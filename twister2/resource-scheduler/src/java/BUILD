@@ -1,10 +1,6 @@
 package(default_visibility = ["//visibility:public"])
 
-common_deps_files = [
-    "@org_yaml_snakeyaml//jar",
-]
-
 java_library(
-    name = "comms-java",
+    name = "resource-scheduler-java",
     srcs = glob(["**/*.java"]),
 )
