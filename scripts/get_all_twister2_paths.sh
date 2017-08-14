@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright 2015 Google Inc. All rights reserved.
+# Copyright 2015 The Bazel Authors. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,32 +17,42 @@
 
 set -eu
 
-cd $(dirname "$0")
-cd ..
-
 function query() {
-    ./output/bazel query "$@"
+  ./output/bazel query "$@"
 }
 
+set +e
+# Build everything
+DIR=`dirname $0`
+source ${DIR}/detect_os_type.sh
+bazel build --config=`platform` {twister2,integration-test,tools/java}/...
+result=$?
+if [ "${result}" -eq "0" ] ; then
+  echo "Bazel build successful!!"
+else
+  echo "WARNING!!! - bazel build failed - intellij setup may not be consistent"
+fi 
+set -e
+echo "Path is `pwd`"
 
-# Build almost everything.
-# //third_party/ijar/test/... is disabled due to #273.
-# xcode and android tools do not work out of the box.
-bazel build twister2/... \
-  || exit $?
+function get_twister2_python_paths() {
+  echo "$(find twister2 -name "*.py" | sed "s|/src/python/.*$|/src/python/|" |sed "s|/tests/python/.*$|/tests/python/|" | sort -u)";
+}
 
-# Source roots.
-# JAVA_PATHS="$(find twister2 -name "*.java" | sed "s|/src/java/.*$||" | sort -u)"
-JAVA_PATHS=$(find twister2 -name "*.java" | sed "s|/src/java/.*$|/src/java|"| sed "s|/java/src/.*$|/java/src|" |  sed "s|/tests/java/.*$|/tests/java|" | sort -u | fgrep -v "twister2/scheduler/" | fgrep -v "twister2/scheduler/" )
-if [ "$(uname -s | tr 'A-Z' 'a-z')" != "darwin" ]; then
-  JAVA_PATHS="$(echo "${JAVA_PATHS}" | fgrep -v "/objc_tools/")"
-fi
+function get_twister2_thirdparty_dependencies() {
+  # bazel-bin/twister2/proto for twister2 proto jars from twister2/proto
+  # bazel-genfiles/external for third_party deps
+  # bazel-twister2/bazel-out/host/bin/third_party for extra_action proto jars in third_party
+  # bazel-twister2/bazel-out/host/genfiles/external more third_party deps
+  echo "$(find {bazel-bin/twister2/proto,bazel-genfiles/external,bazel-twister2/bazel-out/host/bin/third_party,bazel-twister2/bazel-out/host/genfiles/external}/. -name "*jar" -type f | sort -u)";
+}
 
-# THIRD_PARTY_JAR_PATHS="$(find third_party -name "*.jar" | sort -u)"
-THIRD_PARTY_JAR_PATHS=""
-
-# Android-SDK-dependent files may need to be excluded from compilation.
-# ANDROID_IMPORTING_FILES="$(grep "^import android\." -R -l --include "*.java" src | sort)"
+function get_twister2_bazel_deps(){
+  local bazel_third_party_base="$(bazel info output_base)/external/bazel_tools/third_party/";
+  local bazel_ext_deps=`bazel query 'labels("deps", twister2/...)'  | egrep -E "bazel_tools"`;
+  local twister2_resolved_deps=`for dep in $bazel_ext_deps; do bazel query "$dep" --output xml | grep "<label" | grep "\.jar" | sed 's/<label value="//' | sed 's/"\/\>//'| sort -u | sed 's/\/\/third_party/$MODULE_DIR\/third_party/' | sed "s|\@bazel_tools\/\/third_party\:|$bazel_third_party_base|" ; done`;
+  echo "${twister2_resolved_deps}";
+}
 
 # All other generated libraries.
 readonly package_list=$(find twister2 -name "BUILD" | sed "s|/BUILD||" | sed "s|^|//|")
@@ -56,6 +66,20 @@ function get_package_of() {
   done | sort -r -n | head -1 | cut -d " " -f 2
 }
 
+function get_twister2_java_paths() {
+  local java_paths=$(find {twister2,tools,integration-test,contrib} -name "*.java" | sed "s|/src/java/.*$|/src/java|"| sed "s|/java/src/.*$|/java/src|" |  sed "s|/tests/java/.*$|/tests/java|" | sort -u | fgrep -v "twister2/scheduler/" | fgrep -v "twister2/scheduler/" )
+  if [ "$(uname -s | tr 'A-Z' 'a-z')" != "darwin" ]; then
+    java_paths=$(echo "${java_paths}" | fgrep -v "/objc_tools/")
+  fi
+  echo "${java_paths}"
+}
+
+function get_twister2_source_paths() {
+  local java_paths=$(get_twister2_java_paths)
+  local python_paths=$(get_twister2_python_paths)
+  echo "$java_paths $python_paths";
+}
+
 # returns the target corresponding to file $1
 function get_target_of() {
   local package=$(get_package_of $1)
@@ -67,8 +91,10 @@ function get_target_of() {
 function get_consuming_target() {
   # Here to the god of bazel, I should probably offer one or two memory chips for that
   local target=$(get_target_of $1)
-  local generating_target=$(query "deps(${target}, 1) - ${target}")
-  local java_library=$(query "rdeps(//src/..., ${generating_target}, 1) - ${generating_target}")
+  # Get the rule that generated this file.
+  local generating_target=$(query "kind(rule, deps(${target}, 1)) - ${target}")
+  [[ -n $generating_target ]] || echo "Couldn't get generating target for ${target}" 1>&2
+  local java_library=$(query "rdeps(//twister2/..., ${generating_target}, 1) - ${generating_target}")
   echo "${java_library}"
 }
 
@@ -77,19 +103,18 @@ function get_containing_library() {
   get_consuming_target $1 | sed 's|:|/lib|' | sed 's|^//|bazel-bin/|' | sed 's|$|.jar|'
 }
 
+function collect_generated_binary_deps() {
+  local proto_deps=$(find bazel-bin/twister2/proto -type f | grep "jar$");
+  local thrift_deps=$(find bazel-bin/twister2/metricsmgr/src/thrift -type f | grep "jar$");
+  echo "${proto_deps} ${thrift_deps}" | sort | uniq
+}
+
 function collect_generated_paths() {
   # uniq to avoid doing blaze query on duplicates.
   for path in $(find bazel-genfiles/ -name "*.java" | sed 's|/\{0,1\}bazel-genfiles/\{1,2\}|//|' | uniq); do
     source_path=$(echo ${path} | sed 's|//|bazel-genfiles/|' | sed 's|/com/.*$||')
     echo "$(get_containing_library ${path}):${source_path}"
   done | sort -u
-  # done &&
-  # Add in "external" jars which don't have source paths.
-  # for jardir in "jar/" ""; do
-  #  for path in $(find bazel-genfiles/${jardir}_ijar -name "*.jar" | sed 's|^/+||' | uniq); do
-  #    echo "${path}:"
-  #  done
-  # done | sort -u
 }
 
 # GENERATED_PATHS stores pairs of jar:source_path as a list of strings, with
