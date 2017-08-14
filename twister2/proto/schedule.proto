@@ -1,0 +1,16 @@
+package tws.proto.api;
+
+enum Grouping {
+    SHUFFLE = 1;
+    FIELDS = 2;
+    ALL = 3;
+    LOWEST = 4;
+    NONE = 5;
+    DIRECT = 6;
+    CUSTOM = 7;
+    REDUCE = 8;
+    ALLREDUCE = 9;
+    GATHER = 10;
+    ALLGATHER = 11;
+    KEYEDREDUCE = 12;
+}
