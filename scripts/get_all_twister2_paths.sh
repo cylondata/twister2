@@ -44,7 +44,7 @@ function get_twister2_thirdparty_dependencies() {
   # bazel-genfiles/external for third_party deps
   # bazel-twister2/bazel-out/host/bin/third_party for extra_action proto jars in third_party
   # bazel-twister2/bazel-out/host/genfiles/external more third_party deps
-  echo "$(find {bazel-bin/twister2/proto,bazel-genfiles/external,bazel-twister2/bazel-out/host/bin/third_party,bazel-twister2/bazel-out/host/genfiles/external}/. -name "*jar" -type f | sort -u)";
+  echo "$(find {bazel-bin/twister2/proto,bazel-genfiles/external,bazel-genfiles/third_party,bazel-twister2/bazel-out/host/bin/third_party,bazel-twister2/bazel-out/host/genfiles/external}/. -name "*jar" -type f | sort -u)";
 }
 
 function get_twister2_bazel_deps(){
