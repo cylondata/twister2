@@ -50,103 +50,8 @@ public enum Key {
   DRY_RUN                  ("heron.config.dry_run",             Boolean.FALSE),
   DRY_RUN_FORMAT_TYPE      ("heron.config.dry_run_format_type", Type.DRY_RUN_FORMAT_TYPE),
   VERBOSE                  ("heron.config.verbose",             Boolean.FALSE),
-  CONFIG_PROPERTY          ("heron.config.property",            Type.STRING),
+  CONFIG_PROPERTY          ("heron.config.property",            Type.STRING);
 
-  //keys for release/build information
-  BUILD_VERSION            ("heron.build.version",   Type.STRING),
-  BUILD_TIME               ("heron.build.time",      Type.STRING),
-  BUILD_TIMESTAMP          ("heron.build.timestamp", Type.STRING),
-  BUILD_HOST               ("heron.build.host",      Type.STRING),
-  BUILD_USER               ("heron.build.user",      Type.STRING),
-
-  //keys for config provided user classes
-  UPLOADER_CLASS           ("heron.class.uploader",            Type.STRING),
-  LAUNCHER_CLASS           ("heron.class.launcher",            Type.STRING),
-  SCHEDULER_CLASS          ("heron.class.scheduler",           Type.STRING),
-  PACKING_CLASS            ("heron.class.packing.algorithm",   Type.STRING),
-  REPACKING_CLASS          ("heron.class.repacking.algorithm", Type.STRING),
-  STATE_MANAGER_CLASS      ("heron.class.state.manager",       Type.STRING),
-
-  //keys for scheduler config
-  SCHEDULER_IS_SERVICE     ("heron.scheduler.is.service", Boolean.TRUE),
-  SCHEDULER_PROPERTIES     ("heron.scheduler.properties", Type.PROPERTIES),
-
-  //keys for config provided user binaries and jars
-  SCHEDULER_JAR            ("heron.jars.scheduler", "${HERON_LIB}/scheduler/heron-scheduler.jar"),
-
-  //keys for config provided files and directories
-  INTERNALS_CONFIG_FILE    ("heron.internals.config.file", Type.STRING),
-
-  //keys for packages URIs
-  CORE_PACKAGE_URI         ("heron.package.core.uri", "${HERON_DIST}/heron-core.tar.gz"),
-  TOPOLOGY_PACKAGE_URI     ("heron.package.topology.uri", Type.STRING),
-
-  //keys for topology
-  TOPOLOGY_ID              ("heron.topology.id",              Type.STRING),
-  TOPOLOGY_NAME            ("heron.topology.name",            Type.STRING),
-  TOPOLOGY_DEFINITION_FILE ("heron.topology.definition.file", Type.STRING),
-  TOPOLOGY_DEFINITION      ("heron.topology.definition",      Type.STRING),
-  TOPOLOGY_BINARY_FILE     ("heron.topology.binary.file",     Type.STRING),
-  TOPOLOGY_PACKAGE_FILE    ("heron.topology.package.file",    Type.STRING),
-  TOPOLOGY_PACKAGE_TYPE    ("heron.topology.package.type",    Type.PACKAGE_TYPE),
-  TOPOLOGY_CONTAINER_ID    ("heron.topology.container.id",    Type.STRING),
-
-  //keys for proxy config during submission
-  SCHEDULER_PROXY_CONNECTION_STRING("heron.proxy.connection.string", Type.STRING),
-  SCHEDULER_PROXY_CONNECTION_TYPE  ("heron.proxy.connection.type",   Type.STRING),
-
-  //keys for storing state"),
-  STATEMGR_CONNECTION_STRING("heron.statemgr.connection.string", Type.STRING),
-  STATEMGR_ROOT_PATH        ("heron.statemgr.root.path",         Type.STRING),
-
-  //keys for config provided default values for resources
-  STMGR_RAM                 ("heron.resources.stmgr.ram",     ByteAmount.fromBytes(1073741824)),
-  INSTANCE_RAM              ("heron.resources.instance.ram",  ByteAmount.fromBytes(1073741824)),
-  INSTANCE_CPU              ("heron.resources.instance.cpu",  1.0),
-  INSTANCE_DISK             ("heron.resources.instance.disk", ByteAmount.fromBytes(1073741824)),
-
-  //keys for config provided paths
-  INSTANCE_CLASSPATH        ("heron.classpath.instance",             "${HERON_LIB}/instance/*"),
-  METRICSMGR_CLASSPATH      ("heron.classpath.metrics.manager",      "${HERON_LIB}/metricsmgr/*"),
-  METRICSCACHEMGR_CLASSPATH ("heron.classpath.metricscache.manager", "${HERON_LIB}/metricscachemgr/*"),
-  PACKING_CLASSPATH         ("heron.classpath.packing",              "${HERON_LIB}/packing/*"),
-  SCHEDULER_CLASSPATH       ("heron.classpath.scheduler",            "${HERON_LIB}/scheduler/*"),
-  STATEMGR_CLASSPATH        ("heron.classpath.statemgr",             "${HERON_LIB}/statemgr/*"),
-  UPLOADER_CLASSPATH        ("heron.classpath.uploader",             "${HERON_LIB}/uploader/*"),
-
-  //keys for run time config
-  TOPOLOGY_CLASSPATH             ("heron.runtime.topology.class.path",             Type.STRING),
-  SCHEDULER_STATE_MANAGER_ADAPTOR("heron.runtime.scheduler.state.manager.adaptor", Type.STRING),
-  SCHEDULER_SHUTDOWN             ("heron.runtime.scheduler.shutdown",              Type.STRING),
-  PACKING_CLASS_INSTANCE         ("heron.runtime.packing.class.instance",          Type.STRING),
-  LAUNCHER_CLASS_INSTANCE        ("heron.runtime.launcher.class.instance",         Type.STRING),
-  COMPONENT_RAMMAP               ("heron.runtime.component.rammap",                Type.STRING),
-  COMPONENT_JVM_OPTS_IN_BASE64   ("heron.runtime.component.jvm.opts.in.base64",    Type.STRING),
-  INSTANCE_JVM_OPTS_IN_BASE64    ("heron.runtime.instance.jvm.opts.in.base64",     Type.STRING),
-  NUM_CONTAINERS                 ("heron.runtime.num.containers",                  Type.INTEGER),
-
-  //release info
-  HERON_RELEASE_PACKAGE          ("heron.release.package",         Type.STRING),
-  HERON_RELEASE_PACKAGE_ROLE     ("heron.release.package.role",    Type.STRING),
-  HERON_RELEASE_PACKAGE_NAME     ("heron.release.package.name",    Type.STRING),
-  HERON_RELEASE_PACKAGE_VERSION  ("heron.release.package.version", Type.STRING),
-  HERON_UPLOADER_VERSION         ("heron.uploader.version",        Type.STRING),
-
-  //keys for config provided paths
-  HERON_CLUSTER_HOME     ("heron.directory.cluster.home",      "./heron-core"),
-  HERON_CLUSTER_CONF     ("heron.directory.cluster.conf",      "./heron-conf"),
-  // TODO: rename below to heron.directory.cluster.java.home, coordinate change with twitter configs
-  HERON_CLUSTER_JAVA_HOME("heron.directory.sandbox.java.home", "/usr/lib/jvm/default-java"),
-
-  //keys for heron configuration files on the cluster
-  OVERRIDE_YAML("heron.config.file.override.yaml",  "${HERON_CONF}/override.yaml"),
-
-  //keys for config provided user binaries
-  EXECUTOR_BINARY       ("heron.binaries.executor",        "${HERON_BIN}/heron-executor"),
-  STMGR_BINARY          ("heron.binaries.stmgr",           "${HERON_BIN}/heron-stmgr"),
-  TMASTER_BINARY        ("heron.binaries.tmaster",         "${HERON_BIN}/heron-tmaster"),
-  SHELL_BINARY          ("heron.binaries.shell",           "${HERON_BIN}/heron-shell"),
-  PYTHON_INSTANCE_BINARY("heron.binaries.python.instance", "${HERON_BIN}/heron-python-instance");
 
   private final String value;
   private final Object defaultValue;
@@ -186,12 +91,6 @@ public enum Key {
   Key(String value, Boolean defaultValue) {
     this.value = value;
     this.type = Type.BOOLEAN;
-    this.defaultValue = defaultValue;
-  }
-
-  Key(String value, ByteAmount defaultValue) {
-    this.value = value;
-    this.type = Type.BYTE_AMOUNT;
     this.defaultValue = defaultValue;
   }
 

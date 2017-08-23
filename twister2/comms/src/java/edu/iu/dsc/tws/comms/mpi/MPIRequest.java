@@ -12,8 +12,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi;
 
-import mpi.Request;
-
 public class MPIRequest {
 
 }

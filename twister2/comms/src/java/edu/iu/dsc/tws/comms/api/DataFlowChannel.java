@@ -17,7 +17,7 @@ import java.util.Map;
 
 public final class DataFlowChannel {
   DataFlowOperation setUpDataFlowOperation(List<Integer> sources, List<Integer> destinations,
-                                           Map configuration, Operation operation) {
+                                           Map<String, Object> configuration, Operation operation) {
     return null;
   }
 }
