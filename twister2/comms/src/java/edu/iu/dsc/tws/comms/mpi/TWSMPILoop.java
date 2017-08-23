@@ -28,9 +28,6 @@ public class TWSMPILoop {
     for (Request request : pending) {
       try {
         Status status = request.testStatus();
-        if (status != null) {
-
-        }
       } catch (MPIException e) {
         e.printStackTrace();
       }
