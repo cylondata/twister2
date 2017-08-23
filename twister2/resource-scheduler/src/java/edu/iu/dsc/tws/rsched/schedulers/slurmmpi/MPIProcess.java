@@ -17,6 +17,13 @@ import mpi.MPI;
 import mpi.MPIException;
 
 public class MPIProcess {
+
+  public MPIProcess() {
+  }
+
+  public void get() {
+  }
+
   public static void main(String[] args) {
     try {
       MPI.Init(args);
