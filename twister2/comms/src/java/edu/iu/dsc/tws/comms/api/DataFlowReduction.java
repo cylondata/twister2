@@ -13,5 +13,7 @@
 package edu.iu.dsc.tws.comms.api;
 
 public interface DataFlowReduction extends DataFlowOperation {
+  void prepare();
 
+  void reduce();
 }

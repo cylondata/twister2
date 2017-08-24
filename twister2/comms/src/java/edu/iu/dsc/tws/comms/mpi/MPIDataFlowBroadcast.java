@@ -31,4 +31,9 @@ public class MPIDataFlowBroadcast implements DataFlowBroadCast {
   public void complete(Message message) {
 
   }
+
+  @Override
+  public void broadcast(Message message) {
+
+  }
 }

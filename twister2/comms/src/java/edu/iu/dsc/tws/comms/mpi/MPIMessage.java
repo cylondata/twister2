@@ -13,6 +13,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi;
 
-public class MPIMessage {
+import java.util.List;
 
+public class MPIMessage {
+  private List<MPIBuffer> buffers;
+
+  public List<MPIBuffer> getBuffers() {
+    return buffers;
+  }
 }

@@ -13,5 +13,5 @@
 package edu.iu.dsc.tws.comms.api;
 
 public interface DataFlowBroadCast extends DataFlowOperation {
-
+  void broadcast(Message message);
 }

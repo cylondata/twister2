@@ -14,23 +14,35 @@ package edu.iu.dsc.tws.comms.mpi;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 import mpi.MPIException;
 import mpi.Request;
 import mpi.Status;
 
 public class TWSMPILoop {
+  private static final Logger LOG = Logger.getLogger(TWSMPILoop.class.getName());
+
   private List<Integer> ranks = new ArrayList<>();
 
-  private List<Request> pending = new ArrayList<>();
+  private List<MPIRequest> pending = new ArrayList<>();
 
   public void progress() {
-    for (Request request : pending) {
+    for (MPIRequest request : pending) {
       try {
-        Status status = request.testStatus();
+        Status status = request.getRequest().testStatus();
+        // this request has completed
       } catch (MPIException e) {
         e.printStackTrace();
       }
     }
+  }
+
+  public void registerWrite(int rank, Request request) {
+    pending.add(new MPIRequest(request, MPIRequest.RequestType.WRITE, rank));
+  }
+
+  public void registerRead(int rank, Request request) {
+    pending.add(new MPIRequest(request, MPIRequest.RequestType.READ, rank));
   }
 }

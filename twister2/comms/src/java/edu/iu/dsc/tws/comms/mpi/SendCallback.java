@@ -1,4 +1,3 @@
-//  Copyright 2017 Twitter. All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -13,11 +12,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi;
 
-import java.nio.ByteBuffer;
-import java.util.List;
-
-public class MPIBuffers {
-  private List<ByteBuffer> buffers;
-
-
+public interface SendCallback {
+  void onFinish(int id, MPIRequest request);
 }

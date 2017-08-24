@@ -1,3 +1,4 @@
+//  Copyright 2017 Twitter. All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -12,32 +13,29 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi;
 
-import mpi.Request;
+import java.nio.ByteBuffer;
 
-public class MPIRequest {
+import mpi.MPI;
 
-  public enum RequestType {
-    READ,
-    WRITE,
+public class MPIBuffer {
+  private int capacity;
+  private int size;
+  private ByteBuffer byteBuffer;
+
+  public MPIBuffer(int capacity) {
+    this.capacity = capacity;
+    this.byteBuffer = MPI.newByteBuffer(capacity);
   }
 
-  private Request request;
-
-  private RequestType type;
-
-  private int rank;
-
-  public MPIRequest(Request request, RequestType type, int rank) {
-    this.request = request;
-    this.type = type;
-    this.rank = rank;
+  public int getCapacity() {
+    return capacity;
   }
 
-  public Request getRequest() {
-    return request;
+  public int getSize() {
+    return size;
   }
 
-  public RequestType getType() {
-    return type;
+  public ByteBuffer getByteBuffer() {
+    return byteBuffer;
   }
 }

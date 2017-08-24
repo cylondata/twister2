@@ -12,32 +12,18 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi;
 
-import mpi.Request;
+import java.util.Queue;
 
-public class MPIRequest {
+public class ReceiveBufferPool {
+  private Queue<MPIBuffer> buffers;
 
-  public enum RequestType {
-    READ,
-    WRITE,
+  private int capacity;
+
+  public ReceiveBufferPool(int capacity) {
+    this.capacity = capacity;
   }
 
-  private Request request;
-
-  private RequestType type;
-
-  private int rank;
-
-  public MPIRequest(Request request, RequestType type, int rank) {
-    this.request = request;
-    this.type = type;
-    this.rank = rank;
-  }
-
-  public Request getRequest() {
-    return request;
-  }
-
-  public RequestType getType() {
-    return type;
+  public MPIBuffer getByteBuffer() {
+    return buffers.poll();
   }
 }
