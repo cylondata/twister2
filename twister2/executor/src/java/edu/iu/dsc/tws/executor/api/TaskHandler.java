@@ -13,6 +13,9 @@ package edu.iu.dsc.tws.executor.api;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import edu.iu.dsc.tws.executor.model.Task;
 
@@ -20,6 +23,12 @@ import edu.iu.dsc.tws.executor.model.Task;
  * Created by vibhatha on 8/25/17.
  */
 public class TaskHandler {
+
+  private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
+  protected final Lock readLock = readWriteLock.readLock();
+  protected final Lock writeLock = readWriteLock.writeLock();
+
+
   private List<Task> tasks = new ArrayList<Task>();
   private List<ITaskAddedListener> taskAddedListeners = new ArrayList<>();
 
@@ -28,19 +37,43 @@ public class TaskHandler {
     this.notifyTaskAddedListener(task);
   }
 
-  public void registerTaskAddedListener (ITaskAddedListener iTaskAddedListener){
-    this.taskAddedListeners.add(iTaskAddedListener);
+  public synchronized ITaskAddedListener registerTaskAddedListener (ITaskAddedListener iTaskAddedListener){
+    // Lock the list of listeners for writing
+
+    this.writeLock.lock();
+    try {
+      this.taskAddedListeners.add(iTaskAddedListener);
+    }finally{
+      this.writeLock.unlock();
+    }
+    return iTaskAddedListener;
   }
 
-  public void unregisterTasAddedListener(ITaskAddedListener iTaskAddedListener){
-    this.taskAddedListeners.remove(iTaskAddedListener);
+  public synchronized void unregisterTasAddedListener(ITaskAddedListener iTaskAddedListener){
+
+    // Lock the list of listeners for writing
+
+    this.writeLock.lock();
+    try{
+      this.taskAddedListeners.remove(iTaskAddedListener);
+    }finally {
+      this.writeLock.unlock();
+    }
+
+
   }
 
-  public void notifyTaskAddedListener(Task task){
+  public synchronized void notifyTaskAddedListener(Task task){
     /*for (ITaskAddedListener iTaskAddedListener : taskAddedListeners){
       iTaskAddedListener.updateTaskAdded(task);
     }*/
-    this.taskAddedListeners.forEach(taskAddedListener -> taskAddedListener.updateTaskAdded(task));
+    this.writeLock.lock();
+    try{
+      this.taskAddedListeners.forEach(taskAddedListener -> taskAddedListener.updateTaskAdded(task));
+    }finally {
+      this.writeLock.unlock();
+    }
+
   }
 
 }
