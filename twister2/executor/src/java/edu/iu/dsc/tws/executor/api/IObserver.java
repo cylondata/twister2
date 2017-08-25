@@ -13,9 +13,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.api;
 
-/**
- * Created by vibhatha on 8/24/17.
- */
+
 public interface IObserver {
   void onObservableChanged();
 }

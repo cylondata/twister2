@@ -16,9 +16,6 @@ package edu.iu.dsc.tws.executor.api;
 import java.util.HashSet;
 import java.util.Set;
 
-/**
- * Created by vibhatha on 8/24/17.
- */
 public class ThreadSafeObservable {
 
   // this is the object we will be synchronizing on ("the monitor")

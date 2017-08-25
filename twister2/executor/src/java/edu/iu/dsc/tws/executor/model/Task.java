@@ -11,10 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.model;
 
-/**
- * Created by vibhatha on 8/25/17.
- */
+
 public class Task {
 
-  
+
 }
