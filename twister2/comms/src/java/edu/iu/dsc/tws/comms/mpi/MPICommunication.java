@@ -1,5 +1,3 @@
-//  Copyright 2017 Twitter. All rights reserved.
-//
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
@@ -13,34 +11,30 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi;
 
-import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowBroadCast;
-import edu.iu.dsc.tws.comms.api.Message;
-import edu.iu.dsc.tws.comms.core.InstancePlan;
+import edu.iu.dsc.tws.comms.api.DataFlowLoadBalance;
+import edu.iu.dsc.tws.comms.api.DataFlowPartition;
+import edu.iu.dsc.tws.comms.api.DataFlowReduction;
+import edu.iu.dsc.tws.comms.core.Communication;
 
-public class MPIDataFlowBroadcast implements DataFlowBroadCast {
+public class MPICommunication implements Communication {
   @Override
-  public void init(Config config, InstancePlan instancePlan) {
-
+  public DataFlowBroadCast broadcast() {
+    return new MPIDataFlowBroadcast();
   }
 
   @Override
-  public void partial(Message message) {
-
+  public DataFlowLoadBalance loadBalance() {
+    return null;
   }
 
   @Override
-  public void finish() {
-
+  public DataFlowPartition partition() {
+    return null;
   }
 
   @Override
-  public void complete(Message message) {
-
-  }
-
-  @Override
-  public void broadcast(Message message) {
-
+  public DataFlowReduction reduction() {
+    return null;
   }
 }

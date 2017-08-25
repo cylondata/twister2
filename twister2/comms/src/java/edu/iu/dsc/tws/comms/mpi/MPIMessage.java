@@ -1,4 +1,3 @@
-//  Copyright 2017 Twitter. All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -13,12 +12,26 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class MPIMessage {
-  private List<MPIBuffer> buffers;
+  private final List<MPIBuffer> buffers = new ArrayList<MPIBuffer>();
+
+  private final TWSMPIChannel channel;
+
+  public MPIMessage(TWSMPIChannel channel) {
+    this.channel = channel;
+  }
 
   public List<MPIBuffer> getBuffers() {
     return buffers;
+  }
+
+  /**
+   * Release the allocated resources to this buffer.
+   */
+  public void release() {
+    channel.releaseMessage(this);
   }
 }

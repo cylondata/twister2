@@ -13,5 +13,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.api;
 
-public class DataFlowLoadBalance {
+public interface DataFlowLoadBalance {
+
 }

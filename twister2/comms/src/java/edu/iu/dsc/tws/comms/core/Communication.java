@@ -1,4 +1,3 @@
-//
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
@@ -10,14 +9,16 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.api;
+package edu.iu.dsc.tws.comms.core;
 
-import java.util.List;
-import java.util.Map;
+import edu.iu.dsc.tws.comms.api.DataFlowBroadCast;
+import edu.iu.dsc.tws.comms.api.DataFlowLoadBalance;
+import edu.iu.dsc.tws.comms.api.DataFlowPartition;
+import edu.iu.dsc.tws.comms.api.DataFlowReduction;
 
-public final class DataFlowChannel {
-  DataFlowOperation setUpDataFlowOperation(List<Integer> sources, List<Integer> destinations,
-                                           Map<String, Object> configuration, Operation operation) {
-    return null;
-  }
+public interface Communication {
+  DataFlowBroadCast broadcast();
+  DataFlowLoadBalance loadBalance();
+  DataFlowPartition partition();
+  DataFlowReduction reduction();
 }

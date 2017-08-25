@@ -12,7 +12,7 @@ import mpi.Request;
 /**
  * We are going to use a byte based messaging protocol.
  */
-public class TWSMPIChannel implements ReceiveCallback, SendCallback {
+public class TWSMPIChannel implements MessageListener {
   private static final Logger LOG = Logger.getLogger(TWSMPIChannel.class.getName());
 
   /**
@@ -36,12 +36,20 @@ public class TWSMPIChannel implements ReceiveCallback, SendCallback {
    */
   private Map<Integer, PendingReceive> pendingReceives = new HashMap<>();
 
+
   public TWSMPIChannel(Intracomm comm, ReceiveBufferPool pool, TWSMPILoop loop) {
     this.comm = comm;
     this.receiveBufferPool = pool;
     this.loop = loop;
   }
 
+  /**
+   * Send a message to the given rank.
+   *
+   * @param rank
+   * @param message
+   * @param stream
+   */
   public void sendMessage(int rank, MPIMessage message, int stream) {
     for (int i = 0; i < message.getBuffers().size(); i++) {
       try {
@@ -56,12 +64,12 @@ public class TWSMPIChannel implements ReceiveCallback, SendCallback {
   }
 
   /**
-   *
+   * Register to receive messages
    * @param rank
    * @param callback
    * @param stream
    */
-  public void receiveMessage(int rank, ReceiveCallback callback, int stream) {
+  public void receiveMessage(int rank, MessageListener callback, int stream) {
     MPIBuffer byteBuffer = receiveBufferPool.getByteBuffer();
     if (byteBuffer == null) {
       pendingReceives.put(rank, new PendingReceive(rank, callback));
@@ -90,7 +98,7 @@ public class TWSMPIChannel implements ReceiveCallback, SendCallback {
     }
   }
 
-  private void addPending(int id, ReceiveCallback callback) {
+  private void addPending(int id, MessageListener callback) {
     PendingReceive receive;
     if (pendingReceives.containsKey(id)) {
       receive = pendingReceives.get(id);
@@ -107,8 +115,10 @@ public class TWSMPIChannel implements ReceiveCallback, SendCallback {
    * @param message the message
    */
   @Override
-  public void onMessage(int id, MPIMessage message) {
+  public void onReceiveComplete(int id, MPIMessage message) {
+    // call the message deserializer
 
+    // call the
   }
 
   /**
@@ -117,7 +127,7 @@ public class TWSMPIChannel implements ReceiveCallback, SendCallback {
    * @param request
    */
   @Override
-  public void onFinish(int id, MPIRequest request) {
+  public void onSendComplete(int id, MPIRequest request) {
 
   }
 
@@ -127,11 +137,22 @@ public class TWSMPIChannel implements ReceiveCallback, SendCallback {
   private class PendingReceive {
     private int id;
     private int noOfBuffersSubmitted;
-    private ReceiveCallback callback;
+    private MessageListener callback;
 
-    PendingReceive(int id, ReceiveCallback callback) {
+    PendingReceive(int id, MessageListener callback) {
       this.id = id;
       this.callback = callback;
+    }
+  }
+
+  /**
+   * The messages are released back to the receive buffer pool.
+   *
+   * @param message the MPI Message received
+   */
+  public void releaseMessage(MPIMessage message) {
+    for (MPIBuffer b : message.getBuffers()) {
+      receiveBufferPool.releaseBuffer(b);
     }
   }
 }
