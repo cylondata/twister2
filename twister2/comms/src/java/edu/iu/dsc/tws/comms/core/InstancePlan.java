@@ -31,11 +31,38 @@ public class InstancePlan {
    */
   private Map<Integer, Integer> invertedExecutorToChannels = new HashMap<Integer, Integer>();
 
+  /**
+   * The process under which we are running
+   */
+  private int thisExecutor;
+
+  /**
+   * The task id
+   */
+  private int thisTaskId;
+
+  public InstancePlan(Map<Integer, Set<Integer>> executorToChannels,
+                      Map<Integer, Integer> invertedExecutorToChannels,
+                      int thisExecutor, int thisTaskId) {
+    this.executorToChannels = executorToChannels;
+    this.invertedExecutorToChannels = invertedExecutorToChannels;
+    this.thisExecutor = thisExecutor;
+    this.thisTaskId = thisTaskId;
+  }
+
   public int getExecutorForChannel(int channel) {
     return invertedExecutorToChannels.get(channel);
   }
 
   public Set<Integer> getChannelsOfExecutor(int executor) {
     return executorToChannels.get(executor);
+  }
+
+  public int getThisExecutor() {
+    return thisExecutor;
+  }
+
+  public int getThisTaskId() {
+    return thisTaskId;
   }
 }

@@ -19,19 +19,41 @@ public class MPIMessage {
   private final List<MPIBuffer> buffers = new ArrayList<MPIBuffer>();
 
   private final TWSMPIChannel channel;
+  /**
+   * Keeps the number of references to this message
+   * The resources associated with the message is released when refcount becomes 0
+   */
+  private int refCount;
 
   public MPIMessage(TWSMPIChannel channel) {
+    this(channel, 1);
+  }
+
+  public MPIMessage(TWSMPIChannel channel, int refCount) {
     this.channel = channel;
+    this.refCount = refCount;
   }
 
   public List<MPIBuffer> getBuffers() {
     return buffers;
   }
 
+  public int getRefCount() {
+    return refCount;
+  }
+
+  public int incrementRefCount() {
+    refCount++;
+    return refCount;
+  }
+
   /**
    * Release the allocated resources to this buffer.
    */
   public void release() {
-    channel.releaseMessage(this);
+    refCount--;
+    if (refCount == 0) {
+      channel.releaseMessage(this);
+    }
   }
 }

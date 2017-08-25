@@ -66,7 +66,7 @@ public final class DataFlowChannel {
     }
 
     // intialize the operation
-    dataFlowOperation.init(config, instancePlan);
+    dataFlowOperation.init(mergedCfg, instancePlan, sources, destinations, stream);
 
     return dataFlowOperation;
   }

@@ -4,6 +4,4 @@ public class Message {
   private MessageHeader header;
 
   private byte[] body;
-
-
 }

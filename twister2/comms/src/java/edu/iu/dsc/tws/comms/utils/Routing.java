@@ -1,3 +1,5 @@
+//  Copyright 2017 Twitter. All rights reserved.
+//
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
@@ -9,25 +11,24 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.mpi;
+package edu.iu.dsc.tws.comms.utils;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.config.Context;
+import java.util.List;
 
-/**
- * Read the configuration options
- */
-public class MPIContext extends Context {
-  private static final String SEND_BUFFER_SIZE = "comm.sendbuffer.size";
+public class Routing {
+  private final List<Integer> receivingIds;
+  private final List<Integer> sendingIds;
 
-  private static final String SEND_BUFFERS_COUNT = "comm.sendbuffer.count";
-
-  public static int getSendBufferSize(Config cfg) {
-    return cfg.getIntegerValue(SEND_BUFFER_SIZE, 1024);
+  public Routing(List<Integer> receivingIds, List<Integer> sendingIds) {
+    this.receivingIds = receivingIds;
+    this.sendingIds = sendingIds;
   }
 
-  public static int getSendBuffersCount(Config cfg) {
-    return cfg.getIntegerValue(SEND_BUFFERS_COUNT, 4);
+  public List<Integer> getReceivingIds() {
+    return receivingIds;
+  }
+
+  public List<Integer> getSendingIds() {
+    return sendingIds;
   }
 }
-
