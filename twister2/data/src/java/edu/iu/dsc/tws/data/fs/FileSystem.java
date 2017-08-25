@@ -11,12 +11,19 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.fs;
 
+import java.io.File;
+import java.net.URI;
+import java.util.logging.Logger;
+
 /**
  * This class is an abstract of the generic file system that will be used in the system
- * This can be extend to support distributed file system or a local file system. This defines the basic set of operations
+ * This can be extend to support distributed file system or a local file system. This defines
+ * the basic set of operations
  * that need to be supported by the concrete implementation
  */
 public abstract class FileSystem {
+
+  private static final Logger LOG = Logger.getLogger(FileSystem.class.getName());
 
   /**
    * Check if the given path exsits
@@ -66,5 +73,10 @@ public abstract class FileSystem {
    */
   public abstract Path getWorkingDirectory();
 
-
+  /**
+   * Returns a URI whose scheme and authority identify this file system.
+   *
+   * @return a URI whose scheme and authority identify this file system
+   */
+  public abstract URI getUri();
 }

@@ -11,8 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.api;
 
+import java.util.logging.Logger;
+
 /**
  * A DataSet is the main data abstraction, which represents data that is loaded into the system
  */
 public abstract class DataSet {
+
+  private static final Logger LOG = Logger.getLogger(DataSet.class.getName());
+
 }

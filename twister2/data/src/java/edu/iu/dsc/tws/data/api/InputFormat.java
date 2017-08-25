@@ -17,4 +17,5 @@ import java.io.Serializable;
  * The base interface for specifiying the input formats of files that are read
  */
 public interface InputFormat extends Serializable {
+
 }

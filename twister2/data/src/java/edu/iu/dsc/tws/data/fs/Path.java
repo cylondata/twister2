@@ -14,11 +14,14 @@ package edu.iu.dsc.tws.data.fs;
 import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.logging.Logger;
 
 /**
  * Used to name tha files in the FileSystem
  */
 public class Path implements Serializable {
+
+  private static final Logger LOG = Logger.getLogger(Path.class.getName());
 
   /**
    * The directory seperator, a slash
@@ -137,6 +140,14 @@ public class Path implements Serializable {
     initialize(scheme, authority, path);
   }
 
+  /**
+   * Converts the path object to a {@link URI}.
+   *
+   * @return the {@link URI} object converted from the path object
+   */
+  public URI toUri() {
+    return uri;
+  }
 
   /**
    *
@@ -253,5 +264,52 @@ public class Path implements Serializable {
       buffer.append(path);
     }
     return buffer.toString();
+  }
+
+  /**
+   * Returns a qualified path object.
+   *
+   * @param fs
+   *        the FileSystem that should be used to obtain the current working directory
+   * @return the qualified path object
+   */
+  public Path makeQualified(FileSystem fs) {
+    Path path = this;
+    if (!isAbsolute()) {
+      path = new Path(fs.getWorkingDirectory(), this);
+    }
+
+    final URI pathUri = path.toUri();
+    final URI fsUri = fs.getUri();
+
+    String scheme = pathUri.getScheme();
+    String authority = pathUri.getAuthority();
+
+    if (scheme != null && (authority != null || fsUri.getAuthority() == null)) {
+      return path;
+    }
+
+    if (scheme == null) {
+      scheme = fsUri.getScheme();
+    }
+
+    if (authority == null) {
+      authority = fsUri.getAuthority();
+      if (authority == null) {
+        authority = "";
+      }
+    }
+
+    return new Path(scheme + ":" + "//" + authority + pathUri.getPath());
+  }
+
+  /**
+   * Checks if the directory of this path is absolute.
+   *
+   * @return <code>true</code> if the directory of this path is absolute, <code>false</code> otherwise
+   */
+  public boolean isAbsolute() {
+    final int start = hasWindowsDrive(uri.getPath(), true) ? 3 : 0;
+    return uri.getPath().startsWith(SEPARATOR, start);
   }
 }
