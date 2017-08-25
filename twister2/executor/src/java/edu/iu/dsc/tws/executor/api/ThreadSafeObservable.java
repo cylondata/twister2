@@ -43,10 +43,11 @@ public class ThreadSafeObservable {
   }
 
   private void performInit() {
+    System.out.println("Initialization ");
   }
 
   private void performCleanup(){
-
+    System.out.println("Clean Up ");
   }
 
   /**
