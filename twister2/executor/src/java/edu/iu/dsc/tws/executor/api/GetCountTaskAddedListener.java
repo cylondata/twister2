@@ -19,23 +19,21 @@ import edu.iu.dsc.tws.executor.model.Task;
 /**
  * Created by vibhatha on 8/25/17.
  */
-public class GetInfoTaskAddedListener implements ITaskAddedListener {
+public class GetCountTaskAddedListener implements ITaskAddedListener {
 
-  private static final Logger LOGGER = Logger.getLogger( GetInfoTaskAddedListener.class.getName() );
+  private static final Logger LOGGER = Logger.getLogger( GetCountTaskAddedListener.class.getName() );
+  private static int taskAddedCount = 0;
+
   @Override
   public void onTaskAdded(Task task) {
-    LOGGER.log( Level.FINE, "\n Task Added : {0} ", task.toString());
-    //System.out.println("Task Added ");
-    //System.out.println(task.toString());
+
   }
 
   @Override
-  public void updateTaskAdded(Task task){
-    LOGGER.log( Level.FINE, "\n New Task Added : {0} ", task.getName());
-    LOGGER.log(Level.FINE, task.toString());
-    //System.out.println("A new task added : "+task.getName());
-    //System.out.println(task.toString());
+  public void updateTaskAdded(Task task) {
+    taskAddedCount ++;
+    LOGGER.log( Level.FINE, "\n Total Tasks : {0} ", taskAddedCount);
+    //System.out.println("\n Total Tasks : "+taskAddedCount);
+
   }
-
-
 }

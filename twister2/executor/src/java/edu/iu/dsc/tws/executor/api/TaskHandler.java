@@ -25,6 +25,7 @@ public class TaskHandler {
 
   public void addTask (Task task){
     this.tasks.add(task);
+    this.notifyTaskAddedListener(task);
   }
 
   public void registerTaskAddedListener (ITaskAddedListener iTaskAddedListener){
@@ -36,10 +37,10 @@ public class TaskHandler {
   }
 
   public void notifyTaskAddedListener(Task task){
-    for (ITaskAddedListener iTaskAddedListener : taskAddedListeners){
+    /*for (ITaskAddedListener iTaskAddedListener : taskAddedListeners){
       iTaskAddedListener.updateTaskAdded(task);
-    }
-    //this.taskAddedListeners.forEach(taskAddedListener -> taskAddedListener.updateTaskAdded(task));
+    }*/
+    this.taskAddedListeners.forEach(taskAddedListener -> taskAddedListener.updateTaskAdded(task));
   }
 
 }

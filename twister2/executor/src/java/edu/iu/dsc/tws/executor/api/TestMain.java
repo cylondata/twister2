@@ -23,9 +23,10 @@ public class TestMain {
     TaskHandler taskHandler = new TaskHandler();
 
     taskHandler.registerTaskAddedListener(new GetInfoTaskAddedListener());
+    taskHandler.registerTaskAddedListener(new GetCountTaskAddedListener());
     taskHandler.addTask(new Task(1001,"Task 1", new Date(), "Demo Task 1 to handle the queue"));
-    taskHandler.addTask(new Task(1002,"Task 2", new Date(), "Demo Task 1 to handle the queue"));
-    taskHandler.addTask(new Task(1003,"Task 3", new Date(), "Demo Task 1 to handle the queue"));
+    taskHandler.addTask(new Task(1002,"Task 2", new Date(), "Demo Task 2 to handle the queue"));
+    taskHandler.addTask(new Task(1003,"Task 3", new Date(), "Demo Task 3 to handle the queue"));
 
 
   }

@@ -15,12 +15,14 @@ package edu.iu.dsc.tws.executor.api;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ThreadSafeObservable {
 
   // this is the object we will be synchronizing on ("the monitor")
   private final Object MONITOR = new Object();
-
+  private static final Logger LOGGER = Logger.getLogger( ThreadSafeObservable.class.getName() );
   private Set<IObserver> mObservers;
 
   /**
@@ -40,11 +42,13 @@ public class ThreadSafeObservable {
   }
 
   private void performInit() {
-    System.out.println("Initialization ");
+    LOGGER.log( Level.FINE, "\n Initialization ");
+    //System.out.println("Initialization ");
   }
 
   private void performCleanup(){
-    System.out.println("Clean Up ");
+    LOGGER.log( Level.FINE, "\n Clean up ");
+    //System.out.println("Clean Up ");
   }
 
   /**
