@@ -25,10 +25,10 @@ public class TWSMPILoop {
 
   private List<Integer> ranks = new ArrayList<>();
 
-  private List<MPIRequest> pending = new ArrayList<>();
+  private List<MPIMessage> pending = new ArrayList<>();
 
   public void progress() {
-    for (MPIRequest request : pending) {
+    for (MPIMessage request : pending) {
       try {
         Status status = request.getRequest().testStatus();
         // this request has completed
@@ -38,11 +38,11 @@ public class TWSMPILoop {
     }
   }
 
-  public void registerWrite(int rank, Request request) {
+  public void registerWrite(int rank, MPIMessage request) {
     pending.add(new MPIRequest(request, MPIRequest.RequestType.WRITE, rank));
   }
 
-  public void registerRead(int rank, Request request) {
+  public void registerRead(int rank, MPIMessage request) {
     pending.add(new MPIRequest(request, MPIRequest.RequestType.READ, rank));
   }
 }

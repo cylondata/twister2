@@ -152,7 +152,7 @@ echo Done. IDEA module file: $iml_file
 
 IDEA=`ls -1d /Applications/IntelliJ\ * 2> /dev/null| tail -n1`
 if [ -n "$IDEA" ]; then
-  echo "Opening Heron project in IDEA..."
+  echo "Opening Twister2 project in IDEA..."
   open -a "$IDEA" .
   echo "Done."
 else

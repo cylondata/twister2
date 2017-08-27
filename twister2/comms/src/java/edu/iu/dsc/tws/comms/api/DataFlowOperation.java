@@ -26,7 +26,8 @@ public interface DataFlowOperation {
    * @param instancePlan instance plan
    */
   void init(Config config, InstancePlan instancePlan, List<Integer>  sources,
-            List<Integer> destinations, int stream);
+            List<Integer> destinations, int stream, MessageReceiver receiver,
+            MessageFormatter messageFormatter, MessageBuilder messageBuilder);
 
   /**
    * Do a partial broadcast, the receiving side should collect messages until all the messages

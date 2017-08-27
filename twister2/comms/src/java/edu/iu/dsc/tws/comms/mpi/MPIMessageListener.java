@@ -1,3 +1,4 @@
+//  Copyright 2017 Twitter. All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -10,8 +11,9 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.api;
+package edu.iu.dsc.tws.comms.mpi;
 
-public interface DataFlowBroadCast extends DataFlowOperation {
-
+public interface MPIMessageListener {
+  void onReceiveComplete(int id, MPIMessage message);
+  void onSendComplete(int id, MPIMessage message);
 }

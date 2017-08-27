@@ -19,6 +19,9 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.MessageBuilder;
+import edu.iu.dsc.tws.comms.api.MessageFormatter;
+import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.Operation;
 
 public final class DataFlowChannel {
@@ -54,7 +57,10 @@ public final class DataFlowChannel {
 
   public DataFlowOperation setUpDataFlowOperation(List<Integer> sources, List<Integer> destinations,
                                                   Map<String, Object> configuration,
-                                                  Operation operation, int stream) {
+                                                  Operation operation, int stream,
+                                                  MessageReceiver receiver,
+                                                  MessageFormatter formatter,
+                                                  MessageBuilder builder) {
     // merge with the user specified configuration, user specified will take precedence
     Config mergedCfg = Config.newBuilder().putAll(config).putAll(configuration).build();
 
@@ -66,7 +72,8 @@ public final class DataFlowChannel {
     }
 
     // intialize the operation
-    dataFlowOperation.init(mergedCfg, instancePlan, sources, destinations, stream);
+    dataFlowOperation.init(mergedCfg, instancePlan, sources,
+        destinations, stream, receiver, formatter, builder);
 
     return dataFlowOperation;
   }

@@ -15,8 +15,12 @@ package edu.iu.dsc.tws.comms.mpi;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MPIMessage {
+import edu.iu.dsc.tws.comms.api.Message;
+
+public class MPIMessage extends Message {
   private final List<MPIBuffer> buffers = new ArrayList<MPIBuffer>();
+
+  private final List<MPIRequest> requests = new ArrayList<>();
 
   private final TWSMPIChannel channel;
   /**
@@ -38,13 +42,13 @@ public class MPIMessage {
     return buffers;
   }
 
-  public int getRefCount() {
-    return refCount;
-  }
-
   public int incrementRefCount() {
     refCount++;
     return refCount;
+  }
+
+  public void addRequest(MPIRequest request) {
+
   }
 
   /**

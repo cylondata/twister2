@@ -14,5 +14,5 @@
 package edu.iu.dsc.tws.comms.api;
 
 public interface MessageBuilder {
-
+  Object build(Message message);
 }

@@ -21,6 +21,7 @@ public class MPIContext extends Context {
   private static final String SEND_BUFFER_SIZE = "comm.sendbuffer.size";
 
   private static final String SEND_BUFFERS_COUNT = "comm.sendbuffer.count";
+  private static final String BCAST_SEND_BUFFERS_COUNT = "comm.bcast.sendbuffer.count";
 
   public static int getSendBufferSize(Config cfg) {
     return cfg.getIntegerValue(SEND_BUFFER_SIZE, 1024);
@@ -28,6 +29,11 @@ public class MPIContext extends Context {
 
   public static int getSendBuffersCount(Config cfg) {
     return cfg.getIntegerValue(SEND_BUFFERS_COUNT, 4);
+  }
+
+  public static int getBroadcastSendBufferCount(Config cfg) {
+    int sendBufferCount = getSendBuffersCount(cfg);
+    return cfg.getIntegerValue(BCAST_SEND_BUFFERS_COUNT, sendBufferCount);
   }
 }
 

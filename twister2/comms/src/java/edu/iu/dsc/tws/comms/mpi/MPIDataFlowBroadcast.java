@@ -18,11 +18,14 @@ import java.util.Queue;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowBroadCast;
 import edu.iu.dsc.tws.comms.api.Message;
+import edu.iu.dsc.tws.comms.api.MessageBuilder;
+import edu.iu.dsc.tws.comms.api.MessageFormatter;
+import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.core.InstancePlan;
 import edu.iu.dsc.tws.comms.utils.BinaryTree;
 import edu.iu.dsc.tws.comms.utils.Routing;
 
-public class MPIDataFlowBroadcast implements DataFlowBroadCast, MessageListener {
+public class MPIDataFlowBroadcast implements DataFlowBroadCast, MPIMessageListener {
   private Config config;
   private InstancePlan instancePlan;
   private List<Integer> sources;
@@ -30,21 +33,27 @@ public class MPIDataFlowBroadcast implements DataFlowBroadCast, MessageListener 
   private int stream;
   private Routing routing;
   private TWSMPIChannel channel;
+  private MessageReceiver receiver;
+  private MessageFormatter formatter;
+  private MessageBuilder builder;
   /**
-   * The send buffers used by the operation
+   * The send sendBuffers used by the operation
    */
-  private Queue<MPIBuffer> buffers;
+  private Queue<MPIBuffer> sendBuffers;
 
   @Override
   public void init(Config config, InstancePlan instancePlan, List<Integer> sources,
-                   List<Integer> destinations, int stream) {
+                   List<Integer> destinations, int stream, MessageReceiver receiver,
+                   MessageFormatter formatter, MessageBuilder builder) {
     this.config = config;
     this.instancePlan = instancePlan;
     this.sources = sources;
     this.destinations = destinations;
     this.stream = stream;
-
-    this.buffers = new LinkedList<>();
+    this.formatter = formatter;
+    this.builder = builder;
+    this.receiver = receiver;
+    this.sendBuffers = new LinkedList<>();
 
     // lets create the routing needed
     BinaryTree tree = new BinaryTree();
@@ -54,7 +63,7 @@ public class MPIDataFlowBroadcast implements DataFlowBroadCast, MessageListener 
   }
 
   /**
-   * Setup the receives and send buffers
+   * Setup the receives and send sendBuffers
    */
   private void setupCommunication() {
     List<Integer> receiving = routing.getReceivingIds();
@@ -63,44 +72,61 @@ public class MPIDataFlowBroadcast implements DataFlowBroadCast, MessageListener 
       channel.receiveMessage(recv, this, stream);
     }
 
-    // configure the send buffers
+    // configure the send sendBuffers
     int sendBufferSize = MPIContext.getSendBufferSize(config);
     int sendBufferCount = MPIContext.getSendBuffersCount(config);
     for (int i = 0; i < sendBufferCount; i++) {
       MPIBuffer buffer = new MPIBuffer(sendBufferSize);
-      buffers.offer(buffer);
+      sendBuffers.offer(buffer);
     }
   }
 
   @Override
   public void partial(Message message) {
-
+    throw new UnsupportedOperationException("partial messages not supported by broadcast");
   }
 
   @Override
   public void finish() {
-
+    throw new UnsupportedOperationException("partial messages not supported by broadcast");
   }
 
   @Override
   public void complete(Message message) {
+    Object msgObj = builder.build(message);
+    if (!(msgObj instanceof MPIMessage)) {
+      throw new IllegalArgumentException("Expecting a message of MPIMessage type");
+    }
 
+    MPIMessage mpiMessage = (MPIMessage) msgObj;
+    sendMessage(mpiMessage);
   }
 
-  @Override
-  public void broadcast(Message message) {
-
+  private void sendMessage(MPIMessage msgObj1) {
+    if (routing.getSendingIds() != null && routing.getSendingIds().size() > 0) {
+      List<Integer> sendIds = routing.getSendingIds();
+      for (int i : sendIds) {
+        channel.sendMessage(i, msgObj1, stream);
+        // increment the ref count
+        msgObj1.incrementRefCount();
+      }
+    }
   }
 
   @Override
   public void onReceiveComplete(int id, MPIMessage message) {
+    // try to send further
+    sendMessage(message);
     // we received a message, we need to determine weather we need to forward to another node
     // and process
-
+    if (formatter != null) {
+      Object object = formatter.format(message);
+      receiver.receive(object);
+    }
   }
 
   @Override
-  public void onSendComplete(int id, MPIRequest message) {
+  public void onSendComplete(int id, MPIMessage message) {
 
   }
 }
