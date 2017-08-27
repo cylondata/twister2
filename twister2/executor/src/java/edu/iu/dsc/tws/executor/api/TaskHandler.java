@@ -24,7 +24,7 @@ import edu.iu.dsc.tws.executor.model.Task;
  */
 public class TaskHandler {
 
-  private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
+  private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock(true);
   protected final Lock readLock = readWriteLock.readLock();
   protected final Lock writeLock = readWriteLock.writeLock();
 
@@ -43,6 +43,9 @@ public class TaskHandler {
     this.writeLock.lock();
     try {
       this.taskAddedListeners.add(iTaskAddedListener);
+    }catch (Exception ex){
+      System.out.println(ex.getMessage());
+
     }finally{
       this.writeLock.unlock();
     }
@@ -56,6 +59,9 @@ public class TaskHandler {
     this.writeLock.lock();
     try{
       this.taskAddedListeners.remove(iTaskAddedListener);
+    }catch (Exception ex){
+      System.out.println(ex.getMessage());
+
     }finally {
       this.writeLock.unlock();
     }
@@ -64,12 +70,17 @@ public class TaskHandler {
   }
 
   public synchronized void notifyTaskAddedListener(Task task){
-    /*for (ITaskAddedListener iTaskAddedListener : taskAddedListeners){
-      iTaskAddedListener.updateTaskAdded(task);
-    }*/
+
     this.writeLock.lock();
     try{
-      this.taskAddedListeners.forEach(taskAddedListener -> taskAddedListener.updateTaskAdded(task));
+      //this.taskAddedListeners.forEach(taskAddedListener -> taskAddedListener.updateTaskAdded(task));
+    for (ITaskAddedListener iTaskAddedListener : taskAddedListeners) {
+      iTaskAddedListener.updateTaskAdded(task);
+    }
+
+    }catch (Exception ex){
+      System.out.println(ex.getMessage());
+
     }finally {
       this.writeLock.unlock();
     }
