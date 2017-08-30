@@ -5,10 +5,10 @@ common_deps_files = [
     "//third_party:ompi_javabinding_java",
 ]
 
-java_library(
-    name = "executor-java",
-    srcs = glob(["**/*.java"]),
-    deps = common_deps_files,
-)
+#java_library(
+#    name = "executor-java",
+#    srcs = glob(["**/*.java"]),
+#    deps = common_deps_files,
+#)
 
 
