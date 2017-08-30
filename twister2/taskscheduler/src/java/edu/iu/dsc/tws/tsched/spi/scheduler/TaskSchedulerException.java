@@ -11,5 +11,15 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tsched.spi.scheduler;
 
-public class TaskSchedulerException {
+public class TaskSchedulerException extends RuntimeException {
+
+  public static final long serialVersionUID = 6599628617518713638L;
+
+  public TaskSchedulerException(String message) {
+    super(message);
+  }
+
+  public TaskSchedulerException(String message, Throwable cause) {
+    super(message, cause);
+  }
 }

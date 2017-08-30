@@ -9,7 +9,17 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.tsched.spi.task;
+package edu.iu.dsc.tws.tsched.spi.taskschedule;
 
-public class TaskPlan {
+import edu.iu.dsc.tws.tsched.spi.common.Config;
+import edu.iu.dsc.tws.tsched.utils.Job;
+
+public interface TaskSchedule {
+
+  void initialize(Config config, Job job);
+
+  TaskSchedulePlan tschedule() throws ScheduleException;
+
+  void close();
+
 }

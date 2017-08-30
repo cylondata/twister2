@@ -9,7 +9,25 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
 package edu.iu.dsc.tws.tsched.spi.scheduler;
 
-public interface IScheduler {
+import edu.iu.dsc.tws.tsched.spi.common.Config;
+import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
+
+public interface IScheduler extends AutoCloseable {
+
+  void initialize(Config config, Config runtime);
+
+  void close();
+
+  boolean schedule(TaskSchedulePlan taskscheduleplan);
+
+  //boolean kill(Scheduler.KillJobRequest jobrequest);
+
+  //boolean restart(Scheduler.RestartJobRequest jobrequest);
+
+  //boolean update(Scheduler.UpdateJobRequest jobrequest);
+
 }
+

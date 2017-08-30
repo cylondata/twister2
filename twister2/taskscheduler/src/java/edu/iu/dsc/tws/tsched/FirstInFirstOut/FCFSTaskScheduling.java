@@ -9,18 +9,8 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+package edu.iu.dsc.tws.tsched.FirstInFirstOut;
 
-package edu.iu.dsc.tws.tsched.spi.scheduler;
+public class FCFSTaskScheduling {
 
-public class TaskLauncherException extends RuntimeException {
-
-  private static final long serialVersionUID = 8518462128140884098L;
-
-  public TaskLauncherException(String message) {
-    super(message);
-  }
-
-  public TaskLauncherException(String message, Throwable cause) {
-    super(message, cause);
-  }
 }

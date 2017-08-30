@@ -11,5 +11,16 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tsched.spi.scheduler;
 
-public interface ILauncher {
+
+import edu.iu.dsc.tws.tsched.spi.common.Config;
+import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
+
+public interface ILauncher extends AutoCloseable {
+
+  void initialize(Config config, Config runtime);
+
+  void close();
+
+  boolean launch(TaskSchedulePlan plan);
+
 }
