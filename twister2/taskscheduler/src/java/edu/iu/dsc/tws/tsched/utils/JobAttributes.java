@@ -13,47 +13,68 @@ package edu.iu.dsc.tws.tsched.utils;
 
 import java.util.HashMap;
 
+//This class will be replaced with the original JobAttributes file from the job package.
+
 public class JobAttributes {
+
+  private static final Logger LOG = Logger.getLogger(JobAttributes.class.getName());
 
   public static int numberOfContainers;
   public static int numberOfInstances;
   public static int totalNumberOfInstances;
 
   public static int getNumberOfContainers(Job job) {
-    numberOfContainers = job.Number_Of_Containers;
+    setNumberOfContainers();
     return numberOfContainers;
   }
 
-  public void setNumberOfContainers(int numberOfContainers) {
-    JobAttributes.numberOfContainers = numberOfContainers;
+  public static void setNumberOfContainers() {
+    numberOfContainers = Integer.parseInt(JobConfig.Number_OF_Containers.trim());
   }
 
+  /*public void setNumberOfContainers(int numberOfContainers) {
+    //numberOfContainers = Integer.parseInt(JobConfig.Number_OF_Containers.trim());
+    this.numberOfContainers = numberOfContainers;
+  }*/
+
   public static int getNumberOfInstances(Job job) {
-    numberOfInstances = job.Number_Of_Instances;
     return numberOfInstances;
   }
 
-  public void setNumberOfInstances(int numberOfInstances) {
-    JobAttributes.numberOfInstances = numberOfInstances;
+  public static void setNumberOfInstances() {
+    numberOfInstances = Integer.parseInt(JobConfig.Number_OF_Instances.trim());
   }
 
+  /*public void setNumberOfInstances(int numberOfInstances) {
+    this.numberOfInstances = numberOfInstances;
+  }*/
+
   public static int getTotalNumberOfInstances(Job job) {
-   HashMap<String,Integer> parallelTaskMap = getParallelTaskMap(job);
-   int numberOfInstances = 0;
-   for(int instances:parallelTaskMap.values()){
+    HashMap<String,Integer> parallelTaskMap = getParallelTaskMap(job);
+    int numberOfInstances = 0;
+    for(int instances: parallelTaskMap.values()){
       numberOfInstances += instances;
-   }
-   return numberOfInstances;
+    }
+    return numberOfInstances;
   }
 
   public static HashMap<String, Integer> getParallelTaskMap(Job job) {
+
     HashMap<String, Integer> parallelTaskMap = new HashMap<>();
-    for(Job.Task task: job.getTaskList()){
-      String taskName = task.getTaskName();
-      Integer parallelTaskCount = task.getParallelTaskCount();
+    int count = job.getTasklist().length;
+
+    //System.out.println("Job Id is:"+job.getJobId());
+    //System.out.println("Task length is:"+count);
+
+    for(int i = 0; i < job.getTasklist().length; i++){
+      String taskName = job.getTasklist()[i].getTaskName();
+      Integer parallelTaskCount = job.getTasklist()[i].getParallelTaskCount();
       parallelTaskMap.put(taskName,parallelTaskCount);
+      //System.out.println ("Task Details are:"+taskName+"\t"+parallelTaskCount);
     }
+    //System.out.println("Parallel Task Map Size:"+parallelTaskMap.size());
     return parallelTaskMap;
   }
+
 
 }

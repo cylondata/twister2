@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.tsched.RoundRobin;
+package edu.iu.dsc.tws.tsched.FirstInFirstOut;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,14 +27,10 @@ import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.utils.Job;
 import edu.iu.dsc.tws.tsched.utils.JobAttributes;
 
-public class RoundRobinTaskScheduling implements TaskSchedule {
 
-  private static final Logger LOG = Logger.getLogger(RoundRobinTaskScheduling.class.getName());
-  private Job job;
-  private double instanceRAM;
-  private double instanceDisk;
-  private double instanceCPU;
+public class FIFOTaskScheduling implements TaskSchedule {
 
+  private static final Logger LOG = Logger.getLogger(FIFOTaskScheduling.class.getName());
 
   @Override
   public void initialize(Config config, Job job) {
@@ -48,41 +44,46 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
   @Override
   public TaskSchedulePlan tschedule() throws ScheduleException {
 
-    Map<Integer, List<InstanceId>> roundRobinAllocation = doRoundRobinAllocation();
+    Map<Integer, List<InstanceId>> FIFOAllocation = doFIFOAllocation();
+
     Set<TaskSchedulePlan.ContainerPlan> containerPlans = new HashSet<>();
 
-    double containerCPU = getContainerCPUValue(roundRobinAllocation);
-    double containerRAM = getContainerRAMRequested(roundRobinAllocation);
-    double containerDisk = getContainerDiskRequested(roundRobinAllocation);
+    double containerCPU = getContainerCPUValue(FIFOAllocation);
+    double containerRAM = getContainerRAMRequested(FIFOAllocation);
+    double containerDisk = getContainerDiskRequested(FIFOAllocation);
 
-    for(Integer containerId:roundRobinAllocation.keySet()){
+    for(Integer containerId:FIFOAllocation.keySet()){
 
-        List<InstanceId> taskInstanceIds = roundRobinAllocation.get(containerId);
-        Map<InstanceId, TaskSchedulePlan.TaskInstancePlan> taskInstancePlanMap = new HashMap<>();
+      List<InstanceId> taskInstanceIds = FIFOAllocation.get(containerId);
+      Map<InstanceId, TaskSchedulePlan.TaskInstancePlan> taskInstancePlanMap = new HashMap<>();
 
-        for(InstanceId id: taskInstanceIds) {
+      for(InstanceId id: taskInstanceIds) {
 
-          double instanceCPUValue = instanceCPU;
-          double instanceRAMValue = instanceRAM;
-          double instanceDiskValue = instanceDisk;
+        double instanceCPUValue = instanceCPU;
+        double instanceRAMValue = instanceRAM;
+        double instanceDiskValue = instanceDisk;
 
-          Resource resource  = new Resource (instanceRAM,instanceDisk,instanceCPU);
-          taskInstancePlanMap.put(id,new TaskSchedulePlan.TaskInstancePlan("mpitask",1,1, resource));
+        Resource resource  = new Resource (instanceRAM,instanceDisk,instanceCPU);
+        taskInstancePlanMap.put(id,new TaskSchedulePlan.TaskInstancePlan("mpitask",1,1, resource));
 
-        }
-        Resource resource = new Resource(containerRAM, containerDisk, containerCPU);
-        TaskSchedulePlan.ContainerPlan = new TaskSchedulePlan.ContainerPlan(containerId, taskInstancePlanMap.values(),resource));
+      }
+      Resource resource = new Resource(containerRAM, containerDisk, containerCPU);
+      TaskSchedulePlan.ContainerPlan = new TaskSchedulePlan.ContainerPlan(containerId, taskInstancePlanMap.values(),resource));
     }
     return new TaskSchedulePlan(job.getId(),containerPlans);
   }
 
-  private Map<Integer,List<InstanceId>> doRoundRobinAllocation() {
+  private Map<Integer,List<InstanceId>> doFIFOAllocation (){
 
-    Map<Integer, List<InstanceId>> RRAllocation = new HashMap<>();
+    Map<Integer, List<InstanceId>> FIFOAllocation = new HashMap<>();
+
+    //This value will be replaced with the actual parameters
     int numberOfContainers = JobAttributes.getNumberOfContainers(job);
     int totalInstances = JobAttributes.getTotalNumberOfInstances(job);
+    ///////////////////////////////////////////////////////////
+
     for(int i = 1; i <= numberOfContainers; i++) {
-      RRAllocation.put(i, new ArrayList<InstanceId>());
+      FIFOAllocation.put(i, new ArrayList<InstanceId>());
     }
 
     int taskIndex = 1;
@@ -90,15 +91,17 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
 
     //This value will be replaced with the actual parameters
     Map<String,Integer> parallelTaskMap = JobAttributes.getParallelTaskMap(job);
+
+    //This logic should be replaced with FIFO logic....
     for(String task : parallelTaskMap.keySet()){
       int numberOfInstances = parallelTaskMap.get(task);
       for(int i = 0; i < numberOfInstances; i++){
-        RRAllocation.get(taskIndex).add(new InstanceId(task, globalTaskIndex, i));
+        FIFOAllocation.get(taskIndex).add(new InstanceId(task, globalTaskIndex, i));
         taskIndex = (taskIndex == numberOfContainers) ? 1 : taskIndex + 1;
         globalTaskIndex++;
       }
     }
-    return RRAllocation;
+    return FIFOAllocation;
   }
 
   @Override
