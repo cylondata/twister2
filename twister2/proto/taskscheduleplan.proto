@@ -1,0 +1,26 @@
+package twister2.proto.system;
+
+option java_package = "twister2.proto.system";
+option java_outer_classname = "TaskSchedulingPlans";
+
+message Resource {
+    required double availableCPU = 1;
+    required double availableMemory = 2;
+    required double availableDisk = 3;
+}
+message TaskInstancePlan {
+    required int32 taskid = 1;
+    optional string taskname = 2;
+    optional string taskindex = 3;
+    required Resource resource = 4;
+}
+message ContainerPlan {
+    required int32 containerid = 1;
+    repeated TaskInstancePlan taskinstanceplan = 2;
+    required Resource requiredresource = 3;
+    optional Resource scheduledresource = 4;
+}
+message TaskSchedulePlan {
+    required int32 taskscheduleplanid = 1;
+    repeated ContainerPlan containerplan = 2;
+}
