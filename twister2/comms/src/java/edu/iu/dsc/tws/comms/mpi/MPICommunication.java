@@ -11,30 +11,27 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi;
 
-import edu.iu.dsc.tws.comms.api.DataFlowBroadCast;
-import edu.iu.dsc.tws.comms.api.DataFlowLoadBalance;
-import edu.iu.dsc.tws.comms.api.DataFlowPartition;
-import edu.iu.dsc.tws.comms.api.DataFlowReduction;
+import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.core.Communication;
 
 public class MPICommunication implements Communication {
   @Override
-  public DataFlowBroadCast broadcast() {
+  public DataFlowOperation broadcast() {
     return new MPIDataFlowBroadcast();
   }
 
   @Override
-  public DataFlowLoadBalance loadBalance() {
+  public DataFlowOperation loadBalance() {
     return null;
   }
 
   @Override
-  public DataFlowPartition partition() {
+  public DataFlowOperation partition() {
     return null;
   }
 
   @Override
-  public DataFlowReduction reduction() {
+  public DataFlowOperation reduction() {
     return null;
   }
 }

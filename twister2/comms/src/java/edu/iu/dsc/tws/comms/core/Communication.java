@@ -11,14 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.core;
 
-import edu.iu.dsc.tws.comms.api.DataFlowBroadCast;
-import edu.iu.dsc.tws.comms.api.DataFlowLoadBalance;
-import edu.iu.dsc.tws.comms.api.DataFlowPartition;
-import edu.iu.dsc.tws.comms.api.DataFlowReduction;
+import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 
 public interface Communication {
-  DataFlowBroadCast broadcast();
-  DataFlowLoadBalance loadBalance();
-  DataFlowPartition partition();
-  DataFlowReduction reduction();
+  DataFlowOperation broadcast();
+  DataFlowOperation loadBalance();
+  DataFlowOperation partition();
+  DataFlowOperation reduction();
 }

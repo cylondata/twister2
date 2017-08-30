@@ -21,16 +21,18 @@ import mpi.Status;
 public class TWSMPIChannel {
   private static final Logger LOG = Logger.getLogger(TWSMPIChannel.class.getName());
 
+  @SuppressWarnings("VisibilityModifier")
   private class MPIRequest {
     Request request;
     MPIBuffer buffer;
 
-    public MPIRequest(Request request, MPIBuffer buffer) {
+    MPIRequest(Request request, MPIBuffer buffer) {
       this.request = request;
       this.buffer = buffer;
     }
   }
 
+  @SuppressWarnings("VisibilityModifier")
   private class MPIReceiveRequests {
     List<MPIRequest> pendingRequests;
     int rank;
@@ -38,7 +40,7 @@ public class TWSMPIChannel {
     MPIMessageListener callback;
     Queue<MPIBuffer> availableBuffers;
 
-    public MPIReceiveRequests(int rank, int stream,
+    MPIReceiveRequests(int rank, int stream,
                               MPIMessageListener callback, Queue<MPIBuffer> buffers) {
       this.rank = rank;
       this.stream = stream;
@@ -48,6 +50,7 @@ public class TWSMPIChannel {
     }
   }
 
+  @SuppressWarnings("VisibilityModifier")
   private class MPISendRequests {
     List<MPIRequest> pendingSends;
     int rank;
@@ -55,7 +58,7 @@ public class TWSMPIChannel {
     MPIMessage message;
     MPIMessageListener callback;
 
-    public MPISendRequests(int rank, int stream,
+    MPISendRequests(int rank, int stream,
                            MPIMessage message, MPIMessageListener callback) {
       this.rank = rank;
       this.stream = stream;
@@ -169,7 +172,9 @@ public class TWSMPIChannel {
     }
   }
 
-
+  /**
+   * Progress the communications
+   */
   public void progress() {
     // we should rate limit here
     while (pendingSends.size() > 0) {
@@ -188,29 +193,29 @@ public class TWSMPIChannel {
       }
     }
 
-     for (int i = 0; i < waitForCompletionSends.size(); i++) {
-       MPISendRequests sendRequests = waitForCompletionSends.get(i);
-       Iterator<MPIRequest> requestIterator = sendRequests.pendingSends.iterator();
-       while (requestIterator.hasNext()) {
-         MPIRequest r = requestIterator.next();
-         try {
-           Status status = r.request.testStatus();
-           // this request has finished
-           if (status != null) {
+    for (int i = 0; i < waitForCompletionSends.size(); i++) {
+      MPISendRequests sendRequests = waitForCompletionSends.get(i);
+      Iterator<MPIRequest> requestIterator = sendRequests.pendingSends.iterator();
+      while (requestIterator.hasNext()) {
+        MPIRequest r = requestIterator.next();
+        try {
+          Status status = r.request.testStatus();
+          // this request has finished
+          if (status != null) {
             requestIterator.remove();
-           }
-         } catch (MPIException e) {
-           throw new RuntimeException("Failed to complete the send to: " + sendRequests.rank, e);
-         }
-       }
+          }
+        } catch (MPIException e) {
+          throw new RuntimeException("Failed to complete the send to: " + sendRequests.rank, e);
+        }
+      }
 
-       // if the message if fully sent, lets call the callback
-       // ideally we should be able to call for each finish of the buffer
-       if (sendRequests.pendingSends.size() == 0) {
-         sendRequests.callback.onSendComplete(sendRequests.rank,
-             sendRequests.stream, sendRequests.message);
-       }
-     }
+      // if the message if fully sent, lets call the callback
+      // ideally we should be able to call for each finish of the buffer
+      if (sendRequests.pendingSends.size() == 0) {
+        sendRequests.callback.onSendComplete(sendRequests.rank,
+            sendRequests.stream, sendRequests.message);
+      }
+    }
 
     for (int i = 0; i < registeredReceives.size(); i++) {
       MPIReceiveRequests receiveRequests = registeredReceives.get(i);

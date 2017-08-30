@@ -16,7 +16,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.iu.dsc.tws.comms.api.Message;
-import mpi.Request;
 
 public class MPIMessage extends Message {
   private final List<MPIBuffer> buffers = new ArrayList<MPIBuffer>();

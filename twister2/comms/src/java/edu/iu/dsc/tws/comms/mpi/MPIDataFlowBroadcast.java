@@ -31,7 +31,7 @@ import edu.iu.dsc.tws.comms.utils.Routing;
 
 public class MPIDataFlowBroadcast implements DataFlowOperation,
     MPIMessageListener, MPIMessageReleaseCallback {
-  private static Logger LOG = Logger.getLogger(MPIDataFlowBroadcast.class.getName());
+  private static final Logger LOG = Logger.getLogger(MPIDataFlowBroadcast.class.getName());
 
   private Config config;
   private InstancePlan instancePlan;
@@ -55,17 +55,17 @@ public class MPIDataFlowBroadcast implements DataFlowOperation,
   private Map<Integer, List<MPIBuffer>> receiveBuffers = new HashMap<>();
 
   @Override
-  public void init(Config config, InstancePlan instancePlan, List<Integer> sources,
-                   List<Integer> destinations, int stream, MessageReceiver receiver,
-                   MessageFormatter formatter, MessageBuilder builder) {
-    this.config = config;
-    this.instancePlan = instancePlan;
-    this.sources = sources;
-    this.destinations = destinations;
-    this.stream = stream;
-    this.formatter = formatter;
-    this.builder = builder;
-    this.receiver = receiver;
+  public void init(Config cfg, InstancePlan plan, List<Integer> srcs,
+                   List<Integer> dests, int messageStream, MessageReceiver rcvr,
+                   MessageFormatter fmtr, MessageBuilder bldr) {
+    this.config = cfg;
+    this.instancePlan = plan;
+    this.sources = srcs;
+    this.destinations = dests;
+    this.stream = messageStream;
+    this.formatter = fmtr;
+    this.builder = bldr;
+    this.receiver = rcvr;
     this.sendBuffers = new LinkedList<>();
 
     int noOfSendBuffers = MPIContext.getBroadcastBufferCount(config);
@@ -161,7 +161,7 @@ public class MPIDataFlowBroadcast implements DataFlowOperation,
   }
 
   @Override
-  public void onReceiveComplete(int id, int stream, MPIBuffer buffer) {
+  public void onReceiveComplete(int id, int messageStream, MPIBuffer buffer) {
     // we need to try to build the message here, we may need many more messages to complete
     MPIMessage completeMessage = null;
 
@@ -179,7 +179,7 @@ public class MPIDataFlowBroadcast implements DataFlowOperation,
   }
 
   @Override
-  public void onSendComplete(int id, int stream, MPIMessage message) {
+  public void onSendComplete(int id, int messageStream, MPIMessage message) {
     // ok we don't have anything else to do
     message.release();
   }
