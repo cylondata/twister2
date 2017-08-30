@@ -18,7 +18,7 @@ import edu.iu.dsc.tws.data.api.InputFormat;
 /**
  * Created by pulasthi on 8/24/17.
  */
-public class TextInputFormatter implements InputFormat {
+public class TextInputFormatter extends FileInputFormat {
 
   private static final Logger LOG = Logger.getLogger(TextInputFormatter.class.getName());
 

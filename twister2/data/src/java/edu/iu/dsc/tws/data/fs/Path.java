@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.fs;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -155,6 +156,18 @@ public class Path implements Serializable {
    * @param authority
    * @param path
    */
+
+  /**
+   * Returns the FileSystem that owns this Path.
+   *
+   * @return the FileSystem that owns this Path
+   * @throws IOException
+   *         thrown if the file system could not be retrieved
+   */
+  public FileSystem getFileSystem() throws IOException {
+    return FileSystem.get(this.toUri());
+  }
+
   private void initialize(String scheme, String authority, String path) {
     try {
       this.uri = new URI(scheme, authority, normalizePath(path), null, null).normalize();
