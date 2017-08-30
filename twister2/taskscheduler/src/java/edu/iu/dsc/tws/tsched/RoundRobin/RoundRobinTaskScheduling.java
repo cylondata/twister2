@@ -49,7 +49,6 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
   public TaskSchedulePlan tschedule() throws ScheduleException {
 
     Map<Integer, List<InstanceId>> roundRobinAllocation = doRoundRobinAllocation();
-
     Set<TaskSchedulePlan.ContainerPlan> containerPlans = new HashSet<>();
 
     double containerCPU = getContainerCPUValue(roundRobinAllocation);
@@ -71,8 +70,8 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
           taskInstancePlanMap.put(id,new TaskSchedulePlan.TaskInstancePlan("mpitask",1,1, resource));
 
         }
-          Resource resource = new Resource(containerRAM, containerDisk, containerCPU);
-          TaskSchedulePlan.ContainerPlan = new TaskSchedulePlan.ContainerPlan(containerId, taskInstancePlanMap.values(),resource));
+        Resource resource = new Resource(containerRAM, containerDisk, containerCPU);
+        TaskSchedulePlan.ContainerPlan = new TaskSchedulePlan.ContainerPlan(containerId, taskInstancePlanMap.values(),resource));
     }
     return new TaskSchedulePlan(job.getId(),containerPlans);
   }
@@ -89,6 +88,7 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
     int taskIndex = 1;
     int globalTaskIndex = 1;
 
+    //This value will be replaced with the actual parameters
     Map<String,Integer> parallelTaskMap = JobAttributes.getParallelTaskMap(job);
     for(String task : parallelTaskMap.keySet()){
       int numberOfInstances = parallelTaskMap.get(task);
@@ -106,20 +106,18 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
 
   }
 
+  //These three methods will be modified with the actual values....
   private double getContainerRAMRequested(Map<Integer, List<InstanceId>> roundRobinAllocation) {
-
     double RAMValue = Config.Container_Max_RAM_Value;
     return RAMValue;
   }
 
   private double getContainerCPUValue(Map<Integer, List<InstanceId>> roundRobinAllocation) {
-
     double CPUValue = Config.Container_Max_CPU_Value;
     return CPUValue;
   }
 
   private double getContainerDiskRequested(Map<Integer, List<InstanceId>> roundRobinAllocation) {
-
     double DiskValue = Config.Container_Max_Disk_Value;
     return DiskValue;
   }
