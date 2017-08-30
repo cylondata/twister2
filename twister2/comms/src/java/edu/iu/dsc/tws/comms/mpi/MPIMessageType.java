@@ -1,3 +1,4 @@
+//  Copyright 2017 Twitter. All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -12,32 +13,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi;
 
-import mpi.Request;
-
-public class MPIRequest {
-
-  public enum RequestType {
-    READ,
-    WRITE,
-  }
-
-  private Request request;
-
-  private RequestType type;
-
-  private int rank;
-
-  public MPIRequest(Request request, RequestType type, int rank) {
-    this.request = request;
-    this.type = type;
-    this.rank = rank;
-  }
-
-  public Request getRequest() {
-    return request;
-  }
-
-  public RequestType getType() {
-    return type;
-  }
+public enum MPIMessageType {
+  SEND,
+  RECEIVE
 }

@@ -16,26 +16,47 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.iu.dsc.tws.comms.api.Message;
+import mpi.Request;
 
 public class MPIMessage extends Message {
   private final List<MPIBuffer> buffers = new ArrayList<MPIBuffer>();
 
-  private final List<MPIRequest> requests = new ArrayList<>();
-
-  private final TWSMPIChannel channel;
   /**
    * Keeps the number of references to this message
    * The resources associated with the message is released when refcount becomes 0
    */
   private int refCount;
 
-  public MPIMessage(TWSMPIChannel channel) {
-    this(channel, 1);
+  /**
+   * Type of the message, weather request or send
+   */
+  private MPIMessageType messageType;
+
+  private MPIMessageReleaseCallback releaseListener;
+
+  private final int stream;
+
+  /**
+   * Keep track of the originating id, this is required to release the buffers allocated.
+   */
+  private final int originatingId;
+
+  public MPIMessage(int originatingId, int stream,
+                    MPIMessageType type, MPIMessageReleaseCallback releaseListener) {
+    this(originatingId, stream, 1, type, releaseListener);
   }
 
-  public MPIMessage(TWSMPIChannel channel, int refCount) {
-    this.channel = channel;
+  public MPIMessage(int originatingId, int stream, int refCount,
+                    MPIMessageType type, MPIMessageReleaseCallback releaseListener) {
+    this.stream = stream;
     this.refCount = refCount;
+    this.messageType = type;
+    this.releaseListener = releaseListener;
+    this.originatingId = originatingId;
+  }
+
+  public int getStream() {
+    return stream;
   }
 
   public List<MPIBuffer> getBuffers() {
@@ -47,17 +68,24 @@ public class MPIMessage extends Message {
     return refCount;
   }
 
-  public void addRequest(MPIRequest request) {
-
+  public MPIMessageType getMessageType() {
+    return messageType;
   }
 
+  public boolean doneProcessing() {
+    return refCount == 0;
+  }
   /**
    * Release the allocated resources to this buffer.
    */
   public void release() {
     refCount--;
     if (refCount == 0) {
-      channel.releaseMessage(this);
+      releaseListener.release(this);
     }
+  }
+
+  public int getOriginatingId() {
+    return originatingId;
   }
 }

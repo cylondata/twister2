@@ -34,7 +34,7 @@ public interface DataFlowOperation {
    * are received.
    * @param message
    */
-  void partial(Message message);
+  void sendPartial(Message message);
 
   /**
    * Indicate that a partial broadcast is finished
@@ -42,8 +42,8 @@ public interface DataFlowOperation {
   void finish();
 
   /**
-   * Send a complete message
+   * Send a sendComplete message
    * @param message
    */
-  void complete(Message message);
+  void sendComplete(Message message);
 }

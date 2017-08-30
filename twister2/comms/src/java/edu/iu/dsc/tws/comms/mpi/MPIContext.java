@@ -18,22 +18,27 @@ import edu.iu.dsc.tws.common.config.Context;
  * Read the configuration options
  */
 public class MPIContext extends Context {
-  private static final String SEND_BUFFER_SIZE = "comm.sendbuffer.size";
+  private static final String BUFFER_SIZE = "network.mpi.buffer.size";
 
-  private static final String SEND_BUFFERS_COUNT = "comm.sendbuffer.count";
-  private static final String BCAST_SEND_BUFFERS_COUNT = "comm.bcast.sendbuffer.count";
+  private static final String SEND_BUFFERS_COUNT = "network.mpi.sendBuffer.count";
+  private static final String BCAST_BUFFERS_COUNT = "network.mpi.bcast.sendBuffer.count";
+  private static final String RECEIVE_BUFFERS_COUNT = "network.mpi.receiveBuffer.size";
 
-  public static int getSendBufferSize(Config cfg) {
-    return cfg.getIntegerValue(SEND_BUFFER_SIZE, 1024);
+  public static int getBufferSize(Config cfg) {
+    return cfg.getIntegerValue(BUFFER_SIZE, 1024);
   }
 
   public static int getSendBuffersCount(Config cfg) {
     return cfg.getIntegerValue(SEND_BUFFERS_COUNT, 4);
   }
 
-  public static int getBroadcastSendBufferCount(Config cfg) {
+  public static int getBroadcastBufferCount(Config cfg) {
     int sendBufferCount = getSendBuffersCount(cfg);
-    return cfg.getIntegerValue(BCAST_SEND_BUFFERS_COUNT, sendBufferCount);
+    return cfg.getIntegerValue(BCAST_BUFFERS_COUNT, sendBufferCount);
+  }
+
+  public static int getReceiveBufferCount(Config cfg) {
+    return cfg.getIntegerValue(RECEIVE_BUFFERS_COUNT, 64);
   }
 }
 

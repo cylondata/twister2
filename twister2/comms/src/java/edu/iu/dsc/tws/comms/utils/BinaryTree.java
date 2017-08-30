@@ -16,17 +16,20 @@ package edu.iu.dsc.tws.comms.utils;
 import java.util.List;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.core.InstancePlan;
 
 public class BinaryTree {
   /**
    * Initialize the data structure
    *
    * @param config the configuration
+   * @param plan instance plan
    * @param sources the list of sources
    * @param destination list of destinations
    * @param stream stream
    */
-  public void init(Config config, List<Integer> sources, List<Integer> destination, int stream) {
+  public void init(Config config, InstancePlan plan,
+                   List<Integer> sources, List<Integer> destination, int stream) {
 
   }
 

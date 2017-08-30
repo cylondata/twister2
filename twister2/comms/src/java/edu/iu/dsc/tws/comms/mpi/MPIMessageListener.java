@@ -14,6 +14,17 @@
 package edu.iu.dsc.tws.comms.mpi;
 
 public interface MPIMessageListener {
-  void onReceiveComplete(int id, MPIMessage message);
-  void onSendComplete(int id, MPIMessage message);
+  /**
+   * After a receive is complete this function gets called
+   * @param id the rank from which the receive happens
+   * @param message
+   */
+  void onReceiveComplete(int id, int stream, MPIBuffer message);
+
+  /**
+   * After a send is complete this function gets called
+   * @param id  the rank from which the receive happens
+   * @param message message
+   */
+  void onSendComplete(int id, int stream, MPIMessage message);
 }
