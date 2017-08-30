@@ -12,20 +12,20 @@
 
 package edu.iu.dsc.tws.data.fs.io;
 
-    import java.io.Serializable;
-
 /**
- * This interface must be implemented by all kind of input splits that can be assigned to input formats.
- *
- * <p>Input splits are transferred in serialized form via the messages, so they need to be serializable
- * as defined by {@link Serializable}.</p>
+ * An input split assigner distributes the {@link InputSplit}s among the instances on which a
+ * data source exists.
  */
-public interface InputSplit extends Serializable {
+public interface InputSplitAssigner {
 
-  /**
-   * Returns the number of this input split.
-   *
-   * @return the number of this input split
-   */
-  int getSplitNumber();
+	/**
+	 * Returns the next input split that shall be consumed. The consumer's host is passed as a parameter
+	 * to allow localized assignments.
+	 *
+	 * @param host The host address of split requesting task.
+	 * @param taskId The id of the split requesting task.
+	 * @return the next input split to be consumed, or <code>null</code> if no more splits remain.
+	 */
+	InputSplit getNextInputSplit(String host, int taskId);
+
 }

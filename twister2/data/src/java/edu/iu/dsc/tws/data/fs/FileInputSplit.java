@@ -12,6 +12,8 @@
 
 package edu.iu.dsc.tws.data.fs;
 
+import java.util.logging.Logger;
+
 import edu.iu.dsc.tws.data.fs.io.LocatableInputSplit;
 
 /**
@@ -19,6 +21,8 @@ import edu.iu.dsc.tws.data.fs.io.LocatableInputSplit;
  * hosted on a distributed file system and replicated among several hosts. 
  */
 public class FileInputSplit extends LocatableInputSplit {
+
+	private static final Logger LOG = Logger.getLogger(FileInputSplit.class.getName());
 
 	private static final long serialVersionUID = 1L;
 

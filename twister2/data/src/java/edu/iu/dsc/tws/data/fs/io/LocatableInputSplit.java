@@ -13,13 +13,16 @@
 package edu.iu.dsc.tws.data.fs.io;
 
 import java.util.Arrays;
+import java.util.logging.Logger;
 
 
 /**
  * A locatable input split is an input split referring to input data which is located on one or more hosts.
  */
 public class LocatableInputSplit implements InputSplit, java.io.Serializable {
-	
+
+	private static final Logger LOG = Logger.getLogger(LocatableInputSplit.class.getName());
+
 	private static final long serialVersionUID = 1L;
 
 	private static final String[] EMPTY_ARR = new String[0];
