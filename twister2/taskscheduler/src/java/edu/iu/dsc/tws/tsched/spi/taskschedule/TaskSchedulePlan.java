@@ -16,6 +16,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.base.Optional;
+
+
 public class TaskSchedulePlan {
 
   private int jobId;
@@ -118,8 +121,6 @@ public class TaskSchedulePlan {
       result = 31 * result + (resource != null ? resource.hashCode() : 0);
       return result;
     }
-
-
   }
 
   public static class ContainerPlan {
@@ -127,13 +128,36 @@ public class TaskSchedulePlan {
     private final int containerId;
     private final TaskInstancePlan taskInstancePlan;
     private final Resource requiredresource;
-    private final Resource scheduledresource;
+    private final Optional<Resource> scheduledResource;
 
-    public ContainerPlan(int containerId, TaskInstancePlan taskInstancePlan, Resource requiredresource, Resource scheduledresource) {
-      this.containerId = containerId;
-      this.taskInstancePlan = taskInstancePlan;
-      this.requiredresource = requiredresource;
-      scheduledresource = null;
+    public ContainerPlan(int id, Set<InstancePlan> instances, Resource requiredResource) {
+      this(id, instances, requiredResource, null);
+    }
+
+    public ContainerPlan(int id,
+                         Set<InstancePlan> instances,
+                         Resource requiredResource,
+                         Resource scheduledResource) {
+      this.id = id;
+      this.instances = instances;
+      this.requiredResource = requiredResource;
+      this.scheduledResource = Optional.fromNullable(scheduledResource);
+    }
+
+    public int getContainerId() {
+      return containerId;
+    }
+
+    public edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan.TaskInstancePlan getTaskInstancePlan() {
+      return taskInstancePlan;
+    }
+
+    public Resource getRequiredresource() {
+      return requiredresource;
+    }
+
+    public Optional<Resource> getScheduledResource() {
+      return scheduledResource;
     }
 
     @Override
