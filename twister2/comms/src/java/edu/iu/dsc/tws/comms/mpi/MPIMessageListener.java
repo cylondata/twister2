@@ -1,3 +1,4 @@
+//  Copyright 2017 Twitter. All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -10,7 +11,20 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.rsched.spi.resource;
+package edu.iu.dsc.tws.comms.mpi;
 
-public class ResourcePlan {
+public interface MPIMessageListener {
+  /**
+   * After a receive is complete this function gets called
+   * @param id the rank from which the receive happens
+   * @param message
+   */
+  void onReceiveComplete(int id, int stream, MPIBuffer message);
+
+  /**
+   * After a send is complete this function gets called
+   * @param id  the rank from which the receive happens
+   * @param message message
+   */
+  void onSendComplete(int id, int stream, MPIMessage message);
 }

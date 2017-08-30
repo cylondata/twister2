@@ -10,11 +10,24 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.api;
+package edu.iu.dsc.tws.comms.mpi;
 
-/**
- * Information about the instances in which the communication happens.
- */
-public class InstancePlan {
+import java.util.Queue;
 
+public class ReceiveBufferPool {
+  private Queue<MPIBuffer> buffers;
+
+  public ReceiveBufferPool(int capacity, int maxBuffers) {
+    for (int i = 0; i < maxBuffers; i++) {
+      buffers.offer(new MPIBuffer(capacity));
+    }
+  }
+
+  public MPIBuffer getByteBuffer() {
+    return buffers.poll();
+  }
+
+  public void releaseBuffer(MPIBuffer buffer) {
+    buffers.offer(buffer);
+  }
 }

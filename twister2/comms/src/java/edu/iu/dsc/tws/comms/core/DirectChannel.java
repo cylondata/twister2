@@ -1,4 +1,3 @@
-//
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
@@ -10,27 +9,15 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.mpi;
+package edu.iu.dsc.tws.comms.core;
 
-import java.util.ArrayList;
-import java.util.List;
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.config.ConfigLoader;
 
-import mpi.MPIException;
-import mpi.Request;
-import mpi.Status;
+public final class DirectChannel {
+  public DirectChannel(String configurationFile) {
+    Config config = ConfigLoader.loadComponentConfig(configurationFile);
 
-public class TWSMPILoop {
-  private List<Integer> ranks = new ArrayList<>();
-
-  private List<Request> pending = new ArrayList<>();
-
-  public void progress() {
-    for (Request request : pending) {
-      try {
-        Status status = request.testStatus();
-      } catch (MPIException e) {
-        e.printStackTrace();
-      }
-    }
+    // now lets
   }
 }

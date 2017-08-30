@@ -13,11 +13,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi;
 
-import java.nio.ByteBuffer;
-import java.util.List;
-
-public class MPIBuffers {
-  private List<ByteBuffer> buffers;
-
-
+public enum MPIMessageType {
+  SEND,
+  RECEIVE
 }

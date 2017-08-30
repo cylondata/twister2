@@ -1,4 +1,3 @@
-//
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
@@ -12,6 +11,27 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi;
 
-public class MPIRequest {
+import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.core.Communication;
 
+public class MPICommunication implements Communication {
+  @Override
+  public DataFlowOperation broadcast() {
+    return new MPIDataFlowBroadcast();
+  }
+
+  @Override
+  public DataFlowOperation loadBalance() {
+    return null;
+  }
+
+  @Override
+  public DataFlowOperation partition() {
+    return null;
+  }
+
+  @Override
+  public DataFlowOperation reduction() {
+    return null;
+  }
 }

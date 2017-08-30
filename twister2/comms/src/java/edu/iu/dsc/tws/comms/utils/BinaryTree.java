@@ -13,6 +13,34 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.utils;
 
-public class BinaryTree {
+import java.util.List;
 
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.core.InstancePlan;
+
+public class BinaryTree {
+  /**
+   * Initialize the data structure
+   *
+   * @param config the configuration
+   * @param plan instance plan
+   * @param sources the list of sources
+   * @param destination list of destinations
+   * @param stream stream
+   */
+  public void init(Config config, InstancePlan plan,
+                   List<Integer> sources, List<Integer> destination, int stream) {
+
+  }
+
+  /**
+   * A routing map for each destination
+   *
+   * Routing is from taskid -> taskids
+   *
+   * @return a
+   */
+  public Routing routing() {
+    return null;
+  }
 }

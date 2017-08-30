@@ -23,7 +23,7 @@ import edu.iu.dsc.tws.comms.api.MessageFormatter;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.core.InstancePlan;
 
-public class MPIDataFlowReduce implements DataFlowOperation {
+public class MPILoadBalance implements DataFlowOperation {
   @Override
   public void init(Config config, InstancePlan instancePlan, List<Integer> sources,
                    List<Integer> destinations, int stream, MessageReceiver receiver,
