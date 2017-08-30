@@ -26,6 +26,7 @@ import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedule;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.utils.Job;
 import edu.iu.dsc.tws.tsched.utils.JobAttributes;
+import edu.iu.dsc.tws.tsched.utils.JobConfig;
 
 public class RoundRobinTaskScheduling implements TaskSchedule {
 
@@ -48,16 +49,16 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
   @Override
   public TaskSchedulePlan tschedule() throws ScheduleException {
 
-    Map<Integer, List<InstanceId>> roundRobinAllocation = doRoundRobinAllocation();
+    Map<Integer, List<InstanceId>> roundRobinValue = doRoundRobinAllocation();
     Set<TaskSchedulePlan.ContainerPlan> containerPlans = new HashSet<>();
 
-    double containerCPU = getContainerCPUValue(roundRobinAllocation);
-    double containerRAM = getContainerRAMRequested(roundRobinAllocation);
-    double containerDisk = getContainerDiskRequested(roundRobinAllocation);
+    double containerCPU = getContainerCPUValue(roundRobinValue);
+    double containerRAM = getContainerRAMRequested(roundRobinValue);
+    double containerDisk = getContainerDiskRequested(roundRobinValue);
 
-    for(Integer containerId:roundRobinAllocation.keySet()){
+    for(Integer containerId:roundRobinValue.keySet()){
 
-        List<InstanceId> taskInstanceIds = roundRobinAllocation.get(containerId);
+        List<InstanceId> taskInstanceIds = roundRobinValue.get(containerId);
         Map<InstanceId, TaskSchedulePlan.TaskInstancePlan> taskInstancePlanMap = new HashMap<>();
 
         for(InstanceId id: taskInstanceIds) {
@@ -108,17 +109,32 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
 
   //These three methods will be modified with the actual values....
   private double getContainerRAMRequested(Map<Integer, List<InstanceId>> roundRobinAllocation) {
-    double RAMValue = Config.Container_Max_RAM_Value;
-    return RAMValue;
+    //double RAMValue = Config.Container_Max_RAM_Value;
+    try {
+      double containerRAMValue = Double.valueOf(JobConfig.Container_Max_RAM_Value.trim());
+    } catch (java.lang.Exception exception) {
+      exception.printStackTrace();
+    }
+    return containerRAMValue;
   }
 
   private double getContainerCPUValue(Map<Integer, List<InstanceId>> roundRobinAllocation) {
-    double CPUValue = Config.Container_Max_CPU_Value;
-    return CPUValue;
+    //double CPUValue = Config.Container_Max_CPU_Value;
+    try {
+      double containerCPUValue = Double.valueOf(JobConfig.Container_Max_CPU_Value.trim());
+    } catch (java.lang.Exception exception) {
+      exception.printStackTrace();
+    }
+    return containerCPUValue;
   }
 
   private double getContainerDiskRequested(Map<Integer, List<InstanceId>> roundRobinAllocation) {
-    double DiskValue = Config.Container_Max_Disk_Value;
+    //double DiskValue = Config.Container_Max_Disk_Value;
+    try {
+      double containerDiskValue = Double.valueOf(JobConfig.Container_Max_Disk_Value.trim());
+    } catch (java.lang.Exception exception) {
+      exception.printStackTrace();
+    }
     return DiskValue;
   }
 
