@@ -18,4 +18,8 @@ public class JobConfig {
     public static String Number_OF_Containers = "2";
     public static String Number_OF_Instances = "4";
 
+    public static String Container_Max_RAM_Value = "24";
+    public static String Container_Max_CPU_Value = "0.2";
+    public static String Container_Max_Disk_Value = "20";
+
 }
