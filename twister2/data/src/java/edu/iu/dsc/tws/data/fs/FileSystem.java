@@ -97,6 +97,14 @@ public abstract class FileSystem {
   public abstract URI getUri();
 
   /**
+   * Called after a new FileSystem instance is constructed.
+   *
+   * @param name
+   *        a {@link URI} whose authority section names the host, port, etc. for this file system
+   */
+  public abstract void initialize(URI name) throws IOException;
+
+  /**
    * Returns a FileSystem for the given uri
    * TODO: need to think about security (Flink adds a safety net here, that is skipped for now)
    * @param uri
@@ -132,9 +140,8 @@ public abstract class FileSystem {
         //TODO: handle when the system is not supported
       }else{
         String fsClass = SUPPORTEDFS.get(uri.getScheme());
-
-        // Initialize new file system object
-       // fs.initialize(uri);
+        fs = instantiateFileSystem(fsClass);
+        fs.initialize(uri);
       }
 
     }
@@ -148,5 +155,22 @@ public abstract class FileSystem {
    */
   private static boolean isSupportedScheme(String scheme){
     return SUPPORTEDFS.containsKey(scheme);
+  }
+
+  private static FileSystem instantiateFileSystem(String className) throws IOException {
+    try {
+      Class<? extends FileSystem> fsClass = getFileSystemByName(className);
+      return fsClass.newInstance();
+    }
+    catch (ClassNotFoundException e) {
+      throw new IOException("Could not load file system class '" + className + '\'', e);
+    }
+    catch (InstantiationException | IllegalAccessException e) {
+      throw new IOException("Could not instantiate file system class: " + e.getMessage(), e);
+    }
+  }
+
+  private static Class<? extends FileSystem> getFileSystemByName(String className) throws ClassNotFoundException {
+    return Class.forName(className, true, FileSystem.class.getClassLoader()).asSubclass(FileSystem.class);
   }
 }

@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.fs.local;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.UnknownHostException;
@@ -72,5 +73,10 @@ public class LocalFileSystem extends FileSystem {
   @Override
   public URI getUri() {
     return uri;
+  }
+
+  @Override
+  public void initialize(URI name) throws IOException {
+
   }
 }
