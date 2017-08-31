@@ -25,16 +25,20 @@ public class GetInfoTaskAddedListener implements ITaskAddedListener {
   @Override
   public void onTaskAdded(Task task) {
     LOGGER.log( Level.FINE, "\n Task Added : {0} ", task.toString());
-    //System.out.println("Task Added ");
-    //System.out.println(task.toString());
+    System.out.println("=================================");
+    System.out.println("Task Added ");
+    System.out.println(task.toString());
+    System.out.println("=================================");
   }
 
   @Override
   public void updateTaskAdded(Task task){
     LOGGER.log( Level.FINE, "\n New Task Added : {0} ", task.getName());
     LOGGER.log(Level.FINE, task.toString());
-    //System.out.println("A new task added : "+task.getName());
-    //System.out.println(task.toString());
+    System.out.println("=================================");
+    System.out.println("A new task added : "+task.getName());
+    System.out.println(task.toString());
+    System.out.println("=================================");
   }
 
 
