@@ -96,6 +96,17 @@ public class Path implements Serializable {
     path = checkAndTrimPathArg(path);
     initialize(scheme, authority, path);
   }
+  /**
+   * Resolve a child path against a parent path.
+   *
+   * @param parent
+   *        the parent path
+   * @param child
+   *        the child path
+   */
+  public Path(Path parent, String child) {
+    this(parent, new Path(child));
+  }
 
   /**
    * Create path from given path String
@@ -277,6 +288,17 @@ public class Path implements Serializable {
       buffer.append(path);
     }
     return buffer.toString();
+  }
+
+  /**
+   * Returns the final component of this path, i.e., everything that follows the last separator.
+   *
+   * @return the final component of the path
+   */
+  public String getName() {
+    final String path = uri.getPath();
+    final int slash = path.lastIndexOf(SEPARATOR);
+    return path.substring(slash + 1);
   }
 
   /**

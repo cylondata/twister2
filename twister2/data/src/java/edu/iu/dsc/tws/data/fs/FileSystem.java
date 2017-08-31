@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.fs;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
 import java.util.HashMap;
@@ -113,6 +114,29 @@ public abstract class FileSystem {
   public static FileSystem get(URI uri) throws IOException {
     return getFileSystem(uri);
   }
+
+  /**
+   * Return a file status object that represents the path.
+   *
+   * @param f
+   *        The path we want information from
+   * @return a FileStatus object
+   * @throws FileNotFoundException
+   *         when the path does not exist;
+   *         IOException see specific implementation
+   */
+  public abstract FileStatus getFileStatus(Path f) throws IOException;
+
+  /**
+   * List the statuses of the files/directories in the given path if the path is
+   * a directory.
+   *
+   * @param f
+   *        given path
+   * @return the statuses of the files/directories in the given patch
+   * @throws IOException
+   */
+  public abstract FileStatus[] listFiles(Path f) throws IOException;
 
   /**
    * Returns a unsafe filesystem for the given uri
