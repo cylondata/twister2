@@ -18,9 +18,6 @@ import edu.iu.dsc.tws.executor.api.GetInfoTaskAddedListener;
 import edu.iu.dsc.tws.executor.api.TaskHandler;
 import edu.iu.dsc.tws.executor.model.Task;
 
-/**
- * Created by vibhatha on 8/27/17.
- */
 public class TaskManager implements Runnable {
 
   private TaskHandler taskHandler;
