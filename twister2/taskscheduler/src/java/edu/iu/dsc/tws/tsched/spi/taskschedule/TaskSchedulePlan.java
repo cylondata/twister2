@@ -18,6 +18,10 @@ import java.util.Set;
 
 import com.google.common.base.Optional;
 
+/***
+ * This class is responsible for constructing the container plan, instance plan, and task schedule plan along
+ * with their resource requirements.
+ */
 
 public class TaskSchedulePlan {
 
