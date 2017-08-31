@@ -57,7 +57,6 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
    * for the instances and the containers.
    *
    * @return
-   * @throws ScheduleException
    */
   @Override
   public TaskSchedulePlan tschedule() throws ScheduleException {
