@@ -197,4 +197,14 @@ public abstract class FileSystem {
   private static Class<? extends FileSystem> getFileSystemByName(String className) throws ClassNotFoundException {
     return Class.forName(className, true, FileSystem.class.getClassLoader()).asSubclass(FileSystem.class);
   }
+
+  /**
+   * Return an array containing hostnames, offset and size of
+   * portions of the given file. For a nonexistent
+   * file or regions, null will be returned.
+   * This call is most helpful with DFS, where it returns
+   * hostnames of machines that contain the given file.
+   * The FileSystem will simply return an elt containing 'localhost'.
+   */
+  public abstract BlockLocation[] getFileBlockLocations(FileStatus file, long start, long len) throws IOException;
 }

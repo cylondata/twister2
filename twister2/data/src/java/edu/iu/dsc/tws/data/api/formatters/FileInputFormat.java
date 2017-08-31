@@ -13,12 +13,14 @@ package edu.iu.dsc.tws.data.api.formatters;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.InputFormat;
+import edu.iu.dsc.tws.data.fs.BlockLocation;
 import edu.iu.dsc.tws.data.fs.FileInputSplit;
 import edu.iu.dsc.tws.data.fs.FileStatus;
 import edu.iu.dsc.tws.data.fs.FileSystem;
@@ -30,7 +32,7 @@ import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
  * {@link #nextRecord(Object)} and {@link #reachedEnd()} methods need to be implemented.
  * @param <OT>
  */
-public class FileInputFormat<OT> implements InputFormat<OT , FileInputSplit> {
+public abstract class FileInputFormat<OT> implements InputFormat<OT , FileInputSplit> {
   private static final Logger LOG = Logger.getLogger(FileInputFormat.class.getName());
 
   /**
@@ -48,6 +50,11 @@ public class FileInputFormat<OT> implements InputFormat<OT , FileInputSplit> {
    * The path to the file that contains the input.
    */
   protected Path filePath;
+
+  /**
+   * The fraction that the last split may be larger than the others.
+   */
+  private static final float MAX_SPLIT_SIZE_DISCREPANCY = 1.1f;
 
   /**
    * The minimal split size, set by the configure() method.
@@ -129,14 +136,84 @@ public class FileInputFormat<OT> implements InputFormat<OT , FileInputSplit> {
     if (pathFile.isDir()) {
       totalLength += sumFilesInDir(path, files, true);
     } else {
-      //TODO: implement test for unsplittable
+      //TODO L3: implement test for unsplittable
       //testForUnsplittable(pathFile);
 
       files.add(pathFile);
       totalLength += pathFile.getLen();
     }
+
+    //TODO L3: Handle if unsplittable
+    //TODO L1: check if we can add the i j method when making splits so that the last split is not
+    // larger than the other splits
+    final long maxSplitSize = totalLength / minNumSplits + (totalLength % minNumSplits == 0 ? 0 : 1);
+
+    //Generate the splits
+    int splitNum = 0;
+    for (final FileStatus file : files) {
+      final long len = file.getLen();
+      final long blockSize = file.getBlockSize();
+
+      final long minSplitSize;
+      if (this.minSplitSize <= blockSize) {
+        minSplitSize = this.minSplitSize;
+      }
+      else {
+        LOG.log(Level.WARNING,"Minimal split size of " + this.minSplitSize + " is larger than the block size of " +
+              blockSize + ". Decreasing minimal split size to block size.");
+        minSplitSize = blockSize;
+      }
+
+      final long splitSize = Math.max(minSplitSize, Math.min(maxSplitSize, blockSize));
+      final long halfSplit = splitSize >>> 1;
+
+      final long maxBytesForLastSplit = (long) (splitSize * MAX_SPLIT_SIZE_DISCREPANCY);
+      if (len > 0) {
+        // get the block locations and make sure they are in order with respect to their offset
+        final BlockLocation[] blocks = fs.getFileBlockLocations(file, 0, len);
+        Arrays.sort(blocks);
+
+        long bytesUnassigned = len;
+        long position = 0;
+
+        int blockIndex = 0;
+        while (bytesUnassigned > maxBytesForLastSplit) {
+          // get the block containing the majority of the data
+          blockIndex = getBlockIndexForPosition(blocks, position, halfSplit, blockIndex);
+          // create a new split
+          FileInputSplit fis = new FileInputSplit(splitNum++, file.getPath(), position, splitSize,
+              blocks[blockIndex].getHosts());
+          inputSplits.add(fis);
+
+          // adjust the positions
+          position += splitSize;
+          bytesUnassigned -= splitSize;
+        }
+
+        if (bytesUnassigned > 0) {
+          blockIndex = getBlockIndexForPosition(blocks, position, halfSplit, blockIndex);
+          final FileInputSplit fis = new FileInputSplit(splitNum++, file.getPath(), position,
+              bytesUnassigned, blocks[blockIndex].getHosts());
+          inputSplits.add(fis);
+        }
+
+      }else {
+        // special case with a file of zero bytes size
+        final BlockLocation[] blocks = fs.getFileBlockLocations(file, 0, 0);
+        String[] hosts;
+        if (blocks.length > 0) {
+          hosts = blocks[0].getHosts();
+        } else {
+          hosts = new String[0];
+        }
+        final FileInputSplit fis = new FileInputSplit(splitNum++, file.getPath(), 0, 0, hosts);
+        inputSplits.add(fis);
+      }
+    }
     return new FileInputSplit[0];
   }
+
+  
 
   @Override
   public InputSplitAssigner getInputSplitAssigner(FileInputSplit[] inputSplits) {
@@ -214,5 +291,34 @@ public class FileInputFormat<OT> implements InputFormat<OT , FileInputSplit> {
         && !name.startsWith(".");
     //TODO: Need to add support for file filters
        // && !filesFilter.filterPath(fileStatus.getPath());
+  }
+
+  /**
+   * Retrieves the index of the <tt>BlockLocation</tt> that contains the part of the file described by the given
+   * offset.
+   *
+   * @param blocks The different blocks of the file. Must be ordered by their offset.
+   * @param offset The offset of the position in the file.
+   * @param startIndex The earliest index to look at.
+   * @return The index of the block containing the given position (gives the block that contains
+   * most of the split)
+   */
+  private int getBlockIndexForPosition(BlockLocation[] blocks, long offset, long halfSplitSize, int startIndex) {
+    // go over all indexes after the startIndex
+    for (int i = startIndex; i < blocks.length; i++) {
+      long blockStart = blocks[i].getOffset();
+      long blockEnd = blockStart + blocks[i].getLength();
+
+      if (offset >= blockStart && offset < blockEnd) {
+        // got the block where the split starts
+        // check if the next block contains more than this one does
+        if (i < blocks.length - 1 && blockEnd - offset < halfSplitSize) {
+          return i + 1;
+        } else {
+          return i;
+        }
+      }
+    }
+    throw new IllegalArgumentException("The given offset is not contained in the any block.");
   }
 }

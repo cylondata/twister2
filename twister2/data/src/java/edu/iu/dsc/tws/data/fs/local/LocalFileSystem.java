@@ -20,6 +20,7 @@ import java.net.UnknownHostException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.data.fs.BlockLocation;
 import edu.iu.dsc.tws.data.fs.FileStatus;
 import edu.iu.dsc.tws.data.fs.FileSystem;
 import edu.iu.dsc.tws.data.fs.Path;
@@ -122,5 +123,12 @@ public class LocalFileSystem extends FileSystem {
       path = new Path(getWorkingDirectory(), path);
     }
     return new File(path.toUri().getPath());
+  }
+
+  @Override
+  public BlockLocation[] getFileBlockLocations(FileStatus file, long start, long len) throws IOException {
+    return new BlockLocation[] {
+        new LocalBlockLocation(hostName, file.getLen())
+    };
   }
 }
