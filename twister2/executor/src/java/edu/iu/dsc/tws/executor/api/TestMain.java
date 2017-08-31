@@ -11,22 +11,38 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.api;
 
-import java.util.Date;
-
-import edu.iu.dsc.tws.executor.model.Task;
+import edu.iu.dsc.tws.executor.test.TaskManager;
+import javafx.concurrent.Task;
 
 /**
  * Created by vibhatha on 8/25/17.
  */
 public class TestMain {
-  public static void main(String[] args) {
+  public static void main(String[] args) throws InterruptedException {
     TaskHandler taskHandler = new TaskHandler();
-
     taskHandler.registerTaskAddedListener(new GetInfoTaskAddedListener());
     taskHandler.registerTaskAddedListener(new GetCountTaskAddedListener());
-    taskHandler.addTask(new Task(1001,"Task 1", new Date(), "Demo Task 1 to handle the queue"));
-    taskHandler.addTask(new Task(1002,"Task 2", new Date(), "Demo Task 2 to handle the queue"));
-    taskHandler.addTask(new Task(1003,"Task 3", new Date(), "Demo Task 3 to handle the queue"));
+
+    String thread1Name = "1";
+    Runnable taskManager1 = new TaskManager(taskHandler, thread1Name);
+    Thread thread1 = new Thread(taskManager1);
+    thread1.setDaemon(true);
+    thread1.setName("taskManager1");
+
+
+
+    String thread2Name = "2";
+    Runnable taskManager2= new TaskManager(taskHandler, thread2Name);
+    Thread thread2 = new Thread(taskManager2);
+    thread2.setDaemon(true);
+    thread2.setName("taskManager2");
+
+    thread1.start();
+    thread2.start();
+    thread1.join();
+    thread2.join();
+
+
 
 
   }

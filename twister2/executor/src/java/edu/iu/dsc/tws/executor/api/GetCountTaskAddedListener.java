@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.api;
 
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -22,7 +23,7 @@ import edu.iu.dsc.tws.executor.model.Task;
 public class GetCountTaskAddedListener implements ITaskAddedListener {
 
   private static final Logger LOGGER = Logger.getLogger( GetCountTaskAddedListener.class.getName() );
-  private static int taskAddedCount = 0;
+  private static AtomicLong taskAddedCount = new AtomicLong(0);
 
   @Override
   public void onTaskAdded(Task task) {
@@ -31,9 +32,10 @@ public class GetCountTaskAddedListener implements ITaskAddedListener {
 
   @Override
   public void updateTaskAdded(Task task) {
-    taskAddedCount ++;
+    taskAddedCount.incrementAndGet();
     LOGGER.log( Level.FINE, "\n Total Tasks : {0} ", taskAddedCount);
-    //System.out.println("\n Total Tasks : "+taskAddedCount);
-
+    System.out.println("=================================");
+    System.out.println("\n Total Tasks : "+taskAddedCount);
+    System.out.println("=================================");
   }
 }
