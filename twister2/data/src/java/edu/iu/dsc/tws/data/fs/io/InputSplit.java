@@ -9,17 +9,23 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.data.api.formatters;
 
-import java.util.logging.Logger;
+package edu.iu.dsc.tws.data.fs.io;
 
-import edu.iu.dsc.tws.data.api.InputFormat;
+    import java.io.Serializable;
 
 /**
- * Created by pulasthi on 8/24/17.
+ * This interface must be implemented by all kind of input splits that can be assigned to input formats.
+ *
+ * <p>Input splits are transferred in serialized form via the messages, so they need to be serializable
+ * as defined by {@link Serializable}.</p>
  */
-public class TextInputFormatter extends FileInputFormat {
+public interface InputSplit extends Serializable {
 
-  private static final Logger LOG = Logger.getLogger(TextInputFormatter.class.getName());
-
+  /**
+   * Returns the number of this input split.
+   *
+   * @return the number of this input split
+   */
+  int getSplitNumber();
 }
