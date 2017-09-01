@@ -19,18 +19,30 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.tsched.spi.common.Config;
+//import edu.iu.dsc.tws.tsched.spi.common.Config; (In future it will be replaced with proper config value)
 import edu.iu.dsc.tws.tsched.spi.taskschedule.Resource;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.ScheduleException;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedule;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
+
 import edu.iu.dsc.tws.tsched.utils.Job;
 import edu.iu.dsc.tws.tsched.utils.JobAttributes;
+import edu.iu.dsc.tws.tsched.utils.JobConfig;
+import edu.iu.dsc.tws.tsched.utils.Config;
 
+/***
+ * This class is responsible for
+ * 1. Initializing the RAM, Disk, and CPU percentage values from the Config and Job files.
+ * 2. Perform the FCFS scheduling for assigning the instances to the containers.
+ * 3. Generate the task schedule plan for the containers and the instances in those containers.
+ */
 
 public class FIFOTaskScheduling implements TaskSchedule {
 
   private static final Logger LOG = Logger.getLogger(FIFOTaskScheduling.class.getName());
+  private static final int DEFAULT_CONTAINER_PADDING_PERCENTAGE = 10;
+  private static final int DEFAULT_NUMBER_INSTANCES_PER_CONTAINER = 4;
+
 
   @Override
   public void initialize(Config config, Job job) {
@@ -41,20 +53,27 @@ public class FIFOTaskScheduling implements TaskSchedule {
     this.instanceDisk = config.Container_Max_Disk_Value;
   }
 
+  /***
+   * This method invokes the FIFO/FCFS Scheduling Method and fetch the container instance allocation map.
+   * Using the map value it calculates the required ram, disk, and cpu percentage and generates the task schedule plan
+   * for the instances and the containers.
+   *
+   * @return
+   * @throws ScheduleException
+   */
   @Override
   public TaskSchedulePlan tschedule() throws ScheduleException {
 
-    Map<Integer, List<InstanceId>> FIFOAllocation = doFIFOAllocation();
-
+    Map<Integer, List<InstanceId>> containerInstanceAllocationMap = FIFOScheduling();
     Set<TaskSchedulePlan.ContainerPlan> containerPlans = new HashSet<>();
 
-    double containerCPU = getContainerCPUValue(FIFOAllocation);
-    double containerRAM = getContainerRAMRequested(FIFOAllocation);
-    double containerDisk = getContainerDiskRequested(FIFOAllocation);
+    double containerCPUValue = getContainerCPUValue(containerInstanceAllocationMap);
+    double containerRAMValue = getContainerRAMValue(containerInstanceAllocationMap);
+    double containerDiskValue = getContainerDiskValue(containerInstanceAllocationMap);
 
-    for(Integer containerId:FIFOAllocation.keySet()){
+    for(Integer containerId:containerInstanceAllocationMap.keySet()){
 
-      List<InstanceId> taskInstanceIds = FIFOAllocation.get(containerId);
+      List<InstanceId> taskInstanceIds = containerInstanceAllocationMap.get(containerId);
       Map<InstanceId, TaskSchedulePlan.TaskInstancePlan> taskInstancePlanMap = new HashMap<>();
 
       for(InstanceId id: taskInstanceIds) {
@@ -67,41 +86,44 @@ public class FIFOTaskScheduling implements TaskSchedule {
         taskInstancePlanMap.put(id,new TaskSchedulePlan.TaskInstancePlan("mpitask",1,1, resource));
 
       }
-      Resource resource = new Resource(containerRAM, containerDisk, containerCPU);
-      TaskSchedulePlan.ContainerPlan = new TaskSchedulePlan.ContainerPlan(containerId, taskInstancePlanMap.values(),resource));
+      Resource resource = new Resource(containerRAMValue, containerDiskValue, containerCPUValue);
+      TaskSchedulePlan.ContainerPlan taskContainerPlan = new TaskSchedulePlan.ContainerPlan(containerId, new HashSet<>(taskInstancePlanMap.values()),resource));
+
+      containerPlans.add(taskContainerPlan);
     }
     return new TaskSchedulePlan(job.getId(),containerPlans);
   }
 
-  private Map<Integer,List<InstanceId>> doFIFOAllocation (){
-
-    Map<Integer, List<InstanceId>> FIFOAllocation = new HashMap<>();
-
-    //This value will be replaced with the actual parameters
-    int numberOfContainers = JobAttributes.getNumberOfContainers(job);
-    int totalInstances = JobAttributes.getTotalNumberOfInstances(job);
-    ///////////////////////////////////////////////////////////
-
-    for(int i = 1; i <= numberOfContainers; i++) {
-      FIFOAllocation.put(i, new ArrayList<InstanceId>());
-    }
+  /***
+   * This method performs the First Come First Serve Scheduling operation. It will allocate the instances in a FCFS fashion.
+   *
+   * @return
+   */
+  private Map<Integer,List<InstanceId>> FIFOScheduling() {
 
     int taskIndex = 1;
     int globalTaskIndex = 1;
 
+    Map<Integer, List<InstanceId>> containerInstanceAllocation = new HashMap<>();
+
+    int numberOfContainers = JobAttributes.getNumberOfContainers(job);
+    int totalInstances = JobAttributes.getTotalNumberOfInstances(job);
+
+    for(int i = 1; i <= numberOfContainers; i++) {
+      containerInstanceAllocation.put(i, new ArrayList<InstanceId>());
+    }
+
     //This value will be replaced with the actual parameters
     Map<String,Integer> parallelTaskMap = JobAttributes.getParallelTaskMap(job);
-
-    //This logic should be replaced with FIFO logic....
-    for(String task : parallelTaskMap.keySet()){
-      int numberOfInstances = parallelTaskMap.get(task);
+    for(String taskName : parallelTaskMap.keySet()){
+      int numberOfInstances = parallelTaskMap.get(taskName);
       for(int i = 0; i < numberOfInstances; i++){
-        FIFOAllocation.get(taskIndex).add(new InstanceId(task, globalTaskIndex, i));
+        containerInstanceAllocation.get(taskIndex).add(new InstanceId(taskName, globalTaskIndex, i));
         taskIndex = (taskIndex == numberOfContainers) ? 1 : taskIndex + 1;
         globalTaskIndex++;
       }
     }
-    return FIFOAllocation;
+    return containerInstanceAllocation;
   }
 
   @Override
@@ -110,61 +132,39 @@ public class FIFOTaskScheduling implements TaskSchedule {
   }
 
   //These three methods will be modified with the actual values....
-  private double getContainerRAMRequested(Map<Integer, List<InstanceId>> roundRobinAllocation) {
-    double RAMValue = Config.Container_Max_RAM_Value;
-    return RAMValue;
+  private double getContainerRAMValue(Map<Integer, List<InstanceId>> containerInstanceAllocationMap) {
+    //double RAMValue = Config.Container_Max_RAM_Value;
+    double containerRAMValue = 0.0;
+    try {
+      containerRAMValue = Double.valueOf(JobConfig.Container_Max_RAM_Value.trim());
+
+    } catch (Exception exception) {
+      exception.printStackTrace();
+    }
+    return containerRAMValue;
   }
 
-  private double getContainerCPUValue(Map<Integer, List<InstanceId>> roundRobinAllocation) {
-    double CPUValue = Config.Container_Max_CPU_Value;
-    return CPUValue;
+  private double getContainerCPUValue(Map<Integer, List<InstanceId>> containerInstanceAllocationMap) {
+    //double CPUValue = Config.Container_Max_CPU_Value;
+    double containerCPUValue = 0.0;
+    try {
+      containerCPUValue = Double.valueOf(JobConfig.Container_Max_CPU_Value.trim());
+    } catch (Exception exception) {
+      exception.printStackTrace();
+    }
+    return containerCPUValue;
   }
 
-  private double getContainerDiskRequested(Map<Integer, List<InstanceId>> roundRobinAllocation) {
-    double DiskValue = Config.Container_Max_Disk_Value;
-    return DiskValue;
+  private double getContainerDiskValue(Map<Integer, List<InstanceId>> containerInstanceAllocationMap) {
+    //double DiskValue = Config.Container_Max_Disk_Value;
+    double containerDiskValue = 0.0;
+    try {
+      containerDiskValue = Double.valueOf(JobConfig.Container_Max_Disk_Value.trim());
+    } catch (Exception exception) {
+      exception.printStackTrace();
+    }
+    return containerDiskValue;
   }
 
-  private class InstanceId {
-
-    private final String taskName;
-    private final int taskId;
-    private final int taskIndex;
-
-    public InstanceId(String taskName, int taskId, int taskIndex) {
-      this.taskId = taskId;
-      this.taskName = taskName;
-      this.taskIndex = taskIndex;
-    }
-    public String getTaskName() {
-      return taskName;
-    }
-    public int getTaskId() {
-      return taskId;
-    }
-    public int getTaskIndex() {
-      return taskIndex;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) return true;
-      if (!(o instanceof InstanceId)) return false;
-
-      InstanceId that = (InstanceId) o;
-
-      if (taskId != that.taskId) return false;
-      if (taskIndex != that.taskIndex) return false;
-      return taskName != null ? taskName.equals(that.taskName) : that.taskName == null;
-    }
-
-    @Override
-    public int hashCode() {
-      int result = taskName != null ? taskName.hashCode() : 0;
-      result = 31 * result + taskId;
-      result = 31 * result + taskIndex;
-      return result;
-    }
-  }
 
 }
