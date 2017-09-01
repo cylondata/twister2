@@ -19,16 +19,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-//import edu.iu.dsc.tws.tsched.spi.common.Config; (In future it will be replaced with proper config value)
 import edu.iu.dsc.tws.tsched.spi.taskschedule.Resource;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.ScheduleException;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedule;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
-
+import edu.iu.dsc.tws.tsched.utils.Config;
 import edu.iu.dsc.tws.tsched.utils.Job;
 import edu.iu.dsc.tws.tsched.utils.JobAttributes;
 import edu.iu.dsc.tws.tsched.utils.JobConfig;
-import edu.iu.dsc.tws.tsched.utils.Config;
+
+//import edu.iu.dsc.tws.tsched.spi.common.Config; (In future it will be replaced with proper config value)
 
 /***
  * This class is responsible for
@@ -58,11 +57,9 @@ public class FIFOTaskScheduling implements TaskSchedule {
    * Using the map value it calculates the required ram, disk, and cpu percentage and generates the task schedule plan
    * for the instances and the containers.
    *
-   * @return
-   * @throws ScheduleException
    */
   @Override
-  public TaskSchedulePlan tschedule() throws ScheduleException {
+  public TaskSchedulePlan tschedule() {
 
     Map<Integer, List<InstanceId>> containerInstanceAllocationMap = FIFOScheduling();
     Set<TaskSchedulePlan.ContainerPlan> containerPlans = new HashSet<>();
