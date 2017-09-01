@@ -9,7 +9,6 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
 package edu.iu.dsc.tws.tsched.spi.taskschedule;
 
 import java.util.HashMap;
@@ -17,6 +16,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.base.Optional;
+import com.google.common.base.ImmutableSet;
 
 /***
  * This class is responsible for constructing the container plan, instance plan, and task schedule plan along
@@ -80,7 +80,6 @@ public class TaskSchedulePlan {
     private final int taskIndex;
     private final Resource resource;
 
-
     public TaskInstancePlan(String taskName, int taskId, int taskIndex, Resource resource){
       this.taskName = taskName;
       this.taskId = taskId;
@@ -139,11 +138,12 @@ public class TaskSchedulePlan {
     }
 
     public ContainerPlan(int id,
-                         Set<InstancePlan> instances,
+                         Set<TaskInstancePlan> taskinstances,
                          Resource requiredResource,
                          Resource scheduledResource) {
-      this.id = id;
-      this.instances = instances;
+      this.containerId = id;
+      //this.taskInstancePlan = taskinstances;
+      this.taskInstancePlan = ImmutableSet.copyOf(instances);
       this.requiredResource = requiredResource;
       this.scheduledResource = Optional.fromNullable(scheduledResource);
     }
