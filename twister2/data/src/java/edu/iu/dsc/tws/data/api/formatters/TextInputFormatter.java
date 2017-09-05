@@ -11,10 +11,15 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.api.formatters;
 
+import java.util.logging.Logger;
+
 import edu.iu.dsc.tws.data.api.InputFormat;
 
 /**
  * Created by pulasthi on 8/24/17.
  */
-public class TextInputFormatter implements InputFormat {
+public class TextInputFormatter extends FileInputFormat {
+
+  private static final Logger LOG = Logger.getLogger(TextInputFormatter.class.getName());
+
 }

@@ -25,7 +25,7 @@ import java.util.logging.Logger;
  * should be favored over Strings. Usage of the String API should be refactored out.
  *
  * A newly created Config object holds configs that might include wildcard tokens, like
- * ${TWISTER2_HOME}/bin, ${TWISTER2_LIB}/packing/*. Token substitution can be done by
+ * ${TWISTER2_HOME}/bin, ${TWISTER2_LIB}/packing/*. Token substitution can be doneProcessing by
  * converting that config to a local or cluster config by using the {@code Config.toLocalMode} or
  * {@code Config.toClusterMode} methods.
  *

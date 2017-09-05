@@ -12,13 +12,29 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.api;
 
+import java.util.List;
+
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.core.InstancePlan;
+
 public interface DataFlowOperation {
+
+  /**
+   * Initialize the data flow communication
+   *
+   * @param config the network configuration
+   * @param instancePlan instance plan
+   */
+  void init(Config config, InstancePlan instancePlan, List<Integer>  sources,
+            List<Integer> destinations, int stream, MessageReceiver receiver,
+            MessageFormatter messageFormatter, MessageBuilder messageBuilder);
+
   /**
    * Do a partial broadcast, the receiving side should collect messages until all the messages
    * are received.
    * @param message
    */
-  void partial(Message message);
+  void sendPartial(Message message);
 
   /**
    * Indicate that a partial broadcast is finished
@@ -26,8 +42,8 @@ public interface DataFlowOperation {
   void finish();
 
   /**
-   * Send a complete message
+   * Send a sendComplete message
    * @param message
    */
-  void complete(Message message);
+  void sendComplete(Message message);
 }

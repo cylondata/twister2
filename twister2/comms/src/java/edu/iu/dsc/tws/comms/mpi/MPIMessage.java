@@ -1,4 +1,3 @@
-//  Copyright 2017 Twitter. All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -13,12 +12,79 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi;
 
+import java.util.ArrayList;
 import java.util.List;
 
-public class MPIMessage {
-  private List<MPIBuffer> buffers;
+import edu.iu.dsc.tws.comms.api.Message;
+
+public class MPIMessage extends Message {
+  private final List<MPIBuffer> buffers = new ArrayList<MPIBuffer>();
+
+  /**
+   * Keeps the number of references to this message
+   * The resources associated with the message is released when refcount becomes 0
+   */
+  private int refCount;
+
+  /**
+   * Type of the message, weather request or send
+   */
+  private MPIMessageType messageType;
+
+  private MPIMessageReleaseCallback releaseListener;
+
+  private final int stream;
+
+  /**
+   * Keep track of the originating id, this is required to release the buffers allocated.
+   */
+  private final int originatingId;
+
+  public MPIMessage(int originatingId, int stream,
+                    MPIMessageType type, MPIMessageReleaseCallback releaseListener) {
+    this(originatingId, stream, 1, type, releaseListener);
+  }
+
+  public MPIMessage(int originatingId, int stream, int refCount,
+                    MPIMessageType type, MPIMessageReleaseCallback releaseListener) {
+    this.stream = stream;
+    this.refCount = refCount;
+    this.messageType = type;
+    this.releaseListener = releaseListener;
+    this.originatingId = originatingId;
+  }
+
+  public int getStream() {
+    return stream;
+  }
 
   public List<MPIBuffer> getBuffers() {
     return buffers;
+  }
+
+  public int incrementRefCount() {
+    refCount++;
+    return refCount;
+  }
+
+  public MPIMessageType getMessageType() {
+    return messageType;
+  }
+
+  public boolean doneProcessing() {
+    return refCount == 0;
+  }
+  /**
+   * Release the allocated resources to this buffer.
+   */
+  public void release() {
+    refCount--;
+    if (refCount == 0) {
+      releaseListener.release(this);
+    }
+  }
+
+  public int getOriginatingId() {
+    return originatingId;
   }
 }
