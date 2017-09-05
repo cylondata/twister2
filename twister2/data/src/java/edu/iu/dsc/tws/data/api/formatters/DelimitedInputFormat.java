@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.fs.FSDataInputStream;
 import edu.iu.dsc.tws.data.fs.FileInputSplit;
+import edu.iu.dsc.tws.data.fs.Path;
 
 /**
  * Base class for inputs that are delimited
@@ -107,6 +108,19 @@ public abstract class DelimitedInputFormat<OT> extends FileInputFormat<OT>  {
 
   private long offset = -1;
 
+
+  public DelimitedInputFormat() {
+    this(null, null);
+  }
+
+  protected DelimitedInputFormat(Path filePath, Config configuration) {
+    super(filePath);
+    if (configuration == null) {
+      //TODO L2: Need to create global config
+      //configuration = GlobalConfiguration.loadConfiguration();
+    }
+  }
+
   public byte[] getDelimiter() {
     return delimiter;
   }
@@ -183,6 +197,15 @@ public abstract class DelimitedInputFormat<OT> extends FileInputFormat<OT>  {
    */
   public abstract OT readRecord(OT reuse, byte[] bytes, int offset, int numBytes) throws IOException;
 
+  @Override
+  public OT nextRecord(OT record) throws IOException {
+    if (readLine()) {
+      return readRecord(record, this.currBuffer, this.currOffset, this.currLen);
+    } else {
+      this.end = true;
+      return null;
+    }
+  }
   // --------------------------------------------------------------------------------------------
   //  Pre-flight: Configuration, Splits, Sampling
   // --------------------------------------------------------------------------------------------
@@ -419,6 +442,18 @@ public abstract class DelimitedInputFormat<OT> extends FileInputFormat<OT>  {
     this.currBuffer = buffer;
     this.currOffset = offset;
     this.currLen = len;
+  }
+
+  /**
+   * Closes the input by releasing all buffers and closing the file input stream.
+   *
+   * @throws IOException Thrown, if the closing of the file stream causes an I/O error.
+   */
+  @Override
+  public void close() throws IOException {
+    this.wrapBuffer = null;
+    this.readBuffer = null;
+    super.close();
   }
 
   /**

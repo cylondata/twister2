@@ -92,6 +92,11 @@ public abstract class FileInputFormat<OT> implements InputFormat<OT , FileInputS
    */
   private long openTimeout;
 
+  public FileInputFormat() {}
+
+  protected FileInputFormat(Path filePath) {
+    this.filePath = filePath;
+  }
 
   public boolean isEnumerateNestedFiles() {
     return enumerateNestedFiles;
@@ -295,7 +300,7 @@ public abstract class FileInputFormat<OT> implements InputFormat<OT , FileInputS
   }
 
   @Override
-  public Object nextRecord(Object reuse) throws IOException {
+  public OT nextRecord(OT reuse) throws IOException {
     return null;
   }
 
