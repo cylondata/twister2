@@ -17,6 +17,8 @@ import java.util.Arrays;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.data.fs.FSDataInputStream;
+import edu.iu.dsc.tws.data.fs.FileInputSplit;
 
 /**
  * Base class for inputs that are delimited
@@ -44,16 +46,6 @@ public abstract class DelimitedInputFormat<OT> extends FileInputFormat<OT>  {
   private static final int NUM_SAMPLES_UNDEFINED = -1;
 
   /**
-   * The maximum number of line samples to be taken.
-   */
-  private static int DEFAULT_MAX_NUM_SAMPLES;
-
-  /**
-   * The minimum number of line samples to be taken.
-   */
-  private static int DEFAULT_MIN_NUM_SAMPLES;
-
-  /**
    * The maximum size of a sample record before sampling is aborted. To catch cases where a wrong delimiter is given.
    */
 
@@ -62,14 +54,7 @@ public abstract class DelimitedInputFormat<OT> extends FileInputFormat<OT>  {
    */
   protected static final String RECORD_DELIMITER = "delimited-format.delimiter";
 
-
-  private static int MAX_SAMPLE_LEN;
-
-
-
   private byte[] delimiter = new byte[] {'\n'};
-
-
 
   private String delimiterString = null;
 
@@ -79,6 +64,48 @@ public abstract class DelimitedInputFormat<OT> extends FileInputFormat<OT>  {
 
   private int numLineSamples = NUM_SAMPLES_UNDEFINED;
 
+  /**
+   * The input stream reading from the input file.
+   */
+  protected transient FSDataInputStream stream;
+
+  /**
+   * The start of the split that this parallel instance must consume.
+   */
+  protected transient long splitStart;
+
+  /**
+   * The length of the split that this parallel instance must consume.
+   */
+  protected transient long splitLength;
+
+  /**
+   * The current split that this parallel instance must consume.
+   */
+  protected transient FileInputSplit currentSplit;
+
+  // --------------------------------------------------------------------------------------------
+  //  Variables for internal parsing.
+  //  They are all transient, because we do not want them so be serialized
+  // --------------------------------------------------------------------------------------------
+
+  private transient byte[] readBuffer;
+
+  private transient byte[] wrapBuffer;
+
+  private transient int readPos;
+
+  private transient int limit;
+
+  private transient byte[] currBuffer;		// buffer in which current record byte sequence is found
+  private transient int currOffset;			// offset in above buffer
+  private transient int currLen;				// length of current byte sequence
+
+  private transient boolean overLimit;
+
+  private transient boolean end;
+
+  private long offset = -1;
 
   public byte[] getDelimiter() {
     return delimiter;
@@ -101,6 +128,33 @@ public abstract class DelimitedInputFormat<OT> extends FileInputFormat<OT>  {
     }
     this.delimiter = delimiterString.getBytes(getCharset());
     this.delimiterString = delimiterString;
+  }
+
+  public int getBufferSize() {
+    return bufferSize;
+  }
+
+  public void setBufferSize(int bufferSize) {
+    if (bufferSize < 2) {
+      throw new IllegalArgumentException("Buffer size must be at least 2.");
+    }
+    this.bufferSize = bufferSize;
+  }
+
+  public String getCharsetName() {
+    return charsetName;
+  }
+
+  public void setCharsetName(String charsetName) {
+    this.charsetName = charsetName;
+  }
+
+  public int getLineLengthLimit() {
+    return lineLengthLimit;
+  }
+
+  public void setLineLengthLimit(int lineLengthLimit) {
+    this.lineLengthLimit = lineLengthLimit;
   }
 
 
@@ -153,5 +207,227 @@ public abstract class DelimitedInputFormat<OT> extends FileInputFormat<OT>  {
       }
     }
 
+  }
+
+  /**
+   * Opens the given input split. This method opens the input stream to the specified file, allocates read buffers
+   * and positions the stream at the correct position, making sure that any partial record at the beginning is skipped.
+   *
+   * @param split The input split to open.
+   */
+  public void open(FileInputSplit split) throws IOException {
+    super.open(split);
+    initBuffers();
+
+    this.offset = splitStart;
+    if (this.splitStart != 0) {
+      this.stream.seek(offset);
+      readLine();
+      // if the first partial record already pushes the stream over
+      // the limit of our split, then no record starts within this split
+      if (this.overLimit) {
+        this.end = true;
+      }
+    } else {
+      fillBuffer(0);
+    }
+  }
+
+  private void initBuffers() {
+    this.bufferSize = this.bufferSize <= 0 ? DEFAULT_READ_BUFFER_SIZE : this.bufferSize;
+
+    if (this.bufferSize <= this.delimiter.length) {
+      throw new IllegalArgumentException("Buffer size must be greater than length of delimiter.");
+    }
+
+    if (this.readBuffer == null || this.readBuffer.length != this.bufferSize) {
+      this.readBuffer = new byte[this.bufferSize];
+    }
+    if (this.wrapBuffer == null || this.wrapBuffer.length < 256) {
+      this.wrapBuffer = new byte[256];
+    }
+
+    this.readPos = 0;
+    this.limit = 0;
+    this.overLimit = false;
+    this.end = false;
+  }
+
+  /**
+   * Fills the read buffer with bytes read from the file starting from an offset.
+   */
+  private boolean fillBuffer(int offset) throws IOException {
+    int maxReadLength = this.readBuffer.length - offset;
+    // special case for reading the whole split.
+    if (this.splitLength == FileInputFormat.READ_WHOLE_SPLIT_FLAG) {
+      int read = this.stream.read(this.readBuffer, offset, maxReadLength);
+      if (read == -1) {
+        this.stream.close();
+        this.stream = null;
+        return false;
+      } else {
+        this.readPos = offset;
+        this.limit = read;
+        return true;
+      }
+    }
+
+    // else ..
+    int toRead;
+    if (this.splitLength > 0) {
+      // if we have more data, read that
+      toRead = this.splitLength > maxReadLength ? maxReadLength : (int) this.splitLength;
+    }
+    else {
+      // if we have exhausted our split, we need to complete the current record, or read one
+      // more across the next split.
+      // the reason is that the next split will skip over the beginning until it finds the first
+      // delimiter, discarding it as an incomplete chunk of data that belongs to the last record in the
+      // previous split.
+      toRead = maxReadLength;
+      this.overLimit = true;
+    }
+
+    int read = this.stream.read(this.readBuffer, offset, toRead);
+
+    if (read == -1) {
+      this.stream.close();
+      this.stream = null;
+      return false;
+    } else {
+      this.splitLength -= read;
+      this.readPos = offset; // position from where to start reading
+      this.limit = read + offset; // number of valid bytes in the read buffer
+      return true;
+    }
+  }
+
+  protected final boolean readLine() throws IOException {
+    if (this.stream == null || this.overLimit) {
+      return false;
+    }
+
+    int countInWrapBuffer = 0;
+
+    // position of matching positions in the delimiter byte array
+    int delimPos = 0;
+
+    while (true) {
+      if (this.readPos >= this.limit) {
+        // readBuffer is completely consumed. Fill it again but keep partially read delimiter bytes.
+        if (!fillBuffer(delimPos)) {
+          int countInReadBuffer = delimPos;
+          if (countInWrapBuffer + countInReadBuffer > 0) {
+            // we have bytes left to emit
+            if (countInReadBuffer > 0) {
+              // we have bytes left in the readBuffer. Move them into the wrapBuffer
+              if (this.wrapBuffer.length - countInWrapBuffer < countInReadBuffer) {
+                // reallocate
+                byte[] tmp = new byte[countInWrapBuffer + countInReadBuffer];
+                System.arraycopy(this.wrapBuffer, 0, tmp, 0, countInWrapBuffer);
+                this.wrapBuffer = tmp;
+              }
+
+              // copy readBuffer bytes to wrapBuffer
+              System.arraycopy(this.readBuffer, 0, this.wrapBuffer, countInWrapBuffer, countInReadBuffer);
+              countInWrapBuffer += countInReadBuffer;
+            }
+
+            this.offset += countInWrapBuffer;
+            setResult(this.wrapBuffer, 0, countInWrapBuffer);
+            return true;
+          } else {
+            return false;
+          }
+        }
+      }
+
+      int startPos = this.readPos - delimPos;
+      int count;
+
+      // Search for next occurence of delimiter in read buffer.
+      while (this.readPos < this.limit && delimPos < this.delimiter.length) {
+        if ((this.readBuffer[this.readPos]) == this.delimiter[delimPos]) {
+          // Found the expected delimiter character. Continue looking for the next character of delimiter.
+          delimPos++;
+        } else {
+          // Delimiter does not match.
+          // We have to reset the read position to the character after the first matching character
+          //   and search for the whole delimiter again.
+          readPos -= delimPos;
+          delimPos = 0;
+        }
+        readPos++;
+      }
+
+      // check why we dropped out
+      if (delimPos == this.delimiter.length) {
+        // we found a delimiter
+        int readBufferBytesRead = this.readPos - startPos;
+        this.offset += countInWrapBuffer + readBufferBytesRead;
+        count = readBufferBytesRead - this.delimiter.length;
+
+        // copy to byte array
+        if (countInWrapBuffer > 0) {
+          // check wrap buffer size
+          if (this.wrapBuffer.length < countInWrapBuffer + count) {
+            final byte[] nb = new byte[countInWrapBuffer + count];
+            System.arraycopy(this.wrapBuffer, 0, nb, 0, countInWrapBuffer);
+            this.wrapBuffer = nb;
+          }
+          if (count >= 0) {
+            System.arraycopy(this.readBuffer, 0, this.wrapBuffer, countInWrapBuffer, count);
+          }
+          setResult(this.wrapBuffer, 0, countInWrapBuffer + count);
+          return true;
+        } else {
+          setResult(this.readBuffer, startPos, count);
+          return true;
+        }
+      } else {
+        // we reached the end of the readBuffer
+        count = this.limit - startPos;
+
+        // check against the maximum record length
+        if (((long) countInWrapBuffer) + count > this.lineLengthLimit) {
+          throw new IOException("The record length exceeded the maximum record length (" +
+              this.lineLengthLimit + ").");
+        }
+
+        // Compute number of bytes to move to wrapBuffer
+        // Chars of partially read delimiter must remain in the readBuffer. We might need to go back.
+        int bytesToMove = count - delimPos;
+        // ensure wrapBuffer is large enough
+        if (this.wrapBuffer.length - countInWrapBuffer < bytesToMove) {
+          // reallocate
+          byte[] tmp = new byte[Math.max(this.wrapBuffer.length * 2, countInWrapBuffer + bytesToMove)];
+          System.arraycopy(this.wrapBuffer, 0, tmp, 0, countInWrapBuffer);
+          this.wrapBuffer = tmp;
+        }
+
+        // copy readBuffer to wrapBuffer (except delimiter chars)
+        System.arraycopy(this.readBuffer, startPos, this.wrapBuffer, countInWrapBuffer, bytesToMove);
+        countInWrapBuffer += bytesToMove;
+        // move delimiter chars to the beginning of the readBuffer
+        System.arraycopy(this.readBuffer, this.readPos - delimPos, this.readBuffer, 0, delimPos);
+
+      }
+    }
+  }
+
+  private void setResult(byte[] buffer, int offset, int len) {
+    this.currBuffer = buffer;
+    this.currOffset = offset;
+    this.currLen = len;
+  }
+
+  /**
+   * Checks whether the current split is at its end.
+   *
+   * @return True, if the split is at its end, false otherwise.
+   */
+  @Override
+  public boolean reachedEnd() {
+    return this.end;
   }
 }

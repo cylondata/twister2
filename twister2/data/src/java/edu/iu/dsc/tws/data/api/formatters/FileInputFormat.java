@@ -42,6 +42,11 @@ public abstract class FileInputFormat<OT> implements InputFormat<OT , FileInputS
   protected int numSplits = -1;
 
   /**
+   * The splitLength is set to -1L for reading the whole split.
+   */
+  protected static final long READ_WHOLE_SPLIT_FLAG = -1L;
+
+  /**
    * The flag to specify whether recursive traversal of the input directory
    * structure is enabled.
    */
