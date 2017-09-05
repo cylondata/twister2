@@ -13,9 +13,7 @@ package edu.iu.dsc.tws.executor.test;
 
 import java.util.Date;
 
-import edu.iu.dsc.tws.executor.api.GetCountTaskAddedListener;
-import edu.iu.dsc.tws.executor.api.GetInfoTaskAddedListener;
-import edu.iu.dsc.tws.executor.api.TaskHandler;
+import edu.iu.dsc.tws.executor.api.observer.TaskHandler;
 import edu.iu.dsc.tws.executor.model.Task;
 
 public class TaskManager implements Runnable {
