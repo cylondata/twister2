@@ -35,33 +35,6 @@
     </orderEntry>
     <orderEntry type="inheritedJdk" />
       <orderEntry type="module-library">
-        <library name="libproto-java.jar">
-          <CLASSES>
-            <root url="jar://$MODULE_DIR$/bazel-bin/twister2/proto/./libproto-java.jar!/" />
-          </CLASSES>
-          <JAVADOC />
-          <SOURCES />
-      </library>
-    </orderEntry>
-      <orderEntry type="module-library">
-        <library name="libproto_schedule_java-ijar.jar">
-          <CLASSES>
-            <root url="jar://$MODULE_DIR$/bazel-bin/twister2/proto/./libproto_schedule_java-ijar.jar!/" />
-          </CLASSES>
-          <JAVADOC />
-          <SOURCES />
-      </library>
-    </orderEntry>
-      <orderEntry type="module-library">
-        <library name="libproto_schedule_java.jar">
-          <CLASSES>
-            <root url="jar://$MODULE_DIR$/bazel-bin/twister2/proto/./libproto_schedule_java.jar!/" />
-          </CLASSES>
-          <JAVADOC />
-          <SOURCES />
-      </library>
-    </orderEntry>
-      <orderEntry type="module-library">
         <library name="antlr-2.7.7-ijar.jar">
           <CLASSES>
             <root url="jar://$MODULE_DIR$/bazel-genfiles/external/./antlr_antlr/jar/_ijar/jar/external/antlr_antlr/jar/antlr-2.7.7-ijar.jar!/" />
@@ -300,33 +273,6 @@
         <library name="checkstyle-6.17-ijar.jar">
           <CLASSES>
             <root url="jar://$MODULE_DIR$/bazel-twister2/bazel-out/host/genfiles/external/./com_puppycrawl_tools_checkstyle/jar/_ijar/jar/external/com_puppycrawl_tools_checkstyle/jar/checkstyle-6.17-ijar.jar!/" />
-          </CLASSES>
-          <JAVADOC />
-          <SOURCES />
-      </library>
-    </orderEntry>
-      <orderEntry type="module-library">
-        <library name="libproto-java.jar">
-          <CLASSES>
-            <root url="jar://$MODULE_DIR$/bazel-bin/twister2/proto/libproto-java.jar!/" />
-          </CLASSES>
-          <JAVADOC />
-          <SOURCES />
-      </library>
-    </orderEntry>
-      <orderEntry type="module-library">
-        <library name="libproto_schedule_java-ijar.jar">
-          <CLASSES>
-            <root url="jar://$MODULE_DIR$/bazel-bin/twister2/proto/libproto_schedule_java-ijar.jar!/" />
-          </CLASSES>
-          <JAVADOC />
-          <SOURCES />
-      </library>
-    </orderEntry>
-      <orderEntry type="module-library">
-        <library name="libproto_schedule_java.jar">
-          <CLASSES>
-            <root url="jar://$MODULE_DIR$/bazel-bin/twister2/proto/libproto_schedule_java.jar!/" />
           </CLASSES>
           <JAVADOC />
           <SOURCES />
