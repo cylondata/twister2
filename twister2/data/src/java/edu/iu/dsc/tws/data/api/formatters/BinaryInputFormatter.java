@@ -11,10 +11,14 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.api.formatters;
 
+import java.io.IOException;
 import java.nio.ByteOrder;
+import java.util.Arrays;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.fs.FSDataInputStream;
+import edu.iu.dsc.tws.data.fs.FileInputSplit;
 
 /**
  * Input formatter class that reads binary files
@@ -43,7 +47,14 @@ public class BinaryInputFormatter extends FileInputFormat<byte[]> {
    * The length of a single record in the given binary file.
    */
   protected transient long recordLength;
-  
+
+  /**
+   * The configuration key to set the binary record length.
+   */
+  protected static final String RECORD_LENGTH = "binary-format.record-length";
+
+  private int bufferSize = -1;
+
   /**
    * The start of the split that this parallel instance must consume.
    */
@@ -63,7 +74,7 @@ public class BinaryInputFormatter extends FileInputFormat<byte[]> {
 
   private transient byte[] wrapBuffer;
 
-  private transient int readPos;
+  private transient long readPos;
 
   private transient int limit;
 
@@ -88,5 +99,164 @@ public class BinaryInputFormatter extends FileInputFormat<byte[]> {
       throw new IllegalArgumentException("Endianess must not be null");
     }
     this.endianess = endianess;
+  }
+
+  public int getBufferSize() {
+    return bufferSize;
+  }
+
+  public void setBufferSize(int bufferSize) {
+    if (bufferSize < 2) {
+      throw new IllegalArgumentException("Buffer size must be at least 2.");
+    }
+    this.bufferSize = bufferSize;
+  }
+
+  public long getRecordLength() {
+    return recordLength;
+  }
+
+  public void setRecordLength(long recordLength) {
+    if(recordLength <= 0){
+      throw new IllegalArgumentException("RecordLength must be larger than 0");
+    }
+    this.recordLength = recordLength;
+  }
+
+  /**
+   * Configures this input format by reading the path to the file from the configuration and setting
+   * the record length
+   *
+   * @param parameters The configuration object to read the parameters from.
+   */
+  @Override
+  public void configure(Config parameters) {
+    super.configure(parameters);
+
+    // the if() clauses are to prevent the configure() method from
+    // overwriting the values set by the setters
+    long recordLength = parameters.getLongValue(RECORD_LENGTH, -1   );
+    if (recordLength > 0) {
+      setRecordLength(recordLength);
+    }
+
+  }
+
+  /**
+   * Opens the given input split. This method opens the input stream to the specified file, allocates read buffers
+   * and positions the stream at the correct position, making sure that any partial record at the beginning is skipped.
+   *
+   * @param split The input split to open.
+   */
+  public void open(FileInputSplit split) throws IOException {
+    super.open(split);
+    initBuffers();
+    //Check if we are starting at a new record and adjust as needed (only needed for binary files)
+    long recordMod = this.splitStart % this.recordLength;
+    if( recordMod != 0){
+      //We are not at the start of a record, we change the offset to take it to the start of the
+      //next record
+      this.offset = this.splitStart + this.recordLength - recordMod;
+      //TODO: when debugging check if this shoould be >=
+      if(this.offset > this.splitStart + this.splitLength){
+        this.end = true; // We do not have a record in this split
+      }
+    }else{
+      this.offset = splitStart;
+    }
+
+    if (this.splitStart != 0) {
+      this.stream.seek(offset);
+      readRecord();
+      // if the first partial record already pushes the stream over
+      // the limit of our split, then no record starts within this split
+      if (this.overLimit) {
+        this.end = true;
+      }
+    } else {
+      fillBuffer(0);
+    }
+  }
+
+  private void initBuffers() {
+    this.bufferSize = this.bufferSize <= 0 ? DEFAULT_READ_BUFFER_SIZE : this.bufferSize;
+
+    if (this.bufferSize <= this.recordLength) {
+      throw new IllegalArgumentException("Buffer size must be greater than or equal to the " +
+          "length of a record.");
+    }
+
+    if (this.readBuffer == null || this.readBuffer.length != this.bufferSize) {
+      this.readBuffer = new byte[this.bufferSize];
+    }
+    if (this.wrapBuffer == null || this.wrapBuffer.length < 256) {
+      this.wrapBuffer = new byte[256];
+    }
+
+    this.readPos = 0;
+    this.limit = 0;
+    this.overLimit = false;
+    this.end = false;
+  }
+
+  /**
+   * Reads a single record from the binary file
+   * @return
+   * @throws IOException
+   */
+  private boolean readRecord() throws IOException{
+    if (this.stream == null || this.overLimit) {
+      return false;
+    }
+    
+    return false;
+  }
+  /**
+   * Fills the read buffer with bytes read from the file starting from an offset.
+   */
+  private boolean fillBuffer(int offset) throws IOException {
+    int maxReadLength = this.readBuffer.length - offset;
+    // special case for reading the whole split.
+    if (this.splitLength == FileInputFormat.READ_WHOLE_SPLIT_FLAG) {
+      int read = this.stream.read(this.readBuffer, offset, maxReadLength);
+      if (read == -1) {
+        this.stream.close();
+        this.stream = null;
+        return false;
+      } else {
+        this.readPos = offset;
+        this.limit = read;
+        return true;
+      }
+    }
+
+    // else ..
+    int toRead;
+    if (this.splitLength > 0) {
+      // if we have more data, read that
+      toRead = this.splitLength > maxReadLength ? maxReadLength : (int) this.splitLength;
+    }
+    else {
+      // if we have exhausted our split, we need to complete the current record, or read one
+      // more across the next split.
+      // the reason is that the next split will skip over the beginning until it finds the first
+      // delimiter, discarding it as an incomplete chunk of data that belongs to the last record in the
+      // previous split.
+      toRead = maxReadLength;
+      this.overLimit = true;
+    }
+
+    int read = this.stream.read(this.readBuffer, offset, toRead);
+
+    if (read == -1) {
+      this.stream.close();
+      this.stream = null;
+      return false;
+    } else {
+      this.splitLength -= read;
+      this.readPos = offset; // position from where to start reading
+      this.limit = read + offset; // number of valid bytes in the read buffer
+      return true;
+    }
   }
 }
