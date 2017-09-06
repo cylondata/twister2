@@ -42,11 +42,6 @@ public abstract class DelimitedInputFormat<OT> extends FileInputFormat<OT>  {
   private static final int DEFAULT_READ_BUFFER_SIZE = 1024 * 1024;
 
   /**
-   * Indication that the number of samples has not been set by the configuration.
-   */
-  private static final int NUM_SAMPLES_UNDEFINED = -1;
-
-  /**
    * The maximum size of a sample record before sampling is aborted. To catch cases where a wrong delimiter is given.
    */
 
@@ -62,8 +57,6 @@ public abstract class DelimitedInputFormat<OT> extends FileInputFormat<OT>  {
   private int lineLengthLimit = Integer.MAX_VALUE;
 
   private int bufferSize = -1;
-
-  private int numLineSamples = NUM_SAMPLES_UNDEFINED;
 
   /**
    * The input stream reading from the input file.
