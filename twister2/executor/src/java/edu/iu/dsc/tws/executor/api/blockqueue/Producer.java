@@ -11,26 +11,49 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.api.blockqueue;
 
+import java.util.Date;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+
+import edu.iu.dsc.tws.executor.model.Task;
 
 /**
  * Created by vibhatha on 9/5/17.
  */
 public class Producer implements Runnable {
-  private final BlockingQueue queue;
-  Producer(BlockingQueue q) { queue = q; }
+
+  //private final BlockingQueue queue;
+  protected BlockingQueue queue = null;
+
+
+  public Producer(BlockingQueue q) { queue = q; }
+
+
   public void run() {
     try {
-      int i=0;
-      while (i<=5) { queue.put(produce(i));
-      i++;}
+      int i = 0;
+      while(true){
+        queue.put(produce("Process : "+i+" - "+"Task Descriptor : "+i));
+        i++;
+        Thread.sleep(100);
+      }
+
+
     } catch (InterruptedException ex) {
+
+      System.err.println(ex.getMessage());
 
     }
   }
-  public Object produce(int i) {
+  public Object produce(String taskDescriptor) throws InterruptedException {
 
-    System.out.println("Producing  "+i);
-    return new String("Hello : "+i);
+    System.out.println("Producing : "+taskDescriptor);
+
+    //this.queue.put(taskDescriptor);
+    return new String("Task Id : "+taskDescriptor);
+  }
+
+  public int size(){
+    return this.queue.size();
   }
 }

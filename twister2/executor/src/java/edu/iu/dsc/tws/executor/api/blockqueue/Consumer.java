@@ -11,29 +11,37 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.api.blockqueue;
 
+import java.util.Iterator;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+
+import edu.iu.dsc.tws.executor.model.Task;
 
 /**
  * Created by vibhatha on 9/5/17.
  */
 public class Consumer implements Runnable {
-  private final BlockingQueue queue;
-  Consumer(BlockingQueue q) { queue = q; }
+  //private final BlockingQueue queue;
+  protected BlockingQueue queue = null;
+  public Consumer(BlockingQueue q) { queue = q; }
 
   public void run() {
     try {
-      int i=0;
-      while (i<=5) {
-        consume(queue.take());
-        i++;
-      }
-    } catch (InterruptedException ex) {
+      boolean status = true;
+      System.out.println("Initial Queue Size : "+queue.size());
+        while(status){
+          consume((String) queue.take());
+         /* if(queue.size()==0){
+            break;
+          }*/
+        }
 
+    } catch (InterruptedException ex) {
+      ex.printStackTrace();
     }
   }
-  public void consume(Object x) {
-
-    System.out.println("Consuming : "+x.toString());
+  public void consume(String taskDescriptor) {
+    System.out.println("Consuming : "+taskDescriptor.toString());
 
   }
 }

@@ -11,35 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.api.blockqueue;
 
-import java.util.Date;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.PriorityBlockingQueue;
-
-import edu.iu.dsc.tws.executor.model.Task;
 
 /**
  * Created by vibhatha on 9/5/17.
  */
-public class BlockQueueMain {
-
-  public static void main(String[] args) throws InterruptedException {
-
-    BlockingQueue q1 = new PriorityBlockingQueue();
-    BlockingQueue q = new ArrayBlockingQueue(1024);
-
-    Producer p = new Producer(q);
-    Consumer c1 = new Consumer(q);
-    Consumer c2 = new Consumer(q);
-    Thread t = new Thread(p);
-    t.start();
-
-    Thread t1 = new Thread(c1);
-    t1.start();
+public class PriorityQueue<Task> extends PriorityBlockingQueue<Task> {
 
 
-    System.out.println("Consumer : "+t1.getState());
-    System.out.println("Producer : "+t.getState());
 
-    }
 }
