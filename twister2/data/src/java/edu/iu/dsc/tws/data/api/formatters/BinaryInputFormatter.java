@@ -46,7 +46,7 @@ public class BinaryInputFormatter extends FileInputFormat<byte[]> {
   /**
    * The length of a single record in the given binary file.
    */
-  protected transient long recordLength;
+  protected transient int recordLength;
 
   /**
    * The configuration key to set the binary record length.
@@ -74,7 +74,7 @@ public class BinaryInputFormatter extends FileInputFormat<byte[]> {
 
   private transient byte[] wrapBuffer;
 
-  private transient long readPos;
+  private transient int readPos;
 
   private transient int limit;
 
@@ -112,11 +112,11 @@ public class BinaryInputFormatter extends FileInputFormat<byte[]> {
     this.bufferSize = bufferSize;
   }
 
-  public long getRecordLength() {
+  public int getRecordLength() {
     return recordLength;
   }
 
-  public void setRecordLength(long recordLength) {
+  public void setRecordLength(int recordLength) {
     if(recordLength <= 0){
       throw new IllegalArgumentException("RecordLength must be larger than 0");
     }
@@ -135,7 +135,7 @@ public class BinaryInputFormatter extends FileInputFormat<byte[]> {
 
     // the if() clauses are to prevent the configure() method from
     // overwriting the values set by the setters
-    long recordLength = parameters.getLongValue(RECORD_LENGTH, -1   );
+    int recordLength = parameters.getIntegerValue(RECORD_LENGTH, -1   );
     if (recordLength > 0) {
       setRecordLength(recordLength);
     }
@@ -167,23 +167,15 @@ public class BinaryInputFormatter extends FileInputFormat<byte[]> {
 
     if (this.splitStart != 0) {
       this.stream.seek(offset);
-      readRecord();
-      // if the first partial record already pushes the stream over
-      // the limit of our split, then no record starts within this split
-      if (this.overLimit) {
-        this.end = true;
-      }
-    } else {
-      fillBuffer(0);
     }
+    fillBuffer(0);
   }
 
   private void initBuffers() {
     this.bufferSize = this.bufferSize <= 0 ? DEFAULT_READ_BUFFER_SIZE : this.bufferSize;
 
-    if (this.bufferSize <= this.recordLength) {
-      throw new IllegalArgumentException("Buffer size must be greater than or equal to the " +
-          "length of a record.");
+    if (this.bufferSize %this.recordLength != 0) {
+      throw new IllegalArgumentException("Buffer size must be a multiple of the record length");
     }
 
     if (this.readBuffer == null || this.readBuffer.length != this.bufferSize) {
@@ -204,13 +196,50 @@ public class BinaryInputFormatter extends FileInputFormat<byte[]> {
    * @return
    * @throws IOException
    */
-  private boolean readRecord() throws IOException{
-    if (this.stream == null || this.overLimit) {
-      return false;
+  public byte[] readRecord(byte[] reusable, byte[] bytes, int offset, int numBytes) throws IOException {
+    //If the reusable array is avilable use it
+    //TODO L2: check for faster methods to perform this
+    if(reusable != null && reusable.length == this.recordLength){
+      System.arraycopy(bytes,offset,reusable,0,numBytes);
+      return reusable;
+    }else{
+      //TODO L2:check if this has any memory leaks
+      byte[] tmp = new byte[this.recordLength];
+      System.arraycopy(bytes,offset,tmp,0,numBytes);
+      return tmp;
     }
-    
-    return false;
   }
+
+  @Override
+  public byte[] nextRecord(byte[] record) throws IOException {
+    if (checkAndBufferRecord()) {
+      return readRecord(record, this.readBuffer, this.currOffset, this.currLen);
+    } else {
+      this.end = true;
+      return null;
+    }
+  }
+
+  private boolean checkAndBufferRecord() throws IOException {
+    if(this.readPos < this.limit){
+      //The next record is already in the buffer
+      this.currOffset = this.readPos;
+      this.currLen = this.recordLength;
+      this.readPos = this.readPos + this.recordLength;
+      return true;
+    }else{
+      //Need to refill the buffer
+      if(fillBuffer(0)){
+        this.currOffset = this.readPos;
+        this.currLen = this.recordLength;
+        this.readPos = this.readPos + this.recordLength;
+        return true;
+      }else{
+        return false;
+      }
+    }
+  }
+
   /**
    * Fills the read buffer with bytes read from the file starting from an offset.
    */
