@@ -1,0 +1,24 @@
+package twister2.proto.system;
+
+option java_package = "twister2.proto.system";
+option java_outer_classname = "Scheduler";
+
+message SchedulerLocation {
+  required string job_name = 1;
+  required string http_endpoint = 2;
+  repeated string job_page_link = 3;
+}
+message KillJobRequest {
+  required string job_name = 1;
+}
+message RestartJobRequest {
+  required string job_name = 1;
+  required int32 container_index = 2;
+}
+message UpdateJobRequest {
+  required twister2.proto.system.TaskSchedulingPlans currentTaskSchedulePlan = 1;
+  required twister2.proto.system.TaskSchedulingPlans proposedTaskSchedulePlan = 2;
+}
+//message SchedulerResponse {
+ // required twister2.proto.system.Status status = 1;
+//}

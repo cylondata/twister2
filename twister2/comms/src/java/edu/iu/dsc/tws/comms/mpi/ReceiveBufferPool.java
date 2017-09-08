@@ -17,13 +17,17 @@ import java.util.Queue;
 public class ReceiveBufferPool {
   private Queue<MPIBuffer> buffers;
 
-  private int capacity;
-
-  public ReceiveBufferPool(int capacity) {
-    this.capacity = capacity;
+  public ReceiveBufferPool(int capacity, int maxBuffers) {
+    for (int i = 0; i < maxBuffers; i++) {
+      buffers.offer(new MPIBuffer(capacity));
+    }
   }
 
   public MPIBuffer getByteBuffer() {
     return buffers.poll();
+  }
+
+  public void releaseBuffer(MPIBuffer buffer) {
+    buffers.offer(buffer);
   }
 }

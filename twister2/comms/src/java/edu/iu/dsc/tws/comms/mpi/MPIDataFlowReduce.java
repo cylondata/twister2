@@ -13,6 +13,36 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi;
 
-public class MPIDataFlowReduce {
+import java.util.List;
 
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.Message;
+import edu.iu.dsc.tws.comms.api.MessageBuilder;
+import edu.iu.dsc.tws.comms.api.MessageFormatter;
+import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.core.InstancePlan;
+
+public class MPIDataFlowReduce implements DataFlowOperation {
+  @Override
+  public void init(Config config, InstancePlan instancePlan, List<Integer> sources,
+                   List<Integer> destinations, int stream, MessageReceiver receiver,
+                   MessageFormatter messageFormatter, MessageBuilder messageBuilder) {
+
+  }
+
+  @Override
+  public void sendPartial(Message message) {
+
+  }
+
+  @Override
+  public void finish() {
+
+  }
+
+  @Override
+  public void sendComplete(Message message) {
+
+  }
 }
