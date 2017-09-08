@@ -247,7 +247,7 @@ public abstract class FileInputFormat<OT> implements InputFormat<OT , FileInputS
         inputSplits.add(fis);
       }
     }
-    return new FileInputSplit[0];
+    return inputSplits.toArray(new FileInputSplit[inputSplits.size()]);
   }
 
 
@@ -313,7 +313,7 @@ public abstract class FileInputFormat<OT> implements InputFormat<OT , FileInputS
    * Enumerate all files in the directory and recursive if enumerateNestedFiles is true.
    * @return the total length of accepted files.
    */
-  private long sumFilesInDir(Path path, List<FileStatus> files, boolean logExcludedFiles)
+  protected long sumFilesInDir(Path path, List<FileStatus> files, boolean logExcludedFiles)
       throws IOException {
     final FileSystem fs = path.getFileSystem();
 
@@ -371,7 +371,7 @@ public abstract class FileInputFormat<OT> implements InputFormat<OT , FileInputS
    * @return The index of the block containing the given position (gives the block that contains
    * most of the split)
    */
-  private int getBlockIndexForPosition(BlockLocation[] blocks, long offset, long halfSplitSize, int startIndex) {
+  protected int getBlockIndexForPosition(BlockLocation[] blocks, long offset, long halfSplitSize, int startIndex) {
     // go over all indexes after the startIndex
     for (int i = startIndex; i < blocks.length; i++) {
       long blockStart = blocks[i].getOffset();
