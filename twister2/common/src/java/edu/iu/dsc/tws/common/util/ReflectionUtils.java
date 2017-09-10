@@ -15,13 +15,13 @@ public final class ReflectionUtils {
   private ReflectionUtils() {
   }
 
-  @SuppressWarnings("unchecked") // we don't know what T is until runtime
+  @SuppressWarnings("unchecked")
   public static <T> T newInstance(String className)
       throws ClassNotFoundException, InstantiationException, IllegalAccessException {
     return newInstance(ClassLoader.getSystemClassLoader(), className);
   }
 
-  @SuppressWarnings("unchecked") // we don't know what T is until runtime
+  @SuppressWarnings("unchecked")
   public static <T> T newInstance(ClassLoader classLoader, String className)
       throws ClassNotFoundException, IllegalAccessException, InstantiationException {
     if (className == null) {

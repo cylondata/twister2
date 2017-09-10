@@ -1,0 +1,14 @@
+package tws.proto.job;
+
+option java_package = "edu.iu.dsc.tws.proto.system";
+option java_outer_classname = "Job";
+
+message JobState {
+    required string job_name = 1;
+    required string job_id = 2;
+    // The time the topology was submitted
+    // Unix time
+    optional int64 submission_time = 3;
+    // The username who launched the topology
+    optional string submission_user = 4;
+}

@@ -9,24 +9,28 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.rsched.spi.scheduler;
-
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
+package edu.iu.dsc.tws.rsched.spi.statemanager;
 
 /**
- * Launches job. The purpose of the launcher is to bring up the required processes
+ * A callback interface used to set a watch on any of the nodes
+ * in certain implemenations of IStateManager (Zookeeper for example)
+ * Any event on that node will trigger the callback (processWatch).
  */
-public interface ILauncher extends AutoCloseable {
-  void initialize(Config config, Config runtime);
-
-  void close();
+public interface WatchCallback {
 
   /**
-   * Launch the processes according to the resource plan. An implementation fo this class will
+   * When watch is triggered, process it
    *
-   * @param packing
-   * @return
+   * @param path the node path
+   * @param eventType the WatchEventType
    */
-  boolean launch(ResourcePlan packing);
+  void processWatch(String path, WatchEventType eventType);
+
+  enum WatchEventType {
+    None,
+    NodeCreated,
+    NodeDeleted,
+    NodeDataChanged,
+    NodeChildrenChanged;
+  }
 }

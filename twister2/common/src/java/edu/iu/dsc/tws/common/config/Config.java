@@ -42,8 +42,8 @@ public class Config {
 
   private enum Mode {
     RAW,    // the initially provided configs without pattern substitution
-    LOCAL,  // the provided configs with pattern substitution for the local (i.e., client) env
-    CLUSTER // the provided configs with pattern substitution for the cluster (i.e., remote) env
+    LOCAL,  // the provided configs with pattern substitution for the client env
+    CLUSTER // the provided configs with pattern substitution for the cluster env
   }
 
   // Used to initialize a raw config. Should be used by consumers of Config via the builder
@@ -169,9 +169,7 @@ public class Config {
       case CLUSTER:
         if (this.clusterConfig == null) {
           Config.Builder bc = Config.newBuilder()
-              .putAll(rawConfig.cfgMap)
-              .put(Key.TWISTER2_HOME, get(Key.TWISTER2_CLUSTER_HOME))
-              .put(Key.TWISTER2_CONF, get(Key.TWISTER2_CLUSTER_CONF));
+              .putAll(rawConfig.cfgMap);
           Config tempConfig = Config.expand(bc.build());
           this.clusterConfig = new Config(Mode.CLUSTER, newRawConfig, newLocalConfig, tempConfig);
         }
@@ -185,10 +183,6 @@ public class Config {
 
   public int size() {
     return cfgMap.size();
-  }
-
-  public Object get(Key key) {
-    return get(key.value());
   }
 
   private Object get(String key) {
@@ -209,17 +203,9 @@ public class Config {
     return (String) get(key);
   }
 
-  public String getStringValue(Key key) {
-    return (String) get(key);
-  }
-
   public String getStringValue(String key, String defaultValue) {
     String value = getStringValue(key);
     return value != null ? value : defaultValue;
-  }
-
-  public Boolean getBooleanValue(Key key) {
-    return (Boolean) get(key);
   }
 
   private Boolean getBooleanValue(String key) {
@@ -231,22 +217,12 @@ public class Config {
     return value != null ? value : defaultValue;
   }
 
-  public Long getLongValue(Key key) {
-    Object value = get(key);
-    return TypeUtils.getLong(value);
-  }
-
   public Long getLongValue(String key, long defaultValue) {
     Object value = get(key);
     if (value != null) {
       return TypeUtils.getLong(value);
     }
     return defaultValue;
-  }
-
-  public Integer getIntegerValue(Key key) {
-    Object value = get(key);
-    return TypeUtils.getInteger(value);
   }
 
   public Integer getIntegerValue(String key, int defaultValue) {
@@ -257,14 +233,6 @@ public class Config {
     return defaultValue;
   }
 
-  public Double getDoubleValue(Key key) {
-    Object value = get(key);
-    return Double.valueOf((String) value);
-  }
-
-  public boolean containsKey(Key key) {
-    return cfgMap.containsKey(key);
-  }
 
   public Set<String> getKeySet() {
     return cfgMap.keySet();
@@ -287,28 +255,11 @@ public class Config {
     private static Config.Builder create(boolean loadDefaults) {
       Config.Builder cb = new Builder();
 
-      if (loadDefaults) {
-        loadDefaults(cb, Key.values());
-      }
-
       return cb;
-    }
-
-    private static void loadDefaults(Config.Builder cb, Key... keys) {
-      for (Key key : keys) {
-        if (key.getDefault() != null) {
-          cb.put(key, key.getDefault());
-        }
-      }
     }
 
     public Builder put(String key, Object value) {
       this.keyValues.put(key, value);
-      return this;
-    }
-
-    public Builder put(Key key, Object value) {
-      put(key.value(), value);
       return this;
     }
 
