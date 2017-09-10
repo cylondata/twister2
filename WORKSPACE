@@ -57,3 +57,13 @@ maven_jar(
   name = "commons_logging_commons_logging",
   artifact = "commons-logging:commons-logging:1.1.1",
 )
+
+maven_jar(
+  name = "org_slf4j_slf4j_api",
+  artifact = "org.slf4j:slf4j-api:1.7.7"
+)
+
+maven_jar(
+  name = "org_slf4j_slf4j_jdk14",
+  artifact = "org.slf4j:slf4j-jdk14:1.7.7"
+)
