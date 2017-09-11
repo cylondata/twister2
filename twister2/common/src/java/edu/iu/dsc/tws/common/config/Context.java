@@ -18,43 +18,44 @@ public class Context {
   protected static Map<String, ConfigEntry> substitutions = new HashMap<String, ConfigEntry>();
 
   // configurations for twister2
-  public static final ConfigEntry twister2Home = new ConfigEntry(
+  // configurations with a default value should be specified as a ConfigEntry
+  public static final ConfigEntry TWISTER2_HOME = new ConfigEntry(
       "twister2.directory.home", null, "TWISTER2_HOME");
-  public static final ConfigEntry twister2Bin = new ConfigEntry(
+  public static final ConfigEntry TWISTER2_BIN = new ConfigEntry(
       "twister2.directory.bin", "${TWISTER2_HOME}/bin");
-  public static final ConfigEntry twister2Conf = new ConfigEntry(
+  public static final ConfigEntry TWISTER2_CONF = new ConfigEntry(
       "twister2.directory.conf", "${TWISTER2_HOME}/conf", null, "TWISTER2_CONF");
-  public static final ConfigEntry twister2Lib = new ConfigEntry(
+  public static final ConfigEntry TWISTER2_LIB = new ConfigEntry(
       "twister2.directory.lib", "${TWISTER2_HOME}/lib", null, "TWISTER2_LIB");
-  public static final ConfigEntry twister2Dist = new ConfigEntry(
+  public static final ConfigEntry TWISTER2_DIST = new ConfigEntry(
       "twister2.directory.dist", "${TWISTER2_HOME}/dist", null, "TWISTER_DIST");
-  public static final ConfigEntry  javaHome = new ConfigEntry(
+  public static final ConfigEntry JAVA_HOME = new ConfigEntry(
       "twister2.directory.java.home", "${JAVA_HOME}", null, "JAVA_HOME");
-  public static final ConfigEntry clientYaml = new ConfigEntry(
+  public static final ConfigEntry CLIENT_YAML = new ConfigEntry(
       "twister2.config.file.client.yaml", "${TWISTER2_CONF}/client.yaml");
-  public static final ConfigEntry schedulerYaml = new ConfigEntry(
+  public static final ConfigEntry SCHEDULER_YAML = new ConfigEntry(
       "twister2.config.file.packing.yaml",   "${TWISTER2_CONF}/task.yaml");
-  public static final ConfigEntry resourceSchedulerYaml = new ConfigEntry(
+  public static final ConfigEntry RESOURCE_SCHEDULER_YAML = new ConfigEntry(
       "twister2.config.file.scheduler.yaml", "${TWISTER2_CONF}/resource-scheduler.yaml");
-  public static final ConfigEntry networkYaml = new ConfigEntry(
+  public static final ConfigEntry NETWORK_YAML = new ConfigEntry(
       "twister2.config.file.system.yaml",    "${TWISTER2_CONF}/network.yaml");
-  public static final ConfigEntry uploaderYaml = new ConfigEntry(
+  public static final ConfigEntry UPLOADER_YAML = new ConfigEntry(
       "twister2.config.file.uploader.yaml",  "${TWISTER2_CONF}/uploader.yaml");
-  public static final ConfigEntry systemYaml = new ConfigEntry(
+  public static final ConfigEntry SYSTEM_YAML = new ConfigEntry(
       "twister2.config.file.uploader.yaml",  "${TWISTER2_CONF}/system.yaml");
-  public static final ConfigEntry overrideYaml = new ConfigEntry(
+  public static final ConfigEntry OVERRIDE_YAML = new ConfigEntry(
       "twister2.config.file.override.yaml",  "${TWISTER2_CONF}/override.yaml");
-  public static final ConfigEntry clusterHome = new ConfigEntry(
+  public static final ConfigEntry CLUSTER_HOME = new ConfigEntry(
       "twister2.directory.cluster.home", "./heron-core");
-  public static final ConfigEntry clusterConf = new ConfigEntry(
+  public static final ConfigEntry CLUSTER_CONF = new ConfigEntry(
       "heron.directory.cluster.conf", "./heron-conf");
 
   static {
-    substitutions.put("TWISTER2_HOME", twister2Home);
-    substitutions.put("TWISTER2_CONF", twister2Conf);
-    substitutions.put("TWISTER2_LIB", twister2Lib);
-    substitutions.put("TWISTER2_DIST", twister2Dist);
-    substitutions.put("JAVA_HOME", javaHome);
+    substitutions.put("TWISTER2_HOME", TWISTER2_HOME);
+    substitutions.put("TWISTER2_CONF", TWISTER2_CONF);
+    substitutions.put("TWISTER2_LIB", TWISTER2_LIB);
+    substitutions.put("TWISTER2_DIST", TWISTER2_DIST);
+    substitutions.put("JAVA_HOME", JAVA_HOME);
   }
 
   protected Context() {
@@ -62,22 +63,22 @@ public class Context {
   }
 
   public static String taskConfigurationFile(Config cfg) {
-    return cfg.getStringValue(schedulerYaml);
+    return cfg.getStringValue(SCHEDULER_YAML);
   }
 
   public static String networkConfigurationFile(Config cfg) {
-    return cfg.getStringValue(networkYaml);
+    return cfg.getStringValue(NETWORK_YAML);
   }
 
   public static String uploaderConfigurationFile(Config cfg) {
-    return cfg.getStringValue(uploaderYaml);
+    return cfg.getStringValue(UPLOADER_YAML);
   }
 
   public static String resourceSchedulerConfigurationFile(Config cfg) {
-    return cfg.getStringValue(resourceSchedulerYaml);
+    return cfg.getStringValue(RESOURCE_SCHEDULER_YAML);
   }
 
   public static String clientConfigurationFile(Config cfg) {
-    return cfg.getStringValue(clientYaml);
+    return cfg.getStringValue(CLIENT_YAML);
   }
 }

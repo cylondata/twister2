@@ -21,8 +21,8 @@ public final class ConfigLoader {
 
   private static Config loadDefaults(String twister2Home, String configPath) {
     return Config.newBuilder(true)
-        .put(Context.twister2Home.getKey(), twister2Home)
-        .put(Context.twister2Conf.getKey(), configPath)
+        .put(Context.TWISTER2_HOME.getKey(), twister2Home)
+        .put(Context.TWISTER2_CONF.getKey(), configPath)
         .build();
   }
 
@@ -64,7 +64,7 @@ public final class ConfigLoader {
    */
   public static Config loadClusterConfig() {
     Config defaultConfig = loadDefaults(
-        Context.clusterHome.getDefaultValue(), Context.clusterConf.getDefaultValue());
+        Context.CLUSTER_HOME.getDefaultValue(), Context.CLUSTER_CONF.getDefaultValue());
     Config clusterConfig = Config.toClusterMode(defaultConfig); //to token-substitute the conf paths
 
     Config.Builder cb = Config.newBuilder()
@@ -80,7 +80,7 @@ public final class ConfigLoader {
 
   public static Config loadComponentConfig(String filePath) {
     Config defaultConfig = loadDefaults(
-        Context.clusterHome.getDefaultValue(), Context.clusterConf.getDefaultValue());
+        Context.CLUSTER_HOME.getDefaultValue(), Context.CLUSTER_CONF.getDefaultValue());
     Config clusterConfig = Config.toClusterMode(defaultConfig); //to token-substitute the conf paths
 
     Config.Builder cb = Config.newBuilder()
