@@ -36,7 +36,7 @@ public final class ConfigLoader {
   }
 
   /**
-   * Loads raw configurations from files under the twister2Home and configPath. The returned config
+   * Loads raw configurations from files under the twister2 Home and configPath. The returned config
    * must be converted to either local or cluster mode to trigger pattern substitution of wildcards
    * tokens.
    */
@@ -50,8 +50,8 @@ public final class ConfigLoader {
         .putAll(loadConfig(Context.clientConfigurationFile(localConfig)))
         .putAll(loadConfig(Context.taskConfigurationFile(localConfig)))
         .putAll(loadConfig(Context.resourceSchedulerConfigurationFile(localConfig)))
-        .putAll(loadConfig(Context.stateManagerConfigurationFile(localConfig)))
         .putAll(loadConfig(Context.uploaderConfigurationFile(localConfig)))
+        .putAll(loadConfig(Context.networkConfigurationFile(localConfig)))
         .putAll(loadConfig(releaseFile))
         .putAll(loadConfig(overrideConfigFile));
     return cb.build();
@@ -64,7 +64,7 @@ public final class ConfigLoader {
    */
   public static Config loadClusterConfig() {
     Config defaultConfig = loadDefaults(
-        Key.TWISTER2_CLUSTER_HOME.getDefaultString(), Key.TWISTER2_CLUSTER_CONF.getDefaultString());
+        Context.clusterHome.getDefaultValue(), Context.clusterConf.getDefaultValue());
     Config clusterConfig = Config.toClusterMode(defaultConfig); //to token-substitute the conf paths
 
     Config.Builder cb = Config.newBuilder()
@@ -72,7 +72,7 @@ public final class ConfigLoader {
         .putAll(loadConfig(Context.clientConfigurationFile(clusterConfig)))
         .putAll(loadConfig(Context.taskConfigurationFile(clusterConfig)))
         .putAll(loadConfig(Context.resourceSchedulerConfigurationFile(clusterConfig)))
-        .putAll(loadConfig(Context.stateManagerConfigurationFile(clusterConfig)))
+        .putAll(loadConfig(Context.networkConfigurationFile(clusterConfig)))
         .putAll(loadConfig(Context.uploaderConfigurationFile(clusterConfig)));
 
     return cb.build();
@@ -80,7 +80,7 @@ public final class ConfigLoader {
 
   public static Config loadComponentConfig(String filePath) {
     Config defaultConfig = loadDefaults(
-        Key.TWISTER2_CLUSTER_HOME.getDefaultString(), Key.TWISTER2_CLUSTER_CONF.getDefaultString());
+        Context.clusterHome.getDefaultValue(), Context.clusterConf.getDefaultValue());
     Config clusterConfig = Config.toClusterMode(defaultConfig); //to token-substitute the conf paths
 
     Config.Builder cb = Config.newBuilder()

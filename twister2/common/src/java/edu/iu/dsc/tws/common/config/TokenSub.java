@@ -33,7 +33,7 @@ public final class TokenSub {
   }
 
   /**
-   * Given a static config map, substitute occurrences of ${HERON_*} variables
+   * Given a static config map, substitute occurrences of ${TWISTER2_*} variables
    * in the provided path string
    *
    * @param config a static map config object of key value pairs
@@ -73,10 +73,6 @@ public final class TokenSub {
         if (m.matches()) {
           String token = m.group(1);
           try {
-            // For backwards compatibility the ${TOPOLOGY} token will match Key.TOPOLOGY_NAME
-            if ("TOPOLOGY".equals(token)) {
-              token = "TOPOLOGY_NAME";
-            }
             Key key = Key.valueOf(token);
             String value = config.getStringValue(key);
             if (value == null) {
