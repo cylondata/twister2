@@ -27,24 +27,29 @@ public class ConfigEntry {
 
   private String key;
   private String defaultValue;
+  private String substitute;
   private Type type;
 
-  public ConfigEntry(String key, String defaultValue, Type type) {
+  public ConfigEntry(String key, String defaultValue, Type type, String substitute) {
     this.key = key;
     this.defaultValue = defaultValue;
     this.type = type;
   }
 
   public ConfigEntry(String key) {
-    this(key, null, Type.STRING);
+    this(key, null, Type.STRING, null);
   }
 
   public ConfigEntry(String key, Type type) {
-    this(key, null, type);
+    this(key, null, type, null);
   }
 
   public ConfigEntry(String key, String defaultValue) {
-    this(key, defaultValue, Type.STRING);
+    this(key, defaultValue, Type.STRING, null);
+  }
+
+  public ConfigEntry(String key, String defaultValue, String substitute) {
+    this(key, defaultValue, Type.STRING, substitute);
   }
 
   public String getKey() {
@@ -57,5 +62,21 @@ public class ConfigEntry {
 
   public Type getType() {
     return type;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
+    ConfigEntry that = (ConfigEntry) o;
+
+    return key != null ? key.equals(that.key) : that.key == null;
+
+  }
+
+  @Override
+  public int hashCode() {
+    return key != null ? key.hashCode() : 0;
   }
 }

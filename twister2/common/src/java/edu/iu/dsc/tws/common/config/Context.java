@@ -15,20 +15,21 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Context {
-  protected static Map<String, String> configurationDefaults = new HashMap<String, String>();
+  protected static Map<String, ConfigEntry> substitutions = new HashMap<String, ConfigEntry>();
 
   // configurations for twister2
-  public static final ConfigEntry twister2Home = new ConfigEntry("twister2.directory.home");
+  public static final ConfigEntry twister2Home = new ConfigEntry(
+      "twister2.directory.home", null, "TWISTER2_HOME");
   public static final ConfigEntry twister2Bin = new ConfigEntry(
       "twister2.directory.bin", "${TWISTER2_HOME}/bin");
   public static final ConfigEntry twister2Conf = new ConfigEntry(
-      "twister2.directory.conf", "${TWISTER2_HOME}/conf");
+      "twister2.directory.conf", "${TWISTER2_HOME}/conf", null, "TWISTER2_CONF");
   public static final ConfigEntry twister2Lib = new ConfigEntry(
-      "twister2.directory.lib", "${TWISTER2_HOME}/lib");
+      "twister2.directory.lib", "${TWISTER2_HOME}/lib", null, "TWISTER2_LIB");
   public static final ConfigEntry twister2Dist = new ConfigEntry(
-      "twister2.directory.dist", "${TWISTER2_HOME}/dist");
+      "twister2.directory.dist", "${TWISTER2_HOME}/dist", null, "TWISTER_DIST");
   public static final ConfigEntry  javaHome = new ConfigEntry(
-      "twister2.directory.java.home", "${JAVA_HOME}");
+      "twister2.directory.java.home", "${JAVA_HOME}", null, "JAVA_HOME");
   public static final ConfigEntry clientYaml = new ConfigEntry(
       "twister2.config.file.client.yaml", "${TWISTER2_CONF}/client.yaml");
   public static final ConfigEntry schedulerYaml = new ConfigEntry(
@@ -47,6 +48,14 @@ public class Context {
       "twister2.directory.cluster.home", "./heron-core");
   public static final ConfigEntry clusterConf = new ConfigEntry(
       "heron.directory.cluster.conf", "./heron-conf");
+
+  static {
+    substitutions.put("TWISTER2_HOME", twister2Home);
+    substitutions.put("TWISTER2_CONF", twister2Conf);
+    substitutions.put("TWISTER2_LIB", twister2Lib);
+    substitutions.put("TWISTER2_DIST", twister2Dist);
+    substitutions.put("JAVA_HOME", javaHome);
+  }
 
   protected Context() {
 

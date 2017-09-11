@@ -21,8 +21,8 @@ public final class ConfigLoader {
 
   private static Config loadDefaults(String twister2Home, String configPath) {
     return Config.newBuilder(true)
-        .put(Key.TWISTER2_HOME, twister2Home)
-        .put(Key.TWISTER2_CONF, configPath)
+        .put(Context.twister2Home.getKey(), twister2Home)
+        .put(Context.twister2Conf.getKey(), configPath)
         .build();
   }
 

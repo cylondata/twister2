@@ -73,12 +73,16 @@ public final class TokenSub {
         if (m.matches()) {
           String token = m.group(1);
           try {
-            Key key = Key.valueOf(token);
-            String value = config.getStringValue(key);
+            ConfigEntry entry = Context.substitutions.get(token);
+            if (entry == null) {
+              LOG.warning("We cannot find the substitution entry for token: " + token);
+              continue;
+            }
+            String value = config.getStringValue(entry.getKey());
             if (value == null) {
               throw new IllegalArgumentException(String.format("Config value %s contains "
                       + "substitution token %s but the corresponding config setting %s not found",
-                  pathString, elem, key.value()));
+                  pathString, elem, entry.getKey()));
             }
             list.set(i, value);
           } catch (IllegalArgumentException e) {
