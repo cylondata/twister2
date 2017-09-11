@@ -182,7 +182,6 @@ public class SharedFileSystemStateManager extends FileSystemStateManager {
     // comes up deterministically.
     return setData(StateLocation.SCHEDULER_LOCATION, jobName, location.toByteArray(), true);
   }
-  
 
   public static boolean writeToFile(String filename, byte[] contents, boolean overwrite) {
     // default Files behavior is to overwrite. If we specify no overwrite then CREATE_NEW fails
