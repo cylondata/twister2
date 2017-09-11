@@ -200,7 +200,7 @@ public class Config {
   }
 
   public String getStringValue(ConfigEntry key) {
-    return (String) getStringValue(key.getKey(), key.getDefaultValue());
+    return getStringValue(key.getKey(), key.getDefaultValue());
   }
 
   public String getStringValue(String key) {
