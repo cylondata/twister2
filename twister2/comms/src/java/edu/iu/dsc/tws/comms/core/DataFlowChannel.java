@@ -49,7 +49,7 @@ public final class DataFlowChannel {
     String communicationClass = CommunicationContext.getCommunicationClass(config);
     try {
       communication = ReflectionUtils.newInstance(communicationClass);
-    } catch (Exception e) {
+    } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
       LOG.severe("Failed to load the communications class");
       throw new RuntimeException(e);
     }

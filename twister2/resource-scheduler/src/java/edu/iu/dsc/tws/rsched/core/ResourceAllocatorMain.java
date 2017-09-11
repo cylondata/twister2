@@ -31,6 +31,9 @@ public class ResourceAllocatorMain {
 
   private Config config;
 
+  /**
+   * Submit the job to the cluster
+   */
   public void submitJob() {
     String statemgrClass = SchedulerContext.stateManagerClass(config);
     IStateManager statemgr;
@@ -65,16 +68,15 @@ public class ResourceAllocatorMain {
           String.format("Failed to instantiate uploader class '%s'", uploaderClass), e);
     }
 
-    try {
-      // intialize the state manager
-      statemgr.initialize(config);
+    // intialize the state manager
+    statemgr.initialize(config);
 
-      // now upload the content of the package
-      uploader.initialize(config);
-      URI packageURI = uploader.uploadPackage();
+    // now upload the content of the package
+    uploader.initialize(config);
+    URI packageURI = uploader.uploadPackage();
 
-      // now launch the launcher
-      // Update the runtime config with the packageURI
+    // now launch the launcher
+    // Update the runtime config with the packageURI
 //      Config runtimeAll = Config.newBuilder()
 //          .putAll(runtimeWithoutPackageURI)
 //          .put(SchedulerContext.JOB_PACKAGE_URI, packageURI)
@@ -82,8 +84,6 @@ public class ResourceAllocatorMain {
 //
 //      launcher.initialize(config, runtimeAll);
 //      launcher.launch()
-    } catch (Exception e) {
-      LOG.log(Level.SEVERE, "Failed to execute the resource allocator");
-    }
+
   }
 }

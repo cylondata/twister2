@@ -27,8 +27,8 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.rsched.spi.uploaders.IUploader;
 import edu.iu.dsc.tws.rsched.spi.uploaders.UploaderException;
 
-public class LocalFileSystemUploader implements IUploader{
-  private static Logger LOG = Logger.getLogger(LocalFileSystemUploader.class.getName());
+public class LocalFileSystemUploader implements IUploader {
+  private static final Logger LOG = Logger.getLogger(LocalFileSystemUploader.class.getName());
 
   // this is the place where we will upload the file
   private String destinationFile;

@@ -7,5 +7,6 @@ java_library(
     deps = [
         "//twister2/common/src/java:config-java",
         "@commons_cli_commons_cli//jar",
+        "@com_google_guava_guava//jar",
     ]
 )
