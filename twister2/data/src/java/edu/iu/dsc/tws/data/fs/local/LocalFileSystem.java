@@ -21,6 +21,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.data.fs.BlockLocation;
+import edu.iu.dsc.tws.data.fs.FSDataInputStream;
 import edu.iu.dsc.tws.data.fs.FileStatus;
 import edu.iu.dsc.tws.data.fs.FileSystem;
 import edu.iu.dsc.tws.data.fs.Path;
@@ -116,6 +117,12 @@ public class LocalFileSystem extends FileSystem {
     }
 
     return results;
+  }
+
+  @Override
+  public FSDataInputStream open(final Path f) throws IOException {
+    final File file = pathToFile(f);
+    return new LocalDataInputStream(file);
   }
 
   private File pathToFile(Path path) {

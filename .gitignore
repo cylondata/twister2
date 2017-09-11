@@ -16,3 +16,4 @@ hs_err_pid*
 #idea created files
 .idea/
 ./twister2/.idea/
+*.iml

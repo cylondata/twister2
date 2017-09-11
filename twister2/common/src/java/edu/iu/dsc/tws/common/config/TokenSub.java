@@ -33,7 +33,7 @@ public final class TokenSub {
   }
 
   /**
-   * Given a static config map, substitute occurrences of ${HERON_*} variables
+   * Given a static config map, substitute occurrences of ${TWISTER2_*} variables
    * in the provided path string
    *
    * @param config a static map config object of key value pairs
@@ -73,16 +73,16 @@ public final class TokenSub {
         if (m.matches()) {
           String token = m.group(1);
           try {
-            // For backwards compatibility the ${TOPOLOGY} token will match Key.TOPOLOGY_NAME
-            if ("TOPOLOGY".equals(token)) {
-              token = "TOPOLOGY_NAME";
+            ConfigEntry entry = Context.substitutions.get(token);
+            if (entry == null) {
+              LOG.warning("We cannot find the substitution entry for token: " + token);
+              continue;
             }
-            Key key = Key.valueOf(token);
-            String value = config.getStringValue(key);
+            String value = config.getStringValue(entry.getKey());
             if (value == null) {
               throw new IllegalArgumentException(String.format("Config value %s contains "
                       + "substitution token %s but the corresponding config setting %s not found",
-                  pathString, elem, key.value()));
+                  pathString, elem, entry.getKey()));
             }
             list.set(i, value);
           } catch (IllegalArgumentException e) {
