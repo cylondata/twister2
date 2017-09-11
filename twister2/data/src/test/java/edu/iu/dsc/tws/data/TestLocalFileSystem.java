@@ -12,7 +12,7 @@
 package edu.iu.dsc.tws.data;
 
 /**
- * Created by pulasthi on 9/11/17.
+ * Test class for LocalFileSystem
  */
-public class test {
+public class TestLocalFileSystem {
 }
