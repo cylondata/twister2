@@ -27,6 +27,7 @@ import edu.iu.dsc.tws.data.fs.FileStatus;
 import edu.iu.dsc.tws.data.fs.FileSystem;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
+import edu.iu.dsc.tws.data.fs.io.LocatableInputSplitAssigner;
 
 /**
  * Base class for File input formats for specific file types the methods
@@ -253,8 +254,8 @@ public abstract class FileInputFormat<OT> implements InputFormat<OT , FileInputS
 
 
   @Override
-  public InputSplitAssigner getInputSplitAssigner(FileInputSplit[] inputSplits) {
-    return null;
+  public LocatableInputSplitAssigner getInputSplitAssigner(FileInputSplit[] inputSplits) {
+    return new LocatableInputSplitAssigner(inputSplits);
   }
 
   /**
