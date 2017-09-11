@@ -21,7 +21,19 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.tsched.FirstInFirstOut;
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+package edu.iu.dsc.tws.tsched.FirstFit;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -107,7 +119,7 @@ public class FirstFitTaskScheduling implements TaskSchedule {
 
       }
       Resource resource = new Resource(containerRAMValue, containerDiskValue, containerCPUValue);
-      TaskSchedulePlan.ContainerPlan taskContainerPlan = new TaskSchedulePlan.ContainerPlan(containerId, new HashSet<>(taskInstancePlanMap.values()),resource));
+      TaskSchedulePlan.ContainerPlan taskContainerPlan = new TaskSchedulePlan.ContainerPlan(containerId, new HashSet<>(taskInstancePlanMap.values()),resource);
 
       containerPlans.add(taskContainerPlan);
     }
@@ -167,10 +179,10 @@ public class FirstFitTaskScheduling implements TaskSchedule {
 
   }
 
-  private static Map<Integer, Map<InstanceId, Double>> getInstancesRamMapInContainer(
+  private Map<Integer, Map<InstanceId, Double>> getInstancesRamMapInContainer(
       Map<Integer, List<InstanceId>> containerInstanceAllocationMap) {
 
-    Map<String, Double> ramMap = JobAttributes.getComponentRamMapConfig ();
+    Map<String, Double> ramMap = JobAttributes.getComponentRAMMapConfig();
     Map<Integer, Map<InstanceId, Double>> InstancesRamContainerMap = new HashMap<> ();
 
     for (int containerId : containerInstanceAllocationMap.keySet ()) {
@@ -209,10 +221,8 @@ public class FirstFitTaskScheduling implements TaskSchedule {
     return InstancesRamContainerMap;
   }
 
-  private static Map<Integer, Map<InstanceId, Double>> getInstancesDiskMapInContainer(
+  private Map<Integer, Map<InstanceId, Double>> getInstancesDiskMapInContainer(
       Map<Integer, List<InstanceId>> containerInstanceAllocationMap) {
-
-    //Map<String, Double> ramMap = JobAttributes.getComponentRamMapConfig ();
 
     Map<String, Double> diskMap = JobAttributes.getComponentDiskMapConfig ();
     Map<Integer, Map<InstanceId, Double>> InstancesDiskContainerMap = new HashMap<> ();
@@ -220,8 +230,8 @@ public class FirstFitTaskScheduling implements TaskSchedule {
     for (int containerId : containerInstanceAllocationMap.keySet ()) {
       Double usedDiskValue = 0.0;
       List<InstanceId> instanceIds = containerInstanceAllocationMap.get (containerId);
-      Map<InstanceId, Double> containerRam = new HashMap<> ();
-      InstancesDiskContainerMap.put (containerId, containerRam);
+      Map<InstanceId, Double> containerDisk = new HashMap<> ();
+      InstancesDiskContainerMap.put (containerId, containerDisk );
       List<InstanceId> instancesToBeCalculated = new ArrayList<> ();
 
       for (InstanceId instanceId : instanceIds) {
@@ -229,7 +239,7 @@ public class FirstFitTaskScheduling implements TaskSchedule {
 
         if (diskMap.containsKey (taskName)) {
           Double diskValue = diskMap.get (taskName);
-          containerRam.put (instanceId, diskValue);
+          containerDisk .put (instanceId, diskValue);
         } else {
           instancesToBeCalculated.add (instanceId);
         }
@@ -240,21 +250,19 @@ public class FirstFitTaskScheduling implements TaskSchedule {
       if (instancesAllocationSize != 0) {
         Double instanceRequiredDisk = 0.0;
         if(!containerDiskValue.equals (NOT_SPECIFIED_NUMBER_VALUE)){
-          Double remainingRam = containerDiskValue - DEFAULT_DISK_PADDING_PER_CONTAINER - usedDiskValue;
-          instanceRequiredDisk = remainingRam / instancesAllocationSize;
+          Double remainingDisk = containerDiskValue - DEFAULT_DISK_PADDING_PER_CONTAINER - usedDiskValue;
+          instanceRequiredDisk = remainingDisk / instancesAllocationSize;
         }
         for (InstanceId instanceId : instancesToBeCalculated) {
-          containerRam.put(instanceId, instanceRequiredDisk);
+          containerDisk .put(instanceId, instanceRequiredDisk);
         }
-
         System.out.println("Instances Required Disk:\t"+instanceRequiredDisk);
       }
     }
-
     return InstancesDiskContainerMap;
 
   }
-  private double getContainerCPUValue(Map<Integer, List<InstanceId>> InstancesAllocation) {
+  private Double getContainerCPUValue(Map<Integer, List<InstanceId>> InstancesAllocation) {
 
         /*List<JobAPI.Config.KeyValue> jobConfig= job.getJobConfig().getKvsList();
         double defaultContainerCpu =
