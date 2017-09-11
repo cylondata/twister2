@@ -12,8 +12,9 @@
 package edu.iu.dsc.tws.comms.core;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.config.Context;
 
-public class CommunicationContext {
+public class CommunicationContext extends Context {
   public static final String COMMUNICATION_CLASS = "tw2.comm.class";
 
   public static String getCommunicationClass(Config cfg) {
