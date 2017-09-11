@@ -33,6 +33,18 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 package edu.iu.dsc.tws.tsched.spi.taskschedule;
 
 import java.util.HashMap;
@@ -154,10 +166,10 @@ public class TaskSchedulePlan {
 
     private final int containerId;
     private final TaskInstancePlan taskInstancePlan;
-    private final Resource requiredresource;
+    private final Resource requiredResource;
     private final Optional<Resource> scheduledResource;
 
-    public ContainerPlan(int id, Set<InstancePlan> instances, Resource requiredResource) {
+    public ContainerPlan(int id, Set<TaskInstancePlan> instances, Resource requiredResource) {
       this(id, instances, requiredResource, null);
     }
 
@@ -180,7 +192,7 @@ public class TaskSchedulePlan {
     }
 
     public Resource getRequiredresource() {
-      return requiredresource;
+      return requiredResource;
     }
 
     public Optional<Resource> getScheduledResource() {
@@ -197,15 +209,17 @@ public class TaskSchedulePlan {
       if (containerId != that.containerId) return false;
       if (taskInstancePlan != null ? !taskInstancePlan.equals(that.taskInstancePlan) : that.taskInstancePlan != null)
         return false;
-      return (requiredresource != null ? requiredresource.equals(that.requiredresource) : that.requiredresource == null) && (scheduledresource != null ? scheduledresource.equals(that.scheduledresource) : that.scheduledresource == null);
+      if (requiredResource != null ? !requiredResource.equals(that.requiredResource) : that.requiredResource != null)
+        return false;
+      return scheduledResource != null ? scheduledResource.equals(that.scheduledResource) : that.scheduledResource == null;
     }
 
     @Override
     public int hashCode() {
       int result = containerId;
       result = 31 * result + (taskInstancePlan != null ? taskInstancePlan.hashCode() : 0);
-      result = 31 * result + (requiredresource != null ? requiredresource.hashCode() : 0);
-      result = 31 * result + (scheduledresource != null ? scheduledresource.hashCode() : 0);
+      result = 31 * result + (requiredResource != null ? requiredResource.hashCode() : 0);
+      result = 31 * result + (scheduledResource != null ? scheduledResource.hashCode() : 0);
       return result;
     }
 
