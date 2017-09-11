@@ -26,7 +26,6 @@ import edu.iu.dsc.tws.data.fs.FileInputSplit;
 import edu.iu.dsc.tws.data.fs.FileStatus;
 import edu.iu.dsc.tws.data.fs.FileSystem;
 import edu.iu.dsc.tws.data.fs.Path;
-import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
 import edu.iu.dsc.tws.data.fs.io.LocatableInputSplitAssigner;
 
 /**
