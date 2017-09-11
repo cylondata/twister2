@@ -152,10 +152,11 @@ public class MPIDataFlowBroadcast implements DataFlowOperation,
   private void sendMessage(MPIMessage msgObj1) {
     if (routing.getSendingIds() != null && routing.getSendingIds().size() > 0) {
       List<Integer> sendIds = routing.getSendingIds();
+      // we need to increment before sending, otherwise message can get released
+      // before we send all
+      msgObj1.incrementRefCount(sendIds.size());
       for (int i : sendIds) {
         channel.sendMessage(i, msgObj1, this);
-        // increment the ref count
-        msgObj1.incrementRefCount();
       }
     }
   }

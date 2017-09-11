@@ -1,4 +1,4 @@
-#!/bin/bash
+#/bin/bash
 # Copyright 2015 The Bazel Authors. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -67,7 +67,7 @@ function get_package_of() {
 }
 
 function get_twister2_java_paths() {
-  local java_paths=$(find {twister2,tools,integration-test,contrib} -name "*.java" | sed "s|/src/java/.*$|/src/java|"| sed "s|/java/src/.*$|/java/src|" |  sed "s|/tests/java/.*$|/tests/java|" | sort -u | fgrep -v "twister2/scheduler/" | fgrep -v "twister2/scheduler/" )
+  local java_paths=$(find {twister2,tools,integration-test,contrib} -name "*.java" | sed "s|/src/test/java/.*$|/src/test/java|" | sed "s|/src/main/java/.*$|/src/main/java|" | sed "s|/src/java/.*$|/src/java|"| sed "s|/java/src/.*$|/java/src|" |  sed "s|/tests/java/.*$|/tests/java|" | sort -u | fgrep -v "twister2/scheduler/" | fgrep -v "twister2/scheduler/" )
   if [ "$(uname -s | tr 'A-Z' 'a-z')" != "darwin" ]; then
     java_paths=$(echo "${java_paths}" | fgrep -v "/objc_tools/")
   fi

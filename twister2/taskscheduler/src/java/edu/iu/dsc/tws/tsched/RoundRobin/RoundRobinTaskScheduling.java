@@ -21,6 +21,18 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 package edu.iu.dsc.tws.tsched.RoundRobin;
 
 import java.util.ArrayList;
@@ -51,6 +63,7 @@ import edu.iu.dsc.tws.tsched.utils.JobConfig;
 public class RoundRobinTaskScheduling implements TaskSchedule {
 
   private static final Logger LOG = Logger.getLogger(RoundRobinTaskScheduling.class.getName());
+
   private Job job;
   private double instanceRAM;
   private double instanceDisk;
@@ -83,16 +96,16 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
   @Override
   public TaskSchedulePlan tschedule() {
 
-    Map<Integer, List<InstanceId>> containerInstanceAllocationMap = RoundRobinScheduling();
+    Map<Integer, List<InstanceId>> roundRobinContainerInstanceMap = RoundRobinScheduling();
     Set<TaskSchedulePlan.ContainerPlan> containerPlans = new HashSet<>();
 
-    double containerCPUValue = getContainerCPUValue(containerInstanceAllocationMap);
-    double containerRAMValue = getContainerRamValue(containerInstanceAllocationMap);
-    double containerDiskValue = getContainerDiskValue(containerInstanceAllocationMap);
+    double containerCPUValue = getContainerCPUValue(roundRobinContainerInstanceMap);
+    double containerRAMValue = getContainerRamValue(roundRobinContainerInstanceMap);
+    double containerDiskValue = getContainerDiskValue(roundRobinContainerInstanceMap);
 
-    for(Integer containerId:containerInstanceAllocationMap.keySet()){
+    for(Integer containerId:roundRobinContainerInstanceMap.keySet()){
 
-        List<InstanceId> taskInstanceIds = containerInstanceAllocationMap.get(containerId);
+        List<InstanceId> taskInstanceIds = roundRobinContainerInstanceMap.get(containerId);
         Map<InstanceId, TaskSchedulePlan.TaskInstancePlan> taskInstancePlanMap = new HashMap<>();
 
         for(InstanceId id: taskInstanceIds) {
@@ -101,16 +114,17 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
           double instanceRAMValue = instanceRAM;
           double instanceDiskValue = instanceDisk;
 
-          Resource resource  = new Resource (instanceRAM,instanceDisk,instanceCPU);
+          Resource resource  = new Resource (instanceRAM, instanceDisk, instanceCPU);
           taskInstancePlanMap.put(id,new TaskSchedulePlan.TaskInstancePlan("mpitask",1,1, resource));
 
         }
         Resource resource = new Resource(containerRAMValue, containerDiskValue, containerCPUValue);
-        TaskSchedulePlan.ContainerPlan taskContainerPlan = new TaskSchedulePlan.ContainerPlan(containerId, new HashSet<>(taskInstancePlanMap.values()),resource));
+        TaskSchedulePlan.ContainerPlan taskContainerPlan =
+            new TaskSchedulePlan.ContainerPlan(containerId, new HashSet<>(taskInstancePlanMap.values()), resource);
 
         containerPlans.add(taskContainerPlan);
     }
-    return new TaskSchedulePlan(job.getId(),containerPlans);
+    return new TaskSchedulePlan(job.getJobId(), containerPlans);
   }
 
   /***
@@ -128,13 +142,14 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
     Map<Integer, List<InstanceId>> RRAllocation = new HashMap<>();
 
     try {
+
       int numberOfContainers = JobAttributes.getNumberOfContainers(job);
       int totalInstances = JobAttributes.getTotalNumberOfInstances(job);
+
       for (int i = 1; i <= numberOfContainers; i++) {
         RRAllocation.put(i, new ArrayList<InstanceId>());
       }
 
-      //This value will be replaced with the actual parameters
       Map<String, Integer> parallelTaskMap = JobAttributes.getParallelTaskMap(job);
       for (String task : parallelTaskMap.keySet()) {
         int numberOfInstances = parallelTaskMap.get(task);
@@ -170,10 +185,10 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
     return maximumValue;
   }
 
-  private static Map<Integer, Map<InstanceId, Double>> getInstancesRamMapInContainer(
+  private Map<Integer, Map<InstanceId, Double>> getInstancesRamMapInContainer(
       Map<Integer, List<InstanceId>> containerInstanceAllocationMap) {
 
-    Map<String, Double> ramMap = JobAttributes.getComponentRamMapConfig ();
+    Map<String, Double> ramMap = JobAttributes.getComponentRAMMapConfig();
     Map<Integer, Map<InstanceId, Double>> InstancesRamContainerMap = new HashMap<> ();
 
     for (int containerId : containerInstanceAllocationMap.keySet ()) {
@@ -198,9 +213,11 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
       int instancesAllocationSize = instancesToBeCalculated.size ();
       if (instancesAllocationSize != 0) {
         Double instanceRequiredRam = instanceRAM;
+
         if(!containerRamValue.equals (NOT_SPECIFIED_NUMBER_VALUE)){
           Double remainingRam = containerRamValue - DEFAULT_RAM_PADDING_PER_CONTAINER - usedRamValue;
           instanceRequiredRam = remainingRam / instancesAllocationSize;
+
         }
         for (InstanceId instanceId : instancesToBeCalculated) {
           containerRam.put(instanceId, instanceRequiredRam);
@@ -209,7 +226,48 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
     }
     return InstancesRamContainerMap;
   }
-  
+
+  private Map<Integer, Map<InstanceId, Double>> getInstancesDiskMapInContainer(
+      Map<Integer, List<InstanceId>> containerInstanceAllocationMap) {
+
+    Map<String, Double> diskMap = JobAttributes.getComponentDiskMapConfig ();
+    Map<Integer, Map<InstanceId, Double>> InstancesDiskContainerMap = new HashMap<> ();
+
+    for (int containerId : containerInstanceAllocationMap.keySet ()) {
+      Double usedDiskValue = 0.0;
+      List<InstanceId> instanceIds = containerInstanceAllocationMap.get (containerId);
+      Map<InstanceId, Double> containerDisk = new HashMap<> ();
+      InstancesDiskContainerMap.put (containerId, containerDisk );
+      List<InstanceId> instancesToBeCalculated = new ArrayList<> ();
+
+      for (InstanceId instanceId : instanceIds) {
+        String taskName = instanceId.getTaskName ();
+
+        if (diskMap.containsKey (taskName)) {
+          Double diskValue = diskMap.get (taskName);
+          containerDisk .put (instanceId, diskValue);
+        } else {
+          instancesToBeCalculated.add (instanceId);
+        }
+      }
+
+      Double containerDiskValue = getContainerDiskValue (containerInstanceAllocationMap);
+      int instancesAllocationSize = instancesToBeCalculated.size ();
+      if (instancesAllocationSize != 0) {
+        Double instanceRequiredDisk = 0.0;
+        if(!containerDiskValue.equals (NOT_SPECIFIED_NUMBER_VALUE)){
+          Double remainingDisk = containerDiskValue - DEFAULT_DISK_PADDING_PER_CONTAINER - usedDiskValue;
+          instanceRequiredDisk = remainingDisk / instancesAllocationSize;
+        }
+        for (InstanceId instanceId : instancesToBeCalculated) {
+          containerDisk .put(instanceId, instanceRequiredDisk);
+        }
+        System.out.println("Instances Required Disk:\t"+instanceRequiredDisk);
+      }
+    }
+    return InstancesDiskContainerMap;
+  }
+
   private double getContainerCPUValue(Map<Integer, List<InstanceId>> InstancesAllocation) {
 
         /*List<JobAPI.Config.KeyValue> jobConfig= job.getJobConfig().getKvsList();
@@ -253,4 +311,5 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
          Long containerRAMValue = 10L;
          return containerRAMValue.doubleValue();
   }
+
 }
