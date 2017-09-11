@@ -10,5 +10,6 @@ java_library(
         "//twister2/proto:proto_job_java",
         "//twister2/proto:proto_resource_scheduler_java",
         "//third_party:ompi_javabinding_java",
-        "@com_google_guava_guava//jar"],
+        "@com_google_guava_guava//jar",
+        "@com_google_protobuf_protobuf_java//jar",]
 )
