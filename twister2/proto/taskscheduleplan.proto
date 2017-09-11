@@ -10,8 +10,8 @@ message Resource {
 }
 message TaskInstancePlan {
     required int32 taskid = 1;
-    optional string taskname = 2;
-    optional string taskindex = 3;
+    required string taskname = 2;
+    required string taskindex = 3;
     required Resource resource = 4;
 }
 message ContainerPlan {
