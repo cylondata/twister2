@@ -112,6 +112,7 @@ public class SharedFileSystemStateManager extends FileSystemStateManager {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   protected <M extends Message> ListenableFuture<M> getNodeData(
       WatchCallback watcher, String path, Message.Builder builder) {
     final SettableFuture<M> future = SettableFuture.create();
