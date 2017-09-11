@@ -21,19 +21,40 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 package edu.iu.dsc.tws.tsched.builder;
+
+import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedule;
+import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
+import edu.iu.dsc.tws.tsched.spi.taskschedule.Resource;
 
 import java.util.TreeSet;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
 
-public  class TaskSchedulePlanBuilder implements TaskSchedule {
+public  class TaskSchedulePlanBuilder {
 
   private int jobId;
   private int numNodes;
   private ArrayList<Integer> taskIds;
   private TaskSchedulePlan previousTaskSchedulePlan;
+  private Resource instanceDefaultResourceValue;
+  private Resource containerMaximumResourceValue;
+  private Map<String, Double> componentRamMap;
+  private int requestedContainerPadding;
+  private int numContainers;
 
   public TaskSchedulePlanBuilder(int jobId) {
     this.jobId = jobId;
@@ -46,6 +67,10 @@ public  class TaskSchedulePlanBuilder implements TaskSchedule {
     this.numContainers = 0;
     this.requestedContainerPadding = 0;
     this.componentRamMap = new HashMap<> ();
+  }
+
+  public void newTaskSchedulePlanBuilder(){
+
   }
 
   public int getJobId() {
@@ -85,10 +110,11 @@ public  class TaskSchedulePlanBuilder implements TaskSchedule {
     return instanceDefaultResourceValue;
   }
 
-  public TaskSchedulePlan setInstanceDefaultResourceValue(Resource instanceDefaultResourceValue) {
+  /*public TaskSchedulePlan setInstanceDefaultResourceValue(Resource instanceDefaultResourceValue) {
     this.instanceDefaultResourceValue = instanceDefaultResourceValue;
     return this;
-  }
+
+  }*/
 
   public Resource getContainerMaximumResourceValue() {
     return containerMaximumResourceValue;
@@ -121,15 +147,4 @@ public  class TaskSchedulePlanBuilder implements TaskSchedule {
   public void setNumContainers(int numContainers) {
     this.numContainers = numContainers;
   }
-
-  private Resource instanceDefaultResourceValue;
-  private Resource containerMaximumResourceValue;
-  private Map<String, Double> componentRamMap;
-  private int requestedContainerPadding;
-  private int numContainers;
-
-  public void newTaskSchedulePlanBuilder(){
-
-  }
-
 }
