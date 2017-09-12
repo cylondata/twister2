@@ -70,13 +70,9 @@ def create_parser():
         title="Available commands",
         metavar='<command> <options>')
 
-    activate.create_parser(subparsers)
-    deactivate.create_parser(subparsers)
     cli_help.create_parser(subparsers)
     kill.create_parser(subparsers)
-    restart.create_parser(subparsers)
     submit.create_parser(subparsers)
-    update.create_parser(subparsers)
     version.create_parser(subparsers)
 
     return parser
@@ -93,12 +89,8 @@ def run(command, parser, command_args, unknown_args):
     :return:
     '''
     runners = {
-        'activate':activate,
-        'deactivate':deactivate,
         'kill':kill,
-        'restart':restart,
         'submit':submit,
-        'update':update,
         'help':cli_help,
         'version':version,
     }
