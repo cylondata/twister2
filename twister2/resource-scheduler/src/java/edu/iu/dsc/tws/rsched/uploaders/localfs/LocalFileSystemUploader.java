@@ -79,8 +79,8 @@ public class LocalFileSystemUploader implements IUploader {
     }
 
     // copy the topology package to target working directory
-    LOG.log(Level.FINE, String.format("Copying topology package at '%s' to target " +
-        "working directory '%s'",  originalFile, filePath.toString()));
+    LOG.log(Level.FINE, String.format("Copying topology package at '%s' to target "
+        + "working directory '%s'",  originalFile, filePath.toString()));
 
     Path source = Paths.get(originalFile);
     try {

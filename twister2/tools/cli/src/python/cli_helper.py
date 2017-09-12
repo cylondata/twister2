@@ -13,12 +13,12 @@
 # limitations under the License.
 ''' cli_helper.py '''
 import logging
-import heron.tools.common.src.python.utils.config as config
-import heron.tools.cli.src.python.args as args
-import heron.tools.cli.src.python.execute as execute
-import heron.tools.cli.src.python.jars as jars
+import twister2.tools.cli.src.python.config as config
+import twister2.tools.cli.src.python.args as args
+import twister2.tools.cli.src.python.execute as execute
+import twister2.tools.cli.src.python.jars as jars
 
-from heron.common.src.python.utils.log import Log
+from twister2.tools.cli.src.python.log import Log
 
 ################################################################################
 def create_parser(subparsers, action, help_arg):
@@ -78,7 +78,7 @@ def run(command, cl_args, action, extra_args=[], extra_lib_jars=[]):
 
     # invoke the runtime manager to kill the topology
     result = execute.heron_class(
-        'com.twitter.heron.scheduler.RuntimeManagerMain',
+        'com.twitter.twister2.scheduler.RuntimeManagerMain',
         lib_jars,
         extra_jars=[],
         args=new_args

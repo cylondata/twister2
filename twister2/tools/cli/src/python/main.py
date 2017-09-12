@@ -20,16 +20,16 @@ import sys
 import time
 import traceback
 
-import heron.common.src.python.utils.log as log
-import heron.tools.common.src.python.utils.config as config
-import heron.tools.cli.src.python.submit as submit
+import twister2.tools.cli.src.python.log as log
+import twister2.tools.cli.src.python.config as config
+import twister2.tools.cli.src.python.submit as submit
 
-from heron.tools.cli.src.python.opts import cleaned_up_files
+from twister2.tools.cli.src.python.opts import cleaned_up_files
 
 Log = log.Log
 
 HELP_EPILOG = '''Getting more help:
-  heron help <command> Prints help and options for <command>
+  twister2 help <command> Prints help and options for <command>
 
 For detailed documentation, go to http://heronstreaming.io'''
 
@@ -61,7 +61,7 @@ def create_parser():
     :return:
     '''
     parser = argparse.ArgumentParser(
-        prog='heron',
+        prog='twister2',
         epilog=HELP_EPILOG,
         formatter_class=config.SubcommandHelpFormatter,
         add_help=True)
@@ -120,9 +120,6 @@ def check_environment():
     :return:
     '''
     if not config.check_java_home_set():
-        sys.exit(1)
-
-    if not config.check_release_file_exists():
         sys.exit(1)
 
 
