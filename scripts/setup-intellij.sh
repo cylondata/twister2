@@ -43,6 +43,8 @@ EOH
       is_test_source="true"
     elif [[ $source == *"tests/"* ]]; then
       is_test_source="true"
+    elif [[ $source == *"test/"* ]]; then
+      is_test_source="true"
     else
       is_test_source="false"
     fi

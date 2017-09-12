@@ -45,13 +45,37 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 package edu.iu.dsc.tws.tsched.spi.taskschedule;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.base.ImmutableSet;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.base.Optional;
 
 /***
@@ -67,7 +91,7 @@ public class TaskSchedulePlan {
 
   public TaskSchedulePlan(int id, Set<ContainerPlan> containers) {
     this.jobId = id;
-    this.containers = containers;
+    this.containers = ImmutableSet.copyOf(containers);
     containersMap = new HashMap<>();
     for(ContainerPlan containerPlan:containers){
       containersMap.put(containerPlan.containerId,containerPlan);
@@ -165,7 +189,7 @@ public class TaskSchedulePlan {
   public static class ContainerPlan {
 
     private final int containerId;
-    private final TaskInstancePlan taskInstancePlan;
+    private final Set<TaskInstancePlan> taskInstances;
     private final Resource requiredResource;
     private final Optional<Resource> scheduledResource;
 
@@ -174,11 +198,11 @@ public class TaskSchedulePlan {
     }
 
     public ContainerPlan(int id,
-                         Set<TaskInstancePlan> taskinstances,
+                         Set<TaskInstancePlan> taskInstances,
                          Resource requiredResource,
                          Resource scheduledResource) {
       this.containerId = id;
-      this.taskInstancePlan = ImmutableSet.copyOf(instances);
+      this.taskInstances = ImmutableSet.copyOf(taskInstances);
       this.requiredResource = requiredResource;
       this.scheduledResource = Optional.fromNullable(scheduledResource);
     }
@@ -187,11 +211,11 @@ public class TaskSchedulePlan {
       return containerId;
     }
 
-    public edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan.TaskInstancePlan getTaskInstancePlan() {
-      return taskInstancePlan;
+    public Set<TaskInstancePlan> getTaskInstances() {
+      return taskInstances;
     }
 
-    public Resource getRequiredresource() {
+    public Resource getRequiredResource() {
       return requiredResource;
     }
 
@@ -207,21 +231,21 @@ public class TaskSchedulePlan {
       ContainerPlan that = (ContainerPlan) o;
 
       if (containerId != that.containerId) return false;
-      if (taskInstancePlan != null ? !taskInstancePlan.equals(that.taskInstancePlan) : that.taskInstancePlan != null)
-        return false;
-      if (requiredResource != null ? !requiredResource.equals(that.requiredResource) : that.requiredResource != null)
-        return false;
-      return scheduledResource != null ? scheduledResource.equals(that.scheduledResource) : that.scheduledResource == null;
+      if (!taskInstances.equals(that.taskInstances)) return false;
+      if (!requiredResource.equals(that.requiredResource)) return false;
+      return scheduledResource.equals(that.scheduledResource);
     }
 
     @Override
     public int hashCode() {
       int result = containerId;
-      result = 31 * result + (taskInstancePlan != null ? taskInstancePlan.hashCode() : 0);
-      result = 31 * result + (requiredResource != null ? requiredResource.hashCode() : 0);
-      result = 31 * result + (scheduledResource != null ? scheduledResource.hashCode() : 0);
+      result = 31 * result + taskInstances.hashCode();
+      result = 31 * result + requiredResource.hashCode();
+      result = 31 * result + scheduledResource.hashCode();
       return result;
     }
+
+
 
   }
 }
