@@ -20,7 +20,7 @@ def create_parser(subparsers):
     :param subparsers:
     :return:
     '''
-    return cli_helper.create_parser(subparsers, 'kill', 'Kill a topology')
+    return cli_helper.create_parser(subparsers, 'kill', 'Kill a job')
 
 
 # pylint: disable=unused-argument
@@ -32,4 +32,4 @@ def run(command, parser, cl_args, unknown_args):
     :param unknown_args:
     :return:
     '''
-    return cli_helper.run(command, cl_args, "kill topology")
+    return cli_helper.run(command, cl_args, "kill job")

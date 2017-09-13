@@ -31,7 +31,7 @@ def create_parser(subparsers, action, help_arg):
     parser = subparsers.add_parser(
         action,
         help=help_arg,
-        usage="%(prog)s [options] cluster/[role]/[env] <topology-name>",
+        usage="%(prog)s [options] cluster <job-name>",
         add_help=True)
 
     args.add_titles(parser)
@@ -55,15 +55,14 @@ def run(command, cl_args, action, extra_args=[], extra_lib_jars=[]):
     :param action:        description of action taken
     :return:
     '''
-    topology_name = cl_args['topology-name']
+    topology_name = cl_args['job-name']
 
     new_args = [
         "--cluster", cl_args['cluster'],
         "--twister2_home", config.get_twister2_dir(),
         "--config_path", cl_args['config_path'],
         "--override_config_file", cl_args['override_config_file'],
-        "--release_file", config.get_twister2_release_file(),
-        "--topology_name", topology_name,
+        "--job_name", job_name,
         "--command", command,
     ]
     new_args += extra_args
@@ -74,7 +73,7 @@ def run(command, cl_args, action, extra_args=[], extra_lib_jars=[]):
     if Log.getEffectiveLevel() == logging.DEBUG:
         new_args.append("--verbose")
 
-    # invoke the runtime manager to kill the topology
+    # invoke the runtime manager to kill the job
     result = execute.twister2_class(
         'com.twitter.twister2.scheduler.RuntimeManagerMain',
         lib_jars,

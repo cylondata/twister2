@@ -59,8 +59,8 @@ def add_job(parser):
     :return:
     '''
     parser.add_argument(
-        'topology-name',
-        help='Name of the topology')
+        'job-name',
+        help='Name of the job')
     return parser
 
 
@@ -70,8 +70,8 @@ def add_job_file(parser):
     :return:
     '''
     parser.add_argument(
-        'topology-file-name',
-        help='Topology jar/tar/zip file')
+        'job-file-name',
+        help='Job jar/tar/zip file')
     return parser
 
 
@@ -81,8 +81,8 @@ def add_job_class(parser):
     :return:
     '''
     parser.add_argument(
-        'topology-class-name',
-        help='Topology class name')
+        'job-class-name',
+        help='Job class name')
     return parser
 
 
@@ -92,7 +92,7 @@ def add_cluster_role_env(parser):
     :return:
     '''
     parser.add_argument(
-        'cluster/[role]/[env]',
+        'cluster',
         help='Cluster, role, and environment to run topology'
     )
     return parser

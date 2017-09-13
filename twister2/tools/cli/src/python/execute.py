@@ -60,11 +60,11 @@ def twister2_class(class_name, lib_jars, extra_jars=None, args=None, java_define
 
     # set twister2_config environment variable
     twister2_env = os.environ.copy()
-    twister2_env['twister2_OPTIONS'] = opts.get_twister2_config()
+    twister2_env['TWISTER2_OPTIONS'] = opts.get_twister2_config()
 
     # print the verbose message
     Log.debug("Invoking class using command: ``%s''", ' '.join(all_args))
-    Log.debug("twister2 options: {%s}", str(twister2_env["TWISTER2_OPTIONS"]))
+    Log.debug("Twister2 options: {%s}", str(twister2_env["TWISTER2_OPTIONS"]))
 
     # invoke the command with subprocess and print error message, if any
     proc = subprocess.Popen(all_args, env=twister2_env, stdout=subprocess.PIPE,
