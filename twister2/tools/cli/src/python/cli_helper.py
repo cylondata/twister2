@@ -36,7 +36,7 @@ def create_parser(subparsers, action, help_arg):
 
     args.add_titles(parser)
     args.add_cluster_role_env(parser)
-    args.add_topology(parser)
+    args.add_job(parser)
 
     args.add_config(parser)
     args.add_verbose(parser)
@@ -59,25 +59,23 @@ def run(command, cl_args, action, extra_args=[], extra_lib_jars=[]):
 
     new_args = [
         "--cluster", cl_args['cluster'],
-        "--role", cl_args['role'],
-        "--environment", cl_args['environ'],
-        "--heron_home", config.get_heron_dir(),
+        "--twister2_home", config.get_twister2_dir(),
         "--config_path", cl_args['config_path'],
         "--override_config_file", cl_args['override_config_file'],
-        "--release_file", config.get_heron_release_file(),
+        "--release_file", config.get_twister2_release_file(),
         "--topology_name", topology_name,
         "--command", command,
     ]
     new_args += extra_args
 
-    lib_jars = config.get_heron_libs(jars.scheduler_jars() + jars.statemgr_jars())
+    lib_jars = config.get_twister2_libs(jars.resource_scheduler_jars() + jars.statemgr_jars())
     lib_jars += extra_lib_jars
 
     if Log.getEffectiveLevel() == logging.DEBUG:
         new_args.append("--verbose")
 
     # invoke the runtime manager to kill the topology
-    result = execute.heron_class(
+    result = execute.twister2_class(
         'com.twitter.twister2.scheduler.RuntimeManagerMain',
         lib_jars,
         extra_jars=[],

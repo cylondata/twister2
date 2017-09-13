@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-'''config.py: util functions for config, mainly for heron-cli'''
+'''config.py: util functions for config, mainly for twister2-cli'''
 
 import argparse
 import contextlib
@@ -30,25 +30,25 @@ from twister2.tools.cli.src.python.log import Log
 # default environ tag, if not provided
 ENVIRON = "default"
 
-# directories for heron distribution
+# directories for twister2 distribution
 BIN_DIR = "bin"
 CONF_DIR = "conf"
 ETC_DIR = "etc"
 LIB_DIR = "lib"
-CLI_DIR = ".heron"
+CLI_DIR = ".twister2"
 RELEASE_YAML = "release.yaml"
 ZIPPED_RELEASE_YAML = "scripts/packages/release.yaml"
 OVERRIDE_YAML = "override.yaml"
 
-# directories for heron sandbox
-SANDBOX_CONF_DIR = "./heron-conf"
+# directories for twister2 sandbox
+SANDBOX_CONF_DIR = "./twister2-conf"
 
-# config file for heron cli
+# config file for twister2 cli
 CLIENT_YAML = "client.yaml"
 
 # cli configs for role and env
-IS_ROLE_REQUIRED = "heron.config.is.role.required"
-IS_ENV_REQUIRED = "heron.config.is.env.required"
+IS_ROLE_REQUIRED = "twister2.config.is.role.required"
+IS_ENV_REQUIRED = "twister2.config.is.env.required"
 
 
 def create_tar(tar_filename, files, config_dir, config_files):
@@ -63,13 +63,13 @@ def create_tar(tar_filename, files, config_dir, config_files):
                 raise Exception("%s is not an existing file" % filename)
 
         if os.path.isdir(config_dir):
-            tar.add(config_dir, arcname=get_heron_sandbox_conf_dir())
+            tar.add(config_dir, arcname=get_twister2_sandbox_conf_dir())
         else:
             raise Exception("%s is not an existing directory" % config_dir)
 
         for filename in config_files:
             if os.path.isfile(filename):
-                arcfile = os.path.join(get_heron_sandbox_conf_dir(), os.path.basename(filename))
+                arcfile = os.path.join(get_twister2_sandbox_conf_dir(), os.path.basename(filename))
                 tar.add(filename, arcname=arcfile)
             else:
                 raise Exception("%s is not an existing file" % filename)
@@ -128,14 +128,14 @@ def get_classpath(jars):
     return ':'.join(map(normalized_class_path, jars))
 
 
-def get_heron_dir():
+def get_twister2_dir():
     """
-    This will extract heron directory from .pex file.
+    This will extract twister2 directory from .pex file.
 
     For example,
-    when __file__ is '/Users/heron-user/bin/heron/heron/tools/common/src/python/utils/config.pyc', and
-    its real path is '/Users/heron-user/.heron/bin/heron/tools/common/src/python/utils/config.pyc',
-    the internal variable ``path`` would be '/Users/heron-user/.heron', which is the heron directory
+    when __file__ is '/Users/twister2-user/bin/twister2/twister2/tools/common/src/python/utils/config.pyc', and
+    its real path is '/Users/twister2-user/.twister2/bin/twister2/tools/common/src/python/utils/config.pyc',
+    the internal variable ``path`` would be '/Users/twister2-user/.twister2', which is the twister2 directory
 
     This means the variable `go_above_dirs` below is 9.
 
@@ -145,15 +145,15 @@ def get_heron_dir():
     path = "/".join(os.path.realpath(__file__).split('/')[:-go_above_dirs])
     return normalized_class_path(path)
 
-def get_zipped_heron_dir():
+def get_zipped_twister2_dir():
     """
-    This will extract heron directory from .pex file,
+    This will extract twister2 directory from .pex file,
     with `zip_safe = False' Bazel flag added when building this .pex file
 
     For example,
     when __file__'s real path is
-      '/Users/heron-user/.pex/code/xxxyyy/heron/tools/common/src/python/utils/config.pyc', and
-    the internal variable ``path`` would be '/Users/heron-user/.pex/code/xxxyyy/',
+      '/Users/twister2-user/.pex/code/xxxyyy/twister2/tools/common/src/python/utils/config.pyc', and
+    the internal variable ``path`` would be '/Users/twister2-user/.pex/code/xxxyyy/',
     which is the root PEX directory
 
     This means the variable `go_above_dirs` below is 7.
@@ -165,78 +165,78 @@ def get_zipped_heron_dir():
     return normalized_class_path(path)
 
 ################################################################################
-# Get the root of heron dir and various sub directories depending on platform
+# Get the root of twister2 dir and various sub directories depending on platform
 ################################################################################
-def get_heron_bin_dir():
+def get_twister2_bin_dir():
     """
-    This will provide heron bin directory from .pex file.
-    :return: absolute path of heron lib directory
+    This will provide twister2 bin directory from .pex file.
+    :return: absolute path of twister2 lib directory
     """
-    bin_path = os.path.join(get_heron_dir(), BIN_DIR)
+    bin_path = os.path.join(get_twister2_dir(), BIN_DIR)
     return bin_path
 
 
-def get_heron_conf_dir():
+def get_twister2_conf_dir():
     """
-    This will provide heron conf directory from .pex file.
-    :return: absolute path of heron conf directory
+    This will provide twister2 conf directory from .pex file.
+    :return: absolute path of twister2 conf directory
     """
-    conf_path = os.path.join(get_heron_dir(), CONF_DIR)
+    conf_path = os.path.join(get_twister2_dir(), CONF_DIR)
     return conf_path
 
 
-def get_heron_lib_dir():
+def get_twister2_lib_dir():
     """
-    This will provide heron lib directory from .pex file.
-    :return: absolute path of heron lib directory
+    This will provide twister2 lib directory from .pex file.
+    :return: absolute path of twister2 lib directory
     """
-    lib_path = os.path.join(get_heron_dir(), LIB_DIR)
+    lib_path = os.path.join(get_twister2_dir(), LIB_DIR)
     return lib_path
 
 
-def get_heron_release_file():
+def get_twister2_release_file():
     """
-    This will provide the path to heron release.yaml file
-    :return: absolute path of heron release.yaml file
+    This will provide the path to twister2 release.yaml file
+    :return: absolute path of twister2 release.yaml file
     """
-    return os.path.join(get_heron_dir(), RELEASE_YAML)
+    return os.path.join(get_twister2_dir(), RELEASE_YAML)
 
 
-def get_zipped_heron_release_file():
+def get_zipped_twister2_release_file():
     """
-    This will provide the path to heron release.yaml file.
+    This will provide the path to twister2 release.yaml file.
     To be used for .pex file built with `zip_safe = False` flag.
-    For example, `heron-ui'.
+    For example, `twister2-ui'.
 
-    :return: absolute path of heron release.yaml file
+    :return: absolute path of twister2 release.yaml file
     """
-    return os.path.join(get_zipped_heron_dir(), ZIPPED_RELEASE_YAML)
+    return os.path.join(get_zipped_twister2_dir(), ZIPPED_RELEASE_YAML)
 
 
-def get_heron_cluster_conf_dir(cluster, default_config_path):
+def get_twister2_cluster_conf_dir(cluster, default_config_path):
     """
-    This will provide heron cluster config directory, if config path is default
-    :return: absolute path of heron cluster conf directory
+    This will provide twister2 cluster config directory, if config path is default
+    :return: absolute path of twister2 cluster conf directory
     """
     return os.path.join(default_config_path, cluster)
 
 
-def get_heron_sandbox_conf_dir():
+def get_twister2_sandbox_conf_dir():
     """
-    This will provide heron conf directory in the sandbox
-    :return: relative path of heron sandbox conf directory
+    This will provide twister2 conf directory in the sandbox
+    :return: relative path of twister2 sandbox conf directory
     """
     return SANDBOX_CONF_DIR
 
 
-def get_heron_libs(local_jars):
-    """Get all the heron lib jars with the absolute paths"""
-    heron_lib_dir = get_heron_lib_dir()
-    heron_libs = [os.path.join(heron_lib_dir, f) for f in local_jars]
-    return heron_libs
+def get_twister2_libs(local_jars):
+    """Get all the twister2 lib jars with the absolute paths"""
+    twister2_lib_dir = get_twister2_lib_dir()
+    twister2_libs = [os.path.join(twister2_lib_dir, f) for f in local_jars]
+    return twister2_libs
 
 
-def get_heron_cluster(cluster_role_env):
+def get_twister2_cluster(cluster_role_env):
     """Get the cluster to which topology is submitted"""
     return cluster_role_env.split('/')[0]
 
@@ -336,7 +336,7 @@ def check_java_home_set():
 
 def check_release_file_exists():
     """Check if the release.yaml file exists"""
-    release_file = get_heron_release_file()
+    release_file = get_twister2_release_file()
 
     # if the file does not exist and is not a file
     if not os.path.isfile(release_file):
@@ -351,9 +351,9 @@ def print_build_info(zipped_pex=False):
     :param zipped_pex: True if the PEX file is built with flag `zip_safe=False'.
     """
     if zipped_pex:
-        release_file = get_zipped_heron_release_file()
+        release_file = get_zipped_twister2_release_file()
     else:
-        release_file = get_heron_release_file()
+        release_file = get_twister2_release_file()
     with open(release_file) as release_info:
         for line in release_info:
             print line,
@@ -364,13 +364,13 @@ def get_version_number(zipped_pex=False):
     :param zipped_pex: True if the PEX file is built with flag `zip_safe=False'.
     """
     if zipped_pex:
-        release_file = get_zipped_heron_release_file()
+        release_file = get_zipped_twister2_release_file()
     else:
-        release_file = get_heron_release_file()
+        release_file = get_twister2_release_file()
     with open(release_file) as release_info:
         for line in release_info:
             trunks = line[:-1].split(' ')
-            if trunks[0] == 'heron.build.version':
+            if trunks[0] == 'twister2.build.version':
                 return trunks[-1].replace("'", "")
         return 'unknown'
 

@@ -30,14 +30,14 @@ from twister2.tools.cli.src.python.log import Log
 #  - status code == 200:
 #    program sends out dry-run response
 
-# Definition corresponds to definition in com.twitter.heron.scheduler.AbstractMain
+# Definition corresponds to definition in com.twitter.twister2.scheduler.AbstractMain
 
 # pylint: disable=no-init
 class Status(Enum):
     """Status code enum"""
     Ok = 0
     InvocationError = 1
-    HeronError = 100
+    Twister2Error = 100
     DryRun = 200
 
 def status_type(status_code):
@@ -48,7 +48,7 @@ def status_type(status_code):
     elif status_code == 200:
         return Status.DryRun
     else:
-        return Status.HeronError
+        return Status.Twister2Error
 
 class Result(object):
     """Result class"""
@@ -76,7 +76,7 @@ class Result(object):
         assert self.status is not None
         if self.status in [Status.Ok, Status.DryRun]:
             self._do_log(Log.info, self.succ_context)
-        elif self.status in [Status.HeronError, Status.InvocationError]:
+        elif self.status in [Status.twister2Error, Status.InvocationError]:
             self._do_log(Log.error, self.err_context)
         else:
             raise RuntimeError(
@@ -146,7 +146,7 @@ class ProcessResult(Result):
         # remove pending newline
         if self.status == Status.Ok:
             self._do_log(Log.info, stdout)
-        elif self.status == Status.HeronError:
+        elif self.status == Status.Twister2Error:
             # remove last newline since logging will append newline
             self._do_log(Log.error, stdout)
         # No need to prefix [INFO] here. We want to display dry-run response in a clean way

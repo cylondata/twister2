@@ -17,16 +17,16 @@ import logging
 import os
 import tempfile
 
-from heron.common.src.python.utils.log import Log
-from heron.proto import topology_pb2
-from heron.tools.cli.src.python.result import SimpleResult, Status
-import heron.tools.cli.src.python.args as cli_args
-import heron.tools.cli.src.python.execute as execute
-import heron.tools.cli.src.python.jars as jars
-import heron.tools.cli.src.python.opts as opts
-import heron.tools.cli.src.python.result as result
-import heron.tools.common.src.python.utils.config as config
-import heron.tools.common.src.python.utils.classpath as classpath
+from twister2.common.src.python.utils.log import Log
+from twister2.proto import topology_pb2
+from twister2.tools.cli.src.python.result import SimpleResult, Status
+import twister2.tools.cli.src.python.args as cli_args
+import twister2.tools.cli.src.python.execute as execute
+import twister2.tools.cli.src.python.jars as jars
+import twister2.tools.cli.src.python.opts as opts
+import twister2.tools.cli.src.python.result as result
+import twister2.tools.common.src.python.utils.config as config
+import twister2.tools.common.src.python.utils.classpath as classpath
 
 # pylint: disable=too-many-return-statements
 
@@ -50,10 +50,8 @@ def create_parser(subparsers):
     cli_args.add_topology_file(parser)
     cli_args.add_topology_class(parser)
     cli_args.add_config(parser)
-    cli_args.add_deactive_deploy(parser)
     cli_args.add_extra_launch_classpath(parser)
     cli_args.add_system_property(parser)
-    cli_args.add_dry_run(parser)
     cli_args.add_verbose(parser)
 
     parser.set_defaults(subcommand='submit')
@@ -74,7 +72,7 @@ def launch_a_topology(cl_args, tmp_dir, topology_file, topology_defn_file, topol
     topology_pkg_path = config.normalized_class_path(os.path.join(tmp_dir, 'topology.tar.gz'))
 
     # get the release yaml file
-    release_yaml_file = config.get_heron_release_file()
+    release_yaml_file = config.get_twister2_release_file()
 
     # create a tar package with the cluster configuration and generated config files
     config_path = cl_args['config_path']
@@ -88,7 +86,7 @@ def launch_a_topology(cl_args, tmp_dir, topology_file, topology_defn_file, topol
         "--cluster", cl_args['cluster'],
         "--role", cl_args['role'],
         "--environment", cl_args['environ'],
-        "--heron_home", config.get_heron_dir(),
+        "--twister2_home", config.get_twister2_dir(),
         "--config_path", config_path,
         "--override_config_file", cl_args['override_config_file'],
         "--release_file", release_yaml_file,
@@ -105,14 +103,14 @@ def launch_a_topology(cl_args, tmp_dir, topology_file, topology_defn_file, topol
         if "dry_run_format" in cl_args:
             args += ["--dry_run_format", cl_args["dry_run_format"]]
 
-    lib_jars = config.get_heron_libs(
-        jars.scheduler_jars() + jars.uploader_jars() + jars.statemgr_jars() + jars.packing_jars()
+    lib_jars = config.get_twister2_libs(
+        jars.resource_scheduler_jars() + jars.uploader_jars() + jars.statemgr_jars() + jars.task_scheduler_jars()
     )
     extra_jars = cl_args['extra_launch_classpath'].split(':')
 
     # invoke the submitter to submit and launch the topology
-    main_class = 'com.twitter.heron.scheduler.SubmitterMain'
-    res = execute.heron_class(
+    main_class = 'com.twitter.twister2.scheduler.SubmitterMain'
+    res = execute.twister2_class(
         class_name=main_class,
         lib_jars=lib_jars,
         extra_jars=extra_jars,
@@ -140,7 +138,7 @@ def launch_topologies(cl_args, topology_file, tmp_dir):
     defn_files = glob.glob(tmp_dir + '/*.defn')
 
     if len(defn_files) == 0:
-        return SimpleResult(Status.HeronError, "No topologies found under %s" % tmp_dir)
+        return SimpleResult(Status.Twister2Error, "No topologies found under %s" % tmp_dir)
 
     results = []
     for defn_file in defn_files:
@@ -152,7 +150,7 @@ def launch_topologies(cl_args, topology_file, tmp_dir):
             handle.close()
         except Exception as e:
             err_context = "Cannot load topology definition '%s': %s" % (defn_file, e)
-            return SimpleResult(Status.HeronError, err_context)
+            return SimpleResult(Status.Twister2Error, err_context)
         # launch the topology
         Log.info("Launching topology: \'%s\'", topology_defn.name)
         res = launch_a_topology(
@@ -166,7 +164,7 @@ def submit_fatjar(cl_args, unknown_args, tmp_dir):
     '''
     We use the packer to make a package for the jar and dump it
     to a well-known location. We then run the main method of class
-    with the specified arguments. We pass arguments as an environment variable HERON_OPTIONS.
+    with the specified arguments. We pass arguments as an environment variable TWISTER2_OPTIONS.
 
     This will run the jar file with the topology_class_name. The submitter
     inside will write out the topology defn file to a location that
@@ -183,9 +181,9 @@ def submit_fatjar(cl_args, unknown_args, tmp_dir):
 
     main_class = cl_args['topology-class-name']
 
-    res = execute.heron_class(
+    res = execute.twister2_class(
         class_name=main_class,
-        lib_jars=config.get_heron_libs(jars.topology_jars()),
+        lib_jars=config.get_twister2_libs(jars.job_jars()),
         extra_jars=[topology_file],
         args=tuple(unknown_args),
         java_defines=cl_args['topology_main_jvm_property'])
@@ -211,7 +209,7 @@ def submit_tar(cl_args, unknown_args, tmp_dir):
 
     We use the packer to make a package for the tar and dump it
     to a well-known location. We then run the main method of class
-    with the specified arguments. We pass arguments as an environment variable HERON_OPTIONS.
+    with the specified arguments. We pass arguments as an environment variable TWISTER2_OPTIONS.
     This will run the jar file with the topology class name.
 
     The submitter inside will write out the topology defn file to a location
@@ -227,7 +225,7 @@ def submit_tar(cl_args, unknown_args, tmp_dir):
     topology_file = cl_args['topology-file-name']
     java_defines = cl_args['topology_main_jvm_property']
     main_class = cl_args['topology-class-name']
-    res = execute.heron_tar(
+    res = execute.twister2_tar(
         main_class,
         topology_file,
         tuple(unknown_args),
@@ -253,7 +251,7 @@ def submit_pex(cl_args, unknown_args, tmp_dir):
     # execute main of the topology to create the topology definition
     topology_file = cl_args['topology-file-name']
     topology_class_name = cl_args['topology-class-name']
-    res = execute.heron_pex(
+    res = execute.twister2_pex(
         topology_file, topology_class_name, tuple(unknown_args))
 
     result.render(res)
@@ -274,7 +272,7 @@ def run(command, parser, cl_args, unknown_args):
         fatjar (if the ext is .jar) or a tar file (if the ext is .tar/.tar.gz).
       * We upload the topology file to the packer, update zookeeper and launch
         scheduler jobs representing that topology
-      * You can see your topology in Heron UI
+      * You can see your topology in Twister2 UI
     :param command:
     :param parser:
     :param cl_args:

@@ -21,15 +21,15 @@ import traceback
 
 from twister2.tools.cli.src.python.log import Log
 from twister2.tools.cli.src.python.result import SimpleResult, ProcessResult, Status
-import heron.common.src.python.pex_loader as pex_loader
-import heron.tools.cli.src.python.opts as opts
-import heron.tools.cli.src.python.jars as jars
-import heron.tools.common.src.python.utils.config as config
+import twister2.common.src.python.pex_loader as pex_loader
+import twister2.tools.cli.src.python.opts as opts
+import twister2.tools.cli.src.python.jars as jars
+import twister2.tools.common.src.python.utils.config as config
 
 ################################################################################
-def heron_class(class_name, lib_jars, extra_jars=None, args=None, java_defines=None):
+def twister2_class(class_name, lib_jars, extra_jars=None, args=None, java_defines=None):
     '''
-    Execute a heron class given the args and the jars needed for class path
+    Execute a twister2 class given the args and the jars needed for class path
     :param class_name:
     :param lib_jars:
     :param extra_jars:
@@ -58,22 +58,22 @@ def heron_class(class_name, lib_jars, extra_jars=None, args=None, java_defines=N
 
     all_args += [class_name] + list(args)
 
-    # set heron_config environment variable
-    heron_env = os.environ.copy()
-    heron_env['HERON_OPTIONS'] = opts.get_heron_config()
+    # set twister2_config environment variable
+    twister2_env = os.environ.copy()
+    twister2_env['twister2_OPTIONS'] = opts.get_twister2_config()
 
     # print the verbose message
     Log.debug("Invoking class using command: ``%s''", ' '.join(all_args))
-    Log.debug("Heron options: {%s}", str(heron_env["HERON_OPTIONS"]))
+    Log.debug("twister2 options: {%s}", str(twister2_env["TWISTER2_OPTIONS"]))
 
     # invoke the command with subprocess and print error message, if any
-    proc = subprocess.Popen(all_args, env=heron_env, stdout=subprocess.PIPE,
+    proc = subprocess.Popen(all_args, env=twister2_env, stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE, bufsize=1)
     # stdout message has the information Java program sends back
     # stderr message has extra information, such as debugging message
     return ProcessResult(proc)
 
-def heron_tar(class_name, topology_tar, arguments, tmpdir_root, java_defines):
+def twister2_tar(class_name, topology_tar, arguments, tmpdir_root, java_defines):
     '''
     :param class_name:
     :param topology_tar:
@@ -95,15 +95,15 @@ def heron_tar(class_name, topology_tar, arguments, tmpdir_root, java_defines):
     topology_jar = os.path.basename(topology_tar).replace(".tar.gz", "").replace(".tar", "") + ".jar"
 
     extra_jars = [
-        os.path.join(tmpdir, "heron-instance.jar"),
+        os.path.join(tmpdir, "twister2-instance.jar"),
         os.path.join(tmpdir, topology_jar),
         os.path.join(tmpdir, "*"),
         os.path.join(tmpdir, "libs/*")
     ]
 
-    lib_jars = config.get_heron_libs(jars.topology_jars())
+    lib_jars = config.get_twister2_libs(jars.job_jars())
 
     # Now execute the class
-    return heron_class(class_name, lib_jars, extra_jars, arguments, java_defines)
+    return twister2_class(class_name, lib_jars, extra_jars, arguments, java_defines)
 
 

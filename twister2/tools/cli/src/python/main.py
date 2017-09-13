@@ -21,17 +21,18 @@ import time
 import traceback
 
 import twister2.tools.cli.src.python.log as log
+import twister2.tools.cli.src.python.help as cli_help
+import twister2.tools.cli.src.python.kill as kill
 import twister2.tools.cli.src.python.config as config
 import twister2.tools.cli.src.python.submit as submit
+import twister2.tools.cli.src.python.result as result
 
 from twister2.tools.cli.src.python.opts import cleaned_up_files
 
 Log = log.Log
 
 HELP_EPILOG = '''Getting more help:
-  twister2 help <command> Prints help and options for <command>
-
-For detailed documentation, go to http://heronstreaming.io'''
+  twister2 help <command> Prints help and options for <command>'''
 
 
 # pylint: disable=protected-access
@@ -54,7 +55,6 @@ class _HelpAction(argparse._HelpAction):
                 print subparser.format_help()
                 return
 
-################################################################################
 def create_parser():
     '''
     Main parser
@@ -73,12 +73,10 @@ def create_parser():
     cli_help.create_parser(subparsers)
     kill.create_parser(subparsers)
     submit.create_parser(subparsers)
-    version.create_parser(subparsers)
 
     return parser
 
 
-################################################################################
 def run(command, parser, command_args, unknown_args):
     '''
     Run the command
@@ -92,7 +90,6 @@ def run(command, parser, command_args, unknown_args):
         'kill':kill,
         'submit':submit,
         'help':cli_help,
-        'version':version,
     }
 
     if command in runners:
@@ -113,7 +110,6 @@ def cleanup(files):
             shutil.rmtree(os.path.dirname(cur_file))
 
 
-################################################################################
 def check_environment():
     '''
     Check whether the environment variables are set
@@ -123,7 +119,6 @@ def check_environment():
         sys.exit(1)
 
 
-################################################################################
 def extract_common_args(command, parser, cl_args):
     '''
     Extract all the common args for all commands
@@ -133,7 +128,7 @@ def extract_common_args(command, parser, cl_args):
     :return:
     '''
     try:
-        cluster_role_env = cl_args.pop('cluster/[role]/[env]')
+        cluster_role_env = cl_args.pop('cluster')
         config_path = cl_args['config_path']
         override_config_file = config.parse_override_config(cl_args['config_property'])
     except KeyError:
@@ -142,8 +137,8 @@ def extract_common_args(command, parser, cl_args):
         print subparser.format_help()
         return dict()
 
-    cluster = config.get_heron_cluster(cluster_role_env)
-    config_path = config.get_heron_cluster_conf_dir(cluster, config_path)
+    cluster = config.get_twister2_cluster(cluster_role_env)
+    config_path = config.get_twister2_cluster_conf_dir(cluster, config_path)
     if not os.path.isdir(config_path):
         Log.error("Config path cluster directory does not exist: %s", config_path)
         return dict()
@@ -152,19 +147,16 @@ def extract_common_args(command, parser, cl_args):
     try:
         cluster_tuple = config.parse_cluster_role_env(cluster_role_env, config_path)
         new_cl_args['cluster'] = cluster_tuple[0]
-        new_cl_args['role'] = cluster_tuple[1]
-        new_cl_args['environ'] = cluster_tuple[2]
         new_cl_args['config_path'] = config_path
         new_cl_args['override_config_file'] = override_config_file
     except Exception as ex:
-        Log.error("Argument cluster/[role]/[env] is not correct: %s", str(ex))
+        Log.error("Argument cluster is not correct: %s", str(ex))
         return dict()
 
     cl_args.update(new_cl_args)
     return cl_args
 
 
-################################################################################
 def main():
     '''
     Run the command

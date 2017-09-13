@@ -15,12 +15,12 @@
 import os
 import fnmatch
 
-import heron.tools.common.src.python.utils.config as config
+import twister2.tools.common.src.python.utils.config as config
 
 
 def pick(dirname, pattern):
     '''
-    Get the topology jars
+    Get the job jars
     :param dirname:
     :param pattern:
     :return:
@@ -29,24 +29,24 @@ def pick(dirname, pattern):
     return file_list[0] if file_list else None
 
 
-def topology_jars():
+def job_jars():
     '''
-    Get the topology jars
+    Get the job jars
     :return:
     '''
     jars = [
-        os.path.join(config.get_heron_lib_dir(), "third_party", "*")
+        os.path.join(config.get_twister2_lib_dir(), "third_party", "*")
     ]
     return jars
 
 
-def scheduler_jars():
+def resource_scheduler_jars():
     '''
     Get the scheduler jars
     :return:
     '''
     jars = [
-        os.path.join(config.get_heron_lib_dir(), "scheduler", "*")
+        os.path.join(config.get_twister2_lib_dir(), "scheduler", "*")
     ]
     return jars
 
@@ -57,7 +57,7 @@ def uploader_jars():
     :return:
     '''
     jars = [
-        os.path.join(config.get_heron_lib_dir(), "uploader", "*")
+        os.path.join(config.get_twister2_lib_dir(), "uploader", "*")
     ]
     return jars
 
@@ -68,17 +68,17 @@ def statemgr_jars():
     :return:
     '''
     jars = [
-        os.path.join(config.get_heron_lib_dir(), "statemgr", "*")
+        os.path.join(config.get_twister2_lib_dir(), "statemgr", "*")
     ]
     return jars
 
 
-def packing_jars():
+def task_scheduler_jars():
     '''
     Get the packing algorithm jars
     :return:
     '''
     jars = [
-        os.path.join(config.get_heron_lib_dir(), "packing", "*")
+        os.path.join(config.get_twister2_lib_dir(), "packing", "*")
     ]
     return jars

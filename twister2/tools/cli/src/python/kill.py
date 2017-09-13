@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ''' kill.py '''
-import heron.tools.cli.src.python.cli_helper as cli_helper
+import twister2.tools.cli.src.python.cli_helper as cli_helper
 
 
 def create_parser(subparsers):
