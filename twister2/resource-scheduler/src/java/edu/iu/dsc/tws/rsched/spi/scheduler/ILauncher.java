@@ -1,4 +1,3 @@
-//
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
@@ -16,34 +15,18 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
 /**
- * Launches scheduler. will create Launcher object using default no argument constructor.
+ * Launches job. The purpose of the launcher is to bring up the required processes
  */
 public interface ILauncher extends AutoCloseable {
-  /**
-   * Initialize Launcher with Config, Uploader and topology. These object
-   * will be passed from submitter main. Config will contain information that launcher may use
-   * to setup scheduler and other parameters required by launcher to contact
-   * services which will launch scheduler.
-   */
   void initialize(Config config, Config runtime);
 
-  /**
-   * This is to for disposing or cleaning up any internal state accumulated by
-   * the ILauncher
-   * <p>
-   * Closes this stream and releases any system resources associated
-   * with it. If the stream is already closed then invoking this
-   * method has no effect.
-   */
   void close();
 
   /**
-   * Starts scheduler. Once this function returns successfully, twister-cli will terminate and
-   * the launch process succeeded.
+   * Launch the processes according to the resource plan. An implementation fo this class will
    *
-   * @param packing Initial mapping suggested by running packing algorithm.
-   * container_id-&gt;List of instance_id to be launched on this container.
-   * @return true if topology launched successfully, false otherwise.
+   * @param packing
+   * @return
    */
   boolean launch(ResourcePlan packing);
 }

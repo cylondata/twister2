@@ -67,6 +67,11 @@ public class MPIMessage extends Message {
     return refCount;
   }
 
+  public int incrementRefCount(int count) {
+    refCount += count;
+    return refCount;
+  }
+
   public MPIMessageType getMessageType() {
     return messageType;
   }

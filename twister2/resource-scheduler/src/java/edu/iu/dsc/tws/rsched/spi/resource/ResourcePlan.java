@@ -13,4 +13,5 @@
 package edu.iu.dsc.tws.rsched.spi.resource;
 
 public class ResourcePlan {
+
 }
