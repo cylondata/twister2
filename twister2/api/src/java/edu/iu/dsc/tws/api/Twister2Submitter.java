@@ -9,24 +9,14 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.utils;
+package edu.iu.dsc.tws.api;
 
-import java.util.List;
+import java.util.logging.Logger;
 
-public class Routing {
-  private final List<Integer> receivingIds;
-  private final List<Integer> sendingIds;
+public class Twister2Submitter {
+  private static Logger LOG = Logger.getLogger(Twister2Submitter.class.getName());
 
-  public Routing(List<Integer> receivingIds, List<Integer> sendingIds) {
-    this.receivingIds = receivingIds;
-    this.sendingIds = sendingIds;
-  }
+  public void submitContainer() {
 
-  public List<Integer> getReceivingIds() {
-    return receivingIds;
-  }
-
-  public List<Integer> getSendingIds() {
-    return sendingIds;
   }
 }

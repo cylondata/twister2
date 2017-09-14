@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.rsched.core;
 
 import java.net.URI;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
