@@ -58,26 +58,6 @@ public abstract class DelimitedInputFormat<OT> extends FileInputFormat<OT>  {
 
   private int bufferSize = -1;
 
-  /**
-   * The input stream reading from the input file.
-   */
-  protected transient FSDataInputStream stream;
-
-  /**
-   * The start of the split that this parallel instance must consume.
-   */
-  protected transient long splitStart;
-
-  /**
-   * The length of the split that this parallel instance must consume.
-   */
-  protected transient long splitLength;
-
-  /**
-   * The current split that this parallel instance must consume.
-   */
-  protected transient FileInputSplit currentSplit;
-
   // --------------------------------------------------------------------------------------------
   //  Variables for internal parsing.
   //  They are all transient, because we do not want them so be serialized

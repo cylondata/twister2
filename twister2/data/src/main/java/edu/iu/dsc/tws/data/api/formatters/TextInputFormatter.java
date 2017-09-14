@@ -79,9 +79,4 @@ public class TextInputFormatter extends DelimitedInputFormat<String> {
 
     return new String(bytes, offset, numBytes, this.charsetName);
   }
-
-  @Override
-  public String nextRecord(String reuse) throws IOException {
-    return null;
-  }
 }
