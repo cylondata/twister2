@@ -11,13 +11,17 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.fs;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.config.ConfigConstants;
 import edu.iu.dsc.tws.data.fs.local.LocalFileSystem;
 
 /**
@@ -37,6 +41,13 @@ public abstract class FileSystem {
    * Data structure holding supported FileSystem Information
    */
   private static final Map<String, String> SUPPORTEDFS = new HashMap<String, String>();
+
+  /**
+   * The default filesystem scheme to be used. This can be specified by the parameter
+   * <code>fs.default-scheme</code> in <code>flink-conf.yaml</code>. By default this is
+   * set to <code>file:///</code>
+   */
+  private static URI defaultScheme;
 
   static {
     SUPPORTEDFS.put("file", LocalFileSystem.class.getName());
@@ -106,6 +117,34 @@ public abstract class FileSystem {
   public abstract void initialize(URI name) throws IOException;
 
   /**
+   * <p>
+   * Sets the default filesystem scheme based on the user-specified configuration parameter
+   * <code>fs.default-scheme</code>. By default this is set to <code>file:///</code>
+   * and the local filesystem is used.
+   * <p>
+   * As an example, if set to <code>hdfs://localhost:9000/</code>, then an HDFS deployment
+   * with the namenode being on the local node and listening to port 9000 is going to be used.
+   * In this case, a file path specified as <code>/user/USERNAME/in.txt</code>
+   * is going to be transformed into <code>hdfs://localhost:9000/user/USERNAME/in.txt</code>. By
+   * default this is set to <code>file:///</code> which points to the local filesystem.
+   * @param config the configuration from where to fetch the parameter.
+   */
+  public static void setDefaultScheme(Config config) throws IOException {
+    synchronized (SYNCHRONIZATION_OBJECT) {
+      if (defaultScheme == null) {
+        String stringifiedUri = config.getStringValue(ConfigConstants.FILESYSTEM_SCHEME,
+            ConfigConstants.DEFAULT_FILESYSTEM_SCHEME);
+        try {
+          defaultScheme = new URI(stringifiedUri);
+        } catch (URISyntaxException e) {
+          throw new IOException("The URI used to set the default filesystem " +
+              "scheme ('" + stringifiedUri + "') is not valid.");
+        }
+      }
+    }
+  }
+
+  /**
    * Returns a FileSystem for the given uri
    * TODO: need to think about security (Flink adds a safety net here, that is skipped for now)
    * @param uri
@@ -153,13 +192,41 @@ public abstract class FileSystem {
    */
   private static FileSystem getFileSystem(URI uri) throws IOException {
     FileSystem fs = null;
+    URI asked = uri;
 
-    if(uri == null || uri.getScheme() == null){
-      //TODO: try to fix missing scheme using a default scheme
+    if(uri == null){
       throw new IOException("The URI " + uri.toString() + " is not a vaild URI");
     }
     //TODO: check if the sycn is actually needed or can be scoped down
     synchronized (SYNCHRONIZATION_OBJECT){
+
+      if (uri.getScheme() == null) {
+        try {
+          if (defaultScheme == null) {
+            defaultScheme = new URI(ConfigConstants.DEFAULT_FILESYSTEM_SCHEME);
+          }
+
+          uri = new URI(defaultScheme.getScheme(), null, defaultScheme.getHost(),
+              defaultScheme.getPort(), uri.getPath(), null, null);
+
+        } catch (URISyntaxException e) {
+          try {
+            if (defaultScheme.getScheme().equals("file")) {
+              uri = new URI("file", null,
+                  new Path(new File(uri.getPath()).getAbsolutePath()).toUri().getPath(), null);
+            }
+          } catch (URISyntaxException ex) {
+            // we tried to repair it, but could not. report the scheme error
+            throw new IOException("The URI '" + uri.toString() + "' is not valid.");
+          }
+        }
+      }
+
+      if(uri.getScheme() == null) {
+        throw new IOException("The URI '" + uri + "' is invalid.\n" +
+            "The fs.default-scheme = " + defaultScheme + ", the requested URI = " + asked +
+            ", and the final URI = " + uri + ".");
+      }
       if (uri.getScheme().equals("file") && uri.getAuthority() != null && !uri.getAuthority().isEmpty()) {
         String supposedUri = "file:///" + uri.getAuthority() + uri.getPath();
 

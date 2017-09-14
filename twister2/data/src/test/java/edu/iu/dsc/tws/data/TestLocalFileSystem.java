@@ -13,9 +13,11 @@ package edu.iu.dsc.tws.data;
 
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.data.api.InputFormat;
 import edu.iu.dsc.tws.data.api.formatters.TextInputFormatter;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
+import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
 
 /**
  * Test class for LocalFileSystem
@@ -27,13 +29,18 @@ public class TestLocalFileSystem {
     builder.put("input.file.path","/home/pulasthi/git/twister2/twister2/data/src/test/resources/TextInputFormatTestFile.text");
     Config txtFileConf = builder.build();
     Path path = new Path("/home/pulasthi/git/twister2/twister2/data/src/test/resources/TextInputFormatTestFile.text");
-    TextInputFormatter txtInput = new TextInputFormatter(path);
+    InputFormat txtInput = new TextInputFormatter(path);
     txtInput.configure(txtFileConf);
     int minSplits = 8;
 
     try {
       InputSplit[] inputSplits = txtInput.createInputSplits(minSplits);
-
+      InputSplitAssigner inputSplitAssigner = txtInput.getInputSplitAssigner(inputSplits);
+      InputSplit cur = inputSplitAssigner.getNextInputSplit(null,0);
+      txtInput.open(cur);
+      String line = "";
+      line = (String)txtInput.nextRecord(line);
+      System.out.println(line);
     } catch (Exception e) {
       e.printStackTrace();
     }

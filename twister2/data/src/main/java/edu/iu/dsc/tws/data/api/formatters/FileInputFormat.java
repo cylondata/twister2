@@ -60,7 +60,7 @@ public abstract class FileInputFormat<OT> implements InputFormat<OT , FileInputS
   /**
    * The fraction that the last split may be larger than the others.
    */
-  private static final float MAX_SPLIT_SIZE_DISCREPANCY = 1.1f;
+  protected static final float MAX_SPLIT_SIZE_DISCREPANCY = 1.1f;
 
   /**
    * The minimal split size, set by the configure() method.
@@ -70,27 +70,27 @@ public abstract class FileInputFormat<OT> implements InputFormat<OT , FileInputS
   /**
    * Current split that is used
    */
-  private FileInputSplit currentSplit;
+  protected FileInputSplit currentSplit;
 
   /**
    * Start point of the current split
    */
-  private long splitStart;
+  protected long splitStart;
 
   /**
    * Length of the current split
    */
-  private long splitLength;
+  protected long splitLength;
 
   /**
    * The input data stream
    */
-  private FSDataInputStream stream;
+  protected FSDataInputStream stream;
 
   /**
    * Time to wait when opening a file.
    */
-  private long openTimeout;
+  protected long openTimeout;
 
   public FileInputFormat() {}
 
