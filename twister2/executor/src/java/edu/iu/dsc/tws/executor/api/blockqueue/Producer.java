@@ -11,10 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.api.blockqueue;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
+import edu.iu.dsc.tws.executor.constants.TaskOps;
 import edu.iu.dsc.tws.executor.model.Task;
 
 /**
@@ -24,19 +26,91 @@ public class Producer implements Runnable {
 
   //private final BlockingQueue queue;
   protected BlockingQueue queue = null;
-
+  protected Task task = null;
+  protected ArrayList<Task> taskList = null;
+  protected TaskOps executableType= TaskOps.SINGLE;
 
   public Producer(BlockingQueue q) { queue = q; }
 
+  public Producer(BlockingQueue queue, Task task) {
+    this.queue = queue;
+    this.task = task;
+  }
+
+  public Producer(BlockingQueue queue, Task task, ArrayList<Task> taskList) {
+    this.queue = queue;
+    this.task = task;
+    this.taskList = taskList;
+  }
+
+  public Producer(BlockingQueue queue, ArrayList<Task> taskList, TaskOps executableType) {
+    this.queue = queue;
+    this.taskList = taskList;
+    this.executableType = executableType;
+  }
+
+  public Producer(BlockingQueue queue, Task task, ArrayList<Task> taskList, TaskOps executableType) {
+    this.queue = queue;
+    this.task = task;
+    this.taskList = taskList;
+    this.executableType = executableType;
+  }
+
+  public TaskOps getExecutableType() {
+    return executableType;
+  }
+
+  public void setExecutableType(TaskOps executableType) {
+    this.executableType = executableType;
+  }
+
+  public BlockingQueue getQueue() {
+    return queue;
+  }
+
+  public ArrayList<Task> getTaskList() {
+    return taskList;
+  }
+
+  public void setTaskList(ArrayList<Task> taskList) {
+    this.taskList = taskList;
+  }
+
+  public void setQueue(BlockingQueue queue) {
+    this.queue = queue;
+  }
+
+  public Task getTask() {
+    return task;
+  }
+
+  public void setTask(Task task) {
+    this.task = task;
+  }
 
   public void run() {
     try {
-      int i = 0;
-      while(true){
-        queue.put(produce("Process : "+i+" - "+"Task Descriptor : "+i));
-        i++;
-        Thread.sleep(100);
+
+      if(executableType ==TaskOps.SINGLE){
+          //queue.put(produce("Process : "+i+" - "+"Task Descriptor : "+i));
+          queue.put(produceTask(this.task));
       }
+
+      if(executableType == TaskOps.LIST){
+        int i = 0;
+        for (Task task :taskList) {
+          System.out.println("Task "+i+" executing");
+          queue.put(produceTask(task));
+          i++;
+        }
+
+      }
+
+      if(executableType == TaskOps.CONTINUES){
+
+      }
+
+
 
 
     } catch (InterruptedException ex) {
@@ -51,6 +125,12 @@ public class Producer implements Runnable {
 
     //this.queue.put(taskDescriptor);
     return new String("Task Id : "+taskDescriptor);
+  }
+
+  public Object produceTask(Task task){
+
+    System.out.println("Producing Task : "+task.getName()+" : "+task.getThreadId());
+    return task;
   }
 
   public int size(){

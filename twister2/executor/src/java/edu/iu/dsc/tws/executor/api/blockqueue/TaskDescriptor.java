@@ -11,12 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.api.blockqueue;
 
+import java.io.Serializable;
 import java.util.Comparator;
 
 /**
  * Created by vibhatha on 9/5/17.
  */
-public class TaskDescriptor implements Comparable<TaskDescriptor>, Comparator<TaskDescriptor>{
+public class TaskDescriptor implements Comparable<TaskDescriptor>, Comparator<TaskDescriptor>, Serializable{
 
   private String id;
   private String taskName;
