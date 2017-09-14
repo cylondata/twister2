@@ -125,6 +125,20 @@ public class BinaryInputFormatter extends FileInputFormat<byte[]> {
       throw new IllegalArgumentException("RecordLength must be larger than 0");
     }
     this.recordLength = recordLength;
+    if(this.bufferSize % recordLength != 0){
+      int bufferFactor = 1;
+      if(this.bufferSize > 0){
+        bufferFactor = bufferSize/recordLength;
+      }else{
+        bufferFactor = DEFAULT_READ_BUFFER_SIZE/recordLength;
+      }
+      if(bufferFactor >= 1){
+        setBufferSize(recordLength*bufferFactor);
+      }else{
+        setBufferSize(recordLength*8);
+      }
+
+    }
   }
 
   /**
