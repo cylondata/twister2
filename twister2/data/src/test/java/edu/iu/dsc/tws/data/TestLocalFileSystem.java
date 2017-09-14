@@ -11,8 +11,33 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data;
 
+
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.data.api.formatters.TextInputFormatter;
+import edu.iu.dsc.tws.data.fs.Path;
+import edu.iu.dsc.tws.data.fs.io.InputSplit;
+
 /**
  * Test class for LocalFileSystem
  */
 public class TestLocalFileSystem {
+
+  public static void main(String[] args) {
+    Config.Builder builder = new Config.Builder();
+    builder.put("input.file.path","/home/pulasthi/git/twister2/twister2/data/src/test/resources/TextInputFormatTestFile.text");
+    Config txtFileConf = builder.build();
+    Path path = new Path("/home/pulasthi/git/twister2/twister2/data/src/test/resources/TextInputFormatTestFile.text");
+    TextInputFormatter txtInput = new TextInputFormatter(path);
+    txtInput.configure(txtFileConf);
+    int minSplits = 8;
+
+    try {
+      InputSplit[] inputSplits = txtInput.createInputSplits(minSplits);
+
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+
+  }
+
 }
