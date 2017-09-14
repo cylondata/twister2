@@ -378,6 +378,7 @@ public class BinaryInputFormatter extends FileInputFormat<byte[]> {
       // previous split.
       toRead = maxReadLength;
       this.overLimit = true;
+      return false; //Since the BIF does not break splits in the middle of records there cannot be partial records
     }
 
     int read = this.stream.read(this.readBuffer, offset, toRead);
