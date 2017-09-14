@@ -28,7 +28,7 @@ public class TestLocalFileSystem {
     Config txtFileConf = builder.build();
     Path path = new Path("/home/pulasthi/git/twister2/twister2/data/src/test/resources/TextInputFormatTestFile.text");
     TextInputFormatter txtInput = new TextInputFormatter(path);
-    txtInput.configure(txtFileConf);
+   // txtInput.configure(txtFileConf);
     int minSplits = 8;
 
     try {
