@@ -16,10 +16,7 @@ import java.nio.charset.Charset;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.api.InputFormat;
 import edu.iu.dsc.tws.data.fs.Path;
-import edu.iu.dsc.tws.data.fs.io.InputSplit;
-import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
 
 /**
  * Created by pulasthi on 8/24/17.
