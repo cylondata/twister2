@@ -21,69 +21,54 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.tsched.spi.taskschedule;
+package edu.iu.dsc.tws.tsched.utils;
 
-import java.util.Objects;
+public class RequiredCPU {
 
-public class Resource {
+  private String taskName;
+  private Double requiredCPU;
 
-  private Double ram;
-  private Double disk;
-  private Double cpu;
+  public RequiredCPU(String taskName, Double CPU) {
+    this.taskName = taskName;
+    this.requiredCPU = CPU;
+  }
 
-  public Resource(Double ram, Double disk, Double cpu) {
-    this.ram = ram;
-    this.disk = disk;
-    this.cpu = cpu;
+  public void setTaskName(String taskName) {
+    this.taskName = taskName;
+  }
+
+  public Double getRequiredCPU() {
+    return requiredCPU;
+  }
+
+  public void setRequiredCPU(Double requiredCPU) {
+    this.requiredCPU = requiredCPU;
+  }
+
+  public String getTaskName() {
+    return taskName;
+  }
+
+  public int compareTo(RequiredCPU requiredCPU) {
+    return this.requiredCPU.compareTo (requiredCPU.requiredCPU);
   }
 
   @Override
   public boolean equals(Object o) {
-    if (o instanceof Resource) {
-      Resource r = (Resource) o;
-      return (Objects.equals(this.getCpu(), r.getCpu()))
-          && (this.getRam().equals(r.getRam()))
-          && (this.getDisk().equals(r.getDisk()));
-    } else {
-      return false;
-    }
+    if (this == o) return true;
+    if (!(o instanceof RequiredCPU)) return false;
+
+    RequiredCPU that = (RequiredCPU) o;
+
+    if (!taskName.equals (that.taskName)) return false;
+    return requiredCPU.equals (that.requiredCPU);
   }
 
   @Override
   public int hashCode() {
-    int result;
-    long temp;
-    temp = Double.doubleToLongBits(cpu);
-    result = (int) (temp ^ (temp >>> 32));
-    result = 31 * result + ram.hashCode();
-    result = 31 * result + disk.hashCode();
+    int result = taskName.hashCode ();
+    result = 31 * result + requiredCPU.hashCode ();
     return result;
   }
 
-  public Double getRam() {
-    return ram;
-  }
-
-  public void setRam(Double ram) {
-    this.ram = ram;
-  }
-
-  public Double getDisk() {
-    return disk;
-  }
-
-  public void setDisk(Double disk) {
-    this.disk = disk;
-  }
-
-  public Double getCpu() {
-    return cpu;
-  }
-
-  public void setCpu(Double cpu) {
-    this.cpu = cpu;
-  }
-
 }
-
-
