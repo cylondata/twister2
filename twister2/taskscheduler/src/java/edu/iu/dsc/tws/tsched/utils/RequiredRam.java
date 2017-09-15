@@ -23,14 +23,30 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tsched.utils;
 
-public class RequiredRam {
+public class RequiredRam implements Comparable<RequiredRam> {
 
     private String taskName;
     private Double requiredRam;
 
-    public RequiredRam(String taskName, Double ram) {
-        this.taskName = taskName;
-        this.requiredRam = ram;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof RequiredRam)) return false;
+
+        RequiredRam that = (RequiredRam) o;
+        if (!taskName.equals (that.taskName)) return false;
+        return requiredRam.equals (that.requiredRam);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = taskName.hashCode ();
+        result = 31 * result + requiredRam.hashCode ();
+        return result;
+    }
+
+    public String getTaskName() {
+        return taskName;
     }
 
     public void setTaskName(String taskName) {
@@ -45,30 +61,13 @@ public class RequiredRam {
         this.requiredRam = requiredRam;
     }
 
-    public String getTaskName() {
-        return taskName;
-    }
-
-    public int compareTo(RequiredRam requiredRam) {
-        return this.requiredRam.compareTo (requiredRam.requiredRam);
+    public RequiredRam(String taskName, Double ram) {
+        this.taskName = taskName;
+        this.requiredRam = ram;
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof RequiredRam)) return false;
-
-        RequiredRam that = (RequiredRam) o;
-
-        if (!taskName.equals (that.taskName)) return false;
-        return requiredRam.equals (that.requiredRam);
+    public int compareTo(RequiredRam o) {
+        return this.requiredRam.compareTo (o.requiredRam);
     }
-
-    @Override
-    public int hashCode() {
-        int result = taskName.hashCode ();
-        result = 31 * result + requiredRam.hashCode ();
-        return result;
-    }
-
 }

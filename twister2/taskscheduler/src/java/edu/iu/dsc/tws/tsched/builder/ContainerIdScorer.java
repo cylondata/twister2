@@ -35,61 +35,43 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tsched.builder;
 
-import java.util.HashSet;
 
-import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.Resource;
+public class ContainerIdScorer implements Scorer<Container> {
 
-public class Container {
+  private final boolean sortAscending;
+  private final Integer firstId;
+  private final Integer maxId;
 
-    private int containerId;
-    private HashSet<TaskSchedulePlan.TaskInstancePlan> taskInstances;
-    private Resource resource;
-    private int paddingPercentage;
+  public ContainerIdScorer() {
+    this(true);
+  }
 
-    public Container(int containerId, Resource containerMaximumResourceValue, int requestedContainerPadding) {
-        this.containerId = containerId;
-        this.resource = containerMaximumResourceValue;
-        this.paddingPercentage = requestedContainerPadding;
+  public ContainerIdScorer(boolean sortAscending) {
+    this(0, 0, sortAscending);
+  }
+
+  public ContainerIdScorer(Integer firstId, Integer maxId) {
+    this(firstId, maxId, true);
+  }
+
+  private ContainerIdScorer(Integer firstId, Integer maxId, boolean sortAscending) {
+    this.sortAscending = sortAscending;
+    this.firstId = firstId;
+    this.maxId = maxId;
+  }
+
+  @Override
+  public boolean sortAscending() {
+    return sortAscending;
+  }
+
+  @Override
+  public double getScore(Container container) {
+    int containerId = container.getContainerId();
+    if (containerId >= firstId) {
+      return containerId - firstId;
+    } else {
+      return containerId + maxId;
     }
-
-    public int getContainerId() {
-        return containerId;
-    }
-
-    public void setContainerId(int containerId) {
-        this.containerId = containerId;
-    }
-
-    public HashSet<TaskSchedulePlan.TaskInstancePlan> getTaskInstances() {
-        return taskInstances;
-    }
-
-    public void setTaskInstances(HashSet<TaskSchedulePlan.TaskInstancePlan> taskInstances) {
-        this.taskInstances = taskInstances;
-    }
-
-    public Resource getResource() {
-        return resource;
-    }
-
-    public void setResource(Resource resource) {
-        this.resource = resource;
-    }
-
-    public int getPaddingPercentage() {
-        return paddingPercentage;
-    }
-
-    public void setPaddingPercentage(int paddingPercentage) {
-        this.paddingPercentage = paddingPercentage;
-    }
-
-    void add(TaskSchedulePlan.TaskInstancePlan taskInstancePlan) {
-
-        //assertHasSpace(instancePlan.getResource());
-        this.taskInstances.add(taskInstancePlan);
-    }
-
-
+  }
 }

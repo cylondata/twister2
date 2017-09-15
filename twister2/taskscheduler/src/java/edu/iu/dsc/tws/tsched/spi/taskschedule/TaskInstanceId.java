@@ -33,63 +33,46 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.tsched.builder;
+package edu.iu.dsc.tws.tsched.spi.taskschedule;
 
-import java.util.HashSet;
+public class TaskInstanceId {
 
-import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.Resource;
+  private final String taskName;
+  private final int taskId;
+  private final int taskIndex;
 
-public class Container {
+  public TaskInstanceId(String taskName, int taskId, int taskIndex) {
+    this.taskName = taskName;
+    this.taskId = taskId;
+    this.taskIndex = taskIndex;
+  }
+  public String getTaskName() {
+    return taskName;
+  }
+  public int getTaskId() {
+    return taskId;
+  }
+  public int getTaskIndex() {
+    return taskIndex;
+  }
 
-    private int containerId;
-    private HashSet<TaskSchedulePlan.TaskInstancePlan> taskInstances;
-    private Resource resource;
-    private int paddingPercentage;
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof TaskInstanceId)) return false;
 
-    public Container(int containerId, Resource containerMaximumResourceValue, int requestedContainerPadding) {
-        this.containerId = containerId;
-        this.resource = containerMaximumResourceValue;
-        this.paddingPercentage = requestedContainerPadding;
-    }
+    TaskInstanceId that = (TaskInstanceId) o;
 
-    public int getContainerId() {
-        return containerId;
-    }
+    if (taskId != that.taskId) return false;
+    if (taskIndex != that.taskIndex) return false;
+    return taskName != null ? taskName.equals(that.taskName) : that.taskName == null;
+  }
 
-    public void setContainerId(int containerId) {
-        this.containerId = containerId;
-    }
-
-    public HashSet<TaskSchedulePlan.TaskInstancePlan> getTaskInstances() {
-        return taskInstances;
-    }
-
-    public void setTaskInstances(HashSet<TaskSchedulePlan.TaskInstancePlan> taskInstances) {
-        this.taskInstances = taskInstances;
-    }
-
-    public Resource getResource() {
-        return resource;
-    }
-
-    public void setResource(Resource resource) {
-        this.resource = resource;
-    }
-
-    public int getPaddingPercentage() {
-        return paddingPercentage;
-    }
-
-    public void setPaddingPercentage(int paddingPercentage) {
-        this.paddingPercentage = paddingPercentage;
-    }
-
-    void add(TaskSchedulePlan.TaskInstancePlan taskInstancePlan) {
-
-        //assertHasSpace(instancePlan.getResource());
-        this.taskInstances.add(taskInstancePlan);
-    }
-
-
+  @Override
+  public int hashCode() {
+    int result = taskName != null ? taskName.hashCode() : 0;
+    result = 31 * result + taskId;
+    result = 31 * result + taskIndex;
+    return result;
+  }
 }

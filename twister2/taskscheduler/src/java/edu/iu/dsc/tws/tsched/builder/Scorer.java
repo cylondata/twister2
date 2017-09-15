@@ -35,61 +35,26 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tsched.builder;
 
-import java.util.HashSet;
+/**
+ * Scores an  object based on some heuristic. The ordering of the object by score could be used to
+ * drive algorithms that rely on preference of objects (e.g. containers) to be used for packing
+ * operations.
+ */
 
-import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.Resource;
+public interface Scorer<T> {
 
-public class Container {
+  /**
+   * Whether or not scores produced by this scorer should sort ascending or descending
+   * @return true if the low scores should sort before higher scores
+   */
+  boolean sortAscending();
 
-    private int containerId;
-    private HashSet<TaskSchedulePlan.TaskInstancePlan> taskInstances;
-    private Resource resource;
-    private int paddingPercentage;
-
-    public Container(int containerId, Resource containerMaximumResourceValue, int requestedContainerPadding) {
-        this.containerId = containerId;
-        this.resource = containerMaximumResourceValue;
-        this.paddingPercentage = requestedContainerPadding;
-    }
-
-    public int getContainerId() {
-        return containerId;
-    }
-
-    public void setContainerId(int containerId) {
-        this.containerId = containerId;
-    }
-
-    public HashSet<TaskSchedulePlan.TaskInstancePlan> getTaskInstances() {
-        return taskInstances;
-    }
-
-    public void setTaskInstances(HashSet<TaskSchedulePlan.TaskInstancePlan> taskInstances) {
-        this.taskInstances = taskInstances;
-    }
-
-    public Resource getResource() {
-        return resource;
-    }
-
-    public void setResource(Resource resource) {
-        this.resource = resource;
-    }
-
-    public int getPaddingPercentage() {
-        return paddingPercentage;
-    }
-
-    public void setPaddingPercentage(int paddingPercentage) {
-        this.paddingPercentage = paddingPercentage;
-    }
-
-    void add(TaskSchedulePlan.TaskInstancePlan taskInstancePlan) {
-
-        //assertHasSpace(instancePlan.getResource());
-        this.taskInstances.add(taskInstancePlan);
-    }
-
+  /**
+   * Return the score for a given component on a container
+   *
+   * @param object the object to be scored
+   * @return score for container
+   */
+  double getScore(T object);
 
 }
