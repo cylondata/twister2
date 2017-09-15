@@ -12,6 +12,18 @@ proto_library(
 )
 
 proto_library(
+    name = "proto_job_state",
+    src = "job_state.proto",
+    gen_cc = 0,
+    gen_java = 1,
+    gen_py = 0,
+    includes = ["twister2/proto"],
+    deps = [
+        ":proto_common"
+    ],
+)
+
+proto_library(
     name = "proto_job",
     src = "job.proto",
     gen_cc = 0,
@@ -43,7 +55,7 @@ java_library(
     deps = [
         "@com_google_protobuf_protobuf_java//jar",
         ":proto_resource_scheduler_java",
-        ":proto_job_java",
+        ":proto_job_state_java",
         ":proto_common_java",
     ],
 )
