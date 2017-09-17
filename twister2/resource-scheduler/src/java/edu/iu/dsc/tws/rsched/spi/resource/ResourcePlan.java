@@ -12,6 +12,17 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.spi.resource;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ResourcePlan {
+  private String cluster;
+
+  private List<Resource> resources = new ArrayList<>();
+
+  public ResourcePlan(String cluster) {
+    this.cluster = cluster;
+  }
+
 
 }

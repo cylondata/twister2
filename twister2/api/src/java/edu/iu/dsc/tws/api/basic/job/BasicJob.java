@@ -21,27 +21,8 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.tsched.utils;
+package edu.iu.dsc.tws.api.basic.job;
 
-public class Task {
+public class BasicJob {
 
-  private int taskParallelism = 2;
-  private String taskName;
-  private int taskCount;
-
-  public int getTaskCount() {
-    return taskCount;
-  }
-
-  public void setTaskCount(int taskCount) {
-    this.taskCount = taskCount;
-  }
-
-  public String getTaskName() {
-    return taskName;
-  }
-
-  public void setTaskName(String taskName) {
-    this.taskName = taskName;
-  }
 }

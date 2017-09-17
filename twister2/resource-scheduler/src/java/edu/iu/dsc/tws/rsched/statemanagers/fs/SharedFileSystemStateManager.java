@@ -31,7 +31,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.proto.system.Job;
+import edu.iu.dsc.tws.proto.system.JobExecutionState;
 import edu.iu.dsc.tws.proto.system.ResourceScheduler;
 import edu.iu.dsc.tws.rsched.spi.statemanager.Lock;
 import edu.iu.dsc.tws.rsched.spi.statemanager.WatchCallback;
@@ -169,7 +169,7 @@ public class SharedFileSystemStateManager extends FileSystemStateManager {
 
   @Override
   public ListenableFuture<Boolean> setExecutionState(
-      Job.JobState executionState, String jobName) {
+      JobExecutionState.JobState executionState, String jobName) {
     return setData(
         StateLocation.EXECUTION_STATE, jobName, executionState.toByteArray(), false);
   }

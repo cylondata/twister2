@@ -1,7 +1,9 @@
 package tws.proto.job;
 
 option java_package = "edu.iu.dsc.tws.proto.system";
-option java_outer_classname = "JobState";
+option java_outer_classname = "JobExecutionState";
+
+// captures the runtime state of a job
 
 message JobState {
     required string job_name = 1;
@@ -11,4 +13,6 @@ message JobState {
     optional int64 submission_time = 3;
     // The username who launched the topology
     optional string submission_user = 4;
+    // the cluster under which job was submitted
+    optional string cluster = 5;
 }

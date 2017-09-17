@@ -50,6 +50,10 @@ public class Context {
   public static final ConfigEntry CLUSTER_CONF = new ConfigEntry(
       "heron.directory.cluster.conf", "./heron-conf");
 
+  // an internal property to represent the container id
+  public static final String TWISTER2_CONTAINER_ID = "twister2.container.id";
+  public static final String TWISTER2_CLUSTER_NAME = "twister2.cluster.name";
+
   static {
     substitutions.put("TWISTER2_HOME", TWISTER2_HOME);
     substitutions.put("TWISTER2_CONF", TWISTER2_CONF);
@@ -80,5 +84,13 @@ public class Context {
 
   public static String clientConfigurationFile(Config cfg) {
     return cfg.getStringValue(CLIENT_YAML);
+  }
+
+  public static String clusterName(Config cfg) {
+    return cfg.getStringValue(TWISTER2_CLUSTER_NAME);
+  }
+
+  public static String containerId(Config cfg) {
+    return cfg.getStringValue(TWISTER2_CONTAINER_ID);
   }
 }

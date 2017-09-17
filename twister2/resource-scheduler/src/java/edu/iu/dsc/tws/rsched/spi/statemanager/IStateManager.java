@@ -15,7 +15,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import edu.iu.dsc.tws.common.config.Config;
 
-import edu.iu.dsc.tws.proto.system.Job;
+import edu.iu.dsc.tws.proto.system.JobExecutionState;
 import edu.iu.dsc.tws.proto.system.ResourceScheduler;
 
 /**
@@ -96,7 +96,7 @@ public interface IStateManager extends AutoCloseable {
    * @return Boolean - Success or Failure
    */
   ListenableFuture<Boolean> setExecutionState(
-      Job.JobState executionState, String topologyName);
+      JobExecutionState.JobState executionState, String topologyName);
 
   /**
    * Set the scheduler location for the given topology
