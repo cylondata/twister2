@@ -34,6 +34,7 @@ public class ConfigEntry {
     this.key = key;
     this.defaultValue = defaultValue;
     this.type = type;
+    this.substitute = substitute;
   }
 
   public ConfigEntry(String key) {

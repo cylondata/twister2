@@ -93,29 +93,33 @@ public class MPIProcess {
   private static Options setupOptions() {
     Options options = new Options();
 
-    Option containerClass = Option.builder("c_class")
+    Option containerClass = Option.builder("c")
         .desc("The class name of the container to launch")
+        .longOpt("container_class")
         .hasArgs()
         .argName("container class")
         .required()
         .build();
 
-    Option configDirectory = Option.builder("config_dir")
+    Option configDirectory = Option.builder("d")
         .desc("The class name of the container to launch")
+        .longOpt("config_dir")
         .hasArgs()
         .argName("configuration directory")
         .required()
         .build();
 
-    Option twister2Home = Option.builder("twister2_home")
+    Option twister2Home = Option.builder("t")
         .desc("The class name of the container to launch")
+        .longOpt("twister2_home")
         .hasArgs()
         .argName("twister2 home")
         .required()
         .build();
 
-    Option clusterName = Option.builder("cluster_name")
+    Option clusterName = Option.builder("n")
         .desc("The clustr name")
+        .longOpt("cluster_name")
         .hasArgs()
         .argName("cluster name")
         .required()
@@ -148,7 +152,7 @@ public class MPIProcess {
   }
 
   private static void worker(Config config, int rank) {
-    String containerClass = SlurmMPIContext.getTwister2JobBasicContainerClass(config);
+    String containerClass = SlurmMPIContext.jobBasicContainerClass(config);
     IContainer container = null;
     try {
       Object object = ReflectionUtils.newInstance(containerClass);

@@ -46,9 +46,13 @@ public class Context {
   public static final ConfigEntry OVERRIDE_YAML = new ConfigEntry(
       "twister2.config.file.override.yaml",  "${TWISTER2_CONF}/override.yaml");
   public static final ConfigEntry CLUSTER_HOME = new ConfigEntry(
-      "twister2.directory.cluster.home", "./heron-core");
+      "twister2.directory.cluster.home", "./core");
   public static final ConfigEntry CLUSTER_CONF = new ConfigEntry(
-      "heron.directory.cluster.conf", "./heron-conf");
+      "twister2.directory.cluster.conf", "./conf");
+  public static final ConfigEntry VERBOSE = new ConfigEntry(
+      "twister2.verbose", "false");
+  public static final ConfigEntry JOB = new ConfigEntry(
+      "twister2.job", null, "JOB");
 
   // an internal property to represent the container id
   public static final String TWISTER2_CONTAINER_ID = "twister2.container.id";
@@ -60,6 +64,7 @@ public class Context {
     substitutions.put("TWISTER2_LIB", TWISTER2_LIB);
     substitutions.put("TWISTER2_DIST", TWISTER2_DIST);
     substitutions.put("JAVA_HOME", JAVA_HOME);
+    substitutions.put("JOB", JAVA_HOME);
   }
 
   protected Context() {
@@ -92,5 +97,13 @@ public class Context {
 
   public static String containerId(Config cfg) {
     return cfg.getStringValue(TWISTER2_CONTAINER_ID);
+  }
+
+  public static Boolean verbose(Config cfg) {
+    return cfg.getBooleanValue(VERBOSE.getKey(), false);
+  }
+
+  public static String conf(Config cfg) {
+    return cfg.getStringValue(cfg.getStringValue(TWISTER2_CONF));
   }
 }

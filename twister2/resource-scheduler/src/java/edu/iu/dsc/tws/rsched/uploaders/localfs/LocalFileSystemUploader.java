@@ -40,9 +40,9 @@ public class LocalFileSystemUploader implements IUploader {
   @Override
   public void initialize(Config config) {
     this.destinationDirectory = FsContext.getDirectory(config);
-    this.originalFile = FsContext.getJobPackageFile(config);
+    this.originalFile = FsContext.jobPackageFile(config);
     // create a random file name
-    String fileName = FsContext.getJobName(config) + "tar.gz";
+    String fileName = FsContext.jobName(config) + "tar.gz";
     this.destinationFile = Paths.get(destinationDirectory, fileName).toString();
   }
 

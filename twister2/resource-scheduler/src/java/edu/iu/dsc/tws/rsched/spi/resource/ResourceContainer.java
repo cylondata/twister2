@@ -18,13 +18,13 @@ import java.util.Map;
 /**
  * Represent a resource
  */
-public class Resource {
+public class ResourceContainer {
   private int id;
   // include properties of the resource
   // this can include things like available ports
   private Map<String, Object> properties = new HashMap<>();
 
-  public Resource(int id) {
+  public ResourceContainer(int id) {
     this.id = id;
   }
 }
