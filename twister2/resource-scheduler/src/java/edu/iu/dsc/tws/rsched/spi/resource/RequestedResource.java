@@ -9,8 +9,22 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.basic.job;
+package edu.iu.dsc.tws.rsched.spi.resource;
 
-public class BasicJobBuilder {
+public class RequestedResource {
+  private final int noOfCpus;
+  private final int memoryMegaBytes;
 
+  public RequestedResource(int noOfCpus, int memoryMegaBytes) {
+    this.noOfCpus = noOfCpus;
+    this.memoryMegaBytes = memoryMegaBytes;
+  }
+
+  public int getNoOfCpus() {
+    return noOfCpus;
+  }
+
+  public int getMemoryMegaBytes() {
+    return memoryMegaBytes;
+  }
 }

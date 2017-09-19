@@ -18,7 +18,14 @@ import edu.iu.dsc.tws.api.basic.job.BasicJob;
 public class Twister2Submitter {
   private static final Logger LOG = Logger.getLogger(Twister2Submitter.class.getName());
 
+  /**
+   * Submit a basic job with only container and communications
+   * @param basicJob basic job
+   */
   public void submitContainer(BasicJob basicJob) {
+    // save the job to state manager
+
+    // launch the luancher
 
   }
 }
