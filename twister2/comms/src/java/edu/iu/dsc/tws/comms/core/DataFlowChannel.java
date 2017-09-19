@@ -39,9 +39,9 @@ public final class DataFlowChannel {
   /**
    * Instance plan containing mappings from communication specific ids to higher level task ids
    */
-  private InstancePlan instancePlan;
+  private TaskPlan instancePlan;
 
-  public DataFlowChannel(InstancePlan instancePlan, Config config) {
+  public DataFlowChannel(TaskPlan instancePlan, Config config) {
     this.instancePlan = instancePlan;
     this.config = config;
 

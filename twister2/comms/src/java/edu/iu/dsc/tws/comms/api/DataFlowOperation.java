@@ -12,10 +12,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.api;
 
-import java.util.List;
+import java.util.Set;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.core.InstancePlan;
+import edu.iu.dsc.tws.comms.core.TaskPlan;
 
 public interface DataFlowOperation {
 
@@ -25,8 +25,8 @@ public interface DataFlowOperation {
    * @param config the network configuration
    * @param instancePlan instance plan
    */
-  void init(Config config, InstancePlan instancePlan, List<Integer>  sources,
-            List<Integer> destinations, int stream, MessageReceiver receiver,
+  void init(Config config, TaskPlan instancePlan, Set<Integer> sources,
+            Set<Integer> destinations, int stream, MessageReceiver receiver,
             MessageFormatter messageFormatter, MessageBuilder messageBuilder);
 
   /**

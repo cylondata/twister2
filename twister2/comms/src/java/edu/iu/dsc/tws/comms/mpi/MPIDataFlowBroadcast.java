@@ -17,6 +17,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -25,7 +26,7 @@ import edu.iu.dsc.tws.comms.api.Message;
 import edu.iu.dsc.tws.comms.api.MessageBuilder;
 import edu.iu.dsc.tws.comms.api.MessageFormatter;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
-import edu.iu.dsc.tws.comms.core.InstancePlan;
+import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.utils.BinaryTree;
 import edu.iu.dsc.tws.comms.utils.Routing;
 
@@ -34,9 +35,9 @@ public class MPIDataFlowBroadcast implements DataFlowOperation,
   private static final Logger LOG = Logger.getLogger(MPIDataFlowBroadcast.class.getName());
 
   private Config config;
-  private InstancePlan instancePlan;
-  private List<Integer> sources;
-  private List<Integer> destinations;
+  private TaskPlan instancePlan;
+  private Set<Integer> sources;
+  private Set<Integer> destinations;
   private int stream;
   private Routing routing;
   private TWSMPIChannel channel;
@@ -55,8 +56,8 @@ public class MPIDataFlowBroadcast implements DataFlowOperation,
   private Map<Integer, List<MPIBuffer>> receiveBuffers = new HashMap<>();
 
   @Override
-  public void init(Config cfg, InstancePlan plan, List<Integer> srcs,
-                   List<Integer> dests, int messageStream, MessageReceiver rcvr,
+  public void init(Config cfg, TaskPlan plan, Set<Integer> srcs,
+                   Set<Integer> dests, int messageStream, MessageReceiver rcvr,
                    MessageFormatter fmtr, MessageBuilder bldr) {
     this.config = cfg;
     this.instancePlan = plan;
@@ -68,8 +69,8 @@ public class MPIDataFlowBroadcast implements DataFlowOperation,
     this.receiver = rcvr;
     this.sendBuffers = new LinkedList<>();
 
-    int noOfSendBuffers = MPIContext.getBroadcastBufferCount(config);
-    int sendBufferSize = MPIContext.getBufferSize(config);
+    int noOfSendBuffers = MPIContext.broadcastBufferCount(config);
+    int sendBufferSize = MPIContext.bufferSize(config);
 
     for (int i = 0; i < noOfSendBuffers; i++) {
       sendBuffers.offer(new MPIBuffer(sendBufferSize));
@@ -91,8 +92,8 @@ public class MPIDataFlowBroadcast implements DataFlowOperation,
   private void setupCommunication() {
     List<Integer> receiving = routing.getReceivingIds();
 
-    int maxReceiveBuffers = MPIContext.getReceiveBufferCount(config);
-    int receiveBufferSize = MPIContext.getBufferSize(config);
+    int maxReceiveBuffers = MPIContext.receiveBufferCount(config);
+    int receiveBufferSize = MPIContext.bufferSize(config);
     for (Integer recv : receiving) {
       List<MPIBuffer> recvList = new ArrayList<>();
       for (int i = 0; i < maxReceiveBuffers; i++) {
@@ -103,8 +104,8 @@ public class MPIDataFlowBroadcast implements DataFlowOperation,
     }
 
     // configure the send sendBuffers
-    int sendBufferSize = MPIContext.getBufferSize(config);
-    int sendBufferCount = MPIContext.getSendBuffersCount(config);
+    int sendBufferSize = MPIContext.bufferSize(config);
+    int sendBufferCount = MPIContext.sendBuffersCount(config);
     for (int i = 0; i < sendBufferCount; i++) {
       MPIBuffer buffer = new MPIBuffer(sendBufferSize);
       sendBuffers.offer(buffer);

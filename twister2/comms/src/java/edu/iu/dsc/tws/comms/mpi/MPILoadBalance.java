@@ -13,7 +13,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi;
 
-import java.util.List;
+import java.util.Set;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
@@ -21,12 +21,12 @@ import edu.iu.dsc.tws.comms.api.Message;
 import edu.iu.dsc.tws.comms.api.MessageBuilder;
 import edu.iu.dsc.tws.comms.api.MessageFormatter;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
-import edu.iu.dsc.tws.comms.core.InstancePlan;
+import edu.iu.dsc.tws.comms.core.TaskPlan;
 
 public class MPILoadBalance implements DataFlowOperation {
   @Override
-  public void init(Config config, InstancePlan instancePlan, List<Integer> sources,
-                   List<Integer> destinations, int stream, MessageReceiver receiver,
+  public void init(Config config, TaskPlan instancePlan, Set<Integer> sources,
+                   Set<Integer> destinations, int stream, MessageReceiver receiver,
                    MessageFormatter messageFormatter, MessageBuilder messageBuilder) {
 
   }
