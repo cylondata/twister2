@@ -24,8 +24,11 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class ProcessUtils {
+public final class ProcessUtils {
   private static final Logger LOG = Logger.getLogger(ProcessUtils.class.getName());
+
+  private ProcessUtils() {
+  }
 
   protected static ProcessBuilder getProcessBuilder(
       boolean isInheritIO, String[] command, File workingDirectory, Map<String, String> envs) {

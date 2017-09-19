@@ -2,7 +2,7 @@ package(default_visibility = ["//visibility:public"])
 
 java_library(
     name = "api-java",
-    srcs = glob(["**/api/*.java"]),
+    srcs = glob(["**/*.java"]),
     deps = [
         "//twister2/common/src/java:common-java",
         "//twister2/resource-scheduler/src/java:resource-scheduler-java",

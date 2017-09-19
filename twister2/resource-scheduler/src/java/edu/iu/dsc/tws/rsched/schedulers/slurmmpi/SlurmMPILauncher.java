@@ -27,14 +27,14 @@ public class SlurmMPILauncher implements ILauncher {
 
   private Config config;
 
-  private String topologyWorkingDirectory;
+  private String jobWorkingDirectory;
 
   @Override
   public void initialize(Config mConfig) {
     this.config = mConfig;
 
-    // get the topology working directory
-    this.topologyWorkingDirectory = SlurmMPIContext.workingDirectory(mConfig);
+    // get the job working directory
+    this.jobWorkingDirectory = SlurmMPIContext.workingDirectory(mConfig);
   }
 
   @Override
@@ -44,16 +44,18 @@ public class SlurmMPILauncher implements ILauncher {
 
   @Override
   public boolean launch(ResourcePlan resourcePlan) {
-    LOG.log(Level.FINE, "Launching topology for cluster {0}",
+    LOG.log(Level.FINE, "Launching job for cluster {0}",
         SlurmMPIContext.clusterName(config));
 
-    // download the core and topology packages into the working directory
+    // download the core and job packages into the working directory
     // this working directory is a shared directory among the nodes
     if (!setupWorkingDirectory()) {
-      LOG.log(Level.SEVERE, "Failed to download the core and topology packages");
+      LOG.log(Level.SEVERE, "Failed to download the core and job packages");
       return false;
     }
 
+    // now start the controller, which will get the resources from
+    // slurm and start the job
     IController controller = new SlurmMPIController(true);
     controller.initialize(config);
     return controller.start(resourcePlan);
@@ -61,7 +63,7 @@ public class SlurmMPILauncher implements ILauncher {
 
   /**
    * setup the working directory mainly it downloads and extracts the heron-core-release
-   * and topology package to the working directory
+   * and job package to the working directory
    * @return false if setup fails
    */
   protected boolean setupWorkingDirectory() {
@@ -70,21 +72,22 @@ public class SlurmMPILauncher implements ILauncher {
 
     // form the target dest core release file name
     String coreReleaseFileDestination = Paths.get(
-        topologyWorkingDirectory, "twister2-system.tar.gz").toString();
+        jobWorkingDirectory, "twister2-system.tar.gz").toString();
 
-    // Form the topology package's URI
-    String topologyPackageURI = SlurmMPIContext.jobPackageUri(config).toString();
+    // Form the job package's URI
+    String jobPackageURI = SlurmMPIContext.jobPackageUri(config).toString();
 
-    // form the target topology package file name
-    String topologyPackageDestination = Paths.get(
-        topologyWorkingDirectory, "topology.tar.gz").toString();
+    // form the target job package file name
+    String jobPackageDestination = Paths.get(
+        jobWorkingDirectory, "job.tar.gz").toString();
 
+    // copy the files to the working directory
     return ResourceSchedulerUtils.setupWorkingDirectory(
-        topologyWorkingDirectory,
+        jobWorkingDirectory,
         coreReleasePackageURI,
         coreReleaseFileDestination,
-        topologyPackageURI,
-        topologyPackageDestination,
+        jobPackageURI,
+        jobPackageDestination,
         Context.verbose(config));
   }
 }

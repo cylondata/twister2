@@ -11,11 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.basic.container;
 
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
 public class BaseContainer implements IContainer {
   @Override
-  public void init(int id, ResourcePlan resourcePlan) {
+  public void init(Config config, int id, ResourcePlan resourcePlan) {
 
   }
 }

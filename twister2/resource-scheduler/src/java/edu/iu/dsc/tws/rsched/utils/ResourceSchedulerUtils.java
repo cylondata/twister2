@@ -14,8 +14,11 @@ package edu.iu.dsc.tws.rsched.utils;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class ResourceSchedulerUtils {
+public final class ResourceSchedulerUtils {
   private static final Logger LOG = Logger.getLogger(ResourceSchedulerUtils.class.getName());
+
+  private ResourceSchedulerUtils() {
+  }
 
   public static boolean setupWorkingDirectory(
       String workingDirectory,

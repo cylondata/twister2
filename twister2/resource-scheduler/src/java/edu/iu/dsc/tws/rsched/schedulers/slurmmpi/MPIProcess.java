@@ -22,19 +22,21 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
-import edu.iu.dsc.tws.api.basic.container.IContainer;
-import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
+import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
+
 import mpi.MPI;
 import mpi.MPIException;
+
 
 /**
  * This is the base process started by the resource scheduler. This process will
  * start the rest of the resource as needed.
  */
-public class MPIProcess {
+public final class MPIProcess {
   private static final Logger LOG = Logger.getLogger(MPIProcess.class.getName());
 
   private MPIProcess() {
@@ -67,9 +69,19 @@ public class MPIProcess {
 
       // this is the job manager`
       if (rank == 0) {
-
+        LOG.log(Level.INFO, "This is the master process, we are not doing anything");
+        // first lets do a barrier
+        MPI.COMM_WORLD.barrier();
+        // now wait until other processes finish
+        while (true) {
+          try {
+            Thread.sleep(100);
+          } catch (InterruptedException ignore) {
+          }
+        }
       } else {
         // normal worker
+        LOG.log(Level.INFO, "A worker process is starting...");
         worker(config, rank);
       }
     } catch (MPIException e) {

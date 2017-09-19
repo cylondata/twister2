@@ -11,8 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.spi.scheduler;
 
-import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
 /**
  * This class is used to control the job once it is deployed.

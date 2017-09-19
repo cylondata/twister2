@@ -21,10 +21,10 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import edu.iu.dsc.tws.rsched.spi.scheduler.IController;
 import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
-import edu.iu.dsc.tws.common.config.Config;
 
 public class SlurmMPIController implements IController {
   private static final Logger LOG = Logger.getLogger(SlurmMPIController.class.getName());
@@ -59,8 +59,8 @@ public class SlurmMPIController implements IController {
       return false;
     }
     long containers = resourcePlan.noOfContainers();
-    LOG.log(Level.INFO, "Launching job in Slurm scheduler with no of containers = " +
-        containers);
+    LOG.log(Level.INFO, "Launching job in Slurm scheduler with no of containers = "
+        + containers);
 
     boolean jobCreated = createJob(getTwister2SlurmPath(), SlurmMPIContext.mpiExecFile(config),
         getExecutorCommand(),
@@ -223,8 +223,9 @@ public class SlurmMPIController implements IController {
     return result;
   }
 
-  protected String[] mpiCommandArguments(Config config) {
+  protected String[] mpiCommandArguments(Config cfg) {
     List<String> commands = new ArrayList<>();
+
     return null;
   }
 }

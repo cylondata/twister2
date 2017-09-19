@@ -14,5 +14,5 @@ package edu.iu.dsc.tws.api;
 import java.util.HashMap;
 
 public class Config extends HashMap<String, Object> {
-
+  private static final long serialVersionUID = 6585146860997305058L;
 }

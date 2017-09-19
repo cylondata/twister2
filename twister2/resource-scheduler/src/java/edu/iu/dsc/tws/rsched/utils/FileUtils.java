@@ -23,8 +23,11 @@ import java.nio.file.StandardOpenOption;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class FileUtils {
+public final class FileUtils {
   private static final Logger LOG = Logger.getLogger(FileUtils.class.getName());
+
+  private FileUtils() {
+  }
 
   public static boolean writeToFile(String filename, byte[] contents, boolean overwrite) {
     // default Files behavior is to overwrite. If we specify no overwrite then CREATE_NEW fails

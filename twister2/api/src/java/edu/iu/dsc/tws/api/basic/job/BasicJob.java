@@ -23,6 +23,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.basic.job;
 
-public class BasicJob {
+import edu.iu.dsc.tws.proto.system.JobAPI;
 
+public class BasicJob {
+  public JobAPI.Job serialize() {
+    return null;
+  }
 }
