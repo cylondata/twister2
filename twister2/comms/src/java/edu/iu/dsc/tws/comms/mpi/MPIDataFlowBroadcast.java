@@ -27,8 +27,8 @@ import edu.iu.dsc.tws.comms.api.MessageBuilder;
 import edu.iu.dsc.tws.comms.api.MessageFormatter;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.utils.BinaryTree;
-import edu.iu.dsc.tws.comms.utils.Routing;
+import edu.iu.dsc.tws.comms.routing.BinaryTree;
+import edu.iu.dsc.tws.comms.routing.Routing;
 
 public class MPIDataFlowBroadcast implements DataFlowOperation,
     MPIMessageListener, MPIMessageReleaseCallback {
@@ -56,7 +56,7 @@ public class MPIDataFlowBroadcast implements DataFlowOperation,
   private Map<Integer, List<MPIBuffer>> receiveBuffers = new HashMap<>();
 
   @Override
-  public void init(Config cfg, TaskPlan plan, Set<Integer> srcs,
+  public void init(Config cfg, int thisTask, TaskPlan plan, Set<Integer> srcs,
                    Set<Integer> dests, int messageStream, MessageReceiver rcvr,
                    MessageFormatter fmtr, MessageBuilder bldr) {
     this.config = cfg;
@@ -78,7 +78,7 @@ public class MPIDataFlowBroadcast implements DataFlowOperation,
 
     // lets create the routing needed
     BinaryTree tree = new BinaryTree();
-    tree.init(config, instancePlan, sources, destinations, stream);
+    tree.init(config, thisTask, instancePlan, sources, destinations, stream);
 
     routing = tree.routing();
 
@@ -90,7 +90,7 @@ public class MPIDataFlowBroadcast implements DataFlowOperation,
    * Setup the receives and send sendBuffers
    */
   private void setupCommunication() {
-    List<Integer> receiving = routing.getReceivingIds();
+    List<Integer> receiving = routing.getUpstreamIds();
 
     int maxReceiveBuffers = MPIContext.receiveBufferCount(config);
     int receiveBufferSize = MPIContext.bufferSize(config);
@@ -151,8 +151,8 @@ public class MPIDataFlowBroadcast implements DataFlowOperation,
   }
 
   private void sendMessage(MPIMessage msgObj1) {
-    if (routing.getSendingIds() != null && routing.getSendingIds().size() > 0) {
-      List<Integer> sendIds = routing.getSendingIds();
+    if (routing.getDownstreamIds() != null && routing.getDownstreamIds().size() > 0) {
+      List<Integer> sendIds = routing.getDownstreamIds();
       // we need to increment before sending, otherwise message can get released
       // before we send all
       msgObj1.incrementRefCount(sendIds.size());

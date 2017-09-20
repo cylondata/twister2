@@ -9,24 +9,16 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.utils;
+package edu.iu.dsc.tws.comms.routing;
 
-import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-public class Routing {
-  private final List<Integer> receivingIds;
-  private final List<Integer> sendingIds;
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.core.TaskPlan;
 
-  public Routing(List<Integer> receivingIds, List<Integer> sendingIds) {
-    this.receivingIds = receivingIds;
-    this.sendingIds = sendingIds;
-  }
-
-  public List<Integer> getReceivingIds() {
-    return receivingIds;
-  }
-
-  public List<Integer> getSendingIds() {
-    return sendingIds;
-  }
+public interface IRouter {
+  void init(Config cfg, int thisTask, TaskPlan plan,
+                   Set<Integer> srscs, Set<Integer> dests, int strm);
+  Map<Integer, Routing> routing(int distinctRoutes);
 }

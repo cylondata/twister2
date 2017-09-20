@@ -9,13 +9,15 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.utils;
+package edu.iu.dsc.tws.comms.routing;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.logging.Level;
@@ -24,7 +26,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 
-public class BinaryTree {
+public class BinaryTree implements IRouter {
   private static final Logger LOG = Logger.getLogger(BinaryTree.class.getName());
 
   private Config config;
@@ -40,13 +42,13 @@ public class BinaryTree {
    * Initialize the data structure
    *
    * @param cfg
-   * @param plan
    * @param thisTask
+   * @param plan
    * @param srscs
    * @param dests
    * @param strm
    */
-  public void init(Config cfg, TaskPlan plan, int thisTask,
+  public void init(Config cfg, int thisTask, TaskPlan plan,
                    Set<Integer> srscs, Set<Integer> dests, int strm) {
     this.config = cfg;
     this.taskPlan = plan;
@@ -63,16 +65,56 @@ public class BinaryTree {
    *
    * @return a
    */
-  public Routing routing() {
-    return null;
+  public Map<Integer, Routing> routing(int distinctRoutes) {
+    Map<Integer, Routing> routings = new HashMap<>();
+
+    ArrayList<Integer> sourceList = new ArrayList<>(sources);
+    Collections.sort(sourceList);
+
+    // we can only have routes equal to sources
+    if (distinctRoutes > sourceList.size()) {
+      distinctRoutes = sourceList.size();
+      LOG.log(Level.WARNING, "Trimming down distinct routes to: " + distinctRoutes);
+    }
+
+    for (int i = 0; i < sourceList.size(); i++) {
+      int source = sourceList.get(i);
+      int index = i % distinctRoutes;
+
+      Node root = buildInterGroupTree(index);
+      Node search = search(root, task);
+      if (search != null) {
+        Routing routing = getRouting(search);
+        if (routing != null) {
+          routings.put(source, routing);
+        }
+      }
+    }
+
+    return routings;
   }
 
-  private TreeNode search(TreeNode root, int taskId) {
-    Queue<TreeNode> queue = new LinkedList<>();
+  private Routing getRouting(Node node) {
+    List<Integer> upstream = new ArrayList<>();
+    List<Integer> downstrean = new ArrayList<>();
+
+    Node parent = node.getParent();
+    upstream.add(parent.getTaskId());
+
+    List<Node> children = node.getChildren();
+    for (Node child : children) {
+      downstrean.add(child.getTaskId());
+    }
+    downstrean.addAll(node.getDirectChildren());
+    return new Routing(upstream, downstrean);
+  }
+
+  private Node search(Node root, int taskId) {
+    Queue<Node> queue = new LinkedList<>();
     queue.add(root);
 
     while (queue.size() > 0) {
-      TreeNode current = queue.poll();
+      Node current = queue.poll();
       if (taskId >= 0 && current.getTaskId() == taskId) {
         return current;
       } else {
@@ -83,9 +125,10 @@ public class BinaryTree {
     return null;
   }
 
-  private TreeNode buildInterGroupTree() {
+  private Node buildInterGroupTree(int index) {
     // get the groups hosting the component
-    List<Integer> groups = new ArrayList<>(getGroupsHostingTasks(destinations));
+    // rotate according to index, this will create a unique tree for each index
+    List<Integer> groups = rotateList(new ArrayList<>(getGroupsHostingTasks(destinations)), index);
     LOG.log(Level.INFO, "Number of groups: " + groups.size());
     if (groups.size() == 0) {
       LOG.log(Level.WARNING, "Groups for destinations is zero");
@@ -94,20 +137,20 @@ public class BinaryTree {
 
     // sort the list
     Collections.sort(groups);
-    TreeNode root = buildIntraGroupTree(groups.get(0));
+    Node root = buildIntraGroupTree(groups.get(0), index);
     if (root == null) {
       LOG.log(Level.WARNING, "Intranode tree didn't built: " + groups.get(0));
       return null;
     }
 
-    Queue<TreeNode> queue = new LinkedList<>();
-    TreeNode current = root;
+    Queue<Node> queue = new LinkedList<>();
+    Node current = root;
 
     int i = 1;
     int currentInterNodeDegree = current.getChildren().size() + interNodeDegree;
     while (i < groups.size()) {
       if (current.getChildren().size() < currentInterNodeDegree) {
-        TreeNode e = buildIntraGroupTree(groups.get(i));
+        Node e = buildIntraGroupTree(groups.get(i), index);
         if (e != null) {
           current.addChild(e);
           e.setParent(current);
@@ -124,8 +167,10 @@ public class BinaryTree {
     return root;
   }
 
-  private TreeNode buildIntraGroupTree(int groupId) {
-    List<Integer> executorIds = new ArrayList<>(taskPlan.getExecutesOfGroup(groupId));
+  private Node buildIntraGroupTree(int groupId, int index) {
+    // rotate according to index, this will create a unique tree for each index
+    List<Integer> executorIds = rotateList(
+        new ArrayList<>(taskPlan.getExecutesOfGroup(groupId)), index);
     if (executorIds.size() == 0) {
       return null;
     }
@@ -135,16 +180,16 @@ public class BinaryTree {
     Collections.sort(executorIds);
 
     // create the root of the tree
-    TreeNode root = createTreeeNode(groupId, executorIds.get(0));
+    Node root = createTreeeNode(groupId, executorIds.get(0), index);
 
     // now lets create the tree
-    Queue<TreeNode> queue = new LinkedList<>();
-    TreeNode current = root;
+    Queue<Node> queue = new LinkedList<>();
+    Node current = root;
     int i = 0;
     while (i < executorIds.size()) {
       if (current.getChildren().size() < intraNodeDegree) {
         // create a tree node and add it to the current node as a child
-        TreeNode e = createTreeeNode(groupId, executorIds.get(i));
+        Node e = createTreeeNode(groupId, executorIds.get(i), index);
         current.addChild(e);
         e.setParent(current);
         queue.add(e);
@@ -158,14 +203,16 @@ public class BinaryTree {
     return root;
   }
 
-  private TreeNode createTreeeNode(int groupId, int executorId) {
+  private Node createTreeeNode(int groupId, int executorId, int rotateIndex) {
     List<Integer> channelsOfExecutorList = new ArrayList<>(
         taskPlan.getChannelsOfExecutor(executorId));
     Collections.sort(channelsOfExecutorList);
+    // we will rotate according to rotate index
+    channelsOfExecutorList = rotateList(channelsOfExecutorList, rotateIndex);
 
     int firstTaskId = channelsOfExecutorList.get(0);
     // this task act as the tree node
-    TreeNode node = new TreeNode(firstTaskId, groupId);
+    Node node = new Node(firstTaskId, groupId);
     // add all the other tasks as direct children
     for (int i = 1; i < channelsOfExecutorList.size(); i++) {
       node.addDirectChild(channelsOfExecutorList.get(i));
@@ -181,5 +228,13 @@ public class BinaryTree {
       groups.add(group);
     }
     return groups;
+  }
+
+  private List<Integer> rotateList(List<Integer> original, int index) {
+    List<Integer> rotate = new ArrayList<>();
+    for (int i = 0; i < original.size(); i++) {
+      rotate.add(original.get((i + index) / original.size()));
+    }
+    return rotate;
   }
 }

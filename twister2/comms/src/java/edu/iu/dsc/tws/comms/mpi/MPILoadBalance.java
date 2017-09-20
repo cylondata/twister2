@@ -25,7 +25,7 @@ import edu.iu.dsc.tws.comms.core.TaskPlan;
 
 public class MPILoadBalance implements DataFlowOperation {
   @Override
-  public void init(Config config, TaskPlan instancePlan, Set<Integer> sources,
+  public void init(Config config, int thisTask, TaskPlan instancePlan, Set<Integer> sources,
                    Set<Integer> destinations, int stream, MessageReceiver receiver,
                    MessageFormatter messageFormatter, MessageBuilder messageBuilder) {
 

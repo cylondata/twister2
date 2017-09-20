@@ -9,12 +9,12 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.utils;
+package edu.iu.dsc.tws.comms.routing;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class TreeNode {
+public class Node {
 
   public enum NodeType {
     MIDDLE,
@@ -22,35 +22,35 @@ public class TreeNode {
   }
 
   // children that are not in memory
-  private List<TreeNode> children = new ArrayList<>();
+  private List<Node> children = new ArrayList<>();
 
   // in memory children
   private List<Integer> directChildren = new ArrayList<>();
 
-  private TreeNode parent;
+  private Node parent;
   private int taskId;
   private int groupId;
 
-  public TreeNode(int taskId, int groupId) {
+  public Node(int taskId, int groupId) {
     this.taskId = taskId;
     this.groupId = groupId;
   }
 
-  public TreeNode(TreeNode parent, int taskId, int grpId) {
+  public Node(Node parent, int taskId, int grpId) {
     this.parent = parent;
     this.taskId = taskId;
     this.groupId = grpId;
   }
 
-  public void addChild(TreeNode child) {
+  public void addChild(Node child) {
     children.add(child);
   }
 
-  public List<TreeNode> getChildren() {
+  public List<Node> getChildren() {
     return children;
   }
 
-  public TreeNode getParent() {
+  public Node getParent() {
     return parent;
   }
 
@@ -62,11 +62,11 @@ public class TreeNode {
     return groupId;
   }
 
-  public void setParent(TreeNode node) {
+  public void setParent(Node node) {
     this.parent = node;
   }
 
-  public void addChildren(List<TreeNode> nodes) {
+  public void addChildren(List<Node> nodes) {
     this.children.addAll(nodes);
   }
 
@@ -76,6 +76,10 @@ public class TreeNode {
 
   public void addDirectChild(int task) {
     this.directChildren.add(task);
+  }
+
+  public List<Integer> getDirectChildren() {
+    return directChildren;
   }
 }
 
