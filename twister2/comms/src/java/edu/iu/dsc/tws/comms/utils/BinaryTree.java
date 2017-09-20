@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.comms.utils;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -72,12 +73,10 @@ public class BinaryTree {
 
     while (queue.size() > 0) {
       TreeNode current = queue.poll();
-      if ((taskId >= 0 && current.getNodeType() == TreeNode.NodeType.LEAF && current.getTaskId() == taskId &&
-          current.stmgrId.equals(stmgrId)) ||
-          (taskId < 0 && current.nodeType == NodeType.STMGR && current.stmgrId.equals(stmgrId))) {
+      if (taskId >= 0 && current.getTaskId() == taskId) {
         return current;
       } else {
-        queue.addAll(current.children);
+        queue.addAll(current.getChildren());
       }
     }
 
@@ -85,35 +84,33 @@ public class BinaryTree {
   }
 
   private TreeNode buildInterGroupTree() {
-    // get the stmgrs hosting the component
-    List<String> stmgrs = helper.getStmgrsHostingComponent(helper.getMyComponent());
-    LOG.log(Level.INFO, "Number of stream managers: " + stmgrs.size());
-    if (stmgrs.size() == 0) {
-      LOG.log(Level.WARNING, "Stream managers for component is zero: " + helper.getMyComponent());
+    // get the groups hosting the component
+    List<Integer> groups = new ArrayList<>(getGroupsHostingTasks(destinations));
+    LOG.log(Level.INFO, "Number of groups: " + groups.size());
+    if (groups.size() == 0) {
+      LOG.log(Level.WARNING, "Groups for destinations is zero");
       return null;
     }
 
     // sort the list
-    Collections.sort(stmgrs);
-    TreeNode root = buildIntraNodeTree(stmgrs.get(0));
+    Collections.sort(groups);
+    TreeNode root = buildIntraGroupTree(groups.get(0));
     if (root == null) {
-      LOG.log(Level.WARNING, "Intranode tree didn't built: " + stmgrs.get(0) +
-          " : " + helper.getMyComponent());
+      LOG.log(Level.WARNING, "Intranode tree didn't built: " + groups.get(0));
       return null;
     }
+
     Queue<TreeNode> queue = new LinkedList<>();
-    queue.add(root);
+    TreeNode current = root;
 
-    TreeNode current = queue.poll();
     int i = 1;
-    int currentInterNodeDegree = current.children.size() + interNodeDegree;
-
-    while (i < stmgrs.size()) {
-      if (current.children.size() < currentInterNodeDegree) {
-        TreeNode e = buildIntraGroupTree(stmgrs.get(i));
+    int currentInterNodeDegree = current.getChildren().size() + interNodeDegree;
+    while (i < groups.size()) {
+      if (current.getChildren().size() < currentInterNodeDegree) {
+        TreeNode e = buildIntraGroupTree(groups.get(i));
         if (e != null) {
-          current.children.add(e);
-          e. = current;
+          current.addChild(e);
+          e.setParent(current);
           queue.add(e);
         } else {
           throw new RuntimeException("Stream manager with 0 components for building tree");
@@ -121,44 +118,39 @@ public class BinaryTree {
         i++;
       } else {
         current = queue.poll();
-        currentInterNodeDegree = current.children.size() + interNodeDegree;
+        currentInterNodeDegree = current.getChildren().size() + interNodeDegree;
       }
     }
     return root;
   }
 
   private TreeNode buildIntraGroupTree(int groupId) {
-    Set<Integer> executorIds = taskPlan.getExecutesOfGroup(groupId);
+    List<Integer> executorIds = new ArrayList<>(taskPlan.getExecutesOfGroup(groupId));
     if (executorIds.size() == 0) {
       return null;
     }
+    LOG.log(Level.FINE, "Number of executors: " + executorIds.size());
 
-    List<Integer> executorIdList = new ArrayList<>(executorIds);
-    LOG.log(Level.FINE, "Number of tasks: " + executorIds.size());
     // sort the taskIds to make sure everybody creating the same tree
-    Collections.sort(executorIdList);
+    Collections.sort(executorIds);
 
-    // get the tasks of this executor
-    TreeNode root = createTreeeNode(groupId, executorIdList);
+    // create the root of the tree
+    TreeNode root = createTreeeNode(groupId, executorIds.get(0));
 
+    // now lets create the tree
     Queue<TreeNode> queue = new LinkedList<>();
     TreeNode current = root;
     int i = 0;
     while (i < executorIds.size()) {
-      int executorId = executorIdList.get(i);
-      List<Integer> tasksOfExecutorList =
-          new ArrayList<>(taskPlan.getChannelsOfExecutor(executorId));
-      Collections.sort(tasksOfExecutorList);
-
       if (current.getChildren().size() < intraNodeDegree) {
-        TreeNode e = new TreeNode(current, executorIds.get(i), groupId,
-            helper.getInstanceIdForComponentId(helper.getMyComponent(),
-                executorIds.get(i)), NodeType.TASK);
-        current.children.add(e);
-        e.parent = current;
+        // create a tree node and add it to the current node as a child
+        TreeNode e = createTreeeNode(groupId, executorIds.get(i));
+        current.addChild(e);
+        e.setParent(current);
         queue.add(e);
         i++;
       } else {
+        // the current node is filled, lets move to the next
         current = queue.poll();
       }
     }
@@ -166,21 +158,28 @@ public class BinaryTree {
     return root;
   }
 
-  private TreeNode createTreeeNode(int groupId, List<Integer> executorIdList) {
-    int rootExecutor = executorIdList.get(0);
+  private TreeNode createTreeeNode(int groupId, int executorId) {
     List<Integer> channelsOfExecutorList = new ArrayList<>(
-        taskPlan.getChannelsOfExecutor(rootExecutor));
+        taskPlan.getChannelsOfExecutor(executorId));
     Collections.sort(channelsOfExecutorList);
 
-    int rootTaskId = channelsOfExecutorList.get(0);
-    TreeNode root = new TreeNode(rootTaskId, groupId);
+    int firstTaskId = channelsOfExecutorList.get(0);
+    // this task act as the tree node
+    TreeNode node = new TreeNode(firstTaskId, groupId);
+    // add all the other tasks as direct children
     for (int i = 1; i < channelsOfExecutorList.size(); i++) {
-      root.addDirectChild(channelsOfExecutorList.get(i));
+      node.addDirectChild(channelsOfExecutorList.get(i));
     }
-    return root;
+    return node;
   }
 
-  private void addDirectChildren() {
-
+  private Set<Integer> getGroupsHostingTasks(Set<Integer> tasks) {
+    Set<Integer> groups = new HashSet<>();
+    for (int t : tasks) {
+      int executor = taskPlan.getExecutorForChannel(t);
+      int group = taskPlan.getGroupOfExecutor(executor);
+      groups.add(group);
+    }
+    return groups;
   }
 }

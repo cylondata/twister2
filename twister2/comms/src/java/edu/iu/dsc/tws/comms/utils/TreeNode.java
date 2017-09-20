@@ -21,10 +21,10 @@ public class TreeNode {
     LEAF
   }
 
-  // children that go through network
+  // children that are not in memory
   private List<TreeNode> children = new ArrayList<>();
 
-  // in memory children that we should send directly
+  // in memory children
   private List<Integer> directChildren = new ArrayList<>();
 
   private TreeNode parent;
