@@ -72,10 +72,7 @@ public class BinaryTree implements IRouter {
     Collections.sort(sourceList);
 
     // we can only have routes equal to sources
-    if (distinctRoutes > sourceList.size()) {
-      distinctRoutes = sourceList.size();
-      LOG.log(Level.WARNING, "Trimming down distinct routes to: " + distinctRoutes);
-    }
+    distinctRoutes = Math.min(Math.min(distinctRoutes, sourceList.size()), destinations.size());
 
     for (int i = 0; i < sourceList.size(); i++) {
       int source = sourceList.get(i);

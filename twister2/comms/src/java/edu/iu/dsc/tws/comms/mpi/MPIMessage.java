@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.iu.dsc.tws.comms.api.Message;
+import edu.iu.dsc.tws.comms.api.MessageHeader;
 
 public class MPIMessage extends Message {
   private final List<MPIBuffer> buffers = new ArrayList<MPIBuffer>();
@@ -34,6 +35,11 @@ public class MPIMessage extends Message {
   private MPIMessageReleaseCallback releaseListener;
 
   private final int stream;
+
+  /**
+   * The message header
+   */
+  private MessageHeader header;
 
   /**
    * Keep track of the originating id, this is required to release the buffers allocated.
@@ -91,5 +97,9 @@ public class MPIMessage extends Message {
 
   public int getOriginatingId() {
     return originatingId;
+  }
+
+  public MessageHeader getHeader() {
+    return header;
   }
 }
