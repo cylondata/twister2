@@ -23,7 +23,7 @@ import com.google.protobuf.Message;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.proto.system.JobExecutionState;
-import edu.iu.dsc.tws.proto.system.ResourceScheduler;
+import edu.iu.dsc.tws.proto.system.ResourceAPI;
 import edu.iu.dsc.tws.rsched.spi.statemanager.Lock;
 import edu.iu.dsc.tws.rsched.spi.statemanager.WatchCallback;
 import edu.iu.dsc.tws.rsched.utils.FileUtils;
@@ -168,7 +168,7 @@ public class SharedFileSystemStateManager extends FileSystemStateManager {
 
   @Override
   public ListenableFuture<Boolean> setSchedulerLocation(
-      ResourceScheduler.SchedulerLocation location, String jobName) {
+      ResourceAPI.SchedulerLocation location, String jobName) {
     // Note: Unlike Zk statemgr, we overwrite the location even if there is already one.
     // This is because when running in simulator we control when a scheduler dies and
     // comes up deterministically.

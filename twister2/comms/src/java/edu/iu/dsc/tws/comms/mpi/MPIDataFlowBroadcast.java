@@ -58,7 +58,7 @@ public class MPIDataFlowBroadcast implements DataFlowOperation,
   private Map<Integer, List<MPIBuffer>> receiveBuffers = new HashMap<>();
 
   @Override
-  public void init(Config cfg, int thisTask, TaskPlan plan, Set<Integer> srcs,
+  public void init(Config cfg, int task, TaskPlan plan, Set<Integer> srcs,
                    Set<Integer> dests, int messageStream, MessageReceiver rcvr,
                    MessageFormatter fmtr, MessageBuilder bldr) {
     this.config = cfg;
@@ -70,7 +70,7 @@ public class MPIDataFlowBroadcast implements DataFlowOperation,
     this.builder = bldr;
     this.receiver = rcvr;
     this.sendBuffers = new LinkedList<>();
-    this.thisTask = thisTask;
+    this.thisTask = task;
 
 
     int noOfSendBuffers = MPIContext.broadcastBufferCount(config);

@@ -72,11 +72,11 @@ public class BinaryTree implements IRouter {
     Collections.sort(sourceList);
 
     // we can only have routes equal to sources
-    distinctRoutes = Math.min(Math.min(distinctRoutes, sourceList.size()), destinations.size());
+    int routs = Math.min(Math.min(distinctRoutes, sourceList.size()), destinations.size());
 
     for (int i = 0; i < sourceList.size(); i++) {
       int source = sourceList.get(i);
-      int index = i % distinctRoutes;
+      int index = i % routs;
 
       Node root = buildInterGroupTree(index);
       Node search = search(root, task);
