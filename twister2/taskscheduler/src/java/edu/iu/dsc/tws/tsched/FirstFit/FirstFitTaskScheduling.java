@@ -21,7 +21,6 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
 package edu.iu.dsc.tws.tsched.FirstFit;
 
 import java.util.ArrayList;
@@ -30,25 +29,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedule;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.Resource;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskInstanceId;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.ScheduleException;
-
-import edu.iu.dsc.tws.tsched.builder.TaskSchedulePlanBuilder;
-
 import edu.iu.dsc.tws.tsched.spi.common.Config;
 import edu.iu.dsc.tws.tsched.spi.common.Context;
+
+import edu.iu.dsc.tws.tsched.builder.TaskSchedulePlanBuilder;
+import edu.iu.dsc.tws.tsched.builder.Container;
+import edu.iu.dsc.tws.tsched.builder.ContainerIdScorer;
+
 import edu.iu.dsc.tws.tsched.utils.Job;
 import edu.iu.dsc.tws.tsched.utils.JobAttributes;
 import edu.iu.dsc.tws.tsched.utils.RequiredRam;
 import edu.iu.dsc.tws.tsched.utils.RequiredDisk;
 import edu.iu.dsc.tws.tsched.utils.RequiredCPU;
-import edu.iu.dsc.tws.tsched.builder.Container;
-import edu.iu.dsc.tws.tsched.builder.ContainerIdScorer;
-
 
 public class FirstFitTaskScheduling {
 

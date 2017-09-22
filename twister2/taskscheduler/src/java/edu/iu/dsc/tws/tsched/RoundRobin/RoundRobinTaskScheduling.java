@@ -21,7 +21,6 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
 package edu.iu.dsc.tws.tsched.RoundRobin;
 
 import java.util.ArrayList;
@@ -40,10 +39,9 @@ import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.utils.Job;
 import edu.iu.dsc.tws.tsched.utils.JobAttributes;
 import edu.iu.dsc.tws.tsched.utils.JobConfig;
-
 //import edu.iu.dsc.tws.tsched.spi.common.Config; (In future it will be replaced with proper config value)
 
-/***
+/**
  * This class is responsible for
  * 1. Initializing the RAM, Disk, and CPU percentage values from the Config and Job files.
  * 2. Perform the Round Robin based scheduling for assigning the instances to the containers.
@@ -57,7 +55,6 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
   private double instanceRAM;
   private double instanceDisk;
   private double instanceCPU;
-
   //It should be replaced with appropriate values....
   private static final double DEFAULT_DISK_PADDING_PER_CONTAINER = 10;
   private static final double DEFAULT_CPU_PADDING_PER_CONTAINER = 1;
@@ -65,7 +62,6 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
   private static final double NOT_SPECIFIED_NUMBER_VALUE = -1;
   private static final double DEFAULT_RAM_PADDING_PER_CONTAINER = 2;
   
-
   @Override
   public void initialize(Config config, Job job) {
     this.job = job;
@@ -74,7 +70,6 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
     //this.instanceRAM = Context.instanceRam(config);
     //this.instanceDisk = Context.instanceDisk(config);
     //this.instanceCPU = Context.instanceCPU(config);
-
     this.instanceRAM = config.Container_Max_RAM_Value;
     this.instanceCPU = config.Container_Max_CPU_Value;
     this.instanceDisk = config.Container_Max_Disk_Value;
@@ -136,14 +131,11 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
     Map<Integer, List<InstanceId>> RRAllocation = new HashMap<>();
 
     try {
-
       int numberOfContainers = JobAttributes.getNumberOfContainers(job);
       int totalInstances = JobAttributes.getTotalNumberOfInstances(job);
-
       for (int i = 1; i <= numberOfContainers; i++) {
         RRAllocation.put(i, new ArrayList<InstanceId>());
       }
-
       Map<String, Integer> parallelTaskMap = JobAttributes.getParallelTaskMap(job);
       for (String task : parallelTaskMap.keySet()) {
         int numberOfInstances = parallelTaskMap.get(task);
