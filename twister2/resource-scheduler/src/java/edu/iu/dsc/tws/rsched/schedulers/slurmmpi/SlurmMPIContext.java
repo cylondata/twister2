@@ -11,14 +11,41 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.slurmmpi;
 
-import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.config.TokenSub;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
-public class SlurmMPIContext extends Context {
-  public static final String TWISTER2_JOB_BASIC_CONTAINER_CLASS =
-      "twister2.job.basic.container.class";
+public class SlurmMPIContext extends SchedulerContext {
+  public static final String WORKING_DIRECTORY =
+      "twister2.resource.scheduler.slurm.working.directory";
 
-  public static String getTwister2JobBasicContainerClass(Config cfg) {
-    return cfg.getStringValue(TWISTER2_JOB_BASIC_CONTAINER_CLASS);
+  public static final String SLURM_JOB_ID = "twister2.resource.scheduler.slurm.job.id";
+
+  public static final String SLURM_SHELL_SCRIPT = "twister2.resource.scheduler.slurm.shell.script";
+
+  public static final String PARTITION = "twister2.resource.scheduler.slurm.partition";
+  public static final String MPI_HOME = "twister2.resource.scheduler.mpi.home";
+
+  public static String workingDirectory(Config config) {
+    String workingDirectory = config.getStringValue(WORKING_DIRECTORY,
+        "${HOME}/.twister2data/jobs/${CLUSTER}/${JOB}");
+    return TokenSub.substitute(config, workingDirectory);
+  }
+
+  public static String jobIdFile(Config config) {
+    return config.getStringValue(SLURM_JOB_ID, "slurm-job.pid");
+  }
+
+  public static String slurmShellScript(Config config) {
+    return config.getStringValue(SLURM_SHELL_SCRIPT, "slurm.sh");
+  }
+
+  public static String partition(Config cfg) {
+    return cfg.getStringValue(PARTITION);
+  }
+
+  public static String mpiExecFile(Config cfg) {
+    String mpiExec = cfg.getStringValue(MPI_HOME, "");
+    return TokenSub.substitute(cfg, mpiExec);
   }
 }

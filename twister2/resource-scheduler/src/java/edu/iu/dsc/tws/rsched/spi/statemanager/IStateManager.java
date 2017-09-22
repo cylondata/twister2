@@ -16,7 +16,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import edu.iu.dsc.tws.common.config.Config;
 
 import edu.iu.dsc.tws.proto.system.JobExecutionState;
-import edu.iu.dsc.tws.proto.system.ResourceScheduler;
+import edu.iu.dsc.tws.proto.system.ResourceAPI;
 
 /**
  * This file defines the IStateManager interface.
@@ -104,7 +104,7 @@ public interface IStateManager extends AutoCloseable {
    * @return Boolean - Success or Failure
    */
   ListenableFuture<Boolean> setSchedulerLocation(
-      ResourceScheduler.SchedulerLocation location, String topologyName);
+      ResourceAPI.SchedulerLocation location, String topologyName);
 
   /**
    * Delete the tmaster location for the given topology

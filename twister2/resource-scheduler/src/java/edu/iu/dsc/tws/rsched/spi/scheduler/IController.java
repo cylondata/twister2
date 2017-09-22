@@ -11,7 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.spi.scheduler;
 
-import edu.iu.dsc.tws.tsched.spi.common.Config;
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
 /**
  * This class is used to control the job once it is deployed.
@@ -21,9 +22,9 @@ public interface IController {
   /**
    * This will initialize controller using config file. Will be called during start.
    */
-  void initialize(Config config, Config runtime);
+  void initialize(Config config);
 
-  void start();
+  boolean start(ResourcePlan requestedResources);
 
   void close();
 

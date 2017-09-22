@@ -1,0 +1,10 @@
+# working directory
+twister2.resource.scheduler.slurm.working.directory: "${HOME}/.herondata/topologies/${CLUSTER}/${JOB}"
+# the job id file
+twister2.resource.scheduler.slurm.job.id: ""
+# slurm script to run
+twister2.resource.scheduler.slurm.shell.script: "slurm.sh"
+# slurm partition
+twister2.resource.scheduler.slurm.partition: ""
+# the mpirun command location
+twister2.resource.scheduler.mpi.home: ""

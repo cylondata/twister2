@@ -185,7 +185,7 @@ public class Config {
     return cfgMap.size();
   }
 
-  private Object get(String key) {
+  public Object get(String key) {
     switch (mode) {
       case LOCAL:
         return localConfig.cfgMap.get(key);
@@ -212,7 +212,7 @@ public class Config {
     return value != null ? value : defaultValue;
   }
 
-  private Boolean getBooleanValue(String key) {
+  public Boolean getBooleanValue(String key) {
     return (Boolean) get(key);
   }
 

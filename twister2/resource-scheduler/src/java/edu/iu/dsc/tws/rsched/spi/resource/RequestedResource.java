@@ -9,11 +9,22 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.basic.container;
+package edu.iu.dsc.tws.rsched.spi.resource;
 
-import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
-import edu.iu.dsc.tws.common.config.Config;
+public class RequestedResource {
+  private final int noOfCpus;
+  private final int memoryMegaBytes;
 
-public interface IContainer {
-  void init(Config config, int id, ResourcePlan resourcePlan);
+  public RequestedResource(int noOfCpus, int memoryMegaBytes) {
+    this.noOfCpus = noOfCpus;
+    this.memoryMegaBytes = memoryMegaBytes;
+  }
+
+  public int getNoOfCpus() {
+    return noOfCpus;
+  }
+
+  public int getMemoryMegaBytes() {
+    return memoryMegaBytes;
+  }
 }

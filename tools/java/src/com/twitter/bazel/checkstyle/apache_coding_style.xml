@@ -199,7 +199,7 @@ limitations under the License.
       <module name="UnusedImports"/>
       <module name="ImportOrder">
         <property name="groups"
-                  value="/^javax?\./,scala,com,net,org,com.twitter"/>
+                  value="/^javax?\./,scala,com,net,org,edu"/>
         <property name="ordered" value="true"/>
         <property name="separated" value="true"/>
         <property name="option" value="bottom"/>

@@ -18,11 +18,17 @@ import java.util.List;
 public class ResourcePlan {
   private String cluster;
 
-  private List<Resource> resources = new ArrayList<>();
+  private List<ResourceContainer> containers = new ArrayList<>();
 
   public ResourcePlan(String cluster) {
     this.cluster = cluster;
   }
 
+  public List<ResourceContainer> getContainers() {
+    return containers;
+  }
 
+  public int noOfContainers() {
+    return containers.size();
+  }
 }

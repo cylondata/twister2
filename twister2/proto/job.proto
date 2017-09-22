@@ -1,6 +1,6 @@
 package tws.proto.job;
 
-option java_package = "edu.iu.dsc.tws.proto.system";
+option java_package = "edu.iu.dsc.tws.proto.system.job";
 option java_outer_classname = "JobAPI";
 
 import "resource-scheduler.proto";

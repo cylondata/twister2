@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.core;
 
+import java.net.URI;
+
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 
@@ -24,9 +26,11 @@ public class SchedulerContext extends Context {
   public static final String PACKAGE_FILE = "twister2.job.package.file";
   public static final String JOB_NAME = "twister2.job.name";
   public static final String STATE_MANAGER_ROOT_PATH = "twister2.state.manager.root.path";
-
+  public static final String SYSTEM_PACKAGE_URI = "twister2.system.package.uri";
+  public static final String TWISTER2_JOB_BASIC_CONTAINER_CLASS =
+      "twister2.job.basic.container.class";
   /**
-   * Internal configuration
+   * Internal configuration for job package url
    */
   public static final String JOB_PACKAGE_URI = "twister2.job.package.uri";
 
@@ -46,15 +50,27 @@ public class SchedulerContext extends Context {
     return cfg.getStringValue(LAUNCHER_CLASS);
   }
 
-  public static String getJobPackageFile(Config cfg) {
+  public static String jobPackageFile(Config cfg) {
     return cfg.getStringValue(PACKAGE_FILE);
   }
 
-  public static String getJobName(Config cfg) {
+  public static String jobName(Config cfg) {
     return cfg.getStringValue(JOB_NAME);
   }
 
-  public static String getStateManegerRootPath(Config cfg) {
+  public static String stateManegerRootPath(Config cfg) {
     return cfg.getStringValue(STATE_MANAGER_ROOT_PATH);
+  }
+
+  public static String systemPackageUrl(Config cfg) {
+    return cfg.getStringValue(SYSTEM_PACKAGE_URI, "${HERON_DIST}/twister2-system.tar.gz");
+  }
+
+  public static URI jobPackageUri(Config cfg) {
+    return (URI) cfg.get(JOB_PACKAGE_URI);
+  }
+
+  public static String jobBasicContainerClass(Config cfg) {
+    return cfg.getStringValue(TWISTER2_JOB_BASIC_CONTAINER_CLASS);
   }
 }

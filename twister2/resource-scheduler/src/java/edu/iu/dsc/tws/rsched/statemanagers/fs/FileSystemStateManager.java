@@ -88,7 +88,7 @@ public abstract class FileSystemStateManager implements IStateManager {
 
   @Override
   public void initialize(Config config) {
-    this.rootAddress = SchedulerContext.getStateManegerRootPath(config);
+    this.rootAddress = SchedulerContext.stateManegerRootPath(config);
     LOG.log(Level.FINE, "File system state manager root address: {0}", rootAddress);
   }
 

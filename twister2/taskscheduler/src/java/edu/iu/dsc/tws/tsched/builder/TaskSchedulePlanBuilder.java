@@ -229,7 +229,7 @@ public  class TaskSchedulePlanBuilder {
                     }
                     containerRAMValue += instanceRAMValue;
 
-                    System.out.println("Container Ram Value:"+containerRAMValue);
+                    System.out.println("ResourceContainer Ram Value:"+containerRAMValue);
 
                     if (taskDiskMap.containsKey (instanceId.getTaskName ())) {
                         instanceDiskValue = instanceDefaultResourceValue.getDisk ();
@@ -238,7 +238,7 @@ public  class TaskSchedulePlanBuilder {
                     }
                     containerDiskValue += instanceDiskValue;
 
-                    System.out.println("Container Disk Value:"+containerDiskValue);
+                    System.out.println("ResourceContainer Disk Value:"+containerDiskValue);
 
                     if (taskCPUMap.containsKey (instanceId.getTaskName ())) {
                         instanceCPUValue = instanceDefaultResourceValue.getCpu ();
@@ -253,10 +253,10 @@ public  class TaskSchedulePlanBuilder {
                     (instanceId.getTaskName (), instanceId.getTaskId (), instanceId.getTaskIndex (), resource));
 
                     //taskInstancePlans.add(new TaskSchedulePlan.TaskInstancePlan (instanceId,
-                      //      new Resource(instanceRAMValue, instanceDiskValue, instanceCPUValue)));
+                      //      new ResourceContainer(instanceRAMValue, instanceDiskValue, instanceCPUValue)));
                 }
 
-                System.out.println("Container CPU Value:"+containerCPUValue);
+                System.out.println("ResourceContainer CPU Value:"+containerCPUValue);
                     /**** containerCpu += (paddingPercentage * containerCpu) / 100;
                     containerRam = containerRam.increaseBy(paddingPercentage);
                     containerDiskInBytes = containerDiskInBytes.increaseBy(paddingPercentage); ****/
@@ -361,7 +361,7 @@ public  class TaskSchedulePlanBuilder {
         this.taskIds = newtaskIds;
         this.taskIndexes = newtaskIndexes;
         this.containers = containerMap;
-        System.out.println ("Container size value is:" + containers.size ()+"\t"+this.taskIds+"\t"+this.taskIndexes);
+        System.out.println ("ResourceContainer size value is:" + containers.size ()+"\t"+this.taskIds+"\t"+this.taskIndexes);
     }
 
     private Map<Integer, Container> getContainers(TaskSchedulePlan previousTaskSchedulePlan, int requestedContainerPadding, HashMap<String, TreeSet<Integer>> taskIndexes, TreeSet<Integer> taskIds) {
@@ -372,9 +372,9 @@ public  class TaskSchedulePlanBuilder {
         }
         Map<Integer, Container> containers = new HashMap<> ();
 
-        /*Resource resource = null;
+        /*ResourceContainer resource = null;
         try {
-          Resource resource = previousTaskSchedulePlan.getMaxContainerResources ();
+          ResourceContainer resource = previousTaskSchedulePlan.getMaxContainerResources ();
         } catch (NullPointerException ne){
             ne.printStackTrace ();
         }*/
@@ -382,7 +382,7 @@ public  class TaskSchedulePlanBuilder {
         //for testing
         Resource resource = new Resource(2.0, 5.0,5.0);
 
-        System.out.println("Resource inside the container:"+resource);
+        System.out.println("ResourceContainer inside the container:"+resource);
 
         for (TaskSchedulePlan.ContainerPlan currentContainerPlan : previousTaskSchedulePlan.getContainers ()) {
             Container container = new Container
@@ -394,7 +394,7 @@ public  class TaskSchedulePlanBuilder {
         }
 
         if(!containers.isEmpty ()){
-            System.out.println("Container values are:"+containers);
+            System.out.println("ResourceContainer values are:"+containers);
         }
         else {
             System.out.println("container values are empty");
@@ -436,7 +436,7 @@ public  class TaskSchedulePlanBuilder {
             addInstance(container.getContainerId(), taskName);
             //return container.getContainerId();
             containerId = container.getContainerId ();
-            System.out.println("Container Id and task Name:"+containerId+"\t"+taskName);
+            System.out.println("ResourceContainer Id and task Name:"+containerId+"\t"+taskName);
         }
         return containerId;
     }

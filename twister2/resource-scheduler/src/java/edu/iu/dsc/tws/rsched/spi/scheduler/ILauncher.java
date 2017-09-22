@@ -18,15 +18,19 @@ import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
  * Launches job. The purpose of the launcher is to bring up the required processes
  */
 public interface ILauncher extends AutoCloseable {
-  void initialize(Config config, Config runtime);
+  /**
+   * Initilize with the configuration
+   * @param config the configuration
+   */
+  void initialize(Config config);
 
   void close();
 
   /**
    * Launch the processes according to the resource plan. An implementation fo this class will
    *
-   * @param packing
-   * @return
+   * @param resourcePlan requested resources
+   * @return true if the request is granted
    */
-  boolean launch(ResourcePlan packing);
+  boolean launch(ResourcePlan resourcePlan);
 }

@@ -22,19 +22,21 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
-import edu.iu.dsc.tws.api.basic.container.IContainer;
-import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
+import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
+
 import mpi.MPI;
 import mpi.MPIException;
+
 
 /**
  * This is the base process started by the resource scheduler. This process will
  * start the rest of the resource as needed.
  */
-public class MPIProcess {
+public final class MPIProcess {
   private static final Logger LOG = Logger.getLogger(MPIProcess.class.getName());
 
   private MPIProcess() {
@@ -67,9 +69,19 @@ public class MPIProcess {
 
       // this is the job manager`
       if (rank == 0) {
-
+        LOG.log(Level.INFO, "This is the master process, we are not doing anything");
+        // first lets do a barrier
+        MPI.COMM_WORLD.barrier();
+        // now wait until other processes finish
+        while (true) {
+          try {
+            Thread.sleep(100);
+          } catch (InterruptedException ignore) {
+          }
+        }
       } else {
         // normal worker
+        LOG.log(Level.INFO, "A worker process is starting...");
         worker(config, rank);
       }
     } catch (MPIException e) {
@@ -93,29 +105,33 @@ public class MPIProcess {
   private static Options setupOptions() {
     Options options = new Options();
 
-    Option containerClass = Option.builder("c_class")
+    Option containerClass = Option.builder("c")
         .desc("The class name of the container to launch")
+        .longOpt("container_class")
         .hasArgs()
         .argName("container class")
         .required()
         .build();
 
-    Option configDirectory = Option.builder("config_dir")
+    Option configDirectory = Option.builder("d")
         .desc("The class name of the container to launch")
+        .longOpt("config_dir")
         .hasArgs()
         .argName("configuration directory")
         .required()
         .build();
 
-    Option twister2Home = Option.builder("twister2_home")
+    Option twister2Home = Option.builder("t")
         .desc("The class name of the container to launch")
+        .longOpt("twister2_home")
         .hasArgs()
         .argName("twister2 home")
         .required()
         .build();
 
-    Option clusterName = Option.builder("cluster_name")
+    Option clusterName = Option.builder("n")
         .desc("The clustr name")
+        .longOpt("cluster_name")
         .hasArgs()
         .argName("cluster name")
         .required()
@@ -148,7 +164,7 @@ public class MPIProcess {
   }
 
   private static void worker(Config config, int rank) {
-    String containerClass = SlurmMPIContext.getTwister2JobBasicContainerClass(config);
+    String containerClass = SlurmMPIContext.jobBasicContainerClass(config);
     IContainer container = null;
     try {
       Object object = ReflectionUtils.newInstance(containerClass);

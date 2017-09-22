@@ -12,8 +12,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.core;
 
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -39,9 +39,9 @@ public final class DataFlowChannel {
   /**
    * Instance plan containing mappings from communication specific ids to higher level task ids
    */
-  private InstancePlan instancePlan;
+  private TaskPlan instancePlan;
 
-  public DataFlowChannel(InstancePlan instancePlan, Config config) {
+  public DataFlowChannel(TaskPlan instancePlan, Config config) {
     this.instancePlan = instancePlan;
     this.config = config;
 
@@ -55,7 +55,8 @@ public final class DataFlowChannel {
     }
   }
 
-  public DataFlowOperation setUpDataFlowOperation(List<Integer> sources, List<Integer> destinations,
+  public DataFlowOperation setUpDataFlowOperation(int task, Set<Integer> sources,
+                                                  Set<Integer> destinations,
                                                   Map<String, Object> configuration,
                                                   Operation operation, int stream,
                                                   MessageReceiver receiver,
@@ -72,7 +73,7 @@ public final class DataFlowChannel {
     }
 
     // intialize the operation
-    dataFlowOperation.init(mergedCfg, instancePlan, sources,
+    dataFlowOperation.init(mergedCfg, task, instancePlan, sources,
         destinations, stream, receiver, formatter, builder);
 
     return dataFlowOperation;

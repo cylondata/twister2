@@ -9,8 +9,16 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.basic.job;
+package edu.iu.dsc.tws.comms.routing;
 
-public class BasicJobBuilder {
+import java.util.Map;
+import java.util.Set;
 
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.core.TaskPlan;
+
+public interface IRouter {
+  void init(Config cfg, int thisTask, TaskPlan plan,
+                   Set<Integer> srscs, Set<Integer> dests, int strm);
+  Map<Integer, Routing> routing(int distinctRoutes);
 }

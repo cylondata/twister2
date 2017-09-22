@@ -9,6 +9,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+
 import mpi.Intracomm;
 import mpi.MPI;
 import mpi.MPIException;
@@ -78,8 +79,14 @@ public class TWSMPIChannel {
    */
   private ArrayBlockingQueue<MPISendRequests> pendingSends;
 
+  /**
+   * These are the places where we expect to receive messages
+   */
   private List<MPIReceiveRequests> registeredReceives;
 
+  /**
+   * Wait for completion sends
+   */
   private List<MPISendRequests> waitForCompletionSends;
 
 
@@ -159,20 +166,6 @@ public class TWSMPIChannel {
   }
 
   /**
-   * Keep track of the receiving request
-   */
-  private class PendingReceive {
-    private int id;
-    private int noOfBuffersSubmitted;
-    private MPIMessageListener callback;
-
-    PendingReceive(int id, MPIMessageListener callback) {
-      this.id = id;
-      this.callback = callback;
-    }
-  }
-
-  /**
    * Progress the communications
    */
   public void progress() {
@@ -234,7 +227,7 @@ public class TWSMPIChannel {
         // this request has completed
       } catch (MPIException e) {
         LOG.severe("Network failure");
-        throw new RuntimeException("Network failure");
+        throw new RuntimeException("Network failure", e);
       }
     }
   }

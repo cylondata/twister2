@@ -58,6 +58,7 @@ java_library(
         ":proto_resource_scheduler_java",
         ":proto_job_state_java",
         ":proto_common_java",
+        ":proto_job_java",
     ],
 )
 

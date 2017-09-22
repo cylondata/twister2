@@ -162,7 +162,7 @@ public class FirstFitTaskScheduling {
         ArrayList<RequiredRam> ramRequirements = new ArrayList<>();
         Map<String, Double> taskRamMap = JobAttributes.getTaskRamMap (job);
         for (String taskName : taskNameSet) {
-            /*Resource requiredResource = PackingUtils.getResourceRequirement(
+            /*ResourceContainer requiredResource = PackingUtils.getResourceRequirement(
                     taskName, ramMap, this.defaultResourceValue,
                     this.maximumContainerResourceValue, this.paddingPercentage);*/  //It should be modified in future....
             //ramRequirements.add(new RequiredRam(taskName, requiredResource.getRam()));
