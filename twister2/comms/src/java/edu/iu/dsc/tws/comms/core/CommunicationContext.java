@@ -15,9 +15,9 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 
 public class CommunicationContext extends Context {
-  public static final String COMMUNICATION_CLASS = "tw2.comm.class";
+  public static final String DATAFLOW_COMMUNICATION_CLASS = "twister2.network.dataflow.class";
 
-  public static String getCommunicationClass(Config cfg) {
-    return cfg.getStringValue(COMMUNICATION_CLASS);
+  public static String communicationClass(Config cfg) {
+    return cfg.getStringValue(DATAFLOW_COMMUNICATION_CLASS);
   }
 }

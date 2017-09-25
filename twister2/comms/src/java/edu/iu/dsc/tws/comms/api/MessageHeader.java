@@ -32,24 +32,19 @@ public class MessageHeader {
   /**
    * Set of properties
    */
-  private Map<String, String> properties = new HashMap<>();
+  private Map<String, Object> properties = new HashMap<>();
 
-  public MessageHeader(int sourceId, int destId, int edge) {
+  private MessageHeader(int sourceId, int destId, int edge) {
     this.sourceId = sourceId;
     this.destId = destId;
     this.edge = edge;
   }
 
-  /**
-   * Add a key value pair to be sent with the message
-   * @param property
-   * @param value
-   */
-  public void addProperty(String property, String value) {
+  private void set(int sourceId, int destId, int edge) {
 
   }
 
-  public String getProperty(String property) {
+  public Object getProperty(String property) {
     return properties.get(property);
   }
 
@@ -63,5 +58,37 @@ public class MessageHeader {
 
   public int getEdge() {
     return edge;
+  }
+
+  public static Builder newBuilder(int sourceId, int destId, int edge) {
+    return new Builder(sourceId, destId, edge);
+  }
+
+  public static class Builder {
+    private MessageHeader header;
+
+    private Builder(int sourceId, int destId, int edge) {
+      header = new MessageHeader(sourceId, destId, edge);
+    }
+
+    public Builder reInit(int sourceId, int destId, int edge) {
+      header.set(sourceId, destId, edge);
+      header.properties.clear();
+      return this;
+    }
+
+    /**
+     * Add a key value pair to be sent with the message
+     * @param property
+     * @param value
+     */
+    public Builder addProperty(String property, String value) {
+      header.properties.put(property, value);
+      return this;
+    }
+
+    public MessageHeader build() {
+      return header;
+    }
   }
 }

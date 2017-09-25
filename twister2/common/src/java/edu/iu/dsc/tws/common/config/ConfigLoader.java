@@ -77,13 +77,8 @@ public final class ConfigLoader {
   }
 
   public static Config loadComponentConfig(String filePath) {
-    Config defaultConfig = loadDefaults(
-        Context.CLUSTER_HOME.getDefaultValue(), Context.CLUSTER_CONF.getDefaultValue());
-    Config clusterConfig = Config.toClusterMode(defaultConfig); //to token-substitute the conf paths
-
     Config.Builder cb = Config.newBuilder()
-        .putAll(defaultConfig)
         .putAll(loadConfig(filePath));
-    return cb.build();
+    return Config.toClusterMode(cb.build());
   }
 }

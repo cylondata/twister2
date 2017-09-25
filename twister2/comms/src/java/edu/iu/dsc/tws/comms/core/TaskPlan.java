@@ -36,6 +36,9 @@ public class TaskPlan {
    */
   private Map<Integer, Integer> executorToGroup = new HashMap<>();
 
+  /**
+   * Group to executor
+   */
   private Map<Integer, Set<Integer>> groupsToExecutor = new HashMap<>();
 
   /**

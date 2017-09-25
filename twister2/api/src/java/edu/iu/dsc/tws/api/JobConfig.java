@@ -9,29 +9,10 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.mpi;
+package edu.iu.dsc.tws.api;
 
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.core.Communication;
+import java.util.HashMap;
 
-public class MPICommunication implements Communication {
-  @Override
-  public DataFlowOperation broadcast() {
-    return new MPIDataFlowBroadcast();
-  }
-
-  @Override
-  public DataFlowOperation loadBalance() {
-    return null;
-  }
-
-  @Override
-  public DataFlowOperation partition() {
-    return null;
-  }
-
-  @Override
-  public DataFlowOperation reduction() {
-    return null;
-  }
+public class JobConfig extends HashMap<String, String> {
+  private static final long serialVersionUID = 6585146860991205058L;
 }

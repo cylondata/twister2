@@ -18,4 +18,9 @@ public enum Operation {
   PARTITION,
   LOADBALANCE,
   P2P,
+  CUSTOM,
+  ALLREDUCE,
+  GATHER,
+  ALLGATHER,
+  JOIN
 }

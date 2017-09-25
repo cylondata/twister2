@@ -13,11 +13,12 @@ package edu.iu.dsc.tws.comms.mpi;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.comms.core.CommunicationContext;
 
 /**
  * Read the configuration options
  */
-public class MPIContext extends Context {
+public class MPIContext extends CommunicationContext {
   private static final String BUFFER_SIZE = "network.mpi.buffer.size";
 
   private static final String SEND_BUFFERS_COUNT = "network.mpi.sendBuffer.count";

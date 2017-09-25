@@ -11,6 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.api;
 
-public interface MessageFormatter {
-  Object format(Message message);
+public interface MessageDeSerializer {
+  Object format(Object message);
 }

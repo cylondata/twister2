@@ -17,65 +17,51 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageBuilder;
-import edu.iu.dsc.tws.comms.api.MessageFormatter;
+import edu.iu.dsc.tws.comms.api.MessageSerializer;
+import edu.iu.dsc.tws.comms.api.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.Operation;
 
-public final class DataFlowChannel {
-  private static final Logger LOG = Logger.getLogger(DataFlowChannel.class.getName());
-  /**
-   * The underlying communication implementation
-   */
-  private Communication communication;
+public abstract class DataFlowCommunication implements TWSCommunication {
+  private static final Logger LOG = Logger.getLogger(DataFlowCommunication.class.getName());
 
   /**
    * The configuration read from the configuration file
    */
-  private Config config;
+  protected Config config;
 
   /**
    * Instance plan containing mappings from communication specific ids to higher level task ids
    */
-  private TaskPlan instancePlan;
+  protected TaskPlan instancePlan;
 
-  public DataFlowChannel(TaskPlan instancePlan, Config config) {
-    this.instancePlan = instancePlan;
-    this.config = config;
-
-    // lets load the communication implementation
-    String communicationClass = CommunicationContext.getCommunicationClass(config);
-    try {
-      communication = ReflectionUtils.newInstance(communicationClass);
-    } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
-      LOG.severe("Failed to load the communications class");
-      throw new RuntimeException(e);
-    }
-  }
-
-  public DataFlowOperation setUpDataFlowOperation(int task, Set<Integer> sources,
+  public DataFlowOperation setUpDataFlowOperation(Operation operation, int task,
+                                                  Set<Integer> sources,
                                                   Set<Integer> destinations,
                                                   Map<String, Object> configuration,
-                                                  Operation operation, int stream,
+                                                  int stream,
                                                   MessageReceiver receiver,
-                                                  MessageFormatter formatter,
-                                                  MessageBuilder builder) {
+                                                  MessageDeSerializer formatter,
+                                                  MessageSerializer builder) {
     // merge with the user specified configuration, user specified will take precedence
     Config mergedCfg = Config.newBuilder().putAll(config).putAll(configuration).build();
 
-    DataFlowOperation dataFlowOperation = null;
-    if (operation == Operation.BROADCAST) {
-      dataFlowOperation = communication.broadcast();
-    } else {
-      throw new IllegalArgumentException("Un-recognizable operation: " + operation);
-    }
+    // create the dataflow operation
+    DataFlowOperation dataFlowOperation = create(operation);
 
     // intialize the operation
     dataFlowOperation.init(mergedCfg, task, instancePlan, sources,
         destinations, stream, receiver, formatter, builder);
 
     return dataFlowOperation;
+  }
+
+  public abstract DataFlowOperation create(Operation operation);
+
+  @Override
+  public void init(Config config, TaskPlan taskPlan) {
+    this.instancePlan = taskPlan;
+    this.config = config;
   }
 }

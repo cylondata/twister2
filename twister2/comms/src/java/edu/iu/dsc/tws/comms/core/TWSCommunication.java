@@ -9,43 +9,28 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.mpi;
+package edu.iu.dsc.tws.comms.core;
 
+import java.util.Map;
 import java.util.Set;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.Message;
-import edu.iu.dsc.tws.comms.api.MessageSerializer;
 import edu.iu.dsc.tws.comms.api.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
-import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.api.MessageSerializer;
+import edu.iu.dsc.tws.comms.api.Operation;
 
-public class MPILoadBalance implements DataFlowOperation {
-  @Override
-  public void init(Config config, int thisTask, TaskPlan instancePlan, Set<Integer> sources,
-                   Set<Integer> destinations, int stream, MessageReceiver receiver,
-                   MessageDeSerializer messageDeSerializer, MessageSerializer messageSerializer) {
+public interface TWSCommunication {
+  void init(Config config, TaskPlan taskPlan);
+  DataFlowOperation setUpDataFlowOperation(Operation operation, int task,
+                                      Set<Integer> sources,
+                                      Set<Integer> destinations,
+                                      Map<String, Object> configuration,
+                                      int stream,
+                                      MessageReceiver receiver,
+                                      MessageDeSerializer formatter,
+                                      MessageSerializer builder);
+  void progress();
 
-  }
-
-  @Override
-  public void sendPartial(Message message) {
-
-  }
-
-  @Override
-  public void finish() {
-
-  }
-
-  @Override
-  public void sendComplete(Message message) {
-
-  }
-
-  @Override
-  public void close() {
-
-  }
 }

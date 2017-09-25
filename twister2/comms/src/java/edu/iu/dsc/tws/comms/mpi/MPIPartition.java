@@ -21,10 +21,15 @@ import edu.iu.dsc.tws.comms.api.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 
-public class MPILoadBalance implements DataFlowOperation {
+/**
+ * Partition a data set using hash
+ */
+public class MPIPartition implements DataFlowOperation {
   @Override
-  public void init(Config config, int thisTask, TaskPlan instancePlan, Set<Integer> sources,
-                   Set<Integer> destinations, int stream, MessageReceiver receiver,
+  public void init(Config config, int thisTask,
+                   TaskPlan instancePlan,
+                   Set<Integer> sources, Set<Integer> destinations,
+                   int stream, MessageReceiver receiver,
                    MessageDeSerializer messageDeSerializer, MessageSerializer messageSerializer) {
 
   }

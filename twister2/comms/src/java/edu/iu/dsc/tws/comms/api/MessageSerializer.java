@@ -1,3 +1,4 @@
+//  Copyright 2017 Twitter. All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -10,24 +11,8 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.mpi;
+package edu.iu.dsc.tws.comms.api;
 
-import java.util.Queue;
-
-public class ReceiveBufferPool {
-  private Queue<MPIBuffer> buffers;
-
-  public ReceiveBufferPool(int capacity, int maxBuffers) {
-    for (int i = 0; i < maxBuffers; i++) {
-      buffers.offer(new MPIBuffer(capacity));
-    }
-  }
-
-  public MPIBuffer getByteBuffer() {
-    return buffers.poll();
-  }
-
-  public void releaseBuffer(MPIBuffer buffer) {
-    buffers.offer(buffer);
-  }
+public interface MessageSerializer {
+  Object build(Message message);
 }

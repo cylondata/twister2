@@ -11,9 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.basic.job;
 
-import java.util.HashMap;
 import java.util.Map;
 
+import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.proto.system.ResourceAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.spi.resource.RequestedResource;
@@ -23,7 +23,7 @@ public final class BasicJob {
   private String containerClass;
   private RequestedResource requestedResource;
   private int noOfContainers;
-  private Map<String, String> config = new HashMap<String, String>();
+  private JobConfig config = new JobConfig();
 
   private BasicJob() {
   }

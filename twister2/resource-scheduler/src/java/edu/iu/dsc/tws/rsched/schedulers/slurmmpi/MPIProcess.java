@@ -31,7 +31,6 @@ import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import mpi.MPI;
 import mpi.MPIException;
 
-
 /**
  * This is the base process started by the resource scheduler. This process will
  * start the rest of the resource as needed.
@@ -93,7 +92,7 @@ public final class MPIProcess {
     } finally {
       try {
         MPI.Finalize();
-      } catch (MPIException e) {
+      } catch (MPIException ignore) {
       }
     }
   }
@@ -154,6 +153,7 @@ public final class MPIProcess {
 
     Config config = ConfigLoader.loadConfig(twister2Home, configDir, overrideFile);
     return Config.newBuilder().putAll(config).
+        put(SlurmMPIContext.TWISTER2_HOME.getKey(), twister2Home).
         put(SlurmMPIContext.TWISTER2_JOB_BASIC_CONTAINER_CLASS, container).
         put(SlurmMPIContext.TWISTER2_CONTAINER_ID, id).
         put(SlurmMPIContext.TWISTER2_CLUSTER_NAME, clusterName).build();
@@ -165,7 +165,7 @@ public final class MPIProcess {
 
   private static void worker(Config config, int rank) {
     String containerClass = SlurmMPIContext.jobBasicContainerClass(config);
-    IContainer container = null;
+    IContainer container;
     try {
       Object object = ReflectionUtils.newInstance(containerClass);
       container = (IContainer) object;

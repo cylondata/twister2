@@ -24,8 +24,8 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.Message;
-import edu.iu.dsc.tws.comms.api.MessageBuilder;
-import edu.iu.dsc.tws.comms.api.MessageFormatter;
+import edu.iu.dsc.tws.comms.api.MessageSerializer;
+import edu.iu.dsc.tws.comms.api.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.routing.BinaryTree;
@@ -43,8 +43,8 @@ public class MPIDataFlowBroadcast implements DataFlowOperation,
   private Map<Integer, Routing> routings;
   private TWSMPIChannel channel;
   private MessageReceiver receiver;
-  private MessageFormatter formatter;
-  private MessageBuilder builder;
+  private MessageDeSerializer formatter;
+  private MessageSerializer builder;
   private int thisTask;
 
   /**
@@ -57,10 +57,14 @@ public class MPIDataFlowBroadcast implements DataFlowOperation,
    */
   private Map<Integer, List<MPIBuffer>> receiveBuffers = new HashMap<>();
 
+  public MPIDataFlowBroadcast(TWSMPIChannel channel) {
+    this.channel = channel;
+  }
+
   @Override
   public void init(Config cfg, int task, TaskPlan plan, Set<Integer> srcs,
                    Set<Integer> dests, int messageStream, MessageReceiver rcvr,
-                   MessageFormatter fmtr, MessageBuilder bldr) {
+                   MessageDeSerializer fmtr, MessageSerializer bldr) {
     this.config = cfg;
     this.instancePlan = plan;
     this.sources = srcs;
@@ -160,6 +164,11 @@ public class MPIDataFlowBroadcast implements DataFlowOperation,
       throw new RuntimeException("Failed to get downstream tasks");
     }
     sendMessage(mpiMessage, routing.getDownstreamIds());
+  }
+
+  @Override
+  public void close() {
+
   }
 
   private void sendMessage(MPIMessage msgObj1, List<Integer> sendIds) {

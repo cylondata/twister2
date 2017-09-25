@@ -27,7 +27,7 @@ public interface DataFlowOperation {
    */
   void init(Config config, int thisTask, TaskPlan instancePlan, Set<Integer> sources,
             Set<Integer> destinations, int stream, MessageReceiver receiver,
-            MessageFormatter messageFormatter, MessageBuilder messageBuilder);
+            MessageDeSerializer messageDeSerializer, MessageSerializer messageSerializer);
 
   /**
    * Do a partial broadcast, the receiving side should collect messages until all the messages
@@ -46,4 +46,9 @@ public interface DataFlowOperation {
    * @param message
    */
   void sendComplete(Message message);
+
+  /**
+   * Clean up the resources
+   */
+  void close();
 }

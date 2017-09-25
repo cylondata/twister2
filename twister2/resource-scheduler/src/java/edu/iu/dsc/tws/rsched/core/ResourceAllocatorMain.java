@@ -12,10 +12,15 @@
 package edu.iu.dsc.tws.rsched.core;
 
 import java.net.URI;
+import java.util.Map;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.config.ConfigConstants;
+import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.spi.scheduler.ILauncher;
 import edu.iu.dsc.tws.rsched.spi.scheduler.LauncherException;
 import edu.iu.dsc.tws.rsched.spi.statemanager.IStateManager;
@@ -28,12 +33,17 @@ import edu.iu.dsc.tws.rsched.spi.uploaders.UploaderException;
 public class ResourceAllocatorMain {
   public static final Logger LOG = Logger.getLogger(ResourceAllocatorMain.class.getName());
 
-  private Config config;
+  private Config loadConfig(Map<String, String> cfg) {
+    return null;
+  }
 
   /**
    * Submit the job to the cluster
    */
-  public void submitJob() {
+  public void submitJob(JobAPI.Job job, JobConfig cfg) {
+    // first lets load the configurations
+    Config config = loadConfig(cfg);
+
     String statemgrClass = SchedulerContext.stateManagerClass(config);
     IStateManager statemgr;
 

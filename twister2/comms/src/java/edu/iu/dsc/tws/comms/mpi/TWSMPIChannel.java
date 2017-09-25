@@ -6,6 +6,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -21,6 +23,9 @@ import mpi.Status;
  */
 public class TWSMPIChannel {
   private static final Logger LOG = Logger.getLogger(TWSMPIChannel.class.getName());
+
+  // a lock object to be used
+  private Lock lock = new ReentrantLock();
 
   @SuppressWarnings("VisibilityModifier")
   private class MPIRequest {
@@ -105,7 +110,12 @@ public class TWSMPIChannel {
    * @return true if the message is accepted to be sent
    */
   public boolean sendMessage(int id, MPIMessage message, MPIMessageListener callback) {
-    return pendingSends.offer(new MPISendRequests(id, message.getStream(), message, callback));
+    lock.lock();
+    try {
+      return pendingSends.offer(new MPISendRequests(id, message.getEdge(), message, callback));
+    } finally {
+      lock.unlock();
+    }
   }
 
   /**
@@ -117,8 +127,13 @@ public class TWSMPIChannel {
    */
   public boolean receiveMessage(int rank, int stream,
                                 MPIMessageListener callback, List<MPIBuffer> receiveBuffers) {
-    return registeredReceives.add(new MPIReceiveRequests(rank, stream, callback,
-        new LinkedList<MPIBuffer>(receiveBuffers)));
+    lock.lock();
+    try {
+      return registeredReceives.add(new MPIReceiveRequests(rank, stream, callback,
+          new LinkedList<MPIBuffer>(receiveBuffers)));
+    } finally {
+      lock.unlock();
+    }
   }
 
   /**
@@ -132,7 +147,7 @@ public class TWSMPIChannel {
       try {
         MPIBuffer buffer = message.getBuffers().get(i);
         Request request = comm.iSend(buffer.getByteBuffer(), 0,
-            MPI.BYTE, buffer.getSize(), message.getStream());
+            MPI.BYTE, buffer.getSize(), message.getEdge());
         // register to the loop to make progress on the send
         requests.pendingSends.add(new MPIRequest(request, buffer));
       } catch (MPIException e) {
@@ -226,8 +241,8 @@ public class TWSMPIChannel {
         }
         // this request has completed
       } catch (MPIException e) {
-        LOG.severe("Network failure");
-        throw new RuntimeException("Network failure", e);
+        LOG.severe("Twister2Network failure");
+        throw new RuntimeException("Twister2Network failure", e);
       }
     }
   }

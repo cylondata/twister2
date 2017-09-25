@@ -14,6 +14,9 @@ package edu.iu.dsc.tws.api;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.core.ResourceAllocatorMain;
 
 public class Twister2Submitter {
   private static final Logger LOG = Logger.getLogger(Twister2Submitter.class.getName());
@@ -22,10 +25,13 @@ public class Twister2Submitter {
    * Submit a basic job with only container and communications
    * @param basicJob basic job
    */
-  public void submitContainer(BasicJob basicJob) {
+  public void submitContainer(BasicJob basicJob, JobConfig jobConfig) {
     // save the job to state manager
+    JobAPI.Job job = basicJob.serialize();
+
 
     // launch the luancher
-
+    ResourceAllocatorMain resourceAllocatorMain = new ResourceAllocatorMain();
+    resourceAllocatorMain.submitJob(job, jobConfig);
   }
 }
