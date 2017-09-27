@@ -28,4 +28,8 @@ public final class ConfigConstants {
    * the local filesystem is going to be used to resolve URIs without an explicit scheme.
    * */
   public static final String FILESYSTEM_SCHEME = "fs.default-scheme";
+
+  private ConfigConstants() {
+
+  }
 }

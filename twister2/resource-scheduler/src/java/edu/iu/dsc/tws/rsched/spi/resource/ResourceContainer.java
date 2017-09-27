@@ -1,4 +1,3 @@
-//  Copyright 2017 Twitter. All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -11,8 +10,20 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.api;
+package edu.iu.dsc.tws.rsched.spi.resource;
 
-public interface MessageBuilder {
-  Object build(Message message);
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Represent a resource
+ */
+public class ResourceContainer {
+  private int id;
+  // include properties of the resource
+  // this can include things like available ports
+  private Map<String, Object> properties = new HashMap<>();
+
+  public ResourceContainer() {
+  }
 }

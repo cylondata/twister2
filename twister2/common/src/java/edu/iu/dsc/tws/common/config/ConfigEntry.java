@@ -34,6 +34,7 @@ public class ConfigEntry {
     this.key = key;
     this.defaultValue = defaultValue;
     this.type = type;
+    this.substitute = substitute;
   }
 
   public ConfigEntry(String key) {
@@ -66,8 +67,12 @@ public class ConfigEntry {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
 
     ConfigEntry that = (ConfigEntry) o;
 

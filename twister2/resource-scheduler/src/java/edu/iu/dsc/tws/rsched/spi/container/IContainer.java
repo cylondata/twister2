@@ -9,29 +9,11 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.mpi;
+package edu.iu.dsc.tws.rsched.spi.container;
 
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.core.Communication;
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
-public class MPICommunication implements Communication {
-  @Override
-  public DataFlowOperation broadcast() {
-    return new MPIDataFlowBroadcast();
-  }
-
-  @Override
-  public DataFlowOperation loadBalance() {
-    return null;
-  }
-
-  @Override
-  public DataFlowOperation partition() {
-    return null;
-  }
-
-  @Override
-  public DataFlowOperation reduction() {
-    return null;
-  }
+public interface IContainer {
+  void init(Config config, int id, ResourcePlan resourcePlan);
 }

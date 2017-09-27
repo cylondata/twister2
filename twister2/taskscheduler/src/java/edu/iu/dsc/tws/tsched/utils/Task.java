@@ -25,7 +25,7 @@ package edu.iu.dsc.tws.tsched.utils;
 
 public class Task {
 
-  private int Task_Parallelism = 2;
+  private int taskParallelism = 2;
   private String taskName;
   private int taskCount;
 

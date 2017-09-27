@@ -20,7 +20,7 @@ import java.util.Set;
  * This holds the mapping from the physical level communication addresses which are based on
  * the communication library to high level ids that are defined by upper layers.
  */
-public class InstancePlan {
+public class TaskPlan {
   /**
    * Map from executor to message channel ids, we assume unique channel ids across the cluster
    */
@@ -32,6 +32,16 @@ public class InstancePlan {
   private Map<Integer, Integer> invertedExecutorToChannels = new HashMap<Integer, Integer>();
 
   /**
+   * Executors can be grouped
+   */
+  private Map<Integer, Integer> executorToGroup = new HashMap<>();
+
+  /**
+   * Group to executor
+   */
+  private Map<Integer, Set<Integer>> groupsToExecutor = new HashMap<>();
+
+  /**
    * The process under which we are running
    */
   private int thisExecutor;
@@ -41,13 +51,25 @@ public class InstancePlan {
    */
   private int thisTaskId;
 
-  public InstancePlan(Map<Integer, Set<Integer>> executorToChannels,
-                      Map<Integer, Integer> invertedExecutorToChannels,
-                      int thisExecutor, int thisTaskId) {
+  public TaskPlan(Map<Integer, Set<Integer>> executorToChannels,
+                  Map<Integer, Set<Integer>> groupsToExecutor,
+                  int thisExecutor, int thisTaskId) {
     this.executorToChannels = executorToChannels;
-    this.invertedExecutorToChannels = invertedExecutorToChannels;
     this.thisExecutor = thisExecutor;
     this.thisTaskId = thisTaskId;
+    this.groupsToExecutor = groupsToExecutor;
+
+    for (Map.Entry<Integer, Set<Integer>> e : executorToChannels.entrySet()) {
+      for (Integer c : e.getValue()) {
+        invertedExecutorToChannels.put(c, e.getKey());
+      }
+    }
+
+    for (Map.Entry<Integer, Set<Integer>> e : groupsToExecutor.entrySet()) {
+      for (Integer ex : e.getValue()) {
+        executorToGroup.put(ex, e.getKey());
+      }
+    }
   }
 
   public int getExecutorForChannel(int channel) {
@@ -64,5 +86,17 @@ public class InstancePlan {
 
   public int getThisTaskId() {
     return thisTaskId;
+  }
+
+  public Set<Integer> getAllExecutorGroups() {
+    return groupsToExecutor.keySet();
+  }
+
+  public Set<Integer> getExecutesOfGroup(int group) {
+    return groupsToExecutor.get(group);
+  }
+
+  public int getGroupOfExecutor(int executor) {
+    return executorToGroup.get(executor);
   }
 }

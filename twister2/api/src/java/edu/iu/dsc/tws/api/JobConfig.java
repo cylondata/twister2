@@ -9,13 +9,10 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.core;
+package edu.iu.dsc.tws.api;
 
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import java.util.HashMap;
 
-public interface Communication {
-  DataFlowOperation broadcast();
-  DataFlowOperation loadBalance();
-  DataFlowOperation partition();
-  DataFlowOperation reduction();
+public class JobConfig extends HashMap<String, String> {
+  private static final long serialVersionUID = 6585146860991205058L;
 }

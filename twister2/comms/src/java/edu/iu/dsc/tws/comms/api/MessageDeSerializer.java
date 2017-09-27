@@ -9,15 +9,8 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.container;
+package edu.iu.dsc.tws.comms.api;
 
-import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
-
-/**
- * This is the base API according to which a program can be built.
- * A dataflow or MPI style program starting as a container should manage threads, communications and
- * distributed data by its own.
- */
-public interface IContainer {
-  void init(int containerId, ResourcePlan resourcePlan);
+public interface MessageDeSerializer {
+  Object format(Object message);
 }

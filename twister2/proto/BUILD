@@ -31,7 +31,8 @@ proto_library(
     gen_py = 0,
     includes = ["twister2/proto"],
     deps = [
-        ":proto_common"
+        ":proto_common",
+        ":proto_resource_scheduler",
     ],
 )
 
@@ -57,6 +58,7 @@ java_library(
         ":proto_resource_scheduler_java",
         ":proto_job_state_java",
         ":proto_common_java",
+        ":proto_job_java",
     ],
 )
 

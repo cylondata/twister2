@@ -1,4 +1,3 @@
-//
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
@@ -40,8 +39,8 @@ public final class ConfigLoader {
    * must be converted to either local or cluster mode to trigger pattern substitution of wildcards
    * tokens.
    */
-  public static Config loadConfig(String twister2Home, String configPath,
-                                  String releaseFile, String overrideConfigFile) {
+  public static Config loadConfig(String twister2Home,
+                                  String configPath, String overrideConfigFile) {
     Config defaultConfig = loadDefaults(twister2Home, configPath);
     Config localConfig = Config.toLocalMode(defaultConfig); //to token-substitute the conf paths
 
@@ -52,7 +51,6 @@ public final class ConfigLoader {
         .putAll(loadConfig(Context.resourceSchedulerConfigurationFile(localConfig)))
         .putAll(loadConfig(Context.uploaderConfigurationFile(localConfig)))
         .putAll(loadConfig(Context.networkConfigurationFile(localConfig)))
-        .putAll(loadConfig(releaseFile))
         .putAll(loadConfig(overrideConfigFile));
     return cb.build();
   }
@@ -79,13 +77,8 @@ public final class ConfigLoader {
   }
 
   public static Config loadComponentConfig(String filePath) {
-    Config defaultConfig = loadDefaults(
-        Context.CLUSTER_HOME.getDefaultValue(), Context.CLUSTER_CONF.getDefaultValue());
-    Config clusterConfig = Config.toClusterMode(defaultConfig); //to token-substitute the conf paths
-
     Config.Builder cb = Config.newBuilder()
-        .putAll(defaultConfig)
         .putAll(loadConfig(filePath));
-    return cb.build();
+    return Config.toClusterMode(cb.build());
   }
 }

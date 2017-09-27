@@ -1050,7 +1050,7 @@ variable to point to an accessible directory.
         This is where Mac header rewrites should be done; other platforms don't
         have anything special they should do.
 
-        Resource providers should call this method ONLY after successfully
+        ResourceContainer providers should call this method ONLY after successfully
         extracting a compressed resource.  They must NOT call it on resources
         that are already in the filesystem.
 
@@ -1580,7 +1580,7 @@ class ContextualZipFile(zipfile.ZipFile):
 
 
 class ZipProvider(EggProvider):
-    """Resource support for zips and eggs"""
+    """ResourceContainer support for zips and eggs"""
 
     eagers = None
 

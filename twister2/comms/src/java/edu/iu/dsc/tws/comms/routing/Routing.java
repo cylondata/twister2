@@ -9,24 +9,24 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.utils;
+package edu.iu.dsc.tws.comms.routing;
 
 import java.util.List;
 
 public class Routing {
-  private final List<Integer> receivingIds;
-  private final List<Integer> sendingIds;
+  private final List<Integer> upstreamIds;
+  private final List<Integer> downstreamIds;
 
-  public Routing(List<Integer> receivingIds, List<Integer> sendingIds) {
-    this.receivingIds = receivingIds;
-    this.sendingIds = sendingIds;
+  public Routing(List<Integer> up, List<Integer> down) {
+    this.upstreamIds = up;
+    this.downstreamIds = down;
   }
 
-  public List<Integer> getReceivingIds() {
-    return receivingIds;
+  public List<Integer> getUpstreamIds() {
+    return upstreamIds;
   }
 
-  public List<Integer> getSendingIds() {
-    return sendingIds;
+  public List<Integer> getDownstreamIds() {
+    return downstreamIds;
   }
 }

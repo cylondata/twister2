@@ -21,18 +21,6 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
 package edu.iu.dsc.tws.tsched.RoundRobin;
 
 import java.util.ArrayList;
@@ -51,10 +39,9 @@ import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.utils.Job;
 import edu.iu.dsc.tws.tsched.utils.JobAttributes;
 import edu.iu.dsc.tws.tsched.utils.JobConfig;
-
 //import edu.iu.dsc.tws.tsched.spi.common.Config; (In future it will be replaced with proper config value)
 
-/***
+/**
  * This class is responsible for
  * 1. Initializing the RAM, Disk, and CPU percentage values from the Config and Job files.
  * 2. Perform the Round Robin based scheduling for assigning the instances to the containers.
@@ -68,7 +55,6 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
   private double instanceRAM;
   private double instanceDisk;
   private double instanceCPU;
-
   //It should be replaced with appropriate values....
   private static final double DEFAULT_DISK_PADDING_PER_CONTAINER = 10;
   private static final double DEFAULT_CPU_PADDING_PER_CONTAINER = 1;
@@ -76,11 +62,14 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
   private static final double NOT_SPECIFIED_NUMBER_VALUE = -1;
   private static final double DEFAULT_RAM_PADDING_PER_CONTAINER = 2;
   
-
   @Override
   public void initialize(Config config, Job job) {
     this.job = job;
-    //This value should be modified and it should read from the job/configuration file.
+
+    //The commented value should be enabled once the context class is created.
+    //this.instanceRAM = Context.instanceRam(config);
+    //this.instanceDisk = Context.instanceDisk(config);
+    //this.instanceCPU = Context.instanceCPU(config);
     this.instanceRAM = config.Container_Max_RAM_Value;
     this.instanceCPU = config.Container_Max_CPU_Value;
     this.instanceDisk = config.Container_Max_Disk_Value;
@@ -115,7 +104,7 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
           double instanceDiskValue = instanceDisk;
 
           Resource resource  = new Resource (instanceRAM, instanceDisk, instanceCPU);
-          taskInstancePlanMap.put(id,new TaskSchedulePlan.TaskInstancePlan("mpitask",1,1, resource));
+          taskInstancePlanMap.put(id, new TaskSchedulePlan.TaskInstancePlan("mpitask",1,1, resource));
 
         }
         Resource resource = new Resource(containerRAMValue, containerDiskValue, containerCPUValue);
@@ -142,14 +131,11 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
     Map<Integer, List<InstanceId>> RRAllocation = new HashMap<>();
 
     try {
-
       int numberOfContainers = JobAttributes.getNumberOfContainers(job);
       int totalInstances = JobAttributes.getTotalNumberOfInstances(job);
-
       for (int i = 1; i <= numberOfContainers; i++) {
         RRAllocation.put(i, new ArrayList<InstanceId>());
       }
-
       Map<String, Integer> parallelTaskMap = JobAttributes.getParallelTaskMap(job);
       for (String task : parallelTaskMap.keySet()) {
         int numberOfInstances = parallelTaskMap.get(task);
@@ -188,9 +174,9 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
   private Map<Integer, Map<InstanceId, Double>> getInstancesRamMapInContainer(
       Map<Integer, List<InstanceId>> containerInstanceAllocationMap) {
 
-    Map<String, Double> ramMap = JobAttributes.getComponentRAMMapConfig();
-    Map<Integer, Map<InstanceId, Double>> InstancesRamContainerMap = new HashMap<> ();
+    Map<String, Double> ramMap = JobAttributes.getTaskRamMap(this.job);
 
+    Map<Integer, Map<InstanceId, Double>> InstancesRamContainerMap = new HashMap<> ();
     for (int containerId : containerInstanceAllocationMap.keySet ()) {
 
       Double usedRamValue = 0.0;
@@ -230,10 +216,11 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
   private Map<Integer, Map<InstanceId, Double>> getInstancesDiskMapInContainer(
       Map<Integer, List<InstanceId>> containerInstanceAllocationMap) {
 
-    Map<String, Double> diskMap = JobAttributes.getComponentDiskMapConfig ();
-    Map<Integer, Map<InstanceId, Double>> InstancesDiskContainerMap = new HashMap<> ();
+    Map<String, Double> diskMap = JobAttributes.getTaskDiskMap(this.job);
 
+    Map<Integer, Map<InstanceId, Double>> InstancesDiskContainerMap = new HashMap<> ();
     for (int containerId : containerInstanceAllocationMap.keySet ()) {
+
       Double usedDiskValue = 0.0;
       List<InstanceId> instanceIds = containerInstanceAllocationMap.get (containerId);
       Map<InstanceId, Double> containerDisk = new HashMap<> ();

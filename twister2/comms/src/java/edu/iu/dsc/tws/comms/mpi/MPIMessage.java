@@ -1,4 +1,3 @@
-//
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
@@ -15,9 +14,7 @@ package edu.iu.dsc.tws.comms.mpi;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.iu.dsc.tws.comms.api.Message;
-
-public class MPIMessage extends Message {
+public class MPIMessage {
   private final List<MPIBuffer> buffers = new ArrayList<MPIBuffer>();
 
   /**
@@ -33,7 +30,7 @@ public class MPIMessage extends Message {
 
   private MPIMessageReleaseCallback releaseListener;
 
-  private final int stream;
+  private final int edge;
 
   /**
    * Keep track of the originating id, this is required to release the buffers allocated.
@@ -47,15 +44,15 @@ public class MPIMessage extends Message {
 
   public MPIMessage(int originatingId, int stream, int refCount,
                     MPIMessageType type, MPIMessageReleaseCallback releaseListener) {
-    this.stream = stream;
+    this.edge = stream;
     this.refCount = refCount;
     this.messageType = type;
     this.releaseListener = releaseListener;
     this.originatingId = originatingId;
   }
 
-  public int getStream() {
-    return stream;
+  public int getEdge() {
+    return edge;
   }
 
   public List<MPIBuffer> getBuffers() {

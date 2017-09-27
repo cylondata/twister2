@@ -1,18 +1,38 @@
 package tws.proto.job;
 
-option java_package = "edu.iu.dsc.tws.proto.system";
-option java_outer_classname = "Job";
+option java_package = "edu.iu.dsc.tws.proto.system.job";
+option java_outer_classname = "JobAPI";
 
+import "resource-scheduler.proto";
 // defines the job parameters. This will define the required resources for the job,
 // what type of a job this is (a basic container job, fully featured dataflow job etc)
 
+message Config {
+    message KeyValue {
+        required string key = 1;
+        // Only one of the below are set
+        optional string value = 2;
+        optional bytes serialized_value = 3;
+    }
+    repeated KeyValue kvs = 1;
+}
+
+message Container {
+    required string class_name = 1;
+}
+
+message JobResources {
+    required tws.proto.resource.scheduler.ComputeResource container = 1;
+    required int32 no_of_containers = 2;
+}
+
+// this is a basic job. it will only have a container
 message Job {
     required string job_name = 1;
-    required string job_id = 2;
-    // The time the topology was submitted
-    // Unix time
-    optional int64 submission_time = 3;
-    // The username who launched the topology
-    optional string submission_user = 4;
-    optional string cluster = 5;
+    // the container to run
+    required Container container = 2;
+    // the requested resourcces
+    required JobResources job_resources = 3;
+    // the configurations specified
+    required Config config = 4;
 }
