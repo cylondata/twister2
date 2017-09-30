@@ -16,32 +16,49 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class MessageHeader {
+  public static final int HEADER_SIZE = 20;
   /**
    * The source task id
    */
-  private final int sourceId;
+  private int sourceId;
   /**
    * The destination task id
    */
-  private final int destId;
+  private int destId;
   /**
    * The edge id
    */
-  private final int edge;
+  private int edge;
+
+  /**
+   * The last node we visited
+   */
+  private int lastNode;
+
+  /**
+   * Length of the message
+   */
+  private int length;
 
   /**
    * Set of properties
    */
   private Map<String, Object> properties = new HashMap<>();
 
-  private MessageHeader(int sourceId, int destId, int edge) {
+  private MessageHeader(int sourceId, int destId, int edge, int length, int lastNode) {
     this.sourceId = sourceId;
     this.destId = destId;
     this.edge = edge;
+    this.length = length;
+    this.lastNode = lastNode;
   }
 
-  private void set(int sourceId, int destId, int edge) {
-
+  private void set(int sourceId, int destId, int edge, int length, int lastNode) {
+    this.sourceId = sourceId;
+    this.destId = destId;
+    this.edge = edge;
+    this.length = length;
+    this.lastNode = lastNode;
   }
 
   public Object getProperty(String property) {
@@ -60,20 +77,33 @@ public class MessageHeader {
     return edge;
   }
 
-  public static Builder newBuilder(int sourceId, int destId, int edge) {
-    return new Builder(sourceId, destId, edge);
+  public int getLastNode() {
+    return lastNode;
+  }
+
+  public int getLength() {
+    return length;
+  }
+
+  public static Builder newBuilder(int sourceId, int destId, int edge, int length, int lastNode) {
+    return new Builder(sourceId, destId, edge, length, lastNode);
   }
 
   public static class Builder {
     private MessageHeader header;
 
-    private Builder(int sourceId, int destId, int edge) {
-      header = new MessageHeader(sourceId, destId, edge);
+    private Builder(int sourceId, int destId, int edge, int length, int lastNode) {
+      header = new MessageHeader(sourceId, destId, edge, length, lastNode);
     }
 
-    public Builder reInit(int sourceId, int destId, int edge) {
-      header.set(sourceId, destId, edge);
+    public Builder reInit(int sourceId, int destId, int edge, int length, int lastNode) {
+      header.set(sourceId, destId, edge, length, lastNode);
       header.properties.clear();
+      return this;
+    }
+
+    public Builder lastNode(int last) {
+      header.lastNode = last;
       return this;
     }
 

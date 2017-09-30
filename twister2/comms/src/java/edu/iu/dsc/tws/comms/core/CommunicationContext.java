@@ -16,8 +16,18 @@ import edu.iu.dsc.tws.common.config.Context;
 
 public class CommunicationContext extends Context {
   public static final String DATAFLOW_COMMUNICATION_CLASS = "twister2.network.dataflow.class";
+  private static final String INTER_NODE_DEGREE = "network.routing.inter.node.degree";
+  private static final String INTRA_NODE_DEGREE = "network.routing.intra.node.degree";
 
   public static String communicationClass(Config cfg) {
     return cfg.getStringValue(DATAFLOW_COMMUNICATION_CLASS);
+  }
+
+  public static int interNodeDegree(Config cfg, int defaultValue) {
+    return cfg.getIntegerValue(INTER_NODE_DEGREE, defaultValue);
+  }
+
+  public static int intraNodeDegree(Config cfg, int defaultValue) {
+    return cfg.getIntegerValue(INTRA_NODE_DEGREE, defaultValue);
   }
 }

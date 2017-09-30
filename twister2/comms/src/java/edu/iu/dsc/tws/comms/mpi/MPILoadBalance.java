@@ -11,41 +11,110 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi;
 
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.Message;
-import edu.iu.dsc.tws.comms.api.MessageSerializer;
-import edu.iu.dsc.tws.comms.api.MessageDeSerializer;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
-import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.api.MessageHeader;
+import edu.iu.dsc.tws.comms.routing.IRouter;
+import edu.iu.dsc.tws.comms.routing.LoadBalanceRouter;
 
-public class MPILoadBalance implements DataFlowOperation {
-  @Override
-  public void init(Config config, int thisTask, TaskPlan instancePlan, Set<Integer> sources,
-                   Set<Integer> destinations, int stream, MessageReceiver receiver,
-                   MessageDeSerializer messageDeSerializer, MessageSerializer messageSerializer) {
+public class MPILoadBalance extends MPIDataFlowOperation {
+  private static final Logger LOG = Logger.getLogger(MPILoadBalance.class.getName());
 
+  private Map<Integer, MPIMessage> currentMessages = new HashMap<>();
+
+  public MPILoadBalance(TWSMPIChannel channel) {
+    super(channel);
   }
 
   @Override
   public void sendPartial(Message message) {
-
+    throw new UnsupportedOperationException("partial messages not supported by load balance");
   }
 
   @Override
   public void finish() {
-
+    throw new UnsupportedOperationException("partial messages not supported by load balance");
   }
 
+
+  protected IRouter setupRouting() {
+    // lets create the routing needed
+    LoadBalanceRouter router = new LoadBalanceRouter();
+    router.init(config, thisTask, instancePlan, sources, destinations, stream,
+        MPIContext.distinctRoutes(config, sources.size()));
+    return router;
+  }
+
+  /**
+   * Sends a complete message
+   * @param message the message object
+   */
   @Override
   public void sendComplete(Message message) {
+    // this need to use the available buffers
+    // we need to advertise the available buffers to the upper layers
+    Object msgObj = messageSerializer.build(message);
 
+    if (!(msgObj instanceof MPIMessage)) {
+      throw new IllegalArgumentException("Expecting a message of MPIMessage type");
+    }
+
+    MPIMessage mpiMessage = (MPIMessage) msgObj;
+    MessageHeader header = mpiMessage.getHeader();
+
+    if (header.getSourceId() != thisTask) {
+      throw new RuntimeException("The source of the message should be the sender");
+    }
+
+    List<Integer> routes = new ArrayList<>();
+    router.routeMessage(header, routes);
+    if (routes.size() == 0) {
+      throw new RuntimeException("Failed to get downstream tasks");
+    }
+
+    sendMessage(mpiMessage, routes);
   }
 
-  @Override
-  public void close() {
 
+  @Override
+  public void onReceiveComplete(int id, int messageStream, MPIBuffer buffer) {
+    int originatingNode = buffer.getByteBuffer().getInt();
+
+    if (!sources.contains(originatingNode)) {
+      throw new RuntimeException("The message should always come directly from a source");
+    }
+    // we need to try to build the message here, we may need many more messages to complete
+    MPIMessage currentMessage = currentMessages.get(originatingNode);
+
+    if (currentMessage == null) {
+      MessageHeader header = buildHeader(buffer);
+      currentMessage = new MPIMessage(thisTask, header, MPIMessageType.RECEIVE, this);
+      currentMessages.put(originatingNode, currentMessage);
+    } else if (!currentMessage.isComplete()) {
+      currentMessage.addBuffer(buffer);
+      currentMessage.build();
+    }
+
+    if (currentMessage.isComplete()) {
+      List<Integer> routes = new ArrayList<>();
+      // we will get the routing based on the originating id
+      router.routeMessage(currentMessage.getHeader(), routes);
+      // try to send further
+      sendMessage(currentMessage, routes);
+
+      // we received a message, we need to determine weather we need to forward to another node
+      // and process
+      if (messageDeSerializer != null) {
+        Object object = messageDeSerializer.buid(currentMessage);
+        receiver.receive(object);
+      }
+
+      currentMessages.remove(originatingNode);
+    }
   }
 }

@@ -24,10 +24,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.mpi.MPIContext;
 
-public class BinaryTree implements IRouter {
-  private static final Logger LOG = Logger.getLogger(BinaryTree.class.getName());
+public class BinaryTreeRouter implements IRouter {
+  private static final Logger LOG = Logger.getLogger(BinaryTreeRouter.class.getName());
 
   private Config config;
   private TaskPlan taskPlan;
@@ -37,6 +39,8 @@ public class BinaryTree implements IRouter {
   private int task;
   private int intraNodeDegree;
   private int interNodeDegree;
+  private int distinctRoutes;
+  private Map<Integer, Routing> routings;
 
   /**
    * Initialize the data structure
@@ -49,23 +53,21 @@ public class BinaryTree implements IRouter {
    * @param strm
    */
   public void init(Config cfg, int thisTask, TaskPlan plan,
-                   Set<Integer> srscs, Set<Integer> dests, int strm) {
+                   Set<Integer> srscs, Set<Integer> dests, int strm, int distinctRoutes) {
     this.config = cfg;
     this.taskPlan = plan;
     this.task = thisTask;
     this.sources = srscs;
     this.destinations = dests;
     this.stream = strm;
+    this.distinctRoutes = distinctRoutes;
+
+    this.interNodeDegree = MPIContext.interNodeDegree(cfg, 2);
+    this.intraNodeDegree = MPIContext.intraNodeDegree(cfg, 2);
   }
 
-  /**
-   * A routing map for each destination
-   *
-   * Routing is from taskid -> taskids
-   *
-   * @return a
-   */
-  public Map<Integer, Routing> routing(int distinctRoutes) {
+  @Override
+  public Map<Integer, Routing> expectedRoutes() {
     Map<Integer, Routing> routings = new HashMap<>();
 
     ArrayList<Integer> sourceList = new ArrayList<>(sources);
@@ -89,6 +91,11 @@ public class BinaryTree implements IRouter {
     }
 
     return routings;
+  }
+
+  @Override
+  public void routeMessage(MessageHeader message, List<Integer> routes) {
+
   }
 
   private Routing getRouting(Node node) {

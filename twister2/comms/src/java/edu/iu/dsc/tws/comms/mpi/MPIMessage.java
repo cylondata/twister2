@@ -14,6 +14,8 @@ package edu.iu.dsc.tws.comms.mpi;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.iu.dsc.tws.comms.api.MessageHeader;
+
 public class MPIMessage {
   private final List<MPIBuffer> buffers = new ArrayList<MPIBuffer>();
 
@@ -30,29 +32,37 @@ public class MPIMessage {
 
   private MPIMessageReleaseCallback releaseListener;
 
-  private final int edge;
-
   /**
    * Keep track of the originating id, this is required to release the buffers allocated.
    */
-  private final int originatingId;
+  private int originatingId;
 
-  public MPIMessage(int originatingId, int stream,
-                    MPIMessageType type, MPIMessageReleaseCallback releaseListener) {
-    this(originatingId, stream, 1, type, releaseListener);
+  /**
+   * The message header
+   */
+  private MessageHeader header;
+
+  /**
+   * Keep weather the message has been fully built
+   */
+  private boolean complete = false;
+
+  public MPIMessage() {
   }
 
-  public MPIMessage(int originatingId, int stream, int refCount,
+  public MPIMessage(int originatingId, MessageHeader header,
                     MPIMessageType type, MPIMessageReleaseCallback releaseListener) {
-    this.edge = stream;
+    this(originatingId, header, 1, type, releaseListener);
+  }
+
+  public MPIMessage(int originatingId, MessageHeader header, int refCount,
+                    MPIMessageType type, MPIMessageReleaseCallback releaseListener) {
+    this.header = header;
     this.refCount = refCount;
     this.messageType = type;
     this.releaseListener = releaseListener;
     this.originatingId = originatingId;
-  }
-
-  public int getEdge() {
-    return edge;
+    this.complete = true;
   }
 
   public List<MPIBuffer> getBuffers() {
@@ -86,7 +96,37 @@ public class MPIMessage {
     }
   }
 
+  public void addBuffer(MPIBuffer buffer) {
+    buffers.add(buffer);
+  }
+
   public int getOriginatingId() {
     return originatingId;
+  }
+
+  public MessageHeader getHeader() {
+    return header;
+  }
+
+  public boolean build() {
+    if (header == null && buffers.size() > 0) {
+
+    }
+
+    if (header != null) {
+      int currentSize = 0;
+      for (MPIBuffer buffer : buffers) {
+        currentSize += buffer.getByteBuffer().remaining();
+      }
+      if (currentSize == header.getLength()) {
+        complete = true;
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public boolean isComplete() {
+    return complete;
   }
 }

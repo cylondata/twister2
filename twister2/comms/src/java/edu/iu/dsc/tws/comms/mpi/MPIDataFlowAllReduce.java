@@ -11,9 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi;
 
-import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
@@ -22,20 +20,9 @@ import edu.iu.dsc.tws.comms.api.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageSerializer;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.routing.Routing;
 
-public class MPIDataFlowReduce implements DataFlowOperation,
-    MPIMessageListener, MPIMessageReleaseCallback  {
-  private static final Logger LOG = Logger.getLogger(MPIDataFlowBroadcast.class.getName());
-
-
-  public MPIDataFlowReduce(TWSMPIChannel channel) {
-  }
-
-  public Map<Integer, Routing> setupRouting() {
-    return null;
-  }
-
+public class MPIDataFlowAllReduce implements DataFlowOperation,
+    MPIMessageListener, MPIMessageReleaseCallback {
   @Override
   public void release(MPIMessage message) {
 
@@ -52,26 +39,22 @@ public class MPIDataFlowReduce implements DataFlowOperation,
   }
 
   @Override
-  public void init(Config cfg, int task, TaskPlan plan, Set<Integer> srcs,
-                   Set<Integer> dests, int messageStream, MessageReceiver rcvr,
-                   MessageDeSerializer fmtr, MessageSerializer bldr) {
-  }
-
-  /**
-   * Setup the receives and send sendBuffers
-   */
-  private void setupCommunication() {
+  public void init(Config config, int thisTask, TaskPlan instancePlan,
+                   Set<Integer> sources, Set<Integer> destinations,
+                   int stream, MessageReceiver receiver,
+                   MessageDeSerializer messageDeSerializer,
+                   MessageSerializer messageSerializer) {
 
   }
 
   @Override
   public void sendPartial(Message message) {
-    throw new UnsupportedOperationException("partial messages not supported by reduce");
+
   }
 
   @Override
   public void finish() {
-    throw new UnsupportedOperationException("partial messages not supported by reduce");
+
   }
 
   @Override

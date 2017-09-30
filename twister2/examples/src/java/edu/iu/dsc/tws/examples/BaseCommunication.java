@@ -54,7 +54,7 @@ public class BaseCommunication implements IContainer {
 
     // this method calls the init method
     // I think this is wrong
-    reduce = channel.setUpDataFlowOperation(Operation.BROADCAST, id, sources,
+    reduce = channel.setUpDataFlowOperation(Operation.REDUCE, id, sources,
         dests, cfg, 0, new ReduceMessageReceiver(),
         new ReduceMessageDeSerializer(), new ReduceMessageSerializer());
 
@@ -81,7 +81,6 @@ public class BaseCommunication implements IContainer {
   }
 
   private class ReduceMessageReceiver implements MessageReceiver {
-
     @Override
     public void receive(Object object) {
 
@@ -90,7 +89,7 @@ public class BaseCommunication implements IContainer {
 
   private class ReduceMessageDeSerializer implements MessageDeSerializer {
     @Override
-    public Object format(Object message) {
+    public Object buid(Object message) {
       if (message instanceof MPIMessage) {
         // now deserialize it
       }

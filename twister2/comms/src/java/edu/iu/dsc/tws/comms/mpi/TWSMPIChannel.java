@@ -112,7 +112,8 @@ public class TWSMPIChannel {
   public boolean sendMessage(int id, MPIMessage message, MPIMessageListener callback) {
     lock.lock();
     try {
-      return pendingSends.offer(new MPISendRequests(id, message.getEdge(), message, callback));
+      return pendingSends.offer(
+          new MPISendRequests(id, message.getHeader().getEdge(), message, callback));
     } finally {
       lock.unlock();
     }
@@ -147,7 +148,7 @@ public class TWSMPIChannel {
       try {
         MPIBuffer buffer = message.getBuffers().get(i);
         Request request = comm.iSend(buffer.getByteBuffer(), 0,
-            MPI.BYTE, buffer.getSize(), message.getEdge());
+            MPI.BYTE, buffer.getSize(), message.getHeader().getEdge());
         // register to the loop to make progress on the send
         requests.pendingSends.add(new MPIRequest(request, buffer));
       } catch (MPIException e) {

@@ -15,12 +15,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Node {
-
-  public enum NodeType {
-    MIDDLE,
-    LEAF
-  }
-
   // children that are not in memory
   private List<Node> children = new ArrayList<>();
 
