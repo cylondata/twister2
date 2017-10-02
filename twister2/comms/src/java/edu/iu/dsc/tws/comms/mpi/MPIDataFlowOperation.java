@@ -43,6 +43,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
   protected MessageDeSerializer messageDeSerializer;
   protected MessageSerializer messageSerializer;
   protected int thisTask;
+  protected Map<Integer, Routing> expectedRoutes;
 
   /**
    * The send sendBuffers used by the operation
@@ -82,6 +83,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
     }
 
     router = setupRouting();
+    this.expectedRoutes = router.expectedRoutes();
 
     // now setup the sends and receives
     setupCommunication();
@@ -89,15 +91,17 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
 
   protected abstract IRouter setupRouting();
 
+  protected abstract void routeMessage(MessageHeader message, List<Integer> routes);
   /**
    * Setup the receives and send sendBuffers
    */
   protected void setupCommunication() {
-    Map<Integer, Routing> expectedRoutes = router.expectedRoutes();
     Set<Integer> receiving = new HashSet<>();
+    Map<Integer, List<Integer>> receiveMap = new HashMap<>();
     // we will receive from these
     for (Map.Entry<Integer, Routing> e : expectedRoutes.entrySet()) {
       receiving.addAll(e.getValue().getUpstreamIds());
+      receiveMap.put(e.getKey(), e.getValue().getUpstreamIds());
     }
 
     int maxReceiveBuffers = MPIContext.receiveBufferCount(config);
@@ -110,6 +114,9 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
       channel.receiveMessage(recv, stream, this, recvList);
       receiveBuffers.put(recv, recvList);
     }
+
+    // initialize the receive
+    this.receiver.init(receiveMap);
 
     // configure the send sendBuffers
     int sendBufferSize = MPIContext.bufferSize(config);

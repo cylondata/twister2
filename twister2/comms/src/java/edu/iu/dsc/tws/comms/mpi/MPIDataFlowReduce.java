@@ -11,57 +11,72 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.Message;
-import edu.iu.dsc.tws.comms.api.MessageDeSerializer;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
-import edu.iu.dsc.tws.comms.api.MessageSerializer;
-import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.routing.Routing;
+import edu.iu.dsc.tws.comms.api.MessageHeader;
+import edu.iu.dsc.tws.comms.routing.IRouter;
 
-public class MPIDataFlowReduce implements DataFlowOperation,
-    MPIMessageListener, MPIMessageReleaseCallback  {
+public class MPIDataFlowReduce extends MPIDataFlowOperation {
   private static final Logger LOG = Logger.getLogger(MPIDataFlowBroadcast.class.getName());
 
+  /**
+   * Keep track of the current message been received
+   */
+  private Map<Integer, Map<Integer, MPIMessage>> currentMessages = new HashMap<>();
 
   public MPIDataFlowReduce(TWSMPIChannel channel) {
+    super(channel);
   }
 
-  public Map<Integer, Routing> setupRouting() {
+  public IRouter setupRouting() {
     return null;
   }
 
   @Override
-  public void release(MPIMessage message) {
+  protected void routeMessage(MessageHeader message, List<Integer> routes) {
 
   }
 
   @Override
-  public void onReceiveComplete(int id, int stream, MPIBuffer message) {
+  public void onReceiveComplete(int id, int stream, MPIBuffer buffer) {
+    int originatingNode = buffer.getByteBuffer().getInt();
+    int sourceNode = buffer.getByteBuffer().getInt();
 
-  }
+    Map<Integer, MPIMessage> messageMap = currentMessages.get(sourceNode);
 
-  @Override
-  public void onSendComplete(int id, int stream, MPIMessage message) {
+    // we need to try to build the message here, we may need many more messages to complete
+    MPIMessage currentMessage = messageMap.get(originatingNode);
 
-  }
+    if (currentMessage == null) {
+      MessageHeader header = buildHeader(buffer);
+      currentMessage = new MPIMessage(thisTask, header, MPIMessageType.RECEIVE, this);
+      messageMap.put(originatingNode, currentMessage);
+    } else if (!currentMessage.isComplete()) {
+      currentMessage.addBuffer(buffer);
+      currentMessage.build();
+    }
 
-  @Override
-  public void init(Config cfg, int task, TaskPlan plan, Set<Integer> srcs,
-                   Set<Integer> dests, int messageStream, MessageReceiver rcvr,
-                   MessageDeSerializer fmtr, MessageSerializer bldr) {
-  }
+    if (currentMessage.isComplete()) {
+      List<Integer> routes = new ArrayList<>();
+      // we will get the routing based on the originating id
+      routeMessage(currentMessage.getHeader(), routes);
+      // try to send further
+      sendMessage(currentMessage, routes);
 
-  /**
-   * Setup the receives and send sendBuffers
-   */
-  private void setupCommunication() {
+      // we received a message, we need to determine weather we need to
+      // forward to another node and process
+      if (messageDeSerializer != null) {
+        Object object = messageDeSerializer.buid(currentMessage);
+        receiver.onMessage(object);
+      }
 
+      currentMessages.remove(originatingNode);
+    }
   }
 
   @Override
@@ -76,11 +91,6 @@ public class MPIDataFlowReduce implements DataFlowOperation,
 
   @Override
   public void sendComplete(Message message) {
-
-  }
-
-  @Override
-  public void close() {
 
   }
 }

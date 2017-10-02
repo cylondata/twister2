@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.comms.mpi;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.comms.core.CommunicationContext;
 
 /**

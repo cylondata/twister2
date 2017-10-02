@@ -19,7 +19,6 @@ import java.util.Random;
 import java.util.Set;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 
 public class LoadBalanceRouter implements IRouter {
@@ -54,11 +53,5 @@ public class LoadBalanceRouter implements IRouter {
     routingMap.put(task, new Routing(down));
 
     return routingMap;
-  }
-
-  @Override
-  public void routeMessage(MessageHeader message, List<Integer> routes) {
-    int next = random.nextInt(destList.size());
-    routes.add(next);
   }
 }

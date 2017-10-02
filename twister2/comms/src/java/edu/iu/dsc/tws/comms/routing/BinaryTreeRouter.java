@@ -40,7 +40,7 @@ public class BinaryTreeRouter implements IRouter {
   private int intraNodeDegree;
   private int interNodeDegree;
   private int distinctRoutes;
-  private Map<Integer, Routing> routings;
+  private Map<Integer, Routing> expectedRouting = new HashMap<>();
 
   /**
    * Initialize the data structure
@@ -64,12 +64,16 @@ public class BinaryTreeRouter implements IRouter {
 
     this.interNodeDegree = MPIContext.interNodeDegree(cfg, 2);
     this.intraNodeDegree = MPIContext.intraNodeDegree(cfg, 2);
+
+    calculateExpectedRouter();
   }
 
   @Override
   public Map<Integer, Routing> expectedRoutes() {
-    Map<Integer, Routing> routings = new HashMap<>();
+    return expectedRouting;
+  }
 
+  private void calculateExpectedRouter() {
     ArrayList<Integer> sourceList = new ArrayList<>(sources);
     Collections.sort(sourceList);
 
@@ -85,17 +89,10 @@ public class BinaryTreeRouter implements IRouter {
       if (search != null) {
         Routing routing = getRouting(search);
         if (routing != null) {
-          routings.put(source, routing);
+          expectedRouting.put(source, routing);
         }
       }
     }
-
-    return routings;
-  }
-
-  @Override
-  public void routeMessage(MessageHeader message, List<Integer> routes) {
-
   }
 
   private Routing getRouting(Node node) {

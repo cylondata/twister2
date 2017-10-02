@@ -23,6 +23,7 @@ import edu.iu.dsc.tws.comms.api.Operation;
 
 public interface TWSCommunication {
   void init(Config config, TaskPlan taskPlan);
+
   DataFlowOperation setUpDataFlowOperation(Operation operation, int task,
                                       Set<Integer> sources,
                                       Set<Integer> destinations,

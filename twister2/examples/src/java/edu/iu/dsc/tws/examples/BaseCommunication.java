@@ -2,6 +2,7 @@ package edu.iu.dsc.tws.examples;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -66,7 +67,7 @@ public class BaseCommunication implements IContainer {
     @Override
     public void run() {
       Message.Builder messageBuilder = Message.newBuilder();
-      MessageHeader.Builder messageHeaderBuilder = MessageHeader.newBuilder(id, id + 1, 0);
+      MessageHeader.Builder messageHeaderBuilder = MessageHeader.newBuilder(id, id + 1, 0, 100, id);
       for (int i = 0; i < 1000; i++) {
         reduce.sendComplete(null);
       }
@@ -82,7 +83,12 @@ public class BaseCommunication implements IContainer {
 
   private class ReduceMessageReceiver implements MessageReceiver {
     @Override
-    public void receive(Object object) {
+    public void init(Map<Integer, List<Integer>> expectedIds) {
+
+    }
+
+    @Override
+    public void onMessage(Object object) {
 
     }
   }

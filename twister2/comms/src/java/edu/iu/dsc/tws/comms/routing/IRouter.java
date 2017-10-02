@@ -47,5 +47,5 @@ public interface IRouter {
    * @param message header of the message
    * @param routes updates this route list
    */
-  void routeMessage(MessageHeader message, List<Integer> routes);
+//  void routeMessage(MessageHeader message, List<Integer> routes);
 }

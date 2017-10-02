@@ -15,20 +15,25 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.Message;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.routing.IRouter;
 import edu.iu.dsc.tws.comms.routing.LoadBalanceRouter;
+import edu.iu.dsc.tws.comms.routing.Routing;
 
 public class MPILoadBalance extends MPIDataFlowOperation {
   private static final Logger LOG = Logger.getLogger(MPILoadBalance.class.getName());
+
+  private Random random;
 
   private Map<Integer, MPIMessage> currentMessages = new HashMap<>();
 
   public MPILoadBalance(TWSMPIChannel channel) {
     super(channel);
+    random = new Random(System.nanoTime());
   }
 
   @Override
@@ -72,7 +77,7 @@ public class MPILoadBalance extends MPIDataFlowOperation {
     }
 
     List<Integer> routes = new ArrayList<>();
-    router.routeMessage(header, routes);
+    routeMessage(header, routes);
     if (routes.size() == 0) {
       throw new RuntimeException("Failed to get downstream tasks");
     }
@@ -103,7 +108,7 @@ public class MPILoadBalance extends MPIDataFlowOperation {
     if (currentMessage.isComplete()) {
       List<Integer> routes = new ArrayList<>();
       // we will get the routing based on the originating id
-      router.routeMessage(currentMessage.getHeader(), routes);
+      routeMessage(currentMessage.getHeader(), routes);
       // try to send further
       sendMessage(currentMessage, routes);
 
@@ -111,10 +116,18 @@ public class MPILoadBalance extends MPIDataFlowOperation {
       // and process
       if (messageDeSerializer != null) {
         Object object = messageDeSerializer.buid(currentMessage);
-        receiver.receive(object);
+        receiver.onMessage(object);
       }
 
       currentMessages.remove(originatingNode);
     }
+  }
+
+  @Override
+  protected void routeMessage(MessageHeader message, List<Integer> routes) {
+    Routing routing = expectedRoutes.get(thisTask);
+
+    int next = random.nextInt(routing.getDownstreamIds().size());
+    routes.add(routing.getDownstreamIds().get(next));
   }
 }
