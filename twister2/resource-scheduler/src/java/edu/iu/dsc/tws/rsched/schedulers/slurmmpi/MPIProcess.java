@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.slurmmpi;
 
+import java.nio.IntBuffer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -187,5 +188,25 @@ public final class MPIProcess {
 
     // now initialize the container
     container.init(config, rank, resourcePlan);
+  }
+
+  private static ResourcePlan createResourcePlan(Config config) {
+    ResourcePlan resourcePlan = new ResourcePlan(SlurmMPIContext.clusterName(config));
+
+    try {
+      String processName = MPI.getProcessorName();
+      char[] processNameChars = new char[processName.length()];
+      processName.getChars(0, processNameChars.length, processNameChars, 0);
+
+      IntBuffer countSend = MPI.newIntBuffer(1);
+      IntBuffer countReceive = MPI.newIntBuffer(1);
+
+      // first we need to send the expected number of characters
+      // now we need to send this to all the nodes
+    } catch (MPIException e) {
+      throw new RuntimeException("Failed to communicate", e);
+    }
+
+    return resourcePlan;
   }
 }

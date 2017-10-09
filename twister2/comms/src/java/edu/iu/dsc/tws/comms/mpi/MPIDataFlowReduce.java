@@ -15,10 +15,16 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.Message;
+import edu.iu.dsc.tws.comms.api.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
+import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.api.MessageSerializer;
+import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.routing.IRouter;
 
 public class MPIDataFlowReduce extends MPIDataFlowOperation {
@@ -31,6 +37,19 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
 
   public MPIDataFlowReduce(TWSMPIChannel channel) {
     super(channel);
+  }
+
+  @Override
+  public void init(Config cfg, int task, TaskPlan plan,
+                   Set<Integer> srcs, Set<Integer> dests,
+                   int messageStream, MessageReceiver rcvr,
+                   MessageDeSerializer fmtr, MessageSerializer bldr,
+                   MessageReceiver partialRcvr) {
+    super.init(cfg, task, plan, srcs, dests, messageStream, rcvr, fmtr, bldr, partialRcvr);
+
+    for (Integer source : expectedRoutes.keySet()) {
+      currentMessages.put(source, new HashMap<Integer, MPIMessage>());
+    }
   }
 
   public IRouter setupRouting() {
@@ -79,18 +98,14 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
     }
   }
 
+
   @Override
-  public void sendPartial(Message message) {
-    throw new UnsupportedOperationException("partial messages not supported by reduce");
+  public void injectPartialResult(Message message) {
+    super.injectPartialResult(message);
   }
 
   @Override
-  public void finish() {
-    throw new UnsupportedOperationException("partial messages not supported by reduce");
-  }
-
-  @Override
-  public void sendComplete(Message message) {
+  public void sendCompleteMessage(Message message) {
 
   }
 }

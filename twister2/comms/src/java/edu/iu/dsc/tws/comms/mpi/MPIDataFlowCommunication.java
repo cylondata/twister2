@@ -18,6 +18,7 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.Operation;
 import edu.iu.dsc.tws.comms.core.DataFlowCommunication;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
+
 import mpi.MPI;
 
 public class MPIDataFlowCommunication extends DataFlowCommunication {
@@ -28,10 +29,10 @@ public class MPIDataFlowCommunication extends DataFlowCommunication {
   private TWSMPIChannel channel;
 
   @Override
-  public void init(Config config, TaskPlan taskPlan) {
-    super.init(config, taskPlan);
+  public void init(Config cfg, TaskPlan taskPlan) {
+    super.init(cfg, taskPlan);
 
-    channel = new TWSMPIChannel(config, MPI.COMM_WORLD);
+    channel = new TWSMPIChannel(cfg, MPI.COMM_WORLD);
   }
 
   @Override
@@ -45,7 +46,7 @@ public class MPIDataFlowCommunication extends DataFlowCommunication {
     } else if (operation == Operation.LOADBALANCE) {
       return new MPILoadBalance(channel);
     } else if (operation == Operation.PARTITION) {
-      return new MPIPartition();
+      return new MPIPartition(channel);
     }
     return null;
   }

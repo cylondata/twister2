@@ -10,7 +10,6 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.Message;
-import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageSerializer;
 import edu.iu.dsc.tws.comms.api.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
@@ -57,20 +56,62 @@ public class BaseCommunication implements IContainer {
     // I think this is wrong
     reduce = channel.setUpDataFlowOperation(Operation.REDUCE, id, sources,
         dests, cfg, 0, new ReduceMessageReceiver(),
-        new ReduceMessageDeSerializer(), new ReduceMessageSerializer());
+        new ReduceMessageDeSerializer(), new ReduceMessageSerializer(), new PartialReceiver());
 
+    // this thread is only run at the reduce
     Thread reduceThread = new Thread(new ReduceWorker());
+
+    // the map thread where data is produced
     Thread mapThread = new Thread(new MapWorker());
+
+    reduceThread.start();
+    mapThread.start();
+
+    try {
+      mapThread.join();
+      reduceThread.join();
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
   }
 
   private class MapWorker implements Runnable {
     @Override
     public void run() {
-      Message.Builder messageBuilder = Message.newBuilder();
-      MessageHeader.Builder messageHeaderBuilder = MessageHeader.newBuilder(id, id + 1, 0, 100, id);
+      // lets generate a message
+      TextData textData = new TextData("Hello");
       for (int i = 0; i < 1000; i++) {
-        reduce.sendComplete(null);
+        reduce.sendCompleteMessage(null);
       }
+    }
+  }
+
+  /**
+   * Let assume we have 1 task per container
+   * @param resourcePlan the resource plan from scheduler
+   * @return task plan
+   */
+  private TaskPlan createTaskPlan(ResourcePlan resourcePlan) {
+    int noOfProcs = resourcePlan.noOfContainers();
+
+    Map<Integer, Set<Integer>> executorToChannels = null;
+    Map<Integer, Set<Integer>> groupsToChannels = null;
+    int thisExecutor = 0;
+    int thisTaskk = 0;
+
+    TaskPlan taskPlan = new TaskPlan(executorToChannels, groupsToChannels, thisExecutor, thisTaskk);
+    return taskPlan;
+  }
+
+  private class PartialReceiver implements MessageReceiver {
+    @Override
+    public void init(Map<Integer, List<Integer>> expectedIds) {
+
+    }
+
+    @Override
+    public void onMessage(Object object) {
+      reduce.sendPartialMessage(null);
     }
   }
 

@@ -18,10 +18,11 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageSerializer;
 import edu.iu.dsc.tws.comms.api.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.api.MessageSerializer;
 import edu.iu.dsc.tws.comms.api.Operation;
+
 
 public abstract class DataFlowCommunication implements TWSCommunication {
   private static final Logger LOG = Logger.getLogger(DataFlowCommunication.class.getName());
@@ -43,7 +44,8 @@ public abstract class DataFlowCommunication implements TWSCommunication {
                                                   int stream,
                                                   MessageReceiver receiver,
                                                   MessageDeSerializer formatter,
-                                                  MessageSerializer builder) {
+                                                  MessageSerializer builder,
+                                                  MessageReceiver partialReceiver) {
     // merge with the user specified configuration, user specified will take precedence
     Config mergedCfg = Config.newBuilder().putAll(config).putAll(configuration).build();
 
@@ -52,7 +54,7 @@ public abstract class DataFlowCommunication implements TWSCommunication {
 
     // intialize the operation
     dataFlowOperation.init(mergedCfg, task, instancePlan, sources,
-        destinations, stream, receiver, formatter, builder);
+        destinations, stream, receiver, formatter, builder, partialReceiver);
 
     return dataFlowOperation;
   }
@@ -60,8 +62,8 @@ public abstract class DataFlowCommunication implements TWSCommunication {
   public abstract DataFlowOperation create(Operation operation);
 
   @Override
-  public void init(Config config, TaskPlan taskPlan) {
+  public void init(Config cfg, TaskPlan taskPlan) {
     this.instancePlan = taskPlan;
-    this.config = config;
+    this.config = cfg;
   }
 }

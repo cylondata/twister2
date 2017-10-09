@@ -42,7 +42,7 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
   }
 
   @Override
-  public void sendPartial(Message message) {
+  public void sendPartialMessage(Message message) {
     throw new UnsupportedOperationException("partial messages not supported by broadcast");
   }
 
@@ -55,8 +55,9 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
   public void init(Config cfg, int task, TaskPlan plan,
                    Set<Integer> srcs, Set<Integer> dests,
                    int messageStream, MessageReceiver rcvr,
-                   MessageDeSerializer fmtr, MessageSerializer bldr) {
-    super.init(cfg, task, plan, srcs, dests, messageStream, rcvr, fmtr, bldr);
+                   MessageDeSerializer fmtr, MessageSerializer bldr,
+                   MessageReceiver partialRcvr) {
+    super.init(cfg, task, plan, srcs, dests, messageStream, rcvr, fmtr, bldr, partialRcvr);
 
     for (Integer source : expectedRoutes.keySet()) {
       currentMessages.put(source, new HashMap<Integer, MPIMessage>());
@@ -68,7 +69,7 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
    * @param message the message object
    */
   @Override
-  public void sendComplete(Message message) {
+  public void sendCompleteMessage(Message message) {
     // this need to use the available buffers
     // we need to advertise the available buffers to the upper layers
     Object msgObj = messageSerializer.build(message);

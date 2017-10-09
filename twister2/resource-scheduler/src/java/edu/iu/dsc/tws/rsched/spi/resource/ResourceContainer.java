@@ -24,6 +24,11 @@ public class ResourceContainer {
   // this can include things like available ports
   private Map<String, Object> properties = new HashMap<>();
 
+  public ResourceContainer(int id) {
+    this.id = id;
+  }
+
   public ResourceContainer() {
+
   }
 }

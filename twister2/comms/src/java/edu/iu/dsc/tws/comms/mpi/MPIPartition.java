@@ -11,31 +11,48 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi;
 
+import java.util.List;
 import java.util.Set;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.Message;
-import edu.iu.dsc.tws.comms.api.MessageSerializer;
 import edu.iu.dsc.tws.comms.api.MessageDeSerializer;
+import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.api.MessageSerializer;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.routing.IRouter;
 
 /**
  * Partition a data set using hash
  */
-public class MPIPartition implements DataFlowOperation {
+public class MPIPartition extends MPIDataFlowOperation {
+  public MPIPartition(TWSMPIChannel channel) {
+    super(channel);
+  }
+
   @Override
   public void init(Config config, int thisTask,
                    TaskPlan instancePlan,
                    Set<Integer> sources, Set<Integer> destinations,
                    int stream, MessageReceiver receiver,
-                   MessageDeSerializer messageDeSerializer, MessageSerializer messageSerializer) {
+                   MessageDeSerializer messageDeSerializer,
+                   MessageSerializer messageSerializer, MessageReceiver partialRcvr) {
 
   }
 
   @Override
-  public void sendPartial(Message message) {
+  protected IRouter setupRouting() {
+    return null;
+  }
+
+  @Override
+  protected void routeMessage(MessageHeader message, List<Integer> routes) {
+
+  }
+
+  @Override
+  public void sendPartialMessage(Message message) {
 
   }
 
@@ -45,12 +62,17 @@ public class MPIPartition implements DataFlowOperation {
   }
 
   @Override
-  public void sendComplete(Message message) {
+  public void sendCompleteMessage(Message message) {
 
   }
 
   @Override
   public void close() {
+
+  }
+
+  @Override
+  public void onReceiveComplete(int id, int stream, MPIBuffer message) {
 
   }
 }

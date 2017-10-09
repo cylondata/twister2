@@ -11,18 +11,23 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi;
 
+import java.util.List;
 import java.util.Set;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.Message;
 import edu.iu.dsc.tws.comms.api.MessageDeSerializer;
+import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageSerializer;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.routing.IRouter;
 
-public class MPIDataFlowAllReduce implements DataFlowOperation,
-    MPIMessageListener, MPIMessageReleaseCallback {
+public class MPIDataFlowAllReduce extends MPIDataFlowOperation {
+  public MPIDataFlowAllReduce(TWSMPIChannel channel) {
+    super(channel);
+  }
+
   @Override
   public void release(MPIMessage message) {
 
@@ -43,12 +48,13 @@ public class MPIDataFlowAllReduce implements DataFlowOperation,
                    Set<Integer> sources, Set<Integer> destinations,
                    int stream, MessageReceiver receiver,
                    MessageDeSerializer messageDeSerializer,
-                   MessageSerializer messageSerializer) {
+                   MessageSerializer messageSerializer,
+                   MessageReceiver partialRcvr) {
 
   }
 
   @Override
-  public void sendPartial(Message message) {
+  public void sendPartialMessage(Message message) {
 
   }
 
@@ -58,7 +64,17 @@ public class MPIDataFlowAllReduce implements DataFlowOperation,
   }
 
   @Override
-  public void sendComplete(Message message) {
+  protected IRouter setupRouting() {
+    return null;
+  }
+
+  @Override
+  protected void routeMessage(MessageHeader message, List<Integer> routes) {
+
+  }
+
+  @Override
+  public void sendCompleteMessage(Message message) {
 
   }
 

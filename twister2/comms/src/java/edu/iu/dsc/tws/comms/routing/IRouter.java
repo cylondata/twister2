@@ -11,12 +11,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.routing;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 
 public interface IRouter {

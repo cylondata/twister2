@@ -22,6 +22,7 @@ import java.util.Set;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.Message;
 import edu.iu.dsc.tws.comms.api.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
@@ -44,6 +45,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
   protected MessageSerializer messageSerializer;
   protected int thisTask;
   protected Map<Integer, Routing> expectedRoutes;
+  protected MessageReceiver partialReceiver;
 
   /**
    * The send sendBuffers used by the operation
@@ -62,7 +64,8 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
   @Override
   public void init(Config cfg, int task, TaskPlan plan, Set<Integer> srcs,
                    Set<Integer> dests, int messageStream, MessageReceiver rcvr,
-                   MessageDeSerializer fmtr, MessageSerializer bldr) {
+                   MessageDeSerializer fmtr, MessageSerializer bldr,
+                   MessageReceiver partialRcvr) {
     this.config = cfg;
     this.instancePlan = plan;
     this.sources = srcs;
@@ -73,6 +76,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
     this.receiver = rcvr;
     this.sendBuffers = new LinkedList<>();
     this.thisTask = task;
+    this.partialReceiver = partialRcvr;
 
 
     int noOfSendBuffers = MPIContext.broadcastBufferCount(config);
@@ -87,6 +91,21 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
 
     // now setup the sends and receives
     setupCommunication();
+  }
+
+  @Override
+  public void injectPartialResult(Message message) {
+    throw new RuntimeException("Not implemented");
+  }
+
+  @Override
+  public void sendPartialMessage(Message message) {
+    throw new RuntimeException("Not implemented");
+  }
+
+  @Override
+  public void finish() {
+    throw new RuntimeException("Not implemented");
   }
 
   protected abstract IRouter setupRouting();
