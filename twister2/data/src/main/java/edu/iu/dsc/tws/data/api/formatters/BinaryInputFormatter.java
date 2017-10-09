@@ -37,17 +37,12 @@ public class BinaryInputFormatter extends FileInputFormat<byte[]> {
   /**
    * Endianess of the binary file, or the byte order
    */
-  ByteOrder endianess = ByteOrder.BIG_ENDIAN;
+  ByteOrder endianess = ByteOrder.LITTLE_ENDIAN;
 
   /**
    * The default read buffer size = 1MB.
    */
   private static final int DEFAULT_READ_BUFFER_SIZE = 1024 * 1024;
-
-  /**
-   * The input stream reading from the input file.
-   */
-  protected transient FSDataInputStream stream;
 
   /**
    * The length of a single record in the given binary file.
@@ -59,17 +54,12 @@ public class BinaryInputFormatter extends FileInputFormat<byte[]> {
    */
   protected static final String RECORD_LENGTH = "binary-format.record-length";
 
+  /**
+   * The default value of the record length
+   */
+  protected static final int DEFAULT_RECORD_LENGTH = 8;
+
   private int bufferSize = -1;
-
-  /**
-   * The start of the split that this parallel instance must consume.
-   */
-  protected transient long splitStart;
-
-  /**
-   * The length of the split that this parallel instance must consume.
-   */
-  protected transient long splitLength;
 
   // --------------------------------------------------------------------------------------------
   //  Variables for internal parsing.
@@ -94,7 +84,15 @@ public class BinaryInputFormatter extends FileInputFormat<byte[]> {
 
   private long offset = -1;
 
+  public BinaryInputFormatter(Path filePath){
+    super(filePath);
+    setRecordLength(DEFAULT_RECORD_LENGTH);
+  }
 
+  public BinaryInputFormatter(Path filePath, int recordLength){
+    super(filePath);
+    setRecordLength(recordLength);
+  }
 
   public ByteOrder getEndianess() {
     return endianess;
@@ -127,6 +125,20 @@ public class BinaryInputFormatter extends FileInputFormat<byte[]> {
       throw new IllegalArgumentException("RecordLength must be larger than 0");
     }
     this.recordLength = recordLength;
+    if(this.bufferSize % recordLength != 0){
+      int bufferFactor = 1;
+      if(this.bufferSize > 0){
+        bufferFactor = bufferSize/recordLength;
+      }else{
+        bufferFactor = DEFAULT_READ_BUFFER_SIZE/recordLength;
+      }
+      if(bufferFactor >= 1){
+        setBufferSize(recordLength*bufferFactor);
+      }else{
+        setBufferSize(recordLength*8);
+      }
+
+    }
   }
 
   /**
@@ -366,6 +378,7 @@ public class BinaryInputFormatter extends FileInputFormat<byte[]> {
       // previous split.
       toRead = maxReadLength;
       this.overLimit = true;
+      return false; //Since the BIF does not break splits in the middle of records there cannot be partial records
     }
 
     int read = this.stream.read(this.readBuffer, offset, toRead);

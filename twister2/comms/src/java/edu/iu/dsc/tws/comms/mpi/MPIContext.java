@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.comms.mpi;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.comms.core.CommunicationContext;
 
 /**
@@ -25,6 +24,7 @@ public class MPIContext extends CommunicationContext {
   private static final String BCAST_BUFFERS_COUNT = "network.mpi.bcast.sendBuffer.count";
   private static final String RECEIVE_BUFFERS_COUNT = "network.mpi.receiveBuffer.size";
   private static final String DISTINCT_ROUTS = "network.mpi.routing.distinct.routes";
+
 
   public static int bufferSize(Config cfg) {
     return cfg.getIntegerValue(BUFFER_SIZE, 1024);

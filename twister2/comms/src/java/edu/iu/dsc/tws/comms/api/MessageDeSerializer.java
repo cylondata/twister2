@@ -12,5 +12,5 @@
 package edu.iu.dsc.tws.comms.api;
 
 public interface MessageDeSerializer {
-  Object format(Object message);
+  Object buid(Object message);
 }

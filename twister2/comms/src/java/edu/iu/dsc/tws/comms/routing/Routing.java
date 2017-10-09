@@ -11,15 +11,20 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.routing;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Routing {
-  private final List<Integer> upstreamIds;
-  private final List<Integer> downstreamIds;
+  private final List<Integer> upstreamIds = new ArrayList<>();
+  private final List<Integer> downstreamIds = new ArrayList<>();
+
+  public Routing(List<Integer> down) {
+    this.downstreamIds.addAll(down);
+  }
 
   public Routing(List<Integer> up, List<Integer> down) {
-    this.upstreamIds = up;
-    this.downstreamIds = down;
+    this.upstreamIds.addAll(up);
+    this.downstreamIds.addAll(down);
   }
 
   public List<Integer> getUpstreamIds() {
