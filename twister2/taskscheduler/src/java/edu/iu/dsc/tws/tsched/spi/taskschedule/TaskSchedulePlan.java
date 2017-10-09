@@ -100,13 +100,11 @@ public class TaskSchedulePlan {
     }
 
     public TaskInstancePlan(TaskInstanceId taskInstanceId, Resource resource) {
-
       this.taskName = taskInstanceId.getTaskName();
       this.taskId = taskInstanceId.getTaskId();
       this.taskIndex = taskInstanceId.getTaskIndex ();
       this.resource = resource;
     }
-
 
     public String getTaskName() {
       return taskName;
@@ -205,6 +203,5 @@ public class TaskSchedulePlan {
       result = 31 * result + scheduledResource.hashCode();
       return result;
     }
-
   }
 }
