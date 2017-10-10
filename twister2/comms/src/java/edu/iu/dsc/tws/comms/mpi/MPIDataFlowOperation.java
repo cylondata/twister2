@@ -112,7 +112,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
 
   protected abstract IRouter setupRouting();
 
-  protected abstract void routeReceveidMessage(MessageHeader message, List<Integer> routes);
+  protected abstract void routeReceivedMessage(MessageHeader message, List<Integer> routes);
   protected abstract void routeSendMessage(MessageHeader message, List<Integer> routes);
 
   /**

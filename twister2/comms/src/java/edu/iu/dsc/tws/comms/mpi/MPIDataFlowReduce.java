@@ -68,14 +68,20 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
   }
 
   @Override
-  protected void routeMessage(MessageHeader message, List<Integer> routes) {
-    // look at the message and decide the routes
-    int sourceId = message.getSourceId();
-    int lastNodeVisited = message.getLastNode();
-    boolean subTaskDest = message.isSubNodeDestination();
-    boolean subTaskOrigin = message.isSubNodeOrigin();
+  protected void routeReceivedMessage(MessageHeader message, List<Integer> routes) {
+    throw new RuntimeException("We don't rout send received messages directly");
+  }
 
-    Routing routing = expectedRoutes.get(sourceId);
+  @Override
+  protected void routeSendMessage(MessageHeader message, List<Integer> routes) {
+    // check the origin
+    int source = message.getSourceId();
+    // get the expected routes
+    Routing routing = expectedRoutes.get(source);
+
+    if (routing == null) {
+      throw new RuntimeException("Un-expected message from source: " + source);
+    }
     routes.addAll(routing.getDownstreamIds());
   }
 
@@ -99,12 +105,6 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
     }
 
     if (currentMessage.isComplete()) {
-      List<Integer> routes = new ArrayList<>();
-      // we will get the routing based on the originating id
-      routeMessage(currentMessage.getHeader(), routes);
-      // try to send further
-      sendMessage(currentMessage, routes);
-
       // we received a message, we need to determine weather we need to
       // forward to another node and process
       if (messageDeSerializer != null) {
@@ -134,7 +134,7 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
 
     MPIMessage mpiMessage = (MPIMessage) msgObj;
     List<Integer> routes = new ArrayList<>();
-    routeMessage(mpiMessage.getHeader(), routes);
+    routeSendMessage(mpiMessage.getHeader(), routes);
 
     if (routes.size() > 1) {
       throw new RuntimeException("We only expect to send to one more task");

@@ -118,7 +118,7 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
     if (currentMessage.isComplete()) {
       List<Integer> routes = new ArrayList<>();
       // we will get the routing based on the originating id
-      routeReceveidMessage(currentMessage.getHeader(), routes);
+      routeReceivedMessage(currentMessage.getHeader(), routes);
       // try to send further
       sendMessage(currentMessage, routes);
 
@@ -142,7 +142,7 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
   }
 
   @Override
-  protected void routeReceveidMessage(MessageHeader message, List<Integer> routes) {
+  protected void routeReceivedMessage(MessageHeader message, List<Integer> routes) {
     // check the origin
     int source = message.getSourceId();
     // get the expected routes

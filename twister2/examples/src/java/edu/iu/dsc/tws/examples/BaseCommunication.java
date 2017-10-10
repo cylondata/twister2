@@ -2,22 +2,22 @@ package edu.iu.dsc.tws.examples;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.Message;
-import edu.iu.dsc.tws.comms.api.MessageSerializer;
-import edu.iu.dsc.tws.comms.api.MessageDeSerializer;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.Operation;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.mpi.MPIMessage;
+import edu.iu.dsc.tws.comms.mpi.io.DefaultMessageReceiver;
+import edu.iu.dsc.tws.comms.mpi.io.MPIMessageDeSerializer;
+import edu.iu.dsc.tws.comms.mpi.io.MPIMessageSerializer;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
@@ -35,6 +35,10 @@ public class BaseCommunication implements IContainer {
 
   private Config config;
 
+  private BlockingQueue<Message> partialReceiveQueue = new ArrayBlockingQueue<Message>(1024);
+
+  private BlockingQueue<Message> reduceReceiveQueue = new ArrayBlockingQueue<Message>(1024);
+
   @Override
   public void init(Config config, int id, ResourcePlan resourcePlan) {
     this.config = config;
@@ -42,7 +46,7 @@ public class BaseCommunication implements IContainer {
     this.id = id;
 
     // lets create the task plan
-    TaskPlan taskPlan = null;
+    TaskPlan taskPlan = createTaskPlan(config, resourcePlan);
     //first get the communication config file
     TWSNetwork network = new TWSNetwork(config, taskPlan);
 
@@ -55,8 +59,9 @@ public class BaseCommunication implements IContainer {
     // this method calls the init method
     // I think this is wrong
     reduce = channel.setUpDataFlowOperation(Operation.REDUCE, id, sources,
-        dests, cfg, 0, new ReduceMessageReceiver(),
-        new ReduceMessageDeSerializer(), new ReduceMessageSerializer(), new PartialReceiver());
+        dests, cfg, 0, new DefaultMessageReceiver(reduceReceiveQueue),
+        new MPIMessageDeSerializer(), new MPIMessageSerializer(),
+        new DefaultMessageReceiver(partialReceiveQueue));
 
     // this thread is only run at the reduce
     Thread reduceThread = new Thread(new ReduceWorker());
@@ -75,15 +80,44 @@ public class BaseCommunication implements IContainer {
     }
   }
 
+  /**
+   * We are running the map in a separate thread
+   */
   private class MapWorker implements Runnable {
     @Override
     public void run() {
-      // lets generate a message
-      TextData textData = new TextData("Hello");
-      for (int i = 0; i < 1000; i++) {
-        reduce.sendCompleteMessage(null);
+      for (int i = 0; i < 100000; i++) {
+        Message message = Message.newBuilder().setPayload(generateData()).build();
+        // lets generate a message
+        reduce.sendCompleteMessage(message);
       }
     }
+  }
+
+  /**
+   * Reduce class will work on the reduce messages.
+   */
+  private class ReduceWorker implements Runnable {
+    @Override
+    public void run() {
+      while (true) {
+        Message message = partialReceiveQueue.poll();
+
+      }
+    }
+  }
+
+  /**
+   * Generate data with an integer array
+   *
+   * @return IntData
+   */
+  private IntData generateData() {
+    int[] d = new int[10];
+    for (int i = 0; i < 10; i ++) {
+      d[i] = i;
+    }
+    return new IntData(d);
   }
 
   /**
@@ -91,7 +125,7 @@ public class BaseCommunication implements IContainer {
    * @param resourcePlan the resource plan from scheduler
    * @return task plan
    */
-  private TaskPlan createTaskPlan(ResourcePlan resourcePlan) {
+  private TaskPlan createTaskPlan(Config config, ResourcePlan resourcePlan) {
     int noOfProcs = resourcePlan.noOfContainers();
 
     Map<Integer, Set<Integer>> executorToChannels = null;
@@ -101,54 +135,5 @@ public class BaseCommunication implements IContainer {
 
     TaskPlan taskPlan = new TaskPlan(executorToChannels, groupsToChannels, thisExecutor, thisTaskk);
     return taskPlan;
-  }
-
-  private class PartialReceiver implements MessageReceiver {
-    @Override
-    public void init(Map<Integer, List<Integer>> expectedIds) {
-
-    }
-
-    @Override
-    public void onMessage(Object object) {
-      reduce.sendPartialMessage(null);
-    }
-  }
-
-  private class ReduceWorker implements Runnable {
-    @Override
-    public void run() {
-
-    }
-  }
-
-  private class ReduceMessageReceiver implements MessageReceiver {
-    @Override
-    public void init(Map<Integer, List<Integer>> expectedIds) {
-
-    }
-
-    @Override
-    public void onMessage(Object object) {
-
-    }
-  }
-
-  private class ReduceMessageDeSerializer implements MessageDeSerializer {
-    @Override
-    public Object buid(Object message) {
-      if (message instanceof MPIMessage) {
-        // now deserialize it
-      }
-      return null;
-    }
-  }
-
-  private class ReduceMessageSerializer implements MessageSerializer {
-
-    @Override
-    public Object build(Message message) {
-      return null;
-    }
   }
 }

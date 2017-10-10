@@ -43,7 +43,7 @@ public final class Message {
       return this;
     }
 
-    private Message build() {
+    public Message build() {
       return message;
     }
   }
