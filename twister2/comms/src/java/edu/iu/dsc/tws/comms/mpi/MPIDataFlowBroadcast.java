@@ -59,6 +59,11 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
                    MessageReceiver partialRcvr) {
     super.init(cfg, task, plan, srcs, dests, messageStream, rcvr, fmtr, bldr, partialRcvr);
 
+    // broadcast only supports a single source
+    if (sources.size() > 1) {
+      throw new RuntimeException("Broadcast only supports one source");
+    }
+
     for (Integer source : expectedRoutes.keySet()) {
       currentMessages.put(source, new HashMap<Integer, MPIMessage>());
     }
@@ -80,7 +85,7 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
 
     MPIMessage mpiMessage = (MPIMessage) msgObj;
     List<Integer> routes = new ArrayList<>();
-    routeMessage(mpiMessage.getHeader(), routes);
+    routeSendMessage(mpiMessage.getHeader(), routes);
     if (routes.size() == 0) {
       throw new RuntimeException("Failed to get downstream tasks");
     }
@@ -113,7 +118,7 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
     if (currentMessage.isComplete()) {
       List<Integer> routes = new ArrayList<>();
       // we will get the routing based on the originating id
-      routeMessage(currentMessage.getHeader(), routes);
+      routeReceveidMessage(currentMessage.getHeader(), routes);
       // try to send further
       sendMessage(currentMessage, routes);
 
@@ -131,15 +136,30 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
   protected IRouter setupRouting() {
     // lets create the routing needed
     BinaryTreeRouter tree = new BinaryTreeRouter();
-    tree.init(config, thisTask, instancePlan, sources, destinations, stream,
-        MPIContext.distinctRoutes(config, sources.size()));
+    // we will only have one distinct route
+    tree.init(config, thisTask, instancePlan, sources, destinations, stream, 1);
     return tree;
   }
 
   @Override
-  protected void routeMessage(MessageHeader message, List<Integer> routes) {
+  protected void routeReceveidMessage(MessageHeader message, List<Integer> routes) {
     // check the origin
     int source = message.getSourceId();
+    // get the expected routes
+    Routing routing = expectedRoutes.get(source);
+
+    if (routing == null) {
+      throw new RuntimeException("Un-expected message from source: " + source);
+    }
+
+    routes.addAll(routing.getDownstreamIds());
+  }
+
+  @Override
+  protected void routeSendMessage(MessageHeader message, List<Integer> routes) {
+    // check the origin
+    int source = message.getSourceId();
+    // get the expected routes
     Routing routing = expectedRoutes.get(source);
 
     if (routing == null) {

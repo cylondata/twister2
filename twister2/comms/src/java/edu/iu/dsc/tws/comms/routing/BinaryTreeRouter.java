@@ -76,7 +76,7 @@ public class BinaryTreeRouter implements IRouter {
     ArrayList<Integer> sourceList = new ArrayList<>(sources);
     Collections.sort(sourceList);
 
-    // we can only have routes equal to sources
+    // we can only have max routes equal to sources
     int routs = Math.min(Math.min(distinctRoutes, sourceList.size()), destinations.size());
 
     for (int i = 0; i < sourceList.size(); i++) {

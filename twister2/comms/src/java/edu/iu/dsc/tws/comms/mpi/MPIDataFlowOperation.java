@@ -38,12 +38,14 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
   protected Set<Integer> sources;
   protected Set<Integer> destinations;
   protected int stream;
+  // the router that gives us the possible routes
   protected IRouter router;
   protected TWSMPIChannel channel;
   protected MessageReceiver receiver;
   protected MessageDeSerializer messageDeSerializer;
   protected MessageSerializer messageSerializer;
   protected int thisTask;
+  // we may have multiple routes throughus
   protected Map<Integer, Routing> expectedRoutes;
   protected MessageReceiver partialReceiver;
 
@@ -110,7 +112,9 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
 
   protected abstract IRouter setupRouting();
 
-  protected abstract void routeMessage(MessageHeader message, List<Integer> routes);
+  protected abstract void routeReceveidMessage(MessageHeader message, List<Integer> routes);
+  protected abstract void routeSendMessage(MessageHeader message, List<Integer> routes);
+
   /**
    * Setup the receives and send sendBuffers
    */
@@ -130,6 +134,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
       for (int i = 0; i < maxReceiveBuffers; i++) {
         recvList.add(new MPIBuffer(receiveBufferSize));
       }
+      // register with the channel
       channel.receiveMessage(recv, stream, this, recvList);
       receiveBuffers.put(recv, recvList);
     }

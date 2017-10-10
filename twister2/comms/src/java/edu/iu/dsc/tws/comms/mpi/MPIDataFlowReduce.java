@@ -25,7 +25,9 @@ import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageSerializer;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.routing.BinaryTreeRouter;
 import edu.iu.dsc.tws.comms.routing.IRouter;
+import edu.iu.dsc.tws.comms.routing.Routing;
 
 public class MPIDataFlowReduce extends MPIDataFlowOperation {
   private static final Logger LOG = Logger.getLogger(MPIDataFlowBroadcast.class.getName());
@@ -47,18 +49,34 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
                    MessageReceiver partialRcvr) {
     super.init(cfg, task, plan, srcs, dests, messageStream, rcvr, fmtr, bldr, partialRcvr);
 
+    if (dests.size() > 1) {
+      throw new IllegalArgumentException("Reduce can only have one destination");
+    }
+
     for (Integer source : expectedRoutes.keySet()) {
       currentMessages.put(source, new HashMap<Integer, MPIMessage>());
     }
   }
 
   public IRouter setupRouting() {
-    return null;
+    // lets create the routing needed
+    BinaryTreeRouter tree = new BinaryTreeRouter();
+    // we only have one destination and sources becomes destinations for creating tree
+    // because this is an inverted tree
+    tree.init(config, thisTask, instancePlan, destinations, sources, stream, 1);
+    return tree;
   }
 
   @Override
   protected void routeMessage(MessageHeader message, List<Integer> routes) {
+    // look at the message and decide the routes
+    int sourceId = message.getSourceId();
+    int lastNodeVisited = message.getLastNode();
+    boolean subTaskDest = message.isSubNodeDestination();
+    boolean subTaskOrigin = message.isSubNodeOrigin();
 
+    Routing routing = expectedRoutes.get(sourceId);
+    routes.addAll(routing.getDownstreamIds());
   }
 
   @Override
@@ -106,6 +124,22 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
 
   @Override
   public void sendCompleteMessage(Message message) {
+    // this need to use the available buffers
+    // we need to advertise the available buffers to the upper layers
+    Object msgObj = messageSerializer.build(message);
 
+    if (!(msgObj instanceof MPIMessage)) {
+      throw new IllegalArgumentException("Expecting a message of MPIMessage type");
+    }
+
+    MPIMessage mpiMessage = (MPIMessage) msgObj;
+    List<Integer> routes = new ArrayList<>();
+    routeMessage(mpiMessage.getHeader(), routes);
+
+    if (routes.size() > 1) {
+      throw new RuntimeException("We only expect to send to one more task");
+    }
+    // now send the message
+    sendMessage(mpiMessage, routes);
   }
 }

@@ -48,7 +48,7 @@ public final class MessageHeader {
   /**
    * Weather this is destined to a sub node
    */
-  private boolean subNodeDestingation;
+  private boolean subNodeDestination;
 
   /**
    * Set of properties
@@ -95,6 +95,14 @@ public final class MessageHeader {
     return length;
   }
 
+  public boolean isSubNodeOrigin() {
+    return subNodeOrigin;
+  }
+
+  public boolean isSubNodeDestination() {
+    return subNodeDestination;
+  }
+
   public static Builder newBuilder(int srcId, int dstId, int e, int l, int lNode) {
     return new Builder(srcId, dstId, e, l, lNode);
   }
@@ -108,7 +116,7 @@ public final class MessageHeader {
 
     public Builder reInit(int sourceId, int destId, int edge, int length, int lastNode) {
       header.set(sourceId, destId, edge, length, lastNode);
-      header.subNodeDestingation = false;
+      header.subNodeDestination = false;
       header.subNodeOrigin = false;
       header.properties.clear();
       return this;
@@ -125,7 +133,7 @@ public final class MessageHeader {
     }
 
     public Builder subNodeDestination(boolean destination) {
-      header.subNodeDestingation = destination;
+      header.subNodeDestination = destination;
       return this;
     }
 

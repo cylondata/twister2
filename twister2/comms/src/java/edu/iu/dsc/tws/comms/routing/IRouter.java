@@ -38,12 +38,4 @@ public interface IRouter {
    * @return a map of source to -> routing
    */
   Map<Integer, Routing> expectedRoutes();
-
-  /**
-   * Get the message routes in the routes
-   *
-   * @param message header of the message
-   * @param routes updates this route list
-   */
-//  void routeMessage(MessageHeader message, List<Integer> routes);
 }
