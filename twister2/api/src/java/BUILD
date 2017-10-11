@@ -12,7 +12,8 @@ java_library(
         "@com_google_guava_guava//jar",
         "@com_google_protobuf_protobuf_java//jar",
         "//twister2/proto:proto_job_state_java",
-        "//twister2/proto:proto_job_java",]
+        "//twister2/proto:proto_job_java",
+        "//twister2/proto:proto_resource_scheduler_java"]
 )
 
 

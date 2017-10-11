@@ -9,25 +9,23 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.rsched.spi.resource;
+package edu.iu.dsc.tws.examples;
 
-import java.util.HashMap;
-import java.util.Map;
+public class IntData {
+  private int[] data;
 
-/**
- * Represent a resource
- */
-public class ResourceContainer {
-  private int id;
-  // include properties of the resource
-  // this can include things like available ports
-  private Map<String, Object> properties = new HashMap<>();
-
-  public ResourceContainer(int id) {
-    this.id = id;
+  public IntData(int[] data) {
+    this.data = data;
   }
 
-  public int getId() {
-    return id;
+  public IntData() {
+  }
+
+  public int[] getData() {
+    return data;
+  }
+
+  public void setData(int[] data) {
+    this.data = data;
   }
 }

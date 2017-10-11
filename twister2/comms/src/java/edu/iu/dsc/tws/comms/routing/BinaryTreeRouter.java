@@ -24,7 +24,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.mpi.MPIContext;
 
@@ -53,14 +52,14 @@ public class BinaryTreeRouter implements IRouter {
    * @param strm
    */
   public void init(Config cfg, int thisTask, TaskPlan plan,
-                   Set<Integer> srscs, Set<Integer> dests, int strm, int distinctRoutes) {
+                   Set<Integer> srscs, Set<Integer> dests, int strm, int distinctRts) {
     this.config = cfg;
     this.taskPlan = plan;
     this.task = thisTask;
     this.sources = srscs;
     this.destinations = dests;
     this.stream = strm;
-    this.distinctRoutes = distinctRoutes;
+    this.distinctRoutes = distinctRts;
 
     this.interNodeDegree = MPIContext.interNodeDegree(cfg, 2);
     this.intraNodeDegree = MPIContext.intraNodeDegree(cfg, 2);
@@ -77,7 +76,7 @@ public class BinaryTreeRouter implements IRouter {
     ArrayList<Integer> sourceList = new ArrayList<>(sources);
     Collections.sort(sourceList);
 
-    // we can only have routes equal to sources
+    // we can only have max routes equal to sources
     int routs = Math.min(Math.min(distinctRoutes, sourceList.size()), destinations.size());
 
     for (int i = 0; i < sourceList.size(); i++) {

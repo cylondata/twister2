@@ -9,25 +9,29 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.rsched.spi.resource;
+package edu.iu.dsc.tws.comms.mpi.io;
 
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.BlockingQueue;
 
-/**
- * Represent a resource
- */
-public class ResourceContainer {
-  private int id;
-  // include properties of the resource
-  // this can include things like available ports
-  private Map<String, Object> properties = new HashMap<>();
+import edu.iu.dsc.tws.comms.api.Message;
+import edu.iu.dsc.tws.comms.api.MessageReceiver;
 
-  public ResourceContainer(int id) {
-    this.id = id;
+public class DefaultMessageReceiver implements MessageReceiver {
+  private BlockingQueue<Message> messages;
+
+  public DefaultMessageReceiver(BlockingQueue<Message> messages) {
+    this.messages = messages;
   }
 
-  public int getId() {
-    return id;
+  @Override
+  public void init(Map<Integer, List<Integer>> expectedIds) {
+
+  }
+
+  @Override
+  public void onMessage(Object object) {
+    messages.offer((Message) object);
   }
 }

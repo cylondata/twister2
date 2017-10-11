@@ -15,7 +15,7 @@ package edu.iu.dsc.tws.comms.api;
 import java.util.HashMap;
 import java.util.Map;
 
-public class MessageHeader {
+public final class MessageHeader {
   public static final int HEADER_SIZE = 20;
   /**
    * The source task id
@@ -41,24 +41,34 @@ public class MessageHeader {
   private int length;
 
   /**
+   * Weather this originated from a sub node
+   */
+  private boolean subNodeOrigin;
+
+  /**
+   * Weather this is destined to a sub node
+   */
+  private boolean subNodeDestination;
+
+  /**
    * Set of properties
    */
   private Map<String, Object> properties = new HashMap<>();
 
-  private MessageHeader(int sourceId, int destId, int edge, int length, int lastNode) {
-    this.sourceId = sourceId;
-    this.destId = destId;
-    this.edge = edge;
-    this.length = length;
-    this.lastNode = lastNode;
+  private MessageHeader(int srcId, int dstId, int e, int l, int lNode) {
+    this.sourceId = srcId;
+    this.destId = dstId;
+    this.edge = e;
+    this.length = l;
+    this.lastNode = lNode;
   }
 
-  private void set(int sourceId, int destId, int edge, int length, int lastNode) {
-    this.sourceId = sourceId;
-    this.destId = destId;
-    this.edge = edge;
-    this.length = length;
-    this.lastNode = lastNode;
+  private void set(int srcId, int dstId, int e, int l, int lNode) {
+    this.sourceId = srcId;
+    this.destId = dstId;
+    this.edge = e;
+    this.length = l;
+    this.lastNode = lNode;
   }
 
   public Object getProperty(String property) {
@@ -85,11 +95,19 @@ public class MessageHeader {
     return length;
   }
 
-  public static Builder newBuilder(int sourceId, int destId, int edge, int length, int lastNode) {
-    return new Builder(sourceId, destId, edge, length, lastNode);
+  public boolean isSubNodeOrigin() {
+    return subNodeOrigin;
   }
 
-  public static class Builder {
+  public boolean isSubNodeDestination() {
+    return subNodeDestination;
+  }
+
+  public static Builder newBuilder(int srcId, int dstId, int e, int l, int lNode) {
+    return new Builder(srcId, dstId, e, l, lNode);
+  }
+
+  public static final class Builder {
     private MessageHeader header;
 
     private Builder(int sourceId, int destId, int edge, int length, int lastNode) {
@@ -98,12 +116,24 @@ public class MessageHeader {
 
     public Builder reInit(int sourceId, int destId, int edge, int length, int lastNode) {
       header.set(sourceId, destId, edge, length, lastNode);
+      header.subNodeDestination = false;
+      header.subNodeOrigin = false;
       header.properties.clear();
       return this;
     }
 
     public Builder lastNode(int last) {
       header.lastNode = last;
+      return this;
+    }
+
+    public Builder subNodeOrigin(boolean origin) {
+      header.subNodeOrigin = origin;
+      return this;
+    }
+
+    public Builder subNodeDestination(boolean destination) {
+      header.subNodeDestination = destination;
       return this;
     }
 

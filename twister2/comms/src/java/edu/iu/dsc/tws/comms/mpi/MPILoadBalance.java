@@ -29,7 +29,7 @@ public class MPILoadBalance extends MPIDataFlowOperation {
 
   private Random random;
 
-  private Map<Integer, MPIMessage> currentMessages = new HashMap<>();
+  protected Map<Integer, MPIMessage> currentMessages = new HashMap<>();
 
   public MPILoadBalance(TWSMPIChannel channel) {
     super(channel);
@@ -37,7 +37,7 @@ public class MPILoadBalance extends MPIDataFlowOperation {
   }
 
   @Override
-  public void sendPartial(Message message) {
+  public void sendPartialMessage(Message message) {
     throw new UnsupportedOperationException("partial messages not supported by load balance");
   }
 
@@ -55,12 +55,25 @@ public class MPILoadBalance extends MPIDataFlowOperation {
     return router;
   }
 
+  @Override
+  protected void routeReceivedMessage(MessageHeader message, List<Integer> routes) {
+    throw new RuntimeException("Load-balance doesn't rout received messages");
+  }
+
+  @Override
+  protected void routeSendMessage(MessageHeader message, List<Integer> routes) {
+    Routing routing = expectedRoutes.get(thisTask);
+
+    int next = random.nextInt(routing.getDownstreamIds().size());
+    routes.add(routing.getDownstreamIds().get(next));
+  }
+
   /**
    * Sends a complete message
    * @param message the message object
    */
   @Override
-  public void sendComplete(Message message) {
+  public void sendCompleteMessage(Message message) {
     // this need to use the available buffers
     // we need to advertise the available buffers to the upper layers
     Object msgObj = messageSerializer.build(message);
@@ -77,14 +90,13 @@ public class MPILoadBalance extends MPIDataFlowOperation {
     }
 
     List<Integer> routes = new ArrayList<>();
-    routeMessage(header, routes);
+    routeSendMessage(header, routes);
     if (routes.size() == 0) {
       throw new RuntimeException("Failed to get downstream tasks");
     }
 
     sendMessage(mpiMessage, routes);
   }
-
 
   @Override
   public void onReceiveComplete(int id, int messageStream, MPIBuffer buffer) {
@@ -93,6 +105,7 @@ public class MPILoadBalance extends MPIDataFlowOperation {
     if (!sources.contains(originatingNode)) {
       throw new RuntimeException("The message should always come directly from a source");
     }
+
     // we need to try to build the message here, we may need many more messages to complete
     MPIMessage currentMessage = currentMessages.get(originatingNode);
 
@@ -106,12 +119,6 @@ public class MPILoadBalance extends MPIDataFlowOperation {
     }
 
     if (currentMessage.isComplete()) {
-      List<Integer> routes = new ArrayList<>();
-      // we will get the routing based on the originating id
-      routeMessage(currentMessage.getHeader(), routes);
-      // try to send further
-      sendMessage(currentMessage, routes);
-
       // we received a message, we need to determine weather we need to forward to another node
       // and process
       if (messageDeSerializer != null) {
@@ -121,13 +128,5 @@ public class MPILoadBalance extends MPIDataFlowOperation {
 
       currentMessages.remove(originatingNode);
     }
-  }
-
-  @Override
-  protected void routeMessage(MessageHeader message, List<Integer> routes) {
-    Routing routing = expectedRoutes.get(thisTask);
-
-    int next = random.nextInt(routing.getDownstreamIds().size());
-    routes.add(routing.getDownstreamIds().get(next));
   }
 }

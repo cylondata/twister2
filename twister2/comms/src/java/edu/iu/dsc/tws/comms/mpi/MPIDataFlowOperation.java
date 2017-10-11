@@ -22,6 +22,7 @@ import java.util.Set;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.Message;
 import edu.iu.dsc.tws.comms.api.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
@@ -37,13 +38,16 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
   protected Set<Integer> sources;
   protected Set<Integer> destinations;
   protected int stream;
+  // the router that gives us the possible routes
   protected IRouter router;
   protected TWSMPIChannel channel;
   protected MessageReceiver receiver;
   protected MessageDeSerializer messageDeSerializer;
   protected MessageSerializer messageSerializer;
   protected int thisTask;
+  // we may have multiple routes throughus
   protected Map<Integer, Routing> expectedRoutes;
+  protected MessageReceiver partialReceiver;
 
   /**
    * The send sendBuffers used by the operation
@@ -62,7 +66,8 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
   @Override
   public void init(Config cfg, int task, TaskPlan plan, Set<Integer> srcs,
                    Set<Integer> dests, int messageStream, MessageReceiver rcvr,
-                   MessageDeSerializer fmtr, MessageSerializer bldr) {
+                   MessageDeSerializer fmtr, MessageSerializer bldr,
+                   MessageReceiver partialRcvr) {
     this.config = cfg;
     this.instancePlan = plan;
     this.sources = srcs;
@@ -73,6 +78,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
     this.receiver = rcvr;
     this.sendBuffers = new LinkedList<>();
     this.thisTask = task;
+    this.partialReceiver = partialRcvr;
 
 
     int noOfSendBuffers = MPIContext.broadcastBufferCount(config);
@@ -89,9 +95,26 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
     setupCommunication();
   }
 
+  @Override
+  public void injectPartialResult(Message message) {
+    throw new RuntimeException("Not implemented");
+  }
+
+  @Override
+  public void sendPartialMessage(Message message) {
+    throw new RuntimeException("Not implemented");
+  }
+
+  @Override
+  public void finish() {
+    throw new RuntimeException("Not implemented");
+  }
+
   protected abstract IRouter setupRouting();
 
-  protected abstract void routeMessage(MessageHeader message, List<Integer> routes);
+  protected abstract void routeReceivedMessage(MessageHeader message, List<Integer> routes);
+  protected abstract void routeSendMessage(MessageHeader message, List<Integer> routes);
+
   /**
    * Setup the receives and send sendBuffers
    */
@@ -111,6 +134,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
       for (int i = 0; i < maxReceiveBuffers; i++) {
         recvList.add(new MPIBuffer(receiveBufferSize));
       }
+      // register with the channel
       channel.receiveMessage(recv, stream, this, recvList);
       receiveBuffers.put(recv, recvList);
     }
@@ -180,5 +204,13 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
         sourceId, destId, edge, length, lastNode);
     // first build the header
     return headerBuilder.build();
+  }
+
+  protected void receiveOnlyMessage(int id, int messageStream, MPIBuffer buffer ) {
+
+  }
+
+  protected void receivePropergateMessage(int id, int messageStream, MPIBuffer buffer) {
+
   }
 }

@@ -110,7 +110,7 @@ public class MPIMessage {
 
   public boolean build() {
     if (header == null && buffers.size() > 0) {
-
+      return false;
     }
 
     if (header != null) {

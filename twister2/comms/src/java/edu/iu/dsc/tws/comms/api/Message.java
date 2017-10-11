@@ -1,6 +1,6 @@
 package edu.iu.dsc.tws.comms.api;
 
-public class Message {
+public final class Message {
   private MessageHeader header;
 
   private Object payload;
@@ -20,7 +20,7 @@ public class Message {
     return payload;
   }
 
-  public static class Builder {
+  public static final class Builder {
     private Message message;
 
     private Builder() {
@@ -43,7 +43,7 @@ public class Message {
       return this;
     }
 
-    private Message build() {
+    public Message build() {
       return message;
     }
   }

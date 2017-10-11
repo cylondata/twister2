@@ -9,25 +9,13 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.rsched.spi.resource;
+package edu.iu.dsc.tws.comms.mpi.io;
 
-import java.util.HashMap;
-import java.util.Map;
+import edu.iu.dsc.tws.comms.api.MessageDeSerializer;
 
-/**
- * Represent a resource
- */
-public class ResourceContainer {
-  private int id;
-  // include properties of the resource
-  // this can include things like available ports
-  private Map<String, Object> properties = new HashMap<>();
-
-  public ResourceContainer(int id) {
-    this.id = id;
-  }
-
-  public int getId() {
-    return id;
+public class MPIMessageDeSerializer implements MessageDeSerializer {
+  @Override
+  public Object buid(Object message) {
+    return null;
   }
 }

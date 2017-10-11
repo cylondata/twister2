@@ -31,7 +31,8 @@ public interface TWSCommunication {
                                       int stream,
                                       MessageReceiver receiver,
                                       MessageDeSerializer formatter,
-                                      MessageSerializer builder);
+                                      MessageSerializer builder,
+                                      MessageReceiver partialReceiver);
   void progress();
 
 }
