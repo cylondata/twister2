@@ -24,8 +24,6 @@ import mpi.MPI;
 public class MPIDataFlowCommunication extends DataFlowCommunication {
   private static final Logger LOG = Logger.getLogger(MPIDataFlowCommunication.class.getName());
 
-  private Config config;
-
   private TWSMPIChannel channel;
 
   @Override

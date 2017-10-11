@@ -78,6 +78,7 @@ public class BaseReduceCommunication implements IContainer {
     } catch (InterruptedException e) {
       throw new RuntimeException("Failed to wait on threads");
     }
+
   }
 
   /**
@@ -88,6 +89,9 @@ public class BaseReduceCommunication implements IContainer {
     public void run() {
       for (int i = 0; i < 100000; i++) {
         Message message = Message.newBuilder().setPayload(generateData()).build();
+
+
+
         // lets generate a message
         reduce.sendCompleteMessage(message);
       }

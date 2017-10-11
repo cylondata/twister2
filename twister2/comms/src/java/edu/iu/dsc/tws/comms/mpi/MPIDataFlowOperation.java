@@ -12,9 +12,9 @@
 package edu.iu.dsc.tws.comms.mpi;
 
 import java.util.ArrayList;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -52,12 +52,29 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
   /**
    * The send sendBuffers used by the operation
    */
-  protected Queue<MPIBuffer> sendBuffers = new LinkedList<>();
+  protected Queue<MPIBuffer> sendBuffers;
 
   /**
    * Receive availableBuffers, for each receive we need to make
    */
-  protected Map<Integer, List<MPIBuffer>> receiveBuffers = new HashMap<>();
+  protected Map<Integer, List<MPIBuffer>> receiveBuffers;
+
+  /**
+   * Sends a complete message
+   * @param message the message object
+   */
+  @Override
+  public void sendCompleteMessage(Message message) {
+    // this need to use the available buffers
+    // we need to advertise the available buffers to the upper layers
+    Object msgObj = messageSerializer.build(message);
+
+    if (!(msgObj instanceof MPIMessage)) {
+      throw new IllegalArgumentException("Expecting a message of MPIMessage type");
+    }
+    sendCompleteMPIMessage((MPIMessage) msgObj);
+  }
+
 
   public MPIDataFlowOperation(TWSMPIChannel channel) {
     this.channel = channel;
@@ -76,23 +93,28 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
     this.messageDeSerializer = fmtr;
     this.messageSerializer = bldr;
     this.receiver = rcvr;
-    this.sendBuffers = new LinkedList<>();
     this.thisTask = task;
     this.partialReceiver = partialRcvr;
-
 
     int noOfSendBuffers = MPIContext.broadcastBufferCount(config);
     int sendBufferSize = MPIContext.bufferSize(config);
 
+    this.sendBuffers = new ArrayBlockingQueue<MPIBuffer>(noOfSendBuffers);
     for (int i = 0; i < noOfSendBuffers; i++) {
       sendBuffers.offer(new MPIBuffer(sendBufferSize));
     }
+    this.receiveBuffers = new HashMap<>();
 
     router = setupRouting();
     this.expectedRoutes = router.expectedRoutes();
 
     // now setup the sends and receives
     setupCommunication();
+  }
+
+  @Override
+  public void progress() {
+
   }
 
   @Override
@@ -114,6 +136,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
 
   protected abstract void routeReceivedMessage(MessageHeader message, List<Integer> routes);
   protected abstract void routeSendMessage(MessageHeader message, List<Integer> routes);
+  protected abstract void sendCompleteMPIMessage(MPIMessage message);
 
   /**
    * Setup the receives and send sendBuffers
@@ -204,13 +227,5 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
         sourceId, destId, edge, length, lastNode);
     // first build the header
     return headerBuilder.build();
-  }
-
-  protected void receiveOnlyMessage(int id, int messageStream, MPIBuffer buffer ) {
-
-  }
-
-  protected void receivePropergateMessage(int id, int messageStream, MPIBuffer buffer) {
-
   }
 }

@@ -45,11 +45,20 @@ public class BaseLoadBalanceCommunication implements IContainer {
 
   private BlockingQueue<Message> loadReceiveQueue = new ArrayBlockingQueue<Message>(1024);
 
+  private enum Status {
+    INIT,
+    MAP_FINISHED,
+    LOAD_RECEIVE_FINISHED,
+  }
+
+  private Status status;
+
   @Override
   public void init(Config cfg, int containerId, ResourcePlan plan) {
     this.config = cfg;
     this.resourcePlan = plan;
     this.id = containerId;
+    this.status = Status.INIT;
 
     // lets create the task plan
     TaskPlan taskPlan = createTaskPlan(cfg, plan);
@@ -74,6 +83,15 @@ public class BaseLoadBalanceCommunication implements IContainer {
 
     mapThread.start();
 
+    // now lets create the load balance receiving worker
+    Thread loadBalanceWorker = new Thread(new LoadBalanceWorker());
+    loadBalanceWorker.start();
+
+    // we need to progress the communication
+    while (status != Status.LOAD_RECEIVE_FINISHED) {
+      channel.progress();
+    }
+
     try {
       mapThread.join();
     } catch (InterruptedException e) {
@@ -95,6 +113,20 @@ public class BaseLoadBalanceCommunication implements IContainer {
     }
   }
 
+
+  private class LoadBalanceWorker implements Runnable {
+    @Override
+    public void run() {
+      while (true) {
+        try {
+          Message m = loadReceiveQueue.take();
+          System.out.println("Received message");
+        } catch (InterruptedException ignore) {
+        }
+      }
+    }
+  }
+
   /**
    * Generate data with an integer array
    *
@@ -110,7 +142,7 @@ public class BaseLoadBalanceCommunication implements IContainer {
 
   /**
    * Let assume we have 1 task per container
-   * @param resourcePlan the resource plan from scheduler
+   * @param plan the resource plan from scheduler
    * @return task plan
    */
   private TaskPlan createTaskPlan(Config cfg, ResourcePlan plan) {

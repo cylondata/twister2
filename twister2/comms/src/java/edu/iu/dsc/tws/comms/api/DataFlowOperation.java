@@ -49,10 +49,15 @@ public interface DataFlowOperation {
   void finish();
 
   /**
-   * Send a sendCompleteMessage message
+   * Send a sendCompleteMessage message, this call will work asynchronously
    * @param message
    */
   void sendCompleteMessage(Message message);
+
+  /**
+   * Progress the pending dataflow operations
+   */
+  void progress();
 
   /**
    * Clean up the resources
