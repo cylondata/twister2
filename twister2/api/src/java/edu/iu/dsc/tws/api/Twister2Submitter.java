@@ -14,7 +14,6 @@ package edu.iu.dsc.tws.api;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
-import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocatorMain;
 

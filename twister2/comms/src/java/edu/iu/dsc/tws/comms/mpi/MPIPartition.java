@@ -47,9 +47,15 @@ public class MPIPartition extends MPIDataFlowOperation {
   }
 
   @Override
-  protected void routeMessage(MessageHeader message, List<Integer> routes) {
+  protected void routeReceivedMessage(MessageHeader message, List<Integer> routes) {
 
   }
+
+  @Override
+  protected void routeSendMessage(MessageHeader message, List<Integer> routes) {
+
+  }
+
 
   @Override
   public void sendPartialMessage(Message message) {

@@ -43,33 +43,31 @@ public class BaseLoadBalanceCommunication implements IContainer {
 
   private Config config;
 
-  private BlockingQueue<Message> partialReceiveQueue = new ArrayBlockingQueue<Message>(1024);
-
-  private BlockingQueue<Message> reduceReceiveQueue = new ArrayBlockingQueue<Message>(1024);
+  private BlockingQueue<Message> loadReceiveQueue = new ArrayBlockingQueue<Message>(1024);
 
   @Override
-  public void init(Config config, int id, ResourcePlan resourcePlan) {
-    this.config = config;
-    this.resourcePlan = resourcePlan;
-    this.id = id;
+  public void init(Config cfg, int containerId, ResourcePlan plan) {
+    this.config = cfg;
+    this.resourcePlan = plan;
+    this.id = containerId;
 
     // lets create the task plan
-    TaskPlan taskPlan = createTaskPlan(config, resourcePlan);
+    TaskPlan taskPlan = createTaskPlan(cfg, plan);
     //first get the communication config file
-    TWSNetwork network = new TWSNetwork(config, taskPlan);
+    TWSNetwork network = new TWSNetwork(cfg, taskPlan);
 
     TWSCommunication channel = network.getDataFlowTWSCommunication();
 
     Set<Integer> sources = new HashSet<>();
     Set<Integer> dests = new HashSet<>();
-    Map<String, Object> cfg = new HashMap<>();
+    Map<String, Object> newCfg = new HashMap<>();
 
     // this method calls the init method
     // I think this is wrong
     loadBalance = channel.setUpDataFlowOperation(Operation.REDUCE, id, sources,
-        dests, cfg, 0, new DefaultMessageReceiver(reduceReceiveQueue),
+        dests, newCfg, 0, new DefaultMessageReceiver(loadReceiveQueue),
         new MPIMessageDeSerializer(), new MPIMessageSerializer(),
-        new DefaultMessageReceiver(partialReceiveQueue));
+        new DefaultMessageReceiver(loadReceiveQueue));
 
     // the map thread where data is produced
     Thread mapThread = new Thread(new MapWorker());
@@ -104,7 +102,7 @@ public class BaseLoadBalanceCommunication implements IContainer {
    */
   private IntData generateData() {
     int[] d = new int[10];
-    for (int i = 0; i < 10; i ++) {
+    for (int i = 0; i < 10; i++) {
       d[i] = i;
     }
     return new IntData(d);
@@ -115,7 +113,7 @@ public class BaseLoadBalanceCommunication implements IContainer {
    * @param resourcePlan the resource plan from scheduler
    * @return task plan
    */
-  private TaskPlan createTaskPlan(Config config, ResourcePlan resourcePlan) {
+  private TaskPlan createTaskPlan(Config cfg, ResourcePlan plan) {
     int noOfProcs = resourcePlan.noOfContainers();
 
     Map<Integer, Set<Integer>> executorToChannels = null;

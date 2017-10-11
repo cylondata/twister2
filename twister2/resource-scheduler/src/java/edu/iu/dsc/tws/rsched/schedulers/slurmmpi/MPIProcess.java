@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.slurmmpi;
 
+import java.nio.CharBuffer;
 import java.nio.IntBuffer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -199,10 +200,19 @@ public final class MPIProcess {
       processName.getChars(0, processNameChars.length, processNameChars, 0);
 
       IntBuffer countSend = MPI.newIntBuffer(1);
-      IntBuffer countReceive = MPI.newIntBuffer(1);
+      IntBuffer countReceive = MPI.newIntBuffer(MPI.COMM_WORLD.getSize());
+      // now calculate the total number of characters
 
+
+      countSend.put(processNameChars.length);
       // first we need to send the expected number of characters
+      MPI.COMM_WORLD.allGather(countSend, 0, MPI.INT, countReceive, 0, MPI.INT);
       // now we need to send this to all the nodes
+      CharBuffer sendBuffer = MPI.newCharBuffer(processNameChars.length);
+      CharBuffer receiveBuffer = MPI.newCharBuffer(countReceive.get());
+      sendBuffer.append(processName);
+
+//      MPI.COMM_WORLD.allToAll();
     } catch (MPIException e) {
       throw new RuntimeException("Failed to communicate", e);
     }

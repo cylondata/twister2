@@ -4,6 +4,7 @@ common_deps_files = [
     "@org_yaml_snakeyaml//jar",
     "//twister2/resource-scheduler/src/java:resource-scheduler-java",
     "//twister2/comms/src/java:comms-java",
+    "//twister2/common/src/java:common-java",
    ]
 
 java_library(
