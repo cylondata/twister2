@@ -62,7 +62,7 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
     // lets create the routing needed
     BinaryTreeRouter tree = new BinaryTreeRouter();
     // we only have one destination and sources becomes destinations for creating tree
-    // because this is an inverted tree
+    // because this is an inverted tree from sources to destination
     tree.init(config, thisTask, instancePlan, destinations, sources, stream, 1);
     return tree;
   }

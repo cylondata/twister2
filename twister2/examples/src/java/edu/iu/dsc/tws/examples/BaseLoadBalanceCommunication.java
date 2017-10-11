@@ -1,3 +1,14 @@
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 package edu.iu.dsc.tws.examples;
 
 import java.util.HashMap;
@@ -21,13 +32,10 @@ import edu.iu.dsc.tws.comms.mpi.io.MPIMessageSerializer;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
-/**
- * This will be a map-reduce job only using the communication primitives
- */
-public class BaseCommunication implements IContainer {
-  private static final Logger LOG = Logger.getLogger(BaseCommunication.class.getName());
+public class BaseLoadBalanceCommunication implements IContainer {
+  private static final Logger LOG = Logger.getLogger(BaseLoadBalanceCommunication.class.getName());
 
-  private DataFlowOperation reduce;
+  private DataFlowOperation loadBalance;
 
   private ResourcePlan resourcePlan;
 
@@ -58,25 +66,20 @@ public class BaseCommunication implements IContainer {
 
     // this method calls the init method
     // I think this is wrong
-    reduce = channel.setUpDataFlowOperation(Operation.REDUCE, id, sources,
+    loadBalance = channel.setUpDataFlowOperation(Operation.REDUCE, id, sources,
         dests, cfg, 0, new DefaultMessageReceiver(reduceReceiveQueue),
         new MPIMessageDeSerializer(), new MPIMessageSerializer(),
         new DefaultMessageReceiver(partialReceiveQueue));
 
-    // this thread is only run at the reduce
-    Thread reduceThread = new Thread(new ReduceWorker());
-
     // the map thread where data is produced
     Thread mapThread = new Thread(new MapWorker());
 
-    reduceThread.start();
     mapThread.start();
 
     try {
       mapThread.join();
-      reduceThread.join();
     } catch (InterruptedException e) {
-      e.printStackTrace();
+      throw new RuntimeException("Failed to wait on threads");
     }
   }
 
@@ -89,20 +92,7 @@ public class BaseCommunication implements IContainer {
       for (int i = 0; i < 100000; i++) {
         Message message = Message.newBuilder().setPayload(generateData()).build();
         // lets generate a message
-        reduce.sendCompleteMessage(message);
-      }
-    }
-  }
-
-  /**
-   * Reduce class will work on the reduce messages.
-   */
-  private class ReduceWorker implements Runnable {
-    @Override
-    public void run() {
-      while (true) {
-        Message message = partialReceiveQueue.poll();
-
+        loadBalance.sendCompleteMessage(message);
       }
     }
   }

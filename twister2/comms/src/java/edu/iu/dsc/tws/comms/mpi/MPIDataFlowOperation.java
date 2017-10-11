@@ -205,4 +205,12 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
     // first build the header
     return headerBuilder.build();
   }
+
+  protected void receiveOnlyMessage(int id, int messageStream, MPIBuffer buffer ) {
+
+  }
+
+  protected void receivePropergateMessage(int id, int messageStream, MPIBuffer buffer) {
+
+  }
 }
