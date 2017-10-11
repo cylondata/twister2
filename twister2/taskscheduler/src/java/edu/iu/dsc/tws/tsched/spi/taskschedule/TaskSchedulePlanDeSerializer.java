@@ -27,6 +27,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import twister2.proto.system.TaskSchedulingPlans;
+import twister2.proto.system.TaskSchedulingPlans.InstanceTaskPlan;
+import twister2.proto.system.TaskSchedulingPlans.ContainerPlan;
 
 public class TaskSchedulePlanDeSerializer {
 
@@ -50,10 +52,10 @@ public class TaskSchedulePlanDeSerializer {
 
   private TaskSchedulePlan.TaskInstancePlan convert(TaskSchedulingPlans.InstanceTaskPlan instanceTaskPlan){
 
-    return new TaskSchedulePlan.TaskInstancePlan(new TaskInstanceId(instanceTaskPlan.getTaskindex(),
-        instanceTaskPlan.getTaskid(),
-        instanceTaskPlan.getTaskname()),
-        convert(instanceTaskPlan.getResource()));
+    return new TaskSchedulePlan.TaskInstancePlan(new TaskInstanceId(instanceTaskPlan.getTaskname(),
+                                                      instanceTaskPlan.getTaskid(),
+                                                      instanceTaskPlan.getTaskindex()),
+    convert(instanceTaskPlan.getResource()));
   }
 
   private Resource convert(TaskSchedulingPlans.Resource requiredresource) {

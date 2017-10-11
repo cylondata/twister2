@@ -28,18 +28,30 @@ public class TaskInstanceId {
   private final String taskName;
   private final int taskId;
   private final int taskIndex;
+  private final String taskIdx;
 
   public TaskInstanceId(String taskName, int taskId, int taskIndex) {
     this.taskName = taskName;
     this.taskId = taskId;
     this.taskIndex = taskIndex;
+    taskIdx = null;
   }
+
+  public TaskInstanceId(String taskName, int taskId, String taskIndex) {
+    this.taskName = taskName;
+    this.taskId = taskId;
+    this.taskIdx = taskIndex;
+    this.taskIndex = 0;
+  }
+
   public String getTaskName() {
     return taskName;
   }
+
   public int getTaskId() {
     return taskId;
   }
+
   public int getTaskIndex() {
     return taskIndex;
   }
