@@ -25,6 +25,11 @@ def twister2_client_lib_resource_scheduler_files():
         "//twister2/resource-scheduler/src/java:resource-scheduler-java",
     ]
 
+def twister2_client_lib_api_files():
+    return [
+        "//twister2/api/src/java:api-java",
+    ]
+
 def twister2_client_lib_third_party_files():
     return [
         "@com_google_protobuf_protobuf_java//jar",
