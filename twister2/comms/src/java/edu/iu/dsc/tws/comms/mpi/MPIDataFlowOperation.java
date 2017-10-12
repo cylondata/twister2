@@ -30,6 +30,7 @@ import edu.iu.dsc.tws.comms.api.MessageSerializer;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.routing.IRouter;
 import edu.iu.dsc.tws.comms.routing.Routing;
+import javafx.util.Pair;
 
 public abstract class MPIDataFlowOperation implements DataFlowOperation,
     MPIMessageListener, MPIMessageReleaseCallback {
@@ -60,19 +61,31 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
   protected Map<Integer, List<MPIBuffer>> receiveBuffers;
 
   /**
+   * Pending send messages
+   */
+  protected Queue<Pair<Message, MPIMessage>> pendingSendMessages;
+
+  /**
    * Sends a complete message
    * @param message the message object
    */
   @Override
-  public void sendCompleteMessage(Message message) {
+  public boolean sendCompleteMessage(Message message) {
+    MPISendMessage sendMessage = new MPISendMessage(instancePlan.getThisTaskId(),
+        message.getHeader(), MPIMessageType.SEND, this);
+
     // this need to use the available buffers
     // we need to advertise the available buffers to the upper layers
-    Object msgObj = messageSerializer.build(message);
+    messageSerializer.build(message, sendMessage);
 
-    if (!(msgObj instanceof MPIMessage)) {
-      throw new IllegalArgumentException("Expecting a message of MPIMessage type");
+    // okay we could build fully
+    if (sendMessage.isComplete()) {
+      sendCompleteMPIMessage(sendMessage);
+      return true;
+    } else {
+      // now try to put this into pending
+      return pendingSendMessages.offer(new Pair<>(message, sendMessage));
     }
-    sendCompleteMPIMessage((MPIMessage) msgObj);
   }
 
 
@@ -107,6 +120,10 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
 
     router = setupRouting();
     this.expectedRoutes = router.expectedRoutes();
+
+    // later look at how not to allocate pairs for this each time
+    pendingSendMessages = new ArrayBlockingQueue<Pair<Message, MPIMessage>>(
+        MPIContext.sendPendingMax(config, 1024));
 
     // now setup the sends and receives
     setupCommunication();

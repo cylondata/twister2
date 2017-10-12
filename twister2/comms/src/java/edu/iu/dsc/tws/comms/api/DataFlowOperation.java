@@ -52,7 +52,7 @@ public interface DataFlowOperation {
    * Send a sendCompleteMessage message, this call will work asynchronously
    * @param message
    */
-  void sendCompleteMessage(Message message);
+  boolean sendCompleteMessage(Message message);
 
   /**
    * Progress the pending dataflow operations

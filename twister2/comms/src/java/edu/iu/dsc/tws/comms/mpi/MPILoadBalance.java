@@ -85,8 +85,6 @@ public class MPILoadBalance extends MPIDataFlowOperation {
     sendMessage(mpiMessage, routes);
   }
 
-
-
   @Override
   public void onReceiveComplete(int id, int messageStream, MPIBuffer buffer) {
     int originatingNode = buffer.getByteBuffer().getInt();

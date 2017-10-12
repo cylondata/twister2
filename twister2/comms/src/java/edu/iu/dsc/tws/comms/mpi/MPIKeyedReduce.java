@@ -54,4 +54,9 @@ public class MPIKeyedReduce extends MPIDataFlowOperation {
   protected void routeSendMessage(MessageHeader message, List<Integer> routes) {
 
   }
+
+  @Override
+  protected void sendCompleteMPIMessage(MPIMessage message) {
+
+  }
 }

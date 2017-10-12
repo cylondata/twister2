@@ -23,29 +23,29 @@ public class MPIMessage {
    * Keeps the number of references to this message
    * The resources associated with the message is released when refcount becomes 0
    */
-  private int refCount;
+  protected int refCount;
 
   /**
    * Type of the message, weather request or send
    */
-  private MPIMessageType messageType;
+  protected MPIMessageType messageType;
 
-  private MPIMessageReleaseCallback releaseListener;
+  protected MPIMessageReleaseCallback releaseListener;
 
   /**
    * Keep track of the originating id, this is required to release the buffers allocated.
    */
-  private int originatingId;
+  protected int originatingId;
 
   /**
    * The message header
    */
-  private MessageHeader header;
+  protected MessageHeader header;
 
   /**
    * Keep weather the message has been fully built
    */
-  private boolean complete = false;
+  protected boolean complete = false;
 
   public MPIMessage() {
   }

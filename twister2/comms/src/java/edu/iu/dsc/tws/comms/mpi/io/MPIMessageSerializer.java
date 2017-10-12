@@ -11,35 +11,28 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi.io;
 
-import java.io.OutputStream;
+import java.util.Queue;
 
 import edu.iu.dsc.tws.comms.api.Message;
-import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageSerializer;
-import edu.iu.dsc.tws.comms.mpi.MPIMessage;
+import edu.iu.dsc.tws.comms.mpi.MPIBuffer;
 import edu.iu.dsc.tws.comms.mpi.MPIMessageReleaseCallback;
 import edu.iu.dsc.tws.comms.mpi.MPIMessageType;
 
 public class MPIMessageSerializer implements MessageSerializer {
-  private int taskId;
-
-  private MPIMessageType type;
-
-  private MPIMessageReleaseCallback releaseCallback;
+  private Queue<MPIBuffer> sendBuffers;
 
   public MPIMessageSerializer(int taskId, MPIMessageType type,
                               MPIMessageReleaseCallback releaseCallback) {
-    this.taskId = taskId;
-    this.type = type;
-    this.releaseCallback = releaseCallback;
   }
 
   @Override
-  public Object build(OutputStream stream, Message message) {
-    // now create the header
-    MessageHeader header = MessageHeader.newBuilder(taskId, 0, 0, 0, 0).build();
-    MPIMessage mpiMessage = new MPIMessage(taskId, header, type, releaseCallback);
+  public Object build(Message message) {
+    return null;
+  }
 
-    return mpiMessage;
+  @Override
+  public Object build(Message message, Object partialBuildObject) {
+    return null;
   }
 }

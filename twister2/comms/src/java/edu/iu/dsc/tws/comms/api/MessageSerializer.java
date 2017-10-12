@@ -13,8 +13,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.api;
 
-import java.io.OutputStream;
-
 public interface MessageSerializer {
-  Object build(OutputStream stream, Message message);
+  Object build(Message message);
+  Object build(Message message, Object partialBuildObject);
 }

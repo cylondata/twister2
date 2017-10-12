@@ -20,6 +20,9 @@ import mpi.Status;
 
 /**
  * We are going to use a byte based messaging protocol.
+ *
+ * The transport threads doesn't handle the message serialization and it is left to the
+ * application level.
  */
 public class TWSMPIChannel {
   private static final Logger LOG = Logger.getLogger(TWSMPIChannel.class.getName());
@@ -182,7 +185,7 @@ public class TWSMPIChannel {
   }
 
   /**
-   * Progress the communications
+   * Progress the communications that are pending
    */
   public void progress() {
     // we should rate limit here

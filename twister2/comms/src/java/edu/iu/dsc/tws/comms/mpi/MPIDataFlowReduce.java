@@ -86,6 +86,11 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
   }
 
   @Override
+  protected void sendCompleteMPIMessage(MPIMessage message) {
+
+  }
+
+  @Override
   public void onReceiveComplete(int id, int stream, MPIBuffer buffer) {
     int originatingNode = buffer.getByteBuffer().getInt();
     int sourceNode = buffer.getByteBuffer().getInt();
