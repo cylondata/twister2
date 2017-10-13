@@ -129,4 +129,8 @@ public class MPIMessage {
   public boolean isComplete() {
     return complete;
   }
+
+  public void setComplete(boolean complete) {
+    this.complete = complete;
+  }
 }

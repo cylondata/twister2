@@ -12,13 +12,16 @@
 package edu.iu.dsc.tws.comms.mpi;
 
 import java.util.ArrayList;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
+
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
@@ -30,7 +33,6 @@ import edu.iu.dsc.tws.comms.api.MessageSerializer;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.routing.IRouter;
 import edu.iu.dsc.tws.comms.routing.Routing;
-import javafx.util.Pair;
 
 public abstract class MPIDataFlowOperation implements DataFlowOperation,
     MPIMessageListener, MPIMessageReleaseCallback {
@@ -63,7 +65,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
   /**
    * Pending send messages
    */
-  protected Queue<Pair<Message, MPIMessage>> pendingSendMessages;
+  protected Queue<Pair<Message, MPISendMessage>> pendingSendMessages;
 
   /**
    * Sends a complete message
@@ -71,20 +73,23 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
    */
   @Override
   public boolean sendCompleteMessage(Message message) {
-    MPISendMessage sendMessage = new MPISendMessage(instancePlan.getThisTaskId(),
+    MPIMessage mpiMessage = new MPIMessage(instancePlan.getThisTaskId(),
         message.getHeader(), MPIMessageType.SEND, this);
 
+    // create a send message to keep track of the serialization
+    MPISendMessage sendMessage = new MPISendMessage(mpiMessage);
     // this need to use the available buffers
     // we need to advertise the available buffers to the upper layers
     messageSerializer.build(message, sendMessage);
 
     // okay we could build fully
-    if (sendMessage.isComplete()) {
-      sendCompleteMPIMessage(sendMessage);
+    if (sendMessage.serializedState() == MPISendMessage.SerializedState.FINISHED) {
+      sendCompleteMPIMessage(mpiMessage);
       return true;
     } else {
       // now try to put this into pending
-      return pendingSendMessages.offer(new Pair<>(message, sendMessage));
+      return pendingSendMessages.offer(
+          new ImmutablePair<Message, MPISendMessage>(message, sendMessage));
     }
   }
 
@@ -122,7 +127,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
     this.expectedRoutes = router.expectedRoutes();
 
     // later look at how not to allocate pairs for this each time
-    pendingSendMessages = new ArrayBlockingQueue<Pair<Message, MPIMessage>>(
+    pendingSendMessages = new ArrayBlockingQueue<Pair<Message, MPISendMessage>>(
         MPIContext.sendPendingMax(config, 1024));
 
     // now setup the sends and receives
@@ -131,7 +136,20 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
 
   @Override
   public void progress() {
+    while (pendingSendMessages.size() > 0) {
+      // take out pending messages
+      Pair<Message, MPISendMessage> pair = pendingSendMessages.peek();
+      MPISendMessage message = (MPISendMessage)
+          messageSerializer.build(pair.getKey(), pair.getValue());
 
+      // okay we build the message, send it
+      if (message.serializedState() == MPISendMessage.SerializedState.FINISHED) {
+        sendCompleteMPIMessage(message.getMPIMessage());
+        pendingSendMessages.remove();
+      } else {
+        break;
+      }
+    }
   }
 
   @Override

@@ -90,6 +90,9 @@ public class BaseLoadBalanceCommunication implements IContainer {
     // we need to progress the communication
     while (status != Status.LOAD_RECEIVE_FINISHED) {
       channel.progress();
+
+      // we should progress the load balance as well
+      loadBalance.progress();
     }
 
     try {

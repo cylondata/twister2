@@ -14,7 +14,6 @@ package edu.iu.dsc.tws.comms.mpi;
 import java.util.List;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.comms.api.Message;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.routing.BinaryTreeRouter;
 import edu.iu.dsc.tws.comms.routing.IRouter;
@@ -28,11 +27,6 @@ public class MPIKeyedReduce extends MPIDataFlowOperation {
 
   @Override
   public void onReceiveComplete(int id, int stream, MPIBuffer message) {
-
-  }
-
-  @Override
-  public void sendCompleteMessage(Message message) {
 
   }
 

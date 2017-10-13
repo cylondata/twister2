@@ -78,9 +78,8 @@ public class MPIDataFlowAllReduce extends MPIDataFlowOperation {
 
   }
 
-
   @Override
-  public void sendCompleteMessage(Message message) {
+  protected void sendCompleteMPIMessage(MPIMessage message) {
 
   }
 

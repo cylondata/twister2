@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Set;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.Message;
 import edu.iu.dsc.tws.comms.api.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
@@ -56,19 +55,13 @@ public class MPIPartition extends MPIDataFlowOperation {
 
   }
 
-
   @Override
-  public void sendPartialMessage(Message message) {
+  protected void sendCompleteMPIMessage(MPIMessage message) {
 
   }
 
   @Override
   public void finish() {
-
-  }
-
-  @Override
-  public void sendCompleteMessage(Message message) {
 
   }
 

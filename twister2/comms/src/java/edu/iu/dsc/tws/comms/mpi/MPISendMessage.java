@@ -11,28 +11,77 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi;
 
-import edu.iu.dsc.tws.comms.api.MessageHeader;
-
-public class MPISendMessage extends MPIMessage {
+/**
+ * Keep track of a MPI message while it is transisitioning through the send phases
+ */
+public class MPISendMessage {
+  // keep track of the serialized bytes in case we don't
+  // have enough space in the send buffers
   protected byte[] sendBytes;
 
-  private enum SerializedState {
+  //number of bytes copied to the network buffers so far
+  private int byteCopied = 0;
+
+  private int writtenHeaderSize = 0;
+
+  private MPIMessage ref;
+
+  private boolean complete = false;
+
+  public enum SerializedState {
     INIT,
     HEADER_BUILT,
     BODY,
     FINISHED
   }
 
-  public MPISendMessage() {
+  private SerializedState serializedState;
+
+  public MPISendMessage(MPIMessage message) {
+    this.ref = message;
   }
 
-  public MPISendMessage(int originatingId, MessageHeader header,
-                        MPIMessageType type, MPIMessageReleaseCallback releaseListener) {
-    super(originatingId, header, type, releaseListener);
+  public SerializedState serializedState() {
+    return serializedState;
   }
 
-  public MPISendMessage(int originatingId, MessageHeader header, int refCount,
-                        MPIMessageType type, MPIMessageReleaseCallback releaseListener) {
-    super(originatingId, header, refCount, type, releaseListener);
+  public int getByteCopied() {
+    return byteCopied;
+  }
+
+  public void setByteCopied(int byteCopied) {
+    this.byteCopied = byteCopied;
+  }
+
+  public void setSerializedState(SerializedState serializedState) {
+    this.serializedState = serializedState;
+  }
+
+  public int getWrittenHeaderSize() {
+    return writtenHeaderSize;
+  }
+
+  public void setWrittenHeaderSize(int writtenHeaderSize) {
+    this.writtenHeaderSize = writtenHeaderSize;
+  }
+
+  public MPIMessage getMPIMessage() {
+    return ref;
+  }
+
+  public void setSendBytes(byte[] sendBytes) {
+    this.sendBytes = sendBytes;
+  }
+
+  public byte[] getSendBytes() {
+    return sendBytes;
+  }
+
+  public boolean isComplete() {
+    return complete;
+  }
+
+  public void setComplete(boolean complete) {
+    this.complete = complete;
   }
 }

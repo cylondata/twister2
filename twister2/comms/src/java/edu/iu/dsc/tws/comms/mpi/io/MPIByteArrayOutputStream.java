@@ -22,7 +22,7 @@ public class MPIByteArrayOutputStream extends OutputStream {
   /**
    * The buffer where data is stored.
    */
-  protected byte buf[];
+  protected byte[] buf;
 
   /**
    * The number of valid bytes in the buffer.
@@ -45,8 +45,9 @@ public class MPIByteArrayOutputStream extends OutputStream {
 
   private void ensureCapacity(int minCapacity) {
     // overflow-conscious code
-    if (minCapacity - buf.length > 0)
+    if (minCapacity - buf.length > 0) {
       grow(minCapacity);
+    }
   }
 
   private static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
@@ -55,19 +56,20 @@ public class MPIByteArrayOutputStream extends OutputStream {
     // overflow-conscious code
     int oldCapacity = buf.length;
     int newCapacity = oldCapacity << 1;
-    if (newCapacity - minCapacity < 0)
+    if (newCapacity - minCapacity < 0) {
       newCapacity = minCapacity;
-    if (newCapacity - MAX_ARRAY_SIZE > 0)
+    }
+    if (newCapacity - MAX_ARRAY_SIZE > 0) {
       newCapacity = hugeCapacity(minCapacity);
+    }
     buf = Arrays.copyOf(buf, newCapacity);
   }
 
   private static int hugeCapacity(int minCapacity) {
-    if (minCapacity < 0) // overflow
+    if (minCapacity < 0) { // overflow
       throw new OutOfMemoryError();
-    return (minCapacity > MAX_ARRAY_SIZE) ?
-        Integer.MAX_VALUE :
-        MAX_ARRAY_SIZE;
+    }
+    return (minCapacity > MAX_ARRAY_SIZE) ? Integer.MAX_VALUE : MAX_ARRAY_SIZE;
   }
 
   public synchronized void write(int b) {
@@ -76,9 +78,8 @@ public class MPIByteArrayOutputStream extends OutputStream {
     count += 1;
   }
 
-  public synchronized void write(byte b[], int off, int len) {
-    if ((off < 0) || (off > b.length) || (len < 0) ||
-        ((off + len) - b.length > 0)) {
+  public synchronized void write(byte[] b, int off, int len) {
+    if ((off < 0) || (off > b.length) || (len < 0) || ((off + len) - b.length > 0)) {
       throw new IndexOutOfBoundsException();
     }
     ensureCapacity(count + len);
@@ -112,6 +113,12 @@ public class MPIByteArrayOutputStream extends OutputStream {
     return new String(buf, 0, count, charsetName);
   }
 
+  /**
+   * Deprecated method
+   * @deprecated deprecated use
+   * @param hibyte
+   * @return
+   */
   @Deprecated
   public synchronized String toString(int hibyte) {
     return new String(buf, hibyte, 0, count);

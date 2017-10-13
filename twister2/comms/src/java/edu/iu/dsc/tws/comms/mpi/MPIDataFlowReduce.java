@@ -86,8 +86,15 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
   }
 
   @Override
-  protected void sendCompleteMPIMessage(MPIMessage message) {
+  protected void sendCompleteMPIMessage(MPIMessage mpiMessage) {
+    List<Integer> routes = new ArrayList<>();
+    routeSendMessage(mpiMessage.getHeader(), routes);
 
+    if (routes.size() > 1) {
+      throw new RuntimeException("We only expect to send to one more task");
+    }
+    // now send the message
+    sendMessage(mpiMessage, routes);
   }
 
   @Override
@@ -125,26 +132,5 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
   @Override
   public void injectPartialResult(Message message) {
     super.injectPartialResult(message);
-  }
-
-  @Override
-  public void sendCompleteMessage(Message message) {
-    // this need to use the available buffers
-    // we need to advertise the available buffers to the upper layers
-    Object msgObj = messageSerializer.build(message);
-
-    if (!(msgObj instanceof MPIMessage)) {
-      throw new IllegalArgumentException("Expecting a message of MPIMessage type");
-    }
-
-    MPIMessage mpiMessage = (MPIMessage) msgObj;
-    List<Integer> routes = new ArrayList<>();
-    routeSendMessage(mpiMessage.getHeader(), routes);
-
-    if (routes.size() > 1) {
-      throw new RuntimeException("We only expect to send to one more task");
-    }
-    // now send the message
-    sendMessage(mpiMessage, routes);
   }
 }
