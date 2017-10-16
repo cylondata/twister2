@@ -20,7 +20,7 @@ maven_jar(
 
 maven_jar(
   name = "commons_lang_commons_lang",
-  artifact = "commons-lang:commons-lang:2.6",
+  artifact = "org.apache.commons:commons-lang3:3.6",
 )
 
 maven_jar(
@@ -66,4 +66,9 @@ maven_jar(
 maven_jar(
   name = "org_slf4j_slf4j_jdk14",
   artifact = "org.slf4j:slf4j-jdk14:1.7.7"
+)
+
+maven_jar(
+  name = "com_esotericsoftware_kryo",
+  artifact = "com.esotericsoftware:kryo:3.0.3",
 )
