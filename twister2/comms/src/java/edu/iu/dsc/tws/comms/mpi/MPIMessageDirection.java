@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi;
 
-public enum MPIMessageType {
+public enum MPIMessageDirection {
   SEND,
   RECEIVE
 }

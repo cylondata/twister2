@@ -14,5 +14,5 @@
 package edu.iu.dsc.tws.comms.api;
 
 public interface MessageSerializer {
-  Object build(Message message, Object partialBuildObject);
+  Object build(Object message, Object partialBuildObject);
 }

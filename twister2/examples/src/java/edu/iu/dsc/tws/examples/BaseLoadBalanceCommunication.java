@@ -111,7 +111,7 @@ public class BaseLoadBalanceCommunication implements IContainer {
       for (int i = 0; i < 100000; i++) {
         Message message = Message.newBuilder().setPayload(generateData()).build();
         // lets generate a message
-        loadBalance.sendCompleteMessage(message);
+        loadBalance.send(message);
       }
     }
   }

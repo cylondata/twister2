@@ -12,10 +12,15 @@
 package edu.iu.dsc.tws.comms.mpi.io;
 
 import edu.iu.dsc.tws.comms.api.MessageDeSerializer;
+import edu.iu.dsc.tws.comms.api.MessageType;
 
 public class MPIMessageDeSerializer implements MessageDeSerializer {
+  private MessageType expectedType;
+
   @Override
   public Object buid(Object message) {
     return null;
   }
+
+
 }

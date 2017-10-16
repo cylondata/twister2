@@ -19,11 +19,11 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.Message;
 import edu.iu.dsc.tws.comms.api.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageSerializer;
+import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.routing.BinaryTreeRouter;
 import edu.iu.dsc.tws.comms.routing.IRouter;
@@ -42,22 +42,13 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
   }
 
   @Override
-  public void sendPartialMessage(Message message) {
-    throw new UnsupportedOperationException("partial messages not supported by broadcast");
-  }
-
-  @Override
-  public void finish() {
-    throw new UnsupportedOperationException("partial messages not supported by broadcast");
-  }
-
-  @Override
-  public void init(Config cfg, int task, TaskPlan plan,
+  public void init(Config cfg, MessageType messageType, int task, TaskPlan plan,
                    Set<Integer> srcs, Set<Integer> dests,
                    int messageStream, MessageReceiver rcvr,
                    MessageDeSerializer fmtr, MessageSerializer bldr,
                    MessageReceiver partialRcvr) {
-    super.init(cfg, task, plan, srcs, dests, messageStream, rcvr, fmtr, bldr, partialRcvr);
+    super.init(cfg, messageType, task, plan, srcs, dests,
+        messageStream, rcvr, fmtr, bldr, partialRcvr);
 
     // broadcast only supports a single source
     if (sources.size() > 1) {
@@ -83,48 +74,19 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
   public void close() {
   }
 
-  @Override
-  public void onReceiveComplete(int id, int edge, MPIBuffer buffer) {
-    int originatingNode = buffer.getByteBuffer().getInt();
-    int sourceNode = buffer.getByteBuffer().getInt();
-
-    Map<Integer, MPIMessage> messageMap = currentMessages.get(sourceNode);
-
-    // we need to try to build the message here, we may need many more messages to complete
-    MPIMessage currentMessage = messageMap.get(originatingNode);
-
-    if (currentMessage == null) {
-      MessageHeader header = buildHeader(buffer);
-      currentMessage = new MPIMessage(thisTask, header, MPIMessageType.RECEIVE, this);
-      messageMap.put(originatingNode, currentMessage);
-    } else if (!currentMessage.isComplete()) {
-      currentMessage.addBuffer(buffer);
-      currentMessage.build();
-    }
-
-    if (currentMessage.isComplete()) {
-      List<Integer> routes = new ArrayList<>();
-      // we will get the routing based on the originating id
-      routeReceivedMessage(currentMessage.getHeader(), routes);
-      // try to send further
-      sendMessage(currentMessage, routes);
-
-      // we received a message, we need to determine weather we need to
-      // forward to another node and process
-      if (messageDeSerializer != null) {
-        Object object = messageDeSerializer.buid(currentMessage);
-        receiver.onMessage(object);
-      }
-
-      messageMap.remove(originatingNode);
-    }
+  protected void passMessageDownstream(MPIMessage currentMessage) {
+    List<Integer> routes = new ArrayList<>();
+    // we will get the routing based on the originating id
+    routeReceivedMessage(currentMessage.getHeader(), routes);
+    // try to send further
+    sendMessage(currentMessage, routes);
   }
 
   protected IRouter setupRouting() {
     // lets create the routing needed
     BinaryTreeRouter tree = new BinaryTreeRouter();
     // we will only have one distinct route
-    tree.init(config, thisTask, instancePlan, sources, destinations, stream, 1);
+    tree.init(config, thisTask, instancePlan, sources, destinations, edge, 1);
     return tree;
   }
 

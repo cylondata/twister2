@@ -14,7 +14,6 @@ package edu.iu.dsc.tws.comms.mpi.io;
 import java.nio.ByteBuffer;
 import java.util.Queue;
 
-import edu.iu.dsc.tws.comms.api.Message;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageSerializer;
 import edu.iu.dsc.tws.comms.api.MessageType;
@@ -32,7 +31,7 @@ public class MPIMessageSerializer implements MessageSerializer {
   }
 
   @Override
-  public Object build(Message message, Object partialBuildObject) {
+  public Object build(Object message, Object partialBuildObject) {
     MPISendMessage sendMessage = (MPISendMessage) partialBuildObject;
 
     // we got an already serialized message, lets just return it
@@ -47,7 +46,8 @@ public class MPIMessageSerializer implements MessageSerializer {
 
       if (sendMessage.serializedState() == MPISendMessage.SerializedState.INIT) {
         // build the header
-        buildHeader(message.getHeader(), buffer, sendMessage);
+        MessageHeader header = sendMessage.getMPIMessage().getHeader();
+        buildHeader(header, buffer, sendMessage);
         sendMessage.setSerializedState(MPISendMessage.SerializedState.HEADER_BUILT);
       }
 
@@ -93,15 +93,14 @@ public class MPIMessageSerializer implements MessageSerializer {
 
   /**
    * Serialized the message into the buffer
-   * @param originalMessage
+   * @param payload
    * @param sendMessage
    * @param buffer
    * @return true if the message is completely written
    */
-  private void serializeBody(Message originalMessage,
+  private void serializeBody(Object payload,
                              MPISendMessage sendMessage, MPIBuffer buffer) {
-    Object payload = originalMessage.getPayload();
-    MessageType type = originalMessage.getType();
+    MessageType type = sendMessage.getMPIMessage().getType();
 
     switch (type) {
       case INTEGER:
