@@ -25,7 +25,8 @@ public interface DataFlowOperation {
    * @param config the network configuration
    * @param instancePlan instance plan
    */
-  void init(Config config, int thisTask, TaskPlan instancePlan, Set<Integer> sources,
+  void init(Config config, MessageType type, int thisTask,
+            TaskPlan instancePlan, Set<Integer> sources,
             Set<Integer> destinations, int stream, MessageReceiver receiver,
             MessageDeSerializer messageDeSerializer, MessageSerializer messageSerializer,
             MessageReceiver partialReceiver);
@@ -34,14 +35,14 @@ public interface DataFlowOperation {
    * Use this to inject partial results in a distributed dataflow operation
    * @param message message
    */
-  void injectPartialResult(Message message);
+  void injectPartialResult(Object message);
 
   /**
    * Do a partial operation, the receiving side should collect messages until all the messages
    * are received.
    * @param message
    */
-  void sendPartialMessage(Message message);
+  void sendPartial(Object message);
 
   /**
    * Indicate that a partial operation is finished
@@ -49,10 +50,15 @@ public interface DataFlowOperation {
   void finish();
 
   /**
-   * Send a sendCompleteMessage message
+   * Send a send message, this call will work asynchronously
    * @param message
    */
-  void sendCompleteMessage(Message message);
+  boolean send(Object message);
+
+  /**
+   * Progress the pending dataflow operations
+   */
+  void progress();
 
   /**
    * Clean up the resources

@@ -20,6 +20,9 @@ import mpi.Status;
 
 /**
  * We are going to use a byte based messaging protocol.
+ *
+ * The transport threads doesn't handle the message serialization and it is left to the
+ * application level.
  */
 public class TWSMPIChannel {
   private static final Logger LOG = Logger.getLogger(TWSMPIChannel.class.getName());
@@ -42,14 +45,14 @@ public class TWSMPIChannel {
   private class MPIReceiveRequests {
     List<MPIRequest> pendingRequests;
     int rank;
-    int stream;
+    int edge;
     MPIMessageListener callback;
     Queue<MPIBuffer> availableBuffers;
 
-    MPIReceiveRequests(int rank, int stream,
+    MPIReceiveRequests(int rank, int e,
                               MPIMessageListener callback, Queue<MPIBuffer> buffers) {
       this.rank = rank;
-      this.stream = stream;
+      this.edge = e;
       this.callback = callback;
       this.availableBuffers = buffers;
       this.pendingRequests = new ArrayList<>();
@@ -60,14 +63,14 @@ public class TWSMPIChannel {
   private class MPISendRequests {
     List<MPIRequest> pendingSends;
     int rank;
-    int stream;
+    int edge;
     MPIMessage message;
     MPIMessageListener callback;
 
-    MPISendRequests(int rank, int stream,
+    MPISendRequests(int rank, int e,
                            MPIMessage message, MPIMessageListener callback) {
       this.rank = rank;
-      this.stream = stream;
+      this.edge = e;
       this.message = message;
       pendingSends = new ArrayList<>();
       this.callback = callback;
@@ -161,7 +164,7 @@ public class TWSMPIChannel {
     MPIBuffer byteBuffer = requests.availableBuffers.poll();
     if (byteBuffer != null) {
       // post the receive
-      Request request = postReceive(requests.rank, requests.stream, byteBuffer);
+      Request request = postReceive(requests.rank, requests.edge, byteBuffer);
       requests.pendingRequests.add(new MPIRequest(request, byteBuffer));
     }
   }
@@ -182,7 +185,7 @@ public class TWSMPIChannel {
   }
 
   /**
-   * Progress the communications
+   * Progress the communications that are pending
    */
   public void progress() {
     // we should rate limit here
@@ -222,7 +225,7 @@ public class TWSMPIChannel {
       // ideally we should be able to call for each finish of the buffer
       if (sendRequests.pendingSends.size() == 0) {
         sendRequests.callback.onSendComplete(sendRequests.rank,
-            sendRequests.stream, sendRequests.message);
+            sendRequests.edge, sendRequests.message);
       }
     }
 
@@ -236,7 +239,7 @@ public class TWSMPIChannel {
           if (status != null) {
             // lets call the callback about the receive complete
             receiveRequests.callback.onReceiveComplete(
-                receiveRequests.rank, receiveRequests.stream, r.buffer);
+                receiveRequests.rank, receiveRequests.edge, r.buffer);
             requestIterator.remove();
           }
         }

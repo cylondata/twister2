@@ -78,6 +78,7 @@ public class BaseReduceCommunication implements IContainer {
     } catch (InterruptedException e) {
       throw new RuntimeException("Failed to wait on threads");
     }
+
   }
 
   /**
@@ -87,9 +88,18 @@ public class BaseReduceCommunication implements IContainer {
     @Override
     public void run() {
       for (int i = 0; i < 100000; i++) {
-        Message message = Message.newBuilder().setPayload(generateData()).build();
+        IntData data = generateData();
+
+        // do some computation over data
+        for (int j = 0; j < 1000; j++) {
+          for (int k : data.getData()) {
+            k = k * 100;
+          }
+        }
+
         // lets generate a message
-        reduce.sendCompleteMessage(message);
+        Message message = Message.newBuilder().setPayload(data).build();
+        reduce.send(message);
       }
     }
   }

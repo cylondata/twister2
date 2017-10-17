@@ -9,18 +9,9 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.mpi.io;
+package edu.iu.dsc.tws.comms.mpi;
 
-import edu.iu.dsc.tws.comms.api.MessageDeSerializer;
-import edu.iu.dsc.tws.comms.api.MessageType;
-
-public class MPIMessageDeSerializer implements MessageDeSerializer {
-  private MessageType expectedType;
-
-  @Override
-  public Object buid(Object message) {
-    return null;
-  }
-
-
+public enum MPIMessageDirection {
+  SEND,
+  RECEIVE
 }

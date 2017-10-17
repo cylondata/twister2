@@ -9,9 +9,14 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.mpi;
+package edu.iu.dsc.tws.comms.api;
 
-public enum MPIMessageType {
-  SEND,
-  RECEIVE
+public enum  MessageType {
+  INTEGER,
+  CHAR,
+  BYTE,
+  STRING,
+  LONG,
+  DOUBLE,
+  OBJECT
 }

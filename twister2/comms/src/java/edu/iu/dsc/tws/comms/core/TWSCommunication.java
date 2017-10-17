@@ -19,20 +19,21 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageSerializer;
+import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.Operation;
 
 public interface TWSCommunication {
   void init(Config config, TaskPlan taskPlan);
 
-  DataFlowOperation setUpDataFlowOperation(Operation operation, int task,
-                                      Set<Integer> sources,
-                                      Set<Integer> destinations,
-                                      Map<String, Object> configuration,
-                                      int stream,
-                                      MessageReceiver receiver,
-                                      MessageDeSerializer formatter,
-                                      MessageSerializer builder,
-                                      MessageReceiver partialReceiver);
+  DataFlowOperation setUpDataFlowOperation(Operation operation, MessageType type, int task,
+                                           Set<Integer> sources,
+                                           Set<Integer> destinations,
+                                           Map<String, Object> configuration,
+                                           int stream,
+                                           MessageReceiver receiver,
+                                           MessageDeSerializer formatter,
+                                           MessageSerializer builder,
+                                           MessageReceiver partialReceiver);
   void progress();
 
 }

@@ -24,8 +24,6 @@ import mpi.MPI;
 public class MPIDataFlowCommunication extends DataFlowCommunication {
   private static final Logger LOG = Logger.getLogger(MPIDataFlowCommunication.class.getName());
 
-  private Config config;
-
   private TWSMPIChannel channel;
 
   @Override
@@ -46,7 +44,7 @@ public class MPIDataFlowCommunication extends DataFlowCommunication {
     } else if (operation == Operation.LOADBALANCE) {
       return new MPILoadBalance(channel);
     } else if (operation == Operation.PARTITION) {
-      return new MPIPartition(channel);
+      return null;
     }
     return null;
   }

@@ -21,6 +21,7 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageSerializer;
+import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.Operation;
 
 
@@ -37,7 +38,7 @@ public abstract class DataFlowCommunication implements TWSCommunication {
    */
   protected TaskPlan instancePlan;
 
-  public DataFlowOperation setUpDataFlowOperation(Operation operation, int task,
+  public DataFlowOperation setUpDataFlowOperation(Operation operation, MessageType type, int task,
                                                   Set<Integer> sources,
                                                   Set<Integer> destinations,
                                                   Map<String, Object> configuration,
@@ -53,7 +54,7 @@ public abstract class DataFlowCommunication implements TWSCommunication {
     DataFlowOperation dataFlowOperation = create(operation);
 
     // intialize the operation
-    dataFlowOperation.init(mergedCfg, task, instancePlan, sources,
+    dataFlowOperation.init(mergedCfg, type, task, instancePlan, sources,
         destinations, stream, receiver, formatter, builder, partialReceiver);
 
     return dataFlowOperation;

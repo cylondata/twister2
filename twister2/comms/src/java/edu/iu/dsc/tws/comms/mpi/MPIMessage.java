@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.iu.dsc.tws.comms.api.MessageHeader;
+import edu.iu.dsc.tws.comms.api.MessageType;
 
 public class MPIMessage {
   private final List<MPIBuffer> buffers = new ArrayList<MPIBuffer>();
@@ -23,43 +24,46 @@ public class MPIMessage {
    * Keeps the number of references to this message
    * The resources associated with the message is released when refcount becomes 0
    */
-  private int refCount;
+  protected int refCount;
 
   /**
    * Type of the message, weather request or send
    */
-  private MPIMessageType messageType;
+  protected MPIMessageDirection messageDirection;
 
-  private MPIMessageReleaseCallback releaseListener;
+
+  protected MPIMessageReleaseCallback releaseListener;
 
   /**
    * Keep track of the originating id, this is required to release the buffers allocated.
    */
-  private int originatingId;
+  protected int originatingId;
 
   /**
    * The message header
    */
-  private MessageHeader header;
+  protected MessageHeader header;
 
   /**
    * Keep weather the message has been fully built
    */
-  private boolean complete = false;
+  protected boolean complete = false;
+
+  protected MessageType type;
 
   public MPIMessage() {
   }
 
   public MPIMessage(int originatingId, MessageHeader header,
-                    MPIMessageType type, MPIMessageReleaseCallback releaseListener) {
+                    MPIMessageDirection type, MPIMessageReleaseCallback releaseListener) {
     this(originatingId, header, 1, type, releaseListener);
   }
 
   public MPIMessage(int originatingId, MessageHeader header, int refCount,
-                    MPIMessageType type, MPIMessageReleaseCallback releaseListener) {
+                    MPIMessageDirection type, MPIMessageReleaseCallback releaseListener) {
     this.header = header;
     this.refCount = refCount;
-    this.messageType = type;
+    this.messageDirection = type;
     this.releaseListener = releaseListener;
     this.originatingId = originatingId;
     this.complete = true;
@@ -79,8 +83,8 @@ public class MPIMessage {
     return refCount;
   }
 
-  public MPIMessageType getMessageType() {
-    return messageType;
+  public MPIMessageDirection getMessageDirection() {
+    return messageDirection;
   }
 
   public boolean doneProcessing() {
@@ -128,5 +132,13 @@ public class MPIMessage {
 
   public boolean isComplete() {
     return complete;
+  }
+
+  public void setComplete(boolean complete) {
+    this.complete = complete;
+  }
+
+  public MessageType getType() {
+    return type;
   }
 }

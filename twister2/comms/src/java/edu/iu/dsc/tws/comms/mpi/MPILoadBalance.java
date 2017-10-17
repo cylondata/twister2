@@ -18,7 +18,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.comms.api.Message;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.routing.IRouter;
 import edu.iu.dsc.tws.comms.routing.LoadBalanceRouter;
@@ -36,21 +35,10 @@ public class MPILoadBalance extends MPIDataFlowOperation {
     random = new Random(System.nanoTime());
   }
 
-  @Override
-  public void sendPartialMessage(Message message) {
-    throw new UnsupportedOperationException("partial messages not supported by load balance");
-  }
-
-  @Override
-  public void finish() {
-    throw new UnsupportedOperationException("partial messages not supported by load balance");
-  }
-
-
   protected IRouter setupRouting() {
     // lets create the routing needed
     LoadBalanceRouter router = new LoadBalanceRouter();
-    router.init(config, thisTask, instancePlan, sources, destinations, stream,
+    router.init(config, thisTask, instancePlan, sources, destinations, edge,
         MPIContext.distinctRoutes(config, sources.size()));
     return router;
   }
@@ -68,21 +56,8 @@ public class MPILoadBalance extends MPIDataFlowOperation {
     routes.add(routing.getDownstreamIds().get(next));
   }
 
-  /**
-   * Sends a complete message
-   * @param message the message object
-   */
   @Override
-  public void sendCompleteMessage(Message message) {
-    // this need to use the available buffers
-    // we need to advertise the available buffers to the upper layers
-    Object msgObj = messageSerializer.build(message);
-
-    if (!(msgObj instanceof MPIMessage)) {
-      throw new IllegalArgumentException("Expecting a message of MPIMessage type");
-    }
-
-    MPIMessage mpiMessage = (MPIMessage) msgObj;
+  protected void sendCompleteMPIMessage(MPIMessage mpiMessage) {
     MessageHeader header = mpiMessage.getHeader();
 
     if (header.getSourceId() != thisTask) {
@@ -96,37 +71,5 @@ public class MPILoadBalance extends MPIDataFlowOperation {
     }
 
     sendMessage(mpiMessage, routes);
-  }
-
-  @Override
-  public void onReceiveComplete(int id, int messageStream, MPIBuffer buffer) {
-    int originatingNode = buffer.getByteBuffer().getInt();
-
-    if (!sources.contains(originatingNode)) {
-      throw new RuntimeException("The message should always come directly from a source");
-    }
-
-    // we need to try to build the message here, we may need many more messages to complete
-    MPIMessage currentMessage = currentMessages.get(originatingNode);
-
-    if (currentMessage == null) {
-      MessageHeader header = buildHeader(buffer);
-      currentMessage = new MPIMessage(thisTask, header, MPIMessageType.RECEIVE, this);
-      currentMessages.put(originatingNode, currentMessage);
-    } else if (!currentMessage.isComplete()) {
-      currentMessage.addBuffer(buffer);
-      currentMessage.build();
-    }
-
-    if (currentMessage.isComplete()) {
-      // we received a message, we need to determine weather we need to forward to another node
-      // and process
-      if (messageDeSerializer != null) {
-        Object object = messageDeSerializer.buid(currentMessage);
-        receiver.onMessage(object);
-      }
-
-      currentMessages.remove(originatingNode);
-    }
   }
 }
