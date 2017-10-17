@@ -121,6 +121,13 @@ public class MPIMessageSerializer implements MessageSerializer {
     }
   }
 
+  /**
+   * Serializes a java object using kryo serialization
+   *
+   * @param object
+   * @param sendMessage
+   * @param buffer
+   */
   private void serializeObject(Object object, MPISendMessage sendMessage, MPIBuffer buffer) {
     byte[] data;
     int dataPosition;
