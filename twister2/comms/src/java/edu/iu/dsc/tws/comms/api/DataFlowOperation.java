@@ -56,6 +56,21 @@ public interface DataFlowOperation {
   boolean send(Object message);
 
   /**
+   * Send the message on a specific path
+   * @param message
+   * @param path
+   * @return
+   */
+  boolean send(Object message, int path);
+
+  /**
+   * Send partial message on a specific path
+   * @param message
+   * @param path
+   * @return
+   */
+  boolean sendPartial(Object message, int path);
+  /**
    * Progress the pending dataflow operations
    */
   void progress();

@@ -13,6 +13,8 @@ package edu.iu.dsc.tws.rsched.schedulers.slurmmpi;
 
 import java.nio.CharBuffer;
 import java.nio.IntBuffer;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -197,22 +199,45 @@ public final class MPIProcess {
     try {
       String processName = MPI.getProcessorName();
       char[] processNameChars = new char[processName.length()];
-      processName.getChars(0, processNameChars.length, processNameChars, 0);
+      int length = processNameChars.length;
+      processName.getChars(0, length, processNameChars, 0);
 
       IntBuffer countSend = MPI.newIntBuffer(1);
-      IntBuffer countReceive = MPI.newIntBuffer(MPI.COMM_WORLD.getSize());
+      int worldSize = MPI.COMM_WORLD.getSize();
+      IntBuffer countReceive = MPI.newIntBuffer(worldSize);
       // now calculate the total number of characters
+      countSend.put(length);
+      MPI.COMM_WORLD.allGather(countSend, 1, MPI.INT, countReceive,
+          MPI.COMM_WORLD.getSize(), MPI.INT);
 
-
-      countSend.put(processNameChars.length);
+      int[] receiveSizes = new int[worldSize];
+      int[] displacements = new int[worldSize];
+      int sum = 0;
+      for (int i = 0; i < worldSize; i++) {
+        receiveSizes[i] = countReceive.get(i);
+        displacements[i] = sum;
+        sum += receiveSizes[i];
+      }
       // first we need to send the expected number of characters
-      MPI.COMM_WORLD.allGather(countSend, 0, MPI.INT, countReceive, 0, MPI.INT);
+      MPI.COMM_WORLD.allGather(countSend, 1, MPI.INT, countReceive, worldSize, MPI.INT);
+
       // now we need to send this to all the nodes
-      CharBuffer sendBuffer = MPI.newCharBuffer(processNameChars.length);
+      CharBuffer sendBuffer = MPI.newCharBuffer(length);
       CharBuffer receiveBuffer = MPI.newCharBuffer(countReceive.get());
       sendBuffer.append(processName);
 
-//      MPI.COMM_WORLD.allToAll();
+      // now lets receive the process names of each rank
+      MPI.COMM_WORLD.allGatherv(sendBuffer, length, MPI.CHAR, receiveBuffer,
+          receiveSizes, displacements, MPI.CHAR);
+
+      Map<Integer, String> processNames = new HashMap<>();
+
+      for (int i = 0; i < receiveSizes.length; i++) {
+        char[] c = new char[receiveSizes[i]];
+        receiveBuffer.get(c);
+        processNames.put(i, new String(c));
+        LOG.info(String.format("Process %d name: %s", i, processNames.get(i)));
+      }
     } catch (MPIException e) {
       throw new RuntimeException("Failed to communicate", e);
     }

@@ -74,6 +74,11 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
   public void close() {
   }
 
+  @Override
+  public void injectPartialResult(Object message) {
+    throw new RuntimeException("Not supported method");
+  }
+
   protected void passMessageDownstream(MPIMessage currentMessage) {
     List<Integer> routes = new ArrayList<>();
     // we will get the routing based on the originating id

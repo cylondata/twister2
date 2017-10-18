@@ -304,4 +304,14 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
    */
   protected void passMessageDownstream(MPIMessage currentMessage) {
   }
+
+  @Override
+  public boolean send(Object message, int path) {
+    return false;
+  }
+
+  @Override
+  public boolean sendPartial(Object message, int path) {
+    return false;
+  }
 }

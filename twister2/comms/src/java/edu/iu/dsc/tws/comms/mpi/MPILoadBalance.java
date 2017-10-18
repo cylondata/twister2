@@ -49,6 +49,11 @@ public class MPILoadBalance extends MPIDataFlowOperation {
   }
 
   @Override
+  public void injectPartialResult(Object message) {
+    throw new RuntimeException("Not supported method");
+  }
+
+  @Override
   protected void routeSendMessage(MessageHeader message, List<Integer> routes) {
     Routing routing = expectedRoutes.get(thisTask);
 

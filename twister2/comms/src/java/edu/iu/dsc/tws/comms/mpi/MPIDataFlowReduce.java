@@ -86,9 +86,4 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
     // now send the message
     sendMessage(mpiMessage, routes);
   }
-
-  @Override
-  public void injectPartialResult(Object message) {
-
-  }
 }
