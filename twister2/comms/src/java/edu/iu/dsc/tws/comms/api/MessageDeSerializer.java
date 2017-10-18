@@ -11,6 +11,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.api;
 
+import edu.iu.dsc.tws.common.config.Config;
+
 public interface MessageDeSerializer {
-  Object buid(Object message);
+  void init(Config cfg, boolean grouped);
+
+  Object buid(Object message, Object partialObject);
 }

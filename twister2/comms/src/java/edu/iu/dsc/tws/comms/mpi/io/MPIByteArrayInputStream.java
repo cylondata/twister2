@@ -13,68 +13,157 @@ package edu.iu.dsc.tws.comms.mpi.io;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.util.List;
 
 import edu.iu.dsc.tws.comms.mpi.MPIBuffer;
 
+/**
+ * This is a specialized input stream targetted to reading a twister message expanding
+ * to multiple MPI buffers.
+ */
 public class MPIByteArrayInputStream extends InputStream {
-  protected byte buf[];
+  protected List<MPIBuffer> bufs;
 
   protected int pos;
 
   protected int mark = 0;
 
-  protected int count;
+  protected int currentBufferIndex = 0;
 
-  public MPIByteArrayInputStream(MPIBuffer buffer) {
-    this.buf = buf;
+  protected int headerSize;
+
+  protected boolean grouped;
+
+  public MPIByteArrayInputStream(List<MPIBuffer> buffers, int headerSize, boolean group) {
+    this.bufs = buffers;
     this.pos = 0;
-    this.count = buf.length;
+    this.currentBufferIndex = 0;
+    this.headerSize = headerSize;
+    this.grouped = group;
   }
 
   public synchronized int read() {
-    return (pos < count) ? (buf[pos++] & 0xff) : -1;
-  }
-
-  public synchronized int read(byte b[], int off, int len) {
-    if (b == null) {
-      throw new NullPointerException();
-    } else if (off < 0 || len < 0 || len > b.length - off) {
-      throw new IndexOutOfBoundsException();
-    }
-
-    if (pos >= count) {
+    ByteBuffer byteBuffer = getReadBuffer();
+    // we are at the end
+    if (byteBuffer == null) {
       return -1;
     }
+    // check to see if this buffer has this information
+    if (byteBuffer.remaining() >= 1) {
+      pos += 1;
+      return byteBuffer.get();
+    } else {
+      throw new RuntimeException("Failed to read the next byte");
+    }
+  }
 
-    int avail = count - pos;
-    if (len > avail) {
-      len = avail;
+  public synchronized int read(byte[] b, int off, int len) {
+    ByteBuffer byteBuffer = getReadBuffer();
+    // we are at the end
+    if (byteBuffer == null) {
+      return -1;
     }
-    if (len <= 0) {
-      return 0;
+    // check to see if this buffer has this information
+    if (byteBuffer.remaining() >= 1) {
+      // we can copy upto len or remaining
+      int copiedLength = byteBuffer.remaining() > len ? len : byteBuffer.remaining();
+      byteBuffer.get(b, off, copiedLength);
+      // increment position
+      pos += copiedLength;
+      return copiedLength;
+    } else {
+      throw new RuntimeException("Failed to read the next byte");
     }
-    System.arraycopy(buf, pos, b, off, len);
-    pos += len;
-    return len;
+  }
+
+  private ByteBuffer getReadBuffer() {
+    ByteBuffer byteBuffer = bufs.get(currentBufferIndex).getByteBuffer();
+    // this is the intial time we are reading
+    if (currentBufferIndex == 0 && pos == 0 && byteBuffer.remaining() > headerSize) {
+      // lets rewind the buffer so the position becomes 0
+      byteBuffer.rewind();
+      // now skip the header size
+      byteBuffer.position(headerSize);
+    } else {
+      // we don't have enough data in the buffer to read the header
+      throw new RuntimeException("The buffer doesn't contain data or complete header");
+    }
+
+    // now check if we need to go to the next buffer
+    if (pos >= byteBuffer.limit() - 1) {
+      // if we are at the end we need to move to next
+      currentBufferIndex++;
+      pos = 0;
+      byteBuffer = bufs.get(currentBufferIndex).getByteBuffer();
+      byteBuffer.rewind();
+      //we are at the end so return -1
+      if (currentBufferIndex >= bufs.size()) {
+        return null;
+      }
+    }
+    return byteBuffer;
   }
 
   public synchronized long skip(long n) {
-    long k = count - pos;
-    if (n < k) {
-      k = n < 0 ? 0 : n;
+    if (n < 0) {
+      return 0;
     }
 
-    pos += k;
-    return k;
+    int skipped = 0;
+    for (int i = currentBufferIndex; i < bufs.size(); i++) {
+      ByteBuffer b = bufs.get(i).getByteBuffer();
+      int avail = 0;
+      long needSkip = n - skipped;
+      int bufPos = b.position();
+
+      // we need to skip header
+      if (i == 0) {
+        if (bufPos < headerSize) {
+          // lets go to the header
+          b.position(headerSize);
+          bufPos = headerSize;
+        }
+      }
+
+      avail = b.remaining() - bufPos;
+      // now check how much we need to move here
+      if (needSkip >= avail) {
+        // we go to the end
+        b.position(bufPos + avail);
+        currentBufferIndex++;
+        pos = 0;
+        skipped += avail;
+      } else {
+        b.position((int) (bufPos + needSkip));
+        skipped += needSkip;
+        pos = (int) (bufPos + needSkip);
+      }
+    }
+    return skipped;
   }
 
   public synchronized int available() {
-    return count - pos;
+    int avail = 0;
+    for (int i = currentBufferIndex; i < bufs.size(); i++) {
+      ByteBuffer b = bufs.get(i).getByteBuffer();
+      if (i == 0) {
+        int position = b.position();
+        if (position > headerSize) {
+          avail += b.remaining() - position;
+        } else {
+          avail += b.remaining() - headerSize;
+        }
+      } else {
+        avail += b.remaining();
+      }
+    }
+    return avail;
   }
 
 
   public boolean markSupported() {
-    return true;
+    return false;
   }
 
 

@@ -30,8 +30,6 @@ import edu.iu.dsc.tws.comms.routing.Routing;
 public class MPIDataFlowReduce extends MPIDataFlowOperation {
   private static final Logger LOG = Logger.getLogger(MPIDataFlowBroadcast.class.getName());
 
-
-
   public MPIDataFlowReduce(TWSMPIChannel channel) {
     super(channel);
   }
@@ -87,5 +85,10 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
     }
     // now send the message
     sendMessage(mpiMessage, routes);
+  }
+
+  @Override
+  public void injectPartialResult(Object message) {
+
   }
 }

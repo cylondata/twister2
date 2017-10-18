@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.comms.mpi.io;
 import java.nio.ByteBuffer;
 import java.util.Queue;
 
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageSerializer;
 import edu.iu.dsc.tws.comms.api.MessageType;
@@ -24,10 +25,18 @@ import edu.iu.dsc.tws.comms.mpi.MPISendMessage;
 public class MPIMessageSerializer implements MessageSerializer {
   private Queue<MPIBuffer> sendBuffers;
   private KryoSerializer serializer;
+  private Config config;
+  private boolean grouped;
 
   public MPIMessageSerializer(Queue<MPIBuffer> buffers, KryoSerializer kryoSerializer) {
     this.sendBuffers = buffers;
     this.serializer = kryoSerializer;
+  }
+
+  @Override
+  public void init(Config cfg, boolean grped) {
+    this.config = cfg;
+    this.grouped = grped;
   }
 
   @Override

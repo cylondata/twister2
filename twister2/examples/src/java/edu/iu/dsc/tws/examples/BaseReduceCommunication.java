@@ -11,11 +11,13 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.Message;
+import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.Operation;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.mpi.io.DefaultMessageReceiver;
+import edu.iu.dsc.tws.comms.mpi.io.KryoSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.MPIMessageDeSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.MPIMessageSerializer;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
@@ -58,9 +60,11 @@ public class BaseReduceCommunication implements IContainer {
 
     // this method calls the init method
     // I think this is wrong
-    reduce = channel.setUpDataFlowOperation(Operation.REDUCE, containerId, sources,
+    reduce = channel.setUpDataFlowOperation(Operation.REDUCE, MessageType.INTEGER,
+        containerId, sources,
         dests, newCfg, 0, new DefaultMessageReceiver(reduceReceiveQueue),
-        new MPIMessageDeSerializer(), new MPIMessageSerializer(),
+        new MPIMessageDeSerializer(new KryoSerializer()),
+        new MPIMessageSerializer(null, new KryoSerializer()),
         new DefaultMessageReceiver(partialReceiveQueue));
 
     // this thread is only run at the reduce

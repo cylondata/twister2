@@ -11,13 +11,14 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi.io;
 
+import java.io.InputStream;
 import java.util.Map;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 
-public class KryoSerializer  {
+public class KryoSerializer {
   private Kryo kryo;
   private Output kryoOut;
   private Input kryoIn;
@@ -41,5 +42,10 @@ public class KryoSerializer  {
   public Object deserialize(byte[] input) {
     kryoIn.setBuffer(input);
     return kryo.readClassAndObject(kryoIn);
+  }
+
+  public Object deserialize(InputStream inputStream) {
+    Input input = new Input(inputStream);
+    return kryo.readClassAndObject(input);
   }
 }

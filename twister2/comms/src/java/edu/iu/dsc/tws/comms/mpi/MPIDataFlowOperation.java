@@ -53,7 +53,6 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
   protected Map<Integer, Routing> expectedRoutes;
   protected MessageReceiver partialReceiver;
   protected MessageType type;
-  protected boolean groupedOperation;
 
   /**
    * The send sendBuffers used by the operation
@@ -71,9 +70,9 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
   protected Queue<Pair<Object, MPISendMessage>> pendingSendMessages;
 
   /**
-   * Keep track of the current message been received
+   * Non grouped current messages
    */
-  private Map<Integer, Map<Integer, MPIMessage>> currentMessages = new HashMap<>();
+  private Map<Integer, MPIMessage> currentMessages = new HashMap<>();
 
   public MPIDataFlowOperation(TWSMPIChannel channel) {
     this.channel = channel;
@@ -115,10 +114,14 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
     // now setup the sends and receives
     setupCommunication();
 
-    //initialize sources
-    for (Integer source : expectedRoutes.keySet()) {
-      currentMessages.put(source, new HashMap<Integer, MPIMessage>());
-    }
+    // initialize the serializers
+    initSerializers();
+  }
+
+  protected void initSerializers() {
+    // initialize the serializers
+    messageSerializer.init(config, false);
+    messageDeSerializer.init(config, false);
   }
 
   @Override
@@ -128,7 +131,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
 
   @Override
   public void injectPartialResult(Object message) {
-    throw new NotImplementedException("Not implemented method");
+    sendMessage(message);
   }
 
   @Override
@@ -147,13 +150,16 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
    */
   @Override
   public boolean send(Object message) {
-    // first we need to create a message header
+    return sendMessage(message);
+  }
 
+  private boolean sendMessage(Object message) {
+    // first we need to create a message header
     // todo: figure out length and destination
     MessageHeader header = MessageHeader.newBuilder(thisTask, 0, edge, 0, thisTask).build();
 
-    MPIMessage mpiMessage = new MPIMessage(instancePlan.getThisTaskId(),
-        header, MPIMessageDirection.SEND, this);
+    MPIMessage mpiMessage = new MPIMessage(instancePlan.getThisTaskId(), type,
+        header, 0, MPIMessageDirection.SEND, this);
 
     // create a send message to keep track of the serialization
     MPISendMessage sendMessage = new MPISendMessage(mpiMessage);
@@ -268,49 +274,26 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
     }
   }
 
-  protected MessageHeader buildHeader(MPIBuffer buffer) {
-    int sourceId = buffer.getByteBuffer().getInt();
-    int destId = buffer.getByteBuffer().getInt();
-    int e = buffer.getByteBuffer().getInt();
-    int length = buffer.getByteBuffer().getInt();
-    int lastNode = buffer.getByteBuffer().getInt();
-
-    MessageHeader.Builder headerBuilder = MessageHeader.newBuilder(
-        sourceId, destId, e, length, lastNode);
-    // first build the header
-    return headerBuilder.build();
-  }
-
   @Override
   public void onReceiveComplete(int id, int stream, MPIBuffer buffer) {
-    int originatingNode = buffer.getByteBuffer().getInt();
-    int sourceNode = buffer.getByteBuffer().getInt();
-
-    Map<Integer, MPIMessage> messageMap = currentMessages.get(sourceNode);
-
     // we need to try to build the message here, we may need many more messages to complete
-    MPIMessage currentMessage = messageMap.get(originatingNode);
-
+    MPIMessage currentMessage = currentMessages.get(id);
     if (currentMessage == null) {
-      MessageHeader header = buildHeader(buffer);
-      currentMessage = new MPIMessage(thisTask, header, MPIMessageDirection.RECEIVE, this);
-      messageMap.put(originatingNode, currentMessage);
-    } else if (!currentMessage.isComplete()) {
-      currentMessage.addBuffer(buffer);
-      currentMessage.build();
+      currentMessage = new MPIMessage(thisTask, type, MPIMessageDirection.RECEIVE, this);
+      currentMessages.put(id, currentMessage);
     }
 
+    Object object = messageDeSerializer.buid(buffer, currentMessage);
+
+    // if the message is complete, send it further down and call the receiver
     if (currentMessage.isComplete()) {
       // we may need to pass this down to others
       passMessageDownstream(currentMessage);
       // we received a message, we need to determine weather we need to
       // forward to another node and process
-      if (messageDeSerializer != null) {
-        Object object = messageDeSerializer.buid(currentMessage);
-        receiver.onMessage(object);
-      }
-
-      currentMessages.remove(originatingNode);
+      receiver.onMessage(object);
+      // okay we built this message, lets remove it from the map
+      currentMessages.remove(id);
     }
   }
 

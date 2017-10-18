@@ -11,11 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi;
 
-import java.util.List;
+public class MPIAllReduce {
 
-/**
- * Keep track of a receiving message
- */
-public class MPIReceiveMessage {
-  private List<MPIMessage> receiveMessages;
 }

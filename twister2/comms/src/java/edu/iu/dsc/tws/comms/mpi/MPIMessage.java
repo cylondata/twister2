@@ -49,18 +49,33 @@ public class MPIMessage {
    */
   protected boolean complete = false;
 
+  /**
+   * Message type
+   */
   protected MessageType type;
+
+  /**
+   * Number of bytes in the header
+   */
+  protected int headerSize;
 
   public MPIMessage() {
   }
 
-  public MPIMessage(int originatingId, MessageHeader header,
-                    MPIMessageDirection type, MPIMessageReleaseCallback releaseListener) {
-    this(originatingId, header, 1, type, releaseListener);
+  public MPIMessage(int originatingId, MessageType messageType,
+                    MPIMessageDirection messageDirection,
+                    MPIMessageReleaseCallback releaseListener) {
+    this.refCount = 0;
+    this.messageDirection = messageDirection;
+    this.releaseListener = releaseListener;
+    this.originatingId = originatingId;
+    this.complete = true;
+    this.type = messageType;
   }
 
-  public MPIMessage(int originatingId, MessageHeader header, int refCount,
+  public MPIMessage(int originatingId, MessageType messageType, MessageHeader header, int refCount,
                     MPIMessageDirection type, MPIMessageReleaseCallback releaseListener) {
+    this.type = messageType;
     this.header = header;
     this.refCount = refCount;
     this.messageDirection = type;
@@ -112,6 +127,10 @@ public class MPIMessage {
     return header;
   }
 
+  public void setHeader(MessageHeader header) {
+    this.header = header;
+  }
+
   public boolean build() {
     if (header == null && buffers.size() > 0) {
       return false;
@@ -140,5 +159,13 @@ public class MPIMessage {
 
   public MessageType getType() {
     return type;
+  }
+
+  public void setHeaderSize(int headerSize) {
+    this.headerSize = headerSize;
+  }
+
+  public int getHeaderSize() {
+    return headerSize;
   }
 }
