@@ -23,11 +23,21 @@ public class ResourceContainer {
   // this can include things like available ports
   private Map<String, Object> properties = new HashMap<>();
 
+  // no of cpus in this container
+  private int noOfCpus;
+
+  // memory available to the container
+  private int memoryMegaBytes;
+
   public ResourceContainer(int id) {
     this.id = id;
   }
 
   public int getId() {
     return id;
+  }
+
+  public void addProperty(String key, Object property) {
+    properties.put(key, property);
   }
 }

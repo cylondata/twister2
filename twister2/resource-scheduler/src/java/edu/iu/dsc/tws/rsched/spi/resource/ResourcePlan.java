@@ -15,6 +15,9 @@ package edu.iu.dsc.tws.rsched.spi.resource;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Holds information about the cluster resources including each container.
+ */
 public class ResourcePlan {
   private String cluster;
 
@@ -30,5 +33,13 @@ public class ResourcePlan {
 
   public int noOfContainers() {
     return containers.size();
+  }
+
+  public void addContainer(ResourceContainer container) {
+    this.containers.add(container);
+  }
+
+  public String getCluster() {
+    return cluster;
   }
 }

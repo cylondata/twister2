@@ -30,6 +30,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
+import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
 import mpi.MPI;
@@ -238,10 +239,23 @@ public final class MPIProcess {
         processNames.put(i, new String(c));
         LOG.info(String.format("Process %d name: %s", i, processNames.get(i)));
       }
+
+      // now lets add the containers
+      addContainers(config, resourcePlan, processNames);
     } catch (MPIException e) {
       throw new RuntimeException("Failed to communicate", e);
     }
 
     return resourcePlan;
+  }
+
+  private static void addContainers(Config cfg, ResourcePlan resourcePlan,
+                                    Map<Integer, String> processes) throws MPIException {
+    int size = MPI.COMM_WORLD.getSize();
+    for (int i = 0; i < size; i++) {
+      ResourceContainer resourceContainer = new ResourceContainer(MPI.COMM_WORLD.getRank());
+      resourceContainer.addProperty("PROCESS_NAME", processes.get(i));
+      resourcePlan.addContainer(resourceContainer);
+    }
   }
 }
