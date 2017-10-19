@@ -180,7 +180,7 @@ public final class MPIProcess {
     }
 
     // lets create the resource plan
-    ResourcePlan resourcePlan = new ResourcePlan(SlurmMPIContext.clusterName(config));
+    ResourcePlan resourcePlan = createResourcePlan(config);
 
     // lets do a barrier here so everyone is synchronized at the start
     try {

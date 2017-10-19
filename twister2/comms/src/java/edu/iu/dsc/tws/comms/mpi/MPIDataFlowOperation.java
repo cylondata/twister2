@@ -158,7 +158,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
     // todo: figure out length and destination
     MessageHeader header = MessageHeader.newBuilder(thisTask, 0, edge, 0, thisTask).build();
 
-    MPIMessage mpiMessage = new MPIMessage(instancePlan.getThisTaskId(), type,
+    MPIMessage mpiMessage = new MPIMessage(thisTask, type,
         header, 0, MPIMessageDirection.SEND, this);
 
     // create a send message to keep track of the serialization

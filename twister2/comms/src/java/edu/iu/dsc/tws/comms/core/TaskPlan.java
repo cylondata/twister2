@@ -46,17 +46,12 @@ public class TaskPlan {
    */
   private int thisExecutor;
 
-  /**
-   * The task id
-   */
-  private int thisTaskId;
 
   public TaskPlan(Map<Integer, Set<Integer>> executorToChannels,
                   Map<Integer, Set<Integer>> groupsToExecutor,
-                  int thisExecutor, int thisTaskId) {
+                  int thisExecutor) {
     this.executorToChannels = executorToChannels;
     this.thisExecutor = thisExecutor;
-    this.thisTaskId = thisTaskId;
     this.groupsToExecutor = groupsToExecutor;
 
     for (Map.Entry<Integer, Set<Integer>> e : executorToChannels.entrySet()) {
@@ -82,10 +77,6 @@ public class TaskPlan {
 
   public int getThisExecutor() {
     return thisExecutor;
-  }
-
-  public int getThisTaskId() {
-    return thisTaskId;
   }
 
   public Set<Integer> getAllExecutorGroups() {

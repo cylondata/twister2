@@ -40,4 +40,8 @@ public class ResourceContainer {
   public void addProperty(String key, Object property) {
     properties.put(key, property);
   }
+
+  public Object getProperty(String key) {
+    return properties.get(key);
+  }
 }

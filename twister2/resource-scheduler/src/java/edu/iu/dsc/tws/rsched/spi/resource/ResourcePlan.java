@@ -19,12 +19,18 @@ import java.util.List;
  * Holds information about the cluster resources including each container.
  */
 public class ResourcePlan {
+  // the cluster name
   private String cluster;
 
+  // id of this task
+  private int thisId;
+
+  // list of resource containers
   private List<ResourceContainer> containers = new ArrayList<>();
 
-  public ResourcePlan(String cluster) {
+  public ResourcePlan(String cluster, int id) {
     this.cluster = cluster;
+    this.thisId = id;
   }
 
   public List<ResourceContainer> getContainers() {
@@ -41,5 +47,9 @@ public class ResourcePlan {
 
   public String getCluster() {
     return cluster;
+  }
+
+  public int getThisId() {
+    return thisId;
   }
 }
