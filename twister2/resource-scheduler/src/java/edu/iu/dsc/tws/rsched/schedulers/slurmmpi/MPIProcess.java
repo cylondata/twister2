@@ -195,9 +195,10 @@ public final class MPIProcess {
   }
 
   private static ResourcePlan createResourcePlan(Config config) {
-    ResourcePlan resourcePlan = new ResourcePlan(SlurmMPIContext.clusterName(config));
-
     try {
+      ResourcePlan resourcePlan = new ResourcePlan(
+          SlurmMPIContext.clusterName(config), MPI.COMM_WORLD.getRank());
+
       String processName = MPI.getProcessorName();
       char[] processNameChars = new char[processName.length()];
       int length = processNameChars.length;
@@ -242,11 +243,11 @@ public final class MPIProcess {
 
       // now lets add the containers
       addContainers(config, resourcePlan, processNames);
+
+      return resourcePlan;
     } catch (MPIException e) {
       throw new RuntimeException("Failed to communicate", e);
     }
-
-    return resourcePlan;
   }
 
   private static void addContainers(Config cfg, ResourcePlan resourcePlan,
