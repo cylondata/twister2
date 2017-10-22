@@ -151,12 +151,11 @@ public final class MPIProcess {
 
   private static Config loadConfigurations(CommandLine cmd, int id) {
     String twister2Home = cmd.getOptionValue("twister2_home");
-    String container = cmd.getOptionValue("c_class");
+    String container = cmd.getOptionValue("container_class");
     String configDir = cmd.getOptionValue("config_dir");
-    String overrideFile = cmd.getOptionValue("override_file");
     String clusterName = cmd.getOptionValue("cluster_name");
 
-    Config config = ConfigLoader.loadConfig(twister2Home, configDir, overrideFile);
+    Config config = ConfigLoader.loadConfig(twister2Home, configDir);
     return Config.newBuilder().putAll(config).
         put(SlurmMPIContext.TWISTER2_HOME.getKey(), twister2Home).
         put(SlurmMPIContext.TWISTER2_JOB_BASIC_CONTAINER_CLASS, container).

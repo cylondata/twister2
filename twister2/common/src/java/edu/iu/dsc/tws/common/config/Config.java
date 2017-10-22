@@ -13,7 +13,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.config;
 
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -25,7 +24,7 @@ import java.util.logging.Logger;
  * should be favored over Strings. Usage of the String API should be refactored out.
  *
  * A newly created Config object holds configs that might include wildcard tokens, like
- * ${TWISTER2_HOME}/bin, ${TWISTER2_LIB}/packing/*. Token substitution can be doneProcessing by
+ * ${TWISTER2_HOME}/bin, ${TWISTER2_LIB}/*. Token substitution can be doneProcessing by
  * converting that config to a local or cluster config by using the {@code Config.toLocalMode} or
  * {@code Config.toClusterMode} methods.
  *
@@ -40,35 +39,34 @@ public class Config {
 
   private final Map<String, Object> cfgMap;
 
+  private final Mode mode;
+  private final Config initialConfig;     // what the user first creates
+  private Config transformedConfig = null;  // what gets generated after transformations
+
   private enum Mode {
-    RAW,    // the initially provided configs without pattern substitution
-    LOCAL,  // the provided configs with pattern substitution for the client env
-    CLUSTER // the provided configs with pattern substitution for the cluster env
+    INITIAL,    // the initially provided configs without pattern substitution
+    TRANSFORMED,  // the provided configs with pattern substitution for the client env
   }
 
   // Used to initialize a raw config. Should be used by consumers of Config via the builder
   protected Config(Builder build) {
-    this.mode = Mode.RAW;
-    this.rawConfig = this;
+    this.mode = Mode.INITIAL;
+    this.initialConfig = this;
     this.cfgMap = new HashMap<>(build.keyValues);
   }
 
   // Used internally to create a Config that is actually a facade over a raw, local and
   // cluster config
-  private Config(Mode mode, Config rawConfig, Config localConfig, Config clusterConfig) {
+  private Config(Mode mode, Config initialConfig, Config newConfig) {
     this.mode = mode;
-    this.rawConfig = rawConfig;
-    this.localConfig = localConfig;
-    this.clusterConfig = clusterConfig;
+    this.initialConfig = initialConfig;
+    this.transformedConfig = newConfig;
     switch (mode) {
-      case RAW:
-        this.cfgMap = rawConfig.cfgMap;
+      case INITIAL:
+        this.cfgMap = initialConfig.cfgMap;
         break;
-      case LOCAL:
-        this.cfgMap = localConfig.cfgMap;
-        break;
-      case CLUSTER:
-        this.cfgMap = clusterConfig.cfgMap;
+      case TRANSFORMED:
+        this.cfgMap = transformedConfig.cfgMap;
         break;
       default:
         throw new IllegalArgumentException("Unrecognized mode passed to constructor: " + mode);
@@ -76,23 +74,21 @@ public class Config {
   }
 
   public static Builder newBuilder() {
-    return newBuilder(false);
+    return newBuilder();
   }
 
-  public static Builder newBuilder(boolean loadDefaults) {
-    return Builder.create(loadDefaults);
+  /**
+   * Transform with default substitutions as in @Context
+   *
+   * @param config the intial configuration
+   * @return a new configuration
+   */
+  public static Config transform(Config config) {
+    return config.lazyCreateConfig(Mode.TRANSFORMED, Context.substitutions);
   }
 
-  public static Config toLocalMode(Config config) {
-    return config.lazyCreateConfig(Mode.LOCAL);
-  }
-
-  public static Config toClusterMode(Config config) {
-    return config.lazyCreateConfig(Mode.CLUSTER);
-  }
-
-  private static Config expand(Config config) {
-    return expand(config, 0);
+  public static Config transform(Config config, Map<String, ConfigEntry> substitutions) {
+    return config.lazyCreateConfig(Mode.TRANSFORMED, substitutions);
   }
 
   /**
@@ -107,13 +103,14 @@ public class Config {
    * If break logic is when another round does not reduce the number of tokens, since it means we
    * couldn't find a valid replacement.
    */
-  private static Config expand(Config config, int previousTokensCount) {
+  private static Config expand(Config config, int previousTokensCount,
+                               Map<String, ConfigEntry> substitutions) {
     Config.Builder cb = Config.newBuilder().putAll(config);
     int tokensCount = 0;
     for (String key : config.getKeySet()) {
       Object value = config.get(key);
       if (value instanceof String) {
-        String expandedValue = TokenSub.substitute(config, (String) value);
+        String expandedValue = TokenSub.substitute(config, (String) value, substitutions);
         if (expandedValue.contains("${")) {
           tokensCount++;
         }
@@ -122,37 +119,26 @@ public class Config {
         cb.put(key, value);
       }
     }
+
+    // go recursive if required
     if (previousTokensCount != tokensCount) {
-      return expand(cb.build(), tokensCount);
+      return expand(cb.build(), tokensCount, substitutions);
     } else {
       return cb.build();
     }
   }
 
-  private final Mode mode;
-  private final Config rawConfig;     // what the user first creates
-  private Config localConfig = null;  // what gets generated during toLocalMode
-  private Config clusterConfig = null; // what gets generated during toClusterMode
-
-  private Config lazyCreateConfig(Mode newMode) {
-    if (newMode == this.mode) {
-      return this;
-    }
-
+  private Config lazyCreateConfig(Mode newMode, Map<String, ConfigEntry> subtitutions) {
     // this is here so that we don't keep cascading deeper into object creation so:
     // localConfig == toLocalMode(toClusterMode(localConfig))
-    Config newRawConfig = this.rawConfig;
-    Config newLocalConfig = this.localConfig;
-    Config newClusterConfig = this.clusterConfig;
+    Config newInitialConfig = this.initialConfig;
+    Config newTransformedConfig = this.transformedConfig;
     switch (this.mode) {
-      case RAW:
-        newRawConfig = this;
+      case INITIAL:
+        newInitialConfig = this;
         break;
-      case LOCAL:
-        newLocalConfig = this;
-        break;
-      case CLUSTER:
-        newClusterConfig = this;
+      case TRANSFORMED:
+        newTransformedConfig = this;
         break;
       default:
         throw new IllegalArgumentException(
@@ -160,21 +146,14 @@ public class Config {
     }
 
     switch (newMode) {
-      case LOCAL:
-        if (this.localConfig == null) {
-          Config tempConfig = Config.expand(Config.newBuilder().putAll(rawConfig.cfgMap).build());
-          this.localConfig = new Config(Mode.LOCAL, newRawConfig, tempConfig, newClusterConfig);
+      case TRANSFORMED:
+        if (this.transformedConfig == null) {
+          Config tempConfig = expand(
+              Config.newBuilder().putAll(initialConfig.cfgMap).build(), 0, subtitutions);
+          this.transformedConfig = new Config(Mode.TRANSFORMED, newInitialConfig, tempConfig);
         }
-        return this.localConfig;
-      case CLUSTER:
-        if (this.clusterConfig == null) {
-          Config.Builder bc = Config.newBuilder()
-              .putAll(rawConfig.cfgMap);
-          Config tempConfig = Config.expand(bc.build());
-          this.clusterConfig = new Config(Mode.CLUSTER, newRawConfig, newLocalConfig, tempConfig);
-        }
-        return this.clusterConfig;
-      case RAW:
+        return this.transformedConfig;
+      case INITIAL:
       default:
         throw new IllegalArgumentException(
             "Unrecognized mode passed to lazyCreateConfig: " + newMode);
@@ -187,12 +166,10 @@ public class Config {
 
   public Object get(String key) {
     switch (mode) {
-      case LOCAL:
-        return localConfig.cfgMap.get(key);
-      case CLUSTER:
-        return clusterConfig.cfgMap.get(key);
-      case RAW:
-        return rawConfig.cfgMap.get(key);
+      case TRANSFORMED:
+        return transformedConfig.cfgMap.get(key);
+      case INITIAL:
+        return initialConfig.cfgMap.get(key);
       default:
         throw new IllegalArgumentException(String.format(
             "Unrecognized mode passed to get for key=%s: %s", key, mode));
@@ -255,12 +232,6 @@ public class Config {
 
   public static class Builder {
     private final Map<String, Object> keyValues = new HashMap<>();
-
-    private static Config.Builder create(boolean loadDefaults) {
-      Config.Builder cb = new Builder();
-
-      return cb;
-    }
 
     public Builder put(String key, Object value) {
       this.keyValues.put(key, value);

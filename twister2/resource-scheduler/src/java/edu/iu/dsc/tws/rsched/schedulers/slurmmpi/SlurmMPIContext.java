@@ -27,9 +27,7 @@ public class SlurmMPIContext extends SchedulerContext {
   public static final String MPI_HOME = "twister2.resource.scheduler.mpi.home";
 
   public static String workingDirectory(Config config) {
-    String workingDirectory = config.getStringValue(WORKING_DIRECTORY,
-        "${HOME}/.twister2data/jobs/${CLUSTER}/${JOB}");
-    return TokenSub.substitute(config, workingDirectory);
+    return config.getStringValue(WORKING_DIRECTORY, "${HOME}/.twister2data/jobs/${CLUSTER}/${JOB}");
   }
 
   public static String jobIdFile(Config config) {
@@ -45,7 +43,6 @@ public class SlurmMPIContext extends SchedulerContext {
   }
 
   public static String mpiExecFile(Config cfg) {
-    String mpiExec = cfg.getStringValue(MPI_HOME, "");
-    return TokenSub.substitute(cfg, mpiExec);
+    return cfg.getStringValue(MPI_HOME, "");
   }
 }

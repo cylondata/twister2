@@ -19,25 +19,28 @@ import java.util.List;
 import edu.iu.dsc.tws.comms.mpi.MPIBuffer;
 
 /**
- * This is a specialized input stream targetted to reading a twister message expanding
+ * This is a specialized input stream targetted to reading a twister object message expanding
  * to multiple MPI buffers.
  */
 public class MPIByteArrayInputStream extends InputStream {
+  // the buffers which contains the message
   protected List<MPIBuffer> bufs;
 
-  protected int pos;
-
+  // the absolute position of the current buffer
+  // protected int pos;
   protected int mark = 0;
 
+  // the current buffer index
   protected int currentBufferIndex = 0;
 
+  // header size read
   protected int headerSize;
 
+  // weather we are in a grouped collective, where we need to think about message path
   protected boolean grouped;
 
   public MPIByteArrayInputStream(List<MPIBuffer> buffers, int headerSize, boolean group) {
     this.bufs = buffers;
-    this.pos = 0;
     this.currentBufferIndex = 0;
     this.headerSize = headerSize;
     this.grouped = group;
@@ -51,7 +54,6 @@ public class MPIByteArrayInputStream extends InputStream {
     }
     // check to see if this buffer has this information
     if (byteBuffer.remaining() >= 1) {
-      pos += 1;
       return byteBuffer.get();
     } else {
       throw new RuntimeException("Failed to read the next byte");
@@ -70,7 +72,6 @@ public class MPIByteArrayInputStream extends InputStream {
       int copiedLength = byteBuffer.remaining() > len ? len : byteBuffer.remaining();
       byteBuffer.get(b, off, copiedLength);
       // increment position
-      pos += copiedLength;
       return copiedLength;
     } else {
       throw new RuntimeException("Failed to read the next byte");
@@ -80,24 +81,30 @@ public class MPIByteArrayInputStream extends InputStream {
   private ByteBuffer getReadBuffer() {
     ByteBuffer byteBuffer = bufs.get(currentBufferIndex).getByteBuffer();
     // this is the intial time we are reading
-    if (currentBufferIndex == 0 && pos == 0 && byteBuffer.remaining() > headerSize) {
+    int pos = byteBuffer.position();
+    // we are at the 0th position, we need to skip header
+    if (currentBufferIndex == 0 && pos == 0) {
+      if (byteBuffer.remaining() < headerSize) {
+        throw new RuntimeException("The buffer doesn't contain data or complete header");
+      }
       // lets rewind the buffer so the position becomes 0
       byteBuffer.rewind();
       // now skip the header size
       byteBuffer.position(headerSize);
-    } else {
-      // we don't have enough data in the buffer to read the header
-      throw new RuntimeException("The buffer doesn't contain data or complete header");
+      pos = headerSize;
     }
 
     // now check if we need to go to the next buffer
     if (pos >= byteBuffer.limit() - 1) {
       // if we are at the end we need to move to next
       currentBufferIndex++;
-      pos = 0;
       byteBuffer = bufs.get(currentBufferIndex).getByteBuffer();
       byteBuffer.rewind();
-      //we are at the end so return -1
+      // if grouped first 4 bytes are for the path
+      if (grouped) {
+        byteBuffer.position(4);
+      }
+      //we are at the end so return null
       if (currentBufferIndex >= bufs.size()) {
         return null;
       }
@@ -113,7 +120,7 @@ public class MPIByteArrayInputStream extends InputStream {
     int skipped = 0;
     for (int i = currentBufferIndex; i < bufs.size(); i++) {
       ByteBuffer b = bufs.get(i).getByteBuffer();
-      int avail = 0;
+      int avail;
       long needSkip = n - skipped;
       int bufPos = b.position();
 
@@ -132,12 +139,14 @@ public class MPIByteArrayInputStream extends InputStream {
         // we go to the end
         b.position(bufPos + avail);
         currentBufferIndex++;
-        pos = 0;
         skipped += avail;
       } else {
         b.position((int) (bufPos + needSkip));
         skipped += needSkip;
-        pos = (int) (bufPos + needSkip);
+      }
+
+      if (skipped >= n) {
+        break;
       }
     }
     return skipped;
@@ -155,24 +164,24 @@ public class MPIByteArrayInputStream extends InputStream {
           avail += b.remaining() - headerSize;
         }
       } else {
-        avail += b.remaining();
+        if (grouped) {
+          avail += b.remaining() - 4;
+        } else {
+          avail += b.remaining();
+        }
       }
     }
     return avail;
   }
 
-
   public boolean markSupported() {
     return false;
   }
 
-
   public void mark(int readAheadLimit) {
-    mark = pos;
   }
 
   public synchronized void reset() {
-    pos = mark;
   }
 
   public void close() throws IOException {

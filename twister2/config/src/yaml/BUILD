@@ -9,3 +9,8 @@ filegroup(
     name = "conf-local-yaml",
     srcs = glob(["conf/local/*.yaml"]),
 )
+
+filegroup(
+    name = "conf-slurmmpi-yaml",
+    srcs = glob(["conf/slurmmpi/*"]),
+)

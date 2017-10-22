@@ -15,7 +15,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Context {
+  // the entries used for configurations
   protected static Map<String, ConfigEntry> substitutions = new HashMap<String, ConfigEntry>();
+  // these are the default configurations
+  protected static Map<String, Object> defaults = new HashMap<>();
 
   // configurations for twister2
   // configurations with a default value should be specified as a ConfigEntry
@@ -33,7 +36,7 @@ public class Context {
       "twister2.directory.java.home", "${JAVA_HOME}", null, "JAVA_HOME");
   public static final ConfigEntry CLIENT_YAML = new ConfigEntry(
       "twister2.config.file.client.yaml", "${TWISTER2_CONF}/client.yaml");
-  public static final ConfigEntry SCHEDULER_YAML = new ConfigEntry(
+  public static final ConfigEntry TASK_YAML = new ConfigEntry(
       "twister2.config.file.packing.yaml",   "${TWISTER2_CONF}/task.yaml");
   public static final ConfigEntry RESOURCE_SCHEDULER_YAML = new ConfigEntry(
       "twister2.config.file.scheduler.yaml", "${TWISTER2_CONF}/resource-scheduler.yaml");
@@ -53,6 +56,8 @@ public class Context {
       "twister2.verbose", "false");
   public static final ConfigEntry JOB = new ConfigEntry(
       "twister2.job", null, "JOB");
+  public static final ConfigEntry CLUSTER = new ConfigEntry(
+      "twister2.cluster", null, "CLUSTER");
 
   // an internal property to represent the container id
   public static final String TWISTER2_CONTAINER_ID = "twister2.container.id";
@@ -63,8 +68,22 @@ public class Context {
     substitutions.put("TWISTER2_CONF", TWISTER2_CONF);
     substitutions.put("TWISTER2_LIB", TWISTER2_LIB);
     substitutions.put("TWISTER2_DIST", TWISTER2_DIST);
+    substitutions.put("TWISTER2_BIN", TWISTER2_BIN);
     substitutions.put("JAVA_HOME", JAVA_HOME);
-    substitutions.put("JOB", JAVA_HOME);
+    substitutions.put("JOB", JOB);
+    substitutions.put("CLUSTER", CLUSTER);
+  }
+
+  static {
+    defaults.put(TWISTER2_BIN.getKey(), TWISTER2_BIN.getDefaultValue());
+    defaults.put(TWISTER2_CONF.getKey(), TWISTER2_CONF.getDefaultValue());
+    defaults.put(TWISTER2_LIB.getKey(), TWISTER2_LIB.getDefaultValue());
+    defaults.put(TWISTER2_DIST.getKey(), TWISTER2_DIST.getDefaultValue());
+    defaults.put(CLIENT_YAML.getKey(), CLIENT_YAML.getDefaultValue());
+    defaults.put(TASK_YAML.getKey(), TASK_YAML.getDefaultValue());
+    defaults.put(RESOURCE_SCHEDULER_YAML.getKey(), RESOURCE_SCHEDULER_YAML.getDefaultValue());
+    defaults.put(NETWORK_YAML.getKey(), NETWORK_YAML.getDefaultValue());
+    defaults.put(SYSTEM_YAML.getKey(), SYSTEM_YAML.getDefaultValue());
   }
 
   protected Context() {
@@ -72,7 +91,7 @@ public class Context {
   }
 
   public static String taskConfigurationFile(Config cfg) {
-    return cfg.getStringValue(SCHEDULER_YAML);
+    return cfg.getStringValue(TASK_YAML);
   }
 
   public static String networkConfigurationFile(Config cfg) {

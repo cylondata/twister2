@@ -1,0 +1,5 @@
+# Running
+
+cp=lib/commons-cli-1.3.1.jar:lib/commons-lang3-3.6.jar:lib/guava-18.0.jar:lib/kryo-3.0.3.jar:lib/libapi-java.jar:lib/libcomms-java.jar:lib/libproto_job_java.jar:lib/libproto_job_state_java.jar:lib/libproto_resource_scheduler_java.jar:lib/libresource-scheduler-java.jar:lib/libtask_scheduler-java.jar:lib/ompijavabinding-1.10.1.jar:lib/protobuf-java-2.5.0.jar:lib/snakeyaml-1.15.jar
+
+mpirun --hostfile conf/slurmmpi/nodes java -cp lib/commons-cli-1.3.1.jar:lib/commons-lang3-3.6.jar:lib/guava-18.0.jar:lib/kryo-3.0.3.jar:lib/libapi-java.jar:lib/libcomms-java.jar:lib/libproto_job_java.jar:lib/libproto_job_state_java.jar:lib/libproto_resource_scheduler_java.jar:lib/libresource-scheduler-java.jar:lib/libtask_scheduler-java.jar:lib/ompijavabinding-1.10.1.jar:lib/protobuf-java-2.5.0.jar:lib/snakeyaml-1.15.jar  edu.iu.dsc.tws.rsched.schedulers.slurmmpi.MPIProcess   

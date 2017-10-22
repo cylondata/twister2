@@ -51,6 +51,11 @@ public final class MessageHeader {
   private boolean subNodeDestination;
 
   /**
+   * Different paths for grouped collectives
+   */
+  private int path;
+
+  /**
    * Set of properties
    */
   private Map<String, Object> properties = new HashMap<>();
@@ -93,6 +98,10 @@ public final class MessageHeader {
 
   public int getLength() {
     return length;
+  }
+
+  public int getPath() {
+    return path;
   }
 
   public boolean isSubNodeOrigin() {
@@ -144,6 +153,11 @@ public final class MessageHeader {
      */
     public Builder addProperty(String property, String value) {
       header.properties.put(property, value);
+      return this;
+    }
+
+    public Builder path(int p) {
+      header.path = p;
       return this;
     }
 

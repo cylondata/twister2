@@ -1,9 +1,7 @@
 package edu.iu.dsc.tws.examples;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -23,7 +21,6 @@ import edu.iu.dsc.tws.comms.mpi.io.KryoSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.MPIMessageDeSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.MPIMessageSerializer;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
-import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
 /**
@@ -51,7 +48,7 @@ public class BaseReduceCommunication implements IContainer {
     this.id = containerId;
 
     // lets create the task plan
-    TaskPlan taskPlan = createTaskPlan(cfg, plan);
+    TaskPlan taskPlan = Utils.createTaskPlan(cfg, plan);
     //first get the communication config file
     TWSNetwork network = new TWSNetwork(cfg, taskPlan);
 
@@ -84,7 +81,6 @@ public class BaseReduceCommunication implements IContainer {
     } catch (InterruptedException e) {
       throw new RuntimeException("Failed to wait on threads");
     }
-
   }
 
   /**
@@ -99,7 +95,7 @@ public class BaseReduceCommunication implements IContainer {
         // do some computation over data
         for (int j = 0; j < 1000; j++) {
           for (int k : data.getData()) {
-            k = k * 100;
+            int p = k * j;
           }
         }
 
@@ -137,54 +133,5 @@ public class BaseReduceCommunication implements IContainer {
     return new IntData(d);
   }
 
-  /**
-   * Let assume we have 1 task per container
-   * @param plan the resource plan from scheduler
-   * @return task plan
-   */
-  private TaskPlan createTaskPlan(Config cfg, ResourcePlan plan) {
-    int noOfProcs = plan.noOfContainers();
 
-    Map<Integer, Set<Integer>> executorToGraphNodes = new HashMap<>();
-    Map<Integer, Set<Integer>> groupsToExeuctors = new HashMap<>();
-    int thisExecutor = plan.getThisId();
-
-    List<ResourceContainer> containers = plan.getContainers();
-    Map<String, List<ResourceContainer>> containersPerNode = new HashMap<>();
-    for (ResourceContainer c : containers) {
-      String name = (String) c.getProperty("PROCESS_NAME");
-      List<ResourceContainer> containerList;
-      if (!containersPerNode.containsKey(name)) {
-        containerList = new ArrayList<>();
-        containersPerNode.put(name, containerList);
-      } else {
-        containerList = containersPerNode.get(name);
-      }
-      containerList.add(c);
-    }
-
-    for (int i = 0; i < noOfProcs; i++) {
-      Set<Integer> nodesOfExecutor = new HashSet<>();
-      if (i == 0) {
-        nodesOfExecutor.add(noOfProcs);
-      }
-      nodesOfExecutor.add(i);
-      executorToGraphNodes.put(i, nodesOfExecutor);
-    }
-
-    int i = 0;
-    // we take each container as an executor
-    for (Map.Entry<String, List<ResourceContainer>> e : containersPerNode.entrySet()) {
-      Set<Integer> executorsOfGroup = new HashSet<>();
-      for (ResourceContainer c : e.getValue()) {
-        executorsOfGroup.add(c.getId());
-      }
-      groupsToExeuctors.put(i, executorsOfGroup);
-      i++;
-    }
-
-    // now lets create the task plan of this, we assume we have map tasks in all the processes
-    // and reduce task in 0th process
-    return new TaskPlan(executorToGraphNodes, groupsToExeuctors, thisExecutor);
-  }
 }

@@ -4,10 +4,13 @@ load("@bazel_tools//tools/build_defs/pkg:pkg.bzl", "pkg_tar", "pkg_deb")
 
 load("/tools/rules/twister2_client", "twister2_client_bin_files")
 load("/tools/rules/twister2_client", "twister2_client_conf_files")
+load("/tools/rules/twister2_client", "twister2_client_slurmmpi_files")
 load("/tools/rules/twister2_client", "twister2_client_lib_third_party_files")
 load("/tools/rules/twister2_client", "twister2_client_lib_task_scheduler_files")
 load("/tools/rules/twister2_client", "twister2_client_lib_resource_scheduler_files")
 load("/tools/rules/twister2_client", "twister2_client_lib_api_files")
+load("/tools/rules/twister2_client", "twister2_client_lib_communication_files")
+load("/tools/rules/twister2_client", "twister2_client_example_files")
 
 load("/tools/rules/twister2_core", "twister2_core_files")
 load("/tools/rules/twister2_core", "twister2_core_conf_files")
@@ -47,19 +50,19 @@ pkg_tar(
 
 pkg_tar(
     name = "twister2-core-lib-resource-scheduler",
-    package_dir = "twister2-core/lib/resource-scheduler",
+    package_dir = "lib/resource-scheduler",
     files = twister2_core_lib_resource_scheduler_files(),
 )
 
 pkg_tar(
     name = "twister2-core-lib-task-scheduler",
-    package_dir = "twister2-core/lib/task-scheduler",
+    package_dir = "lib/task-scheduler",
     files = twister2_core_lib_task_scheduler_files(),
 )
 
 pkg_tar(
     name = "twister2-core-lib-communication",
-    package_dir = "twister2-core/lib/communication",
+    package_dir = "lib/communication",
     files = twister2_core_lib_communication_files(),
 )
 
@@ -69,6 +72,7 @@ pkg_tar(
     name = "twister2-client",
     extension = "tar.gz",
     # files = generated_release_files,
+    package_dir = "twister2-dist",
     deps = [
         ":twister2-client-bin",
         ":twister2-client-conf",
@@ -77,13 +81,15 @@ pkg_tar(
         ":twister2-client-lib-resource-scheduler",
         ":twister2-client-lib-task-scheduler",
         ":twister2-client-lib-api",
+        ":twister2-client-communication",
+        ":twister2-client-examples",
     ],
 )
 
 pkg_tar(
     name = "twister2-client-conf",
-    package_dir = "conf",
-    files = twister2_client_conf_files(),
+    package_dir = "conf/slurmmpi",
+    files = twister2_client_slurmmpi_files(),
 )
 
 pkg_tar(
@@ -94,30 +100,42 @@ pkg_tar(
 
 pkg_tar(
     name = "twister2-client-bin",
-    package_dir = "twister2-client/bin",
+    package_dir = "bin",
     files = twister2_client_bin_files(),
 )
 
 pkg_tar(
     name = "twister2-client-lib-api",
-    package_dir = "twister2-client/lib/api",
+    package_dir = "lib",
     files = twister2_client_lib_api_files(),
 )
 
 pkg_tar(
     name = "twister2-client-lib-resource-scheduler",
-    package_dir = "twister2-client/lib/resource-scheduler",
+    package_dir = "lib",
     files = twister2_client_lib_resource_scheduler_files(),
 )
 
 pkg_tar(
     name = "twister2-client-lib-task-scheduler",
-    package_dir = "twister2-client/lib/task-scheduler",
+    package_dir = "lib",
     files = twister2_client_lib_task_scheduler_files(),
 )
 
 pkg_tar(
     name = "twister2-client-lib-third_party",
-    package_dir = "twister2-client/lib/third_party",
+    package_dir = "lib",
     files = twister2_client_lib_third_party_files(),
+)
+
+pkg_tar(
+    name = "twister2-client-communication",
+    package_dir = "lib",
+    files = twister2_client_lib_communication_files(),
+)
+
+pkg_tar(
+    name = "twister2-client-examples",
+    package_dir = "examples",
+    files = twister2_client_example_files(),
 )

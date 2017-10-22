@@ -23,8 +23,6 @@ import edu.iu.dsc.tws.comms.mpi.MPIMessage;
 public class MPIMessageDeSerializer implements MessageDeSerializer {
   private KryoSerializer serializer;
 
-  private Config config;
-
   private boolean grouped;
 
   public MPIMessageDeSerializer(KryoSerializer kryoSerializer) {
@@ -33,7 +31,6 @@ public class MPIMessageDeSerializer implements MessageDeSerializer {
 
   @Override
   public void init(Config cfg, boolean grped) {
-    this.config = cfg;
     this.grouped = grped;
   }
 

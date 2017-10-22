@@ -18,46 +18,49 @@ import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
 
 public class MPIMessage {
+  /**
+   * List of buffers filled with the message
+   */
   private final List<MPIBuffer> buffers = new ArrayList<MPIBuffer>();
 
   /**
    * Keeps the number of references to this message
    * The resources associated with the message is released when refcount becomes 0
    */
-  protected int refCount;
+  private int refCount;
 
   /**
    * Type of the message, weather request or send
    */
-  protected MPIMessageDirection messageDirection;
+  private MPIMessageDirection messageDirection;
 
 
-  protected MPIMessageReleaseCallback releaseListener;
+  private MPIMessageReleaseCallback releaseListener;
 
   /**
    * Keep track of the originating id, this is required to release the buffers allocated.
    */
-  protected int originatingId;
+  private int originatingId;
 
   /**
    * The message header
    */
-  protected MessageHeader header;
+  private MessageHeader header;
 
   /**
    * Keep weather the message has been fully built
    */
-  protected boolean complete = false;
+  private boolean complete = false;
 
   /**
    * Message type
    */
-  protected MessageType type;
+  private MessageType type;
 
   /**
    * Number of bytes in the header
    */
-  protected int headerSize;
+  private int headerSize;
 
   public MPIMessage() {
   }

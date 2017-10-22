@@ -14,23 +14,23 @@ package edu.iu.dsc.tws.common.config;
 import java.util.Map;
 
 public final class ConfigLoader {
-
   private ConfigLoader() {
   }
 
   private static Config loadDefaults(String twister2Home, String configPath) {
-    return Config.newBuilder(true)
+    return Config.newBuilder()
         .put(Context.TWISTER2_HOME.getKey(), twister2Home)
         .put(Context.TWISTER2_CONF.getKey(), configPath)
+        .putAll(Context.defaults)
         .build();
   }
 
-  static Config loadConfig(String file) {
+  private static Config loadConfig(String file) {
     Map<String, Object> readConfig = ConfigReader.loadFile(file);
     return addFromFile(readConfig);
   }
 
-  static Config addFromFile(Map<String, Object> readConfig) {
+  private static Config addFromFile(Map<String, Object> readConfig) {
     return Config.newBuilder().putAll(readConfig).build();
   }
 
@@ -40,45 +40,25 @@ public final class ConfigLoader {
    * tokens.
    */
   public static Config loadConfig(String twister2Home,
-                                  String configPath, String overrideConfigFile) {
+                                  String configPath) {
     Config defaultConfig = loadDefaults(twister2Home, configPath);
-    Config localConfig = Config.toLocalMode(defaultConfig); //to token-substitute the conf paths
+    // to token-substitute the conf paths
+    Config localConfig = Config.transform(defaultConfig);
 
+    // now load the configurations
     Config.Builder cb = Config.newBuilder()
-        .putAll(defaultConfig)
-        .putAll(loadConfig(Context.clientConfigurationFile(localConfig)))
+        .putAll(localConfig)
         .putAll(loadConfig(Context.taskConfigurationFile(localConfig)))
         .putAll(loadConfig(Context.resourceSchedulerConfigurationFile(localConfig)))
         .putAll(loadConfig(Context.uploaderConfigurationFile(localConfig)))
-        .putAll(loadConfig(Context.networkConfigurationFile(localConfig)))
-        .putAll(loadConfig(overrideConfigFile));
-    return cb.build();
-  }
-
-  /**
-   * Loads raw configurations using the default configured twister2Home and configPath on
-   * the cluster. The returned config must be converted to either local or cluster
-   * mode to trigger pattern substitution of wildcards tokens.
-   */
-  public static Config loadClusterConfig() {
-    Config defaultConfig = loadDefaults(
-        Context.CLUSTER_HOME.getDefaultValue(), Context.CLUSTER_CONF.getDefaultValue());
-    Config clusterConfig = Config.toClusterMode(defaultConfig); //to token-substitute the conf paths
-
-    Config.Builder cb = Config.newBuilder()
-        .putAll(defaultConfig)
-        .putAll(loadConfig(Context.clientConfigurationFile(clusterConfig)))
-        .putAll(loadConfig(Context.taskConfigurationFile(clusterConfig)))
-        .putAll(loadConfig(Context.resourceSchedulerConfigurationFile(clusterConfig)))
-        .putAll(loadConfig(Context.networkConfigurationFile(clusterConfig)))
-        .putAll(loadConfig(Context.uploaderConfigurationFile(clusterConfig)));
-
-    return cb.build();
+        .putAll(loadConfig(Context.networkConfigurationFile(localConfig)));
+    Config config = cb.build();
+    return Config.transform(config);
   }
 
   public static Config loadComponentConfig(String filePath) {
     Config.Builder cb = Config.newBuilder()
         .putAll(loadConfig(filePath));
-    return Config.toClusterMode(cb.build());
+    return Config.transform(cb.build());
   }
 }

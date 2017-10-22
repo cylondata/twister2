@@ -63,7 +63,7 @@ public class BaseLoadBalanceCommunication implements IContainer {
     this.status = Status.INIT;
 
     // lets create the task plan
-    TaskPlan taskPlan = createTaskPlan(cfg, plan);
+    TaskPlan taskPlan = Utils.createTaskPlan(cfg, plan);
     //first get the communication config file
     TWSNetwork network = new TWSNetwork(cfg, taskPlan);
 
@@ -78,7 +78,8 @@ public class BaseLoadBalanceCommunication implements IContainer {
     loadBalance = channel.setUpDataFlowOperation(Operation.REDUCE, MessageType.INTEGER,
         id, sources,
         dests, newCfg, 0, new DefaultMessageReceiver(loadReceiveQueue),
-        new MPIMessageDeSerializer(new KryoSerializer()), new MPIMessageSerializer(null, new KryoSerializer()),
+        new MPIMessageDeSerializer(new KryoSerializer()),
+        new MPIMessageSerializer(null, new KryoSerializer()),
         new DefaultMessageReceiver(loadReceiveQueue));
 
     // the map thread where data is produced
@@ -144,22 +145,5 @@ public class BaseLoadBalanceCommunication implements IContainer {
       d[i] = i;
     }
     return new IntData(d);
-  }
-
-  /**
-   * Let assume we have 1 task per container
-   * @param plan the resource plan from scheduler
-   * @return task plan
-   */
-  private TaskPlan createTaskPlan(Config cfg, ResourcePlan plan) {
-    int noOfProcs = resourcePlan.noOfContainers();
-
-    Map<Integer, Set<Integer>> executorToChannels = null;
-    Map<Integer, Set<Integer>> groupsToChannels = null;
-    int thisExecutor = 0;
-    int thisTaskk = 0;
-
-    TaskPlan taskPlan = new TaskPlan(executorToChannels, groupsToChannels, thisExecutor, thisTaskk);
-    return taskPlan;
   }
 }
