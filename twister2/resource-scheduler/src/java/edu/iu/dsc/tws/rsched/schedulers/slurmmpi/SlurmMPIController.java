@@ -40,7 +40,7 @@ public class SlurmMPIController implements IController {
 
   @Override
   public void initialize(Config mConfig) {
-    this.config = Config.toClusterMode(mConfig);
+    this.config = Config.transform(mConfig);
 
     // get the job working directory
     this.workingDirectory = SlurmMPIContext.workingDirectory(config);

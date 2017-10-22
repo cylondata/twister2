@@ -15,7 +15,7 @@ maven_jar(
 
 maven_jar(
   name = "ompi_ompijavabinding",
-  artifact = "ompi:ompijavabinding:1.10.1"
+  artifact = "ompi:ompijavabinding:3.0.0"
 )
 
 maven_jar(

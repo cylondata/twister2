@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.rsched.schedulers.slurmmpi;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.config.TokenSub;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
 public class SlurmMPIContext extends SchedulerContext {
