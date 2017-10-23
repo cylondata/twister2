@@ -47,15 +47,19 @@ public abstract class DataFlowCommunication implements TWSCommunication {
                                                   MessageDeSerializer formatter,
                                                   MessageSerializer builder,
                                                   MessageReceiver partialReceiver) {
+    LOG.info("Merging configurations");
     // merge with the user specified configuration, user specified will take precedence
     Config mergedCfg = Config.newBuilder().putAll(config).putAll(configuration).build();
+    LOG.info("Merged configurations");
 
     // create the dataflow operation
     DataFlowOperation dataFlowOperation = create(operation);
+    LOG.info("Created dataflow operation");
 
     // intialize the operation
     dataFlowOperation.init(mergedCfg, type, task, instancePlan, sources,
         destinations, stream, receiver, formatter, builder, partialReceiver);
+    LOG.info("Intiailize dataflow operation");
 
     return dataFlowOperation;
   }

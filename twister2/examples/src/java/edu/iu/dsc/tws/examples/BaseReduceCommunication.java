@@ -61,6 +61,7 @@ public class BaseReduceCommunication implements IContainer {
     Set<Integer> dests = new HashSet<>();
     Map<String, Object> newCfg = new HashMap<>();
 
+    LOG.info("Setting up reduce dataflow operation");
     // this method calls the init method
     // I think this is wrong
     reduce = channel.setUpDataFlowOperation(Operation.REDUCE, MessageType.INTEGER,
@@ -76,7 +77,9 @@ public class BaseReduceCommunication implements IContainer {
     // the map thread where data is produced
     Thread mapThread = new Thread(new MapWorker());
 
+    LOG.log(Level.INFO, "Starting reduce thread");
     reduceThread.start();
+    LOG.log(Level.INFO, "Starting map thread");
     mapThread.start();
     try {
       mapThread.join();
@@ -92,6 +95,7 @@ public class BaseReduceCommunication implements IContainer {
   private class MapWorker implements Runnable {
     @Override
     public void run() {
+      LOG.log(Level.INFO, "Starting map worker");
       for (int i = 0; i < 100000; i++) {
         IntData data = generateData();
 
@@ -115,6 +119,7 @@ public class BaseReduceCommunication implements IContainer {
   private class PartialReduceWorker implements Runnable {
     @Override
     public void run() {
+      LOG.log(Level.INFO, "Starting reduce worker");
       while (true) {
         Message message = partialReceiveQueue.poll();
         Object payload = message.getPayload();

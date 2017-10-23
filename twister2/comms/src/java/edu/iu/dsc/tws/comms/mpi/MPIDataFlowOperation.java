@@ -19,6 +19,8 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -37,6 +39,8 @@ import edu.iu.dsc.tws.comms.routing.Routing;
 
 public abstract class MPIDataFlowOperation implements DataFlowOperation,
     MPIMessageListener, MPIMessageReleaseCallback {
+  private static final Logger LOG = Logger.getLogger(MPIDataFlowOperation.class.getName());
+
   protected Config config;
   protected TaskPlan instancePlan;
   protected Set<Integer> sources;
@@ -150,10 +154,12 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
    */
   @Override
   public boolean send(Object message) {
+    LOG.log(Level.INFO, "Sending message 1...");
     return sendMessage(message);
   }
 
   private boolean sendMessage(Object message) {
+    LOG.log(Level.INFO, "Sending message...");
     // first we need to create a message header
     // todo: figure out length and destination
     MessageHeader header = MessageHeader.newBuilder(thisTask, 0, edge, 0, thisTask).build();
