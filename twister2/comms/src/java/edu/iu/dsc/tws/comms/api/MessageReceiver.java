@@ -21,5 +21,10 @@ public interface MessageReceiver {
    * @param expectedIds expected task ids
    */
   void init(Map<Integer, List<Integer>> expectedIds);
+
+  /**
+   * The actual message callback
+   * @param object
+   */
   void onMessage(Object object);
 }

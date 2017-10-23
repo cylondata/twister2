@@ -12,17 +12,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.core;
 
-import java.util.Map;
-import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageDeSerializer;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
-import edu.iu.dsc.tws.comms.api.MessageSerializer;
-import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.api.Operation;
 
 
 public abstract class DataFlowCommunication implements TWSCommunication {
@@ -38,33 +30,9 @@ public abstract class DataFlowCommunication implements TWSCommunication {
    */
   protected TaskPlan instancePlan;
 
-  public DataFlowOperation setUpDataFlowOperation(Operation operation, MessageType type, int task,
-                                                  Set<Integer> sources,
-                                                  Set<Integer> destinations,
-                                                  Map<String, Object> configuration,
-                                                  int stream,
-                                                  MessageReceiver receiver,
-                                                  MessageDeSerializer formatter,
-                                                  MessageSerializer builder,
-                                                  MessageReceiver partialReceiver) {
-    LOG.info("Merging configurations");
-    // merge with the user specified configuration, user specified will take precedence
-    Config mergedCfg = Config.newBuilder().putAll(config).putAll(configuration).build();
-    LOG.info("Merged configurations");
 
-    // create the dataflow operation
-    DataFlowOperation dataFlowOperation = create(operation);
-    LOG.info("Created dataflow operation");
-
-    // intialize the operation
-    dataFlowOperation.init(mergedCfg, type, task, instancePlan, sources,
-        destinations, stream, receiver, formatter, builder, partialReceiver);
-    LOG.info("Intiailize dataflow operation");
-
-    return dataFlowOperation;
+  public DataFlowCommunication() {
   }
-
-  public abstract DataFlowOperation create(Operation operation);
 
   @Override
   public void init(Config cfg, TaskPlan taskPlan) {

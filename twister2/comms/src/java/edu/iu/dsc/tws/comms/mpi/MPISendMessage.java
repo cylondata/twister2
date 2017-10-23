@@ -28,6 +28,8 @@ public class MPISendMessage {
 
   private boolean complete = false;
 
+  private int source;
+
   public enum SerializedState {
     INIT,
     HEADER_BUILT,
@@ -37,8 +39,9 @@ public class MPISendMessage {
 
   private SerializedState serializedState;
 
-  public MPISendMessage(MPIMessage message) {
+  public MPISendMessage(int src, MPIMessage message) {
     this.ref = message;
+    this.source = src;
   }
 
   public SerializedState serializedState() {
@@ -83,5 +86,9 @@ public class MPISendMessage {
 
   public void setComplete(boolean complete) {
     this.complete = complete;
+  }
+
+  public int getSource() {
+    return source;
   }
 }

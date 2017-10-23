@@ -32,7 +32,7 @@ public abstract class MPIGroupedDataFlowOperation extends MPIDataFlowOperation {
   }
 
   @Override
-  public void onReceiveComplete(int id, int stream, MPIBuffer buffer) {
+  public void onReceiveComplete(int id, int e, MPIBuffer buffer) {
     // we need to get the path at which this message is sent
     int path = buffer.getByteBuffer().getInt();
     // get the message map according to the path
@@ -41,11 +41,11 @@ public abstract class MPIGroupedDataFlowOperation extends MPIDataFlowOperation {
     // we need to try to build the message here, we may need many more messages to complete
     MPIMessage currentMessage = messageMap.get(id);
     if (currentMessage == null) {
-      currentMessage = new MPIMessage(thisTask, type, MPIMessageDirection.RECEIVE, this);
+      currentMessage = new MPIMessage(type, MPIMessageDirection.IN, this);
       messageMap.put(id, currentMessage);
     }
 
-    Object object = messageDeSerializer.buid(buffer, currentMessage);
+    Object object = messageDeSerializer.buid(buffer, currentMessage, e);
 
     // if the message is complete, send it further down and call the receiver
     if (currentMessage.isComplete()) {

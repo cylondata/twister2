@@ -1,4 +1,3 @@
-//
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
@@ -12,37 +11,33 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.api;
 
-import java.util.Set;
-
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 
 public interface DataFlowOperation {
-
   /**
    * Initialize the data flow communication
    *
    * @param config the network configuration
    * @param instancePlan instance plan
    */
-  void init(Config config, MessageType type, int thisTask,
-            TaskPlan instancePlan, Set<Integer> sources,
-            Set<Integer> destinations, int stream, MessageReceiver receiver,
-            MessageDeSerializer messageDeSerializer, MessageSerializer messageSerializer,
-            MessageReceiver partialReceiver);
+  void init(Config config, MessageType type,
+            TaskPlan instancePlan, int edge,
+            MessageReceiver rcvr,
+            MessageReceiver partialRcvr);
 
   /**
    * Use this to inject partial results in a distributed dataflow operation
    * @param message message
    */
-  void injectPartialResult(Object message);
+  void injectPartialResult(int source, Object message);
 
   /**
    * Do a partial operation, the receiving side should collect messages until all the messages
    * are received.
    * @param message
    */
-  void sendPartial(Object message);
+  void sendPartial(int source, Object message);
 
   /**
    * Indicate that a partial operation is finished
@@ -51,25 +46,28 @@ public interface DataFlowOperation {
 
   /**
    * Send a send message, this call will work asynchronously
+   * @param source
    * @param message
    */
-  boolean send(Object message);
+  boolean send(int source, Object message);
 
   /**
    * Send the message on a specific path
+   * @param source
    * @param message
    * @param path
    * @return
    */
-  boolean send(Object message, int path);
+  boolean send(int source, Object message, int path);
 
   /**
    * Send partial message on a specific path
+   * @param source
    * @param message
    * @param path
    * @return
    */
-  boolean sendPartial(Object message, int path);
+  boolean sendPartial(int source, Object message, int path);
   /**
    * Progress the pending dataflow operations
    */

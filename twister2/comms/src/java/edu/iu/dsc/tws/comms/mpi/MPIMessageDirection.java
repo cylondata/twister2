@@ -12,6 +12,6 @@
 package edu.iu.dsc.tws.comms.mpi;
 
 public enum MPIMessageDirection {
-  SEND,
-  RECEIVE
+  OUT,
+  IN
 }

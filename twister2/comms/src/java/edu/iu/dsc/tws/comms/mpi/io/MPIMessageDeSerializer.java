@@ -35,12 +35,12 @@ public class MPIMessageDeSerializer implements MessageDeSerializer {
   }
 
   @Override
-  public Object buid(Object message, Object partialObject) {
+  public Object buid(Object message, Object partialObject, int edge) {
     MPIMessage currentMessage = (MPIMessage) partialObject;
     MPIBuffer buffer = (MPIBuffer) message;
 
     if (currentMessage.getHeader() == null) {
-      buildHeader(buffer, currentMessage);
+      buildHeader(buffer, currentMessage, edge);
     }
 
     if (!currentMessage.isComplete()) {
@@ -57,15 +57,17 @@ public class MPIMessageDeSerializer implements MessageDeSerializer {
     return null;
   }
 
-  private void buildHeader(MPIBuffer buffer, MPIMessage message) {
+  private void buildHeader(MPIBuffer buffer, MPIMessage message, int edge) {
     int sourceId = buffer.getByteBuffer().getInt();
     int destId = buffer.getByteBuffer().getInt();
-    int e = buffer.getByteBuffer().getInt();
-    int length = buffer.getByteBuffer().getInt();
     int lastNode = buffer.getByteBuffer().getInt();
+    int path = buffer.getByteBuffer().getInt();
+    int length = buffer.getByteBuffer().getInt();
 
     MessageHeader.Builder headerBuilder = MessageHeader.newBuilder(
-        sourceId, destId, e, length, lastNode);
+        sourceId, destId, edge, length, lastNode);
+    // set the path
+    headerBuilder.path(path);
     // first build the header
     message.setHeader(headerBuilder.build());
     // we set the 20 header size for now

@@ -73,25 +73,25 @@ public final class MPIProcess {
       // System.out.println(config.toString());
 
       // this is the job manager`
-      if (rank == 0) {
-        LOG.log(Level.INFO, "This is the master process, we are not doing anything");
-        master(config, rank);
-        // first lets do a barrier
-        LOG.log(Level.INFO, String.format("Process %d: barrier", rank));
-        MPI.COMM_WORLD.barrier();
-        LOG.log(Level.INFO, "Master: the cluster is ready...");
-        // now wait until other processes finish
-        while (true) {
-          try {
-            Thread.sleep(100);
-          } catch (InterruptedException ignore) {
-          }
-        }
-      } else {
+//      if (rank == 0) {
+//        LOG.log(Level.INFO, "This is the master process, we are not doing anything");
+//        master(config, rank);
+//        // first lets do a barrier
+//        LOG.log(Level.INFO, String.format("Process %d: barrier", rank));
+//        MPI.COMM_WORLD.barrier();
+//        LOG.log(Level.INFO, "Master: the cluster is ready...");
+//        // now wait until other processes finish
+//        while (true) {
+//          try {
+//            Thread.sleep(100);
+//          } catch (InterruptedException ignore) {
+//          }
+//        }
+//      } else {
         // normal worker
-        LOG.log(Level.INFO, "A worker process is starting...");
-        worker(config, rank);
-      }
+      LOG.log(Level.INFO, "A worker process is starting...");
+      worker(config, rank);
+//      }
     } catch (MPIException e) {
       LOG.log(Level.SEVERE, "Failed the MPI process", e);
       throw new RuntimeException(e);

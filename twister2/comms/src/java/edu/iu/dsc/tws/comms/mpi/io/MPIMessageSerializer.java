@@ -91,13 +91,13 @@ public class MPIMessageSerializer implements MessageSerializer {
     // now lets put the content of header in
     byteBuffer.putInt(header.getSourceId());
     byteBuffer.putInt(header.getDestId());
-    byteBuffer.putInt(header.getEdge());
     byteBuffer.putInt(header.getLastNode());
+    // the path we are on, if not grouped it will be 0 and ignored
+    byteBuffer.putInt(header.getPath());
     // todo : how to know the length
     byteBuffer.putInt(header.getLength());
 
-    sendMessage.setWrittenHeaderSize(24);
-    // todo: add properties to header
+    sendMessage.setWrittenHeaderSize(20);
   }
 
   /**

@@ -34,6 +34,9 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageSerializer;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.mpi.io.KryoSerializer;
+import edu.iu.dsc.tws.comms.mpi.io.MPIMessageDeSerializer;
+import edu.iu.dsc.tws.comms.mpi.io.MPIMessageSerializer;
 import edu.iu.dsc.tws.comms.routing.IRouter;
 import edu.iu.dsc.tws.comms.routing.Routing;
 
@@ -41,10 +44,11 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
     MPIMessageListener, MPIMessageReleaseCallback {
   private static final Logger LOG = Logger.getLogger(MPIDataFlowOperation.class.getName());
 
+  // the configuration
   protected Config config;
+  // the task plan
   protected TaskPlan instancePlan;
-  protected Set<Integer> sources;
-  protected Set<Integer> destinations;
+
   protected int edge;
   // the router that gives us the possible routes
   protected IRouter router;
@@ -52,7 +56,6 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
   protected MessageReceiver receiver;
   protected MessageDeSerializer messageDeSerializer;
   protected MessageSerializer messageSerializer;
-  protected int thisTask;
   // we may have multiple routes throughus
   protected Map<Integer, Routing> expectedRoutes;
   protected MessageReceiver partialReceiver;
@@ -78,24 +81,20 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
    */
   private Map<Integer, MPIMessage> currentMessages = new HashMap<>();
 
+  protected KryoSerializer kryoSerializer;
+
   public MPIDataFlowOperation(TWSMPIChannel channel) {
     this.channel = channel;
   }
 
+
   @Override
-  public void init(Config cfg, MessageType messageType, int task, TaskPlan plan, Set<Integer> srcs,
-                   Set<Integer> dests, int messageStream, MessageReceiver rcvr,
-                   MessageDeSerializer fmtr, MessageSerializer bldr,
-                   MessageReceiver partialRcvr) {
+  public void init(Config cfg, MessageType messageType, TaskPlan plan, int graphEdge,
+                   MessageReceiver rcvr, MessageReceiver partialRcvr) {
     this.config = cfg;
     this.instancePlan = plan;
-    this.sources = srcs;
-    this.destinations = dests;
-    this.edge = messageStream;
-    this.messageDeSerializer = fmtr;
-    this.messageSerializer = bldr;
+    this.edge = graphEdge;
     this.receiver = rcvr;
-    this.thisTask = task;
     this.partialReceiver = partialRcvr;
     this.type = messageType;
 
@@ -123,6 +122,9 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
   }
 
   protected void initSerializers() {
+    kryoSerializer = new KryoSerializer();
+    messageDeSerializer = new MPIMessageDeSerializer(kryoSerializer);
+    messageSerializer = new MPIMessageSerializer(sendBuffers, kryoSerializer);
     // initialize the serializers
     messageSerializer.init(config, false);
     messageDeSerializer.init(config, false);
@@ -134,48 +136,48 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
   }
 
   @Override
-  public void injectPartialResult(Object message) {
-    sendMessage(message);
+  public void injectPartialResult(int source, Object message) {
+    sendMessage(source, message);
   }
 
   @Override
-  public void sendPartial(Object message) {
+  public void sendPartial(int source, Object message) {
     throw new NotImplementedException("Not implemented method");
   }
 
   protected abstract IRouter setupRouting();
   protected abstract void routeReceivedMessage(MessageHeader message, List<Integer> routes);
-  protected abstract void routeSendMessage(MessageHeader message, List<Integer> routes);
-  protected abstract void sendCompleteMPIMessage(MPIMessage message);
+  protected abstract void routeSendMessage(int source, MessageHeader message, List<Integer> routes);
+  protected abstract void sendCompleteMPIMessage(int source, MPIMessage message);
 
   /**
    * Sends a complete message
    * @param message the message object
    */
   @Override
-  public boolean send(Object message) {
+  public boolean send(int source, Object message) {
     LOG.log(Level.INFO, "Sending message 1...");
-    return sendMessage(message);
+    return sendMessage(source, message);
   }
 
-  private boolean sendMessage(Object message) {
+  private boolean sendMessage(int source, Object message) {
     LOG.log(Level.INFO, "Sending message...");
     // first we need to create a message header
     // todo: figure out length and destination
-    MessageHeader header = MessageHeader.newBuilder(thisTask, 0, edge, 0, thisTask).build();
+    MessageHeader header = MessageHeader.newBuilder(source, 0, edge, 0, source).build();
 
-    MPIMessage mpiMessage = new MPIMessage(thisTask, type,
-        header, 0, MPIMessageDirection.SEND, this);
+    MPIMessage mpiMessage = new MPIMessage(source, type,
+        header, 0, MPIMessageDirection.OUT, this);
 
     // create a send message to keep track of the serialization
-    MPISendMessage sendMessage = new MPISendMessage(mpiMessage);
+    MPISendMessage sendMessage = new MPISendMessage(source, mpiMessage);
     // this need to use the available buffers
     // we need to advertise the available buffers to the upper layers
     messageSerializer.build(message, sendMessage);
 
     // okay we could build fully
     if (sendMessage.serializedState() == MPISendMessage.SerializedState.FINISHED) {
-      sendCompleteMPIMessage(mpiMessage);
+      sendCompleteMPIMessage(source, mpiMessage);
       return true;
     } else {
       // now try to put this into pending
@@ -194,7 +196,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
 
       // okay we build the message, send it
       if (message.serializedState() == MPISendMessage.SerializedState.FINISHED) {
-        sendCompleteMPIMessage(message.getMPIMessage());
+        sendCompleteMPIMessage(message.getSource(), message.getMPIMessage());
         pendingSendMessages.remove();
       } else {
         break;
@@ -267,12 +269,12 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
   }
 
   protected void releaseTheBuffers(int id, MPIMessage message) {
-    if (MPIMessageDirection.RECEIVE == message.getMessageDirection()) {
+    if (MPIMessageDirection.IN == message.getMessageDirection()) {
       List<MPIBuffer> list = receiveBuffers.get(id);
       for (MPIBuffer buffer : message.getBuffers()) {
         list.add(buffer);
       }
-    } else if (MPIMessageDirection.SEND == message.getMessageDirection()) {
+    } else if (MPIMessageDirection.OUT == message.getMessageDirection()) {
       Queue<MPIBuffer> queue = sendBuffers;
       for (MPIBuffer buffer : message.getBuffers()) {
         queue.offer(buffer);
@@ -281,22 +283,23 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
   }
 
   @Override
-  public void onReceiveComplete(int id, int stream, MPIBuffer buffer) {
+  public void onReceiveComplete(int id, int e, MPIBuffer buffer) {
     // we need to try to build the message here, we may need many more messages to complete
     MPIMessage currentMessage = currentMessages.get(id);
     if (currentMessage == null) {
-      currentMessage = new MPIMessage(thisTask, type, MPIMessageDirection.RECEIVE, this);
+      currentMessage = new MPIMessage(type, MPIMessageDirection.IN, this);
       currentMessages.put(id, currentMessage);
     }
 
-    Object object = messageDeSerializer.buid(buffer, currentMessage);
-
+    Object object = messageDeSerializer.buid(buffer, currentMessage, e);
     // if the message is complete, send it further down and call the receiver
     if (currentMessage.isComplete()) {
+
       // we may need to pass this down to others
       passMessageDownstream(currentMessage);
       // we received a message, we need to determine weather we need to
       // forward to another node and process
+      // check weather this is a message for partial or final receiver
       receiver.onMessage(object);
       // okay we built this message, lets remove it from the map
       currentMessages.remove(id);
@@ -311,13 +314,16 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
   protected void passMessageDownstream(MPIMessage currentMessage) {
   }
 
+  protected void messageReceived(MPIMessage completeMessage) {
+  }
+
   @Override
-  public boolean send(Object message, int path) {
+  public boolean send(int source, Object message, int path) {
     return false;
   }
 
   @Override
-  public boolean sendPartial(Object message, int path) {
+  public boolean sendPartial(int source, Object message, int path) {
     return false;
   }
 }

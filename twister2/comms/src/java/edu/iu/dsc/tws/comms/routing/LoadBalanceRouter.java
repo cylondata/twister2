@@ -31,12 +31,11 @@ public class LoadBalanceRouter implements IRouter {
   private Random random;
 
   @Override
-  public void init(Config cfg, int thisTask, TaskPlan plan,
+  public void init(Config cfg, TaskPlan plan,
                    Set<Integer> srscs, Set<Integer> dests,
                    int strm, int distinctRoutes) {
     this.config = cfg;
     this.taskPlan = plan;
-    this.task = thisTask;
     this.sources = srscs;
     this.stream = strm;
     random = new Random(System.nanoTime());

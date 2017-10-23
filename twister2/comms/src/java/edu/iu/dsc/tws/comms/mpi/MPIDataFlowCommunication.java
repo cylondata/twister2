@@ -11,11 +11,15 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi;
 
+import java.util.Map;
+import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.Operation;
+import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.DataFlowCommunication;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 
@@ -31,26 +35,54 @@ public class MPIDataFlowCommunication extends DataFlowCommunication {
     super.init(cfg, taskPlan);
 
     channel = new TWSMPIChannel(cfg, MPI.COMM_WORLD);
-  }
-
-  @Override
-  public DataFlowOperation create(Operation operation) {
-    if (operation == Operation.BROADCAST) {
-      return new MPIDataFlowBroadcast(channel);
-    } else if (operation == Operation.REDUCE) {
-      return new MPIDataFlowReduce(channel);
-    } else if (operation == Operation.ALLGATHER) {
-      return null;
-    } else if (operation == Operation.LOADBALANCE) {
-      return new MPILoadBalance(channel);
-    } else if (operation == Operation.PARTITION) {
-      return null;
-    }
-    return null;
+    LOG.log(Level.INFO, "Initialized MPI dataflow communication");
   }
 
   @Override
   public void progress() {
     channel.progress();
+  }
+
+  public DataFlowOperation reduce(Map<String, Object> properties, MessageType type, int edge,
+                                  Set<Integer> sourceTasks, int destTask,
+                                  MessageReceiver reduceReceiver, MessageReceiver partialReceiver) {
+    LOG.info("Merging configurations");
+    // merge with the user specified configuration, user specified will take precedence
+    Config mergedCfg = Config.newBuilder().putAll(config).putAll(properties).build();
+    LOG.info("Merged configurations");
+
+    // create the dataflow operation
+    DataFlowOperation dataFlowOperation = new MPIDataFlowReduce(channel, sourceTasks, destTask);
+    LOG.info("Created dataflow operation");
+
+    // intialize the operation
+    dataFlowOperation.init(mergedCfg, type, instancePlan, edge, reduceReceiver, partialReceiver);
+    LOG.info("Intiailize dataflow operation");
+
+    return dataFlowOperation;
+  }
+
+  public DataFlowOperation broadCast(Map<String, Object> properties, MessageType type, int edge,
+                                     int sourceTask, Set<Integer> destTasks,
+                                     MessageReceiver receiver, MessageReceiver partialReceiver) {
+    LOG.info("Merging configurations");
+    // merge with the user specified configuration, user specified will take precedence
+    Config mergedCfg = Config.newBuilder().putAll(config).putAll(properties).build();
+    LOG.info("Merged configurations");
+
+    // create the dataflow operation
+    DataFlowOperation dataFlowOperation = new MPIDataFlowBroadcast(channel, sourceTask, destTasks);
+    LOG.info("Created dataflow operation");
+
+    // intialize the operation
+    dataFlowOperation.init(mergedCfg, type, instancePlan, edge, receiver, partialReceiver);
+    LOG.info("Intiailize dataflow operation");
+    return dataFlowOperation;
+  }
+
+  public DataFlowOperation direct(Map<String, Object> properties, MessageType type,
+                                  int sourceTask, int destTask,
+                                  MessageReceiver receiver) {
+    return new MPIDirectDataFlowCommunication(channel, sourceTask, destTask);
   }
 }

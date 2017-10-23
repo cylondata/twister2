@@ -45,17 +45,15 @@ public class BinaryTreeRouter implements IRouter {
    * Initialize the data structure
    *
    * @param cfg
-   * @param thisTask
    * @param plan
    * @param srscs
    * @param dests
    * @param strm
    */
-  public void init(Config cfg, int thisTask, TaskPlan plan,
+  public void init(Config cfg, TaskPlan plan,
                    Set<Integer> srscs, Set<Integer> dests, int strm, int distinctRts) {
     this.config = cfg;
     this.taskPlan = plan;
-    this.task = thisTask;
     this.sources = srscs;
     this.destinations = dests;
     this.stream = strm;
@@ -64,7 +62,7 @@ public class BinaryTreeRouter implements IRouter {
     this.interNodeDegree = MPIContext.interNodeDegree(cfg, 2);
     this.intraNodeDegree = MPIContext.intraNodeDegree(cfg, 2);
 
-    calculateExpectedRouter();
+    calculateExpectedRoutes();
   }
 
   @Override
@@ -72,7 +70,7 @@ public class BinaryTreeRouter implements IRouter {
     return expectedRouting;
   }
 
-  private void calculateExpectedRouter() {
+  private void calculateExpectedRoutes() {
     ArrayList<Integer> sourceList = new ArrayList<>(sources);
     Collections.sort(sourceList);
 

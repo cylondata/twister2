@@ -65,6 +65,16 @@ public class MPIMessage {
   public MPIMessage() {
   }
 
+  public MPIMessage(MessageType messageType,
+                    MPIMessageDirection messageDirection,
+                    MPIMessageReleaseCallback releaseListener) {
+    this.refCount = 0;
+    this.messageDirection = messageDirection;
+    this.releaseListener = releaseListener;
+    this.complete = true;
+    this.type = messageType;
+  }
+
   public MPIMessage(int originatingId, MessageType messageType,
                     MPIMessageDirection messageDirection,
                     MPIMessageReleaseCallback releaseListener) {

@@ -12,17 +12,12 @@
 package edu.iu.dsc.tws.comms.mpi;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
-import edu.iu.dsc.tws.comms.api.MessageSerializer;
-import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.routing.BinaryTreeRouter;
 import edu.iu.dsc.tws.comms.routing.IRouter;
 import edu.iu.dsc.tws.comms.routing.Routing;
@@ -30,22 +25,17 @@ import edu.iu.dsc.tws.comms.routing.Routing;
 public class MPIDataFlowReduce extends MPIDataFlowOperation {
   private static final Logger LOG = Logger.getLogger(MPIDataFlowBroadcast.class.getName());
 
-  public MPIDataFlowReduce(TWSMPIChannel channel) {
+  // the source tasks
+  protected Set<Integer> sources;
+
+  // the destination task
+  protected int destination;
+
+  public MPIDataFlowReduce(TWSMPIChannel channel, Set<Integer> sources, int destination) {
     super(channel);
-  }
 
-  @Override
-  public void init(Config cfg, MessageType messageType, int task, TaskPlan plan,
-                   Set<Integer> srcs, Set<Integer> dests,
-                   int messageStream, MessageReceiver rcvr,
-                   MessageDeSerializer fmtr, MessageSerializer bldr,
-                   MessageReceiver partialRcvr) {
-    super.init(cfg, messageType, task, plan, srcs, dests,
-        messageStream, rcvr, fmtr, bldr, partialRcvr);
-
-    if (dests.size() > 1) {
-      throw new IllegalArgumentException("Reduce can only have one destination");
-    }
+    this.sources = sources;
+    this.destination = destination;
   }
 
   public IRouter setupRouting() {
@@ -53,7 +43,11 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
     BinaryTreeRouter tree = new BinaryTreeRouter();
     // we only have one destination and sources becomes destinations for creating tree
     // because this is an inverted tree from sources to destination
-    tree.init(config, thisTask, instancePlan, destinations, sources, edge, 1);
+    Set<Integer> destinations = new HashSet<>();
+    destinations.add(destination);
+
+    // we only have one path
+    tree.init(config, instancePlan, destinations, sources, edge, 1);
     return tree;
   }
 
@@ -63,9 +57,7 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
   }
 
   @Override
-  protected void routeSendMessage(MessageHeader message, List<Integer> routes) {
-    // check the origin
-    int source = message.getSourceId();
+  protected void routeSendMessage(int source, MessageHeader message, List<Integer> routes) {
     // get the expected routes
     Routing routing = expectedRoutes.get(source);
 
@@ -76,9 +68,9 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
   }
 
   @Override
-  protected void sendCompleteMPIMessage(MPIMessage mpiMessage) {
+  protected void sendCompleteMPIMessage(int source, MPIMessage mpiMessage) {
     List<Integer> routes = new ArrayList<>();
-    routeSendMessage(mpiMessage.getHeader(), routes);
+    routeSendMessage(source, mpiMessage.getHeader(), routes);
 
     if (routes.size() > 1) {
       throw new RuntimeException("We only expect to send to one more task");

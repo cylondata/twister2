@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.MessageHeader;
@@ -27,18 +28,22 @@ public class MPILoadBalance extends MPIDataFlowOperation {
   private static final Logger LOG = Logger.getLogger(MPILoadBalance.class.getName());
 
   private Random random;
+  private Set<Integer> sources;
+  private Set<Integer> destinations;
 
   protected Map<Integer, MPIMessage> currentMessages = new HashMap<>();
 
-  public MPILoadBalance(TWSMPIChannel channel) {
+  public MPILoadBalance(TWSMPIChannel channel, Set<Integer> srcs, Set<Integer> dests) {
     super(channel);
     random = new Random(System.nanoTime());
+    this.sources = srcs;
+    this.destinations = dests;
   }
 
   protected IRouter setupRouting() {
     // lets create the routing needed
     LoadBalanceRouter router = new LoadBalanceRouter();
-    router.init(config, thisTask, instancePlan, sources, destinations, edge,
+    router.init(config, instancePlan, sources, destinations, edge,
         MPIContext.distinctRoutes(config, sources.size()));
     return router;
   }
@@ -49,28 +54,28 @@ public class MPILoadBalance extends MPIDataFlowOperation {
   }
 
   @Override
-  public void injectPartialResult(Object message) {
+  public void injectPartialResult(int source, Object message) {
     throw new RuntimeException("Not supported method");
   }
 
   @Override
-  protected void routeSendMessage(MessageHeader message, List<Integer> routes) {
-    Routing routing = expectedRoutes.get(thisTask);
+  protected void routeSendMessage(int source, MessageHeader message, List<Integer> routes) {
+    Routing routing = expectedRoutes.get(source);
 
     int next = random.nextInt(routing.getDownstreamIds().size());
     routes.add(routing.getDownstreamIds().get(next));
   }
 
   @Override
-  protected void sendCompleteMPIMessage(MPIMessage mpiMessage) {
+  protected void sendCompleteMPIMessage(int source, MPIMessage mpiMessage) {
     MessageHeader header = mpiMessage.getHeader();
 
-    if (header.getSourceId() != thisTask) {
+    if (header.getSourceId() != source) {
       throw new RuntimeException("The source of the message should be the sender");
     }
 
     List<Integer> routes = new ArrayList<>();
-    routeSendMessage(header, routes);
+    routeSendMessage(source, header, routes);
     if (routes.size() == 0) {
       throw new RuntimeException("Failed to get downstream tasks");
     }

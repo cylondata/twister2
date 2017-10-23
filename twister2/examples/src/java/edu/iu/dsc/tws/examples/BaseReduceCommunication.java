@@ -1,3 +1,14 @@
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 package edu.iu.dsc.tws.examples;
 
 import java.util.HashMap;
@@ -13,14 +24,10 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.Message;
 import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.api.Operation;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.mpi.io.DefaultMessageReceiver;
-import edu.iu.dsc.tws.comms.mpi.io.KryoSerializer;
-import edu.iu.dsc.tws.comms.mpi.io.MPIMessageDeSerializer;
-import edu.iu.dsc.tws.comms.mpi.io.MPIMessageSerializer;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
@@ -64,11 +71,8 @@ public class BaseReduceCommunication implements IContainer {
     LOG.info("Setting up reduce dataflow operation");
     // this method calls the init method
     // I think this is wrong
-    reduce = channel.setUpDataFlowOperation(Operation.REDUCE, MessageType.INTEGER,
-        containerId, sources,
-        dests, newCfg, 0, new DefaultMessageReceiver(reduceReceiveQueue),
-        new MPIMessageDeSerializer(new KryoSerializer()),
-        new MPIMessageSerializer(null, new KryoSerializer()),
+    reduce = channel.reduce(newCfg, MessageType.INTEGER, 0, sources,
+        0, new DefaultMessageReceiver(reduceReceiveQueue),
         new DefaultMessageReceiver(partialReceiveQueue));
 
     // this thread is only run at the reduce
@@ -96,7 +100,7 @@ public class BaseReduceCommunication implements IContainer {
     @Override
     public void run() {
       LOG.log(Level.INFO, "Starting map worker");
-      for (int i = 0; i < 100000; i++) {
+      for (int i = 0; i < 10; i++) {
         IntData data = generateData();
 
         // do some computation over data
@@ -108,7 +112,7 @@ public class BaseReduceCommunication implements IContainer {
 
         // lets generate a message
         Message message = Message.newBuilder().setPayload(data).build();
-        reduce.send(message);
+        reduce.send(0, message);
       }
     }
   }

@@ -16,24 +16,19 @@ import java.util.Set;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
-import edu.iu.dsc.tws.comms.api.MessageSerializer;
 import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.api.Operation;
 
 public interface TWSCommunication {
   void init(Config config, TaskPlan taskPlan);
 
-  DataFlowOperation setUpDataFlowOperation(Operation operation, MessageType type, int task,
-                                           Set<Integer> sources,
-                                           Set<Integer> destinations,
-                                           Map<String, Object> configuration,
-                                           int stream,
-                                           MessageReceiver receiver,
-                                           MessageDeSerializer formatter,
-                                           MessageSerializer builder,
-                                           MessageReceiver partialReceiver);
   void progress();
 
+  DataFlowOperation reduce(Map<String, Object> properties, MessageType type, int edge,
+                            Set<Integer> sourceTasks, int destTask,
+                            MessageReceiver reduceReceiver, MessageReceiver partialReceiver);
+
+  DataFlowOperation broadCast(Map<String, Object> properties, MessageType type, int edge,
+                               int sourceTask, Set<Integer> destTasks,
+                               MessageReceiver receiver, MessageReceiver partialReceiver);
 }

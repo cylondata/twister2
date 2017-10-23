@@ -22,15 +22,14 @@ public interface IRouter {
    * Initialize the router
    *
    * @param cfg
-   * @param thisTask
    * @param plan
    * @param srscs
    * @param dests
    * @param strm
    * @param distinctRoutes
    */
-  void init(Config cfg, int thisTask, TaskPlan plan,
-                   Set<Integer> srscs, Set<Integer> dests, int strm, int distinctRoutes);
+  void init(Config cfg, TaskPlan plan, Set<Integer> srscs,
+            Set<Integer> dests, int strm, int distinctRoutes);
 
   /**
    * For each source get a routing.

@@ -16,8 +16,12 @@ import java.util.List;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.routing.IRouter;
 
-public class MPIDataFlowKeyedReduce extends MPIGroupedDataFlowOperation {
-  public MPIDataFlowKeyedReduce(TWSMPIChannel channel) {
+/**
+ * A direct data flow operation sends peer to peer messages
+ */
+public class MPIDirectDataFlowCommunication extends MPIDataFlowOperation {
+
+  public MPIDirectDataFlowCommunication(TWSMPIChannel channel, int source, int destination) {
     super(channel);
   }
 
@@ -28,7 +32,7 @@ public class MPIDataFlowKeyedReduce extends MPIGroupedDataFlowOperation {
 
   @Override
   protected void routeReceivedMessage(MessageHeader message, List<Integer> routes) {
-    throw new RuntimeException("We cannot route the received message");
+
   }
 
   @Override

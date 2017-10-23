@@ -12,58 +12,33 @@
 package edu.iu.dsc.tws.comms.mpi;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
-import edu.iu.dsc.tws.comms.api.MessageSerializer;
-import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.routing.BinaryTreeRouter;
 import edu.iu.dsc.tws.comms.routing.IRouter;
 import edu.iu.dsc.tws.comms.routing.Routing;
 
 public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
   private static final Logger LOG = Logger.getLogger(MPIDataFlowBroadcast.class.getName());
-  /**
-   * Keep track of the current message been received
-   */
-  private Map<Integer, Map<Integer, MPIMessage>> currentMessages = new HashMap<>();
 
+  private int source;
 
-  public MPIDataFlowBroadcast(TWSMPIChannel channel) {
+  private Set<Integer> destinations;
+
+  public MPIDataFlowBroadcast(TWSMPIChannel channel, int src, Set<Integer> dests) {
     super(channel);
+    this.source = src;
+    this.destinations = dests;
   }
 
   @Override
-  public void init(Config cfg, MessageType messageType, int task, TaskPlan plan,
-                   Set<Integer> srcs, Set<Integer> dests,
-                   int messageStream, MessageReceiver rcvr,
-                   MessageDeSerializer fmtr, MessageSerializer bldr,
-                   MessageReceiver partialRcvr) {
-    super.init(cfg, messageType, task, plan, srcs, dests,
-        messageStream, rcvr, fmtr, bldr, partialRcvr);
-
-    // broadcast only supports a single source
-    if (sources.size() > 1) {
-      throw new RuntimeException("Broadcast only supports one source");
-    }
-
-    for (Integer source : expectedRoutes.keySet()) {
-      currentMessages.put(source, new HashMap<Integer, MPIMessage>());
-    }
-  }
-
-  @Override
-  protected void sendCompleteMPIMessage(MPIMessage mpiMessage) {
+  protected void sendCompleteMPIMessage(int src, MPIMessage mpiMessage) {
     List<Integer> routes = new ArrayList<>();
-    routeSendMessage(mpiMessage.getHeader(), routes);
+    routeSendMessage(src, mpiMessage.getHeader(), routes);
     if (routes.size() == 0) {
       throw new RuntimeException("Failed to get downstream tasks");
     }
@@ -75,7 +50,7 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
   }
 
   @Override
-  public void injectPartialResult(Object message) {
+  public void injectPartialResult(int src, Object message) {
     throw new RuntimeException("Not supported method");
   }
 
@@ -91,33 +66,34 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
     // lets create the routing needed
     BinaryTreeRouter tree = new BinaryTreeRouter();
     // we will only have one distinct route
-    tree.init(config, thisTask, instancePlan, sources, destinations, edge, 1);
+    Set<Integer> sources = new HashSet<>();
+    sources.add(source);
+
+    tree.init(config, instancePlan, sources, destinations, edge, 1);
     return tree;
   }
 
   @Override
   protected void routeReceivedMessage(MessageHeader message, List<Integer> routes) {
     // check the origin
-    int source = message.getSourceId();
+    int src = message.getSourceId();
     // get the expected routes
-    Routing routing = expectedRoutes.get(source);
+    Routing routing = expectedRoutes.get(src);
 
     if (routing == null) {
-      throw new RuntimeException("Un-expected message from source: " + source);
+      throw new RuntimeException("Un-expected message from source: " + src);
     }
 
     routes.addAll(routing.getDownstreamIds());
   }
 
   @Override
-  protected void routeSendMessage(MessageHeader message, List<Integer> routes) {
-    // check the origin
-    int source = message.getSourceId();
+  protected void routeSendMessage(int src, MessageHeader message, List<Integer> routes) {
     // get the expected routes
-    Routing routing = expectedRoutes.get(source);
+    Routing routing = expectedRoutes.get(src);
 
     if (routing == null) {
-      throw new RuntimeException("Un-expected message from source: " + source);
+      throw new RuntimeException("Un-expected message from source: " + src);
     }
 
     routes.addAll(routing.getDownstreamIds());
