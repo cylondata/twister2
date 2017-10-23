@@ -74,7 +74,7 @@ public class Config {
   }
 
   public static Builder newBuilder() {
-    return newBuilder();
+    return new Builder();
   }
 
   /**

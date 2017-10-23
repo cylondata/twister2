@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -43,6 +44,8 @@ public class BaseReduceCommunication implements IContainer {
 
   @Override
   public void init(Config cfg, int containerId, ResourcePlan plan) {
+    LOG.log(Level.INFO, "Starting the example with container id: " + plan.getThisId());
+
     this.config = cfg;
     this.resourcePlan = plan;
     this.id = containerId;

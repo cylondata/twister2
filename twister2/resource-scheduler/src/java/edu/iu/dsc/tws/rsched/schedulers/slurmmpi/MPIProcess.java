@@ -70,12 +70,16 @@ public final class MPIProcess {
       // load the configuration
       // we are loading the configuration for all the components
       Config config = loadConfigurations(cmd, rank);
+      // System.out.println(config.toString());
 
       // this is the job manager`
       if (rank == 0) {
         LOG.log(Level.INFO, "This is the master process, we are not doing anything");
+        master(config, rank);
         // first lets do a barrier
+        LOG.log(Level.INFO, String.format("Process %d: barrier", rank));
         MPI.COMM_WORLD.barrier();
+        LOG.log(Level.INFO, "Master: the cluster is ready...");
         // now wait until other processes finish
         while (true) {
           try {
@@ -155,7 +159,7 @@ public final class MPIProcess {
     String configDir = cmd.getOptionValue("config_dir");
     String clusterName = cmd.getOptionValue("cluster_name");
 
-    Config config = ConfigLoader.loadConfig(twister2Home, configDir);
+    Config config = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterName);
     return Config.newBuilder().putAll(config).
         put(SlurmMPIContext.TWISTER2_HOME.getKey(), twister2Home).
         put(SlurmMPIContext.TWISTER2_JOB_BASIC_CONTAINER_CLASS, container).
@@ -164,26 +168,32 @@ public final class MPIProcess {
   }
 
   private static void master(Config config, int rank) {
-
+    // lets do a barrier here so everyone is synchronized at the start
+    // lets create the resource plan
+    createResourcePlan(config);
   }
 
   private static void worker(Config config, int rank) {
+    // lets create the resource plan
+    ResourcePlan resourcePlan = createResourcePlan(config);
+
     String containerClass = SlurmMPIContext.jobBasicContainerClass(config);
     IContainer container;
     try {
       Object object = ReflectionUtils.newInstance(containerClass);
       container = (IContainer) object;
+      LOG.info("loaded container class: " + containerClass);
     } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
       LOG.log(Level.SEVERE, "failed to load the container class", e);
       throw new RuntimeException(e);
     }
 
-    // lets create the resource plan
-    ResourcePlan resourcePlan = createResourcePlan(config);
 
     // lets do a barrier here so everyone is synchronized at the start
     try {
+      LOG.log(Level.INFO, String.format("Process %d: barrier", rank));
       MPI.COMM_WORLD.barrier();
+      LOG.log(Level.INFO, String.format("Worker %d: the cluster is ready...", rank));
     } catch (MPIException e) {
       LOG.log(Level.SEVERE, "Failed to synchronize the workers at the start");
       throw new RuntimeException(e);
@@ -195,6 +205,7 @@ public final class MPIProcess {
 
   private static ResourcePlan createResourcePlan(Config config) {
     try {
+      int rank = MPI.COMM_WORLD.getRank();
       ResourcePlan resourcePlan = new ResourcePlan(
           SlurmMPIContext.clusterName(config), MPI.COMM_WORLD.getRank());
 
@@ -209,7 +220,7 @@ public final class MPIProcess {
       // now calculate the total number of characters
       countSend.put(length);
       MPI.COMM_WORLD.allGather(countSend, 1, MPI.INT, countReceive,
-          MPI.COMM_WORLD.getSize(), MPI.INT);
+          1, MPI.INT);
 
       int[] receiveSizes = new int[worldSize];
       int[] displacements = new int[worldSize];
@@ -218,13 +229,14 @@ public final class MPIProcess {
         receiveSizes[i] = countReceive.get(i);
         displacements[i] = sum;
         sum += receiveSizes[i];
+        LOG.log(Level.INFO, String.format("Process %d: receive size %d", rank, receiveSizes[i]));
       }
       // first we need to send the expected number of characters
-      MPI.COMM_WORLD.allGather(countSend, 1, MPI.INT, countReceive, worldSize, MPI.INT);
+      //  MPI.COMM_WORLD.allGather(countSend, 1, MPI.INT, countReceive, worldSize, MPI.INT);
 
       // now we need to send this to all the nodes
       CharBuffer sendBuffer = MPI.newCharBuffer(length);
-      CharBuffer receiveBuffer = MPI.newCharBuffer(countReceive.get());
+      CharBuffer receiveBuffer = MPI.newCharBuffer(sum);
       sendBuffer.append(processName);
 
       // now lets receive the process names of each rank

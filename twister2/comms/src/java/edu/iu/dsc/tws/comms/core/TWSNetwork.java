@@ -36,8 +36,9 @@ public final class TWSNetwork {
     String communicationClass = CommunicationContext.communicationClass(config);
     try {
       dataFlowTWSCommunication = ReflectionUtils.newInstance(communicationClass);
+      LOG.info("Created communication with class: " + communicationClass);
     } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
-      LOG.severe("Failed to load the communications class");
+      LOG.severe("Failed to load the communications class: " + communicationClass);
       throw new RuntimeException(e);
     }
   }

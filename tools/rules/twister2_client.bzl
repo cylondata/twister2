@@ -55,6 +55,12 @@ def twister2_client_lib_communication_files():
         "//third_party:ompi_javabinding_java",
     ]
 
+def twister2_client_lib_common_files():
+    return [
+        "//twister2/common/src/java:config-java",
+        "//twister2/common/src/java:common-java",
+    ]
+
 def twister2_client_example_files():
     return [
         "//twister2/examples/src/java:examples-java",

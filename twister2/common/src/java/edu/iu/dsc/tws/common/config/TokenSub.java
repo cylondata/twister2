@@ -27,7 +27,7 @@ public final class TokenSub {
 
   // Pattern to match an URL - just looks for double forward slashes //
   private static final Pattern URL_PATTERN = Pattern.compile("(.+)://(.+)");
-  private static final Pattern TOKEN_PATTERN = Pattern.compile("^\\$\\{([A-Z_]+)}$");
+  private static final Pattern TOKEN_PATTERN = Pattern.compile("^\\$\\{([A-Z_0-9]+)}$");
 
   private TokenSub() {
   }

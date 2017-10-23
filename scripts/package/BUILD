@@ -11,6 +11,7 @@ load("/tools/rules/twister2_client", "twister2_client_lib_resource_scheduler_fil
 load("/tools/rules/twister2_client", "twister2_client_lib_api_files")
 load("/tools/rules/twister2_client", "twister2_client_lib_communication_files")
 load("/tools/rules/twister2_client", "twister2_client_example_files")
+load("/tools/rules/twister2_client", "twister2_client_lib_common_files")
 
 load("/tools/rules/twister2_core", "twister2_core_files")
 load("/tools/rules/twister2_core", "twister2_core_conf_files")
@@ -83,6 +84,7 @@ pkg_tar(
         ":twister2-client-lib-api",
         ":twister2-client-communication",
         ":twister2-client-examples",
+        ":twister2-client-lib-common",
     ],
 )
 
@@ -132,6 +134,12 @@ pkg_tar(
     name = "twister2-client-communication",
     package_dir = "lib",
     files = twister2_client_lib_communication_files(),
+)
+
+pkg_tar(
+    name = "twister2-client-lib-common",
+    package_dir = "lib",
+    files = twister2_client_lib_common_files(),
 )
 
 pkg_tar(
