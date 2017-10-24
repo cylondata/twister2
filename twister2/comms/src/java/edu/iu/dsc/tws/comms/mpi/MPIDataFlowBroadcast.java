@@ -36,16 +36,6 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
   }
 
   @Override
-  protected void sendCompleteMPIMessage(int src, MPIMessage mpiMessage) {
-    List<Integer> routes = new ArrayList<>();
-    routeSendMessage(src, mpiMessage.getHeader(), routes);
-    if (routes.size() == 0) {
-      throw new RuntimeException("Failed to get downstream tasks");
-    }
-    sendMessage(mpiMessage, routes);
-  }
-
-  @Override
   public void close() {
   }
 
@@ -63,14 +53,11 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
   }
 
   protected IRouter setupRouting() {
-    // lets create the routing needed
-    BinaryTreeRouter tree = new BinaryTreeRouter();
     // we will only have one distinct route
     Set<Integer> sources = new HashSet<>();
     sources.add(source);
 
-    tree.init(config, instancePlan, sources, destinations, edge, 1);
-    return tree;
+    return new BinaryTreeRouter(config, instancePlan, sources, destinations, edge, 1);
   }
 
   @Override
@@ -88,7 +75,7 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
   }
 
   @Override
-  protected void routeSendMessage(int src, MessageHeader message, List<Integer> routes) {
+  protected void routeSendMessage(int src, MPISendMessage message, List<Integer> routes) {
     // get the expected routes
     Routing routing = expectedRoutes.get(src);
 

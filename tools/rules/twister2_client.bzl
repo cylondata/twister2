@@ -52,6 +52,8 @@ def twister2_client_lib_communication_files():
         "@com_esotericsoftware_kryo//jar",
         "@com_google_guava_guava//jar",
         "@commons_lang_commons_lang//jar",
+        "@org_objenesis_objenesis//jar",
+        "@com_esotericsoftware_minlog//jar",
         "//third_party:ompi_javabinding_java",
     ]
 

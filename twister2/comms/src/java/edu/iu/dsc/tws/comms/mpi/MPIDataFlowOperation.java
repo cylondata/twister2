@@ -123,6 +123,8 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
 
   protected void initSerializers() {
     kryoSerializer = new KryoSerializer();
+    kryoSerializer.init(new HashMap<String, Object>());
+
     messageDeSerializer = new MPIMessageDeSerializer(kryoSerializer);
     messageSerializer = new MPIMessageSerializer(sendBuffers, kryoSerializer);
     // initialize the serializers
@@ -147,8 +149,8 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
 
   protected abstract IRouter setupRouting();
   protected abstract void routeReceivedMessage(MessageHeader message, List<Integer> routes);
-  protected abstract void routeSendMessage(int source, MessageHeader message, List<Integer> routes);
-  protected abstract void sendCompleteMPIMessage(int source, MPIMessage message);
+  protected abstract void routeSendMessage(int source,
+                                           MPISendMessage message, List<Integer> routes);
 
   /**
    * Sends a complete message
@@ -156,28 +158,27 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
    */
   @Override
   public boolean send(int source, Object message) {
-    LOG.log(Level.INFO, "Sending message 1...");
     return sendMessage(source, message);
   }
 
   private boolean sendMessage(int source, Object message) {
-    LOG.log(Level.INFO, "Sending message...");
-    // first we need to create a message header
-    // todo: figure out length and destination
-    MessageHeader header = MessageHeader.newBuilder(source, 0, edge, 0, source).build();
-
-    MPIMessage mpiMessage = new MPIMessage(source, type,
-        header, 0, MPIMessageDirection.OUT, this);
+    LOG.log(Level.INFO, "Sending message of type: " + type);
+    // this is a originating message. we are going to put ref count to 0
+    MPIMessage mpiMessage = new MPIMessage(source, type, MPIMessageDirection.OUT, this);
 
     // create a send message to keep track of the serialization
-    MPISendMessage sendMessage = new MPISendMessage(source, mpiMessage);
+    // at the intial stage the sub-edge is 0
+    MPISendMessage sendMessage = new MPISendMessage(source, mpiMessage, edge, 0);
     // this need to use the available buffers
     // we need to advertise the available buffers to the upper layers
     messageSerializer.build(message, sendMessage);
 
     // okay we could build fully
     if (sendMessage.serializedState() == MPISendMessage.SerializedState.FINISHED) {
-      sendCompleteMPIMessage(source, mpiMessage);
+      List<Integer> routes = new ArrayList<>();
+      routeSendMessage(source, sendMessage, routes);
+
+      sendMessage(mpiMessage, routes);
       return true;
     } else {
       // now try to put this into pending
@@ -196,7 +197,11 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
 
       // okay we build the message, send it
       if (message.serializedState() == MPISendMessage.SerializedState.FINISHED) {
-        sendCompleteMPIMessage(message.getSource(), message.getMPIMessage());
+
+        List<Integer> routes = new ArrayList<>();
+        routeSendMessage(message.getSource(), message, routes);
+        sendMessage(message.getMPIMessage(), routes);
+
         pendingSendMessages.remove();
       } else {
         break;
@@ -246,6 +251,8 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
       // before we send all
       msgObj1.incrementRefCount(sendIds.size());
       for (int i : sendIds) {
+        // we need to convert the send id to a MPI process id
+
         channel.sendMessage(i, msgObj1, this);
       }
     }
@@ -299,7 +306,15 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
       // we received a message, we need to determine weather we need to
       // forward to another node and process
       // check weather this is a message for partial or final receiver
-      receiver.onMessage(object);
+      MessageHeader header = currentMessage.getHeader();
+
+      // todo: convert id to task id
+      // check weather this message is for a sub task
+      if (router.isSubTask(header.getPath(), header.getSourceId(), header.getEdge())) {
+        partialReceiver.onMessage(currentMessage.getHeader(), object);
+      } else {
+        receiver.onMessage(currentMessage.getHeader(), object);
+      }
       // okay we built this message, lets remove it from the map
       currentMessages.remove(id);
     }

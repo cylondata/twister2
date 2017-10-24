@@ -12,28 +12,23 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.api;
 
-import java.util.HashMap;
-import java.util.Map;
-
+/**
+ * Information about the message. All this information doesn't have to be sent along the message and
+ * some can be derived from other means. It is upto the implementations how to transfer this
+ * information with the message.
+ */
 public final class MessageHeader {
   public static final int HEADER_SIZE = 20;
+
   /**
-   * The source task id
+   * The source task id where this message originated from
    */
   private int sourceId;
-  /**
-   * The destination task id
-   */
-  private int destId;
+
   /**
    * The edge id
    */
   private int edge;
-
-  /**
-   * The last node we visited
-   */
-  private int lastNode;
 
   /**
    * Length of the message
@@ -41,59 +36,32 @@ public final class MessageHeader {
   private int length;
 
   /**
-   * Weather this originated from a sub node
+   * The sub edge in which we are in
    */
-  private boolean subNodeOrigin;
-
-  /**
-   * Weather this is destined to a sub node
-   */
-  private boolean subNodeDestination;
+  private int subEdge;
 
   /**
    * Different paths for grouped collectives
    */
   private int path;
 
-  /**
-   * Set of properties
-   */
-  private Map<String, Object> properties = new HashMap<>();
-
-  private MessageHeader(int srcId, int dstId, int e, int l, int lNode) {
+  private MessageHeader(int srcId, int e, int l) {
     this.sourceId = srcId;
-    this.destId = dstId;
     this.edge = e;
     this.length = l;
-    this.lastNode = lNode;
   }
 
-  private void set(int srcId, int dstId, int e, int l, int lNode) {
+  private MessageHeader(int srcId, int e) {
     this.sourceId = srcId;
-    this.destId = dstId;
     this.edge = e;
-    this.length = l;
-    this.lastNode = lNode;
-  }
-
-  public Object getProperty(String property) {
-    return properties.get(property);
   }
 
   public int getSourceId() {
     return sourceId;
   }
 
-  public int getDestId() {
-    return destId;
-  }
-
   public int getEdge() {
     return edge;
-  }
-
-  public int getLastNode() {
-    return lastNode;
   }
 
   public int getLength() {
@@ -104,60 +72,46 @@ public final class MessageHeader {
     return path;
   }
 
-  public boolean isSubNodeOrigin() {
-    return subNodeOrigin;
+  public int getSubEdge() {
+    return subEdge;
   }
 
-  public boolean isSubNodeDestination() {
-    return subNodeDestination;
+  public static Builder newBuilder(int srcId, int e, int l) {
+    return new Builder(srcId, e, l);
   }
 
-  public static Builder newBuilder(int srcId, int dstId, int e, int l, int lNode) {
-    return new Builder(srcId, dstId, e, l, lNode);
+  public static Builder newBuilder(int srcId, int e) {
+    return new Builder(srcId, e);
   }
 
   public static final class Builder {
     private MessageHeader header;
 
-    private Builder(int sourceId, int destId, int edge, int length, int lastNode) {
-      header = new MessageHeader(sourceId, destId, edge, length, lastNode);
+    private Builder(int sourceId, int edge, int length) {
+      header = new MessageHeader(sourceId, edge, length);
     }
 
-    public Builder reInit(int sourceId, int destId, int edge, int length, int lastNode) {
-      header.set(sourceId, destId, edge, length, lastNode);
-      header.subNodeDestination = false;
-      header.subNodeOrigin = false;
-      header.properties.clear();
+    private Builder(int sourceId, int edge) {
+      header = new MessageHeader(sourceId, edge);
+    }
+
+    public Builder reInit(int sourceId, int edge, int length) {
+      header.sourceId = sourceId;
       return this;
     }
 
-    public Builder lastNode(int last) {
-      header.lastNode = last;
-      return this;
-    }
-
-    public Builder subNodeOrigin(boolean origin) {
-      header.subNodeOrigin = origin;
-      return this;
-    }
-
-    public Builder subNodeDestination(boolean destination) {
-      header.subNodeDestination = destination;
-      return this;
-    }
-
-    /**
-     * Add a key value pair to be sent with the message
-     * @param property
-     * @param value
-     */
-    public Builder addProperty(String property, String value) {
-      header.properties.put(property, value);
+    public Builder subEdge(int edge) {
+      header.subEdge = edge;
       return this;
     }
 
     public Builder path(int p) {
       header.path = p;
+      return this;
+    }
+
+    public Builder lenght(int l) {
+      header.length = l;
       return this;
     }
 

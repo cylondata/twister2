@@ -12,29 +12,22 @@
 package edu.iu.dsc.tws.comms.routing;
 
 import java.util.Map;
-import java.util.Set;
-
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.core.TaskPlan;
 
 public interface IRouter {
-  /**
-   * Initialize the router
-   *
-   * @param cfg
-   * @param plan
-   * @param srscs
-   * @param dests
-   * @param strm
-   * @param distinctRoutes
-   */
-  void init(Config cfg, TaskPlan plan, Set<Integer> srscs,
-            Set<Integer> dests, int strm, int distinctRoutes);
-
   /**
    * For each source get a routing.
    *
    * @return a map of source to -> routing
    */
   Map<Integer, Routing> expectedRoutes();
+
+  /**
+   * Check if this message is going on a sub edge
+   * @return
+   */
+  boolean isSubRoute(int path, int source, int incomingSubEdge);
+
+  int subEdge(int path, int source, int incomingSubEdge);
+
+  boolean isSubTask(int path, int source, int incomingEdge);
 }

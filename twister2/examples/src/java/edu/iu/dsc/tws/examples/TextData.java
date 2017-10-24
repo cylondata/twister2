@@ -9,22 +9,20 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.api;
+package edu.iu.dsc.tws.examples;
 
-import java.util.List;
-import java.util.Map;
+public class TextData {
+  private String value;
 
-public interface MessageReceiver {
-  /**
-   * Initialize the message receiver with tasks from which messages are expected
-   *
-   * @param expectedIds expected task ids
-   */
-  void init(Map<Integer, List<Integer>> expectedIds);
+  public TextData(String value) {
+    this.value = value;
+  }
 
-  /**
-   * The actual message callback
-   * @param object
-   */
-  void onMessage(MessageHeader header, Object object);
+  public String getValue() {
+    return value;
+  }
+
+  public void setValue(String value) {
+    this.value = value;
+  }
 }

@@ -13,6 +13,8 @@ package edu.iu.dsc.tws.comms.mpi.io;
 
 import java.nio.ByteBuffer;
 import java.util.Queue;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
@@ -23,6 +25,8 @@ import edu.iu.dsc.tws.comms.mpi.MPIMessage;
 import edu.iu.dsc.tws.comms.mpi.MPISendMessage;
 
 public class MPIMessageSerializer implements MessageSerializer {
+  private static final Logger LOG = Logger.getLogger(MPIMessageSerializer.class.getName());
+
   private Queue<MPIBuffer> sendBuffers;
   private KryoSerializer serializer;
   private Config config;
@@ -55,8 +59,7 @@ public class MPIMessageSerializer implements MessageSerializer {
 
       if (sendMessage.serializedState() == MPISendMessage.SerializedState.INIT) {
         // build the header
-        MessageHeader header = sendMessage.getMPIMessage().getHeader();
-        buildHeader(header, buffer, sendMessage);
+        buildHeader(buffer, sendMessage);
         sendMessage.setSerializedState(MPISendMessage.SerializedState.HEADER_BUILT);
       }
 
@@ -81,21 +84,19 @@ public class MPIMessageSerializer implements MessageSerializer {
     return sendMessage;
   }
 
-  private void buildHeader(MessageHeader header, MPIBuffer buffer,
-                           MPISendMessage sendMessage) {
+  private void buildHeader(MPIBuffer buffer, MPISendMessage sendMessage) {
     if (buffer.getCapacity() < 12) {
       throw new RuntimeException("The buffers should be able to hold the complete header");
     }
 
     ByteBuffer byteBuffer = buffer.getByteBuffer();
     // now lets put the content of header in
-    byteBuffer.putInt(header.getSourceId());
+    byteBuffer.putInt(sendMessage.getSource());
     // the path we are on, if not grouped it will be 0 and ignored
-    byteBuffer.putInt(header.getPath());
-    // todo : how to know the length
-    byteBuffer.putInt(header.getLength());
-
-    sendMessage.setWrittenHeaderSize(12);
+    byteBuffer.putInt(sendMessage.getPath());
+    byteBuffer.putInt(sendMessage.getSubEdge());
+    // at this point we haven't put the length and we will do it at the serializaton
+    sendMessage.setWrittenHeaderSize(16);
   }
 
   /**
@@ -108,7 +109,7 @@ public class MPIMessageSerializer implements MessageSerializer {
   private void serializeBody(Object payload,
                              MPISendMessage sendMessage, MPIBuffer buffer) {
     MessageType type = sendMessage.getMPIMessage().getType();
-
+    LOG.log(Level.INFO, "Serializing body with type: " + type);
     switch (type) {
       case INTEGER:
         break;
@@ -138,18 +139,33 @@ public class MPIMessageSerializer implements MessageSerializer {
   private void serializeObject(Object object, MPISendMessage sendMessage, MPIBuffer buffer) {
     byte[] data;
     int dataPosition;
+    ByteBuffer byteBuffer = buffer.getByteBuffer();
     if (sendMessage.serializedState() == MPISendMessage.SerializedState.HEADER_BUILT) {
       // okay we need to serialize the data
       data = serializer.serialize(object);
+      // at this point we know the length of the data
+      byteBuffer.putInt(12, data.length);
+      // now lets set the header
+      MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
+          sendMessage.getEdge(), data.length);
+      builder.subEdge(sendMessage.getSubEdge());
+      sendMessage.getMPIMessage().setHeader(builder.build());
       dataPosition = 0;
+      sendMessage.setSendBytes(data);
+      LOG.log(Level.INFO, "Finished adding header");
     } else {
       data = sendMessage.getSendBytes();
       dataPosition = sendMessage.getByteCopied();
     }
 
+    LOG.log(Level.INFO, "Serialize object body");
+    if (grouped && MPISendMessage.SerializedState.BODY == sendMessage.serializedState()) {
+      // we need to set the path at the begining
+      byteBuffer.putInt(sendMessage.getPath());
+    }
+
     int remainingToCopy = data.length - dataPosition;
     // check how much space we have
-    ByteBuffer byteBuffer = buffer.getByteBuffer();
     int bufferSpace = byteBuffer.capacity() - byteBuffer.position();
 
     int copyBytes = remainingToCopy > bufferSpace ? bufferSpace : remainingToCopy;

@@ -11,22 +11,44 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.routing;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.core.TaskPlan;
-
 public class DirectRouter implements IRouter {
-  @Override
-  public void init(Config cfg, TaskPlan plan,
-                   Set<Integer> srscs, Set<Integer> dests,
-                   int strm, int distinctRoutes) {
+  private Set<Integer> sources;
+  private int destinations;
 
+  public DirectRouter(Set<Integer> srscs, int dest) {
+    this.sources = srscs;
+    this.destinations = dest;
   }
 
   @Override
   public Map<Integer, Routing> expectedRoutes() {
-    return null;
+    Map<Integer, Routing> routingMap = new HashMap<>();
+
+    List<Integer> down = new ArrayList<>();
+    down.add(destinations);
+
+    routingMap.put(0, new Routing(down));
+    return routingMap;
+  }
+
+  @Override
+  public boolean isSubRoute(int path, int source, int incomingSubEdge) {
+    return false;
+  }
+
+  @Override
+  public int subEdge(int path, int source, int incomingSubEdge) {
+    return 0;
+  }
+
+  @Override
+  public boolean isSubTask(int path, int source, int incomingEdge) {
+    return false;
   }
 }

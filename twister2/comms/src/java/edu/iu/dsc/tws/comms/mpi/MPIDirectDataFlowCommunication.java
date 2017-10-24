@@ -12,38 +12,44 @@
 package edu.iu.dsc.tws.comms.mpi;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import edu.iu.dsc.tws.comms.api.MessageHeader;
+import edu.iu.dsc.tws.comms.routing.DirectRouter;
 import edu.iu.dsc.tws.comms.routing.IRouter;
+import edu.iu.dsc.tws.comms.routing.Routing;
 
 /**
  * A direct data flow operation sends peer to peer messages
  */
 public class MPIDirectDataFlowCommunication extends MPIDataFlowOperation {
+  private Set<Integer> sources;
+  private int destination;
 
   public MPIDirectDataFlowCommunication(TWSMPIChannel channel,
-                                        Set<Integer> source, int destination) {
+                                        Set<Integer> srcs, int dest) {
     super(channel);
+
+    this.sources = srcs;
+    this.destination = dest;
   }
 
   @Override
   protected IRouter setupRouting() {
-    return null;
+    return new DirectRouter(sources, destination);
   }
 
   @Override
   protected void routeReceivedMessage(MessageHeader message, List<Integer> routes) {
-
+    throw new RuntimeException("We are not routing received messages");
   }
 
   @Override
-  protected void routeSendMessage(int source, MessageHeader message, List<Integer> routes) {
+  protected void routeSendMessage(int source, MPISendMessage message, List<Integer> routes) {
+    Map<Integer, Routing>  routingMap = router.expectedRoutes();
 
-  }
-
-  @Override
-  protected void sendCompleteMPIMessage(int source, MPIMessage message) {
-
+    Routing routing = routingMap.get(source);
+    routes.addAll(routing.getDownstreamIds());
   }
 }

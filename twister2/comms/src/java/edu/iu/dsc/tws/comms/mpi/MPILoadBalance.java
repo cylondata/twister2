@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,10 +41,8 @@ public class MPILoadBalance extends MPIDataFlowOperation {
 
   protected IRouter setupRouting() {
     // lets create the routing needed
-    LoadBalanceRouter router = new LoadBalanceRouter();
-    router.init(config, instancePlan, sources, destinations, edge,
+    return new LoadBalanceRouter(config, instancePlan, sources, destinations, edge,
         MPIContext.distinctRoutes(config, sources.size()));
-    return router;
   }
 
   @Override
@@ -59,27 +56,10 @@ public class MPILoadBalance extends MPIDataFlowOperation {
   }
 
   @Override
-  protected void routeSendMessage(int source, MessageHeader message, List<Integer> routes) {
+  protected void routeSendMessage(int source, MPISendMessage message, List<Integer> routes) {
     Routing routing = expectedRoutes.get(source);
 
     int next = random.nextInt(routing.getDownstreamIds().size());
     routes.add(routing.getDownstreamIds().get(next));
-  }
-
-  @Override
-  protected void sendCompleteMPIMessage(int source, MPIMessage mpiMessage) {
-    MessageHeader header = mpiMessage.getHeader();
-
-    if (header.getSourceId() != source) {
-      throw new RuntimeException("The source of the message should be the sender");
-    }
-
-    List<Integer> routes = new ArrayList<>();
-    routeSendMessage(source, header, routes);
-    if (routes.size() == 0) {
-      throw new RuntimeException("Failed to get downstream tasks");
-    }
-
-    sendMessage(mpiMessage, routes);
   }
 }

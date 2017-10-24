@@ -31,4 +31,8 @@ public interface TWSCommunication {
   DataFlowOperation broadCast(Map<String, Object> properties, MessageType type, int edge,
                                int sourceTask, Set<Integer> destTasks,
                                MessageReceiver receiver);
+
+  DataFlowOperation direct(Map<String, Object> properties, MessageType type, int edge,
+                           Set<Integer> sourceTasks, int destTask,
+                           MessageReceiver receiver);
 }

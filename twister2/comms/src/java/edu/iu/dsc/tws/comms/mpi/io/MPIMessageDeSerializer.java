@@ -60,16 +60,19 @@ public class MPIMessageDeSerializer implements MessageDeSerializer {
   private void buildHeader(MPIBuffer buffer, MPIMessage message, int edge) {
     int sourceId = buffer.getByteBuffer().getInt();
     int path = buffer.getByteBuffer().getInt();
+    int subEdge = buffer.getByteBuffer().getInt();
     int length = buffer.getByteBuffer().getInt();
 
     MessageHeader.Builder headerBuilder = MessageHeader.newBuilder(
-        sourceId, 0, edge, length, 0);
+        sourceId, edge, length);
     // set the path
     headerBuilder.path(path);
+    headerBuilder.subEdge(subEdge);
+
     // first build the header
     message.setHeader(headerBuilder.build());
     // we set the 20 header size for now
-    message.setHeaderSize(12);
+    message.setHeaderSize(16);
   }
 
   protected Object buildMessage(MPIMessage message) {

@@ -30,8 +30,7 @@ public class LoadBalanceRouter implements IRouter {
   private List<Integer> destList;
   private Random random;
 
-  @Override
-  public void init(Config cfg, TaskPlan plan,
+  public LoadBalanceRouter(Config cfg, TaskPlan plan,
                    Set<Integer> srscs, Set<Integer> dests,
                    int strm, int distinctRoutes) {
     this.config = cfg;
@@ -52,5 +51,20 @@ public class LoadBalanceRouter implements IRouter {
     routingMap.put(task, new Routing(down));
 
     return routingMap;
+  }
+
+  @Override
+  public boolean isSubRoute(int path, int source, int incomingSubEdge) {
+    return false;
+  }
+
+  @Override
+  public int subEdge(int path, int source, int incomingSubEdge) {
+    return 0;
+  }
+
+  @Override
+  public boolean isSubTask(int path, int source, int incomingEdge) {
+    return false;
   }
 }

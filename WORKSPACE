@@ -72,3 +72,13 @@ maven_jar(
   name = "com_esotericsoftware_kryo",
   artifact = "com.esotericsoftware:kryo:3.0.3",
 )
+
+maven_jar(
+  name = "org_objenesis_objenesis",
+  artifact = "org.objenesis:objenesis:2.1",
+)
+
+maven_jar(
+  name = "com_esotericsoftware_minlog",
+  artifact = "com.esotericsoftware:minlog:1.3.0",
+)

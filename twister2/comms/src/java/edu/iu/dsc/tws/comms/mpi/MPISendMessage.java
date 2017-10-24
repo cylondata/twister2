@@ -30,6 +30,12 @@ public class MPISendMessage {
 
   private int source;
 
+  private int edge;
+
+  private int subEdge;
+
+  private int path;
+
   public enum SerializedState {
     INIT,
     HEADER_BUILT,
@@ -37,11 +43,18 @@ public class MPISendMessage {
     FINISHED
   }
 
-  private SerializedState serializedState;
+  private SerializedState serializedState = SerializedState.INIT;
 
-  public MPISendMessage(int src, MPIMessage message) {
+  public MPISendMessage(int src, MPIMessage message, int e, int se) {
+    this(src, message, e, se, 0);
+  }
+
+  public MPISendMessage(int src, MPIMessage message, int e, int se, int p) {
     this.ref = message;
     this.source = src;
+    this.edge = e;
+    this.subEdge = se;
+    this.path = p;
   }
 
   public SerializedState serializedState() {
@@ -90,5 +103,17 @@ public class MPISendMessage {
 
   public int getSource() {
     return source;
+  }
+
+  public int getEdge() {
+    return edge;
+  }
+
+  public int getSubEdge() {
+    return subEdge;
+  }
+
+  public int getPath() {
+    return path;
   }
 }

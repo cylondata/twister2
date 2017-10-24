@@ -50,7 +50,7 @@ public class BinaryTreeRouter implements IRouter {
    * @param dests
    * @param strm
    */
-  public void init(Config cfg, TaskPlan plan,
+  public BinaryTreeRouter(Config cfg, TaskPlan plan,
                    Set<Integer> srscs, Set<Integer> dests, int strm, int distinctRts) {
     this.config = cfg;
     this.taskPlan = plan;
@@ -68,6 +68,21 @@ public class BinaryTreeRouter implements IRouter {
   @Override
   public Map<Integer, Routing> expectedRoutes() {
     return expectedRouting;
+  }
+
+  @Override
+  public boolean isSubRoute(int path, int source, int incomingSubEdge) {
+    return false;
+  }
+
+  @Override
+  public int subEdge(int path, int source, int incomingSubEdge) {
+    return 0;
+  }
+
+  @Override
+  public boolean isSubTask(int path, int source, int incomingEdge) {
+    return false;
   }
 
   private void calculateExpectedRoutes() {

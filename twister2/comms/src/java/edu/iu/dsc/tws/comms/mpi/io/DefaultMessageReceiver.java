@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.comms.api.Message;
+import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 
 public class DefaultMessageReceiver implements MessageReceiver {
@@ -31,7 +32,6 @@ public class DefaultMessageReceiver implements MessageReceiver {
   }
 
   @Override
-  public void onMessage(Object object) {
-    messages.offer((Message) object);
+  public void onMessage(MessageHeader header, Object object) {
   }
 }

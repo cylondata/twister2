@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -39,16 +38,14 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
   }
 
   public IRouter setupRouting() {
-    // lets create the routing needed
-    BinaryTreeRouter tree = new BinaryTreeRouter();
     // we only have one destination and sources becomes destinations for creating tree
     // because this is an inverted tree from sources to destination
     Set<Integer> destinations = new HashSet<>();
     destinations.add(destination);
 
     // we only have one path
-    tree.init(config, instancePlan, destinations, sources, edge, 1);
-    return tree;
+    return new BinaryTreeRouter(config, instancePlan,
+        destinations, sources, edge, 1);
   }
 
   @Override
@@ -57,7 +54,7 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
   }
 
   @Override
-  protected void routeSendMessage(int source, MessageHeader message, List<Integer> routes) {
+  protected void routeSendMessage(int source, MPISendMessage message, List<Integer> routes) {
     // get the expected routes
     Routing routing = expectedRoutes.get(source);
 
@@ -65,17 +62,5 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
       throw new RuntimeException("Un-expected message from source: " + source);
     }
     routes.addAll(routing.getDownstreamIds());
-  }
-
-  @Override
-  protected void sendCompleteMPIMessage(int source, MPIMessage mpiMessage) {
-    List<Integer> routes = new ArrayList<>();
-    routeSendMessage(source, mpiMessage.getHeader(), routes);
-
-    if (routes.size() > 1) {
-      throw new RuntimeException("We only expect to send to one more task");
-    }
-    // now send the message
-    sendMessage(mpiMessage, routes);
   }
 }
