@@ -79,7 +79,7 @@ public class PingPongCommunication implements IContainer {
     // this method calls the init method
     // I think this is wrong
     direct = channel.direct(newCfg, MessageType.OBJECT, 0, sources,
-        dests, new DefaultMessageReceiver(reduceReceiveQueue));
+        dests, new PingPongReceive());
 
 
     // the map thread where data is produced

@@ -19,6 +19,7 @@ import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -225,6 +226,7 @@ public class TWSMPIChannel {
           Status status = r.request.testStatus();
           // this request has finished
           if (status != null) {
+            LOG.log(Level.INFO, "Send finished");
             requestIterator.remove();
           }
         } catch (MPIException e) {
@@ -248,6 +250,7 @@ public class TWSMPIChannel {
           MPIRequest r = requestIterator.next();
           Status status = r.request.testStatus();
           if (status != null) {
+            LOG.log(Level.INFO, "Receive completed");
             // lets call the callback about the receive complete
             receiveRequests.callback.onReceiveComplete(
                 receiveRequests.rank, receiveRequests.edge, r.buffer);
