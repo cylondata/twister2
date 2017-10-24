@@ -83,21 +83,19 @@ public class MPIMessageSerializer implements MessageSerializer {
 
   private void buildHeader(MessageHeader header, MPIBuffer buffer,
                            MPISendMessage sendMessage) {
-    if (buffer.getCapacity() < 24) {
+    if (buffer.getCapacity() < 12) {
       throw new RuntimeException("The buffers should be able to hold the complete header");
     }
 
     ByteBuffer byteBuffer = buffer.getByteBuffer();
     // now lets put the content of header in
     byteBuffer.putInt(header.getSourceId());
-    byteBuffer.putInt(header.getDestId());
-    byteBuffer.putInt(header.getLastNode());
     // the path we are on, if not grouped it will be 0 and ignored
     byteBuffer.putInt(header.getPath());
     // todo : how to know the length
     byteBuffer.putInt(header.getLength());
 
-    sendMessage.setWrittenHeaderSize(20);
+    sendMessage.setWrittenHeaderSize(12);
   }
 
   /**

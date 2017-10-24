@@ -72,9 +72,7 @@ public class BaseLoadBalanceCommunication implements IContainer {
     // this method calls the init method
     // I think this is wrong
     loadBalance = channel.broadCast(newCfg, MessageType.INTEGER, 0,
-        0,
-        dests, new DefaultMessageReceiver(loadReceiveQueue),
-        new DefaultMessageReceiver(loadReceiveQueue));
+        0, dests, new DefaultMessageReceiver(loadReceiveQueue));
 
     // the map thread where data is produced
     Thread mapThread = new Thread(new MapWorker());

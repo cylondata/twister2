@@ -294,7 +294,6 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
     Object object = messageDeSerializer.buid(buffer, currentMessage, e);
     // if the message is complete, send it further down and call the receiver
     if (currentMessage.isComplete()) {
-
       // we may need to pass this down to others
       passMessageDownstream(currentMessage);
       // we received a message, we need to determine weather we need to

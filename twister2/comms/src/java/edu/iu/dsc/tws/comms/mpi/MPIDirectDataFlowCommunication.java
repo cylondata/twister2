@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.comms.mpi;
 
 import java.util.List;
+import java.util.Set;
 
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.routing.IRouter;
@@ -21,7 +22,8 @@ import edu.iu.dsc.tws.comms.routing.IRouter;
  */
 public class MPIDirectDataFlowCommunication extends MPIDataFlowOperation {
 
-  public MPIDirectDataFlowCommunication(TWSMPIChannel channel, int source, int destination) {
+  public MPIDirectDataFlowCommunication(TWSMPIChannel channel,
+                                        Set<Integer> source, int destination) {
     super(channel);
   }
 

@@ -64,7 +64,7 @@ public class MPIDataFlowCommunication extends DataFlowCommunication {
 
   public DataFlowOperation broadCast(Map<String, Object> properties, MessageType type, int edge,
                                      int sourceTask, Set<Integer> destTasks,
-                                     MessageReceiver receiver, MessageReceiver partialReceiver) {
+                                     MessageReceiver receiver) {
     LOG.info("Merging configurations");
     // merge with the user specified configuration, user specified will take precedence
     Config mergedCfg = Config.newBuilder().putAll(config).putAll(properties).build();
@@ -75,14 +75,27 @@ public class MPIDataFlowCommunication extends DataFlowCommunication {
     LOG.info("Created dataflow operation");
 
     // intialize the operation
-    dataFlowOperation.init(mergedCfg, type, instancePlan, edge, receiver, partialReceiver);
+    dataFlowOperation.init(mergedCfg, type, instancePlan, edge, receiver, null);
     LOG.info("Intiailize dataflow operation");
     return dataFlowOperation;
   }
 
-  public DataFlowOperation direct(Map<String, Object> properties, MessageType type,
-                                  int sourceTask, int destTask,
+  public DataFlowOperation direct(Map<String, Object> properties, MessageType type, int edge,
+                                  Set<Integer> sourceTasks, int destTask,
                                   MessageReceiver receiver) {
-    return new MPIDirectDataFlowCommunication(channel, sourceTask, destTask);
+    LOG.info("Merging configurations");
+    // merge with the user specified configuration, user specified will take precedence
+    Config mergedCfg = Config.newBuilder().putAll(config).putAll(properties).build();
+    LOG.info("Merged configurations");
+
+    // create the dataflow operation
+    DataFlowOperation dataFlowOperation = new MPIDirectDataFlowCommunication(channel,
+        sourceTasks, destTask);
+    LOG.info("Created dataflow operation");
+
+    // intialize the operation
+    dataFlowOperation.init(mergedCfg, type, instancePlan, edge, receiver, null);
+    LOG.info("Intiailize dataflow operation");
+    return dataFlowOperation;
   }
 }
