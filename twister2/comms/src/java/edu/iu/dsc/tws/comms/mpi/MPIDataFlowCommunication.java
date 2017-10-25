@@ -34,7 +34,7 @@ public class MPIDataFlowCommunication extends DataFlowCommunication {
   public void init(Config cfg, TaskPlan taskPlan) {
     super.init(cfg, taskPlan);
 
-    channel = new TWSMPIChannel(cfg, MPI.COMM_WORLD);
+    channel = new TWSMPIChannel(cfg, MPI.COMM_WORLD, taskPlan.getThisExecutor());
     LOG.log(Level.INFO, "Initialized MPI dataflow communication");
   }
 

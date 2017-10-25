@@ -265,7 +265,7 @@ public final class MPIProcess {
                                     Map<Integer, String> processes) throws MPIException {
     int size = MPI.COMM_WORLD.getSize();
     for (int i = 0; i < size; i++) {
-      ResourceContainer resourceContainer = new ResourceContainer(MPI.COMM_WORLD.getRank());
+      ResourceContainer resourceContainer = new ResourceContainer(i);
       resourceContainer.addProperty("PROCESS_NAME", processes.get(i));
       resourcePlan.addContainer(resourceContainer);
     }

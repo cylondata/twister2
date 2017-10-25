@@ -17,10 +17,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 
 public class DirectRouter implements IRouter {
+  private static final Logger LOG = Logger.getLogger(DirectRouter.class.getName());
+
   private int destination;
   private TaskPlan taskPlan;
   private HashSet<Integer> downStream;
@@ -51,6 +54,7 @@ public class DirectRouter implements IRouter {
 
   @Override
   public Set<Integer> receivingExecutors() {
+    LOG.info(taskPlan.getThisExecutor() + " Receiving executors: " + receiveExecutors);
     return receiveExecutors;
   }
 
@@ -58,6 +62,7 @@ public class DirectRouter implements IRouter {
   public Map<Integer, List<Integer>> receiveExpectedTaskIds() {
     // check if this executor contains
     if (isLast()) {
+      LOG.info(taskPlan.getThisExecutor() + " Receive expected tasks: " + upstream.get(0));
       return upstream;
     }
 

@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.comms.mpi.io;
 
 import java.io.IOException;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.MessageDeSerializer;
@@ -21,6 +22,8 @@ import edu.iu.dsc.tws.comms.mpi.MPIBuffer;
 import edu.iu.dsc.tws.comms.mpi.MPIMessage;
 
 public class MPIMessageDeSerializer implements MessageDeSerializer {
+  private static final Logger LOG = Logger.getLogger(MPIMessageDeSerializer.class.getName());
+
   private KryoSerializer serializer;
 
   private boolean grouped;
@@ -71,6 +74,8 @@ public class MPIMessageDeSerializer implements MessageDeSerializer {
 
     // first build the header
     message.setHeader(headerBuilder.build());
+    LOG.info(String.format("Received message header: %d %d %d %d",
+        sourceId, path, subEdge, length));
     // we set the 20 header size for now
     message.setHeaderSize(16);
   }

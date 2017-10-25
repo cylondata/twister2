@@ -152,7 +152,8 @@ public class MPIMessageSerializer implements MessageSerializer {
       sendMessage.getMPIMessage().setHeader(builder.build());
       dataPosition = 0;
       sendMessage.setSendBytes(data);
-      LOG.log(Level.INFO, "Finished adding header");
+      LOG.log(Level.INFO, String.format("Finished adding header %d %d %d %d",
+          sendMessage.getSource(), sendMessage.getEdge(), sendMessage.getPath(), data.length));
     } else {
       data = sendMessage.getSendBytes();
       dataPosition = sendMessage.getByteCopied();

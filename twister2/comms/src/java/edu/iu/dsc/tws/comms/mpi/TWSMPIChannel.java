@@ -42,6 +42,8 @@ public class TWSMPIChannel {
   // a lock object to be used
   private Lock lock = new ReentrantLock();
 
+  private int executor;
+
   @SuppressWarnings("VisibilityModifier")
   private class MPIRequest {
     Request request;
@@ -110,11 +112,12 @@ public class TWSMPIChannel {
   private List<MPISendRequests> waitForCompletionSends;
 
 
-  public TWSMPIChannel(Config config, Intracomm comm) {
+  public TWSMPIChannel(Config config, Intracomm comm, int exec) {
     this.comm = comm;
     this.pendingSends = new ArrayBlockingQueue<MPISendRequests>(1024);
     this.registeredReceives = new ArrayList<>(1024);
     this.waitForCompletionSends = new ArrayList<>(1024);
+    this.executor = exec;
   }
 
   /**
@@ -161,9 +164,10 @@ public class TWSMPIChannel {
     MPIMessage message = requests.message;
     for (int i = 0; i < message.getBuffers().size(); i++) {
       try {
+        LOG.info(String.format("%d Sending message to: %d", executor, requests.rank));
         MPIBuffer buffer = message.getBuffers().get(i);
         Request request = comm.iSend(buffer.getByteBuffer(), 0,
-            MPI.BYTE, buffer.getSize(), message.getHeader().getEdge());
+            MPI.BYTE, requests.rank, message.getHeader().getEdge());
         // register to the loop to make progress on the send
         requests.pendingSends.add(new MPIRequest(request, buffer));
       } catch (MPIException e) {
@@ -213,7 +217,7 @@ public class TWSMPIChannel {
       MPIReceiveRequests receiveRequests = registeredReceives.get(i);
       // okay we have more buffers to be posted
       if (receiveRequests.availableBuffers.size() > 0) {
-        LOG.log(Level.INFO, "Posting receive request: " + receiveRequests.rank);
+        LOG.info(String.format("%d Posting receive request: %d", executor, receiveRequests.rank));
         postReceive(receiveRequests);
       }
     }
@@ -227,7 +231,7 @@ public class TWSMPIChannel {
           Status status = r.request.testStatus();
           // this request has finished
           if (status != null) {
-            LOG.log(Level.INFO, "Send finished");
+            LOG.log(Level.INFO, executor + " Send finished");
             requestIterator.remove();
           }
         } catch (MPIException e) {
@@ -251,7 +255,7 @@ public class TWSMPIChannel {
           MPIRequest r = requestIterator.next();
           Status status = r.request.testStatus();
           if (status != null) {
-            LOG.log(Level.INFO, "Receive completed");
+            LOG.log(Level.INFO, executor + " Receive completed");
             // lets call the callback about the receive complete
             receiveRequests.callback.onReceiveComplete(
                 receiveRequests.rank, receiveRequests.edge, r.buffer);

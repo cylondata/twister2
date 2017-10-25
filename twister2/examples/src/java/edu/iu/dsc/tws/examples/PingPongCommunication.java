@@ -80,25 +80,29 @@ public class PingPongCommunication implements IContainer {
     direct = channel.direct(newCfg, MessageType.OBJECT, 0, sources,
         dests, new PingPongReceive());
 
+    if (containerId == 0) {
+      // the map thread where data is produced
+      Thread mapThread = new Thread(new MapWorker());
 
-    // the map thread where data is produced
-    Thread mapThread = new Thread(new MapWorker());
+      LOG.log(Level.INFO, "Starting map thread");
+      mapThread.start();
+      // we need to progress the communication
+      while (status != Status.MAP_FINISHED) {
+        channel.progress();
 
-    LOG.log(Level.INFO, "Starting map thread");
-    mapThread.start();
-
-    // we need to progress the communication
-    while (status != Status.LOAD_RECEIVE_FINISHED) {
-      channel.progress();
-
-      // we should progress the load balance as well
-      direct.progress();
-    }
-
-    try {
-      mapThread.join();
-    } catch (InterruptedException e) {
-      throw new RuntimeException("Failed to wait on threads");
+        // we should progress the load balance as well
+        direct.progress();
+      }
+      try {
+        mapThread.join();
+      } catch (InterruptedException e) {
+        throw new RuntimeException("Failed to wait on threads");
+      }
+    } else if (containerId == 1) {
+      while (status != Status.LOAD_RECEIVE_FINISHED) {
+        channel.progress();
+        direct.progress();
+      }
     }
   }
 
@@ -131,6 +135,7 @@ public class PingPongCommunication implements IContainer {
         // lets generate a message
         direct.send(0, data);
       }
+      status = Status.MAP_FINISHED;
     }
   }
 

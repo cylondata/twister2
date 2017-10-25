@@ -71,7 +71,7 @@ public class MPIMessage {
     this.refCount = 0;
     this.messageDirection = messageDirection;
     this.releaseListener = releaseListener;
-    this.complete = true;
+    this.complete = false;
     this.type = messageType;
   }
 
@@ -94,7 +94,7 @@ public class MPIMessage {
     this.messageDirection = type;
     this.releaseListener = releaseListener;
     this.originatingId = originatingId;
-    this.complete = true;
+    this.complete = false;
   }
 
   public List<MPIBuffer> getBuffers() {

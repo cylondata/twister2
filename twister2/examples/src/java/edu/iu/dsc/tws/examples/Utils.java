@@ -17,6 +17,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
@@ -24,6 +26,7 @@ import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
 public final class Utils {
+  private static final Logger LOG = Logger.getLogger(Utils.class.getName());
 
   private Utils() {
   }
@@ -35,7 +38,7 @@ public final class Utils {
    */
   public static TaskPlan createTaskPlan(Config cfg, ResourcePlan plan) {
     int noOfProcs = plan.noOfContainers();
-
+    LOG.log(Level.INFO, "No of containers: " + noOfProcs);
     Map<Integer, Set<Integer>> executorToGraphNodes = new HashMap<>();
     Map<Integer, Set<Integer>> groupsToExeuctors = new HashMap<>();
     int thisExecutor = plan.getThisId();
@@ -56,9 +59,6 @@ public final class Utils {
 
     for (int i = 0; i < noOfProcs; i++) {
       Set<Integer> nodesOfExecutor = new HashSet<>();
-      if (i == 0) {
-        nodesOfExecutor.add(noOfProcs);
-      }
       nodesOfExecutor.add(i);
       executorToGraphNodes.put(i, nodesOfExecutor);
     }
@@ -74,8 +74,24 @@ public final class Utils {
       i++;
     }
 
+    String print = printMap(executorToGraphNodes);
+    LOG.info("Executor To Graph: " + print);
+    print = printMap(groupsToExeuctors);
+    LOG.info("Groups to executors: " + print);
     // now lets create the task plan of this, we assume we have map tasks in all the processes
     // and reduce task in 0th process
     return new TaskPlan(executorToGraphNodes, groupsToExeuctors, thisExecutor);
+  }
+
+  public static String printMap(Map<Integer, Set<Integer>> map) {
+    StringBuilder sb = new StringBuilder();
+    for (Map.Entry<Integer, Set<Integer>> e : map.entrySet()) {
+      sb.append(e.getKey() + " : ");
+      for (Integer i : e.getValue()) {
+        sb.append(i).append(" ");
+      }
+      sb.append("\n");
+    }
+    return sb.toString();
   }
 }
