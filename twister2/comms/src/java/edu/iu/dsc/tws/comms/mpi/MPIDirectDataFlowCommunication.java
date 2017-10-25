@@ -12,13 +12,11 @@
 package edu.iu.dsc.tws.comms.mpi;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.routing.DirectRouter;
 import edu.iu.dsc.tws.comms.routing.IRouter;
-import edu.iu.dsc.tws.comms.routing.Routing;
 
 /**
  * A direct data flow operation sends peer to peer messages
@@ -37,7 +35,7 @@ public class MPIDirectDataFlowCommunication extends MPIDataFlowOperation {
 
   @Override
   protected IRouter setupRouting() {
-    return new DirectRouter(sources, destination);
+    return new DirectRouter(instancePlan, sources, destination);
   }
 
   @Override
@@ -47,9 +45,7 @@ public class MPIDirectDataFlowCommunication extends MPIDataFlowOperation {
 
   @Override
   protected void routeSendMessage(int source, MPISendMessage message, List<Integer> routes) {
-    Map<Integer, Routing>  routingMap = router.expectedRoutes();
-
-    Routing routing = routingMap.get(source);
-    routes.addAll(routing.getDownstreamIds());
+    Set<Integer> downstreamTasks = router.getDownstreamTasks(source);
+    routes.addAll(downstreamTasks);
   }
 }

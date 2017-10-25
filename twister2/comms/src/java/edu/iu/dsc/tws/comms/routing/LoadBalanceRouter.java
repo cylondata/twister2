@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.comms.routing;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -43,28 +42,27 @@ public class LoadBalanceRouter implements IRouter {
   }
 
   @Override
-  public Map<Integer, Routing> expectedRoutes() {
-    Map<Integer, Routing> routingMap = new HashMap<>();
-    // we are going to send to all tasks
-    List<Integer> down = new ArrayList<>();
-    down.addAll(destList);
-    routingMap.put(task, new Routing(down));
-
-    return routingMap;
+  public Set<Integer> receivingExecutors() {
+    return null;
   }
 
   @Override
-  public boolean isSubRoute(int path, int source, int incomingSubEdge) {
+  public Map<Integer, List<Integer>> receiveExpectedTaskIds() {
+    return null;
+  }
+
+  @Override
+  public boolean isLast() {
     return false;
   }
 
   @Override
-  public int subEdge(int path, int source, int incomingSubEdge) {
+  public Set<Integer> getDownstreamTasks(int src) {
+    return null;
+  }
+
+  @Override
+  public int executor(int t) {
     return 0;
-  }
-
-  @Override
-  public boolean isSubTask(int path, int source, int incomingEdge) {
-    return false;
   }
 }

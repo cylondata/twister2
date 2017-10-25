@@ -90,4 +90,8 @@ public class TaskPlan {
   public int getGroupOfExecutor(int executor) {
     return executorToGroup.get(executor);
   }
+
+  public Set<Integer> getTasksOfThisExecutor() {
+    return executorToChannels.get(thisExecutor);
+  }
 }

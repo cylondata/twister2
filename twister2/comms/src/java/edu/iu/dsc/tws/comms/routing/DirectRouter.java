@@ -13,42 +13,72 @@ package edu.iu.dsc.tws.comms.routing;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import edu.iu.dsc.tws.comms.core.TaskPlan;
+
 public class DirectRouter implements IRouter {
-  private Set<Integer> sources;
-  private int destinations;
+  private int destination;
+  private TaskPlan taskPlan;
+  private HashSet<Integer> downStream;
+  private Map<Integer, List<Integer>> upstream;
+  private Set<Integer> receiveExecutors;
 
-  public DirectRouter(Set<Integer> srscs, int dest) {
-    this.sources = srscs;
-    this.destinations = dest;
+  public DirectRouter(TaskPlan plan, Set<Integer> srscs, int dest) {
+    this.destination = dest;
+    this.taskPlan = plan;
+
+    this.downStream = new HashSet<>();
+    this.downStream.add(dest);
+
+    this.upstream = new HashMap<>();
+    List<Integer> sources = new ArrayList<>();
+    sources.addAll(srscs);
+    this.upstream.put(0, sources);
+
+    int destinationExecutor = executor(destination);
+    receiveExecutors = new HashSet<>();
+    for (int s : srscs) {
+      int e = executor(s);
+      if (destinationExecutor != e) {
+        receiveExecutors.add(e);
+      }
+    }
   }
 
   @Override
-  public Map<Integer, Routing> expectedRoutes() {
-    Map<Integer, Routing> routingMap = new HashMap<>();
-
-    List<Integer> down = new ArrayList<>();
-    down.add(destinations);
-
-    routingMap.put(0, new Routing(down));
-    return routingMap;
+  public Set<Integer> receivingExecutors() {
+    return receiveExecutors;
   }
 
   @Override
-  public boolean isSubRoute(int path, int source, int incomingSubEdge) {
-    return false;
+  public Map<Integer, List<Integer>> receiveExpectedTaskIds() {
+    // check if this executor contains
+    if (isLast()) {
+      return upstream;
+    }
+
+    return new HashMap<>();
   }
 
   @Override
-  public int subEdge(int path, int source, int incomingSubEdge) {
-    return 0;
+  public boolean isLast() {
+    Set<Integer> tasks = taskPlan.getChannelsOfExecutor(taskPlan.getThisExecutor());
+    // now check if destination is in this task
+    return tasks.contains(destination);
   }
 
   @Override
-  public boolean isSubTask(int path, int source, int incomingEdge) {
-    return false;
+  public Set<Integer> getDownstreamTasks(int source) {
+    // return a routing
+    return downStream;
+  }
+
+  @Override
+  public int executor(int task) {
+    return taskPlan.getExecutorForChannel(task);
   }
 }

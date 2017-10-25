@@ -17,6 +17,9 @@ import java.util.Map;
 public interface MessageReceiver {
   /**
    * Initialize the message receiver with tasks from which messages are expected
+   * For each sub edge in graph, for each path, gives the expected task ids
+   *
+   * subedge -> (path -> ids)
    *
    * @param expectedIds expected task ids
    */
@@ -24,7 +27,8 @@ public interface MessageReceiver {
 
   /**
    * The actual message callback
-   * @param object
+   *
+   * @param object the actual message
    */
   void onMessage(MessageHeader header, Object object);
 }

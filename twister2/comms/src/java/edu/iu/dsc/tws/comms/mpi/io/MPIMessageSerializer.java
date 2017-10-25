@@ -95,7 +95,7 @@ public class MPIMessageSerializer implements MessageSerializer {
     // the path we are on, if not grouped it will be 0 and ignored
     byteBuffer.putInt(sendMessage.getPath());
     byteBuffer.putInt(sendMessage.getSubEdge());
-    // at this point we haven't put the length and we will do it at the serializaton
+    // at this point we haven't put the length and we will do it at the serialization
     sendMessage.setWrittenHeaderSize(16);
   }
 

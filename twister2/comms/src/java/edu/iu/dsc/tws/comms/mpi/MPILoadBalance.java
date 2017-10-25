@@ -21,7 +21,6 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.routing.IRouter;
 import edu.iu.dsc.tws.comms.routing.LoadBalanceRouter;
-import edu.iu.dsc.tws.comms.routing.Routing;
 
 public class MPILoadBalance extends MPIDataFlowOperation {
   private static final Logger LOG = Logger.getLogger(MPILoadBalance.class.getName());
@@ -57,9 +56,6 @@ public class MPILoadBalance extends MPIDataFlowOperation {
 
   @Override
   protected void routeSendMessage(int source, MPISendMessage message, List<Integer> routes) {
-    Routing routing = expectedRoutes.get(source);
-
-    int next = random.nextInt(routing.getDownstreamIds().size());
-    routes.add(routing.getDownstreamIds().get(next));
+    Set<Integer> routing = router.getDownstreamTasks(source);
   }
 }

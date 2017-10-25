@@ -213,6 +213,7 @@ public class TWSMPIChannel {
       MPIReceiveRequests receiveRequests = registeredReceives.get(i);
       // okay we have more buffers to be posted
       if (receiveRequests.availableBuffers.size() > 0) {
+        LOG.log(Level.INFO, "Posting receive request: " + receiveRequests.rank);
         postReceive(receiveRequests);
       }
     }

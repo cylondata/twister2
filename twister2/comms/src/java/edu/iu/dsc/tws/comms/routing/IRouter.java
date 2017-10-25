@@ -11,23 +11,43 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.routing;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public interface IRouter {
   /**
-   * For each source get a routing.
-   *
-   * @return a map of source to -> routing
-   */
-  Map<Integer, Routing> expectedRoutes();
-
-  /**
-   * Check if this message is going on a sub edge
+   * Return the list of receiving executors for this
    * @return
    */
-  boolean isSubRoute(int path, int source, int incomingSubEdge);
+  Set<Integer> receivingExecutors();
 
-  int subEdge(int path, int source, int incomingSubEdge);
+  /**
+   * Initialize the message receiver with tasks from which messages are expected
+   * For each sub edge in graph, for each path, gives the expected task ids
+   *
+   * path -> (ids)
+   *
+   * @return  expected task ids
+   */
+  Map<Integer, List<Integer>> receiveExpectedTaskIds();
 
-  boolean isSubTask(int path, int source, int incomingEdge);
+  /**
+   * Is this the final task
+   * @return
+   */
+  boolean isLast();
+  /**
+   * Get routing for a source
+   * @param source
+   * @return
+   */
+  Set<Integer> getDownstreamTasks(int source);
+
+  /**
+   * Get the executor for a task
+   * @param task
+   * @return
+   */
+  int executor(int task);
 }

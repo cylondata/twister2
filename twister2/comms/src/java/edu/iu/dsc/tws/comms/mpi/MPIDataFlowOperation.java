@@ -13,11 +13,9 @@ package edu.iu.dsc.tws.comms.mpi;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -38,7 +36,6 @@ import edu.iu.dsc.tws.comms.mpi.io.KryoSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.MPIMessageDeSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.MPIMessageSerializer;
 import edu.iu.dsc.tws.comms.routing.IRouter;
-import edu.iu.dsc.tws.comms.routing.Routing;
 
 public abstract class MPIDataFlowOperation implements DataFlowOperation,
     MPIMessageListener, MPIMessageReleaseCallback {
@@ -53,11 +50,10 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
   // the router that gives us the possible routes
   protected IRouter router;
   protected TWSMPIChannel channel;
-  protected MessageReceiver receiver;
+  protected MessageReceiver finalReceiver;
   protected MessageDeSerializer messageDeSerializer;
   protected MessageSerializer messageSerializer;
   // we may have multiple routes throughus
-  protected Map<Integer, Routing> expectedRoutes;
   protected MessageReceiver partialReceiver;
   protected MessageType type;
 
@@ -87,14 +83,13 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
     this.channel = channel;
   }
 
-
   @Override
   public void init(Config cfg, MessageType messageType, TaskPlan plan, int graphEdge,
                    MessageReceiver rcvr, MessageReceiver partialRcvr) {
     this.config = cfg;
     this.instancePlan = plan;
     this.edge = graphEdge;
-    this.receiver = rcvr;
+    this.finalReceiver = rcvr;
     this.partialReceiver = partialRcvr;
     this.type = messageType;
 
@@ -107,8 +102,8 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
     }
     this.receiveBuffers = new HashMap<>();
 
+    // this should setup a router
     router = setupRouting();
-    this.expectedRoutes = router.expectedRoutes();
 
     // later look at how not to allocate pairs for this each time
     pendingSendMessages = new ArrayBlockingQueue<Pair<Object, MPISendMessage>>(
@@ -213,17 +208,10 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
    * Setup the receives and send sendBuffers
    */
   protected void setupCommunication() {
-    Set<Integer> receiving = new HashSet<>();
-    Map<Integer, List<Integer>> receiveMap = new HashMap<>();
     // we will receive from these
-    for (Map.Entry<Integer, Routing> e : expectedRoutes.entrySet()) {
-      receiving.addAll(e.getValue().getUpstreamIds());
-      receiveMap.put(e.getKey(), e.getValue().getUpstreamIds());
-    }
-
     int maxReceiveBuffers = MPIContext.receiveBufferCount(config);
     int receiveBufferSize = MPIContext.bufferSize(config);
-    for (Integer recv : receiving) {
+    for (Integer recv : router.receivingExecutors()) {
       List<MPIBuffer> recvList = new ArrayList<>();
       for (int i = 0; i < maxReceiveBuffers; i++) {
         recvList.add(new MPIBuffer(receiveBufferSize));
@@ -234,7 +222,11 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
     }
 
     // initialize the receive
-    this.receiver.init(receiveMap);
+    if (!router.isLast() && this.partialReceiver != null) {
+      partialReceiver.init(router.receiveExpectedTaskIds());
+    } else {
+      this.finalReceiver.init(router.receiveExpectedTaskIds());
+    }
 
     // configure the send sendBuffers
     int sendBufferSize = MPIContext.bufferSize(config);
@@ -252,8 +244,8 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
       msgObj1.incrementRefCount(sendIds.size());
       for (int i : sendIds) {
         // we need to convert the send id to a MPI process id
-
-        channel.sendMessage(i, msgObj1, this);
+        int e = router.executor(i);
+        channel.sendMessage(e, msgObj1, this);
       }
     }
   }
@@ -308,12 +300,11 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
       // check weather this is a message for partial or final receiver
       MessageHeader header = currentMessage.getHeader();
 
-      // todo: convert id to task id
       // check weather this message is for a sub task
-      if (router.isSubTask(header.getPath(), header.getSourceId(), header.getEdge())) {
-        partialReceiver.onMessage(currentMessage.getHeader(), object);
+      if (!router.isLast() && partialReceiver != null) {
+        partialReceiver.onMessage(header, object);
       } else {
-        receiver.onMessage(currentMessage.getHeader(), object);
+        finalReceiver.onMessage(header, object);
       }
       // okay we built this message, lets remove it from the map
       currentMessages.remove(id);

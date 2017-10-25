@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.comms.routing;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -39,7 +38,6 @@ public class BinaryTreeRouter implements IRouter {
   private int intraNodeDegree;
   private int interNodeDegree;
   private int distinctRoutes;
-  private Map<Integer, Routing> expectedRouting = new HashMap<>();
 
   /**
    * Initialize the data structure
@@ -62,30 +60,10 @@ public class BinaryTreeRouter implements IRouter {
     this.interNodeDegree = MPIContext.interNodeDegree(cfg, 2);
     this.intraNodeDegree = MPIContext.intraNodeDegree(cfg, 2);
 
-    calculateExpectedRoutes();
+    calculateRoutingTable();
   }
 
-  @Override
-  public Map<Integer, Routing> expectedRoutes() {
-    return expectedRouting;
-  }
-
-  @Override
-  public boolean isSubRoute(int path, int source, int incomingSubEdge) {
-    return false;
-  }
-
-  @Override
-  public int subEdge(int path, int source, int incomingSubEdge) {
-    return 0;
-  }
-
-  @Override
-  public boolean isSubTask(int path, int source, int incomingEdge) {
-    return false;
-  }
-
-  private void calculateExpectedRoutes() {
+  private void calculateRoutingTable() {
     ArrayList<Integer> sourceList = new ArrayList<>(sources);
     Collections.sort(sourceList);
 
@@ -101,7 +79,8 @@ public class BinaryTreeRouter implements IRouter {
       if (search != null) {
         Routing routing = getRouting(search);
         if (routing != null) {
-          expectedRouting.put(source, routing);
+          // expectedRouting.put(source, routing);
+          throw new RuntimeException("");
         }
       }
     }
@@ -249,5 +228,29 @@ public class BinaryTreeRouter implements IRouter {
       rotate.add(original.get((i + index) / original.size()));
     }
     return rotate;
+  }
+
+  public int executor(int t) {
+    return this.taskPlan.getExecutorForChannel(t);
+  }
+
+  @Override
+  public Set<Integer> receivingExecutors() {
+    return null;
+  }
+
+  @Override
+  public Map<Integer, List<Integer>> receiveExpectedTaskIds() {
+    return null;
+  }
+
+  @Override
+  public boolean isLast() {
+    return false;
+  }
+
+  @Override
+  public Set<Integer> getDownstreamTasks(int src) {
+    return null;
   }
 }

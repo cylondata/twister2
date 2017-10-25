@@ -19,7 +19,6 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.routing.BinaryTreeRouter;
 import edu.iu.dsc.tws.comms.routing.IRouter;
-import edu.iu.dsc.tws.comms.routing.Routing;
 
 public class MPIDataFlowReduce extends MPIDataFlowOperation {
   private static final Logger LOG = Logger.getLogger(MPIDataFlowBroadcast.class.getName());
@@ -56,11 +55,11 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
   @Override
   protected void routeSendMessage(int source, MPISendMessage message, List<Integer> routes) {
     // get the expected routes
-    Routing routing = expectedRoutes.get(source);
+    Set<Integer> routing = router.getDownstreamTasks(source);
 
     if (routing == null) {
       throw new RuntimeException("Un-expected message from source: " + source);
     }
-    routes.addAll(routing.getDownstreamIds());
+    routes.addAll(routing);
   }
 }
