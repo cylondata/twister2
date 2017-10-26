@@ -164,9 +164,10 @@ public class TWSMPIChannel {
     MPIMessage message = requests.message;
     for (int i = 0; i < message.getBuffers().size(); i++) {
       try {
-        LOG.info(String.format("%d Sending message to: %d", executor, requests.rank));
         MPIBuffer buffer = message.getBuffers().get(i);
-        Request request = comm.iSend(buffer.getByteBuffer(), 0,
+        LOG.info(String.format("%d Sending message to: %d size: %d", executor,
+            requests.rank, buffer.getSize()));
+        Request request = comm.iSend(buffer.getByteBuffer(), buffer.getSize(),
             MPI.BYTE, requests.rank, message.getHeader().getEdge());
         // register to the loop to make progress on the send
         requests.pendingSends.add(new MPIRequest(request, buffer));
@@ -194,7 +195,8 @@ public class TWSMPIChannel {
    */
   private Request postReceive(int rank, int stream, MPIBuffer byteBuffer) {
     try {
-      return comm.iRecv(byteBuffer.getByteBuffer(), 0, MPI.BYTE, rank, stream);
+      return comm.iRecv(byteBuffer.getByteBuffer(), byteBuffer.getCapacity(),
+          MPI.BYTE, rank, stream);
     } catch (MPIException e) {
       throw new RuntimeException("Failed to post the receive", e);
     }
@@ -228,6 +230,7 @@ public class TWSMPIChannel {
       while (requestIterator.hasNext()) {
         MPIRequest r = requestIterator.next();
         try {
+//          LOG.info("Testing send status");
           Status status = r.request.testStatus();
           // this request has finished
           if (status != null) {
@@ -253,13 +256,19 @@ public class TWSMPIChannel {
         Iterator<MPIRequest> requestIterator = receiveRequests.pendingRequests.iterator();
         while (requestIterator.hasNext()) {
           MPIRequest r = requestIterator.next();
+//          LOG.info("Testing receive status");
           Status status = r.request.testStatus();
           if (status != null) {
-            LOG.log(Level.INFO, executor + " Receive completed");
-            // lets call the callback about the receive complete
-            receiveRequests.callback.onReceiveComplete(
-                receiveRequests.rank, receiveRequests.edge, r.buffer);
-            requestIterator.remove();
+            if (!status.isCancelled()) {
+              LOG.log(Level.INFO, executor + " Receive completed: " + status.getCount(MPI.BYTE));
+              // lets call the callback about the receive complete
+              r.buffer.setSize(status.getCount(MPI.BYTE));
+              receiveRequests.callback.onReceiveComplete(
+                  receiveRequests.rank, receiveRequests.edge, r.buffer);
+              requestIterator.remove();
+            } else {
+              throw new RuntimeException("MPI receive request cancelled");
+            }
           }
         }
         // this request has completed

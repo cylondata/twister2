@@ -54,6 +54,8 @@ def twister2_client_lib_communication_files():
         "@commons_lang_commons_lang//jar",
         "@org_objenesis_objenesis//jar",
         "@com_esotericsoftware_minlog//jar",
+        "@com_esotericsoftware_reflectasm//jar",
+        "@org_ow2_asm_asm//jar",
         "//third_party:ompi_javabinding_java",
     ]
 

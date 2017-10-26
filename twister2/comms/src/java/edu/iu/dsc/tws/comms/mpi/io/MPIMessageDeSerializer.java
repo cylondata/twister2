@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.comms.mpi.io;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -41,6 +42,13 @@ public class MPIMessageDeSerializer implements MessageDeSerializer {
   public Object buid(Object message, Object partialObject, int edge) {
     MPIMessage currentMessage = (MPIMessage) partialObject;
     MPIBuffer buffer = (MPIBuffer) message;
+
+    // lets rewind to 0
+    ByteBuffer byteBuffer = buffer.getByteBuffer();
+    byteBuffer.position(buffer.getSize());
+    byteBuffer.flip();
+    LOG.info("Build message with buffer containing: " + byteBuffer.remaining()
+        + " size: " + buffer.getSize());
 
     if (currentMessage.getHeader() == null) {
       buildHeader(buffer, currentMessage, edge);

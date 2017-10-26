@@ -217,6 +217,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
         recvList.add(new MPIBuffer(receiveBufferSize));
       }
       // register with the channel
+      LOG.info(instancePlan.getThisExecutor() + " Register to receive from: " + recv);
       channel.receiveMessage(recv, edge, this, recvList);
       receiveBuffers.put(recv, recvList);
     }
@@ -293,6 +294,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
     Object object = messageDeSerializer.buid(buffer, currentMessage, e);
     // if the message is complete, send it further down and call the receiver
     if (currentMessage.isComplete()) {
+      LOG.info("On receive complete message built");
       // we may need to pass this down to others
       passMessageDownstream(currentMessage);
       // we received a message, we need to determine weather we need to
@@ -308,6 +310,8 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
       }
       // okay we built this message, lets remove it from the map
       currentMessages.remove(id);
+    } else {
+      LOG.info("On receive complete message NOT built");
     }
   }
 

@@ -44,10 +44,12 @@ public class DirectRouter implements IRouter {
 
     int destinationExecutor = executor(destination);
     receiveExecutors = new HashSet<>();
-    for (int s : srscs) {
-      int e = executor(s);
-      if (destinationExecutor != e) {
-        receiveExecutors.add(e);
+    if (destinationExecutor == taskPlan.getThisExecutor()) {
+      for (int s : srscs) {
+        int e = executor(s);
+        if (destinationExecutor != e) {
+          receiveExecutors.add(e);
+        }
       }
     }
   }

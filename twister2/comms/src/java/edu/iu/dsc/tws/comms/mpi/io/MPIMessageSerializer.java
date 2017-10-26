@@ -85,7 +85,7 @@ public class MPIMessageSerializer implements MessageSerializer {
   }
 
   private void buildHeader(MPIBuffer buffer, MPISendMessage sendMessage) {
-    if (buffer.getCapacity() < 12) {
+    if (buffer.getCapacity() < 16) {
       throw new RuntimeException("The buffers should be able to hold the complete header");
     }
 
@@ -95,8 +95,12 @@ public class MPIMessageSerializer implements MessageSerializer {
     // the path we are on, if not grouped it will be 0 and ignored
     byteBuffer.putInt(sendMessage.getPath());
     byteBuffer.putInt(sendMessage.getSubEdge());
+    // we add 0 for now and late change it
+    byteBuffer.putInt(0);
     // at this point we haven't put the length and we will do it at the serialization
     sendMessage.setWrittenHeaderSize(16);
+    // lets set the size for 16 for now
+    buffer.setSize(16);
   }
 
   /**
@@ -173,6 +177,10 @@ public class MPIMessageSerializer implements MessageSerializer {
     // check how much space left in the buffer
     byteBuffer.put(data, dataPosition, copyBytes);
     sendMessage.setByteCopied(dataPosition + copyBytes);
+
+    // now set the size of the buffer
+    buffer.setSize(byteBuffer.position());
+
     // okay we are done with the message
     if (copyBytes == remainingToCopy) {
       sendMessage.setSerializedState(MPISendMessage.SerializedState.FINISHED);

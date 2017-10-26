@@ -25,6 +25,10 @@ public class MPIBuffer {
     this.byteBuffer = MPI.newByteBuffer(capacity);
   }
 
+  public void setSize(int size) {
+    this.size = size;
+  }
+
   public int getCapacity() {
     return capacity;
   }

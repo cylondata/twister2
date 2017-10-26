@@ -82,3 +82,13 @@ maven_jar(
   name = "com_esotericsoftware_minlog",
   artifact = "com.esotericsoftware:minlog:1.3.0",
 )
+
+maven_jar(
+  name = "com_esotericsoftware_reflectasm",
+  artifact = "com.esotericsoftware:reflectasm:1.10.0",
+)
+
+maven_jar(
+  name = "org_ow2_asm_asm",
+  artifact = "org.ow2.asm:asm:4.2",
+)
