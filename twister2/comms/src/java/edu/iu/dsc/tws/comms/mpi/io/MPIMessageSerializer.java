@@ -67,7 +67,6 @@ public class MPIMessageSerializer implements MessageSerializer {
         // build the body
         // first we need to serialize the body if needed
         serializeBody(message, sendMessage, buffer);
-        sendMessage.setSerializedState(MPISendMessage.SerializedState.BODY);
       } else if (sendMessage.serializedState() == MPISendMessage.SerializedState.BODY) {
         // further build the body
         serializeBody(message, sendMessage, buffer);
@@ -79,6 +78,9 @@ public class MPIMessageSerializer implements MessageSerializer {
         MPIMessage mpiMessage = sendMessage.getMPIMessage();
         // mark the original message as complete
         mpiMessage.setComplete(true);
+        LOG.info("Message FULLY serialized");
+      } else {
+        LOG.info("Message NOT FULLY serialized");
       }
     }
     return sendMessage;
@@ -88,7 +90,7 @@ public class MPIMessageSerializer implements MessageSerializer {
     if (buffer.getCapacity() < 16) {
       throw new RuntimeException("The buffers should be able to hold the complete header");
     }
-
+    LOG.info("Building header");
     ByteBuffer byteBuffer = buffer.getByteBuffer();
     // now lets put the content of header in
     byteBuffer.putInt(sendMessage.getSource());
@@ -163,7 +165,6 @@ public class MPIMessageSerializer implements MessageSerializer {
       dataPosition = sendMessage.getByteCopied();
     }
 
-    LOG.log(Level.INFO, "Serialize object body");
     if (grouped && MPISendMessage.SerializedState.BODY == sendMessage.serializedState()) {
       // we need to set the path at the begining
       byteBuffer.putInt(sendMessage.getPath());
@@ -179,11 +180,15 @@ public class MPIMessageSerializer implements MessageSerializer {
     sendMessage.setByteCopied(dataPosition + copyBytes);
 
     // now set the size of the buffer
+    LOG.log(Level.INFO, String.format("Serialize object body with buffer size: %d copyBytes: "
+        + "%d remainingCopy: %d", byteBuffer.position(), copyBytes, remainingToCopy));
     buffer.setSize(byteBuffer.position());
 
     // okay we are done with the message
     if (copyBytes == remainingToCopy) {
       sendMessage.setSerializedState(MPISendMessage.SerializedState.FINISHED);
+    } else {
+      sendMessage.setSerializedState(MPISendMessage.SerializedState.BODY);
     }
   }
 }
