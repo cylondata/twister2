@@ -86,20 +86,29 @@ public class PingPongCommunication implements IContainer {
 
       LOG.log(Level.INFO, "Starting map thread");
       mapThread.start();
+//      try {
+//        mapThread.join();
+//      } catch (InterruptedException e) {
+//        e.printStackTrace();
+//      }
       // we need to progress the communication
-      while (status != Status.MAP_FINISHED) {
+      while (true) {
+//        LOG.log(Level.INFO, "Map progressing: " + containerId);
+        // progress the channel
         channel.progress();
-
-        // we should progress the load balance as well
+//
+        // we should progress the communication directive
         direct.progress();
+        Thread.yield();
       }
-      try {
-        mapThread.join();
-      } catch (InterruptedException e) {
-        throw new RuntimeException("Failed to wait on threads");
-      }
+//      try {
+//        mapThread.join();
+//      } catch (InterruptedException e) {
+//        throw new RuntimeException("Failed to wait on threads");
+//      }
     } else if (containerId == 1) {
       while (status != Status.LOAD_RECEIVE_FINISHED) {
+//        LOG.log(Level.INFO, "Receive progressing: " + containerId);
         channel.progress();
         direct.progress();
       }
@@ -115,9 +124,9 @@ public class PingPongCommunication implements IContainer {
 
     @Override
     public void onMessage(MessageHeader header, Object object) {
-      LOG.info("received message");
       count++;
-      if (count == 10) {
+      LOG.info("received message: " + count);
+      if (count == 10000) {
         status = Status.LOAD_RECEIVE_FINISHED;
       }
     }
@@ -130,12 +139,20 @@ public class PingPongCommunication implements IContainer {
     @Override
     public void run() {
       LOG.log(Level.INFO, "Starting map worker");
-      for (int i = 0; i < 10; i++) {
+      for (int i = 0; i < 10000; i++) {
         IntData data = generateData();
         // lets generate a message
         direct.send(0, data);
+        Thread.yield();
       }
       status = Status.MAP_FINISHED;
+//      while (true) {
+//        try {
+//          Thread.sleep(10);
+//        } catch (InterruptedException e) {
+//          e.printStackTrace();
+//        }
+//      }
     }
   }
 

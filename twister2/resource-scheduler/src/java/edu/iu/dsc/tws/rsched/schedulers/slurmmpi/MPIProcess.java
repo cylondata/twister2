@@ -47,25 +47,17 @@ public final class MPIProcess {
   }
 
   public static void main(String[] args) {
+    Options cmdOptions = null;
     try {
       MPI.Init(args);
 
       int rank = MPI.COMM_WORLD.getRank();
       int size = MPI.COMM_WORLD.getSize();
 
-      Options cmdOptions = setupOptions();
+      cmdOptions = setupOptions();
       CommandLineParser parser = new DefaultParser();
       // parse the help options first.
-      CommandLine cmd = parser.parse(cmdOptions, args, true);
-
-      try {
-        // Now parse the required options
-        cmd = parser.parse(cmdOptions, args);
-      } catch (ParseException e) {
-        HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp("SubmitterMain", cmdOptions);
-        throw new RuntimeException("Error parsing command line options: ", e);
-      }
+      CommandLine cmd = parser.parse(cmdOptions, args);
 
       // load the configuration
       // we are loading the configuration for all the components
@@ -96,8 +88,9 @@ public final class MPIProcess {
       LOG.log(Level.SEVERE, "Failed the MPI process", e);
       throw new RuntimeException(e);
     } catch (ParseException e) {
-      LOG.log(Level.SEVERE, "Invalid arguments");
-      throw new RuntimeException(e);
+      HelpFormatter formatter = new HelpFormatter();
+      formatter.printHelp("SubmitterMain", cmdOptions);
+      throw new RuntimeException("Error parsing command line options: ", e);
     } finally {
       try {
         MPI.Finalize();

@@ -32,7 +32,7 @@ public class MPIContext extends CommunicationContext {
   }
 
   public static int sendBuffersCount(Config cfg) {
-    return cfg.getIntegerValue(SEND_BUFFERS_COUNT, 4);
+    return cfg.getIntegerValue(SEND_BUFFERS_COUNT, 128);
   }
 
   public static int broadcastBufferCount(Config cfg) {
@@ -41,7 +41,7 @@ public class MPIContext extends CommunicationContext {
   }
 
   public static int receiveBufferCount(Config cfg) {
-    return cfg.getIntegerValue(RECEIVE_BUFFERS_COUNT, 64);
+    return cfg.getIntegerValue(RECEIVE_BUFFERS_COUNT, 128);
   }
 
   public static int distinctRoutes(Config cfg, int defaultRoutes) {

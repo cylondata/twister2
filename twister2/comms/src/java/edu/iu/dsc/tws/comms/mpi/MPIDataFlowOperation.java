@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang3.NotImplementedException;
@@ -157,7 +156,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
   }
 
   private boolean sendMessage(int source, Object message) {
-    LOG.log(Level.INFO, "Sending message of type: " + type);
+//    LOG.log(Level.INFO, "Sending message of type: " + type);
     // this is a originating message. we are going to put ref count to 0
     MPIMessage mpiMessage = new MPIMessage(source, type, MPIMessageDirection.OUT, this);
 
@@ -272,11 +271,16 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
     if (MPIMessageDirection.IN == message.getMessageDirection()) {
       List<MPIBuffer> list = receiveBuffers.get(id);
       for (MPIBuffer buffer : message.getBuffers()) {
+        // we need to reset the buffer so it can be used again
+        buffer.getByteBuffer().reset();
         list.add(buffer);
       }
     } else if (MPIMessageDirection.OUT == message.getMessageDirection()) {
       Queue<MPIBuffer> queue = sendBuffers;
       for (MPIBuffer buffer : message.getBuffers()) {
+        LOG.info("Releasing send buffer");
+        // we need to reset the buffer so it can be used again
+        buffer.getByteBuffer().clear();
         queue.offer(buffer);
       }
     }

@@ -115,7 +115,7 @@ public class MPIMessageSerializer implements MessageSerializer {
   private void serializeBody(Object payload,
                              MPISendMessage sendMessage, MPIBuffer buffer) {
     MessageType type = sendMessage.getMPIMessage().getType();
-    LOG.log(Level.INFO, "Serializing body with type: " + type);
+//    LOG.log(Level.INFO, "Serializing body with type: " + type);
     switch (type) {
       case INTEGER:
         break;
