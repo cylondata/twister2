@@ -12,8 +12,8 @@
 package edu.iu.dsc.tws.comms.mpi;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -118,8 +118,8 @@ public class TWSMPIChannel {
   public TWSMPIChannel(Config config, Intracomm comm, int exec) {
     this.comm = comm;
     this.pendingSends = new ArrayBlockingQueue<MPISendRequests>(1024);
-    this.registeredReceives = new ArrayList<>(1024);
-    this.waitForCompletionSends = new ArrayList<>(1024);
+    this.registeredReceives = Collections.synchronizedList(new ArrayList<>(1024));
+    this.waitForCompletionSends = Collections.synchronizedList(new ArrayList<>(1024));
     this.executor = exec;
   }
 
@@ -131,16 +131,17 @@ public class TWSMPIChannel {
    * @return true if the message is accepted to be sent
    */
   public boolean sendMessage(int id, MPIMessage message, MPIMessageListener callback) {
-    lock.lock();
-    try {
-      boolean offer = pendingSends.offer(
-          new MPISendRequests(id, message.getHeader().getEdge(), message, callback));
-      LOG.info(String.format("Pending sends count: %d inQueue: %d", ++pendingSendCount,
-          pendingSends.size()));
-      return offer;
-    } finally {
-      lock.unlock();
-    }
+//    LOG.log(Level.INFO, "lock 1 " + executor);
+//    lock.lock();
+//    try {
+    boolean offer = pendingSends.offer(
+        new MPISendRequests(id, message.getHeader().getEdge(), message, callback));
+//    LOG.info(String.format("Pending sends count: %d inQueue: %d", ++pendingSendCount,
+//        pendingSends.size()));
+    return offer;
+//    } finally {
+//      lock.unlock();
+//    }
   }
 
   /**
@@ -151,14 +152,15 @@ public class TWSMPIChannel {
    * @return
    */
   public boolean receiveMessage(int rank, int stream,
-                                MPIMessageListener callback, List<MPIBuffer> receiveBuffers) {
-    lock.lock();
-    try {
-      return registeredReceives.add(new MPIReceiveRequests(rank, stream, callback,
-          new LinkedList<MPIBuffer>(receiveBuffers)));
-    } finally {
-      lock.unlock();
-    }
+                                MPIMessageListener callback, Queue<MPIBuffer> receiveBuffers) {
+//    LOG.log(Level.INFO, "lock 2 " + executor);
+//    lock.lock();
+//    try {
+    return registeredReceives.add(new MPIReceiveRequests(rank, stream, callback,
+        receiveBuffers));
+//    } finally {
+////      lock.unlock();
+//    }
   }
 
   /**
@@ -172,8 +174,8 @@ public class TWSMPIChannel {
       try {
         sendCount++;
         MPIBuffer buffer = message.getBuffers().get(i);
-        LOG.info(String.format("%d Sending message to: %d size: %d sendCount: %d", executor,
-            requests.rank, buffer.getSize(), sendCount));
+//        LOG.info(String.format("%d Sending message to: %d size: %d sendCount: %d", executor,
+//            requests.rank, buffer.getSize(), sendCount));
         Request request = comm.iSend(buffer.getByteBuffer(), buffer.getSize(),
             MPI.BYTE, requests.rank, message.getHeader().getEdge());
         // register to the loop to make progress on the send
@@ -213,8 +215,11 @@ public class TWSMPIChannel {
    * Progress the communications that are pending
    */
   public void progress() {
+//    LOG.log(Level.INFO, "lock 3 " + executor);
+//    lock.lock();
+//    try {
 //    LOG.log(Level.INFO, "Progress: pendingSends: " + pendingSends.size());
-    // we should rate limit here
+      // we should rate limit here
     while (pendingSends.size() > 0) {
 //      LOG.log(Level.INFO, "Pending sends");
       // post the message
@@ -229,9 +234,11 @@ public class TWSMPIChannel {
       MPIReceiveRequests receiveRequests = registeredReceives.get(i);
       // okay we have more buffers to be posted
       if (receiveRequests.availableBuffers.size() > 0) {
-        LOG.info(String.format("%d Posting receive request: %d", executor, receiveRequests.rank));
+//        LOG.info(String.format("%d Posting receive request: %d", executor, receiveRequests.rank));
         postReceive(receiveRequests);
-      }
+      } /*else {
+//          LOG.info("No receive buffers available for posting: " + receiveRequests.rank);
+      }*/
     }
 
     for (int i = 0; i < waitForCompletionSends.size(); i++) {
@@ -290,6 +297,9 @@ public class TWSMPIChannel {
         throw new RuntimeException("Twister2Network failure", e);
       }
     }
+//    } finally {
+//      lock.unlock();
+//    }
   }
 }
 

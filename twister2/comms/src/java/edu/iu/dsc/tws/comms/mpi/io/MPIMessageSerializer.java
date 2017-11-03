@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.comms.mpi.io;
 
 import java.nio.ByteBuffer;
 import java.util.Queue;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -78,7 +77,7 @@ public class MPIMessageSerializer implements MessageSerializer {
         MPIMessage mpiMessage = sendMessage.getMPIMessage();
         // mark the original message as complete
         mpiMessage.setComplete(true);
-        LOG.info("Message FULLY serialized");
+//        LOG.info("Message FULLY serialized");
       } else {
         LOG.info("Message NOT FULLY serialized");
       }
@@ -90,7 +89,7 @@ public class MPIMessageSerializer implements MessageSerializer {
     if (buffer.getCapacity() < 16) {
       throw new RuntimeException("The buffers should be able to hold the complete header");
     }
-    LOG.info("Building header");
+//    LOG.info("Building header");
     ByteBuffer byteBuffer = buffer.getByteBuffer();
     // now lets put the content of header in
     byteBuffer.putInt(sendMessage.getSource());
@@ -158,8 +157,8 @@ public class MPIMessageSerializer implements MessageSerializer {
       sendMessage.getMPIMessage().setHeader(builder.build());
       dataPosition = 0;
       sendMessage.setSendBytes(data);
-      LOG.log(Level.INFO, String.format("Finished adding header %d %d %d %d",
-          sendMessage.getSource(), sendMessage.getEdge(), sendMessage.getPath(), data.length));
+//      LOG.log(Level.INFO, String.format("Finished adding header %d %d %d %d",
+//          sendMessage.getSource(), sendMessage.getEdge(), sendMessage.getPath(), data.length));
     } else {
       data = sendMessage.getSendBytes();
       dataPosition = sendMessage.getByteCopied();
@@ -180,8 +179,8 @@ public class MPIMessageSerializer implements MessageSerializer {
     sendMessage.setByteCopied(dataPosition + copyBytes);
 
     // now set the size of the buffer
-    LOG.log(Level.INFO, String.format("Serialize object body with buffer size: %d copyBytes: "
-        + "%d remainingCopy: %d", byteBuffer.position(), copyBytes, remainingToCopy));
+//    LOG.log(Level.INFO, String.format("Serialize object body with buffer size: %d copyBytes: "
+//        + "%d remainingCopy: %d", byteBuffer.position(), copyBytes, remainingToCopy));
     buffer.setSize(byteBuffer.position());
 
     // okay we are done with the message

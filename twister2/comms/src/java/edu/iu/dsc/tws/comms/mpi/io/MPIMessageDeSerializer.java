@@ -47,8 +47,8 @@ public class MPIMessageDeSerializer implements MessageDeSerializer {
     ByteBuffer byteBuffer = buffer.getByteBuffer();
     byteBuffer.position(buffer.getSize());
     byteBuffer.flip();
-    LOG.info("Build message with buffer containing: " + byteBuffer.remaining()
-        + " size: " + buffer.getSize());
+//    LOG.info("Build message with buffer containing: " + byteBuffer.remaining()
+//        + " size: " + buffer.getSize());
 
     if (currentMessage.getHeader() == null) {
       buildHeader(buffer, currentMessage, edge);
@@ -82,8 +82,8 @@ public class MPIMessageDeSerializer implements MessageDeSerializer {
 
     // first build the header
     message.setHeader(headerBuilder.build());
-    LOG.info(String.format("Received message header: %d %d %d %d",
-        sourceId, path, subEdge, length));
+//    LOG.info(String.format("Received message header: %d %d %d %d",
+//        sourceId, path, subEdge, length));
     // we set the 20 header size for now
     message.setHeaderSize(16);
   }

@@ -136,13 +136,23 @@ public class PingPongCommunication implements IContainer {
    * We are running the map in a separate thread
    */
   private class MapWorker implements Runnable {
+    private int sendCount = 0;
     @Override
     public void run() {
       LOG.log(Level.INFO, "Starting map worker");
       for (int i = 0; i < 10000; i++) {
         IntData data = generateData();
         // lets generate a message
-        direct.send(0, data);
+//        LOG.log(Level.INFO, "Sending message in map");
+        while (!direct.send(0, data)) {
+          // lets wait a litte and try again
+          try {
+            Thread.sleep(1);
+          } catch (InterruptedException e) {
+            e.printStackTrace();
+          }
+        }
+        sendCount++;
         Thread.yield();
       }
       status = Status.MAP_FINISHED;

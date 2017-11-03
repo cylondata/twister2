@@ -13,10 +13,13 @@ package edu.iu.dsc.tws.comms.mpi;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang3.NotImplementedException;
@@ -55,7 +58,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
   // we may have multiple routes throughus
   protected MessageReceiver partialReceiver;
   protected MessageType type;
-
+  protected int executor;
   /**
    * The send sendBuffers used by the operation
    */
@@ -64,7 +67,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
   /**
    * Receive availableBuffers, for each receive we need to make
    */
-  protected Map<Integer, List<MPIBuffer>> receiveBuffers;
+  protected Map<Integer, Queue<MPIBuffer>> receiveBuffers;
 
   /**
    * Pending send messages
@@ -77,6 +80,11 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
   private Map<Integer, MPIMessage> currentMessages = new HashMap<>();
 
   protected KryoSerializer kryoSerializer;
+
+  /**
+   * A lock to serialize access to the resources
+   */
+  protected final Lock lock = new ReentrantLock();
 
   public MPIDataFlowOperation(TWSMPIChannel channel) {
     this.channel = channel;
@@ -91,6 +99,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
     this.finalReceiver = rcvr;
     this.partialReceiver = partialRcvr;
     this.type = messageType;
+    this.executor = instancePlan.getThisExecutor();
 
     int noOfSendBuffers = MPIContext.broadcastBufferCount(config);
     int sendBufferSize = MPIContext.bufferSize(config);
@@ -156,50 +165,64 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
   }
 
   private boolean sendMessage(int source, Object message) {
-//    LOG.log(Level.INFO, "Sending message of type: " + type);
-    // this is a originating message. we are going to put ref count to 0
-    MPIMessage mpiMessage = new MPIMessage(source, type, MPIMessageDirection.OUT, this);
+//    LOG.log(Level.INFO, "lock 00 " + executor);
+    lock.lock();
+    try {
+//   LOG.log(Level.INFO, "Sending message of type: " + type);
+      // this is a originating message. we are going to put ref count to 0 for now and
+      // increment it later
+      MPIMessage mpiMessage = new MPIMessage(source, type, MPIMessageDirection.OUT, this);
 
-    // create a send message to keep track of the serialization
-    // at the intial stage the sub-edge is 0
-    MPISendMessage sendMessage = new MPISendMessage(source, mpiMessage, edge, 0);
-    // this need to use the available buffers
-    // we need to advertise the available buffers to the upper layers
-    messageSerializer.build(message, sendMessage);
+      // create a send message to keep track of the serialization
+      // at the intial stage the sub-edge is 0
+      MPISendMessage sendMessage = new MPISendMessage(source, mpiMessage, edge, 0);
+      // this need to use the available buffers
+      // we need to advertise the available buffers to the upper layers
+      messageSerializer.build(message, sendMessage);
 
-    // okay we could build fully
-    if (sendMessage.serializedState() == MPISendMessage.SerializedState.FINISHED) {
-      List<Integer> routes = new ArrayList<>();
-      routeSendMessage(source, sendMessage, routes);
-
-      sendMessage(mpiMessage, routes);
-      return true;
-    } else {
-      // now try to put this into pending
-      return pendingSendMessages.offer(
-          new ImmutablePair<Object, MPISendMessage>(message, sendMessage));
+      // okay we could build fully
+      if (sendMessage.serializedState() == MPISendMessage.SerializedState.FINISHED) {
+        List<Integer> routes = new ArrayList<>();
+        routeSendMessage(source, sendMessage, routes);
+        // lets increment the reference count of this message
+        mpiMessage.incrementRefCount();
+        sendMessage(mpiMessage, routes);
+        return true;
+      } else {
+        // now try to put this into pending
+        return pendingSendMessages.offer(
+            new ImmutablePair<Object, MPISendMessage>(message, sendMessage));
+      }
+    } finally {
+      lock.unlock();
     }
   }
 
   @Override
   public void progress() {
-    while (pendingSendMessages.size() > 0) {
-      // take out pending messages
-      Pair<Object, MPISendMessage> pair = pendingSendMessages.peek();
-      MPISendMessage message = (MPISendMessage)
-          messageSerializer.build(pair.getKey(), pair.getValue());
+//    LOG.log(Level.INFO, "lock 11 " + executor);
+    lock.lock();
+    try {
+      while (pendingSendMessages.size() > 0) {
+        // take out pending messages
+        Pair<Object, MPISendMessage> pair = pendingSendMessages.peek();
+        MPISendMessage message = (MPISendMessage)
+            messageSerializer.build(pair.getKey(), pair.getValue());
 
-      // okay we build the message, send it
-      if (message.serializedState() == MPISendMessage.SerializedState.FINISHED) {
+        // okay we build the message, send it
+        if (message.serializedState() == MPISendMessage.SerializedState.FINISHED) {
 
-        List<Integer> routes = new ArrayList<>();
-        routeSendMessage(message.getSource(), message, routes);
-        sendMessage(message.getMPIMessage(), routes);
+          List<Integer> routes = new ArrayList<>();
+          routeSendMessage(message.getSource(), message, routes);
+          sendMessage(message.getMPIMessage(), routes);
 
-        pendingSendMessages.remove();
-      } else {
-        break;
+          pendingSendMessages.remove();
+        } else {
+          break;
+        }
       }
+    } finally {
+      lock.unlock();
     }
   }
 
@@ -211,7 +234,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
     int maxReceiveBuffers = MPIContext.receiveBufferCount(config);
     int receiveBufferSize = MPIContext.bufferSize(config);
     for (Integer recv : router.receivingExecutors()) {
-      List<MPIBuffer> recvList = new ArrayList<>();
+      Queue<MPIBuffer> recvList = new LinkedList<>();
       for (int i = 0; i < maxReceiveBuffers; i++) {
         recvList.add(new MPIBuffer(receiveBufferSize));
       }
@@ -268,54 +291,72 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
   }
 
   protected void releaseTheBuffers(int id, MPIMessage message) {
-    if (MPIMessageDirection.IN == message.getMessageDirection()) {
-      List<MPIBuffer> list = receiveBuffers.get(id);
-      for (MPIBuffer buffer : message.getBuffers()) {
-        // we need to reset the buffer so it can be used again
-        buffer.getByteBuffer().reset();
-        list.add(buffer);
+//    LOG.log(Level.INFO, "lock 22 " + executor);
+    lock.lock();
+    try {
+      if (MPIMessageDirection.IN == message.getMessageDirection()) {
+        Queue<MPIBuffer> list = receiveBuffers.get(id);
+        for (MPIBuffer buffer : message.getBuffers()) {
+          // we need to reset the buffer so it can be used again
+          buffer.getByteBuffer().clear();
+//        LOG.info("Releasing receive buffer to: " + id);
+          list.offer(buffer);
+        }
+      } else if (MPIMessageDirection.OUT == message.getMessageDirection()) {
+        Queue<MPIBuffer> queue = sendBuffers;
+        for (MPIBuffer buffer : message.getBuffers()) {
+//        LOG.info("Releasing send buffer");
+          // we need to reset the buffer so it can be used again
+          buffer.getByteBuffer().clear();
+          queue.offer(buffer);
+        }
       }
-    } else if (MPIMessageDirection.OUT == message.getMessageDirection()) {
-      Queue<MPIBuffer> queue = sendBuffers;
-      for (MPIBuffer buffer : message.getBuffers()) {
-        LOG.info("Releasing send buffer");
-        // we need to reset the buffer so it can be used again
-        buffer.getByteBuffer().clear();
-        queue.offer(buffer);
-      }
+    } finally {
+      lock.unlock();
     }
   }
 
   @Override
   public void onReceiveComplete(int id, int e, MPIBuffer buffer) {
-    // we need to try to build the message here, we may need many more messages to complete
-    MPIMessage currentMessage = currentMessages.get(id);
-    if (currentMessage == null) {
-      currentMessage = new MPIMessage(type, MPIMessageDirection.IN, this);
-      currentMessages.put(id, currentMessage);
-    }
-
-    Object object = messageDeSerializer.buid(buffer, currentMessage, e);
-    // if the message is complete, send it further down and call the receiver
-    if (currentMessage.isComplete()) {
-      LOG.info("On receive complete message built");
-      // we may need to pass this down to others
-      passMessageDownstream(currentMessage);
-      // we received a message, we need to determine weather we need to
-      // forward to another node and process
-      // check weather this is a message for partial or final receiver
-      MessageHeader header = currentMessage.getHeader();
-
-      // check weather this message is for a sub task
-      if (!router.isLast() && partialReceiver != null) {
-        partialReceiver.onMessage(header, object);
-      } else {
-        finalReceiver.onMessage(header, object);
+//    LOG.log(Level.INFO, "lock 33 " + executor);
+    lock.lock();
+    try {
+      // we need to try to build the message here, we may need many more messages to complete
+      MPIMessage currentMessage = currentMessages.get(id);
+      if (currentMessage == null) {
+        currentMessage = new MPIMessage(type, MPIMessageDirection.IN, this);
+        currentMessages.put(id, currentMessage);
       }
-      // okay we built this message, lets remove it from the map
-      currentMessages.remove(id);
-    } else {
-      LOG.info("On receive complete message NOT built");
+
+      Object object = messageDeSerializer.buid(buffer, currentMessage, e);
+      // if the message is complete, send it further down and call the receiver
+      if (currentMessage.isComplete()) {
+//      LOG.info("On receive complete message built");
+        // we need to increment the ref count here before someone send it to another place
+        // other wise they may free it before we do
+        currentMessage.incrementRefCount();
+        // we may need to pass this down to others
+        passMessageDownstream(currentMessage);
+        // we received a message, we need to determine weather we need to
+        // forward to another node and process
+        // check weather this is a message for partial or final receiver
+        MessageHeader header = currentMessage.getHeader();
+
+        // check weather this message is for a sub task
+        if (!router.isLast() && partialReceiver != null) {
+          partialReceiver.onMessage(header, object);
+        } else {
+          finalReceiver.onMessage(header, object);
+        }
+        // okay we built this message, lets remove it from the map
+        currentMessages.remove(id);
+        // okay lets try to free the buffers of this message
+        currentMessage.release();
+      } else {
+        LOG.info("On receive complete message NOT built");
+      }
+    } finally {
+      lock.unlock();
     }
   }
 
