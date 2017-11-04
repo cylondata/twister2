@@ -125,8 +125,10 @@ public class PingPongCommunication implements IContainer {
     @Override
     public void onMessage(MessageHeader header, Object object) {
       count++;
-      LOG.info("received message: " + count);
-      if (count == 10000) {
+      if (count % 10000 == 0) {
+        LOG.info("received message: " + count);
+      }
+      if (count == 100000) {
         status = Status.LOAD_RECEIVE_FINISHED;
       }
     }
@@ -140,7 +142,7 @@ public class PingPongCommunication implements IContainer {
     @Override
     public void run() {
       LOG.log(Level.INFO, "Starting map worker");
-      for (int i = 0; i < 10000; i++) {
+      for (int i = 0; i < 100000; i++) {
         IntData data = generateData();
         // lets generate a message
 //        LOG.log(Level.INFO, "Sending message in map");
