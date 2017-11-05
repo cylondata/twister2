@@ -11,23 +11,111 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.routing;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.mpi.MPIContext;
+
 public class SingleTargetBinaryTreeRouter implements IRouter {
+  private Config config;
+  private TaskPlan taskPlan;
+  private int sources;
+  private Set<Integer> destinations;
+  private int stream;
+  private int task;
+  private int intraNodeDegree;
+  private int interNodeDegree;
+  private int distinctRoutes;
+  private BinaryTree tree;
+  private Node treeRoot;
+  private Map<Integer, List<Integer>> upstream;
+  private Set<Integer> receiveExecutors;
+  private Set<Integer> downStream;
+
+  /**
+   * Tasks belonging to this operation and in the same executor
+   */
+  private Set<Integer> thisExecutorTasksOfOperation;
+
+  /**
+   * Initialize the data structure
+   *
+   * @param cfg
+   * @param plan
+   * @param root
+   * @param dests
+   * @param strm
+   */
+  public SingleTargetBinaryTreeRouter(Config cfg, TaskPlan plan,
+                          int root, Set<Integer> dests, int strm, int distinctRts) {
+    this.config = cfg;
+    this.taskPlan = plan;
+    this.sources = root;
+    this.destinations = dests;
+    this.stream = strm;
+    this.distinctRoutes = distinctRts;
+
+    this.interNodeDegree = MPIContext.interNodeDegree(cfg, 2);
+    this.intraNodeDegree = MPIContext.intraNodeDegree(cfg, 2);
+
+    // lets build the tree
+    tree = new BinaryTree(interNodeDegree, intraNodeDegree, taskPlan, root, dests);
+    treeRoot = tree.buildInterGroupTree(0);
+
+    Set<Integer> thisExecutorTasks = taskPlan.getChannelsOfExecutor(taskPlan.getThisExecutor());
+    thisExecutorTasksOfOperation = new HashSet<>();
+    for (int t : thisExecutorTasks) {
+      if (dests.contains(t) || root == t) {
+        thisExecutorTasksOfOperation.add(t);
+      }
+    }
+
+    receiveExecutors = new HashSet<>();
+    for (int t : thisExecutorTasksOfOperation) {
+      Node search = BinaryTree.search(treeRoot, t);
+      if (search == null) {
+        // we do no have the tasks that are directly connected to the tree node
+        continue;
+      }
+      receiveExecutors.addAll(search.getRemoteChildrenIds());
+    }
+
+    // construct the map of receiving ids
+    this.upstream = new HashMap<>();
+    Set<Integer> recv = new HashSet<>();
+    for (int t : thisExecutorTasksOfOperation) {
+      Node search = BinaryTree.search(treeRoot, t);
+      if (search == null) {
+        // we do no have the tasks that are directly connected to the tree node
+        continue;
+      }
+      recv.addAll(search.getAllChildrenIds());
+    }
+    upstream.put(0, new ArrayList<>(recv));
+
+    // now lets construct the downstream tasks
+    downStream = new HashSet<>();
+
+  }
+
   @Override
   public Set<Integer> receivingExecutors() {
-    return null;
+    return receiveExecutors;
   }
 
   @Override
   public Map<Integer, List<Integer>> receiveExpectedTaskIds() {
-    return null;
+    return upstream;
   }
 
   @Override
-  public boolean isLast() {
+  public boolean isLast(int task) {
     return false;
   }
 
@@ -38,6 +126,16 @@ public class SingleTargetBinaryTreeRouter implements IRouter {
 
   @Override
   public int executor(int task) {
+    return taskPlan.getExecutorForChannel(task);
+  }
+
+  @Override
+  public int mainTaskOfExecutor(int executor) {
+    return 0;
+  }
+
+  @Override
+  public int destinationIdentifier() {
     return 0;
   }
 }

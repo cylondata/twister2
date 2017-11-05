@@ -156,6 +156,14 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
                                            MPISendMessage message, List<Integer> routes);
 
   /**
+   * Default implementation returns 0 and specific implementations should override
+   * @return
+   */
+  protected int destinationIdentifier() {
+    return 0;
+  }
+
+  /**
    * Sends a complete message
    * @param message the message object
    */
@@ -175,7 +183,8 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
 
       // create a send message to keep track of the serialization
       // at the intial stage the sub-edge is 0
-      MPISendMessage sendMessage = new MPISendMessage(source, mpiMessage, edge, 0);
+      MPISendMessage sendMessage = new MPISendMessage(source, mpiMessage, edge,
+          destinationIdentifier());
       // this need to use the available buffers
       // we need to advertise the available buffers to the upper layers
       messageSerializer.build(message, sendMessage);
@@ -245,7 +254,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
     }
 
     // initialize the receive
-    if (!router.isLast() && this.partialReceiver != null) {
+    if (this.partialReceiver != null) {
       partialReceiver.init(router.receiveExpectedTaskIds());
     } else {
       this.finalReceiver.init(router.receiveExpectedTaskIds());
@@ -340,14 +349,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
         // we received a message, we need to determine weather we need to
         // forward to another node and process
         // check weather this is a message for partial or final receiver
-        MessageHeader header = currentMessage.getHeader();
-
-        // check weather this message is for a sub task
-        if (!router.isLast() && partialReceiver != null) {
-          partialReceiver.onMessage(header, object);
-        } else {
-          finalReceiver.onMessage(header, object);
-        }
+        receiveMessage(currentMessage, object);
         // okay we built this message, lets remove it from the map
         currentMessages.remove(id);
         // okay lets try to free the buffers of this message
@@ -360,15 +362,25 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
     }
   }
 
+  protected void receiveMessage(MPIMessage currentMessage, Object object) {
+    MessageHeader header = currentMessage.getHeader();
+
+    // we always receive to the main task
+    int messageDestId = currentMessage.getHeader().getDestinationIdentifier();
+    // check weather this message is for a sub task
+    if (!router.isLast(messageDestId) && partialReceiver != null) {
+      partialReceiver.onMessage(header, object);
+    } else {
+      finalReceiver.onMessage(header, object);
+    }
+  }
+
   /**
    * By default we are not doing anything here and the specific operations can override this
    *
    * @param currentMessage
    */
   protected void passMessageDownstream(MPIMessage currentMessage) {
-  }
-
-  protected void messageReceived(MPIMessage completeMessage) {
   }
 
   @Override

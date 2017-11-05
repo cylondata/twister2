@@ -13,13 +13,9 @@ package edu.iu.dsc.tws.comms.routing;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -34,7 +30,6 @@ public class BinaryTreeRouter implements IRouter {
   private Set<Integer> sources;
   private Set<Integer> destinations;
   private int stream;
-  private int task;
   private int intraNodeDegree;
   private int interNodeDegree;
   private int distinctRoutes;
@@ -79,7 +74,7 @@ public class BinaryTreeRouter implements IRouter {
 
 //      Node root = buildInterGroupTree(index);
       Node root = null;
-      Node search = tree.search(root, task);
+      Node search = BinaryTree.search(root, 0);
       if (search != null) {
         Routing routing = getRouting(search);
         if (routing != null) {
@@ -110,6 +105,16 @@ public class BinaryTreeRouter implements IRouter {
   }
 
   @Override
+  public int mainTaskOfExecutor(int executor) {
+    return 0;
+  }
+
+  @Override
+  public int destinationIdentifier() {
+    return 0;
+  }
+
+  @Override
   public Set<Integer> receivingExecutors() {
     return null;
   }
@@ -120,7 +125,7 @@ public class BinaryTreeRouter implements IRouter {
   }
 
   @Override
-  public boolean isLast() {
+  public boolean isLast(int task) {
     return false;
   }
 

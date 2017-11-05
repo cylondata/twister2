@@ -16,14 +16,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.Message;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
@@ -45,10 +42,6 @@ public class PingPongCommunication implements IContainer {
   }
 
   private Status status;
-
-  private BlockingQueue<Message> partialReceiveQueue = new ArrayBlockingQueue<Message>(1024);
-
-  private BlockingQueue<Message> reduceReceiveQueue = new ArrayBlockingQueue<Message>(1024);
 
   /**
    * Initialize the container
@@ -86,29 +79,17 @@ public class PingPongCommunication implements IContainer {
 
       LOG.log(Level.INFO, "Starting map thread");
       mapThread.start();
-//      try {
-//        mapThread.join();
-//      } catch (InterruptedException e) {
-//        e.printStackTrace();
-//      }
+
       // we need to progress the communication
       while (true) {
-//        LOG.log(Level.INFO, "Map progressing: " + containerId);
         // progress the channel
         channel.progress();
-//
         // we should progress the communication directive
         direct.progress();
         Thread.yield();
       }
-//      try {
-//        mapThread.join();
-//      } catch (InterruptedException e) {
-//        throw new RuntimeException("Failed to wait on threads");
-//      }
     } else if (containerId == 1) {
       while (status != Status.LOAD_RECEIVE_FINISHED) {
-//        LOG.log(Level.INFO, "Receive progressing: " + containerId);
         channel.progress();
         direct.progress();
       }
@@ -119,7 +100,6 @@ public class PingPongCommunication implements IContainer {
     private int count = 0;
     @Override
     public void init(Map<Integer, List<Integer>> expectedIds) {
-
     }
 
     @Override
@@ -145,7 +125,6 @@ public class PingPongCommunication implements IContainer {
       for (int i = 0; i < 100000; i++) {
         IntData data = generateData();
         // lets generate a message
-//        LOG.log(Level.INFO, "Sending message in map");
         while (!direct.send(0, data)) {
           // lets wait a litte and try again
           try {
@@ -158,13 +137,6 @@ public class PingPongCommunication implements IContainer {
         Thread.yield();
       }
       status = Status.MAP_FINISHED;
-//      while (true) {
-//        try {
-//          Thread.sleep(10);
-//        } catch (InterruptedException e) {
-//          e.printStackTrace();
-//        }
-//      }
     }
   }
 

@@ -12,7 +12,9 @@
 package edu.iu.dsc.tws.comms.routing;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class Node {
   // children that are not in memory
@@ -46,6 +48,23 @@ public class Node {
 
   public Node getParent() {
     return parent;
+  }
+
+  public Set<Integer> getAllChildrenIds() {
+    Set<Integer> allChildren = new HashSet<>();
+    allChildren.addAll(directChildren);
+    for (Node n : children) {
+      allChildren.add(n.getTaskId());
+    }
+    return allChildren;
+  }
+
+  public Set<Integer> getRemoteChildrenIds() {
+    Set<Integer> allChildren = new HashSet<>();
+    for (Node n : children) {
+      allChildren.add(n.getTaskId());
+    }
+    return allChildren;
   }
 
   public int getTaskId() {

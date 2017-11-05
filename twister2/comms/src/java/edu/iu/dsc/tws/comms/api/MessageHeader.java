@@ -36,9 +36,9 @@ public final class MessageHeader {
   private int length;
 
   /**
-   * The sub edge in which we are in
+   * An integer value used to identify the destination
    */
-  private int subEdge;
+  private int destinationIdentifier;
 
   /**
    * Different paths for grouped collectives
@@ -72,8 +72,8 @@ public final class MessageHeader {
     return path;
   }
 
-  public int getSubEdge() {
-    return subEdge;
+  public int getDestinationIdentifier() {
+    return destinationIdentifier;
   }
 
   public static Builder newBuilder(int srcId, int e, int l) {
@@ -101,7 +101,7 @@ public final class MessageHeader {
     }
 
     public Builder subEdge(int edge) {
-      header.subEdge = edge;
+      header.destinationIdentifier = edge;
       return this;
     }
 

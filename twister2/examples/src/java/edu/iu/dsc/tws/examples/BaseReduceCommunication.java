@@ -13,21 +13,20 @@ package edu.iu.dsc.tws.examples;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.Message;
+import edu.iu.dsc.tws.comms.api.MessageHeader;
+import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.mpi.io.DefaultMessageReceiver;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
@@ -45,9 +44,13 @@ public class BaseReduceCommunication implements IContainer {
 
   private Config config;
 
-  private BlockingQueue<Message> partialReceiveQueue = new ArrayBlockingQueue<Message>(1024);
+  private enum Status {
+    INIT,
+    MAP_FINISHED,
+    LOAD_RECEIVE_FINISHED,
+  }
 
-  private BlockingQueue<Message> reduceReceiveQueue = new ArrayBlockingQueue<Message>(1024);
+  private Status status;
 
   @Override
   public void init(Config cfg, int containerId, ResourcePlan plan) {
@@ -56,40 +59,47 @@ public class BaseReduceCommunication implements IContainer {
     this.config = cfg;
     this.resourcePlan = plan;
     this.id = containerId;
+    this.status = Status.INIT;
 
     // lets create the task plan
-    TaskPlan taskPlan = Utils.createTaskPlan(cfg, plan);
+    TaskPlan taskPlan = Utils.createReduceTaskPlan(cfg, plan, 8);
     //first get the communication config file
     TWSNetwork network = new TWSNetwork(cfg, taskPlan);
 
     TWSCommunication channel = network.getDataFlowTWSCommunication();
 
     Set<Integer> sources = new HashSet<>();
-    Set<Integer> dests = new HashSet<>();
+    for (int i = 0; i < 7; i++) {
+      sources.add(i);
+    }
+    int dest = 7;
+
     Map<String, Object> newCfg = new HashMap<>();
 
     LOG.info("Setting up reduce dataflow operation");
     // this method calls the init method
     // I think this is wrong
-    reduce = channel.reduce(newCfg, MessageType.INTEGER, 0, sources,
-        0, new DefaultMessageReceiver(reduceReceiveQueue),
-        new DefaultMessageReceiver(partialReceiveQueue));
+    reduce = channel.reduce(newCfg, MessageType.OBJECT, 0, sources,
+        dest, new FinalReduceReceive(), new PartialReduceWorker());
 
-    // this thread is only run at the reduce
-    Thread reduceThread = new Thread(new PartialReduceWorker());
+    if (containerId == 0) {
+      // the map thread where data is produced
+      Thread mapThread = new Thread(new MapWorker());
+      mapThread.start();
 
-    // the map thread where data is produced
-    Thread mapThread = new Thread(new MapWorker());
-
-    LOG.log(Level.INFO, "Starting reduce thread");
-    reduceThread.start();
-    LOG.log(Level.INFO, "Starting map thread");
-    mapThread.start();
-    try {
-      mapThread.join();
-      reduceThread.join();
-    } catch (InterruptedException e) {
-      throw new RuntimeException("Failed to wait on threads");
+      // we need to progress the communication
+      while (true) {
+        // progress the channel
+        channel.progress();
+        // we should progress the communication directive
+        reduce.progress();
+        Thread.yield();
+      }
+    } else if (containerId == 1) {
+      while (status != Status.LOAD_RECEIVE_FINISHED) {
+        channel.progress();
+        reduce.progress();
+      }
     }
   }
 
@@ -97,38 +107,50 @@ public class BaseReduceCommunication implements IContainer {
    * We are running the map in a separate thread
    */
   private class MapWorker implements Runnable {
+    private int sendCount = 0;
     @Override
     public void run() {
       LOG.log(Level.INFO, "Starting map worker");
-      for (int i = 0; i < 10; i++) {
+      for (int i = 0; i < 100000; i++) {
         IntData data = generateData();
-
-        // do some computation over data
-        for (int j = 0; j < 1000; j++) {
-          for (int k : data.getData()) {
-            int p = k * j;
+        // lets generate a message
+        while (!reduce.send(0, data)) {
+          // lets wait a litte and try again
+          try {
+            Thread.sleep(1);
+          } catch (InterruptedException e) {
+            e.printStackTrace();
           }
         }
-
-        // lets generate a message
-        Message message = Message.newBuilder().setPayload(data).build();
-        reduce.send(0, message);
+        sendCount++;
+        Thread.yield();
       }
+      status = Status.MAP_FINISHED;
     }
   }
 
   /**
    * Reduce class will work on the reduce messages.
    */
-  private class PartialReduceWorker implements Runnable {
+  private class PartialReduceWorker implements MessageReceiver {
     @Override
-    public void run() {
-      LOG.log(Level.INFO, "Starting reduce worker");
-      while (true) {
-        Message message = partialReceiveQueue.poll();
-        Object payload = message.getPayload();
+    public void init(Map<Integer, List<Integer>> expectedIds) {
+    }
 
-      }
+    @Override
+    public void onMessage(MessageHeader header, Object object) {
+      reduce.injectPartialResult(0, object);
+    }
+  }
+
+  private class FinalReduceReceive implements MessageReceiver {
+    @Override
+    public void init(Map<Integer, List<Integer>> expectedIds) {
+    }
+
+    @Override
+    public void onMessage(MessageHeader header, Object object) {
+
     }
   }
 

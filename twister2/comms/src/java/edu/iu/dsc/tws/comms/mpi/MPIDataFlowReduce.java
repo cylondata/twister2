@@ -48,6 +48,16 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
   }
 
   @Override
+  protected int destinationIdentifier() {
+    return super.destinationIdentifier();
+  }
+
+  @Override
+  protected void receiveMessage(MPIMessage currentMessage, Object object) {
+    super.receiveMessage(currentMessage, object);
+  }
+
+  @Override
   protected void routeReceivedMessage(MessageHeader message, List<Integer> routes) {
     throw new RuntimeException("We don't rout send received messages directly");
   }

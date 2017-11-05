@@ -29,6 +29,7 @@ public class DirectRouter implements IRouter {
   private HashSet<Integer> downStream;
   private Map<Integer, List<Integer>> upstream;
   private Set<Integer> receiveExecutors;
+  private Set<Integer> thisExecutorTasks;
 
   public DirectRouter(TaskPlan plan, Set<Integer> srscs, int dest) {
     this.destination = dest;
@@ -52,6 +53,7 @@ public class DirectRouter implements IRouter {
         }
       }
     }
+    this.thisExecutorTasks = taskPlan.getChannelsOfExecutor(taskPlan.getThisExecutor());
   }
 
   @Override
@@ -63,7 +65,7 @@ public class DirectRouter implements IRouter {
   @Override
   public Map<Integer, List<Integer>> receiveExpectedTaskIds() {
     // check if this executor contains
-    if (isLast()) {
+    if (thisExecutorTasks.contains(destination)) {
       LOG.info(taskPlan.getThisExecutor() + " Receive expected tasks: " + upstream.get(0));
       return upstream;
     }
@@ -72,10 +74,9 @@ public class DirectRouter implements IRouter {
   }
 
   @Override
-  public boolean isLast() {
-    Set<Integer> tasks = taskPlan.getChannelsOfExecutor(taskPlan.getThisExecutor());
+  public boolean isLast(int task) {
     // now check if destination is in this task
-    return tasks.contains(destination);
+    return thisExecutorTasks.contains(destination);
   }
 
   @Override
@@ -87,5 +88,15 @@ public class DirectRouter implements IRouter {
   @Override
   public int executor(int task) {
     return taskPlan.getExecutorForChannel(task);
+  }
+
+  @Override
+  public int mainTaskOfExecutor(int executor) {
+    return 0;
+  }
+
+  @Override
+  public int destinationIdentifier() {
+    return 0;
   }
 }

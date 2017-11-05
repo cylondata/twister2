@@ -38,6 +38,15 @@ public class MPIDirectDataFlowCommunication extends MPIDataFlowOperation {
     return new DirectRouter(instancePlan, sources, destination);
   }
 
+  /**
+   * We will use the destination task id as the identifier
+   * @return
+   */
+  @Override
+  protected int destinationIdentifier() {
+    return destination;
+  }
+
   @Override
   protected void routeReceivedMessage(MessageHeader message, List<Integer> routes) {
     throw new RuntimeException("We are not routing received messages");

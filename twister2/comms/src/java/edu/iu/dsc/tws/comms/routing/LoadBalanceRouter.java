@@ -25,7 +25,6 @@ public class LoadBalanceRouter implements IRouter {
   private TaskPlan taskPlan;
   private Set<Integer> sources;
   private int stream;
-  private int task;
   private List<Integer> destList;
   private Random random;
 
@@ -52,7 +51,7 @@ public class LoadBalanceRouter implements IRouter {
   }
 
   @Override
-  public boolean isLast() {
+  public boolean isLast(int task) {
     return false;
   }
 
@@ -63,6 +62,16 @@ public class LoadBalanceRouter implements IRouter {
 
   @Override
   public int executor(int t) {
+    return 0;
+  }
+
+  @Override
+  public int mainTaskOfExecutor(int executor) {
+    return 0;
+  }
+
+  @Override
+  public int destinationIdentifier() {
     return 0;
   }
 }
