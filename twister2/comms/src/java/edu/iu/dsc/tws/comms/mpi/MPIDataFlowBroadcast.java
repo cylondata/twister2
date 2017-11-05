@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.comms.mpi;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -27,6 +28,8 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
   private int source;
 
   private Set<Integer> destinations;
+
+  protected IRouter router;
 
   public MPIDataFlowBroadcast(TWSMPIChannel channel, int src, Set<Integer> dests) {
     super(channel);
@@ -51,12 +54,12 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
     sendMessage(currentMessage, routes);
   }
 
-  protected IRouter setupRouting() {
+  protected void setupRouting() {
     // we will only have one distinct route
     Set<Integer> sources = new HashSet<>();
     sources.add(source);
 
-    return new BinaryTreeRouter(config, instancePlan, sources, destinations, edge, 1);
+    router = new BinaryTreeRouter(config, instancePlan, sources, destinations, edge, 1);
   }
 
   @Override
@@ -83,6 +86,21 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
     }
 
     routes.addAll(routing);
+  }
+
+  @Override
+  protected Set<Integer> receivingExecutors() {
+    return null;
+  }
+
+  @Override
+  protected Map<Integer, List<Integer>> receiveExpectedTaskIds() {
+    return null;
+  }
+
+  @Override
+  protected boolean isLast(int taskIdentifier) {
+    return false;
   }
 }
 

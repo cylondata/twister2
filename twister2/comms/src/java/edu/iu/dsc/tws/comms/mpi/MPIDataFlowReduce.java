@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.comms.mpi;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -29,6 +30,8 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
   // the destination task
   protected int destination;
 
+  protected IRouter router;
+
   public MPIDataFlowReduce(TWSMPIChannel channel, Set<Integer> sources, int destination) {
     super(channel);
 
@@ -36,14 +39,14 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
     this.destination = destination;
   }
 
-  public IRouter setupRouting() {
+  public void setupRouting() {
     // we only have one destination and sources becomes destinations for creating tree
     // because this is an inverted tree from sources to destination
     Set<Integer> destinations = new HashSet<>();
     destinations.add(destination);
 
     // we only have one path
-    return new BinaryTreeRouter(config, instancePlan,
+    this.router = new BinaryTreeRouter(config, instancePlan,
         destinations, sources, edge, 1);
   }
 
@@ -53,8 +56,22 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
   }
 
   @Override
+  protected boolean isLast(int taskIdentifier) {
+    return false;
+  }
+
+  @Override
   protected void receiveMessage(MPIMessage currentMessage, Object object) {
-    super.receiveMessage(currentMessage, object);
+    MessageHeader header = currentMessage.getHeader();
+
+    // we always receive to the main task
+    int messageDestId = currentMessage.getHeader().getDestinationIdentifier();
+    // check weather this message is for a sub task
+    if (!isLast(messageDestId) && partialReceiver != null) {
+      partialReceiver.onMessage(header, object);
+    } else {
+      finalReceiver.onMessage(header, object);
+    }
   }
 
   @Override
@@ -71,5 +88,15 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
       throw new RuntimeException("Un-expected message from source: " + source);
     }
     routes.addAll(routing);
+  }
+
+  @Override
+  protected Set<Integer> receivingExecutors() {
+    return router.receivingExecutors();
+  }
+
+  @Override
+  protected Map<Integer, List<Integer>> receiveExpectedTaskIds() {
+    return router.receiveExpectedTaskIds();
   }
 }

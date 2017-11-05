@@ -31,6 +31,8 @@ public class MPILoadBalance extends MPIDataFlowOperation {
 
   protected Map<Integer, MPIMessage> currentMessages = new HashMap<>();
 
+  protected IRouter router;
+
   public MPILoadBalance(TWSMPIChannel channel, Set<Integer> srcs, Set<Integer> dests) {
     super(channel);
     random = new Random(System.nanoTime());
@@ -38,9 +40,9 @@ public class MPILoadBalance extends MPIDataFlowOperation {
     this.destinations = dests;
   }
 
-  protected IRouter setupRouting() {
+  protected void setupRouting() {
     // lets create the routing needed
-    return new LoadBalanceRouter(config, instancePlan, sources, destinations, edge,
+    this.router = new LoadBalanceRouter(config, instancePlan, sources, destinations, edge,
         MPIContext.distinctRoutes(config, sources.size()));
   }
 
@@ -57,5 +59,20 @@ public class MPILoadBalance extends MPIDataFlowOperation {
   @Override
   protected void routeSendMessage(int source, MPISendMessage message, List<Integer> routes) {
     Set<Integer> routing = router.getDownstreamTasks(source);
+  }
+
+  @Override
+  protected Set<Integer> receivingExecutors() {
+    return null;
+  }
+
+  @Override
+  protected Map<Integer, List<Integer>> receiveExpectedTaskIds() {
+    return null;
+  }
+
+  @Override
+  protected boolean isLast(int taskIdentifier) {
+    return false;
   }
 }

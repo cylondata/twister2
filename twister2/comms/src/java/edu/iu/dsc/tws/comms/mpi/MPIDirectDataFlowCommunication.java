@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.comms.mpi;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import edu.iu.dsc.tws.comms.api.MessageHeader;
@@ -24,6 +25,7 @@ import edu.iu.dsc.tws.comms.routing.IRouter;
 public class MPIDirectDataFlowCommunication extends MPIDataFlowOperation {
   private Set<Integer> sources;
   private int destination;
+  protected IRouter router;
 
   public MPIDirectDataFlowCommunication(TWSMPIChannel channel,
                                         Set<Integer> srcs, int dest) {
@@ -34,8 +36,8 @@ public class MPIDirectDataFlowCommunication extends MPIDataFlowOperation {
   }
 
   @Override
-  protected IRouter setupRouting() {
-    return new DirectRouter(instancePlan, sources, destination);
+  protected void setupRouting() {
+    this.router = new DirectRouter(instancePlan, sources, destination);
   }
 
   /**
@@ -48,6 +50,11 @@ public class MPIDirectDataFlowCommunication extends MPIDataFlowOperation {
   }
 
   @Override
+  protected boolean isLast(int taskIdentifier) {
+    return false;
+  }
+
+  @Override
   protected void routeReceivedMessage(MessageHeader message, List<Integer> routes) {
     throw new RuntimeException("We are not routing received messages");
   }
@@ -56,5 +63,15 @@ public class MPIDirectDataFlowCommunication extends MPIDataFlowOperation {
   protected void routeSendMessage(int source, MPISendMessage message, List<Integer> routes) {
     Set<Integer> downstreamTasks = router.getDownstreamTasks(source);
     routes.addAll(downstreamTasks);
+  }
+
+  @Override
+  protected Set<Integer> receivingExecutors() {
+    return router.receivingExecutors();
+  }
+
+  @Override
+  protected Map<Integer, List<Integer>> receiveExpectedTaskIds() {
+    return this.router.receiveExpectedTaskIds();
   }
 }

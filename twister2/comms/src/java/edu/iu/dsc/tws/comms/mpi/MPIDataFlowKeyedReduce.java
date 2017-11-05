@@ -12,9 +12,10 @@
 package edu.iu.dsc.tws.comms.mpi;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import edu.iu.dsc.tws.comms.api.MessageHeader;
-import edu.iu.dsc.tws.comms.routing.IRouter;
 
 public class MPIDataFlowKeyedReduce extends MPIGroupedDataFlowOperation {
   public MPIDataFlowKeyedReduce(TWSMPIChannel channel) {
@@ -22,8 +23,8 @@ public class MPIDataFlowKeyedReduce extends MPIGroupedDataFlowOperation {
   }
 
   @Override
-  protected IRouter setupRouting() {
-    return null;
+  protected void setupRouting() {
+    return;
   }
 
   @Override
@@ -34,5 +35,20 @@ public class MPIDataFlowKeyedReduce extends MPIGroupedDataFlowOperation {
   @Override
   protected void routeSendMessage(int source, MPISendMessage message, List<Integer> routes) {
 
+  }
+
+  @Override
+  protected Set<Integer> receivingExecutors() {
+    return null;
+  }
+
+  @Override
+  protected Map<Integer, List<Integer>> receiveExpectedTaskIds() {
+    return null;
+  }
+
+  @Override
+  protected boolean isLast(int taskIdentifier) {
+    return false;
   }
 }
