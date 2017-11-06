@@ -92,3 +92,13 @@ maven_jar(
   name = "org_ow2_asm_asm",
   artifact = "org.ow2.asm:asm:4.2",
 )
+
+maven_jar(
+  name = "akka_actor",
+  artifact = "com.typesafe.akka:akka-actor:2.5.6",
+)
+
+maven_jar(
+  name = "akka_remote",
+  artifact = "com.typesafe.akka:akka-remote:2.5.6",
+)
