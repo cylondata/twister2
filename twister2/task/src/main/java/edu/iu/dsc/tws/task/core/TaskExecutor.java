@@ -26,6 +26,8 @@ package edu.iu.dsc.tws.task.core;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
+import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.task.api.Task;
 import edu.iu.dsc.tws.task.core.ExecutorContext;
 
@@ -37,6 +39,10 @@ import edu.iu.dsc.tws.task.core.ExecutorContext;
 public class TaskExecutor {
 
   private static ThreadPoolExecutor executorPool;
+  private TWSCommunication channel;
+  private DataFlowOperation direct;
+  private boolean progres = false;
+
 
 
   public TaskExecutor(){
@@ -48,6 +54,16 @@ public class TaskExecutor {
   }
 
   /**
+   * Init task executor
+   * @param channel
+   * @param direct
+   */
+  public void init(TWSCommunication channel, DataFlowOperation direct){
+    this.channel = channel;
+    this.direct = direct;
+    this.progres = true;
+  }
+  /**
    * Submit the task to run in the thread pool.
    * @param task task to be run
    * @return returns true if the task was submitted and queued
@@ -57,4 +73,15 @@ public class TaskExecutor {
     return true;
   }
 
+  public void progres(){
+    while (progres){ //This can be done in a separate thread if that is more suitable
+      channel.progress();
+      direct.progress();
+      Thread.yield();
+    }
+  }
+
+  public void setProgress(boolean value){
+    this.progres = value;
+  }
 }

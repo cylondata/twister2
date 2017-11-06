@@ -67,6 +67,7 @@ public class PingPongCommunicationTaskBased implements IContainer {
    */
   public void init(Config cfg, int containerId, ResourcePlan plan) {
     LOG.log(Level.INFO, "Starting the example with container id: " + plan.getThisId());
+    //Creates task an task executor instance to be used in this container
     taskExecutor = new TaskExecutor();
     this.status = Status.INIT;
 
@@ -88,26 +89,14 @@ public class PingPongCommunicationTaskBased implements IContainer {
     // I think this is wrong
     direct = channel.direct(newCfg, MessageType.OBJECT, 0, sources,
         dests, new PingPongReceive());
-
+    taskExecutor.init(channel,direct);
     if (containerId == 0) {
       // the map thread where data is produced
       LOG.log(Level.INFO, "Starting map thread");
       taskExecutor.submit(new MapWorker());
-
-
-      // we need to progress the communication
-      while (true) {
-        // progress the channel
-        channel.progress();
-        // we should progress the communication directive
-        direct.progress();
-        Thread.yield();
-      }
+      taskExecutor.progres();
     } else if (containerId == 1) {
-      while (status != Status.LOAD_RECEIVE_FINISHED) {
-        channel.progress();
-        direct.progress();
-      }
+     taskExecutor.progres();
     }
   }
 
@@ -125,6 +114,7 @@ public class PingPongCommunicationTaskBased implements IContainer {
       }
       if (count == 100000) {
         status = Status.LOAD_RECEIVE_FINISHED;
+        taskExecutor.setProgress(false);
       }
     }
   }
@@ -132,10 +122,11 @@ public class PingPongCommunicationTaskBased implements IContainer {
   /**
    * We are running the map in a separate thread
    */
-  private class MapWorker implements Task {
+  private class MapWorker extends Task {
     private int sendCount = 0;
+
     @Override
-    public void run() {
+    public void execute() {
       LOG.log(Level.INFO, "Starting map worker");
       for (int i = 0; i < 100000; i++) {
         IntData data = generateData();
