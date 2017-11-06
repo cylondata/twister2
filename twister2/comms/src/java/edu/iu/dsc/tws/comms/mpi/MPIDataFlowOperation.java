@@ -151,8 +151,8 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
 
   protected abstract void setupRouting();
   protected abstract void routeReceivedMessage(MessageHeader message, List<Integer> routes);
-  protected abstract void routeSendMessage(int source,
-                                           MPISendMessage message, List<Integer> routes);
+  protected abstract void routeSendMessage(int source, List<Integer> routes);
+
   /**
    * Return the list of receiving executors for this
    * @return
@@ -196,7 +196,18 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
 //    LOG.log(Level.INFO, "lock 00 " + executor);
     lock.lock();
     try {
-//   LOG.log(Level.INFO, "Sending message of type: " + type);
+      List<Integer> routes = new ArrayList<>();
+      routeSendMessage(source, routes);
+      Set<Integer> thisExecutorTasks = instancePlan.getChannelsOfExecutor(
+          instancePlan.getThisExecutor());
+
+      // now check if these routes are in this executor
+      List<Integer> routesInThisExecutor = new ArrayList<>();
+
+
+      // check weather some of the routes are in the same executor
+
+      // LOG.log(Level.INFO, "Sending message of type: " + type);
       // this is a originating message. we are going to put ref count to 0 for now and
       // increment it later
       MPIMessage mpiMessage = new MPIMessage(source, type, MPIMessageDirection.OUT, this);
@@ -211,8 +222,6 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
 
       // okay we could build fully
       if (sendMessage.serializedState() == MPISendMessage.SerializedState.FINISHED) {
-        List<Integer> routes = new ArrayList<>();
-        routeSendMessage(source, sendMessage, routes);
         // lets increment the reference count of this message
         mpiMessage.incrementRefCount();
         sendMessage(mpiMessage, routes);
@@ -242,7 +251,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
         if (message.serializedState() == MPISendMessage.SerializedState.FINISHED) {
 
           List<Integer> routes = new ArrayList<>();
-          routeSendMessage(message.getSource(), message, routes);
+          routeSendMessage(message.getSource(), routes);
           sendMessage(message.getMPIMessage(), routes);
 
           pendingSendMessages.remove();

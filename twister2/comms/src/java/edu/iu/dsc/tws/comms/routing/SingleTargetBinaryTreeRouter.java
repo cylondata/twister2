@@ -76,6 +76,10 @@ public class SingleTargetBinaryTreeRouter implements IRouter {
       }
     }
 
+    // construct the map of receiving ids
+    this.upstream = new HashMap<>();
+    Set<Integer> recv = new HashSet<>();
+
     receiveExecutors = new HashSet<>();
     for (int t : thisExecutorTasksOfOperation) {
       Node search = BinaryTree.search(treeRoot, t);
@@ -84,24 +88,12 @@ public class SingleTargetBinaryTreeRouter implements IRouter {
         continue;
       }
       receiveExecutors.addAll(search.getRemoteChildrenIds());
-    }
-
-    // construct the map of receiving ids
-    this.upstream = new HashMap<>();
-    Set<Integer> recv = new HashSet<>();
-    for (int t : thisExecutorTasksOfOperation) {
-      Node search = BinaryTree.search(treeRoot, t);
-      if (search == null) {
-        // we do no have the tasks that are directly connected to the tree node
-        continue;
-      }
       recv.addAll(search.getAllChildrenIds());
     }
     upstream.put(0, new ArrayList<>(recv));
 
     // now lets construct the downstream tasks
     downStream = new HashSet<>();
-
   }
 
   @Override
@@ -121,12 +113,7 @@ public class SingleTargetBinaryTreeRouter implements IRouter {
 
   @Override
   public Set<Integer> getDownstreamTasks(int source) {
-    return null;
-  }
-
-  @Override
-  public int executor(int task) {
-    return taskPlan.getExecutorForChannel(task);
+    return downStream;
   }
 
   @Override

@@ -57,7 +57,7 @@ public class MPILoadBalance extends MPIDataFlowOperation {
   }
 
   @Override
-  protected void routeSendMessage(int source, MPISendMessage message, List<Integer> routes) {
+  protected void routeSendMessage(int source, List<Integer> routes) {
     Set<Integer> routing = router.getDownstreamTasks(source);
   }
 

@@ -61,11 +61,6 @@ public class LoadBalanceRouter implements IRouter {
   }
 
   @Override
-  public int executor(int t) {
-    return 0;
-  }
-
-  @Override
   public int mainTaskOfExecutor(int executor) {
     return 0;
   }

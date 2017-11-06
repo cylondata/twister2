@@ -77,7 +77,7 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
   }
 
   @Override
-  protected void routeSendMessage(int src, MPISendMessage message, List<Integer> routes) {
+  protected void routeSendMessage(int src, List<Integer> routes) {
     // get the expected routes
     Set<Integer> routing = router.getDownstreamTasks(src);
 

@@ -80,7 +80,7 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
   }
 
   @Override
-  protected void routeSendMessage(int source, MPISendMessage message, List<Integer> routes) {
+  protected void routeSendMessage(int source, List<Integer> routes) {
     // get the expected routes
     Set<Integer> routing = router.getDownstreamTasks(source);
 

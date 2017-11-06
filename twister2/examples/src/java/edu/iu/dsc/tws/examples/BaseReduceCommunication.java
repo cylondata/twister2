@@ -44,6 +44,8 @@ public class BaseReduceCommunication implements IContainer {
 
   private Config config;
 
+  private static final int NO_OF_TASKS = 8;
+
   private enum Status {
     INIT,
     MAP_FINISHED,
@@ -62,17 +64,17 @@ public class BaseReduceCommunication implements IContainer {
     this.status = Status.INIT;
 
     // lets create the task plan
-    TaskPlan taskPlan = Utils.createReduceTaskPlan(cfg, plan, 8);
+    TaskPlan taskPlan = Utils.createReduceTaskPlan(cfg, plan, NO_OF_TASKS);
     //first get the communication config file
     TWSNetwork network = new TWSNetwork(cfg, taskPlan);
 
     TWSCommunication channel = network.getDataFlowTWSCommunication();
 
     Set<Integer> sources = new HashSet<>();
-    for (int i = 0; i < 7; i++) {
+    for (int i = 0; i < NO_OF_TASKS - 1; i++) {
       sources.add(i);
     }
-    int dest = 7;
+    int dest = NO_OF_TASKS;
 
     Map<String, Object> newCfg = new HashMap<>();
 
@@ -113,13 +115,15 @@ public class BaseReduceCommunication implements IContainer {
       LOG.log(Level.INFO, "Starting map worker");
       for (int i = 0; i < 100000; i++) {
         IntData data = generateData();
-        // lets generate a message
-        while (!reduce.send(0, data)) {
-          // lets wait a litte and try again
-          try {
-            Thread.sleep(1);
-          } catch (InterruptedException e) {
-            e.printStackTrace();
+        for (int j = 0; j < NO_OF_TASKS - 1; j++) {
+          // lets generate a message
+          while (!reduce.send(j, data)) {
+            // lets wait a litte and try again
+            try {
+              Thread.sleep(1);
+            } catch (InterruptedException e) {
+              e.printStackTrace();
+            }
           }
         }
         sendCount++;

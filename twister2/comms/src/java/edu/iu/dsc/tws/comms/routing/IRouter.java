@@ -45,13 +45,6 @@ public interface IRouter {
   Set<Integer> getDownstreamTasks(int source);
 
   /**
-   * Get the executor for a task
-   * @param task
-   * @return
-   */
-  int executor(int task);
-
-  /**
    * Return the main task of an executor
    * @param executor
    * @return

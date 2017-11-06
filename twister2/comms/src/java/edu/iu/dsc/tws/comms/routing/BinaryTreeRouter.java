@@ -100,10 +100,6 @@ public class BinaryTreeRouter implements IRouter {
     return new Routing(upstream, downstrean);
   }
 
-  public int executor(int t) {
-    return this.taskPlan.getExecutorForChannel(t);
-  }
-
   @Override
   public int mainTaskOfExecutor(int executor) {
     return 0;

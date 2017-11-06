@@ -43,11 +43,11 @@ public class DirectRouter implements IRouter {
     sources.addAll(srscs);
     this.upstream.put(0, sources);
 
-    int destinationExecutor = executor(destination);
+    int destinationExecutor = taskPlan.getExecutorForChannel(destination);
     receiveExecutors = new HashSet<>();
     if (destinationExecutor == taskPlan.getThisExecutor()) {
       for (int s : srscs) {
-        int e = executor(s);
+        int e = taskPlan.getExecutorForChannel(s);
         if (destinationExecutor != e) {
           receiveExecutors.add(e);
         }
@@ -83,11 +83,6 @@ public class DirectRouter implements IRouter {
   public Set<Integer> getDownstreamTasks(int source) {
     // return a routing
     return downStream;
-  }
-
-  @Override
-  public int executor(int task) {
-    return taskPlan.getExecutorForChannel(task);
   }
 
   @Override

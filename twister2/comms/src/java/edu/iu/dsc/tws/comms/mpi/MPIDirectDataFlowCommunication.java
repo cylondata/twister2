@@ -60,7 +60,7 @@ public class MPIDirectDataFlowCommunication extends MPIDataFlowOperation {
   }
 
   @Override
-  protected void routeSendMessage(int source, MPISendMessage message, List<Integer> routes) {
+  protected void routeSendMessage(int source, List<Integer> routes) {
     Set<Integer> downstreamTasks = router.getDownstreamTasks(source);
     routes.addAll(downstreamTasks);
   }

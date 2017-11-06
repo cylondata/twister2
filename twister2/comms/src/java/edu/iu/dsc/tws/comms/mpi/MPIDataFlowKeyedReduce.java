@@ -33,7 +33,7 @@ public class MPIDataFlowKeyedReduce extends MPIGroupedDataFlowOperation {
   }
 
   @Override
-  protected void routeSendMessage(int source, MPISendMessage message, List<Integer> routes) {
+  protected void routeSendMessage(int source, List<Integer> routes) {
 
   }
 
