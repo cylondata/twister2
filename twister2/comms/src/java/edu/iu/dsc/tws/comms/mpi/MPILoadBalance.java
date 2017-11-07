@@ -20,7 +20,6 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.routing.IRouter;
-import edu.iu.dsc.tws.comms.routing.LoadBalanceRouter;
 
 public class MPILoadBalance extends MPIDataFlowOperation {
   private static final Logger LOG = Logger.getLogger(MPILoadBalance.class.getName());
@@ -41,9 +40,7 @@ public class MPILoadBalance extends MPIDataFlowOperation {
   }
 
   protected void setupRouting() {
-    // lets create the routing needed
-    this.router = new LoadBalanceRouter(config, instancePlan, sources, destinations, edge,
-        MPIContext.distinctRoutes(config, sources.size()));
+
   }
 
   @Override
@@ -57,8 +54,16 @@ public class MPILoadBalance extends MPIDataFlowOperation {
   }
 
   @Override
-  protected void routeSendMessage(int source, List<Integer> routes) {
-    Set<Integer> routing = router.getDownstreamTasks(source);
+  protected void externalRoutesForSend(int source, List<Integer> routes) {
+  }
+
+  @Override
+  protected void internalRoutesForSend(int source, List<Integer> routes) {
+  }
+
+  @Override
+  protected void receiveSendInternally(int source, int t, int path, Object message) {
+
   }
 
   @Override
@@ -67,12 +72,17 @@ public class MPILoadBalance extends MPIDataFlowOperation {
   }
 
   @Override
-  protected Map<Integer, List<Integer>> receiveExpectedTaskIds() {
+  protected Map<Integer, Map<Integer, List<Integer>>> receiveExpectedTaskIds() {
     return null;
   }
 
   @Override
-  protected boolean isLast(int taskIdentifier) {
+  protected boolean isLast(int source, int path, int taskIdentifier) {
     return false;
+  }
+
+  @Override
+  protected void receiveMessage(MPIMessage currentMessage, Object object) {
+
   }
 }

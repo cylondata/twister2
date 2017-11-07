@@ -34,9 +34,10 @@ public class SingleTargetBinaryTreeRouter implements IRouter {
   private int distinctRoutes;
   private BinaryTree tree;
   private Node treeRoot;
-  private Map<Integer, List<Integer>> upstream;
+  private Map<Integer, Map<Integer, List<Integer>>> upstream;
   private Set<Integer> receiveExecutors;
-  private Set<Integer> downStream;
+  private Map<Integer, Map<Integer, Set<Integer>>> sendExternalTasks;
+  private Map<Integer, Map<Integer, Set<Integer>>> sendInternalTasks;
 
   /**
    * Tasks belonging to this operation and in the same executor
@@ -77,11 +78,14 @@ public class SingleTargetBinaryTreeRouter implements IRouter {
     }
 
     // construct the map of receiving ids
-    this.upstream = new HashMap<>();
-    Set<Integer> recv = new HashSet<>();
+    this.upstream = new HashMap<Integer, Map<Integer, List<Integer>>>();
 
+    // now lets construct the downstream tasks
+    sendExternalTasks = new HashMap<>();
+    // now lets construct the receive tasks tasks
     receiveExecutors = new HashSet<>();
     for (int t : thisExecutorTasksOfOperation) {
+      List<Integer> recv = new ArrayList<>();
       Node search = BinaryTree.search(treeRoot, t);
       if (search == null) {
         // we do no have the tasks that are directly connected to the tree node
@@ -89,11 +93,27 @@ public class SingleTargetBinaryTreeRouter implements IRouter {
       }
       receiveExecutors.addAll(search.getRemoteChildrenIds());
       recv.addAll(search.getAllChildrenIds());
-    }
-    upstream.put(0, new ArrayList<>(recv));
 
-    // now lets construct the downstream tasks
-    downStream = new HashSet<>();
+      Map<Integer, List<Integer>> receivePathMap = new HashMap<>();
+      receivePathMap.put(0, new ArrayList<>(recv));
+      upstream.put(t, receivePathMap);
+
+      Map<Integer, Set<Integer>> sendMap = new HashMap<>();
+
+      Node parent = search.getParent();
+      if (parent != null) {
+        Set<Integer> sendTasks = new HashSet<>();
+        sendTasks.add(parent.getTaskId());
+        sendMap.put(t, sendTasks);
+        if (thisExecutorTasksOfOperation.contains(parent.getTaskId())) {
+          sendInternalTasks.put(t, sendMap);
+        } else {
+          sendExternalTasks.put(t, sendMap);
+        }
+      }
+    }
+
+
   }
 
   @Override
@@ -102,18 +122,23 @@ public class SingleTargetBinaryTreeRouter implements IRouter {
   }
 
   @Override
-  public Map<Integer, List<Integer>> receiveExpectedTaskIds() {
+  public Map<Integer, Map<Integer, List<Integer>>> receiveExpectedTaskIds() {
     return upstream;
   }
 
   @Override
-  public boolean isLast(int task) {
-    return false;
+  public boolean isLast(int t) {
+    // check weather this
+    return true;
   }
 
   @Override
-  public Set<Integer> getDownstreamTasks(int source) {
-    return downStream;
+  public Map<Integer, Map<Integer, Set<Integer>>> getInternalSendTasks(int source) {
+    return sendInternalTasks;
+  }
+
+  public Map<Integer, Map<Integer, Set<Integer>>> getExternalSendTasks(int source) {
+    return sendExternalTasks;
   }
 
   @Override

@@ -151,7 +151,15 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
 
   protected abstract void setupRouting();
   protected abstract void routeReceivedMessage(MessageHeader message, List<Integer> routes);
-  protected abstract void routeSendMessage(int source, List<Integer> routes);
+  protected abstract void externalRoutesForSend(int source, List<Integer> routes);
+  protected abstract void internalRoutesForSend(int source, List<Integer> routes);
+
+  /**
+   * Receive the sends internally directly
+   * @param t
+   * @param message
+   */
+  protected abstract void receiveSendInternally(int source, int t, int path, Object message);
 
   /**
    * Return the list of receiving executors for this
@@ -167,7 +175,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
    *
    * @return  expected task ids
    */
-  protected abstract Map<Integer, List<Integer>> receiveExpectedTaskIds();
+  protected abstract Map<Integer, Map<Integer, List<Integer>>> receiveExpectedTaskIds();
 
   /**
    * Default implementation returns 0 and specific implementations should override
@@ -181,7 +189,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
    * Is this the final task
    * @return
    */
-  protected abstract boolean isLast(int taskIdentifier);
+  protected abstract boolean isLast(int source, int path, int taskIdentifier);
 
   /**
    * Sends a complete message
@@ -196,17 +204,24 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
 //    LOG.log(Level.INFO, "lock 00 " + executor);
     lock.lock();
     try {
-      List<Integer> routes = new ArrayList<>();
-      routeSendMessage(source, routes);
-      Set<Integer> thisExecutorTasks = instancePlan.getChannelsOfExecutor(
-          instancePlan.getThisExecutor());
+      List<Integer> externalRoutes = new ArrayList<>();
+      List<Integer> internalRoutes = new ArrayList<>();
 
-      // now check if these routes are in this executor
-      List<Integer> routesInThisExecutor = new ArrayList<>();
+      internalRoutesForSend(source, internalRoutes);
+      for (Integer i : internalRoutes) {
+        // okay now we need to check weather this is the last place
+        receiveSendInternally(source, i, 0, message);
+      }
 
+      // now lets get the external routes to send
+      externalRoutesForSend(source, externalRoutes);
 
-      // check weather some of the routes are in the same executor
+      // we don't have an external executor to send this message
+      if (externalRoutes.size() == 0) {
+        return true;
+      }
 
+      // we need to serialize for sending over the wire
       // LOG.log(Level.INFO, "Sending message of type: " + type);
       // this is a originating message. we are going to put ref count to 0 for now and
       // increment it later
@@ -224,7 +239,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
       if (sendMessage.serializedState() == MPISendMessage.SerializedState.FINISHED) {
         // lets increment the reference count of this message
         mpiMessage.incrementRefCount();
-        sendMessage(mpiMessage, routes);
+        sendMessage(mpiMessage, externalRoutes);
         return true;
       } else {
         // now try to put this into pending
@@ -251,7 +266,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
         if (message.serializedState() == MPISendMessage.SerializedState.FINISHED) {
 
           List<Integer> routes = new ArrayList<>();
-          routeSendMessage(message.getSource(), routes);
+          externalRoutesForSend(message.getSource(), routes);
           sendMessage(message.getMPIMessage(), routes);
 
           pendingSendMessages.remove();
@@ -391,18 +406,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
     }
   }
 
-  protected void receiveMessage(MPIMessage currentMessage, Object object) {
-    MessageHeader header = currentMessage.getHeader();
-
-    // we always receive to the main task
-    int messageDestId = currentMessage.getHeader().getDestinationIdentifier();
-    // check weather this message is for a sub task
-    if (!isLast(messageDestId) && partialReceiver != null) {
-      partialReceiver.onMessage(header, object);
-    } else {
-      finalReceiver.onMessage(header, object);
-    }
-  }
+  protected abstract void receiveMessage(MPIMessage currentMessage, Object object);
 
   /**
    * By default we are not doing anything here and the specific operations can override this

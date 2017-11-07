@@ -16,6 +16,18 @@ package edu.iu.dsc.tws.comms.api;
 import edu.iu.dsc.tws.common.config.Config;
 
 public interface MessageSerializer {
+  /**
+   * Initialize the serializer
+   * @param cfg
+   * @param grouped
+   */
   void init(Config cfg, boolean grouped);
+
+  /**
+   * This method will be called repeatedly until the message is fully built
+   * @param message
+   * @param partialBuildObject
+   * @return
+   */
   Object build(Object message, Object partialBuildObject);
 }

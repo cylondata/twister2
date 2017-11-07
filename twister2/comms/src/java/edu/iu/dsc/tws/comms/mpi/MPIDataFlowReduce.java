@@ -56,10 +56,17 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
   }
 
   @Override
-  protected boolean isLast(int taskIdentifier) {
-    return false;
+  protected boolean isLast(int source, int path, int taskIdentifier) {
+    return router.isLast(taskIdentifier);
   }
 
+  /**
+   * We can receive messages from internal tasks or an external task, we allways receive messages
+   * to the main task of the executor and we go from there
+   *
+   * @param currentMessage
+   * @param object
+   */
   @Override
   protected void receiveMessage(MPIMessage currentMessage, Object object) {
     MessageHeader header = currentMessage.getHeader();
@@ -67,10 +74,13 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
     // we always receive to the main task
     int messageDestId = currentMessage.getHeader().getDestinationIdentifier();
     // check weather this message is for a sub task
-    if (!isLast(messageDestId) && partialReceiver != null) {
-      partialReceiver.onMessage(header, object);
+    if (!isLast(header.getSourceId(), header.getPath(), messageDestId)
+        && partialReceiver != null) {
+      partialReceiver.onMessage(header.getSourceId(), header.getPath(),
+          router.mainTaskOfExecutor(instancePlan.getThisExecutor()), object);
     } else {
-      finalReceiver.onMessage(header, object);
+      finalReceiver.onMessage(header.getSourceId(), header.getPath(),
+          router.mainTaskOfExecutor(instancePlan.getThisExecutor()), object);
     }
   }
 
@@ -80,14 +90,38 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
   }
 
   @Override
-  protected void routeSendMessage(int source, List<Integer> routes) {
+  protected void externalRoutesForSend(int source, List<Integer> routes) {
     // get the expected routes
-    Set<Integer> routing = router.getDownstreamTasks(source);
-
+    Map<Integer, Map<Integer, Set<Integer>>> routing = router.getExternalSendTasks(source);
     if (routing == null) {
       throw new RuntimeException("Un-expected message from source: " + source);
     }
-    routes.addAll(routing);
+
+    Map<Integer, Set<Integer>> sourceRouting = routing.get(source);
+    if (sourceRouting != null) {
+      // we always use path 0 because only one path
+      routes.addAll(sourceRouting.get(0));
+    }
+  }
+
+  @Override
+  protected void internalRoutesForSend(int source, List<Integer> routes) {
+    // get the expected routes
+    Map<Integer, Map<Integer, Set<Integer>>> routing = router.getInternalSendTasks(source);
+    if (routing == null) {
+      throw new RuntimeException("Un-expected message from source: " + source);
+    }
+
+    Map<Integer, Set<Integer>> sourceRouting = routing.get(source);
+    if (sourceRouting != null) {
+      // we always use path 0 because only one path
+      routes.addAll(sourceRouting.get(0));
+    }
+  }
+
+  @Override
+  protected void receiveSendInternally(int source, int t, int path, Object message) {
+
   }
 
   @Override
@@ -96,7 +130,7 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
   }
 
   @Override
-  protected Map<Integer, List<Integer>> receiveExpectedTaskIds() {
+  protected Map<Integer, Map<Integer, List<Integer>>> receiveExpectedTaskIds() {
     return router.receiveExpectedTaskIds();
   }
 }

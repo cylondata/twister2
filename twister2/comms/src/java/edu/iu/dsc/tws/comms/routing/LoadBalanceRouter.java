@@ -46,7 +46,7 @@ public class LoadBalanceRouter implements IRouter {
   }
 
   @Override
-  public Map<Integer, List<Integer>> receiveExpectedTaskIds() {
+  public Map<Integer, Map<Integer, List<Integer>>> receiveExpectedTaskIds() {
     return null;
   }
 
@@ -56,7 +56,12 @@ public class LoadBalanceRouter implements IRouter {
   }
 
   @Override
-  public Set<Integer> getDownstreamTasks(int src) {
+  public Map<Integer, Map<Integer, Set<Integer>>> getInternalSendTasks(int src) {
+    return null;
+  }
+
+  @Override
+  public Map<Integer, Map<Integer, Set<Integer>>> getExternalSendTasks(int source) {
     return null;
   }
 

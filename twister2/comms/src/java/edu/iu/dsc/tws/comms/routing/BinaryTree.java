@@ -112,11 +112,11 @@ public class BinaryTree {
     Collections.sort(executorIds);
 
     // create the root of the tree
-    Node root = createTreeeNode(groupId, executorIds.get(0), index);
+    Node rootNode = createTreeeNode(groupId, executorIds.get(0), index);
 
     // now lets create the tree
     Queue<Node> queue = new LinkedList<>();
-    Node current = root;
+    Node current = rootNode;
     int i = 0;
     while (i < executorIds.size()) {
       if (current.getChildren().size() < intraNodeDegree) {
@@ -132,7 +132,7 @@ public class BinaryTree {
       }
     }
 
-    return root;
+    return rootNode;
   }
 
   private Node createTreeeNode(int groupId, int executorId, int rotateIndex) {

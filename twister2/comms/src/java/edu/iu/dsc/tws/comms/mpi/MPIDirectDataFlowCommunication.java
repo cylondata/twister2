@@ -50,8 +50,15 @@ public class MPIDirectDataFlowCommunication extends MPIDataFlowOperation {
   }
 
   @Override
-  protected boolean isLast(int taskIdentifier) {
-    return false;
+  protected boolean isLast(int source, int path, int taskIdentifier) {
+    return router.isLast(taskIdentifier);
+  }
+
+  @Override
+  protected void receiveMessage(MPIMessage currentMessage, Object object) {
+    MessageHeader header = currentMessage.getHeader();
+    // check weather this message is for a sub task
+    finalReceiver.onMessage(header.getSourceId(), header.getPath(), destination, object);
   }
 
   @Override
@@ -60,9 +67,44 @@ public class MPIDirectDataFlowCommunication extends MPIDataFlowOperation {
   }
 
   @Override
-  protected void routeSendMessage(int source, List<Integer> routes) {
-    Set<Integer> downstreamTasks = router.getDownstreamTasks(source);
-    routes.addAll(downstreamTasks);
+  protected void externalRoutesForSend(int source, List<Integer> routes) {
+    // get the expected routes
+    Map<Integer, Map<Integer, Set<Integer>>> routing = router.getExternalSendTasks(source);
+    if (routing == null) {
+      throw new RuntimeException("Un-expected message from source: " + source);
+    }
+
+    Map<Integer, Set<Integer>> sourceRouting = routing.get(source);
+    if (sourceRouting != null) {
+      // we always use path 0 because only one path
+      routes.addAll(sourceRouting.get(0));
+    }
+  }
+
+  @Override
+  protected void internalRoutesForSend(int source, List<Integer> routes) {
+    // get the expected routes
+    Map<Integer, Map<Integer, Set<Integer>>> routing = router.getInternalSendTasks(source);
+    if (routing == null) {
+      throw new RuntimeException("Un-expected message from source: " + source);
+    }
+
+    Map<Integer, Set<Integer>> sourceRouting = routing.get(source);
+    if (sourceRouting != null) {
+      // we always use path 0 because only one path
+      routes.addAll(sourceRouting.get(0));
+    }
+  }
+
+  @Override
+  protected void receiveSendInternally(int source, int t, int path, Object message) {
+    // we only have one destination in this case
+    if (t != destination) {
+      throw new RuntimeException("We only have one destination");
+    }
+
+    // okay this must be for the
+    finalReceiver.onMessage(source, path, t, message);
   }
 
   @Override
@@ -71,7 +113,7 @@ public class MPIDirectDataFlowCommunication extends MPIDataFlowOperation {
   }
 
   @Override
-  protected Map<Integer, List<Integer>> receiveExpectedTaskIds() {
+  protected Map<Integer, Map<Integer, List<Integer>>> receiveExpectedTaskIds() {
     return this.router.receiveExpectedTaskIds();
   }
 }

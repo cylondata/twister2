@@ -33,7 +33,16 @@ public class MPIDataFlowKeyedReduce extends MPIGroupedDataFlowOperation {
   }
 
   @Override
-  protected void routeSendMessage(int source, List<Integer> routes) {
+  protected void externalRoutesForSend(int source, List<Integer> routes) {
+
+  }
+
+  @Override
+  protected void internalRoutesForSend(int source, List<Integer> routes) {
+  }
+
+  @Override
+  protected void receiveSendInternally(int source, int t, int path,  Object message) {
 
   }
 
@@ -43,12 +52,17 @@ public class MPIDataFlowKeyedReduce extends MPIGroupedDataFlowOperation {
   }
 
   @Override
-  protected Map<Integer, List<Integer>> receiveExpectedTaskIds() {
+  protected Map<Integer, Map<Integer, List<Integer>>> receiveExpectedTaskIds() {
     return null;
   }
 
   @Override
-  protected boolean isLast(int taskIdentifier) {
+  protected boolean isLast(int source, int path, int taskIdentifier) {
     return false;
+  }
+
+  @Override
+  protected void receiveMessage(MPIMessage currentMessage, Object object) {
+
   }
 }

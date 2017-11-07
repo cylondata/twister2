@@ -42,6 +42,11 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
   }
 
   @Override
+  protected void receiveMessage(MPIMessage currentMessage, Object object) {
+
+  }
+
+  @Override
   public void injectPartialResult(int src, Object message) {
     throw new RuntimeException("Not supported method");
   }
@@ -64,28 +69,41 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
 
   @Override
   protected void routeReceivedMessage(MessageHeader message, List<Integer> routes) {
-    // check the origin
-    int src = message.getSourceId();
-    // get the expected routes
-    Set<Integer> routing = router.getDownstreamTasks(src);
-
-    if (routing == null) {
-      throw new RuntimeException("Un-expected message from source: " + src);
-    }
-
-    routes.addAll(routing);
   }
 
   @Override
-  protected void routeSendMessage(int src, List<Integer> routes) {
+  protected void externalRoutesForSend(int src, List<Integer> routes) {
     // get the expected routes
-    Set<Integer> routing = router.getDownstreamTasks(src);
-
+    Map<Integer, Map<Integer, Set<Integer>>> routing = router.getExternalSendTasks(source);
     if (routing == null) {
-      throw new RuntimeException("Un-expected message from source: " + src);
+      throw new RuntimeException("Un-expected message from source: " + source);
     }
 
-    routes.addAll(routing);
+    Map<Integer, Set<Integer>> sourceRouting = routing.get(source);
+    if (sourceRouting != null) {
+      // we always use path 0 because only one path
+      routes.addAll(sourceRouting.get(0));
+    }
+  }
+
+  @Override
+  protected void internalRoutesForSend(int s, List<Integer> routes) {
+    // get the expected routes
+    Map<Integer, Map<Integer, Set<Integer>>> routing = router.getInternalSendTasks(source);
+    if (routing == null) {
+      throw new RuntimeException("Un-expected message from source: " + source);
+    }
+
+    Map<Integer, Set<Integer>> sourceRouting = routing.get(source);
+    if (sourceRouting != null) {
+      // we always use path 0 because only one path
+      routes.addAll(sourceRouting.get(0));
+    }
+  }
+
+  @Override
+  protected void receiveSendInternally(int src, int t, int path, Object message) {
+
   }
 
   @Override
@@ -94,12 +112,12 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
   }
 
   @Override
-  protected Map<Integer, List<Integer>> receiveExpectedTaskIds() {
+  protected Map<Integer, Map<Integer, List<Integer>>> receiveExpectedTaskIds() {
     return null;
   }
 
   @Override
-  protected boolean isLast(int taskIdentifier) {
+  protected boolean isLast(int src, int path, int taskIdentifier) {
     return false;
   }
 }
