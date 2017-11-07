@@ -21,7 +21,6 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
@@ -138,22 +137,22 @@ public class BaseReduceCommunication implements IContainer {
    */
   private class PartialReduceWorker implements MessageReceiver {
     @Override
-    public void init(Map<Integer, List<Integer>> expectedIds) {
+    public void init(Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
     }
 
     @Override
-    public void onMessage(MessageHeader header, Object object) {
+    public void onMessage(int source, int path, int target, Object object) {
       reduce.injectPartialResult(0, object);
     }
   }
 
   private class FinalReduceReceive implements MessageReceiver {
     @Override
-    public void init(Map<Integer, List<Integer>> expectedIds) {
+    public void init(Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
     }
 
     @Override
-    public void onMessage(MessageHeader header, Object object) {
+    public void onMessage(int source, int path, int target, Object object) {
 
     }
   }

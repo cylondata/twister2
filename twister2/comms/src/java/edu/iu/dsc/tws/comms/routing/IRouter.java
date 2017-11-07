@@ -30,7 +30,7 @@ public interface IRouter {
    *
    * @return  expected task ids
    */
-  Map<Integer, List<Integer>> receiveExpectedTaskIds();
+  Map<Integer, Map<Integer, List<Integer>>> receiveExpectedTaskIds();
 
   /**
    * Is this the final task
@@ -42,7 +42,9 @@ public interface IRouter {
    * @param source
    * @return
    */
-  Set<Integer> getDownstreamTasks(int source);
+  Map<Integer, Map<Integer, Set<Integer>>> getInternalSendTasks(int source);
+
+  Map<Integer, Map<Integer, Set<Integer>>> getExternalSendTasks(int source);
 
   /**
    * Return the main task of an executor

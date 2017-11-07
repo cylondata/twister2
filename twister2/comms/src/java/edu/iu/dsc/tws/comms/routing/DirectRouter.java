@@ -26,22 +26,55 @@ public class DirectRouter implements IRouter {
 
   private int destination;
   private TaskPlan taskPlan;
-  private HashSet<Integer> downStream;
-  private Map<Integer, List<Integer>> upstream;
+  // task -> (path -> tasks)
+  private Map<Integer, Map<Integer, Set<Integer>>> externalSendTasks;
+  // task -> (path -> tasks)
+  private Map<Integer, Map<Integer, Set<Integer>>> internalSendTasks;
+  // task -> (path -> tasks)
+  private Map<Integer, Map<Integer, List<Integer>>> upstream;
   private Set<Integer> receiveExecutors;
   private Set<Integer> thisExecutorTasks;
 
+  /**
+   * Create a direct router
+   * @param plan
+   * @param srscs
+   * @param dest
+   */
   public DirectRouter(TaskPlan plan, Set<Integer> srscs, int dest) {
     this.destination = dest;
     this.taskPlan = plan;
 
-    this.downStream = new HashSet<>();
-    this.downStream.add(dest);
+    this.externalSendTasks = new HashMap<>();
+    this.internalSendTasks = new HashMap<>();
 
+    Set<Integer> myTasks = taskPlan.getChannelsOfExecutor(taskPlan.getThisExecutor());
+    for (int src : srscs) {
+      if (myTasks.contains(src)) {
+        // okay the destination is in the same executor
+        if (myTasks.contains(dest)) {
+          Map<Integer, Set<Integer>> sendMap = new HashMap<>();
+          Set<Integer> set = new HashSet<>();
+          set.add(dest);
+          sendMap.put(0, set);
+          internalSendTasks.put(src, sendMap);
+        } else {
+          Map<Integer, Set<Integer>> sendMap = new HashMap<>();
+          Set<Integer> set = new HashSet<>();
+          set.add(dest);
+          sendMap.put(0, set);
+          externalSendTasks.put(src, sendMap);
+        }
+      }
+    }
+
+    // we are going to receive from all the sources
     this.upstream = new HashMap<>();
+    Map<Integer, List<Integer>> pathTasks = new HashMap<>();
     List<Integer> sources = new ArrayList<>();
     sources.addAll(srscs);
-    this.upstream.put(0, sources);
+    pathTasks.put(0, sources);
+    this.upstream.put(destination, pathTasks);
 
     int destinationExecutor = taskPlan.getExecutorForChannel(destination);
     receiveExecutors = new HashSet<>();
@@ -63,7 +96,7 @@ public class DirectRouter implements IRouter {
   }
 
   @Override
-  public Map<Integer, List<Integer>> receiveExpectedTaskIds() {
+  public Map<Integer, Map<Integer, List<Integer>>> receiveExpectedTaskIds() {
     // check if this executor contains
     if (thisExecutorTasks.contains(destination)) {
       LOG.info(taskPlan.getThisExecutor() + " Receive expected tasks: " + upstream.get(0));
@@ -80,18 +113,28 @@ public class DirectRouter implements IRouter {
   }
 
   @Override
-  public Set<Integer> getDownstreamTasks(int source) {
+  public Map<Integer, Map<Integer, Set<Integer>>> getInternalSendTasks(int source) {
     // return a routing
-    return downStream;
+    return internalSendTasks;
+  }
+
+  @Override
+  public Map<Integer, Map<Integer, Set<Integer>>> getExternalSendTasks(int source) {
+    return externalSendTasks;
   }
 
   @Override
   public int mainTaskOfExecutor(int executor) {
-    return 0;
+    return -1;
   }
 
+  /**
+   * The destination id is the destination itself
+   *
+   * @return
+   */
   @Override
   public int destinationIdentifier() {
-    return 0;
+    return destination;
   }
 }

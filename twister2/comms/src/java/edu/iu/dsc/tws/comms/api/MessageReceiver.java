@@ -23,12 +23,12 @@ public interface MessageReceiver {
    *
    * @param expectedIds expected task ids
    */
-  void init(Map<Integer, List<Integer>> expectedIds);
+  void init(Map<Integer, Map<Integer, List<Integer>>> expectedIds);
 
   /**
    * The actual message callback
    *
    * @param object the actual message
    */
-  void onMessage(MessageHeader header, Object object);
+  void onMessage(int source, int path, int target, Object object);
 }

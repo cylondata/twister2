@@ -16,7 +16,6 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.comms.api.Message;
-import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 
 public class DefaultMessageReceiver implements MessageReceiver {
@@ -27,11 +26,11 @@ public class DefaultMessageReceiver implements MessageReceiver {
   }
 
   @Override
-  public void init(Map<Integer, List<Integer>> expectedIds) {
+  public void init(Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
 
   }
 
   @Override
-  public void onMessage(MessageHeader header, Object object) {
+  public void onMessage(int source, int path, int target, Object object) {
   }
 }
