@@ -32,5 +32,5 @@ public class ExecutorContext extends Context {
   /**
    * The size of the task pool assigned to the executors
    */
-  public static int EXECUTOR_CORE_POOL_SIZE = 4;
+  public static final int EXECUTOR_CORE_POOL_SIZE = 4;
 }
