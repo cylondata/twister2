@@ -31,6 +31,6 @@ public interface ITask extends Runnable {
   /**
    * Code that needs to be executed in the Task
    */
-  public void execute();
+  void execute();
 
 }

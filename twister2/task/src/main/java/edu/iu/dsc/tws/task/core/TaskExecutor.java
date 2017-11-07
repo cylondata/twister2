@@ -29,7 +29,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.task.api.Task;
-import edu.iu.dsc.tws.task.core.ExecutorContext;
 
 /**
  * Class that will handle the task execution. Each task executor will manage an task execution
@@ -45,22 +44,23 @@ public class TaskExecutor {
 
 
 
-  public TaskExecutor(){
-    executorPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(ExecutorContext.EXECUTOR_CORE_POOL_SIZE);
+  public TaskExecutor() {
+    executorPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(ExecutorContext.
+        EXECUTOR_CORE_POOL_SIZE);
   }
 
-  public TaskExecutor(int poolSize){
+  public TaskExecutor(int poolSize) {
     executorPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(poolSize);
   }
 
   /**
    * Init task executor
-   * @param channel
-   * @param direct
+   * @param twscom
+   * @param dfo
    */
-  public void init(TWSCommunication channel, DataFlowOperation direct){
-    this.channel = channel;
-    this.direct = direct;
+  public void init(TWSCommunication twscom, DataFlowOperation dfo) {
+    this.channel = twscom;
+    this.direct = dfo;
     this.progres = true;
   }
   /**
@@ -68,20 +68,20 @@ public class TaskExecutor {
    * @param task task to be run
    * @return returns true if the task was submitted and queued
    */
-  public boolean submit(Task task){
+  public boolean submit(Task task) {
     executorPool.submit(task);
     return true;
   }
 
-  public void progres(){
-    while (progres){ //This can be done in a separate thread if that is more suitable
+  public void progres() {
+    while (progres) { //This can be done in a separate thread if that is more suitable
       channel.progress();
       direct.progress();
       Thread.yield();
     }
   }
 
-  public void setProgress(boolean value){
+  public void setProgress(boolean value) {
     this.progres = value;
   }
 }

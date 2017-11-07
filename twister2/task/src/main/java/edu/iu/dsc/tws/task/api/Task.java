@@ -14,9 +14,9 @@ package edu.iu.dsc.tws.task.api;
 /**
  * Created by pulasthi on 11/6/17.
  */
-public abstract class Task implements ITask{
+public abstract class Task implements ITask {
   @Override
-  public void run(){
+  public void run() {
     execute();
   }
 }
