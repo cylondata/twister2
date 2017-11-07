@@ -45,7 +45,8 @@ import edu.iu.dsc.tws.task.api.Task;
 import edu.iu.dsc.tws.task.core.TaskExecutor;
 
 public class PingPongCommunicationTaskBased implements IContainer {
-  private static final Logger LOG = Logger.getLogger(PingPongCommunicationTaskBased.class.getName());
+  private static final Logger LOG = Logger.getLogger(PingPongCommunicationTaskBased.
+      class.getName());
 
   private DataFlowOperation direct;
 
@@ -89,14 +90,14 @@ public class PingPongCommunicationTaskBased implements IContainer {
     // I think this is wrong
     direct = channel.direct(newCfg, MessageType.OBJECT, 0, sources,
         dests, new PingPongReceive());
-    taskExecutor.init(channel,direct);
+    taskExecutor.init(channel, direct);
     if (containerId == 0) {
       // the map thread where data is produced
       LOG.log(Level.INFO, "Starting map thread");
       taskExecutor.submit(new MapWorker());
       taskExecutor.progres();
     } else if (containerId == 1) {
-     taskExecutor.progres();
+      taskExecutor.progres();
     }
   }
 
