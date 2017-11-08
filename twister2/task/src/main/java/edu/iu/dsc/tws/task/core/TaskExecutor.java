@@ -28,6 +28,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
+import edu.iu.dsc.tws.task.api.RunnableTask;
 import edu.iu.dsc.tws.task.api.Task;
 
 /**
@@ -69,7 +70,8 @@ public class TaskExecutor {
    * @return returns true if the task was submitted and queued
    */
   public boolean submit(Task task) {
-    executorPool.submit(task);
+
+    executorPool.submit(new RunnableTask(task));
     return true;
   }
 
