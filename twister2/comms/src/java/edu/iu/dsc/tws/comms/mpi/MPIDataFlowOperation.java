@@ -140,11 +140,6 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
   }
 
   @Override
-  public void injectPartialResult(int source, Object message) {
-    sendMessage(source, message);
-  }
-
-  @Override
   public void sendPartial(int source, Object message) {
     throw new NotImplementedException("Not implemented method");
   }

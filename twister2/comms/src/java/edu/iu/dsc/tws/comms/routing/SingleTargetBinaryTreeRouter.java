@@ -17,32 +17,21 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.mpi.MPIContext;
 
 public class SingleTargetBinaryTreeRouter implements IRouter {
-  private Config config;
-  private TaskPlan taskPlan;
-  private int sources;
-  private Set<Integer> destinations;
-  private int stream;
-  private int task;
-  private int intraNodeDegree;
-  private int interNodeDegree;
-  private int distinctRoutes;
-  private BinaryTree tree;
-  private Node treeRoot;
-  private Map<Integer, Map<Integer, List<Integer>>> upstream;
+  private static final Logger LOG = Logger.getLogger(SingleTargetBinaryTreeRouter.class.getName());
+
+  private Map<Integer, Map<Integer, List<Integer>>> receiveTasks;
   private Set<Integer> receiveExecutors;
   private Map<Integer, Map<Integer, Set<Integer>>> sendExternalTasks;
   private Map<Integer, Map<Integer, Set<Integer>>> sendInternalTasks;
-
-  /**
-   * Tasks belonging to this operation and in the same executor
-   */
-  private Set<Integer> thisExecutorTasksOfOperation;
+  private int mainTask;
+  private boolean mainTaskLast;
 
   /**
    * Initialize the data structure
@@ -51,69 +40,85 @@ public class SingleTargetBinaryTreeRouter implements IRouter {
    * @param plan
    * @param root
    * @param dests
-   * @param strm
    */
   public SingleTargetBinaryTreeRouter(Config cfg, TaskPlan plan,
-                          int root, Set<Integer> dests, int strm, int distinctRts) {
-    this.config = cfg;
-    this.taskPlan = plan;
-    this.sources = root;
-    this.destinations = dests;
-    this.stream = strm;
-    this.distinctRoutes = distinctRts;
-
-    this.interNodeDegree = MPIContext.interNodeDegree(cfg, 2);
-    this.intraNodeDegree = MPIContext.intraNodeDegree(cfg, 2);
-
+                          int root, Set<Integer> dests) {
+    int interNodeDegree = MPIContext.interNodeDegree(cfg, 2);
+    int intraNodeDegree = MPIContext.intraNodeDegree(cfg, 2);
+    mainTaskLast = false;
     // lets build the tree
-    tree = new BinaryTree(interNodeDegree, intraNodeDegree, taskPlan, root, dests);
-    treeRoot = tree.buildInterGroupTree(0);
+    BinaryTree tree = new BinaryTree(interNodeDegree, intraNodeDegree, plan, root, dests);
+    Node treeRoot = tree.buildInterGroupTree(0);
 
-    Set<Integer> thisExecutorTasks = taskPlan.getChannelsOfExecutor(taskPlan.getThisExecutor());
-    thisExecutorTasksOfOperation = new HashSet<>();
+    Set<Integer> thisExecutorTasks = plan.getChannelsOfExecutor(plan.getThisExecutor());
+    /*
+      Tasks belonging to this operation and in the same executor
+    */
+    Set<Integer> thisExecutorTasksOfOperation = new HashSet<>();
     for (int t : thisExecutorTasks) {
       if (dests.contains(t) || root == t) {
         thisExecutorTasksOfOperation.add(t);
       }
     }
-
+    LOG.info(String.format("%d Executor Tasks: %s", plan.getThisExecutor(),
+        thisExecutorTasksOfOperation.toString()));
     // construct the map of receiving ids
-    this.upstream = new HashMap<Integer, Map<Integer, List<Integer>>>();
+    this.receiveTasks = new HashMap<Integer, Map<Integer, List<Integer>>>();
 
     // now lets construct the downstream tasks
     sendExternalTasks = new HashMap<>();
+    sendInternalTasks = new HashMap<>();
+
     // now lets construct the receive tasks tasks
     receiveExecutors = new HashSet<>();
     for (int t : thisExecutorTasksOfOperation) {
       List<Integer> recv = new ArrayList<>();
+
       Node search = BinaryTree.search(treeRoot, t);
-      if (search == null) {
-        // we do no have the tasks that are directly connected to the tree node
-        continue;
-      }
-      receiveExecutors.addAll(search.getRemoteChildrenIds());
-      recv.addAll(search.getAllChildrenIds());
+      // okay this is the main task of this executor
+      if (search != null) {
+        mainTask = search.getTaskId();
+        LOG.info(String.format("%d main task: %d", plan.getThisExecutor(), mainTask));
+        // this is the only task that receives messages
+        receiveExecutors.addAll(search.getRemoteChildrenIds());
+        recv.addAll(search.getAllChildrenIds());
 
-      Map<Integer, List<Integer>> receivePathMap = new HashMap<>();
-      receivePathMap.put(0, new ArrayList<>(recv));
-      upstream.put(t, receivePathMap);
+        Map<Integer, List<Integer>> receivePathMap = new HashMap<>();
+        receivePathMap.put(0, new ArrayList<>(recv));
+        receiveTasks.put(t, receivePathMap);
 
-      Map<Integer, Set<Integer>> sendMap = new HashMap<>();
-
-      Node parent = search.getParent();
-      if (parent != null) {
-        Set<Integer> sendTasks = new HashSet<>();
-        sendTasks.add(parent.getTaskId());
-        sendMap.put(t, sendTasks);
-        if (thisExecutorTasksOfOperation.contains(parent.getTaskId())) {
-          sendInternalTasks.put(t, sendMap);
-        } else {
-          sendExternalTasks.put(t, sendMap);
+        // this task is connected to others and they send the message to this task
+        List<Integer> directChildren = search.getDirectChildren();
+        for (int child : directChildren) {
+          Map<Integer, Set<Integer>> sendMap = new HashMap<>();
+          String log = "";
+          Set<Integer> sendTasks = new HashSet<>();
+          sendTasks.add(t);
+          sendMap.put(MPIContext.DEFAULT_PATH, sendTasks);
+          log += String.format("%d Sending -> from: %d to %d", plan.getThisExecutor(), child, t);
+          sendInternalTasks.put(child, sendMap);
+          LOG.info("Internal tasks: " + log);
         }
+
+        // now lets calculate the external send tasks of the main task
+        Node parent = search.getParent();
+        if (parent != null) {
+          Map<Integer, Set<Integer>> mainSendMap = new HashMap<>();
+          String log = "";
+          Set<Integer> sendTasks = new HashSet<>();
+          sendTasks.add(parent.getTaskId());
+          mainSendMap.put(MPIContext.DEFAULT_PATH, sendTasks);
+          log += String.format("%d Sending -> from: %d to %d",
+              plan.getThisExecutor(), t, parent.getTaskId());
+          sendExternalTasks.put(t, mainSendMap);
+          LOG.info("External tasks of main: " + log);
+        } else {
+          mainTaskLast = true;
+        }
+      } else {
+        LOG.info(String.format("%d doesn't have a node in tree: %d", plan.getThisExecutor(), t));
       }
     }
-
-
   }
 
   @Override
@@ -123,13 +128,13 @@ public class SingleTargetBinaryTreeRouter implements IRouter {
 
   @Override
   public Map<Integer, Map<Integer, List<Integer>>> receiveExpectedTaskIds() {
-    return upstream;
+    return receiveTasks;
   }
 
   @Override
   public boolean isLast(int t) {
     // check weather this
-    return true;
+    return mainTaskLast;
   }
 
   @Override
@@ -143,11 +148,11 @@ public class SingleTargetBinaryTreeRouter implements IRouter {
 
   @Override
   public int mainTaskOfExecutor(int executor) {
-    return 0;
+    return mainTask;
   }
 
   @Override
   public int destinationIdentifier() {
-    return 0;
+    return mainTask;
   }
 }

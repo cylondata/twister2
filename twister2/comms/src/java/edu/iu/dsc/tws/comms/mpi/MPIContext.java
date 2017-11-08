@@ -26,6 +26,7 @@ public class MPIContext extends CommunicationContext {
   private static final String DISTINCT_ROUTS = "network.mpi.routing.distinct.routes";
   private static final String SEND_PENDING_MAX = "network.mpi.send.pending.max";
 
+  public static final int DEFAULT_PATH = 0;
 
   public static int bufferSize(Config cfg) {
     return cfg.getIntegerValue(BUFFER_SIZE, 1024);

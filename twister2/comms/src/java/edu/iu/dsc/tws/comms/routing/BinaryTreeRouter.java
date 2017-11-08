@@ -116,7 +116,7 @@ public class BinaryTreeRouter implements IRouter {
   }
 
   @Override
-  public Map<Integer, Map<Integer, List<Integer>>> receiveExpectedTaskIds() {
+  public Map<Integer, Map<Integer, List<Integer>>>  receiveExpectedTaskIds() {
     return null;
   }
 

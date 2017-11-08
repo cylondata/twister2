@@ -65,4 +65,9 @@ public class MPIDataFlowKeyedReduce extends MPIGroupedDataFlowOperation {
   protected void receiveMessage(MPIMessage currentMessage, Object object) {
 
   }
+
+  @Override
+  public void injectPartialResult(int source, Object message) {
+
+  }
 }

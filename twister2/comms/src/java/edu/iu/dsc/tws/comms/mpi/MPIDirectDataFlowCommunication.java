@@ -116,4 +116,9 @@ public class MPIDirectDataFlowCommunication extends MPIDataFlowOperation {
   protected Map<Integer, Map<Integer, List<Integer>>> receiveExpectedTaskIds() {
     return this.router.receiveExpectedTaskIds();
   }
+
+  @Override
+  public void injectPartialResult(int source, Object message) {
+    throw new RuntimeException("This method is not used by direct communication");
+  }
 }

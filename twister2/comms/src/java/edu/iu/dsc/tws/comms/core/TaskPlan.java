@@ -68,7 +68,11 @@ public class TaskPlan {
   }
 
   public int getExecutorForChannel(int channel) {
-    return invertedExecutorToChannels.get(channel);
+    Object ret = invertedExecutorToChannels.get(channel);
+    if (ret == null) {
+      return -1;
+    }
+    return (int) ret;
   }
 
   public Set<Integer> getChannelsOfExecutor(int executor) {

@@ -94,5 +94,16 @@ public class Node {
   public List<Integer> getDirectChildren() {
     return directChildren;
   }
+
+  @Override
+  public String toString() {
+    return "Node{"
+        + "children=" + children
+        + ", directChildren=" + directChildren
+        + ", parent=" + (parent != null ? parent.getTaskId() + "" : "NULL")
+        + ", taskId=" + taskId
+        + ", groupId=" + groupId
+        + '}';
+  }
 }
 

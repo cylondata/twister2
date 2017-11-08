@@ -39,6 +39,7 @@ public class BinaryTree {
     this.taskPlan = taskPlan;
     this.root = source;
     this.nodes = destinations;
+    LOG.info(String.format("Building tree with root: %d nodes: %s", root, nodes.toString()));
   }
 
   public static Node search(Node root, int taskId) {
@@ -57,11 +58,34 @@ public class BinaryTree {
     return null;
   }
 
+  /**
+   * Retrieve the parent of the child
+   *
+   * @param root
+   * @param taskId
+   * @return
+   */
+  public static Node searchParent(Node root, int taskId) {
+    Queue<Node> queue = new LinkedList<>();
+    queue.add(root);
+
+    while (queue.size() > 0) {
+      Node current = queue.poll();
+      if (current.getAllChildrenIds().contains(taskId)) {
+        return current;
+      } else {
+        queue.addAll(current.getChildren());
+      }
+    }
+
+    return null;
+  }
+
   public Node buildInterGroupTree(int index) {
     // get the groups hosting the component
     // rotate according to index, this will create a unique tree for each index
     List<Integer> groups = rotateList(new ArrayList<>(getGroupsHostingTasks(nodes)), index);
-    LOG.log(Level.INFO, "Number of groups: " + groups.size());
+    LOG.log(Level.INFO, taskPlan.getThisExecutor() + " Groups for binary tree: " + groups);
     if (groups.size() == 0) {
       LOG.log(Level.WARNING, "Groups for destinations is zero");
       return null;
@@ -69,7 +93,7 @@ public class BinaryTree {
 
     // sort the list
     Collections.sort(groups);
-    Node rootNode = buildIntraGroupTree(getGroupHostingTask(this.root), index);
+    Node rootNode = buildIntraGroupTree(groups.get(0), index);
     if (rootNode == null) {
       LOG.log(Level.WARNING, "Intranode tree didn't built: " + groups.get(0));
       return null;
@@ -78,7 +102,7 @@ public class BinaryTree {
     Queue<Node> queue = new LinkedList<>();
     Node current = rootNode;
 
-    int i = 0;
+    int i = 1;
     int currentInterNodeDegree = current.getChildren().size() + interNodeDegree;
     while (i < groups.size()) {
       if (current.getChildren().size() < currentInterNodeDegree) {
@@ -101,13 +125,15 @@ public class BinaryTree {
 
   private Node buildIntraGroupTree(int groupId, int index) {
     // rotate according to index, this will create a unique tree for each index
+    Set<Integer> executorsHostingTask = getExecutorsHostingTask(groupId);
+    LOG.log(Level.INFO, taskPlan.getThisExecutor() + " Executor before rotate: "
+        + executorsHostingTask);
     List<Integer> executorIds = rotateList(
-        new ArrayList<>(taskPlan.getExecutesOfGroup(groupId)), index);
+        new ArrayList<>(executorsHostingTask), index);
+    LOG.log(Level.INFO, taskPlan.getThisExecutor() + " Executors after rotate: " + executorIds);
     if (executorIds.size() == 0) {
       return null;
     }
-    LOG.log(Level.FINE, "Number of executors: " + executorIds.size());
-
     // sort the taskIds to make sure everybody creating the same tree
     Collections.sort(executorIds);
 
@@ -136,8 +162,19 @@ public class BinaryTree {
   }
 
   private Node createTreeeNode(int groupId, int executorId, int rotateIndex) {
-    List<Integer> channelsOfExecutorList = new ArrayList<>(
-        taskPlan.getChannelsOfExecutor(executorId));
+    Set<Integer> allTasksOfExecutor = taskPlan.getChannelsOfExecutor(executorId);
+    if (allTasksOfExecutor == null) {
+      throw new RuntimeException("At this point we should have one task in executor");
+    }
+
+    Set<Integer> tasksOfExecutor = getTasksInExecutor(executorId);
+    if (tasksOfExecutor == null) {
+      throw new RuntimeException("At this point we should have at least one task");
+    }
+
+    LOG.info(String.format("%d Has task %s and we are only using tasks %s",
+        taskPlan.getThisExecutor(), allTasksOfExecutor.toString(), tasksOfExecutor.toString()));
+    List<Integer> channelsOfExecutorList = new ArrayList<>(tasksOfExecutor);
     Collections.sort(channelsOfExecutorList);
     // we will rotate according to rotate index
     channelsOfExecutorList = rotateList(channelsOfExecutorList, rotateIndex);
@@ -149,12 +186,49 @@ public class BinaryTree {
     for (int i = 1; i < channelsOfExecutorList.size(); i++) {
       node.addDirectChild(channelsOfExecutorList.get(i));
     }
+    LOG.info(String.format("%d created node %s", taskPlan.getThisExecutor(), node));
     return node;
   }
 
   private int getGroupHostingTask(int task) {
     int executor = taskPlan.getExecutorForChannel(task);
+    if (executor < 0) {
+      String format = String.format("Cannot find executor for task: %d", task);
+      LOG.severe(format);
+      throw new RuntimeException(format);
+    }
     return taskPlan.getGroupOfExecutor(executor);
+  }
+
+  private Set<Integer> getTasksInExecutor(int e) {
+    Set<Integer> tasks = new HashSet<>();
+    Set<Integer> tasksOfExecutor = taskPlan.getChannelsOfExecutor(e);
+    if (tasksOfExecutor != null) {
+      for (int t: tasksOfExecutor) {
+        if (nodes.contains(t)) {
+          tasks.add(t);
+        }
+      }
+    }
+    return tasks;
+  }
+
+  private Set<Integer> getExecutorsHostingTask(int groupId) {
+    Set<Integer> executors = taskPlan.getExecutesOfGroup(groupId);
+
+    Set<Integer> execs = new HashSet<>();
+    for (int ex : executors) {
+      Set<Integer> tasksOfExec = taskPlan.getChannelsOfExecutor(ex);
+      if (tasksOfExec != null) {
+        for (int t : nodes) {
+          if (tasksOfExec.contains(t)) {
+            execs.add(ex);
+            break;
+          }
+        }
+      }
+    }
+    return execs;
   }
 
   private Set<Integer> getGroupsHostingTasks(Set<Integer> tasks) {
@@ -170,7 +244,7 @@ public class BinaryTree {
   private List<Integer> rotateList(List<Integer> original, int index) {
     List<Integer> rotate = new ArrayList<>();
     for (int i = 0; i < original.size(); i++) {
-      rotate.add(original.get((i + index) / original.size()));
+      rotate.add(original.get((i + index) % original.size()));
     }
     return rotate;
   }

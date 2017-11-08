@@ -11,15 +11,14 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.MessageHeader;
-import edu.iu.dsc.tws.comms.routing.BinaryTreeRouter;
 import edu.iu.dsc.tws.comms.routing.IRouter;
+import edu.iu.dsc.tws.comms.routing.SingleTargetBinaryTreeRouter;
 
 public class MPIDataFlowReduce extends MPIDataFlowOperation {
   private static final Logger LOG = Logger.getLogger(MPIDataFlowBroadcast.class.getName());
@@ -40,14 +39,9 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
   }
 
   public void setupRouting() {
-    // we only have one destination and sources becomes destinations for creating tree
-    // because this is an inverted tree from sources to destination
-    Set<Integer> destinations = new HashSet<>();
-    destinations.add(destination);
-
     // we only have one path
-    this.router = new BinaryTreeRouter(config, instancePlan,
-        destinations, sources, edge, 1);
+    this.router = new SingleTargetBinaryTreeRouter(config, instancePlan,
+        destination, sources);
   }
 
   @Override
@@ -121,6 +115,17 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
 
   @Override
   protected void receiveSendInternally(int source, int t, int path, Object message) {
+    // check weather this is the last task
+    if (router.isLast(t)) {
+      finalReceiver.onMessage(source, path, t, message);
+    } else {
+      partialReceiver.onMessage(source, path, t, message);
+    }
+  }
+
+  @Override
+  public void injectPartialResult(int source, Object message) {
+    // now what we need to do
 
   }
 

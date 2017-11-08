@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -26,6 +27,7 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.mpi.MPIContext;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
@@ -45,6 +47,8 @@ public class BaseReduceCommunication implements IContainer {
 
   private static final int NO_OF_TASKS = 8;
 
+  private int noOfTasksPerExecutor = 2;
+
   private enum Status {
     INIT,
     MAP_FINISHED,
@@ -61,6 +65,7 @@ public class BaseReduceCommunication implements IContainer {
     this.resourcePlan = plan;
     this.id = containerId;
     this.status = Status.INIT;
+    this.noOfTasksPerExecutor = NO_OF_TASKS / plan.noOfContainers();
 
     // lets create the task plan
     TaskPlan taskPlan = Utils.createReduceTaskPlan(cfg, plan, NO_OF_TASKS);
@@ -73,7 +78,7 @@ public class BaseReduceCommunication implements IContainer {
     for (int i = 0; i < NO_OF_TASKS - 1; i++) {
       sources.add(i);
     }
-    int dest = NO_OF_TASKS;
+    int dest = NO_OF_TASKS - 1;
 
     Map<String, Object> newCfg = new HashMap<>();
 
@@ -114,7 +119,7 @@ public class BaseReduceCommunication implements IContainer {
       LOG.log(Level.INFO, "Starting map worker");
       for (int i = 0; i < 100000; i++) {
         IntData data = generateData();
-        for (int j = 0; j < NO_OF_TASKS - 1; j++) {
+        for (int j = 0; j < noOfTasksPerExecutor; j++) {
           // lets generate a message
           while (!reduce.send(j, data)) {
             // lets wait a litte and try again
@@ -136,13 +141,55 @@ public class BaseReduceCommunication implements IContainer {
    * Reduce class will work on the reduce messages.
    */
   private class PartialReduceWorker implements MessageReceiver {
+    // lets keep track of the messages
+    // for each task we need to keep track of incoming messages
+    private Map<Integer, Map<Integer, List<Object>>> messages = new HashMap<>();
+
+    /**
+     * For each task in this exector, we will receive from the list of tasks in the given path
+     *
+     * @param expectedIds expected task ids
+     */
     @Override
     public void init(Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
+      for (Map.Entry<Integer, Map<Integer, List<Integer>>> e : expectedIds.entrySet()) {
+        Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
+
+        for (int i : e.getValue().get(MPIContext.DEFAULT_PATH)) {
+          messagesPerTask.put(i, new ArrayList<Object>());
+        }
+
+        LOG.info(String.format("%d Task %d receives from %s",
+            id, e.getKey(), e.getValue().get(MPIContext.DEFAULT_PATH).toString()));
+
+        messages.put(e.getKey(), messagesPerTask);
+      }
     }
 
     @Override
     public void onMessage(int source, int path, int target, Object object) {
-      reduce.injectPartialResult(0, object);
+      // add the object to the map
+      List<Object> m = messages.get(target).get(source);
+      m.add(object);
+      // now check weather we have the messages for this source
+      Map<Integer, List<Object>> map = messages.get(target);
+      boolean found = true;
+      for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
+        if (e.getValue().size() == 0) {
+          found = false;
+        }
+      }
+      if (found) {
+        Object o = null;
+        for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
+          o = e.getValue().remove(0);
+        }
+        if (o != null) {
+          reduce.sendPartial(target, o);
+        } else {
+          LOG.severe("We cannot find an object and this is not correct");
+        }
+      }
     }
   }
 
