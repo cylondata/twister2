@@ -21,16 +21,17 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.core;
+package edu.iu.dsc.tws.task.tsystem;
 
-import edu.iu.dsc.tws.common.config.Context;
+public class DataTuple<String, Integer> {
 
-/**
- * Configurations specific to executor
- */
-public class ExecutorContext extends Context {
-  /**
-   * The size of the task pool assigned to the executors
-   */
-  public static final int EXECUTOR_CORE_POOL_SIZE = 4;
+    private DataTuple<String, Integer> dataTuple;
+
+    public DataTuple(String token, Integer i) {
+        dataTuple.add(token,i);
+    }
+
+    private void add(String token, Integer i) {
+
+    }
 }

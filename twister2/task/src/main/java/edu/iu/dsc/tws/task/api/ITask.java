@@ -26,11 +26,11 @@ package edu.iu.dsc.tws.task.api;
 /**
  * Base interface for tasks
  */
-public interface ITask extends Runnable {
+public interface ITask {
 
   /**
    * Code that needs to be executed in the Task
    */
-  public void execute();
+  void execute();
 
 }

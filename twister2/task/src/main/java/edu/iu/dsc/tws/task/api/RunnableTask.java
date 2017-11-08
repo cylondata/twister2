@@ -12,7 +12,27 @@
 package edu.iu.dsc.tws.task.api;
 
 /**
- * Created by pulasthi on 11/6/17.
+ * Created by pulasthi on 11/8/17.
  */
-public abstract class Task implements ITask {
+public class RunnableTask implements Runnable {
+  private Task executableTask;
+
+  public RunnableTask(Task task) {
+    this.executableTask = task;
+  }
+  public Task getExecutableTask() {
+    return executableTask;
+  }
+
+  public void setExecutableTask(Task executableTask) {
+    this.executableTask = executableTask;
+  }
+
+  @Override
+  public void run() {
+    if(executableTask == null){
+      throw new RuntimeException("Task needs to be set to execute");
+    }
+    executableTask.execute();
+  }
 }

@@ -21,16 +21,37 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.core;
+package edu.iu.dsc.tws.task.tsystem;
 
-import edu.iu.dsc.tws.common.config.Context;
+public class TaskBuilder {
 
-/**
- * Configurations specific to executor
- */
-public class ExecutorContext extends Context {
-  /**
-   * The size of the task pool assigned to the executors
-   */
-  public static final int EXECUTOR_CORE_POOL_SIZE = 4;
+    public TaskBuilder(){
+    }
+
+    /** This method will interface the task system or task graph **/
+    /*public Task createTask(){
+       return new TaskSubmitter(task);
+    }*/
+
+    /** If the task parallelism is not specified for mapper class, it will assign the default parallelism **/
+
+    public TMap setMapper(int Id, TMap tMap){
+        return setMapper (Id, tMap,0);
+    }
+
+    public TMap setMapper(int Id, TMap tMap, int taskParallelism){
+        return setMapper (Id, new Mapper (tMap), taskParallelism);
+
+    }
+
+    /** If the task parallelism is not specified for reducer class, it will assign the default parallelism **/
+
+    public TReduce setReducer(int Id, TReduce tReduce){
+        return setReducer (Id, tReduce, 0);
+    }
+
+    public TReduce setReducer(int Id, TReduce tReduce, int taskParallelism){
+        return setReducer(Id, new Reducer(tReduce), taskParallelism);
+    }
+
 }

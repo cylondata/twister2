@@ -45,6 +45,11 @@ def twister2_client_lib_api_files():
         "//twister2/api/src/java:api-java",
     ]
 
+def twister2_client_lib_task_files():
+    return [
+        "//twister2/task/src/main/java:task-java",
+    ]
+
 def twister2_client_lib_communication_files():
     return [
         "//twister2/comms/src/java:comms-java",

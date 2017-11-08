@@ -9,10 +9,24 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.api;
+package edu.iu.dsc.tws.api.basic.taskinformation;
 
-/**
- * Created by pulasthi on 11/6/17.
- */
-public abstract class Task implements ITask {
+public class TaskInformation {
+
+    private final String taskName;
+    private final int jobId;
+
+    public TaskInformation(String taskName, int jobId) {
+        this.taskName = taskName;
+        this.jobId = jobId;
+    }
+
+    public String getTaskName() {
+        return taskName;
+    }
+
+    public int getJobId() {
+        return jobId;
+    }
+
 }
