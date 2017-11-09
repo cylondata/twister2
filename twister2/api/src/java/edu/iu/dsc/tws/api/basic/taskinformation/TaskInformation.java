@@ -13,20 +13,20 @@ package edu.iu.dsc.tws.api.basic.taskinformation;
 
 public class TaskInformation {
 
-    private final String taskName;
-    private final int jobId;
+  private final String taskName;
+  private final int jobId;
 
-    public TaskInformation(String taskName, int jobId) {
-        this.taskName = taskName;
-        this.jobId = jobId;
-    }
+  public TaskInformation(String taskName, int jobId) {
+    this.taskName = taskName;
+    this.jobId = jobId;
+  }
 
-    public String getTaskName() {
-        return taskName;
-    }
+  public String getTaskName() {
+    return taskName;
+  }
 
-    public int getJobId() {
-        return jobId;
-    }
+  public int getJobId() {
+    return jobId;
+  }
 
 }

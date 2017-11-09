@@ -126,11 +126,11 @@ public class BinaryTree {
   private Node buildIntraGroupTree(int groupId, int index) {
     // rotate according to index, this will create a unique tree for each index
     Set<Integer> executorsHostingTask = getExecutorsHostingTask(groupId);
-    LOG.log(Level.INFO, taskPlan.getThisExecutor() + " Executor before rotate: "
-        + executorsHostingTask);
+//    LOG.log(Level.INFO, taskPlan.getThisExecutor() + " Executor before rotate: "
+//        + executorsHostingTask);
     List<Integer> executorIds = rotateList(
         new ArrayList<>(executorsHostingTask), index);
-    LOG.log(Level.INFO, taskPlan.getThisExecutor() + " Executors after rotate: " + executorIds);
+//    LOG.log(Level.INFO, taskPlan.getThisExecutor() + " Executors after rotate: " + executorIds);
     if (executorIds.size() == 0) {
       return null;
     }
@@ -143,13 +143,15 @@ public class BinaryTree {
     // now lets create the tree
     Queue<Node> queue = new LinkedList<>();
     Node current = rootNode;
-    int i = 0;
+    int i = 1;
     while (i < executorIds.size()) {
       if (current.getChildren().size() < intraNodeDegree) {
         // create a tree node and add it to the current node as a child
         Node e = createTreeeNode(groupId, executorIds.get(i), index);
         current.addChild(e);
         e.setParent(current);
+        LOG.info(String.format("%d Create node with parent %s -> %s",
+            taskPlan.getThisExecutor(), e, current));
         queue.add(e);
         i++;
       } else {
@@ -186,7 +188,6 @@ public class BinaryTree {
     for (int i = 1; i < channelsOfExecutorList.size(); i++) {
       node.addDirectChild(channelsOfExecutorList.get(i));
     }
-    LOG.info(String.format("%d created node %s", taskPlan.getThisExecutor(), node));
     return node;
   }
 

@@ -168,6 +168,7 @@ public class BaseReduceCommunication implements IContainer {
 
     @Override
     public void onMessage(int source, int path, int target, Object object) {
+      LOG.info("Message received for partial");
       // add the object to the map
       List<Object> m = messages.get(target).get(source);
       m.add(object);
@@ -200,7 +201,7 @@ public class BaseReduceCommunication implements IContainer {
 
     @Override
     public void onMessage(int source, int path, int target, Object object) {
-
+      LOG.info("Message received for last");
     }
   }
 

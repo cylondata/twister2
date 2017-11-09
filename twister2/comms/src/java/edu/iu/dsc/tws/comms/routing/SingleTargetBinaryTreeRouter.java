@@ -80,7 +80,9 @@ public class SingleTargetBinaryTreeRouter implements IRouter {
         mainTask = search.getTaskId();
         LOG.info(String.format("%d main task: %d", plan.getThisExecutor(), mainTask));
         // this is the only task that receives messages
-        receiveExecutors.addAll(search.getRemoteChildrenIds());
+        for (int k : search.getRemoteChildrenIds()) {
+          receiveExecutors.add(plan.getExecutorForChannel(k));
+        }
         recv.addAll(search.getAllChildrenIds());
 
         Map<Integer, List<Integer>> receivePathMap = new HashMap<>();
