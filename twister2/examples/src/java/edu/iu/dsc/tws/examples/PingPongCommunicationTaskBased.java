@@ -33,7 +33,6 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
@@ -41,7 +40,7 @@ import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
-import edu.iu.dsc.tws.task.api.Task;
+import edu.iu.dsc.tws.task.api.SourceTask;
 import edu.iu.dsc.tws.task.core.TaskExecutor;
 
 public class PingPongCommunicationTaskBased implements IContainer {
@@ -62,9 +61,6 @@ public class PingPongCommunicationTaskBased implements IContainer {
 
   /**
    * Initialize the container
-   * @param cfg
-   * @param containerId
-   * @param plan
    */
   public void init(Config cfg, int containerId, ResourcePlan plan) {
     LOG.log(Level.INFO, "Starting the example with container id: " + plan.getThisId());
@@ -88,13 +84,19 @@ public class PingPongCommunicationTaskBased implements IContainer {
     LOG.info("Setting up reduce dataflow operation");
     // this method calls the init method
     // I think this is wrong
+    //TODO: Does the task genereate the communication or is it done by a controller for examples
+    // the direct comm between task 0 and 1 is it done by the container or the the task
+
+    //TODO: if the task creates the dataflowop does the task progress it or the executor
+
+    //TODO : FOR NOW the dataflowop is created at container and sent to task
     direct = channel.direct(newCfg, MessageType.OBJECT, 0, sources,
         dests, new PingPongReceive());
     taskExecutor.init(channel, direct);
     if (containerId == 0) {
       // the map thread where data is produced
       LOG.log(Level.INFO, "Starting map thread");
-      taskExecutor.submit(new MapWorker());
+      taskExecutor.submit(new MapWorker(0, direct));
       taskExecutor.progres();
     } else if (containerId == 1) {
       taskExecutor.progres();
@@ -103,6 +105,7 @@ public class PingPongCommunicationTaskBased implements IContainer {
 
   private class PingPongReceive implements MessageReceiver {
     private int count = 0;
+
     @Override
     public void init(Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
     }
@@ -122,8 +125,13 @@ public class PingPongCommunicationTaskBased implements IContainer {
   /**
    * We are running the map in a separate thread
    */
-  private class MapWorker extends Task {
+  private class MapWorker extends SourceTask {
     private int sendCount = 0;
+
+    MapWorker(int tid, DataFlowOperation dataFlowOperation) {
+      super(tid, dataFlowOperation);
+
+    }
 
     @Override
     public void execute() {
@@ -131,7 +139,8 @@ public class PingPongCommunicationTaskBased implements IContainer {
       for (int i = 0; i < 100000; i++) {
         IntData data = generateData();
         // lets generate a message
-        while (!direct.send(0, data)) {
+
+        while (getDfop().send(0, data)) {
           // lets wait a litte and try again
           try {
             Thread.sleep(1);

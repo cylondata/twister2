@@ -15,4 +15,27 @@ package edu.iu.dsc.tws.task.api;
  * Created by pulasthi on 11/6/17.
  */
 public abstract class Task implements ITask {
+
+  public Task() {
+
+  }
+
+  public Task(int tid) {
+    this.taskId = tid;
+  }
+
+  /**
+   * The unique id assigned to this task. This id will be used for communications
+   */
+  private int taskId;
+
+
+  public int getTaskId() {
+    return taskId;
+  }
+
+  public void setTaskId(int taskId) {
+    this.taskId = taskId;
+  }
+
 }
