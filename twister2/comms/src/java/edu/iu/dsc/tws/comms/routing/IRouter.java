@@ -36,7 +36,7 @@ public interface IRouter {
    * Is this the final task
    * @return
    */
-  boolean isLast(int task);
+  boolean isLastReceiver();
   /**
    * Get routing for a source
    * @param source
@@ -57,5 +57,5 @@ public interface IRouter {
    * Get a destination identifier, used for determining the correct task to hand over a message
    * @return
    */
-  int destinationIdentifier();
+  int destinationIdentifier(int source, int path);
 }

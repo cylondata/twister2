@@ -49,7 +49,7 @@ public class MPILoadBalance extends MPIDataFlowOperation {
   }
 
   @Override
-  public void injectPartialResult(int source, Object message) {
+  public boolean injectPartialResult(int source, Object message) {
     throw new RuntimeException("Not supported method");
   }
 
@@ -84,5 +84,10 @@ public class MPILoadBalance extends MPIDataFlowOperation {
   @Override
   protected void receiveMessage(MPIMessage currentMessage, Object object) {
 
+  }
+
+  @Override
+  protected boolean isLastReceiver() {
+    return false;
   }
 }

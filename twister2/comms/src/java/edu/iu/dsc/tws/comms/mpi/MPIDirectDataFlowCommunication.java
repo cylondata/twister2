@@ -45,13 +45,13 @@ public class MPIDirectDataFlowCommunication extends MPIDataFlowOperation {
    * @return
    */
   @Override
-  protected int destinationIdentifier() {
+  protected int destinationIdentifier(int source, int path) {
     return destination;
   }
 
   @Override
   protected boolean isLast(int source, int path, int taskIdentifier) {
-    return router.isLast(taskIdentifier);
+    return router.isLastReceiver();
   }
 
   @Override
@@ -118,7 +118,12 @@ public class MPIDirectDataFlowCommunication extends MPIDataFlowOperation {
   }
 
   @Override
-  public void injectPartialResult(int source, Object message) {
+  public boolean injectPartialResult(int source, Object message) {
     throw new RuntimeException("This method is not used by direct communication");
+  }
+
+  @Override
+  protected boolean isLastReceiver() {
+    return router.isLastReceiver();
   }
 }

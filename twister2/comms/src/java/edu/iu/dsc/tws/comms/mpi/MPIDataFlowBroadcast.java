@@ -47,7 +47,7 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
   }
 
   @Override
-  public void injectPartialResult(int src, Object message) {
+  public boolean injectPartialResult(int src, Object message) {
     throw new RuntimeException("Not supported method");
   }
 
@@ -121,5 +121,9 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
     return false;
   }
 
+  @Override
+  protected boolean isLastReceiver() {
+    return false;
+  }
 }
 

@@ -28,10 +28,12 @@ public class SingleTargetBinaryTreeRouter implements IRouter {
 
   private Map<Integer, Map<Integer, List<Integer>>> receiveTasks;
   private Set<Integer> receiveExecutors;
+  private Map<Integer, Map<Integer, Set<Integer>>> sendExternalTasksPartial;
   private Map<Integer, Map<Integer, Set<Integer>>> sendExternalTasks;
   private Map<Integer, Map<Integer, Set<Integer>>> sendInternalTasks;
   private int mainTask;
   private boolean mainTaskLast;
+  private Map<Integer, Integer> destinationIdentifiers;
 
   /**
    * Initialize the data structure
@@ -62,12 +64,14 @@ public class SingleTargetBinaryTreeRouter implements IRouter {
     }
     LOG.info(String.format("%d Executor Tasks: %s", plan.getThisExecutor(),
         thisExecutorTasksOfOperation.toString()));
+    this.destinationIdentifiers = new HashMap<>();
     // construct the map of receiving ids
     this.receiveTasks = new HashMap<Integer, Map<Integer, List<Integer>>>();
 
     // now lets construct the downstream tasks
-    sendExternalTasks = new HashMap<>();
+    sendExternalTasksPartial = new HashMap<>();
     sendInternalTasks = new HashMap<>();
+    sendExternalTasks = new HashMap<>();
 
     // now lets construct the receive tasks tasks
     receiveExecutors = new HashSet<>();
@@ -99,6 +103,7 @@ public class SingleTargetBinaryTreeRouter implements IRouter {
           sendMap.put(MPIContext.DEFAULT_PATH, sendTasks);
           log += String.format("%d Sending -> from: %d to %d", plan.getThisExecutor(), child, t);
           sendInternalTasks.put(child, sendMap);
+          destinationIdentifiers.put(child, t);
           LOG.info("Internal tasks: " + log);
         }
 
@@ -112,7 +117,8 @@ public class SingleTargetBinaryTreeRouter implements IRouter {
           mainSendMap.put(MPIContext.DEFAULT_PATH, sendTasks);
           log += String.format("%d Sending -> from: %d to %d",
               plan.getThisExecutor(), t, parent.getTaskId());
-          sendExternalTasks.put(t, mainSendMap);
+          sendExternalTasksPartial.put(t, mainSendMap);
+          destinationIdentifiers.put(t, parent.getTaskId());
           LOG.info("External tasks of main: " + log);
         } else {
           mainTaskLast = true;
@@ -134,7 +140,7 @@ public class SingleTargetBinaryTreeRouter implements IRouter {
   }
 
   @Override
-  public boolean isLast(int t) {
+  public boolean isLastReceiver() {
     // check weather this
     return mainTaskLast;
   }
@@ -145,7 +151,11 @@ public class SingleTargetBinaryTreeRouter implements IRouter {
   }
 
   public Map<Integer, Map<Integer, Set<Integer>>> getExternalSendTasks(int source) {
-    return sendExternalTasks;
+    return sendExternalTasksPartial;
+  }
+
+  public Map<Integer, Map<Integer, Set<Integer>>> getExternalSendTasksForPartial(int source) {
+    return sendExternalTasksPartial;
   }
 
   @Override
@@ -154,7 +164,12 @@ public class SingleTargetBinaryTreeRouter implements IRouter {
   }
 
   @Override
-  public int destinationIdentifier() {
-    return mainTask;
+  public int destinationIdentifier(int source, int path) {
+    Object o = destinationIdentifiers.get(source);
+    if (o != null) {
+      return (int) o;
+    } else {
+      throw new RuntimeException("Unexpected source requesting destination: " + source);
+    }
   }
 }

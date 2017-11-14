@@ -16,7 +16,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -88,23 +90,20 @@ public class BaseReduceCommunication implements IContainer {
     reduce = channel.reduce(newCfg, MessageType.OBJECT, 0, sources,
         dest, new FinalReduceReceive(), new PartialReduceWorker());
 
-    if (containerId == 0) {
-      // the map thread where data is produced
-      Thread mapThread = new Thread(new MapWorker());
-      mapThread.start();
+    // the map thread where data is produced
+    Thread mapThread = new Thread(new MapWorker());
+    mapThread.start();
 
-      // we need to progress the communication
-      while (true) {
+    // we need to progress the communication
+    while (true) {
+      try {
         // progress the channel
         channel.progress();
         // we should progress the communication directive
         reduce.progress();
         Thread.yield();
-      }
-    } else if (containerId == 1) {
-      while (status != Status.LOAD_RECEIVE_FINISHED) {
-        channel.progress();
-        reduce.progress();
+      } catch (Throwable t) {
+        t.printStackTrace();
       }
     }
   }
@@ -117,11 +116,11 @@ public class BaseReduceCommunication implements IContainer {
     @Override
     public void run() {
       LOG.log(Level.INFO, "Starting map worker");
-      for (int i = 0; i < 100000; i++) {
+      for (int i = 0; i < 5000; i++) {
         IntData data = generateData();
         for (int j = 0; j < noOfTasksPerExecutor; j++) {
           // lets generate a message
-          while (!reduce.send(j, data)) {
+          while (!reduce.send(j + id * noOfTasksPerExecutor, data)) {
             // lets wait a litte and try again
             try {
               Thread.sleep(1);
@@ -129,6 +128,8 @@ public class BaseReduceCommunication implements IContainer {
               e.printStackTrace();
             }
           }
+          LOG.info(String.format("%d sending to %d", id, j + id * noOfTasksPerExecutor)
+              + " count: " + sendCount++);
         }
         sendCount++;
         Thread.yield();
@@ -141,6 +142,9 @@ public class BaseReduceCommunication implements IContainer {
    * Reduce class will work on the reduce messages.
    */
   private class PartialReduceWorker implements MessageReceiver {
+    private int count = 0;
+
+    private Queue<Object> pendingSends = new LinkedBlockingQueue<Object>();
     // lets keep track of the messages
     // for each task we need to keep track of incoming messages
     private Map<Integer, Map<Integer, List<Object>>> messages = new HashMap<>();
@@ -159,7 +163,7 @@ public class BaseReduceCommunication implements IContainer {
           messagesPerTask.put(i, new ArrayList<Object>());
         }
 
-        LOG.info(String.format("%d Task %d receives from %s",
+        LOG.info(String.format("%d Partial Task %d receives from %s",
             id, e.getKey(), e.getValue().get(MPIContext.DEFAULT_PATH).toString()));
 
         messages.put(e.getKey(), messagesPerTask);
@@ -168,40 +172,73 @@ public class BaseReduceCommunication implements IContainer {
 
     @Override
     public void onMessage(int source, int path, int target, Object object) {
-      LOG.info("Message received for partial");
-      // add the object to the map
-      List<Object> m = messages.get(target).get(source);
-      m.add(object);
-      // now check weather we have the messages for this source
-      Map<Integer, List<Object>> map = messages.get(target);
-      boolean found = true;
-      for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
-        if (e.getValue().size() == 0) {
-          found = false;
+      LOG.info(String.format("%d Message received for partial %d from %d", id, target, source));
+      while (pendingSends.size() > 0) {
+        boolean r = reduce.injectPartialResult(target, pendingSends.poll());
+        if (!r) {
+          break;
         }
       }
-      if (found) {
-        Object o = null;
+      // add the object to the map
+      try {
+        List<Object> m = messages.get(target).get(source);
+        m.add(object);
+        // now check weather we have the messages for this source
+        Map<Integer, List<Object>> map = messages.get(target);
+        boolean found = true;
         for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
-          o = e.getValue().remove(0);
+          if (e.getValue().size() == 0) {
+            found = false;
+          }
         }
-        if (o != null) {
-          reduce.sendPartial(target, o);
-        } else {
-          LOG.severe("We cannot find an object and this is not correct");
+        if (found) {
+          Object o = null;
+          for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
+            o = e.getValue().remove(0);
+          }
+          if (o != null) {
+            if (pendingSends.size() > 0) {
+              pendingSends.offer(object);
+            } else {
+              boolean inject = reduce.injectPartialResult(target, o);
+              if (!inject) {
+                pendingSends.offer(object);
+              } else {
+                LOG.info(String.format("%d Inject partial %d count: %d", id, target, count++));
+              }
+            }
+          } else {
+            LOG.severe("We cannot find an object and this is not correct");
+          }
         }
+      } catch (Throwable t) {
+        t.printStackTrace();
       }
     }
   }
 
   private class FinalReduceReceive implements MessageReceiver {
+    private Map<Integer, Map<Integer, List<Object>>> messages = new HashMap<>();
+    private int count = 0;
     @Override
     public void init(Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
+      for (Map.Entry<Integer, Map<Integer, List<Integer>>> e : expectedIds.entrySet()) {
+        Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
+
+        for (int i : e.getValue().get(MPIContext.DEFAULT_PATH)) {
+          messagesPerTask.put(i, new ArrayList<Object>());
+        }
+
+        LOG.info(String.format("%d Final Task %d receives from %s",
+            id, e.getKey(), e.getValue().get(MPIContext.DEFAULT_PATH).toString()));
+
+        messages.put(e.getKey(), messagesPerTask);
+      }
     }
 
     @Override
     public void onMessage(int source, int path, int target, Object object) {
-      LOG.info("Message received for last");
+      LOG.info("Message received for last: " + source + " count: " + count++);
     }
   }
 
