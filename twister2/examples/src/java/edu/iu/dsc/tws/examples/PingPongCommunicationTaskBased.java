@@ -140,7 +140,7 @@ public class PingPongCommunicationTaskBased implements IContainer {
         IntData data = generateData();
         // lets generate a message
 
-        while (getDfop().send(0, data)) {
+        while (!getDfop().send(0, data)) {
           // lets wait a litte and try again
           try {
             Thread.sleep(1);
