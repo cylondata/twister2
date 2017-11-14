@@ -67,7 +67,12 @@ public class MPIDataFlowKeyedReduce extends MPIGroupedDataFlowOperation {
   }
 
   @Override
-  public void injectPartialResult(int source, Object message) {
+  public boolean injectPartialResult(int source, Object message) {
+    return false;
+  }
 
+  @Override
+  protected boolean isLastReceiver() {
+    return false;
   }
 }

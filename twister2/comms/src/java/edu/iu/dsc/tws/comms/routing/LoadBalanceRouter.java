@@ -51,7 +51,7 @@ public class LoadBalanceRouter implements IRouter {
   }
 
   @Override
-  public boolean isLast(int task) {
+  public boolean isLastReceiver() {
     return false;
   }
 
@@ -71,7 +71,7 @@ public class LoadBalanceRouter implements IRouter {
   }
 
   @Override
-  public int destinationIdentifier() {
+  public int destinationIdentifier(int source, int path) {
     return 0;
   }
 }

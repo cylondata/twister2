@@ -11,10 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
+
 
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.routing.IRouter;
@@ -45,13 +48,13 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
   }
 
   @Override
-  protected int destinationIdentifier() {
-    return super.destinationIdentifier();
+  protected int destinationIdentifier(int source, int path) {
+    return router.destinationIdentifier(source, path);
   }
 
   @Override
   protected boolean isLast(int source, int path, int taskIdentifier) {
-    return router.isLast(taskIdentifier);
+    return router.isLastReceiver();
   }
 
   /**
@@ -67,12 +70,16 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
 
     // we always receive to the main task
     int messageDestId = currentMessage.getHeader().getDestinationIdentifier();
+//    LOG.info(String.format("%d received message from %d", instancePlan.getThisExecutor(),
+//        currentMessage.getHeader().getSourceId()));
     // check weather this message is for a sub task
     if (!isLast(header.getSourceId(), header.getPath(), messageDestId)
         && partialReceiver != null) {
+//      LOG.info(String.format("%d calling partial receiver", instancePlan.getThisExecutor()));
       partialReceiver.onMessage(header.getSourceId(), header.getPath(),
           router.mainTaskOfExecutor(instancePlan.getThisExecutor()), object);
     } else {
+//      LOG.info(String.format("%d calling fina receiver", instancePlan.getThisExecutor()));
       finalReceiver.onMessage(header.getSourceId(), header.getPath(),
           router.mainTaskOfExecutor(instancePlan.getThisExecutor()), object);
     }
@@ -85,8 +92,27 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
 
   @Override
   protected void externalRoutesForSend(int source, List<Integer> routes) {
+    // we dont do anything
+  }
+
+  @Override
+  protected void externalRoutesForPartialSend(int source, List<Integer> routes) {
     // get the expected routes
     Map<Integer, Map<Integer, Set<Integer>>> routing = router.getExternalSendTasks(source);
+    if (routing == null) {
+      throw new RuntimeException("Un-expected message from source: " + source);
+    }
+
+    Map<Integer, Set<Integer>> sourceRouting = routing.get(source);
+    if (sourceRouting != null) {
+      // we always use path 0 because only one path
+      routes.addAll(sourceRouting.get(0));
+    }
+  }
+
+  protected void internalRouterForPartialInject(int source, List<Integer> routes) {
+    // get the expected routes
+    Map<Integer, Map<Integer, Set<Integer>>> routing = router.getInternalSendTasks(source);
     if (routing == null) {
       throw new RuntimeException("Un-expected message from source: " + source);
     }
@@ -106,6 +132,12 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
       throw new RuntimeException("Un-expected message from source: " + source);
     }
 
+    // we are going to add source if we are the main executor
+    if (router.mainTaskOfExecutor(instancePlan.getThisExecutor()) == source) {
+      routes.add(source);
+    }
+
+    // we should not have the route for main task to outside at this point
     Map<Integer, Set<Integer>> sourceRouting = routing.get(source);
     if (sourceRouting != null) {
       // we always use path 0 because only one path
@@ -114,9 +146,16 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
   }
 
   @Override
+  protected boolean isLastReceiver() {
+    return router.isLastReceiver();
+  }
+
+  @Override
   protected void receiveSendInternally(int source, int t, int path, Object message) {
     // check weather this is the last task
-    if (router.isLast(t)) {
+    if (router.isLastReceiver()) {
+//      LOG.info(String.format("%d Calling directly final receiver %d",
+//          instancePlan.getThisExecutor(), source));
       finalReceiver.onMessage(source, path, t, message);
     } else {
       partialReceiver.onMessage(source, path, t, message);
@@ -124,9 +163,9 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
   }
 
   @Override
-  public void injectPartialResult(int source, Object message) {
+  public boolean injectPartialResult(int source, Object message) {
     // now what we need to do
-
+    return sendMessagePartial(source, message);
   }
 
   @Override
@@ -136,6 +175,21 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
 
   @Override
   protected Map<Integer, Map<Integer, List<Integer>>> receiveExpectedTaskIds() {
-    return router.receiveExpectedTaskIds();
+    Map<Integer, Map<Integer, List<Integer>>> integerMapMap = router.receiveExpectedTaskIds();
+    // add the main task to receive from iteself
+    int key = router.mainTaskOfExecutor(instancePlan.getThisExecutor());
+    Map<Integer, List<Integer>> mainReceives = integerMapMap.get(
+        key);
+    List<Integer> mainReceiveList;
+    if (mainReceives == null) {
+      mainReceives = new HashMap<>();
+      mainReceiveList = new ArrayList<>();
+      mainReceives.put(key, mainReceiveList);
+    } else {
+      mainReceiveList = mainReceives.get(MPIContext.DEFAULT_PATH);
+    }
+    mainReceiveList.add(key);
+
+    return integerMapMap;
   }
 }

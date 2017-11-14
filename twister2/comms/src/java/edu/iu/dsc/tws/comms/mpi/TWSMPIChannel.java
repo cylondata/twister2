@@ -136,8 +136,8 @@ public class TWSMPIChannel {
 //    try {
     boolean offer = pendingSends.offer(
         new MPISendRequests(id, message.getHeader().getEdge(), message, callback));
-//    LOG.info(String.format("Pending sends count: %d inQueue: %d", ++pendingSendCount,
-//        pendingSends.size()));
+    LOG.info(String.format("%d Pending sends count: %d inQueue: %d", executor, ++pendingSendCount,
+        pendingSends.size()));
     return offer;
 //    } finally {
 //      lock.unlock();
@@ -211,6 +211,7 @@ public class TWSMPIChannel {
     }
   }
 
+  private int completedReceives = 0;
   /**
    * Progress the communications that are pending
    */
@@ -269,22 +270,27 @@ public class TWSMPIChannel {
       }
     }
 
+
     for (int i = 0; i < registeredReceives.size(); i++) {
-//      LOG.log(Level.INFO, "Going through Pending receives");
+
       MPIReceiveRequests receiveRequests = registeredReceives.get(i);
+      LOG.info(String.format("%d Going through Pending receives: %d pending %d",
+          executor, registeredReceives.size(), receiveRequests.pendingRequests.size()));
       try {
         Iterator<MPIRequest> requestIterator = receiveRequests.pendingRequests.iterator();
         while (requestIterator.hasNext()) {
           MPIRequest r = requestIterator.next();
-//          LOG.info("Testing receive status");
+//          LOG.info(String.format("%d Testing receive status %d pending %d", executor,
+//              receiveRequests.rank, receiveRequests.pendingRequests.size()));
           Status status = r.request.testStatus();
           if (status != null) {
             if (!status.isCancelled()) {
-//              LOG.log(Level.INFO, executor + " Receive completed: " + status.getCount(MPI.BYTE));
-              // lets call the callback about the receive complete
+              LOG.info(executor + " Receive completed: " + completedReceives++);
+//               lets call the callback about the receive complete
               r.buffer.setSize(status.getCount(MPI.BYTE));
               receiveRequests.callback.onReceiveComplete(
                   receiveRequests.rank, receiveRequests.edge, r.buffer);
+//              LOG.info(String.format("%d finished calling the on complete method", executor));
               requestIterator.remove();
             } else {
               throw new RuntimeException("MPI receive request cancelled");

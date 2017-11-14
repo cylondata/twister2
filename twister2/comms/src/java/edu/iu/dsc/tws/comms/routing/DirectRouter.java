@@ -107,7 +107,7 @@ public class DirectRouter implements IRouter {
   }
 
   @Override
-  public boolean isLast(int task) {
+  public boolean isLastReceiver() {
     // now check if destination is in this task
     return thisExecutorTasks.contains(destination);
   }
@@ -134,7 +134,7 @@ public class DirectRouter implements IRouter {
    * @return
    */
   @Override
-  public int destinationIdentifier() {
+  public int destinationIdentifier(int source, int path) {
     return destination;
   }
 }

@@ -106,7 +106,7 @@ public class BinaryTreeRouter implements IRouter {
   }
 
   @Override
-  public int destinationIdentifier() {
+  public int destinationIdentifier(int source, int path) {
     return 0;
   }
 
@@ -121,7 +121,7 @@ public class BinaryTreeRouter implements IRouter {
   }
 
   @Override
-  public boolean isLast(int task) {
+  public boolean isLastReceiver() {
     return false;
   }
 
