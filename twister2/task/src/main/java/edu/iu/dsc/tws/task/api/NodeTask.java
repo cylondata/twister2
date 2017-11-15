@@ -12,28 +12,8 @@
 package edu.iu.dsc.tws.task.api;
 
 /**
- * Created by pulasthi on 11/8/17.
+ * The abstract class that represents the tasks that are performed in middle of the task graph
+ * Node Tasks takes an input from one task and sends the results into another task
  */
-public class RunnableTask implements Runnable {
-  private Task executableTask;
-
-  public RunnableTask(Task task) {
-    this.executableTask = task;
-  }
-
-  public Task getExecutableTask() {
-    return executableTask;
-  }
-
-  public void setExecutableTask(Task executableTask) {
-    this.executableTask = executableTask;
-  }
-
-  @Override
-  public void run() {
-    if (executableTask == null) {
-      throw new RuntimeException("Task needs to be set to execute");
-    }
-    executableTask.execute();
-  }
+public abstract class NodeTask extends Task {
 }
