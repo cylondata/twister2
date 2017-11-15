@@ -84,7 +84,8 @@ public final class Utils {
   }
 
   /**
-   * Let assume we have 2 task per container
+   * Let assume we have 2 tasks per container and one additional for first container,
+   * which will be the destination
    * @param plan the resource plan from scheduler
    * @return task plan
    */
@@ -114,6 +115,9 @@ public final class Utils {
       Set<Integer> nodesOfExecutor = new HashSet<>();
       for (int j = 0; j < taskPerExecutor; j++) {
         nodesOfExecutor.add(i * taskPerExecutor + j);
+      }
+      if (i == 0) {
+        nodesOfExecutor.add(noOfTasks);
       }
       executorToGraphNodes.put(i, nodesOfExecutor);
     }

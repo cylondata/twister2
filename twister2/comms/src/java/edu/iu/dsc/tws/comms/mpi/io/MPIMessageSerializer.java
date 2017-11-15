@@ -48,32 +48,33 @@ public class MPIMessageSerializer implements MessageSerializer {
 
     // we got an already serialized message, lets just return it
     if (sendMessage.getMPIMessage().isComplete()) {
-      sendMessage.setSerializedState(MPISendMessage.SerializedState.FINISHED);
+      sendMessage.setSendState(MPISendMessage.SendState.SERIALIZED);
       return sendMessage;
     }
 
     while (sendBuffers.size() > 0 && sendMessage.serializedState()
-        != MPISendMessage.SerializedState.FINISHED) {
+        != MPISendMessage.SendState.SERIALIZED) {
       MPIBuffer buffer = sendBuffers.poll();
 
-      if (sendMessage.serializedState() == MPISendMessage.SerializedState.INIT) {
+      if (sendMessage.serializedState() == MPISendMessage.SendState.INIT
+          || sendMessage.serializedState() == MPISendMessage.SendState.SENT_INTERNALLY) {
         // build the header
         buildHeader(buffer, sendMessage);
-        sendMessage.setSerializedState(MPISendMessage.SerializedState.HEADER_BUILT);
+        sendMessage.setSendState(MPISendMessage.SendState.HEADER_BUILT);
       }
 
-      if (sendMessage.serializedState() == MPISendMessage.SerializedState.HEADER_BUILT) {
+      if (sendMessage.serializedState() == MPISendMessage.SendState.HEADER_BUILT) {
         // build the body
         // first we need to serialize the body if needed
         serializeBody(message, sendMessage, buffer);
-      } else if (sendMessage.serializedState() == MPISendMessage.SerializedState.BODY) {
+      } else if (sendMessage.serializedState() == MPISendMessage.SendState.BODY_BUILT) {
         // further build the body
         serializeBody(message, sendMessage, buffer);
       }
 
       // okay we are adding this buffer
       sendMessage.getMPIMessage().addBuffer(buffer);
-      if (sendMessage.serializedState() == MPISendMessage.SerializedState.FINISHED) {
+      if (sendMessage.serializedState() == MPISendMessage.SendState.SERIALIZED) {
         MPIMessage mpiMessage = sendMessage.getMPIMessage();
         // mark the original message as complete
         mpiMessage.setComplete(true);
@@ -95,7 +96,7 @@ public class MPIMessageSerializer implements MessageSerializer {
     byteBuffer.putInt(sendMessage.getSource());
     // the path we are on, if not grouped it will be 0 and ignored
     byteBuffer.putInt(sendMessage.getPath());
-    byteBuffer.putInt(sendMessage.getSubEdge());
+    byteBuffer.putInt(sendMessage.getDestintationIdentifier());
     // we add 0 for now and late change it
     byteBuffer.putInt(0);
     // at this point we haven't put the length and we will do it at the serialization
@@ -145,7 +146,7 @@ public class MPIMessageSerializer implements MessageSerializer {
     byte[] data;
     int dataPosition;
     ByteBuffer byteBuffer = buffer.getByteBuffer();
-    if (sendMessage.serializedState() == MPISendMessage.SerializedState.HEADER_BUILT) {
+    if (sendMessage.serializedState() == MPISendMessage.SendState.HEADER_BUILT) {
       // okay we need to serialize the data
       data = serializer.serialize(object);
       // at this point we know the length of the data
@@ -153,7 +154,7 @@ public class MPIMessageSerializer implements MessageSerializer {
       // now lets set the header
       MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
           sendMessage.getEdge(), data.length);
-      builder.subEdge(sendMessage.getSubEdge());
+      builder.subEdge(sendMessage.getDestintationIdentifier());
       sendMessage.getMPIMessage().setHeader(builder.build());
       dataPosition = 0;
       sendMessage.setSendBytes(data);
@@ -164,7 +165,7 @@ public class MPIMessageSerializer implements MessageSerializer {
       dataPosition = sendMessage.getByteCopied();
     }
 
-    if (grouped && MPISendMessage.SerializedState.BODY == sendMessage.serializedState()) {
+    if (grouped && MPISendMessage.SendState.BODY_BUILT == sendMessage.serializedState()) {
       // we need to set the path at the begining
       byteBuffer.putInt(sendMessage.getPath());
     }
@@ -185,9 +186,9 @@ public class MPIMessageSerializer implements MessageSerializer {
 
     // okay we are done with the message
     if (copyBytes == remainingToCopy) {
-      sendMessage.setSerializedState(MPISendMessage.SerializedState.FINISHED);
+      sendMessage.setSendState(MPISendMessage.SendState.SERIALIZED);
     } else {
-      sendMessage.setSerializedState(MPISendMessage.SerializedState.BODY);
+      sendMessage.setSendState(MPISendMessage.SendState.BODY_BUILT);
     }
   }
 }

@@ -77,10 +77,10 @@ public class BaseReduceCommunication implements IContainer {
     TWSCommunication channel = network.getDataFlowTWSCommunication();
 
     Set<Integer> sources = new HashSet<>();
-    for (int i = 0; i < NO_OF_TASKS - 1; i++) {
+    for (int i = 0; i < NO_OF_TASKS; i++) {
       sources.add(i);
     }
-    int dest = NO_OF_TASKS - 1;
+    int dest = NO_OF_TASKS;
 
     Map<String, Object> newCfg = new HashMap<>();
 
@@ -238,7 +238,8 @@ public class BaseReduceCommunication implements IContainer {
 
     @Override
     public void onMessage(int source, int path, int target, Object object) {
-      LOG.info("Message received for last: " + source + " count: " + count++);
+      LOG.info("Message received for last: " + source + " target: "
+          + target + " count: " + count++);
     }
   }
 
