@@ -17,4 +17,17 @@ package edu.iu.dsc.tws.task.api;
  * The task takes inputs from another task and outputs to a output source
  */
 public abstract class SinkTask extends Task {
+
+  /**
+   * The output sink for this task. The output will be written to this
+   */
+  private Sink outputSink;
+
+  public Sink getOutputSink() {
+    return outputSink;
+  }
+
+  public void setOutputSink(Sink outputSink) {
+    this.outputSink = outputSink;
+  }
 }

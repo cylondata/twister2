@@ -40,6 +40,7 @@ import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
+import edu.iu.dsc.tws.task.api.SinkTask;
 import edu.iu.dsc.tws.task.api.SourceTask;
 import edu.iu.dsc.tws.task.core.TaskExecutor;
 
@@ -121,7 +122,16 @@ public class PingPongCommunicationTaskBased implements IContainer {
       }
     }
   }
+  /**
+   * RevieceWorker
+   */
+  private class recieveWorker extends SinkTask {
 
+    @Override
+    public void execute() {
+
+    }
+  }
   /**
    * We are running the map in a separate thread
    */
@@ -140,7 +150,7 @@ public class PingPongCommunicationTaskBased implements IContainer {
         IntData data = generateData();
         // lets generate a message
 
-        while (!getDfop().send(0, data)) {
+        while (!getDataFlowOperation().send(0, data)) {
           // lets wait a litte and try again
           try {
             Thread.sleep(1);

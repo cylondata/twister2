@@ -12,28 +12,7 @@
 package edu.iu.dsc.tws.task.api;
 
 /**
- * Wrapper class that is used to execute Tasks
+ * The interface that that all data input sources (Batch, Streaming, etc)
  */
-public class RunnableTask implements Runnable {
-  private Task executableTask;
-
-  public RunnableTask(Task task) {
-    this.executableTask = task;
-  }
-
-  public Task getExecutableTask() {
-    return executableTask;
-  }
-
-  public void setExecutableTask(Task executableTask) {
-    this.executableTask = executableTask;
-  }
-
-  @Override
-  public void run() {
-    if (executableTask == null) {
-      throw new RuntimeException("Task needs to be set to execute");
-    }
-    executableTask.execute();
-  }
+public interface Source {
 }

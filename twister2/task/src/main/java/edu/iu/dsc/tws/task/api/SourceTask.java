@@ -11,9 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.api;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 
 /**
@@ -21,17 +18,20 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
  * This task reads data from a input data source and ouputs data to another task
  */
 public abstract class SourceTask extends Task {
-  /**
-   * The task id's of tasks that this sources task will send messages to
-   */
-  private Set<Integer> sinks = new HashSet<>(); //TODO: we only need this if the dfop is created
-  //TODO: at the task level will leave this for now might need it later
+//  /**
+//   * The task id's of tasks that this sources task will send messages to
+//   */
+//  private Set<Integer> sinks = new HashSet<>();
 
+  /**
+   * The input source for this task. the input data will be read from this
+   */
+  private Source inputSource;
   /**
    * The data flow operation related to this task. This will be used to send data to the dependent
    * tasks in the application
    */
-  private DataFlowOperation dfop;
+  private DataFlowOperation dataFlowOperation;
 
   public SourceTask() {
     super();
@@ -41,29 +41,37 @@ public abstract class SourceTask extends Task {
     super(tid);
   }
 
-  public SourceTask(int tid, Set<Integer> sinksSet) {
-    super(tid);
-    this.sinks = sinksSet;
-  }
+//  public SourceTask(int tid, Set<Integer> sinksSet) {
+//    super(tid);
+//    this.sinks = sinksSet;
+//  }
 
   public SourceTask(int tid, DataFlowOperation dataFlowOperation) {
     super(tid);
-    this.dfop = dataFlowOperation;
+    this.dataFlowOperation = dataFlowOperation;
   }
 
-  public Set<Integer> getSinks() {
-    return sinks;
+//  public Set<Integer> getSinks() {
+//    return sinks;
+//  }
+//
+//  public void setSinks(Set<Integer> sinks) {
+//    this.sinks = sinks;
+//  }
+
+  public DataFlowOperation getDataFlowOperation() {
+    return dataFlowOperation;
   }
 
-  public void setSinks(Set<Integer> sinks) {
-    this.sinks = sinks;
+  public void setDataFlowOperation(DataFlowOperation dfop) {
+    this.dataFlowOperation = dfop;
   }
 
-  public DataFlowOperation getDfop() {
-    return dfop;
+  public Source getInputSource() {
+    return inputSource;
   }
 
-  public void setDfop(DataFlowOperation dfop) {
-    this.dfop = dfop;
+  public void setInputSource(Source inputSource) {
+    this.inputSource = inputSource;
   }
 }
