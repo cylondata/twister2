@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi;
 
+import java.util.List;
+
 /**
  * Keep track of a MPI message while it is transisitioning through the send phases
  */
@@ -32,33 +34,41 @@ public class MPISendMessage {
 
   private int edge;
 
-  private int subEdge;
+  private int destintationIdentifier;
 
   private int path;
 
-  public enum SerializedState {
+  private List<Integer> internalSends;
+
+  private List<Integer> externalSends;
+
+  private int acceptedExternalSends = 0;
+
+  public enum SendState {
     INIT,
+    SENT_INTERNALLY,
     HEADER_BUILT,
-    BODY,
-    FINISHED
+    BODY_BUILT,
+    SERIALIZED,
+    FINISHED,
   }
 
-  private SerializedState serializedState = SerializedState.INIT;
+  private SendState sendState = SendState.INIT;
 
-  public MPISendMessage(int src, MPIMessage message, int e, int se) {
-    this(src, message, e, se, 0);
-  }
 
-  public MPISendMessage(int src, MPIMessage message, int e, int se, int p) {
+  public MPISendMessage(int src, MPIMessage message, int e, int di, int p,
+                        List<Integer> intSends, List<Integer> extSends) {
     this.ref = message;
     this.source = src;
     this.edge = e;
-    this.subEdge = se;
+    this.destintationIdentifier = di;
     this.path = p;
+    this.internalSends = intSends;
+    this.externalSends = extSends;
   }
 
-  public SerializedState serializedState() {
-    return serializedState;
+  public SendState serializedState() {
+    return sendState;
   }
 
   public int getByteCopied() {
@@ -69,8 +79,8 @@ public class MPISendMessage {
     this.byteCopied = byteCopied;
   }
 
-  public void setSerializedState(SerializedState serializedState) {
-    this.serializedState = serializedState;
+  public void setSendState(SendState sendState) {
+    this.sendState = sendState;
   }
 
   public int getWrittenHeaderSize() {
@@ -109,11 +119,27 @@ public class MPISendMessage {
     return edge;
   }
 
-  public int getSubEdge() {
-    return subEdge;
+  public int getDestintationIdentifier() {
+    return destintationIdentifier;
   }
 
   public int getPath() {
     return path;
+  }
+
+  public List<Integer> getInternalSends() {
+    return internalSends;
+  }
+
+  public List<Integer> getExternalSends() {
+    return externalSends;
+  }
+
+  public int getAcceptedExternalSends() {
+    return acceptedExternalSends;
+  }
+
+  public int incrementAcceptedExternalSends() {
+    return ++acceptedExternalSends;
   }
 }

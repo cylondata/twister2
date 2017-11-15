@@ -136,7 +136,10 @@ public class TWSMPIChannel {
 //    try {
     boolean offer = pendingSends.offer(
         new MPISendRequests(id, message.getHeader().getEdge(), message, callback));
-    LOG.info(String.format("%d Pending sends count: %d inQueue: %d", executor, ++pendingSendCount,
+    if (offer) {
+      pendingSendCount++;
+    }
+    LOG.info(String.format("%d Pending sends count: %d inQueue: %d", executor, pendingSendCount,
         pendingSends.size()));
     return offer;
 //    } finally {
@@ -222,7 +225,7 @@ public class TWSMPIChannel {
 //    LOG.log(Level.INFO, "Progress: pendingSends: " + pendingSends.size());
       // we should rate limit here
     while (pendingSends.size() > 0) {
-//      LOG.log(Level.INFO, "Pending sends");
+      LOG.info(String.format("%d Pending sends %d", executor, pendingSends.size()));
       // post the message
       MPISendRequests sendRequests = pendingSends.poll();
       // post the send
@@ -274,8 +277,8 @@ public class TWSMPIChannel {
     for (int i = 0; i < registeredReceives.size(); i++) {
 
       MPIReceiveRequests receiveRequests = registeredReceives.get(i);
-      LOG.info(String.format("%d Going through Pending receives: %d pending %d",
-          executor, registeredReceives.size(), receiveRequests.pendingRequests.size()));
+//      LOG.info(String.format("%d Going through Pending receives: %d pending %d",
+//          executor, registeredReceives.size(), receiveRequests.pendingRequests.size()));
       try {
         Iterator<MPIRequest> requestIterator = receiveRequests.pendingRequests.iterator();
         while (requestIterator.hasNext()) {
@@ -285,7 +288,7 @@ public class TWSMPIChannel {
           Status status = r.request.testStatus();
           if (status != null) {
             if (!status.isCancelled()) {
-              LOG.info(executor + " Receive completed: " + completedReceives++);
+//              LOG.info(executor + " Receive completed: " + completedReceives++);
 //               lets call the callback about the receive complete
               r.buffer.setSize(status.getCount(MPI.BYTE));
               receiveRequests.callback.onReceiveComplete(

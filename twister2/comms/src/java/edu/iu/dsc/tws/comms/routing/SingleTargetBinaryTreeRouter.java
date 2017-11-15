@@ -127,6 +127,17 @@ public class SingleTargetBinaryTreeRouter implements IRouter {
         LOG.info(String.format("%d doesn't have a node in tree: %d", plan.getThisExecutor(), t));
       }
     }
+
+    LOG.info(String.format("****** %d internal tasks: %s",
+        plan.getThisExecutor(), sendInternalTasks));
+    LOG.info(String.format("****** %d external tasks: %s",
+        plan.getThisExecutor(), sendExternalTasks));
+    LOG.info(String.format("****** %d externalPartial tasks: %s", plan.getThisExecutor(),
+        sendExternalTasksPartial));
+    LOG.info(String.format("****** %d receive executor: %s",
+        plan.getThisExecutor(), receiveExecutors));
+    LOG.info(String.format("****** %d receive tasks: %s",
+        plan.getThisExecutor(), receiveTasks));
   }
 
   @Override

@@ -56,7 +56,7 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
     // we will get the routing based on the originating id
     routeReceivedMessage(currentMessage.getHeader(), routes);
     // try to send further
-    sendMessage(currentMessage, routes);
+    sendMessage(currentMessage, routes, 0);
   }
 
   protected void setupRouting() {

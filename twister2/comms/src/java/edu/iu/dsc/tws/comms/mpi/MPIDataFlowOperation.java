@@ -114,7 +114,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
 
     // later look at how not to allocate pairs for this each time
     pendingSendMessages = new ArrayBlockingQueue<Pair<Object, MPISendMessage>>(
-        MPIContext.sendPendingMax(config, 1024));
+        MPIContext.sendPendingMax(config, 4096));
 
     // now setup the sends and receives
     setupCommunication();
@@ -209,7 +209,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
     return sendMessage(source, message);
   }
 
-  protected boolean sendMessagePartial(int source, Object message) {
+  protected boolean sendMessagePartial(int source, Object object) {
 //    LOG.log(Level.INFO, "lock 00 " + executor);
     lock.lock();
     try {
@@ -219,19 +219,12 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
       internalRouterForPartialInject(source, internalRoutes);
 //      LOG.info(String.format("%d internal routes for send %d: %s",
 //          instancePlan.getThisExecutor(), source, internalRoutes));
-      for (Integer i : internalRoutes) {
-        // okay now we need to check weather this is the last place
-        receiveSendInternally(source, i, 0, message);
-      }
+
 
       // now lets get the external routes to send
       externalRoutesForPartialSend(source, externalRoutes);
-//      LOG.info(String.format("%d External routes for send %d: %s",
+//      LOG.info(String.format("%d Partial External routes for send %d: %s",
 //          instancePlan.getThisExecutor(), source, externalRoutes));
-      // we don't have an external executor to send this message
-      if (externalRoutes.size() == 0) {
-        return true;
-      }
 
       // we need to serialize for sending over the wire
       // LOG.log(Level.INFO, "Sending message of type: " + type);
@@ -239,25 +232,18 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
       // increment it later
       MPIMessage mpiMessage = new MPIMessage(source, type, MPIMessageDirection.OUT, this);
 
+      int di = -1;
+      if (externalRoutes.size() > 0) {
+        di = destinationIdentifier(source, MPIContext.DEFAULT_PATH);
+      }
       // create a send message to keep track of the serialization
       // at the intial stage the sub-edge is 0
       MPISendMessage sendMessage = new MPISendMessage(source, mpiMessage, edge,
-          destinationIdentifier(source, MPIContext.DEFAULT_PATH));
-      // this need to use the available buffers
-      // we need to advertise the available buffers to the upper layers
-      messageSerializer.build(message, sendMessage);
+          di, MPIContext.DEFAULT_PATH, internalRoutes, externalRoutes);
 
-      // okay we could build fully
-      if (sendMessage.serializedState() == MPISendMessage.SerializedState.FINISHED) {
-        LOG.info(String.format("%d cannot serialize", instancePlan.getThisExecutor()));
-        // lets increment the reference count of this message
-        mpiMessage.incrementRefCount();
-        return sendMessage(mpiMessage, externalRoutes);
-      } else {
-        // now try to put this into pending
-        return pendingSendMessages.offer(
-            new ImmutablePair<Object, MPISendMessage>(message, sendMessage));
-      }
+      // now try to put this into pending
+      return pendingSendMessages.offer(
+          new ImmutablePair<Object, MPISendMessage>(object, sendMessage));
     } finally {
       lock.unlock();
     }
@@ -273,19 +259,11 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
       internalRoutesForSend(source, internalRoutes);
 //      LOG.info(String.format("%d internal routes for send %d: %s",
 //          instancePlan.getThisExecutor(), source, internalRoutes));
-      for (Integer i : internalRoutes) {
-        // okay now we need to check weather this is the last place
-        receiveSendInternally(source, i, 0, message);
-      }
 
       // now lets get the external routes to send
       externalRoutesForSend(source, externalRoutes);
-
-      // we don't have an external executor to send this message
-      if (externalRoutes.size() == 0) {
-        return true;
-      }
-
+//      LOG.info(String.format("%d External routes for send %d: %s",
+//          instancePlan.getThisExecutor(), source, externalRoutes));
       // we need to serialize for sending over the wire
       // LOG.log(Level.INFO, "Sending message of type: " + type);
       // this is a originating message. we are going to put ref count to 0 for now and
@@ -294,22 +272,16 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
 
       // create a send message to keep track of the serialization
       // at the intial stage the sub-edge is 0
-      MPISendMessage sendMessage = new MPISendMessage(source, mpiMessage, edge,
-          destinationIdentifier(source, MPIContext.DEFAULT_PATH));
-      // this need to use the available buffers
-      // we need to advertise the available buffers to the upper layers
-      messageSerializer.build(message, sendMessage);
-
-      // okay we could build fully
-      if (sendMessage.serializedState() == MPISendMessage.SerializedState.FINISHED) {
-        // lets increment the reference count of this message
-        mpiMessage.incrementRefCount();
-        return sendMessage(mpiMessage, externalRoutes);
-      } else {
-        // now try to put this into pending
-        return pendingSendMessages.offer(
-            new ImmutablePair<Object, MPISendMessage>(message, sendMessage));
+      int di = -1;
+      if (externalRoutes.size() > 0) {
+        di = destinationIdentifier(source, MPIContext.DEFAULT_PATH);
       }
+      MPISendMessage sendMessage = new MPISendMessage(source, mpiMessage, edge,
+          di, MPIContext.DEFAULT_PATH, internalRoutes, externalRoutes);
+
+      // now try to put this into pending
+      return pendingSendMessages.offer(
+          new ImmutablePair<Object, MPISendMessage>(message, sendMessage));
     } finally {
       lock.unlock();
     }
@@ -317,23 +289,66 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
 
   @Override
   public void progress() {
-//    LOG.log(Level.INFO, "lock 11 " + executor);
     lock.lock();
+    boolean canProgress = true;
+//    LOG.info(String.format("%d progress pendingsize %d", executor, pendingSendMessages.size()));
     try {
-      while (pendingSendMessages.size() > 0) {
+      while (pendingSendMessages.size() > 0 && canProgress) {
         // take out pending messages
         Pair<Object, MPISendMessage> pair = pendingSendMessages.peek();
+        MPISendMessage mpiMessage = pair.getValue();
+        Object messageObject = pair.getKey();
+//        LOG.info(String.format("%d message status 1 %s",
+//            instancePlan.getThisExecutor(), mpiMessage.serializedState()));
+        if (mpiMessage.serializedState() == MPISendMessage.SendState.INIT) {
+          // send it internally
+          for (Integer i : mpiMessage.getInternalSends()) {
+            // okay now we need to check weather this is the last place
+            receiveSendInternally(mpiMessage.getSource(), i,
+                MPIContext.DEFAULT_PATH, messageObject);
+          }
+
+          mpiMessage.setSendState(MPISendMessage.SendState.SENT_INTERNALLY);
+        }
+
+        // we don't have an external executor to send this message
+        if (mpiMessage.getExternalSends().size() == 0) {
+          pendingSendMessages.poll();
+          continue;
+        }
+
+//        LOG.info(String.format("%d message status 2 %s",
+//            instancePlan.getThisExecutor(), mpiMessage.serializedState()));
+        // at this point lets build the message
         MPISendMessage message = (MPISendMessage)
-            messageSerializer.build(pair.getKey(), pair.getValue());
+            messageSerializer.build(pair.getKey(), mpiMessage);
+
+//        LOG.info(String.format("%d message status 3 %s",
+//            instancePlan.getThisExecutor(), mpiMessage.serializedState()));
 
         // okay we build the message, send it
-        if (message.serializedState() == MPISendMessage.SerializedState.FINISHED) {
+        if (message.serializedState() == MPISendMessage.SendState.SERIALIZED) {
+          List<Integer> exRoutes = mpiMessage.getExternalSends();
+          int startOfExternalRouts = mpiMessage.getAcceptedExternalSends();
+          int noOfExternalSends = startOfExternalRouts;
+          for (int i = startOfExternalRouts; i < exRoutes.size(); i++) {
+            boolean sendAccepted = sendMessageToTarget(message.getMPIMessage(), exRoutes.get(i));
+            LOG.info(String.format("%d send message to task %d accepted %b",
+                instancePlan.getThisExecutor(), i, sendAccepted));
+            // if no longer accepts stop
+            if (!sendAccepted) {
+              canProgress = false;
+              break;
+            } else {
+              noOfExternalSends++;
+            }
+          }
 
-          List<Integer> routes = new ArrayList<>();
-          externalRoutesForSend(message.getSource(), routes);
-          sendMessage(message.getMPIMessage(), routes);
-
-          pendingSendMessages.remove();
+          if (noOfExternalSends == exRoutes.size()) {
+            // we are done
+            mpiMessage.setSendState(MPISendMessage.SendState.FINISHED);
+            pendingSendMessages.poll();
+          }
         } else {
           break;
         }
@@ -379,20 +394,24 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
     }
   }
 
-  protected boolean sendMessage(MPIMessage msgObj1, List<Integer> sendIds) {
+  protected boolean sendMessage(MPIMessage msgObj1, List<Integer> sendIds, int startIndex) {
     if (sendIds != null && sendIds.size() > 0) {
       // we need to increment before sending, otherwise message can get released
       // before we send all
-      msgObj1.incrementRefCount(sendIds.size());
-      for (int i : sendIds) {
+      for (int i = startIndex; i < sendIds.size(); i++) {
         // we need to convert the send id to a MPI process id
-        int e = instancePlan.getExecutorForChannel(i);
-//        LOG.info(String.format("%d sending message of task %d to executor: %d",
-//            instancePlan.getThisExecutor(), i, e));
-        return channel.sendMessage(e, msgObj1, this);
+        return sendMessageToTarget(msgObj1, sendIds.get(i));
       }
     }
     return false;
+  }
+
+  private boolean sendMessageToTarget(MPIMessage msgObj1, int i) {
+    msgObj1.incrementRefCount(1);
+    int e = instancePlan.getExecutorForChannel(i);
+//        LOG.info(String.format("%d sending message of task %d to executor: %d",
+//            instancePlan.getThisExecutor(), i, e));
+    return channel.sendMessage(e, msgObj1, this);
   }
 
   @Override
