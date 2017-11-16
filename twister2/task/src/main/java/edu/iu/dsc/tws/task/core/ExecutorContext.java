@@ -33,4 +33,15 @@ public class ExecutorContext extends Context {
    * The size of the task pool assigned to the executors
    */
   public static final int EXECUTOR_CORE_POOL_SIZE = 4;
+
+  /**
+   * The maximum size of the task pool
+   */
+  public static final int EXECUTOR_MAX_POOL_SIZE = Integer.MAX_VALUE;
+
+  /**
+   * The keep alive time for the tasks that are not in the core pool
+   */
+  public static final long EXECUTOR_POOL_KEEP_ALIVE_TIME = 1000*60;
+
 }

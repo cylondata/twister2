@@ -25,6 +25,7 @@ package edu.iu.dsc.tws.task.core;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
@@ -46,12 +47,15 @@ public class TaskExecutor {
 
 
   public TaskExecutor() {
-    executorPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(ExecutorContext.
-        EXECUTOR_CORE_POOL_SIZE);
+    initThreadPool(ExecutorContext.EXECUTOR_CORE_POOL_SIZE,ExecutorContext.EXECUTOR_MAX_POOL_SIZE,ExecutorContext.EXECUTOR_POOL_KEEP_ALIVE_TIME);
   }
 
   public TaskExecutor(int poolSize) {
-    executorPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(poolSize);
+    initThreadPool(poolSize,ExecutorContext.EXECUTOR_MAX_POOL_SIZE,ExecutorContext.EXECUTOR_POOL_KEEP_ALIVE_TIME);
+  }
+
+  public TaskExecutor(int poolSize, int maxPoolSize, long keepAliveTime) {
+    initThreadPool(poolSize,maxPoolSize,keepAliveTime);
   }
 
   /**
@@ -85,5 +89,13 @@ public class TaskExecutor {
 
   public void setProgress(boolean value) {
     this.progres = value;
+  }
+
+  private void initThreadPool(int corePoolSize, int maxPoolSize, long keepAliveTime){
+    executorPool = (ThreadPoolExecutor) Executors.newCachedThreadPool();
+    executorPool.setCorePoolSize(corePoolSize);
+    executorPool.setMaximumPoolSize(maxPoolSize);
+    executorPool.setKeepAliveTime(keepAliveTime, TimeUnit.MILLISECONDS);
+
   }
 }
