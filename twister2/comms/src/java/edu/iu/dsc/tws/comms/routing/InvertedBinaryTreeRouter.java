@@ -23,8 +23,8 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.mpi.MPIContext;
 
-public class SingleTargetBinaryTreeRouter implements IRouter {
-  private static final Logger LOG = Logger.getLogger(SingleTargetBinaryTreeRouter.class.getName());
+public class InvertedBinaryTreeRouter implements IRouter {
+  private static final Logger LOG = Logger.getLogger(InvertedBinaryTreeRouter.class.getName());
 
   private Map<Integer, Map<Integer, List<Integer>>> receiveTasks;
   private Set<Integer> receiveExecutors;
@@ -43,8 +43,8 @@ public class SingleTargetBinaryTreeRouter implements IRouter {
    * @param root
    * @param dests
    */
-  public SingleTargetBinaryTreeRouter(Config cfg, TaskPlan plan,
-                          int root, Set<Integer> dests) {
+  public InvertedBinaryTreeRouter(Config cfg, TaskPlan plan,
+                                  int root, Set<Integer> dests) {
     int interNodeDegree = MPIContext.interNodeDegree(cfg, 2);
     int intraNodeDegree = MPIContext.intraNodeDegree(cfg, 2);
     mainTaskLast = false;
@@ -162,7 +162,7 @@ public class SingleTargetBinaryTreeRouter implements IRouter {
   }
 
   public Map<Integer, Map<Integer, Set<Integer>>> getExternalSendTasks(int source) {
-    return sendExternalTasksPartial;
+    return sendExternalTasks;
   }
 
   public Map<Integer, Map<Integer, Set<Integer>>> getExternalSendTasksForPartial(int source) {

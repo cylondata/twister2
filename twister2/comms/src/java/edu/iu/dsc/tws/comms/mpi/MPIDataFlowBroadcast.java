@@ -18,6 +18,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
+
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.routing.BinaryTreeRouter;
 import edu.iu.dsc.tws.comms.routing.IRouter;
@@ -43,7 +45,16 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
 
   @Override
   protected void receiveMessage(MPIMessage currentMessage, Object object) {
+    MessageHeader header = currentMessage.getHeader();
 
+    // we always receive to the main task
+//    LOG.info(String.format("%d received message from %d", instancePlan.getThisExecutor(),
+//        currentMessage.getHeader().getSourceId()));
+    // check weather this message is for a sub task
+
+//      LOG.info(String.format("%d calling fina receiver", instancePlan.getThisExecutor()));
+    finalReceiver.onMessage(header.getSourceId(), header.getPath(),
+        router.mainTaskOfExecutor(instancePlan.getThisExecutor()), object);
   }
 
   @Override
@@ -51,12 +62,37 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
     throw new RuntimeException("Not supported method");
   }
 
-  protected void passMessageDownstream(MPIMessage currentMessage) {
-    List<Integer> routes = new ArrayList<>();
-    // we will get the routing based on the originating id
-    routeReceivedMessage(currentMessage.getHeader(), routes);
-    // try to send further
-    sendMessage(currentMessage, routes, 0);
+  protected void passMessageDownstream(Object object, MPIMessage currentMessage) {
+    List<Integer> externalRoutes = new ArrayList<>();
+    List<Integer> internalRoutes = new ArrayList<>();
+    int src = router.mainTaskOfExecutor(instancePlan.getThisExecutor());
+    internalRoutesForSend(src, internalRoutes);
+
+    LOG.info(String.format("%d down internal routes for send %d: %s",
+        instancePlan.getThisExecutor(), src, internalRoutes));
+
+    // now lets get the external routes to send
+    externalRoutesForSend(src, externalRoutes);
+    LOG.info(String.format("%d down External routes for send %d: %s",
+        instancePlan.getThisExecutor(), src, externalRoutes));
+    // we need to serialize for sending over the wire
+    // LOG.log(Level.INFO, "Sending message of type: " + type);
+    // this is a originating message. we are going to put ref count to 0 for now and
+    // increment it later
+    MPIMessage mpiMessage = new MPIMessage(src, type, MPIMessageDirection.OUT, this);
+
+    // create a send message to keep track of the serialization
+    // at the intial stage the sub-edge is 0
+    int di = -1;
+    if (externalRoutes.size() > 0) {
+      di = destinationIdentifier(src, MPIContext.DEFAULT_PATH);
+    }
+    MPISendMessage sendMessage = new MPISendMessage(src, mpiMessage, edge,
+        di, MPIContext.DEFAULT_PATH, internalRoutes, externalRoutes);
+
+    // now try to put this into pending
+    pendingSendMessages.offer(
+        new ImmutablePair<Object, MPISendMessage>(object, sendMessage));
   }
 
   protected void setupRouting() {
@@ -64,7 +100,7 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
     Set<Integer> sources = new HashSet<>();
     sources.add(source);
 
-    router = new BinaryTreeRouter(config, instancePlan, sources, destinations, edge, 1);
+    router = new BinaryTreeRouter(config, instancePlan, source, destinations);
   }
 
   @Override
@@ -72,14 +108,14 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
   }
 
   @Override
-  protected void externalRoutesForSend(int src, List<Integer> routes) {
+  protected void externalRoutesForSend(int s, List<Integer> routes) {
     // get the expected routes
-    Map<Integer, Map<Integer, Set<Integer>>> routing = router.getExternalSendTasks(source);
+    Map<Integer, Map<Integer, Set<Integer>>> routing = router.getExternalSendTasks(s);
     if (routing == null) {
-      throw new RuntimeException("Un-expected message from source: " + source);
+      throw new RuntimeException("Un-expected message from source: " + s);
     }
 
-    Map<Integer, Set<Integer>> sourceRouting = routing.get(source);
+    Map<Integer, Set<Integer>> sourceRouting = routing.get(s);
     if (sourceRouting != null) {
       // we always use path 0 because only one path
       routes.addAll(sourceRouting.get(0));
@@ -91,10 +127,10 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
     // get the expected routes
     Map<Integer, Map<Integer, Set<Integer>>> routing = router.getInternalSendTasks(source);
     if (routing == null) {
-      throw new RuntimeException("Un-expected message from source: " + source);
+      throw new RuntimeException("Un-expected message from source: " + s);
     }
 
-    Map<Integer, Set<Integer>> sourceRouting = routing.get(source);
+    Map<Integer, Set<Integer>> sourceRouting = routing.get(s);
     if (sourceRouting != null) {
       // we always use path 0 because only one path
       routes.addAll(sourceRouting.get(0));
@@ -103,17 +139,17 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
 
   @Override
   protected void receiveSendInternally(int src, int t, int path, Object message) {
-
+    finalReceiver.onMessage(src, path, t, message);
   }
 
   @Override
   protected Set<Integer> receivingExecutors() {
-    return null;
+    return router.receivingExecutors();
   }
 
   @Override
   protected Map<Integer, Map<Integer, List<Integer>>> receiveExpectedTaskIds() {
-    return null;
+    return router.receiveExpectedTaskIds();
   }
 
   @Override
@@ -123,7 +159,7 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
 
   @Override
   protected boolean isLastReceiver() {
-    return false;
+    return true;
   }
 }
 

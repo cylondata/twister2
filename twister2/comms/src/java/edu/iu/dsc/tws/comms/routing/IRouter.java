@@ -46,6 +46,8 @@ public interface IRouter {
 
   Map<Integer, Map<Integer, Set<Integer>>> getExternalSendTasks(int source);
 
+  Map<Integer, Map<Integer, Set<Integer>>> getExternalSendTasksForPartial(int source);
+
   /**
    * Return the main task of an executor
    * @param executor

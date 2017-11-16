@@ -21,7 +21,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.routing.IRouter;
-import edu.iu.dsc.tws.comms.routing.SingleTargetBinaryTreeRouter;
+import edu.iu.dsc.tws.comms.routing.InvertedBinaryTreeRouter;
 
 public class MPIDataFlowReduce extends MPIDataFlowOperation {
   private static final Logger LOG = Logger.getLogger(MPIDataFlowBroadcast.class.getName());
@@ -43,7 +43,7 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
 
   public void setupRouting() {
     // we only have one path
-    this.router = new SingleTargetBinaryTreeRouter(config, instancePlan,
+    this.router = new InvertedBinaryTreeRouter(config, instancePlan,
         destination, sources);
   }
 
@@ -98,7 +98,8 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
   @Override
   protected void externalRoutesForPartialSend(int source, List<Integer> routes) {
     // get the expected routes
-    Map<Integer, Map<Integer, Set<Integer>>> routing = router.getExternalSendTasks(source);
+    Map<Integer, Map<Integer, Set<Integer>>> routing =
+        router.getExternalSendTasksForPartial(source);
     if (routing == null) {
       throw new RuntimeException("Un-expected message from source: " + source);
     }

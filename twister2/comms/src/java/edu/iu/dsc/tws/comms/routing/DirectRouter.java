@@ -124,6 +124,11 @@ public class DirectRouter implements IRouter {
   }
 
   @Override
+  public Map<Integer, Map<Integer, Set<Integer>>> getExternalSendTasksForPartial(int source) {
+    return null;
+  }
+
+  @Override
   public int mainTaskOfExecutor(int executor) {
     return -1;
   }

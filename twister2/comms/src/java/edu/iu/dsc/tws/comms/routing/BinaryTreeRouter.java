@@ -12,7 +12,8 @@
 package edu.iu.dsc.tws.comms.routing;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -25,113 +26,159 @@ import edu.iu.dsc.tws.comms.mpi.MPIContext;
 public class BinaryTreeRouter implements IRouter {
   private static final Logger LOG = Logger.getLogger(BinaryTreeRouter.class.getName());
 
-  private Config config;
-  private TaskPlan taskPlan;
-  private Set<Integer> sources;
-  private Set<Integer> destinations;
-  private int stream;
-  private int intraNodeDegree;
-  private int interNodeDegree;
-  private int distinctRoutes;
-  private BinaryTree tree;
+  private Map<Integer, Map<Integer, List<Integer>>> receiveTasks;
+  private Set<Integer> receiveExecutors;
+  private Map<Integer, Map<Integer, Set<Integer>>> sendExternalTasksPartial;
+  private Map<Integer, Map<Integer, Set<Integer>>> sendExternalTasks;
+  private Map<Integer, Map<Integer, Set<Integer>>> sendInternalTasks;
+  private int mainTask;
+  private boolean mainTaskLast;
+  private Map<Integer, Integer> destinationIdentifiers;
 
   /**
    * Initialize the data structure
    *
    * @param cfg
    * @param plan
-   * @param srscs
+   * @param root
    * @param dests
-   * @param strm
    */
   public BinaryTreeRouter(Config cfg, TaskPlan plan,
-                   Set<Integer> srscs, Set<Integer> dests, int strm, int distinctRts) {
-    this.config = cfg;
-    this.taskPlan = plan;
-    this.sources = srscs;
-    this.destinations = dests;
-    this.stream = strm;
-    this.distinctRoutes = distinctRts;
+                                  int root, Set<Integer> dests) {
+    int interNodeDegree = MPIContext.interNodeDegree(cfg, 2);
+    int intraNodeDegree = MPIContext.intraNodeDegree(cfg, 2);
+    mainTaskLast = false;
+    // lets build the tree
+    BinaryTree tree = new BinaryTree(interNodeDegree, intraNodeDegree, plan, root, dests);
+    Node treeRoot = tree.buildInterGroupTree(0);
 
-    this.interNodeDegree = MPIContext.interNodeDegree(cfg, 2);
-    this.intraNodeDegree = MPIContext.intraNodeDegree(cfg, 2);
-
-    tree = new BinaryTree(interNodeDegree, intraNodeDegree, taskPlan, 0, dests);
-
-    calculateRoutingTable();
-  }
-
-  private void calculateRoutingTable() {
-    ArrayList<Integer> sourceList = new ArrayList<>(sources);
-    Collections.sort(sourceList);
-
-    // we can only have max routes equal to sources
-    int routs = Math.min(Math.min(distinctRoutes, sourceList.size()), destinations.size());
-
-    for (int i = 0; i < sourceList.size(); i++) {
-      int source = sourceList.get(i);
-      int index = i % routs;
-
-//      Node root = buildInterGroupTree(index);
-      Node root = null;
-      Node search = BinaryTree.search(root, 0);
-      if (search != null) {
-        Routing routing = getRouting(search);
-        if (routing != null) {
-          // expectedRouting.put(source, routing);
-          throw new RuntimeException("");
-        }
+    Set<Integer> thisExecutorTasks = plan.getChannelsOfExecutor(plan.getThisExecutor());
+    /*
+      Tasks belonging to this operation and in the same executor
+    */
+    Set<Integer> thisExecutorTasksOfOperation = new HashSet<>();
+    for (int t : thisExecutorTasks) {
+      if (dests.contains(t) || root == t) {
+        thisExecutorTasksOfOperation.add(t);
       }
     }
-  }
+    LOG.info(String.format("%d Executor Tasks: %s", plan.getThisExecutor(),
+        thisExecutorTasksOfOperation.toString()));
+    this.destinationIdentifiers = new HashMap<>();
+    // construct the map of receiving ids
+    this.receiveTasks = new HashMap<Integer, Map<Integer, List<Integer>>>();
 
-  private Routing getRouting(Node node) {
-    List<Integer> upstream = new ArrayList<>();
-    List<Integer> downstrean = new ArrayList<>();
+    // now lets construct the downstream tasks
+    sendExternalTasksPartial = new HashMap<>();
+    sendInternalTasks = new HashMap<>();
+    sendExternalTasks = new HashMap<>();
 
-    Node parent = node.getParent();
-    upstream.add(parent.getTaskId());
+    // now lets construct the receive tasks
+    receiveExecutors = new HashSet<>();
+    for (int t : thisExecutorTasksOfOperation) {
+      List<Integer> recv = new ArrayList<>();
 
-    List<Node> children = node.getChildren();
-    for (Node child : children) {
-      downstrean.add(child.getTaskId());
+      Node search = BinaryTree.search(treeRoot, t);
+      // okay this is the main task of this executor
+      if (search != null) {
+        mainTask = search.getTaskId();
+        LOG.info(String.format("%d main task: %d", plan.getThisExecutor(), mainTask));
+        // this is the only task that receives messages and it receive from its parent
+        if (search.getParent() != null) {
+          receiveExecutors.add(plan.getExecutorForChannel(search.getParent().getTaskId()));
+          recv.add(search.getParent().getTaskId());
+        }
+        Map<Integer, List<Integer>> receivePathMap = new HashMap<>();
+        receivePathMap.put(0, new ArrayList<>(recv));
+        receiveTasks.put(t, receivePathMap);
+
+        // this task is connected to others and they dont send messages to anyone
+        List<Integer> directChildren = search.getDirectChildren();
+        for (int child : directChildren) {
+          Map<Integer, Set<Integer>> sendMap = new HashMap<>();
+          Set<Integer> sendTasks = new HashSet<>();
+          sendMap.put(MPIContext.DEFAULT_PATH, sendTasks);
+          sendInternalTasks.put(child, sendMap);
+          destinationIdentifiers.put(t, child);
+
+          Map<Integer, List<Integer>> childReceiveMap = new HashMap<>();
+          List<Integer> childReceiveTasks = new ArrayList<>();
+          childReceiveTasks.add(t);
+          childReceiveMap.put(MPIContext.DEFAULT_PATH, childReceiveTasks);
+          receiveTasks.put(child, childReceiveMap);
+        }
+
+        // main task is going to send to its internal tasks
+        Map<Integer, Set<Integer>> mainInternalSendMap = new HashMap<>();
+        Set<Integer> mainInternalSendTasks = new HashSet<>(directChildren);
+        mainInternalSendMap.put(MPIContext.DEFAULT_PATH, mainInternalSendTasks);
+        sendInternalTasks.put(t, mainInternalSendMap);
+
+        // now lets calculate the external send tasks of the main task
+        Map<Integer, Set<Integer>> mainExternalSendMap = new HashMap<>();
+        Set<Integer> mainExternalSendTasks = new HashSet<>();
+        mainExternalSendTasks.addAll(search.getRemoteChildrenIds());
+        mainExternalSendMap.put(MPIContext.DEFAULT_PATH, mainExternalSendTasks);
+        sendExternalTasks.put(t, mainExternalSendMap);
+        destinationIdentifiers.put(t, 0);
+      } else {
+        LOG.info(String.format("%d doesn't have a node in tree: %d", plan.getThisExecutor(), t));
+      }
     }
-    downstrean.addAll(node.getDirectChildren());
-    return new Routing(upstream, downstrean);
-  }
 
-  @Override
-  public int mainTaskOfExecutor(int executor) {
-    return 0;
-  }
-
-  @Override
-  public int destinationIdentifier(int source, int path) {
-    return 0;
+    LOG.info(String.format("****** %d send internal tasks: %s",
+        plan.getThisExecutor(), sendInternalTasks));
+    LOG.info(String.format("****** %d send external tasks: %s",
+        plan.getThisExecutor(), sendExternalTasks));
+    LOG.info(String.format("****** %d send externalPartial tasks: %s", plan.getThisExecutor(),
+        sendExternalTasksPartial));
+    LOG.info(String.format("****** %d receive executor: %s",
+        plan.getThisExecutor(), receiveExecutors));
+    LOG.info(String.format("****** %d receive tasks: %s",
+        plan.getThisExecutor(), receiveTasks));
   }
 
   @Override
   public Set<Integer> receivingExecutors() {
-    return null;
+    return receiveExecutors;
   }
 
   @Override
-  public Map<Integer, Map<Integer, List<Integer>>>  receiveExpectedTaskIds() {
-    return null;
+  public Map<Integer, Map<Integer, List<Integer>>> receiveExpectedTaskIds() {
+    return receiveTasks;
   }
 
   @Override
   public boolean isLastReceiver() {
-    return false;
+    // check weather this
+    return mainTaskLast;
   }
 
   @Override
-  public Map<Integer, Map<Integer, Set<Integer>>> getInternalSendTasks(int src) {
-    return null;
+  public Map<Integer, Map<Integer, Set<Integer>>> getInternalSendTasks(int source) {
+    return sendInternalTasks;
   }
 
-  @Override
   public Map<Integer, Map<Integer, Set<Integer>>> getExternalSendTasks(int source) {
-    return null;
+    return sendExternalTasks;
+  }
+
+  public Map<Integer, Map<Integer, Set<Integer>>> getExternalSendTasksForPartial(int source) {
+    return sendExternalTasksPartial;
+  }
+
+  @Override
+  public int mainTaskOfExecutor(int executor) {
+    return mainTask;
+  }
+
+  @Override
+  public int destinationIdentifier(int source, int path) {
+    Object o = destinationIdentifiers.get(source);
+    if (o != null) {
+      return (int) o;
+    } else {
+      throw new RuntimeException("Unexpected source requesting destination: " + source);
+    }
   }
 }

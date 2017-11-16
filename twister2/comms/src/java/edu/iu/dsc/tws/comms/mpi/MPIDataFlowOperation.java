@@ -58,6 +58,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
   protected MessageReceiver partialReceiver;
   protected MessageType type;
   protected int executor;
+  private int sendCount = 0;
   /**
    * The send sendBuffers used by the operation
    */
@@ -257,13 +258,13 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
       List<Integer> internalRoutes = new ArrayList<>();
 
       internalRoutesForSend(source, internalRoutes);
-//      LOG.info(String.format("%d internal routes for send %d: %s",
-//          instancePlan.getThisExecutor(), source, internalRoutes));
+      LOG.info(String.format("%d internal routes for send %d: %s",
+          instancePlan.getThisExecutor(), source, internalRoutes));
 
       // now lets get the external routes to send
       externalRoutesForSend(source, externalRoutes);
-//      LOG.info(String.format("%d External routes for send %d: %s",
-//          instancePlan.getThisExecutor(), source, externalRoutes));
+      LOG.info(String.format("%d External routes for send %d: %s",
+          instancePlan.getThisExecutor(), source, externalRoutes));
       // we need to serialize for sending over the wire
       // LOG.log(Level.INFO, "Sending message of type: " + type);
       // this is a originating message. we are going to put ref count to 0 for now and
@@ -298,8 +299,9 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
         Pair<Object, MPISendMessage> pair = pendingSendMessages.peek();
         MPISendMessage mpiMessage = pair.getValue();
         Object messageObject = pair.getKey();
-//        LOG.info(String.format("%d message status 1 %s",
-//            instancePlan.getThisExecutor(), mpiMessage.serializedState()));
+        LOG.info(String.format("%d message status 1 %s internal %s %d",
+            instancePlan.getThisExecutor(), mpiMessage.serializedState(),
+            mpiMessage.getInternalSends(), ++sendCount));
         if (mpiMessage.serializedState() == MPISendMessage.SendState.INIT) {
           // send it internally
           for (Integer i : mpiMessage.getInternalSends()) {
@@ -317,14 +319,14 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
           continue;
         }
 
-//        LOG.info(String.format("%d message status 2 %s",
-//            instancePlan.getThisExecutor(), mpiMessage.serializedState()));
+        LOG.info(String.format("%d message status 2 %s",
+            instancePlan.getThisExecutor(), mpiMessage.serializedState()));
         // at this point lets build the message
         MPISendMessage message = (MPISendMessage)
             messageSerializer.build(pair.getKey(), mpiMessage);
 
-//        LOG.info(String.format("%d message status 3 %s",
-//            instancePlan.getThisExecutor(), mpiMessage.serializedState()));
+        LOG.info(String.format("%d message status 3 %s",
+            instancePlan.getThisExecutor(), mpiMessage.serializedState()));
 
         // okay we build the message, send it
         if (message.serializedState() == MPISendMessage.SendState.SERIALIZED) {
@@ -480,7 +482,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
         // other wise they may free it before we do
         currentMessage.incrementRefCount();
         // we may need to pass this down to others
-        passMessageDownstream(currentMessage);
+        passMessageDownstream(object, currentMessage);
         // we received a message, we need to determine weather we need to
         // forward to another node and process
         // check weather this is a message for partial or final receiver
@@ -504,7 +506,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
    *
    * @param currentMessage
    */
-  protected void passMessageDownstream(MPIMessage currentMessage) {
+  protected void passMessageDownstream(Object object, MPIMessage currentMessage) {
   }
 
   @Override
