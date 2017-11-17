@@ -12,6 +12,4 @@
 package edu.iu.dsc.tws.task.tsystem;
 
 public class TaskOutputResult {
-
-
 }
