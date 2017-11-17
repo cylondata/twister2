@@ -9,14 +9,14 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package graphbuilder;
-
-import taskgraph.TaskGraphParser;
+package edu.iu.dsc.tws.task.taskgraphbuilder;
 
 public abstract class Mapper implements Runnable {
 
     private final String id;
     private float executionWeight = -1;
+    private int priorityValue;
+
 
     public int getPriorityValue() {
         return priorityValue;
@@ -25,9 +25,6 @@ public abstract class Mapper implements Runnable {
     public void setPriorityValue(int priorityValue) {
         this.priorityValue = priorityValue;
     }
-
-    private int priorityValue;
-    private TaskGraphParser taskGraphParser;
 
     public Mapper(String id, int priorityValue){
         this.id = id;
@@ -64,12 +61,6 @@ public abstract class Mapper implements Runnable {
         return this.executionWeight != -1;
     }
 
-    /*public void execute(){
-        for (int i = 0; i < 10; i++) {
-            System.out.println ("Task Id:" + id + ":Execution");
-        }
-    }*/
-
     public abstract void execute();
     public abstract void execute(Mapper mapper);
 
@@ -85,7 +76,7 @@ public abstract class Mapper implements Runnable {
         }
     }
 
-    public void setTaskGraphParser(TaskGraphParser taskGraphParser){
+    /*public void setTaskGraphParser(TaskGraphParser taskGraphParser){
         this.taskGraphParser = taskGraphParser;
-    }
+    }*/
 }
