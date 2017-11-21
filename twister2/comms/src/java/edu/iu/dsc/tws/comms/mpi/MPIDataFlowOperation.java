@@ -115,7 +115,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
 
     // later look at how not to allocate pairs for this each time
     pendingSendMessages = new ArrayBlockingQueue<Pair<Object, MPISendMessage>>(
-        MPIContext.sendPendingMax(config, 4096));
+        MPIContext.sendPendingMax(config, 8192));
 
     // now setup the sends and receives
     setupCommunication();

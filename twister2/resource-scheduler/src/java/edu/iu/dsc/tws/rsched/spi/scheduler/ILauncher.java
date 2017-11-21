@@ -15,15 +15,20 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
 /**
- * Launches job. The purpose of the launcher is to bring up the required processes
+ * Launches job. The purpose of the launcher is to bring up the required processes.
+ * After it brings up the required processes, the controller is used for managing the job.
  */
 public interface ILauncher extends AutoCloseable {
   /**
-   * Initilize with the configuration
+   * Initialize with the configuration
+   *
    * @param config the configuration
    */
   void initialize(Config config);
 
+  /**
+   * Cleanup any resources
+   */
   void close();
 
   /**

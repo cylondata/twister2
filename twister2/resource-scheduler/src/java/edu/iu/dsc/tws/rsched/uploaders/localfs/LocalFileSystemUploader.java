@@ -42,7 +42,7 @@ public class LocalFileSystemUploader implements IUploader {
     this.destinationDirectory = FsContext.getDirectory(config);
     this.originalFile = FsContext.jobPackageFile(config);
     // create a random file name
-    String fileName = FsContext.jobName(config) + "tar.gz";
+    String fileName = FsContext.jobName(config) + ".tar.gz";
     this.destinationFile = Paths.get(destinationDirectory, fileName).toString();
   }
 

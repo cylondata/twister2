@@ -37,8 +37,8 @@ import mpi.MPI;
 import mpi.MPIException;
 
 /**
- * This is the base process started by the resource scheduler. This process will
- * start the rest of the resource as needed.
+ * This is the base process started by the resource scheduler. This process will lanch the container
+ * code and it will eventually will load the tasks.
  */
 public final class MPIProcess {
   private static final Logger LOG = Logger.getLogger(MPIProcess.class.getName());
@@ -62,28 +62,10 @@ public final class MPIProcess {
       // load the configuration
       // we are loading the configuration for all the components
       Config config = loadConfigurations(cmd, rank);
-      // System.out.println(config.toString());
 
-      // this is the job manager`
-//      if (rank == 0) {
-//        LOG.log(Level.INFO, "This is the master process, we are not doing anything");
-//        master(config, rank);
-//        // first lets do a barrier
-//        LOG.log(Level.INFO, String.format("Process %d: barrier", rank));
-//        MPI.COMM_WORLD.barrier();
-//        LOG.log(Level.INFO, "Master: the cluster is ready...");
-//        // now wait until other processes finish
-//        while (true) {
-//          try {
-//            Thread.sleep(100);
-//          } catch (InterruptedException ignore) {
-//          }
-//        }
-//      } else {
-        // normal worker
+      // normal worker
       LOG.log(Level.INFO, "A worker process is starting...");
       worker(config, rank);
-//      }
     } catch (MPIException e) {
       LOG.log(Level.SEVERE, "Failed the MPI process", e);
       throw new RuntimeException(e);

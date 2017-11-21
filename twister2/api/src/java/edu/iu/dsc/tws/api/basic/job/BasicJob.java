@@ -18,6 +18,9 @@ import edu.iu.dsc.tws.proto.system.ResourceAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.spi.resource.RequestedResource;
 
+/**
+ * This is a basic job with only communication available
+ */
 public final class BasicJob {
   private String name;
   private String containerClass;
@@ -58,7 +61,7 @@ public final class BasicJob {
     return jobBuilder.build();
   }
 
-  public BasicJobBuilder newBuilder() {
+  public static BasicJobBuilder newBuilder() {
     return new BasicJobBuilder();
   }
 
@@ -86,8 +89,8 @@ public final class BasicJob {
       return this;
     }
 
-    public BasicJobBuilder addConfig(String key, String object) {
-      basicJob.config.put(key, object);
+    public BasicJobBuilder addConfig(String key, String value) {
+      basicJob.config.put(key, value);
       return this;
     }
 

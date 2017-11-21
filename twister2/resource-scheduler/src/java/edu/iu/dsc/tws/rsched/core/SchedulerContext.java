@@ -34,6 +34,18 @@ public class SchedulerContext extends Context {
    */
   public static final String JOB_PACKAGE_URI = "twister2.job.package.uri";
 
+  /**
+   * Temp directory where the files are placed before packing them for upload
+   */
+  public static final String JOB_TEMP_DIR = "twister2.client.job.temp.dir";
+
+  /**
+   * These are specified as system properties when deploying a topology
+   */
+  public static final String TWISTER_2_HOME = "twister2_home";
+  public static final String CONFIG_DIR = "config_dir";
+  public static final String CLUSTER_NAME = "cluster_name";
+
   public static String stateManagerClass(Config cfg) {
     return cfg.getStringValue(STATE_MANAGER_CLASS);
   }
@@ -72,5 +84,9 @@ public class SchedulerContext extends Context {
 
   public static String jobBasicContainerClass(Config cfg) {
     return cfg.getStringValue(TWISTER2_JOB_BASIC_CONTAINER_CLASS);
+  }
+
+  public static String jobClientTempDirectory(Config cfg) {
+    return cfg.getStringValue(JOB_TEMP_DIR, "/tmp");
   }
 }

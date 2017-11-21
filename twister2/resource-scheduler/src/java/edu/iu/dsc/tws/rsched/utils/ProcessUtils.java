@@ -218,6 +218,17 @@ public final class ProcessUtils {
     return ret == 0;
   }
 
+  public static boolean createTarPackage(
+      String packageName, String outputName, String targetFolder,
+      boolean isVerbose, boolean isInheritIO) {
+    String cmd = String.format("tar -cvf %s %s", packageName, outputName);
+
+    int ret = runSyncProcess(isInheritIO,
+        splitTokens(cmd), new StringBuilder(), new File(targetFolder));
+
+    return ret == 0;
+  }
+
   // java 7 compatible version of String.join(" ", array), available in java 8
   private static String joinString(String[] array) {
     StringBuilder sb = new StringBuilder();

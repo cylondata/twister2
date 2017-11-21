@@ -18,7 +18,6 @@ import os
 import tempfile
 
 from twister2.common.src.python.utils.log import Log
-from twister2.proto import topology_pb2
 from twister2.tools.cli.src.python.result import SimpleResult, Status
 import twister2.tools.cli.src.python.args as cli_args
 import twister2.tools.cli.src.python.execute as execute
