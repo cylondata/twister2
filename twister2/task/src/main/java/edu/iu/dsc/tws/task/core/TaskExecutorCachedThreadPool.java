@@ -35,9 +35,9 @@ import edu.iu.dsc.tws.task.api.Task;
 /**
  * Class that will handle the task execution. Each task executor will manage an task execution
  * thread pool that will be used to execute the tasks that are assigned to the particular task
- * executor
+ * executor.
  */
-public class TaskExecutor {
+public class TaskExecutorCachedThreadPool {
 
   private static ThreadPoolExecutor executorPool;
   private TWSCommunication channel;
@@ -46,15 +46,15 @@ public class TaskExecutor {
 
 
 
-  public TaskExecutor() {
+  public TaskExecutorCachedThreadPool() {
     initThreadPool(ExecutorContext.EXECUTOR_CORE_POOL_SIZE,ExecutorContext.EXECUTOR_MAX_POOL_SIZE,ExecutorContext.EXECUTOR_POOL_KEEP_ALIVE_TIME);
   }
 
-  public TaskExecutor(int poolSize) {
+  public TaskExecutorCachedThreadPool(int poolSize) {
     initThreadPool(poolSize,ExecutorContext.EXECUTOR_MAX_POOL_SIZE,ExecutorContext.EXECUTOR_POOL_KEEP_ALIVE_TIME);
   }
 
-  public TaskExecutor(int poolSize, int maxPoolSize, long keepAliveTime) {
+  public TaskExecutorCachedThreadPool(int poolSize, int maxPoolSize, long keepAliveTime) {
     initThreadPool(poolSize,maxPoolSize,keepAliveTime);
   }
 
