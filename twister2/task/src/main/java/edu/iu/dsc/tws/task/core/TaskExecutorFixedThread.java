@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.task.core;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -84,7 +85,28 @@ public class TaskExecutorFixedThread {
     }
   }
 
+  public boolean registerQueue(int qid,int taskId, ExecutorContext.QueueType type){
+    if(!queues.containsKey(qid)) throw new RuntimeException(String.format("Cannot register queue : %d to task : %d. Queue %d is not registered", qid, taskId, qid));
+    if(type == ExecutorContext.QueueType.INPUT){
+      if(!taskInputQueues.containsKey(taskId)) taskInputQueues.put(taskId,new ArrayList<Integer>());
+      return taskInputQueues.get(taskId).add(qid);
+    }else{
+      if(!taskOutputQueues.containsKey(taskId)) taskOutputQueues.put(taskId,new ArrayList<Integer>());
+      return taskOutputQueues.get(taskId).add(qid);
+    }
+  }
 
+  public boolean registerQueue(int qid, Queue queue){
+    queues.put(qid,queue);
+    return true;
+  }
+
+
+  public boolean registerTask(int taskId, Task task, List<Integer> inputQueues,List<Integer> outputQueues){
+    taskMap.put(taskId, task);
+    
+    return true;
+  }
 
   /**
    * Init's the task thread pool
