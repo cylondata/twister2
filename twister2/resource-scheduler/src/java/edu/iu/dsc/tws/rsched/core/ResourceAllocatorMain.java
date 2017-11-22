@@ -28,7 +28,6 @@ import edu.iu.dsc.tws.rsched.spi.statemanager.IStateManager;
 import edu.iu.dsc.tws.rsched.spi.uploaders.IUploader;
 import edu.iu.dsc.tws.rsched.spi.uploaders.UploaderException;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
-import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
 
 /**
  * This is the main class that allocates the resources and starts the processes required
@@ -97,9 +96,6 @@ public class ResourceAllocatorMain {
 
     // copy the job files
 
-    // now package this into a tar file to be uploaded to the cluster
-    ProcessUtils.createTarPackage(tempDirectory, tempDirectory + ".tar",
-        tempDirectory, false, false);
 
     return null;
   }

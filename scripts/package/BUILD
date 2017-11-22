@@ -43,29 +43,58 @@ pkg_tar(
     name = "twister2-core",
     extension = "tar.gz",
     # files = generated_release_files,
+    package_dir = "twister2-core",
     deps = [
         ":twister2-core-lib-resource-scheduler",
         ":twister2-core-lib-task-scheduler",
         ":twister2-core-lib-communication",
+        ":twister2-core-lib-api",
+        ":twister2-core-lib-task",
+        ":twister2-core-lib-common",
+        ":twister2-core-lib-third_party",
     ],
 )
 
 pkg_tar(
+    name = "twister2-core-lib-api",
+    package_dir = "lib",
+    files = twister2_client_lib_api_files(),
+)
+
+pkg_tar(
+    name = "twister2-core-lib-task",
+    package_dir = "lib",
+    files = twister2_client_lib_task_files(),
+)
+
+pkg_tar(
     name = "twister2-core-lib-resource-scheduler",
-    package_dir = "lib/resource-scheduler",
-    files = twister2_core_lib_resource_scheduler_files(),
+    package_dir = "lib",
+    files = twister2_client_lib_resource_scheduler_files(),
 )
 
 pkg_tar(
     name = "twister2-core-lib-task-scheduler",
-    package_dir = "lib/task-scheduler",
-    files = twister2_core_lib_task_scheduler_files(),
+    package_dir = "lib",
+    files = twister2_client_lib_task_scheduler_files(),
+)
+
+pkg_tar(
+    name = "twister2-core-lib-third_party",
+    package_dir = "lib",
+    files = twister2_client_lib_third_party_files(),
 )
 
 pkg_tar(
     name = "twister2-core-lib-communication",
-    package_dir = "lib/communication",
-    files = twister2_core_lib_communication_files(),
+    package_dir = "lib",
+    files = twister2_client_lib_communication_files(),
+)
+
+pkg_tar(
+    name = "twister2-core-lib-common",
+    package_dir = "lib",
+    files = twister2_client_lib_common_files(),
 )
 
 # twister2 client packaging
