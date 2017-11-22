@@ -44,4 +44,9 @@ public class ExecutorContext extends Context {
    */
   public static final long EXECUTOR_POOL_KEEP_ALIVE_TIME = 1000*60;
 
+  public enum QueueType {
+    INPUT,
+    OUTPUT
+  }
+
 }

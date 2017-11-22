@@ -42,7 +42,7 @@ import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import edu.iu.dsc.tws.task.api.SinkTask;
 import edu.iu.dsc.tws.task.api.SourceTask;
-import edu.iu.dsc.tws.task.core.TaskExecutor;
+import edu.iu.dsc.tws.task.core.TaskExecutorCachedThreadPool;
 
 public class PingPongCommunicationTaskBased implements IContainer {
   private static final Logger LOG = Logger.getLogger(PingPongCommunicationTaskBased.
@@ -50,7 +50,7 @@ public class PingPongCommunicationTaskBased implements IContainer {
 
   private DataFlowOperation direct;
 
-  private TaskExecutor taskExecutor;
+  private TaskExecutorCachedThreadPool taskExecutor;
 
   private enum Status {
     INIT,
@@ -66,7 +66,7 @@ public class PingPongCommunicationTaskBased implements IContainer {
   public void init(Config cfg, int containerId, ResourcePlan plan) {
     LOG.log(Level.INFO, "Starting the example with container id: " + plan.getThisId());
     //Creates task an task executor instance to be used in this container
-    taskExecutor = new TaskExecutor();
+    taskExecutor = new TaskExecutorCachedThreadPool();
     this.status = Status.INIT;
 
     // lets create the task plan
