@@ -45,31 +45,32 @@ public class TaskExecutorCachedThreadPool {
   private boolean progres = false;
 
 
-
   public TaskExecutorCachedThreadPool() {
-    initThreadPool(ExecutorContext.EXECUTOR_CORE_POOL_SIZE,ExecutorContext.EXECUTOR_MAX_POOL_SIZE,ExecutorContext.EXECUTOR_POOL_KEEP_ALIVE_TIME);
+    initThreadPool(ExecutorContext.EXECUTOR_CORE_POOL_SIZE, ExecutorContext.EXECUTOR_MAX_POOL_SIZE,
+        ExecutorContext.EXECUTOR_POOL_KEEP_ALIVE_TIME);
   }
 
   public TaskExecutorCachedThreadPool(int poolSize) {
-    initThreadPool(poolSize,ExecutorContext.EXECUTOR_MAX_POOL_SIZE,ExecutorContext.EXECUTOR_POOL_KEEP_ALIVE_TIME);
+    initThreadPool(poolSize, ExecutorContext.EXECUTOR_MAX_POOL_SIZE,
+        ExecutorContext.EXECUTOR_POOL_KEEP_ALIVE_TIME);
   }
 
   public TaskExecutorCachedThreadPool(int poolSize, int maxPoolSize, long keepAliveTime) {
-    initThreadPool(poolSize,maxPoolSize,keepAliveTime);
+    initThreadPool(poolSize, maxPoolSize, keepAliveTime);
   }
 
   /**
    * Init task executor
-   * @param twscom
-   * @param dfo
    */
   public void init(TWSCommunication twscom, DataFlowOperation dfo) {
     this.channel = twscom;
     this.direct = dfo;
     this.progres = true;
   }
+
   /**
    * Submit the task to run in the thread pool.
+   *
    * @param task task to be run
    * @return returns true if the task was submitted and queued
    */
@@ -91,7 +92,7 @@ public class TaskExecutorCachedThreadPool {
     this.progres = value;
   }
 
-  private void initThreadPool(int corePoolSize, int maxPoolSize, long keepAliveTime){
+  private void initThreadPool(int corePoolSize, int maxPoolSize, long keepAliveTime) {
     executorPool = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     executorPool.setCorePoolSize(corePoolSize);
     executorPool.setMaximumPoolSize(maxPoolSize);

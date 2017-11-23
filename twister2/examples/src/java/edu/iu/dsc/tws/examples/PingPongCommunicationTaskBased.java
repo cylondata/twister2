@@ -125,7 +125,7 @@ public class PingPongCommunicationTaskBased implements IContainer {
   /**
    * RevieceWorker
    */
-  private class recieveWorker extends SinkTask {
+  private class RecieveWorker extends SinkTask {
 
     @Override
     public void execute() {

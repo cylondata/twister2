@@ -42,7 +42,7 @@ public class ExecutorContext extends Context {
   /**
    * The keep alive time for the tasks that are not in the core pool
    */
-  public static final long EXECUTOR_POOL_KEEP_ALIVE_TIME = 1000*60;
+  public static final long EXECUTOR_POOL_KEEP_ALIVE_TIME = 1000 * 60;
 
   public enum QueueType {
     INPUT,
