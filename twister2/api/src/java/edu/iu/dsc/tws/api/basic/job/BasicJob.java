@@ -16,7 +16,7 @@ import java.util.Map;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.proto.system.ResourceAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.spi.resource.RequestedResource;
+import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 
 /**
  * This is a basic job with only communication available
@@ -24,7 +24,7 @@ import edu.iu.dsc.tws.rsched.spi.resource.RequestedResource;
 public final class BasicJob {
   private String name;
   private String containerClass;
-  private RequestedResource requestedResource;
+  private ResourceContainer requestedResource;
   private int noOfContainers;
   private JobConfig config = new JobConfig();
 
@@ -58,7 +58,30 @@ public final class BasicJob {
     computeResourceBuilder.setAvailableMemory(requestedResource.getMemoryMegaBytes());
     jobResourceBuilder.setContainer(computeResourceBuilder);
 
+    // set the job resources
+    jobBuilder.setJobResources(jobResourceBuilder.build());
+
     return jobBuilder.build();
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public String getContainerClass() {
+    return containerClass;
+  }
+
+  public ResourceContainer getRequestedResource() {
+    return requestedResource;
+  }
+
+  public int getNoOfContainers() {
+    return noOfContainers;
+  }
+
+  public JobConfig getConfig() {
+    return config;
   }
 
   public static BasicJobBuilder newBuilder() {
@@ -82,7 +105,7 @@ public final class BasicJob {
       return this;
     }
 
-    public BasicJobBuilder setRequestResource(RequestedResource requestResource,
+    public BasicJobBuilder setRequestResource(ResourceContainer requestResource,
                                               int noOfContainers) {
       basicJob.noOfContainers = noOfContainers;
       basicJob.requestedResource = requestResource;

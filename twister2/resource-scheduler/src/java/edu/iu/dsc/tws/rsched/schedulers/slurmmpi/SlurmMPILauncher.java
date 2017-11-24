@@ -17,7 +17,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
+import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
 import edu.iu.dsc.tws.rsched.spi.scheduler.IController;
 import edu.iu.dsc.tws.rsched.spi.scheduler.ILauncher;
 import edu.iu.dsc.tws.rsched.utils.ResourceSchedulerUtils;
@@ -43,7 +43,7 @@ public class SlurmMPILauncher implements ILauncher {
   }
 
   @Override
-  public boolean launch(ResourcePlan resourcePlan) {
+  public boolean launch(RequestedResources resourcePlan) {
     LOG.log(Level.FINE, "Launching job for cluster {0}",
         SlurmMPIContext.clusterName(config));
 

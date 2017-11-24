@@ -41,10 +41,11 @@ public interface IUploader extends AutoCloseable {
   /**
    * UploadPackage will upload the topology package to the given location.
    *
+   * @param sourceLocation the source location with all the files
    * @return destination URI of where the topology package has
    * been uploaded if successful, or {@code null} if failed.
    */
-  URI uploadPackage() throws UploaderException;
+  URI uploadPackage(String sourceLocation) throws UploaderException;
 
   /**
    * If subsequent stages fail, undo will be called to free resources used by

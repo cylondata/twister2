@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.utils;
 
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.DirectoryNotEmptyException;
@@ -91,6 +90,24 @@ public final class FileUtils {
       return false;
     }
 
+    return true;
+  }
+
+  public static boolean copyDirectory(String src, String dst) {
+    try {
+      org.apache.commons.io.FileUtils.copyDirectoryToDirectory(new File(src), new File(dst));
+    } catch (IOException e) {
+      return false;
+    }
+    return true;
+  }
+
+  public static boolean copyFileToDirectory(String src, String dstFolder) {
+    try {
+      org.apache.commons.io.FileUtils.copyFileToDirectory(new File(src), new File(dstFolder));
+    } catch (IOException e) {
+      return false;
+    }
     return true;
   }
 }

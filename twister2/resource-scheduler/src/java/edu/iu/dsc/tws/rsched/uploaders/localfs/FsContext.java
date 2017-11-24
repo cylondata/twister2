@@ -22,7 +22,7 @@ public class FsContext extends SchedulerContext {
    * Get the directory to upload the file
    * @return full path as a string
    */
-  public static final String getDirectory(Config cfg) {
+  public static final String uploaderJobDirectory(Config cfg) {
     return cfg.getStringValue(UPLOAD_DIRECTORY, "${HOME}/.twister2/repository/${JOB}");
   }
 }

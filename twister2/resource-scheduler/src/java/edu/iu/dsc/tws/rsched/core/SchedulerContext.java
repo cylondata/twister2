@@ -22,8 +22,6 @@ public class SchedulerContext extends Context {
   public static final String LAUNCHER_CLASS = "twister2.class.launcher";
   public static final String UPLOADER_CLASS = "twister2.class.uploader";
 
-  // this is a configuration key to hold the original jar file location of the job
-  public static final String PACKAGE_FILE = "twister2.job.package.file";
   public static final String JOB_NAME = "twister2.job.name";
   public static final String STATE_MANAGER_ROOT_PATH = "twister2.state.manager.root.path";
   public static final String SYSTEM_PACKAGE_URI = "twister2.system.package.uri";
@@ -46,6 +44,9 @@ public class SchedulerContext extends Context {
   public static final String CONFIG_DIR = "config_dir";
   public static final String CLUSTER_NAME = "cluster_name";
 
+  public static final String TWISTER2_CORE_PACKAGE_DEFAULT = "twister2-core.tar.gz";
+  public static final String TWISTER2_CORE_PACKAGE = "twister2-core.tar.gz";
+
   public static String stateManagerClass(Config cfg) {
     return cfg.getStringValue(STATE_MANAGER_CLASS);
   }
@@ -62,10 +63,6 @@ public class SchedulerContext extends Context {
     return cfg.getStringValue(LAUNCHER_CLASS);
   }
 
-  public static String jobPackageFile(Config cfg) {
-    return cfg.getStringValue(PACKAGE_FILE);
-  }
-
   public static String jobName(Config cfg) {
     return cfg.getStringValue(JOB_NAME);
   }
@@ -75,7 +72,7 @@ public class SchedulerContext extends Context {
   }
 
   public static String systemPackageUrl(Config cfg) {
-    return cfg.getStringValue(SYSTEM_PACKAGE_URI, "${HERON_DIST}/twister2-system.tar.gz");
+    return cfg.getStringValue(SYSTEM_PACKAGE_URI, "${TWISTER2_DIST}/twister2-core.tar.gz");
   }
 
   public static URI jobPackageUri(Config cfg) {

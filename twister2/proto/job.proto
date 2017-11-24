@@ -4,9 +4,14 @@ option java_package = "edu.iu.dsc.tws.proto.system.job";
 option java_outer_classname = "JobAPI";
 
 import "resource-scheduler.proto";
+
+enum JobFormatType {
+    SHUFFLE = 1;
+    FIELDS = 2;
+}
+
 // defines the job parameters. This will define the required resources for the job,
 // what type of a job this is (a basic container job, fully featured dataflow job etc)
-
 message Config {
     message KeyValue {
         required string key = 1;
@@ -24,6 +29,11 @@ message Container {
 message JobResources {
     required tws.proto.resource.scheduler.ComputeResource container = 1;
     required int32 no_of_containers = 2;
+}
+
+message JobFormat {
+    required JobFormatType type = 1;
+    required string job_file = 2;
 }
 
 // this is a basic job. it will only have a container

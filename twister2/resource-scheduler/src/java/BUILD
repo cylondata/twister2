@@ -12,5 +12,7 @@ java_library(
         "//third_party:ompi_javabinding_java",
         "@com_google_guava_guava//jar",
         "@com_google_protobuf_protobuf_java//jar",
-        "//twister2/proto:proto_job_state_java",]
+        "//twister2/proto:proto_job_state_java",
+        "@commons_io_commons_io//jar",
+        ]
 )

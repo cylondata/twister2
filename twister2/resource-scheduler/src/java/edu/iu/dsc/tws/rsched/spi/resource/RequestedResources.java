@@ -11,20 +11,23 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.spi.resource;
 
-public class RequestedResource {
-  private final int noOfCpus;
-  private final int memoryMegaBytes;
+/**
+ * We are using uniform resources.
+ */
+public class RequestedResources {
+  private int noOfContainers;
+  private ResourceContainer container;
 
-  public RequestedResource(int noOfCpus, int memoryMegaBytes) {
-    this.noOfCpus = noOfCpus;
-    this.memoryMegaBytes = memoryMegaBytes;
+  public RequestedResources(int noOfContainers, ResourceContainer container) {
+    this.noOfContainers = noOfContainers;
+    this.container = container;
   }
 
-  public int getNoOfCpus() {
-    return noOfCpus;
+  public int getNoOfContainers() {
+    return noOfContainers;
   }
 
-  public int getMemoryMegaBytes() {
-    return memoryMegaBytes;
+  public ResourceContainer getContainer() {
+    return container;
   }
 }

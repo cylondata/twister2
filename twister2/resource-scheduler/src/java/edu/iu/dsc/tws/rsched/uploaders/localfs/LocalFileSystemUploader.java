@@ -39,15 +39,15 @@ public class LocalFileSystemUploader implements IUploader {
 
   @Override
   public void initialize(Config config) {
-    this.destinationDirectory = FsContext.getDirectory(config);
-    this.originalFile = FsContext.jobPackageFile(config);
+    this.destinationDirectory = FsContext.uploaderJobDirectory(config);
     // create a random file name
     String fileName = FsContext.jobName(config) + ".tar.gz";
     this.destinationFile = Paths.get(destinationDirectory, fileName).toString();
   }
 
   @Override
-  public URI uploadPackage() throws UploaderException {
+  public URI uploadPackage(String sourceLocation) throws UploaderException {
+    this.originalFile = sourceLocation;
     // we shouldn't come here naturally as a jar file is needed for us to get here
     boolean fileExists = new File(originalFile).isFile();
     if (!fileExists) {

@@ -22,7 +22,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
+import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
 import edu.iu.dsc.tws.rsched.spi.scheduler.IController;
 import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
 
@@ -53,12 +53,12 @@ public class SlurmMPIController implements IController {
   }
 
   @Override
-  public boolean start(ResourcePlan resourcePlan) {
-    if (resourcePlan == null || resourcePlan.getContainers().isEmpty()) {
+  public boolean start(RequestedResources resourcePlan) {
+    if (resourcePlan == null || resourcePlan.getNoOfContainers() == 0) {
       LOG.log(Level.SEVERE, "No container requested. Can't schedule");
       return false;
     }
-    long containers = resourcePlan.noOfContainers();
+    long containers = resourcePlan.getNoOfContainers();
     LOG.log(Level.INFO, "Launching job in Slurm scheduler with no of containers = "
         + containers);
 

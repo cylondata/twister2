@@ -12,7 +12,7 @@
 package edu.iu.dsc.tws.rsched.spi.scheduler;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
+import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
 
 /**
  * Launches job. The purpose of the launcher is to bring up the required processes.
@@ -34,8 +34,8 @@ public interface ILauncher extends AutoCloseable {
   /**
    * Launch the processes according to the resource plan. An implementation fo this class will
    *
-   * @param resourcePlan requested resources
+   * @param resourceRequest requested resources
    * @return true if the request is granted
    */
-  boolean launch(ResourcePlan resourcePlan);
+  boolean launch(RequestedResources resourceRequest);
 }

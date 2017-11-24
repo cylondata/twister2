@@ -33,6 +33,11 @@ public class ResourceContainer {
     this.id = id;
   }
 
+  public ResourceContainer(int noOfCpus, int memoryMegaBytes) {
+    this.noOfCpus = noOfCpus;
+    this.memoryMegaBytes = memoryMegaBytes;
+  }
+
   public int getId() {
     return id;
   }
@@ -43,5 +48,13 @@ public class ResourceContainer {
 
   public Object getProperty(String key) {
     return properties.get(key);
+  }
+
+  public int getNoOfCpus() {
+    return noOfCpus;
+  }
+
+  public int getMemoryMegaBytes() {
+    return memoryMegaBytes;
   }
 }

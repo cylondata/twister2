@@ -12,7 +12,7 @@
 package edu.iu.dsc.tws.rsched.spi.scheduler;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
+import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
 
 /**
  * This class is used to control the job once it is deployed.
@@ -24,7 +24,7 @@ public interface IController {
    */
   void initialize(Config config);
 
-  boolean start(ResourcePlan requestedResources);
+  boolean start(RequestedResources requestedResources);
 
   void close();
 

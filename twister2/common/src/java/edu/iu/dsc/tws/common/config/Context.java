@@ -125,4 +125,12 @@ public class Context {
   public static String conf(Config cfg) {
     return cfg.getStringValue(cfg.getStringValue(TWISTER2_CONF));
   }
+
+  public static String distDirectory(Config cfg) {
+    return cfg.getStringValue(TWISTER2_DIST);
+  }
+
+  public static String libDirectory(Config cfg) {
+    return cfg.getStringValue(TWISTER2_LIB);
+  }
 }

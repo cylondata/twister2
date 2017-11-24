@@ -11,8 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.core;
 
-import java.io.File;
+import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -22,11 +25,14 @@ import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.schedulers.slurmmpi.SlurmMPIContext;
+import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
+import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.scheduler.ILauncher;
 import edu.iu.dsc.tws.rsched.spi.scheduler.LauncherException;
 import edu.iu.dsc.tws.rsched.spi.statemanager.IStateManager;
 import edu.iu.dsc.tws.rsched.spi.uploaders.IUploader;
 import edu.iu.dsc.tws.rsched.spi.uploaders.UploaderException;
+import edu.iu.dsc.tws.rsched.utils.FileUtils;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 /**
@@ -79,25 +85,37 @@ public class ResourceAllocatorMain {
     // lets write the job into file, this will be used for job creation
     String tempDirectory = SchedulerContext.jobClientTempDirectory(config)
         + "/" + job.getJobName();
+    try {
+      Path tempDirPath = Files.createTempDirectory(Paths.get(tempDirectory),
+          job.getJobName());
 
-    // lets create the directory
-    File tempDir = new File(tempDirectory);
-    if (!tempDir.mkdir()) {
-      throw new RuntimeException("Failed to create the temp directory");
+      String tempDirPathString = tempDirPath.toString();
+      String jobFilePath =  tempDirPathString + "/" + job.getJobName() + ".job";
+      boolean write = JobUtils.writeJobFile(job, jobFilePath);
+      if (!write) {
+        throw new RuntimeException("Failed to write the job file");
+      }
+
+      // now we need to copy the actual job binary files here
+
+
+      // copy the job files
+      String twister2CorePackage = SchedulerContext.systemPackageUrl(config);
+      String confDir = SchedulerContext.conf(config);
+
+      // copy the dist pakache
+      if (!FileUtils.copyDirectory(confDir, tempDirPathString)) {
+        throw new RuntimeException("Failed to copy the configuration");
+      }
+
+      if (!FileUtils.copyFileToDirectory(twister2CorePackage, tempDirPathString)) {
+        throw new RuntimeException("Failed to copy the core package");
+      }
+
+      return tempDirPathString;
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to create temp directory");
     }
-    // we are going to delete this on exit
-    tempDir.deleteOnExit();
-
-    String jobFile = tempDirectory + "/" + "temp.job";
-    boolean write = JobUtils.writeJobFile(job, jobFile);
-    if (!write) {
-      throw new RuntimeException("Failed to write the job file");
-    }
-
-    // copy the job files
-
-
-    return null;
   }
 
   /**
@@ -105,12 +123,12 @@ public class ResourceAllocatorMain {
    *
    * @param job the actual job
    */
-  public void   submitJob(JobAPI.Job job) {
+  public void submitJob(JobAPI.Job job) {
     // first lets load the configurations
     Config config = loadConfig(new HashMap<>());
 
     // lets prepare the job files
-    String jobFile = prepareJobFiles(config, job);
+    String jobDirectory = prepareJobFiles(config, job);
 
     String statemgrClass = SchedulerContext.stateManagerClass(config);
     if (statemgrClass == null) {
@@ -161,16 +179,33 @@ public class ResourceAllocatorMain {
     // now upload the content of the package
     uploader.initialize(config);
     // gives the url of the file to be uploaded
-    URI packageURI = uploader.uploadPackage();
+    URI packageURI = uploader.uploadPackage(jobDirectory);
 
     // now launch the launcher
     // Update the runtime config with the packageURI
-//    Config runtimeAll = Config.newBuilder()
-//        .putAll()
-//        .put(SchedulerContext.JOB_PACKAGE_URI, packageURI)
-//        .build();
-//
-//    launcher.initialize(config);
-//    launcher.launch();
+    Config runtimeAll = Config.newBuilder()
+        .put(SchedulerContext.JOB_PACKAGE_URI, packageURI)
+        .build();
+
+    // this is a handler chain based execution in resource allocator. We need to
+    // make it more formal as such
+    launcher.initialize(runtimeAll);
+
+    RequestedResources requestedResources = buildRequestedResources(job);
+    if (requestedResources == null) {
+      throw new RuntimeException("Failed to build the requested resources");
+    }
+
+    launcher.launch(requestedResources);
+  }
+
+  private RequestedResources buildRequestedResources(JobAPI.Job job) {
+    JobAPI.JobResources jobResources = job.getJobResources();
+    int noOfContainers = jobResources.getNoOfContainers();
+    ResourceContainer container = new ResourceContainer(
+        (int) jobResources.getContainer().getAvailableCPU(),
+        (int) jobResources.getContainer().getAvailableMemory());
+
+    return new RequestedResources(noOfContainers, container);
   }
 }
