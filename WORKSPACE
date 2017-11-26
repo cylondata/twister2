@@ -59,6 +59,11 @@ maven_jar(
 )
 
 maven_jar(
+  name = "commons_io_commons_io",
+  artifact = "commons-io:commons-io:2.5",
+)
+
+maven_jar(
   name = "org_slf4j_slf4j_api",
   artifact = "org.slf4j:slf4j-api:1.7.7"
 )
