@@ -46,8 +46,8 @@ import edu.iu.dsc.tws.rsched.utils.JobUtils;
  * 2. Create a job package with jars and job information file to be uploaded to the cluster
  *
  */
-public class ResourceAllocatorMain {
-  public static final Logger LOG = Logger.getLogger(ResourceAllocatorMain.class.getName());
+public class ResourceAllocator {
+  public static final Logger LOG = Logger.getLogger(ResourceAllocator.class.getName());
 
   private Config loadConfig(Map<String, Object> cfg) {
     // first lets read the essential properties from java system properties

@@ -53,6 +53,16 @@ def add_trace_execution(parser):
     return parser
 
 
+def add_job_type(parser):
+    '''
+    :param parser:
+    :return:
+    '''
+    parser.add_argument(
+        'job-type',
+        help='Type of the job, Only jar type is supported')
+    return parser
+
 def add_job(parser):
     '''
     :param parser:

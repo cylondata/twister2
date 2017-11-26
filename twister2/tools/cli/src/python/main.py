@@ -27,8 +27,6 @@ import twister2.tools.cli.src.python.config as config
 import twister2.tools.cli.src.python.submit as submit
 import twister2.tools.cli.src.python.result as result
 
-from twister2.tools.cli.src.python.opts import cleaned_up_files
-
 Log = log.Log
 
 HELP_EPILOG = '''Getting more help:
@@ -119,44 +117,6 @@ def check_environment():
         sys.exit(1)
 
 
-def extract_common_args(command, parser, cl_args):
-    '''
-    Extract all the common args for all commands
-    :param command:
-    :param parser:
-    :param cl_args:
-    :return:
-    '''
-    try:
-        cluster_role_env = cl_args.pop('cluster')
-        config_path = cl_args['config_path']
-        override_config_file = config.parse_override_config(cl_args['config_property'])
-    except KeyError:
-        # if some of the arguments are not found, print error and exit
-        subparser = config.get_subparser(parser, command)
-        print subparser.format_help()
-        return dict()
-
-    cluster = config.get_twister2_cluster(cluster_role_env)
-    config_path = config.get_twister2_cluster_conf_dir(cluster, config_path)
-    if not os.path.isdir(config_path):
-        Log.error("Config path cluster directory does not exist: %s", config_path)
-        return dict()
-
-    new_cl_args = dict()
-    try:
-        cluster_tuple = config.parse_cluster_role_env(cluster_role_env, config_path)
-        new_cl_args['cluster'] = cluster_tuple[0]
-        new_cl_args['config_path'] = config_path
-        new_cl_args['override_config_file'] = override_config_file
-    except Exception as ex:
-        Log.error("Argument cluster is not correct: %s", str(ex))
-        return dict()
-
-    cl_args.update(new_cl_args)
-    return cl_args
-
-
 def main():
     '''
     Run the command
@@ -189,22 +149,11 @@ def main():
     # command to be execute
     command = command_line_args['subcommand']
 
-    if command not in ('help', 'version'):
-        log.set_logging_level(command_line_args)
-        command_line_args = extract_common_args(command, parser, command_line_args)
-        # bail out if args are empty
-        if not command_line_args:
-            return 1
-        # register dirs cleanup function during exit
-        cleaned_up_files.append(command_line_args['override_config_file'])
-
-    atexit.register(cleanup, cleaned_up_files)
-
     # print the input parameters, if verbose is enabled
     Log.debug(command_line_args)
 
     start = time.time()
-    results = run(command, parser, command_line_args, unknown_args)
+    results = run(command, parser, args, unknown_args)
     if command not in ('help', 'version'):
         result.render(results)
     end = time.time()

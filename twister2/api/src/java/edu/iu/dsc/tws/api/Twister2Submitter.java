@@ -15,7 +15,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.core.ResourceAllocatorMain;
+import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
 public final class Twister2Submitter {
   private static final Logger LOG = Logger.getLogger(Twister2Submitter.class.getName());
@@ -32,7 +32,7 @@ public final class Twister2Submitter {
     JobAPI.Job job = basicJob.serialize();
 
     // launch the luancher
-    ResourceAllocatorMain resourceAllocatorMain = new ResourceAllocatorMain();
-    resourceAllocatorMain.submitJob(job);
+    ResourceAllocator resourceAllocator = new ResourceAllocator();
+    resourceAllocator.submitJob(job);
   }
 }
