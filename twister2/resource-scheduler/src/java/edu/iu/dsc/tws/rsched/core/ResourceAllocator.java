@@ -18,6 +18,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -51,9 +52,11 @@ public class ResourceAllocator {
 
   private Config loadConfig(Map<String, Object> cfg) {
     // first lets read the essential properties from java system properties
-    String twister2Home = System.getProperty(SchedulerContext.CONFIG_DIR);
+    String twister2Home = System.getProperty(SchedulerContext.TWISTER_2_HOME);
     String configDir = System.getProperty(SchedulerContext.CONFIG_DIR);
     String clusterName = System.getProperty(SchedulerContext.CLUSTER_NAME);
+    // lets get the job jar file from system properties or environment
+    String jobJar = System.getProperty(SchedulerContext.JOB_FILE);
 
     // now lets see weather these are overridden in environment variables
     Map<String, Object> environmentProperties = JobUtils.readCommandLineOpts();
@@ -70,10 +73,21 @@ public class ResourceAllocator {
       clusterName = (String) environmentProperties.get(SchedulerContext.CLUSTER_NAME);
     }
 
+    if (environmentProperties.containsKey(SchedulerContext.JOB_FILE)) {
+      jobJar = (String) environmentProperties.get(SchedulerContext.JOB_FILE);
+    }
+
+    if (configDir == null) {
+      configDir = twister2Home + "/conf";
+    }
+
+    LOG.log(Level.INFO, String.format("Loading configuration with twister2_home: %s and "
+        + "configuration: %s and cluster: %s", twister2Home, configDir, clusterName));
     Config config = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterName);
     return Config.newBuilder().putAll(config).
         put(SlurmMPIContext.TWISTER2_HOME.getKey(), twister2Home).
         put(SlurmMPIContext.TWISTER2_CLUSTER_NAME, clusterName).
+        put(SlurmMPIContext.JOB_FILE, jobJar).
         putAll(environmentProperties).putAll(cfg).build();
   }
 
@@ -86,36 +100,62 @@ public class ResourceAllocator {
     String tempDirectory = SchedulerContext.jobClientTempDirectory(config)
         + "/" + job.getJobName();
     try {
-      Path tempDirPath = Files.createTempDirectory(Paths.get(tempDirectory),
-          job.getJobName());
-
-      String tempDirPathString = tempDirPath.toString();
-      String jobFilePath =  tempDirPathString + "/" + job.getJobName() + ".job";
-      boolean write = JobUtils.writeJobFile(job, jobFilePath);
-      if (!write) {
-        throw new RuntimeException("Failed to write the job file");
-      }
-
-      // now we need to copy the actual job binary files here
-
-
-      // copy the job files
-      String twister2CorePackage = SchedulerContext.systemPackageUrl(config);
-      String confDir = SchedulerContext.conf(config);
-
-      // copy the dist pakache
-      if (!FileUtils.copyDirectory(confDir, tempDirPathString)) {
-        throw new RuntimeException("Failed to copy the configuration");
-      }
-
-      if (!FileUtils.copyFileToDirectory(twister2CorePackage, tempDirPathString)) {
-        throw new RuntimeException("Failed to copy the core package");
-      }
-
-      return tempDirPathString;
+      Files.createDirectories(Paths.get(tempDirectory));
     } catch (IOException e) {
-      throw new RuntimeException("Failed to create temp directory");
+      throw new RuntimeException("Failed to create the base temp directory for job", e);
     }
+
+    String jobFile = SchedulerContext.jobFile(config);
+    if (jobFile == null) {
+      throw new RuntimeException("Job file cannot be null");
+    }
+
+    Path tempDirPath = null;
+    try {
+      tempDirPath = Files.createTempDirectory(Paths.get(tempDirectory),
+          job.getJobName());
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to create temp directory: " + tempDirectory, e);
+    }
+
+    String tempDirPathString = tempDirPath.toString();
+    String jobFilePath =  tempDirPathString + "/" + job.getJobName() + ".job";
+
+    // now we need to copy the actual job binary files here
+    JobAPI.JobFormat.Builder format = JobAPI.JobFormat.newBuilder();
+    format.setType(JobAPI.JobFormatType.SHUFFLE);
+    format.setJobFile(Paths.get(jobFile).getFileName().toString());
+
+    // now lets set the updates
+    JobAPI.Job updatedJob = JobAPI.Job.newBuilder(job).setJobFormat(format).build();
+    boolean write = JobUtils.writeJobFile(updatedJob, jobFilePath);
+    if (!write) {
+      throw new RuntimeException("Failed to write the job file");
+    }
+
+    // copy the job jar file
+    if (!FileUtils.copyFileToDirectory(jobFile, tempDirPathString)) {
+      throw new RuntimeException("Failed to copy the job jar file: "
+          + jobFile + " to:" + tempDirPathString);
+    }
+
+    // copy the job files
+    String twister2CorePackage = SchedulerContext.systemPackageUrl(config);
+    String confDir = SchedulerContext.conf(config);
+
+    // copy the dist pakache
+    if (!FileUtils.copyDirectory(confDir, tempDirPathString)) {
+      throw new RuntimeException("Failed to copy the configuration: "
+          + confDir + " to: " + tempDirPathString);
+    }
+
+    LOG.log(Level.INFO, String.format("Copy core package: %s to %s",
+        twister2CorePackage, tempDirPathString));
+    if (!FileUtils.copyFileToDirectory(twister2CorePackage, tempDirPathString)) {
+      throw new RuntimeException("Failed to copy the core package");
+    }
+
+    return tempDirPathString;
   }
 
   /**

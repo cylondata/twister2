@@ -15,6 +15,7 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.examples.BaseBroadcastCommunication;
+import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 
 public final class BasicBroadcastJob {
   private BasicBroadcastJob() {
@@ -25,7 +26,7 @@ public final class BasicBroadcastJob {
 
     jobBuilder.setName("basic-broadcast");
     jobBuilder.setContainerClass(BaseBroadcastCommunication.class.getName());
-
+    jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 4);
     // now submit the job
     Twister2Submitter.submitContainerJob(jobBuilder.build(), new JobConfig());
   }

@@ -45,4 +45,6 @@ message Job {
     required JobResources job_resources = 3;
     // the configurations specified
     required Config config = 4;
+    // how the job is layed out
+    optional JobFormat job_format = 5;
 }

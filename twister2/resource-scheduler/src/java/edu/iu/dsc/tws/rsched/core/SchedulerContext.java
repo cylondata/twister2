@@ -43,6 +43,7 @@ public class SchedulerContext extends Context {
   public static final String TWISTER_2_HOME = "twister2_home";
   public static final String CONFIG_DIR = "config_dir";
   public static final String CLUSTER_NAME = "cluster_name";
+  public static final String JOB_FILE = "job_file";
 
   public static final String TWISTER2_CORE_PACKAGE_DEFAULT = "twister2-core.tar.gz";
   public static final String TWISTER2_CORE_PACKAGE = "twister2-core.tar.gz";
@@ -72,7 +73,7 @@ public class SchedulerContext extends Context {
   }
 
   public static String systemPackageUrl(Config cfg) {
-    return cfg.getStringValue(SYSTEM_PACKAGE_URI, "${TWISTER2_DIST}/twister2-core.tar.gz");
+    return cfg.getStringValue(SYSTEM_PACKAGE_URI);
   }
 
   public static URI jobPackageUri(Config cfg) {
@@ -85,5 +86,9 @@ public class SchedulerContext extends Context {
 
   public static String jobClientTempDirectory(Config cfg) {
     return cfg.getStringValue(JOB_TEMP_DIR, "/tmp");
+  }
+
+  public static String jobFile(Config cfg) {
+    return cfg.getStringValue(JOB_FILE);
   }
 }

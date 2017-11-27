@@ -76,7 +76,7 @@ class Result(object):
         assert self.status is not None
         if self.status in [Status.Ok, Status.DryRun]:
             self._do_log(Log.info, self.succ_context)
-        elif self.status in [Status.twister2Error, Status.InvocationError]:
+        elif self.status in [Status.Twister2Error, Status.InvocationError]:
             self._do_log(Log.error, self.err_context)
         else:
             raise RuntimeError(

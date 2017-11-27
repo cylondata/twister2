@@ -15,7 +15,7 @@
 import os
 import fnmatch
 
-import twister2.tools.common.src.python.utils.config as config
+import twister2.tools.cli.src.python.config as config
 
 
 def pick(dirname, pattern):
@@ -35,7 +35,7 @@ def job_jars():
     :return:
     '''
     jars = [
-        os.path.join(config.get_twister2_lib_dir(), "third_party", "*")
+        os.path.join(config.get_twister2_lib_dir(), "*")
     ]
     return jars
 
@@ -46,7 +46,7 @@ def resource_scheduler_jars():
     :return:
     '''
     jars = [
-        os.path.join(config.get_twister2_lib_dir(), "scheduler", "*")
+        os.path.join(config.get_twister2_lib_dir(), "*")
     ]
     return jars
 
@@ -57,7 +57,7 @@ def uploader_jars():
     :return:
     '''
     jars = [
-        os.path.join(config.get_twister2_lib_dir(), "uploader", "*")
+        os.path.join(config.get_twister2_lib_dir(), "*")
     ]
     return jars
 
@@ -68,7 +68,7 @@ def statemgr_jars():
     :return:
     '''
     jars = [
-        os.path.join(config.get_twister2_lib_dir(), "statemgr", "*")
+        os.path.join(config.get_twister2_lib_dir(), "*")
     ]
     return jars
 
@@ -79,6 +79,6 @@ def task_scheduler_jars():
     :return:
     '''
     jars = [
-        os.path.join(config.get_twister2_lib_dir(), "packing", "*")
+        os.path.join(config.get_twister2_lib_dir(), "*")
     ]
     return jars

@@ -103,7 +103,7 @@ def add_cluster_role_env(parser):
     '''
     parser.add_argument(
         'cluster',
-        help='Cluster, role, and environment to run topology'
+        help='Cluster to run topology'
     )
     return parser
 

@@ -139,6 +139,7 @@ def main():
     try:
         # parse the args
         args, unknown_args = parser.parse_known_args()
+        print "args ", argparse, " unknown_args", unknown_args
     except ValueError as ex:
         Log.error("Error while parsing arguments: %s", str(ex))
         Log.debug(traceback.format_exc())
@@ -153,7 +154,7 @@ def main():
     Log.debug(command_line_args)
 
     start = time.time()
-    results = run(command, parser, args, unknown_args)
+    results = run(command, parser, command_line_args, unknown_args)
     if command not in ('help', 'version'):
         result.render(results)
     end = time.time()

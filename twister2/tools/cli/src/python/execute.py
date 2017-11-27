@@ -21,10 +21,9 @@ import traceback
 
 from twister2.tools.cli.src.python.log import Log
 from twister2.tools.cli.src.python.result import SimpleResult, ProcessResult, Status
-import twister2.common.src.python.pex_loader as pex_loader
 import twister2.tools.cli.src.python.opts as opts
 import twister2.tools.cli.src.python.jars as jars
-import twister2.tools.common.src.python.utils.config as config
+import twister2.tools.cli.src.python.config as config
 
 ################################################################################
 def twister2_class(class_name, lib_jars, extra_jars=None, args=None, java_defines=None):

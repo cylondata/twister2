@@ -1,5 +1,3 @@
-# Copyright 2016 Twitter. All rights reserved.
-#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -16,16 +14,15 @@ import glob
 import logging
 import os
 import tempfile
+import sys
 
 from twister2.tools.cli.src.python.log import Log
 from twister2.tools.cli.src.python.result import SimpleResult, Status
 import twister2.tools.cli.src.python.args as cli_args
 import twister2.tools.cli.src.python.execute as execute
 import twister2.tools.cli.src.python.jars as jars
-import twister2.tools.cli.src.python.opts as opts
 import twister2.tools.cli.src.python.result as result
-import twister2.tools.common.src.python.utils.config as config
-import twister2.tools.common.src.python.utils.classpath as classpath
+import twister2.tools.cli.src.python.config as config
 
 # pylint: disable=too-many-return-statements
 
@@ -39,8 +36,8 @@ def create_parser(subparsers):
     parser = subparsers.add_parser(
         'submit',
         help='Submit a job',
-        usage="%(prog)s [options] cluster/[role]/[env] " + \
-              "job-file-name job-class-name [job-args]",
+        usage="%(prog)s [options] cluster " + \
+              "job-type job-file-name job-class-name [job-args]",
         add_help=True
     )
 
@@ -53,6 +50,23 @@ def create_parser(subparsers):
 
     parser.set_defaults(subcommand='submit')
     return parser
+
+def setup_java_system_properties(cl_args):
+    java_system_props = []
+    twister2_home = os.path.dirname(os.path.dirname(os.path.realpath(sys.argv[0])))
+    twister2_home = config.get_twister2_dir()
+
+    if os.environ.get('TWISTER2_HOME'):
+        twister2_home = os.environ.get('TWISTER2_HOME')
+
+    # lets set the system property
+    java_system_props.append("twister2_home=" + twister2_home)
+    # set the cluster name property
+    java_system_props.append("cluster_name=" + cl_args["cluster"])
+    # set the job file
+    java_system_props.append("job_file=" + cl_args['job-file-name'])
+    print twister2_home
+    return java_system_props
 
 ################################################################################
 def submit_fatjar(cl_args, unknown_args):
@@ -71,6 +85,9 @@ def submit_fatjar(cl_args, unknown_args):
     :param tmp_dir:
     :return:
     '''
+    # set up the system properties
+    java_system_props = setup_java_system_properties(cl_args)
+
     # execute main of the job to create the job definition
     job_file = cl_args['job-file-name']
 
@@ -81,7 +98,7 @@ def submit_fatjar(cl_args, unknown_args):
         lib_jars=config.get_twister2_libs(jars.job_jars()),
         extra_jars=[job_file],
         args=tuple(unknown_args),
-        java_defines=cl_args['job_main_jvm_property'])
+        java_defines=java_system_props)
 
     result.render(res)
 

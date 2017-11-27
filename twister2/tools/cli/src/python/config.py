@@ -141,7 +141,7 @@ def get_twister2_dir():
 
     :return: root location of the .pex file
     """
-    go_above_dirs = 9
+    go_above_dirs = 8
     path = "/".join(os.path.realpath(__file__).split('/')[:-go_above_dirs])
     return normalized_class_path(path)
 

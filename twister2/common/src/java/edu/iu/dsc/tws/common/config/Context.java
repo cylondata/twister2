@@ -39,7 +39,7 @@ public class Context {
   public static final ConfigEntry TASK_YAML = new ConfigEntry(
       "twister2.config.file.packing.yaml",   "${TWISTER2_CONF}/task.yaml");
   public static final ConfigEntry RESOURCE_SCHEDULER_YAML = new ConfigEntry(
-      "twister2.config.file.scheduler.yaml", "${TWISTER2_CONF}/resource-scheduler.yaml");
+      "twister2.config.file.scheduler.yaml", "${TWISTER2_CONF}/resource.yaml");
   public static final ConfigEntry NETWORK_YAML = new ConfigEntry(
       "twister2.config.file.system.yaml",    "${TWISTER2_CONF}/network.yaml");
   public static final ConfigEntry UPLOADER_YAML = new ConfigEntry(
@@ -123,7 +123,7 @@ public class Context {
   }
 
   public static String conf(Config cfg) {
-    return cfg.getStringValue(cfg.getStringValue(TWISTER2_CONF));
+    return cfg.getStringValue(TWISTER2_CONF);
   }
 
   public static String distDirectory(Config cfg) {
