@@ -9,30 +9,6 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
 package edu.iu.dsc.tws.tsched.builder;
 
 import java.util.ArrayList;
@@ -61,7 +37,6 @@ public class TaskSchedulePlanBuilder {
   private TaskSchedulePlan previousTaskSchedulePlan;
   private Resource instanceDefaultResourceValue;
   private Resource containerMaximumResourceValue;
-
   private Map<String, Double> TaskRamMap;
   private Map<String, Double> TaskDiskMap;
   private Map<String, Double> TaskCPUMap;
@@ -71,17 +46,14 @@ public class TaskSchedulePlanBuilder {
 
   private int requestedContainerPadding;
   private int numContainers;
-  //private int numNodes;
   private int numberOfContainers;
   private int jobId;
 
   public TaskSchedulePlanBuilder(int jobId) {
     //this(jobId, previousTaskSchedulePlan:null);
-
   }
 
   public TaskSchedulePlanBuilder(int jobId, TaskSchedulePlan previousTaskSchedulePlan) {
-
     this.jobId = jobId;
     this.previousTaskSchedulePlan = previousTaskSchedulePlan;
     this.numContainers = 0;
@@ -89,7 +61,6 @@ public class TaskSchedulePlanBuilder {
     this.TaskRamMap = new HashMap<>();
     this.TaskDiskMap = new HashMap<>();
     this.TaskCPUMap = new HashMap<>();
-
   }
 
   public void setTaskIds(TreeSet<Integer> taskIds) {
@@ -146,14 +117,6 @@ public class TaskSchedulePlanBuilder {
   public void setJobId(int jobId) {
     this.jobId = jobId;
   }
-
-    /*public int getNumNodes() {
-        return numNodes;
-    }
-
-    public void setNumNodes(int numNodes) {
-        this.numNodes = numNodes;
-    }*/
 
   public TaskSchedulePlan getPreviousTaskSchedulePlan() {
     return previousTaskSchedulePlan;
@@ -263,14 +226,14 @@ public class TaskSchedulePlanBuilder {
           taskInstancePlans.add(new TaskSchedulePlan.TaskInstancePlan
               (instanceId.getTaskName(), instanceId.getTaskId(), instanceId.getTaskIndex(), resource));
 
-          //taskInstancePlans.add(new TaskSchedulePlan.TaskInstancePlan (instanceId,
-          //      new ResourceContainer(instanceRAMValue, instanceDiskValue, instanceCPUValue)));
+          /*taskInstancePlans.add(new TaskSchedulePlan.TaskInstancePlan (instanceId,
+                new ResourceContainer(instanceRAMValue, instanceDiskValue, instanceCPUValue)));*/
         }
 
-        System.out.println("ResourceContainer CPU Value:" + containerCPUValue);
-        /**** containerCpu += (paddingPercentage * containerCpu) / 100;
-         containerRam = containerRam.increaseBy(paddingPercentage);
-         containerDiskInBytes = containerDiskInBytes.increaseBy(paddingPercentage); ****/
+          System.out.println("ResourceContainer CPU Value:" + containerCPUValue);
+          /* containerCpu += (paddingPercentage * containerCpu) / 100;
+          containerRam = containerRam.increaseBy(paddingPercentage);
+          containerDiskInBytes = containerDiskInBytes.increaseBy(paddingPercentage); */
 
         Resource resource = new Resource(containerRAMValue, containerDiskValue, containerCPUValue);
         TaskSchedulePlan.ContainerPlan containerPlan =
@@ -308,9 +271,6 @@ public class TaskSchedulePlanBuilder {
       instanceDisk = getTaskDiskMap().get(taskName);
       instanceCPU = getTaskCPUMap().get(taskName);
     }
-
-    System.out.println("Instance Ram value for the task in line number 273 @Taskscheduleplanbuilder:" + instanceRam + "\t" + taskName + "\t" + instanceDisk + "\t" + instanceCPU);
-
     double instanceRAMValue = 4.0;
     double instanceDiskValue = 10.0;
     double instanceCPUValue = 5.0;
@@ -367,7 +327,6 @@ public class TaskSchedulePlanBuilder {
       }
 
     }
-
     this.taskIds = newtaskIds;
     this.taskIndexes = newtaskIndexes;
     this.containers = containerMap;
@@ -376,22 +335,19 @@ public class TaskSchedulePlanBuilder {
 
   private Map<Integer, Container> getContainers(TaskSchedulePlan previousTaskSchedulePlan, int requestedContainerPadding, HashMap<String, TreeSet<Integer>> taskIndexes, TreeSet<Integer> taskIds) {
 
-
     if (previousTaskSchedulePlan != null) {
       System.out.println("Previous Task Schedule Plan is:" + previousTaskSchedulePlan);
     }
     Map<Integer, Container> containers = new HashMap<>();
-
-        /*ResourceContainer resource = null;
-        try {
+    /*ResourceContainer resource = null;
+      try {
           ResourceContainer resource = previousTaskSchedulePlan.getMaxContainerResources ();
-        } catch (NullPointerException ne){
-            ne.printStackTrace ();
-        }*/
+      } catch (NullPointerException ne){
+          ne.printStackTrace ();
+      }*/
 
     //for testing
     Resource resource = new Resource(2.0, 5.0, 5.0);
-
     System.out.println("ResourceContainer inside the container:" + resource);
 
     for (TaskSchedulePlan.ContainerPlan currentContainerPlan : previousTaskSchedulePlan.getContainers()) {
@@ -429,7 +385,6 @@ public class TaskSchedulePlanBuilder {
   }
 
   /****************************************For testing use the code from heron ***********************/
-
   public int addInstance(Scorer<Container> scorer,
                          String taskName) {
     List<Scorer<Container>> scorers = new LinkedList<>();
@@ -514,5 +469,4 @@ public class TaskSchedulePlanBuilder {
     }
   }
   /****************************************************************************************/
-
 }

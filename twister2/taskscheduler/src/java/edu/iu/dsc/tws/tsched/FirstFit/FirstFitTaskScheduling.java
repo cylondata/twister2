@@ -9,30 +9,6 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
 package edu.iu.dsc.tws.tsched.FirstFit;
 
 import java.util.ArrayList;
@@ -169,28 +145,28 @@ public class FirstFitTaskScheduling {
 
     Job job = new Job();
     job.setJob(job);
-
     ArrayList<RequiredRam> ramRequirements = new ArrayList<>();
     Map<String, Double> taskRamMap = JobAttributes.getTaskRamMap(job);
-    for (String taskName : taskNameSet) {
-            /*ResourceContainer requiredResource = PackingUtils.getResourceRequirement(
+      for (String taskName : taskNameSet) {
+        /*ResourceContainer requiredResource = PackingUtils.getResourceRequirement(
                     taskName, ramMap, this.defaultResourceValue,
                     this.maximumContainerResourceValue, this.paddingPercentage);*/  //It should be modified in future....
-      //ramRequirements.add(new RequiredRam(taskName, requiredResource.getRam()));
+        //ramRequirements.add(new RequiredRam(taskName, requiredResource.getRam()));
 
       if (taskRamMap.containsKey(taskNameSet)) {
-        instanceRAM = taskRamMap.get(taskNameSet);
+          instanceRAM = taskRamMap.get(taskNameSet);
       }
-      //RequiredRam requiredRam = new RequiredRam (taskName, instanceRAM);
-      //ramRequirements.add (requiredRam);
+        //RequiredRam requiredRam = new RequiredRam (taskName, instanceRAM);
+        //ramRequirements.add (requiredRam);
       ramRequirements.add(new RequiredRam(taskName, instanceRAM));
       System.out.println("Task Name and Required Ram:" + taskName + "\t" + instanceRAM);
     }
-    Collections.sort(ramRequirements, Collections.reverseOrder());
-    return ramRequirements;
+      Collections.sort(ramRequirements, Collections.reverseOrder());
+      return ramRequirements;
   }
 
-   /*private static int getLargestContainerSize(Map<Integer, List<InstanceId>> InstancesAllocation) {
+  /*private static int getLargestContainerSize(Map<Integer, List<InstanceId>> InstancesAllocation) {
+
         int max = 0;
         for (List<InstanceId> instances : InstancesAllocation.values ()) {
             if (instances.size () > max) {
@@ -199,17 +175,9 @@ public class FirstFitTaskScheduling {
         }
         System.out.println("Maximum container value is:\t"+max);
         return max;
-    }*/
+  }*/
 
   private static double getContainerCpuValue(Map<Integer, List<TaskInstanceId>> InstancesAllocation) {
-
-        /*List<JobAPI.Config.KeyValue> jobConfig= job.getJobConfig().getKvsList();
-        double defaultContainerCpu =
-                DEFAULT_CPU_PADDING_PER_CONTAINER + getLargestContainerSize(InstancesAllocation);
-
-        String cpuHint = JobUtils.getConfigWithDefault(
-                jobConfig, com.tws.api.Config.TOPOLOGY_CONTAINER_CPU_REQUESTED,
-                Double.toString(defaultContainerCpu)); */
 
     //These two lines will be removed with the above commented code, once the actual job description file is created...
     String cpuHint = "0.6";
@@ -218,15 +186,6 @@ public class FirstFitTaskScheduling {
 
   private static Double getContainerDiskValue(Map<Integer, List<TaskInstanceId>> InstancesAllocation) {
 
-        /*ByteAmount defaultContainerDisk = instanceDiskDefault
-                .multiply(getLargestContainerSize(InstancesAllocation))
-                .plus(DEFAULT_DISK_PADDING_PER_CONTAINER);
-
-        List<JobAPI.Config.KeyValue> jobConfig = job.getJobConfig().getKvsList();
-        return JobUtils.getConfigWithDefault(jobConfig,
-                com.tws.api.Config.JOB_CONTAINER_DISK_REQUESTED,
-                defaultContainerDisk); */
-
     //These two lines will be removed with the above commented code, once the actual job description file is created...
     Long containerDiskValue = 100L;
     return containerDiskValue.doubleValue();
@@ -234,23 +193,15 @@ public class FirstFitTaskScheduling {
 
   private static Double getContainerRamValue(Map<Integer, List<TaskInstanceId>> InstancesAllocation) {
 
-        /*List<JobAPI.Config.KeyValue> jobConfig = job.getJobConfig().getKvsList();
-        return JobUtils.getConfigWithDefault(
-                jobConfig, com.tws.api.Config.JOB_CONTAINER_RAM_REQUESTED,
-                NOT_SPECIFIED_NUMBER_VALUE);*/
 
-    //These two lines will be removed with the above commented code, once the actual job description file is created...
-    //return ByteAmount.fromGigabytes (containerRAMValue);
     Long containerRAMValue = 10L;
     return containerRAMValue.doubleValue();
   }
 
   //This method will be implemented for future rescheduling case....
   public void reschedule() {
-
   }
 
   public void close() {
-
   }
 }

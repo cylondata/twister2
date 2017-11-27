@@ -9,18 +9,6 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
 package edu.iu.dsc.tws.tsched.RoundRobin;
 
 import java.util.ArrayList;
@@ -39,7 +27,7 @@ import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.utils.Job;
 import edu.iu.dsc.tws.tsched.utils.JobAttributes;
 import edu.iu.dsc.tws.tsched.utils.JobConfig;
-//import edu.iu.dsc.tws.tsched.spi.common.Config; (In future it will be replaced with proper config value)
+import static edu.iu.dsc.tws.tsched.spi.common.Config.*;
 
 /**
  * This class is responsible for
@@ -70,12 +58,12 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
     //this.instanceRAM = Context.instanceRam(config);
     //this.instanceDisk = Context.instanceDisk(config);
     //this.instanceCPU = Context.instanceCPU(config);
-    this.instanceRAM = config.Container_Max_RAM_Value;
+    this.instanceRAM = Container_Max_RAM_Value;
     this.instanceCPU = config.Container_Max_CPU_Value;
     this.instanceDisk = config.Container_Max_Disk_Value;
   }
 
-  /***
+  /**
    * This method invokes the Round Robin Scheduling Method and fetch the container instance allocation map.
    * Using the map value it calculates the required ram, disk, and cpu percentage for
    * each container and instances in each container and generates the task schedule plan
@@ -116,11 +104,11 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
     return new TaskSchedulePlan(job.getJobId(), containerPlans);
   }
 
-  /***
+  /**
    * This method is to perform the Round Robin based Scheduling operation.
    * And, it will allocate the instances in a Round Robin mode.
    *
-   * @return
+   * @return Container Instance Map
    */
   private Map<Integer, List<InstanceId>> RoundRobinScheduling() {
 
@@ -256,30 +244,12 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
 
   private double getContainerCPUValue(Map<Integer, List<InstanceId>> InstancesAllocation) {
 
-        /*List<JobAPI.Config.KeyValue> jobConfig= job.getJobConfig().getKvsList();
-        double defaultContainerCpu =
-                DEFAULT_CPU_PADDING_PER_CONTAINER + getLargestContainerSize(InstancesAllocation);
-
-        String cpuHint = JobUtils.getConfigWithDefault(
-                jobConfig, com.tws.api.Config.TOPOLOGY_CONTAINER_CPU_REQUESTED,
-                Double.toString(defaultContainerCpu)); */
-
     //These two lines will be removed with the above commented code, once the actual job description file is created...
     String cpuHint = "0.6";
     return Double.parseDouble(cpuHint);
   }
 
-  private Double getContainerDiskValue(Map<Integer, List<InstanceId>> InstancesAllocation) {
-
-        /*ByteAmount defaultContainerDisk = instanceDiskDefault
-                .multiply(getLargestContainerSize(InstancesAllocation))
-                .plus(DEFAULT_DISK_PADDING_PER_CONTAINER);
-
-        List<JobAPI.Config.KeyValue> jobConfig = job.getJobConfig().getKvsList();
-        return JobUtils.getConfigWithDefault(jobConfig,
-                com.tws.api.Config.JOB_CONTAINER_DISK_REQUESTED,
-                defaultContainerDisk); */
-    //return ByteAmount.fromGigabytes (containerDiskValue);
+  private Double getContainerDiskValue(Map<Integer, List<InstanceId>> InstancesAllocation){
 
     //These two lines will be removed with the above commented code, once the actual job description file is created...
     Long containerDiskValue = 10L;
@@ -288,14 +258,8 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
 
   private Double getContainerRamValue(Map<Integer, List<InstanceId>> InstancesAllocation) {
 
-        /*List<JobAPI.Config.KeyValue> jobConfig = job.getJobConfig().getKvsList();
-        return JobUtils.getConfigWithDefault(
-                jobConfig, com.tws.api.Config.JOB_CONTAINER_RAM_REQUESTED,
-                NOT_SPECIFIED_NUMBER_VALUE); */
-
     //These two lines will be removed with the above commented code, once the actual job description file is created...
     Long containerRAMValue = 10L;
     return containerRAMValue.doubleValue();
   }
-
 }
