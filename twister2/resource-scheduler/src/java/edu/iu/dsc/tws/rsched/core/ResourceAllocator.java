@@ -25,7 +25,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.schedulers.slurmmpi.SlurmMPIContext;
+import edu.iu.dsc.tws.rsched.schedulers.mpi.MPIContext;
 import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.scheduler.ILauncher;
@@ -85,9 +85,9 @@ public class ResourceAllocator {
         + "configuration: %s and cluster: %s", twister2Home, configDir, clusterName));
     Config config = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterName);
     return Config.newBuilder().putAll(config).
-        put(SlurmMPIContext.TWISTER2_HOME.getKey(), twister2Home).
-        put(SlurmMPIContext.TWISTER2_CLUSTER_NAME, clusterName).
-        put(SlurmMPIContext.JOB_FILE, jobJar).
+        put(MPIContext.TWISTER2_HOME.getKey(), twister2Home).
+        put(MPIContext.TWISTER2_CLUSTER_NAME, clusterName).
+        put(MPIContext.JOB_FILE, jobJar).
         putAll(environmentProperties).putAll(cfg).build();
   }
 
@@ -244,7 +244,7 @@ public class ResourceAllocator {
       throw new RuntimeException("Failed to build the requested resources");
     }
 
-    launcher.launch(requestedResources);
+    launcher.launch(requestedResources, job);
   }
 
   private RequestedResources buildRequestedResources(JobAPI.Job job) {

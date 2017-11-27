@@ -69,4 +69,22 @@ public final class JobUtils {
     }
     return ret;
   }
+
+  public static String jobClassPath(JobAPI.Job job) {
+    StringBuilder classPathBuilder = new StringBuilder();
+    // TODO(nbhagat): Take type of package as argument.
+//    if (job.getJobFormat().getType().endsWith(".jar")) {
+//      // Bundled jar
+//      classPathBuilder.append(originalPackage);
+//    } else {
+//      // Bundled tar
+//      String topologyJar = originalPackage.replace(".tar.gz", "").replace(".tar", "") + ".jar";
+//      classPathBuilder.append(String.format("libs/*:%s", topologyJar));
+//    }
+    return classPathBuilder.toString();
+  }
+
+  public static String systemClassPath(Config cfg) {
+    return "libs/*";
+  }
 }

@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.rsched.schedulers.slurmmpi;
+package edu.iu.dsc.tws.rsched.schedulers.mpi;
 
 import java.nio.file.Paths;
 import java.util.logging.Level;
@@ -17,13 +17,14 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
 import edu.iu.dsc.tws.rsched.spi.scheduler.IController;
 import edu.iu.dsc.tws.rsched.spi.scheduler.ILauncher;
 import edu.iu.dsc.tws.rsched.utils.ResourceSchedulerUtils;
 
-public class SlurmMPILauncher implements ILauncher {
-  private static final Logger LOG = Logger.getLogger(SlurmMPILauncher.class.getName());
+public class MPILauncher implements ILauncher {
+  private static final Logger LOG = Logger.getLogger(MPILauncher.class.getName());
 
   private Config config;
 
@@ -34,7 +35,7 @@ public class SlurmMPILauncher implements ILauncher {
     this.config = mConfig;
 
     // get the job working directory
-    this.jobWorkingDirectory = SlurmMPIContext.workingDirectory(mConfig);
+    this.jobWorkingDirectory = MPIContext.workingDirectory(mConfig);
   }
 
   @Override
@@ -43,22 +44,19 @@ public class SlurmMPILauncher implements ILauncher {
   }
 
   @Override
-  public boolean launch(RequestedResources resourcePlan) {
+  public boolean launch(RequestedResources resourcePlan, JobAPI.Job job) {
     LOG.log(Level.INFO, "Launching job for cluster {0}",
-        SlurmMPIContext.clusterName(config));
+        MPIContext.clusterName(config));
 
-    // download the core and job packages into the working directory
-    // this working directory is a shared directory among the nodes
-//    if (!setupWorkingDirectory()) {
-//      LOG.log(Level.SEVERE, "Failed to download the core and job packages");
-//      return false;
-//    }
+    if (!setupWorkingDirectory()) {
+      throw new RuntimeException("Failed to setup the directory");
+    }
 
     // now start the controller, which will get the resources from
     // slurm and start the job
-    IController controller = new SlurmMPIController(true);
+    IController controller = new MPIController(true);
     controller.initialize(config);
-    return controller.start(resourcePlan);
+    return controller.start(resourcePlan, job);
   }
 
   /**
@@ -68,14 +66,14 @@ public class SlurmMPILauncher implements ILauncher {
    */
   protected boolean setupWorkingDirectory() {
     // get the path of core release URI
-    String coreReleasePackageURI = SlurmMPIContext.systemPackageUrl(config);
+    String coreReleasePackageURI = MPIContext.systemPackageUrl(config);
 
     // form the target dest core release file name
     String coreReleaseFileDestination = Paths.get(
         jobWorkingDirectory, "twister2-system.tar.gz").toString();
 
     // Form the job package's URI
-    String jobPackageURI = SlurmMPIContext.jobPackageUri(config).toString();
+    String jobPackageURI = MPIContext.jobPackageUri(config).toString();
 
     // form the target job package file name
     String jobPackageDestination = Paths.get(
