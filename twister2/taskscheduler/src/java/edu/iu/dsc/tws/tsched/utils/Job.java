@@ -21,6 +21,18 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 package edu.iu.dsc.tws.tsched.utils;
 
 //This class will be replaced with the original Job file from job package.
@@ -74,26 +86,26 @@ public class Job {
     t.setTaskName("mpitask1");
     t.setTaskCount(2);
     t.setRequiredRam(6.0);
-    t.setRequiredDisk (20.0);
-    t.setRequiredCPU (5.0);
+    t.setRequiredDisk(20.0);
+    t.setRequiredCPU(5.0);
 
     tasklist[0] = t;
 
     Task t1 = new Task();
     t1.setTaskName("mpitask2");
     t1.setTaskCount(4);
-    t1.setRequiredRam (5.0);
-    t1.setRequiredDisk (10.0);
-    t1.setRequiredCPU (7.0);
+    t1.setRequiredRam(5.0);
+    t1.setRequiredDisk(10.0);
+    t1.setRequiredCPU(7.0);
 
     tasklist[1] = t1;
 
     Task t2 = new Task();
     t2.setTaskName("mpitask3");
     t2.setTaskCount(3);
-    t2.setRequiredRam (7.0);
-    t2.setRequiredDisk (15.0);
-    t2.setRequiredCPU (10.0);
+    t2.setRequiredRam(7.0);
+    t2.setRequiredDisk(15.0);
+    t2.setRequiredCPU(10.0);
 
     tasklist[2] = t2;
 

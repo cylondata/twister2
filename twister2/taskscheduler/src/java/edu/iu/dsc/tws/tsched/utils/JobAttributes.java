@@ -33,6 +33,18 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 package edu.iu.dsc.tws.tsched.utils;
 
 import java.util.HashMap;
@@ -94,14 +106,14 @@ public class JobAttributes {
           continue;
         }
         String[] taskAndRam = token.split(":");
-        Double requiredRam = Double.parseDouble (taskAndRam[1]);
+        Double requiredRam = Double.parseDouble(taskAndRam[1]);
         ramMap.put(taskAndRam[0], requiredRam);
       }
     }
     return ramMap;
   }
 
-  public static Map<String,Double> getTaskDiskMap(Job job) {
+  public static Map<String, Double> getTaskDiskMap(Job job) {
 
     Set<String> taskNameSet = new HashSet<String>();
     taskNameSet.add("mpitask1");
@@ -118,14 +130,14 @@ public class JobAttributes {
           continue;
         }
         String[] taskAndDisk = token.split(":");
-        Double requiredDisk = Double.parseDouble (taskAndDisk[1]);
+        Double requiredDisk = Double.parseDouble(taskAndDisk[1]);
         diskMap.put(taskAndDisk[0], requiredDisk);
       }
     }
     return diskMap;
   }
 
-  public static Map<String,Double> getTaskCPUMap(Job job) {
+  public static Map<String, Double> getTaskCPUMap(Job job) {
 
     Set<String> taskNameSet = new HashSet<String>();
     taskNameSet.add("mpitask1");
@@ -142,7 +154,7 @@ public class JobAttributes {
           continue;
         }
         String[] taskAndDisk = token.split(":");
-        Double requiredDisk = Double.parseDouble (taskAndDisk[1]);
+        Double requiredDisk = Double.parseDouble(taskAndDisk[1]);
         cpuMap.put(taskAndDisk[0], requiredDisk);
       }
     }
@@ -152,7 +164,7 @@ public class JobAttributes {
   public static int getTotalNumberOfInstances(Job job) {
     HashMap<String, Integer> parallelTaskMap = getParallelTaskMap(job);
     int numberOfInstances = 0;
-    for(int instances: parallelTaskMap.values()){
+    for (int instances : parallelTaskMap.values()) {
       numberOfInstances += instances;
     }
     return numberOfInstances;
@@ -161,7 +173,7 @@ public class JobAttributes {
   public static HashMap<String, Integer> getParallelTaskMap(Job job) {
     HashMap<String, Integer> parallelTaskMap = new HashMap<>();
     int count = job.getTasklist().length;
-    for(int i = 0; i < job.getTasklist().length; i++){
+    for (int i = 0; i < job.getTasklist().length; i++) {
       String taskName = job.getTasklist()[i].getTaskName();
       Integer parallelTaskCount = job.getTasklist()[i].getParallelTaskCount();
       parallelTaskMap.put(taskName, parallelTaskCount);

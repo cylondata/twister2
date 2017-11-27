@@ -25,18 +25,20 @@ package edu.iu.dsc.tws.tsched.spi.common;
 
 public class Context {
 
-    public static Double instanceRam(Config config) {
-        System.out.println(config.getDoubleValue (Key.INSTANCE_RAM));
-        //return config.getDoubleValue(Key.INSTANCE_RAM);
-        return Double.valueOf(20.0);
+  public static Double instanceRam(Config config) {
+    System.out.println(config.getDoubleValue(Key.INSTANCE_RAM));
+    //return config.getDoubleValue(Key.INSTANCE_RAM);
+    return Double.valueOf(20.0);
 
-    }
-    public static Double instanceDisk(Config config) {
-        //return config.getDoubleValue (Key.INSTANCE_DISK);
-        return Double.valueOf (200.0);
-    }
-    public static Double instanceCPU(Config config) {
-        //return config.getDoubleValue (Key.INSTANCE_CPU);
-        return Double.valueOf (5.0);
-    }
+  }
+
+  public static Double instanceDisk(Config config) {
+    //return config.getDoubleValue (Key.INSTANCE_DISK);
+    return Double.valueOf(200.0);
+  }
+
+  public static Double instanceCPU(Config config) {
+    //return config.getDoubleValue (Key.INSTANCE_CPU);
+    return Double.valueOf(5.0);
+  }
 }

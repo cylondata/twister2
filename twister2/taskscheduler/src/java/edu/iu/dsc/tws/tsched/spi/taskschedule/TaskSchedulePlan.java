@@ -21,6 +21,18 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 package edu.iu.dsc.tws.tsched.spi.taskschedule;
 
 import java.util.HashMap;
@@ -39,14 +51,14 @@ public class TaskSchedulePlan {
 
   private int jobId;
   private final Set<ContainerPlan> containers;
-  private final Map<Integer,ContainerPlan> containersMap;
+  private final Map<Integer, ContainerPlan> containersMap;
 
   public TaskSchedulePlan(int id, Set<ContainerPlan> containers) {
     this.jobId = id;
     this.containers = ImmutableSet.copyOf(containers);
     containersMap = new HashMap<>();
-    for(ContainerPlan containerPlan:containers){
-      containersMap.put(containerPlan.containerId,containerPlan);
+    for (ContainerPlan containerPlan : containers) {
+      containersMap.put(containerPlan.containerId, containerPlan);
     }
   }
 
@@ -92,7 +104,7 @@ public class TaskSchedulePlan {
     private final int taskIndex;
     private final Resource resource;
 
-    public TaskInstancePlan(String taskName, int taskId, int taskIndex, Resource resource){
+    public TaskInstancePlan(String taskName, int taskId, int taskIndex, Resource resource) {
       this.taskName = taskName;
       this.taskId = taskId;
       this.taskIndex = taskIndex;
@@ -102,7 +114,7 @@ public class TaskSchedulePlan {
     public TaskInstancePlan(TaskInstanceId taskInstanceId, Resource resource) {
       this.taskName = taskInstanceId.getTaskName();
       this.taskId = taskInstanceId.getTaskId();
-      this.taskIndex = taskInstanceId.getTaskIndex ();
+      this.taskIndex = taskInstanceId.getTaskIndex();
       this.resource = resource;
     }
 
