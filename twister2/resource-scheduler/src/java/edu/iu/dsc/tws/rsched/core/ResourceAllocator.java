@@ -134,6 +134,8 @@ public class ResourceAllocator {
     }
 
     // copy the job jar file
+    LOG.log(Level.INFO, String.format("Copy job jar: %s to %s",
+        jobFile, tempDirPathString));
     if (!FileUtils.copyFileToDirectory(jobFile, tempDirPathString)) {
       throw new RuntimeException("Failed to copy the job jar file: "
           + jobFile + " to:" + tempDirPathString);
@@ -144,6 +146,8 @@ public class ResourceAllocator {
     String confDir = SchedulerContext.conf(config);
 
     // copy the dist pakache
+    LOG.log(Level.INFO, String.format("Copy configuration: %s to %s",
+        confDir, tempDirPathString));
     if (!FileUtils.copyDirectory(confDir, tempDirPathString)) {
       throw new RuntimeException("Failed to copy the configuration: "
           + confDir + " to: " + tempDirPathString);
@@ -213,17 +217,21 @@ public class ResourceAllocator {
           String.format("Failed to instantiate uploader class '%s'", uploaderClass), e);
     }
 
+    LOG.log(Level.INFO, "Initialize state manager");
     // initialize the state manager
     statemgr.initialize(config);
 
+    LOG.log(Level.INFO, "Initialize uploader");
     // now upload the content of the package
     uploader.initialize(config);
     // gives the url of the file to be uploaded
+    LOG.log(Level.INFO, "Calling uploader to upload the package content");
     URI packageURI = uploader.uploadPackage(jobDirectory);
 
     // now launch the launcher
     // Update the runtime config with the packageURI
     Config runtimeAll = Config.newBuilder()
+        .putAll(config)
         .put(SchedulerContext.JOB_PACKAGE_URI, packageURI)
         .build();
 

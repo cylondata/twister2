@@ -44,7 +44,7 @@ public class SlurmMPILauncher implements ILauncher {
 
   @Override
   public boolean launch(RequestedResources resourcePlan) {
-    LOG.log(Level.FINE, "Launching job for cluster {0}",
+    LOG.log(Level.INFO, "Launching job for cluster {0}",
         SlurmMPIContext.clusterName(config));
 
     // download the core and job packages into the working directory
