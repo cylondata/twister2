@@ -12,6 +12,8 @@
 package edu.iu.dsc.tws.rsched.uploaders.localfs;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.common.config.TokenSub;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
 public class FsContext extends SchedulerContext {
@@ -23,6 +25,7 @@ public class FsContext extends SchedulerContext {
    * @return full path as a string
    */
   public static final String uploaderJobDirectory(Config cfg) {
-    return cfg.getStringValue(UPLOAD_DIRECTORY, "${HOME}/.twister2/repository/${JOB}");
+    return TokenSub.substitute(cfg, cfg.getStringValue(UPLOAD_DIRECTORY,
+        "${HOME}/.twister2/repository"), Context.substitutions);
   }
 }

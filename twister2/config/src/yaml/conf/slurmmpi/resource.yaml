@@ -1,5 +1,5 @@
 # working directory
-twister2.resource.scheduler.slurm.working.directory: "${HOME}/.herondata/topologies/${CLUSTER}/${JOB}"
+twister2.resource.scheduler.slurm.working.directory: "${HOME}/.twister2data/jobs/"
 # the job id file
 twister2.resource.scheduler.slurm.job.id: ""
 # slurm script to run

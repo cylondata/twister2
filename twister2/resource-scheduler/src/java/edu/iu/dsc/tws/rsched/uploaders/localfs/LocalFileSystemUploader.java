@@ -12,52 +12,41 @@
 package edu.iu.dsc.tws.rsched.uploaders.localfs;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.CopyOption;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.rsched.spi.uploaders.IUploader;
 import edu.iu.dsc.tws.rsched.spi.uploaders.UploaderException;
+import edu.iu.dsc.tws.rsched.utils.FileUtils;
 
 public class LocalFileSystemUploader implements IUploader {
   private static final Logger LOG = Logger.getLogger(LocalFileSystemUploader.class.getName());
 
-  // this is the place where we will upload the file
-  private String destinationFile;
   // this is the directory where to upload the file
   private String destinationDirectory;
-  // this is the original file
-  private String originalFile;
 
   @Override
   public void initialize(Config config) {
     this.destinationDirectory = FsContext.uploaderJobDirectory(config);
-    // create a random file name
-    String fileName = FsContext.jobName(config) + ".tar.gz";
-    this.destinationFile = Paths.get(destinationDirectory, fileName).toString();
   }
 
   @Override
   public URI uploadPackage(String sourceLocation) throws UploaderException {
-    this.originalFile = sourceLocation;
     // we shouldn't come here naturally as a jar file is needed for us to get here
-    boolean fileExists = new File(originalFile).isFile();
+    boolean fileExists = new File(sourceLocation).isDirectory();
     if (!fileExists) {
       throw new UploaderException(
-          String.format("Job package does not exist at '%s'", originalFile));
+          String.format("Job package does not exist at '%s'", sourceLocation));
     }
 
     // get the directory containing the file
-    Path filePath = Paths.get(destinationFile);
-    File parentDirectory = filePath.getParent().toFile();
+    Path filePath = Paths.get(destinationDirectory);
+    File parentDirectory = filePath.toFile();
     assert parentDirectory != null;
 
     // if the dest directory does not exist, create it.
@@ -74,35 +63,26 @@ public class LocalFileSystemUploader implements IUploader {
     // if the dest file exists, write a log message
     fileExists = new File(filePath.toString()).isFile();
     if (fileExists) {
-      LOG.fine(String.format("Target topology package already exists at '%s'. Overwriting it now",
+      LOG.fine(String.format("Target job package already exists at '%s'. Overwriting it now",
           filePath.toString()));
     }
 
     // copy the topology package to target working directory
-    LOG.log(Level.FINE, String.format("Copying topology package at '%s' to target "
-        + "working directory '%s'",  originalFile, filePath.toString()));
-
-    Path source = Paths.get(originalFile);
+    LOG.log(Level.FINE, String.format("Copying job directory at '%s' to target "
+        + "working directory '%s'", sourceLocation, filePath.toString()));
     try {
-      CopyOption[] options = new CopyOption[]{StandardCopyOption.REPLACE_EXISTING};
-      Files.copy(source, filePath, options);
-      StringBuilder sb = new StringBuilder()
-          .append("file://")
-          .append(destinationDirectory);
-      return new URI(sb.toString());
-    } catch (IOException e) {
-      throw new UploaderException(
-          String.format("Unable to copy topology file from '%s' to '%s'",
-              source, filePath), e);
+      FileUtils.copyDirectory(filePath.toString(), destinationDirectory);
+      return new URI(destinationDirectory);
     } catch (URISyntaxException e) {
-      throw new RuntimeException("Invalid file path for topology package destination", e);
+      throw new RuntimeException("Invalid file path for topology package destination: "
+          + destinationDirectory, e);
     }
   }
 
   @Override
   public boolean undo() {
     LOG.info("Clean uploaded jar");
-    File file = new File(destinationFile);
+    File file = new File(destinationDirectory);
     return file.delete();
   }
 

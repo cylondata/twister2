@@ -12,6 +12,8 @@
 package edu.iu.dsc.tws.rsched.schedulers.slurmmpi;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.common.config.TokenSub;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
 public class SlurmMPIContext extends SchedulerContext {
@@ -26,7 +28,8 @@ public class SlurmMPIContext extends SchedulerContext {
   public static final String MPI_HOME = "twister2.resource.scheduler.mpi.home";
 
   public static String workingDirectory(Config config) {
-    return config.getStringValue(WORKING_DIRECTORY, "${HOME}/.twister2data/jobs/${CLUSTER}/${JOB}");
+    return TokenSub.substitute(config, config.getStringValue(WORKING_DIRECTORY,
+        "${HOME}/.twister2data/jobs"), Context.substitutions);
   }
 
   public static String jobIdFile(Config config) {

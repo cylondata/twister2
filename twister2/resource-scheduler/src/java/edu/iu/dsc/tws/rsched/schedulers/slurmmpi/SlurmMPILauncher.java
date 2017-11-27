@@ -49,10 +49,10 @@ public class SlurmMPILauncher implements ILauncher {
 
     // download the core and job packages into the working directory
     // this working directory is a shared directory among the nodes
-    if (!setupWorkingDirectory()) {
-      LOG.log(Level.SEVERE, "Failed to download the core and job packages");
-      return false;
-    }
+//    if (!setupWorkingDirectory()) {
+//      LOG.log(Level.SEVERE, "Failed to download the core and job packages");
+//      return false;
+//    }
 
     // now start the controller, which will get the resources from
     // slurm and start the job

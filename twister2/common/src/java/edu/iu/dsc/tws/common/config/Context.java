@@ -24,6 +24,8 @@ public class Context {
   // configurations with a default value should be specified as a ConfigEntry
   public static final ConfigEntry TWISTER2_HOME = new ConfigEntry(
       "twister2.directory.home", null, "TWISTER2_HOME");
+  public static final ConfigEntry HOME = new ConfigEntry(
+      "home", null, "HOME");
   public static final ConfigEntry TWISTER2_BIN = new ConfigEntry(
       "twister2.directory.bin", "${TWISTER2_HOME}/bin");
   public static final ConfigEntry TWISTER2_CONF = new ConfigEntry(
@@ -65,6 +67,7 @@ public class Context {
 
   static {
     substitutions.put("TWISTER2_HOME", TWISTER2_HOME);
+    substitutions.put("HOME", HOME);
     substitutions.put("TWISTER2_CONF", TWISTER2_CONF);
     substitutions.put("TWISTER2_LIB", TWISTER2_LIB);
     substitutions.put("TWISTER2_DIST", TWISTER2_DIST);

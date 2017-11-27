@@ -108,9 +108,7 @@ def submit_fatjar(cl_args, unknown_args):
         res.add_context(err_context)
         return res
 
-    results = launch_jobs(cl_args, job_file, tmp_dir)
-
-    return results
+    return res
 
 ################################################################################
 # pylint: disable=unused-argument
