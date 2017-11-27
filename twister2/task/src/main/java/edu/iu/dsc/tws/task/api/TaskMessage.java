@@ -12,33 +12,25 @@
 package edu.iu.dsc.tws.task.api;
 
 /**
- * Base interface for input and output queue of the task layer
- * The type of the queue can be specified
+ * Wrapper interface for all the messages types.
  */
-public interface Queue<T> {
+public class TaskMessage<T> implements Message {
 
   /**
-   * Adds the given element to the queue
-   * @param e
-   * @return
+   * Stores the data
    */
-  boolean add(T e);
+  private T content;
 
-  /**
-   * Removes the head of the queue
-   * @return
-   */
-  T remove();
+  public TaskMessage(T data) {
+    this.content = data;
+  }
 
-  /**
-   * Retrieves the head of the queue but does not remove it
-   * @return
-   */
-  T peek();
+  public T getContent() {
+    return content;
+  }
 
-  /**
-   * Retrieves and removes the head of the queue
-   * @return
-   */
-  T poll();
+  public void setContent(T content) {
+    this.content = content;
+  }
+
 }

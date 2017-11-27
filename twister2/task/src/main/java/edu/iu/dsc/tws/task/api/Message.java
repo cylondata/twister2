@@ -12,33 +12,7 @@
 package edu.iu.dsc.tws.task.api;
 
 /**
- * Base interface for input and output queue of the task layer
- * The type of the queue can be specified
+ * Wrapper interface for all the messages types.
  */
-public interface Queue<T> {
-
-  /**
-   * Adds the given element to the queue
-   * @param e
-   * @return
-   */
-  boolean add(T e);
-
-  /**
-   * Removes the head of the queue
-   * @return
-   */
-  T remove();
-
-  /**
-   * Retrieves the head of the queue but does not remove it
-   * @return
-   */
-  T peek();
-
-  /**
-   * Retrieves and removes the head of the queue
-   * @return
-   */
-  T poll();
+public interface Message {
 }
