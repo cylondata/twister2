@@ -13,7 +13,7 @@ common_deps_files = [
 
 java_library(
     name = "task-java",
-    srcs = ["edu/iu/dsc/tws/task/api/ITask.java"],
+    srcs = glob(["**/*.java"]),
     deps = common_deps_files,
 )
 

@@ -40,6 +40,7 @@ import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
+import edu.iu.dsc.tws.task.api.Message;
 import edu.iu.dsc.tws.task.api.SinkTask;
 import edu.iu.dsc.tws.task.api.SourceTask;
 import edu.iu.dsc.tws.task.core.TaskExecutorCachedThreadPool;
@@ -131,6 +132,11 @@ public class PingPongCommunicationTaskBased implements IContainer {
     public void execute() {
 
     }
+
+    @Override
+    public void execute(Message content) {
+
+    }
   }
   /**
    * We are running the map in a separate thread
@@ -162,6 +168,11 @@ public class PingPongCommunicationTaskBased implements IContainer {
         Thread.yield();
       }
       status = Status.MAP_FINISHED;
+    }
+
+    @Override
+    public void execute(Message content) {
+
     }
   }
 
