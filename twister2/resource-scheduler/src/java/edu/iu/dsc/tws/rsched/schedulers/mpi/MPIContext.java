@@ -9,23 +9,24 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.rsched.schedulers.slurmmpi;
+package edu.iu.dsc.tws.rsched.schedulers.mpi;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.config.TokenSub;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
-public class SlurmMPIContext extends SchedulerContext {
+public class MPIContext extends SchedulerContext {
   public static final String WORKING_DIRECTORY =
-      "twister2.resource.scheduler.slurm.working.directory";
+      "twister2.resource.scheduler.mpi.working.directory";
 
-  public static final String SLURM_JOB_ID = "twister2.resource.scheduler.slurm.job.id";
+  public static final String SLURM_JOB_ID = "twister2.resource.scheduler.mpi.job.id";
 
-  public static final String SLURM_SHELL_SCRIPT = "twister2.resource.scheduler.slurm.shell.script";
+  public static final String SLURM_SHELL_SCRIPT = "twister2.resource.scheduler.mpi.shell.script";
 
   public static final String PARTITION = "twister2.resource.scheduler.slurm.partition";
   public static final String MPI_HOME = "twister2.resource.scheduler.mpi.home";
+  public static final String MODE = "twsiter2.resource.scheduler.mpi.mode";
 
   public static String workingDirectory(Config config) {
     return TokenSub.substitute(config, config.getStringValue(WORKING_DIRECTORY,
@@ -33,11 +34,11 @@ public class SlurmMPIContext extends SchedulerContext {
   }
 
   public static String jobIdFile(Config config) {
-    return config.getStringValue(SLURM_JOB_ID, "slurm-job.pid");
+    return config.getStringValue(SLURM_JOB_ID, "mpi-job.pid");
   }
 
-  public static String slurmShellScript(Config config) {
-    return config.getStringValue(SLURM_SHELL_SCRIPT, "slurm.sh");
+  public static String mpiShellScript(Config config) {
+    return config.getStringValue(SLURM_SHELL_SCRIPT, "mpi.sh");
   }
 
   public static String partition(Config cfg) {
@@ -46,5 +47,9 @@ public class SlurmMPIContext extends SchedulerContext {
 
   public static String mpiExecFile(Config cfg) {
     return cfg.getStringValue(MPI_HOME, "");
+  }
+
+  public static String mpiMode(Config cfg) {
+    return cfg.getStringValue(MODE, "node");
   }
 }

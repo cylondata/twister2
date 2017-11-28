@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.rsched.spi.scheduler;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
 
 /**
@@ -24,7 +25,7 @@ public interface IController {
    */
   void initialize(Config config);
 
-  boolean start(RequestedResources requestedResources);
+  boolean start(RequestedResources requestedResources, JobAPI.Job job);
 
   void close();
 

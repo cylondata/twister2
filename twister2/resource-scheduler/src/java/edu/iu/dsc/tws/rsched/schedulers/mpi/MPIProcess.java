@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.rsched.schedulers.slurmmpi;
+package edu.iu.dsc.tws.rsched.schedulers.mpi;
 
 import java.nio.CharBuffer;
 import java.nio.IntBuffer;
@@ -136,10 +136,10 @@ public final class MPIProcess {
 
     Config config = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterName);
     return Config.newBuilder().putAll(config).
-        put(SlurmMPIContext.TWISTER2_HOME.getKey(), twister2Home).
-        put(SlurmMPIContext.TWISTER2_JOB_BASIC_CONTAINER_CLASS, container).
-        put(SlurmMPIContext.TWISTER2_CONTAINER_ID, id).
-        put(SlurmMPIContext.TWISTER2_CLUSTER_NAME, clusterName).build();
+        put(MPIContext.TWISTER2_HOME.getKey(), twister2Home).
+        put(MPIContext.TWISTER2_JOB_BASIC_CONTAINER_CLASS, container).
+        put(MPIContext.TWISTER2_CONTAINER_ID, id).
+        put(MPIContext.TWISTER2_CLUSTER_NAME, clusterName).build();
   }
 
   private static void master(Config config, int rank) {
@@ -152,7 +152,7 @@ public final class MPIProcess {
     // lets create the resource plan
     ResourcePlan resourcePlan = createResourcePlan(config);
 
-    String containerClass = SlurmMPIContext.jobBasicContainerClass(config);
+    String containerClass = MPIContext.jobBasicContainerClass(config);
     IContainer container;
     try {
       Object object = ReflectionUtils.newInstance(containerClass);
@@ -182,7 +182,7 @@ public final class MPIProcess {
     try {
       int rank = MPI.COMM_WORLD.getRank();
       ResourcePlan resourcePlan = new ResourcePlan(
-          SlurmMPIContext.clusterName(config), MPI.COMM_WORLD.getRank());
+          MPIContext.clusterName(config), MPI.COMM_WORLD.getRank());
 
       String processName = MPI.getProcessorName();
       char[] processNameChars = new char[processName.length()];

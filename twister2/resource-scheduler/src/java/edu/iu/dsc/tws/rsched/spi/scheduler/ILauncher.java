@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.rsched.spi.scheduler;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
 
 /**
@@ -37,5 +38,5 @@ public interface ILauncher extends AutoCloseable {
    * @param resourceRequest requested resources
    * @return true if the request is granted
    */
-  boolean launch(RequestedResources resourceRequest);
+  boolean launch(RequestedResources resourceRequest, JobAPI.Job job);
 }
