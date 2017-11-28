@@ -18,9 +18,6 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.fs.Path;
 
-/**
- * Created by pulasthi on 8/24/17.
- */
 public class TextInputFormatter extends DelimitedInputFormat<String> {
 
   private static final Logger LOG = Logger.getLogger(TextInputFormatter.class.getName());
@@ -69,11 +66,13 @@ public class TextInputFormatter extends DelimitedInputFormat<String> {
   }
 
   @Override
-  public String readRecord(String reusable, byte[] bytes, int offset, int numBytes) throws IOException {
-    //Check if \n is used as delimiter and the end of this line is a \r, then remove \r from the line
+  public String readRecord(String reusable, byte[] bytes, int offset, int numBytes)
+      throws IOException {
+    //Check if \n is used as delimiter and the end of this line is a \r,
+    // then remove \r from the line
     if (this.getDelimiter() != null && this.getDelimiter().length == 1
         && this.getDelimiter()[0] == NEW_LINE && offset + numBytes >= 1
-        && bytes[offset + numBytes - 1] == CARRIAGE_RETURN){
+        && bytes[offset + numBytes - 1] == CARRIAGE_RETURN) {
       numBytes -= 1;
     }
 

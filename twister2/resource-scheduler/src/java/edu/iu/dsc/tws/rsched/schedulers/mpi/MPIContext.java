@@ -30,7 +30,7 @@ public class MPIContext extends SchedulerContext {
 
   public static String workingDirectory(Config config) {
     return TokenSub.substitute(config, config.getStringValue(WORKING_DIRECTORY,
-        "${HOME}/.twister2data/jobs"), Context.substitutions);
+        "${HOME}/.twister2/jobs"), Context.substitutions);
   }
 
   public static String jobIdFile(Config config) {

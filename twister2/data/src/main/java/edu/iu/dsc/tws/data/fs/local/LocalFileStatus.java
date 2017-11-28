@@ -18,8 +18,8 @@ import edu.iu.dsc.tws.data.fs.FileSystem;
 import edu.iu.dsc.tws.data.fs.Path;
 
 /**
- * The class <code>LocalFileStatus</code> provides an implementation of the {@link FileStatus} interface
- * for the local file system.
+ * The class <code>LocalFileStatus</code> provides an implementation of the {@link FileStatus}
+ * interface for the local file system.
  */
 public class LocalFileStatus implements FileStatus {
 

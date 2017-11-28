@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.utils;
 
-import java.util.logging.Level;
+import java.nio.file.Paths;
 import java.util.logging.Logger;
 
 public final class ResourceSchedulerUtils {
@@ -21,50 +21,41 @@ public final class ResourceSchedulerUtils {
   }
 
   public static boolean setupWorkingDirectory(
+      String jobName,
       String workingDirectory,
-      String coreReleasePackageURL,
-      String coreReleaseDestination,
-      String topologyPackageURL,
-      String topologyPackageDestination,
+      String corePackageName,
+      String jobPackageURI,
       boolean isVerbose) {
-    // if the working directory does not exist, create it.
-    if (!FileUtils.isDirectoryExists(workingDirectory)) {
-      LOG.fine("The working directory does not exist; creating it.");
-      if (!FileUtils.createDirectory(workingDirectory)) {
-        LOG.severe("Failed to create directory: " + workingDirectory);
-        return false;
-      }
+
+    String corePackagePath = Paths.get(jobPackageURI, corePackageName).toString();
+    String corePackageDestination = Paths.get(workingDirectory,
+        jobName, corePackageName).toString();
+
+    // And then delete the downloaded release package
+    // now lets copy other files
+    String dst = Paths.get(workingDirectory, jobName).toString();
+    LOG.info(String.format("Downloading package %s to %s", jobPackageURI, dst));
+    if (!FileUtils.copyDirectory(jobPackageURI, dst)) {
+      LOG.severe(String.format("Failed to copy the file from "
+          + "uploaded place %s to working directory %s", jobPackageURI, dst));
     }
 
-    // Curl and extract heron core release package and topology package
-    // And then delete the downloaded release package
-    boolean ret =
-        curlAndExtractPackage(
-            workingDirectory, coreReleasePackageURL, coreReleaseDestination, true, isVerbose)
-            &&
-            curlAndExtractPackage(
-                workingDirectory, topologyPackageURL, topologyPackageDestination, true, isVerbose);
-
-    return ret;
+    if (!extractPackage(
+        dst, corePackageDestination, true, isVerbose)) {
+      LOG.severe(String.format("Failed to extract the core package %s to directory %s",
+          corePackagePath, dst));
+      return false;
+    }
+    return true;
   }
 
-  public static boolean curlAndExtractPackage(
+  public static boolean extractPackage(
       String workingDirectory,
-      String packageURI,
       String packageDestination,
       boolean isDeletePackage,
       boolean isVerbose) {
-    // curl the package to the working directory and extract it
-    LOG.log(Level.FINE, "Fetching package {0}", packageURI);
-    LOG.fine("Fetched package can overwrite old one.");
-    if (!ProcessUtils.curlPackage(
-        packageURI, packageDestination, isVerbose, false)) {
-      LOG.severe("Failed to fetch package.");
-      return false;
-    }
 
     // untar the heron core release package in the working directory
-    LOG.log(Level.FINE, "Extracting the package {0}", packageURI);
     if (!ProcessUtils.extractPackage(
         packageDestination, workingDirectory, isVerbose, false)) {
       LOG.severe("Failed to extract package.");

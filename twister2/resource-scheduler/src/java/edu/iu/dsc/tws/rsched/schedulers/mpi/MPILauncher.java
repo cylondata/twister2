@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.mpi;
 
-import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -48,7 +47,7 @@ public class MPILauncher implements ILauncher {
     LOG.log(Level.INFO, "Launching job for cluster {0}",
         MPIContext.clusterName(config));
 
-    if (!setupWorkingDirectory()) {
+    if (!setupWorkingDirectory(job)) {
       throw new RuntimeException("Failed to setup the directory");
     }
 
@@ -64,28 +63,22 @@ public class MPILauncher implements ILauncher {
    * and job package to the working directory
    * @return false if setup fails
    */
-  protected boolean setupWorkingDirectory() {
+  protected boolean setupWorkingDirectory(JobAPI.Job job) {
     // get the path of core release URI
-    String coreReleasePackageURI = MPIContext.systemPackageUrl(config);
-
-    // form the target dest core release file name
-    String coreReleaseFileDestination = Paths.get(
-        jobWorkingDirectory, "twister2-system.tar.gz").toString();
+    String corePackage = MPIContext.corePackageName(config);
 
     // Form the job package's URI
     String jobPackageURI = MPIContext.jobPackageUri(config).toString();
 
     // form the target job package file name
-    String jobPackageDestination = Paths.get(
-        jobWorkingDirectory, "job.tar.gz").toString();
+    String jobDefinitionFile = job.getJobName() + ".job";
 
     // copy the files to the working directory
     return ResourceSchedulerUtils.setupWorkingDirectory(
+        job.getJobName(),
         jobWorkingDirectory,
-        coreReleasePackageURI,
-        coreReleaseFileDestination,
+        corePackage,
         jobPackageURI,
-        jobPackageDestination,
         Context.verbose(config));
   }
 }

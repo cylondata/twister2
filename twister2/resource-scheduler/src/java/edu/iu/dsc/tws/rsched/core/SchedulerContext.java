@@ -46,7 +46,7 @@ public class SchedulerContext extends Context {
   public static final String JOB_FILE = "job_file";
 
   public static final String TWISTER2_CORE_PACKAGE_DEFAULT = "twister2-core.tar.gz";
-  public static final String TWISTER2_CORE_PACKAGE = "twister2-core.tar.gz";
+  public static final String TWISTER2_CORE_PACKAGE = "twister2.package.core";
 
   public static String stateManagerClass(Config cfg) {
     return cfg.getStringValue(STATE_MANAGER_CLASS);
@@ -78,6 +78,10 @@ public class SchedulerContext extends Context {
 
   public static URI jobPackageUri(Config cfg) {
     return (URI) cfg.get(JOB_PACKAGE_URI);
+  }
+
+  public static String corePackageName(Config cfg) {
+    return cfg.getStringValue(TWISTER2_CORE_PACKAGE, TWISTER2_CORE_PACKAGE_DEFAULT);
   }
 
   public static String jobBasicContainerClass(Config cfg) {

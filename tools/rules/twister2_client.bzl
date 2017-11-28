@@ -24,7 +24,7 @@ def twister2_client_slurmmpi_files():
 
 def twister2_client_lib_task_scheduler_files():
     return [
-        "//twister2/taskscheduler/src/java:task_scheduler-java",
+        "//twister2/taskscheduler/src/java:taskscheduler-java",
     ]
 
 def twister2_client_lib_resource_scheduler_files():

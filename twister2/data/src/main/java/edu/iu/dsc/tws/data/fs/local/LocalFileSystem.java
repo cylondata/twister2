@@ -34,19 +34,27 @@ public class LocalFileSystem extends FileSystem {
 
   private static final Logger LOG = Logger.getLogger(LocalFileSystem.class.getName());
 
-  /** The URI representing the local file system. */
+  /**
+   * The URI representing the local file system.
+   */
   private static final URI uri = OperatingSystem.isWindows() ? URI.create("file:/") :
       URI.create("file:///");
 
-  /** Path pointing to the current working directory.
-   * Because Paths are not immutable, we cannot cache the proper path here */
+  /**
+   * Path pointing to the current working directory.
+   * Because Paths are not immutable, we cannot cache the proper path here
+   */
   private final String workingDir;
 
-  /** Path pointing to the current working directory.
-   * Because Paths are not immutable, we cannot cache the proper path here */
+  /**
+   * Path pointing to the current working directory.
+   * Because Paths are not immutable, we cannot cache the proper path here
+   */
   private final String homeDir;
 
-  /** The host name of this machine */
+  /**
+   * The host name of this machine
+   */
   private final String hostName;
 
   /**
@@ -60,7 +68,7 @@ public class LocalFileSystem extends FileSystem {
     try {
       tmp = InetAddress.getLocalHost().getHostName();
     } catch (UnknownHostException e) {
-      LOG.log(Level.SEVERE,"Could not resolve local host", e);
+      LOG.log(Level.SEVERE, "Could not resolve local host", e);
     }
     this.hostName = tmp;
   }
@@ -81,17 +89,18 @@ public class LocalFileSystem extends FileSystem {
   }
 
   @Override
-  public void initialize(URI name) throws IOException { }
+  public void initialize(URI name) throws IOException {
+  }
 
   @Override
   public FileStatus getFileStatus(Path f) throws IOException {
     final File path = pathToFile(f);
     if (path.exists()) {
       return new LocalFileStatus(pathToFile(f), this);
-    }
-    else {
+    } else {
       throw new FileNotFoundException("File " + f + " does not exist or the user running "
-          + "Flink ('"+System.getProperty("user.name")+"') has insufficient permissions to access it.");
+          + "Flink ('" + System.getProperty("user.name")
+          + "') has insufficient permissions to access it.");
     }
   }
 
@@ -104,7 +113,7 @@ public class LocalFileSystem extends FileSystem {
       return null;
     }
     if (localf.isFile()) {
-      return new FileStatus[] { new LocalFileStatus(localf, this) };
+      return new FileStatus[]{new LocalFileStatus(localf, this)};
     }
 
     final String[] names = localf.list();
@@ -133,8 +142,9 @@ public class LocalFileSystem extends FileSystem {
   }
 
   @Override
-  public BlockLocation[] getFileBlockLocations(FileStatus file, long start, long len) throws IOException {
-    return new BlockLocation[] {
+  public BlockLocation[] getFileBlockLocations(FileStatus file,
+                                               long start, long len) throws IOException {
+    return new BlockLocation[]{
         new LocalBlockLocation(hostName, file.getLen())
     };
   }

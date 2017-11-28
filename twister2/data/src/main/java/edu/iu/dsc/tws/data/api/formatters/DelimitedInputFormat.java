@@ -17,7 +17,6 @@ import java.util.Arrays;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.fs.FSDataInputStream;
 import edu.iu.dsc.tws.data.fs.FileInputSplit;
 import edu.iu.dsc.tws.data.fs.Path;
 
@@ -42,7 +41,8 @@ public abstract class DelimitedInputFormat<OT> extends FileInputFormat<OT>  {
   private static final int DEFAULT_READ_BUFFER_SIZE = 1024 * 1024;
 
   /**
-   * The maximum size of a sample record before sampling is aborted. To catch cases where a wrong delimiter is given.
+   * The maximum size of a sample record before sampling is aborted. To catch
+   * cases where a wrong delimiter is given.
    */
 
   /**
@@ -179,12 +179,13 @@ public abstract class DelimitedInputFormat<OT> extends FileInputFormat<OT>  {
       return null;
     }
   }
+
   // --------------------------------------------------------------------------------------------
   //  Pre-flight: Configuration, Splits, Sampling
   // --------------------------------------------------------------------------------------------
-
   /**
-   * Configures this input format by reading the path to the file from the configuration and the string that
+   * Configures this input format by reading the path to the file from the
+   * configuration and the string that
    * defines the record delimiter.
    *
    * @param parameters The configuration object to read the parameters from.
@@ -206,8 +207,10 @@ public abstract class DelimitedInputFormat<OT> extends FileInputFormat<OT>  {
   }
 
   /**
-   * Opens the given input split. This method opens the input stream to the specified file, allocates read buffers
-   * and positions the stream at the correct position, making sure that any partial record at the beginning is skipped.
+   * Opens the given input split. This method opens the input stream to the specified file,
+   * allocates read buffers
+   * and positions the stream at the correct position, making sure that any partial
+   * record at the beginning is skipped.
    *
    * @param split The input split to open.
    */
@@ -278,7 +281,8 @@ public abstract class DelimitedInputFormat<OT> extends FileInputFormat<OT>  {
       // if we have exhausted our split, we need to complete the current record, or read one
       // more across the next split.
       // the reason is that the next split will skip over the beginning until it finds the first
-      // delimiter, discarding it as an incomplete chunk of data that belongs to the last record in the
+      // delimiter, discarding it as an incomplete chunk of data that belongs to
+      // the last record in the
       // previous split.
       toRead = maxReadLength;
       this.overLimit = true;
@@ -325,7 +329,8 @@ public abstract class DelimitedInputFormat<OT> extends FileInputFormat<OT>  {
               }
 
               // copy readBuffer bytes to wrapBuffer
-              System.arraycopy(this.readBuffer, 0, this.wrapBuffer, countInWrapBuffer, countInReadBuffer);
+              System.arraycopy(this.readBuffer, 0, this.wrapBuffer,
+                  countInWrapBuffer, countInReadBuffer);
               countInWrapBuffer += countInReadBuffer;
             }
 
@@ -344,11 +349,13 @@ public abstract class DelimitedInputFormat<OT> extends FileInputFormat<OT>  {
       // Search for next occurence of delimiter in read buffer.
       while (this.readPos < this.limit && delimPos < this.delimiter.length) {
         if ((this.readBuffer[this.readPos]) == this.delimiter[delimPos]) {
-          // Found the expected delimiter character. Continue looking for the next character of delimiter.
+          // Found the expected delimiter character. Continue looking for the next
+          // character of delimiter.
           delimPos++;
         } else {
           // Delimiter does not match.
-          // We have to reset the read position to the character after the first matching character
+          // We have to reset the read position to the character after
+          // the first matching character
           //   and search for the whole delimiter again.
           readPos -= delimPos;
           delimPos = 0;
@@ -391,18 +398,21 @@ public abstract class DelimitedInputFormat<OT> extends FileInputFormat<OT>  {
         }
 
         // Compute number of bytes to move to wrapBuffer
-        // Chars of partially read delimiter must remain in the readBuffer. We might need to go back.
+        // Chars of partially read delimiter must remain in the readBuffer.
+        // We might need to go back.
         int bytesToMove = count - delimPos;
         // ensure wrapBuffer is large enough
         if (this.wrapBuffer.length - countInWrapBuffer < bytesToMove) {
           // reallocate
-          byte[] tmp = new byte[Math.max(this.wrapBuffer.length * 2, countInWrapBuffer + bytesToMove)];
+          byte[] tmp = new byte[Math.max(this.wrapBuffer.length * 2,
+              countInWrapBuffer + bytesToMove)];
           System.arraycopy(this.wrapBuffer, 0, tmp, 0, countInWrapBuffer);
           this.wrapBuffer = tmp;
         }
 
         // copy readBuffer to wrapBuffer (except delimiter chars)
-        System.arraycopy(this.readBuffer, startPos, this.wrapBuffer, countInWrapBuffer, bytesToMove);
+        System.arraycopy(this.readBuffer, startPos, this.wrapBuffer,
+            countInWrapBuffer, bytesToMove);
         countInWrapBuffer += bytesToMove;
         // move delimiter chars to the beginning of the readBuffer
         System.arraycopy(this.readBuffer, this.readPos - delimPos, this.readBuffer, 0, delimPos);

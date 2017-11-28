@@ -148,7 +148,7 @@ public class ResourceAllocator {
     // copy the dist pakache
     LOG.log(Level.INFO, String.format("Copy configuration: %s to %s",
         confDir, tempDirPathString));
-    if (!FileUtils.copyDirectory(confDir, tempDirPathString)) {
+    if (!FileUtils.copyDirectoryToDirectory(confDir, tempDirPathString)) {
       throw new RuntimeException("Failed to copy the configuration: "
           + confDir + " to: " + tempDirPathString);
     }

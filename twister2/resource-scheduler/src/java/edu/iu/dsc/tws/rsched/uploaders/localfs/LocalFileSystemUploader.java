@@ -38,12 +38,14 @@ public class LocalFileSystemUploader implements IUploader {
   @Override
   public URI uploadPackage(String sourceLocation) throws UploaderException {
     // we shouldn't come here naturally as a jar file is needed for us to get here
-    boolean fileExists = new File(sourceLocation).isDirectory();
+    File file = new File(sourceLocation);
+    boolean fileExists = file.isDirectory();
     if (!fileExists) {
       throw new UploaderException(
           String.format("Job package does not exist at '%s'", sourceLocation));
     }
 
+    String directoryName = file.getName();
     // get the directory containing the file
     Path filePath = Paths.get(destinationDirectory);
     File parentDirectory = filePath.toFile();
@@ -71,11 +73,11 @@ public class LocalFileSystemUploader implements IUploader {
     LOG.log(Level.INFO, String.format("Copying job directory at '%s' to target "
         + "working directory '%s'", sourceLocation, filePath.toString()));
     try {
-      if (!FileUtils.copyDirectory(sourceLocation, destinationDirectory)) {
+      if (!FileUtils.copyDirectoryToDirectory(sourceLocation, destinationDirectory)) {
         throw new RuntimeException(String.format("Failed to copy directory %s to %s",
             filePath.toString(), destinationDirectory));
       }
-      return new URI(destinationDirectory);
+      return new URI(Paths.get(destinationDirectory, directoryName).toString());
     } catch (URISyntaxException e) {
       throw new RuntimeException("Invalid file path for topology package destination: "
           + destinationDirectory, e);

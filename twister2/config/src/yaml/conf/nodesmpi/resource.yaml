@@ -8,6 +8,8 @@ twister2.resource.scheduler.mpi.job.id: ""
 twister2.resource.scheduler.mpi.shell.script: "mpi.sh"
 # the mpirun command location
 twister2.resource.scheduler.mpi.home: ""
+# the name of the core package
+twister2.package.core: "twister2-core.tar.gz"
 # the package uri
 twister2.system.package.uri: "${TWISTER2_DIST}/twister2-core.tar.gz"
 # the resource manager class

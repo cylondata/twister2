@@ -25,8 +25,8 @@ import java.io.OutputStream;
  * and for fault tolerance and recovery. It is therefore crucial that the persistence semantics
  * of these streams are well defined.
  * 
- * <p>Please refer to the class-level docs of {@link FileSystem} for the definition of data persistence
- * via Flink's FileSystem abstraction and the {@code FSDataOutputStream}.
+ * <p>Please refer to the class-level docs of {@link FileSystem} for the definition of
+ * data persistence via Flink's FileSystem abstraction and the {@code FSDataOutputStream}.
  * 
  * <h2>Thread Safety</h2>
  * 

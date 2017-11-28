@@ -20,7 +20,7 @@ def twister2_core_lib_resource_scheduler_files():
 
 def twister2_core_lib_task_scheduler_files():
     return [
-        "//twister2/taskscheduler/src/java:task_scheduler-java",
+        "//twister2/taskscheduler/src/java:taskscheduler-java",
     ]
 
 def twister2_core_lib_communication_files():
