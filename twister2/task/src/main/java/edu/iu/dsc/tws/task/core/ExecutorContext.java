@@ -44,6 +44,11 @@ public class ExecutorContext extends Context {
    */
   public static final long EXECUTOR_POOL_KEEP_ALIVE_TIME = 1000 * 60;
 
+  /**
+   * sync lock used in the TaskExecutorFixedThread
+   */
+  public static final Integer FIXED_EXECUTOR_LOCK = new Integer(1);
+
   public enum QueueType {
     INPUT,
     OUTPUT

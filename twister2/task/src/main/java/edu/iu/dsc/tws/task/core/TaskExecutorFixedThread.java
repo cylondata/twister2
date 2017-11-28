@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.task.core;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -34,7 +35,7 @@ public class TaskExecutorFixedThread {
   /**
    * Thread pool used to execute tasks
    */
-  private static ThreadPoolExecutor executorPool;
+  public static ThreadPoolExecutor executorPool;
   /**
    * Hashmap that contains all the input and output queues of the executor and its associated
    * tasks
@@ -69,6 +70,12 @@ public class TaskExecutorFixedThread {
    * Hashmap that contains the tasks that need to be executed
    */
   private Map<Integer, Task> taskMap = new HashMap<Integer, Task>();
+
+  /**
+   * Hashset that keeps track of all the tasks that are currently running and queued
+   * in the thread pool
+   */
+  private static HashSet<Integer> runningTasks = new HashSet<Integer>();
 
   public TaskExecutorFixedThread() {
     initThreadPool(ExecutorContext.EXECUTOR_CORE_POOL_SIZE);
@@ -146,18 +153,50 @@ public class TaskExecutorFixedThread {
    * Submit message to the given queue
    */
   public <T> boolean submitMessage(int qid, T message) {
-    queues.get(qid).add(new TaskMessage<T>(message));
-
+    //TODO; double check if the sync is correct
+    synchronized (ExecutorContext.FIXED_EXECUTOR_LOCK) {
+      queues.get(qid).add(new TaskMessage<T>(message));
+    }
     //Add the related task to the execution queue
     for (Integer extaskid : queuexTaskInput.get(qid)) {
-      executorPool.submit(new RunnableTask(taskMap.get(extaskid), queues.get(qid)));
+      if (!runningTasks.contains(extaskid)) {
+        addRunningTask(extaskid);
+        executorPool.submit(new RunnableTask(taskMap.get(extaskid), queues.get(qid)));
+      }
     }
 
     //Add the related task to the execution queue
     for (Integer extaskid : queuexTaskInput.get(qid)) {
       executorPool.submit(new RunnableTask(taskMap.get(extaskid), queues.get(qid)));
     }
+
     return true;
+  }
+
+  public static HashSet<Integer> getRunningTasks() {
+    return runningTasks;
+  }
+
+  public static void setRunningTasks(HashSet<Integer> runningTasks) {
+    TaskExecutorFixedThread.runningTasks = runningTasks;
+  }
+
+  /**
+   * Adds a task id to the runing tasks.Throws an RuntimeException if the task is already present
+   *
+   * @param tid the task id to be added
+   */
+  public static void addRunningTask(int tid) {
+    if (runningTasks.contains(tid)) {
+      throw new RuntimeException(String.format("Trying to add already running task %d to the"
+          + " running tasks set", tid));
+    }
+    runningTasks.add(tid);
+  }
+
+  //TODO: might be able to remove sycn from this method need to confirm
+  public static void removeRunningTask(int tid) {
+    runningTasks.remove(tid);
   }
 
   /**

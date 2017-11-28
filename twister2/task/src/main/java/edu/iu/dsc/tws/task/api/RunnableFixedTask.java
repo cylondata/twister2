@@ -9,35 +9,50 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 package edu.iu.dsc.tws.task.api;
 
+import edu.iu.dsc.tws.task.core.ExecutorContext;
+import edu.iu.dsc.tws.task.core.TaskExecutorFixedThread;
+
 /**
- * Wrapper class that is used to execute Tasks ( this is for the chached thread executor which is
- * not in use at the moment)
+ * Wrapper class that is used to execute Tasks. This runnable task is to be used with the
+ * TaskExecutorFixedThread
  */
-public class RunnableTask implements Runnable {
+public class RunnableFixedTask implements Runnable {
   private Task executableTask;
   private Queue<Message> queueRef;
   private boolean isMessageBased = false;
   private int messageProcessLimit = 1;
   private int messageProcessCount = 0;
 
-  public RunnableTask(Task task) {
+  public RunnableFixedTask(Task task) {
     this.executableTask = task;
   }
 
-  public RunnableTask(Task task, int messageLimit) {
+  public RunnableFixedTask(Task task, int messageLimit) {
     this.executableTask = task;
   }
 
   //TODO: would it better to send a referance to the queue and then use that to get the message?
-  public RunnableTask(Task task, Queue<Message> msg) {
+  public RunnableFixedTask(Task task, Queue<Message> msg) {
     this.executableTask = task;
     this.queueRef = msg;
     isMessageBased = true;
   }
 
-  public RunnableTask(Task task, Queue<Message> msg, int messageLimit) {
+  public RunnableFixedTask(Task task, Queue<Message> msg, int messageLimit) {
     this.executableTask = task;
     this.queueRef = msg;
     this.messageProcessLimit = messageLimit;
@@ -86,6 +101,9 @@ public class RunnableTask implements Runnable {
 
   @Override
   public void run() {
+    //debuglog
+    System.out.println(String.format("Launcing task : %d", executableTask.getTaskId()));
+
     if (executableTask == null) {
       throw new RuntimeException("Task needs to be set to execute");
     }
@@ -95,6 +113,16 @@ public class RunnableTask implements Runnable {
         if (messageProcessCount < messageProcessLimit) {
           executableTask.execute(queueRef.poll());
           messageProcessCount++;
+        } else {
+          //Need to make sure the remaining tasks are processed
+          TaskExecutorFixedThread.executorPool.submit(new RunnableTask(executableTask, queueRef));
+        }
+      }
+      synchronized (ExecutorContext.FIXED_EXECUTOR_LOCK) {
+        if (!queueRef.isEmpty()) {
+          TaskExecutorFixedThread.executorPool.submit(new RunnableTask(executableTask, queueRef));
+        } else {
+          TaskExecutorFixedThread.removeRunningTask(executableTask.getTaskId());
         }
       }
     } else {
