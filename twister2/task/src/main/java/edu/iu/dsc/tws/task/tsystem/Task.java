@@ -15,7 +15,6 @@ public class Task implements Runnable, TaskInterface {
 
   private final String taskId;
   private final Thread executionThread;
-
   /*private final JobId jobId;
   private final ExecutorID executorId;
   private final Integer taskId;
