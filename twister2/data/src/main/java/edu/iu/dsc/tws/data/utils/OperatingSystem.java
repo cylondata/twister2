@@ -25,7 +25,7 @@ public enum OperatingSystem {
   /**
    * The enum constant for the operating system.
    */
-  private static final OperatingSystem os = readOSFromSystemProperties();
+  private static final OperatingSystem OS = readOSFromSystemProperties();
 
   /**
    * Gets the operating system that the JVM runs on from the java system properties.
@@ -35,7 +35,7 @@ public enum OperatingSystem {
    * possible to determine.
    */
   public static OperatingSystem getCurrentOperatingSystem() {
-    return os;
+    return OS;
   }
 
   /**
@@ -100,7 +100,7 @@ public enum OperatingSystem {
   /**
    * The key to extract the operating system name from the system properties.
    */
-  private static final String OS_KEY = "os.name";
+  private static final String OS_KEY = "OS.name";
 
   /**
    * The expected prefix for Linux operating systems.

@@ -63,9 +63,7 @@ public class Path implements Serializable {
   }
 
   /**
-   *
-   * @param parent
-   * @param child
+   * constructor
    */
   public Path(String parent, Path child) {
     this(new Path(parent), child);
@@ -74,8 +72,9 @@ public class Path implements Serializable {
   public Path(Path parent, Path child) {
     // Add a slash to parent's path so resolution is compatible with URI's
     URI parentUri = parent.uri;
+    Path curChild = child;
     final String parentPath = parentUri.getPath();
-    if (!(parentPath.equals("/") || parentPath.equals(""))) {
+    if (!("/".equals(parentPath) || "".equals(parentPath))) {
       try {
         parentUri = new URI(parentUri.getScheme(), parentUri.getAuthority(), parentUri.getPath()
             + "/", null,
@@ -85,19 +84,18 @@ public class Path implements Serializable {
       }
     }
 
-    if (child.uri.getPath().startsWith(Path.SEPARATOR)) {
-      child = new Path(child.uri.getScheme(), child.uri.getAuthority(),
-          child.uri.getPath().substring(1));
+    if (curChild.uri.getPath().startsWith(Path.SEPARATOR)) {
+      curChild = new Path(curChild.uri.getScheme(), curChild.uri.getAuthority(),
+          curChild.uri.getPath().substring(1));
     }
 
-    final URI resolved = parentUri.resolve(child.uri);
+    final URI resolved = parentUri.resolve(curChild.uri);
     initialize(resolved.getScheme(), resolved.getAuthority(), normalizePath(resolved.getPath()));
   }
 
 
   public Path(String scheme, String authority, String path) {
-    path = checkAndTrimPathArg(path);
-    initialize(scheme, authority, path);
+    initialize(scheme, authority, checkAndTrimPathArg(path));
   }
 
   /**
@@ -114,14 +112,14 @@ public class Path implements Serializable {
    * Create path from given path String
    */
   public Path(String pathString) {
-    pathString = checkAndTrimPathArg(pathString);
+    String curpathString = checkAndTrimPathArg(pathString);
 
     // We can't use 'new URI(String)' directly, since it assumes things are
     // escaped, which we don't require of Paths.
 
     // add a slash in front of paths with Windows drive letters
-    if (hasWindowsDrive(pathString, false)) {
-      pathString = "/" + pathString;
+    if (hasWindowsDrive(curpathString, false)) {
+      curpathString = "/" + curpathString;
     }
 
     // parse uri components
@@ -131,24 +129,25 @@ public class Path implements Serializable {
     int start = 0;
 
     // parse uri scheme, if any
-    final int colon = pathString.indexOf(':');
-    final int slash = pathString.indexOf('/');
+    final int colon = curpathString.indexOf(':');
+    final int slash = curpathString.indexOf('/');
     if ((colon != -1) && ((slash == -1) || (colon < slash))) { // has a
       // scheme
-      scheme = pathString.substring(0, colon);
+      scheme = curpathString.substring(0, colon);
       start = colon + 1;
     }
 
     // parse uri authority, if any
-    if (pathString.startsWith("//", start) && (pathString.length() - start > 2)) { // has authority
-      final int nextSlash = pathString.indexOf('/', start + 2);
-      final int authEnd = nextSlash > 0 ? nextSlash : pathString.length();
-      authority = pathString.substring(start + 2, authEnd);
+    if (curpathString.startsWith("//", start) && (curpathString.length() - start > 2)) {
+      // has authority
+      final int nextSlash = curpathString.indexOf('/', start + 2);
+      final int authEnd = nextSlash > 0 ? nextSlash : curpathString.length();
+      authority = curpathString.substring(start + 2, authEnd);
       start = authEnd;
     }
 
     // uri path is the rest of the string -- query & fragment not supported
-    final String path = pathString.substring(start, pathString.length());
+    final String path = curpathString.substring(start, curpathString.length());
 
     initialize(scheme, authority, path);
   }
@@ -188,23 +187,22 @@ public class Path implements Serializable {
   }
 
   private String normalizePath(String path) {
-
     // remove leading and tailing whitespaces
-    path = path.trim();
+    String curPath = path.trim();
 
     // remove consecutive slashes & backslashes
-    path = path.replace("\\", "/");
-    path = path.replaceAll("/+", "/");
+    curPath = curPath.replace("\\", "/");
+    curPath = curPath.replaceAll("/+", "/");
 
     // remove tailing separator
-    if (!path.equals(SEPARATOR) &&            // UNIX root path
-        !path.matches("/\\p{Alpha}+:/") &&  // Windows root path
-        path.endsWith(SEPARATOR)) {
+    if (!curPath.equals(SEPARATOR) &&            // UNIX root path
+        !curPath.matches("/\\p{Alpha}+:/") &&  // Windows root path
+        curPath.endsWith(SEPARATOR)) {
       // remove tailing slash
-      path = path.substring(0, path.length() - SEPARATOR.length());
+      curPath = curPath.substring(0, curPath.length() - SEPARATOR.length());
     }
 
-    return path;
+    return curPath;
   }
 
   private String checkAndTrimPathArg(String path) {
@@ -212,11 +210,11 @@ public class Path implements Serializable {
     if (path == null) {
       throw new IllegalArgumentException("Can not create a Path from a null string");
     }
-    path = path.trim();
-    if (path.length() == 0) {
+    String curpath = path.trim();
+    if (curpath.length() == 0) {
       throw new IllegalArgumentException("Can not create a Path from an empty string");
     }
-    return path;
+    return curpath;
   }
 
   /**

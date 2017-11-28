@@ -85,9 +85,9 @@ public class LocalFileStatus implements FileStatus {
 
   @Override
   public String toString() {
-    return "LocalFileStatus{" +
-        "file=" + file +
-        ", path=" + path +
-        '}';
+    return "LocalFileStatus{"
+        + "file=" + file
+        + ", path=" + path
+        + '}';
   }
 }

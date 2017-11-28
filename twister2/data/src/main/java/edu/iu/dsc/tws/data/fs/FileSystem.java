@@ -208,8 +208,8 @@ public abstract class FileSystem {
       }
 
       if (curUri.getScheme() == null) {
-        throw new IOException("The URI '" + curUri + "' is invalid.\n" +
-            "The fs.default-scheme = " + defaultScheme + ", the requested URI = " + asked
+        throw new IOException("The URI '" + curUri + "' is invalid.\n"
+            + "The fs.default-scheme = " + defaultScheme + ", the requested URI = " + asked
             + ", and the final URI = " + curUri + ".");
       }
       if (curUri.getScheme().equals("file") && curUri.getAuthority() != null
