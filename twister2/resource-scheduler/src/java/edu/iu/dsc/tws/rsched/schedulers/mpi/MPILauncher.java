@@ -70,9 +70,6 @@ public class MPILauncher implements ILauncher {
     // Form the job package's URI
     String jobPackageURI = MPIContext.jobPackageUri(config).toString();
 
-    // form the target job package file name
-    String jobDefinitionFile = job.getJobName() + ".job";
-
     // copy the files to the working directory
     return ResourceSchedulerUtils.setupWorkingDirectory(
         job.getJobName(),
