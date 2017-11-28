@@ -12,8 +12,7 @@
 package edu.iu.dsc.tws.task.tsystem;
 
 public interface TaskInterface {
+  void execute();
 
-    public void execute();
-    public void cancel();
-
+  void cancel();
 }

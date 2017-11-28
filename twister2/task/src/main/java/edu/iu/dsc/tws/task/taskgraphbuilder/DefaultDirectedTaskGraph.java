@@ -12,22 +12,26 @@
 package edu.iu.dsc.tws.task.taskgraphbuilder;
 
 import java.io.Serializable;
-import java.util.Set;
 
 public class DefaultDirectedTaskGraph<TV, TE> extends AbstractTaskGraph<TV, TE>
-                                            implements TaskGraph<TV, TE>, Cloneable, Serializable {
+                                  implements TaskGraph<TV, TE>, Cloneable, Serializable {
 
-    public DefaultDirectedTaskGraph(TaskEdgeFactory<TV, TE> taskEdgeFactory) {
-        super (taskEdgeFactory);
-    }
+  private static final long serialVersionUID = 3618135658586388792L;
 
-    public DefaultDirectedTaskGraph(Class<? extends TE> taskEdgeClass){
-       this (new TaskEdgeFactory<TV, TE> () {
-           @Override
-           public TE createEdge(TV sourceTaskVertex, TV targetTaskVertex) {
-               return null;
-           }
-       }) ;
-    }
+  public DefaultDirectedTaskGraph(TaskEdgeFactory<TV, TE> taskEdgeFactory) {
+    super(taskEdgeFactory);
+  }
+
+  public DefaultDirectedTaskGraph(Class<? extends TE> taskEdgeClass) {
+    this(new TaskEdgeFactory<TV, TE>() {
+      @Override
+      public TE createEdge(TV sourceTaskVertex, TV targetTaskVertex) {
+        return null;
+      }
+    });
+  }
 
 }
+
+
+

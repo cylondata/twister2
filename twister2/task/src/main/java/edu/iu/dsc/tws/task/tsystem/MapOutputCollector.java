@@ -12,7 +12,5 @@
 package edu.iu.dsc.tws.task.tsystem;
 
 public interface MapOutputCollector<D> {
-
-    public void collect(D stringIntegerDataTuple);
-
+  void collect(D stringIntegerDataTuple);
 }

@@ -12,41 +12,40 @@
 package edu.iu.dsc.tws.task.tsystem;
 
 public class TaskConfiguration {
+  private String taskConfigurationFile;
+  private double taskRequiredRam;
+  private double taskRequiredMemory;
+  private double taskRequiredCPU;
 
-    private String taskConfigurationFile;
-    private double taskRequiredRam;
-    private double taskRequiredMemory;
-    private double taskRequiredCPU;
+  public double getTaskRequiredRam() {
+    return taskRequiredRam;
+  }
 
-    public double getTaskRequiredRam() {
-        return taskRequiredRam;
-    }
+  public void setTaskRequiredRam(double taskrequiredRam) {
+    this.taskRequiredRam = taskrequiredRam;
+  }
 
-    public void setTaskRequiredRam(double taskRequiredRam) {
-        this.taskRequiredRam = taskRequiredRam;
-    }
+  public double getTaskRequiredMemory() {
+    return taskRequiredMemory;
+  }
 
-    public double getTaskRequiredMemory() {
-        return taskRequiredMemory;
-    }
+  public void setTaskRequiredMemory(double taskrequiredMemory) {
+    this.taskRequiredMemory = taskrequiredMemory;
+  }
 
-    public void setTaskRequiredMemory(double taskRequiredMemory) {
-        this.taskRequiredMemory = taskRequiredMemory;
-    }
+  public double getTaskRequiredCPU() {
+    return taskRequiredCPU;
+  }
 
-    public double getTaskRequiredCPU() {
-        return taskRequiredCPU;
-    }
+  public void setTaskRequiredCPU(double taskrequiredCPU) {
+    this.taskRequiredCPU = taskrequiredCPU;
+  }
 
-    public void setTaskRequiredCPU(double taskRequiredCPU) {
-        this.taskRequiredCPU = taskRequiredCPU;
-    }
+  public void setConfiguration(String taskconfigurationFile) {
+    this.taskConfigurationFile = taskconfigurationFile;
+  }
 
-    public void setConfiguration(String taskConfigurationFile) {
-        this.taskConfigurationFile = taskConfigurationFile;
-    }
-
-    public String getTaskConfigurationFile(){
-        return taskConfigurationFile;
-    }
+  public String getTaskConfigurationFile() {
+    return taskConfigurationFile;
+  }
 }

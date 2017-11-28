@@ -13,14 +13,14 @@ package edu.iu.dsc.tws.task.taskgraphbuilder;
 
 public class CManager {
 
+  private String message;
 
-        private String message;
+  protected CManager(String message) {
+    this.message = message;
+  }
 
-        public CManager(String message){
-            this.message = message;
-        }
+  public void communicate(String msg) {
+    System.out.println("I am ready for communication:" + msg);
+  }
 
-        public void communicate(String msg){
-            System.out.println("I am ready for communication:"+msg);
-        }
 }

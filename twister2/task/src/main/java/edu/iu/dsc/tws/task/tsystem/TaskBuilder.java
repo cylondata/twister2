@@ -12,34 +12,5 @@
 package edu.iu.dsc.tws.task.tsystem;
 
 public class TaskBuilder {
-
-    public TaskBuilder(){
-    }
-
-    /** This method will interface the task system or task graph **/
-    /*public Task createTask(){
-       return new TaskSubmitter(task);
-    }*/
-
-    /** If the task parallelism is not specified for mapper class, it will assign the default parallelism **/
-
-    public TMap setMapper(int Id, TMap tMap){
-        return setMapper (Id, tMap,0);
-    }
-
-    public TMap setMapper(int Id, TMap tMap, int taskParallelism){
-        return setMapper (Id, new Mapper (tMap), taskParallelism);
-
-    }
-
-    /** If the task parallelism is not specified for reducer class, it will assign the default parallelism **/
-
-    public TReduce setReducer(int Id, TReduce tReduce){
-        return setReducer (Id, tReduce, 0);
-    }
-
-    public TReduce setReducer(int Id, TReduce tReduce, int taskParallelism){
-        return setReducer(Id, new Reducer(tReduce), taskParallelism);
-    }
-
 }
+
