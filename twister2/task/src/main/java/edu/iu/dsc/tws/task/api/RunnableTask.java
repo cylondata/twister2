@@ -16,9 +16,31 @@ package edu.iu.dsc.tws.task.api;
  */
 public class RunnableTask implements Runnable {
   private Task executableTask;
+  private Queue<Message> queueRef;
+  private boolean isMessageBased = false;
+  private int messageProcessLimit = 1;
+  private int messageProcessCount = 0;
 
   public RunnableTask(Task task) {
     this.executableTask = task;
+  }
+
+  public RunnableTask(Task task, int messageLimit) {
+    this.executableTask = task;
+  }
+
+  //TODO: would it better to send a referance to the queue and then use that to get the message?
+  public RunnableTask(Task task, Queue<Message> msg) {
+    this.executableTask = task;
+    this.queueRef = msg;
+    isMessageBased = true;
+  }
+
+  public RunnableTask(Task task, Queue<Message> msg, int messageLimit) {
+    this.executableTask = task;
+    this.queueRef = msg;
+    this.messageProcessLimit = messageLimit;
+    isMessageBased = true;
   }
 
   public Task getExecutableTask() {
@@ -29,11 +51,53 @@ public class RunnableTask implements Runnable {
     this.executableTask = executableTask;
   }
 
+  public int getMessageProcessCount() {
+    return messageProcessCount;
+  }
+
+  public void setMessageProcessCount(int messageProcessCount) {
+    this.messageProcessCount = messageProcessCount;
+  }
+
+  public boolean isMessageBased() {
+    return isMessageBased;
+  }
+
+  public void setMessageBased(boolean messageBased) {
+    isMessageBased = messageBased;
+  }
+
+  public int getMessageProcessLimit() {
+    return messageProcessLimit;
+  }
+
+  public void setMessageProcessLimit(int messageProcessLimit) {
+    this.messageProcessLimit = messageProcessLimit;
+  }
+
+  public Queue<Message> getQueueRef() {
+    return queueRef;
+  }
+
+  public void setQueueRef(Queue<Message> queueRef) {
+    this.queueRef = queueRef;
+  }
+
   @Override
   public void run() {
     if (executableTask == null) {
       throw new RuntimeException("Task needs to be set to execute");
     }
-    executableTask.execute();
+    if (isMessageBased) {
+      //TODO: check if this part needs to be synced
+      while (!queueRef.isEmpty()) {
+        if (messageProcessCount < messageProcessLimit) {
+          executableTask.execute(queueRef.poll());
+          messageProcessCount++;
+        }
+      }
+    } else {
+      executableTask.execute();
+    }
   }
 }

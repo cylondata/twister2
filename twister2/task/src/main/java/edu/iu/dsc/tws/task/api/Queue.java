@@ -19,26 +19,26 @@ public interface Queue<T> {
 
   /**
    * Adds the given element to the queue
-   * @param e
-   * @return
    */
   boolean add(T e);
 
   /**
    * Removes the head of the queue
-   * @return
    */
   T remove();
 
   /**
    * Retrieves the head of the queue but does not remove it
-   * @return
    */
   T peek();
 
   /**
    * Retrieves and removes the head of the queue
-   * @return
    */
   T poll();
+
+  /**
+   * check if the queue is empty
+   */
+  boolean isEmpty();
 }

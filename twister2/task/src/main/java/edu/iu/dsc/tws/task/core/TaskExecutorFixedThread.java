@@ -146,16 +146,16 @@ public class TaskExecutorFixedThread {
    * Submit message to the given queue
    */
   public <T> boolean submitMessage(int qid, T message) {
-    queues.get(qid).add(new TaskMessage<>(message));
+    queues.get(qid).add(new TaskMessage<T>(message));
 
     //Add the related task to the execution queue
     for (Integer extaskid : queuexTaskInput.get(qid)) {
-      executorPool.submit(new RunnableTask(taskMap.get(extaskid)));
+      executorPool.submit(new RunnableTask(taskMap.get(extaskid), queues.get(qid)));
     }
 
     //Add the related task to the execution queue
     for (Integer extaskid : queuexTaskInput.get(qid)) {
-      executorPool.submit(new RunnableTask(taskMap.get(extaskid)));
+      executorPool.submit(new RunnableTask(taskMap.get(extaskid), queues.get(qid)));
     }
     return true;
   }
