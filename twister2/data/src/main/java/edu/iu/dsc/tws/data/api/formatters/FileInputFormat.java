@@ -35,6 +35,8 @@ import edu.iu.dsc.tws.data.fs.io.LocatableInputSplitAssigner;
 public abstract class FileInputFormat<OT> implements InputFormat<OT, FileInputSplit> {
   private static final Logger LOG = Logger.getLogger(FileInputFormat.class.getName());
 
+  private static final long serialVersionUID = 1L;
+
   /**
    * The desired number of splits, as set by the configure() method.
    */
@@ -160,10 +162,10 @@ public abstract class FileInputFormat<OT> implements InputFormat<OT, FileInputSp
     }
 
     // take the desired number of splits into account
-    minNumSplits = Math.max(minNumSplits, this.numSplits);
+    int curminNumSplits = Math.max(minNumSplits, this.numSplits);
 
     final Path path = this.filePath;
-    final List<FileInputSplit> inputSplits = new ArrayList<FileInputSplit>(minNumSplits);
+    final List<FileInputSplit> inputSplits = new ArrayList<FileInputSplit>(curminNumSplits);
 
     // get all the files that are involved in the splits
     List<FileStatus> files = new ArrayList<FileStatus>();
@@ -185,7 +187,8 @@ public abstract class FileInputFormat<OT> implements InputFormat<OT, FileInputSp
     //TODO L3: Handle if unsplittable
     //TODO L1: check if we can add the i j method when making splits so that the last split is not
     // larger than the other splits
-    final long maxSplitSize = totalLength / minNumSplits + (totalLength % minNumSplits == 0 ? 0 : 1);
+    final long maxSplitSize = totalLength / curminNumSplits
+        + (totalLength % curminNumSplits == 0 ? 0 : 1);
 
     //Generate the splits
     int splitNum = 0;
@@ -193,17 +196,17 @@ public abstract class FileInputFormat<OT> implements InputFormat<OT, FileInputSp
       final long len = file.getLen();
       final long blockSize = file.getBlockSize();
 
-      final long minSplitSize;
+      final long localminSplitSize;
       if (this.minSplitSize <= blockSize) {
-        minSplitSize = this.minSplitSize;
+        localminSplitSize = this.minSplitSize;
       } else {
         LOG.log(Level.WARNING, "Minimal split size of " + this.minSplitSize
             + " is larger than the block size of " + blockSize
             + ". Decreasing minimal split size to block size.");
-        minSplitSize = blockSize;
+        localminSplitSize = blockSize;
       }
 
-      final long splitSize = Math.max(minSplitSize, Math.min(maxSplitSize, blockSize));
+      final long splitSize = Math.max(localminSplitSize, Math.min(maxSplitSize, blockSize));
       final long halfSplit = splitSize >>> 1;
 
       final long maxBytesForLastSplit = (long) (splitSize * MAX_SPLIT_SIZE_DISCREPANCY);
@@ -286,8 +289,8 @@ public abstract class FileInputFormat<OT> implements InputFormat<OT, FileInputSp
       // This is not an initial requirement
       //this.stream = decorateInputStream(this.stream, fileSplit);
     } catch (Throwable t) {
-      throw new IOException("Error opening the Input Split " + fileSplit.getPath() +
-          " [" + splitStart + "," + splitLength + "]: " + t.getMessage(), t);
+      throw new IOException("Error opening the Input Split " + fileSplit.getPath()
+          + " [" + splitStart + "," + splitLength + "]: " + t.getMessage(), t);
     }
 
     // get FSDataInputStream
@@ -453,8 +456,8 @@ public abstract class FileInputFormat<OT> implements InputFormat<OT, FileInputSp
           throw iex;
         }
       }
-      while (this.error == null && this.fdis == null &&
-          (remaining = this.timeout + start - System.currentTimeMillis()) > 0);
+      while (this.error == null && this.fdis == null
+          && (remaining = this.timeout + start - System.currentTimeMillis()) > 0);
 
       if (this.error != null) {
         throw this.error;
@@ -474,8 +477,8 @@ public abstract class FileInputFormat<OT> implements InputFormat<OT, FileInputSp
           bld.append("\tat ").append(e.toString()).append('\n');
         }
         throw new IOException("Input opening request timed out. Opener was "
-            + (stillAlive ? "" : "NOT ") +
-            " alive. Stack of split open thread:\n" + bld.toString());
+            + (stillAlive ? "" : "NOT ")
+            + " alive. Stack of split open thread:\n" + bld.toString());
       }
     }
 

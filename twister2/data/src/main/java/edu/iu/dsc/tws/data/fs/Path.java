@@ -24,6 +24,7 @@ public class Path implements Serializable {
 
   private static final Logger LOG = Logger.getLogger(Path.class.getName());
 
+  private static final long serialVersionUID = 1L;
   /**
    * The directory seperator, a slash
    */
@@ -44,18 +45,18 @@ public class Path implements Serializable {
   /**
    * Empty constructor
    */
-  public Path() {}
+  public Path() {
+  }
 
   /**
    * Create Path with given URI
-   * @param uri
    */
-  public Path(URI uri) {this.uri = uri;}
+  public Path(URI uri) {
+    this.uri = uri;
+  }
 
   /**
    * create Path with parent and child
-   * @param parent
-   * @param child
    */
   public Path(String parent, String child) {
     this(new Path(parent), new Path(child));
@@ -76,7 +77,8 @@ public class Path implements Serializable {
     final String parentPath = parentUri.getPath();
     if (!(parentPath.equals("/") || parentPath.equals(""))) {
       try {
-        parentUri = new URI(parentUri.getScheme(), parentUri.getAuthority(), parentUri.getPath() + "/", null,
+        parentUri = new URI(parentUri.getScheme(), parentUri.getAuthority(), parentUri.getPath()
+            + "/", null,
             null);
       } catch (URISyntaxException e) {
         throw new IllegalArgumentException(e);
@@ -84,7 +86,8 @@ public class Path implements Serializable {
     }
 
     if (child.uri.getPath().startsWith(Path.SEPARATOR)) {
-      child = new Path(child.uri.getScheme(), child.uri.getAuthority(), child.uri.getPath().substring(1));
+      child = new Path(child.uri.getScheme(), child.uri.getAuthority(),
+          child.uri.getPath().substring(1));
     }
 
     final URI resolved = parentUri.resolve(child.uri);
@@ -96,13 +99,12 @@ public class Path implements Serializable {
     path = checkAndTrimPathArg(path);
     initialize(scheme, authority, path);
   }
+
   /**
    * Resolve a child path against a parent path.
    *
-   * @param parent
-   *        the parent path
-   * @param child
-   *        the child path
+   * @param parent the parent path
+   * @param child the child path
    */
   public Path(Path parent, String child) {
     this(parent, new Path(child));
@@ -110,7 +112,6 @@ public class Path implements Serializable {
 
   /**
    * Create path from given path String
-   * @param pathString
    */
   public Path(String pathString) {
     pathString = checkAndTrimPathArg(pathString);
@@ -172,8 +173,7 @@ public class Path implements Serializable {
    * Returns the FileSystem that owns this Path.
    *
    * @return the FileSystem that owns this Path
-   * @throws IOException
-   *         thrown if the file system could not be retrieved
+   * @throws IOException thrown if the file system could not be retrieved
    */
   public FileSystem getFileSystem() throws IOException {
     return FileSystem.get(this.toUri());
@@ -197,10 +197,9 @@ public class Path implements Serializable {
     path = path.replaceAll("/+", "/");
 
     // remove tailing separator
-    if(!path.equals(SEPARATOR) &&         		// UNIX root path
+    if (!path.equals(SEPARATOR) &&            // UNIX root path
         !path.matches("/\\p{Alpha}+:/") &&  // Windows root path
-        path.endsWith(SEPARATOR))
-    {
+        path.endsWith(SEPARATOR)) {
       // remove tailing slash
       path = path.substring(0, path.length() - SEPARATOR.length());
     }
@@ -223,11 +222,8 @@ public class Path implements Serializable {
   /**
    * Checks if the provided path string contains a windows drive letter.
    *
-   * @param path
-   *        the path to check
-   * @param slashed
-   *         true to indicate the first character of the string is a slash, false otherwise
-   *
+   * @param path the path to check
+   * @param slashed true to indicate the first character of the string is a slash, false otherwise
    * @return <code>true</code> if the path string contains a windows drive letter, false otherwise
    */
   private boolean hasWindowsDrive(String path, boolean slashed) {
@@ -235,12 +231,14 @@ public class Path implements Serializable {
     return path.length() >= start + 2
         && (!slashed || path.charAt(0) == '/')
         && path.charAt(start + 1) == ':'
-        && ((path.charAt(start) >= 'A' && path.charAt(start) <= 'Z') || (path.charAt(start) >= 'a' && path
+        && ((path.charAt(start) >= 'A' && path.charAt(start) <= 'Z')
+        || (path.charAt(start) >= 'a' && path
         .charAt(start) <= 'z'));
   }
 
   /**
    * get full path.
+   *
    * @return full path
    */
   public String getPath() {
@@ -304,8 +302,7 @@ public class Path implements Serializable {
   /**
    * Returns a qualified path object.
    *
-   * @param fs
-   *        the FileSystem that should be used to obtain the current working directory
+   * @param fs the FileSystem that should be used to obtain the current working directory
    * @return the qualified path object
    */
   public Path makeQualified(FileSystem fs) {
@@ -341,7 +338,8 @@ public class Path implements Serializable {
   /**
    * Checks if the directory of this path is absolute.
    *
-   * @return <code>true</code> if the directory of this path is absolute, <code>false</code> otherwise
+   * @return <code>true</code> if the directory of this path is absolute,
+   * <code>false</code> otherwise
    */
   public boolean isAbsolute() {
     final int start = hasWindowsDrive(uri.getPath(), true) ? 3 : 0;

@@ -103,7 +103,8 @@ public abstract class FileSystem {
   /**
    * Called after a new FileSystem instance is constructed.
    *
-   * @param name a {@link URI} whose authority section names the host, port, etc. for this file system
+   * @param name a {@link URI} whose authority section names the host, port, etc.
+   * for this file system
    */
   public abstract void initialize(URI name) throws IOException;
 
@@ -129,8 +130,8 @@ public abstract class FileSystem {
         try {
           defaultScheme = new URI(stringifiedUri);
         } catch (URISyntaxException e) {
-          throw new IOException("The URI used to set the default filesystem " +
-              "scheme ('" + stringifiedUri + "') is not valid.");
+          throw new IOException("The URI used to set the default filesystem "
+              + "scheme ('" + stringifiedUri + "') is not valid.");
         }
       }
     }
@@ -176,57 +177,58 @@ public abstract class FileSystem {
   private static FileSystem getFileSystem(URI uri) throws IOException {
     FileSystem fs = null;
     URI asked = uri;
+    URI curUri = uri;
 
-    if (uri == null) {
-      throw new IOException("The URI " + uri.toString() + " is not a vaild URI");
+    if (curUri == null) {
+      throw new IOException("The URI " + curUri.toString() + " is not a vaild URI");
     }
     //TODO: check if the sycn is actually needed or can be scoped down
     synchronized (SYNCHRONIZATION_OBJECT) {
 
-      if (uri.getScheme() == null) {
+      if (curUri.getScheme() == null) {
         try {
           if (defaultScheme == null) {
             defaultScheme = new URI(ConfigConstants.DEFAULT_FILESYSTEM_SCHEME);
           }
 
-          uri = new URI(defaultScheme.getScheme(), null, defaultScheme.getHost(),
-              defaultScheme.getPort(), uri.getPath(), null, null);
+          curUri = new URI(defaultScheme.getScheme(), null, defaultScheme.getHost(),
+              defaultScheme.getPort(), curUri.getPath(), null, null);
 
         } catch (URISyntaxException e) {
           try {
             if (defaultScheme.getScheme().equals("file")) {
-              uri = new URI("file", null,
-                  new Path(new File(uri.getPath()).getAbsolutePath()).toUri().getPath(), null);
+              curUri = new URI("file", null,
+                  new Path(new File(curUri.getPath()).getAbsolutePath()).toUri().getPath(), null);
             }
           } catch (URISyntaxException ex) {
             // we tried to repair it, but could not. report the scheme error
-            throw new IOException("The URI '" + uri.toString() + "' is not valid.");
+            throw new IOException("The URI '" + curUri.toString() + "' is not valid.");
           }
         }
       }
 
-      if (uri.getScheme() == null) {
-        throw new IOException("The URI '" + uri + "' is invalid.\n" +
-            "The fs.default-scheme = " + defaultScheme + ", the requested URI = " + asked +
-            ", and the final URI = " + uri + ".");
+      if (curUri.getScheme() == null) {
+        throw new IOException("The URI '" + curUri + "' is invalid.\n" +
+            "The fs.default-scheme = " + defaultScheme + ", the requested URI = " + asked
+            + ", and the final URI = " + curUri + ".");
       }
-      if (uri.getScheme().equals("file") && uri.getAuthority() != null
-          && !uri.getAuthority().isEmpty()) {
-        String supposedUri = "file:///" + uri.getAuthority() + uri.getPath();
+      if (curUri.getScheme().equals("file") && curUri.getAuthority() != null
+          && !curUri.getAuthority().isEmpty()) {
+        String supposedUri = "file:///" + curUri.getAuthority() + curUri.getPath();
 
         throw new IOException("Found local file path with authority '"
-            + uri.getAuthority() + "' in path '"
-            + uri.toString()
+            + curUri.getAuthority() + "' in path '"
+            + curUri.toString()
             + "'. Hint: Did you forget a slash? (correct path would be '" + supposedUri + "')");
       }
 
       //TODO : need to add cache that can save FileSystem Objects and return from cache if available
-      if (!isSupportedScheme(uri.getScheme())) {
+      if (!isSupportedScheme(curUri.getScheme())) {
         //TODO: handle when the system is not supported
       } else {
-        String fsClass = SUPPORTEDFS.get(uri.getScheme());
+        String fsClass = SUPPORTEDFS.get(curUri.getScheme());
         fs = instantiateFileSystem(fsClass);
-        fs.initialize(uri);
+        fs.initialize(curUri);
       }
 
     }

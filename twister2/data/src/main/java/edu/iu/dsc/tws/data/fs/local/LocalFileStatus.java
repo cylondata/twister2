@@ -36,10 +36,8 @@ public class LocalFileStatus implements FileStatus {
   /**
    * Creates a <code>LocalFileStatus</code> object from a given {@link File} object.
    *
-   * @param f
-   *        the {@link File} object this <code>LocalFileStatus</code> refers to
-   * @param fs
-   *        the file system the corresponding file has been read from
+   * @param f the {@link File} object this <code>LocalFileStatus</code> refers to
+   * @param fs the file system the corresponding file has been read from
    */
   public LocalFileStatus(final File f, final FileSystem fs) {
     this.file = f;

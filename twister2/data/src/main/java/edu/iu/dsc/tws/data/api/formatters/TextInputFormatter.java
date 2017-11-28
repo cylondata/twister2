@@ -66,16 +66,17 @@ public class TextInputFormatter extends DelimitedInputFormat<String> {
   }
 
   @Override
-  public String readRecord(String reusable, byte[] bytes, int offset, int numBytes)
+  public String readRecord(String reusable, byte[] bytes, int readOffset, int numBytes)
       throws IOException {
     //Check if \n is used as delimiter and the end of this line is a \r,
     // then remove \r from the line
+    int curNumBytes = numBytes;
     if (this.getDelimiter() != null && this.getDelimiter().length == 1
-        && this.getDelimiter()[0] == NEW_LINE && offset + numBytes >= 1
-        && bytes[offset + numBytes - 1] == CARRIAGE_RETURN) {
-      numBytes -= 1;
+        && this.getDelimiter()[0] == NEW_LINE && readOffset + curNumBytes >= 1
+        && bytes[readOffset + curNumBytes - 1] == CARRIAGE_RETURN) {
+      curNumBytes -= 1;
     }
 
-    return new String(bytes, offset, numBytes, this.charsetName);
+    return new String(bytes, readOffset, numBytes, this.charsetName);
   }
 }

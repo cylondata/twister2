@@ -27,7 +27,7 @@ public class NetUtils {
       throw new IllegalArgumentException("fqdn is null");
     }
     int dotPos = fqdn.indexOf('.');
-    if(dotPos == -1) {
+    if (dotPos == -1) {
       return fqdn;
     } else {
       return fqdn.substring(0, dotPos);
