@@ -115,12 +115,14 @@ public class RunnableFixedTask implements Runnable {
           messageProcessCount++;
         } else {
           //Need to make sure the remaining tasks are processed
-          TaskExecutorFixedThread.executorPool.submit(new RunnableTask(executableTask, queueRef));
+          TaskExecutorFixedThread.executorPool.submit(
+              new RunnableFixedTask(executableTask, queueRef));
         }
       }
       synchronized (ExecutorContext.FIXED_EXECUTOR_LOCK) {
         if (!queueRef.isEmpty()) {
-          TaskExecutorFixedThread.executorPool.submit(new RunnableTask(executableTask, queueRef));
+          TaskExecutorFixedThread.executorPool.submit(
+              new RunnableFixedTask(executableTask, queueRef));
         } else {
           TaskExecutorFixedThread.removeRunningTask(executableTask.getTaskId());
         }

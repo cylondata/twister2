@@ -21,7 +21,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 import edu.iu.dsc.tws.task.api.Message;
 import edu.iu.dsc.tws.task.api.Queue;
-import edu.iu.dsc.tws.task.api.RunnableTask;
+import edu.iu.dsc.tws.task.api.RunnableFixedTask;
 import edu.iu.dsc.tws.task.api.Task;
 import edu.iu.dsc.tws.task.api.TaskMessage;
 
@@ -161,13 +161,13 @@ public class TaskExecutorFixedThread {
     for (Integer extaskid : queuexTaskInput.get(qid)) {
       if (!runningTasks.contains(extaskid)) {
         addRunningTask(extaskid);
-        executorPool.submit(new RunnableTask(taskMap.get(extaskid), queues.get(qid)));
+        executorPool.submit(new RunnableFixedTask(taskMap.get(extaskid), queues.get(qid)));
       }
     }
 
     //Add the related task to the execution queue
     for (Integer extaskid : queuexTaskInput.get(qid)) {
-      executorPool.submit(new RunnableTask(taskMap.get(extaskid), queues.get(qid)));
+      executorPool.submit(new RunnableFixedTask(taskMap.get(extaskid), queues.get(qid)));
     }
 
     return true;
