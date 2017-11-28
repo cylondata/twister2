@@ -33,4 +33,10 @@ public interface ITask {
    */
   void execute();
 
+  /**
+   * Code that is executed for a single message
+   * @param content
+   */
+  void execute(Message content);
+
 }

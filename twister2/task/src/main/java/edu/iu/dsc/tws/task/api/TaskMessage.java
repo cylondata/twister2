@@ -9,25 +9,28 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.rsched.spi.scheduler;
-
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
+package edu.iu.dsc.tws.task.api;
 
 /**
- * This class is used to control the job once it is deployed.
- *
+ * Wrapper interface for all the messages types.
  */
-public interface IController {
+public class TaskMessage<T> implements Message {
+
   /**
-   * This will initialize controller using config file. Will be called during start.
+   * Stores the data
    */
-  void initialize(Config config);
+  private T content;
 
-  boolean start(RequestedResources requestedResources, JobAPI.Job job);
+  public TaskMessage(T data) {
+    this.content = data;
+  }
 
-  void close();
+  public T getContent() {
+    return content;
+  }
 
-  boolean kill();
+  public void setContent(T content) {
+    this.content = content;
+  }
+
 }

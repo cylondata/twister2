@@ -16,4 +16,29 @@ package edu.iu.dsc.tws.task.api;
  * The type of the queue can be specified
  */
 public interface Queue<T> {
+
+  /**
+   * Adds the given element to the queue
+   */
+  boolean add(T e);
+
+  /**
+   * Removes the head of the queue
+   */
+  T remove();
+
+  /**
+   * Retrieves the head of the queue but does not remove it
+   */
+  T peek();
+
+  /**
+   * Retrieves and removes the head of the queue
+   */
+  T poll();
+
+  /**
+   * check if the queue is empty
+   */
+  boolean isEmpty();
 }
