@@ -23,6 +23,56 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tsched.utils;
 
-/***This package is created just for task scheduling reference and this package consists of classes and
- interfaces which required for task scheduling process and it will be replaced with an appropriate
- job and job attribute values ***/
+public class RequiredCpu {
+
+  private String taskName;
+  private Double requiredCpu;
+
+  public RequiredCpu(String taskName, Double requiredCpu) {
+    this.taskName = taskName;
+    this.requiredCpu = requiredCpu;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof RequiredCpu)) {
+      return false;
+    }
+
+    RequiredCpu that = (RequiredCpu) o;
+
+    if (!taskName.equals(that.taskName)) {
+      return false;
+    }
+    return requiredCpu.equals(that.requiredCpu);
+  }
+
+  @Override
+  public int hashCode() {
+    int result = taskName.hashCode();
+    result = 31 * result + requiredCpu.hashCode();
+    return result;
+  }
+
+  public Double getRequiredCpu() {
+    return requiredCpu;
+  }
+
+  public void setRequiredCpu(Double requiredCpu) {
+    this.requiredCpu = requiredCpu;
+  }
+
+  public String getTaskName() {
+    return taskName;
+  }
+
+  public void setTaskName(String taskName) {
+    this.taskName = taskName;
+  }
+
+
+}
+

@@ -9,6 +9,18 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 package edu.iu.dsc.tws.tsched.utils;
 
 import java.util.HashMap;
@@ -19,7 +31,7 @@ import java.util.logging.Logger;
 
 //This class will be replaced with the original JobAttributes file from the job package.
 
-public class JobAttributes {
+public final class JobAttributes {
 
   private static final Logger LOG = Logger.getLogger(JobAttributes.class.getName());
 
@@ -27,10 +39,11 @@ public class JobAttributes {
   public static final Double JOB_CONTAINER_MAX_RAM_VALUE = 20.00;
   public static final Double JOB_CONTAINER_MAX_DISK_VALUE = 200.00;
   public static final Double JOB_CONTAINER_MAX_CPU_VALUE = 5.0;
-
   public static int numberOfContainers;
   public static int numberOfInstances;
-  public static int totalNumberOfInstances;
+
+  private JobAttributes() {
+  }
 
   public static int getNumberOfContainers(Job job) {
     setNumberOfContainers();
@@ -38,7 +51,7 @@ public class JobAttributes {
   }
 
   public static void setNumberOfContainers() {
-    numberOfContainers = Integer.parseInt(JobConfig.Number_OF_Containers.trim());
+    numberOfContainers = Integer.parseInt(JobConfig.numberOfContainers.trim());
   }
 
   public static int getNumberOfInstances(Job job) {
@@ -46,11 +59,7 @@ public class JobAttributes {
   }
 
   public static void setNumberOfInstances() {
-    numberOfInstances = Integer.parseInt(JobConfig.Number_OF_Instances.trim());
-  }
-
-  public void setNumberOfInstances(int numberOfInstances) {
-    JobAttributes.numberOfInstances = numberOfInstances;
+    numberOfInstances = Integer.parseInt(JobConfig.numberOfInstances.trim());
   }
 
   public static Map<String, Double> getTaskRamMap(Job job) {
@@ -127,11 +136,11 @@ public class JobAttributes {
 
   public static int getTotalNumberOfInstances(Job job) {
     HashMap<String, Integer> parallelTaskMap = getParallelTaskMap(job);
-    int numberOfInstances = 0;
+    int totalNumberOfInstances = 0;
     for (int instances : parallelTaskMap.values()) {
-      numberOfInstances += instances;
+      totalNumberOfInstances += instances;
     }
-    return numberOfInstances;
+    return totalNumberOfInstances;
   }
 
   public static HashMap<String, Integer> getParallelTaskMap(Job job) {
