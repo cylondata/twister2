@@ -40,10 +40,11 @@ import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
+import edu.iu.dsc.tws.task.api.LinkedQueue;
 import edu.iu.dsc.tws.task.api.Message;
 import edu.iu.dsc.tws.task.api.SinkTask;
 import edu.iu.dsc.tws.task.api.SourceTask;
-import edu.iu.dsc.tws.task.core.TaskExecutorCachedThreadPool;
+import edu.iu.dsc.tws.task.core.TaskExecutorFixedThread;
 
 public class PingPongCommunicationTaskBased implements IContainer {
   private static final Logger LOG = Logger.getLogger(PingPongCommunicationTaskBased.
@@ -51,7 +52,7 @@ public class PingPongCommunicationTaskBased implements IContainer {
 
   private DataFlowOperation direct;
 
-  private TaskExecutorCachedThreadPool taskExecutor;
+  private TaskExecutorFixedThread taskExecutor;
 
   private enum Status {
     INIT,
@@ -67,7 +68,7 @@ public class PingPongCommunicationTaskBased implements IContainer {
   public void init(Config cfg, int containerId, ResourcePlan plan) {
     LOG.log(Level.INFO, "Starting the example with container id: " + plan.getThisId());
     //Creates task an task executor instance to be used in this container
-    taskExecutor = new TaskExecutorCachedThreadPool();
+    taskExecutor = new TaskExecutorFixedThread();
     this.status = Status.INIT;
 
     // lets create the task plan
@@ -92,13 +93,18 @@ public class PingPongCommunicationTaskBased implements IContainer {
     //TODO: if the task creates the dataflowop does the task progress it or the executor
 
     //TODO : FOR NOW the dataflowop is created at container and sent to task
+    LinkedQueue<Message> pongQueue = new LinkedQueue<Message>();
+    taskExecutor.registerQueue(0, pongQueue);
+
     direct = channel.direct(newCfg, MessageType.OBJECT, 0, sources,
         dests, new PingPongReceive());
-    taskExecutor.init(channel, direct);
+    taskExecutor.initCommunication(channel, direct);
+
     if (containerId == 0) {
       // the map thread where data is produced
       LOG.log(Level.INFO, "Starting map thread");
-      taskExecutor.submit(new MapWorker(0, direct));
+      taskExecutor.registerTask(0, new MapWorker(0, direct));
+      taskExecutor.submitTask(0);
       taskExecutor.progres();
     } else if (containerId == 1) {
       taskExecutor.progres();
@@ -123,6 +129,7 @@ public class PingPongCommunicationTaskBased implements IContainer {
       }
     }
   }
+
   /**
    * RevieceWorker
    */
@@ -138,6 +145,7 @@ public class PingPongCommunicationTaskBased implements IContainer {
 
     }
   }
+
   /**
    * We are running the map in a separate thread
    */
@@ -172,7 +180,7 @@ public class PingPongCommunicationTaskBased implements IContainer {
 
     @Override
     public void execute(Message content) {
-
+      execute();
     }
   }
 
