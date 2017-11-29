@@ -129,6 +129,7 @@ public class RunnableFixedTask implements Runnable {
       }
     } else {
       executableTask.execute();
+      TaskExecutorFixedThread.removeRunningTask(executableTask.getTaskId());
     }
   }
 }

@@ -19,6 +19,8 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
+import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.task.api.Message;
 import edu.iu.dsc.tws.task.api.Queue;
 import edu.iu.dsc.tws.task.api.RunnableFixedTask;
@@ -31,6 +33,10 @@ import edu.iu.dsc.tws.task.api.TaskMessage;
  * executor.
  */
 public class TaskExecutorFixedThread {
+
+  private TWSCommunication channel;
+  private DataFlowOperation direct;
+  private boolean progres = false;
 
   /**
    * Thread pool used to execute tasks
@@ -131,7 +137,30 @@ public class TaskExecutorFixedThread {
     return true;
   }
 
+  /**
+   * Register sink tasks which only have input queues associated with the task
+   */
+  public boolean registerSinkTask(int taskid, Task task, List<Integer> inputQueues) {
+    return registerTask(taskid, task, inputQueues, inputQueues);
+  }
 
+  /**
+   * Register source tasks which only have output queues associated with the task
+   */
+  public boolean registerSourceTask(int taskid, Task task, List<Integer> outputQueues) {
+    return registerTask(taskid, task, null, outputQueues);
+  }
+
+  /**
+   * register tasks that does not contain any queues associated
+   */
+  public boolean registerTask(int taskid, Task task) {
+    return registerTask(taskid, task, null, null);
+  }
+
+  /**
+   * register a given task with executor
+   */
   public boolean registerTask(int taskId, Task task, List<Integer> inputQueues,
                               List<Integer> outputQueues) {
     //Register task queues
@@ -173,6 +202,17 @@ public class TaskExecutorFixedThread {
     return true;
   }
 
+  public boolean submitTask(int tid) {
+    if (!taskMap.containsKey(tid)) {
+      throw new RuntimeException(String.format("Unable to locate task with task id : %d, "
+          + "Please make sure the task is registered", tid));
+    } else {
+      addRunningTask(tid);
+      executorPool.submit(new RunnableFixedTask(taskMap.get(tid)));
+    }
+    return true;
+  }
+
   public static HashSet<Integer> getRunningTasks() {
     return runningTasks;
   }
@@ -204,5 +244,26 @@ public class TaskExecutorFixedThread {
    */
   private void initThreadPool(int corePoolSize) {
     executorPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(corePoolSize);
+  }
+
+  /**
+   * Init task executor
+   */
+  public void initCommunication(TWSCommunication twscom, DataFlowOperation dfo) {
+    this.channel = twscom;
+    this.direct = dfo;
+    this.progres = true;
+  }
+
+  public void progres() {
+    while (progres) { //This can be done in a separate thread if that is more suitable
+      channel.progress();
+      direct.progress();
+      Thread.yield();
+    }
+  }
+
+  public void setProgress(boolean value) {
+    this.progres = value;
   }
 }
