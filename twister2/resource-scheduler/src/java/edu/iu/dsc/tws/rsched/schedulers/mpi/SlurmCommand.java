@@ -49,7 +49,8 @@ public class SlurmCommand extends MPICommand {
   }
 
   @Override
-  protected List<String> mpiCommand(RequestedResources resourcePlan, JobAPI.Job job) {
+  protected List<String> mpiCommand(String workingDirectory,
+                                    RequestedResources resourcePlan, JobAPI.Job job) {
     // lets construct the mpi command to launch
     List<String> slurmCommand = mpiCommand(getScriptPath(), resourcePlan.getNoOfContainers());
     Map<String, Object> map = mpiCommandArguments(config, resourcePlan, job);

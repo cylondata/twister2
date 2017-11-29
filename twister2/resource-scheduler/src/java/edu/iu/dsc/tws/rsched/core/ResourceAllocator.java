@@ -50,6 +50,8 @@ import edu.iu.dsc.tws.rsched.utils.JobUtils;
 public class ResourceAllocator {
   public static final Logger LOG = Logger.getLogger(ResourceAllocator.class.getName());
 
+  private JobAPI.Job updatedJob;
+
   private Config loadConfig(Map<String, Object> cfg) {
     // first lets read the essential properties from java system properties
     String twister2Home = System.getProperty(SchedulerContext.TWISTER_2_HOME);
@@ -127,7 +129,7 @@ public class ResourceAllocator {
     format.setJobFile(Paths.get(jobFile).getFileName().toString());
 
     // now lets set the updates
-    JobAPI.Job updatedJob = JobAPI.Job.newBuilder(job).setJobFormat(format).build();
+    updatedJob = JobAPI.Job.newBuilder(job).setJobFormat(format).build();
     boolean write = JobUtils.writeJobFile(updatedJob, jobFilePath);
     if (!write) {
       throw new RuntimeException("Failed to write the job file");
@@ -239,12 +241,12 @@ public class ResourceAllocator {
     // make it more formal as such
     launcher.initialize(runtimeAll);
 
-    RequestedResources requestedResources = buildRequestedResources(job);
+    RequestedResources requestedResources = buildRequestedResources(updatedJob);
     if (requestedResources == null) {
       throw new RuntimeException("Failed to build the requested resources");
     }
 
-    launcher.launch(requestedResources, job);
+    launcher.launch(requestedResources, updatedJob);
   }
 
   private RequestedResources buildRequestedResources(JobAPI.Job job) {

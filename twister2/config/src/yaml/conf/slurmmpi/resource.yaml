@@ -1,5 +1,5 @@
 # working directory
-twister2.resource.scheduler.mpi.working.directory: "${HOME}/.twister2/jobs/"
+twister2.resource.scheduler.mpi.working.directory: "${HOME}/.twister2/jobs"
 # mode of the mpi scheduler
 twsiter2.resource.scheduler.mpi.mode: "slurm"
 # the job id file

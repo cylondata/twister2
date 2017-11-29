@@ -14,3 +14,9 @@ filegroup(
     name = "conf-slurmmpi-yaml",
     srcs = glob(["conf/slurmmpi/*"]),
 )
+
+
+filegroup(
+    name = "conf-nodesmpi-yaml",
+    srcs = glob(["conf/nodesmpi/*"]),
+)
