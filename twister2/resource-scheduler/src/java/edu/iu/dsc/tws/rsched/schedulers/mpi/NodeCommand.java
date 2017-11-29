@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.mpi;
 
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -18,6 +19,7 @@ import java.util.Map;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
 
 public class NodeCommand extends MPICommand {
@@ -31,7 +33,13 @@ public class NodeCommand extends MPICommand {
   }
 
   @Override
-  protected List<String> mpiCommand(RequestedResources resourcePlan, JobAPI.Job job) {
+  protected List<String> mpiCommand(String workingDirectory,
+                                    RequestedResources resourcePlan, JobAPI.Job job) {
+    String twister2Home = Paths.get(workingDirectory, job.getJobName()).toString();
+    String configDirectoryName = Paths.get(workingDirectory,
+        job.getJobName(), SchedulerContext.clusterName(config)).toString();
+    String nodesFileName = MPIContext.nodeFiles(config);
+
     // lets construct the mpi command to launch
     List<String> mpiCommand = mpiCommand(getScriptPath());
     Map<String, Object> map = mpiCommandArguments(config, resourcePlan, job);
@@ -40,8 +48,9 @@ public class NodeCommand extends MPICommand {
     mpiCommand.add(map.get("java_props").toString());
     mpiCommand.add(map.get("classpath").toString());
     mpiCommand.add(map.get("container_class").toString());
-    mpiCommand.add(map.get("twister2_home").toString());
-    mpiCommand.add(map.get("config_dir").toString());
+    mpiCommand.add(twister2Home);
+    mpiCommand.add(twister2Home);
+    mpiCommand.add(Paths.get(configDirectoryName, nodesFileName).toString());
 
     return mpiCommand;
   }

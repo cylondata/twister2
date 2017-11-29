@@ -134,6 +134,10 @@ public final class MPIProcess {
     String configDir = cmd.getOptionValue("config_dir");
     String clusterName = cmd.getOptionValue("cluster_name");
 
+    LOG.log(Level.INFO, String.format("Initializing process with "
+        + "twister_home: %s container_class: %s config_dir: %s cluster_name: %s",
+        twister2Home, container, configDir, clusterName));
+
     Config config = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterName);
     return Config.newBuilder().putAll(config).
         put(MPIContext.TWISTER2_HOME.getKey(), twister2Home).

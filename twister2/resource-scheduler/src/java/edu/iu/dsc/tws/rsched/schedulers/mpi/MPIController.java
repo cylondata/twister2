@@ -107,7 +107,7 @@ public class MPIController implements IController {
   public boolean createJob(String jobWorkingDirectory,
                            RequestedResources resources, JobAPI.Job job) {
     // get the command to run the job on Slurm cluster
-    List<String> slurmCmd = command.mpiCommand(resources, job);
+    List<String> slurmCmd = command.mpiCommand(jobWorkingDirectory, resources, job);
 
     // change the empty strings of command args to "", because batch
     // doesn't recognize space as an arguments
@@ -120,10 +120,8 @@ public class MPIController implements IController {
         transformedArgs.add(arg);
       }
     }
-
     // add the args to the command
-    slurmCmd.addAll(transformedArgs);
-    String[] cmdArray = slurmCmd.toArray(new String[0]);
+    String[] cmdArray = transformedArgs.toArray(new String[0]);
     LOG.log(Level.INFO, "Executing job [" + jobWorkingDirectory + "]:",
         Arrays.toString(cmdArray));
     StringBuilder stderr = new StringBuilder();
