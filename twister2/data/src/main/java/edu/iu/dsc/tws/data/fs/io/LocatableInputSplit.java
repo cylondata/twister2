@@ -91,8 +91,8 @@ public class LocatableInputSplit implements InputSplit, java.io.Serializable {
       return true;
     } else if (obj != null && obj instanceof LocatableInputSplit) {
       LocatableInputSplit other = (LocatableInputSplit) obj;
-      return other.splitNumber == this.splitNumber &&
-          Arrays.deepEquals(other.hostnames, this.hostnames);
+      return other.splitNumber == this.splitNumber
+          && Arrays.deepEquals(other.hostnames, this.hostnames);
     } else {
       return false;
     }

@@ -37,8 +37,8 @@ public class LocalFileSystem extends FileSystem {
   /**
    * The URI representing the local file system.
    */
-  private static final URI uri = OperatingSystem.isWindows() ? URI.create("file:/") :
-      URI.create("file:///");
+  private static URI uri = OperatingSystem.isWindows() ? URI.create("file:/")
+      : URI.create("file:///");
 
   /**
    * Path pointing to the current working directory.
@@ -135,10 +135,11 @@ public class LocalFileSystem extends FileSystem {
   }
 
   private File pathToFile(Path path) {
+    Path curPath = path;
     if (!path.isAbsolute()) {
-      path = new Path(getWorkingDirectory(), path);
+      curPath = new Path(getWorkingDirectory(), path);
     }
-    return new File(path.toUri().getPath());
+    return new File(curPath.toUri().getPath());
   }
 
   @Override

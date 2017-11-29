@@ -29,7 +29,8 @@ public class LocatableInputSplitAssigner implements InputSplitAssigner {
   private static final Logger LOG = Logger.getLogger(LocatableInputSplitAssigner.class.getName());
 
   // unassigned input splits
-  private final Set<LocatableInputSplitWithCount> unassigned = new HashSet<LocatableInputSplitWithCount>();
+  private final Set<LocatableInputSplitWithCount> unassigned =
+      new HashSet<LocatableInputSplitWithCount>();
 
   // input splits indexed by host for local assignment
   private final ConcurrentHashMap<String, LocatableInputSplitChooser> localPerHost =
@@ -90,10 +91,10 @@ public class LocatableInputSplitAssigner implements InputSplitAssigner {
       }
     }
 
-    host = host.toLowerCase(Locale.US);
+    String curhost = host.toLowerCase(Locale.US);
 
     // for any non-null host, we take the list of non-null splits
-    LocatableInputSplitChooser localSplits = this.localPerHost.get(host);
+    LocatableInputSplitChooser localSplits = this.localPerHost.get(curhost);
 
     // if we have no list for this host yet, create one
     if (localSplits == null) {
@@ -101,7 +102,7 @@ public class LocatableInputSplitAssigner implements InputSplitAssigner {
 
       // lock the list, to be sure that others have to wait for that host's local list
       synchronized (localSplits) {
-        LocatableInputSplitChooser prior = this.localPerHost.putIfAbsent(host, localSplits);
+        LocatableInputSplitChooser prior = this.localPerHost.putIfAbsent(curhost, localSplits);
 
         // if someone else beat us in the case to create this list,
         // then we do not populate this one, but
@@ -118,7 +119,7 @@ public class LocatableInputSplitAssigner implements InputSplitAssigner {
           }
 
           for (LocatableInputSplitWithCount isw : remaining) {
-            if (isLocal(host, isw.getSplit().getHostnames())) {
+            if (isLocal(curhost, isw.getSplit().getHostnames())) {
               // Split is local on host.
               // Increment local count
               isw.incrementLocalCount();
@@ -185,7 +186,7 @@ public class LocatableInputSplitAssigner implements InputSplitAssigner {
     }
   }
 
-  private static final boolean isLocal(String flinkHost, String[] hosts) {
+  private static boolean isLocal(String flinkHost, String[] hosts) {
     if (flinkHost == null || hosts == null) {
       return false;
     }
@@ -215,20 +216,20 @@ public class LocatableInputSplitAssigner implements InputSplitAssigner {
     private final LocatableInputSplit split;
     private int localCount;
 
-    public LocatableInputSplitWithCount(LocatableInputSplit split) {
+    LocatableInputSplitWithCount(LocatableInputSplit split) {
       this.split = split;
       this.localCount = 0;
     }
 
-    public void incrementLocalCount() {
+    void incrementLocalCount() {
       this.localCount++;
     }
 
-    public int getLocalCount() {
+    int getLocalCount() {
       return this.localCount;
     }
 
-    public LocatableInputSplit getSplit() {
+    LocatableInputSplit getSplit() {
       return this.split;
     }
 
@@ -256,11 +257,11 @@ public class LocatableInputSplitAssigner implements InputSplitAssigner {
     // number of elements we need to inspect for the minimum local count.
     private int elementCycleCount = 0;
 
-    public LocatableInputSplitChooser() {
+    LocatableInputSplitChooser() {
       this.splits = new LinkedList<LocatableInputSplitWithCount>();
     }
 
-    public LocatableInputSplitChooser(Collection<LocatableInputSplitWithCount> splits) {
+    LocatableInputSplitChooser(Collection<LocatableInputSplitWithCount> splits) {
       this.splits = new LinkedList<LocatableInputSplitWithCount>();
       for (LocatableInputSplitWithCount isw : splits) {
         this.addInputSplit(isw);

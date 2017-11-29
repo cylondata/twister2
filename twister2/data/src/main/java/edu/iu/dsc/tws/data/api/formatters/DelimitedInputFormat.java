@@ -23,7 +23,7 @@ import edu.iu.dsc.tws.data.fs.Path;
 /**
  * Base class for inputs that are delimited
  */
-public abstract class DelimitedInputFormat<OT> extends FileInputFormat<OT>  {
+public abstract class DelimitedInputFormat<OT> extends FileInputFormat<OT> {
 
   private static final long serialVersionUID = 1L;
 
@@ -50,7 +50,7 @@ public abstract class DelimitedInputFormat<OT> extends FileInputFormat<OT>  {
    */
   protected static final String RECORD_DELIMITER = "delimited-format.delimiter";
 
-  private byte[] delimiter = new byte[] {'\n'};
+  private byte[] delimiter = new byte[]{'\n'};
 
   private String delimiterString = null;
 
@@ -71,9 +71,9 @@ public abstract class DelimitedInputFormat<OT> extends FileInputFormat<OT>  {
 
   private transient int limit;
 
-  private transient byte[] currBuffer;		// buffer in which current record byte sequence is found
-  private transient int currOffset;			// offset in above buffer
-  private transient int currLen;				// length of current byte sequence
+  private transient byte[] currBuffer;    // buffer in which current record byte sequence is found
+  private transient int currOffset;      // offset in above buffer
+  private transient int currLen;        // length of current byte sequence
 
   private transient boolean overLimit;
 
@@ -147,6 +147,7 @@ public abstract class DelimitedInputFormat<OT> extends FileInputFormat<OT>  {
 
   /**
    * Get the character set used for the row delimiter.
+   *
    * @return the charset
    */
   public Charset getCharset() {
@@ -162,13 +163,13 @@ public abstract class DelimitedInputFormat<OT> extends FileInputFormat<OT>  {
    *
    * @param reuse An optionally reusable object.
    * @param bytes Binary data of serialized records.
-   * @param offset The offset where to start to read the record data.
+   * @param readOffset The offset where to start to read the record data.
    * @param numBytes The number of bytes that can be read starting at the offset position.
-   *
    * @return Returns the read record if it was successfully deserialized.
    * @throws IOException if the record could not be read.
    */
-  public abstract OT readRecord(OT reuse, byte[] bytes, int offset, int numBytes) throws IOException;
+  public abstract OT readRecord(OT reuse, byte[] bytes, int readOffset, int numBytes)
+      throws IOException;
 
   @Override
   public OT nextRecord(OT record) throws IOException {
@@ -183,6 +184,7 @@ public abstract class DelimitedInputFormat<OT> extends FileInputFormat<OT>  {
   // --------------------------------------------------------------------------------------------
   //  Pre-flight: Configuration, Splits, Sampling
   // --------------------------------------------------------------------------------------------
+
   /**
    * Configures this input format by reading the path to the file from the
    * configuration and the string that
@@ -197,7 +199,7 @@ public abstract class DelimitedInputFormat<OT> extends FileInputFormat<OT>  {
     // the if() clauses are to prevent the configure() method from
     // overwriting the values set by the setters
 
-    if (Arrays.equals(delimiter, new byte[] {'\n'})) {
+    if (Arrays.equals(delimiter, new byte[]{'\n'})) {
       String delimString = parameters.getStringValue(RECORD_DELIMITER, null);
       if (delimString != null) {
         setDelimiterString(delimString);
@@ -255,17 +257,17 @@ public abstract class DelimitedInputFormat<OT> extends FileInputFormat<OT>  {
   /**
    * Fills the read buffer with bytes read from the file starting from an offset.
    */
-  private boolean fillBuffer(int offset) throws IOException {
-    int maxReadLength = this.readBuffer.length - offset;
+  private boolean fillBuffer(int fillOffset) throws IOException {
+    int maxReadLength = this.readBuffer.length - fillOffset;
     // special case for reading the whole split.
     if (this.splitLength == FileInputFormat.READ_WHOLE_SPLIT_FLAG) {
-      int read = this.stream.read(this.readBuffer, offset, maxReadLength);
+      int read = this.stream.read(this.readBuffer, fillOffset, maxReadLength);
       if (read == -1) {
         this.stream.close();
         this.stream = null;
         return false;
       } else {
-        this.readPos = offset;
+        this.readPos = fillOffset;
         this.limit = read;
         return true;
       }
@@ -276,8 +278,7 @@ public abstract class DelimitedInputFormat<OT> extends FileInputFormat<OT>  {
     if (this.splitLength > 0) {
       // if we have more data, read that
       toRead = this.splitLength > maxReadLength ? maxReadLength : (int) this.splitLength;
-    }
-    else {
+    } else {
       // if we have exhausted our split, we need to complete the current record, or read one
       // more across the next split.
       // the reason is that the next split will skip over the beginning until it finds the first
@@ -288,7 +289,7 @@ public abstract class DelimitedInputFormat<OT> extends FileInputFormat<OT>  {
       this.overLimit = true;
     }
 
-    int read = this.stream.read(this.readBuffer, offset, toRead);
+    int read = this.stream.read(this.readBuffer, fillOffset, toRead);
 
     if (read == -1) {
       this.stream.close();
@@ -296,8 +297,8 @@ public abstract class DelimitedInputFormat<OT> extends FileInputFormat<OT>  {
       return false;
     } else {
       this.splitLength -= read;
-      this.readPos = offset; // position from where to start reading
-      this.limit = read + offset; // number of valid bytes in the read buffer
+      this.readPos = fillOffset; // position from where to start reading
+      this.limit = read + fillOffset; // number of valid bytes in the read buffer
       return true;
     }
   }
@@ -393,8 +394,8 @@ public abstract class DelimitedInputFormat<OT> extends FileInputFormat<OT>  {
 
         // check against the maximum record length
         if (((long) countInWrapBuffer) + count > this.lineLengthLimit) {
-          throw new IOException("The record length exceeded the maximum record length (" +
-              this.lineLengthLimit + ").");
+          throw new IOException("The record length exceeded the maximum record length ("
+              + this.lineLengthLimit + ").");
         }
 
         // Compute number of bytes to move to wrapBuffer
@@ -421,9 +422,9 @@ public abstract class DelimitedInputFormat<OT> extends FileInputFormat<OT>  {
     }
   }
 
-  private void setResult(byte[] buffer, int offset, int len) {
+  private void setResult(byte[] buffer, int resultOffset, int len) {
     this.currBuffer = buffer;
-    this.currOffset = offset;
+    this.currOffset = resultOffset;
     this.currLen = len;
   }
 

@@ -25,7 +25,7 @@ public enum OperatingSystem {
   /**
    * The enum constant for the operating system.
    */
-  private static final OperatingSystem os = readOSFromSystemProperties();
+  private static final OperatingSystem OS = readOSFromSystemProperties();
 
   /**
    * Gets the operating system that the JVM runs on from the java system properties.
@@ -35,7 +35,7 @@ public enum OperatingSystem {
    * possible to determine.
    */
   public static OperatingSystem getCurrentOperatingSystem() {
-    return os;
+    return OS;
   }
 
   /**
@@ -60,11 +60,12 @@ public enum OperatingSystem {
 
     return UNKNOWN;
   }
+
   /**
    * Checks whether the operating system this JVM runs on is Windows.
    *
    * @return <code>true</code> if the operating system this JVM runs on is
-   *         Windows, <code>false</code> otherwise
+   * Windows, <code>false</code> otherwise
    */
   public static boolean isWindows() {
     return getCurrentOperatingSystem() == WINDOWS;
@@ -74,7 +75,7 @@ public enum OperatingSystem {
    * Checks whether the operating system this JVM runs on is Linux.
    *
    * @return <code>true</code> if the operating system this JVM runs on is
-   *         Linux, <code>false</code> otherwise
+   * Linux, <code>false</code> otherwise
    */
   public static boolean isLinux() {
     return getCurrentOperatingSystem() == LINUX;
@@ -84,7 +85,7 @@ public enum OperatingSystem {
    * Checks whether the operating system this JVM runs on is Windows.
    *
    * @return <code>true</code> if the operating system this JVM runs on is
-   *         Windows, <code>false</code> otherwise
+   * Windows, <code>false</code> otherwise
    */
   public static boolean isMac() {
     return getCurrentOperatingSystem() == MACOS;
@@ -99,7 +100,7 @@ public enum OperatingSystem {
   /**
    * The key to extract the operating system name from the system properties.
    */
-  private static final String OS_KEY = "os.name";
+  private static final String OS_KEY = "OS.name";
 
   /**
    * The expected prefix for Linux operating systems.
