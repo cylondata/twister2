@@ -104,6 +104,7 @@ public class PingPongCommunicationTaskBased implements IContainer {
       // the map thread where data is produced
       LOG.log(Level.INFO, "Starting map thread");
       taskExecutor.registerTask(0, new MapWorker(0, direct));
+      LOG.log(Level.INFO, "registered map thread");
       taskExecutor.submitTask(0);
       taskExecutor.progres();
     } else if (containerId == 1) {

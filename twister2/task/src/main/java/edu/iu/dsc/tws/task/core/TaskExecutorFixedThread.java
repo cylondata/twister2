@@ -131,6 +131,7 @@ public class TaskExecutorFixedThread {
   }
 
   public boolean registerQueue(int qid, Queue<Message> queue) {
+
     queues.put(qid, queue);
     queuexTaskInput.put(qid, new ArrayList<>());
     queuexTaskOutput.put(qid, new ArrayList<>());
@@ -155,7 +156,7 @@ public class TaskExecutorFixedThread {
    * register tasks that does not contain any queues associated
    */
   public boolean registerTask(int taskid, Task task) {
-    return registerTask(taskid, task, null, null);
+    return registerTask(taskid, task, new ArrayList<>(), new ArrayList<>());
   }
 
   /**
@@ -164,11 +165,15 @@ public class TaskExecutorFixedThread {
   public boolean registerTask(int taskId, Task task, List<Integer> inputQueues,
                               List<Integer> outputQueues) {
     //Register task queues
-    for (Integer inputQueue : inputQueues) {
-      registerTaskQueue(inputQueue, taskId, ExecutorContext.QueueType.INPUT);
+    if (inputQueues != null) {
+      for (Integer inputQueue : inputQueues) {
+        registerTaskQueue(inputQueue, taskId, ExecutorContext.QueueType.INPUT);
+      }
     }
-    for (Integer outputQueue : outputQueues) {
-      registerTaskQueue(outputQueue, taskId, ExecutorContext.QueueType.OUTPUT);
+    if (outputQueues != null) {
+      for (Integer outputQueue : outputQueues) {
+        registerTaskQueue(outputQueue, taskId, ExecutorContext.QueueType.OUTPUT);
+      }
     }
 
     //If queues are registered add the task to task map
