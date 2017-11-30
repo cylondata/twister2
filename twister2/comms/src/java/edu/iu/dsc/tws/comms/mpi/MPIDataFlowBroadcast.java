@@ -11,8 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi;
 
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -63,18 +61,18 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
   }
 
   protected void passMessageDownstream(Object object, MPIMessage currentMessage) {
-    List<Integer> externalRoutes = new ArrayList<>();
-    List<Integer> internalRoutes = new ArrayList<>();
     int src = router.mainTaskOfExecutor(instancePlan.getThisExecutor());
-    internalRoutesForSend(src, internalRoutes);
+    RoutingParameters routingParameters = sendRoutingParameters(src, MPIContext.DEFAULT_PATH);
 
-    LOG.info(String.format("%d down internal routes for send %d: %s",
-        instancePlan.getThisExecutor(), src, internalRoutes));
+//    internalRoutesForSend(src, internalRoutes);
 
-    // now lets get the external routes to send
-    externalRoutesForSend(src, externalRoutes);
-    LOG.info(String.format("%d down External routes for send %d: %s",
-        instancePlan.getThisExecutor(), src, externalRoutes));
+//    LOG.info(String.format("%d down internal routes for send %d: %s",
+//        instancePlan.getThisExecutor(), src, internalRoutes));
+//
+//    // now lets get the external routes to send
+//    externalRoutesForSend(src, externalRoutes);
+//    LOG.info(String.format("%d down External routes for send %d: %s",
+//        instancePlan.getThisExecutor(), src, externalRoutes));
     // we need to serialize for sending over the wire
     // LOG.log(Level.INFO, "Sending message of type: " + type);
     // this is a originating message. we are going to put ref count to 0 for now and
@@ -84,11 +82,12 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
     // create a send message to keep track of the serialization
     // at the intial stage the sub-edge is 0
     int di = -1;
-    if (externalRoutes.size() > 0) {
-      di = destinationIdentifier(src, MPIContext.DEFAULT_PATH);
+    if (routingParameters.getExternalRoutes().size() > 0) {
+      di = routingParameters.getDestinationId();
     }
     MPISendMessage sendMessage = new MPISendMessage(src, mpiMessage, edge,
-        di, MPIContext.DEFAULT_PATH, internalRoutes, externalRoutes);
+        di, MPIContext.DEFAULT_PATH, routingParameters.getInternalRoutes(),
+        routingParameters.getExternalRoutes());
 
     // now try to put this into pending
     pendingSendMessages.offer(
@@ -97,9 +96,6 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
 
   protected void setupRouting() {
     // we will only have one distinct route
-    Set<Integer> sources = new HashSet<>();
-    sources.add(source);
-
     router = new BinaryTreeRouter(config, instancePlan, source, destinations);
   }
 
@@ -108,33 +104,31 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
   }
 
   @Override
-  protected void externalRoutesForSend(int s, List<Integer> routes) {
+  protected RoutingParameters sendRoutingParameters(int s, int path) {
+    RoutingParameters routingParameters = new RoutingParameters();
     // get the expected routes
-    Map<Integer, Map<Integer, Set<Integer>>> routing = router.getExternalSendTasks(s);
-    if (routing == null) {
+    Map<Integer, Map<Integer, Set<Integer>>> internalRouting = router.getInternalSendTasks(source);
+    if (internalRouting == null) {
       throw new RuntimeException("Un-expected message from source: " + s);
     }
 
-    Map<Integer, Set<Integer>> sourceRouting = routing.get(s);
-    if (sourceRouting != null) {
+    Map<Integer, Set<Integer>> internalSourceRouting = internalRouting.get(s);
+    if (internalSourceRouting != null) {
       // we always use path 0 because only one path
-      routes.addAll(sourceRouting.get(0));
+      routingParameters.addInternalRoutes(internalSourceRouting.get(0));
     }
-  }
 
-  @Override
-  protected void internalRoutesForSend(int s, List<Integer> routes) {
     // get the expected routes
-    Map<Integer, Map<Integer, Set<Integer>>> routing = router.getInternalSendTasks(source);
-    if (routing == null) {
+    Map<Integer, Map<Integer, Set<Integer>>> externalRouting = router.getExternalSendTasks(s);
+    if (externalRouting == null) {
       throw new RuntimeException("Un-expected message from source: " + s);
     }
-
-    Map<Integer, Set<Integer>> sourceRouting = routing.get(s);
-    if (sourceRouting != null) {
+    Map<Integer, Set<Integer>> externalSourceRouting = externalRouting.get(s);
+    if (externalSourceRouting != null) {
       // we always use path 0 because only one path
-      routes.addAll(sourceRouting.get(0));
+      routingParameters.addExternalRoutes(externalSourceRouting.get(0));
     }
+    return routingParameters;
   }
 
   @Override

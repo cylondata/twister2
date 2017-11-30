@@ -12,57 +12,109 @@
 package edu.iu.dsc.tws.comms.routing;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
+import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.mpi.MPIContext;
 
 public class LoadBalanceRouter implements IRouter {
-  private Config config;
+  private static final Logger LOG = Logger.getLogger(LoadBalanceRouter.class.getName());
+  // the task plan
   private TaskPlan taskPlan;
-  private Set<Integer> sources;
-  private int stream;
-  private List<Integer> destList;
-  private Random random;
+  // task -> (path -> tasks)
+  private Map<Integer, Map<Integer, Set<Integer>>> externalSendTasks;
+  // task -> (path -> tasks)
+  private Map<Integer, Map<Integer, Set<Integer>>> internalSendTasks;
+  // task -> (path -> tasks)
+  private Map<Integer, Map<Integer, List<Integer>>> upstream;
+  private Set<Integer> receiveExecutors;
+  private Set<Integer> thisExecutorTasks;
 
-  public LoadBalanceRouter(Config cfg, TaskPlan plan,
-                   Set<Integer> srscs, Set<Integer> dests,
-                   int strm, int distinctRoutes) {
-    this.config = cfg;
+  /**
+   * Create a direct router
+   * @param plan
+   * @param srscs
+   * @param dests
+   */
+  public LoadBalanceRouter(TaskPlan plan, Set<Integer> srscs, Set<Integer> dests) {
     this.taskPlan = plan;
-    this.sources = srscs;
-    this.stream = strm;
-    random = new Random(System.nanoTime());
 
-    destList = new ArrayList<>(dests);
+    this.externalSendTasks = new HashMap<>();
+    this.internalSendTasks = new HashMap<>();
+
+    Set<Integer> myTasks = taskPlan.getChannelsOfExecutor(taskPlan.getThisExecutor());
+    for (int src : srscs) {
+      if (myTasks.contains(src)) {
+        for (int dest : dests) {
+          // okay the destination is in the same executor
+          if (myTasks.contains(dest)) {
+            Map<Integer, Set<Integer>> sendMap = new HashMap<>();
+            Set<Integer> set = new HashSet<>();
+            set.add(dest);
+            sendMap.put(MPIContext.DEFAULT_PATH, set);
+            internalSendTasks.put(src, sendMap);
+          } else {
+            Map<Integer, Set<Integer>> sendMap = new HashMap<>();
+            Set<Integer> set = new HashSet<>();
+            set.add(dest);
+            sendMap.put(MPIContext.DEFAULT_PATH, set);
+            externalSendTasks.put(src, sendMap);
+          }
+        }
+      }
+    }
+
+    // we are going to receive from all the sources
+    this.upstream = new HashMap<>();
+    Map<Integer, List<Integer>> pathTasks = new HashMap<>();
+    List<Integer> sources = new ArrayList<>();
+    sources.addAll(srscs);
+    pathTasks.put(MPIContext.DEFAULT_PATH, sources);
+    for (int dest : dests) {
+      if (myTasks.contains(dest)) {
+        this.upstream.put(dest, pathTasks);
+      }
+    }
+
+    receiveExecutors = LoadBalanceRouter.getExecutorsHostingTasks(plan, srscs);
+    // we are not interested in our own
+    receiveExecutors.remove(taskPlan.getThisExecutor());
+
+    this.thisExecutorTasks = taskPlan.getChannelsOfExecutor(taskPlan.getThisExecutor());
   }
 
   @Override
   public Set<Integer> receivingExecutors() {
-    return null;
+    LOG.info(taskPlan.getThisExecutor() + " Receiving executors: " + receiveExecutors);
+    return receiveExecutors;
   }
 
   @Override
   public Map<Integer, Map<Integer, List<Integer>>> receiveExpectedTaskIds() {
-    return null;
+    // check if this executor contains
+    return upstream;
   }
 
   @Override
   public boolean isLastReceiver() {
-    return false;
+    // now check if destination is in this task
+    return true;
   }
 
   @Override
-  public Map<Integer, Map<Integer, Set<Integer>>> getInternalSendTasks(int src) {
-    return null;
+  public Map<Integer, Map<Integer, Set<Integer>>> getInternalSendTasks(int source) {
+    // return a routing
+    return internalSendTasks;
   }
 
   @Override
   public Map<Integer, Map<Integer, Set<Integer>>> getExternalSendTasks(int source) {
-    return null;
+    return externalSendTasks;
   }
 
   @Override
@@ -72,11 +124,32 @@ public class LoadBalanceRouter implements IRouter {
 
   @Override
   public int mainTaskOfExecutor(int executor) {
-    return 0;
+    return -1;
   }
 
+  /**
+   * The destination id is the destination itself
+   * @return
+   */
   @Override
   public int destinationIdentifier(int source, int path) {
     return 0;
+  }
+
+  private static Set<Integer> getExecutorsHostingTasks(TaskPlan plan, Set<Integer> tasks) {
+    Set<Integer> executors = new HashSet<>();
+
+    Set<Integer> allExecutors = plan.getAllExecutors();
+    for (int e : allExecutors) {
+      Set<Integer> tasksOfExecutor = plan.getChannelsOfExecutor(e);
+      for (int t : tasks) {
+        if (tasksOfExecutor.contains(t)) {
+          executors.add(e);
+          break;
+        }
+      }
+    }
+
+    return executors;
   }
 }

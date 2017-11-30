@@ -33,15 +33,6 @@ public class MPIDataFlowKeyedReduce extends MPIGroupedDataFlowOperation {
   }
 
   @Override
-  protected void externalRoutesForSend(int source, List<Integer> routes) {
-
-  }
-
-  @Override
-  protected void internalRoutesForSend(int source, List<Integer> routes) {
-  }
-
-  @Override
   protected void receiveSendInternally(int source, int t, int path,  Object message) {
 
   }
@@ -74,5 +65,10 @@ public class MPIDataFlowKeyedReduce extends MPIGroupedDataFlowOperation {
   @Override
   protected boolean isLastReceiver() {
     return false;
+  }
+
+  @Override
+  protected RoutingParameters sendRoutingParameters(int source, int path) {
+    return null;
   }
 }

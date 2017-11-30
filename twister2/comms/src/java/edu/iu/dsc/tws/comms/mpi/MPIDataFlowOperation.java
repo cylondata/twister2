@@ -147,22 +147,13 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
 
   protected abstract void setupRouting();
   protected abstract void routeReceivedMessage(MessageHeader message, List<Integer> routes);
-  protected abstract void externalRoutesForSend(int source, List<Integer> routes);
-  protected abstract void internalRoutesForSend(int source, List<Integer> routes);
   protected abstract boolean isLastReceiver();
 
-  /**
-   * Not every body needs to implement this
-   * @param source
-   * @param routes
-   */
-  protected void internalRouterForPartialInject(int source, List<Integer> routes) {
-    throw new RuntimeException("Operations with partial results should implement this");
+  protected RoutingParameters partialSendRoutingParameters(int source, int path) {
+    throw new RuntimeException("This method needs to be implemented by the specific operation");
   }
 
-  protected void externalRoutesForPartialSend(int source, List<Integer> routes) {
-    throw new RuntimeException("Operations with partial results should implement this");
-  }
+  protected abstract RoutingParameters sendRoutingParameters(int source, int path);
 
   /**
    * Receive the sends internally directly
@@ -188,14 +179,6 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
   protected abstract Map<Integer, Map<Integer, List<Integer>>> receiveExpectedTaskIds();
 
   /**
-   * Default implementation returns 0 and specific implementations should override
-   * @return
-   */
-  protected int destinationIdentifier(int source, int path) {
-    return 0;
-  }
-
-  /**
    * Is this the final task
    * @return
    */
@@ -214,18 +197,19 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
 //    LOG.log(Level.INFO, "lock 00 " + executor);
     lock.lock();
     try {
-      List<Integer> externalRoutes = new ArrayList<>();
-      List<Integer> internalRoutes = new ArrayList<>();
-
-      internalRouterForPartialInject(source, internalRoutes);
-//      LOG.info(String.format("%d internal routes for send %d: %s",
-//          instancePlan.getThisExecutor(), source, internalRoutes));
+//      List<Integer> externalRoutes = new ArrayList<>();
+//      List<Integer> internalRoutes = new ArrayList<>();
+      RoutingParameters routingParameters = partialSendRoutingParameters(
+          source, MPIContext.DEFAULT_PATH);
+//      internalRouterForPartialSend(source, internalRoutes);
+      LOG.info(String.format("%d internal routes for send %d: %s",
+          instancePlan.getThisExecutor(), source, routingParameters.getInternalRoutes()));
 
 
       // now lets get the external routes to send
-      externalRoutesForPartialSend(source, externalRoutes);
-//      LOG.info(String.format("%d Partial External routes for send %d: %s",
-//          instancePlan.getThisExecutor(), source, externalRoutes));
+//      externalRoutesForPartialSend(source, externalRoutes);
+      LOG.info(String.format("%d Partial External routes for send %d: %s",
+          instancePlan.getThisExecutor(), source, routingParameters.getExternalRoutes()));
 
       // we need to serialize for sending over the wire
       // LOG.log(Level.INFO, "Sending message of type: " + type);
@@ -234,13 +218,14 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
       MPIMessage mpiMessage = new MPIMessage(source, type, MPIMessageDirection.OUT, this);
 
       int di = -1;
-      if (externalRoutes.size() > 0) {
-        di = destinationIdentifier(source, MPIContext.DEFAULT_PATH);
+      if (routingParameters.getExternalRoutes().size() > 0) {
+        di = routingParameters.getDestinationId();
       }
       // create a send message to keep track of the serialization
       // at the intial stage the sub-edge is 0
       MPISendMessage sendMessage = new MPISendMessage(source, mpiMessage, edge,
-          di, MPIContext.DEFAULT_PATH, internalRoutes, externalRoutes);
+          di, MPIContext.DEFAULT_PATH, routingParameters.getInternalRoutes(),
+          routingParameters.getExternalRoutes());
 
       // now try to put this into pending
       return pendingSendMessages.offer(
@@ -254,17 +239,18 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
 //    LOG.log(Level.INFO, "lock 00 " + executor);
     lock.lock();
     try {
-      List<Integer> externalRoutes = new ArrayList<>();
-      List<Integer> internalRoutes = new ArrayList<>();
+//      List<Integer> externalRoutes = new ArrayList<>();
+//      List<Integer> internalRoutes = new ArrayList<>();
 
-      internalRoutesForSend(source, internalRoutes);
+      RoutingParameters routingParameters = sendRoutingParameters(source, MPIContext.DEFAULT_PATH);
+//      internalRoutesForSend(source, internalRoutes);
       LOG.info(String.format("%d internal routes for send %d: %s",
-          instancePlan.getThisExecutor(), source, internalRoutes));
+          instancePlan.getThisExecutor(), source, routingParameters.getInternalRoutes()));
 
       // now lets get the external routes to send
-      externalRoutesForSend(source, externalRoutes);
+//      externalRoutesForSend(source, externalRoutes);
       LOG.info(String.format("%d External routes for send %d: %s",
-          instancePlan.getThisExecutor(), source, externalRoutes));
+          instancePlan.getThisExecutor(), source, routingParameters.getExternalRoutes()));
       // we need to serialize for sending over the wire
       // LOG.log(Level.INFO, "Sending message of type: " + type);
       // this is a originating message. we are going to put ref count to 0 for now and
@@ -274,11 +260,12 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
       // create a send message to keep track of the serialization
       // at the intial stage the sub-edge is 0
       int di = -1;
-      if (externalRoutes.size() > 0) {
-        di = destinationIdentifier(source, MPIContext.DEFAULT_PATH);
+      if (routingParameters.getExternalRoutes().size() > 0) {
+        di = routingParameters.getDestinationId();
       }
       MPISendMessage sendMessage = new MPISendMessage(source, mpiMessage, edge,
-          di, MPIContext.DEFAULT_PATH, internalRoutes, externalRoutes);
+          di, MPIContext.DEFAULT_PATH, routingParameters.getInternalRoutes(),
+          routingParameters.getExternalRoutes());
 
       // now try to put this into pending
       return pendingSendMessages.offer(
@@ -330,7 +317,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
 
         // okay we build the message, send it
         if (message.serializedState() == MPISendMessage.SendState.SERIALIZED) {
-          List<Integer> exRoutes = mpiMessage.getExternalSends();
+          List<Integer> exRoutes = new ArrayList<>(mpiMessage.getExternalSends());
           int startOfExternalRouts = mpiMessage.getAcceptedExternalSends();
           int noOfExternalSends = startOfExternalRouts;
           for (int i = startOfExternalRouts; i < exRoutes.size(); i++) {
