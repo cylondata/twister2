@@ -23,6 +23,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.core;
 
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -31,13 +32,14 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.task.api.RunnableTask;
 import edu.iu.dsc.tws.task.api.Task;
+import edu.iu.dsc.tws.task.api.TaskExecutor;
 
 /**
  * Class that will handle the task execution. Each task executor will manage an task execution
  * thread pool that will be used to execute the tasks that are assigned to the particular task
  * executor.
  */
-public class TaskExecutorCachedThreadPool {
+public class TaskExecutorCachedThreadPool implements TaskExecutor {
 
   private static ThreadPoolExecutor executorPool;
   private TWSCommunication channel;
@@ -46,17 +48,15 @@ public class TaskExecutorCachedThreadPool {
 
 
   public TaskExecutorCachedThreadPool() {
-    initThreadPool(ExecutorContext.EXECUTOR_CORE_POOL_SIZE, ExecutorContext.EXECUTOR_MAX_POOL_SIZE,
-        ExecutorContext.EXECUTOR_POOL_KEEP_ALIVE_TIME);
+    initExecutionPool(ExecutorContext.EXECUTOR_CORE_POOL_SIZE);
   }
 
   public TaskExecutorCachedThreadPool(int poolSize) {
-    initThreadPool(poolSize, ExecutorContext.EXECUTOR_MAX_POOL_SIZE,
-        ExecutorContext.EXECUTOR_POOL_KEEP_ALIVE_TIME);
+    initExecutionPool(poolSize);
   }
 
   public TaskExecutorCachedThreadPool(int poolSize, int maxPoolSize, long keepAliveTime) {
-    initThreadPool(poolSize, maxPoolSize, keepAliveTime);
+    initExecutionPool(poolSize, maxPoolSize, keepAliveTime);
   }
 
   /**
@@ -66,18 +66,6 @@ public class TaskExecutorCachedThreadPool {
     this.channel = twscom;
     this.direct = dfo;
     this.progres = true;
-  }
-
-  /**
-   * Submit the task to run in the thread pool.
-   *
-   * @param task task to be run
-   * @return returns true if the task was submitted and queued
-   */
-  public boolean submit(Task task) {
-
-    executorPool.submit(new RunnableTask(task));
-    return true;
   }
 
   public void progres() {
@@ -92,11 +80,54 @@ public class TaskExecutorCachedThreadPool {
     this.progres = value;
   }
 
-  private void initThreadPool(int corePoolSize, int maxPoolSize, long keepAliveTime) {
+  private void initExecutionPool(int corePoolSize, int maxPoolSize, long keepAliveTime) {
     executorPool = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     executorPool.setCorePoolSize(corePoolSize);
     executorPool.setMaximumPoolSize(maxPoolSize);
     executorPool.setKeepAliveTime(keepAliveTime, TimeUnit.MILLISECONDS);
 
+  }
+
+  @Override
+  public void initExecutionPool(int coreSize) {
+    initExecutionPool(coreSize, ExecutorContext.EXECUTOR_MAX_POOL_SIZE,
+        ExecutorContext.EXECUTOR_POOL_KEEP_ALIVE_TIME);
+  }
+
+  /**
+   * Submit the task to run in the thread pool.
+   *
+   * @param task task to be run
+   * @return returns true if the task was submitted and queued
+   */
+  @Override
+  public boolean submitTask(Task task) {
+    executorPool.submit(new RunnableTask(task));
+    return true;
+  }
+
+  @Override
+  public boolean submitTask(int tid) {
+    return false;
+  }
+
+  @Override
+  public Set<Integer> getRunningTasks() {
+    return null;
+  }
+
+  @Override
+  public boolean addRunningTasks(int tid) {
+    return false;
+  }
+
+  @Override
+  public boolean removeRunningTask(int tid) {
+    return false;
+  }
+
+  @Override
+  public boolean registerTask(Task task) {
+    return false;
   }
 }

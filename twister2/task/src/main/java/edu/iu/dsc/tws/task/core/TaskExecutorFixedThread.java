@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -25,6 +26,7 @@ import edu.iu.dsc.tws.task.api.Message;
 import edu.iu.dsc.tws.task.api.Queue;
 import edu.iu.dsc.tws.task.api.RunnableFixedTask;
 import edu.iu.dsc.tws.task.api.Task;
+import edu.iu.dsc.tws.task.api.TaskExecutor;
 import edu.iu.dsc.tws.task.api.TaskMessage;
 
 /**
@@ -32,7 +34,7 @@ import edu.iu.dsc.tws.task.api.TaskMessage;
  * thread pool that will be used to execute the tasks that are assigned to the particular task
  * executor.
  */
-public class TaskExecutorFixedThread {
+public class TaskExecutorFixedThread implements TaskExecutor {
 
   private TWSCommunication channel;
   private DataFlowOperation direct;
@@ -86,14 +88,14 @@ public class TaskExecutorFixedThread {
    * Hashset that keeps track of all the tasks that are currently running and queued
    * in the thread pool
    */
-  private static HashSet<Integer> runningTasks = new HashSet<Integer>();
+  private static HashSet<Integer> submittedTasks = new HashSet<Integer>();
 
   public TaskExecutorFixedThread() {
-    initThreadPool(ExecutorContext.EXECUTOR_CORE_POOL_SIZE);
+    initExecutionPool(ExecutorContext.EXECUTOR_CORE_POOL_SIZE);
   }
 
   public TaskExecutorFixedThread(int corePoolSize) {
-    initThreadPool(corePoolSize);
+    initExecutionPool(corePoolSize);
   }
 
   /**
@@ -146,44 +148,44 @@ public class TaskExecutorFixedThread {
   /**
    * Register sink tasks which only have input queues associated with the task
    */
-  public boolean registerSinkTask(int taskid, Task task, List<Integer> inputQueues) {
-    return registerTask(taskid, task, inputQueues, inputQueues);
+  public boolean registerSinkTask(Task task, List<Integer> inputQueues) {
+    return registerTask(task, inputQueues, inputQueues);
   }
 
   /**
    * Register source tasks which only have output queues associated with the task
    */
-  public boolean registerSourceTask(int taskid, Task task, List<Integer> outputQueues) {
-    return registerTask(taskid, task, null, outputQueues);
+  public boolean registerSourceTask(Task task, List<Integer> outputQueues) {
+    return registerTask(task, null, outputQueues);
   }
 
   /**
    * register tasks that does not contain any queues associated
    */
-  public boolean registerTask(int taskid, Task task) {
-    return registerTask(taskid, task, new ArrayList<>(), new ArrayList<>());
+  public boolean registerTask(Task task) {
+    return registerTask(task, new ArrayList<>(), new ArrayList<>());
   }
 
   /**
    * register a given task with executor
    */
-  public boolean registerTask(int taskId, Task task, List<Integer> inputQueues,
+  public boolean registerTask(Task task, List<Integer> inputQueues,
                               List<Integer> outputQueues) {
     //Register task queues
     //TODO: What happens in the queue already has data when task is registered
     if (inputQueues != null) {
       for (Integer inputQueue : inputQueues) {
-        registerTaskQueue(inputQueue, taskId, ExecutorContext.QueueType.INPUT);
+        registerTaskQueue(inputQueue, task.getTaskId(), ExecutorContext.QueueType.INPUT);
       }
     }
     if (outputQueues != null) {
       for (Integer outputQueue : outputQueues) {
-        registerTaskQueue(outputQueue, taskId, ExecutorContext.QueueType.OUTPUT);
+        registerTaskQueue(outputQueue, task.getTaskId(), ExecutorContext.QueueType.OUTPUT);
       }
     }
 
     //If queues are registered add the task to task map
-    taskMap.put(taskId, task);
+    taskMap.put(task.getTaskId(), task);
     return true;
   }
 
@@ -199,7 +201,7 @@ public class TaskExecutorFixedThread {
     }
     //Add the related task to the execution queue
     for (Integer extaskid : queuexTaskInput.get(qid)) {
-      if (!runningTasks.contains(extaskid)) {
+      if (!submittedTasks.contains(extaskid)) {
         addRunningTask(extaskid);
         executorPool.submit(new RunnableFixedTask(taskMap.get(extaskid), queues.get(qid),
             taskMessageProcessLimit));
@@ -208,13 +210,35 @@ public class TaskExecutorFixedThread {
 
     //Add the related task to the execution queue
     for (Integer extaskid : queuexTaskOutput.get(qid)) {
-      if (!runningTasks.contains(extaskid)) {
+      if (!submittedTasks.contains(extaskid)) {
         addRunningTask(extaskid);
         executorPool.submit(new RunnableFixedTask(taskMap.get(extaskid), queues.get(qid),
             taskMessageProcessLimit));
       }
     }
 
+    return true;
+  }
+
+  /**
+   * Init's the task thread pool
+   *
+   * @param coreSize the size of the execution pool
+   */
+  @Override
+  public void initExecutionPool(int coreSize) {
+    executorPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(coreSize);
+  }
+
+  @Override
+  public boolean submitTask(Task task) {
+    if (!taskMap.containsKey(task.getTaskId())) {
+      throw new RuntimeException(String.format("Unable to locate task with task id : %d, "
+          + "Please make sure the task is registered", task.getTaskId()));
+    } else {
+      addRunningTask(task.getTaskId());
+      executorPool.submit(new RunnableFixedTask(taskMap.get(task.getTaskId())));
+    }
     return true;
   }
 
@@ -229,12 +253,27 @@ public class TaskExecutorFixedThread {
     return true;
   }
 
-  public static HashSet<Integer> getRunningTasks() {
-    return runningTasks;
+  @Override
+  public Set<Integer> getRunningTasks() {
+    return submittedTasks;
   }
 
-  public static void setRunningTasks(HashSet<Integer> runningTasks) {
-    TaskExecutorFixedThread.runningTasks = runningTasks;
+  public static HashSet<Integer> getSubmittedTasks() {
+    return submittedTasks;
+  }
+
+  @Override
+  public boolean addRunningTasks(int tid) {
+    return submittedTasks.add(tid);
+  }
+
+  @Override
+  public boolean removeRunningTask(int tid) {
+    return submittedTasks.remove(tid);
+  }
+
+  public static void setSubmittedTasks(HashSet<Integer> submittedTasks) {
+    TaskExecutorFixedThread.submittedTasks = submittedTasks;
   }
 
   /**
@@ -243,23 +282,16 @@ public class TaskExecutorFixedThread {
    * @param tid the task id to be added
    */
   public static void addRunningTask(int tid) {
-    if (runningTasks.contains(tid)) {
+    if (submittedTasks.contains(tid)) {
       throw new RuntimeException(String.format("Trying to add already running task %d to the"
           + " running tasks set", tid));
     }
-    runningTasks.add(tid);
+    submittedTasks.add(tid);
   }
 
   //TODO: might be able to remove sycn from this method need to confirm
-  public static void removeRunningTask(int tid) {
-    runningTasks.remove(tid);
-  }
-
-  /**
-   * Init's the task thread pool
-   */
-  private void initThreadPool(int corePoolSize) {
-    executorPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(corePoolSize);
+  public static boolean removeSubmittedTask(int tid) {
+    return submittedTasks.remove(tid);
   }
 
   /**

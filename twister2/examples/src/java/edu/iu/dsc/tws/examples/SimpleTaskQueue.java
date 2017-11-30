@@ -116,14 +116,14 @@ public class SimpleTaskQueue implements IContainer {
     if (containerId == 0) {
       // the map thread where data is produced
       LOG.log(Level.INFO, "Starting map thread");
-      taskExecutor.registerTask(0, new MapWorker(0, direct));
+      taskExecutor.registerTask(new MapWorker(0, direct));
       taskExecutor.submitTask(0);
       taskExecutor.progres();
     } else if (containerId == 1) {
       ArrayList<Integer> inq = new ArrayList<>();
       inq.add(0);
       taskExecutor.setTaskMessageProcessLimit(10000);
-      taskExecutor.registerSinkTask(1, new RecieveWorker(1), inq);
+      taskExecutor.registerSinkTask(new RecieveWorker(1), inq);
       taskExecutor.progres();
     }
   }
