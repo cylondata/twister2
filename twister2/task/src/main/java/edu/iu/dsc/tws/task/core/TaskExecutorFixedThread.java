@@ -42,6 +42,11 @@ public class TaskExecutorFixedThread {
    * Thread pool used to execute tasks
    */
   public static ThreadPoolExecutor executorPool;
+
+  /**
+   * Message processing limit for a task
+   */
+  private int taskMessageProcessLimit = 1;
   /**
    * Hashmap that contains all the input and output queues of the executor and its associated
    * tasks
@@ -165,6 +170,7 @@ public class TaskExecutorFixedThread {
   public boolean registerTask(int taskId, Task task, List<Integer> inputQueues,
                               List<Integer> outputQueues) {
     //Register task queues
+    //TODO: What happens in the queue already has data when task is registered
     if (inputQueues != null) {
       for (Integer inputQueue : inputQueues) {
         registerTaskQueue(inputQueue, taskId, ExecutorContext.QueueType.INPUT);
@@ -195,13 +201,18 @@ public class TaskExecutorFixedThread {
     for (Integer extaskid : queuexTaskInput.get(qid)) {
       if (!runningTasks.contains(extaskid)) {
         addRunningTask(extaskid);
-        executorPool.submit(new RunnableFixedTask(taskMap.get(extaskid), queues.get(qid)));
+        executorPool.submit(new RunnableFixedTask(taskMap.get(extaskid), queues.get(qid),
+            taskMessageProcessLimit));
       }
     }
 
     //Add the related task to the execution queue
-    for (Integer extaskid : queuexTaskInput.get(qid)) {
-      executorPool.submit(new RunnableFixedTask(taskMap.get(extaskid), queues.get(qid)));
+    for (Integer extaskid : queuexTaskOutput.get(qid)) {
+      if (!runningTasks.contains(extaskid)) {
+        addRunningTask(extaskid);
+        executorPool.submit(new RunnableFixedTask(taskMap.get(extaskid), queues.get(qid),
+            taskMessageProcessLimit));
+      }
     }
 
     return true;
@@ -270,5 +281,13 @@ public class TaskExecutorFixedThread {
 
   public void setProgress(boolean value) {
     this.progres = value;
+  }
+
+  public int getTaskMessageProcessLimit() {
+    return taskMessageProcessLimit;
+  }
+
+  public void setTaskMessageProcessLimit(int taskMessageProcessLimit) {
+    this.taskMessageProcessLimit = taskMessageProcessLimit;
   }
 }

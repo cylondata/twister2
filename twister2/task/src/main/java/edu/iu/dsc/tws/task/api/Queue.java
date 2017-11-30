@@ -41,4 +41,9 @@ public interface Queue<T> {
    * check if the queue is empty
    */
   boolean isEmpty();
+
+  /**
+   * get count of entries in queue
+   */
+  int size();
 }

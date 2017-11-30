@@ -23,6 +23,14 @@ public abstract class SinkTask extends Task {
    */
   private Sink outputSink;
 
+  public SinkTask() {
+    super();
+  }
+
+  public SinkTask(int tid) {
+    super(tid);
+  }
+
   public Sink getOutputSink() {
     return outputSink;
   }

@@ -23,6 +23,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.api;
 
+import java.util.logging.Logger;
+
 import edu.iu.dsc.tws.task.core.ExecutorContext;
 import edu.iu.dsc.tws.task.core.TaskExecutorFixedThread;
 
@@ -31,6 +33,9 @@ import edu.iu.dsc.tws.task.core.TaskExecutorFixedThread;
  * TaskExecutorFixedThread
  */
 public class RunnableFixedTask implements Runnable {
+
+  private static final Logger LOG = Logger.getLogger(RunnableFixedTask.class.getName());
+
   private Task executableTask;
   private Queue<Message> queueRef;
   private boolean isMessageBased = false;
@@ -100,13 +105,13 @@ public class RunnableFixedTask implements Runnable {
   }
 
   @Override
-  public void run() {
-    //debuglog
-    System.out.println(String.format("Launcing task : %d", executableTask.getTaskId()));
-
+  public void run() {m
     if (executableTask == null) {
       throw new RuntimeException("Task needs to be set to execute");
     }
+    LOG.info(String.format("Runnable task %d limit %d", executableTask.getTaskId(),
+        messageProcessLimit));
+
     if (isMessageBased) {
       //TODO: check if this part needs to be synced
       while (!queueRef.isEmpty()) {
@@ -115,14 +120,17 @@ public class RunnableFixedTask implements Runnable {
           messageProcessCount++;
         } else {
           //Need to make sure the remaining tasks are processed
+          LOG.info("Need to run more so resubmitting the task");
           TaskExecutorFixedThread.executorPool.submit(
-              new RunnableFixedTask(executableTask, queueRef));
+              new RunnableFixedTask(executableTask, queueRef, messageProcessLimit));
+          return;
         }
       }
       synchronized (ExecutorContext.FIXED_EXECUTOR_LOCK) {
         if (!queueRef.isEmpty()) {
+          LOG.info("Need to run more so resubmitting the task");
           TaskExecutorFixedThread.executorPool.submit(
-              new RunnableFixedTask(executableTask, queueRef));
+              new RunnableFixedTask(executableTask, queueRef, messageProcessLimit));
         } else {
           TaskExecutorFixedThread.removeRunningTask(executableTask.getTaskId());
         }

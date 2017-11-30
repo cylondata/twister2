@@ -15,4 +15,10 @@ package edu.iu.dsc.tws.task.api;
  * Wrapper interface for all the messages types.
  */
 public interface Message {
+
+  /**
+   * Returns the content of the message
+   * @return content of the message
+   */
+  Object getContent();
 }
