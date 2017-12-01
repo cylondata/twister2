@@ -5,7 +5,7 @@ paradigms for big data applications. Twister2 models a parallel computation as a
 
 The detailed desing of Twister2 can be found at
 
-[Twister2 Desing](http://dsc.soic.indiana.edu/publications/twister2_design_big_data_toolkit.pdf)
+[Twister2 Design](http://dsc.soic.indiana.edu/publications/twister2_design_big_data_toolkit.pdf)
 
 We use Jira for tracking the progress of twister2.
 
