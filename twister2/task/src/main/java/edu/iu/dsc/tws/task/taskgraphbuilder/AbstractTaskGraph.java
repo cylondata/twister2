@@ -23,85 +23,51 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.taskgraphbuilder;
 
+import java.util.Collection;
 import java.util.Set;
 
 public abstract class AbstractTaskGraph<TV, TE> implements TaskGraph<TV, TE> {
 
-  private TaskEdgeFactory<TV, TE> taskEdgeFactory;
-
-  public AbstractTaskGraph(TaskEdgeFactory<TV, TE> taskEdgeFactory) {
-
-    this.taskEdgeFactory = taskEdgeFactory;
+  public AbstractTaskGraph() {
   }
 
   @Override
-  public Set<TE> getAllTaskEdges(TV taskVertex1, TV taskVertex2) {
+  public boolean containsTaskEdge(TV sourceTaskVertex, TV targetTaskVertex) {
+    boolean success = false;
+    if (!(getTaskEdge(sourceTaskVertex, targetTaskVertex) == null)) {
+      success = true;
+    }
+    return success;
+  }
+
+  @Override
+  public boolean removeAllTaskEdges(Collection<? extends TE> taskEdges) {
+    boolean success = false;
+    for (TE taskEdge : taskEdges) {
+      // success |= removeTaskEdge(taskEdge);
+    }
+    return success;
+  }
+
+  @Override
+  public Set<TE> removeAllTaskEdges(TV sourceTaskVertex,
+                                    TV targetTaskVertex) {
     return null;
   }
 
-  @Override
-  public TE getTaskEdge(TV taskVertex1, TV taskVertex2) {
-    return null;
+  protected boolean removeAllTaskEdges(TE[] taskEdges) {
+    boolean success = false;
+    //do the computation to remove all the task edges....!
+    return success;
   }
 
   @Override
-  public boolean addTaskEdge(TV taskVertex1, TV taskVertex2, TE taskEdge) {
-    return false;
+  public boolean removeAllTaskVertices(Collection<? extends TV>
+                                           taskVertices) {
+    boolean success = false;
+    //do the computation to remove the vertex....
+    return success;
   }
 
-  @Override
-  public boolean addTaskVertex(TV taskVertex) {
-    return false;
-  }
-
-  @Override
-  public boolean containsTaskEdge(TV taskVertex1, TV taskVertex2) {
-    return false;
-  }
-
-  @Override
-  public boolean containsTaskEdge(TE taskEdge) {
-    return false;
-  }
-
-  @Override
-  public boolean containsTaskVertex(TV taskVertex) {
-    return false;
-  }
-
-  @Override
-  public TE addTaskEdge(TV sourceTaskVertex, TV targetTaskVertex) {
-    return null;
-  }
-
-  @Override
-  public TaskEdgeFactory<TV, TE> getTaskEdgeFactory() {
-    return taskEdgeFactory;
-  }
-
-  @Override
-  public Set<TV> taskVertexSet() {
-    return null;
-  }
-
-  @Override
-  public Set<TE> taskEdgeSet() {
-    return null;
-  }
-
-  @Override
-  public TE removeTaskEdge(TV sourceTaskVertex, TV targetTaskVertex) {
-    return null;
-  }
-
-  @Override
-  public Set<TE> removeAllTaskEdges(TV sourceTaskVertex, TV targetTaskVertex) {
-    return null;
-  }
-
-  @Override
-  public boolean removeTaskVertex(TV taskVertex) {
-    return false;
-  }
 
 }

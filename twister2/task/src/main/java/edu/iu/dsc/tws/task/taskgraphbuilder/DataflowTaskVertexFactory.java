@@ -23,6 +23,25 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.taskgraphbuilder;
 
-public interface TaskVertexFactory<TV> {
-  TV createTaskVertex() throws IllegalAccessException;
+import java.io.Serializable;
+
+public class DataflowTaskVertexFactory<TV> implements TaskVertexFactory<TV>, Serializable {
+
+  private static final long serialVersionUID = 223333333344459888L;
+
+  private Class<? extends TV> taskVertexClass;
+
+  public DataflowTaskVertexFactory(Class<? extends TV> taskVertexClass) {
+    this.taskVertexClass = taskVertexClass;
+  }
+
+  @Override
+  public TV createTaskVertex() throws IllegalAccessException {
+    try {
+      return taskVertexClass.newInstance();
+    } catch (InstantiationException e) {
+      throw new RuntimeException("instance creation failed", e);
+    }
+  }
+
 }

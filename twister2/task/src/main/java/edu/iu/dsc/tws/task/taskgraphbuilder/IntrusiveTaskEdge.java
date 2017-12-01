@@ -1,3 +1,4 @@
+
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
@@ -13,25 +14,19 @@ package edu.iu.dsc.tws.task.taskgraphbuilder;
 
 import java.io.Serializable;
 
-public class DefaultDirectedTaskGraph<TV, TE> extends AbstractTaskGraph<TV, TE>
-                                  implements TaskGraph<TV, TE>, Cloneable, Serializable {
+public class IntrusiveTaskEdge implements Cloneable, Serializable {
 
-  private static final long serialVersionUID = 3618135658586388792L;
+  private static final long serialVersionUID = 2233233333444449278L;
 
-  public DefaultDirectedTaskGraph(TaskEdgeFactory<TV, TE> taskEdgeFactory) {
-    super(taskEdgeFactory);
-  }
+  /*private Object source;
+  private Object target;
 
-  public DefaultDirectedTaskGraph(Class<? extends TE> taskEdgeClass) {
-    this(new TaskEdgeFactory<TV, TE>() {
-      @Override
-      public TE createEdge(TV sourceTaskVertex, TV targetTaskVertex) {
-        return null;
-      }
-    });
-  }
+  public Object clone() {
+    try {
+      return super.clone();
+    } catch (CloneNotSupportedException e) {
+      throw new InternalError();
+    }
+  }*/
 
 }
-
-
-
