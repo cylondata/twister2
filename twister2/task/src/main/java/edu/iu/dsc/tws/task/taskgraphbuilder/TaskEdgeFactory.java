@@ -31,5 +31,6 @@ public interface TaskEdgeFactory<TV, TE> {
   /**
    * This method creates a task edge and their endpoints are source task and target task vertices.
    */
-  TE createEdge(TV sourceTaskVertex, TV targetTaskVertex);
+  TE createTaskEdge(TV sourceTaskVertex, TV targetTaskVertex)
+      throws IllegalAccessException, InstantiationException;
 }

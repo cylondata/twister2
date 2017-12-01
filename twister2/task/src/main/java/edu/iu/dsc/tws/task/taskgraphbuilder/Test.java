@@ -13,38 +13,37 @@ package edu.iu.dsc.tws.task.taskgraphbuilder;
 
 public class Test {
 
-  public void tes() {
-    DefaultDirectedTaskGraph<Mapper, CManager> taskVertices =
-        new DefaultDirectedTaskGraph<>(CManager.class);
+  private IDataflowTaskGraph<Mapper, CManager> taskGraph =
+      new DataflowTaskGraph<Mapper, CManager>(CManager.class);
 
-    Mapper task1 = new Mapper("1", 1) {
-      @Override
-      public void execute() {
-      }
+  private Mapper task1 = new Mapper("1", 1) {
 
-      @Override
-      public void execute(Mapper mapper) {
-      }
-    };
+    @Override
+    public void execute() {
+    }
 
-    Mapper task2 = new Mapper("2", 2) {
-      @Override
-      public void execute() {
-      }
+    @Override
+    public void execute(Mapper mapper) {
+    }
+  };
 
-      @Override
-      public void execute(Mapper mapper) {
-      }
-    };
+  private Mapper task2 = new Mapper("2", 2) {
 
-    taskVertices.addTaskEdge(task1, task2);
-    System.out.println("Task Vertices are:" + taskVertices.toString());
+    @Override
+    public void execute() {
+    }
 
-  }
+    @Override
+    public void execute(Mapper mapper) {
+    }
+  };
 
-  public static void main(String[] args) {
-    Test test = new Test();
-    test.tes();
-  }
+  /*taskGraph.addTaskVertex(task1);
+  taskGraph.addTaskVertex(task2);
+
+  CManager cManager = new CManager("hello");
+  taskGraph.addTaskEdge(task1, task2, cManager);
+
+  System.out.println("Task Vertices are:"+taskGraph.toString());*/
 }
 

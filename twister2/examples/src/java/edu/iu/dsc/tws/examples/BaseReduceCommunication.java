@@ -116,8 +116,8 @@ public class BaseReduceCommunication implements IContainer {
     @Override
     public void run() {
       LOG.log(Level.INFO, "Starting map worker");
+      IntData data = generateData();
       for (int i = 0; i < 5000; i++) {
-        IntData data = generateData();
         for (int j = 0; j < noOfTasksPerExecutor; j++) {
           // lets generate a message
           while (!reduce.send(j + id * noOfTasksPerExecutor, data)) {
@@ -128,8 +128,8 @@ public class BaseReduceCommunication implements IContainer {
               e.printStackTrace();
             }
           }
-          LOG.info(String.format("%d sending to %d", id, j + id * noOfTasksPerExecutor)
-              + " count: " + sendCount++);
+//          LOG.info(String.format("%d sending to %d", id, j + id * noOfTasksPerExecutor)
+//              + " count: " + sendCount++);
         }
         sendCount++;
         Thread.yield();
@@ -142,7 +142,6 @@ public class BaseReduceCommunication implements IContainer {
    * Reduce class will work on the reduce messages.
    */
   private class PartialReduceWorker implements MessageReceiver {
-    private int count = 0;
 
     private Queue<Object> pendingSends = new LinkedBlockingQueue<Object>();
     // lets keep track of the messages
@@ -172,7 +171,7 @@ public class BaseReduceCommunication implements IContainer {
 
     @Override
     public void onMessage(int source, int path, int target, Object object) {
-      LOG.info(String.format("%d Message received for partial %d from %d", id, target, source));
+//      LOG.info(String.format("%d Message received for partial %d from %d", id, target, source));
       while (pendingSends.size() > 0) {
         boolean r = reduce.injectPartialResult(target, pendingSends.poll());
         if (!r) {
@@ -203,9 +202,9 @@ public class BaseReduceCommunication implements IContainer {
               boolean inject = reduce.injectPartialResult(target, o);
               if (!inject) {
                 pendingSends.offer(object);
-              } else {
-                LOG.info(String.format("%d Inject partial %d count: %d", id, target, count++));
-              }
+              } /*else {
+//                LOG.info(String.format("%d Inject partial %d count: %d", id, target, count++));
+              }*/
             }
           } else {
             LOG.severe("We cannot find an object and this is not correct");
@@ -218,7 +217,11 @@ public class BaseReduceCommunication implements IContainer {
   }
 
   private class FinalReduceReceive implements MessageReceiver {
+    private Queue<Object> pendingSends = new LinkedBlockingQueue<Object>();
+    // lets keep track of the messages
+    // for each task we need to keep track of incoming messages
     private Map<Integer, Map<Integer, List<Object>>> messages = new HashMap<>();
+
     private int count = 0;
     @Override
     public void init(Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
@@ -238,8 +241,37 @@ public class BaseReduceCommunication implements IContainer {
 
     @Override
     public void onMessage(int source, int path, int target, Object object) {
-      LOG.info("Message received for last: " + source + " target: "
-          + target + " count: " + count++);
+//      LOG.info(String.format("%d Message received for partial %d from %d", id, target, source));
+      // add the object to the map
+      try {
+        List<Object> m = messages.get(target).get(source);
+        m.add(object);
+        // now check weather we have the messages for this source
+        Map<Integer, List<Object>> map = messages.get(target);
+        boolean found = true;
+        for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
+          if (e.getValue().size() == 0) {
+            found = false;
+          }
+        }
+        if (found) {
+          Object o = null;
+          for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
+            o = e.getValue().remove(0);
+          }
+          if (o != null) {
+            count++;
+            if (count % 1000 == 0) {
+              LOG.info("Message received for last: " + source + " target: "
+                  + target + " count: " + count);
+            }
+          } else {
+            LOG.severe("We cannot find an object and this is not correct");
+          }
+        }
+      } catch (Throwable t) {
+        t.printStackTrace();
+      }
     }
   }
 
