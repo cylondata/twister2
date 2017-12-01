@@ -30,7 +30,6 @@ public class MPILoadBalance extends MPIDataFlowOperation {
   private Set<Integer> destinations;
   protected IRouter router;
 
-  private List<Integer> destinationList;
   private Map<Integer, Integer> destinationIndex;
   private Set<Integer> thisSources;
   private Destinations dests = new Destinations();
@@ -38,8 +37,8 @@ public class MPILoadBalance extends MPIDataFlowOperation {
   /**
    * A place holder for keeping the internal and external destinations
    */
+  @SuppressWarnings("VisibilityModifier")
   private class Destinations {
-    int total = 0;
     List<Integer> internal = new ArrayList<>();
     List<Integer> external = new ArrayList<>();
   }
@@ -53,13 +52,20 @@ public class MPILoadBalance extends MPIDataFlowOperation {
     for (int s : sources) {
       destinationIndex.put(s, 0);
     }
-    this.destinationList = new ArrayList<>(destinations);
-
-    this.thisSources = TaskPlanUtils.getTasksOfThisExecutor(instancePlan, srcs);
   }
 
   protected void setupRouting() {
+    this.thisSources = TaskPlanUtils.getTasksOfThisExecutor(instancePlan, sources);
+
     this.router = new LoadBalanceRouter(instancePlan, sources, destinations);
+    Map<Integer, Map<Integer, Set<Integer>>> internal = router.getInternalSendTasks(0);
+    Map<Integer, Map<Integer, Set<Integer>>> external = router.getExternalSendTasks(0);
+
+    for (int s : thisSources) {
+      this.dests.internal.addAll(internal.get(s).get(MPIContext.DEFAULT_PATH));
+      this.dests.external.addAll(external.get(s).get(MPIContext.DEFAULT_PATH));
+      break;
+    }
   }
 
   @Override
@@ -77,16 +83,31 @@ public class MPILoadBalance extends MPIDataFlowOperation {
     throw new RuntimeException("Method not supported");
   }
 
-  private int getRouting(int source) {
-    return 0;
-  }
-
   @Override
   protected RoutingParameters sendRoutingParameters(int source, int path) {
     RoutingParameters routingParameters = new RoutingParameters();
     int destination = 0;
 
     routingParameters.setDestinationId(destination);
+
+    if (!destinationIndex.containsKey(source)) {
+      throw new RuntimeException(String.format(
+          "Un-expected source %d in loadbalance executor %d %s", source,
+          executor, destinationIndex));
+    }
+
+    int index = destinationIndex.get(source);
+    if (index >= dests.internal.size()) {
+      index = index - dests.internal.size();
+      Integer route = dests.external.get(index);
+      routingParameters.addExternalRoute(route);
+      routingParameters.setDestinationId(route);
+    } else {
+      Integer route = dests.external.get(index);
+      routingParameters.addExternalRoute(route);
+      routingParameters.setDestinationId(route);
+    }
+
     return routingParameters;
   }
 

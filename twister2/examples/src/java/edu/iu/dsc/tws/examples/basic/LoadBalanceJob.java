@@ -11,5 +11,23 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.basic;
 
-public class LoadBalanceJob {
+import edu.iu.dsc.tws.api.JobConfig;
+import edu.iu.dsc.tws.api.Twister2Submitter;
+import edu.iu.dsc.tws.api.basic.job.BasicJob;
+import edu.iu.dsc.tws.examples.BaseLoadBalanceCommunication;
+import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
+
+public final class LoadBalanceJob {
+  private LoadBalanceJob() {
+  }
+
+  public static void main(String[] args) {
+    BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
+
+    jobBuilder.setName("basic-loadbalance");
+    jobBuilder.setContainerClass(BaseLoadBalanceCommunication.class.getName());
+    jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 4);
+    // now submit the job
+    Twister2Submitter.submitContainerJob(jobBuilder.build(), new JobConfig());
+  }
 }

@@ -80,6 +80,7 @@ public class BaseLoadBalanceCommunication implements IContainer {
         dests.add(i);
       }
     }
+    LOG.info(String.format("Loadbalance: sources %s destinations: %s", sources, dests));
 
     Map<String, Object> newCfg = new HashMap<>();
 
@@ -87,10 +88,10 @@ public class BaseLoadBalanceCommunication implements IContainer {
     // this method calls the init method
     // I think this is wrong
     loadBalance = channel.loadBalance(newCfg, MessageType.OBJECT, 0,
-        dests, sources, new BCastReceive());
-
+        sources, dests, new BCastReceive());
     // the map thread where data is produced
-    if (id == 0) {
+    LOG.info("Starting worker: " + id);
+    if (id == 0 || id == 1) {
       Thread mapThread = new Thread(new MapWorker());
       mapThread.start();
     }
@@ -120,12 +121,14 @@ public class BaseLoadBalanceCommunication implements IContainer {
       for (int i = 0; i < 5000; i++) {
         IntData data = generateData();
         // lets generate a message
-        while (!loadBalance.send(NO_OF_TASKS, data)) {
-          // lets wait a litte and try again
-          try {
-            Thread.sleep(1);
-          } catch (InterruptedException e) {
-            e.printStackTrace();
+        for (int j = 0; j < NO_OF_TASKS / 4; j++) {
+          while (!loadBalance.send(id * 2 + j, data)) {
+            // lets wait a litte and try again
+            try {
+              Thread.sleep(1);
+            } catch (InterruptedException e) {
+              e.printStackTrace();
+            }
           }
         }
         LOG.info(String.format("%d sending from %d", id, NO_OF_TASKS)

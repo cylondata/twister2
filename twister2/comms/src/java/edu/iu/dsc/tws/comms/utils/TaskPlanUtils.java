@@ -28,7 +28,7 @@ import java.util.Set;
 
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 
-public class TaskPlanUtils {
+public final class TaskPlanUtils {
   private TaskPlanUtils() {
   }
 
