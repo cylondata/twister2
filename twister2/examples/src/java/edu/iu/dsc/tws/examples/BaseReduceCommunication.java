@@ -116,8 +116,8 @@ public class BaseReduceCommunication implements IContainer {
     @Override
     public void run() {
       LOG.log(Level.INFO, "Starting map worker");
+      IntData data = generateData();
       for (int i = 0; i < 5000; i++) {
-        IntData data = generateData();
         for (int j = 0; j < noOfTasksPerExecutor; j++) {
           // lets generate a message
           while (!reduce.send(j + id * noOfTasksPerExecutor, data)) {
