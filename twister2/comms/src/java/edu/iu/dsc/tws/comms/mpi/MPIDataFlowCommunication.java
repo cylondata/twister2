@@ -98,4 +98,23 @@ public class MPIDataFlowCommunication extends DataFlowCommunication {
     LOG.info("Intiailize dataflow operation");
     return dataFlowOperation;
   }
+
+  public DataFlowOperation loadBalance(Map<String, Object> properties, MessageType type, int edge,
+                                  Set<Integer> sourceTasks, Set<Integer> destTasks,
+                                  MessageReceiver receiver) {
+    LOG.info("Merging configurations");
+    // merge with the user specified configuration, user specified will take precedence
+    Config mergedCfg = Config.newBuilder().putAll(config).putAll(properties).build();
+    LOG.info("Merged configurations");
+
+    // create the dataflow operation
+    DataFlowOperation dataFlowOperation = new MPILoadBalance(channel,
+        sourceTasks, destTasks);
+    LOG.info("Created dataflow operation");
+
+    // intialize the operation
+    dataFlowOperation.init(mergedCfg, type, instancePlan, edge, receiver, null);
+    LOG.info("Intiailize dataflow operation");
+    return dataFlowOperation;
+  }
 }

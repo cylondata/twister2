@@ -5,11 +5,12 @@ common_deps_files = [
     "//twister2/common/src/java:config-java",
     "//twister2/common/src/java:common-java",
 ]
-#java_library(
-#    name = "data-java",
-#    srcs = glob(["**/*.java"]),
-#    deps = common_deps_files,
-#)
+
+java_library(
+    name = "data-java",
+    srcs = glob(["**/*.java"]),
+    deps = common_deps_files,
+)
 
 filegroup(
     name = "srcs",

@@ -20,7 +20,6 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.fs.BlockLocation;
-import edu.iu.dsc.tws.data.fs.FSDataInputStream;
 import edu.iu.dsc.tws.data.fs.FileInputSplit;
 import edu.iu.dsc.tws.data.fs.FileStatus;
 import edu.iu.dsc.tws.data.fs.FileSystem;
@@ -37,7 +36,7 @@ public class BinaryInputFormatter extends FileInputFormat<byte[]> {
   /**
    * Endianess of the binary file, or the byte order
    */
-  ByteOrder endianess = ByteOrder.LITTLE_ENDIAN;
+  private ByteOrder endianess = ByteOrder.LITTLE_ENDIAN;
 
   /**
    * The default read buffer size = 1MB.
@@ -74,9 +73,9 @@ public class BinaryInputFormatter extends FileInputFormat<byte[]> {
 
   private transient int limit;
 
-  private transient byte[] currBuffer;		// buffer in which current record byte sequence is found
-  private transient int currOffset;			// offset in above buffer
-  private transient int currLen;				// length of current byte sequence
+  private transient byte[] currBuffer;    // buffer in which current record byte sequence is found
+  private transient int currOffset;      // offset in above buffer
+  private transient int currLen;        // length of current byte sequence
 
   private transient boolean overLimit;
 
@@ -84,58 +83,58 @@ public class BinaryInputFormatter extends FileInputFormat<byte[]> {
 
   private long offset = -1;
 
-  public BinaryInputFormatter(Path filePath){
+  public BinaryInputFormatter(Path filePath) {
     super(filePath);
     setRecordLength(DEFAULT_RECORD_LENGTH);
   }
 
-  public BinaryInputFormatter(Path filePath, int recordLength){
+  public BinaryInputFormatter(Path filePath, int recordLen) {
     super(filePath);
-    setRecordLength(recordLength);
+    setRecordLength(recordLen);
   }
 
   public ByteOrder getEndianess() {
     return endianess;
   }
 
-  public void setEndianess(ByteOrder endianess) {
-    if(endianess == null){
+  public void setEndianess(ByteOrder order) {
+    if (endianess == null) {
       throw new IllegalArgumentException("Endianess must not be null");
     }
-    this.endianess = endianess;
+    this.endianess = order;
   }
 
   public int getBufferSize() {
     return bufferSize;
   }
 
-  public void setBufferSize(int bufferSize) {
+  public void setBufferSize(int buffSize) {
     if (bufferSize < 2) {
       throw new IllegalArgumentException("Buffer size must be at least 2.");
     }
-    this.bufferSize = bufferSize;
+    this.bufferSize = buffSize;
   }
 
   public int getRecordLength() {
     return recordLength;
   }
 
-  public void setRecordLength(int recordLength) {
-    if(recordLength <= 0){
+  public void setRecordLength(int recordLen) {
+    if (recordLen <= 0) {
       throw new IllegalArgumentException("RecordLength must be larger than 0");
     }
-    this.recordLength = recordLength;
-    if(this.bufferSize % recordLength != 0){
+    this.recordLength = recordLen;
+    if (this.bufferSize % recordLen != 0) {
       int bufferFactor = 1;
-      if(this.bufferSize > 0){
-        bufferFactor = bufferSize/recordLength;
-      }else{
-        bufferFactor = DEFAULT_READ_BUFFER_SIZE/recordLength;
+      if (this.bufferSize > 0) {
+        bufferFactor = bufferSize / recordLen;
+      } else {
+        bufferFactor = DEFAULT_READ_BUFFER_SIZE / recordLen;
       }
-      if(bufferFactor >= 1){
-        setBufferSize(recordLength*bufferFactor);
-      }else{
-        setBufferSize(recordLength*8);
+      if (bufferFactor >= 1) {
+        setBufferSize(recordLen * bufferFactor);
+      } else {
+        setBufferSize(recordLen * 8);
       }
 
     }
@@ -153,17 +152,17 @@ public class BinaryInputFormatter extends FileInputFormat<byte[]> {
 
     // the if() clauses are to prevent the configure() method from
     // overwriting the values set by the setters
-    int recordLength = parameters.getIntegerValue(RECORD_LENGTH, -1   );
-    if (recordLength > 0) {
-      setRecordLength(recordLength);
+    int recordLen = parameters.getIntegerValue(RECORD_LENGTH, -1);
+    if (recordLen > 0) {
+      setRecordLength(recordLen);
     }
 
   }
 
   /**
-   * Computes the input splits for the file. By default, one file block is one split. If more splits
-   * are requested than blocks are available, then a split may be a fraction of a block and splits may cross
-   * block boundaries.
+   * Computes the input splits for the file. By default, one file block is one split. If more
+   * splits are requested than blocks are available, then a split may be a fraction of a block and
+   * splits may cross block boundaries.
    *
    * @param minNumSplits The minimum desired number of file splits.
    * @return The computed file splits.
@@ -175,10 +174,10 @@ public class BinaryInputFormatter extends FileInputFormat<byte[]> {
     }
     //TODO L2: The current implementaion only handles a snigle binary file not a set of files
     // take the desired number of splits into account
-    minNumSplits = Math.max(minNumSplits, this.numSplits);
+    int curminNumSplits = Math.max(minNumSplits, this.numSplits);
 
     final Path path = this.filePath;
-    final List<FileInputSplit> inputSplits = new ArrayList<FileInputSplit>(minNumSplits);
+    final List<FileInputSplit> inputSplits = new ArrayList<FileInputSplit>(curminNumSplits);
     // get all the files that are involved in the splits
     List<FileStatus> files = new ArrayList<FileStatus>();
     long totalLength = 0;
@@ -199,26 +198,28 @@ public class BinaryInputFormatter extends FileInputFormat<byte[]> {
     //TODO L3: Handle if unsplittable
     //Splits will be made so that records are not broken into two splits
     //Odd records will be divided among the first splits so the max diff would be 1 record
-    if(totalLength%this.recordLength != 0) throw new IllegalStateException("The Binary file has a incomplete record");
-    long numberOfRecords = totalLength/this.recordLength;
-    long minRecordsForSplit = Math.floorDiv(numberOfRecords,minNumSplits);
-    long oddRecords = numberOfRecords%minNumSplits;
+    if (totalLength % this.recordLength != 0) {
+      throw new IllegalStateException("The Binary file has a incomplete record");
+    }
+    long numberOfRecords = totalLength / this.recordLength;
+    long minRecordsForSplit = Math.floorDiv(numberOfRecords, minNumSplits);
+    long oddRecords = numberOfRecords % minNumSplits;
 
     //Generate the splits
     int splitNum = 0;
     for (final FileStatus file : files) {
       final long len = file.getLen();
       final long blockSize = file.getBlockSize();
-      final long minSplitSize = minRecordsForSplit*this.recordLength;
+      final long minSplitSize = minRecordsForSplit * this.recordLength;
       long currentSplitSize = minSplitSize;
       long halfSplit = currentSplitSize >>> 1;
 
-      if(oddRecords > 0){
+      if (oddRecords > 0) {
         currentSplitSize = currentSplitSize + this.recordLength;
         oddRecords--;
       }
 
-      if(len > 0){
+      if (len > 0) {
         // get the block locations and make sure they are in order with respect to their offset
         final BlockLocation[] blocks = fs.getFileBlockLocations(file, 0, len);
         Arrays.sort(blocks);
@@ -231,7 +232,8 @@ public class BinaryInputFormatter extends FileInputFormat<byte[]> {
           // get the block containing the majority of the data
           blockIndex = getBlockIndexForPosition(blocks, position, halfSplit, blockIndex);
           // create a new split
-          FileInputSplit fis = new FileInputSplit(splitNum++, file.getPath(), position, currentSplitSize,
+          FileInputSplit fis = new FileInputSplit(splitNum++, file.getPath(),
+              position, currentSplitSize,
               blocks[blockIndex].getHosts());
           inputSplits.add(fis);
 
@@ -239,7 +241,7 @@ public class BinaryInputFormatter extends FileInputFormat<byte[]> {
           position += currentSplitSize;
           bytesUnassigned -= currentSplitSize;
         }
-      }else {
+      } else {
         throw new IllegalStateException("The binary file " + file.getPath() + " is Empty");
       }
 
@@ -248,8 +250,10 @@ public class BinaryInputFormatter extends FileInputFormat<byte[]> {
   }
 
   /**
-   * Opens the given input split. This method opens the input stream to the specified file, allocates read buffers
-   * and positions the stream at the correct position, making sure that any partial record at the beginning is skipped.
+   * Opens the given input split. This method opens the input stream to the specified file,
+   * allocates read buffers
+   * and positions the stream at the correct position, making sure that any partial record at
+   * the beginning is skipped.
    *
    * @param split The input split to open.
    */
@@ -258,15 +262,15 @@ public class BinaryInputFormatter extends FileInputFormat<byte[]> {
     initBuffers();
     //Check if we are starting at a new record and adjust as needed (only needed for binary files)
     long recordMod = this.splitStart % this.recordLength;
-    if( recordMod != 0){
+    if (recordMod != 0) {
       //We are not at the start of a record, we change the offset to take it to the start of the
       //next record
       this.offset = this.splitStart + this.recordLength - recordMod;
       //TODO: when debugging check if this shoould be >=
-      if(this.offset > this.splitStart + this.splitLength){
+      if (this.offset > this.splitStart + this.splitLength) {
         this.end = true; // We do not have a record in this split
       }
-    }else{
+    } else {
       this.offset = splitStart;
     }
 
@@ -279,7 +283,7 @@ public class BinaryInputFormatter extends FileInputFormat<byte[]> {
   private void initBuffers() {
     this.bufferSize = this.bufferSize <= 0 ? DEFAULT_READ_BUFFER_SIZE : this.bufferSize;
 
-    if (this.bufferSize %this.recordLength != 0) {
+    if (this.bufferSize % this.recordLength != 0) {
       throw new IllegalArgumentException("Buffer size must be a multiple of the record length");
     }
 
@@ -298,19 +302,18 @@ public class BinaryInputFormatter extends FileInputFormat<byte[]> {
 
   /**
    * Reads a single record from the binary file
-   * @return
-   * @throws IOException
    */
-  public byte[] readRecord(byte[] reusable, byte[] bytes, int offset, int numBytes) throws IOException {
+  public byte[] readRecord(byte[] reusable, byte[] bytes, int readOffset, int numBytes)
+      throws IOException {
     //If the reusable array is avilable use it
     //TODO L2: check for faster methods to perform this
-    if(reusable != null && reusable.length == this.recordLength){
-      System.arraycopy(bytes,offset,reusable,0,numBytes);
+    if (reusable != null && reusable.length == this.recordLength) {
+      System.arraycopy(bytes, readOffset, reusable, 0, numBytes);
       return reusable;
-    }else{
+    } else {
       //TODO L2:check if this has any memory leaks
       byte[] tmp = new byte[this.recordLength];
-      System.arraycopy(bytes,offset,tmp,0,numBytes);
+      System.arraycopy(bytes, readOffset, tmp, 0, numBytes);
       return tmp;
     }
   }
@@ -326,20 +329,20 @@ public class BinaryInputFormatter extends FileInputFormat<byte[]> {
   }
 
   private boolean checkAndBufferRecord() throws IOException {
-    if(this.readPos < this.limit){
+    if (this.readPos < this.limit) {
       //The next record is already in the buffer
       this.currOffset = this.readPos;
       this.currLen = this.recordLength;
       this.readPos = this.readPos + this.recordLength;
       return true;
-    }else{
+    } else {
       //Need to refill the buffer
-      if(fillBuffer(0)){
+      if (fillBuffer(0)) {
         this.currOffset = this.readPos;
         this.currLen = this.recordLength;
         this.readPos = this.readPos + this.recordLength;
         return true;
-      }else{
+      } else {
         return false;
       }
     }
@@ -348,17 +351,17 @@ public class BinaryInputFormatter extends FileInputFormat<byte[]> {
   /**
    * Fills the read buffer with bytes read from the file starting from an offset.
    */
-  private boolean fillBuffer(int offset) throws IOException {
-    int maxReadLength = this.readBuffer.length - offset;
+  private boolean fillBuffer(int fillOffset) throws IOException {
+    int maxReadLength = this.readBuffer.length - fillOffset;
     // special case for reading the whole split.
     if (this.splitLength == FileInputFormat.READ_WHOLE_SPLIT_FLAG) {
-      int read = this.stream.read(this.readBuffer, offset, maxReadLength);
+      int read = this.stream.read(this.readBuffer, fillOffset, maxReadLength);
       if (read == -1) {
         this.stream.close();
         this.stream = null;
         return false;
       } else {
-        this.readPos = offset;
+        this.readPos = fillOffset;
         this.limit = read;
         return true;
       }
@@ -369,19 +372,20 @@ public class BinaryInputFormatter extends FileInputFormat<byte[]> {
     if (this.splitLength > 0) {
       // if we have more data, read that
       toRead = this.splitLength > maxReadLength ? maxReadLength : (int) this.splitLength;
-    }
-    else {
+    } else {
       // if we have exhausted our split, we need to complete the current record, or read one
       // more across the next split.
       // the reason is that the next split will skip over the beginning until it finds the first
-      // delimiter, discarding it as an incomplete chunk of data that belongs to the last record in the
+      // delimiter, discarding it as an incomplete chunk of data that belongs to
+      // the last record in the
       // previous split.
       toRead = maxReadLength;
       this.overLimit = true;
-      return false; //Since the BIF does not break splits in the middle of records there cannot be partial records
+      return false; //Since the BIF does not break splits in the middle of records
+      // there cannot be partial records
     }
 
-    int read = this.stream.read(this.readBuffer, offset, toRead);
+    int read = this.stream.read(this.readBuffer, fillOffset, toRead);
 
     if (read == -1) {
       this.stream.close();
@@ -389,8 +393,8 @@ public class BinaryInputFormatter extends FileInputFormat<byte[]> {
       return false;
     } else {
       this.splitLength -= read;
-      this.readPos = offset; // position from where to start reading
-      this.limit = read + offset; // number of valid bytes in the read buffer
+      this.readPos = fillOffset; // position from where to start reading
+      this.limit = read + fillOffset; // number of valid bytes in the read buffer
       return true;
     }
   }

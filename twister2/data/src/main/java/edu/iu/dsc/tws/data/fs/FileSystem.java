@@ -34,7 +34,9 @@ public abstract class FileSystem {
 
   private static final Logger LOG = Logger.getLogger(FileSystem.class.getName());
 
-  /** Object used to protect calls to specific methods.*/
+  /**
+   * Object used to protect calls to specific methods.
+   */
   private static final Object SYNCHRONIZATION_OBJECT = new Object();
 
   /**
@@ -55,49 +57,39 @@ public abstract class FileSystem {
 
   /**
    * Check if the given path exsits
-   * @param path
-   * @return
    */
-  public boolean exists(Path path){
+  public boolean exists(Path path) {
     return true;
   }
 
   /**
    * Check if file
-   * @param path
-   * @return
    */
-  public boolean isFile(Path path){
+  public boolean isFile(Path path) {
     return true;
   }
 
   /**
    * Check if directory
-   * @param path
-   * @return
    */
-  public boolean isDirectory(Path path){
+  public boolean isDirectory(Path path) {
     return true;
   }
 
   /**
    * check if isSymlink
-   * @param path
-   * @return
    */
-  public boolean isSymlink(Path path){
+  public boolean isSymlink(Path path) {
     return true;
   }
 
   /**
    * Set the working Directory
-   * @param path
    */
   public abstract void setWorkingDirectory(Path path);
 
   /**
    * Get the working Directory
-   * @return
    */
   public abstract Path getWorkingDirectory();
 
@@ -111,8 +103,8 @@ public abstract class FileSystem {
   /**
    * Called after a new FileSystem instance is constructed.
    *
-   * @param name
-   *        a {@link URI} whose authority section names the host, port, etc. for this file system
+   * @param name a {@link URI} whose authority section names the host, port, etc.
+   * for this file system
    */
   public abstract void initialize(URI name) throws IOException;
 
@@ -127,6 +119,7 @@ public abstract class FileSystem {
    * In this case, a file path specified as <code>/user/USERNAME/in.txt</code>
    * is going to be transformed into <code>hdfs://localhost:9000/user/USERNAME/in.txt</code>. By
    * default this is set to <code>file:///</code> which points to the local filesystem.
+   *
    * @param config the configuration from where to fetch the parameter.
    */
   public static void setDefaultScheme(Config config) throws IOException {
@@ -137,8 +130,8 @@ public abstract class FileSystem {
         try {
           defaultScheme = new URI(stringifiedUri);
         } catch (URISyntaxException e) {
-          throw new IOException("The URI used to set the default filesystem " +
-              "scheme ('" + stringifiedUri + "') is not valid.");
+          throw new IOException("The URI used to set the default filesystem "
+              + "scheme ('" + stringifiedUri + "') is not valid.");
         }
       }
     }
@@ -147,8 +140,6 @@ public abstract class FileSystem {
   /**
    * Returns a FileSystem for the given uri
    * TODO: need to think about security (Flink adds a safety net here, that is skipped for now)
-   * @param uri
-   * @return
    */
   public static FileSystem get(URI uri) throws IOException {
     return getFileSystem(uri);
@@ -157,12 +148,10 @@ public abstract class FileSystem {
   /**
    * Return a file status object that represents the path.
    *
-   * @param f
-   *        The path we want information from
+   * @param f The path we want information from
    * @return a FileStatus object
-   * @throws FileNotFoundException
-   *         when the path does not exist;
-   *         IOException see specific implementation
+   * @throws FileNotFoundException when the path does not exist;
+   * IOException see specific implementation
    */
   public abstract FileStatus getFileStatus(Path f) throws IOException;
 
@@ -170,77 +159,76 @@ public abstract class FileSystem {
    * List the statuses of the files/directories in the given path if the path is
    * a directory.
    *
-   * @param f
-   *        given path
+   * @param f given path
    * @return the statuses of the files/directories in the given patch
-   * @throws IOException
    */
   public abstract FileStatus[] listFiles(Path f) throws IOException;
 
   /**
    * Opens an FSDataInputStream at the indicated Path.
    *
-   * @param f
-   *        the file to open
+   * @param f the file to open
    */
   public abstract FSDataInputStream open(Path f) throws IOException;
 
   /**
    * Returns a unsafe filesystem for the given uri
-   * @param uri
-   * @return
    */
   private static FileSystem getFileSystem(URI uri) throws IOException {
     FileSystem fs = null;
     URI asked = uri;
+    URI curUri = uri;
 
-    if(uri == null){
-      throw new IOException("The URI " + uri.toString() + " is not a vaild URI");
+    if (curUri == null) {
+      throw new IOException("The URI " + curUri.toString() + " is not a vaild URI");
     }
     //TODO: check if the sycn is actually needed or can be scoped down
-    synchronized (SYNCHRONIZATION_OBJECT){
+    synchronized (SYNCHRONIZATION_OBJECT) {
 
-      if (uri.getScheme() == null) {
+      if (curUri.getScheme() == null) {
         try {
           if (defaultScheme == null) {
             defaultScheme = new URI(ConfigConstants.DEFAULT_FILESYSTEM_SCHEME);
           }
 
-          uri = new URI(defaultScheme.getScheme(), null, defaultScheme.getHost(),
-              defaultScheme.getPort(), uri.getPath(), null, null);
+          curUri = new URI(defaultScheme.getScheme(), null, defaultScheme.getHost(),
+              defaultScheme.getPort(), curUri.getPath(), null, null);
 
         } catch (URISyntaxException e) {
           try {
             if (defaultScheme.getScheme().equals("file")) {
-              uri = new URI("file", null,
-                  new Path(new File(uri.getPath()).getAbsolutePath()).toUri().getPath(), null);
+              curUri = new URI("file", null,
+                  new Path(new File(curUri.getPath()).getAbsolutePath()).toUri().getPath(), null);
             }
           } catch (URISyntaxException ex) {
             // we tried to repair it, but could not. report the scheme error
-            throw new IOException("The URI '" + uri.toString() + "' is not valid.");
+            throw new IOException("The URI '" + curUri.toString() + "' is not valid.");
           }
         }
       }
 
-      if(uri.getScheme() == null) {
-        throw new IOException("The URI '" + uri + "' is invalid.\n" +
-            "The fs.default-scheme = " + defaultScheme + ", the requested URI = " + asked +
-            ", and the final URI = " + uri + ".");
+      if (curUri.getScheme() == null) {
+        throw new IOException("The URI '" + curUri + "' is invalid.\n"
+            + "The fs.default-scheme = " + defaultScheme + ", the requested URI = " + asked
+            + ", and the final URI = " + curUri + ".");
       }
-      if (uri.getScheme().equals("file") && uri.getAuthority() != null && !uri.getAuthority().isEmpty()) {
-        String supposedUri = "file:///" + uri.getAuthority() + uri.getPath();
+      if (curUri.getScheme().equals("file") && curUri.getAuthority() != null
+          && !curUri.getAuthority().isEmpty()) {
+        String supposedUri = "file:///" + curUri.getAuthority() + curUri.getPath();
 
-        throw new IOException("Found local file path with authority '" + uri.getAuthority() + "' in path '"
-            + uri.toString() + "'. Hint: Did you forget a slash? (correct path would be '" + supposedUri + "')");
+        throw new IOException("Found local file path with authority '"
+            + curUri.getAuthority() + "' in path '"
+            + curUri.toString()
+            + "'. Hint: Did you forget a slash? (correct path would be '" + supposedUri + "')");
       }
 
       //TODO : need to add cache that can save FileSystem Objects and return from cache if available
-      if(!isSupportedScheme(uri.getScheme())){
+      if (!isSupportedScheme(curUri.getScheme())) {
         //TODO: handle when the system is not supported
-      }else{
-        String fsClass = SUPPORTEDFS.get(uri.getScheme());
+      } else {
+        String fsClass = SUPPORTEDFS.get(curUri.getScheme());
         fs = instantiateFileSystem(fsClass);
-        fs.initialize(uri);
+        fs.initialize(curUri);
       }
 
     }
@@ -249,10 +237,10 @@ public abstract class FileSystem {
 
   /**
    * Checks if the given FileSystem scheme is currently supported
-   * @param scheme
+   *
    * @return true if supported, false otherwise
    */
-  private static boolean isSupportedScheme(String scheme){
+  private static boolean isSupportedScheme(String scheme) {
     return SUPPORTEDFS.containsKey(scheme);
   }
 
@@ -260,17 +248,17 @@ public abstract class FileSystem {
     try {
       Class<? extends FileSystem> fsClass = getFileSystemByName(className);
       return fsClass.newInstance();
-    }
-    catch (ClassNotFoundException e) {
+    } catch (ClassNotFoundException e) {
       throw new IOException("Could not load file system class '" + className + '\'', e);
-    }
-    catch (InstantiationException | IllegalAccessException e) {
+    } catch (InstantiationException | IllegalAccessException e) {
       throw new IOException("Could not instantiate file system class: " + e.getMessage(), e);
     }
   }
 
-  private static Class<? extends FileSystem> getFileSystemByName(String className) throws ClassNotFoundException {
-    return Class.forName(className, true, FileSystem.class.getClassLoader()).asSubclass(FileSystem.class);
+  private static Class<? extends FileSystem> getFileSystemByName(String className)
+      throws ClassNotFoundException {
+    return Class.forName(className, true,
+        FileSystem.class.getClassLoader()).asSubclass(FileSystem.class);
   }
 
   /**
@@ -281,5 +269,6 @@ public abstract class FileSystem {
    * hostnames of machines that contain the given file.
    * The FileSystem will simply return an elt containing 'localhost'.
    */
-  public abstract BlockLocation[] getFileBlockLocations(FileStatus file, long start, long len) throws IOException;
+  public abstract BlockLocation[] getFileBlockLocations(FileStatus file,
+                                                        long start, long len) throws IOException;
 }

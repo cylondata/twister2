@@ -11,13 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.mpi;
 
-import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
 import edu.iu.dsc.tws.rsched.spi.scheduler.IController;
 import edu.iu.dsc.tws.rsched.spi.scheduler.ILauncher;
@@ -48,14 +48,16 @@ public class MPILauncher implements ILauncher {
     LOG.log(Level.INFO, "Launching job for cluster {0}",
         MPIContext.clusterName(config));
 
-    if (!setupWorkingDirectory()) {
+    if (!setupWorkingDirectory(job)) {
       throw new RuntimeException("Failed to setup the directory");
     }
 
+    Config newConfig = Config.newBuilder().putAll(config).put(
+        SchedulerContext.WORKING_DIRECTORY, jobWorkingDirectory).build();
     // now start the controller, which will get the resources from
     // slurm and start the job
     IController controller = new MPIController(true);
-    controller.initialize(config);
+    controller.initialize(newConfig);
     return controller.start(resourcePlan, job);
   }
 
@@ -64,28 +66,19 @@ public class MPILauncher implements ILauncher {
    * and job package to the working directory
    * @return false if setup fails
    */
-  protected boolean setupWorkingDirectory() {
+  protected boolean setupWorkingDirectory(JobAPI.Job job) {
     // get the path of core release URI
-    String coreReleasePackageURI = MPIContext.systemPackageUrl(config);
-
-    // form the target dest core release file name
-    String coreReleaseFileDestination = Paths.get(
-        jobWorkingDirectory, "twister2-system.tar.gz").toString();
+    String corePackage = MPIContext.corePackageName(config);
 
     // Form the job package's URI
     String jobPackageURI = MPIContext.jobPackageUri(config).toString();
 
-    // form the target job package file name
-    String jobPackageDestination = Paths.get(
-        jobWorkingDirectory, "job.tar.gz").toString();
-
     // copy the files to the working directory
     return ResourceSchedulerUtils.setupWorkingDirectory(
+        job.getJobName(),
         jobWorkingDirectory,
-        coreReleasePackageURI,
-        coreReleaseFileDestination,
+        corePackage,
         jobPackageURI,
-        jobPackageDestination,
         Context.verbose(config));
   }
 }

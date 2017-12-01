@@ -14,7 +14,12 @@ package edu.iu.dsc.tws.data.utils;
 /**
  * Util class for network related functions
  */
-public class NetUtils {
+public final class NetUtils {
+
+  private NetUtils() {
+
+  }
+
   /**
    * Turn a fully qualified domain name (fqdn) into a hostname. If the fqdn has multiple subparts
    * (separated by a period '.'), it will take the first part. Otherwise it takes the entire fqdn.
@@ -27,7 +32,7 @@ public class NetUtils {
       throw new IllegalArgumentException("fqdn is null");
     }
     int dotPos = fqdn.indexOf('.');
-    if(dotPos == -1) {
+    if (dotPos == -1) {
       return fqdn;
     } else {
       return fqdn.substring(0, dotPos);

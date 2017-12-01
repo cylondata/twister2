@@ -11,22 +11,23 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.Message;
+import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.mpi.io.DefaultMessageReceiver;
+import edu.iu.dsc.tws.comms.mpi.MPIContext;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
@@ -41,7 +42,9 @@ public class BaseLoadBalanceCommunication implements IContainer {
 
   private Config config;
 
-  private BlockingQueue<Message> loadReceiveQueue = new ArrayBlockingQueue<Message>(1024);
+  private static final int NO_OF_TASKS = 8;
+
+  private int noOfTasksPerExecutor = 2;
 
   private enum Status {
     INIT,
@@ -53,13 +56,16 @@ public class BaseLoadBalanceCommunication implements IContainer {
 
   @Override
   public void init(Config cfg, int containerId, ResourcePlan plan) {
+    LOG.log(Level.INFO, "Starting the example with container id: " + plan.getThisId());
+
     this.config = cfg;
     this.resourcePlan = plan;
     this.id = containerId;
     this.status = Status.INIT;
+    this.noOfTasksPerExecutor = NO_OF_TASKS / plan.noOfContainers();
 
     // lets create the task plan
-    TaskPlan taskPlan = Utils.createTaskPlan(cfg, plan);
+    TaskPlan taskPlan = Utils.createReduceTaskPlan(cfg, plan, NO_OF_TASKS);
     //first get the communication config file
     TWSNetwork network = new TWSNetwork(cfg, taskPlan);
 
@@ -67,34 +73,40 @@ public class BaseLoadBalanceCommunication implements IContainer {
 
     Set<Integer> sources = new HashSet<>();
     Set<Integer> dests = new HashSet<>();
+    for (int i = 0; i < NO_OF_TASKS; i++) {
+      if (i < NO_OF_TASKS / 2) {
+        sources.add(i);
+      } else {
+        dests.add(i);
+      }
+    }
+    LOG.info(String.format("Loadbalance: sources %s destinations: %s", sources, dests));
+
     Map<String, Object> newCfg = new HashMap<>();
 
+    LOG.info("Setting up reduce dataflow operation");
     // this method calls the init method
     // I think this is wrong
-    loadBalance = channel.broadCast(newCfg, MessageType.INTEGER, 0,
-        0, dests, new DefaultMessageReceiver(loadReceiveQueue));
-
+    loadBalance = channel.loadBalance(newCfg, MessageType.OBJECT, 0,
+        sources, dests, new BCastReceive());
     // the map thread where data is produced
-    Thread mapThread = new Thread(new MapWorker());
-
-    mapThread.start();
-
-    // now lets create the load balance receiving worker
-    Thread loadBalanceWorker = new Thread(new LoadBalanceWorker());
-    loadBalanceWorker.start();
-
-    // we need to progress the communication
-    while (status != Status.LOAD_RECEIVE_FINISHED) {
-      channel.progress();
-
-      // we should progress the load balance as well
-      loadBalance.progress();
+    LOG.info("Starting worker: " + id);
+    if (id == 0 || id == 1) {
+      Thread mapThread = new Thread(new MapWorker());
+      mapThread.start();
     }
 
-    try {
-      mapThread.join();
-    } catch (InterruptedException e) {
-      throw new RuntimeException("Failed to wait on threads");
+    // we need to progress the communication
+    while (true) {
+      try {
+        // progress the channel
+        channel.progress();
+        // we should progress the communication directive
+        loadBalance.progress();
+        Thread.yield();
+      } catch (Throwable t) {
+        t.printStackTrace();
+      }
     }
   }
 
@@ -102,27 +114,55 @@ public class BaseLoadBalanceCommunication implements IContainer {
    * We are running the map in a separate thread
    */
   private class MapWorker implements Runnable {
+    private int sendCount = 0;
     @Override
     public void run() {
-      for (int i = 0; i < 100000; i++) {
-        Message message = Message.newBuilder().setPayload(generateData()).build();
+      LOG.log(Level.INFO, "Starting map worker");
+      for (int i = 0; i < 5000; i++) {
+        IntData data = generateData();
         // lets generate a message
-        loadBalance.send(0, message);
+        for (int j = 0; j < NO_OF_TASKS / 4; j++) {
+          while (!loadBalance.send(id * 2 + j, data)) {
+            // lets wait a litte and try again
+            try {
+              Thread.sleep(1);
+            } catch (InterruptedException e) {
+              e.printStackTrace();
+            }
+          }
+        }
+        LOG.info(String.format("%d sending from %d", id, NO_OF_TASKS)
+            + " count: " + sendCount++);
+        sendCount++;
+        Thread.yield();
       }
+      status = Status.MAP_FINISHED;
     }
   }
 
-
-  private class LoadBalanceWorker implements Runnable {
+  private class BCastReceive implements MessageReceiver {
+    private Map<Integer, Map<Integer, List<Object>>> messages = new HashMap<>();
+    private int count = 0;
     @Override
-    public void run() {
-      while (true) {
-        try {
-          Message m = loadReceiveQueue.take();
-          System.out.println("Received message");
-        } catch (InterruptedException ignore) {
+    public void init(Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
+      for (Map.Entry<Integer, Map<Integer, List<Integer>>> e : expectedIds.entrySet()) {
+        Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
+
+        for (int i : e.getValue().get(MPIContext.DEFAULT_PATH)) {
+          messagesPerTask.put(i, new ArrayList<Object>());
         }
+
+        LOG.info(String.format("%d Final Task %d receives from %s",
+            id, e.getKey(), e.getValue().get(MPIContext.DEFAULT_PATH).toString()));
+
+        messages.put(e.getKey(), messagesPerTask);
       }
+    }
+
+    @Override
+    public void onMessage(int source, int path, int target, Object object) {
+      LOG.info("Message received for last: " + source + " target: "
+          + target + " count: " + count++);
     }
   }
 

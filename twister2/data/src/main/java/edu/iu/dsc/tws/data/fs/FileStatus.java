@@ -22,7 +22,6 @@ package edu.iu.dsc.tws.data.fs;
 /**
  * Interface that represents the client side information for a file
  * independent of the file system.
- *
  */
 public interface FileStatus {
 
@@ -34,7 +33,7 @@ public interface FileStatus {
   long getLen();
 
   /**
-   *Get the block size of the file.
+   * Get the block size of the file.
    *
    * @return the number of bytes
    */

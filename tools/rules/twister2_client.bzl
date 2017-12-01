@@ -10,11 +10,17 @@ def twister2_client_conf_files():
         "//twister2/config/src/yaml:conf-yaml",
         "//twister2/config/src/yaml:conf-local-yaml",
         "//twister2/config/src/yaml:conf-slurmmpi-yaml",
+        "//twister2/config/src/yaml:conf-nodesmpi-yaml",
     ]
 
 def twister2_client_local_files():
     return [
         "//twister2/config/src/yaml:conf-local-yaml",
+    ]
+
+def twister2_client_nodesmpi_files():
+    return [
+        "//twister2/config/src/yaml:conf-nodesmpi-yaml",
     ]
 
 def twister2_client_slurmmpi_files():
@@ -24,7 +30,7 @@ def twister2_client_slurmmpi_files():
 
 def twister2_client_lib_task_scheduler_files():
     return [
-        "//twister2/taskscheduler/src/java:task_scheduler-java",
+        "//twister2/taskscheduler/src/java:taskscheduler-java",
     ]
 
 def twister2_client_lib_resource_scheduler_files():

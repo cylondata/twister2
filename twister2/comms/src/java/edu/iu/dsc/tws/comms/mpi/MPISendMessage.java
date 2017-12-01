@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi;
 
-import java.util.List;
+import java.util.Set;
 
 /**
  * Keep track of a MPI message while it is transisitioning through the send phases
@@ -38,9 +38,9 @@ public class MPISendMessage {
 
   private int path;
 
-  private List<Integer> internalSends;
+  private Set<Integer> internalSends;
 
-  private List<Integer> externalSends;
+  private Set<Integer> externalSends;
 
   private int acceptedExternalSends = 0;
 
@@ -57,7 +57,7 @@ public class MPISendMessage {
 
 
   public MPISendMessage(int src, MPIMessage message, int e, int di, int p,
-                        List<Integer> intSends, List<Integer> extSends) {
+                        Set<Integer> intSends, Set<Integer> extSends) {
     this.ref = message;
     this.source = src;
     this.edge = e;
@@ -127,11 +127,11 @@ public class MPISendMessage {
     return path;
   }
 
-  public List<Integer> getInternalSends() {
+  public Set<Integer> getInternalSends() {
     return internalSends;
   }
 
-  public List<Integer> getExternalSends() {
+  public Set<Integer> getExternalSends() {
     return externalSends;
   }
 

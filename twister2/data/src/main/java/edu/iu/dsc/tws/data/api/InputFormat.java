@@ -24,43 +24,49 @@ import edu.iu.dsc.tws.data.fs.io.InputSplitter;
  * <p>
  * The input format handles the following:
  * <ul>
- *   <li>It describes how the input is split into splits that can be processed in parallel.</li>
- *   <li>It describes how to read records from the input split.</li>
- *   <li>It describes how to gather basic statistics from the input.</li>
+ * <li>It describes how the input is split into splits that can be processed in parallel.</li>
+ * <li>It describes how to read records from the input split.</li>
+ * <li>It describes how to gather basic statistics from the input.</li>
  * </ul>
  * <p>
  * The life cycle of an input format is the following:
  * <ol>
-// *   <li>After being instantiated (parameterless), it is configured with a Configuration object.
- *       Basic fields are read from the configuration, such as for example a file path, if the format describes
- *       files as input.</li>
- *   <li>Optionally: It is called by the compiler to produce basic statistics about the input.</li>
- *   <li>It is called to create the input splits.</li>
- *   <li>Each parallel input task creates an instance, configures it and opens it for a specific split.</li>
- *   <li>All records are read from the input</li>
- *   <li>The input format is closed</li>
+ * // *   <li>After being instantiated (parameterless), it is configured with a Configuration object.
+ * Basic fields are read from the configuration, such as for example a file path,
+ * if the format describes
+ * files as input.</li>
+ * <li>Optionally: It is called by the compiler to produce basic statistics about the input.</li>
+ * <li>It is called to create the input splits.</li>
+ * <li>Each parallel input task creates an instance, configures it and opens it for a
+ * specific split.</li>
+ * <li>All records are read from the input</li>
+ * <li>The input format is closed</li>
  * </ol>
  * <p>
- * IMPORTANT NOTE: Input formats must be written such that an instance can be opened again after it was closed. That
- * is due to the fact that the input format is used for potentially multiple splits. After a split is done, the
- * format's close function is invoked and, if another split is available, the open function is invoked afterwards for
+ * IMPORTANT NOTE: Input formats must be written such that an instance can be opened
+ * again after it was closed. That
+ * is due to the fact that the input format is used for potentially multiple splits.
+ * After a split is done, the
+ * format's close function is invoked and, if another split is available, the open
+ * function is invoked afterwards for
  * the next split.
- *
- * @see InputSplit
- * //@see BaseStatistics
  *
  * @param <OT> The type of the produced records.
  * @param <T> The type of input split.
+ * @see InputSplit
+ * //@see BaseStatistics
  */
 public interface InputFormat<OT, T extends InputSplit> extends InputSplitter<T>, Serializable {
 
   /**
-   * Configures this input format. Since input formats are instantiated generically and hence parameterless,
-   * this method is the place where the input formats set their basic fields based on configuration values.
+   * Configures this input format. Since input formats are instantiated generically
+   * and hence parameterless, this method is the place where the input formats
+   * set their basic fields based on configuration values.
    * <p>
    * This method is always called first on a newly instantiated input format.
    *
-   * @param parameters The configuration with all parameters (note: not the Flink config but the TaskConfig).
+   * @param parameters The configuration with all parameters
+   * (note: not the Flink config but the TaskConfig).
    */
   void configure(Config parameters);
 
@@ -97,14 +103,14 @@ public interface InputFormat<OT, T extends InputSplit> extends InputSplitter<T>,
    *
    * @param reuse Object that may be reused.
    * @return Read record.
-   *
    * @throws IOException Thrown, if an I/O error occurred.
    */
   OT nextRecord(OT reuse) throws IOException;
 
   /**
-   * Method that marks the end of the life-cycle of an input split. Should be used to close channels and streams
-   * and release resources. After this method returns without an error, the input is assumed to be correctly read.
+   * Method that marks the end of the life-cycle of an input split. Should be used to
+   * close channels and streams and release resources. After this method returns without an error,
+   * the input is assumed to be correctly read.
    * <p>
    * When this method is called, the input format it guaranteed to be opened.
    *

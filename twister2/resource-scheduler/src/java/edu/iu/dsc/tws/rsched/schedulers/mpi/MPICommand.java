@@ -74,17 +74,17 @@ public abstract class MPICommand {
     // lets get the configurations
     commands.put("procs", requestedResources.getNoOfContainers());
 
-    String jobClassPath = JobUtils.jobClassPath(job);
-    String systemClassPath = JobUtils.jobClassPath(job);
+    String jobClassPath = JobUtils.jobClassPath(cfg, job, workingDirectory);
+    LOG.log(Level.INFO, "Job class path: " + jobClassPath);
+    String systemClassPath = JobUtils.systemClassPath(cfg);
     String classPath = jobClassPath + ":" + systemClassPath;
     commands.put("classpath", classPath);
     commands.put("java_props", "");
     commands.put("container_class", job.getContainer().getClassName());
-    commands.put("twister2_home", "");
-    commands.put("config_dir", "conf");
 
     return commands;
   }
 
-  protected abstract List<String> mpiCommand(RequestedResources resourcePlan, JobAPI.Job job);
+  protected abstract List<String> mpiCommand(String wd,
+                                             RequestedResources resourcePlan, JobAPI.Job job);
 }

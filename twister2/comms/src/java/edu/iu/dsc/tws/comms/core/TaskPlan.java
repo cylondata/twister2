@@ -83,7 +83,7 @@ public class TaskPlan {
     return thisExecutor;
   }
 
-  public Set<Integer> getAllExecutorGroups() {
+  public Set<Integer> getAllExecutors() {
     return groupsToExecutor.keySet();
   }
 

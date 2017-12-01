@@ -35,4 +35,8 @@ public interface TWSCommunication {
   DataFlowOperation direct(Map<String, Object> properties, MessageType type, int edge,
                            Set<Integer> sourceTasks, int destTask,
                            MessageReceiver receiver);
+
+  DataFlowOperation loadBalance(Map<String, Object> properties, MessageType type, int edge,
+                                Set<Integer> sourceTasks, Set<Integer> destTasks,
+                                MessageReceiver receiver);
 }

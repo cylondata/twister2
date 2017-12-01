@@ -17,7 +17,7 @@ import edu.iu.dsc.tws.common.config.TokenSub;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
 public class FsContext extends SchedulerContext {
-  public static final String UPLOAD_DIRECTORY = "uploader.directory";
+  public static final String UPLOAD_DIRECTORY = "twister2.uploader.directory";
 
 
   /**

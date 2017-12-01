@@ -40,15 +40,6 @@ public class MPIDirectDataFlowCommunication extends MPIDataFlowOperation {
     this.router = new DirectRouter(instancePlan, sources, destination);
   }
 
-  /**
-   * We will use the destination task id as the identifier
-   * @return
-   */
-  @Override
-  protected int destinationIdentifier(int source, int path) {
-    return destination;
-  }
-
   @Override
   protected boolean isLast(int source, int path, int taskIdentifier) {
     return router.isLastReceiver();
@@ -64,36 +55,6 @@ public class MPIDirectDataFlowCommunication extends MPIDataFlowOperation {
   @Override
   protected void routeReceivedMessage(MessageHeader message, List<Integer> routes) {
     throw new RuntimeException("We are not routing received messages");
-  }
-
-  @Override
-  protected void externalRoutesForSend(int source, List<Integer> routes) {
-    // get the expected routes
-    Map<Integer, Map<Integer, Set<Integer>>> routing = router.getExternalSendTasks(source);
-    if (routing == null) {
-      throw new RuntimeException("Un-expected message from source: " + source);
-    }
-
-    Map<Integer, Set<Integer>> sourceRouting = routing.get(source);
-    if (sourceRouting != null) {
-      // we always use path 0 because only one path
-      routes.addAll(sourceRouting.get(0));
-    }
-  }
-
-  @Override
-  protected void internalRoutesForSend(int source, List<Integer> routes) {
-    // get the expected routes
-    Map<Integer, Map<Integer, Set<Integer>>> routing = router.getInternalSendTasks(source);
-    if (routing == null) {
-      throw new RuntimeException("Un-expected message from source: " + source);
-    }
-
-    Map<Integer, Set<Integer>> sourceRouting = routing.get(source);
-    if (sourceRouting != null) {
-      // we always use path 0 because only one path
-      routes.addAll(sourceRouting.get(0));
-    }
   }
 
   @Override
@@ -125,5 +86,35 @@ public class MPIDirectDataFlowCommunication extends MPIDataFlowOperation {
   @Override
   protected boolean isLastReceiver() {
     return router.isLastReceiver();
+  }
+
+  @Override
+  protected RoutingParameters sendRoutingParameters(int source, int path) {
+    RoutingParameters routingParameters = new RoutingParameters();
+    // get the expected routes
+    Map<Integer, Map<Integer, Set<Integer>>> internalRoutes = router.getInternalSendTasks(source);
+    if (internalRoutes == null) {
+      throw new RuntimeException("Un-expected message from source: " + source);
+    }
+
+    Map<Integer, Set<Integer>> internalSourceRouting = internalRoutes.get(source);
+    if (internalSourceRouting != null) {
+      // we always use path 0 because only one path
+      routingParameters.addInternalRoutes(internalSourceRouting.get(0));
+    }
+
+    // get the expected routes
+    Map<Integer, Map<Integer, Set<Integer>>> externalRouting = router.getExternalSendTasks(source);
+    if (externalRouting == null) {
+      throw new RuntimeException("Un-expected message from source: " + source);
+    }
+
+    Map<Integer, Set<Integer>> externalSourceRouting = externalRouting.get(source);
+    if (externalSourceRouting != null) {
+      // we always use path 0 because only one path
+      routingParameters.addExternalRoutes(externalSourceRouting.get(0));
+    }
+    routingParameters.setDestinationId(destination);
+    return routingParameters;
   }
 }

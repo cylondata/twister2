@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.rsched.schedulers.mpi;
 
 import java.io.File;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -21,6 +22,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
 
 public class SlurmCommand extends MPICommand {
@@ -49,19 +51,25 @@ public class SlurmCommand extends MPICommand {
   }
 
   @Override
-  protected List<String> mpiCommand(RequestedResources resourcePlan, JobAPI.Job job) {
+  protected List<String> mpiCommand(String workingDirectory,
+                                    RequestedResources resourcePlan, JobAPI.Job job) {
+    String twister2Home = Paths.get(workingDirectory, job.getJobName()).toString();
+    String configDirectoryName = Paths.get(workingDirectory,
+        job.getJobName(), SchedulerContext.clusterName(config)).toString();
+    String nodesFileName = MPIContext.nodeFiles(config);
+
     // lets construct the mpi command to launch
-    List<String> slurmCommand = mpiCommand(getScriptPath(), resourcePlan.getNoOfContainers());
+    List<String> mpiCommand = mpiCommand(getScriptPath(), 1);
     Map<String, Object> map = mpiCommandArguments(config, resourcePlan, job);
 
-    slurmCommand.add(map.get("procs").toString());
-    slurmCommand.add(map.get("java_props").toString());
-    slurmCommand.add(map.get("classpath").toString());
-    slurmCommand.add(map.get("container_class").toString());
-    slurmCommand.add(map.get("twister2_home").toString());
-    slurmCommand.add(map.get("config_dir").toString());
+    mpiCommand.add(map.get("procs").toString());
+    mpiCommand.add(map.get("java_props").toString());
+    mpiCommand.add(map.get("classpath").toString());
+    mpiCommand.add(map.get("container_class").toString());
+    mpiCommand.add(twister2Home);
+    mpiCommand.add(twister2Home);
 
-    return slurmCommand;
+    return mpiCommand;
   }
 
   protected String getJobIdFilePath() {

@@ -48,6 +48,11 @@ public class LinkedQueue<T> implements Queue<T> {
     return queue.isEmpty();
   }
 
+  @Override
+  public int size() {
+    return queue.size();
+  }
+
   public LinkedBlockingQueue<T> getQueue() {
     return queue;
   }

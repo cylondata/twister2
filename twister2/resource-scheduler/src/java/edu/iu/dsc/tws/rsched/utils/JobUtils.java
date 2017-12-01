@@ -11,15 +11,21 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.utils;
 
+import java.io.File;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
 public final class JobUtils {
+  private static final Logger LOG = Logger.getLogger(JobUtils.class.getName());
 
   private JobUtils() {
   }
@@ -70,21 +76,36 @@ public final class JobUtils {
     return ret;
   }
 
-  public static String jobClassPath(JobAPI.Job job) {
+  public static String jobClassPath(Config cfg, JobAPI.Job job, String wd) {
     StringBuilder classPathBuilder = new StringBuilder();
-    // TODO(nbhagat): Take type of package as argument.
-//    if (job.getJobFormat().getType().endsWith(".jar")) {
-//      // Bundled jar
-//      classPathBuilder.append(originalPackage);
-//    } else {
-//      // Bundled tar
-//      String topologyJar = originalPackage.replace(".tar.gz", "").replace(".tar", "") + ".jar";
-//      classPathBuilder.append(String.format("libs/*:%s", topologyJar));
-//    }
+    LOG.log(Level.INFO, "Job type: " + job.getJobFormat().getType());
+    if (job.getJobFormat().getType() == JobAPI.JobFormatType.SHUFFLE) {
+      // Bundled jar
+      classPathBuilder.append(
+          Paths.get(wd, job.getJobName(), job.getJobFormat().getJobFile()).toString());
+    }
     return classPathBuilder.toString();
   }
 
   public static String systemClassPath(Config cfg) {
-    return "libs/*";
+    String libDirectory = SchedulerContext.libDirectory(cfg);
+    String libFile = Paths.get(libDirectory).toString();
+    String classPath = "";
+    File folder = new File(libFile);
+    String libName = folder.getName();
+    File[] listOfFiles = folder.listFiles();
+
+    if (listOfFiles != null) {
+      for (int i = 0; i < listOfFiles.length; i++) {
+        if (listOfFiles[i].isFile()) {
+          if (!"".equals(classPath)) {
+            classPath += ":" + Paths.get(libDirectory, listOfFiles[i].getName()).toString();
+          } else {
+            classPath += Paths.get(libDirectory, listOfFiles[i].getName()).toString();
+          }
+        }
+      }
+    }
+    return classPath;
   }
 }

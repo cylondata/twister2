@@ -29,29 +29,31 @@ public class LocatableInputSplitAssigner implements InputSplitAssigner {
   private static final Logger LOG = Logger.getLogger(LocatableInputSplitAssigner.class.getName());
 
   // unassigned input splits
-  private final Set<LocatableInputSplitWithCount> unassigned = new HashSet<LocatableInputSplitWithCount>();
+  private final Set<LocatableInputSplitWithCount> unassigned =
+      new HashSet<LocatableInputSplitWithCount>();
 
   // input splits indexed by host for local assignment
-  private final ConcurrentHashMap<String, LocatableInputSplitChooser> localPerHost = new ConcurrentHashMap<String, LocatableInputSplitChooser>();
+  private final ConcurrentHashMap<String, LocatableInputSplitChooser> localPerHost =
+      new ConcurrentHashMap<String, LocatableInputSplitChooser>();
 
   // unassigned splits for remote assignment
   private final LocatableInputSplitChooser remoteSplitChooser;
 
-  private int localAssignments;		// lock protected by the unassigned set lock
+  private int localAssignments;    // lock protected by the unassigned set lock
 
-  private int remoteAssignments;		// lock protected by the unassigned set lock
+  private int remoteAssignments;    // lock protected by the unassigned set lock
 
   // --------------------------------------------------------------------------------------------
 
   public LocatableInputSplitAssigner(Collection<LocatableInputSplit> splits) {
-    for(LocatableInputSplit split : splits) {
+    for (LocatableInputSplit split : splits) {
       this.unassigned.add(new LocatableInputSplitWithCount(split));
     }
     this.remoteSplitChooser = new LocatableInputSplitChooser(unassigned);
   }
 
   public LocatableInputSplitAssigner(LocatableInputSplit[] splits) {
-    for(LocatableInputSplit split : splits) {
+    for (LocatableInputSplit split : splits) {
       this.unassigned.add(new LocatableInputSplitWithCount(split));
     }
     this.remoteSplitChooser = new LocatableInputSplitChooser(unassigned);
@@ -67,7 +69,8 @@ public class LocatableInputSplitAssigner implements InputSplitAssigner {
       synchronized (this.remoteSplitChooser) {
         synchronized (this.unassigned) {
 
-          LocatableInputSplitWithCount split = this.remoteSplitChooser.getNextUnassignedMinLocalCountSplit(this.unassigned);
+          LocatableInputSplitWithCount split = this.remoteSplitChooser.
+              getNextUnassignedMinLocalCountSplit(this.unassigned);
 
           if (split != null) {
             // got a split to assign. Double check that it hasn't been assigned before.
@@ -77,7 +80,8 @@ public class LocatableInputSplitAssigner implements InputSplitAssigner {
               remoteAssignments++;
               return split.getSplit();
             } else {
-              throw new IllegalStateException("Chosen InputSplit has already been assigned. This should not happen!");
+              throw new IllegalStateException("Chosen InputSplit has already "
+                  + "been assigned. This should not happen!");
             }
           } else {
             // all splits consumed
@@ -87,10 +91,10 @@ public class LocatableInputSplitAssigner implements InputSplitAssigner {
       }
     }
 
-    host = host.toLowerCase(Locale.US);
+    String curhost = host.toLowerCase(Locale.US);
 
     // for any non-null host, we take the list of non-null splits
-    LocatableInputSplitChooser localSplits = this.localPerHost.get(host);
+    LocatableInputSplitChooser localSplits = this.localPerHost.get(curhost);
 
     // if we have no list for this host yet, create one
     if (localSplits == null) {
@@ -98,9 +102,10 @@ public class LocatableInputSplitAssigner implements InputSplitAssigner {
 
       // lock the list, to be sure that others have to wait for that host's local list
       synchronized (localSplits) {
-        LocatableInputSplitChooser prior = this.localPerHost.putIfAbsent(host, localSplits);
+        LocatableInputSplitChooser prior = this.localPerHost.putIfAbsent(curhost, localSplits);
 
-        // if someone else beat us in the case to create this list, then we do not populate this one, but
+        // if someone else beat us in the case to create this list,
+        // then we do not populate this one, but
         // simply work with that other list
         if (prior == null) {
           // we are the first, we populate
@@ -109,11 +114,12 @@ public class LocatableInputSplitAssigner implements InputSplitAssigner {
           // because that is shared among threads
           LocatableInputSplitWithCount[] remaining;
           synchronized (this.unassigned) {
-            remaining = this.unassigned.toArray(new LocatableInputSplitWithCount[this.unassigned.size()]);
+            remaining = this.unassigned.toArray(
+                new LocatableInputSplitWithCount[this.unassigned.size()]);
           }
 
           for (LocatableInputSplitWithCount isw : remaining) {
-            if (isLocal(host, isw.getSplit().getHostnames())) {
+            if (isLocal(curhost, isw.getSplit().getHostnames())) {
               // Split is local on host.
               // Increment local count
               isw.incrementLocalCount();
@@ -122,8 +128,7 @@ public class LocatableInputSplitAssigner implements InputSplitAssigner {
             }
           }
 
-        }
-        else {
+        } else {
           // someone else was faster
           localSplits = prior;
         }
@@ -138,7 +143,8 @@ public class LocatableInputSplitAssigner implements InputSplitAssigner {
     synchronized (localSplits) {
       synchronized (this.unassigned) {
 
-        LocatableInputSplitWithCount split = localSplits.getNextUnassignedMinLocalCountSplit(this.unassigned);
+        LocatableInputSplitWithCount split =
+            localSplits.getNextUnassignedMinLocalCountSplit(this.unassigned);
 
         if (split != null) {
           // found a valid split. Double check that it hasn't been assigned before.
@@ -148,7 +154,8 @@ public class LocatableInputSplitAssigner implements InputSplitAssigner {
             localAssignments++;
             return split.getSplit();
           } else {
-            throw new IllegalStateException("Chosen InputSplit has already been assigned. This should not happen!");
+            throw new IllegalStateException("Chosen InputSplit has already "
+                + "been assigned. This should not happen!");
           }
         }
       }
@@ -157,7 +164,8 @@ public class LocatableInputSplitAssigner implements InputSplitAssigner {
     // we did not find a local split, return a remote split
     synchronized (this.remoteSplitChooser) {
       synchronized (this.unassigned) {
-        LocatableInputSplitWithCount split = this.remoteSplitChooser.getNextUnassignedMinLocalCountSplit(this.unassigned);
+        LocatableInputSplitWithCount split =
+            this.remoteSplitChooser.getNextUnassignedMinLocalCountSplit(this.unassigned);
 
         if (split != null) {
           // found a valid split. Double check that it hasn't been assigned yet.
@@ -167,7 +175,8 @@ public class LocatableInputSplitAssigner implements InputSplitAssigner {
             remoteAssignments++;
             return split.getSplit();
           } else {
-            throw new IllegalStateException("Chosen InputSplit has already been assigned. This should not happen!");
+            throw new IllegalStateException("Chosen InputSplit has already "
+                + "been assigned. This should not happen!");
           }
         } else {
           // all splits consumed
@@ -177,7 +186,7 @@ public class LocatableInputSplitAssigner implements InputSplitAssigner {
     }
   }
 
-  private static final boolean isLocal(String flinkHost, String[] hosts) {
+  private static boolean isLocal(String flinkHost, String[] hosts) {
     if (flinkHost == null || hosts == null) {
       return false;
     }
@@ -207,20 +216,20 @@ public class LocatableInputSplitAssigner implements InputSplitAssigner {
     private final LocatableInputSplit split;
     private int localCount;
 
-    public LocatableInputSplitWithCount(LocatableInputSplit split) {
+    LocatableInputSplitWithCount(LocatableInputSplit split) {
       this.split = split;
       this.localCount = 0;
     }
 
-    public void incrementLocalCount() {
+    void incrementLocalCount() {
       this.localCount++;
     }
 
-    public int getLocalCount() {
+    int getLocalCount() {
       return this.localCount;
     }
 
-    public LocatableInputSplit getSplit() {
+    LocatableInputSplit getSplit() {
       return this.split;
     }
 
@@ -230,10 +239,11 @@ public class LocatableInputSplitAssigner implements InputSplitAssigner {
    * Holds a list of LocatableInputSplits and returns the split with the lowest local count.
    * The rational is that splits which are local on few hosts should be preferred over others which
    * have more degrees of freedom for local assignment.
-   *
+   * <p>
    * Internally, the splits are stored in a linked list. Sorting the list is not a good solution,
    * as local counts are updated whenever a previously unseen host requests a split.
-   * Instead, we track the minimum local count and iteratively look for splits with that minimum count.
+   * Instead, we track the minimum local count and iteratively look for splits with
+   * that minimum count.
    */
   private static class LocatableInputSplitChooser {
 
@@ -247,13 +257,13 @@ public class LocatableInputSplitAssigner implements InputSplitAssigner {
     // number of elements we need to inspect for the minimum local count.
     private int elementCycleCount = 0;
 
-    public LocatableInputSplitChooser() {
+    LocatableInputSplitChooser() {
       this.splits = new LinkedList<LocatableInputSplitWithCount>();
     }
 
-    public LocatableInputSplitChooser(Collection<LocatableInputSplitWithCount> splits) {
+    LocatableInputSplitChooser(Collection<LocatableInputSplitWithCount> splits) {
       this.splits = new LinkedList<LocatableInputSplitWithCount>();
-      for(LocatableInputSplitWithCount isw : splits) {
+      for (LocatableInputSplitWithCount isw : splits) {
         this.addInputSplit(isw);
       }
     }
@@ -278,7 +288,7 @@ public class LocatableInputSplitAssigner implements InputSplitAssigner {
         // all other splits have more local host than this one
         this.elementCycleCount = 1;
         splits.offerFirst(split);
-      } else if (localCount == minLocalCount ) {
+      } else if (localCount == minLocalCount) {
         this.elementCycleCount++;
         this.splits.offerFirst(split);
       } else {
@@ -291,15 +301,17 @@ public class LocatableInputSplitAssigner implements InputSplitAssigner {
 
     /**
      * Retrieves a LocatableInputSplit with minimum local count.
-     * InputSplits which have already been assigned (i.e., which are not contained in the provided set) are filtered out.
+     * InputSplits which have already been assigned (i.e., which are not contained
+     * in the provided set) are filtered out.
      * The returned input split is NOT removed from the provided set.
      *
      * @param unassignedSplits Set of unassigned input splits.
      * @return An input split with minimum local count or null if all splits have been assigned.
      */
-    public LocatableInputSplitWithCount getNextUnassignedMinLocalCountSplit(Set<LocatableInputSplitWithCount> unassignedSplits) {
+    public LocatableInputSplitWithCount getNextUnassignedMinLocalCountSplit(
+        Set<LocatableInputSplitWithCount> unassignedSplits) {
 
-      if(splits.size() == 0) {
+      if (splits.size() == 0) {
         return null;
       }
 
@@ -323,7 +335,7 @@ public class LocatableInputSplitAssigner implements InputSplitAssigner {
           // split was already assigned
           split = null;
         }
-        if(elementCycleCount == 0) {
+        if (elementCycleCount == 0) {
           // one full cycle, but no split with min local count found
           // update minLocalCnt and element cycle count for next pass over the splits
           minLocalCount = nextMinLocalCount;

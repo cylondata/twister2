@@ -18,8 +18,8 @@ import edu.iu.dsc.tws.data.fs.FileSystem;
 import edu.iu.dsc.tws.data.fs.Path;
 
 /**
- * The class <code>LocalFileStatus</code> provides an implementation of the {@link FileStatus} interface
- * for the local file system.
+ * The class <code>LocalFileStatus</code> provides an implementation of the {@link FileStatus}
+ * interface for the local file system.
  */
 public class LocalFileStatus implements FileStatus {
 
@@ -36,10 +36,8 @@ public class LocalFileStatus implements FileStatus {
   /**
    * Creates a <code>LocalFileStatus</code> object from a given {@link File} object.
    *
-   * @param f
-   *        the {@link File} object this <code>LocalFileStatus</code> refers to
-   * @param fs
-   *        the file system the corresponding file has been read from
+   * @param f the {@link File} object this <code>LocalFileStatus</code> refers to
+   * @param fs the file system the corresponding file has been read from
    */
   public LocalFileStatus(final File f, final FileSystem fs) {
     this.file = f;
@@ -87,9 +85,9 @@ public class LocalFileStatus implements FileStatus {
 
   @Override
   public String toString() {
-    return "LocalFileStatus{" +
-        "file=" + file +
-        ", path=" + path +
-        '}';
+    return "LocalFileStatus{"
+        + "file=" + file
+        + ", path=" + path
+        + '}';
   }
 }

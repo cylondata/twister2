@@ -18,7 +18,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.routing.IRouter;
 import edu.iu.dsc.tws.comms.routing.InvertedBinaryTreeRouter;
@@ -47,7 +46,6 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
         destination, sources);
   }
 
-  @Override
   protected int destinationIdentifier(int source, int path) {
     return router.destinationIdentifier(source, path);
   }
@@ -90,12 +88,10 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
     throw new RuntimeException("We don't rout send received messages directly");
   }
 
-  @Override
   protected void externalRoutesForSend(int source, List<Integer> routes) {
     // we dont do anything
   }
 
-  @Override
   protected void externalRoutesForPartialSend(int source, List<Integer> routes) {
     // get the expected routes
     Map<Integer, Map<Integer, Set<Integer>>> routing =
@@ -111,7 +107,7 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
     }
   }
 
-  protected void internalRouterForPartialInject(int source, List<Integer> routes) {
+  protected void internalRouterForPartialSend(int source, List<Integer> routes) {
     // get the expected routes
     Map<Integer, Map<Integer, Set<Integer>>> routing = router.getInternalSendTasks(source);
     if (routing == null) {
@@ -126,6 +122,63 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
   }
 
   @Override
+  protected RoutingParameters partialSendRoutingParameters(int source, int path) {
+    RoutingParameters routingParameters = new RoutingParameters();
+    // get the expected routes
+    Map<Integer, Map<Integer, Set<Integer>>> internalRoutes = router.getInternalSendTasks(source);
+    if (internalRoutes == null) {
+      throw new RuntimeException("Un-expected message from source: " + source);
+    }
+
+    Map<Integer, Set<Integer>> sourceInternalRouting = internalRoutes.get(source);
+    if (sourceInternalRouting != null) {
+      // we always use path 0 because only one path
+      routingParameters.addInternalRoutes(sourceInternalRouting.get(0));
+    }
+
+    // get the expected routes
+    Map<Integer, Map<Integer, Set<Integer>>> externalRoutes =
+        router.getExternalSendTasksForPartial(source);
+    if (externalRoutes == null) {
+      throw new RuntimeException("Un-expected message from source: " + source);
+    }
+
+    Map<Integer, Set<Integer>> sourceRouting = externalRoutes.get(source);
+    if (sourceRouting != null) {
+      // we always use path 0 because only one path
+      routingParameters.addExternalRoutes(sourceRouting.get(0));
+    }
+
+    routingParameters.setDestinationId(router.destinationIdentifier(source, path));
+    return routingParameters;
+  }
+
+  @Override
+  protected RoutingParameters sendRoutingParameters(int source, int path) {
+    RoutingParameters routingParameters = new RoutingParameters();
+
+    // get the expected routes
+    Map<Integer, Map<Integer, Set<Integer>>> internalRouting = router.getInternalSendTasks(source);
+    if (internalRouting == null) {
+      throw new RuntimeException("Un-expected message from source: " + source);
+    }
+
+    // we are going to add source if we are the main executor
+    if (router.mainTaskOfExecutor(instancePlan.getThisExecutor()) == source) {
+      routingParameters.addInteranlRoute(source);
+    }
+
+    // we should not have the route for main task to outside at this point
+    Map<Integer, Set<Integer>> sourceInternalRouting = internalRouting.get(source);
+    if (sourceInternalRouting != null) {
+      // we always use path 0 because only one path
+      routingParameters.addInternalRoutes(sourceInternalRouting.get(0));
+    }
+
+    routingParameters.setDestinationId(router.destinationIdentifier(source, path));
+    return routingParameters;
+  }
+
   protected void internalRoutesForSend(int source, List<Integer> routes) {
     // get the expected routes
     Map<Integer, Map<Integer, Set<Integer>>> routing = router.getInternalSendTasks(source);
