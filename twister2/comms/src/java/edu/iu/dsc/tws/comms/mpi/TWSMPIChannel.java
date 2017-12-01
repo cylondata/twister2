@@ -139,8 +139,8 @@ public class TWSMPIChannel {
     if (offer) {
       pendingSendCount++;
     }
-    LOG.info(String.format("%d Pending sends count: %d inQueue: %d", executor, pendingSendCount,
-        pendingSends.size()));
+//    LOG.info(String.format("%d Pending sends count: %d inQueue: %d", executor, pendingSendCount,
+//        pendingSends.size()));
     return offer;
 //    } finally {
 //      lock.unlock();
@@ -225,7 +225,7 @@ public class TWSMPIChannel {
 //    LOG.log(Level.INFO, "Progress: pendingSends: " + pendingSends.size());
       // we should rate limit here
     while (pendingSends.size() > 0) {
-      LOG.info(String.format("%d Pending sends %d", executor, pendingSends.size()));
+//      LOG.info(String.format("%d Pending sends %d", executor, pendingSends.size()));
       // post the message
       MPISendRequests sendRequests = pendingSends.poll();
       // post the send

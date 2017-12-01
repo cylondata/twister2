@@ -242,7 +242,9 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
     } else {
       mainReceiveList = mainReceives.get(MPIContext.DEFAULT_PATH);
     }
-    mainReceiveList.add(key);
+    if (key != destination) {
+      mainReceiveList.add(key);
+    }
 
     return integerMapMap;
   }
