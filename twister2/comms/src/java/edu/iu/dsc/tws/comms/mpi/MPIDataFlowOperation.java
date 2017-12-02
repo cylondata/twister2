@@ -23,14 +23,12 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageDeSerializer;
-import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageSerializer;
 import edu.iu.dsc.tws.comms.api.MessageType;
@@ -135,18 +133,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
     messageDeSerializer.init(config, false);
   }
 
-  @Override
-  public void finish() {
-    throw new RuntimeException("Not implemented");
-  }
-
-  @Override
-  public void sendPartial(int source, Object message) {
-    throw new NotImplementedException("Not implemented method");
-  }
-
   protected abstract void setupRouting();
-  protected abstract void routeReceivedMessage(MessageHeader message, List<Integer> routes);
   protected abstract boolean isLastReceiver();
 
   protected RoutingParameters partialSendRoutingParameters(int source, int path) {

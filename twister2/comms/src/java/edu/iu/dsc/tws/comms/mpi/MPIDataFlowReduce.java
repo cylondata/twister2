@@ -84,44 +84,6 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
   }
 
   @Override
-  protected void routeReceivedMessage(MessageHeader message, List<Integer> routes) {
-    throw new RuntimeException("We don't rout send received messages directly");
-  }
-
-  protected void externalRoutesForSend(int source, List<Integer> routes) {
-    // we dont do anything
-  }
-
-  protected void externalRoutesForPartialSend(int source, List<Integer> routes) {
-    // get the expected routes
-    Map<Integer, Map<Integer, Set<Integer>>> routing =
-        router.getExternalSendTasksForPartial(source);
-    if (routing == null) {
-      throw new RuntimeException("Un-expected message from source: " + source);
-    }
-
-    Map<Integer, Set<Integer>> sourceRouting = routing.get(source);
-    if (sourceRouting != null) {
-      // we always use path 0 because only one path
-      routes.addAll(sourceRouting.get(0));
-    }
-  }
-
-  protected void internalRouterForPartialSend(int source, List<Integer> routes) {
-    // get the expected routes
-    Map<Integer, Map<Integer, Set<Integer>>> routing = router.getInternalSendTasks(source);
-    if (routing == null) {
-      throw new RuntimeException("Un-expected message from source: " + source);
-    }
-
-    Map<Integer, Set<Integer>> sourceRouting = routing.get(source);
-    if (sourceRouting != null) {
-      // we always use path 0 because only one path
-      routes.addAll(sourceRouting.get(0));
-    }
-  }
-
-  @Override
   protected RoutingParameters partialSendRoutingParameters(int source, int path) {
     RoutingParameters routingParameters = new RoutingParameters();
     // get the expected routes
@@ -179,26 +141,6 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
     return routingParameters;
   }
 
-  protected void internalRoutesForSend(int source, List<Integer> routes) {
-    // get the expected routes
-    Map<Integer, Map<Integer, Set<Integer>>> routing = router.getInternalSendTasks(source);
-    if (routing == null) {
-      throw new RuntimeException("Un-expected message from source: " + source);
-    }
-
-    // we are going to add source if we are the main executor
-    if (router.mainTaskOfExecutor(instancePlan.getThisExecutor()) == source) {
-      routes.add(source);
-    }
-
-    // we should not have the route for main task to outside at this point
-    Map<Integer, Set<Integer>> sourceRouting = routing.get(source);
-    if (sourceRouting != null) {
-      // we always use path 0 because only one path
-      routes.addAll(sourceRouting.get(0));
-    }
-  }
-
   @Override
   protected boolean isLastReceiver() {
     return router.isLastReceiver();
@@ -217,7 +159,7 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
   }
 
   @Override
-  public boolean injectPartialResult(int source, Object message) {
+  public boolean sendPartial(int source, Object message) {
     // now what we need to do
     return sendMessagePartial(source, message);
   }

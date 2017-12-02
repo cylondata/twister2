@@ -30,19 +30,7 @@ public interface DataFlowOperation {
    * Use this to inject partial results in a distributed dataflow operation
    * @param message message
    */
-  boolean injectPartialResult(int source, Object message);
-
-  /**
-   * Do a partial operation, the receiving side should collect messages until all the messages
-   * are received.
-   * @param message
-   */
-  void sendPartial(int source, Object message);
-
-  /**
-   * Indicate that a partial operation is finished
-   */
-  void finish();
+  boolean sendPartial(int source, Object message);
 
   /**
    * Send a send message, this call will work asynchronously
@@ -68,6 +56,7 @@ public interface DataFlowOperation {
    * @return
    */
   boolean sendPartial(int source, Object message, int path);
+
   /**
    * Progress the pending dataflow operations
    */

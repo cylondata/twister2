@@ -15,9 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import edu.iu.dsc.tws.comms.api.MessageHeader;
-
-public class MPIDataFlowKeyedReduce extends MPIGroupedDataFlowOperation {
+public class MPIDataFlowKeyedReduce extends MPIDataFlowOperation {
   public MPIDataFlowKeyedReduce(TWSMPIChannel channel) {
     super(channel);
   }
@@ -25,11 +23,6 @@ public class MPIDataFlowKeyedReduce extends MPIGroupedDataFlowOperation {
   @Override
   protected void setupRouting() {
     return;
-  }
-
-  @Override
-  protected void routeReceivedMessage(MessageHeader message, List<Integer> routes) {
-    throw new RuntimeException("We cannot route the received message");
   }
 
   @Override
@@ -58,7 +51,7 @@ public class MPIDataFlowKeyedReduce extends MPIGroupedDataFlowOperation {
   }
 
   @Override
-  public boolean injectPartialResult(int source, Object message) {
+  public boolean sendPartial(int source, Object message) {
     return false;
   }
 

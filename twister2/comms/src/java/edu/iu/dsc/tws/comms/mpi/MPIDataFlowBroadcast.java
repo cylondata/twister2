@@ -56,7 +56,7 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
   }
 
   @Override
-  public boolean injectPartialResult(int src, Object message) {
+  public boolean sendPartial(int src, Object message) {
     throw new RuntimeException("Not supported method");
   }
 
@@ -97,10 +97,6 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
   protected void setupRouting() {
     // we will only have one distinct route
     router = new BinaryTreeRouter(config, instancePlan, source, destinations);
-  }
-
-  @Override
-  protected void routeReceivedMessage(MessageHeader message, List<Integer> routes) {
   }
 
   @Override

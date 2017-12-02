@@ -69,12 +69,7 @@ public class MPILoadBalance extends MPIDataFlowOperation {
   }
 
   @Override
-  protected void routeReceivedMessage(MessageHeader message, List<Integer> routes) {
-    throw new RuntimeException("Load-balance doesn't rout received messages");
-  }
-
-  @Override
-  public boolean injectPartialResult(int source, Object message) {
+  public boolean sendPartial(int source, Object message) {
     throw new RuntimeException("Not supported method");
   }
 

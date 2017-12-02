@@ -173,7 +173,7 @@ public class BaseReduceCommunication implements IContainer {
     public void onMessage(int source, int path, int target, Object object) {
 //      LOG.info(String.format("%d Message received for partial %d from %d", id, target, source));
       while (pendingSends.size() > 0) {
-        boolean r = reduce.injectPartialResult(target, pendingSends.poll());
+        boolean r = reduce.sendPartial(target, pendingSends.poll());
         if (!r) {
           break;
         }
@@ -199,7 +199,7 @@ public class BaseReduceCommunication implements IContainer {
             if (pendingSends.size() > 0) {
               pendingSends.offer(object);
             } else {
-              boolean inject = reduce.injectPartialResult(target, o);
+              boolean inject = reduce.sendPartial(target, o);
               if (!inject) {
                 pendingSends.offer(object);
               } /*else {
