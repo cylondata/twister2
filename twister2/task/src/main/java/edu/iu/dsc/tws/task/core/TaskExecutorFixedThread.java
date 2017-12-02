@@ -24,7 +24,6 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.task.api.Message;
 import edu.iu.dsc.tws.task.api.Queue;
-import edu.iu.dsc.tws.task.api.RunnableFixedTask;
 import edu.iu.dsc.tws.task.api.Task;
 import edu.iu.dsc.tws.task.api.TaskExecutor;
 import edu.iu.dsc.tws.task.api.TaskMessage;
@@ -194,8 +193,8 @@ public class TaskExecutorFixedThread implements TaskExecutor {
   /**
    * Submit message to the given queue
    */
-  public <T> boolean submitMessage(int qid, T message) {
-    //TODO; double check if the sync is correct
+  public synchronized <T> boolean submitMessage(int qid, T message) {
+    //TODO; double check if the sync is correct and remove it if the methoed must by sync
     synchronized (ExecutorContext.FIXED_EXECUTOR_LOCK) {
       queues.get(qid).add(new TaskMessage<T>(message));
     }
@@ -204,7 +203,7 @@ public class TaskExecutorFixedThread implements TaskExecutor {
       if (!submittedTasks.contains(extaskid)) {
         addRunningTask(extaskid);
         executorPool.submit(new RunnableFixedTask(taskMap.get(extaskid), queues.get(qid),
-            taskMessageProcessLimit));
+            taskMessageProcessLimit, this, taskOutputQueues.get(extaskid)));
       }
     }
 
@@ -213,7 +212,7 @@ public class TaskExecutorFixedThread implements TaskExecutor {
       if (!submittedTasks.contains(extaskid)) {
         addRunningTask(extaskid);
         executorPool.submit(new RunnableFixedTask(taskMap.get(extaskid), queues.get(qid),
-            taskMessageProcessLimit));
+            taskMessageProcessLimit, this, taskOutputQueues.get(extaskid)));
       }
     }
 
@@ -237,7 +236,7 @@ public class TaskExecutorFixedThread implements TaskExecutor {
           + "Please make sure the task is registered", task.getTaskId()));
     } else {
       addRunningTask(task.getTaskId());
-      executorPool.submit(new RunnableFixedTask(taskMap.get(task.getTaskId())));
+      executorPool.submit(new RunnableFixedTask(taskMap.get(task.getTaskId()), this));
     }
     return true;
   }
@@ -248,7 +247,7 @@ public class TaskExecutorFixedThread implements TaskExecutor {
           + "Please make sure the task is registered", tid));
     } else {
       addRunningTask(tid);
-      executorPool.submit(new RunnableFixedTask(taskMap.get(tid)));
+      executorPool.submit(new RunnableFixedTask(taskMap.get(tid), this));
     }
     return true;
   }

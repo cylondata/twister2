@@ -64,5 +64,13 @@ public interface TaskExecutor {
    */
   boolean registerTask(Task task);
 
+  /**
+   * Method submits messages to a given queue
+   *
+   * @param qid id of the queue
+   * @param message message to submit
+   * @param <T> type of message
+   */
+  <T> boolean submitMessage(int qid, T message);
 
 }
