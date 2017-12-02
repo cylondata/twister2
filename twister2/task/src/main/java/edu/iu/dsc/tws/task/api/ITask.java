@@ -31,12 +31,11 @@ public interface ITask {
   /**
    * Code that needs to be executed in the Task
    */
-  void execute();
+  Message execute();
 
   /**
    * Code that is executed for a single message
-   * @param content
    */
-  void execute(Message content);
+  Message execute(Message content);
 
 }
