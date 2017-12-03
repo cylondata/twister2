@@ -15,3 +15,30 @@ Laptop
    
 mpirun -np 2 -file conf/slurmmpi/nodes java -Djava.util.loggi.config.file=conf/slurmmpi/logger.properties -cp lib/minlog-1.3.0.jar:lib/objenesis-2.1.jar:lib/commons-cli-1.3.1.jar:lib/commons-lang3-3.6.jar:lib/guava-18.0.jar:lib/kryo-3.0.3.jar:lib/libapi-java.jar:lib/libcomms-java.jar:lib/libproto_job_java.jar:lib/libproto_job_state_java.jar:lib/libproto_resource_scheduler_java.jar:lib/libresource-scheduler-java.jar:lib/libtask_scheduler-java.jar:lib/ompijavabinding-3.0.0.jar:lib/protobuf-java-2.5.0.jar:lib/snakeyaml-1.15.jar:lib/libcommon-java.jar:examples/libexamples-java.jar:lib/reflectasm-1.10.0.jar:lib/asm-4.2.jar edu.iu.dsc.tws.rsched.schedulers.slurmmpi.MPIProcess --container_class edu.iu.dsc.tws.examples.PingPongCommunication --twister2_home /home/supun/dev/projects/twister2/twister2/bazel-bin/scripts/package/twister2-dist --cluster_name slurmmpi --config_dir /home/supun/dev/projects/twister2/twister2/bazel-bin/scripts/package/twister2-dist/conf   
    
+   
+/home/supun/.twister2/jobs/basic-broadcast/libexamples-java.jar:
+/home/supun/.cache/bazel/_bazel_supun/e5ab0f234c3dec70c8c14f6373b787ce/tw2/bazel-out/local-fastbuild/bin/scripts/package/twister2-dist/lib/ompijavabinding-3.0.0.jar:
+/home/supun/.cache/bazel/_bazel_supun/e5ab0f234c3dec70c8c14f6373b787ce/tw2/bazel-out/local-fastbuild/bin/scripts/package/twister2-dist/lib/commons-cli-1.3.1.jar:
+/home/supun/.cache/bazel/_bazel_supun/e5ab0f234c3dec70c8c14f6373b787ce/tw2/bazel-out/local-fastbuild/bin/scripts/package/twister2-dist/lib/libproto-resource-scheduler-java.jar:
+/home/supun/.cache/bazel/_bazel_supun/e5ab0f234c3dec70c8c14f6373b787ce/tw2/bazel-out/local-fastbuild/bin/scripts/package/twister2-dist/lib/slf4j-api-1.7.7.jar:
+/home/supun/.cache/bazel/_bazel_supun/e5ab0f234c3dec70c8c14f6373b787ce/tw2/bazel-out/local-fastbuild/bin/scripts/package/twister2-dist/lib/asm-4.2.jar:
+/home/supun/.cache/bazel/_bazel_supun/e5ab0f234c3dec70c8c14f6373b787ce/tw2/bazel-out/local-fastbuild/bin/scripts/package/twister2-dist/lib/kryo-3.0.3.jar:
+/home/supun/.cache/bazel/_bazel_supun/e5ab0f234c3dec70c8c14f6373b787ce/tw2/bazel-out/local-fastbuild/bin/scripts/package/twister2-dist/lib/libapi-java.jar:
+/home/supun/.cache/bazel/_bazel_supun/e5ab0f234c3dec70c8c14f6373b787ce/tw2/bazel-out/local-fastbuild/bin/scripts/package/twister2-dist/lib/protobuf-java-2.5.0.jar:
+/home/supun/.cache/bazel/_bazel_supun/e5ab0f234c3dec70c8c14f6373b787ce/tw2/bazel-out/local-fastbuild/bin/scripts/package/twister2-dist/lib/libproto_resource_scheduler_java.jar:
+/home/supun/.cache/bazel/_bazel_supun/e5ab0f234c3dec70c8c14f6373b787ce/tw2/bazel-out/local-fastbuild/bin/scripts/package/twister2-dist/lib/libtaskscheduler-java.jar:
+/home/supun/.cache/bazel/_bazel_supun/e5ab0f234c3dec70c8c14f6373b787ce/tw2/bazel-out/local-fastbuild/bin/scripts/package/twister2-dist/lib/libtask-java.jar:
+/home/supun/.cache/bazel/_bazel_supun/e5ab0f234c3dec70c8c14f6373b787ce/tw2/bazel-out/local-fastbuild/bin/scripts/package/twister2-dist/lib/minlog-1.3.0.jar:
+/home/supun/.cache/bazel/_bazel_supun/e5ab0f234c3dec70c8c14f6373b787ce/tw2/bazel-out/local-fastbuild/bin/scripts/package/twister2-dist/lib/commons-io-2.5.jar:
+/home/supun/.cache/bazel/_bazel_supun/e5ab0f234c3dec70c8c14f6373b787ce/tw2/bazel-out/local-fastbuild/bin/scripts/package/twister2-dist/lib/libconfig-java.jar:
+/home/supun/.cache/bazel/_bazel_supun/e5ab0f234c3dec70c8c14f6373b787ce/tw2/bazel-out/local-fastbuild/bin/scripts/package/twister2-dist/lib/guava-18.0.jar:
+/home/supun/.cache/bazel/_bazel_supun/e5ab0f234c3dec70c8c14f6373b787ce/tw2/bazel-out/local-fastbuild/bin/scripts/package/twister2-dist/lib/commons-lang3-3.6.jar:
+/home/supun/.cache/bazel/_bazel_supun/e5ab0f234c3dec70c8c14f6373b787ce/tw2/bazel-out/local-fastbuild/bin/scripts/package/twister2-dist/lib/libresource-scheduler-java.jar:
+/home/supun/.cache/bazel/_bazel_supun/e5ab0f234c3dec70c8c14f6373b787ce/tw2/bazel-out/local-fastbuild/bin/scripts/package/twister2-dist/lib/slf4j-jdk14-1.7.7.jar:
+/home/supun/.cache/bazel/_bazel_supun/e5ab0f234c3dec70c8c14f6373b787ce/tw2/bazel-out/local-fastbuild/bin/scripts/package/twister2-dist/lib/libproto_job_state_java.jar:
+/home/supun/.cache/bazel/_bazel_supun/e5ab0f234c3dec70c8c14f6373b787ce/tw2/bazel-out/local-fastbuild/bin/scripts/package/twister2-dist/lib/reflectasm-1.10.0.jar:
+/home/supun/.cache/bazel/_bazel_supun/e5ab0f234c3dec70c8c14f6373b787ce/tw2/bazel-out/local-fastbuild/bin/scripts/package/twister2-dist/lib/libproto_job_java.jar:
+/home/supun/.cache/bazel/_bazel_supun/e5ab0f234c3dec70c8c14f6373b787ce/tw2/bazel-out/local-fastbuild/bin/scripts/package/twister2-dist/lib/libcomms-java.jar:
+/home/supun/.cache/bazel/_bazel_supun/e5ab0f234c3dec70c8c14f6373b787ce/tw2/bazel-out/local-fastbuild/bin/scripts/package/twister2-dist/lib/libcommon-java.jar:
+/home/supun/.cache/bazel/_bazel_supun/e5ab0f234c3dec70c8c14f6373b787ce/tw2/bazel-out/local-fastbuild/bin/scripts/package/twister2-dist/lib/objenesis-2.1.jar:
+/home/supun/.cache/bazel/_bazel_supun/e5ab0f234c3dec70c8c14f6373b787ce/tw2/bazel-out/local-fastbuild/bin/scripts/package/twister2-dist/lib/snakeyaml-1.15.jar   

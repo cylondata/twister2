@@ -29,6 +29,7 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.mpi.MPIBuffer;
 import edu.iu.dsc.tws.comms.mpi.MPIContext;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
@@ -87,7 +88,7 @@ public class BaseReduceCommunication implements IContainer {
     LOG.info("Setting up reduce dataflow operation");
     // this method calls the init method
     // I think this is wrong
-    reduce = channel.reduce(newCfg, MessageType.OBJECT, 0, sources,
+    reduce = channel.reduce(newCfg, MessageType.BUFFER, 0, sources,
         dest, new FinalReduceReceive(), new PartialReduceWorker());
 
     // the map thread where data is produced
@@ -116,7 +117,8 @@ public class BaseReduceCommunication implements IContainer {
     @Override
     public void run() {
       LOG.log(Level.INFO, "Starting map worker");
-      IntData data = generateData();
+      MPIBuffer data = new MPIBuffer(1024);
+      data.setSize(24);
       for (int i = 0; i < 5000; i++) {
         for (int j = 0; j < noOfTasksPerExecutor; j++) {
           // lets generate a message
@@ -217,12 +219,14 @@ public class BaseReduceCommunication implements IContainer {
   }
 
   private class FinalReduceReceive implements MessageReceiver {
-    private Queue<Object> pendingSends = new LinkedBlockingQueue<Object>();
     // lets keep track of the messages
     // for each task we need to keep track of incoming messages
     private Map<Integer, Map<Integer, List<Object>>> messages = new HashMap<>();
 
     private int count = 0;
+
+    private long start = System.nanoTime();
+
     @Override
     public void init(Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
       for (Map.Entry<Integer, Map<Integer, List<Integer>>> e : expectedIds.entrySet()) {
@@ -243,6 +247,10 @@ public class BaseReduceCommunication implements IContainer {
     public void onMessage(int source, int path, int target, Object object) {
 //      LOG.info(String.format("%d Message received for partial %d from %d", id, target, source));
       // add the object to the map
+      if (count == 0) {
+        start = System.nanoTime();
+      }
+
       try {
         List<Object> m = messages.get(target).get(source);
         m.add(object);
@@ -264,6 +272,9 @@ public class BaseReduceCommunication implements IContainer {
             if (count % 1000 == 0) {
               LOG.info("Message received for last: " + source + " target: "
                   + target + " count: " + count);
+            }
+            if (count == 5000) {
+              LOG.info("Total time: " + (System.nanoTime() - start) / 1000000);
             }
           } else {
             LOG.severe("We cannot find an object and this is not correct");

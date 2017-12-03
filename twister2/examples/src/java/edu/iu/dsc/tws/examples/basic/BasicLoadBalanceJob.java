@@ -17,8 +17,8 @@ import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.examples.BaseLoadBalanceCommunication;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 
-public final class LoadBalanceJob {
-  private LoadBalanceJob() {
+public final class BasicLoadBalanceJob {
+  private BasicLoadBalanceJob() {
   }
 
   public static void main(String[] args) {

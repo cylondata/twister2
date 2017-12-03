@@ -140,8 +140,10 @@ public class LoadBalanceRouter implements IRouter {
     Set<Integer> executors = new HashSet<>();
 
     Set<Integer> allExecutors = plan.getAllExecutors();
+    LOG.info(String.format("%d All executors: %s", plan.getThisExecutor(), allExecutors));
     for (int e : allExecutors) {
       Set<Integer> tasksOfExecutor = plan.getChannelsOfExecutor(e);
+      LOG.info(String.format("%d Tasks of executors: %s", plan.getThisExecutor(), tasksOfExecutor));
       for (int t : tasks) {
         if (tasksOfExecutor.contains(t)) {
           executors.add(e);

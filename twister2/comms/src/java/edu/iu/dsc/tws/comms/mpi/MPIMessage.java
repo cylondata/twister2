@@ -154,6 +154,8 @@ public class MPIMessage {
       for (MPIBuffer buffer : buffers) {
         currentSize += buffer.getByteBuffer().remaining();
       }
+//      System.out.println(String.format("Current size %d length %d", currentSize,
+//          header.getLength()));
       if (currentSize == header.getLength()) {
         complete = true;
         return true;

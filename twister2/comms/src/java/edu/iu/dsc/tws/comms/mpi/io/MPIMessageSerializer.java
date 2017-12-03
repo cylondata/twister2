@@ -130,9 +130,34 @@ public class MPIMessageSerializer implements MessageSerializer {
         break;
       case STRING:
         break;
+      case BUFFER:
+        serializeBuffer(payload, sendMessage, buffer);
+        break;
       default:
         break;
     }
+  }
+
+  private void serializeBuffer(Object object, MPISendMessage sendMessage, MPIBuffer buffer) {
+    MPIBuffer dataBuffer = (MPIBuffer) object;
+    ByteBuffer byteBuffer = buffer.getByteBuffer();
+    if (sendMessage.serializedState() == MPISendMessage.SendState.HEADER_BUILT) {
+      // okay we need to serialize the data
+      // at this point we know the length of the data
+      byteBuffer.putInt(12, dataBuffer.getSize());
+      // now lets set the header
+      MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
+          sendMessage.getEdge(), dataBuffer.getSize());
+      builder.subEdge(sendMessage.getDestintationIdentifier());
+      sendMessage.getMPIMessage().setHeader(builder.build());
+
+//      sendMessage.setSendBytes(data);
+//      LOG.log(Level.INFO, String.format("Finished adding header %d %d %d %d",
+//          sendMessage.getSource(), sendMessage.getEdge(), sendMessage.getPath(), data.length));
+    }
+    buffer.setSize(16 + dataBuffer.getSize());
+    // okay we are done with the message
+    sendMessage.setSendState(MPISendMessage.SendState.SERIALIZED);
   }
 
   /**

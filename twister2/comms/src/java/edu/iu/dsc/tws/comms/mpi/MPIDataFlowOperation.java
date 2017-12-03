@@ -108,6 +108,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
     }
     this.receiveBuffers = new HashMap<>();
 
+    LOG.info(String.format("%d setup routing", instancePlan.getThisExecutor()));
     // this should setup a router
     setupRouting();
 
@@ -115,10 +116,12 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
     pendingSendMessages = new ArrayBlockingQueue<Pair<Object, MPISendMessage>>(
         MPIContext.sendPendingMax(config, 8192));
 
+    LOG.info(String.format("%d setup communication", instancePlan.getThisExecutor()));
     // now setup the sends and receives
     setupCommunication();
 
     // initialize the serializers
+    LOG.info(String.format("%d setup intializers", instancePlan.getThisExecutor()));
     initSerializers();
   }
 

@@ -84,7 +84,7 @@ public class TaskPlan {
   }
 
   public Set<Integer> getAllExecutors() {
-    return groupsToExecutor.keySet();
+    return executorToChannels.keySet();
   }
 
   public Set<Integer> getExecutesOfGroup(int group) {

@@ -29,6 +29,8 @@ public class MPIMessageDeSerializer implements MessageDeSerializer {
 
   private boolean grouped;
 
+  private MPIBuffer tempBuf;
+
   public MPIMessageDeSerializer(KryoSerializer kryoSerializer) {
     this.serializer = kryoSerializer;
   }
@@ -36,6 +38,7 @@ public class MPIMessageDeSerializer implements MessageDeSerializer {
   @Override
   public void init(Config cfg, boolean grped) {
     this.grouped = grped;
+    tempBuf = new MPIBuffer(1024);
   }
 
   @Override
@@ -104,10 +107,16 @@ public class MPIMessageDeSerializer implements MessageDeSerializer {
         break;
       case STRING:
         break;
+      case BUFFER:
+        return buildBuffer(message);
       default:
         break;
     }
     return null;
+  }
+
+  private Object buildBuffer(MPIMessage message) {
+    return tempBuf;
   }
 
   private Object buildObject(MPIMessage message) {
