@@ -90,7 +90,7 @@ public class BaseLoadBalanceCommunication implements IContainer {
     LOG.info("Setting up reduce dataflow operation");
     // this method calls the init method
     // I think this is wrong
-    loadBalance = channel.loadBalance(newCfg, MessageType.OBJECT, 0,
+    loadBalance = channel.loadBalance(newCfg, MessageType.BUFFER, 0,
         sources, dests, new LoadBalanceReceiver());
     // the map thread where data is produced
     LOG.info("Starting worker: " + id);
@@ -103,10 +103,10 @@ public class BaseLoadBalanceCommunication implements IContainer {
 
     try {
       if (id == 0 || id == 1) {
-        MPIBuffer data1 = new MPIBuffer(1024);
-//        data.setSize(24);
-        IntData data = generateData();
-        for (int i = 0; i < 5000; i++) {
+        MPIBuffer data = new MPIBuffer(1024);
+        data.setSize(24);
+//        IntData data = generateData();
+        for (int i = 0; i < 50000; i++) {
           mapFunction(data);
           channel.progress();
           // we should progress the communication directive
@@ -200,7 +200,7 @@ public class BaseLoadBalanceCommunication implements IContainer {
       if (count % 5000 == 0) {
         LOG.info(id + " Total time: " + (System.nanoTime() - start) / 1000000 + " " + count);
       }
-      if (count > 10000) {
+      if (count > 100000) {
         LOG.info("More than");
       }
     }

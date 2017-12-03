@@ -139,8 +139,8 @@ public class TWSMPIChannel {
     if (offer) {
       pendingSendCount++;
     }
-//    LOG.info(String.format("%d Pending sends count: %d inQueue: %d", executor, pendingSendCount,
-//        pendingSends.size()));
+//    LOG.info(String.format("%d Pending sends count: %d wait: %d",
+//        executor, pendingSends.size(), waitForCompletionSends.size()));
     return offer;
 //    } finally {
 //      lock.unlock();
@@ -245,8 +245,9 @@ public class TWSMPIChannel {
       }*/
     }
 
-    for (int i = 0; i < waitForCompletionSends.size(); i++) {
-      MPISendRequests sendRequests = waitForCompletionSends.get(i);
+    Iterator<MPISendRequests> sendRequestsIterator = waitForCompletionSends.iterator();
+    while (sendRequestsIterator.hasNext()) {
+      MPISendRequests sendRequests = sendRequestsIterator.next();
       Iterator<MPIRequest> requestIterator = sendRequests.pendingSends.iterator();
       while (requestIterator.hasNext()) {
 //        LOG.info("Loooping");
@@ -270,6 +271,7 @@ public class TWSMPIChannel {
       if (sendRequests.pendingSends.size() == 0) {
         sendRequests.callback.onSendComplete(sendRequests.rank,
             sendRequests.edge, sendRequests.message);
+        sendRequestsIterator.remove();
       }
     }
 
