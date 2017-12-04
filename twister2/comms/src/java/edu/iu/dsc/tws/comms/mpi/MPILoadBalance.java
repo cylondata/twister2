@@ -158,7 +158,8 @@ public class MPILoadBalance extends MPIDataFlowOperation {
     MessageHeader header = currentMessage.getHeader();
 
     finalReceiver.onMessage(header.getSourceId(), header.getPath(),
-        router.mainTaskOfExecutor(instancePlan.getThisExecutor()), object);
+        router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
+            header.getPath()), object);
   }
 
   @Override

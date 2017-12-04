@@ -180,17 +180,17 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
    */
   @Override
   public boolean send(int source, Object message) {
-    return sendMessage(source, message);
+    return sendMessage(source, message, MPIContext.DEFAULT_PATH);
   }
 
-  protected boolean sendMessagePartial(int source, Object object) {
-//    LOG.log(Level.INFO, "lock 00 " + executor);
+  protected boolean sendMessagePartial(int source, Object object, int path) {
+    //    LOG.log(Level.INFO, "lock 00 " + executor);
     lock.lock();
     try {
 //      List<Integer> externalRoutes = new ArrayList<>();
 //      List<Integer> internalRoutes = new ArrayList<>();
       RoutingParameters routingParameters = partialSendRoutingParameters(
-          source, MPIContext.DEFAULT_PATH);
+          source, path);
 //      internalRouterForPartialSend(source, internalRoutes);
 //      LOG.info(String.format("%d internal routes for send %d: %s",
 //          instancePlan.getThisExecutor(), source, routingParameters.getInternalRoutes()));
@@ -214,7 +214,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
       // create a send message to keep track of the serialization
       // at the intial stage the sub-edge is 0
       MPISendMessage sendMessage = new MPISendMessage(source, mpiMessage, edge,
-          di, MPIContext.DEFAULT_PATH, routingParameters.getInternalRoutes(),
+          di, path, routingParameters.getInternalRoutes(),
           routingParameters.getExternalRoutes());
 
       // now try to put this into pending
@@ -225,8 +225,8 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
     }
   }
 
-  private boolean sendMessage(int source, Object message) {
-//    LOG.log(Level.INFO, "lock 00 " + executor);
+  protected boolean sendMessage(int source, Object message, int path) {
+    //    LOG.log(Level.INFO, "lock 00 " + executor);
     lock.lock();
     try {
 //      List<Integer> externalRoutes = new ArrayList<>();
@@ -254,7 +254,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
         di = routingParameters.getDestinationId();
       }
       MPISendMessage sendMessage = new MPISendMessage(source, mpiMessage, edge,
-          di, MPIContext.DEFAULT_PATH, routingParameters.getInternalRoutes(),
+          di, path, routingParameters.getInternalRoutes(),
           routingParameters.getExternalRoutes());
 
       // now try to put this into pending
@@ -284,7 +284,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
           for (Integer i : mpiMessage.getInternalSends()) {
             // okay now we need to check weather this is the last place
             receiveSendInternally(mpiMessage.getSource(), i,
-                MPIContext.DEFAULT_PATH, messageObject);
+                mpiMessage.getPath(), messageObject);
           }
 
           mpiMessage.setSendState(MPISendMessage.SendState.SENT_INTERNALLY);
@@ -371,18 +371,6 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
       MPIBuffer buffer = new MPIBuffer(sendBufferSize);
       sendBuffers.offer(buffer);
     }
-  }
-
-  protected boolean sendMessage(MPIMessage msgObj1, List<Integer> sendIds, int startIndex) {
-    if (sendIds != null && sendIds.size() > 0) {
-      // we need to increment before sending, otherwise message can get released
-      // before we send all
-      for (int i = startIndex; i < sendIds.size(); i++) {
-        // we need to convert the send id to a MPI process id
-        return sendMessageToTarget(msgObj1, sendIds.get(i));
-      }
-    }
-    return false;
   }
 
   private boolean sendMessageToTarget(MPIMessage msgObj1, int i) {

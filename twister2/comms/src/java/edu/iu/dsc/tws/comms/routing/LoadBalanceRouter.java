@@ -123,7 +123,7 @@ public class LoadBalanceRouter implements IRouter {
   }
 
   @Override
-  public int mainTaskOfExecutor(int executor) {
+  public int mainTaskOfExecutor(int executor, int path) {
     return -1;
   }
 
@@ -134,6 +134,11 @@ public class LoadBalanceRouter implements IRouter {
   @Override
   public int destinationIdentifier(int source, int path) {
     return 0;
+  }
+
+  @Override
+  public Map<Integer, Integer> getPathAssignedToTasks() {
+    return null;
   }
 
   private static Set<Integer> getExecutorsHostingTasks(TaskPlan plan, Set<Integer> tasks) {

@@ -129,7 +129,7 @@ public class DirectRouter implements IRouter {
   }
 
   @Override
-  public int mainTaskOfExecutor(int executor) {
+  public int mainTaskOfExecutor(int executor, int path) {
     return -1;
   }
 
@@ -141,5 +141,10 @@ public class DirectRouter implements IRouter {
   @Override
   public int destinationIdentifier(int source, int path) {
     return destination;
+  }
+
+  @Override
+  public Map<Integer, Integer> getPathAssignedToTasks() {
+    return null;
   }
 }

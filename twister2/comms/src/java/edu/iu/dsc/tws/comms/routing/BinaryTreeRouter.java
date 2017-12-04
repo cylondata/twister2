@@ -168,7 +168,7 @@ public class BinaryTreeRouter implements IRouter {
   }
 
   @Override
-  public int mainTaskOfExecutor(int executor) {
+  public int mainTaskOfExecutor(int executor, int path) {
     return mainTask;
   }
 
@@ -180,5 +180,10 @@ public class BinaryTreeRouter implements IRouter {
     } else {
       throw new RuntimeException("Unexpected source requesting destination: " + source);
     }
+  }
+
+  @Override
+  public Map<Integer, Integer> getPathAssignedToTasks() {
+    return null;
   }
 }

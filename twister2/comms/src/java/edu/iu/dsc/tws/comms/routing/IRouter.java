@@ -53,11 +53,18 @@ public interface IRouter {
    * @param executor
    * @return
    */
-  int mainTaskOfExecutor(int executor);
+  int mainTaskOfExecutor(int executor, int path);
 
   /**
    * Get a destination identifier, used for determining the correct task to hand over a message
    * @return
    */
   int destinationIdentifier(int source, int path);
+
+  /**
+   * Get path assigned to tasks
+   * task -> path
+   * @return
+   */
+  Map<Integer, Integer> getPathAssignedToTasks();
 }

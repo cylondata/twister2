@@ -52,7 +52,7 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
 
 //      LOG.info(String.format("%d calling fina receiver", instancePlan.getThisExecutor()));
     finalReceiver.onMessage(header.getSourceId(), header.getPath(),
-        router.mainTaskOfExecutor(instancePlan.getThisExecutor()), object);
+        router.mainTaskOfExecutor(instancePlan.getThisExecutor(), MPIContext.DEFAULT_PATH), object);
   }
 
   @Override
@@ -61,7 +61,7 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
   }
 
   protected void passMessageDownstream(Object object, MPIMessage currentMessage) {
-    int src = router.mainTaskOfExecutor(instancePlan.getThisExecutor());
+    int src = router.mainTaskOfExecutor(instancePlan.getThisExecutor(), MPIContext.DEFAULT_PATH);
     RoutingParameters routingParameters = sendRoutingParameters(src, MPIContext.DEFAULT_PATH);
 
 //    internalRoutesForSend(src, internalRoutes);
