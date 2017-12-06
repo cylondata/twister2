@@ -29,7 +29,7 @@ public class MPIContext extends CommunicationContext {
   public static final int DEFAULT_PATH = 0;
 
   public static int bufferSize(Config cfg) {
-    return cfg.getIntegerValue(BUFFER_SIZE, 256000);
+    return cfg.getIntegerValue(BUFFER_SIZE, 2048000);
   }
 
   public static int sendBuffersCount(Config cfg) {
