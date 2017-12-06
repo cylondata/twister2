@@ -90,9 +90,11 @@ public class BaseReduceCommunication implements IContainer {
     reduce = channel.reduce(newCfg, MessageType.OBJECT, 0, sources,
         dest, new FinalReduceReceive(), new PartialReduceWorker());
 
-    // the map thread where data is produced
-    Thread mapThread = new Thread(new MapWorker());
-    mapThread.start();
+    for (int i = 0; i < noOfTasksPerExecutor; i++) {
+      // the map thread where data is produced
+      Thread mapThread = new Thread(new MapWorker(i + id * noOfTasksPerExecutor));
+      mapThread.start();
+    }
 
     // we need to progress the communication
     while (true) {
@@ -112,27 +114,29 @@ public class BaseReduceCommunication implements IContainer {
    * We are running the map in a separate thread
    */
   private class MapWorker implements Runnable {
-    private int sendCount = 0;
+    private int task = 0;
+
+    MapWorker(int task) {
+      this.task = task;
+    }
+
     @Override
     public void run() {
       LOG.log(Level.INFO, "Starting map worker");
 //      MPIBuffer data = new MPIBuffer(1024);
       IntData data = generateData();
       for (int i = 0; i < 10000; i++) {
-        for (int j = 0; j < noOfTasksPerExecutor; j++) {
-          // lets generate a message
-          while (!reduce.send(j + id * noOfTasksPerExecutor, data)) {
-            // lets wait a litte and try again
-            try {
-              Thread.sleep(1);
-            } catch (InterruptedException e) {
-              e.printStackTrace();
-            }
+        // lets generate a message
+        while (!reduce.send(task, data)) {
+          // lets wait a litte and try again
+          try {
+            Thread.sleep(1);
+          } catch (InterruptedException e) {
+            e.printStackTrace();
           }
+        }
 //          LOG.info(String.format("%d sending to %d", id, j + id * noOfTasksPerExecutor)
 //              + " count: " + sendCount++);
-        }
-        sendCount++;
         Thread.yield();
       }
       LOG.info("Done sending");
