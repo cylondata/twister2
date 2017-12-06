@@ -23,23 +23,19 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.taskgraphbuilder;
 
-import java.io.Serializable;
-
-public class IntrusiveTaskEdge implements Cloneable, Serializable {
+public class DefaultTaskEdge extends IntrusiveTaskEdge {
 
   private static final long serialVersionUID = 2233233333444449278L;
 
-  //Find an alternative for clone method...!
+  public Object getSource() {
+    return source;
+  }
 
-  protected Object source;
-  protected Object target;
+  public Object getTarget() {
+    return target;
+  }
 
-  /*public Object clone() {
-    try {
-      return super.clone();
-    } catch (CloneNotSupportedException e) {
-      throw new InternalError();
-    }
-  }*/
+  public String toString() {
+    return "(" + source + " : " + target + ")";
+  }
 }
-

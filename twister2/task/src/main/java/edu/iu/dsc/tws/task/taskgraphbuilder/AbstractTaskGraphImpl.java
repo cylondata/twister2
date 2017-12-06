@@ -21,6 +21,18 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 package edu.iu.dsc.tws.task.taskgraphbuilder;
 
 import java.io.Serializable;
@@ -39,6 +51,8 @@ public abstract class AbstractTaskGraphImpl<TV, TE> extends AbstractTaskGraph<TV
   private TaskGraphSpecifics taskGraphSpecifics;
   private Map<TE, IntrusiveTaskEdge> taskEdgeMap;
   private TaskEdgeSetFactory<TV, TE> taskEdgeSetFactory;
+  //private TypeUtil<TV> vertexTypeDecl = null;
+  private TypeUtil<TV> vertexTypeDecl = new TypeUtil<>();
 
 
   public AbstractTaskGraphImpl(TaskEdgeFactory<TV, TE> taskEdgeFactory) {
@@ -98,6 +112,17 @@ public abstract class AbstractTaskGraphImpl<TV, TE> extends AbstractTaskGraph<TV
 
   }
 
+  public boolean removeTaskEdge(TE taskEdge) {
+    /*if (containsTaskEdge (taskEdge)) {
+      taskGraphSpecifics.removeTaskEdgeFromTouchingVertices (taskEdge);
+      taskEdgeMap.remove (taskEdge);
+      return true;
+    } else {
+      return false;
+    }*/
+    return true;
+  }
+
   private IntrusiveTaskEdge createIntrusiveTaskEdge(TE taskEdge, TV taskVertex1, TV taskVertex2) {
 
     IntrusiveTaskEdge intrusiveTaskEdge;
@@ -110,8 +135,8 @@ public abstract class AbstractTaskGraphImpl<TV, TE> extends AbstractTaskGraph<TV
       System.out.println("I am in intrusive task edge creation else loop:" + intrusiveTaskEdge);
     }
 
-    //intrusiveTaskEdge.source = taskVertex1;
-    //intrusiveTaskEdge.target = taskVertex2;
+    intrusiveTaskEdge.source = taskVertex1;
+    intrusiveTaskEdge.target = taskVertex2;
 
     return intrusiveTaskEdge;
   }
@@ -148,6 +173,33 @@ public abstract class AbstractTaskGraphImpl<TV, TE> extends AbstractTaskGraph<TV
     return taskEdge;
   }
 
+  @Override
+  public TV getTaskEdgeSource(TE taskEdge) {
+    /*return TypeUtil.uncheckedCast(
+        getIntrusiveTaskEdge(taskEdge).source,
+        vertexTypeDecl);*/
+
+    return vertexTypeDecl.uncheckedCast(
+        getIntrusiveTaskEdge(taskEdge).source, vertexTypeDecl);
+  }
+
+  @Override
+  public TV getTaskEdgeTarget(TE taskEdge) {
+    /*return TypeUtil.uncheckedCast(
+        getIntrusiveTaskEdge(taskEdge).target,
+        vertexTypeDecl);*/
+
+    return vertexTypeDecl.uncheckedCast(
+        getIntrusiveTaskEdge(taskEdge).source, vertexTypeDecl);
+  }
+
+  public IntrusiveTaskEdge getIntrusiveTaskEdge(TE taskEdge) {
+    if (taskEdge instanceof IntrusiveTaskEdge) {
+      return (IntrusiveTaskEdge) taskEdge;
+    }
+    return taskEdgeMap.get(taskEdge);
+  }
+
 
   public TaskGraphSpecifics createTaskGraphSpecifics() {
 
@@ -162,6 +214,58 @@ public abstract class AbstractTaskGraphImpl<TV, TE> extends AbstractTaskGraph<TV
     return new DirectedDataflowTaskGraph();
   }
 
+  public static class DirectedDataflowTaskEdgeContainer<TV, TE> implements Serializable {
+
+    private static final long serialVersionUID = 2233233333444449278L;
+
+    private Set<TE> incomingTaskEdge;
+    private Set<TE> outgoingTaskEdge;
+    private transient Set<TE> unmodifiableIncomingTaskEdge = null;
+    private transient Set<TE> unmodifiableOutgoingTaskEdge = null;
+
+    DirectedDataflowTaskEdgeContainer(TaskEdgeSetFactory<TV, TE> edgeSetFactory,
+                                      TV taskVertex)
+        throws InstantiationException, IllegalAccessException {
+      try {
+        incomingTaskEdge = edgeSetFactory.createTaskEdgeSet(taskVertex);
+        outgoingTaskEdge = edgeSetFactory.createTaskEdgeSet(taskVertex);
+      } catch (IllegalAccessException e) {
+        e.printStackTrace();
+      } catch (InstantiationException e) {
+        e.printStackTrace();
+      }
+    }
+
+    public Set<TE> getUnmodifiableIncomingTaskEdges() {
+      if (unmodifiableIncomingTaskEdge == null) {
+        unmodifiableIncomingTaskEdge = Collections.unmodifiableSet(incomingTaskEdge);
+      }
+      return unmodifiableIncomingTaskEdge;
+    }
+
+    public Set<TE> getUnmodifiableOutgoingEdges() {
+      if (unmodifiableOutgoingTaskEdge == null) {
+        unmodifiableOutgoingTaskEdge = Collections.unmodifiableSet(outgoingTaskEdge);
+      }
+      return unmodifiableOutgoingTaskEdge;
+    }
+
+    public void addIncomingEdge(TE taskEdge) {
+      incomingTaskEdge.add(taskEdge);
+    }
+
+    public void addOutgoingEdge(TE taskEdge) {
+      outgoingTaskEdge.add(taskEdge);
+    }
+
+    public void removeIncomingEdge(TE taskEdge) {
+      incomingTaskEdge.remove(taskEdge);
+    }
+
+    public void removeOutgoingEdge(TE taskEdge) {
+      outgoingTaskEdge.remove(taskEdge);
+    }
+  }
 
   public class DirectedDataflowTaskGraph extends TaskGraphSpecifics implements Serializable {
 
@@ -237,59 +341,6 @@ public abstract class AbstractTaskGraphImpl<TV, TE> extends AbstractTaskGraph<TV
     }
   }
 
-  public static class DirectedDataflowTaskEdgeContainer<TV, TE> implements Serializable {
-
-    private static final long serialVersionUID = 2233233333444449278L;
-
-    private Set<TE> incomingTaskEdge;
-    private Set<TE> outgoingTaskEdge;
-    private transient Set<TE> unmodifiableIncomingTaskEdge = null;
-    private transient Set<TE> unmodifiableOutgoingTaskEdge = null;
-
-    DirectedDataflowTaskEdgeContainer(TaskEdgeSetFactory<TV, TE> edgeSetFactory,
-                                      TV taskVertex)
-        throws InstantiationException, IllegalAccessException {
-      try {
-        incomingTaskEdge = edgeSetFactory.createTaskEdgeSet(taskVertex);
-        outgoingTaskEdge = edgeSetFactory.createTaskEdgeSet(taskVertex);
-      } catch (IllegalAccessException e) {
-        e.printStackTrace();
-      } catch (InstantiationException e) {
-        e.printStackTrace();
-      }
-    }
-
-    public Set<TE> getUnmodifiableIncomingTaskEdges() {
-      if (unmodifiableIncomingTaskEdge == null) {
-        unmodifiableIncomingTaskEdge = Collections.unmodifiableSet(incomingTaskEdge);
-      }
-      return unmodifiableIncomingTaskEdge;
-    }
-
-    public Set<TE> getUnmodifiableOutgoingEdges() {
-      if (unmodifiableOutgoingTaskEdge == null) {
-        unmodifiableOutgoingTaskEdge = Collections.unmodifiableSet(outgoingTaskEdge);
-      }
-      return unmodifiableOutgoingTaskEdge;
-    }
-
-    public void addIncomingEdge(TE taskEdge) {
-      incomingTaskEdge.add(taskEdge);
-    }
-
-    public void addOutgoingEdge(TE taskEdge) {
-      outgoingTaskEdge.add(taskEdge);
-    }
-
-    public void removeIncomingEdge(TE taskEdge) {
-      incomingTaskEdge.remove(taskEdge);
-    }
-
-    public void removeOutgoingEdge(TE taskEdge) {
-      outgoingTaskEdge.remove(taskEdge);
-    }
-  }
-
   private abstract class TaskGraphSpecifics implements Serializable {
 
     private static final long serialVersionUID = 2233233333444449278L;
@@ -327,38 +378,5 @@ public abstract class AbstractTaskGraphImpl<TV, TE> extends AbstractTaskGraph<TV
     }
   }
 
-    /*public class DataflowTaskGraphContainer<TV, TE> implements Serializable {
 
-        Set<TE> incomingTaskEdges;
-        Set<TE> outgoingTaskEdges;
-
-        DataflowTaskGraphContainer(TaskEdgeSetFactory<TV, TE> taskEdgeSetFactory, TV taskVertex) {
-            try {
-                incomingTaskEdges = taskEdgeSetFactory.createTaskEdgeSet (taskVertex);
-                outgoingTaskEdges = taskEdgeSetFactory.createTaskEdgeSet (taskVertex);
-            } catch (IllegalAccessException e) {
-                e.printStackTrace ();
-            } catch (InstantiationException e) {
-                e.printStackTrace ();
-            }
-        }
-
-        public void setIncomingTaskEdges(TE taskEdge) {
-            incomingTaskEdges.add (taskEdge);
-        }
-
-        public void setOutgoingTaskEdges(TE taskEdge) {
-            outgoingTaskEdges.add (taskEdge);
-        }
-
-
-        public void removeIncomingTaskEdges(TE taskEdge) {
-            incomingTaskEdges.remove (taskEdge);
-        }
-
-
-        public void removeOutgoingTaskEdges(TE taskEdge) {
-            outgoingTaskEdges.remove (taskEdge);
-        }
-    }*/
 }

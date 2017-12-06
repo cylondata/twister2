@@ -23,23 +23,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.taskgraphbuilder;
 
-import java.io.Serializable;
+public class TypeUtil<TV> {
 
-public class IntrusiveTaskEdge implements Cloneable, Serializable {
-
-  private static final long serialVersionUID = 2233233333444449278L;
-
-  //Find an alternative for clone method...!
-
-  protected Object source;
-  protected Object target;
-
-  /*public Object clone() {
-    try {
-      return super.clone();
-    } catch (CloneNotSupportedException e) {
-      throw new InternalError();
-    }
-  }*/
+  @SuppressWarnings("unchecked")
+  public <TV> TV uncheckedCast(Object object, TypeUtil<TV> typeDecl) {
+    return (TV) object;
+  }
 }
-
