@@ -18,5 +18,6 @@ public enum  MessageType {
   STRING,
   LONG,
   DOUBLE,
-  OBJECT
+  OBJECT,
+  BUFFER,
 }

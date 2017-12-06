@@ -39,4 +39,8 @@ public interface TWSCommunication {
   DataFlowOperation loadBalance(Map<String, Object> properties, MessageType type, int edge,
                                 Set<Integer> sourceTasks, Set<Integer> destTasks,
                                 MessageReceiver receiver);
+
+  DataFlowOperation keyedReduce(Map<String, Object> properties, MessageType type, int edge,
+                                       Set<Integer> sourceTasks, Set<Integer> destTasks,
+                                       MessageReceiver receiver, MessageReceiver partial);
 }

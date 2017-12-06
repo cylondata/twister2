@@ -30,7 +30,6 @@ import java.util.concurrent.TimeUnit;
 
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
-import edu.iu.dsc.tws.task.api.RunnableTask;
 import edu.iu.dsc.tws.task.api.Task;
 import edu.iu.dsc.tws.task.api.TaskExecutor;
 
@@ -128,6 +127,11 @@ public class TaskExecutorCachedThreadPool implements TaskExecutor {
 
   @Override
   public boolean registerTask(Task task) {
+    return false;
+  }
+
+  @Override
+  public <T> boolean submitMessage(int qid, T message) {
     return false;
   }
 }

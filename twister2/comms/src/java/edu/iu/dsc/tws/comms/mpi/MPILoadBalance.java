@@ -33,7 +33,8 @@ public class MPILoadBalance extends MPIDataFlowOperation {
   private Map<Integer, Integer> destinationIndex;
   private Set<Integer> thisSources;
   private Destinations dests = new Destinations();
-
+  private List<Integer> destinationsList;
+  private Set<Integer> thisTasks;
   /**
    * A place holder for keeping the internal and external destinations
    */
@@ -48,6 +49,7 @@ public class MPILoadBalance extends MPIDataFlowOperation {
     this.sources = srcs;
     this.destinations = dests;
     this.destinationIndex = new HashMap<>();
+    this.destinationsList = new ArrayList<>(destinations);
 
     for (int s : sources) {
       destinationIndex.put(s, 0);
@@ -56,25 +58,40 @@ public class MPILoadBalance extends MPIDataFlowOperation {
 
   protected void setupRouting() {
     this.thisSources = TaskPlanUtils.getTasksOfThisExecutor(instancePlan, sources);
-
+    LOG.info(String.format("%d setup loadbalance routing %s",
+        instancePlan.getThisExecutor(), thisSources));
+    this.thisTasks = instancePlan.getTasksOfThisExecutor();
     this.router = new LoadBalanceRouter(instancePlan, sources, destinations);
     Map<Integer, Map<Integer, Set<Integer>>> internal = router.getInternalSendTasks(0);
     Map<Integer, Map<Integer, Set<Integer>>> external = router.getExternalSendTasks(0);
 
-    for (int s : thisSources) {
-      this.dests.internal.addAll(internal.get(s).get(MPIContext.DEFAULT_PATH));
-      this.dests.external.addAll(external.get(s).get(MPIContext.DEFAULT_PATH));
-      break;
+    LOG.info(String.format("%d adding internal/external routing", instancePlan.getThisExecutor()));
+    try {
+      for (int s : thisSources) {
+        Map<Integer, Set<Integer>> integerSetMap = internal.get(s);
+        if (integerSetMap != null) {
+          Set<Integer> c = integerSetMap.get(MPIContext.DEFAULT_PATH);
+          this.dests.internal.addAll(c);
+        }
+
+        Map<Integer, Set<Integer>> integerSetMap1 = external.get(s);
+        if (integerSetMap1 != null) {
+          Set<Integer> c1 = integerSetMap1.get(MPIContext.DEFAULT_PATH);
+          this.dests.external.addAll(c1);
+        }
+        LOG.info(String.format("%d adding internal/external routing %d",
+            instancePlan.getThisExecutor(), s));
+        break;
+      }
+    } catch (Throwable t) {
+      t.printStackTrace();
     }
+    LOG.info(String.format("%d done adding internal/external routing",
+        instancePlan.getThisExecutor()));
   }
 
   @Override
-  protected void routeReceivedMessage(MessageHeader message, List<Integer> routes) {
-    throw new RuntimeException("Load-balance doesn't rout received messages");
-  }
-
-  @Override
-  public boolean injectPartialResult(int source, Object message) {
+  public boolean sendPartial(int source, Object message) {
     throw new RuntimeException("Not supported method");
   }
 
@@ -97,17 +114,21 @@ public class MPILoadBalance extends MPIDataFlowOperation {
     }
 
     int index = destinationIndex.get(source);
-    if (index >= dests.internal.size()) {
-      index = index - dests.internal.size();
-      Integer route = dests.external.get(index);
-      routingParameters.addExternalRoute(route);
-      routingParameters.setDestinationId(route);
-    } else {
-      Integer route = dests.external.get(index);
-      routingParameters.addExternalRoute(route);
-      routingParameters.setDestinationId(route);
-    }
+    int route = destinationsList.get(index);
 
+    if (thisTasks.contains(route)) {
+      routingParameters.addInteranlRoute(route);
+    } else {
+      routingParameters.addExternalRoute(route);
+    }
+    routingParameters.setDestinationId(route);
+//    LOG.info(String.format("%d Eending to %d: %d %s",
+//        instancePlan.getThisExecutor(), index, route, destinationIndex));
+
+    index = (index + 1) % destinations.size();
+    destinationIndex.put(source, index);
+//    LOG.info(String.format("%d EEending to %d: %d %s",
+//        instancePlan.getThisExecutor(), index, route, destinationIndex));
     return routingParameters;
   }
 
@@ -137,7 +158,8 @@ public class MPILoadBalance extends MPIDataFlowOperation {
     MessageHeader header = currentMessage.getHeader();
 
     finalReceiver.onMessage(header.getSourceId(), header.getPath(),
-        router.mainTaskOfExecutor(instancePlan.getThisExecutor()), object);
+        router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
+            header.getPath()), object);
   }
 
   @Override

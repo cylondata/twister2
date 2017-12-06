@@ -137,13 +137,13 @@ public class PingPongCommunicationTaskBased implements IContainer {
   private class RecieveWorker extends SinkTask {
 
     @Override
-    public void execute() {
-
+    public Message execute() {
+      return null;
     }
 
     @Override
-    public void execute(Message content) {
-
+    public Message execute(Message content) {
+      return null;
     }
   }
 
@@ -159,7 +159,7 @@ public class PingPongCommunicationTaskBased implements IContainer {
     }
 
     @Override
-    public void execute() {
+    public Message execute() {
       LOG.log(Level.INFO, "Starting map worker");
       for (int i = 0; i < 100000; i++) {
         IntData data = generateData();
@@ -177,11 +177,12 @@ public class PingPongCommunicationTaskBased implements IContainer {
         Thread.yield();
       }
       status = Status.MAP_FINISHED;
+      return null;
     }
 
     @Override
-    public void execute(Message content) {
-      execute();
+    public Message execute(Message content) {
+      return execute();
     }
   }
 

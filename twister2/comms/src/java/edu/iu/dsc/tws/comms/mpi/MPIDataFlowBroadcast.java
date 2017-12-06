@@ -52,16 +52,16 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
 
 //      LOG.info(String.format("%d calling fina receiver", instancePlan.getThisExecutor()));
     finalReceiver.onMessage(header.getSourceId(), header.getPath(),
-        router.mainTaskOfExecutor(instancePlan.getThisExecutor()), object);
+        router.mainTaskOfExecutor(instancePlan.getThisExecutor(), MPIContext.DEFAULT_PATH), object);
   }
 
   @Override
-  public boolean injectPartialResult(int src, Object message) {
+  public boolean sendPartial(int src, Object message) {
     throw new RuntimeException("Not supported method");
   }
 
   protected void passMessageDownstream(Object object, MPIMessage currentMessage) {
-    int src = router.mainTaskOfExecutor(instancePlan.getThisExecutor());
+    int src = router.mainTaskOfExecutor(instancePlan.getThisExecutor(), MPIContext.DEFAULT_PATH);
     RoutingParameters routingParameters = sendRoutingParameters(src, MPIContext.DEFAULT_PATH);
 
 //    internalRoutesForSend(src, internalRoutes);
@@ -97,10 +97,6 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
   protected void setupRouting() {
     // we will only have one distinct route
     router = new BinaryTreeRouter(config, instancePlan, source, destinations);
-  }
-
-  @Override
-  protected void routeReceivedMessage(MessageHeader message, List<Integer> routes) {
   }
 
   @Override

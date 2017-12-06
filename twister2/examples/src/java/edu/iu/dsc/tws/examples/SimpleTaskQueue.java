@@ -159,12 +159,12 @@ public class SimpleTaskQueue implements IContainer {
     }
 
     @Override
-    public void execute() {
-
+    public Message execute() {
+      return null;
     }
 
     @Override
-    public void execute(Message content) {
+    public Message execute(Message content) {
       try {
         // Sleep for a while
         Thread.sleep(1);
@@ -175,6 +175,7 @@ public class SimpleTaskQueue implements IContainer {
       if (Integer.parseInt(data) % 1000 == 0) {
         System.out.println(((String) content.getContent()).toString());
       }
+      return null;
     }
   }
 
@@ -190,7 +191,7 @@ public class SimpleTaskQueue implements IContainer {
     }
 
     @Override
-    public void execute() {
+    public Message execute() {
       LOG.log(Level.INFO, "Starting map worker");
       for (int i = 0; i < 100000; i++) {
         IntData data = generateData();
@@ -208,11 +209,12 @@ public class SimpleTaskQueue implements IContainer {
         Thread.yield();
       }
       status = Status.MAP_FINISHED;
+      return null;
     }
 
     @Override
-    public void execute(Message content) {
-      execute();
+    public Message execute(Message content) {
+      return execute();
     }
   }
 

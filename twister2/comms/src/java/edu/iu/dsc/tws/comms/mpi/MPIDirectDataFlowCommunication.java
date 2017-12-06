@@ -53,11 +53,6 @@ public class MPIDirectDataFlowCommunication extends MPIDataFlowOperation {
   }
 
   @Override
-  protected void routeReceivedMessage(MessageHeader message, List<Integer> routes) {
-    throw new RuntimeException("We are not routing received messages");
-  }
-
-  @Override
   protected void receiveSendInternally(int source, int t, int path, Object message) {
     // we only have one destination in this case
     if (t != destination) {
@@ -79,7 +74,7 @@ public class MPIDirectDataFlowCommunication extends MPIDataFlowOperation {
   }
 
   @Override
-  public boolean injectPartialResult(int source, Object message) {
+  public boolean sendPartial(int source, Object message) {
     throw new RuntimeException("This method is not used by direct communication");
   }
 

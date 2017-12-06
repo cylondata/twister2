@@ -27,6 +27,7 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.mpi.MPIBuffer;
 import edu.iu.dsc.tws.comms.mpi.MPIContext;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
@@ -54,6 +55,8 @@ public class BaseLoadBalanceCommunication implements IContainer {
 
   private Status status;
 
+  private TWSCommunication channel;
+
   @Override
   public void init(Config cfg, int containerId, ResourcePlan plan) {
     LOG.log(Level.INFO, "Starting the example with container id: " + plan.getThisId());
@@ -69,7 +72,7 @@ public class BaseLoadBalanceCommunication implements IContainer {
     //first get the communication config file
     TWSNetwork network = new TWSNetwork(cfg, taskPlan);
 
-    TWSCommunication channel = network.getDataFlowTWSCommunication();
+    channel = network.getDataFlowTWSCommunication();
 
     Set<Integer> sources = new HashSet<>();
     Set<Integer> dests = new HashSet<>();
@@ -87,62 +90,89 @@ public class BaseLoadBalanceCommunication implements IContainer {
     LOG.info("Setting up reduce dataflow operation");
     // this method calls the init method
     // I think this is wrong
-    loadBalance = channel.loadBalance(newCfg, MessageType.OBJECT, 0,
-        sources, dests, new BCastReceive());
+    loadBalance = channel.loadBalance(newCfg, MessageType.BUFFER, 0,
+        sources, dests, new LoadBalanceReceiver());
     // the map thread where data is produced
     LOG.info("Starting worker: " + id);
-    if (id == 0 || id == 1) {
-      Thread mapThread = new Thread(new MapWorker());
-      mapThread.start();
-    }
+//    if (id == 0 || id == 1) {
+//      Thread mapThread = new Thread(new MapWorker());
+//      mapThread.start();
+//    }
 
     // we need to progress the communication
-    while (true) {
-      try {
-        // progress the channel
-        channel.progress();
-        // we should progress the communication directive
-        loadBalance.progress();
-        Thread.yield();
-      } catch (Throwable t) {
-        t.printStackTrace();
+
+    try {
+      if (id == 0 || id == 1) {
+        MPIBuffer data = new MPIBuffer(1024);
+        data.setSize(24);
+//        IntData data = generateData();
+        for (int i = 0; i < 50000; i++) {
+          mapFunction(data);
+          channel.progress();
+          // we should progress the communication directive
+          loadBalance.progress();
+        }
+        while (true) {
+          channel.progress();
+          // we should progress the communication directive
+          loadBalance.progress();
+        }
+      } else {
+        while (true) {
+          channel.progress();
+          // we should progress the communication directive
+          loadBalance.progress();
+        }
       }
+      // progress the channel
+//        channel.progress();
+//        // we should progress the communication directive
+//        loadBalance.progress();
+//        Thread.yield();
+    } catch (Throwable t) {
+      t.printStackTrace();
     }
   }
+
+  private int sendCount = 0;
 
   /**
    * We are running the map in a separate thread
    */
   private class MapWorker implements Runnable {
-    private int sendCount = 0;
     @Override
     public void run() {
-      LOG.log(Level.INFO, "Starting map worker");
+//      MPIBuffer data = new MPIBuffer(1024);
+//      data.setSize(24);
+      IntData data = generateData();
       for (int i = 0; i < 5000; i++) {
-        IntData data = generateData();
-        // lets generate a message
-        for (int j = 0; j < NO_OF_TASKS / 4; j++) {
-          while (!loadBalance.send(id * 2 + j, data)) {
-            // lets wait a litte and try again
-            try {
-              Thread.sleep(1);
-            } catch (InterruptedException e) {
-              e.printStackTrace();
-            }
-          }
-        }
-        LOG.info(String.format("%d sending from %d", id, NO_OF_TASKS)
-            + " count: " + sendCount++);
-        sendCount++;
+        mapFunction(data);
         Thread.yield();
       }
-      status = Status.MAP_FINISHED;
     }
   }
 
-  private class BCastReceive implements MessageReceiver {
+  private void mapFunction(Object data) {
+//    LOG.log(Level.INFO, "Starting map worker");
+//    IntData data = generateData();
+    // lets generate a message
+    for (int j = 0; j < NO_OF_TASKS / 4; j++) {
+//      LOG.info(id + " Sending to: " + (id * 2 + j));
+      while (!loadBalance.send(id * 2 + j, data)) {
+        // lets wait a litte and try again
+        channel.progress();
+        // we should progress the communication directive
+        loadBalance.progress();
+      }
+    }
+    sendCount++;
+    status = Status.MAP_FINISHED;
+  }
+
+  private class LoadBalanceReceiver implements MessageReceiver {
     private Map<Integer, Map<Integer, List<Object>>> messages = new HashMap<>();
     private int count = 0;
+    private long start = System.nanoTime();
     @Override
     public void init(Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
       for (Map.Entry<Integer, Map<Integer, List<Integer>>> e : expectedIds.entrySet()) {
@@ -161,8 +191,18 @@ public class BaseLoadBalanceCommunication implements IContainer {
 
     @Override
     public void onMessage(int source, int path, int target, Object object) {
-      LOG.info("Message received for last: " + source + " target: "
-          + target + " count: " + count++);
+      if (count == 0) {
+        start = System.nanoTime();
+      }
+      count++;
+//      LOG.info("Message received for last: " + source + " target: "
+//          + target + " count: " + count++);
+      if (count % 5000 == 0) {
+        LOG.info(id + " Total time: " + (System.nanoTime() - start) / 1000000 + " " + count);
+      }
+      if (count > 100000) {
+        LOG.info("More than");
+      }
     }
   }
 

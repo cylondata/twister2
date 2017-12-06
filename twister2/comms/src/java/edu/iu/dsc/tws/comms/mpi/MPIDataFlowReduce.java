@@ -46,10 +46,6 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
         destination, sources);
   }
 
-  protected int destinationIdentifier(int source, int path) {
-    return router.destinationIdentifier(source, path);
-  }
-
   @Override
   protected boolean isLast(int source, int path, int taskIdentifier) {
     return router.isLastReceiver();
@@ -75,49 +71,13 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
         && partialReceiver != null) {
 //      LOG.info(String.format("%d calling partial receiver", instancePlan.getThisExecutor()));
       partialReceiver.onMessage(header.getSourceId(), header.getPath(),
-          router.mainTaskOfExecutor(instancePlan.getThisExecutor()), object);
+          router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
+              MPIContext.DEFAULT_PATH), object);
     } else {
 //      LOG.info(String.format("%d calling fina receiver", instancePlan.getThisExecutor()));
       finalReceiver.onMessage(header.getSourceId(), header.getPath(),
-          router.mainTaskOfExecutor(instancePlan.getThisExecutor()), object);
-    }
-  }
-
-  @Override
-  protected void routeReceivedMessage(MessageHeader message, List<Integer> routes) {
-    throw new RuntimeException("We don't rout send received messages directly");
-  }
-
-  protected void externalRoutesForSend(int source, List<Integer> routes) {
-    // we dont do anything
-  }
-
-  protected void externalRoutesForPartialSend(int source, List<Integer> routes) {
-    // get the expected routes
-    Map<Integer, Map<Integer, Set<Integer>>> routing =
-        router.getExternalSendTasksForPartial(source);
-    if (routing == null) {
-      throw new RuntimeException("Un-expected message from source: " + source);
-    }
-
-    Map<Integer, Set<Integer>> sourceRouting = routing.get(source);
-    if (sourceRouting != null) {
-      // we always use path 0 because only one path
-      routes.addAll(sourceRouting.get(0));
-    }
-  }
-
-  protected void internalRouterForPartialSend(int source, List<Integer> routes) {
-    // get the expected routes
-    Map<Integer, Map<Integer, Set<Integer>>> routing = router.getInternalSendTasks(source);
-    if (routing == null) {
-      throw new RuntimeException("Un-expected message from source: " + source);
-    }
-
-    Map<Integer, Set<Integer>> sourceRouting = routing.get(source);
-    if (sourceRouting != null) {
-      // we always use path 0 because only one path
-      routes.addAll(sourceRouting.get(0));
+          router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
+              MPIContext.DEFAULT_PATH), object);
     }
   }
 
@@ -164,7 +124,8 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
     }
 
     // we are going to add source if we are the main executor
-    if (router.mainTaskOfExecutor(instancePlan.getThisExecutor()) == source) {
+    if (router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
+        MPIContext.DEFAULT_PATH) == source) {
       routingParameters.addInteranlRoute(source);
     }
 
@@ -177,26 +138,6 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
 
     routingParameters.setDestinationId(router.destinationIdentifier(source, path));
     return routingParameters;
-  }
-
-  protected void internalRoutesForSend(int source, List<Integer> routes) {
-    // get the expected routes
-    Map<Integer, Map<Integer, Set<Integer>>> routing = router.getInternalSendTasks(source);
-    if (routing == null) {
-      throw new RuntimeException("Un-expected message from source: " + source);
-    }
-
-    // we are going to add source if we are the main executor
-    if (router.mainTaskOfExecutor(instancePlan.getThisExecutor()) == source) {
-      routes.add(source);
-    }
-
-    // we should not have the route for main task to outside at this point
-    Map<Integer, Set<Integer>> sourceRouting = routing.get(source);
-    if (sourceRouting != null) {
-      // we always use path 0 because only one path
-      routes.addAll(sourceRouting.get(0));
-    }
   }
 
   @Override
@@ -217,9 +158,9 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
   }
 
   @Override
-  public boolean injectPartialResult(int source, Object message) {
+  public boolean sendPartial(int source, Object message) {
     // now what we need to do
-    return sendMessagePartial(source, message);
+    return sendMessagePartial(source, message, MPIContext.DEFAULT_PATH);
   }
 
   @Override
@@ -231,7 +172,7 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
   protected Map<Integer, Map<Integer, List<Integer>>> receiveExpectedTaskIds() {
     Map<Integer, Map<Integer, List<Integer>>> integerMapMap = router.receiveExpectedTaskIds();
     // add the main task to receive from iteself
-    int key = router.mainTaskOfExecutor(instancePlan.getThisExecutor());
+    int key = router.mainTaskOfExecutor(instancePlan.getThisExecutor(), MPIContext.DEFAULT_PATH);
     Map<Integer, List<Integer>> mainReceives = integerMapMap.get(
         key);
     List<Integer> mainReceiveList;
@@ -242,7 +183,9 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
     } else {
       mainReceiveList = mainReceives.get(MPIContext.DEFAULT_PATH);
     }
-    mainReceiveList.add(key);
+    if (key != destination) {
+      mainReceiveList.add(key);
+    }
 
     return integerMapMap;
   }

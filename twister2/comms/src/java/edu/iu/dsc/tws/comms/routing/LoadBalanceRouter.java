@@ -123,7 +123,7 @@ public class LoadBalanceRouter implements IRouter {
   }
 
   @Override
-  public int mainTaskOfExecutor(int executor) {
+  public int mainTaskOfExecutor(int executor, int path) {
     return -1;
   }
 
@@ -136,12 +136,19 @@ public class LoadBalanceRouter implements IRouter {
     return 0;
   }
 
+  @Override
+  public Map<Integer, Integer> getPathAssignedToTasks() {
+    return null;
+  }
+
   private static Set<Integer> getExecutorsHostingTasks(TaskPlan plan, Set<Integer> tasks) {
     Set<Integer> executors = new HashSet<>();
 
     Set<Integer> allExecutors = plan.getAllExecutors();
+    LOG.info(String.format("%d All executors: %s", plan.getThisExecutor(), allExecutors));
     for (int e : allExecutors) {
       Set<Integer> tasksOfExecutor = plan.getChannelsOfExecutor(e);
+      LOG.info(String.format("%d Tasks of executors: %s", plan.getThisExecutor(), tasksOfExecutor));
       for (int t : tasks) {
         if (tasksOfExecutor.contains(t)) {
           executors.add(e);
