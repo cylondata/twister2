@@ -18,6 +18,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -126,6 +127,12 @@ public class KeyedInvertedBinaryTreeRouter implements IRouter {
 
           // this task is connected to others and they send the message to this task
           List<Integer> directChildren = search.getDirectChildren();
+
+          if (t == path) {
+            LOG.log(Level.INFO, String.format("%d direct children %s",
+                plan.getThisExecutor(), directChildren));
+          }
+
           for (int child : directChildren) {
             Map<Integer, Set<Integer>> sendMap;
             if (sendInternalTasks.containsKey(child)) {
@@ -133,11 +140,9 @@ public class KeyedInvertedBinaryTreeRouter implements IRouter {
             } else {
               sendMap = new HashMap<>();
             }
-            String log = "";
             Set<Integer> sendTasks = new HashSet<>();
             sendTasks.add(t);
             sendMap.put(path, sendTasks);
-            log += String.format("%d Sending -> from: %d to %d", plan.getThisExecutor(), child, t);
             sendInternalTasks.put(child, sendMap);
 
             Map<Integer, Integer> destinationMap = new HashMap<>();
@@ -146,7 +151,6 @@ public class KeyedInvertedBinaryTreeRouter implements IRouter {
             }
             destinationMap.put(child, t);
             destinationIdentifiers.put(path, destinationMap);
-            LOG.info("Internal tasks: " + log);
           }
 
           // now lets calculate the external send tasks of the main task
@@ -158,12 +162,9 @@ public class KeyedInvertedBinaryTreeRouter implements IRouter {
             } else {
               mainSendMap = new HashMap<>();
             }
-            String log = "";
             Set<Integer> sendTasks = new HashSet<>();
             sendTasks.add(parent.getTaskId());
             mainSendMap.put(path, sendTasks);
-            log += String.format("%d Sending -> from: %d to %d",
-                plan.getThisExecutor(), t, parent.getTaskId());
             sendExternalTasksPartial.put(t, mainSendMap);
 
             Map<Integer, Integer> destinationMap = new HashMap<>();
@@ -172,7 +173,6 @@ public class KeyedInvertedBinaryTreeRouter implements IRouter {
             }
             destinationMap.put(t, parent.getTaskId());
             destinationIdentifiers.put(path, destinationMap);
-            LOG.info("External tasks of main: " + log);
           } else {
             mainTaskLast = true;
           }

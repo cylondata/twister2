@@ -29,7 +29,6 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.mpi.MPIBuffer;
 import edu.iu.dsc.tws.comms.mpi.MPIContext;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
@@ -88,7 +87,7 @@ public class BaseReduceCommunication implements IContainer {
     LOG.info("Setting up reduce dataflow operation");
     // this method calls the init method
     // I think this is wrong
-    reduce = channel.reduce(newCfg, MessageType.BUFFER, 0, sources,
+    reduce = channel.reduce(newCfg, MessageType.OBJECT, 0, sources,
         dest, new FinalReduceReceive(), new PartialReduceWorker());
 
     // the map thread where data is produced
@@ -117,9 +116,9 @@ public class BaseReduceCommunication implements IContainer {
     @Override
     public void run() {
       LOG.log(Level.INFO, "Starting map worker");
-      MPIBuffer data = new MPIBuffer(1024);
-      data.setSize(24);
-      for (int i = 0; i < 50000; i++) {
+//      MPIBuffer data = new MPIBuffer(1024);
+      IntData data = generateData();
+      for (int i = 0; i < 10000; i++) {
         for (int j = 0; j < noOfTasksPerExecutor; j++) {
           // lets generate a message
           while (!reduce.send(j + id * noOfTasksPerExecutor, data)) {
@@ -136,6 +135,7 @@ public class BaseReduceCommunication implements IContainer {
         sendCount++;
         Thread.yield();
       }
+      LOG.info("Done sending");
       status = Status.MAP_FINISHED;
     }
   }
@@ -273,7 +273,7 @@ public class BaseReduceCommunication implements IContainer {
               LOG.info("Message received for last: " + source + " target: "
                   + target + " count: " + count);
             }
-            if (count == 50000) {
+            if (count >= 10000) {
               LOG.info("Total time: " + (System.nanoTime() - start) / 1000000);
             }
           } else {
@@ -292,8 +292,9 @@ public class BaseReduceCommunication implements IContainer {
    * @return IntData
    */
   private IntData generateData() {
-    int[] d = new int[10];
-    for (int i = 0; i < 10; i++) {
+    int s = 128000;
+    int[] d = new int[s];
+    for (int i = 0; i < s; i++) {
       d[i] = i;
     }
     return new IntData(d);
