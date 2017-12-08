@@ -33,14 +33,25 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 package edu.iu.dsc.tws.task.taskgraphbuilder;
 
 import java.util.Collection;
 import java.util.Set;
 
 public abstract class AbstractTaskGraph<TV, TE> implements TaskGraph<TV, TE> {
-
-  protected AbstractTaskGraph() {
+  public AbstractTaskGraph() {
   }
 
   @Override
@@ -57,7 +68,14 @@ public abstract class AbstractTaskGraph<TV, TE> implements TaskGraph<TV, TE> {
     boolean success = false;
     for (TE taskEdge : taskEdges) {
       //success |= removeTaskEdge (taskEdge);
-      success = true;
+    }
+    return success;
+  }
+
+  protected boolean removeAllTaskEdges(TE[] taskEdges) {
+    boolean success = false;
+    for (int i = 0; i < taskEdges.length; i++) {
+      //success |= removeTaskEdge(taskEdges[i]);
     }
     return success;
   }
@@ -94,4 +112,6 @@ public abstract class AbstractTaskGraph<TV, TE> implements TaskGraph<TV, TE> {
     }
   }
 }
+
+
 

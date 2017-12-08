@@ -33,14 +33,26 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 package edu.iu.dsc.tws.task.taskgraphbuilder;
 
 import java.io.Serializable;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 
 public abstract class AbstractTaskGraphImpl<TV, TE> extends AbstractTaskGraph<TV, TE>
     implements TaskGraph<TV, TE>, Cloneable, Serializable {
@@ -93,7 +105,7 @@ public abstract class AbstractTaskGraphImpl<TV, TE> extends AbstractTaskGraph<TV
     }
 
     try {
-      TE taskedge = taskEdgeFactory.createTaskEdge(taskVertex1, taskVertex2);
+      TE taskdge = taskEdgeFactory.createTaskEdge(taskVertex1, taskVertex2);
       if (containsTaskEdge(taskEdge)) {
         success = false;
       } else {
@@ -175,12 +187,12 @@ public abstract class AbstractTaskGraphImpl<TV, TE> extends AbstractTaskGraph<TV
 
   @Override
   public TV getTaskEdgeSource(TE taskEdge) {
-    /*return TypeUtil.uncheckedCast(
-        getIntrusiveTaskEdge(taskEdge).source,
-        vertexTypeDecl);*/
+      /*return TypeUtil.uncheckedCast(
+              getIntrusiveTaskEdge(taskEdge).source,
+              vertexTypeDecl);*/
 
     return vertexTypeDecl.uncheckedCast(
-        getIntrusiveTaskEdge(taskEdge).source, vertexTypeDecl);
+       getIntrusiveTaskEdge(taskEdge).source, vertexTypeDecl);
   }
 
   @Override
@@ -190,7 +202,7 @@ public abstract class AbstractTaskGraphImpl<TV, TE> extends AbstractTaskGraph<TV
         vertexTypeDecl);*/
 
     return vertexTypeDecl.uncheckedCast(
-        getIntrusiveTaskEdge(taskEdge).source, vertexTypeDecl);
+       getIntrusiveTaskEdge(taskEdge).source, vertexTypeDecl);
   }
 
   public IntrusiveTaskEdge getIntrusiveTaskEdge(TE taskEdge) {
@@ -243,7 +255,7 @@ public abstract class AbstractTaskGraphImpl<TV, TE> extends AbstractTaskGraph<TV
       return unmodifiableIncomingTaskEdge;
     }
 
-    public Set<TE> getUnmodifiableOutgoingEdges() {
+    public Set<TE> getUnmodifiableOutgoingTaskEdges() {
       if (unmodifiableOutgoingTaskEdge == null) {
         unmodifiableOutgoingTaskEdge = Collections.unmodifiableSet(outgoingTaskEdge);
       }
@@ -269,9 +281,9 @@ public abstract class AbstractTaskGraphImpl<TV, TE> extends AbstractTaskGraph<TV
 
   public class DirectedDataflowTaskGraph extends TaskGraphSpecifics implements Serializable {
 
-    private static final long serialVersionUID = 2233233333444449278L;
+    private static final long serialVersionUID = 56565434344343434L;
 
-    public Map<TV, DirectedDataflowTaskEdgeContainer<TV, TE>> vertexTaskMapDirected;
+    public Map<TV, DirectedDataflowTaskEdgeContainer<TV, TE>> taskVertexMap;
 
     public DirectedDataflowTaskGraph() {
       this(new LinkedHashMap<TV, DirectedDataflowTaskEdgeContainer<TV, TE>>());
@@ -279,22 +291,41 @@ public abstract class AbstractTaskGraphImpl<TV, TE> extends AbstractTaskGraph<TV
 
     public DirectedDataflowTaskGraph(Map<TV,
         DirectedDataflowTaskEdgeContainer<TV, TE>> vertexTaskMap) {
-      this.vertexTaskMapDirected = vertexTaskMap;
+      this.taskVertexMap = vertexTaskMap;
     }
 
     @Override
     public void addTaskVertex(TV taskVertex) {
-      vertexTaskMapDirected.put(taskVertex, null);
+      taskVertexMap.put(taskVertex, null);
     }
 
     @Override
     public Set<TV> getTaskVertexSet() {
-      return vertexTaskMapDirected.keySet();
+      return taskVertexMap.keySet();
     }
 
     @Override
     public Set<TE> getAllTaskEdges(TV sourceTaskVertex, TV targetTaskVertex) {
-      return null;
+      Set<TE> taskEdges = null;
+
+      if (containsTaskVertex(sourceTaskVertex)
+          && containsTaskVertex(targetTaskVertex)) {
+
+        taskEdges = new ArrayUnenforcedSet<TE>();
+
+        DirectedDataflowTaskEdgeContainer<TV, TE> ec =
+            getTaskEdgeContainer(sourceTaskVertex);
+
+        Iterator<TE> iter = ec.outgoingTaskEdge.iterator();
+
+        while (iter.hasNext()) {
+          TE e = iter.next();
+          if (getTaskEdgeTarget(e).equals(targetTaskVertex)) {
+            taskEdges.add(e);
+          }
+        }
+      }
+      return taskEdges;
     }
 
     @Override
@@ -304,6 +335,12 @@ public abstract class AbstractTaskGraphImpl<TV, TE> extends AbstractTaskGraph<TV
 
     @Override
     public void addTaskEdgeToTouchingVertices(TE taskEdge) {
+
+      TV source = getTaskEdgeSource(taskEdge);
+      TV target = getTaskEdgeTarget(taskEdge);
+
+      getTaskEdgeContainer(source).addOutgoingEdge(taskEdge);
+      getTaskEdgeContainer(target).addIncomingEdge(taskEdge);
     }
 
     @Override
@@ -313,37 +350,64 @@ public abstract class AbstractTaskGraphImpl<TV, TE> extends AbstractTaskGraph<TV
 
     @Override
     public Set<TE> taskEdgesOf(TV taskVertex) {
-      return null;
+      ArrayUnenforcedSet<TE> inAndOut =
+          new ArrayUnenforcedSet<TE>(getTaskEdgeContainer(taskVertex).incomingTaskEdge);
+      inAndOut.addAll(getTaskEdgeContainer(taskVertex).outgoingTaskEdge);
+
+      return Collections.unmodifiableSet(inAndOut);
     }
 
     @Override
     public int inDegreeOf(TV taskVertex) {
-      return 0;
+      return getTaskEdgeContainer(taskVertex).incomingTaskEdge.size();
     }
 
     @Override
     public Set<TE> incomingTaskEdgesOf(TV taskVertex) {
-      return null;
+      return getTaskEdgeContainer(taskVertex).getUnmodifiableIncomingTaskEdges();
     }
 
     @Override
     public int outDegreeOf(TV taskVertex) {
-      return 0;
+      return getTaskEdgeContainer(taskVertex).outgoingTaskEdge.size();
     }
 
     @Override
     public Set<TE> outgoingTaskEdgesOf(TV taskVertex) {
-      return null;
+      return getTaskEdgeContainer(taskVertex).getUnmodifiableOutgoingTaskEdges();
     }
 
     @Override
     public void removeTaskEdgeFromTouchingVertices(TE taskEdge) {
+
+      TV source = getTaskEdgeSource(taskEdge);
+      TV target = getTaskEdgeSource(taskEdge);
+
+      getTaskEdgeContainer(source).removeOutgoingEdge(taskEdge);
+      getTaskEdgeContainer(target).removeIncomingEdge(taskEdge);
+    }
+
+    private DirectedDataflowTaskEdgeContainer<TV, TE> getTaskEdgeContainer(TV taskVertex) {
+
+      assertTaskVertexExist(taskVertex);
+      DirectedDataflowTaskEdgeContainer<TV, TE> ec = taskVertexMap.get(taskVertex);
+      if (ec == null) {
+        try {
+          ec = new DirectedDataflowTaskEdgeContainer<TV, TE>(taskEdgeSetFactory, taskVertex);
+        } catch (InstantiationException e) {
+          e.printStackTrace();
+        } catch (IllegalAccessException e) {
+          e.printStackTrace();
+        }
+        taskVertexMap.put(taskVertex, ec);
+      }
+      return ec;
     }
   }
 
   private abstract class TaskGraphSpecifics implements Serializable {
 
-    private static final long serialVersionUID = 2233233333444449278L;
+    private static final long serialVersionUID = 33323434344343434L;
 
     public abstract void addTaskVertex(TV taskVertex);
 
@@ -374,9 +438,7 @@ public abstract class AbstractTaskGraphImpl<TV, TE> extends AbstractTaskGraph<TV
   private class ArrayListFactory<TV, TE> implements TaskEdgeSetFactory<TV, TE> {
 
     public Set<TE> createTaskEdgeSet(TV taskVertex) {
-      return new TreeSet<>();
+      return new ArrayUnenforcedSet<TE>(1);
     }
   }
-
-
 }
