@@ -23,14 +23,14 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.mpi.MPIContext;
 
-public class BinaryTreeRouter implements IRouter {
+public class BinaryTreeRouter {
   private static final Logger LOG = Logger.getLogger(BinaryTreeRouter.class.getName());
 
-  private Map<Integer, Map<Integer, List<Integer>>> receiveTasks;
+  private Map<Integer, List<Integer>> receiveTasks;
   private Set<Integer> receiveExecutors;
-  private Map<Integer, Map<Integer, Set<Integer>>> sendExternalTasksPartial;
-  private Map<Integer, Map<Integer, Set<Integer>>> sendExternalTasks;
-  private Map<Integer, Map<Integer, Set<Integer>>> sendInternalTasks;
+  private Map<Integer, Set<Integer>> sendExternalTasksPartial;
+  private Map<Integer, Set<Integer>> sendExternalTasks;
+  private Map<Integer, Set<Integer>> sendInternalTasks;
   private int mainTask;
   private boolean mainTaskLast;
   private Map<Integer, Integer> destinationIdentifiers;
@@ -66,7 +66,7 @@ public class BinaryTreeRouter implements IRouter {
         thisExecutorTasksOfOperation.toString()));
     this.destinationIdentifiers = new HashMap<>();
     // construct the map of receiving ids
-    this.receiveTasks = new HashMap<Integer, Map<Integer, List<Integer>>>();
+    this.receiveTasks = new HashMap<>();
 
     // now lets construct the downstream tasks
     sendExternalTasksPartial = new HashMap<>();
@@ -88,38 +88,27 @@ public class BinaryTreeRouter implements IRouter {
           receiveExecutors.add(plan.getExecutorForChannel(search.getParent().getTaskId()));
           recv.add(search.getParent().getTaskId());
         }
-        Map<Integer, List<Integer>> receivePathMap = new HashMap<>();
-        receivePathMap.put(0, new ArrayList<>(recv));
-        receiveTasks.put(t, receivePathMap);
+        receiveTasks.put(t, new ArrayList<>(recv));
 
         // this task is connected to others and they dont send messages to anyone
         List<Integer> directChildren = search.getDirectChildren();
         for (int child : directChildren) {
-          Map<Integer, Set<Integer>> sendMap = new HashMap<>();
-          Set<Integer> sendTasks = new HashSet<>();
-          sendMap.put(MPIContext.DEFAULT_PATH, sendTasks);
-          sendInternalTasks.put(child, sendMap);
           destinationIdentifiers.put(t, child);
 
-          Map<Integer, List<Integer>> childReceiveMap = new HashMap<>();
+          // we only have one task as main, so we are expecting to receive from it
           List<Integer> childReceiveTasks = new ArrayList<>();
           childReceiveTasks.add(t);
-          childReceiveMap.put(MPIContext.DEFAULT_PATH, childReceiveTasks);
-          receiveTasks.put(child, childReceiveMap);
+          receiveTasks.put(child, childReceiveTasks);
         }
 
         // main task is going to send to its internal tasks
-        Map<Integer, Set<Integer>> mainInternalSendMap = new HashMap<>();
         Set<Integer> mainInternalSendTasks = new HashSet<>(directChildren);
-        mainInternalSendMap.put(MPIContext.DEFAULT_PATH, mainInternalSendTasks);
-        sendInternalTasks.put(t, mainInternalSendMap);
+        sendInternalTasks.put(t, mainInternalSendTasks);
 
         // now lets calculate the external send tasks of the main task
-        Map<Integer, Set<Integer>> mainExternalSendMap = new HashMap<>();
         Set<Integer> mainExternalSendTasks = new HashSet<>();
         mainExternalSendTasks.addAll(search.getRemoteChildrenIds());
-        mainExternalSendMap.put(MPIContext.DEFAULT_PATH, mainExternalSendTasks);
-        sendExternalTasks.put(t, mainExternalSendMap);
+        sendExternalTasks.put(t, mainExternalSendTasks);
         destinationIdentifiers.put(t, 0);
       } else {
         LOG.info(String.format("%d doesn't have a node in tree: %d", plan.getThisExecutor(), t));
@@ -138,41 +127,35 @@ public class BinaryTreeRouter implements IRouter {
         plan.getThisExecutor(), receiveTasks));
   }
 
-  @Override
   public Set<Integer> receivingExecutors() {
     return receiveExecutors;
   }
 
-  @Override
-  public Map<Integer, Map<Integer, List<Integer>>> receiveExpectedTaskIds() {
+  public Map<Integer, List<Integer>> receiveExpectedTaskIds() {
     return receiveTasks;
   }
 
-  @Override
   public boolean isLastReceiver() {
     // check weather this
     return mainTaskLast;
   }
 
-  @Override
-  public Map<Integer, Map<Integer, Set<Integer>>> getInternalSendTasks(int source) {
+  public Map<Integer, Set<Integer>> getInternalSendTasks(int source) {
     return sendInternalTasks;
   }
 
-  public Map<Integer, Map<Integer, Set<Integer>>> getExternalSendTasks(int source) {
+  public Map<Integer, Set<Integer>> getExternalSendTasks(int source) {
     return sendExternalTasks;
   }
 
-  public Map<Integer, Map<Integer, Set<Integer>>> getExternalSendTasksForPartial(int source) {
+  public Map<Integer, Set<Integer>> getExternalSendTasksForPartial(int source) {
     return sendExternalTasksPartial;
   }
 
-  @Override
   public int mainTaskOfExecutor(int executor, int path) {
     return mainTask;
   }
 
-  @Override
   public int destinationIdentifier(int source, int path) {
     Object o = destinationIdentifiers.get(source);
     if (o != null) {
@@ -182,7 +165,6 @@ public class BinaryTreeRouter implements IRouter {
     }
   }
 
-  @Override
   public Map<Integer, Integer> getPathAssignedToTasks() {
     return null;
   }

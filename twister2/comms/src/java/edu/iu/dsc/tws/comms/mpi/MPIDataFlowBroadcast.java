@@ -19,8 +19,8 @@ import java.util.logging.Logger;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import edu.iu.dsc.tws.comms.api.MessageHeader;
+import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.routing.BinaryTreeRouter;
-import edu.iu.dsc.tws.comms.routing.IRouter;
 
 public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
   private static final Logger LOG = Logger.getLogger(MPIDataFlowBroadcast.class.getName());
@@ -29,12 +29,16 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
 
   private Set<Integer> destinations;
 
-  protected IRouter router;
+  private BinaryTreeRouter router;
 
-  public MPIDataFlowBroadcast(TWSMPIChannel channel, int src, Set<Integer> dests) {
+  private MessageReceiver finalReceiver;
+
+  public MPIDataFlowBroadcast(TWSMPIChannel channel, int src, Set<Integer> dests,
+                              MessageReceiver finalRcvr) {
     super(channel);
     this.source = src;
     this.destinations = dests;
+    this.finalReceiver = finalRcvr;
   }
 
   @Override
@@ -97,32 +101,45 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
   protected void setupRouting() {
     // we will only have one distinct route
     router = new BinaryTreeRouter(config, instancePlan, source, destinations);
+
+    if (this.finalReceiver != null) {
+      this.finalReceiver.init(receiveExpectedTaskIds());
+    } else {
+      throw new RuntimeException("Final receiver is required");
+    }
   }
 
   @Override
   protected RoutingParameters sendRoutingParameters(int s, int path) {
     RoutingParameters routingParameters = new RoutingParameters();
+    LOG.info("SSSSSSSSSSSSSSSSSSSS");
     // get the expected routes
-    Map<Integer, Map<Integer, Set<Integer>>> internalRouting = router.getInternalSendTasks(source);
+    Map<Integer, Set<Integer>> internalRouting = router.getInternalSendTasks(source);
     if (internalRouting == null) {
       throw new RuntimeException("Un-expected message from source: " + s);
     }
 
-    Map<Integer, Set<Integer>> internalSourceRouting = internalRouting.get(s);
+    Set<Integer> internalSourceRouting = internalRouting.get(s);
     if (internalSourceRouting != null) {
       // we always use path 0 because only one path
-      routingParameters.addInternalRoutes(internalSourceRouting.get(0));
+      LOG.info(String.format("%d internal routing %s", executor, internalSourceRouting));
+      routingParameters.addInternalRoutes(internalSourceRouting);
+    } else {
+      LOG.info(String.format("%d No internal routes for source %d", executor, s));
     }
 
     // get the expected routes
-    Map<Integer, Map<Integer, Set<Integer>>> externalRouting = router.getExternalSendTasks(s);
+    Map<Integer, Set<Integer>> externalRouting = router.getExternalSendTasks(s);
     if (externalRouting == null) {
       throw new RuntimeException("Un-expected message from source: " + s);
+    } else {
+      LOG.info(String.format("%d No external routes for source %d", executor, s));
     }
-    Map<Integer, Set<Integer>> externalSourceRouting = externalRouting.get(s);
+    Set<Integer> externalSourceRouting = externalRouting.get(s);
     if (externalSourceRouting != null) {
+      LOG.info(String.format("%d external routing %s", executor, externalSourceRouting));
       // we always use path 0 because only one path
-      routingParameters.addExternalRoutes(externalSourceRouting.get(0));
+      routingParameters.addExternalRoutes(externalSourceRouting);
     }
     return routingParameters;
   }
@@ -137,8 +154,7 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
     return router.receivingExecutors();
   }
 
-  @Override
-  protected Map<Integer, Map<Integer, List<Integer>>> receiveExpectedTaskIds() {
+  protected Map<Integer, List<Integer>> receiveExpectedTaskIds() {
     return router.receiveExpectedTaskIds();
   }
 

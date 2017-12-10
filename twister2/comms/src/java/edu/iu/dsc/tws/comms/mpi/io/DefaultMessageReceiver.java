@@ -25,9 +25,9 @@ public class DefaultMessageReceiver implements MessageReceiver {
     this.messages = messages;
   }
 
-  @Override
-  public void init(Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
 
+  @Override
+  public void init(Map<Integer, List<Integer>> expectedIds) {
   }
 
   @Override

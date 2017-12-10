@@ -29,7 +29,6 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.mpi.MPIContext;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
@@ -125,7 +124,7 @@ public class BaseReduceCommunication implements IContainer {
       LOG.log(Level.INFO, "Starting map worker");
 //      MPIBuffer data = new MPIBuffer(1024);
       IntData data = generateData();
-      for (int i = 0; i < 10000; i++) {
+      for (int i = 0; i < 100000; i++) {
         // lets generate a message
         while (!reduce.send(task, data)) {
           // lets wait a litte and try again
@@ -160,16 +159,16 @@ public class BaseReduceCommunication implements IContainer {
      * @param expectedIds expected task ids
      */
     @Override
-    public void init(Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
-      for (Map.Entry<Integer, Map<Integer, List<Integer>>> e : expectedIds.entrySet()) {
+    public void init(Map<Integer, List<Integer>> expectedIds) {
+      for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
         Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
 
-        for (int i : e.getValue().get(MPIContext.DEFAULT_PATH)) {
+        for (int i : e.getValue()) {
           messagesPerTask.put(i, new ArrayList<Object>());
         }
 
         LOG.info(String.format("%d Partial Task %d receives from %s",
-            id, e.getKey(), e.getValue().get(MPIContext.DEFAULT_PATH).toString()));
+            id, e.getKey(), e.getValue().toString()));
 
         messages.put(e.getKey(), messagesPerTask);
       }
@@ -232,16 +231,16 @@ public class BaseReduceCommunication implements IContainer {
     private long start = System.nanoTime();
 
     @Override
-    public void init(Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
-      for (Map.Entry<Integer, Map<Integer, List<Integer>>> e : expectedIds.entrySet()) {
+    public void init(Map<Integer, List<Integer>> expectedIds) {
+      for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
         Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
 
-        for (int i : e.getValue().get(MPIContext.DEFAULT_PATH)) {
+        for (int i : e.getValue()) {
           messagesPerTask.put(i, new ArrayList<Object>());
         }
 
         LOG.info(String.format("%d Final Task %d receives from %s",
-            id, e.getKey(), e.getValue().get(MPIContext.DEFAULT_PATH).toString()));
+            id, e.getKey(), e.getValue().toString()));
 
         messages.put(e.getKey(), messagesPerTask);
       }
@@ -249,7 +248,7 @@ public class BaseReduceCommunication implements IContainer {
 
     @Override
     public void onMessage(int source, int path, int target, Object object) {
-//      LOG.info(String.format("%d Message received for partial %d from %d", id, target, source));
+     // LOG.info(String.format("%d Message received for final %d from %d", id, target, source));
       // add the object to the map
       if (count == 0) {
         start = System.nanoTime();
@@ -270,14 +269,18 @@ public class BaseReduceCommunication implements IContainer {
           Object o = null;
           for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
             o = e.getValue().remove(0);
+            if (count % 1000 == 0) {
+              LOG.info(String.format("%d messages target %d source %d size %d",
+                  id, target, e.getKey(), e.getValue().size()));
+            }
           }
           if (o != null) {
             count++;
-            if (count % 10000 == 0) {
+            if (count % 1000 == 0) {
               LOG.info("Message received for last: " + source + " target: "
-                  + target + " count: " + count);
+                  + target + " count: " + count + " ");
             }
-            if (count >= 10000) {
+            if (count >= 100000) {
               LOG.info("Total time: " + (System.nanoTime() - start) / 1000000);
             }
           } else {

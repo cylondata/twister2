@@ -24,7 +24,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.api.KeyedMessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
@@ -146,7 +146,7 @@ public class BaseKeyedReduceCommunication implements IContainer {
   /**
    * Reduce class will work on the reduce messages.
    */
-  private class PartialReduceWorker implements MessageReceiver {
+  private class PartialReduceWorker implements KeyedMessageReceiver {
 
     private Queue<Object> pendingSends = new LinkedBlockingQueue<Object>();
     // lets keep track of the messages
@@ -223,7 +223,7 @@ public class BaseKeyedReduceCommunication implements IContainer {
     }
   }
 
-  private class FinalReduceReceive implements MessageReceiver {
+  private class FinalReduceReceive implements KeyedMessageReceiver {
     // lets keep track of the messages
     // for each task we need to keep track of incoming messages
     private Map<Integer, Map<Integer, List<Object>>> messages = new HashMap<>();

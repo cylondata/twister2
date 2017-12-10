@@ -23,14 +23,14 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.mpi.MPIContext;
 
-public class InvertedBinaryTreeRouter implements IRouter {
+public class InvertedBinaryTreeRouter {
   private static final Logger LOG = Logger.getLogger(InvertedBinaryTreeRouter.class.getName());
 
-  private Map<Integer, Map<Integer, List<Integer>>> receiveTasks;
+  private Map<Integer, List<Integer>> receiveTasks;
   private Set<Integer> receiveExecutors;
-  private Map<Integer, Map<Integer, Set<Integer>>> sendExternalTasksPartial;
-  private Map<Integer, Map<Integer, Set<Integer>>> sendExternalTasks;
-  private Map<Integer, Map<Integer, Set<Integer>>> sendInternalTasks;
+  private Map<Integer, Set<Integer>> sendExternalTasksPartial;
+  private Map<Integer, Set<Integer>> sendExternalTasks;
+  private Map<Integer, Set<Integer>> sendInternalTasks;
   private int mainTask;
   private boolean mainTaskLast;
   private Map<Integer, Integer> destinationIdentifiers;
@@ -66,7 +66,7 @@ public class InvertedBinaryTreeRouter implements IRouter {
         thisExecutorTasksOfOperation.toString()));
     this.destinationIdentifiers = new HashMap<>();
     // construct the map of receiving ids
-    this.receiveTasks = new HashMap<Integer, Map<Integer, List<Integer>>>();
+    this.receiveTasks = new HashMap<Integer, List<Integer>>();
 
     // now lets construct the downstream tasks
     sendExternalTasksPartial = new HashMap<>();
@@ -88,38 +88,24 @@ public class InvertedBinaryTreeRouter implements IRouter {
           receiveExecutors.add(plan.getExecutorForChannel(k));
         }
         recv.addAll(search.getAllChildrenIds());
-
-        Map<Integer, List<Integer>> receivePathMap = new HashMap<>();
-        receivePathMap.put(0, new ArrayList<>(recv));
-        receiveTasks.put(t, receivePathMap);
+        receiveTasks.put(t, new ArrayList<>(recv));
 
         // this task is connected to others and they send the message to this task
         List<Integer> directChildren = search.getDirectChildren();
         for (int child : directChildren) {
-          Map<Integer, Set<Integer>> sendMap = new HashMap<>();
-          String log = "";
           Set<Integer> sendTasks = new HashSet<>();
           sendTasks.add(t);
-          sendMap.put(MPIContext.DEFAULT_PATH, sendTasks);
-          log += String.format("%d Sending -> from: %d to %d", plan.getThisExecutor(), child, t);
-          sendInternalTasks.put(child, sendMap);
+          sendInternalTasks.put(child, sendTasks);
           destinationIdentifiers.put(child, t);
-          LOG.info("Internal tasks: " + log);
         }
 
         // now lets calculate the external send tasks of the main task
         Node parent = search.getParent();
         if (parent != null) {
-          Map<Integer, Set<Integer>> mainSendMap = new HashMap<>();
-          String log = "";
           Set<Integer> sendTasks = new HashSet<>();
           sendTasks.add(parent.getTaskId());
-          mainSendMap.put(MPIContext.DEFAULT_PATH, sendTasks);
-          log += String.format("%d Sending -> from: %d to %d",
-              plan.getThisExecutor(), t, parent.getTaskId());
-          sendExternalTasksPartial.put(t, mainSendMap);
+          sendExternalTasksPartial.put(t, sendTasks);
           destinationIdentifiers.put(t, parent.getTaskId());
-          LOG.info("External tasks of main: " + log);
         } else {
           mainTaskLast = true;
         }
@@ -140,41 +126,35 @@ public class InvertedBinaryTreeRouter implements IRouter {
         plan.getThisExecutor(), receiveTasks));
   }
 
-  @Override
   public Set<Integer> receivingExecutors() {
     return receiveExecutors;
   }
 
-  @Override
-  public Map<Integer, Map<Integer, List<Integer>>> receiveExpectedTaskIds() {
+  public Map<Integer, List<Integer>> receiveExpectedTaskIds() {
     return receiveTasks;
   }
 
-  @Override
   public boolean isLastReceiver() {
     // check weather this
     return mainTaskLast;
   }
 
-  @Override
-  public Map<Integer, Map<Integer, Set<Integer>>> getInternalSendTasks(int source) {
+  public Map<Integer, Set<Integer>> getInternalSendTasks(int source) {
     return sendInternalTasks;
   }
 
-  public Map<Integer, Map<Integer, Set<Integer>>> getExternalSendTasks(int source) {
+  public Map<Integer, Set<Integer>> getExternalSendTasks(int source) {
     return sendExternalTasks;
   }
 
-  public Map<Integer, Map<Integer, Set<Integer>>> getExternalSendTasksForPartial(int source) {
+  public Map<Integer, Set<Integer>> getExternalSendTasksForPartial(int source) {
     return sendExternalTasksPartial;
   }
 
-  @Override
   public int mainTaskOfExecutor(int executor, int path) {
     return mainTask;
   }
 
-  @Override
   public int destinationIdentifier(int source, int path) {
     Object o = destinationIdentifiers.get(source);
     if (o != null) {
@@ -184,7 +164,6 @@ public class InvertedBinaryTreeRouter implements IRouter {
     }
   }
 
-  @Override
   public Map<Integer, Integer> getPathAssignedToTasks() {
     return null;
   }

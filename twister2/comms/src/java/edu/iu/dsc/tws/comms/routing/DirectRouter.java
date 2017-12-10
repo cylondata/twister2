@@ -21,17 +21,17 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 
-public class DirectRouter implements IRouter {
+public class DirectRouter {
   private static final Logger LOG = Logger.getLogger(DirectRouter.class.getName());
 
   private int destination;
   private TaskPlan taskPlan;
   // task -> (path -> tasks)
-  private Map<Integer, Map<Integer, Set<Integer>>> externalSendTasks;
+  private Map<Integer, Set<Integer>> externalSendTasks;
   // task -> (path -> tasks)
-  private Map<Integer, Map<Integer, Set<Integer>>> internalSendTasks;
+  private Map<Integer, Set<Integer>> internalSendTasks;
   // task -> (path -> tasks)
-  private Map<Integer, Map<Integer, List<Integer>>> upstream;
+  private Map<Integer, List<Integer>> upstream;
   private Set<Integer> receiveExecutors;
   private Set<Integer> thisExecutorTasks;
 
@@ -53,28 +53,22 @@ public class DirectRouter implements IRouter {
       if (myTasks.contains(src)) {
         // okay the destination is in the same executor
         if (myTasks.contains(dest)) {
-          Map<Integer, Set<Integer>> sendMap = new HashMap<>();
           Set<Integer> set = new HashSet<>();
           set.add(dest);
-          sendMap.put(0, set);
-          internalSendTasks.put(src, sendMap);
+          internalSendTasks.put(src, set);
         } else {
-          Map<Integer, Set<Integer>> sendMap = new HashMap<>();
           Set<Integer> set = new HashSet<>();
           set.add(dest);
-          sendMap.put(0, set);
-          externalSendTasks.put(src, sendMap);
+          externalSendTasks.put(src, set);
         }
       }
     }
 
     // we are going to receive from all the sources
     this.upstream = new HashMap<>();
-    Map<Integer, List<Integer>> pathTasks = new HashMap<>();
     List<Integer> sources = new ArrayList<>();
     sources.addAll(srscs);
-    pathTasks.put(0, sources);
-    this.upstream.put(destination, pathTasks);
+    this.upstream.put(destination, sources);
 
     int destinationExecutor = taskPlan.getExecutorForChannel(destination);
     receiveExecutors = new HashSet<>();
@@ -89,14 +83,12 @@ public class DirectRouter implements IRouter {
     this.thisExecutorTasks = taskPlan.getChannelsOfExecutor(taskPlan.getThisExecutor());
   }
 
-  @Override
   public Set<Integer> receivingExecutors() {
     LOG.info(taskPlan.getThisExecutor() + " Receiving executors: " + receiveExecutors);
     return receiveExecutors;
   }
 
-  @Override
-  public Map<Integer, Map<Integer, List<Integer>>> receiveExpectedTaskIds() {
+  public Map<Integer, List<Integer>> receiveExpectedTaskIds() {
     // check if this executor contains
     if (thisExecutorTasks.contains(destination)) {
       LOG.info(taskPlan.getThisExecutor() + " Receive expected tasks: " + upstream.get(0));
@@ -106,29 +98,24 @@ public class DirectRouter implements IRouter {
     return new HashMap<>();
   }
 
-  @Override
   public boolean isLastReceiver() {
     // now check if destination is in this task
     return thisExecutorTasks.contains(destination);
   }
 
-  @Override
-  public Map<Integer, Map<Integer, Set<Integer>>> getInternalSendTasks(int source) {
+  public Map<Integer, Set<Integer>> getInternalSendTasks(int source) {
     // return a routing
     return internalSendTasks;
   }
 
-  @Override
-  public Map<Integer, Map<Integer, Set<Integer>>> getExternalSendTasks(int source) {
+  public Map<Integer, Set<Integer>> getExternalSendTasks(int source) {
     return externalSendTasks;
   }
 
-  @Override
-  public Map<Integer, Map<Integer, Set<Integer>>> getExternalSendTasksForPartial(int source) {
+  public Map<Integer, Set<Integer>> getExternalSendTasksForPartial(int source) {
     return null;
   }
 
-  @Override
   public int mainTaskOfExecutor(int executor, int path) {
     return -1;
   }
@@ -138,12 +125,10 @@ public class DirectRouter implements IRouter {
    *
    * @return
    */
-  @Override
   public int destinationIdentifier(int source, int path) {
     return destination;
   }
 
-  @Override
   public Map<Integer, Integer> getPathAssignedToTasks() {
     return null;
   }

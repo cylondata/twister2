@@ -20,18 +20,17 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.mpi.MPIContext;
 
-public class LoadBalanceRouter implements IRouter {
+public class LoadBalanceRouter {
   private static final Logger LOG = Logger.getLogger(LoadBalanceRouter.class.getName());
   // the task plan
   private TaskPlan taskPlan;
   // task -> (path -> tasks)
-  private Map<Integer, Map<Integer, Set<Integer>>> externalSendTasks;
+  private Map<Integer, Set<Integer>> externalSendTasks;
   // task -> (path -> tasks)
-  private Map<Integer, Map<Integer, Set<Integer>>> internalSendTasks;
+  private Map<Integer, Set<Integer>> internalSendTasks;
   // task -> (path -> tasks)
-  private Map<Integer, Map<Integer, List<Integer>>> upstream;
+  private Map<Integer, List<Integer>> upstream;
   private Set<Integer> receiveExecutors;
   private Set<Integer> thisExecutorTasks;
 
@@ -53,17 +52,13 @@ public class LoadBalanceRouter implements IRouter {
         for (int dest : dests) {
           // okay the destination is in the same executor
           if (myTasks.contains(dest)) {
-            Map<Integer, Set<Integer>> sendMap = new HashMap<>();
             Set<Integer> set = new HashSet<>();
             set.add(dest);
-            sendMap.put(MPIContext.DEFAULT_PATH, set);
-            internalSendTasks.put(src, sendMap);
+            internalSendTasks.put(src, set);
           } else {
-            Map<Integer, Set<Integer>> sendMap = new HashMap<>();
             Set<Integer> set = new HashSet<>();
             set.add(dest);
-            sendMap.put(MPIContext.DEFAULT_PATH, set);
-            externalSendTasks.put(src, sendMap);
+            externalSendTasks.put(src, set);
           }
         }
       }
@@ -71,13 +66,11 @@ public class LoadBalanceRouter implements IRouter {
 
     // we are going to receive from all the sources
     this.upstream = new HashMap<>();
-    Map<Integer, List<Integer>> pathTasks = new HashMap<>();
     List<Integer> sources = new ArrayList<>();
     sources.addAll(srscs);
-    pathTasks.put(MPIContext.DEFAULT_PATH, sources);
     for (int dest : dests) {
       if (myTasks.contains(dest)) {
-        this.upstream.put(dest, pathTasks);
+        this.upstream.put(dest, sources);
       }
     }
 
@@ -88,41 +81,34 @@ public class LoadBalanceRouter implements IRouter {
     this.thisExecutorTasks = taskPlan.getChannelsOfExecutor(taskPlan.getThisExecutor());
   }
 
-  @Override
   public Set<Integer> receivingExecutors() {
     LOG.info(taskPlan.getThisExecutor() + " Receiving executors: " + receiveExecutors);
     return receiveExecutors;
   }
 
-  @Override
-  public Map<Integer, Map<Integer, List<Integer>>> receiveExpectedTaskIds() {
+  public Map<Integer, List<Integer>> receiveExpectedTaskIds() {
     // check if this executor contains
     return upstream;
   }
 
-  @Override
   public boolean isLastReceiver() {
     // now check if destination is in this task
     return true;
   }
 
-  @Override
-  public Map<Integer, Map<Integer, Set<Integer>>> getInternalSendTasks(int source) {
+  public Map<Integer, Set<Integer>> getInternalSendTasks(int source) {
     // return a routing
     return internalSendTasks;
   }
 
-  @Override
-  public Map<Integer, Map<Integer, Set<Integer>>> getExternalSendTasks(int source) {
+  public Map<Integer, Set<Integer>> getExternalSendTasks(int source) {
     return externalSendTasks;
   }
 
-  @Override
-  public Map<Integer, Map<Integer, Set<Integer>>> getExternalSendTasksForPartial(int source) {
+  public Map<Integer, Set<Integer>> getExternalSendTasksForPartial(int source) {
     return null;
   }
 
-  @Override
   public int mainTaskOfExecutor(int executor, int path) {
     return -1;
   }
@@ -131,12 +117,10 @@ public class LoadBalanceRouter implements IRouter {
    * The destination id is the destination itself
    * @return
    */
-  @Override
   public int destinationIdentifier(int source, int path) {
     return 0;
   }
 
-  @Override
   public Map<Integer, Integer> getPathAssignedToTasks() {
     return null;
   }

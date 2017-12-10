@@ -14,16 +14,16 @@ package edu.iu.dsc.tws.comms.api;
 import java.util.List;
 import java.util.Map;
 
-public interface MessageReceiver {
+public interface KeyedMessageReceiver {
   /**
    * Initialize the message receiver with tasks from which messages are expected
    * For each sub edge in graph, for each path, gives the expected task ids
    *
-   * target -> source tasks
+   * subedge -> (path -> ids)
    *
    * @param expectedIds expected task ids
    */
-  void init(Map<Integer, List<Integer>> expectedIds);
+  void init(Map<Integer, Map<Integer, List<Integer>>> expectedIds);
 
   /**
    * The actual message callback

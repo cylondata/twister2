@@ -16,8 +16,8 @@ import java.util.Map;
 import java.util.Set;
 
 import edu.iu.dsc.tws.comms.api.MessageHeader;
+import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.routing.DirectRouter;
-import edu.iu.dsc.tws.comms.routing.IRouter;
 
 /**
  * A direct data flow operation sends peer to peer messages
@@ -25,19 +25,26 @@ import edu.iu.dsc.tws.comms.routing.IRouter;
 public class MPIDirectDataFlowCommunication extends MPIDataFlowOperation {
   private Set<Integer> sources;
   private int destination;
-  protected IRouter router;
+  private DirectRouter router;
+  private MessageReceiver finalReceiver;
 
   public MPIDirectDataFlowCommunication(TWSMPIChannel channel,
-                                        Set<Integer> srcs, int dest) {
+                                        Set<Integer> srcs, int dest,
+                                        MessageReceiver finalRcvr) {
     super(channel);
 
     this.sources = srcs;
     this.destination = dest;
+    this.finalReceiver = finalRcvr;
   }
 
   @Override
   protected void setupRouting() {
     this.router = new DirectRouter(instancePlan, sources, destination);
+
+    if (this.finalReceiver != null && isLastReceiver()) {
+      this.finalReceiver.init(receiveExpectedTaskIds());
+    }
   }
 
   @Override
@@ -68,8 +75,7 @@ public class MPIDirectDataFlowCommunication extends MPIDataFlowOperation {
     return router.receivingExecutors();
   }
 
-  @Override
-  protected Map<Integer, Map<Integer, List<Integer>>> receiveExpectedTaskIds() {
+  protected Map<Integer, List<Integer>> receiveExpectedTaskIds() {
     return this.router.receiveExpectedTaskIds();
   }
 
@@ -87,27 +93,27 @@ public class MPIDirectDataFlowCommunication extends MPIDataFlowOperation {
   protected RoutingParameters sendRoutingParameters(int source, int path) {
     RoutingParameters routingParameters = new RoutingParameters();
     // get the expected routes
-    Map<Integer, Map<Integer, Set<Integer>>> internalRoutes = router.getInternalSendTasks(source);
+    Map<Integer, Set<Integer>> internalRoutes = router.getInternalSendTasks(source);
     if (internalRoutes == null) {
       throw new RuntimeException("Un-expected message from source: " + source);
     }
 
-    Map<Integer, Set<Integer>> internalSourceRouting = internalRoutes.get(source);
+    Set<Integer> internalSourceRouting = internalRoutes.get(source);
     if (internalSourceRouting != null) {
       // we always use path 0 because only one path
-      routingParameters.addInternalRoutes(internalSourceRouting.get(0));
+      routingParameters.addInternalRoutes(internalSourceRouting);
     }
 
     // get the expected routes
-    Map<Integer, Map<Integer, Set<Integer>>> externalRouting = router.getExternalSendTasks(source);
+    Map<Integer, Set<Integer>> externalRouting = router.getExternalSendTasks(source);
     if (externalRouting == null) {
       throw new RuntimeException("Un-expected message from source: " + source);
     }
 
-    Map<Integer, Set<Integer>> externalSourceRouting = externalRouting.get(source);
+    Set<Integer> externalSourceRouting = externalRouting.get(source);
     if (externalSourceRouting != null) {
       // we always use path 0 because only one path
-      routingParameters.addExternalRoutes(externalSourceRouting.get(0));
+      routingParameters.addExternalRoutes(externalSourceRouting);
     }
     routingParameters.setDestinationId(destination);
     return routingParameters;
