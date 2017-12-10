@@ -25,10 +25,11 @@ public class PipelinedTask extends Task {
 
   private List<Task> piplinedTaskList;
 
-  public PipelinedTask(int tid, List<Task> taskList){
+  public PipelinedTask(int tid, List<Task> taskList) {
     super(tid);
-    if(taskList == null || taskList.isEmpty()){
-      throw new RuntimeException("PipelinedTask cannot be initiated with a null or empty task list");
+    if (taskList == null || taskList.isEmpty()) {
+      throw new RuntimeException("PipelinedTask cannot be initiated with a null or "
+          + "empty task list");
     }
     piplinedTaskList = taskList;
   }
@@ -46,23 +47,24 @@ public class PipelinedTask extends Task {
 
   /**
    * Executes the list of tasks in order
+   *
    * @return the result returned from the last task in the task list
    */
-  private Message executePipeline(){
+  private Message executePipeline() {
     return executePipeline(null);
   }
 
   /**
-   *  Executes the list of tasks in order
-   * @param content
+   * Executes the list of tasks in order
+   *
    * @return the result returned from the last task in the task list
    */
-  private Message executePipeline(Message content){
+  private Message executePipeline(Message content) {
     Message intermediateResult = content;
     for (Task task : piplinedTaskList) {
-      if(intermediateResult == null){
+      if (intermediateResult == null) {
         intermediateResult = task.execute();
-      }else{
+      } else {
         intermediateResult = task.execute(intermediateResult);
       }
     }
