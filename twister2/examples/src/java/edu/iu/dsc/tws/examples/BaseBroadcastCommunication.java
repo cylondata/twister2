@@ -145,9 +145,10 @@ public class BaseBroadcastCommunication implements IContainer {
     }
 
     @Override
-    public void onMessage(int source, int path, int target, Object object) {
+    public boolean onMessage(int source, int path, int target, Object object) {
       LOG.info("Message received for last: " + source + " target: "
           + target + " count: " + count++);
+      return true;
     }
   }
 

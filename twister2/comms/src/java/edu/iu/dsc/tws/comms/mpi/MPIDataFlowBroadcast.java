@@ -145,8 +145,8 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
   }
 
   @Override
-  protected void receiveSendInternally(int src, int t, int path, Object message) {
-    finalReceiver.onMessage(src, path, t, message);
+  protected boolean receiveSendInternally(int src, int t, int path, Object message) {
+    return finalReceiver.onMessage(src, path, t, message);
   }
 
   @Override

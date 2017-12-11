@@ -109,7 +109,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
 
     // later look at how not to allocate pairs for this each time
     pendingSendMessages = new ArrayBlockingQueue<Pair<Object, MPISendMessage>>(
-        MPIContext.sendPendingMax(config, 4098));
+        MPIContext.sendPendingMax(config, 128));
 
     LOG.info(String.format("%d setup communication", instancePlan.getThisExecutor()));
     // now setup the sends and receives
@@ -145,7 +145,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
    * @param t
    * @param message
    */
-  protected abstract void receiveSendInternally(int source, int t, int path, Object message);
+  protected abstract boolean receiveSendInternally(int source, int t, int path, Object message);
 
   /**
    * Return the list of receiving executors for this
@@ -288,8 +288,12 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
           // send it internally
           for (Integer i : mpiMessage.getInternalSends()) {
             // okay now we need to check weather this is the last place
-            receiveSendInternally(mpiMessage.getSource(), i,
+            boolean receiveAccepted = receiveSendInternally(mpiMessage.getSource(), i,
                 mpiMessage.getPath(), messageObject);
+            if (!receiveAccepted) {
+              canProgress = false;
+              break;
+            }
           }
 
           mpiMessage.setSendState(MPISendMessage.SendState.SENT_INTERNALLY);

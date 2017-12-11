@@ -140,9 +140,9 @@ public class MPILoadBalance extends MPIDataFlowOperation {
   }
 
   @Override
-  protected void receiveSendInternally(int source, int t, int path, Object message) {
+  protected boolean receiveSendInternally(int source, int t, int path, Object message) {
     // okay this must be for the
-    finalReceiver.onMessage(source, path, t, message);
+    return finalReceiver.onMessage(source, path, t, message);
   }
 
   @Override

@@ -60,14 +60,14 @@ public class MPIDirectDataFlowCommunication extends MPIDataFlowOperation {
   }
 
   @Override
-  protected void receiveSendInternally(int source, int t, int path, Object message) {
+  protected boolean receiveSendInternally(int source, int t, int path, Object message) {
     // we only have one destination in this case
     if (t != destination) {
       throw new RuntimeException("We only have one destination");
     }
 
     // okay this must be for the
-    finalReceiver.onMessage(source, path, t, message);
+    return finalReceiver.onMessage(source, path, t, message);
   }
 
   @Override

@@ -179,7 +179,7 @@ public class BaseLoadBalanceCommunication implements IContainer {
     }
 
     @Override
-    public void onMessage(int source, int path, int target, Object object) {
+    public boolean onMessage(int source, int path, int target, Object object) {
       if (count == 0) {
         start = System.nanoTime();
       }
@@ -192,6 +192,7 @@ public class BaseLoadBalanceCommunication implements IContainer {
       if (count > 100000) {
         LOG.info("More than");
       }
+      return true;
     }
   }
 

@@ -31,6 +31,7 @@ public class DefaultMessageReceiver implements MessageReceiver {
   }
 
   @Override
-  public void onMessage(int source, int path, int target, Object object) {
+  public boolean onMessage(int source, int path, int target, Object object) {
+    return true;
   }
 }

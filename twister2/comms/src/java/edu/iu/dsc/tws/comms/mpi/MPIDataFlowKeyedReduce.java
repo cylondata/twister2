@@ -160,14 +160,14 @@ public class MPIDataFlowKeyedReduce extends MPIDataFlowOperation {
   }
 
   @Override
-  protected void receiveSendInternally(int source, int t, int path, Object message) {
+  protected boolean receiveSendInternally(int source, int t, int path, Object message) {
     // check weather this is the last task
     if (router.isLastReceiver()) {
 //      LOG.info(String.format("%d Calling directly final receiver %d",
 //          instancePlan.getThisExecutor(), source));
-      finalReceiver.onMessage(source, path, t, message);
+      return finalReceiver.onMessage(source, path, t, message);
     } else {
-      partialReceiver.onMessage(source, path, t, message);
+      return partialReceiver.onMessage(source, path, t, message);
     }
   }
 

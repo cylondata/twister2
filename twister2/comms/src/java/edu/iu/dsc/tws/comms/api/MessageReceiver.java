@@ -30,5 +30,5 @@ public interface MessageReceiver {
    *
    * @param object the actual message
    */
-  void onMessage(int source, int path, int target, Object object);
+  boolean onMessage(int source, int path, int target, Object object);
 }

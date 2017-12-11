@@ -177,7 +177,7 @@ public class BaseKeyedReduceCommunication implements IContainer {
     }
 
     @Override
-    public void onMessage(int source, int path, int target, Object object) {
+    public boolean onMessage(int source, int path, int target, Object object) {
       LOG.info(String.format("%d Message received for partial %d from %d", id, target, source));
       while (pendingSends.size() > 0) {
         boolean r = reduce.sendPartial(target, pendingSends.poll());
@@ -220,6 +220,7 @@ public class BaseKeyedReduceCommunication implements IContainer {
       } catch (Throwable t) {
         t.printStackTrace();
       }
+      return true;
     }
   }
 
@@ -252,7 +253,7 @@ public class BaseKeyedReduceCommunication implements IContainer {
     }
 
     @Override
-    public void onMessage(int source, int path, int target, Object object) {
+    public boolean onMessage(int source, int path, int target, Object object) {
       LOG.info(String.format("%d Message received for partial %d from %d", id, target, source));
       // add the object to the map
       if (count == 0) {
@@ -291,6 +292,7 @@ public class BaseKeyedReduceCommunication implements IContainer {
       } catch (Throwable t) {
         t.printStackTrace();
       }
+      return true;
     }
   }
 
