@@ -45,12 +45,8 @@ public class MPIContext extends CommunicationContext {
     return cfg.getIntegerValue(RECEIVE_BUFFERS_COUNT, 128);
   }
 
-  public static int distinctRoutes(Config cfg, int defaultRoutes) {
-    return cfg.getIntegerValue(DISTINCT_ROUTS, defaultRoutes);
-  }
-
-  public static int sendPendingMax(Config cfg, int defaultMax) {
-    return cfg.getIntegerValue(SEND_PENDING_MAX, defaultMax);
+  public static int sendPendingMax(Config cfg) {
+    return cfg.getIntegerValue(SEND_PENDING_MAX, 128);
   }
 }
 

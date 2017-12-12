@@ -16,7 +16,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Logger;
+
+import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
@@ -95,6 +98,15 @@ public class MPILoadBalance extends MPIDataFlowOperation {
     if (this.finalReceiver != null && isLastReceiver()) {
       this.finalReceiver.init(receiveExpectedTaskIds());
     }
+
+    Set<Integer> srcs = TaskPlanUtils.getTasksOfThisExecutor(instancePlan, sources);
+    for (int s : srcs) {
+      // later look at how not to allocate pairs for this each time
+      ArrayBlockingQueue<Pair<Object, MPISendMessage>> pendingSendMessages =
+          new ArrayBlockingQueue<Pair<Object, MPISendMessage>>(
+              MPIContext.sendPendingMax(config));
+      pendingSendMessagesPerSource.put(s, pendingSendMessages);
+    }
   }
 
   @Override
@@ -160,10 +172,10 @@ public class MPILoadBalance extends MPIDataFlowOperation {
   }
 
   @Override
-  protected void receiveMessage(MPIMessage currentMessage, Object object) {
+  protected boolean receiveMessage(MPIMessage currentMessage, Object object) {
     MessageHeader header = currentMessage.getHeader();
 
-    finalReceiver.onMessage(header.getSourceId(), header.getPath(),
+    return finalReceiver.onMessage(header.getSourceId(), header.getPath(),
         router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
             header.getPath()), object);
   }

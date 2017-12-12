@@ -177,8 +177,10 @@ public class TWSMPIChannel {
       try {
         sendCount++;
         MPIBuffer buffer = message.getBuffers().get(i);
-//        LOG.info(String.format("%d Sending message to: %d size: %d sendCount: %d", executor,
-//            requests.rank, buffer.getSize(), sendCount));
+        if (sendCount % 100 == 0) {
+          LOG.info(String.format("%d Sending message to: %d size: %d sendCount: %d", executor,
+              requests.rank, buffer.getSize(), sendCount));
+        }
         Request request = comm.iSend(buffer.getByteBuffer(), buffer.getSize(),
             MPI.BYTE, requests.rank, message.getHeader().getEdge());
         // register to the loop to make progress on the send

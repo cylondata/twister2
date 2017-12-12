@@ -62,6 +62,17 @@ public class MPIMessage {
    */
   private int headerSize;
 
+  public enum ReceivedState {
+    INIT,
+    DOWN,
+    RECEIVE
+  }
+
+  /**
+   * Received state
+   */
+  private ReceivedState receivedState;
+
   public MPIMessage() {
   }
 
@@ -73,6 +84,7 @@ public class MPIMessage {
     this.releaseListener = releaseListener;
     this.complete = false;
     this.type = messageType;
+    this.receivedState = ReceivedState.INIT;
   }
 
   public MPIMessage(int originatingId, MessageType messageType,
@@ -84,6 +96,7 @@ public class MPIMessage {
     this.originatingId = originatingId;
     this.complete = false;
     this.type = messageType;
+    this.receivedState = ReceivedState.INIT;
   }
 
   public MPIMessage(int originatingId, MessageType messageType, MessageHeader header, int refCount,
@@ -95,6 +108,7 @@ public class MPIMessage {
     this.releaseListener = releaseListener;
     this.originatingId = originatingId;
     this.complete = false;
+    this.receivedState = ReceivedState.INIT;
   }
 
   public List<MPIBuffer> getBuffers() {
@@ -182,5 +196,13 @@ public class MPIMessage {
 
   public int getHeaderSize() {
     return headerSize;
+  }
+
+  public ReceivedState getReceivedState() {
+    return receivedState;
+  }
+
+  public void setReceivedState(ReceivedState receivedState) {
+    this.receivedState = receivedState;
   }
 }
