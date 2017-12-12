@@ -17,14 +17,18 @@ import edu.iu.dsc.tws.data.api.formatters.TextInputFormatter;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
+import edu.iu.dsc.tws.rsched.spi.container.IContainer;
+import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import edu.iu.dsc.tws.task.api.Message;
 import edu.iu.dsc.tws.task.api.SourceTask;
 
 /**
  * WordCount example based on developed on Twister 2
  */
-public class WordCountExample {
-  public static void main(String[] args) {
+public class WordCountExample implements IContainer {
+
+  @Override
+  public void init(Config config, int id, ResourcePlan resourcePlan) {
     Config.Builder builder = new Config.Builder();
     builder.put("input.file.path", "/home/pulasthi/git/twister2/twister2"
         + "/data/src/test/resources/TextInputFormatTestFile.text");
@@ -38,6 +42,8 @@ public class WordCountExample {
     try {
       InputSplit[] inputSplits = txtInput.createInputSplits(minSplits);
       InputSplitAssigner inputSplitAssigner = txtInput.getInputSplitAssigner(inputSplits);
+      Mapper wordCountMapper = new Mapper();
+      wordCountMapper.setInputSource(inputSplitAssigner.getNextInputSplit(null, id));
 
     } catch (Exception e) {
       e.printStackTrace();
@@ -46,7 +52,7 @@ public class WordCountExample {
 
   }
 
-  private class Mapper extends SourceTask {
+  private class Mapper extends SourceTask<InputSplit> {
 
     @Override
     public Message execute() {
