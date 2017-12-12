@@ -17,7 +17,7 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
  * The abstract class that represents the start of a application
  * This task reads data from a input data source and ouputs data to another task
  */
-public abstract class SourceTask extends Task {
+public abstract class SourceTask<T> extends Task {
 //  /**
 //   * The task id's of tasks that this sources task will send messages to
 //   */
@@ -26,7 +26,7 @@ public abstract class SourceTask extends Task {
   /**
    * The input source for this task. the input data will be read from this
    */
-  private Source inputSource;
+  private T inputSource;
   /**
    * The data flow operation related to this task. This will be used to send data to the dependent
    * tasks in the application
@@ -67,11 +67,11 @@ public abstract class SourceTask extends Task {
     this.dataFlowOperation = dfop;
   }
 
-  public Source getInputSource() {
+  public T getInputSource() {
     return inputSource;
   }
 
-  public void setInputSource(Source inputSource) {
+  public void setInputSource(T inputSource) {
     this.inputSource = inputSource;
   }
 }
