@@ -167,4 +167,20 @@ public class InvertedBinaryTreeRouter {
   public Map<Integer, Integer> getPathAssignedToTasks() {
     return null;
   }
+
+  public Set<Integer> allSendTasks() {
+    Set<Integer> allSends = new HashSet<>();
+    for (Map.Entry<Integer, Set<Integer>> e : sendExternalTasks.entrySet()) {
+      allSends.addAll(e.getValue());
+    }
+
+    for (Map.Entry<Integer, Set<Integer>> e : sendInternalTasks.entrySet()) {
+      allSends.addAll(e.getValue());
+    }
+
+    for (Map.Entry<Integer, Set<Integer>> e : sendExternalTasksPartial.entrySet()) {
+      allSends.addAll(e.getValue());
+    }
+    return allSends;
+  }
 }

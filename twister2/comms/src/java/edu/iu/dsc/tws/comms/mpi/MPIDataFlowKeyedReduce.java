@@ -76,7 +76,7 @@ public class MPIDataFlowKeyedReduce extends MPIDataFlowOperation {
    * @param object the serialized object
    */
   @Override
-  protected void receiveMessage(MPIMessage currentMessage, Object object) {
+  protected boolean receiveMessage(MPIMessage currentMessage, Object object) {
     MessageHeader header = currentMessage.getHeader();
 
     // we always receive to the main task
@@ -87,11 +87,11 @@ public class MPIDataFlowKeyedReduce extends MPIDataFlowOperation {
     if (!isLast(header.getSourceId(), header.getPath(), messageDestId)
         && partialReceiver != null) {
 //      LOG.info(String.format("%d calling partial receiver", instancePlan.getThisExecutor()));
-      partialReceiver.onMessage(header.getSourceId(), header.getPath(),
+      return partialReceiver.onMessage(header.getSourceId(), header.getPath(),
           router.mainTaskOfExecutor(instancePlan.getThisExecutor(), header.getPath()), object);
     } else {
 //      LOG.info(String.format("%d calling fina receiver", instancePlan.getThisExecutor()));
-      finalReceiver.onMessage(header.getSourceId(), header.getPath(),
+      return finalReceiver.onMessage(header.getSourceId(), header.getPath(),
           router.mainTaskOfExecutor(instancePlan.getThisExecutor(), header.getPath()), object);
     }
   }

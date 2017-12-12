@@ -132,4 +132,16 @@ public class DirectRouter {
   public Map<Integer, Integer> getPathAssignedToTasks() {
     return null;
   }
+
+  public Set<Integer> allSendTasks() {
+    Set<Integer> allSends = new HashSet<>();
+    for (Map.Entry<Integer, Set<Integer>> e : externalSendTasks.entrySet()) {
+      allSends.addAll(e.getValue());
+    }
+
+    for (Map.Entry<Integer, Set<Integer>> e : internalSendTasks.entrySet()) {
+      allSends.addAll(e.getValue());
+    }
+    return allSends;
+  }
 }

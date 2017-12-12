@@ -14,12 +14,17 @@ package edu.iu.dsc.tws.comms.mpi;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Logger;
+
+import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.routing.InvertedBinaryTreeRouter;
+import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
 public class MPIDataFlowReduce extends MPIDataFlowOperation {
   private static final Logger LOG = Logger.getLogger(MPIDataFlowBroadcast.class.getName());
@@ -59,6 +64,28 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
     if (this.finalReceiver != null && isLastReceiver()) {
       this.finalReceiver.init(receiveExpectedTaskIds());
     }
+
+    Set<Integer> srcs = TaskPlanUtils.getTasksOfThisExecutor(instancePlan, sources);
+    for (int s : srcs) {
+      // later look at how not to allocate pairs for this each time
+      ArrayBlockingQueue<Pair<Object, MPISendMessage>> pendingSendMessages =
+          new ArrayBlockingQueue<Pair<Object, MPISendMessage>>(
+              MPIContext.sendPendingMax(config));
+      pendingSendMessagesPerSource.put(s, pendingSendMessages);
+    }
+
+    int maxReceiveBuffers = MPIContext.receiveBufferCount(config);
+    int receiveExecutorsSize = receivingExecutors().size();
+    if (receiveExecutorsSize == 0) {
+      receiveExecutorsSize = 1;
+    }
+    Set<Integer> execs = router.receivingExecutors();
+    for (int e : execs) {
+      Queue<Pair<Object, MPIMessage>> pendingReceiveMessages =
+          new ArrayBlockingQueue<Pair<Object, MPIMessage>>(
+              maxReceiveBuffers * 2 * receiveExecutorsSize);
+      pendingReceiveMessagesPerSource.put(e, pendingReceiveMessages);
+    }
   }
 
   @Override
@@ -74,7 +101,7 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
    * @param object
    */
   @Override
-  protected void receiveMessage(MPIMessage currentMessage, Object object) {
+  protected boolean receiveMessage(MPIMessage currentMessage, Object object) {
     MessageHeader header = currentMessage.getHeader();
 
     // we always receive to the main task
@@ -85,12 +112,12 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
     if (!isLast(header.getSourceId(), header.getPath(), messageDestId)
         && partialReceiver != null) {
 //      LOG.info(String.format("%d calling partial receiver", instancePlan.getThisExecutor()));
-      partialReceiver.onMessage(header.getSourceId(), header.getPath(),
+      return partialReceiver.onMessage(header.getSourceId(), header.getPath(),
           router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
               MPIContext.DEFAULT_PATH), object);
     } else {
 //      LOG.info(String.format("%d calling fina receiver", instancePlan.getThisExecutor()));
-      finalReceiver.onMessage(header.getSourceId(), header.getPath(),
+      return finalReceiver.onMessage(header.getSourceId(), header.getPath(),
           router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
               MPIContext.DEFAULT_PATH), object);
     }

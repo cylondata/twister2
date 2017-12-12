@@ -21,6 +21,7 @@ import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -55,6 +56,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
   protected MessageType type;
   protected int executor;
   private int sendCount = 0;
+  private int sendCountFull = 0;
   /**
    * The send sendBuffers used by the operation
    */
@@ -68,7 +70,15 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
   /**
    * Pending send messages
    */
-  protected Queue<Pair<Object, MPISendMessage>> pendingSendMessages;
+//  protected Queue<Pair<Object, MPISendMessage>> pendingSendMessages;
+  protected Map<Integer, ArrayBlockingQueue<Pair<Object, MPISendMessage>>>
+      pendingSendMessagesPerSource;
+
+  /**
+   * Pending receives in case the receives are not ready
+   */
+  protected Map<Integer, Queue<Pair<Object, MPIMessage>>> pendingReceiveMessagesPerSource;
+//  protected Queue<Pair<Object, MPIMessage>> pendingReceiveMessages;
 
   /**
    * Non grouped current messages
@@ -102,14 +112,12 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
       sendBuffers.offer(new MPIBuffer(sendBufferSize));
     }
     this.receiveBuffers = new HashMap<>();
+    this.pendingSendMessagesPerSource = new HashMap<>();
+    this.pendingReceiveMessagesPerSource = new HashMap<>();
 
     LOG.info(String.format("%d setup routing", instancePlan.getThisExecutor()));
     // this should setup a router
     setupRouting();
-
-    // later look at how not to allocate pairs for this each time
-    pendingSendMessages = new ArrayBlockingQueue<Pair<Object, MPISendMessage>>(
-        MPIContext.sendPendingMax(config, 128));
 
     LOG.info(String.format("%d setup communication", instancePlan.getThisExecutor()));
     // now setup the sends and receives
@@ -170,14 +178,15 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
   protected abstract boolean isLast(int source, int path, int taskIdentifier);
 
 
-  protected abstract void receiveMessage(MPIMessage currentMessage, Object object);
+  protected abstract boolean receiveMessage(MPIMessage currentMessage, Object object);
 
   /**
    * By default we are not doing anything here and the specific operations can override this
    *
    * @param currentMessage
    */
-  protected void passMessageDownstream(Object object, MPIMessage currentMessage) {
+  protected boolean passMessageDownstream(Object object, MPIMessage currentMessage) {
+    return true;
   }
 
   @Override
@@ -229,6 +238,9 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
   protected boolean sendMessagePartial(int source, Object object, int path) {
     lock.lock();
     try {
+      ArrayBlockingQueue<Pair<Object, MPISendMessage>> pendingSendMessages =
+          pendingSendMessagesPerSource.get(source);
+
       RoutingParameters routingParameters = partialSendRoutingParameters(source, path);
       MPIMessage mpiMessage = new MPIMessage(source, type, MPIMessageDirection.OUT, this);
       int di = -1;
@@ -241,10 +253,18 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
           di, path, routingParameters.getInternalRoutes(),
           routingParameters.getExternalRoutes());
 
-//      LOG.info(String.format("%d Pending size: %d", executor, pendingSendMessages.size()));
       // now try to put this into pending
-      return pendingSendMessages.offer(
+      boolean ret = pendingSendMessages.offer(
           new ImmutablePair<Object, MPISendMessage>(object, sendMessage));
+      if (ret) {
+        sendCount++;
+      }
+//      if (sendCount % 100 == 0) {
+//        LOG.info(String.format("%d Partial Pending size: %d %d %d",
+//            executor, pendingSendMessages.size(), sendCount,
+//            pendingSendMessages.remainingCapacity()));
+//      }
+      return ret;
     } finally {
       lock.unlock();
     }
@@ -253,6 +273,9 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
   protected boolean sendMessage(int source, Object message, int path) {
     lock.lock();
     try {
+      ArrayBlockingQueue<Pair<Object, MPISendMessage>> pendingSendMessages =
+          pendingSendMessagesPerSource.get(source);
+
       RoutingParameters routingParameters = sendRoutingParameters(source, MPIContext.DEFAULT_PATH);
       MPIMessage mpiMessage = new MPIMessage(source, type, MPIMessageDirection.OUT, this);
 
@@ -264,11 +287,18 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
           di, path, routingParameters.getInternalRoutes(),
           routingParameters.getExternalRoutes());
 
-//      LOG.info(String.format("%d Pending size: %d", executor, pendingSendMessages.size()));
-
       // now try to put this into pending
-      return pendingSendMessages.offer(
+      boolean ret = pendingSendMessages.offer(
           new ImmutablePair<Object, MPISendMessage>(message, sendMessage));
+      if (ret) {
+        sendCountFull++;
+      }
+//      if (sendCountFull % 100 == 0) {
+//        LOG.info(String.format("%d Full Pending size: %d %d %d",
+//            executor, pendingSendMessages.size(), sendCountFull,
+//            pendingSendMessages.remainingCapacity()));
+//      }
+      return ret;
     } finally {
       lock.unlock();
     }
@@ -277,63 +307,137 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
   @Override
   public void progress() {
     lock.lock();
-    boolean canProgress = true;
     try {
-      while (pendingSendMessages.size() > 0 && canProgress) {
-        // take out pending messages
-        Pair<Object, MPISendMessage> pair = pendingSendMessages.peek();
-        MPISendMessage mpiMessage = pair.getValue();
-        Object messageObject = pair.getKey();
-        if (mpiMessage.serializedState() == MPISendMessage.SendState.INIT) {
-          // send it internally
-          for (Integer i : mpiMessage.getInternalSends()) {
-            // okay now we need to check weather this is the last place
-            boolean receiveAccepted = receiveSendInternally(mpiMessage.getSource(), i,
-                mpiMessage.getPath(), messageObject);
-            if (!receiveAccepted) {
-              canProgress = false;
-              break;
+      int internalSends = 0;
+      int externalSends = 0;
+      int receives = 0;
+      int internalSendsPending = 0;
+      int externalSendsPending = 0;
+      int receivesPending = 0;
+      for (Map.Entry<Integer, ArrayBlockingQueue<Pair<Object, MPISendMessage>>> e
+          : pendingSendMessagesPerSource.entrySet()) {
+
+        Queue<Pair<Object, MPISendMessage>> pendingSendMessages = e.getValue();
+        boolean canProgress = true;
+        while (pendingSendMessages.size() > 0 && canProgress) {
+          // take out pending messages
+          Pair<Object, MPISendMessage> pair = pendingSendMessages.peek();
+          MPISendMessage mpiMessage = pair.getValue();
+          Object messageObject = pair.getKey();
+          if (mpiMessage.serializedState() == MPISendMessage.SendState.INIT) {
+            // send it internally
+            for (Integer i : mpiMessage.getInternalSends()) {
+              internalSendsPending++;
+              // okay now we need to check weather this is the last place
+              boolean receiveAccepted = receiveSendInternally(mpiMessage.getSource(), i,
+                  mpiMessage.getPath(), messageObject);
+              if (!receiveAccepted) {
+                canProgress = false;
+                break;
+              }
+              internalSends++;
+            }
+            if (canProgress) {
+              mpiMessage.setSendState(MPISendMessage.SendState.SENT_INTERNALLY);
             }
           }
 
-          mpiMessage.setSendState(MPISendMessage.SendState.SENT_INTERNALLY);
-        }
+          if (canProgress) {
+            // we don't have an external executor to send this message
+            if (mpiMessage.getExternalSends().size() == 0) {
+              pendingSendMessages.poll();
+              continue;
+            }
 
-        // we don't have an external executor to send this message
-        if (mpiMessage.getExternalSends().size() == 0) {
-          pendingSendMessages.poll();
-          continue;
-        }
+            // at this point lets build the message
+            MPISendMessage message = (MPISendMessage)
+                messageSerializer.build(pair.getKey(), mpiMessage);
 
-        // at this point lets build the message
-        MPISendMessage message = (MPISendMessage)
-            messageSerializer.build(pair.getKey(), mpiMessage);
+            // okay we build the message, send it
+            if (message.serializedState() == MPISendMessage.SendState.SERIALIZED) {
+              List<Integer> exRoutes = new ArrayList<>(mpiMessage.getExternalSends());
+              int startOfExternalRouts = mpiMessage.getAcceptedExternalSends();
+              int noOfExternalSends = startOfExternalRouts;
+              for (int i = startOfExternalRouts; i < exRoutes.size(); i++) {
+                externalSendsPending++;
+                boolean sendAccepted = sendMessageToTarget(message.getMPIMessage(),
+                    exRoutes.get(i));
+                // if no longer accepts stop
+                if (!sendAccepted) {
+                  canProgress = false;
+                  break;
+                } else {
+                  mpiMessage.incrementAcceptedExternalSends();
+                  noOfExternalSends++;
+                  externalSends++;
+                }
+              }
 
-        // okay we build the message, send it
-        if (message.serializedState() == MPISendMessage.SendState.SERIALIZED) {
-          List<Integer> exRoutes = new ArrayList<>(mpiMessage.getExternalSends());
-          int startOfExternalRouts = mpiMessage.getAcceptedExternalSends();
-          int noOfExternalSends = startOfExternalRouts;
-          for (int i = startOfExternalRouts; i < exRoutes.size(); i++) {
-            boolean sendAccepted = sendMessageToTarget(message.getMPIMessage(), exRoutes.get(i));
-            // if no longer accepts stop
-            if (!sendAccepted) {
-              canProgress = false;
-              break;
+              if (noOfExternalSends == exRoutes.size()) {
+                // we are done
+                mpiMessage.setSendState(MPISendMessage.SendState.FINISHED);
+                pendingSendMessages.poll();
+              }
             } else {
-              noOfExternalSends++;
+              break;
             }
           }
-
-          if (noOfExternalSends == exRoutes.size()) {
-            // we are done
-            mpiMessage.setSendState(MPISendMessage.SendState.FINISHED);
-            pendingSendMessages.poll();
-          }
-        } else {
-          break;
         }
       }
+
+      for (Map.Entry<Integer, Queue<Pair<Object, MPIMessage>>> e
+          : pendingReceiveMessagesPerSource.entrySet()) {
+        Queue<Pair<Object, MPIMessage>> pendingReceiveMessages = e.getValue();
+
+        while (pendingReceiveMessages.size() > 0) {
+          Pair<Object, MPIMessage> pair = pendingReceiveMessages.peek();
+          MPIMessage.ReceivedState state = pair.getRight().getReceivedState();
+          MPIMessage currentMessage = pair.getRight();
+          Object object = pair.getLeft();
+          if (state == MPIMessage.ReceivedState.INIT) {
+            currentMessage.incrementRefCount();
+            currentMessage.setReceivedState(MPIMessage.ReceivedState.DOWN);
+            if (!passMessageDownstream(object, currentMessage)) {
+              break;
+            }
+            currentMessage.setReceivedState(MPIMessage.ReceivedState.RECEIVE);
+            if (!receiveMessage(currentMessage, object)) {
+              break;
+            }
+            receives++;
+            currentMessage.release();
+            pendingReceiveMessages.poll();
+          } else if (state == MPIMessage.ReceivedState.DOWN) {
+            currentMessage.setReceivedState(MPIMessage.ReceivedState.DOWN);
+            if (!passMessageDownstream(object, currentMessage)) {
+              break;
+            }
+            currentMessage.setReceivedState(MPIMessage.ReceivedState.RECEIVE);
+            if (!receiveMessage(currentMessage, object)) {
+              break;
+            }
+            receives++;
+            currentMessage.release();
+            pendingReceiveMessages.poll();
+          } else if (state == MPIMessage.ReceivedState.RECEIVE) {
+            currentMessage.setReceivedState(MPIMessage.ReceivedState.RECEIVE);
+            if (!receiveMessage(currentMessage, object)) {
+              break;
+            }
+            receives++;
+            currentMessage.release();
+            pendingReceiveMessages.poll();
+          }
+        }
+      }
+
+//      if (internalSendsPending > 0 || externalSendsPending > 0
+//          || pendingReceiveMessages.size() > 0) {
+//        if (internalSends == 0 && externalSends == 0 && receives == 0) {
+//          LOG.info(String.format("%d No progress has been made %d %d %d",
+//            executor, internalSendsPending, externalSendsPending, pendingReceiveMessages.size()));
+//        }
+//      }
     } finally {
       lock.unlock();
     }
@@ -386,6 +490,8 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
     }
   }
 
+  private int receiveCount = 0;
+
   @Override
   public void onReceiveComplete(int id, int e, MPIBuffer buffer) {
     lock.lock();
@@ -400,19 +506,50 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
       Object object = messageDeSerializer.build(buffer, currentMessage, e);
       // if the message is complete, send it further down and call the receiver
       if (currentMessage.isComplete()) {
-        // we need to increment the ref count here before someone send it to another place
-        // other wise they may free it before we do
-        currentMessage.incrementRefCount();
-        // we may need to pass this down to others
-        passMessageDownstream(object, currentMessage);
-        // we received a message, we need to determine weather we need to
-        // forward to another node and process
-        // check weather this is a message for partial or final receiver
-        receiveMessage(currentMessage, object);
-        // okay we built this message, lets remove it from the map
+        Queue<Pair<Object, MPIMessage>> pendingReceiveMessages =
+            pendingReceiveMessagesPerSource.get(id);
+
+        receiveCount++;
+        if (receiveCount % 100 == 0) {
+          LOG.log(Level.INFO, String.format("%d received message %d %d %d",
+              executor, id, receiveCount, pendingReceiveMessages.size()));
+        }
         currentMessages.remove(id);
-        // okay lets try to free the buffers of this message
-        currentMessage.release();
+
+        currentMessage.setReceivedState(MPIMessage.ReceivedState.INIT);
+        if (pendingReceiveMessages.size() > 0) {
+          if (!pendingReceiveMessages.offer(new ImmutablePair<>(object, currentMessage))) {
+            throw new RuntimeException(executor + " We should have enough space: "
+                + pendingReceiveMessages.size());
+          }
+        } else {
+          // we need to increment the ref count here before someone send it to another place
+          // other wise they may free it before we do
+          currentMessage.incrementRefCount();
+          currentMessage.setReceivedState(MPIMessage.ReceivedState.DOWN);
+          // we may need to pass this down to others
+          if (!passMessageDownstream(object, currentMessage)) {
+            if (!pendingReceiveMessages.offer(new ImmutablePair<>(object, currentMessage))) {
+              throw new RuntimeException(executor + " We should have enough space: "
+                  + pendingReceiveMessages.size());
+            }
+            return;
+          }
+          // we received a message, we need to determine weather we need to
+          // forward to another node and process
+          // check weather this is a message for partial or final receiver
+          currentMessage.setReceivedState(MPIMessage.ReceivedState.RECEIVE);
+          if (!receiveMessage(currentMessage, object)) {
+            if (!pendingReceiveMessages.offer(new ImmutablePair<>(object, currentMessage))) {
+              throw new RuntimeException(executor + " We should have enough space: "
+                  + pendingReceiveMessages.size());
+            }
+            return;
+          }
+          // okay we built this message, lets remove it from the map
+          // okay lets try to free the buffers of this message
+          currentMessage.release();
+        }
       } else {
         LOG.info("On receive complete message NOT built");
       }

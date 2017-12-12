@@ -119,7 +119,7 @@ public class BaseKeyedReduceCommunication implements IContainer {
     private int sendCount = 0;
     @Override
     public void run() {
-      LOG.log(Level.INFO, "Starting map worker");
+      LOG.log(Level.INFO, "Starting map worker: " + id);
       MPIBuffer data = new MPIBuffer(1024);
       data.setSize(24);
       for (int i = 0; i < 5000; i++) {
