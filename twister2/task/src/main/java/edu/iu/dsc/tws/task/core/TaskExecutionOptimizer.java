@@ -77,6 +77,14 @@ public class TaskExecutionOptimizer {
    * called
    */
   public void finish() {
+    runOptimizer();
+  }
+
+  /**
+   * Pefroms analysis on the task information to optimize the execution. once done it will
+   * submit the tasks to the TaskExecutor
+   */
+  private void runOptimizer() {
 
   }
 
