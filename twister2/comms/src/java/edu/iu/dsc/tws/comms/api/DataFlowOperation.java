@@ -21,10 +21,7 @@ public interface DataFlowOperation {
    * @param config the network configuration
    * @param instancePlan instance plan
    */
-  void init(Config config, MessageType type,
-            TaskPlan instancePlan, int edge,
-            MessageReceiver rcvr,
-            MessageReceiver partialRcvr);
+  void init(Config config, MessageType type, TaskPlan instancePlan, int edge);
 
   /**
    * Use this to inject partial results in a distributed dataflow operation

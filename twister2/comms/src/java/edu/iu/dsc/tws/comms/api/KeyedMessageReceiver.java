@@ -9,29 +9,26 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.mpi.io;
+package edu.iu.dsc.tws.comms.api;
 
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.BlockingQueue;
 
-import edu.iu.dsc.tws.comms.api.Message;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
+public interface KeyedMessageReceiver {
+  /**
+   * Initialize the message receiver with tasks from which messages are expected
+   * For each sub edge in graph, for each path, gives the expected task ids
+   *
+   * subedge -> (path -> ids)
+   *
+   * @param expectedIds expected task ids
+   */
+  void init(Map<Integer, Map<Integer, List<Integer>>> expectedIds);
 
-public class DefaultMessageReceiver implements MessageReceiver {
-  private BlockingQueue<Message> messages;
-
-  public DefaultMessageReceiver(BlockingQueue<Message> messages) {
-    this.messages = messages;
-  }
-
-
-  @Override
-  public void init(Map<Integer, List<Integer>> expectedIds) {
-  }
-
-  @Override
-  public boolean onMessage(int source, int path, int target, Object object) {
-    return true;
-  }
+  /**
+   * The actual message callback
+   *
+   * @param object the actual message
+   */
+  boolean onMessage(int source, int path, int target, Object object);
 }

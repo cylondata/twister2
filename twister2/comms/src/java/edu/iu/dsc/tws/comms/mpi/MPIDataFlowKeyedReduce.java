@@ -19,8 +19,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.comms.api.KeyedMessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
-import edu.iu.dsc.tws.comms.routing.IRouter;
 import edu.iu.dsc.tws.comms.routing.KeyedInvertedBinaryTreeRouter;
 
 public class MPIDataFlowKeyedReduce extends MPIDataFlowOperation {
@@ -29,22 +29,38 @@ public class MPIDataFlowKeyedReduce extends MPIDataFlowOperation {
   protected Set<Integer> sources;
 
   // the destination task
-  protected Set<Integer> destinations;
+  private Set<Integer> destinations;
 
-  protected IRouter router;
+  private KeyedInvertedBinaryTreeRouter router;
+
+  private KeyedMessageReceiver partialReceiver;
+
+  private KeyedMessageReceiver finalReceiver;
 
   public MPIDataFlowKeyedReduce(TWSMPIChannel channel,
-                                Set<Integer> sources, Set<Integer> destination) {
+                                Set<Integer> sources, Set<Integer> destination,
+                                KeyedMessageReceiver finalRecv, KeyedMessageReceiver partialRecv) {
     super(channel);
 
     this.sources = sources;
     this.destinations = destination;
+    this.partialReceiver = partialRecv;
+    this.finalReceiver = finalRecv;
   }
 
   public void setupRouting() {
     // we only have one path
     this.router = new KeyedInvertedBinaryTreeRouter(config, instancePlan,
         destinations, sources);
+
+    // initialize the receive
+    if (this.partialReceiver != null && !isLastReceiver()) {
+      partialReceiver.init(receiveExpectedTaskIds());
+    }
+
+    if (this.finalReceiver != null && isLastReceiver()) {
+      this.finalReceiver.init(receiveExpectedTaskIds());
+    }
   }
 
   @Override
@@ -56,8 +72,8 @@ public class MPIDataFlowKeyedReduce extends MPIDataFlowOperation {
    * We can receive messages from internal tasks or an external task, we allways receive messages
    * to the main task of the executor and we go from there
    *
-   * @param currentMessage
-   * @param object
+   * @param currentMessage the current message
+   * @param object the serialized object
    */
   @Override
   protected void receiveMessage(MPIMessage currentMessage, Object object) {
@@ -144,14 +160,14 @@ public class MPIDataFlowKeyedReduce extends MPIDataFlowOperation {
   }
 
   @Override
-  protected void receiveSendInternally(int source, int t, int path, Object message) {
+  protected boolean receiveSendInternally(int source, int t, int path, Object message) {
     // check weather this is the last task
     if (router.isLastReceiver()) {
 //      LOG.info(String.format("%d Calling directly final receiver %d",
 //          instancePlan.getThisExecutor(), source));
-      finalReceiver.onMessage(source, path, t, message);
+      return finalReceiver.onMessage(source, path, t, message);
     } else {
-      partialReceiver.onMessage(source, path, t, message);
+      return partialReceiver.onMessage(source, path, t, message);
     }
   }
 
@@ -181,7 +197,6 @@ public class MPIDataFlowKeyedReduce extends MPIDataFlowOperation {
     return router.receivingExecutors();
   }
 
-  @Override
   protected Map<Integer, Map<Integer, List<Integer>>> receiveExpectedTaskIds() {
     Map<Integer, Map<Integer, List<Integer>>> integerMapMap = router.receiveExpectedTaskIds();
     Set<Integer> paths = new HashSet<>();

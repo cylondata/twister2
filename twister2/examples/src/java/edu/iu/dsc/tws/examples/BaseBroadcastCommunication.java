@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -27,14 +26,13 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.mpi.MPIContext;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
 public class BaseBroadcastCommunication implements IContainer {
   private static final Logger LOG = Logger.getLogger(BaseBroadcastCommunication.class.getName());
 
-  private DataFlowOperation reduce;
+  private DataFlowOperation broadcast;
 
   private ResourcePlan resourcePlan;
 
@@ -57,51 +55,54 @@ public class BaseBroadcastCommunication implements IContainer {
   @Override
   public void init(Config cfg, int containerId, ResourcePlan plan) {
     LOG.log(Level.INFO, "Starting the example with container id: " + plan.getThisId());
+    try {
+      this.config = cfg;
+      this.resourcePlan = plan;
+      this.id = containerId;
+      this.status = Status.INIT;
+      this.noOfTasksPerExecutor = NO_OF_TASKS / plan.noOfContainers();
 
-    this.config = cfg;
-    this.resourcePlan = plan;
-    this.id = containerId;
-    this.status = Status.INIT;
-    this.noOfTasksPerExecutor = NO_OF_TASKS / plan.noOfContainers();
+      // lets create the task plan
+      TaskPlan taskPlan = Utils.createReduceTaskPlan(cfg, plan, NO_OF_TASKS);
+      //first get the communication config file
+      TWSNetwork network = new TWSNetwork(cfg, taskPlan);
 
-    // lets create the task plan
-    TaskPlan taskPlan = Utils.createReduceTaskPlan(cfg, plan, NO_OF_TASKS);
-    //first get the communication config file
-    TWSNetwork network = new TWSNetwork(cfg, taskPlan);
+      TWSCommunication channel = network.getDataFlowTWSCommunication();
 
-    TWSCommunication channel = network.getDataFlowTWSCommunication();
-
-    Set<Integer> sources = new HashSet<>();
-    for (int i = 0; i < NO_OF_TASKS; i++) {
-      sources.add(i);
-    }
-    int dest = NO_OF_TASKS;
-
-    Map<String, Object> newCfg = new HashMap<>();
-
-    LOG.info("Setting up reduce dataflow operation");
-    // this method calls the init method
-    // I think this is wrong
-    reduce = channel.broadCast(newCfg, MessageType.OBJECT, 0, dest,
-        sources, new BCastReceive());
-
-    // the map thread where data is produced
-    if (id == 0) {
-      Thread mapThread = new Thread(new MapWorker());
-      mapThread.start();
-    }
-
-    // we need to progress the communication
-    while (true) {
-      try {
-        // progress the channel
-        channel.progress();
-        // we should progress the communication directive
-        reduce.progress();
-        Thread.yield();
-      } catch (Throwable t) {
-        t.printStackTrace();
+      Set<Integer> sources = new HashSet<>();
+      for (int i = 0; i < NO_OF_TASKS; i++) {
+        sources.add(i);
       }
+      int dest = NO_OF_TASKS;
+
+      Map<String, Object> newCfg = new HashMap<>();
+
+      LOG.info("Setting up reduce dataflow operation");
+      // this method calls the init method
+      // I think this is wrong
+      broadcast = channel.broadCast(newCfg, MessageType.OBJECT, 0, dest,
+          sources, new BCastReceive());
+
+      // the map thread where data is produced
+      if (id == 0) {
+        Thread mapThread = new Thread(new MapWorker());
+        mapThread.start();
+      }
+
+      // we need to progress the communication
+      while (true) {
+        try {
+          // progress the channel
+          channel.progress();
+          // we should progress the communication directive
+          broadcast.progress();
+          Thread.yield();
+        } catch (Throwable t) {
+          t.printStackTrace();
+        }
+      }
+    } catch (Throwable t) {
+      t.printStackTrace();
     }
   }
 
@@ -116,7 +117,8 @@ public class BaseBroadcastCommunication implements IContainer {
       for (int i = 0; i < 5000; i++) {
         IntData data = generateData();
         // lets generate a message
-        while (!reduce.send(NO_OF_TASKS, data)) {
+        LOG.info("Sending message from task:" + NO_OF_TASKS);
+        while (!broadcast.send(NO_OF_TASKS, data)) {
           // lets wait a litte and try again
           try {
             Thread.sleep(1);
@@ -134,28 +136,19 @@ public class BaseBroadcastCommunication implements IContainer {
   }
 
   private class BCastReceive implements MessageReceiver {
-    private Map<Integer, Map<Integer, List<Object>>> messages = new HashMap<>();
     private int count = 0;
-    @Override
-    public void init(Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
-      for (Map.Entry<Integer, Map<Integer, List<Integer>>> e : expectedIds.entrySet()) {
-        Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
-
-        for (int i : e.getValue().get(MPIContext.DEFAULT_PATH)) {
-          messagesPerTask.put(i, new ArrayList<Object>());
-        }
-
+    public void init(Map<Integer, List<Integer>> expectedIds) {
+      for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
         LOG.info(String.format("%d Final Task %d receives from %s",
-            id, e.getKey(), e.getValue().get(MPIContext.DEFAULT_PATH).toString()));
-
-        messages.put(e.getKey(), messagesPerTask);
+            id, e.getKey(), e.getValue().toString()));
       }
     }
 
     @Override
-    public void onMessage(int source, int path, int target, Object object) {
+    public boolean onMessage(int source, int path, int target, Object object) {
       LOG.info("Message received for last: " + source + " target: "
           + target + " count: " + count++);
+      return true;
     }
   }
 

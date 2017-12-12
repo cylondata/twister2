@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -28,7 +27,6 @@ import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.mpi.MPIBuffer;
-import edu.iu.dsc.tws.comms.mpi.MPIContext;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
@@ -170,27 +168,18 @@ public class BaseLoadBalanceCommunication implements IContainer {
   }
 
   private class LoadBalanceReceiver implements MessageReceiver {
-    private Map<Integer, Map<Integer, List<Object>>> messages = new HashMap<>();
     private int count = 0;
     private long start = System.nanoTime();
     @Override
-    public void init(Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
-      for (Map.Entry<Integer, Map<Integer, List<Integer>>> e : expectedIds.entrySet()) {
-        Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
-
-        for (int i : e.getValue().get(MPIContext.DEFAULT_PATH)) {
-          messagesPerTask.put(i, new ArrayList<Object>());
-        }
-
+    public void init(Map<Integer, List<Integer>> expectedIds) {
+      for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
         LOG.info(String.format("%d Final Task %d receives from %s",
-            id, e.getKey(), e.getValue().get(MPIContext.DEFAULT_PATH).toString()));
-
-        messages.put(e.getKey(), messagesPerTask);
+            id, e.getKey(), e.getValue().toString()));
       }
     }
 
     @Override
-    public void onMessage(int source, int path, int target, Object object) {
+    public boolean onMessage(int source, int path, int target, Object object) {
       if (count == 0) {
         start = System.nanoTime();
       }
@@ -203,6 +192,7 @@ public class BaseLoadBalanceCommunication implements IContainer {
       if (count > 100000) {
         LOG.info("More than");
       }
+      return true;
     }
   }
 

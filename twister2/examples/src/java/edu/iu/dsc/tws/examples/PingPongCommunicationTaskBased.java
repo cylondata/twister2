@@ -116,11 +116,11 @@ public class PingPongCommunicationTaskBased implements IContainer {
     private int count = 0;
 
     @Override
-    public void init(Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
+    public void init(Map<Integer, List<Integer>> expectedIds) {
     }
 
     @Override
-    public void onMessage(int source, int path, int target, Object object) {
+    public boolean onMessage(int source, int path, int target, Object object) {
       count++;
       if (count % 10000 == 0) {
         LOG.info("received message: " + count);
@@ -128,6 +128,7 @@ public class PingPongCommunicationTaskBased implements IContainer {
       if (count == 100000) {
         status = Status.LOAD_RECEIVE_FINISHED;
       }
+      return true;
     }
   }
 

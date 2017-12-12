@@ -29,7 +29,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageDeSerializer;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageSerializer;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
@@ -49,11 +48,10 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
   protected int edge;
   // the router that gives us the possible routes
   protected TWSMPIChannel channel;
-  protected MessageReceiver finalReceiver;
   protected MessageDeSerializer messageDeSerializer;
   protected MessageSerializer messageSerializer;
   // we may have multiple routes throughus
-  protected MessageReceiver partialReceiver;
+
   protected MessageType type;
   protected int executor;
   private int sendCount = 0;
@@ -89,13 +87,10 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
   }
 
   @Override
-  public void init(Config cfg, MessageType messageType, TaskPlan plan, int graphEdge,
-                   MessageReceiver rcvr, MessageReceiver partialRcvr) {
+  public void init(Config cfg, MessageType messageType, TaskPlan plan, int graphEdge) {
     this.config = cfg;
     this.instancePlan = plan;
     this.edge = graphEdge;
-    this.finalReceiver = rcvr;
-    this.partialReceiver = partialRcvr;
     this.type = messageType;
     this.executor = instancePlan.getThisExecutor();
 
@@ -114,7 +109,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
 
     // later look at how not to allocate pairs for this each time
     pendingSendMessages = new ArrayBlockingQueue<Pair<Object, MPISendMessage>>(
-        MPIContext.sendPendingMax(config, 8192));
+        MPIContext.sendPendingMax(config, 128));
 
     LOG.info(String.format("%d setup communication", instancePlan.getThisExecutor()));
     // now setup the sends and receives
@@ -150,7 +145,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
    * @param t
    * @param message
    */
-  protected abstract void receiveSendInternally(int source, int t, int path, Object message);
+  protected abstract boolean receiveSendInternally(int source, int t, int path, Object message);
 
   /**
    * Return the list of receiving executors for this
@@ -166,13 +161,61 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
    *
    * @return  expected task ids
    */
-  protected abstract Map<Integer, Map<Integer, List<Integer>>> receiveExpectedTaskIds();
+//  protected abstract Map<Integer, Map<Integer, List<Integer>>> receiveExpectedTaskIds();
 
   /**
    * Is this the final task
    * @return
    */
   protected abstract boolean isLast(int source, int path, int taskIdentifier);
+
+
+  protected abstract void receiveMessage(MPIMessage currentMessage, Object object);
+
+  /**
+   * By default we are not doing anything here and the specific operations can override this
+   *
+   * @param currentMessage
+   */
+  protected void passMessageDownstream(Object object, MPIMessage currentMessage) {
+  }
+
+  @Override
+  public boolean send(int source, Object message, int path) {
+    return false;
+  }
+
+  @Override
+  public boolean sendPartial(int source, Object message, int path) {
+    return false;
+  }
+
+  /**
+   * Setup the receives and send sendBuffers
+   */
+  private void setupCommunication() {
+    // we will receive from these
+    int maxReceiveBuffers = MPIContext.receiveBufferCount(config);
+    int receiveBufferSize = MPIContext.bufferSize(config);
+    for (Integer recv : receivingExecutors()) {
+      Queue<MPIBuffer> recvList = new LinkedList<>();
+      for (int i = 0; i < maxReceiveBuffers; i++) {
+        recvList.add(new MPIBuffer(receiveBufferSize));
+      }
+      // register with the channel
+      LOG.info(instancePlan.getThisExecutor() + " Register to receive from: " + recv);
+      channel.receiveMessage(recv, edge, this, recvList);
+      receiveBuffers.put(recv, recvList);
+    }
+
+    // configure the send sendBuffers
+    int sendBufferSize = MPIContext.bufferSize(config);
+    int sendBufferCount = MPIContext.sendBuffersCount(config);
+    for (int i = 0; i < sendBufferCount; i++) {
+      MPIBuffer buffer = new MPIBuffer(sendBufferSize);
+      sendBuffers.offer(buffer);
+    }
+  }
 
   /**
    * Sends a complete message
@@ -184,29 +227,10 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
   }
 
   protected boolean sendMessagePartial(int source, Object object, int path) {
-    //    LOG.log(Level.INFO, "lock 00 " + executor);
     lock.lock();
     try {
-//      List<Integer> externalRoutes = new ArrayList<>();
-//      List<Integer> internalRoutes = new ArrayList<>();
-      RoutingParameters routingParameters = partialSendRoutingParameters(
-          source, path);
-//      internalRouterForPartialSend(source, internalRoutes);
-//      LOG.info(String.format("%d internal routes for send %d: %s",
-//          instancePlan.getThisExecutor(), source, routingParameters.getInternalRoutes()));
-
-
-      // now lets get the external routes to send
-//      externalRoutesForPartialSend(source, externalRoutes);
-//      LOG.info(String.format("%d Partial External routes for send %d: %s",
-//          instancePlan.getThisExecutor(), source, routingParameters.getExternalRoutes()));
-
-      // we need to serialize for sending over the wire
-      // LOG.log(Level.INFO, "Sending message of type: " + type);
-      // this is a originating message. we are going to put ref count to 0 for now and
-      // increment it later
+      RoutingParameters routingParameters = partialSendRoutingParameters(source, path);
       MPIMessage mpiMessage = new MPIMessage(source, type, MPIMessageDirection.OUT, this);
-
       int di = -1;
       if (routingParameters.getExternalRoutes().size() > 0) {
         di = routingParameters.getDestinationId();
@@ -217,6 +241,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
           di, path, routingParameters.getInternalRoutes(),
           routingParameters.getExternalRoutes());
 
+//      LOG.info(String.format("%d Pending size: %d", executor, pendingSendMessages.size()));
       // now try to put this into pending
       return pendingSendMessages.offer(
           new ImmutablePair<Object, MPISendMessage>(object, sendMessage));
@@ -226,29 +251,11 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
   }
 
   protected boolean sendMessage(int source, Object message, int path) {
-    //    LOG.log(Level.INFO, "lock 00 " + executor);
     lock.lock();
     try {
-//      List<Integer> externalRoutes = new ArrayList<>();
-//      List<Integer> internalRoutes = new ArrayList<>();
-
       RoutingParameters routingParameters = sendRoutingParameters(source, MPIContext.DEFAULT_PATH);
-//      internalRoutesForSend(source, internalRoutes);
-//      LOG.info(String.format("%d internal routes for send %d: %s",
-//          instancePlan.getThisExecutor(), source, routingParameters.getInternalRoutes()));
-
-      // now lets get the external routes to send
-//      externalRoutesForSend(source, externalRoutes);
-//      LOG.info(String.format("%d External routes for send %d: %s",
-//          instancePlan.getThisExecutor(), source, routingParameters.getExternalRoutes()));
-      // we need to serialize for sending over the wire
-      // LOG.log(Level.INFO, "Sending message of type: " + type);
-      // this is a originating message. we are going to put ref count to 0 for now and
-      // increment it later
       MPIMessage mpiMessage = new MPIMessage(source, type, MPIMessageDirection.OUT, this);
 
-      // create a send message to keep track of the serialization
-      // at the intial stage the sub-edge is 0
       int di = -1;
       if (routingParameters.getExternalRoutes().size() > 0) {
         di = routingParameters.getDestinationId();
@@ -256,6 +263,8 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
       MPISendMessage sendMessage = new MPISendMessage(source, mpiMessage, edge,
           di, path, routingParameters.getInternalRoutes(),
           routingParameters.getExternalRoutes());
+
+//      LOG.info(String.format("%d Pending size: %d", executor, pendingSendMessages.size()));
 
       // now try to put this into pending
       return pendingSendMessages.offer(
@@ -269,22 +278,22 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
   public void progress() {
     lock.lock();
     boolean canProgress = true;
-//    LOG.info(String.format("%d progress pendingsize %d", executor, pendingSendMessages.size()));
     try {
       while (pendingSendMessages.size() > 0 && canProgress) {
         // take out pending messages
         Pair<Object, MPISendMessage> pair = pendingSendMessages.peek();
         MPISendMessage mpiMessage = pair.getValue();
         Object messageObject = pair.getKey();
-//        LOG.info(String.format("%d message status 1 %s internal %s %d",
-//            instancePlan.getThisExecutor(), mpiMessage.serializedState(),
-//            mpiMessage.getInternalSends(), ++sendCount));
         if (mpiMessage.serializedState() == MPISendMessage.SendState.INIT) {
           // send it internally
           for (Integer i : mpiMessage.getInternalSends()) {
             // okay now we need to check weather this is the last place
-            receiveSendInternally(mpiMessage.getSource(), i,
+            boolean receiveAccepted = receiveSendInternally(mpiMessage.getSource(), i,
                 mpiMessage.getPath(), messageObject);
+            if (!receiveAccepted) {
+              canProgress = false;
+              break;
+            }
           }
 
           mpiMessage.setSendState(MPISendMessage.SendState.SENT_INTERNALLY);
@@ -296,14 +305,9 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
           continue;
         }
 
-//        LOG.info(String.format("%d message status 2 %s",
-//            instancePlan.getThisExecutor(), mpiMessage.serializedState()));
         // at this point lets build the message
         MPISendMessage message = (MPISendMessage)
             messageSerializer.build(pair.getKey(), mpiMessage);
-
-//        LOG.info(String.format("%d message status 3 %s",
-//            instancePlan.getThisExecutor(), mpiMessage.serializedState()));
 
         // okay we build the message, send it
         if (message.serializedState() == MPISendMessage.SendState.SERIALIZED) {
@@ -312,8 +316,6 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
           int noOfExternalSends = startOfExternalRouts;
           for (int i = startOfExternalRouts; i < exRoutes.size(); i++) {
             boolean sendAccepted = sendMessageToTarget(message.getMPIMessage(), exRoutes.get(i));
-//            LOG.info(String.format("%d send message to task %d accepted %b",
-//                instancePlan.getThisExecutor(), i, sendAccepted));
             // if no longer accepts stop
             if (!sendAccepted) {
               canProgress = false;
@@ -337,47 +339,9 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
     }
   }
 
-  /**
-   * Setup the receives and send sendBuffers
-   */
-  protected void setupCommunication() {
-    // we will receive from these
-    int maxReceiveBuffers = MPIContext.receiveBufferCount(config);
-    int receiveBufferSize = MPIContext.bufferSize(config);
-    for (Integer recv : receivingExecutors()) {
-      Queue<MPIBuffer> recvList = new LinkedList<>();
-      for (int i = 0; i < maxReceiveBuffers; i++) {
-        recvList.add(new MPIBuffer(receiveBufferSize));
-      }
-      // register with the channel
-      LOG.info(instancePlan.getThisExecutor() + " Register to receive from: " + recv);
-      channel.receiveMessage(recv, edge, this, recvList);
-      receiveBuffers.put(recv, recvList);
-    }
-
-    // initialize the receive
-    if (this.partialReceiver != null && !isLastReceiver()) {
-      partialReceiver.init(receiveExpectedTaskIds());
-    }
-
-    if (this.finalReceiver != null && isLastReceiver()) {
-      this.finalReceiver.init(receiveExpectedTaskIds());
-    }
-
-    // configure the send sendBuffers
-    int sendBufferSize = MPIContext.bufferSize(config);
-    int sendBufferCount = MPIContext.sendBuffersCount(config);
-    for (int i = 0; i < sendBufferCount; i++) {
-      MPIBuffer buffer = new MPIBuffer(sendBufferSize);
-      sendBuffers.offer(buffer);
-    }
-  }
-
   private boolean sendMessageToTarget(MPIMessage msgObj1, int i) {
     msgObj1.incrementRefCount(1);
     int e = instancePlan.getExecutorForChannel(i);
-//        LOG.info(String.format("%d sending message of task %d to executor: %d",
-//            instancePlan.getThisExecutor(), i, e));
     return channel.sendMessage(e, msgObj1, this);
   }
 
@@ -400,7 +364,6 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
   }
 
   protected void releaseTheBuffers(int id, MPIMessage message) {
-//    LOG.log(Level.INFO, "lock 22 " + executor);
     lock.lock();
     try {
       if (MPIMessageDirection.IN == message.getMessageDirection()) {
@@ -408,13 +371,11 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
         for (MPIBuffer buffer : message.getBuffers()) {
           // we need to reset the buffer so it can be used again
           buffer.getByteBuffer().clear();
-  //        LOG.info("Releasing receive buffer to: " + id);
           list.offer(buffer);
         }
       } else if (MPIMessageDirection.OUT == message.getMessageDirection()) {
         Queue<MPIBuffer> queue = sendBuffers;
         for (MPIBuffer buffer : message.getBuffers()) {
-  //        LOG.info("Releasing send buffer");
           // we need to reset the buffer so it can be used again
           buffer.getByteBuffer().clear();
           queue.offer(buffer);
@@ -427,11 +388,8 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
 
   @Override
   public void onReceiveComplete(int id, int e, MPIBuffer buffer) {
-//    LOG.log(Level.INFO, "lock 33 " + executor);
     lock.lock();
     try {
-//      LOG.info(String.format("%d receives message buffer from %d",
-//          instancePlan.getThisExecutor(), id));
       // we need to try to build the message here, we may need many more messages to complete
       MPIMessage currentMessage = currentMessages.get(id);
       if (currentMessage == null) {
@@ -442,7 +400,6 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
       Object object = messageDeSerializer.build(buffer, currentMessage, e);
       // if the message is complete, send it further down and call the receiver
       if (currentMessage.isComplete()) {
-//      LOG.info("On receive complete message built");
         // we need to increment the ref count here before someone send it to another place
         // other wise they may free it before we do
         currentMessage.incrementRefCount();
@@ -462,25 +419,5 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
     } finally {
       lock.unlock();
     }
-  }
-
-  protected abstract void receiveMessage(MPIMessage currentMessage, Object object);
-
-  /**
-   * By default we are not doing anything here and the specific operations can override this
-   *
-   * @param currentMessage
-   */
-  protected void passMessageDownstream(Object object, MPIMessage currentMessage) {
-  }
-
-  @Override
-  public boolean send(int source, Object message, int path) {
-    return false;
-  }
-
-  @Override
-  public boolean sendPartial(int source, Object message, int path) {
-    return false;
   }
 }

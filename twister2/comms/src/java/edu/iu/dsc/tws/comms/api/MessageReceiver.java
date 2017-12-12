@@ -19,16 +19,16 @@ public interface MessageReceiver {
    * Initialize the message receiver with tasks from which messages are expected
    * For each sub edge in graph, for each path, gives the expected task ids
    *
-   * subedge -> (path -> ids)
+   * target -> source tasks
    *
    * @param expectedIds expected task ids
    */
-  void init(Map<Integer, Map<Integer, List<Integer>>> expectedIds);
+  void init(Map<Integer, List<Integer>> expectedIds);
 
   /**
    * The actual message callback
    *
    * @param object the actual message
    */
-  void onMessage(int source, int path, int target, Object object);
+  boolean onMessage(int source, int path, int target, Object object);
 }

@@ -19,7 +19,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.MessageHeader;
-import edu.iu.dsc.tws.comms.routing.IRouter;
+import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.routing.LoadBalanceRouter;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
@@ -28,13 +28,15 @@ public class MPILoadBalance extends MPIDataFlowOperation {
 
   private Set<Integer> sources;
   private Set<Integer> destinations;
-  protected IRouter router;
+  private LoadBalanceRouter router;
 
   private Map<Integer, Integer> destinationIndex;
   private Set<Integer> thisSources;
   private Destinations dests = new Destinations();
   private List<Integer> destinationsList;
   private Set<Integer> thisTasks;
+  private MessageReceiver finalReceiver;
+
   /**
    * A place holder for keeping the internal and external destinations
    */
@@ -44,7 +46,8 @@ public class MPILoadBalance extends MPIDataFlowOperation {
     List<Integer> external = new ArrayList<>();
   }
 
-  public MPILoadBalance(TWSMPIChannel channel, Set<Integer> srcs, Set<Integer> dests) {
+  public MPILoadBalance(TWSMPIChannel channel, Set<Integer> srcs,
+                        Set<Integer> dests, MessageReceiver finalRcvr) {
     super(channel);
     this.sources = srcs;
     this.destinations = dests;
@@ -54,6 +57,8 @@ public class MPILoadBalance extends MPIDataFlowOperation {
     for (int s : sources) {
       destinationIndex.put(s, 0);
     }
+
+    this.finalReceiver = finalRcvr;
   }
 
   protected void setupRouting() {
@@ -62,22 +67,20 @@ public class MPILoadBalance extends MPIDataFlowOperation {
         instancePlan.getThisExecutor(), thisSources));
     this.thisTasks = instancePlan.getTasksOfThisExecutor();
     this.router = new LoadBalanceRouter(instancePlan, sources, destinations);
-    Map<Integer, Map<Integer, Set<Integer>>> internal = router.getInternalSendTasks(0);
-    Map<Integer, Map<Integer, Set<Integer>>> external = router.getExternalSendTasks(0);
+    Map<Integer, Set<Integer>> internal = router.getInternalSendTasks(0);
+    Map<Integer, Set<Integer>> external = router.getExternalSendTasks(0);
 
     LOG.info(String.format("%d adding internal/external routing", instancePlan.getThisExecutor()));
     try {
       for (int s : thisSources) {
-        Map<Integer, Set<Integer>> integerSetMap = internal.get(s);
+        Set<Integer> integerSetMap = internal.get(s);
         if (integerSetMap != null) {
-          Set<Integer> c = integerSetMap.get(MPIContext.DEFAULT_PATH);
-          this.dests.internal.addAll(c);
+          this.dests.internal.addAll(integerSetMap);
         }
 
-        Map<Integer, Set<Integer>> integerSetMap1 = external.get(s);
+        Set<Integer> integerSetMap1 = external.get(s);
         if (integerSetMap1 != null) {
-          Set<Integer> c1 = integerSetMap1.get(MPIContext.DEFAULT_PATH);
-          this.dests.external.addAll(c1);
+          this.dests.external.addAll(integerSetMap1);
         }
         LOG.info(String.format("%d adding internal/external routing %d",
             instancePlan.getThisExecutor(), s));
@@ -88,6 +91,10 @@ public class MPILoadBalance extends MPIDataFlowOperation {
     }
     LOG.info(String.format("%d done adding internal/external routing",
         instancePlan.getThisExecutor()));
+
+    if (this.finalReceiver != null && isLastReceiver()) {
+      this.finalReceiver.init(receiveExpectedTaskIds());
+    }
   }
 
   @Override
@@ -133,9 +140,9 @@ public class MPILoadBalance extends MPIDataFlowOperation {
   }
 
   @Override
-  protected void receiveSendInternally(int source, int t, int path, Object message) {
+  protected boolean receiveSendInternally(int source, int t, int path, Object message) {
     // okay this must be for the
-    finalReceiver.onMessage(source, path, t, message);
+    return finalReceiver.onMessage(source, path, t, message);
   }
 
   @Override
@@ -143,8 +150,7 @@ public class MPILoadBalance extends MPIDataFlowOperation {
     return router.receivingExecutors();
   }
 
-  @Override
-  protected Map<Integer, Map<Integer, List<Integer>>> receiveExpectedTaskIds() {
+  protected Map<Integer, List<Integer>> receiveExpectedTaskIds() {
     return router.receiveExpectedTaskIds();
   }
 

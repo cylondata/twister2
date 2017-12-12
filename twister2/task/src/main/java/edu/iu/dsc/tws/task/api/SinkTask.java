@@ -16,12 +16,12 @@ package edu.iu.dsc.tws.task.api;
  * outputing the results to various output sources such as files or console.
  * The task takes inputs from another task and outputs to a output source
  */
-public abstract class SinkTask extends Task {
+public abstract class SinkTask<T> extends Task {
 
   /**
    * The output sink for this task. The output will be written to this
    */
-  private Sink outputSink;
+  private T outputSink;
 
   public SinkTask() {
     super();
@@ -31,11 +31,11 @@ public abstract class SinkTask extends Task {
     super(tid);
   }
 
-  public Sink getOutputSink() {
+  public T getOutputSink() {
     return outputSink;
   }
 
-  public void setOutputSink(Sink outputSink) {
+  public void setOutputSink(T outputSink) {
     this.outputSink = outputSink;
   }
 }

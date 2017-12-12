@@ -29,7 +29,6 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.mpi.MPIContext;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
@@ -125,7 +124,7 @@ public class BaseReduceCommunication implements IContainer {
       LOG.log(Level.INFO, "Starting map worker");
 //      MPIBuffer data = new MPIBuffer(1024);
       IntData data = generateData();
-      for (int i = 0; i < 10000; i++) {
+      for (int i = 0; i < 100000; i++) {
         // lets generate a message
         while (!reduce.send(task, data)) {
           // lets wait a litte and try again
@@ -137,9 +136,12 @@ public class BaseReduceCommunication implements IContainer {
         }
 //          LOG.info(String.format("%d sending to %d", id, j + id * noOfTasksPerExecutor)
 //              + " count: " + sendCount++);
+        if (i % 1000 == 0) {
+          LOG.info(String.format("%d sent %d", id, i));
+        }
         Thread.yield();
       }
-      LOG.info("Done sending");
+      LOG.info(String.format("%d Done sending", id));
       status = Status.MAP_FINISHED;
     }
   }
@@ -154,39 +156,46 @@ public class BaseReduceCommunication implements IContainer {
     // for each task we need to keep track of incoming messages
     private Map<Integer, Map<Integer, List<Object>>> messages = new HashMap<>();
 
+    private int count = 0;
     /**
      * For each task in this exector, we will receive from the list of tasks in the given path
      *
      * @param expectedIds expected task ids
      */
     @Override
-    public void init(Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
-      for (Map.Entry<Integer, Map<Integer, List<Integer>>> e : expectedIds.entrySet()) {
+    public void init(Map<Integer, List<Integer>> expectedIds) {
+      for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
         Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
 
-        for (int i : e.getValue().get(MPIContext.DEFAULT_PATH)) {
+        for (int i : e.getValue()) {
           messagesPerTask.put(i, new ArrayList<Object>());
         }
 
         LOG.info(String.format("%d Partial Task %d receives from %s",
-            id, e.getKey(), e.getValue().get(MPIContext.DEFAULT_PATH).toString()));
+            id, e.getKey(), e.getValue().toString()));
 
         messages.put(e.getKey(), messagesPerTask);
       }
     }
 
     @Override
-    public void onMessage(int source, int path, int target, Object object) {
+    public boolean onMessage(int source, int path, int target, Object object) {
 //      LOG.info(String.format("%d Message received for partial %d from %d", id, target, source));
       while (pendingSends.size() > 0) {
-        boolean r = reduce.sendPartial(target, pendingSends.poll());
+        boolean r = reduce.sendPartial(target, pendingSends.peek());
         if (!r) {
           break;
+        } else {
+          pendingSends.poll();
         }
       }
       // add the object to the map
       try {
         List<Object> m = messages.get(target).get(source);
+        if (m.size() > 1024) {
+          LOG.info(String.format("%d Partial false"));
+          return false;
+        }
         m.add(object);
         // now check weather we have the messages for this source
         Map<Integer, List<Object>> map = messages.get(target);
@@ -200,6 +209,11 @@ public class BaseReduceCommunication implements IContainer {
           Object o = null;
           for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
             o = e.getValue().remove(0);
+//            if (count % 1000 == 0) {
+//              LOG.info(String.format(
+//                  "%d messages target %d source %d size %d pending %d messages %d",
+//                  id, target, e.getKey(), e.getValue().size(), pendingSends.size(), m.size()));
+//            }
           }
           if (o != null) {
             if (pendingSends.size() > 0) {
@@ -211,6 +225,7 @@ public class BaseReduceCommunication implements IContainer {
               } /*else {
 //                LOG.info(String.format("%d Inject partial %d count: %d", id, target, count++));
               }*/
+              count++;
             }
           } else {
             LOG.severe("We cannot find an object and this is not correct");
@@ -219,6 +234,7 @@ public class BaseReduceCommunication implements IContainer {
       } catch (Throwable t) {
         t.printStackTrace();
       }
+      return true;
     }
   }
 
@@ -232,24 +248,24 @@ public class BaseReduceCommunication implements IContainer {
     private long start = System.nanoTime();
 
     @Override
-    public void init(Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
-      for (Map.Entry<Integer, Map<Integer, List<Integer>>> e : expectedIds.entrySet()) {
+    public void init(Map<Integer, List<Integer>> expectedIds) {
+      for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
         Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
 
-        for (int i : e.getValue().get(MPIContext.DEFAULT_PATH)) {
+        for (int i : e.getValue()) {
           messagesPerTask.put(i, new ArrayList<Object>());
         }
 
         LOG.info(String.format("%d Final Task %d receives from %s",
-            id, e.getKey(), e.getValue().get(MPIContext.DEFAULT_PATH).toString()));
+            id, e.getKey(), e.getValue().toString()));
 
         messages.put(e.getKey(), messagesPerTask);
       }
     }
 
     @Override
-    public void onMessage(int source, int path, int target, Object object) {
-//      LOG.info(String.format("%d Message received for partial %d from %d", id, target, source));
+    public boolean onMessage(int source, int path, int target, Object object) {
+     // LOG.info(String.format("%d Message received for final %d from %d", id, target, source));
       // add the object to the map
       if (count == 0) {
         start = System.nanoTime();
@@ -257,6 +273,9 @@ public class BaseReduceCommunication implements IContainer {
 
       try {
         List<Object> m = messages.get(target).get(source);
+        if (m.size() > 1024) {
+          return false;
+        }
         m.add(object);
         // now check weather we have the messages for this source
         Map<Integer, List<Object>> map = messages.get(target);
@@ -270,14 +289,18 @@ public class BaseReduceCommunication implements IContainer {
           Object o = null;
           for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
             o = e.getValue().remove(0);
+            if (count % 1000 == 0) {
+              LOG.info(String.format("%d messages target %d source %d size %d message %d",
+                  id, target, e.getKey(), e.getValue().size(), m.size()));
+            }
           }
           if (o != null) {
             count++;
-            if (count % 10000 == 0) {
+            if (count % 1000 == 0) {
               LOG.info("Message received for last: " + source + " target: "
-                  + target + " count: " + count);
+                  + target + " count: " + count + " message: " + m.size());
             }
-            if (count >= 10000) {
+            if (count >= 100000) {
               LOG.info("Total time: " + (System.nanoTime() - start) / 1000000);
             }
           } else {
@@ -287,6 +310,7 @@ public class BaseReduceCommunication implements IContainer {
       } catch (Throwable t) {
         t.printStackTrace();
       }
+      return true;
     }
   }
 

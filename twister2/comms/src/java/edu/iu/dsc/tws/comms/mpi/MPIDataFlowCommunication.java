@@ -18,6 +18,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.KeyedMessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.DataFlowCommunication;
@@ -52,11 +53,12 @@ public class MPIDataFlowCommunication extends DataFlowCommunication {
     LOG.info("Merged configurations");
 
     // create the dataflow operation
-    DataFlowOperation dataFlowOperation = new MPIDataFlowReduce(channel, sourceTasks, destTask);
+    DataFlowOperation dataFlowOperation = new MPIDataFlowReduce(channel, sourceTasks,
+        destTask, reduceReceiver, partialReceiver);
     LOG.info("Created dataflow operation");
 
     // intialize the operation
-    dataFlowOperation.init(mergedCfg, type, instancePlan, edge, reduceReceiver, partialReceiver);
+    dataFlowOperation.init(mergedCfg, type, instancePlan, edge);
     LOG.info("Intiailize dataflow operation");
 
     return dataFlowOperation;
@@ -71,11 +73,12 @@ public class MPIDataFlowCommunication extends DataFlowCommunication {
     LOG.info("Merged configurations");
 
     // create the dataflow operation
-    DataFlowOperation dataFlowOperation = new MPIDataFlowBroadcast(channel, sourceTask, destTasks);
+    DataFlowOperation dataFlowOperation = new MPIDataFlowBroadcast(channel, sourceTask,
+        destTasks, receiver);
     LOG.info("Created dataflow operation");
 
     // intialize the operation
-    dataFlowOperation.init(mergedCfg, type, instancePlan, edge, receiver, null);
+    dataFlowOperation.init(mergedCfg, type, instancePlan, edge);
     LOG.info("Intiailize dataflow operation");
     return dataFlowOperation;
   }
@@ -90,11 +93,11 @@ public class MPIDataFlowCommunication extends DataFlowCommunication {
 
     // create the dataflow operation
     DataFlowOperation dataFlowOperation = new MPIDirectDataFlowCommunication(channel,
-        sourceTasks, destTask);
+        sourceTasks, destTask, receiver);
     LOG.info("Created dataflow operation");
 
     // intialize the operation
-    dataFlowOperation.init(mergedCfg, type, instancePlan, edge, receiver, null);
+    dataFlowOperation.init(mergedCfg, type, instancePlan, edge);
     LOG.info("Intiailize dataflow operation");
     return dataFlowOperation;
   }
@@ -109,18 +112,19 @@ public class MPIDataFlowCommunication extends DataFlowCommunication {
 
     // create the dataflow operation
     DataFlowOperation dataFlowOperation = new MPILoadBalance(channel,
-        sourceTasks, destTasks);
+        sourceTasks, destTasks, receiver);
     LOG.info(String.format("%d Created dataflow operation", instancePlan.getThisExecutor()));
 
     // intialize the operation
-    dataFlowOperation.init(mergedCfg, type, instancePlan, edge, receiver, null);
+    dataFlowOperation.init(mergedCfg, type, instancePlan, edge);
     LOG.info(String.format("%d Intiailize dataflow operation", instancePlan.getThisExecutor()));
     return dataFlowOperation;
   }
 
   public DataFlowOperation keyedReduce(Map<String, Object> properties, MessageType type, int edge,
                                        Set<Integer> sourceTasks, Set<Integer> destTasks,
-                                       MessageReceiver receiver, MessageReceiver partial) {
+                                       KeyedMessageReceiver receiver,
+                                       KeyedMessageReceiver partial) {
     LOG.info(String.format("%d Merging configurations", instancePlan.getThisExecutor()));
     // merge with the user specified configuration, user specified will take precedence
     Config mergedCfg = Config.newBuilder().putAll(config).putAll(properties).build();
@@ -128,11 +132,11 @@ public class MPIDataFlowCommunication extends DataFlowCommunication {
 
     // create the dataflow operation
     DataFlowOperation dataFlowOperation = new MPIDataFlowKeyedReduce(channel,
-        sourceTasks, destTasks);
+        sourceTasks, destTasks, receiver, partial);
     LOG.info(String.format("%d Created dataflow operation", instancePlan.getThisExecutor()));
 
     // intialize the operation
-    dataFlowOperation.init(mergedCfg, type, instancePlan, edge, receiver, partial);
+    dataFlowOperation.init(mergedCfg, type, instancePlan, edge);
     LOG.info(String.format("%d Intiailize dataflow operation", instancePlan.getThisExecutor()));
     return dataFlowOperation;
   }

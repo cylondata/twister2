@@ -26,7 +26,7 @@ import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.mpi.MPIContext;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
-public class KeyedInvertedBinaryTreeRouter implements IRouter {
+public class KeyedInvertedBinaryTreeRouter {
   private static final Logger LOG = Logger.getLogger(KeyedInvertedBinaryTreeRouter.class.getName());
   private TaskPlan taskPlan;
   // source -> Path -> task
@@ -195,23 +195,19 @@ public class KeyedInvertedBinaryTreeRouter implements IRouter {
     LOG.info(String.format("****** %d main tasks: %s", plan.getThisExecutor(), mainTask));
   }
 
-  @Override
   public Set<Integer> receivingExecutors() {
     return receiveExecutors;
   }
 
-  @Override
   public Map<Integer, Map<Integer, List<Integer>>> receiveExpectedTaskIds() {
     return receiveTasks;
   }
 
-  @Override
   public boolean isLastReceiver() {
     // check weather this
     return mainTaskLast;
   }
 
-  @Override
   public Map<Integer, Map<Integer, Set<Integer>>> getInternalSendTasks(int source) {
     return sendInternalTasks;
   }
@@ -224,7 +220,6 @@ public class KeyedInvertedBinaryTreeRouter implements IRouter {
     return sendExternalTasksPartial;
   }
 
-  @Override
   public int mainTaskOfExecutor(int executor, int path) {
     if (mainTask.containsKey(path)) {
       return mainTask.get(path);
@@ -234,7 +229,6 @@ public class KeyedInvertedBinaryTreeRouter implements IRouter {
     }
   }
 
-  @Override
   public int destinationIdentifier(int source, int path) {
     Map<Integer, Integer> o = destinationIdentifiers.get(path);
     if (o != null) {
@@ -249,7 +243,6 @@ public class KeyedInvertedBinaryTreeRouter implements IRouter {
     }
   }
 
-  @Override
   public Map<Integer, Integer> getPathAssignedToTasks() {
     return pathToTask;
   }
