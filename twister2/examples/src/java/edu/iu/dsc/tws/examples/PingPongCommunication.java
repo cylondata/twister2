@@ -112,6 +112,11 @@ public class PingPongCommunication implements IContainer {
       }
       return true;
     }
+
+    @Override
+    public void progress() {
+
+    }
   }
 
   /**
