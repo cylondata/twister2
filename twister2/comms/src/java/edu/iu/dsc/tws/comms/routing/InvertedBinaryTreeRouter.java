@@ -183,4 +183,13 @@ public class InvertedBinaryTreeRouter {
     }
     return allSends;
   }
+
+  public Set<Integer> sendQueueIds() {
+    Set<Integer> allSends = new HashSet<>();
+    allSends.addAll(sendExternalTasks.keySet());
+    allSends.addAll(sendInternalTasks.keySet());
+    allSends.addAll(sendExternalTasksPartial.keySet());
+    allSends.add(mainTask * -1);
+    return allSends;
+  }
 }

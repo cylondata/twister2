@@ -24,7 +24,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.routing.InvertedBinaryTreeRouter;
-import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
 public class MPIDataFlowReduce extends MPIDataFlowOperation {
   private static final Logger LOG = Logger.getLogger(MPIDataFlowBroadcast.class.getName());
@@ -65,7 +64,9 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
       this.finalReceiver.init(receiveExpectedTaskIds());
     }
 
-    Set<Integer> srcs = TaskPlanUtils.getTasksOfThisExecutor(instancePlan, sources);
+    LOG.info(String.format("%d all send tasks: %s", executor, router.sendQueueIds()));
+
+    Set<Integer> srcs = router.sendQueueIds();
     for (int s : srcs) {
       // later look at how not to allocate pairs for this each time
       ArrayBlockingQueue<Pair<Object, MPISendMessage>> pendingSendMessages =
@@ -134,7 +135,6 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
 
     Set<Integer> sourceInternalRouting = internalRoutes.get(source);
     if (sourceInternalRouting != null) {
-      // we always use path 0 because only one path
       routingParameters.addInternalRoutes(sourceInternalRouting);
     }
 
@@ -147,7 +147,6 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
 
     Set<Integer> sourceRouting = externalRoutes.get(source);
     if (sourceRouting != null) {
-      // we always use path 0 because only one path
       routingParameters.addExternalRoutes(sourceRouting);
     }
 
@@ -174,7 +173,6 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
     // we should not have the route for main task to outside at this point
     Set<Integer> sourceInternalRouting = internalRouting.get(source);
     if (sourceInternalRouting != null) {
-      // we always use path 0 because only one path
       routingParameters.addInternalRoutes(sourceInternalRouting);
     }
 

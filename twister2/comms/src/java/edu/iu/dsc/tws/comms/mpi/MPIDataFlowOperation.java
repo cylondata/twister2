@@ -21,7 +21,6 @@ import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -238,8 +237,9 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
   protected boolean sendMessagePartial(int source, Object object, int path) {
     lock.lock();
     try {
+      // for partial sends we use minus value to find the correct queue
       ArrayBlockingQueue<Pair<Object, MPISendMessage>> pendingSendMessages =
-          pendingSendMessagesPerSource.get(source);
+          pendingSendMessagesPerSource.get(source * -1);
 
       RoutingParameters routingParameters = partialSendRoutingParameters(source, path);
       MPIMessage mpiMessage = new MPIMessage(source, type, MPIMessageDirection.OUT, this);
@@ -260,9 +260,9 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
         sendCount++;
       }
 //      if (sendCount % 100 == 0) {
-      LOG.info(String.format("%d Partial Pending size: %d %d %d %d",
-          executor, source, pendingSendMessages.size(), sendCount,
-          pendingSendMessages.remainingCapacity()));
+//      LOG.info(String.format("%d Partial Pending size: %d %d %d %d",
+//          executor, source, pendingSendMessages.size(), sendCount,
+//          pendingSendMessages.remainingCapacity()));
 //      }
       return ret;
     } finally {
@@ -294,9 +294,9 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
         sendCountFull++;
       }
 //      if (sendCountFull % 100 == 0) {
-      LOG.info(String.format("%d Full Pending size: %d %d %d %d",
-          executor, source, pendingSendMessages.size(), sendCountFull,
-          pendingSendMessages.remainingCapacity()));
+//      LOG.info(String.format("%d Full Pending size: %d %d %d %d",
+//          executor, source, pendingSendMessages.size(), sendCountFull,
+//          pendingSendMessages.remainingCapacity()));
 //      }
       return ret;
     } finally {
@@ -490,7 +490,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
     }
   }
 
-  private int receiveCount = 0;
+//  private int receiveCount = 0;
 
   @Override
   public void onReceiveComplete(int id, int e, MPIBuffer buffer) {
@@ -509,11 +509,11 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
         Queue<Pair<Object, MPIMessage>> pendingReceiveMessages =
             pendingReceiveMessagesPerSource.get(id);
 
-        receiveCount++;
-        if (receiveCount % 100 == 0) {
-          LOG.log(Level.INFO, String.format("%d received message %d %d %d",
-              executor, id, receiveCount, pendingReceiveMessages.size()));
-        }
+//        receiveCount++;
+//        if (receiveCount % 100 == 0) {
+//          LOG.log(Level.INFO, String.format("%d received message %d %d %d",
+//              executor, id, receiveCount, pendingReceiveMessages.size()));
+//        }
         currentMessages.remove(id);
 
         currentMessage.setReceivedState(MPIMessage.ReceivedState.INIT);

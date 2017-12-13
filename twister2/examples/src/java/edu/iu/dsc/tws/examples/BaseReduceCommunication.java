@@ -127,7 +127,7 @@ public class BaseReduceCommunication implements IContainer {
         LOG.log(Level.INFO, "Starting map worker: " + id);
 //      MPIBuffer data = new MPIBuffer(1024);
         IntData data = generateData();
-        for (int i = 0; i < 10000; i++) {
+        for (int i = 0; i < 11000; i++) {
           // lets generate a message
           while (!reduce.send(task, data)) {
             // lets wait a litte and try again
@@ -139,7 +139,7 @@ public class BaseReduceCommunication implements IContainer {
           }
 //          LOG.info(String.format("%d sending to %d", id, task)
 //              + " count: " + sendCount++);
-          if (i % 100 == 0) {
+          if (i % 1000 == 0) {
             LOG.info(String.format("%d sent %d", id, i));
           }
           Thread.yield();
@@ -205,7 +205,7 @@ public class BaseReduceCommunication implements IContainer {
 //          }
           m.add(object);
           counts.get(target).put(source, c + 1);
-          LOG.info(String.format("%d Partial true %d %d %s", id, source, m.size(), counts));
+//          LOG.info(String.format("%d Partial true %d %d %s", id, source, m.size(), counts));
         }
 
 
@@ -236,12 +236,12 @@ public class BaseReduceCommunication implements IContainer {
                     Integer i = e.getValue();
                     cMap.put(e.getKey(), i - 1);
                   }
-                  LOG.info(String.format("%d reduce send true", id));
+//                  LOG.info(String.format("%d reduce send true", id));
                 } else {
                   canProgress = false;
-                  LOG.info(String.format("%d reduce send false", id));
+//                  LOG.info(String.format("%d reduce send false", id));
                 }
-                if (count % 100 == 0) {
+                if (count % 1000 == 0) {
                   LOG.info(String.format("%d Inject partial %d count: %d %s",
                       id, t, count, counts));
                 }
@@ -335,7 +335,7 @@ public class BaseReduceCommunication implements IContainer {
               }
               if (o != null) {
                 count++;
-                if (count % 100 == 0) {
+                if (count % 1000 == 0) {
                   LOG.info(String.format("%d Last %d count: %d %s",
                       id, target, count, counts));
                 }
