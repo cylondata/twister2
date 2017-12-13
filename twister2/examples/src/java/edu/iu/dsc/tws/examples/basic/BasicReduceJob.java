@@ -26,7 +26,7 @@ public final class BasicReduceJob {
 
     jobBuilder.setName("basic-reduce");
     jobBuilder.setContainerClass(BaseReduceCommunication.class.getName());
-    jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 3);
+    jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 4);
     // now submit the job
     Twister2Submitter.submitContainerJob(jobBuilder.build(), new JobConfig());
   }

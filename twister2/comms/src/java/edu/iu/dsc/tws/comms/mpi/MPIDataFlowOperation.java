@@ -260,9 +260,9 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
         sendCount++;
       }
 //      if (sendCount % 100 == 0) {
-//        LOG.info(String.format("%d Partial Pending size: %d %d %d",
-//            executor, pendingSendMessages.size(), sendCount,
-//            pendingSendMessages.remainingCapacity()));
+      LOG.info(String.format("%d Partial Pending size: %d %d %d %d",
+          executor, source, pendingSendMessages.size(), sendCount,
+          pendingSendMessages.remainingCapacity()));
 //      }
       return ret;
     } finally {
@@ -294,9 +294,9 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
         sendCountFull++;
       }
 //      if (sendCountFull % 100 == 0) {
-//        LOG.info(String.format("%d Full Pending size: %d %d %d",
-//            executor, pendingSendMessages.size(), sendCountFull,
-//            pendingSendMessages.remainingCapacity()));
+      LOG.info(String.format("%d Full Pending size: %d %d %d %d",
+          executor, source, pendingSendMessages.size(), sendCountFull,
+          pendingSendMessages.remainingCapacity()));
 //      }
       return ret;
     } finally {

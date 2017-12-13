@@ -44,7 +44,7 @@ public class BaseReduceCommunication implements IContainer {
 
   private Config config;
 
-  private static final int NO_OF_TASKS = 6;
+  private static final int NO_OF_TASKS = 8;
 
   private int noOfTasksPerExecutor = 2;
 
@@ -202,41 +202,53 @@ public class BaseReduceCommunication implements IContainer {
           canAdd = false;
         } else {
 //          if (count % 10 == 0) {
-//            LOG.info(String.format("%d Partial true %d %d", id, source, m.size()));
 //          }
           m.add(object);
           counts.get(target).put(source, c + 1);
+          LOG.info(String.format("%d Partial true %d %d %s", id, source, m.size(), counts));
         }
 
-        boolean canProgress = true;
-        while (canProgress) {
-          // now check weather we have the messages for this source
-          Map<Integer, List<Object>> map = messages.get(target);
-          boolean found = true;
-          for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
-            if (e.getValue().size() == 0) {
-              found = false;
-              canProgress = false;
-            }
-          }
-          if (found) {
+
+        for (int t : messages.keySet()) {
+          boolean canProgress = true;
+          while (canProgress) {
+            // now check weather we have the messages for this source
+            Map<Integer, List<Object>> map = messages.get(t);
+            Map<Integer, Integer> cMap = counts.get(t);
+            boolean found = true;
             Object o = null;
             for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
-              o = e.getValue().remove(0);
+              if (e.getValue().size() == 0) {
+                found = false;
+                canProgress = false;
+              } else {
+                o = e.getValue().get(0);
+              }
             }
-            if (o != null) {
-              if (reduce.sendPartial(target, o)) {
-                count++;
+            if (found) {
+              if (o != null) {
+                if (reduce.sendPartial(t, o)) {
+                  count++;
+                  for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
+                    o = e.getValue().remove(0);
+                  }
+                  for (Map.Entry<Integer, Integer> e : cMap.entrySet()) {
+                    Integer i = e.getValue();
+                    cMap.put(e.getKey(), i - 1);
+                  }
+                  LOG.info(String.format("%d reduce send true", id));
+                } else {
+                  canProgress = false;
+                  LOG.info(String.format("%d reduce send false", id));
+                }
+                if (count % 100 == 0) {
+                  LOG.info(String.format("%d Inject partial %d count: %d %s",
+                      id, t, count, counts));
+                }
               } else {
                 canProgress = false;
+                LOG.severe("We cannot find an object and this is not correct");
               }
-              if (count % 100 == 0) {
-                LOG.info(String.format("%d Inject partial %d count: %d %s",
-                    id, target, count, counts));
-              }
-            } else {
-              canProgress = false;
-              LOG.severe("We cannot find an object and this is not correct");
             }
           }
         }
@@ -302,41 +314,42 @@ public class BaseReduceCommunication implements IContainer {
           counts.get(target).put(source, c + 1);
         }
 
-        boolean canProgress = true;
-        while (canProgress) {
-          // now check weather we have the messages for this source
-          Map<Integer, List<Object>> map = messages.get(target);
-          boolean found = true;
-          for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
-            if (e.getValue().size() == 0) {
-              found = false;
-              canProgress = false;
-            }
-          }
-          if (found) {
+        for (int t : messages.keySet()) {
+          boolean canProgress = true;
+          while (canProgress) {
+            // now check weather we have the messages for this source
+            Map<Integer, List<Object>> map = messages.get(t);
+            boolean found = true;
             Object o = null;
             for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
-              o = e.getValue().remove(0);
-//            if (count % 1000 == 0) {
-//              LOG.info(String.format("%d messages target %d source %d size %d message %d",
-//                  id, target, e.getKey(), e.getValue().size(), m.size()));
-//            }
+              if (e.getValue().size() == 0) {
+                found = false;
+                canProgress = false;
+              } else {
+                o = e.getValue().get(0);
+              }
             }
-            if (o != null) {
-              count++;
-              if (count % 100 == 0) {
-                LOG.info(String.format("%d Last %d count: %d %s",
-                    id, target, count, counts));
+            if (found) {
+              for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
+                o = e.getValue().remove(0);
               }
-              if (count >= 10000) {
-                LOG.info("Total time: " + (System.nanoTime() - start) / 1000000
-                    + " Count: " + count);
+              if (o != null) {
+                count++;
+                if (count % 100 == 0) {
+                  LOG.info(String.format("%d Last %d count: %d %s",
+                      id, target, count, counts));
+                }
+                if (count >= 10000) {
+                  LOG.info("Total time: " + (System.nanoTime() - start) / 1000000
+                      + " Count: " + count);
+                }
+              } else {
+                LOG.severe("We cannot find an object and this is not correct");
               }
-            } else {
-              LOG.severe("We cannot find an object and this is not correct");
             }
           }
         }
+
         return canAdd;
       } catch (Throwable t) {
         t.printStackTrace();
