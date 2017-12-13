@@ -31,4 +31,9 @@ public interface MessageReceiver {
    * @param object the actual message
    */
   boolean onMessage(int source, int path, int target, Object object);
+
+  /**
+   * This method will be called by the progress
+   */
+  void progress();
 }

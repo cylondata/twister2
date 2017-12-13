@@ -208,55 +208,57 @@ public class BaseReduceCommunication implements IContainer {
 //          LOG.info(String.format("%d Partial true %d %d %s", id, source, m.size(), counts));
         }
 
-
-        for (int t : messages.keySet()) {
-          boolean canProgress = true;
-          while (canProgress) {
-            // now check weather we have the messages for this source
-            Map<Integer, List<Object>> map = messages.get(t);
-            Map<Integer, Integer> cMap = counts.get(t);
-            boolean found = true;
-            Object o = null;
-            for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
-              if (e.getValue().size() == 0) {
-                found = false;
-                canProgress = false;
-              } else {
-                o = e.getValue().get(0);
-              }
-            }
-            if (found) {
-              if (o != null) {
-                if (reduce.sendPartial(t, o)) {
-                  count++;
-                  for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
-                    o = e.getValue().remove(0);
-                  }
-                  for (Map.Entry<Integer, Integer> e : cMap.entrySet()) {
-                    Integer i = e.getValue();
-                    cMap.put(e.getKey(), i - 1);
-                  }
-//                  LOG.info(String.format("%d reduce send true", id));
-                } else {
-                  canProgress = false;
-//                  LOG.info(String.format("%d reduce send false", id));
-                }
-                if (count % 1000 == 0) {
-                  LOG.info(String.format("%d Inject partial %d count: %d %s",
-                      id, t, count, counts));
-                }
-              } else {
-                canProgress = false;
-                LOG.severe("We cannot find an object and this is not correct");
-              }
-            }
-          }
-        }
         return canAdd;
       } catch (Throwable t) {
         t.printStackTrace();
       }
       return true;
+    }
+
+    public void progress() {
+      for (int t : messages.keySet()) {
+        boolean canProgress = true;
+        while (canProgress) {
+          // now check weather we have the messages for this source
+          Map<Integer, List<Object>> map = messages.get(t);
+          Map<Integer, Integer> cMap = counts.get(t);
+          boolean found = true;
+          Object o = null;
+          for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
+            if (e.getValue().size() == 0) {
+              found = false;
+              canProgress = false;
+            } else {
+              o = e.getValue().get(0);
+            }
+          }
+          if (found) {
+            if (o != null) {
+              if (reduce.sendPartial(t, o)) {
+                count++;
+                for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
+                  o = e.getValue().remove(0);
+                }
+                for (Map.Entry<Integer, Integer> e : cMap.entrySet()) {
+                  Integer i = e.getValue();
+                  cMap.put(e.getKey(), i - 1);
+                }
+//                  LOG.info(String.format("%d reduce send true", id));
+              } else {
+                canProgress = false;
+//                  LOG.info(String.format("%d reduce send false", id));
+              }
+              if (count % 1000 == 0) {
+                LOG.info(String.format("%d Inject partial %d count: %d %s",
+                    id, t, count, counts));
+              }
+            } else {
+              canProgress = false;
+              LOG.severe("We cannot find an object and this is not correct");
+            }
+          }
+        }
+      }
     }
   }
 
@@ -314,47 +316,49 @@ public class BaseReduceCommunication implements IContainer {
           counts.get(target).put(source, c + 1);
         }
 
-        for (int t : messages.keySet()) {
-          boolean canProgress = true;
-          while (canProgress) {
-            // now check weather we have the messages for this source
-            Map<Integer, List<Object>> map = messages.get(t);
-            boolean found = true;
-            Object o = null;
-            for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
-              if (e.getValue().size() == 0) {
-                found = false;
-                canProgress = false;
-              } else {
-                o = e.getValue().get(0);
-              }
-            }
-            if (found) {
-              for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
-                o = e.getValue().remove(0);
-              }
-              if (o != null) {
-                count++;
-                if (count % 1000 == 0) {
-                  LOG.info(String.format("%d Last %d count: %d %s",
-                      id, target, count, counts));
-                }
-                if (count >= 10000) {
-                  LOG.info("Total time: " + (System.nanoTime() - start) / 1000000
-                      + " Count: " + count);
-                }
-              } else {
-                LOG.severe("We cannot find an object and this is not correct");
-              }
-            }
-          }
-        }
-
         return canAdd;
       } catch (Throwable t) {
         t.printStackTrace();
       }
       return true;
+    }
+
+    public void progress() {
+      for (int t : messages.keySet()) {
+        boolean canProgress = true;
+        while (canProgress) {
+          // now check weather we have the messages for this source
+          Map<Integer, List<Object>> map = messages.get(t);
+          boolean found = true;
+          Object o = null;
+          for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
+            if (e.getValue().size() == 0) {
+              found = false;
+              canProgress = false;
+            } else {
+              o = e.getValue().get(0);
+            }
+          }
+          if (found) {
+            for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
+              o = e.getValue().remove(0);
+            }
+            if (o != null) {
+              count++;
+              if (count % 1000 == 0) {
+                LOG.info(String.format("%d Last %d count: %d %s",
+                    id, t, count, counts));
+              }
+              if (count >= 10000) {
+                LOG.info("Total time: " + (System.nanoTime() - start) / 1000000
+                    + " Count: " + count);
+              }
+            } else {
+              LOG.severe("We cannot find an object and this is not correct");
+            }
+          }
+        }
+      }
     }
   }
 

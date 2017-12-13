@@ -222,4 +222,12 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
     }
     return integerMapMap;
   }
+
+  @Override
+  public void progress() {
+    super.progress();
+
+    finalReceiver.progress();
+    partialReceiver.progress();
+  }
 }

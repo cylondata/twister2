@@ -194,6 +194,11 @@ public class BaseLoadBalanceCommunication implements IContainer {
       }
       return true;
     }
+
+    @Override
+    public void progress() {
+
+    }
   }
 
   /**

@@ -150,6 +150,11 @@ public class BaseBroadcastCommunication implements IContainer {
           + target + " count: " + count++);
       return true;
     }
+
+    @Override
+    public void progress() {
+
+    }
   }
 
   /**
