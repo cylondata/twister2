@@ -92,18 +92,12 @@ public class BaseLoadBalanceCommunication implements IContainer {
         sources, dests, new LoadBalanceReceiver());
     // the map thread where data is produced
     LOG.info("Starting worker: " + id);
-//    if (id == 0 || id == 1) {
-//      Thread mapThread = new Thread(new MapWorker());
-//      mapThread.start();
-//    }
 
     // we need to progress the communication
-
     try {
       if (id == 0 || id == 1) {
         MPIBuffer data = new MPIBuffer(1024);
         data.setSize(24);
-//        IntData data = generateData();
         for (int i = 0; i < 50000; i++) {
           mapFunction(data);
           channel.progress();
@@ -122,40 +116,13 @@ public class BaseLoadBalanceCommunication implements IContainer {
           loadBalance.progress();
         }
       }
-      // progress the channel
-//        channel.progress();
-//        // we should progress the communication directive
-//        loadBalance.progress();
-//        Thread.yield();
     } catch (Throwable t) {
       t.printStackTrace();
     }
   }
 
-  private int sendCount = 0;
-
-  /**
-   * We are running the map in a separate thread
-   */
-  private class MapWorker implements Runnable {
-    @Override
-    public void run() {
-//      MPIBuffer data = new MPIBuffer(1024);
-//      data.setSize(24);
-      IntData data = generateData();
-      for (int i = 0; i < 5000; i++) {
-        mapFunction(data);
-        Thread.yield();
-      }
-    }
-  }
-
   private void mapFunction(Object data) {
-//    LOG.log(Level.INFO, "Starting map worker");
-//    IntData data = generateData();
-    // lets generate a message
     for (int j = 0; j < NO_OF_TASKS / 4; j++) {
-//      LOG.info(id + " Sending to: " + (id * 2 + j));
       while (!loadBalance.send(id * 2 + j, data)) {
         // lets wait a litte and try again
         channel.progress();
@@ -163,7 +130,6 @@ public class BaseLoadBalanceCommunication implements IContainer {
         loadBalance.progress();
       }
     }
-    sendCount++;
     status = Status.MAP_FINISHED;
   }
 
@@ -184,8 +150,6 @@ public class BaseLoadBalanceCommunication implements IContainer {
         start = System.nanoTime();
       }
       count++;
-//      LOG.info("Message received for last: " + source + " target: "
-//          + target + " count: " + count++);
       if (count % 5000 == 0) {
         LOG.info(id + " Total time: " + (System.nanoTime() - start) / 1000000 + " " + count);
       }
@@ -197,7 +161,6 @@ public class BaseLoadBalanceCommunication implements IContainer {
 
     @Override
     public void progress() {
-
     }
   }
 

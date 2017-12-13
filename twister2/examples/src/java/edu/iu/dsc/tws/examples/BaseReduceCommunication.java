@@ -293,7 +293,6 @@ public class BaseReduceCommunication implements IContainer {
 
     @Override
     public boolean onMessage(int source, int path, int target, Object object) {
-//      LOG.info(String.format("%d Message received for final %d from %d", id, target, source));
       // add the object to the map
       boolean canAdd = true;
       if (count == 0) {
@@ -304,14 +303,8 @@ public class BaseReduceCommunication implements IContainer {
         List<Object> m = messages.get(target).get(source);
         Integer c = counts.get(target).get(source);
         if (m.size() > 128) {
-//          if (count % 10 == 0) {
-//            LOG.info(String.format("%d Final false %d %d", id, source, m.size()));
-//          }
           canAdd = false;
         } else {
-//          if (count % 10 == 0) {
-//            LOG.info(String.format("%d Final true %d %d", id, source, m.size()));
-//          }
           m.add(object);
           counts.get(target).put(source, c + 1);
         }

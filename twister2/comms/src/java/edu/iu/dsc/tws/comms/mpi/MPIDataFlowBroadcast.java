@@ -71,7 +71,7 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
     int src = router.mainTaskOfExecutor(instancePlan.getThisExecutor(), MPIContext.DEFAULT_PATH);
     RoutingParameters routingParameters = sendRoutingParameters(src, MPIContext.DEFAULT_PATH);
     ArrayBlockingQueue<Pair<Object, MPISendMessage>> pendingSendMessages =
-        pendingSendMessagesPerSource.get(source);
+        pendingSendMessagesPerSource.get(src);
 
 //    internalRoutesForSend(src, internalRoutes);
 
@@ -113,6 +113,16 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
       throw new RuntimeException("Final receiver is required");
     }
 
+    LOG.info(String.format("%d all send tasks: %s", executor, router.sendQueueIds()));
+    Set<Integer> srcs = router.sendQueueIds();
+    for (int s : srcs) {
+      // later look at how not to allocate pairs for this each time
+      ArrayBlockingQueue<Pair<Object, MPISendMessage>> pendingSendMessages =
+          new ArrayBlockingQueue<Pair<Object, MPISendMessage>>(
+              MPIContext.sendPendingMax(config));
+      pendingSendMessagesPerSource.put(s, pendingSendMessages);
+    }
+
     int maxReceiveBuffers = MPIContext.receiveBufferCount(config);
     int receiveExecutorsSize = receivingExecutors().size();
     if (receiveExecutorsSize == 0) {
@@ -130,7 +140,6 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
   @Override
   protected RoutingParameters sendRoutingParameters(int s, int path) {
     RoutingParameters routingParameters = new RoutingParameters();
-    LOG.info("SSSSSSSSSSSSSSSSSSSS");
     // get the expected routes
     Map<Integer, Set<Integer>> internalRouting = router.getInternalSendTasks(source);
     if (internalRouting == null) {
@@ -140,7 +149,7 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
     Set<Integer> internalSourceRouting = internalRouting.get(s);
     if (internalSourceRouting != null) {
       // we always use path 0 because only one path
-      LOG.info(String.format("%d internal routing %s", executor, internalSourceRouting));
+//      LOG.info(String.format("%d internal routing %s", executor, internalSourceRouting));
       routingParameters.addInternalRoutes(internalSourceRouting);
     } else {
       LOG.info(String.format("%d No internal routes for source %d", executor, s));
@@ -150,12 +159,12 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
     Map<Integer, Set<Integer>> externalRouting = router.getExternalSendTasks(s);
     if (externalRouting == null) {
       throw new RuntimeException("Un-expected message from source: " + s);
-    } else {
+    } /*else {
       LOG.info(String.format("%d No external routes for source %d", executor, s));
-    }
+    }*/
     Set<Integer> externalSourceRouting = externalRouting.get(s);
     if (externalSourceRouting != null) {
-      LOG.info(String.format("%d external routing %s", executor, externalSourceRouting));
+//      LOG.info(String.format("%d external routing %s", executor, externalSourceRouting));
       // we always use path 0 because only one path
       routingParameters.addExternalRoutes(externalSourceRouting);
     }

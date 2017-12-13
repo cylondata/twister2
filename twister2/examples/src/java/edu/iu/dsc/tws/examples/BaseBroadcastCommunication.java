@@ -117,7 +117,7 @@ public class BaseBroadcastCommunication implements IContainer {
       for (int i = 0; i < 5000; i++) {
         IntData data = generateData();
         // lets generate a message
-        LOG.info("Sending message from task:" + NO_OF_TASKS);
+//        LOG.info("Sending message from task:" + NO_OF_TASKS);
         while (!broadcast.send(NO_OF_TASKS, data)) {
           // lets wait a litte and try again
           try {
@@ -126,8 +126,8 @@ public class BaseBroadcastCommunication implements IContainer {
             e.printStackTrace();
           }
         }
-        LOG.info(String.format("%d sending from %d", id, NO_OF_TASKS)
-            + " count: " + sendCount++);
+//        LOG.info(String.format("%d sending from %d", id, NO_OF_TASKS)
+//            + " count: " + sendCount++);
         sendCount++;
         Thread.yield();
       }
@@ -146,8 +146,11 @@ public class BaseBroadcastCommunication implements IContainer {
 
     @Override
     public boolean onMessage(int source, int path, int target, Object object) {
-      LOG.info("Message received for last: " + source + " target: "
-          + target + " count: " + count++);
+      count++;
+      if (count % 1000 == 0) {
+        LOG.info("Message received for last: " + source + " target: "
+            + target + " count: " + count);
+      }
       return true;
     }
 

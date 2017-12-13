@@ -168,4 +168,12 @@ public class BinaryTreeRouter {
   public Map<Integer, Integer> getPathAssignedToTasks() {
     return null;
   }
+
+  public Set<Integer> sendQueueIds() {
+    Set<Integer> allSends = new HashSet<>();
+    allSends.addAll(sendExternalTasks.keySet());
+    allSends.addAll(sendInternalTasks.keySet());
+    allSends.addAll(sendExternalTasksPartial.keySet());
+    return allSends;
+  }
 }
