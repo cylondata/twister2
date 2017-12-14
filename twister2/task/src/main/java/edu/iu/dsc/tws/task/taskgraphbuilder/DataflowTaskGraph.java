@@ -27,7 +27,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
-public class DataflowTaskGraph<TV, TE> extends AbstractTaskGraphImpl<TV, TE>
+public class DataflowTaskGraph<TV, TE> extends AbstractDataflowTaskGraphImpl<TV, TE>
     implements IDataflowTaskGraph<TV, TE> {
 
   private static final long serialVersionUID = 2233233333444449278L;
@@ -38,7 +38,7 @@ public class DataflowTaskGraph<TV, TE> extends AbstractTaskGraphImpl<TV, TE>
     this(new DataflowTaskEdgeFactory<TV, TE>(taskEdgeClass));
   }
 
-  public DataflowTaskGraph(TaskEdgeFactory<TV, TE> taskEdgeFactory) {
+  public DataflowTaskGraph(IDataflowTaskEdgeFactory<TV, TE> taskEdgeFactory) {
     super(taskEdgeFactory);
   }
 

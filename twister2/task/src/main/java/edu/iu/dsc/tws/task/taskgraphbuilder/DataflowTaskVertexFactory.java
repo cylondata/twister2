@@ -25,7 +25,7 @@ package edu.iu.dsc.tws.task.taskgraphbuilder;
 
 import java.io.Serializable;
 
-public class DataflowTaskVertexFactory<TV> implements TaskVertexFactory<TV>, Serializable {
+public class DataflowTaskVertexFactory<TV> implements IDataflowTaskVertexFactory<TV>, Serializable {
 
   private static final long serialVersionUID = 223333333344459888L;
 

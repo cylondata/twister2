@@ -25,7 +25,7 @@ package edu.iu.dsc.tws.task.taskgraphbuilder;
 
 import java.io.Serializable;
 
-public class IntrusiveTaskEdge implements Cloneable, Serializable {
+public class IntrusiveDataflowTaskEdge implements Cloneable, Serializable {
 
   private static final long serialVersionUID = 2233233333444449278L;
 

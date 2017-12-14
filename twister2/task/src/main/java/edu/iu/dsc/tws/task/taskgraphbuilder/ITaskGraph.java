@@ -31,7 +31,7 @@ import java.util.Set;
  * Task Vertices 'TV' and Task Edges (TE) which is mathematically denoted as Task Graph (TG) -> (TV, TE).
  */
 
-public interface TaskGraph<TV, TE> {
+public interface ITaskGraph<TV, TE> {
 
   Set<TV> getTaskVertexSet();
 
@@ -86,7 +86,7 @@ public interface TaskGraph<TV, TE> {
   /**
    * This method returns the factory instance for the task edge.
    */
-  TaskEdgeFactory<TV, TE> getTaskEdgeFactory();
+  IDataflowTaskEdgeFactory<TV, TE> getTaskEdgeFactory();
 
 
   /**

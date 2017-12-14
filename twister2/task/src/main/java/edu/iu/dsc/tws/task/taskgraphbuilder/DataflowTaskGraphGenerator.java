@@ -36,8 +36,8 @@ public class DataflowTaskGraphGenerator {
   private IDataflowTaskGraph<Mapper, CManager> dataflowTaskGraph =
       new DataflowTaskGraph<Mapper, CManager>(CManager.class);
 
-  private IDataflowTaskGraph<Mapper, DefaultTaskEdge> taskGraph =
-      new DataflowTaskGraph<>(DefaultTaskEdge.class);
+  private IDataflowTaskGraph<Mapper, DefaultDataflowTaskEdge> taskGraph =
+      new DataflowTaskGraph<>(DefaultDataflowTaskEdge.class);
 
   private Set<Mapper> runningTasks = new HashSet<>();
 
@@ -50,12 +50,12 @@ public class DataflowTaskGraphGenerator {
     this.dataflowTaskGraph = dataflowTaskGraph;
   }
 
-  public IDataflowTaskGraph<Mapper, DefaultTaskEdge> getTaskGraph() {
+  public IDataflowTaskGraph<Mapper, DefaultDataflowTaskEdge> getTaskGraph() {
     return taskGraph;
   }
 
   public void setTaskGraph(IDataflowTaskGraph<Mapper,
-      DefaultTaskEdge> taskGraph) {
+      DefaultDataflowTaskEdge> taskGraph) {
     this.taskGraph = taskGraph;
   }
 

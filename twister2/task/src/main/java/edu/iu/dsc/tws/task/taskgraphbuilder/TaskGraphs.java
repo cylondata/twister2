@@ -16,8 +16,8 @@ import java.util.Set;
 public abstract class TaskGraphs {
 
   public static <TV, TE> boolean addTaskGraph(
-      TaskGraph<? super TV, ? super TE> target,
-      TaskGraph<TV, TE> source) {
+      ITaskGraph<? super TV, ? super TE> target,
+      ITaskGraph<TV, TE> source) {
 
     boolean value = addAllTaskVertices(target, source.getTaskVertexSet());
     value |= addAllTaskEdges(target, source, source.taskEdgeSet());
@@ -26,8 +26,8 @@ public abstract class TaskGraphs {
   }
 
   private static <TV, TE> boolean addAllTaskEdges(
-      TaskGraph<? super TV, ? super TE> target,
-      TaskGraph<TV, TE> source,
+      ITaskGraph<? super TV, ? super TE> target,
+      ITaskGraph<TV, TE> source,
       Set<TE> taskEdges) {
 
     boolean flag = false;
@@ -45,7 +45,7 @@ public abstract class TaskGraphs {
   }
 
   private static <TV, TE> boolean addAllTaskVertices(
-      TaskGraph<? super TV, ? super TE> target, Set<TV> taskVertices) {
+      ITaskGraph<? super TV, ? super TE> target, Set<TV> taskVertices) {
 
     boolean flag = false;
 
@@ -56,12 +56,12 @@ public abstract class TaskGraphs {
   }
 
   public static <TV, TE> TE addTaskEdge(
-      TaskGraph<TV, TE> taskGraph,
+      ITaskGraph<TV, TE> taskGraph,
       TV sourceTaskVertex,
       TV targetTaskVertex)
       throws InstantiationException, IllegalAccessException {
 
-    TaskEdgeFactory<TV, TE> taskEdgeFactory = taskGraph.getTaskEdgeFactory();
+    IDataflowTaskEdgeFactory<TV, TE> taskEdgeFactory = taskGraph.getTaskEdgeFactory();
     TE taskEdge = null;
     try {
       taskEdge = taskEdgeFactory.createTaskEdge(sourceTaskVertex, targetTaskVertex);
@@ -75,7 +75,7 @@ public abstract class TaskGraphs {
   }
 
   public static <TV, TE> TE addTaskEdgeWithVertices(
-      TaskGraph<TV, TE> taskGraph,
+      ITaskGraph<TV, TE> taskGraph,
       TV sourceTaskVertex,
       TV targetTaskVertex) {
 
@@ -86,8 +86,8 @@ public abstract class TaskGraphs {
   }
 
   public static <TV, TE> boolean addTaskEdgeWithVertices(
-      TaskGraph<TV, TE> sourceTaskGraph,
-      TaskGraph<TV, TE> targetTaskGraph,
+      ITaskGraph<TV, TE> sourceTaskGraph,
+      ITaskGraph<TV, TE> targetTaskGraph,
       TE taskEdge) {
 
     TV sourceTaskVertex = sourceTaskGraph.getTaskEdgeSource(taskEdge);

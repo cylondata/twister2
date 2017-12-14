@@ -23,7 +23,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.taskgraphbuilder;
 
-public class DefaultTaskEdge extends IntrusiveTaskEdge {
+public class DefaultDataflowTaskEdge extends IntrusiveDataflowTaskEdge {
 
   private static final long serialVersionUID = 2233233333444449278L;
 

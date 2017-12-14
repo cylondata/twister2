@@ -45,48 +45,48 @@ import java.util.Set;
 
 /**
  * It is an abstract implementation of the task graph class which is mainly responsible for creating
- * the task edge factory, task edge map, unmodifiable task and ege set, and more.
+ * the task edge factory, task edge map, unmodifiable task and edge set, and so on.
  */
-public abstract class AbstractTaskGraphImpl<TV, TE>
-    extends AbstractTaskGraph<TV, TE>
-    implements TaskGraph<TV, TE>, Cloneable, Serializable {
+public abstract class AbstractDataflowTaskGraphImpl<TV, TE>
+    extends AbstractDataflowTaskGraph<TV, TE>
+    implements ITaskGraph<TV, TE>, Cloneable, Serializable {
 
   private static final long serialVersionUID = 5523434344343434L;
 
-  private TaskEdgeFactory<TV, TE> taskEdgeFactory;
+  private IDataflowTaskEdgeFactory<TV, TE> taskEdgeFactory;
   private TaskGraphSpecifics taskGraphSpecifics;
-  private Map<TE, IntrusiveTaskEdge> taskEdgeMap;
-  private TaskEdgeSetFactory<TV, TE> taskEdgeSetFactory;
+  private Map<TE, IntrusiveDataflowTaskEdge> taskEdgeMap;
+  private IDataflowTaskEdgeSetFactory<TV, TE> taskEdgeSetFactory;
   //private transient TypeUtil<TV> vertexTypeDecl = null;
-  private transient TypeUtil<TV> vertexTypeDecl = new TypeUtil<>();
+  private transient TypeUtils<TV> vertexTypeDecl = new TypeUtils<>();
   private transient Set<TE> unmodifiableTaskEdgeSet = null;
   private transient Set<TV> unmodifiableTaskVertexSet = null;
 
-  public AbstractTaskGraphImpl(TaskEdgeFactory<TV, TE> taskEdgeFactory) {
+  public AbstractDataflowTaskGraphImpl(IDataflowTaskEdgeFactory<TV, TE> taskEdgeFactory) {
     if (taskEdgeFactory == null) {
       throw new NullPointerException();
     }
     this.taskEdgeFactory = taskEdgeFactory;
-    this.taskEdgeMap = new LinkedHashMap<TE, IntrusiveTaskEdge>();
+    this.taskEdgeMap = new LinkedHashMap<TE, IntrusiveDataflowTaskEdge>();
     this.taskEdgeSetFactory = new ArrayListFactory<TV, TE>();
     this.taskGraphSpecifics = createTaskGraphSpecifics();
   }
 
-  public TaskEdgeSetFactory<TV, TE> getTaskEdgeSetFactory() {
+  public IDataflowTaskEdgeSetFactory<TV, TE> getTaskEdgeSetFactory() {
     return taskEdgeSetFactory;
   }
 
   public void setTaskEdgeSetFactory(
-      TaskEdgeSetFactory<TV, TE> taskEdgeSetFactory) {
+      IDataflowTaskEdgeSetFactory<TV, TE> taskEdgeSetFactory) {
     this.taskEdgeSetFactory = taskEdgeSetFactory;
   }
 
   @Override
-  public TaskEdgeFactory<TV, TE> getTaskEdgeFactory() {
+  public IDataflowTaskEdgeFactory<TV, TE> getTaskEdgeFactory() {
     return taskEdgeFactory;
   }
 
-  public void setTaskEdgeFactory(TaskEdgeFactory<TV, TE> taskEdgeFactory) {
+  public void setTaskEdgeFactory(IDataflowTaskEdgeFactory<TV, TE> taskEdgeFactory) {
     this.taskEdgeFactory = taskEdgeFactory;
   }
 
@@ -129,7 +129,7 @@ public abstract class AbstractTaskGraphImpl<TV, TE>
     if (containsTaskEdge(taskEdge)) {
       return null;
     } else {
-      IntrusiveTaskEdge intrusiveTaskEdge =
+      IntrusiveDataflowTaskEdge intrusiveTaskEdge =
           createIntrusiveTaskEdge(taskEdge, sourceTaskVertex, targetTaskVertex);
 
       taskEdgeMap.put(taskEdge, intrusiveTaskEdge);
@@ -151,7 +151,7 @@ public abstract class AbstractTaskGraphImpl<TV, TE>
     assertTaskVertexExist(taskVertex1);
     assertTaskVertexExist(taskVertex2);
 
-    IntrusiveTaskEdge intrusiveTaskEdge =
+    IntrusiveDataflowTaskEdge intrusiveTaskEdge =
         createIntrusiveTaskEdge(taskEdge, taskVertex1, taskVertex2);
     taskEdgeMap.put(taskEdge, intrusiveTaskEdge);
     taskGraphSpecifics.addTaskEdgeToTouchingVertices(taskEdge);
@@ -159,12 +159,13 @@ public abstract class AbstractTaskGraphImpl<TV, TE>
   }
 
 
-  private IntrusiveTaskEdge createIntrusiveTaskEdge(TE taskEdge, TV taskVertex1, TV taskVertex2) {
-    IntrusiveTaskEdge intrusiveTaskEdge;
-    if (taskEdge instanceof IntrusiveTaskEdge) {
-      intrusiveTaskEdge = (IntrusiveTaskEdge) taskEdge;
+  private IntrusiveDataflowTaskEdge createIntrusiveTaskEdge(
+      TE taskEdge, TV taskVertex1, TV taskVertex2) {
+    IntrusiveDataflowTaskEdge intrusiveTaskEdge;
+    if (taskEdge instanceof IntrusiveDataflowTaskEdge) {
+      intrusiveTaskEdge = (IntrusiveDataflowTaskEdge) taskEdge;
     } else {
-      intrusiveTaskEdge = new IntrusiveTaskEdge();
+      intrusiveTaskEdge = new IntrusiveDataflowTaskEdge();
     }
     intrusiveTaskEdge.source = taskVertex1;
     intrusiveTaskEdge.target = taskVertex2;
@@ -288,9 +289,9 @@ public abstract class AbstractTaskGraphImpl<TV, TE>
         vertexTypeDecl);
   }
 
-  public IntrusiveTaskEdge getIntrusiveTaskEdge(TE taskEdge) {
-    if (taskEdge instanceof IntrusiveTaskEdge) {
-      return (IntrusiveTaskEdge) taskEdge;
+  public IntrusiveDataflowTaskEdge getIntrusiveTaskEdge(TE taskEdge) {
+    if (taskEdge instanceof IntrusiveDataflowTaskEdge) {
+      return (IntrusiveDataflowTaskEdge) taskEdge;
     }
     return taskEdgeMap.get(taskEdge);
   }
@@ -313,7 +314,7 @@ public abstract class AbstractTaskGraphImpl<TV, TE>
     private transient Set<TE> unmodifiableIncomingTaskEdge = null;
     private transient Set<TE> unmodifiableOutgoingTaskEdge = null;
 
-    DirectedDataflowTaskEdgeContainer(TaskEdgeSetFactory<TV, TE> edgeSetFactory,
+    DirectedDataflowTaskEdgeContainer(IDataflowTaskEdgeSetFactory<TV, TE> edgeSetFactory,
                                       TV taskVertex)
         throws InstantiationException, IllegalAccessException {
       try {
@@ -389,7 +390,7 @@ public abstract class AbstractTaskGraphImpl<TV, TE>
       if (containsTaskVertex(sourceTaskVertex)
           && containsTaskVertex(targetTaskVertex)) {
 
-        taskEdges = new ArrayUnenforcedSet<TE>();
+        taskEdges = new ArraySet<TE>();
 
         DirectedDataflowTaskEdgeContainer<TV, TE> ec =
             getTaskEdgeContainer(sourceTaskVertex);
@@ -428,8 +429,8 @@ public abstract class AbstractTaskGraphImpl<TV, TE>
 
     @Override
     public Set<TE> taskEdgesOf(TV taskVertex) {
-      ArrayUnenforcedSet<TE> inAndOut =
-          new ArrayUnenforcedSet<TE>(getTaskEdgeContainer(taskVertex).incomingTaskEdge);
+      ArraySet<TE> inAndOut =
+          new ArraySet<TE>(getTaskEdgeContainer(taskVertex).incomingTaskEdge);
       inAndOut.addAll(getTaskEdgeContainer(taskVertex).outgoingTaskEdge);
 
       return Collections.unmodifiableSet(inAndOut);
@@ -513,10 +514,10 @@ public abstract class AbstractTaskGraphImpl<TV, TE>
     public abstract void removeTaskEdgeFromTouchingVertices(TE taskEdge);
   }
 
-  private class ArrayListFactory<TV, TE> implements TaskEdgeSetFactory<TV, TE> {
+  private class ArrayListFactory<TV, TE> implements IDataflowTaskEdgeSetFactory<TV, TE> {
 
     public Set<TE> createTaskEdgeSet(TV taskVertex) {
-      return new ArrayUnenforcedSet<TE>(1);
+      return new ArraySet<TE>(1);
     }
   }
 }

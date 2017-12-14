@@ -25,7 +25,8 @@ package edu.iu.dsc.tws.task.taskgraphbuilder;
 
 import java.io.Serializable;
 
-public class DataflowTaskEdgeFactory<TV, TE> implements TaskEdgeFactory<TV, TE>, Serializable {
+public class DataflowTaskEdgeFactory<TV, TE> implements
+    IDataflowTaskEdgeFactory<TV, TE>, Serializable {
 
   private static final long serialVersionUID = 2233333333444448888L;
 
@@ -36,7 +37,8 @@ public class DataflowTaskEdgeFactory<TV, TE> implements TaskEdgeFactory<TV, TE>,
   }
 
   @Override
-  public TE createTaskEdge(TV sourceTaskVertex, TV targetTaskVertex) throws IllegalAccessException {
+  public TE createTaskEdge(TV sourceTaskVertex, TV targetTaskVertex)
+      throws IllegalAccessException {
     System.out.println("Source Task Vertex is:" + sourceTaskVertex);
     try {
       return taskEdgeClass.newInstance();

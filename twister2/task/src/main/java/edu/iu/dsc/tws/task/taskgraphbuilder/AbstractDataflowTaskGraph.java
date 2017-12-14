@@ -50,8 +50,8 @@ package edu.iu.dsc.tws.task.taskgraphbuilder;
 import java.util.Collection;
 import java.util.Set;
 
-public abstract class AbstractTaskGraph<TV, TE> implements TaskGraph<TV, TE> {
-  public AbstractTaskGraph() {
+public abstract class AbstractDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
+  public AbstractDataflowTaskGraph() {
   }
 
   @Override
