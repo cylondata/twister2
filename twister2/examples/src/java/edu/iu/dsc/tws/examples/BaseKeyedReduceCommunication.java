@@ -16,9 +16,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -127,7 +125,7 @@ public class BaseKeyedReduceCommunication implements IContainer {
       for (int i = 0; i < 5000; i++) {
         for (int j = 0; j < noOfTasksPerExecutor; j++) {
           // lets generate a message
-          while (!reduce.send(j + id * noOfTasksPerExecutor, data, 0)) {
+          while (!reduce.send(j + id * noOfTasksPerExecutor, data, reduceTask)) {
             // lets wait a litte and try again
             try {
               Thread.sleep(1);
@@ -150,86 +148,10 @@ public class BaseKeyedReduceCommunication implements IContainer {
    */
   private class PartialReduceWorker implements KeyedMessageReceiver {
 
-    private Queue<Object> pendingSends = new LinkedBlockingQueue<Object>();
     // lets keep track of the messages
     // for each task we need to keep track of incoming messages
     private Map<Integer, Map<Integer, List<Object>>> messages = new HashMap<>();
-
-    /**
-     * For each task in this exector, we will receive from the list of tasks in the given path
-     *
-     * @param expectedIds expected task ids
-     */
-    @Override
-    public void init(Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
-      for (Map.Entry<Integer, Map<Integer, List<Integer>>> e : expectedIds.entrySet()) {
-        Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
-
-        Map<Integer, List<Integer>> value = e.getValue();
-        if (value.containsKey(reduceTask)) {
-          for (int i : value.get(reduceTask)) {
-            messagesPerTask.put(i, new ArrayList<Object>());
-          }
-        }
-//        LOG.info(String.format("%d Partial Task %d receives from %s",
-//              id, e.getKey(), e.getValue().get(MPIContext.DEFAULT_PATH).toString()));
-
-        messages.put(e.getKey(), messagesPerTask);
-      }
-    }
-
-    @Override
-    public boolean onMessage(int source, int path, int target, Object object) {
-      LOG.info(String.format("%d Message received for partial %d from %d", id, target, source));
-      while (pendingSends.size() > 0) {
-        boolean r = reduce.sendPartial(target, pendingSends.poll());
-        if (!r) {
-          break;
-        }
-      }
-      // add the object to the map
-      try {
-        List<Object> m = messages.get(target).get(source);
-        m.add(object);
-        // now check weather we have the messages for this source
-        Map<Integer, List<Object>> map = messages.get(target);
-        boolean found = true;
-        for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
-          if (e.getValue().size() == 0) {
-            found = false;
-          }
-        }
-        if (found) {
-          Object o = null;
-          for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
-            o = e.getValue().remove(0);
-          }
-          if (o != null) {
-            if (pendingSends.size() > 0) {
-              pendingSends.offer(object);
-            } else {
-              boolean inject = reduce.sendPartial(target, o);
-              if (!inject) {
-                pendingSends.offer(object);
-              } /*else {
-//                LOG.info(String.format("%d Inject partial %d count: %d", id, target, count++));
-              }*/
-            }
-          } else {
-            LOG.severe("We cannot find an object and this is not correct");
-          }
-        }
-      } catch (Throwable t) {
-        t.printStackTrace();
-      }
-      return true;
-    }
-  }
-
-  private class FinalReduceReceive implements KeyedMessageReceiver {
-    // lets keep track of the messages
-    // for each task we need to keep track of incoming messages
-    private Map<Integer, Map<Integer, List<Object>>> messages = new HashMap<>();
+    private Map<Integer, Map<Integer, Integer>> counts = new HashMap<>();
 
     private int count = 0;
 
@@ -237,20 +159,21 @@ public class BaseKeyedReduceCommunication implements IContainer {
 
     @Override
     public void init(Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
-      for (Map.Entry<Integer, Map<Integer, List<Integer>>> e : expectedIds.entrySet()) {
+      Map<Integer, List<Integer>> exp = expectedIds.get(reduceTask);
+      for (Map.Entry<Integer, List<Integer>> e : exp.entrySet()) {
         Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
+        Map<Integer, Integer> countsPerTask = new HashMap<>();
 
-        Map<Integer, List<Integer>> value = e.getValue();
-        if (value.containsKey(reduceTask)) {
-          for (int i : value.get(reduceTask)) {
-            messagesPerTask.put(i, new ArrayList<Object>());
-          }
+        for (int i : e.getValue()) {
+          messagesPerTask.put(i, new ArrayList<Object>());
+          countsPerTask.put(i, 0);
         }
 
-//        LOG.info(String.format("%d Final Task %d receives from %s",
-//            id, e.getKey(), e.getValue().get(MPIContext.DEFAULT_PATH).toString()));
+        LOG.info(String.format("%d Partial Task %d receives from %s",
+            id, e.getKey(), e.getValue().toString()));
 
         messages.put(e.getKey(), messagesPerTask);
+        counts.put(e.getKey(), countsPerTask);
       }
     }
 
@@ -258,43 +181,169 @@ public class BaseKeyedReduceCommunication implements IContainer {
     public boolean onMessage(int source, int path, int target, Object object) {
       LOG.info(String.format("%d Message received for partial %d from %d", id, target, source));
       // add the object to the map
+      boolean canAdd = true;
+      try {
+        List<Object> m = messages.get(target).get(source);
+        Integer c = counts.get(target).get(source);
+        if (m.size() > 128) {
+//          if (count % 10 == 0) {
+//            LOG.info(String.format("%d Partial false %d %d", id, source, m.size()));
+//          }
+          canAdd = false;
+        } else {
+//          if (count % 10 == 0) {
+//          }
+          m.add(object);
+          counts.get(target).put(source, c + 1);
+//          LOG.info(String.format("%d Partial true %d %d %s", id, source, m.size(), counts));
+        }
+
+        return canAdd;
+      } catch (Throwable t) {
+        t.printStackTrace();
+      }
+      return true;
+    }
+
+    public void progress() {
+      for (int t : messages.keySet()) {
+        boolean canProgress = true;
+        while (canProgress) {
+          // now check weather we have the messages for this source
+          Map<Integer, List<Object>> map = messages.get(t);
+          Map<Integer, Integer> cMap = counts.get(t);
+          boolean found = true;
+          Object o = null;
+          for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
+            if (e.getValue().size() == 0) {
+              found = false;
+              canProgress = false;
+            } else {
+              o = e.getValue().get(0);
+            }
+          }
+          if (found) {
+            if (o != null) {
+              if (reduce.sendPartial(t, o)) {
+                count++;
+                for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
+                  o = e.getValue().remove(0);
+                }
+                for (Map.Entry<Integer, Integer> e : cMap.entrySet()) {
+                  Integer i = e.getValue();
+                  cMap.put(e.getKey(), i - 1);
+                }
+//                  LOG.info(String.format("%d reduce send true", id));
+              } else {
+                canProgress = false;
+//                  LOG.info(String.format("%d reduce send false", id));
+              }
+              if (count % 1000 == 0) {
+                LOG.info(String.format("%d Inject partial %d count: %d %s",
+                    id, t, count, counts));
+              }
+            } else {
+              canProgress = false;
+              LOG.severe("We cannot find an object and this is not correct");
+            }
+          }
+        }
+      }
+    }
+  }
+
+  private class FinalReduceReceive implements KeyedMessageReceiver {
+    // lets keep track of the messages
+    // for each task we need to keep track of incoming messages
+    private Map<Integer, Map<Integer, List<Object>>> messages = new HashMap<>();
+    private Map<Integer, Map<Integer, Integer>> counts = new HashMap<>();
+
+    private int count = 0;
+
+    private long start = System.nanoTime();
+
+    @Override
+    public void init(Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
+      Map<Integer, List<Integer>> exp = expectedIds.get(reduceTask);
+
+      for (Map.Entry<Integer, List<Integer>> e : exp.entrySet()) {
+        Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
+        Map<Integer, Integer> countsPerTask = new HashMap<>();
+
+        for (int i : e.getValue()) {
+          messagesPerTask.put(i, new ArrayList<Object>());
+          countsPerTask.put(i, 0);
+        }
+
+        LOG.info(String.format("%d Final Task %d receives from %s",
+            id, e.getKey(), e.getValue().toString()));
+
+        messages.put(e.getKey(), messagesPerTask);
+        counts.put(e.getKey(), countsPerTask);
+      }
+    }
+
+    @Override
+    public boolean onMessage(int source, int path, int target, Object object) {
+      // add the object to the map
+      boolean canAdd = true;
       if (count == 0) {
         start = System.nanoTime();
       }
 
       try {
         List<Object> m = messages.get(target).get(source);
-        m.add(object);
-        // now check weather we have the messages for this source
-        Map<Integer, List<Object>> map = messages.get(target);
-        boolean found = true;
-        for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
-          if (e.getValue().size() == 0) {
-            found = false;
-          }
+        Integer c = counts.get(target).get(source);
+        if (m.size() > 128) {
+          canAdd = false;
+        } else {
+          m.add(object);
+          counts.get(target).put(source, c + 1);
         }
-        if (found) {
-          Object o = null;
-          for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
-            o = e.getValue().remove(0);
-          }
-          if (o != null) {
-            count++;
-            if (count % 1000 == 0) {
-              LOG.info("Message received for last: " + source + " target: "
-                  + target + " count: " + count);
-            }
-            if (count == 5000) {
-              LOG.info("Total time: " + (System.nanoTime() - start) / 1000000);
-            }
-          } else {
-            LOG.severe("We cannot find an object and this is not correct");
-          }
-        }
+
+        return canAdd;
       } catch (Throwable t) {
         t.printStackTrace();
       }
       return true;
+    }
+
+    public void progress() {
+      for (int t : messages.keySet()) {
+        boolean canProgress = true;
+        while (canProgress) {
+          // now check weather we have the messages for this source
+          Map<Integer, List<Object>> map = messages.get(t);
+          boolean found = true;
+          Object o = null;
+          for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
+            if (e.getValue().size() == 0) {
+              found = false;
+              canProgress = false;
+            } else {
+              o = e.getValue().get(0);
+            }
+          }
+          if (found) {
+            for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
+              o = e.getValue().remove(0);
+            }
+            if (o != null) {
+              count++;
+              if (count % 1000 == 0) {
+                LOG.info(String.format("%d Last %d count: %d %s",
+                    id, t, count, counts));
+              }
+              if (count >= 10000) {
+                LOG.info("Total time: " + (System.nanoTime() - start) / 1000000
+                    + " Count: " + count);
+              }
+            } else {
+              LOG.severe("We cannot find an object and this is not correct");
+            }
+          }
+        }
+      }
     }
   }
 

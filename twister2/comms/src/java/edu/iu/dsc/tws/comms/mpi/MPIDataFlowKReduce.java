@@ -45,6 +45,8 @@ public class MPIDataFlowKReduce implements DataFlowOperation {
 
   private Set<Integer> edges;
 
+  private int executor;
+
   public MPIDataFlowKReduce(TWSMPIChannel chnl,
                             Set<Integer> sources, Set<Integer> destination,
                             KeyedMessageReceiver finalRecv,
@@ -69,6 +71,7 @@ public class MPIDataFlowKReduce implements DataFlowOperation {
     if (reduce == null) {
       throw new RuntimeException("Un-expected destination: " + path);
     }
+    LOG.info(String.format("%d sending message on reduce: %d %d", executor, path, source));
     return reduce.send(source, message, path);
   }
 
@@ -86,6 +89,8 @@ public class MPIDataFlowKReduce implements DataFlowOperation {
     for (MPIDataFlowReduce reduce : reduceMap.values()) {
       reduce.progress();
     }
+    finalReceiver.progress();
+    partialReceiver.progress();
   }
 
   @Override
@@ -94,6 +99,7 @@ public class MPIDataFlowKReduce implements DataFlowOperation {
 
   @Override
   public void init(Config config, MessageType type, TaskPlan instancePlan, int edge) {
+    executor = instancePlan.getThisExecutor();
     Map<Integer, Map<Integer, List<Integer>>> partialReceives = new HashMap<>();
     Map<Integer, Map<Integer, List<Integer>>> finalReceives = new HashMap<>();
 
@@ -134,6 +140,7 @@ public class MPIDataFlowKReduce implements DataFlowOperation {
 
     @Override
     public boolean onMessage(int source, int path, int target, Object object) {
+      LOG.info(String.format("%d received message %d %d %d", executor, path, target, source));
       return partialReceiver.onMessage(source, destination, target, object);
     }
 
@@ -154,6 +161,7 @@ public class MPIDataFlowKReduce implements DataFlowOperation {
 
     @Override
     public boolean onMessage(int source, int path, int target, Object object) {
+      LOG.info(String.format("%d received message %d %d %d", executor, path, target, source));
       return finalReceiver.onMessage(source, destination, target, object);
     }
 

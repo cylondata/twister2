@@ -31,4 +31,6 @@ public interface KeyedMessageReceiver {
    * @param object the actual message
    */
   boolean onMessage(int source, int path, int target, Object object);
+
+  void progress();
 }
