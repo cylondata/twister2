@@ -177,16 +177,6 @@ public class MPIDataFlowKeyedReduce extends MPIDataFlowOperation {
   }
 
   @Override
-  public boolean send(int source, Object message, int path) {
-    return sendMessage(source, message, path);
-  }
-
-  @Override
-  public boolean sendPartial(int source, Object message, int path) {
-    return sendMessagePartial(source, message, path);
-  }
-
-  @Override
   public boolean sendPartial(int source, Object message) {
     // now what we need to do
     throw new RuntimeException("Not implemented");

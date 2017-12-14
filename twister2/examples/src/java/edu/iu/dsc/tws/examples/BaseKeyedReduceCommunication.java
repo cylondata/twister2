@@ -30,7 +30,6 @@ import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.mpi.MPIBuffer;
-import edu.iu.dsc.tws.comms.mpi.MPIContext;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
@@ -49,6 +48,8 @@ public class BaseKeyedReduceCommunication implements IContainer {
 
   private int noOfTasksPerExecutor = 2;
 
+  private int reduceTask = 0;
+
   private enum Status {
     INIT,
     MAP_FINISHED,
@@ -66,6 +67,7 @@ public class BaseKeyedReduceCommunication implements IContainer {
     this.id = containerId;
     this.status = Status.INIT;
     this.noOfTasksPerExecutor = NO_OF_TASKS / plan.noOfContainers();
+    this.reduceTask = NO_OF_TASKS / 2;
 
     // lets create the task plan
     TaskPlan taskPlan = Utils.createReduceTaskPlan(cfg, plan, NO_OF_TASKS);
@@ -88,7 +90,7 @@ public class BaseKeyedReduceCommunication implements IContainer {
     LOG.info("Setting up reduce dataflow operation");
     // this method calls the init method
     // I think this is wrong
-    reduce = channel.keyedReduce(newCfg, MessageType.BUFFER, 0, sources,
+    reduce = channel.keyedReduce(newCfg, MessageType.BUFFER, destinations, sources,
         destinations, new FinalReduceReceive(), new PartialReduceWorker());
 
     if (id == 0 || id == 1) {
@@ -164,8 +166,8 @@ public class BaseKeyedReduceCommunication implements IContainer {
         Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
 
         Map<Integer, List<Integer>> value = e.getValue();
-        if (value.containsKey(MPIContext.DEFAULT_PATH)) {
-          for (int i : value.get(MPIContext.DEFAULT_PATH)) {
+        if (value.containsKey(reduceTask)) {
+          for (int i : value.get(reduceTask)) {
             messagesPerTask.put(i, new ArrayList<Object>());
           }
         }
@@ -239,8 +241,8 @@ public class BaseKeyedReduceCommunication implements IContainer {
         Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
 
         Map<Integer, List<Integer>> value = e.getValue();
-        if (value.containsKey(MPIContext.DEFAULT_PATH)) {
-          for (int i : value.get(MPIContext.DEFAULT_PATH)) {
+        if (value.containsKey(reduceTask)) {
+          for (int i : value.get(reduceTask)) {
             messagesPerTask.put(i, new ArrayList<Object>());
           }
         }

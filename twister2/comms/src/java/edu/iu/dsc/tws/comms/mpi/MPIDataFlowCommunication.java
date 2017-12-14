@@ -121,7 +121,8 @@ public class MPIDataFlowCommunication extends DataFlowCommunication {
     return dataFlowOperation;
   }
 
-  public DataFlowOperation keyedReduce(Map<String, Object> properties, MessageType type, int edge,
+  public DataFlowOperation keyedReduce(Map<String, Object> properties, MessageType type,
+                                       Set<Integer> edge,
                                        Set<Integer> sourceTasks, Set<Integer> destTasks,
                                        KeyedMessageReceiver receiver,
                                        KeyedMessageReceiver partial) {
@@ -131,12 +132,12 @@ public class MPIDataFlowCommunication extends DataFlowCommunication {
     LOG.info("Merged configurations");
 
     // create the dataflow operation
-    DataFlowOperation dataFlowOperation = new MPIDataFlowKeyedReduce(channel,
-        sourceTasks, destTasks, receiver, partial);
+    DataFlowOperation dataFlowOperation = new MPIDataFlowKReduce(channel,
+        sourceTasks, destTasks, receiver, partial, edge);
     LOG.info(String.format("%d Created dataflow operation", instancePlan.getThisExecutor()));
 
     // intialize the operation
-    dataFlowOperation.init(mergedCfg, type, instancePlan, edge);
+    dataFlowOperation.init(mergedCfg, type, instancePlan, 0);
     LOG.info(String.format("%d Intiailize dataflow operation", instancePlan.getThisExecutor()));
     return dataFlowOperation;
   }

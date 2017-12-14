@@ -24,7 +24,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.routing.InvertedBinaryTreeRouter;
-import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
 public class MPIDataFlowReduce extends MPIDataFlowOperation {
   private static final Logger LOG = Logger.getLogger(MPIDataFlowBroadcast.class.getName());
@@ -41,20 +40,31 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
 
   private MessageReceiver partialReceiver;
 
-  public MPIDataFlowReduce(TWSMPIChannel channel, Set<Integer> sources, int destination,
-                           MessageReceiver finalRcvr, MessageReceiver partialRcvr) {
-    super(channel);
+  private int index = 0;
 
+  private int pathToUse = MPIContext.DEFAULT_PATH;
+
+  public MPIDataFlowReduce(TWSMPIChannel channel, Set<Integer> sources, int destination,
+                           MessageReceiver finalRcvr,
+                           MessageReceiver partialRcvr, int indx, int p) {
+    super(channel);
+    this.index = indx;
     this.sources = sources;
     this.destination = destination;
     this.finalReceiver = finalRcvr;
     this.partialReceiver = partialRcvr;
+    this.pathToUse = p;
+  }
+
+  public MPIDataFlowReduce(TWSMPIChannel channel, Set<Integer> sources, int destination,
+                           MessageReceiver finalRcvr, MessageReceiver partialRcvr) {
+    this(channel, sources, destination, finalRcvr, partialRcvr, 0, 0);
   }
 
   public void setupRouting() {
     // we only have one path
     this.router = new InvertedBinaryTreeRouter(config, instancePlan,
-        destination, sources);
+        destination, sources, index);
 
     // initialize the receive
     if (this.partialReceiver != null && !isLastReceiver()) {
@@ -65,7 +75,9 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
       this.finalReceiver.init(receiveExpectedTaskIds());
     }
 
-    Set<Integer> srcs = TaskPlanUtils.getTasksOfThisExecutor(instancePlan, sources);
+    LOG.info(String.format("%d all send tasks: %s", executor, router.sendQueueIds()));
+
+    Set<Integer> srcs = router.sendQueueIds();
     for (int s : srcs) {
       // later look at how not to allocate pairs for this each time
       ArrayBlockingQueue<Pair<Object, MPISendMessage>> pendingSendMessages =
@@ -87,6 +99,8 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
       pendingReceiveMessagesPerSource.put(e, pendingReceiveMessages);
     }
   }
+
+
 
   @Override
   protected boolean isLast(int source, int path, int taskIdentifier) {
@@ -134,7 +148,6 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
 
     Set<Integer> sourceInternalRouting = internalRoutes.get(source);
     if (sourceInternalRouting != null) {
-      // we always use path 0 because only one path
       routingParameters.addInternalRoutes(sourceInternalRouting);
     }
 
@@ -147,7 +160,6 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
 
     Set<Integer> sourceRouting = externalRoutes.get(source);
     if (sourceRouting != null) {
-      // we always use path 0 because only one path
       routingParameters.addExternalRoutes(sourceRouting);
     }
 
@@ -174,7 +186,6 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
     // we should not have the route for main task to outside at this point
     Set<Integer> sourceInternalRouting = internalRouting.get(source);
     if (sourceInternalRouting != null) {
-      // we always use path 0 because only one path
       routingParameters.addInternalRoutes(sourceInternalRouting);
     }
 
@@ -200,9 +211,14 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
   }
 
   @Override
+  public boolean send(int source, Object message) {
+    return sendMessage(source, message, pathToUse);
+  }
+
+  @Override
   public boolean sendPartial(int source, Object message) {
     // now what we need to do
-    return sendMessagePartial(source, message, MPIContext.DEFAULT_PATH);
+    return sendMessagePartial(source, message, pathToUse);
   }
 
   @Override
@@ -210,7 +226,7 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
     return router.receivingExecutors();
   }
 
-  protected Map<Integer, List<Integer>> receiveExpectedTaskIds() {
+  public Map<Integer, List<Integer>> receiveExpectedTaskIds() {
     Map<Integer, List<Integer>> integerMapMap = router.receiveExpectedTaskIds();
     // add the main task to receive from iteself
     int key = router.mainTaskOfExecutor(instancePlan.getThisExecutor(), MPIContext.DEFAULT_PATH);
@@ -223,5 +239,13 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
       mainReceives.add(key);
     }
     return integerMapMap;
+  }
+
+  @Override
+  public void progress() {
+    super.progress();
+
+    finalReceiver.progress();
+    partialReceiver.progress();
   }
 }

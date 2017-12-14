@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Logger;
@@ -106,6 +107,19 @@ public class MPILoadBalance extends MPIDataFlowOperation {
           new ArrayBlockingQueue<Pair<Object, MPISendMessage>>(
               MPIContext.sendPendingMax(config));
       pendingSendMessagesPerSource.put(s, pendingSendMessages);
+    }
+
+    int maxReceiveBuffers = MPIContext.receiveBufferCount(config);
+    int receiveExecutorsSize = receivingExecutors().size();
+    if (receiveExecutorsSize == 0) {
+      receiveExecutorsSize = 1;
+    }
+    Set<Integer> execs = router.receivingExecutors();
+    for (int e : execs) {
+      Queue<Pair<Object, MPIMessage>> pendingReceiveMessages =
+          new ArrayBlockingQueue<Pair<Object, MPIMessage>>(
+              maxReceiveBuffers * 2 * receiveExecutorsSize);
+      pendingReceiveMessagesPerSource.put(e, pendingReceiveMessages);
     }
   }
 

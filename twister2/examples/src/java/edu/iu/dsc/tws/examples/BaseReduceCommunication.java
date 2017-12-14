@@ -44,7 +44,7 @@ public class BaseReduceCommunication implements IContainer {
 
   private Config config;
 
-  private static final int NO_OF_TASKS = 6;
+  private static final int NO_OF_TASKS = 8;
 
   private int noOfTasksPerExecutor = 2;
 
@@ -127,7 +127,7 @@ public class BaseReduceCommunication implements IContainer {
         LOG.log(Level.INFO, "Starting map worker: " + id);
 //      MPIBuffer data = new MPIBuffer(1024);
         IntData data = generateData();
-        for (int i = 0; i < 10000; i++) {
+        for (int i = 0; i < 11000; i++) {
           // lets generate a message
           while (!reduce.send(task, data)) {
             // lets wait a litte and try again
@@ -139,7 +139,7 @@ public class BaseReduceCommunication implements IContainer {
           }
 //          LOG.info(String.format("%d sending to %d", id, task)
 //              + " count: " + sendCount++);
-          if (i % 100 == 0) {
+          if (i % 1000 == 0) {
             LOG.info(String.format("%d sent %d", id, i));
           }
           Thread.yield();
@@ -202,37 +202,55 @@ public class BaseReduceCommunication implements IContainer {
           canAdd = false;
         } else {
 //          if (count % 10 == 0) {
-//            LOG.info(String.format("%d Partial true %d %d", id, source, m.size()));
 //          }
           m.add(object);
           counts.get(target).put(source, c + 1);
+//          LOG.info(String.format("%d Partial true %d %d %s", id, source, m.size(), counts));
         }
 
+        return canAdd;
+      } catch (Throwable t) {
+        t.printStackTrace();
+      }
+      return true;
+    }
+
+    public void progress() {
+      for (int t : messages.keySet()) {
         boolean canProgress = true;
         while (canProgress) {
           // now check weather we have the messages for this source
-          Map<Integer, List<Object>> map = messages.get(target);
+          Map<Integer, List<Object>> map = messages.get(t);
+          Map<Integer, Integer> cMap = counts.get(t);
           boolean found = true;
+          Object o = null;
           for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
             if (e.getValue().size() == 0) {
               found = false;
               canProgress = false;
+            } else {
+              o = e.getValue().get(0);
             }
           }
           if (found) {
-            Object o = null;
-            for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
-              o = e.getValue().remove(0);
-            }
             if (o != null) {
-              if (reduce.sendPartial(target, o)) {
+              if (reduce.sendPartial(t, o)) {
                 count++;
+                for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
+                  o = e.getValue().remove(0);
+                }
+                for (Map.Entry<Integer, Integer> e : cMap.entrySet()) {
+                  Integer i = e.getValue();
+                  cMap.put(e.getKey(), i - 1);
+                }
+//                  LOG.info(String.format("%d reduce send true", id));
               } else {
                 canProgress = false;
+//                  LOG.info(String.format("%d reduce send false", id));
               }
-              if (count % 100 == 0) {
+              if (count % 1000 == 0) {
                 LOG.info(String.format("%d Inject partial %d count: %d %s",
-                    id, target, count, counts));
+                    id, t, count, counts));
               }
             } else {
               canProgress = false;
@@ -240,11 +258,7 @@ public class BaseReduceCommunication implements IContainer {
             }
           }
         }
-        return canAdd;
-      } catch (Throwable t) {
-        t.printStackTrace();
       }
-      return true;
     }
   }
 
@@ -279,7 +293,6 @@ public class BaseReduceCommunication implements IContainer {
 
     @Override
     public boolean onMessage(int source, int path, int target, Object object) {
-//      LOG.info(String.format("%d Message received for final %d from %d", id, target, source));
       // add the object to the map
       boolean canAdd = true;
       if (count == 0) {
@@ -290,43 +303,44 @@ public class BaseReduceCommunication implements IContainer {
         List<Object> m = messages.get(target).get(source);
         Integer c = counts.get(target).get(source);
         if (m.size() > 128) {
-//          if (count % 10 == 0) {
-//            LOG.info(String.format("%d Final false %d %d", id, source, m.size()));
-//          }
           canAdd = false;
         } else {
-//          if (count % 10 == 0) {
-//            LOG.info(String.format("%d Final true %d %d", id, source, m.size()));
-//          }
           m.add(object);
           counts.get(target).put(source, c + 1);
         }
 
+        return canAdd;
+      } catch (Throwable t) {
+        t.printStackTrace();
+      }
+      return true;
+    }
+
+    public void progress() {
+      for (int t : messages.keySet()) {
         boolean canProgress = true;
         while (canProgress) {
           // now check weather we have the messages for this source
-          Map<Integer, List<Object>> map = messages.get(target);
+          Map<Integer, List<Object>> map = messages.get(t);
           boolean found = true;
+          Object o = null;
           for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
             if (e.getValue().size() == 0) {
               found = false;
               canProgress = false;
+            } else {
+              o = e.getValue().get(0);
             }
           }
           if (found) {
-            Object o = null;
             for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
               o = e.getValue().remove(0);
-//            if (count % 1000 == 0) {
-//              LOG.info(String.format("%d messages target %d source %d size %d message %d",
-//                  id, target, e.getKey(), e.getValue().size(), m.size()));
-//            }
             }
             if (o != null) {
               count++;
-              if (count % 100 == 0) {
+              if (count % 1000 == 0) {
                 LOG.info(String.format("%d Last %d count: %d %s",
-                    id, target, count, counts));
+                    id, t, count, counts));
               }
               if (count >= 10000) {
                 LOG.info("Total time: " + (System.nanoTime() - start) / 1000000
@@ -337,11 +351,7 @@ public class BaseReduceCommunication implements IContainer {
             }
           }
         }
-        return canAdd;
-      } catch (Throwable t) {
-        t.printStackTrace();
       }
-      return true;
     }
   }
 
