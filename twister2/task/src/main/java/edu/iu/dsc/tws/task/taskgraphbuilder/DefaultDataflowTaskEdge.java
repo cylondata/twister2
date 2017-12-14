@@ -25,17 +25,15 @@ package edu.iu.dsc.tws.task.taskgraphbuilder;
 
 public class DefaultDataflowTaskEdge extends IntrusiveDataflowTaskEdge {
 
-  private static final long serialVersionUID = 2233233333444449278L;
-
-  public Object getSource() {
-    return source;
+  public Object getSourceTaskVertex() {
+    return sourceTaskVertex;
   }
 
-  public Object getTarget() {
-    return target;
+  public Object getTargetVertex() {
+    return targetTaskVertex;
   }
 
   public String toString() {
-    return "(" + source + " : " + target + ")";
+    return "(" + sourceTaskVertex + " : " + targetTaskVertex + ")";
   }
 }
