@@ -28,7 +28,7 @@ import java.util.Set;
 /**
  * This is the main interface for Dataflow task graph.
  */
-public interface IDataflowTaskGraph<TV, TE> extends TaskGraph<TV, TE> {
+public interface IDataflowTaskGraph<TV, TE> extends ITaskGraph<TV, TE> {
 
   /**
    * This method is responsible for returning the number of inward directed edges for the task vertex 'TV'

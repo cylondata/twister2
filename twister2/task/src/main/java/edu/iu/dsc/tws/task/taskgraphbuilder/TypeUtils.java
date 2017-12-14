@@ -11,10 +11,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.taskgraphbuilder;
 
-public class TypeUtil<T> {
+public class TypeUtils<T> {
 
   @SuppressWarnings("unchecked")
-  public <T> T uncheckedCast(Object object, TypeUtil<T> typeDecl) {
+  public <T> T uncheckedCast(Object object, TypeUtils<T> typeDecl) {
     return (T) object;
   }
 }

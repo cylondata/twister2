@@ -23,11 +23,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.taskgraphbuilder;
 
-import java.io.Serializable;
-
-public class DataflowTaskVertexFactory<TV> implements TaskVertexFactory<TV>, Serializable {
-
-  private static final long serialVersionUID = 223333333344459888L;
+public class DataflowTaskVertexFactory<TV> implements IDataflowTaskVertexFactory<TV> {
 
   private Class<? extends TV> taskVertexClass;
 
