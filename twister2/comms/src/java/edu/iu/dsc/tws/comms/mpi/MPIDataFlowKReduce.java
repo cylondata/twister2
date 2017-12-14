@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -18,6 +20,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.KeyedMessageReceiver;
+import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 
@@ -38,14 +41,21 @@ public class MPIDataFlowKReduce implements DataFlowOperation {
   // the final receiver
   private KeyedMessageReceiver finalReceiver;
 
-  public MPIDataFlowKReduce(TWSMPIChannel channel,
-                                Set<Integer> sources, Set<Integer> destination,
-                                KeyedMessageReceiver finalRecv, KeyedMessageReceiver partialRecv) {
+  private TWSMPIChannel channel;
 
+  private Set<Integer> edges;
+
+  public MPIDataFlowKReduce(TWSMPIChannel chnl,
+                            Set<Integer> sources, Set<Integer> destination,
+                            KeyedMessageReceiver finalRecv,
+                            KeyedMessageReceiver partialRecv, Set<Integer> es) {
+    this.channel = chnl;
     this.sources = sources;
     this.destinations = destination;
     this.partialReceiver = partialRecv;
     this.finalReceiver = finalRecv;
+    this.edges = es;
+    this.reduceMap = new HashMap<>();
   }
 
   @Override
@@ -84,12 +94,71 @@ public class MPIDataFlowKReduce implements DataFlowOperation {
 
   @Override
   public void init(Config config, MessageType type, TaskPlan instancePlan, int edge) {
+    Map<Integer, Map<Integer, List<Integer>>> partialReceives = new HashMap<>();
+    Map<Integer, Map<Integer, List<Integer>>> finalReceives = new HashMap<>();
 
+    int count = 0;
+    for (int dest : destinations) {
+      ReducePartialReceiver partialRcvr = new ReducePartialReceiver(dest);
+      ReduceFinalReceiver finalRcvr = new ReduceFinalReceiver(dest);
+      MPIDataFlowReduce reduce = new MPIDataFlowReduce(channel, sources, dest,
+          finalRcvr, partialRcvr, count, dest);
+      reduce.init(config, type, instancePlan, 0);
+      reduceMap.put(dest, reduce);
+      count++;
+
+      partialReceives.put(dest, reduce.receiveExpectedTaskIds());
+      finalReceives.put(dest, reduce.receiveExpectedTaskIds());
+    }
+
+    finalReceiver.init(finalReceives);
+    partialReceiver.init(partialReceives);
   }
 
   @Override
   public boolean sendPartial(int source, Object message) {
     // now what we need to do
     throw new RuntimeException("Not implemented");
+  }
+
+  private class ReducePartialReceiver implements MessageReceiver {
+    private int destination;
+
+    ReducePartialReceiver(int dst) {
+      this.destination = dst;
+    }
+
+    @Override
+    public void init(Map<Integer, List<Integer>> expectedIds) {
+    }
+
+    @Override
+    public boolean onMessage(int source, int path, int target, Object object) {
+      return partialReceiver.onMessage(source, destination, target, object);
+    }
+
+    public void progress() {
+    }
+  }
+
+  private class ReduceFinalReceiver implements MessageReceiver {
+    private int destination;
+
+    ReduceFinalReceiver(int dest) {
+      this.destination = dest;
+    }
+
+    @Override
+    public void init(Map<Integer, List<Integer>> expectedIds) {
+    }
+
+    @Override
+    public boolean onMessage(int source, int path, int target, Object object) {
+      return finalReceiver.onMessage(source, destination, target, object);
+    }
+
+    @Override
+    public void progress() {
+    }
   }
 }

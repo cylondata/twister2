@@ -44,13 +44,13 @@ public class InvertedBinaryTreeRouter {
    * @param dests
    */
   public InvertedBinaryTreeRouter(Config cfg, TaskPlan plan,
-                                  int root, Set<Integer> dests) {
+                                  int root, Set<Integer> dests, int index) {
     int interNodeDegree = MPIContext.interNodeDegree(cfg, 2);
     int intraNodeDegree = MPIContext.intraNodeDegree(cfg, 2);
     mainTaskLast = false;
     // lets build the tree
     BinaryTree tree = new BinaryTree(interNodeDegree, intraNodeDegree, plan, root, dests);
-    Node treeRoot = tree.buildInterGroupTree(0);
+    Node treeRoot = tree.buildInterGroupTree(index);
 
     Set<Integer> thisExecutorTasks = plan.getChannelsOfExecutor(plan.getThisExecutor());
     /*
