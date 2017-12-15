@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,8 +73,9 @@ public class MPIDataFlowKReduce implements DataFlowOperation {
     if (reduce == null) {
       throw new RuntimeException("Un-expected destination: " + path);
     }
-    LOG.info(String.format("%d sending message on reduce: %d %d", executor, path, source));
-    return reduce.send(source, message, path);
+    boolean send = reduce.send(source, message, path);
+//    LOG.info(String.format("%d sending message on reduce: %d %d %b", executor, path, source, send));
+    return send;
   }
 
   @Override
@@ -81,7 +84,9 @@ public class MPIDataFlowKReduce implements DataFlowOperation {
     if (reduce == null) {
       throw new RuntimeException("Un-expected destination: " + path);
     }
-    return reduce.sendPartial(source, message, path);
+    boolean send = reduce.sendPartial(source, message, path);
+//    LOG.info(String.format("%d sending message on reduce: %d %d %b", executor, path, source, send));
+    return send;
   }
 
   @Override
@@ -102,14 +107,15 @@ public class MPIDataFlowKReduce implements DataFlowOperation {
     executor = instancePlan.getThisExecutor();
     Map<Integer, Map<Integer, List<Integer>>> partialReceives = new HashMap<>();
     Map<Integer, Map<Integer, List<Integer>>> finalReceives = new HashMap<>();
-
+    List<Integer> edgeList = new ArrayList<>(edges);
+    Collections.sort(edgeList);
     int count = 0;
     for (int dest : destinations) {
       ReducePartialReceiver partialRcvr = new ReducePartialReceiver(dest);
       ReduceFinalReceiver finalRcvr = new ReduceFinalReceiver(dest);
       MPIDataFlowReduce reduce = new MPIDataFlowReduce(channel, sources, dest,
           finalRcvr, partialRcvr, count, dest);
-      reduce.init(config, type, instancePlan, 0);
+      reduce.init(config, type, instancePlan, edgeList.get(count));
       reduceMap.put(dest, reduce);
       count++;
 
@@ -140,7 +146,7 @@ public class MPIDataFlowKReduce implements DataFlowOperation {
 
     @Override
     public boolean onMessage(int source, int path, int target, Object object) {
-      LOG.info(String.format("%d received message %d %d %d", executor, path, target, source));
+//      LOG.info(String.format("%d received message %d %d %d", executor, path, target, source));
       return partialReceiver.onMessage(source, destination, target, object);
     }
 
@@ -161,7 +167,7 @@ public class MPIDataFlowKReduce implements DataFlowOperation {
 
     @Override
     public boolean onMessage(int source, int path, int target, Object object) {
-      LOG.info(String.format("%d received message %d %d %d", executor, path, target, source));
+//      LOG.info(String.format("%d received message %d %d %d", executor, path, target, source));
       return finalReceiver.onMessage(source, destination, target, object);
     }
 

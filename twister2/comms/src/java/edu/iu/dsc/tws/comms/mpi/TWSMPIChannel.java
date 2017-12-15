@@ -139,8 +139,8 @@ public class TWSMPIChannel {
     if (offer) {
       pendingSendCount++;
     }
-//    LOG.info(String.format("%d Pending sends count: %d wait: %d",
-//        executor, pendingSends.size(), waitForCompletionSends.size()));
+//    LOG.info(String.format("%d Pending sends count: %d wait: %d id:%d",
+//        executor, pendingSends.size(), waitForCompletionSends.size(), id));
     return offer;
 //    } finally {
 //      lock.unlock();

@@ -122,7 +122,7 @@ public class BaseKeyedReduceCommunication implements IContainer {
       LOG.log(Level.INFO, "Starting map worker: " + id);
       MPIBuffer data = new MPIBuffer(1024);
       data.setSize(24);
-      for (int i = 0; i < 5000; i++) {
+      for (int i = 0; i < 10000; i++) {
         for (int j = 0; j < noOfTasksPerExecutor; j++) {
           // lets generate a message
           while (!reduce.send(j + id * noOfTasksPerExecutor, data, reduceTask)) {
@@ -133,8 +133,8 @@ public class BaseKeyedReduceCommunication implements IContainer {
               e.printStackTrace();
             }
           }
-          LOG.info(String.format("%d sending to %d", id, j + id * noOfTasksPerExecutor)
-              + " count: " + sendCount++);
+//          LOG.info(String.format("%d sending to %d", id, j + id * noOfTasksPerExecutor)
+//              + " count: " + sendCount++);
         }
         sendCount++;
         Thread.yield();
@@ -179,7 +179,8 @@ public class BaseKeyedReduceCommunication implements IContainer {
 
     @Override
     public boolean onMessage(int source, int path, int target, Object object) {
-      LOG.info(String.format("%d Message received for partial %d from %d", id, target, source));
+//      LOG.info(String.format("%d Message received for target %d source %d %d path",
+//          id, target, source, path));
       // add the object to the map
       boolean canAdd = true;
       try {
@@ -224,7 +225,7 @@ public class BaseKeyedReduceCommunication implements IContainer {
           }
           if (found) {
             if (o != null) {
-              if (reduce.sendPartial(t, o)) {
+              if (reduce.sendPartial(t, o, reduceTask)) {
                 count++;
                 for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
                   o = e.getValue().remove(0);
@@ -238,7 +239,7 @@ public class BaseKeyedReduceCommunication implements IContainer {
                 canProgress = false;
 //                  LOG.info(String.format("%d reduce send false", id));
               }
-              if (count % 1000 == 0) {
+              if (count % 100 == 0) {
                 LOG.info(String.format("%d Inject partial %d count: %d %s",
                     id, t, count, counts));
               }
@@ -275,16 +276,17 @@ public class BaseKeyedReduceCommunication implements IContainer {
           countsPerTask.put(i, 0);
         }
 
-        LOG.info(String.format("%d Final Task %d receives from %s",
-            id, e.getKey(), e.getValue().toString()));
-
         messages.put(e.getKey(), messagesPerTask);
         counts.put(e.getKey(), countsPerTask);
       }
+      LOG.info(String.format("%d Final Task receives from %s",
+          id, expectedIds));
     }
 
     @Override
     public boolean onMessage(int source, int path, int target, Object object) {
+//      LOG.info(String.format("%d Final receive source %d path %d target %d",
+//          id, source, path, target));
       // add the object to the map
       boolean canAdd = true;
       if (count == 0) {
@@ -330,7 +332,7 @@ public class BaseKeyedReduceCommunication implements IContainer {
             }
             if (o != null) {
               count++;
-              if (count % 1000 == 0) {
+              if (count % 100 == 0) {
                 LOG.info(String.format("%d Last %d count: %d %s",
                     id, t, count, counts));
               }
