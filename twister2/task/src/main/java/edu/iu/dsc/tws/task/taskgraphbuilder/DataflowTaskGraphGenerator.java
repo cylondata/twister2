@@ -13,8 +13,8 @@ public class DataflowTaskGraphGenerator {
   private IDataflowTaskGraph<Mapper, CManager> dataflowTaskGraph =
       new DataflowTaskGraph<Mapper, CManager>(CManager.class);
 
-  private IDataflowTaskGraph<Mapper, DefaultDataflowTaskEdge> taskGraph =
-      new DataflowTaskGraph<>(DefaultDataflowTaskEdge.class);
+  private IDataflowTaskGraph<Mapper, DataflowTaskEdge> taskGraph =
+      new DataflowTaskGraph<>(DataflowTaskEdge.class);
 
   private Set<Mapper> runningTasks = new HashSet<>();
 
@@ -27,12 +27,12 @@ public class DataflowTaskGraphGenerator {
     this.dataflowTaskGraph = dataflowTaskGraph;
   }
 
-  public IDataflowTaskGraph<Mapper, DefaultDataflowTaskEdge> getTaskGraph() {
+  public IDataflowTaskGraph<Mapper, DataflowTaskEdge> getTaskGraph() {
     return taskGraph;
   }
 
   public void setTaskGraph(IDataflowTaskGraph<Mapper,
-      DefaultDataflowTaskEdge> taskGraph) {
+      DataflowTaskEdge> taskGraph) {
     this.taskGraph = taskGraph;
   }
 
@@ -73,26 +73,6 @@ public class DataflowTaskGraphGenerator {
     ++totalNumberOfTasks;
     return this;
   }
-
-  public synchronized Mapper[] getReadyTasks() {
-    return this.dataflowTaskGraph.getTaskVertexSet().stream()
-        .filter(task -> !this.runningTasks.contains(task)
-            && this.dataflowTaskGraph.inDegreeOf(task) == 0)
-        .toArray(size -> new Mapper[size]);
-  }
-
-  public synchronized void notifyDone(Mapper mapperTask) {
-    System.out.println("Mapper task done to be removed:" + mapperTask);
-    this.runningTasks.remove(mapperTask);
-    this.dataflowTaskGraph.removeTaskVertex(mapperTask);
-  }
-
-  public void setAsStarted(final Mapper task) {
-    this.runningTasks.add(task);
-  }
-
-  public synchronized boolean isDone() {
-    return this.dataflowTaskGraph.getTaskVertexSet().isEmpty();
-  }
 }
+
 

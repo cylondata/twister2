@@ -23,7 +23,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.taskgraphbuilder;
 
-public class DefaultDataflowTaskEdge extends IntrusiveDataflowTaskEdge {
+public class DataflowTaskEdge extends DirectedDataflowTaskEdge {
 
   public Object getSourceTaskVertex() {
     return sourceTaskVertex;

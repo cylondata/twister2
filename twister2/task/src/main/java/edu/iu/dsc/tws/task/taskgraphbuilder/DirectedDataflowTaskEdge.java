@@ -11,11 +11,28 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.taskgraphbuilder;
 
-public class TypeUtils<T> {
+public class DirectedDataflowTaskEdge {
 
-  @SuppressWarnings("unchecked")
-  public <T> T uncheckedCast(Object object, TypeUtils<T> typeDecl) {
-    return (T) object;
+  protected Object sourceTaskVertex;
+  protected Object targetTaskVertex;
+
+  public DirectedDataflowTaskEdge() {
+  }
+
+  public Object getSourceTaskVertex() {
+    return sourceTaskVertex;
+  }
+
+  public void setSourceTaskVertex(Object sourceTaskVertex) {
+    this.sourceTaskVertex = sourceTaskVertex;
+  }
+
+  public Object getTargetTaskVertex() {
+    return targetTaskVertex;
+  }
+
+  public void setTargetTaskVertex(Object targetTaskVertex) {
+    this.targetTaskVertex = targetTaskVertex;
   }
 }
 

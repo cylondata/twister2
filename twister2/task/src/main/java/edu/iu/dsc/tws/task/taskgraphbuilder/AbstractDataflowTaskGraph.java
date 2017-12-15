@@ -20,7 +20,7 @@ public abstract class AbstractDataflowTaskGraph<TV, TE> implements ITaskGraph<TV
   public boolean removeAllTaskEdges(Collection<? extends TE> taskEdges) {
     boolean success = false;
     for (TE taskEdge : taskEdges) {
-      //success |= removeTaskEdge (taskEdge);
+      success |= removeTaskEdge(taskEdge);
     }
     return success;
   }
@@ -28,7 +28,7 @@ public abstract class AbstractDataflowTaskGraph<TV, TE> implements ITaskGraph<TV
   protected boolean removeAllTaskEdges(TE[] taskEdges) {
     boolean success = false;
     for (int i = 0; i < taskEdges.length; i++) {
-      //success |= removeTaskEdge(taskEdges[i]);
+      success |= removeTaskEdge(taskEdges[i]);
     }
     return success;
   }

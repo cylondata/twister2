@@ -17,27 +17,26 @@ public abstract class DirectedDataflowGraph<TV, TE> {
 
   public abstract void addTaskVertex(TV taskVertex);
 
+  public abstract void addTaskEdgeToTouchingVertices(TE taskEdge);
+
+  public abstract void removeTaskEdgeFromTouchingVertices(TE taskEdge);
+
   public abstract Set<TV> getTaskVertexSet();
 
   public abstract Set<TE> getAllTaskEdges(TV sourceTaskVertex,
                                           TV targetTaskVertex);
 
-  public abstract TE getTaskEdge(TV sourceTaskVertex, TV targetTaskVertex);
-
-  public abstract void addTaskEdgeToTouchingVertices(TE taskEdge);
-
-  public abstract int degreeOf(TV taskVertex);
-
   public abstract Set<TE> taskEdgesOf(TV taskVertex);
-
-  public abstract int inDegreeOf(TV taskVertex);
 
   public abstract Set<TE> incomingTaskEdgesOf(TV taskVertex);
 
-  public abstract int outDegreeOf(TV taskVertex);
-
   public abstract Set<TE> outgoingTaskEdgesOf(TV taskVertex);
 
-  public abstract void removeTaskEdgeFromTouchingVertices(TE taskEdge);
-}
+  public abstract TE getTaskEdge(TV sourceTaskVertex, TV targetTaskVertex);
 
+  public abstract int degreeOf(TV taskVertex);
+
+  public abstract int inDegreeOf(TV taskVertex);
+
+  public abstract int outDegreeOf(TV taskVertex);
+}

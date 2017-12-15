@@ -15,22 +15,24 @@ public abstract class AbstractDataflowTaskGraphImpl<TV, TE>
     extends AbstractDataflowTaskGraph<TV, TE>
     implements ITaskGraph<TV, TE> {
 
+
   private IDataflowTaskEdgeFactory<TV, TE> dataflowTaskEdgeFactory;
-  private DirectedDataflowGraph directedDataflowTaskGraph;
-  private Map<TE, IntrusiveDataflowTaskEdge> taskEdgeMap;
+  private DirectedDataflowGraph<TV, TE> directedDataflowTaskGraph = null;
+  private Map<TE, DirectedDataflowTaskEdge> taskEdgeMap;
   private IDataflowTaskEdgeSetFactory<TV, TE> taskEdgeSetFactory;
-  private transient TypeUtils<TV> vertexTypeDecl = null;
-  private transient Set<TE> unmodifiableTaskEdgeSet = null;
-  private transient Set<TV> unmodifiableTaskVertexSet = null;
+  private DataflowTaskGraphUtils<TV> vertexTypeDecl = null;
+
+  private Set<TE> taskEdgeSet = null;
+  private Set<TV> taskVertexSet = null;
 
   public AbstractDataflowTaskGraphImpl(IDataflowTaskEdgeFactory<TV, TE> taskEdgeFactory) {
     if (taskEdgeFactory == null) {
       throw new NullPointerException();
     }
     this.dataflowTaskEdgeFactory = taskEdgeFactory;
-    this.taskEdgeMap = new LinkedHashMap<TE, IntrusiveDataflowTaskEdge>();
+    this.taskEdgeMap = new LinkedHashMap<TE, DirectedDataflowTaskEdge>();
     this.taskEdgeSetFactory = new ArrayListFactory<TV, TE>();
-    this.vertexTypeDecl = new TypeUtils<>();
+    this.vertexTypeDecl = new DataflowTaskGraphUtils<>();
     this.directedDataflowTaskGraph = createDirectedDataflowGraph();
   }
 
@@ -91,9 +93,9 @@ public abstract class AbstractDataflowTaskGraphImpl<TV, TE>
     if (containsTaskEdge(taskEdge)) {
       return null;
     } else {
-      IntrusiveDataflowTaskEdge intrusiveTaskEdge =
-          createIntrusiveTaskEdge(taskEdge, sourceTaskVertex, targetTaskVertex);
-      taskEdgeMap.put(taskEdge, intrusiveTaskEdge);
+      DirectedDataflowTaskEdge directedDataflowTaskEdge =
+          createDirectedDataflowTaskEdge(taskEdge, sourceTaskVertex, targetTaskVertex);
+      taskEdgeMap.put(taskEdge, directedDataflowTaskEdge);
       directedDataflowTaskGraph.addTaskEdgeToTouchingVertices(taskEdge);
       return taskEdge;
     }
@@ -110,26 +112,27 @@ public abstract class AbstractDataflowTaskGraphImpl<TV, TE>
     assertTaskVertexExist(taskVertex1);
     assertTaskVertexExist(taskVertex2);
 
-    IntrusiveDataflowTaskEdge intrusiveTaskEdge =
-        createIntrusiveTaskEdge(taskEdge, taskVertex1, taskVertex2);
-    taskEdgeMap.put(taskEdge, intrusiveTaskEdge);
+    DirectedDataflowTaskEdge directedDataflowTaskEdge =
+        createDirectedDataflowTaskEdge(taskEdge, taskVertex1, taskVertex2);
+    taskEdgeMap.put(taskEdge, directedDataflowTaskEdge);
     directedDataflowTaskGraph.addTaskEdgeToTouchingVertices(taskEdge);
     return true;
   }
 
 
-  private IntrusiveDataflowTaskEdge createIntrusiveTaskEdge(
+  private DirectedDataflowTaskEdge createDirectedDataflowTaskEdge(
       TE taskEdge, TV sourceTaskVertex, TV targetTaskVertex) {
 
-    IntrusiveDataflowTaskEdge intrusiveTaskEdge;
-    if (taskEdge instanceof IntrusiveDataflowTaskEdge) {
-      intrusiveTaskEdge = (IntrusiveDataflowTaskEdge) taskEdge;
+    DirectedDataflowTaskEdge directedDataflowTaskEdge;
+    if (taskEdge instanceof DirectedDataflowTaskEdge) {
+      directedDataflowTaskEdge = (DirectedDataflowTaskEdge) taskEdge;
     } else {
-      intrusiveTaskEdge = new IntrusiveDataflowTaskEdge();
+      directedDataflowTaskEdge = new DirectedDataflowTaskEdge();
     }
-    intrusiveTaskEdge.sourceTaskVertex = sourceTaskVertex;
-    intrusiveTaskEdge.targetTaskVertex = targetTaskVertex;
-    return intrusiveTaskEdge;
+    directedDataflowTaskEdge.sourceTaskVertex = sourceTaskVertex;
+    directedDataflowTaskEdge.targetTaskVertex = targetTaskVertex;
+
+    return directedDataflowTaskEdge;
   }
 
   @Override
@@ -143,7 +146,7 @@ public abstract class AbstractDataflowTaskGraphImpl<TV, TE>
     return flag;
   }
 
-  public DirectedDataflowGraph createDirectedDataflowGraph() {
+  public DirectedDataflowGraph<TV, TE> createDirectedDataflowGraph() {
     if (this instanceof DataflowTaskGraph<?, ?>) {
       return createDirectedDataflowTaskGraph();
     } else {
@@ -198,11 +201,11 @@ public abstract class AbstractDataflowTaskGraphImpl<TV, TE>
   }
 
   public Set<TE> taskEdgeSet() {
-    if (unmodifiableTaskEdgeSet == null) {
-      unmodifiableTaskEdgeSet =
+    if (taskEdgeSet == null) {
+      taskEdgeSet =
           Collections.unmodifiableSet(taskEdgeMap.keySet());
     }
-    return unmodifiableTaskEdgeSet;
+    return taskEdgeSet;
   }
 
   public Set<TE> taskEdgesOf(TV taskVertex) {
@@ -239,28 +242,29 @@ public abstract class AbstractDataflowTaskGraphImpl<TV, TE>
         vertexTypeDecl);
   }
 
-  public IntrusiveDataflowTaskEdge getIntrusiveTaskEdge(TE taskEdge) {
-    if (taskEdge instanceof IntrusiveDataflowTaskEdge) {
-      return (IntrusiveDataflowTaskEdge) taskEdge;
+  public DirectedDataflowTaskEdge getIntrusiveTaskEdge(TE taskEdge) {
+    if (taskEdge instanceof DirectedDataflowTaskEdge) {
+      return (DirectedDataflowTaskEdge) taskEdge;
     }
     return taskEdgeMap.get(taskEdge);
   }
 
   @Override
   public Set<TV> getTaskVertexSet() {
-    if (unmodifiableTaskVertexSet == null) {
-      unmodifiableTaskVertexSet =
+    if (taskVertexSet == null) {
+      taskVertexSet =
           Collections.unmodifiableSet(directedDataflowTaskGraph.getTaskVertexSet());
     }
-    return unmodifiableTaskVertexSet;
+    return taskVertexSet;
   }
 
   public static class DirectedDataflowTaskEdgeContainer<TV, TE> {
 
     private Set<TE> incomingTaskEdge;
     private Set<TE> outgoingTaskEdge;
-    private transient Set<TE> unmodifiableIncomingTaskEdge = null;
-    private transient Set<TE> unmodifiableOutgoingTaskEdge = null;
+
+    private Set<TE> unmodifiableIncomingTaskEdge = null;
+    private Set<TE> unmodifiableOutgoingTaskEdge = null;
 
     DirectedDataflowTaskEdgeContainer(IDataflowTaskEdgeSetFactory<TV, TE> edgeSetFactory,
                                       TV taskVertex)
@@ -306,7 +310,7 @@ public abstract class AbstractDataflowTaskGraphImpl<TV, TE>
     }
   }
 
-  public class DirectedDataflowTaskGraph extends DirectedDataflowGraph {
+  public class DirectedDataflowTaskGraph extends DirectedDataflowGraph<TV, TE> {
 
     protected Map<TV, DirectedDataflowTaskEdgeContainer<TV, TE>> taskVertexMap;
 
@@ -428,34 +432,6 @@ public abstract class AbstractDataflowTaskGraphImpl<TV, TE>
       }
       return ec;
     }
-  }
-
-  private abstract class DirectedDataflowGraph {
-
-    public abstract void addTaskVertex(TV taskVertex);
-
-    public abstract Set<TV> getTaskVertexSet();
-
-    public abstract Set<TE> getAllTaskEdges(TV sourceTaskVertex,
-                                            TV targetTaskVertex);
-
-    public abstract TE getTaskEdge(TV sourceTaskVertex, TV targetTaskVertex);
-
-    public abstract void addTaskEdgeToTouchingVertices(TE taskEdge);
-
-    public abstract int degreeOf(TV taskVertex);
-
-    public abstract Set<TE> taskEdgesOf(TV taskVertex);
-
-    public abstract int inDegreeOf(TV taskVertex);
-
-    public abstract Set<TE> incomingTaskEdgesOf(TV taskVertex);
-
-    public abstract int outDegreeOf(TV taskVertex);
-
-    public abstract Set<TE> outgoingTaskEdgesOf(TV taskVertex);
-
-    public abstract void removeTaskEdgeFromTouchingVertices(TE taskEdge);
   }
 
   private class ArrayListFactory<TV, TE> implements IDataflowTaskEdgeSetFactory<TV, TE> {
