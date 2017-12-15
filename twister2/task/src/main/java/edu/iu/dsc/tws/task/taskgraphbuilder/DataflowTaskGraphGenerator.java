@@ -1,8 +1,5 @@
 package edu.iu.dsc.tws.task.taskgraphbuilder;
 
-import java.util.HashSet;
-import java.util.Set;
-
 /**
  * This is the main class for creating the dataflow task graph.
  */
@@ -16,14 +13,12 @@ public class DataflowTaskGraphGenerator {
   private IDataflowTaskGraph<Mapper, DataflowTaskEdge> taskGraph =
       new DataflowTaskGraph<>(DataflowTaskEdge.class);
 
-  private Set<Mapper> runningTasks = new HashSet<>();
-
   public IDataflowTaskGraph<Mapper, CManager> getDataflowTaskGraph() {
     return dataflowTaskGraph;
   }
 
-  public void setDataflowTaskGraph(IDataflowTaskGraph<Mapper, CManager>
-                                       dataflowTaskGraph) {
+  public void setDataflowTaskGraph(IDataflowTaskGraph<Mapper,
+      CManager> dataflowTaskGraph) {
     this.dataflowTaskGraph = dataflowTaskGraph;
   }
 
