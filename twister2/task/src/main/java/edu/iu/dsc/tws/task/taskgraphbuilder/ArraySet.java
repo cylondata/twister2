@@ -6,8 +6,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
 
-public class ArraySet<TE> extends ArrayList<TE>
-    implements Set<TE> {
+public class ArraySet<TE> extends ArrayList<TE> implements Set<TE> {
 
   private static final long serialVersionUID = 4323424243432434234L;
 

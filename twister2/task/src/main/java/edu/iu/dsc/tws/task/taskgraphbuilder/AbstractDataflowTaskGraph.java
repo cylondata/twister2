@@ -34,17 +34,6 @@ public abstract class AbstractDataflowTaskGraph<TV, TE> implements ITaskGraph<TV
   }
 
   @Override
-  public Set<TE> removeAllTaskEdges(TV sourceTaskVertex,
-                                    TV targetTaskVertex) {
-    Set<TE> removedTaskEdge = getAllTaskEdges(sourceTaskVertex, targetTaskVertex);
-    if (removedTaskEdge == null) {
-      return null;
-    }
-    removeAllTaskEdges(removedTaskEdge);
-    return removedTaskEdge;
-  }
-
-  @Override
   public boolean removeAllTaskVertices(Collection<? extends TV>
                                            taskVertices) {
     boolean flag = false;
@@ -63,6 +52,17 @@ public abstract class AbstractDataflowTaskGraph<TV, TE> implements ITaskGraph<TV
       throw new IllegalArgumentException(
           "no such vertex in graph: " + taskVertex.toString());
     }
+  }
+
+  @Override
+  public Set<TE> removeAllTaskEdges(TV sourceTaskVertex,
+                                    TV targetTaskVertex) {
+    Set<TE> removedTaskEdge = getAllTaskEdges(sourceTaskVertex, targetTaskVertex);
+    if (removedTaskEdge == null) {
+      return null;
+    }
+    removeAllTaskEdges(removedTaskEdge);
+    return removedTaskEdge;
   }
 }
 
