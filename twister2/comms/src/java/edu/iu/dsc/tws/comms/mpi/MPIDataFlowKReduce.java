@@ -74,7 +74,7 @@ public class MPIDataFlowKReduce implements DataFlowOperation {
       throw new RuntimeException("Un-expected destination: " + path);
     }
     boolean send = reduce.send(source, message, path);
-//    LOG.info(String.format("%d sending message on reduce: %d %d %b", executor, path, source, send));
+//  LOG.info(String.format("%d sending message on reduce: %d %d %b", executor, path, source, send));
     return send;
   }
 
@@ -85,7 +85,7 @@ public class MPIDataFlowKReduce implements DataFlowOperation {
       throw new RuntimeException("Un-expected destination: " + path);
     }
     boolean send = reduce.sendPartial(source, message, path);
-//    LOG.info(String.format("%d sending message on reduce: %d %d %b", executor, path, source, send));
+//  LOG.info(String.format("%d sending message on reduce: %d %d %b", executor, path, source, send));
     return send;
   }
 

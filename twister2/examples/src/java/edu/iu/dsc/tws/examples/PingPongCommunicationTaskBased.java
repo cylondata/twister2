@@ -130,12 +130,17 @@ public class PingPongCommunicationTaskBased implements IContainer {
       }
       return true;
     }
+
+    @Override
+    public void progress() {
+
+    }
   }
 
   /**
    * RevieceWorker
    */
-  private class RecieveWorker extends SinkTask {
+  private class RecieveWorker extends SinkTask<Object> {
 
     @Override
     public Message execute() {
@@ -151,7 +156,7 @@ public class PingPongCommunicationTaskBased implements IContainer {
   /**
    * We are running the map in a separate thread
    */
-  private class MapWorker extends SourceTask {
+  private class MapWorker extends SourceTask<Object> {
     private int sendCount = 0;
 
     MapWorker(int tid, DataFlowOperation dataFlowOperation) {
