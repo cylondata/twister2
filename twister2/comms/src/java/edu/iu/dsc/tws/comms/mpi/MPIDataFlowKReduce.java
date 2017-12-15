@@ -27,7 +27,7 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 
 public class MPIDataFlowKReduce implements DataFlowOperation {
-  private static final Logger LOG = Logger.getLogger(MPIDataFlowKeyedReduce.class.getName());
+  private static final Logger LOG = Logger.getLogger(MPIDataFlowKReduce.class.getName());
   // the source tasks
   protected Set<Integer> sources;
 

@@ -189,7 +189,7 @@ public class InvertedBinaryTreeRouter {
     allSends.addAll(sendExternalTasks.keySet());
     allSends.addAll(sendInternalTasks.keySet());
     allSends.addAll(sendExternalTasksPartial.keySet());
-    allSends.add(mainTask * -1);
+    allSends.add(mainTask * -1 - 1);
     return allSends;
   }
 }

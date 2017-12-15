@@ -361,7 +361,7 @@ public class BaseReduceCommunication implements IContainer {
    * @return IntData
    */
   private IntData generateData() {
-    int s = 128000;
+    int s = 64000;
     int[] d = new int[s];
     for (int i = 0; i < s; i++) {
       d[i] = i;
