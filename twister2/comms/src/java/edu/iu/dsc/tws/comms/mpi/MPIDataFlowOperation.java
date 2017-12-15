@@ -190,12 +190,12 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
 
   @Override
   public boolean send(int source, Object message, int path) {
-    return false;
+    return sendMessage(source, message, path);
   }
 
   @Override
   public boolean sendPartial(int source, Object message, int path) {
-    return false;
+    return sendMessagePartial(source, message, path);
   }
 
   /**
