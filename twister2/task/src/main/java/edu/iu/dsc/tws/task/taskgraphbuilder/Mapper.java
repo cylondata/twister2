@@ -2,25 +2,25 @@ package edu.iu.dsc.tws.task.taskgraphbuilder;
 
 public abstract class Mapper implements Runnable {
 
-  private final String id;
-  private float executionWeight = -1;
-  private int priorityValue;
+  private final String taskId;
+  private float taskExecutionWeight = 0;
+  private int taskPriority;
 
-  protected Mapper(String id, int priorityValue) {
-    this.id = id;
-    this.priorityValue = priorityValue;
+  protected Mapper(String id, int taskpriority) {
+    this.taskId = id;
+    this.taskPriority = taskpriority;
   }
 
   protected Mapper(String id) {
-    this.id = id;
+    this.taskId = id;
   }
 
-  public int getPriorityValue() {
-    return priorityValue;
+  public int getTaskPriority() {
+    return taskPriority;
   }
 
-  public void setPriorityValue(int priorityValue) {
-    this.priorityValue = priorityValue;
+  public void setTaskPriority(int taskpriority) {
+    this.taskPriority = taskpriority;
   }
 
   @Override
@@ -32,24 +32,24 @@ public abstract class Mapper implements Runnable {
       return false;
     }
     Mapper mapper = (Mapper) o;
-    return id != null ? id.equals(mapper.id) : mapper.id == null;
+    return taskId != null ? taskId.equals(mapper.taskId) : mapper.taskId == null;
   }
 
   @Override
   public int hashCode() {
-    return id != null ? id.hashCode() : 0;
+    return taskId != null ? taskId.hashCode() : 0;
   }
 
   public float getExecutionWeight() {
-    return executionWeight;
+    return taskExecutionWeight;
   }
 
   public void setExecutionWeight(float executionWeight) {
-    this.executionWeight = executionWeight;
+    this.taskExecutionWeight = executionWeight;
   }
 
   public boolean hasExecutionWeight() {
-    return this.executionWeight != -1;
+    return this.taskExecutionWeight != -1;
   }
 
   public abstract void execute();
@@ -61,13 +61,9 @@ public abstract class Mapper implements Runnable {
   public void run() {
     try {
       this.execute();
-      //this.taskGraphParser.notifyDone (this);
-    } catch (Exception ne) {
-      ne.printStackTrace();
+    } catch (Exception e) {
+      e.printStackTrace();
     }
   }
-
-  /*public void setTaskGraphParser(TaskGraphParser taskGraphParser){
-        this.taskGraphParser = taskGraphParser;
-  }*/
 }
+
