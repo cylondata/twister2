@@ -54,7 +54,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
 
   protected MessageType type;
   protected int executor;
-  private int sendCount = 0;
+  private int sendCountPartial = 0;
   private int sendCountFull = 0;
   /**
    * The send sendBuffers used by the operation
@@ -239,7 +239,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
     try {
       // for partial sends we use minus value to find the correct queue
       ArrayBlockingQueue<Pair<Object, MPISendMessage>> pendingSendMessages =
-          pendingSendMessagesPerSource.get(source * -1);
+          pendingSendMessagesPerSource.get(source * -1 - 1);
 
       RoutingParameters routingParameters = partialSendRoutingParameters(source, path);
       MPIMessage mpiMessage = new MPIMessage(source, type, MPIMessageDirection.OUT, this);
@@ -254,15 +254,18 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
           routingParameters.getExternalRoutes());
 
       // now try to put this into pending
+//      LOG.info(String.format("%d before %d %d", executor, pendingSendMessages.size(), 0));
       boolean ret = pendingSendMessages.offer(
           new ImmutablePair<Object, MPISendMessage>(object, sendMessage));
-      if (ret) {
-        sendCount++;
-      }
-//      if (sendCount % 100 == 0) {
-//      LOG.info(String.format("%d Partial Pending size: %d %d %d %d",
-//          executor, source, pendingSendMessages.size(), sendCount,
-//          pendingSendMessages.remainingCapacity()));
+//      LOG.info(String.format("%d after %d", executor, pendingSendMessages.size()));
+//      if (ret) {
+//        sendCountPartial++;
+//      }
+//      if (sendCountPartial % 1 == 0) {
+//        LOG.info(String.format(
+//            "%d Partial Pending size: source %d pending %d  sendCount %d remaining %d %b",
+//            executor, source, pendingSendMessages.size(), sendCountPartial,
+//            pendingSendMessages.remainingCapacity(), ret));
 //      }
       return ret;
     } finally {
@@ -290,13 +293,14 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
       // now try to put this into pending
       boolean ret = pendingSendMessages.offer(
           new ImmutablePair<Object, MPISendMessage>(message, sendMessage));
-      if (ret) {
-        sendCountFull++;
-      }
-//      if (sendCountFull % 100 == 0) {
-//      LOG.info(String.format("%d Full Pending size: %d %d %d %d",
-//          executor, source, pendingSendMessages.size(), sendCountFull,
-//          pendingSendMessages.remainingCapacity()));
+//      if (ret) {
+//        sendCountFull++;
+//      }
+//      if (sendCountFull % 1 == 0) {
+//        LOG.info(String.format(
+//            "%d Full Pending size: source %d pending %d sendCount %d remaining %d",
+//            executor, source, pendingSendMessages.size(), sendCountFull,
+//            pendingSendMessages.remainingCapacity()));
 //      }
       return ret;
     } finally {
@@ -490,7 +494,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
     }
   }
 
-//  private int receiveCount = 0;
+  private int receiveCount = 0;
 
   @Override
   public void onReceiveComplete(int id, int e, MPIBuffer buffer) {
@@ -510,8 +514,8 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
             pendingReceiveMessagesPerSource.get(id);
 
 //        receiveCount++;
-//        if (receiveCount % 100 == 0) {
-//          LOG.log(Level.INFO, String.format("%d received message %d %d %d",
+//        if (receiveCount % 1 == 0) {
+//          LOG.info(String.format("%d received message %d %d %d",
 //              executor, id, receiveCount, pendingReceiveMessages.size()));
 //        }
         currentMessages.remove(id);

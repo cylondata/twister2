@@ -27,7 +27,6 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.mpi.MPIBuffer;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
@@ -44,7 +43,7 @@ public class BaseKeyedReduceCommunication implements IContainer {
 
   private static final int NO_OF_TASKS = 16;
 
-  private int noOfTasksPerExecutor = 2;
+  private int noOfTasksPerExecutor = 4;
 
   private int reduceTask = 0;
 
@@ -88,13 +87,16 @@ public class BaseKeyedReduceCommunication implements IContainer {
     LOG.info("Setting up reduce dataflow operation");
     // this method calls the init method
     // I think this is wrong
-    reduce = channel.keyedReduce(newCfg, MessageType.BUFFER, destinations, sources,
+    reduce = channel.keyedReduce(newCfg, MessageType.OBJECT, destinations, sources,
         destinations, new FinalReduceReceive(), new PartialReduceWorker());
 
     if (id == 0 || id == 1) {
-      // the map thread where data is produced
-      Thread mapThread = new Thread(new MapWorker());
-      mapThread.start();
+      for (int i = 0; i < noOfTasksPerExecutor; i++) {
+        // the map thread where data is produced
+        LOG.info(String.format("%d Starting %d", id, i + id * noOfTasksPerExecutor));
+        Thread mapThread = new Thread(new MapWorker(i + id * noOfTasksPerExecutor));
+        mapThread.start();
+      }
     }
 
     // we need to progress the communication
@@ -115,17 +117,25 @@ public class BaseKeyedReduceCommunication implements IContainer {
   /**
    * We are running the map in a separate thread
    */
+  /**
+   * We are running the map in a separate thread
+   */
   private class MapWorker implements Runnable {
+    private int task = 0;
     private int sendCount = 0;
+    MapWorker(int task) {
+      this.task = task;
+    }
+
     @Override
     public void run() {
-      LOG.log(Level.INFO, "Starting map worker: " + id);
-      MPIBuffer data = new MPIBuffer(1024);
-      data.setSize(24);
-      for (int i = 0; i < 10000; i++) {
-        for (int j = 0; j < noOfTasksPerExecutor; j++) {
+      try {
+        LOG.log(Level.INFO, "Starting map worker: " + id);
+//      MPIBuffer data = new MPIBuffer(1024);
+        IntData data = generateData();
+        for (int i = 0; i < 10000; i++) {
           // lets generate a message
-          while (!reduce.send(j + id * noOfTasksPerExecutor, data, reduceTask)) {
+          while (!reduce.send(task, data, reduceTask)) {
             // lets wait a litte and try again
             try {
               Thread.sleep(1);
@@ -133,13 +143,18 @@ public class BaseKeyedReduceCommunication implements IContainer {
               e.printStackTrace();
             }
           }
-//          LOG.info(String.format("%d sending to %d", id, j + id * noOfTasksPerExecutor)
+//          LOG.info(String.format("%d sending to %d", id, task)
 //              + " count: " + sendCount++);
+          if (i % 1000 == 0) {
+            LOG.info(String.format("%d sent %d", id, i));
+          }
+          Thread.yield();
         }
-        sendCount++;
-        Thread.yield();
+        LOG.info(String.format("%d Done sending", id));
+        status = Status.MAP_FINISHED;
+      } catch (Throwable t) {
+        t.printStackTrace();
       }
-      status = Status.MAP_FINISHED;
     }
   }
 
@@ -187,8 +202,8 @@ public class BaseKeyedReduceCommunication implements IContainer {
         List<Object> m = messages.get(target).get(source);
         Integer c = counts.get(target).get(source);
         if (m.size() > 128) {
-//          if (count % 10 == 0) {
-//            LOG.info(String.format("%d Partial false %d %d", id, source, m.size()));
+//          if (count % 1 == 0) {
+//            LOG.info(String.format("%d Partial false %d %d %s", id, source, m.size(), counts));
 //          }
           canAdd = false;
         } else {
@@ -234,15 +249,15 @@ public class BaseKeyedReduceCommunication implements IContainer {
                   Integer i = e.getValue();
                   cMap.put(e.getKey(), i - 1);
                 }
-//                  LOG.info(String.format("%d reduce send true", id));
+//                LOG.info(String.format("%d reduce send true", id));
               } else {
                 canProgress = false;
-//                  LOG.info(String.format("%d reduce send false", id));
+//                LOG.info(String.format("%d reduce send false", id));
               }
-              if (count % 100 == 0) {
-                LOG.info(String.format("%d Inject partial %d count: %d %s",
-                    id, t, count, counts));
-              }
+//              if (count % 100 == 0) {
+//                LOG.info(String.format("%d Inject partial %d count: %d %s",
+//                    id, t, count, counts));
+//              }
             } else {
               canProgress = false;
               LOG.severe("We cannot find an object and this is not correct");
@@ -298,9 +313,11 @@ public class BaseKeyedReduceCommunication implements IContainer {
         Integer c = counts.get(target).get(source);
         if (m.size() > 128) {
           canAdd = false;
+//          LOG.info(String.format("%d Final false %d %d %s", id, source, m.size(), counts));
         } else {
           m.add(object);
           counts.get(target).put(source, c + 1);
+//          LOG.info(String.format("%d Final true %d %d %s", id, source, m.size(), counts));
         }
 
         return canAdd;
@@ -312,6 +329,7 @@ public class BaseKeyedReduceCommunication implements IContainer {
 
     public void progress() {
       for (int t : messages.keySet()) {
+        Map<Integer, Integer> cMap = counts.get(t);
         boolean canProgress = true;
         while (canProgress) {
           // now check weather we have the messages for this source
@@ -329,6 +347,10 @@ public class BaseKeyedReduceCommunication implements IContainer {
           if (found) {
             for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
               o = e.getValue().remove(0);
+            }
+            for (Map.Entry<Integer, Integer> e : cMap.entrySet()) {
+              Integer i = e.getValue();
+              cMap.put(e.getKey(), i - 1);
             }
             if (o != null) {
               count++;
@@ -355,8 +377,9 @@ public class BaseKeyedReduceCommunication implements IContainer {
    * @return IntData
    */
   private IntData generateData() {
-    int[] d = new int[10];
-    for (int i = 0; i < 10; i++) {
+    int i1 = 64000;
+    int[] d = new int[i1];
+    for (int i = 0; i < i1; i++) {
       d[i] = i;
     }
     return new IntData(d);

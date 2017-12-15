@@ -139,8 +139,8 @@ public class TWSMPIChannel {
     if (offer) {
       pendingSendCount++;
     }
-//    LOG.info(String.format("%d Pending sends count: %d wait: %d id:%d",
-//        executor, pendingSends.size(), waitForCompletionSends.size(), id));
+//    LOG.info(String.format("%d Pending sends count: %d wait: %d id:%d total: %d",
+//        executor, pendingSends.size(), waitForCompletionSends.size(), id, pendingSendCount));
     return offer;
 //    } finally {
 //      lock.unlock();
@@ -175,9 +175,9 @@ public class TWSMPIChannel {
     MPIMessage message = requests.message;
     for (int i = 0; i < message.getBuffers().size(); i++) {
       try {
-//        sendCount++;
+        sendCount++;
         MPIBuffer buffer = message.getBuffers().get(i);
-//        if (sendCount % 100 == 0) {
+//        if (sendCount % 1 == 0) {
 //          LOG.info(String.format("%d Sending message to: %d size: %d sendCount: %d", executor,
 //              requests.rank, buffer.getSize(), sendCount));
 //        }
