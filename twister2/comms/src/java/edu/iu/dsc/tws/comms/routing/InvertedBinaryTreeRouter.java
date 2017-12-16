@@ -34,6 +34,7 @@ public class InvertedBinaryTreeRouter {
   private int mainTask;
   private boolean mainTaskLast;
   private Map<Integer, Integer> destinationIdentifiers;
+  private int executor = 0;
 
   /**
    * Initialize the data structure
@@ -47,7 +48,8 @@ public class InvertedBinaryTreeRouter {
                                   int root, Set<Integer> dests, int index) {
     int interNodeDegree = MPIContext.interNodeDegree(cfg, 2);
     int intraNodeDegree = MPIContext.intraNodeDegree(cfg, 2);
-    mainTaskLast = false;
+    this.executor = plan.getThisExecutor();
+    this.mainTaskLast = false;
     // lets build the tree
     BinaryTree tree = new BinaryTree(interNodeDegree, intraNodeDegree, plan, root, dests);
     Node treeRoot = tree.buildInterGroupTree(index);
@@ -151,7 +153,7 @@ public class InvertedBinaryTreeRouter {
     return sendExternalTasksPartial;
   }
 
-  public int mainTaskOfExecutor(int executor, int path) {
+  public int mainTaskOfExecutor(int ex, int path) {
     return mainTask;
   }
 
@@ -160,7 +162,7 @@ public class InvertedBinaryTreeRouter {
     if (o != null) {
       return (int) o;
     } else {
-      throw new RuntimeException("Unexpected source requesting destination: " + source);
+      throw new RuntimeException(executor + " Unexpected source requesting destination: " + source);
     }
   }
 

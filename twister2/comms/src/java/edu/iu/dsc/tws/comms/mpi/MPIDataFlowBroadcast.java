@@ -73,19 +73,6 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
     ArrayBlockingQueue<Pair<Object, MPISendMessage>> pendingSendMessages =
         pendingSendMessagesPerSource.get(src);
 
-//    internalRoutesForSend(src, internalRoutes);
-
-//    LOG.info(String.format("%d down internal routes for send %d: %s",
-//        instancePlan.getThisExecutor(), src, internalRoutes));
-//
-//    // now lets get the external routes to send
-//    externalRoutesForSend(src, externalRoutes);
-//    LOG.info(String.format("%d down External routes for send %d: %s",
-//        instancePlan.getThisExecutor(), src, externalRoutes));
-    // we need to serialize for sending over the wire
-    // LOG.log(Level.INFO, "Sending message of type: " + type);
-    // this is a originating message. we are going to put ref count to 0 for now and
-    // increment it later
     MPIMessage mpiMessage = new MPIMessage(src, type, MPIMessageDirection.OUT, this);
 
     // create a send message to keep track of the serialization
@@ -181,7 +168,7 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
     return router.receivingExecutors();
   }
 
-  protected Map<Integer, List<Integer>> receiveExpectedTaskIds() {
+  public Map<Integer, List<Integer>> receiveExpectedTaskIds() {
     return router.receiveExpectedTaskIds();
   }
 
