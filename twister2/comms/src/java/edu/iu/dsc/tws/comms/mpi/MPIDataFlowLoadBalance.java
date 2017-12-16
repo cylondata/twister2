@@ -27,8 +27,8 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.routing.LoadBalanceRouter;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
-public class MPILoadBalance extends MPIDataFlowOperation {
-  private static final Logger LOG = Logger.getLogger(MPILoadBalance.class.getName());
+public class MPIDataFlowLoadBalance extends MPIDataFlowOperation {
+  private static final Logger LOG = Logger.getLogger(MPIDataFlowLoadBalance.class.getName());
 
   private Set<Integer> sources;
   private Set<Integer> destinations;
@@ -50,8 +50,8 @@ public class MPILoadBalance extends MPIDataFlowOperation {
     List<Integer> external = new ArrayList<>();
   }
 
-  public MPILoadBalance(TWSMPIChannel channel, Set<Integer> srcs,
-                        Set<Integer> dests, MessageReceiver finalRcvr) {
+  public MPIDataFlowLoadBalance(TWSMPIChannel channel, Set<Integer> srcs,
+                                Set<Integer> dests, MessageReceiver finalRcvr) {
     super(channel);
     this.sources = srcs;
     this.destinations = dests;
