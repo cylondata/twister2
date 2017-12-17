@@ -48,6 +48,10 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
 
   private int pathToUse = MPIContext.DEFAULT_PATH;
 
+  private int gatherLimit = 1;
+
+  private boolean batch = false;
+
   public MPIDataFlowGather(TWSMPIChannel channel, Set<Integer> sources, int destination,
                            MessageReceiver finalRcvr,
                            MessageReceiver partialRcvr, int indx, int p) {

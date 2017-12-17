@@ -119,7 +119,10 @@ public class MPIDataFlowAllReduce implements DataFlowOperation {
 
   @Override
   public void close() {
+  }
 
+  @Override
+  public void finish() {
   }
 
   private class ReduceFinalReceiver implements MessageReceiver {

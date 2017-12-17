@@ -63,4 +63,9 @@ public interface DataFlowOperation {
    * Clean up the resources
    */
   void close();
+
+  /**
+   * If this is a larger transfer of dataflow style, we need to finish
+   */
+  void finish();
 }

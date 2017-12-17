@@ -561,4 +561,8 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
       lock.unlock();
     }
   }
+
+  @Override
+  public void finish() {
+  }
 }
