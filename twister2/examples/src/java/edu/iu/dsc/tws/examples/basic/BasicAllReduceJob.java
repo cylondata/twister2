@@ -17,7 +17,10 @@ import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.examples.BaseAllReduceCommunication;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 
-public class BasicAllReduceJob {
+public final class BasicAllReduceJob {
+  private BasicAllReduceJob() {
+  }
+
   public static void main(String[] args) {
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
 
