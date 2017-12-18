@@ -11,26 +11,5 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.tsystem;
 
-public class Task2 extends AbstractMapper {
-
-  private String id;
-
-  public Task2(String id, int priorityValue) {
-    super(id, priorityValue);
-    this.id = id;
-  }
-
-  @Override
-  public void execute() {
-    for (int i = 0; i < 10; i++) {
-      System.out.println("Task execution" + "\t" + id);
-    }
-  }
-
-  @Override
-  public void execute(AbstractMapper mapper) {
-    for (int i = 0; i < 10; i++) {
-      System.out.println("Task execution" + "\t" + id);
-    }
-  }
+public class TaskInformation {
 }
