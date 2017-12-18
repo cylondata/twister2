@@ -194,11 +194,13 @@ public class BinaryTree {
     boolean rootPresent = channelsOfExecutorList.contains(root);
     if (rootPresent) {
       channelsOfExecutorList.remove(new Integer(root));
-      channelsOfExecutorList.add(0, root);
     }
 
     // we will rotate according to rotate index
     channelsOfExecutorList = rotateList(channelsOfExecutorList, rotateIndex);
+    if (rootPresent) {
+      channelsOfExecutorList.add(0, root);
+    }
 
     int firstTaskId = channelsOfExecutorList.get(0);
     // this task act as the tree node
