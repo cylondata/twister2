@@ -22,5 +22,4 @@ public class CManager {
   public void communicate(String msg) {
     System.out.println("I am ready for communication:" + msg);
   }
-
 }
