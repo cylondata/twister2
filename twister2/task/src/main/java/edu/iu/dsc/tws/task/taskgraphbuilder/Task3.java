@@ -9,9 +9,13 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.tsystem;
+package edu.iu.dsc.tws.task.taskgraphbuilder;
 
-public class Task3 extends AbstractMapper {
+import java.util.logging.Logger;
+
+public class Task3 extends TaskMapper {
+
+  private static final Logger LOGGER = Logger.getLogger(Task3.class.getName());
 
   private String id;
 
@@ -23,14 +27,23 @@ public class Task3 extends AbstractMapper {
   @Override
   public void execute() {
     for (int i = 0; i < 10; i++) {
-      System.out.println("Task execution" + "\t" + id);
+      LOGGER.info("Task execution" + "\t" + id);
     }
   }
 
   @Override
-  public void execute(AbstractMapper mapper) {
+  public void execute(TaskMapper taskMapper) {
     for (int i = 0; i < 10; i++) {
-      System.out.println("Task execution" + "\t" + id);
+      LOGGER.info("Task execution" + "\t" + id);
+    }
+  }
+
+  @Override
+  public void execute(String message) {
+    for (int i = 0; i < 10; i++) {
+      LOGGER.info("Task execution" + "\t" + id + "\t" + message);
     }
   }
 }
+
+
