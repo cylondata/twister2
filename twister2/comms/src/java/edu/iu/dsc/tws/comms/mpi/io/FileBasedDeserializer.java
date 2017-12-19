@@ -9,29 +9,19 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.basic.wordcount;
+package edu.iu.dsc.tws.comms.mpi.io;
 
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Logger;
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.MessageDeSerializer;
 
-import edu.iu.dsc.tws.comms.api.KeyedMessageReceiver;
-
-public class WordAggregate implements KeyedMessageReceiver {
-  private static final Logger LOG = Logger.getLogger(WordAggregate.class.getName());
-
+public class FileBasedDeserializer implements MessageDeSerializer {
   @Override
-  public void init(Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
+  public void init(Config cfg) {
 
   }
 
   @Override
-  public boolean onMessage(int source, int path, int target, int flags, Object object) {
-    return false;
-  }
-
-  @Override
-  public void progress() {
-
+  public Object build(Object message, Object partialObject, int edge) {
+    return null;
   }
 }

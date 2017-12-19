@@ -30,7 +30,7 @@ public interface KeyedMessageReceiver {
    *
    * @param object the actual message
    */
-  boolean onMessage(int source, int path, int target, Object object);
+  boolean onMessage(int source, int path, int target, int flags, Object object);
 
   void progress();
 }

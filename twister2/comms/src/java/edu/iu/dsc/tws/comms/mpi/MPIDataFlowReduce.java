@@ -123,17 +123,17 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
 //    LOG.info(String.format("%d received message from %d", instancePlan.getThisExecutor(),
 //        currentMessage.getHeader().getSourceId()));
     // check weather this message is for a sub task
-    if (!isLast(header.getSourceId(), header.getPath(), messageDestId)
+    if (!isLast(header.getSourceId(), header.getFlags(), messageDestId)
         && partialReceiver != null) {
 //      LOG.info(String.format("%d calling partial receiver", instancePlan.getThisExecutor()));
-      return partialReceiver.onMessage(header.getSourceId(), header.getPath(),
+      return partialReceiver.onMessage(header.getSourceId(), MPIContext.DEFAULT_PATH,
           router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
-              MPIContext.DEFAULT_PATH), object);
+              MPIContext.DEFAULT_PATH), header.getFlags(), object);
     } else {
 //      LOG.info(String.format("%d calling fina receiver", instancePlan.getThisExecutor()));
-      return finalReceiver.onMessage(header.getSourceId(), header.getPath(),
+      return finalReceiver.onMessage(header.getSourceId(), MPIContext.DEFAULT_PATH,
           router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
-              MPIContext.DEFAULT_PATH), object);
+              MPIContext.DEFAULT_PATH), header.getFlags(), object);
     }
   }
 
@@ -199,26 +199,26 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
   }
 
   @Override
-  protected boolean receiveSendInternally(int source, int t, int path, Object message) {
+  protected boolean receiveSendInternally(int source, int t, int path, int flags, Object message) {
     // check weather this is the last task
     if (router.isLastReceiver()) {
 //      LOG.info(String.format("%d Calling directly final receiver %d",
 //          instancePlan.getThisExecutor(), source));
-      return finalReceiver.onMessage(source, path, t, message);
+      return finalReceiver.onMessage(source, path, t, flags, message);
     } else {
-      return partialReceiver.onMessage(source, path, t, message);
+      return partialReceiver.onMessage(source, path, t, flags, message);
     }
   }
 
   @Override
-  public boolean send(int source, Object message) {
-    return sendMessage(source, message, pathToUse);
+  public boolean send(int source, Object message, int flags) {
+    return sendMessage(source, message, pathToUse, flags);
   }
 
   @Override
-  public boolean sendPartial(int source, Object message) {
+  public boolean sendPartial(int source, Object message, int flags) {
     // now what we need to do
-    return sendMessagePartial(source, message, pathToUse);
+    return sendMessagePartial(source, message, pathToUse, flags);
   }
 
   @Override

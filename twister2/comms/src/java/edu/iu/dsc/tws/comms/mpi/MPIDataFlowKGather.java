@@ -61,28 +61,28 @@ public class MPIDataFlowKGather implements DataFlowOperation {
   }
 
   @Override
-  public boolean send(int source, Object message) {
+  public boolean send(int source, Object message, int flags) {
     throw new RuntimeException("Not implemented");
   }
 
   @Override
-  public boolean send(int source, Object message, int path) {
+  public boolean send(int source, Object message, int flags, int path) {
     MPIDataFlowOperation reduce = gatherMap.get(path);
     if (reduce == null) {
       throw new RuntimeException("Un-expected destination: " + path);
     }
-    boolean send = reduce.send(source, message, path);
+    boolean send = reduce.send(source, message, flags, path);
 //  LOG.info(String.format("%d sending message on reduce: %d %d %b", executor, path, source, send));
     return send;
   }
 
   @Override
-  public boolean sendPartial(int source, Object message, int path) {
+  public boolean sendPartial(int source, Object message, int path, int flags) {
     MPIDataFlowOperation reduce = gatherMap.get(path);
     if (reduce == null) {
       throw new RuntimeException("Un-expected destination: " + path);
     }
-    boolean send = reduce.sendPartial(source, message, path);
+    boolean send = reduce.sendPartial(source, message, flags, path);
 //  LOG.info(String.format("%d sending message on reduce: %d %d %b", executor, path, source, send));
     return send;
   }
@@ -130,7 +130,7 @@ public class MPIDataFlowKGather implements DataFlowOperation {
   }
 
   @Override
-  public boolean sendPartial(int source, Object message) {
+  public boolean sendPartial(int source, Object message, int flags) {
     // now what we need to do
     throw new RuntimeException("Not implemented");
   }
@@ -147,9 +147,9 @@ public class MPIDataFlowKGather implements DataFlowOperation {
     }
 
     @Override
-    public boolean onMessage(int source, int path, int target, Object object) {
+    public boolean onMessage(int source, int path, int target, int flags, Object object) {
 //      LOG.info(String.format("%d received message %d %d %d", executor, path, target, source));
-      return partialReceiver.onMessage(source, destination, target, object);
+      return partialReceiver.onMessage(source, destination, target, flags, object);
     }
 
     public void progress() {
@@ -168,9 +168,9 @@ public class MPIDataFlowKGather implements DataFlowOperation {
     }
 
     @Override
-    public boolean onMessage(int source, int path, int target, Object object) {
+    public boolean onMessage(int source, int path, int target, int flags, Object object) {
 //      LOG.info(String.format("%d received message %d %d %d", executor, path, target, source));
-      return finalReceiver.onMessage(source, destination, target, object);
+      return finalReceiver.onMessage(source, destination, target, flags, object);
     }
 
     @Override

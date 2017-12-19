@@ -1,5 +1,3 @@
-//  Copyright 2017 Twitter. All rights reserved.
-//
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
@@ -13,20 +11,5 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.api;
 
-import edu.iu.dsc.tws.common.config.Config;
-
-public interface MessageSerializer {
-  /**
-   * Initialize the serializer
-   * @param cfg
-   */
-  void init(Config cfg);
-
-  /**
-   * This method will be called repeatedly until the message is fully built
-   * @param message
-   * @param partialBuildObject
-   * @return
-   */
-  Object build(Object message, Object partialBuildObject);
+public class BoundedKeyedMessageReceiver {
 }

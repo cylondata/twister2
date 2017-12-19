@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.comms.api;
 import java.util.List;
 import java.util.Map;
 
-public interface MessageReceiver {
+public interface BoundedMessageReceiver {
   /**
    * Initialize the message receiver with tasks from which messages are expected
    * For each sub edge in graph, for each path, gives the expected task ids
@@ -30,7 +30,7 @@ public interface MessageReceiver {
    *
    * @param object the actual message
    */
-  boolean onMessage(int source, int path, int target, int flags, Object object);
+  boolean onMessage(int source, int path, int target, int flags, Object object, boolean last);
 
   /**
    * This method will be called by the progress

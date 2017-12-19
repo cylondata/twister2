@@ -22,6 +22,7 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.mpi.MPIBuffer;
 import edu.iu.dsc.tws.comms.mpi.MPIMessage;
 import edu.iu.dsc.tws.comms.mpi.MPISendMessage;
+import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
 public class MPIMessageSerializer implements MessageSerializer {
   private static final Logger LOG = Logger.getLogger(MPIMessageSerializer.class.getName());
@@ -29,7 +30,6 @@ public class MPIMessageSerializer implements MessageSerializer {
   private Queue<MPIBuffer> sendBuffers;
   private KryoSerializer serializer;
   private Config config;
-  private boolean grouped;
 
   public MPIMessageSerializer(Queue<MPIBuffer> buffers, KryoSerializer kryoSerializer) {
     this.sendBuffers = buffers;
@@ -37,9 +37,8 @@ public class MPIMessageSerializer implements MessageSerializer {
   }
 
   @Override
-  public void init(Config cfg, boolean grped) {
+  public void init(Config cfg) {
     this.config = cfg;
-    this.grouped = grped;
   }
 
   @Override
@@ -95,7 +94,7 @@ public class MPIMessageSerializer implements MessageSerializer {
     // now lets put the content of header in
     byteBuffer.putInt(sendMessage.getSource());
     // the path we are on, if not grouped it will be 0 and ignored
-    byteBuffer.putInt(sendMessage.getPath());
+    byteBuffer.putInt(sendMessage.getFlags());
     byteBuffer.putInt(sendMessage.getDestintationIdentifier());
     // we add 0 for now and late change it
     byteBuffer.putInt(0);
@@ -148,7 +147,7 @@ public class MPIMessageSerializer implements MessageSerializer {
       // now lets set the header
       MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
           sendMessage.getEdge(), dataBuffer.getSize());
-      builder.subEdge(sendMessage.getDestintationIdentifier());
+      builder.destination(sendMessage.getDestintationIdentifier());
       sendMessage.getMPIMessage().setHeader(builder.build());
 
 //      sendMessage.setSendBytes(data);
@@ -179,7 +178,7 @@ public class MPIMessageSerializer implements MessageSerializer {
       // now lets set the header
       MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
           sendMessage.getEdge(), data.length);
-      builder.subEdge(sendMessage.getDestintationIdentifier());
+      builder.destination(sendMessage.getDestintationIdentifier());
       sendMessage.getMPIMessage().setHeader(builder.build());
       dataPosition = 0;
       sendMessage.setSendBytes(data);
@@ -188,11 +187,6 @@ public class MPIMessageSerializer implements MessageSerializer {
     } else {
       data = sendMessage.getSendBytes();
       dataPosition = sendMessage.getByteCopied();
-    }
-
-    if (grouped && MPISendMessage.SendState.BODY_BUILT == sendMessage.serializedState()) {
-      // we need to set the path at the begining
-      byteBuffer.putInt(sendMessage.getPath());
     }
 
     int remainingToCopy = data.length - dataPosition;

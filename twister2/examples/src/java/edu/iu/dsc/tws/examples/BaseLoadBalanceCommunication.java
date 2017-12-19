@@ -123,7 +123,7 @@ public class BaseLoadBalanceCommunication implements IContainer {
 
   private void mapFunction(Object data) {
     for (int j = 0; j < NO_OF_TASKS / 4; j++) {
-      while (!loadBalance.send(id * 2 + j, data)) {
+      while (!loadBalance.send(id * 2 + j, data, 0)) {
         // lets wait a litte and try again
         channel.progress();
         // we should progress the communication directive
@@ -145,7 +145,7 @@ public class BaseLoadBalanceCommunication implements IContainer {
     }
 
     @Override
-    public boolean onMessage(int source, int path, int target, Object object) {
+    public boolean onMessage(int source, int path, int target, int flags, Object object) {
       if (count == 0) {
         start = System.nanoTime();
       }
