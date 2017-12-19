@@ -23,10 +23,10 @@ public abstract class DirectedDataflowGraph<TV, TE> {
 
   public abstract Set<TV> getTaskVertexSet();
 
+  public abstract TE getTaskEdge(TV sourceTaskVertex, TV targetTaskVertex);
+
   public abstract Set<TE> getAllTaskEdges(TV sourceTaskVertex,
                                           TV targetTaskVertex);
-
-  public abstract TE getTaskEdge(TV sourceTaskVertex, TV targetTaskVertex);
 
   public abstract Set<TE> taskEdgesOf(TV taskVertex);
 
