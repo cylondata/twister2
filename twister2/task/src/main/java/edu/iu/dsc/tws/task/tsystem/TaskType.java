@@ -28,5 +28,5 @@ public enum TaskType {
   /**
    * The task belongs to FaaS type
    **/
-  FaaS;
+  FaaS
 }
