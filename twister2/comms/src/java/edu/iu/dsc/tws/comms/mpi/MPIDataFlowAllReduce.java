@@ -89,22 +89,22 @@ public class MPIDataFlowAllReduce implements DataFlowOperation {
   }
 
   @Override
-  public boolean sendPartial(int source, Object message) {
-    return reduce.sendPartial(source, message);
+  public boolean sendPartial(int source, Object message, int flags) {
+    return reduce.sendPartial(source, message, flags);
   }
 
   @Override
-  public boolean send(int source, Object message) {
-    return reduce.send(source, message);
+  public boolean send(int source, Object message, int flags) {
+    return reduce.send(source, message, flags);
   }
 
   @Override
-  public boolean send(int source, Object message, int path) {
+  public boolean send(int source, Object message, int flags, int path) {
     throw new RuntimeException("Not-implemented");
   }
 
   @Override
-  public boolean sendPartial(int source, Object message, int path) {
+  public boolean sendPartial(int source, Object message, int flags, int path) {
     throw new RuntimeException("Not-implemented");
   }
 
@@ -153,7 +153,7 @@ public class MPIDataFlowAllReduce implements DataFlowOperation {
     }
 
     @Override
-    public boolean onMessage(int source, int path, int target, Object object) {
+    public boolean onMessage(int source, int path, int target, int flags, Object object) {
 //      LOG.info(String.format("%d received message %d", executor, target));
       // add the object to the map
       boolean canAdd = true;
@@ -192,7 +192,7 @@ public class MPIDataFlowAllReduce implements DataFlowOperation {
             }
           }
           if (found) {
-            if (broadcast.send(t, o)) {
+            if (broadcast.send(t, o, 0)) {
               count++;
               for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
                 o = e.getValue().remove(0);

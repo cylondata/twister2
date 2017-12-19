@@ -58,12 +58,14 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
     // check weather this message is for a sub task
 
 //      LOG.info(String.format("%d calling fina receiver", instancePlan.getThisExecutor()));
-    return finalReceiver.onMessage(header.getSourceId(), header.getPath(),
-        router.mainTaskOfExecutor(instancePlan.getThisExecutor(), MPIContext.DEFAULT_PATH), object);
+    return finalReceiver.onMessage(
+        header.getSourceId(), MPIContext.DEFAULT_PATH,
+        router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
+            MPIContext.DEFAULT_PATH), header.getFlags(), object);
   }
 
   @Override
-  public boolean sendPartial(int src, Object message) {
+  public boolean sendPartial(int src, Object message, int flags) {
     throw new RuntimeException("Not supported method");
   }
 
@@ -82,7 +84,8 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
       di = routingParameters.getDestinationId();
     }
     MPISendMessage sendMessage = new MPISendMessage(src, mpiMessage, edge,
-        di, MPIContext.DEFAULT_PATH, routingParameters.getInternalRoutes(),
+        di, MPIContext.DEFAULT_PATH, currentMessage.getHeader().getFlags(),
+        routingParameters.getInternalRoutes(),
         routingParameters.getExternalRoutes());
 
     // now try to put this into pending
@@ -159,8 +162,8 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
   }
 
   @Override
-  protected boolean receiveSendInternally(int src, int t, int path, Object message) {
-    return finalReceiver.onMessage(src, path, t, message);
+  protected boolean receiveSendInternally(int src, int t, int path, int flags, Object message) {
+    return finalReceiver.onMessage(src, path, t, flags, message);
   }
 
   @Override

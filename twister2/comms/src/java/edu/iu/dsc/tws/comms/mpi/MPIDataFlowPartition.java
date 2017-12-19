@@ -35,7 +35,7 @@ public class MPIDataFlowPartition extends MPIDataFlowOperation {
   }
 
   @Override
-  protected boolean receiveSendInternally(int source, int t, int path, Object message) {
+  protected boolean receiveSendInternally(int source, int t, int path, int flags, Object message) {
     return false;
   }
 
@@ -55,7 +55,7 @@ public class MPIDataFlowPartition extends MPIDataFlowOperation {
   }
 
   @Override
-  public boolean sendPartial(int source, Object message) {
+  public boolean sendPartial(int source, Object message, int flags) {
     return false;
   }
 }

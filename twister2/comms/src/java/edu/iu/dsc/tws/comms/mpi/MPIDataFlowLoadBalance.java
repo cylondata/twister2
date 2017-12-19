@@ -124,7 +124,7 @@ public class MPIDataFlowLoadBalance extends MPIDataFlowOperation {
   }
 
   @Override
-  public boolean sendPartial(int source, Object message) {
+  public boolean sendPartial(int source, Object message, int flags) {
     throw new RuntimeException("Not supported method");
   }
 
@@ -166,9 +166,9 @@ public class MPIDataFlowLoadBalance extends MPIDataFlowOperation {
   }
 
   @Override
-  protected boolean receiveSendInternally(int source, int t, int path, Object message) {
+  protected boolean receiveSendInternally(int source, int t, int path, int flags, Object message) {
     // okay this must be for the
-    return finalReceiver.onMessage(source, path, t, message);
+    return finalReceiver.onMessage(source, path, t, flags, message);
   }
 
   @Override
@@ -189,9 +189,9 @@ public class MPIDataFlowLoadBalance extends MPIDataFlowOperation {
   protected boolean receiveMessage(MPIMessage currentMessage, Object object) {
     MessageHeader header = currentMessage.getHeader();
 
-    return finalReceiver.onMessage(header.getSourceId(), header.getPath(),
+    return finalReceiver.onMessage(header.getSourceId(), MPIContext.DEFAULT_PATH,
         router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
-            header.getPath()), object);
+            MPIContext.DEFAULT_PATH), header.getFlags(), object);
   }
 
   @Override

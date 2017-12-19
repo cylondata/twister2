@@ -28,6 +28,9 @@ import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 public final class WordCountUtils {
   private static final Logger LOG = Logger.getLogger(WordCountUtils.class.getName());
 
+  private WordCountUtils() {
+  }
+
   /**
    * Let assume we have 2 tasks per container and one additional for first container,
    * which will be the destination

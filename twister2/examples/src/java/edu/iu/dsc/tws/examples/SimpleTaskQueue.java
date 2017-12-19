@@ -136,7 +136,7 @@ public class SimpleTaskQueue implements IContainer {
     }
 
     @Override
-    public boolean onMessage(int source, int path, int target, Object object) {
+    public boolean onMessage(int source, int path, int target, int flags, Object object) {
       count++;
       if (count % 50000 == 0) {
         LOG.info("received message: " + count);
@@ -203,7 +203,7 @@ public class SimpleTaskQueue implements IContainer {
         IntData data = generateData();
         // lets generate a message
 
-        while (!getDataFlowOperation().send(0, data)) {
+        while (!getDataFlowOperation().send(0, data, 0)) {
           // lets wait a litte and try again
           try {
             Thread.sleep(1);

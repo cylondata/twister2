@@ -44,6 +44,8 @@ public class MPISendMessage {
 
   private int acceptedExternalSends = 0;
 
+  private int flags;
+
   public enum SendState {
     INIT,
     SENT_INTERNALLY,
@@ -56,7 +58,7 @@ public class MPISendMessage {
   private SendState sendState = SendState.INIT;
 
 
-  public MPISendMessage(int src, MPIMessage message, int e, int di, int p,
+  public MPISendMessage(int src, MPIMessage message, int e, int di, int p, int f,
                         Set<Integer> intSends, Set<Integer> extSends) {
     this.ref = message;
     this.source = src;
@@ -65,6 +67,7 @@ public class MPISendMessage {
     this.path = p;
     this.internalSends = intSends;
     this.externalSends = extSends;
+    this.flags = f;
   }
 
   public SendState serializedState() {
@@ -141,5 +144,9 @@ public class MPISendMessage {
 
   public int incrementAcceptedExternalSends() {
     return ++acceptedExternalSends;
+  }
+
+  public int getFlags() {
+    return flags;
   }
 }

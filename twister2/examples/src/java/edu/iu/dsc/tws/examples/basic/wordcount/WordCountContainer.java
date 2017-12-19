@@ -12,12 +12,30 @@
 package edu.iu.dsc.tws.examples.basic.wordcount;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.core.TWSCommunication;
+import edu.iu.dsc.tws.comms.core.TWSNetwork;
+import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.mpi.MPIDataFlowKGather;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
 public class WordCountContainer implements IContainer {
-  @Override
-  public void init(Config config, int id, ResourcePlan resourcePlan) {
+  private MPIDataFlowKGather keyGather;
 
+  private TWSNetwork network;
+
+  private TWSCommunication channel;
+
+  @Override
+  public void init(Config cfg, int id, ResourcePlan resourcePlan) {
+    TaskPlan taskPlan = WordCountUtils.createWordCountPlan(cfg, resourcePlan, 8);
+
+    network = new TWSNetwork(cfg, taskPlan);
+    channel = network.getDataFlowTWSCommunication();
+
+//    keyGather = new MPIDataFlowKGather(channel, )
+  }
+
+  private void setupTasks() {
   }
 }

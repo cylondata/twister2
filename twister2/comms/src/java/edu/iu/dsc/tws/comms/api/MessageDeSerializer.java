@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.comms.api;
 import edu.iu.dsc.tws.common.config.Config;
 
 public interface MessageDeSerializer {
-  void init(Config cfg, boolean grouped);
+  void init(Config cfg);
 
   Object build(Object message, Object partialObject, int edge);
 }

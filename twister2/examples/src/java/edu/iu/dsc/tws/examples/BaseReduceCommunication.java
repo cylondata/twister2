@@ -129,7 +129,7 @@ public class BaseReduceCommunication implements IContainer {
         IntData data = generateData();
         for (int i = 0; i < 11000; i++) {
           // lets generate a message
-          while (!reduce.send(task, data)) {
+          while (!reduce.send(task, data, 0)) {
             // lets wait a litte and try again
             try {
               Thread.sleep(1);
@@ -188,7 +188,7 @@ public class BaseReduceCommunication implements IContainer {
     }
 
     @Override
-    public boolean onMessage(int source, int path, int target, Object object) {
+    public boolean onMessage(int source, int path, int target, int flags, Object object) {
 //      LOG.info(String.format("%d Message received for partial %d from %d", id, target, source));
       // add the object to the map
       boolean canAdd = true;
@@ -234,7 +234,7 @@ public class BaseReduceCommunication implements IContainer {
           }
           if (found) {
             if (o != null) {
-              if (reduce.sendPartial(t, o)) {
+              if (reduce.sendPartial(t, o, 0)) {
                 count++;
                 for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
                   o = e.getValue().remove(0);
@@ -292,7 +292,7 @@ public class BaseReduceCommunication implements IContainer {
     }
 
     @Override
-    public boolean onMessage(int source, int path, int target, Object object) {
+    public boolean onMessage(int source, int path, int target, int flags, Object object) {
       // add the object to the map
       boolean canAdd = true;
       if (count == 0) {

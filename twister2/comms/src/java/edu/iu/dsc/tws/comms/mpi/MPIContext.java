@@ -28,6 +28,8 @@ public class MPIContext extends CommunicationContext {
 
   public static final int DEFAULT_PATH = 0;
 
+  public static final int FLAGS_LAST = 1 << 30;
+
   public static int bufferSize(Config cfg) {
     return cfg.getIntegerValue(BUFFER_SIZE, 256000);
   }

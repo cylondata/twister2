@@ -21,13 +21,12 @@ import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.mpi.MPIBuffer;
 import edu.iu.dsc.tws.comms.mpi.MPIMessage;
+import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
 public class MPIMessageDeSerializer implements MessageDeSerializer {
   private static final Logger LOG = Logger.getLogger(MPIMessageDeSerializer.class.getName());
 
   private KryoSerializer serializer;
-
-  private boolean grouped;
 
   private MPIBuffer tempBuf;
 
@@ -36,8 +35,7 @@ public class MPIMessageDeSerializer implements MessageDeSerializer {
   }
 
   @Override
-  public void init(Config cfg, boolean grped) {
-    this.grouped = grped;
+  public void init(Config cfg) {
     tempBuf = new MPIBuffer(1024);
   }
 
@@ -73,15 +71,15 @@ public class MPIMessageDeSerializer implements MessageDeSerializer {
 
   private void buildHeader(MPIBuffer buffer, MPIMessage message, int edge) {
     int sourceId = buffer.getByteBuffer().getInt();
-    int path = buffer.getByteBuffer().getInt();
+    int flags = buffer.getByteBuffer().getInt();
     int subEdge = buffer.getByteBuffer().getInt();
     int length = buffer.getByteBuffer().getInt();
 
     MessageHeader.Builder headerBuilder = MessageHeader.newBuilder(
         sourceId, edge, length);
     // set the path
-    headerBuilder.path(path);
-    headerBuilder.subEdge(subEdge);
+    headerBuilder.flags(flags);
+    headerBuilder.destination(subEdge);
 
     // first build the header
     message.setHeader(headerBuilder.build());
@@ -123,7 +121,7 @@ public class MPIMessageDeSerializer implements MessageDeSerializer {
     MPIByteArrayInputStream input = null;
     try {
       //todo: headersize
-      input = new MPIByteArrayInputStream(message.getBuffers(), message.getHeaderSize(), grouped);
+      input = new MPIByteArrayInputStream(message.getBuffers(), message.getHeaderSize());
       return serializer.deserialize(input);
     } finally {
       if (input != null) {

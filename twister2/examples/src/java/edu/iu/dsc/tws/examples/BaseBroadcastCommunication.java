@@ -118,7 +118,7 @@ public class BaseBroadcastCommunication implements IContainer {
         IntData data = generateData();
         // lets generate a message
 //        LOG.info("Sending message from task:" + NO_OF_TASKS);
-        while (!broadcast.send(NO_OF_TASKS, data)) {
+        while (!broadcast.send(NO_OF_TASKS, data, 0)) {
           // lets wait a litte and try again
           try {
             Thread.sleep(1);
@@ -145,7 +145,7 @@ public class BaseBroadcastCommunication implements IContainer {
     }
 
     @Override
-    public boolean onMessage(int source, int path, int target, Object object) {
+    public boolean onMessage(int source, int path, int target, int flags, Object object) {
       count++;
       if (count % 1000 == 0) {
         LOG.info("Message received for last: " + source + " target: "
