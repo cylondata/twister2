@@ -9,23 +9,20 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples;
+package edu.iu.dsc.tws.task.taskgraphbuilder;
 
-public class IntData {
-  private int[] data;
+/**
+ * This class will be replaced with the original Executor code
+ **/
+public class Executor implements Runnable {
 
-  public IntData(int[] data) {
-    this.data = data;
+  public void execute(TaskMapper task, Class<CManager> cManager) {
+    System.out.println("Runnable task for the executor:" + task);
+    task.run();
   }
 
-  public IntData() {
-  }
-
-  public int[] getData() {
-    return data;
-  }
-
-  public void setData(int[] data) {
-    this.data = data;
+  @Override
+  public void run() {
+    System.out.println("hello execution finished");
   }
 }
