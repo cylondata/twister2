@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.comms.mpi.io;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -40,36 +39,21 @@ public class MPIMessageDeSerializer implements MessageDeSerializer {
   }
 
   @Override
-  public Object build(Object message, Object partialObject, int edge) {
+  public Object build(Object partialObject, int edge) {
     MPIMessage currentMessage = (MPIMessage) partialObject;
-    MPIBuffer buffer = (MPIBuffer) message;
-
-    // lets rewind to 0
-    ByteBuffer byteBuffer = buffer.getByteBuffer();
-    byteBuffer.position(buffer.getSize());
-    byteBuffer.flip();
 //    LOG.info("Build message with buffer containing: " + byteBuffer.remaining()
 //        + " size: " + buffer.getSize());
 
-    if (currentMessage.getHeader() == null) {
-      buildHeader(buffer, currentMessage, edge);
-    }
-
-    if (!currentMessage.isComplete()) {
-      currentMessage.addBuffer(buffer);
-      currentMessage.build();
-    }
-
     // we received a message, we need to determine weather we need to
     // forward to another node and process
-    if (currentMessage.isComplete()) {
-      return buildMessage(currentMessage);
-    }
+//    if (currentMessage.isComplete()) {
+    return buildMessage(currentMessage);
+//    }
 
-    return null;
+//    return null;
   }
 
-  private void buildHeader(MPIBuffer buffer, MPIMessage message, int edge) {
+  public MessageHeader buildHeader(MPIBuffer buffer, int edge) {
     int sourceId = buffer.getByteBuffer().getInt();
     int flags = buffer.getByteBuffer().getInt();
     int subEdge = buffer.getByteBuffer().getInt();
@@ -82,11 +66,7 @@ public class MPIMessageDeSerializer implements MessageDeSerializer {
     headerBuilder.destination(subEdge);
 
     // first build the header
-    message.setHeader(headerBuilder.build());
-//    LOG.info(String.format("Received message header: %d %d %d %d",
-//        sourceId, path, subEdge, length));
-    // we set the 20 header size for now
-    message.setHeaderSize(16);
+    return headerBuilder.build();
   }
 
   private Object buildMessage(MPIMessage message) {

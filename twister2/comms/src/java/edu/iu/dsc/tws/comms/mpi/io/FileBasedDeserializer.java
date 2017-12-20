@@ -13,6 +13,8 @@ package edu.iu.dsc.tws.comms.mpi.io;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.MessageDeSerializer;
+import edu.iu.dsc.tws.comms.api.MessageHeader;
+import edu.iu.dsc.tws.comms.mpi.MPIBuffer;
 
 public class FileBasedDeserializer implements MessageDeSerializer {
   @Override
@@ -21,7 +23,12 @@ public class FileBasedDeserializer implements MessageDeSerializer {
   }
 
   @Override
-  public Object build(Object message, Object partialObject, int edge) {
+  public Object build(Object partialObject, int edge) {
+    return null;
+  }
+
+  @Override
+  public MessageHeader buildHeader(MPIBuffer buffer, int edge) {
     return null;
   }
 }
