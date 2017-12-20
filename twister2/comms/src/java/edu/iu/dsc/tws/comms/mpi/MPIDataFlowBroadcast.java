@@ -120,10 +120,12 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
     }
     Set<Integer> execs = router.receivingExecutors();
     for (int e : execs) {
+      int capacity = maxReceiveBuffers * 2 * receiveExecutorsSize;
       Queue<Pair<Object, MPIMessage>> pendingReceiveMessages =
           new ArrayBlockingQueue<Pair<Object, MPIMessage>>(
-              maxReceiveBuffers * 2 * receiveExecutorsSize);
+              capacity);
       pendingReceiveMessagesPerSource.put(e, pendingReceiveMessages);
+      pendingReceiveDeSerializations.put(e, new ArrayBlockingQueue<MPIMessage>(capacity));
     }
   }
 

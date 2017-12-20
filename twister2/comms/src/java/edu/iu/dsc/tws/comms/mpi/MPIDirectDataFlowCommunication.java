@@ -57,6 +57,8 @@ public class MPIDirectDataFlowCommunication extends MPIDataFlowOperation {
           new ArrayBlockingQueue<Pair<Object, MPISendMessage>>(
               MPIContext.sendPendingMax(config));
       pendingSendMessagesPerSource.put(s, pendingSendMessages);
+      pendingReceiveDeSerializations.put(s, new ArrayBlockingQueue<MPIMessage>(
+          MPIContext.sendPendingMax(config)));
     }
   }
 

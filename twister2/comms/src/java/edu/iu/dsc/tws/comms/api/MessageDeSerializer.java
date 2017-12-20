@@ -12,9 +12,12 @@
 package edu.iu.dsc.tws.comms.api;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.mpi.MPIBuffer;
 
 public interface MessageDeSerializer {
   void init(Config cfg);
 
-  Object build(Object message, Object partialObject, int edge);
+  Object build(Object partialObject, int edge);
+
+  MessageHeader buildHeader(MPIBuffer buffer, int edge);
 }
