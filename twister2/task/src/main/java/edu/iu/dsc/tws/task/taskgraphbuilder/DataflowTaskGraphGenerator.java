@@ -13,18 +13,35 @@ package edu.iu.dsc.tws.task.taskgraphbuilder;
 
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.task.api.Task;
+
 /**
  * This is the main class for creating the dataflow task graph.
  */
 public class DataflowTaskGraphGenerator {
 
-  private static final Logger LOGGER = Logger.getLogger(DataflowTaskGraphGenerator.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(
+      DataflowTaskGraphGenerator.class.getName());
 
   private IDataflowTaskGraph<TaskMapper, CManager> dataflowTaskGraph =
-      new DataflowTaskGraph<TaskMapper, CManager>(CManager.class);
+      new DataflowTaskGraph<>(CManager.class);
 
   private IDataflowTaskGraph<TaskMapper, DataflowTaskEdge> taskGraph =
       new DataflowTaskGraph<>(DataflowTaskEdge.class);
+
+  private IDataflowTaskGraph<Task, DataFlowOperation> dataflowGraph =
+      new DataflowTaskGraph<>(DataFlowOperation.class);
+
+
+  public IDataflowTaskGraph<TaskMapper, DataflowTaskEdge> getTaskGraph() {
+    return taskGraph;
+  }
+
+  public void setTaskGraph(IDataflowTaskGraph<TaskMapper,
+      DataflowTaskEdge> taskGraph) {
+    this.taskGraph = taskGraph;
+  }
 
   public IDataflowTaskGraph<TaskMapper, CManager> getDataflowTaskGraph() {
     return dataflowTaskGraph;
@@ -35,13 +52,30 @@ public class DataflowTaskGraphGenerator {
     this.dataflowTaskGraph = dataflowTaskGraph;
   }
 
-  public IDataflowTaskGraph<TaskMapper, DataflowTaskEdge> getTaskGraph() {
-    return taskGraph;
+  public IDataflowTaskGraph<Task, DataFlowOperation> getDataflowGraph() {
+    return dataflowGraph;
   }
 
-  public void setTaskGraph(IDataflowTaskGraph<TaskMapper,
-      DataflowTaskEdge> taskGraph) {
-    this.taskGraph = taskGraph;
+  public void setDataflowGraph(IDataflowTaskGraph<Task, DataFlowOperation> dataflowGraph) {
+    this.dataflowGraph = dataflowGraph;
+  }
+
+  public DataflowTaskGraphGenerator generateDataflowGraph(Task sourceTask,
+                                                          Task sinkTask,
+                                                          DataFlowOperation... dataFlowOperation) {
+    try {
+      this.dataflowGraph.addTaskVertex(sourceTask);
+      this.dataflowGraph.addTaskVertex(sinkTask);
+      for (DataFlowOperation dataflowOperation1 : dataFlowOperation) {
+        this.dataflowGraph.addTaskEdge(sourceTask, sinkTask, dataFlowOperation[0]);
+      }
+    } catch (Exception iae) {
+      iae.printStackTrace();
+    }
+    LOGGER.info("Generated Dataflow Task Graph Is:" + taskGraph);
+    LOGGER.info("Generated Dataflow Task Graph with Vertices is:"
+        + taskGraph.getTaskVertexSet().size());
+    return this;
   }
 
   public DataflowTaskGraphGenerator generateTaskGraph(TaskMapper taskMapperTask1,
@@ -79,5 +113,6 @@ public class DataflowTaskGraphGenerator {
     return this;
   }
 }
+
 
 
