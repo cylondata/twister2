@@ -421,7 +421,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
               throw new RuntimeException(executor + " We should have enough space: "
                   + pendingReceiveMessages.size());
             }
-            return;
+            continue;
           }
           // we received a message, we need to determine weather we need to
           // forward to another node and process
@@ -432,7 +432,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
               throw new RuntimeException(executor + " We should have enough space: "
                   + pendingReceiveMessages.size());
             }
-            return;
+            continue;
           }
           // okay we built this message, lets remove it from the map
           // okay lets try to free the buffers of this message
