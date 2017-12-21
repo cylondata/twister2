@@ -449,19 +449,12 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
           MPIMessage.ReceivedState state = pair.getRight().getReceivedState();
           MPIMessage currentMessage = pair.getRight();
           Object object = pair.getLeft();
+
           if (state == MPIMessage.ReceivedState.INIT) {
             currentMessage.incrementRefCount();
-            currentMessage.setReceivedState(MPIMessage.ReceivedState.DOWN);
-            if (!passMessageDownstream(object, currentMessage)) {
-              break;
-            }
-            currentMessage.setReceivedState(MPIMessage.ReceivedState.RECEIVE);
-            if (!receiveMessage(currentMessage, object)) {
-              break;
-            }
-            currentMessage.release();
-            pendingReceiveMessages.poll();
-          } else if (state == MPIMessage.ReceivedState.DOWN) {
+          }
+
+          if (state == MPIMessage.ReceivedState.DOWN || state == MPIMessage.ReceivedState.INIT) {
             currentMessage.setReceivedState(MPIMessage.ReceivedState.DOWN);
             if (!passMessageDownstream(object, currentMessage)) {
               break;
