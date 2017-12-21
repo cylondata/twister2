@@ -209,7 +209,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
   /**
    * Setup the receives and send sendBuffers
    */
-  private void setupCommunication() {
+  protected void setupCommunication() {
     // we will receive from these
     int maxReceiveBuffers = MPIContext.receiveBufferCount(config);
     int receiveBufferSize = MPIContext.bufferSize(config);

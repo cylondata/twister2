@@ -12,6 +12,8 @@
 package edu.iu.dsc.tws.comms.mpi;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -23,6 +25,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.mpi.io.MPIGatherReceiver;
 import edu.iu.dsc.tws.comms.routing.InvertedBinaryTreeRouter;
 
 public class MPIDataFlowGather extends MPIDataFlowOperation {
@@ -42,7 +45,7 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
 
   private MessageReceiver finalReceiver;
 
-  private MessageReceiver partialReceiver;
+  private MPIGatherReceiver partialReceiver;
 
   private int index = 0;
 
@@ -54,7 +57,7 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
 
   public MPIDataFlowGather(TWSMPIChannel channel, Set<Integer> sources, int destination,
                            MessageReceiver finalRcvr,
-                           MessageReceiver partialRcvr, int indx, int p) {
+                           MPIGatherReceiver partialRcvr, int indx, int p) {
     super(channel);
     this.index = indx;
     this.sources = sources;
@@ -65,7 +68,7 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
   }
 
   public MPIDataFlowGather(TWSMPIChannel channel, Set<Integer> sources, int destination,
-                           MessageReceiver finalRcvr, MessageReceiver partialRcvr) {
+                           MessageReceiver finalRcvr, MPIGatherReceiver partialRcvr) {
     this(channel, sources, destination, finalRcvr, partialRcvr, 0, 0);
   }
 
@@ -82,8 +85,6 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
     if (this.finalReceiver != null && isLastReceiver()) {
       this.finalReceiver.init(receiveExpectedTaskIds());
     }
-
-    LOG.info(String.format("%d all send tasks: %s", executor, router.sendQueueIds()));
 
     Set<Integer> srcs = router.sendQueueIds();
     for (int s : srcs) {
@@ -110,7 +111,31 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
     }
   }
 
+  /**
+   * Setup the receives and send sendBuffers
+   */
+  protected void setupCommunication() {
+    // we will receive from these
+    int maxReceiveBuffers = MPIContext.receiveBufferCount(config);
+    int receiveBufferSize = MPIContext.bufferSize(config);
+    for (Integer recv : receivingExecutors()) {
+      Queue<MPIBuffer> recvList = new LinkedList<>();
+      for (int i = 0; i < maxReceiveBuffers; i++) {
+        recvList.add(new MPIBuffer(receiveBufferSize));
+      }
+      // register with the channel
+      channel.receiveMessage(recv, edge, this, recvList);
+      receiveBuffers.put(recv, recvList);
+    }
 
+    // configure the send sendBuffers
+    int sendBufferSize = MPIContext.bufferSize(config);
+    int sendBufferCount = MPIContext.sendBuffersCount(config);
+    for (int i = 0; i < sendBufferCount; i++) {
+      MPIBuffer buffer = new MPIBuffer(sendBufferSize);
+      sendBuffers.offer(buffer);
+    }
+  }
 
   @Override
   protected boolean isLast(int source, int path, int taskIdentifier) {
@@ -139,7 +164,7 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
       return partialReceiver.onMessage(header.getSourceId(),
           MPIContext.DEFAULT_PATH, header.getFlags(),
           router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
-              MPIContext.DEFAULT_PATH), object);
+              MPIContext.DEFAULT_PATH), currentMessage);
     } else {
 //      LOG.info(String.format("%d calling fina receiver", instancePlan.getThisExecutor()));
       return finalReceiver.onMessage(header.getSourceId(),
@@ -218,7 +243,9 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
 //          instancePlan.getThisExecutor(), source));
       return finalReceiver.onMessage(source, path, t, flags, message);
     } else {
-      return partialReceiver.onMessage(source, path, t, flags, message);
+      // now we need to serialize this to the buffer
+
+      return partialReceiver.onMessage(source, path, t, flags, null);
     }
   }
 
@@ -259,5 +286,76 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
 
     finalReceiver.progress();
     partialReceiver.progress();
+  }
+
+  private class PartialGather implements MPIGatherReceiver {
+    // lets keep track of the messages
+    // for each task we need to keep track of incoming messages
+    private Map<Integer, Map<Integer, List<MPIMessage>>> messages = new HashMap<>();
+    private Map<Integer, Map<Integer, Integer>> counts = new HashMap<>();
+
+    @Override
+    public void init(Map<Integer, List<Integer>> expectedIds) {
+      for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
+        Map<Integer, List<MPIMessage>> messagesPerTask = new HashMap<>();
+        Map<Integer, Integer> countsPerTask = new HashMap<>();
+
+        for (int i : e.getValue()) {
+          messagesPerTask.put(i, new ArrayList<MPIMessage>());
+          countsPerTask.put(i, 0);
+        }
+
+        messages.put(e.getKey(), messagesPerTask);
+        counts.put(e.getKey(), countsPerTask);
+      }
+    }
+
+    @Override
+    public boolean onMessage(int source, int path, int target, int flags, MPIMessage object) {
+      // add the object to the map
+      boolean canAdd = true;
+      List<MPIMessage> m = messages.get(target).get(source);
+      Integer c = counts.get(target).get(source);
+      if (m.size() > 128) {
+        canAdd = false;
+      } else {
+        m.add(object);
+        counts.get(target).put(source, c + 1);
+      }
+      return canAdd;
+    }
+
+    public void progress() {
+      for (int t : messages.keySet()) {
+        boolean canProgress = true;
+        while (canProgress) {
+          // now check weather we have the messages for this source
+          Map<Integer, List<MPIMessage>> map = messages.get(t);
+          Map<Integer, Integer> cMap = counts.get(t);
+          boolean found = true;
+          for (Map.Entry<Integer, List<MPIMessage>> e : map.entrySet()) {
+            if (e.getValue().size() == 0) {
+              found = false;
+              canProgress = false;
+            }
+          }
+
+          if (found) {
+            if (sendPartial(t, null, 0)) {
+              MPIMessage o = null;
+              for (Map.Entry<Integer, List<MPIMessage>> e : map.entrySet()) {
+                o = e.getValue().remove(0);
+              }
+              for (Map.Entry<Integer, Integer> e : cMap.entrySet()) {
+                Integer i = e.getValue();
+                cMap.put(e.getKey(), i - 1);
+              }
+            } else {
+              canProgress = false;
+            }
+          }
+        }
+      }
+    }
   }
 }
