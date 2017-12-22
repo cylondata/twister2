@@ -354,11 +354,11 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
           }
 
           if (found) {
-            List<Object> messages = new ArrayList<>();
+            List<Object> out = new ArrayList<>();
             for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
-              messages.add(e);
+              out.add(e);
             }
-            if (sendMessagePartial(t, messages, 0,
+            if (sendMessagePartial(t, out, 0,
                 MPIContext.FLAGS_MULTI_MSG, MessageType.MULTI_BUFFER)) {
               for (Map.Entry<Integer, Integer> e : cMap.entrySet()) {
                 Integer i = e.getValue();

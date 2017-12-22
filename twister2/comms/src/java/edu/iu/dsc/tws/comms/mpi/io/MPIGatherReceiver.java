@@ -14,8 +14,6 @@ package edu.iu.dsc.tws.comms.mpi.io;
 import java.util.List;
 import java.util.Map;
 
-import edu.iu.dsc.tws.comms.mpi.MPIMessage;
-
 public interface MPIGatherReceiver {
   /**
    * Initialize the message receiver with tasks from which messages are expected

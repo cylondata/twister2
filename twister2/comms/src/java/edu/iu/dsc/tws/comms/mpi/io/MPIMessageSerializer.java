@@ -138,6 +138,10 @@ public class MPIMessageSerializer implements MessageSerializer {
     }
   }
 
+  private void serializeMultiBuffer(Object object, MPISendMessage sendMessage, MPIBuffer buffer) {
+
+  }
+
   private void serializeBuffer(Object object, MPISendMessage sendMessage, MPIBuffer buffer) {
     MPIBuffer dataBuffer = (MPIBuffer) object;
     ByteBuffer byteBuffer = buffer.getByteBuffer();
