@@ -242,7 +242,8 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
     return sendMessage(source, message, MPIContext.DEFAULT_PATH, flags);
   }
 
-  protected boolean sendMessagePartial(int source, Object object, int path, int flags) {
+  protected boolean sendMessagePartial(int source, Object object, int path,
+                                       int flags, MessageType t) {
     lock.lock();
     try {
       // for partial sends we use minus value to find the correct queue
@@ -250,7 +251,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
           pendingSendMessagesPerSource.get(source * -1 - 1);
 
       RoutingParameters routingParameters = partialSendRoutingParameters(source, path);
-      MPIMessage mpiMessage = new MPIMessage(source, type, MPIMessageDirection.OUT, this);
+      MPIMessage mpiMessage = new MPIMessage(source, t, MPIMessageDirection.OUT, this);
       int di = -1;
       if (routingParameters.getExternalRoutes().size() > 0) {
         di = routingParameters.getDestinationId();
@@ -279,6 +280,10 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
     } finally {
       lock.unlock();
     }
+  }
+
+  protected boolean sendMessagePartial(int source, Object object, int path, int flags) {
+    return sendMessagePartial(source, object, path, flags, type);
   }
 
   protected boolean sendMessage(int source, Object message, int path, int flags) {

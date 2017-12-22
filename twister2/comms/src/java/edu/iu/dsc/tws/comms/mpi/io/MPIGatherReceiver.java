@@ -32,7 +32,7 @@ public interface MPIGatherReceiver {
    *
    * @param object the actual message
    */
-  boolean onMessage(int source, int path, int target, int flags, MPIMessage object);
+  boolean onMessage(int source, int path, int target, int flags, Object object);
 
   /**
    * This method will be called by the progress

@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Logger;
 
@@ -25,6 +26,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.mpi.io.MPIGatherReceiver;
 import edu.iu.dsc.tws.comms.routing.InvertedBinaryTreeRouter;
 
@@ -54,6 +56,18 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
   private int gatherLimit = 1;
 
   private boolean batch = false;
+
+  public MPIDataFlowGather(TWSMPIChannel channel, Set<Integer> sources, int destination,
+                           MessageReceiver finalRcvr,
+                           int indx, int p) {
+    super(channel);
+    this.index = indx;
+    this.sources = sources;
+    this.destination = destination;
+    this.finalReceiver = finalRcvr;
+    this.partialReceiver = new PartialGather();
+    this.pathToUse = p;
+  }
 
   public MPIDataFlowGather(TWSMPIChannel channel, Set<Integer> sources, int destination,
                            MessageReceiver finalRcvr,
@@ -155,18 +169,14 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
 
     // we always receive to the main task
     int messageDestId = currentMessage.getHeader().getDestinationIdentifier();
-//    LOG.info(String.format("%d received message from %d", instancePlan.getThisExecutor(),
-//        currentMessage.getHeader().getSourceId()));
     // check weather this message is for a sub task
     if (!isLast(header.getSourceId(), header.getFlags(), messageDestId)
         && partialReceiver != null) {
-//      LOG.info(String.format("%d calling partial receiver", instancePlan.getThisExecutor()));
       return partialReceiver.onMessage(header.getSourceId(),
           MPIContext.DEFAULT_PATH, header.getFlags(),
           router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
               MPIContext.DEFAULT_PATH), currentMessage);
     } else {
-//      LOG.info(String.format("%d calling fina receiver", instancePlan.getThisExecutor()));
       return finalReceiver.onMessage(header.getSourceId(),
           MPIContext.DEFAULT_PATH, header.getFlags(),
           router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
@@ -239,13 +249,10 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
   protected boolean receiveSendInternally(int source, int t, int path, int flags, Object message) {
     // check weather this is the last task
     if (router.isLastReceiver()) {
-//      LOG.info(String.format("%d Calling directly final receiver %d",
-//          instancePlan.getThisExecutor(), source));
       return finalReceiver.onMessage(source, path, t, flags, message);
     } else {
       // now we need to serialize this to the buffer
-
-      return partialReceiver.onMessage(source, path, t, flags, null);
+      return partialReceiver.onMessage(source, path, t, flags, message);
     }
   }
 
@@ -291,17 +298,18 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
   private class PartialGather implements MPIGatherReceiver {
     // lets keep track of the messages
     // for each task we need to keep track of incoming messages
-    private Map<Integer, Map<Integer, List<MPIMessage>>> messages = new HashMap<>();
+    private Map<Integer, Map<Integer, List<Object>>> messages = new TreeMap<>();
     private Map<Integer, Map<Integer, Integer>> counts = new HashMap<>();
+    private int currentIndex = 0;
 
     @Override
     public void init(Map<Integer, List<Integer>> expectedIds) {
       for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
-        Map<Integer, List<MPIMessage>> messagesPerTask = new HashMap<>();
+        Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
         Map<Integer, Integer> countsPerTask = new HashMap<>();
 
         for (int i : e.getValue()) {
-          messagesPerTask.put(i, new ArrayList<MPIMessage>());
+          messagesPerTask.put(i, new ArrayList<Object>());
           countsPerTask.put(i, 0);
         }
 
@@ -311,14 +319,19 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
     }
 
     @Override
-    public boolean onMessage(int source, int path, int target, int flags, MPIMessage object) {
+    public boolean onMessage(int source, int path, int target, int flags, Object object) {
       // add the object to the map
       boolean canAdd = true;
-      List<MPIMessage> m = messages.get(target).get(source);
+      List<Object> m = messages.get(target).get(source);
       Integer c = counts.get(target).get(source);
       if (m.size() > 128) {
         canAdd = false;
       } else {
+        // we need to increment the reference count to make the buffers available
+        // other wise they will bre reclaimed
+        if (object instanceof MPIMessage) {
+          ((MPIMessage) object).incrementRefCount();
+        }
         m.add(object);
         counts.get(target).put(source, c + 1);
       }
@@ -330,10 +343,10 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
         boolean canProgress = true;
         while (canProgress) {
           // now check weather we have the messages for this source
-          Map<Integer, List<MPIMessage>> map = messages.get(t);
+          Map<Integer, List<Object>> map = messages.get(t);
           Map<Integer, Integer> cMap = counts.get(t);
           boolean found = true;
-          for (Map.Entry<Integer, List<MPIMessage>> e : map.entrySet()) {
+          for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
             if (e.getValue().size() == 0) {
               found = false;
               canProgress = false;
@@ -341,11 +354,12 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
           }
 
           if (found) {
-            if (sendPartial(t, null, 0)) {
-              MPIMessage o = null;
-              for (Map.Entry<Integer, List<MPIMessage>> e : map.entrySet()) {
-                o = e.getValue().remove(0);
-              }
+            List<Object> messages = new ArrayList<>();
+            for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
+              messages.add(e);
+            }
+            if (sendMessagePartial(t, messages, 0,
+                MPIContext.FLAGS_MULTI_MSG, MessageType.MULTI_BUFFER)) {
               for (Map.Entry<Integer, Integer> e : cMap.entrySet()) {
                 Integer i = e.getValue();
                 cMap.put(e.getKey(), i - 1);

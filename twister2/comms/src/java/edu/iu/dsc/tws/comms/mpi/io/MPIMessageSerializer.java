@@ -132,6 +132,7 @@ public class MPIMessageSerializer implements MessageSerializer {
       case BUFFER:
         serializeBuffer(payload, sendMessage, buffer);
         break;
+      case MULTI_BUFFER:
       default:
         break;
     }
