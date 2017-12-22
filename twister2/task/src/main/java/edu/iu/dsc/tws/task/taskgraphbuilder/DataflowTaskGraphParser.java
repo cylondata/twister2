@@ -13,25 +13,31 @@ package edu.iu.dsc.tws.task.taskgraphbuilder;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
+import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.task.api.Task;
+
 public class DataflowTaskGraphParser {
 
-  private static final Logger LOGGER = Logger.getLogger(DataflowTaskGraphParser.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(
+      DataflowTaskGraphParser.class.getName());
   private static int jobId = 0;
   private DataflowTaskGraphGenerator dataflowTaskGraph;
-  private DataflowTaskGraphParser taskGraphParser;
+  private DataflowTaskGraphParser dataflowTaskGraphParser;
   private Executor executor = new Executor();
-  private CManager cManager = new CManager("msg");
+  private DataFlowOperation dataFlowOperation = null;
+  private AtomicInteger totalRunningTasks = new AtomicInteger(0);
 
   public DataflowTaskGraphParser(DataflowTaskGraphGenerator taskgraph) {
     this.dataflowTaskGraph = taskgraph;
   }
 
   @SuppressWarnings("unchecked")
-  public void dataflowTaskGraphParseAndSchedule() {
-    Set<TaskMapper> processedTaskVertices = new HashSet<>();
+  public Set<Task> dataflowTaskGraphParseAndSchedule() {
+    Set<Task> processedTaskVertices = new HashSet<>();
 
     if (dataflowTaskGraph != null) {
       processedTaskVertices = dataflowTaskGraphPrioritize(this.dataflowTaskGraph);
@@ -42,55 +48,59 @@ public class DataflowTaskGraphParser {
         processedTaskVertices.forEach(System.out::println);
         processedTaskVertices.stream().
             forEach(Mapper -> executor.execute(Mapper,
-                (Class<CManager>) cManager.getClass()));
+                (Class<DataFlowOperation>) dataFlowOperation.getClass()));
         ++jobId;
       } catch (Exception e) {
         e.printStackTrace();
       }
     }
+    return processedTaskVertices;
   }
 
-  public Set<TaskMapper> dataflowTaskGraphPrioritize(DataflowTaskGraphGenerator taskGraph) {
-    final IDataflowTaskGraph<TaskMapper, CManager> dataflowGraph =
-        taskGraph.getDataflowTaskGraph();
-    Set<TaskMapper> taskVertices = dataflowGraph.getTaskVertexSet();
+  private Set<Task> dataflowTaskGraphPrioritize(DataflowTaskGraphGenerator taskGraph) {
+
+    final IDataflowTaskGraph<Task, DataFlowOperation> dataflowTaskgraph
+        = taskGraph.getDataflowGraph();
+    Set<Task> taskVertices = dataflowTaskgraph.getTaskVertexSet();
 
     try {
       taskVertices.stream()
-          .filter(task -> dataflowGraph.inDegreeOf(task) == 0)
-          .forEach(task -> dataflowTaskGraphParse(dataflowGraph, task));
+          .filter(task -> dataflowTaskgraph.inDegreeOf(task) == 0)
+          .forEach(task -> dataflowTaskGraphParse(dataflowTaskgraph, task));
     } catch (NullPointerException npe) {
       npe.printStackTrace();
     }
     return taskVertices;
   }
 
-  private int dataflowTaskGraphParse(final IDataflowTaskGraph<TaskMapper,
-      CManager> dataflowGraph, final TaskMapper mapper) {
+  private int dataflowTaskGraphParse(final IDataflowTaskGraph<Task,
+      DataFlowOperation> dataflowTaskgraph, final Task mapper) {
 
-    LOGGER.info("Dataflow Task Graph is:" + dataflowGraph
+    LOGGER.info("Dataflow Task Graph is:" + dataflowTaskgraph
         + "\t" + "and Task Object is:" + mapper);
 
-    if (mapper.hasExecutionWeight()) {
-      return (int) mapper.getExecutionWeight();
-    }
-    if (dataflowGraph.outDegreeOf(mapper) == 0) {
-      mapper.setExecutionWeight(mapper.getTaskPriority());
-      return (int) mapper.getExecutionWeight();
+    if (dataflowTaskgraph.outDegreeOf(mapper) == 0) {
+      //mapper.setTaskExecutionWeight(mapper.getTaskPriority());
+      //return (int) mapper.getTaskExecutionWeight();
+      return 1;
     } else {
-      Set<CManager> taskEdges = dataflowGraph.outgoingTaskEdgesOf(mapper);
-      Stream<TaskMapper> neighbours = taskEdges.stream().map(dataflowGraph::getTaskEdgeTarget);
+      Set<DataFlowOperation> taskEdgesOf = dataflowTaskgraph.outgoingTaskEdgesOf(mapper);
+      Stream<Task> taskStream = taskEdgesOf.stream().map(dataflowTaskgraph::getTaskEdgeTarget);
 
-      int maxWeightOfNeighbours = neighbours.map(
-          next -> dataflowTaskGraphParse(dataflowGraph, next)).max(Integer::compare).get();
-      int weightOfCurrent = mapper.getTaskPriority() + maxWeightOfNeighbours;
-      mapper.setExecutionWeight(weightOfCurrent);
+      int maxWeightOfNeighbours = taskStream.map(
+          next -> dataflowTaskGraphParse(dataflowTaskgraph, next)).max(Integer::compare).get();
+      //int weightOfCurrent = mapper.getTaskPriority() + maxWeightOfNeighbours;
+      //mapper.setTaskExecutionWeight(weightOfCurrent);
 
-      LOGGER.info("Task Edges are:" + taskEdges + "\t"
-          + "neighbours:" + neighbours.getClass().getName() + "\t"
+      //For testing....
+      int weightOfCurrent = 1 + maxWeightOfNeighbours;
+
+      LOGGER.info("Task Edges are:" + taskEdgesOf + "\t"
+          + "taskStream:" + taskStream.getClass().getName() + "\t"
           + "Weight of the current task:" + weightOfCurrent);
 
       return weightOfCurrent;
     }
   }
 }
+

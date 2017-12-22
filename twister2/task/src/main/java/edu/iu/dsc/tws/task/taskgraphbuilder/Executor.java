@@ -11,6 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.taskgraphbuilder;
 
+import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.task.api.Task;
+
 /**
  * This class will be replaced with the original Executor code
  **/
@@ -19,6 +22,10 @@ public class Executor implements Runnable {
   public void execute(TaskMapper task, Class<CManager> cManager) {
     System.out.println("Runnable task for the executor:" + task);
     task.run();
+  }
+
+  public void execute(Task task, Class<DataFlowOperation> dataFlowOperationClass) {
+    //task.run();
   }
 
   @Override
