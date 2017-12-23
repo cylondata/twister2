@@ -263,19 +263,8 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
           routingParameters.getExternalRoutes());
 
       // now try to put this into pending
-//      LOG.info(String.format("%d before %d %d", executor, pendingSendMessages.size(), 0));
       boolean ret = pendingSendMessages.offer(
           new ImmutablePair<Object, MPISendMessage>(object, sendMessage));
-//      LOG.info(String.format("%d after %d", executor, pendingSendMessages.size()));
-//      if (ret) {
-//        sendCountPartial++;
-//      }
-//      if (sendCountPartial % 1 == 0) {
-//        LOG.info(String.format(
-//            "%d Partial Pending size: source %d pending %d  sendCount %d remaining %d %b",
-//            executor, source, pendingSendMessages.size(), sendCountPartial,
-//            pendingSendMessages.remainingCapacity(), ret));
-//      }
       return ret;
     } finally {
       lock.unlock();
@@ -306,15 +295,6 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
       // now try to put this into pending
       boolean ret = pendingSendMessages.offer(
           new ImmutablePair<Object, MPISendMessage>(message, sendMessage));
-//      if (ret) {
-//        sendCountFull++;
-//      }
-//      if (sendCountFull % 1 == 0) {
-//        LOG.info(String.format(
-//            "%d Full Pending size: source %d pending %d sendCount %d remaining %d",
-//            executor, source, pendingSendMessages.size(), sendCountFull,
-//            pendingSendMessages.remainingCapacity()));
-//      }
       return ret;
     } finally {
       lock.unlock();
@@ -439,7 +419,6 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
             }
             continue;
           }
-          // okay we built this message, lets remove it from the map
           // okay lets try to free the buffers of this message
           currentMessage.release();
         }
@@ -546,10 +525,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
       if (currentMessage == null) {
         currentMessage = new MPIMessage(id, type, MPIMessageDirection.IN, this);
         currentMessages.put(id, currentMessage);
-
         MessageHeader header = messageDeSerializer.buildHeader(buffer, e);
-//    LOG.info(String.format("Received message header: %d %d %d %d",
-//        sourceId, path, subEdge, length));
         // we set the 20 header size for now
         currentMessage.setHeader(header);
         currentMessage.setHeaderSize(16);
