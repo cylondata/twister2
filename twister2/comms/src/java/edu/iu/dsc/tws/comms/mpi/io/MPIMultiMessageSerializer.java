@@ -69,8 +69,8 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
         sendMessage.setSendState(MPISendMessage.SendState.HEADER_BUILT);
       }
 
-      if (sendMessage.serializedState() == MPISendMessage.SendState.HEADER_BUILT ||
-          sendMessage.serializedState() == MPISendMessage.SendState.BODY_BUILT) {
+      if (sendMessage.serializedState() == MPISendMessage.SendState.HEADER_BUILT
+          || sendMessage.serializedState() == MPISendMessage.SendState.BODY_BUILT) {
         // build the body
         // first we need to serialize the body if needed
         serializeBody(message, sendMessage, buffer);
