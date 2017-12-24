@@ -26,8 +26,9 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
-import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.mpi.io.MPIGatherReceiver;
+import edu.iu.dsc.tws.comms.mpi.io.MultiObject;
+import edu.iu.dsc.tws.comms.mpi.io.types.ObjectSerializer;
 import edu.iu.dsc.tws.comms.routing.InvertedBinaryTreeRouter;
 
 public class MPIDataFlowGather extends MPIDataFlowOperation {
@@ -356,10 +357,15 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
           if (found) {
             List<Object> out = new ArrayList<>();
             for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
-              out.add(e);
+              Object e1 = e.getValue().get(0);
+              if (!(e1 instanceof MPIMessage)) {
+                out.add(new MultiObject(e.getKey(), e1));
+              } else {
+                out.add(e1);
+              }
             }
             if (sendMessagePartial(t, out, 0,
-                MPIContext.FLAGS_MULTI_MSG, MessageType.MULTI_BUFFER)) {
+                MPIContext.FLAGS_MULTI_MSG, type)) {
               for (Map.Entry<Integer, Integer> e : cMap.entrySet()) {
                 Integer i = e.getValue();
                 cMap.put(e.getKey(), i - 1);
