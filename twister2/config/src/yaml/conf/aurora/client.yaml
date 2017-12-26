@@ -20,10 +20,10 @@ twister2.job.name: "hello"
 # number of CPUs for this job
 twister2.cpu_per_container: "1"
 
-# amount of memory for each CPU
+# amount of memory for each CPU in bytes
 twister2.ram_per_container: "1000000000"
 
-# amount of hard disk space for this job on each CPU
+# amount of hard disk space for this job on each CPU in bytes
 twister2.disk_per_container: "1000000000"
 
 # number of instances for the task
