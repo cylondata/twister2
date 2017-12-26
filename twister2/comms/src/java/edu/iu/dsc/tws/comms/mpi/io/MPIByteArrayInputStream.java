@@ -26,20 +26,19 @@ public class MPIByteArrayInputStream extends InputStream {
   // the buffers which contains the message
   protected List<MPIBuffer> bufs;
 
-  // the absolute position of the current buffer
-  // protected int pos;
-  protected int mark = 0;
-
   // the current buffer index
   protected int currentBufferIndex = 0;
 
   // header size read
   protected int headerSize;
 
-  public MPIByteArrayInputStream(List<MPIBuffer> buffers, int headerSize) {
+  private int length;
+
+  public MPIByteArrayInputStream(List<MPIBuffer> buffers, int startOffset, int len) {
     this.bufs = buffers;
     this.currentBufferIndex = 0;
-    this.headerSize = headerSize;
+    this.headerSize = startOffset;
+    this.length = len;
   }
 
   public synchronized int read() {

@@ -19,7 +19,7 @@ import java.util.Set;
 public class MPISendMessage {
   // keep track of the serialized bytes in case we don't
   // have enough space in the send buffers
-  protected byte[] sendBytes;
+  protected Object serializationState;
 
   //number of bytes copied to the network buffers so far
   private int byteCopied = 0;
@@ -98,12 +98,12 @@ public class MPISendMessage {
     return ref;
   }
 
-  public void setSendBytes(byte[] sendBytes) {
-    this.sendBytes = sendBytes;
+  public void setSerializationState(Object serializationState) {
+    this.serializationState = serializationState;
   }
 
-  public byte[] getSendBytes() {
-    return sendBytes;
+  public Object getSerializationState() {
+    return serializationState;
   }
 
   public boolean isComplete() {

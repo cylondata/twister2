@@ -11,6 +11,7 @@ def twister2_client_conf_files():
         "//twister2/config/src/yaml:conf-local-yaml",
         "//twister2/config/src/yaml:conf-slurmmpi-yaml",
         "//twister2/config/src/yaml:conf-nodesmpi-yaml",
+        "//twister2/config/src/yaml:conf-aurora-yaml",
     ]
 
 def twister2_client_local_files():
@@ -26,6 +27,11 @@ def twister2_client_nodesmpi_files():
 def twister2_client_slurmmpi_files():
     return [
         "//twister2/config/src/yaml:conf-slurmmpi-yaml",
+    ]
+
+def twister2_client_aurora_files():
+    return [
+        "//twister2/config/src/yaml:conf-aurora-yaml",
     ]
 
 def twister2_client_lib_task_scheduler_files():

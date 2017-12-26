@@ -41,16 +41,7 @@ public class MPIMessageDeSerializer implements MessageDeSerializer {
   @Override
   public Object build(Object partialObject, int edge) {
     MPIMessage currentMessage = (MPIMessage) partialObject;
-//    LOG.info("Build message with buffer containing: " + byteBuffer.remaining()
-//        + " size: " + buffer.getSize());
-
-    // we received a message, we need to determine weather we need to
-    // forward to another node and process
-//    if (currentMessage.isComplete()) {
     return buildMessage(currentMessage);
-//    }
-
-//    return null;
   }
 
   public MessageHeader buildHeader(MPIBuffer buffer, int edge) {
@@ -101,7 +92,8 @@ public class MPIMessageDeSerializer implements MessageDeSerializer {
     MPIByteArrayInputStream input = null;
     try {
       //todo: headersize
-      input = new MPIByteArrayInputStream(message.getBuffers(), message.getHeaderSize());
+      input = new MPIByteArrayInputStream(message.getBuffers(), message.getHeaderSize(),
+          message.getHeader().getLength());
       return serializer.deserialize(input);
     } finally {
       if (input != null) {

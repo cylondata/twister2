@@ -50,6 +50,7 @@ public final class ConfigLoader {
     // now load the configurations
     Config.Builder cb = Config.newBuilder()
         .putAll(localConfig)
+        .putAll(loadConfig(Context.clientConfigurationFile(localConfig)))
         .putAll(loadConfig(Context.taskConfigurationFile(localConfig)))
         .putAll(loadConfig(Context.resourceSchedulerConfigurationFile(localConfig)))
         .putAll(loadConfig(Context.uploaderConfigurationFile(localConfig)))
