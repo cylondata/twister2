@@ -18,6 +18,17 @@ package edu.iu.dsc.tws.data.memory;
  */
 public interface MemoryManager {
 
+  /**
+   * Initializes the Memory manager
+   * @return
+   */
   boolean init();
 
+  /**
+   * Stores the give key value pair in the memory manager
+   * @param key key of the pair
+   * @param value value to be stored
+   * @return true of the key value pair was added, false otherwise
+   */
+  boolean put(byte[] key, byte[] value);
 }
