@@ -3,7 +3,7 @@
 ################################################################################
 
 # aurora python script to submit a job to Aurora Scheduler
-twister2.resource.scheduler.aurora.script: "/root/twister2/twister2.aurora"
+#twister2.resource.scheduler.aurora.script: "/root/twister2/twister2.aurora"
 
 # cluster name aurora scheduler runs in
 twister2.resource.scheduler.aurora.cluster: "example"
@@ -20,11 +20,11 @@ twister2.job.name: "hello"
 # number of CPUs for this job
 twister2.cpu_per_container: "1"
 
-# amount of memory for each CPU in bytes
-twister2.ram_per_container: "1000000000"
+# amount of memory for each CPU in bytes, 1GB=1024*1024*1024
+twister2.ram_per_container: "1073741824"
 
-# amount of hard disk space for this job on each CPU in bytes
-twister2.disk_per_container: "1000000000"
+# amount of hard disk space on each CPU in bytes, 1GB=1024*1024*1024
+twister2.disk_per_container: "1073741824"
 
 # number of instances for the task
 twister2.number_of_containers: "1"
