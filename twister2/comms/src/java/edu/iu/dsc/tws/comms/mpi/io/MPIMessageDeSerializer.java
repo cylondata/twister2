@@ -92,7 +92,7 @@ public class MPIMessageDeSerializer implements MessageDeSerializer {
     MPIByteArrayInputStream input = null;
     try {
       //todo: headersize
-      input = new MPIByteArrayInputStream(message.getBuffers(), message.getHeaderSize(),
+      input = new MPIByteArrayInputStream(message.getBuffers(),
           message.getHeader().getLength());
       return serializer.deserialize(input);
     } finally {

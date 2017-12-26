@@ -34,10 +34,9 @@ public class MPIByteArrayInputStream extends InputStream {
 
   private int length;
 
-  public MPIByteArrayInputStream(List<MPIBuffer> buffers, int offset, int len) {
+  public MPIByteArrayInputStream(List<MPIBuffer> buffers, int len) {
     this.bufs = buffers;
     this.currentBufferIndex = 0;
-    this.startOffSet = offset;
     this.length = len;
   }
 

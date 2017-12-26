@@ -45,6 +45,7 @@ public class MPIMultiMessageDeserializer implements MessageDeSerializer {
     int readLength = 0;
     int bufferIndex = 0;
     List<MPIBuffer> buffers = currentMessage.getBuffers();
+    List<MultiObject> returnList = new ArrayList<>();
     while (readLength < currentMessage.getHeader().getLength()) {
       List<MPIBuffer> messageBuffers = new ArrayList<>();
       // now read the header
@@ -53,9 +54,18 @@ public class MPIMultiMessageDeserializer implements MessageDeSerializer {
       int length = byteBuffer.getInt();
       int source = byteBuffer.getInt();
 
-
+      int tempLength = 0;
+      while (tempLength < length) {
+        MPIBuffer e = buffers.get(bufferIndex);
+        messageBuffers.add(e);
+        tempLength += e.getSize();
+      }
+      // calculate the offset
+      MultiObject multiObject =  new MultiObject(source, buildMessage(currentMessage.getType(),
+          messageBuffers, length));
+      returnList.add(multiObject);
     }
-    return buildMessage(currentMessage, 0);
+    return returnList;
   }
 
   @Override
@@ -72,9 +82,7 @@ public class MPIMultiMessageDeserializer implements MessageDeSerializer {
     return headerBuilder.build();
   }
 
-  private Object buildMessage(MPIMessage message, int a) {
-    MessageType type = message.getType();
-
+  private Object buildMessage(MessageType type, List<MPIBuffer> message, int length) {
     switch (type) {
       case INTEGER:
         break;
@@ -83,7 +91,7 @@ public class MPIMultiMessageDeserializer implements MessageDeSerializer {
       case DOUBLE:
         break;
       case OBJECT:
-        return buildObject(message);
+        return buildObject(message, length);
       case BYTE:
         break;
       case STRING:
@@ -96,12 +104,11 @@ public class MPIMultiMessageDeserializer implements MessageDeSerializer {
     return null;
   }
 
-  private Object buildObject(MPIMessage message) {
+  private Object buildObject(List<MPIBuffer> buffers, int length) {
     MPIByteArrayInputStream input = null;
     try {
       //todo: headersize
-      input = new MPIByteArrayInputStream(message.getBuffers(), message.getHeaderSize(),
-          message.getHeader().getLength());
+      input = new MPIByteArrayInputStream(buffers, length);
       return serializer.deserialize(input);
     } finally {
       if (input != null) {
