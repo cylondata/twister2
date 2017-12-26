@@ -4,6 +4,8 @@ common_deps_files = [
     "@org_yaml_snakeyaml//jar",
     "//twister2/common/src/java:config-java",
     "//twister2/common/src/java:common-java",
+    "@lmdb_java//jar",
+
 ]
 
 java_library(

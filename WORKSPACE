@@ -112,3 +112,8 @@ maven_jar(
   name ="net_openhft_chronicle_queue",
   artifact = "net.openhft:chronicle-queue:4.6.55",
 )
+
+maven_jar(
+  name ="lmdb_java",
+  artifact = "org.lmdbjava:lmdbjava:0.6.0",
+)
