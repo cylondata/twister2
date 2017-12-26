@@ -6,6 +6,7 @@ load("/tools/rules/twister2_client", "twister2_client_bin_files")
 load("/tools/rules/twister2_client", "twister2_client_conf_files")
 load("/tools/rules/twister2_client", "twister2_client_slurmmpi_files")
 load("/tools/rules/twister2_client", "twister2_client_nodesmpi_files")
+load("/tools/rules/twister2_client", "twister2_client_aurora_files")
 load("/tools/rules/twister2_client", "twister2_client_lib_third_party_files")
 load("/tools/rules/twister2_client", "twister2_client_lib_task_scheduler_files")
 load("/tools/rules/twister2_client", "twister2_client_lib_resource_scheduler_files")
@@ -109,6 +110,7 @@ pkg_tar(
         ":twister2-client-bin",
         ":twister2-client-conf-slurmmpi",
         ":twister2-client-conf-nodesmpi",
+        ":twister2-client-conf-aurora",
         ":twister2-client-dist",
         ":twister2-client-lib-third_party",
         ":twister2-client-lib-resource-scheduler",
@@ -131,6 +133,12 @@ pkg_tar(
     name = "twister2-client-conf-nodesmpi",
     package_dir = "conf/nodesmpi",
     files = twister2_client_nodesmpi_files(),
+)
+
+pkg_tar(
+    name = "twister2-client-conf-aurora",
+    package_dir = "conf/aurora",
+    files = twister2_client_aurora_files(),
 )
 
 pkg_tar(
