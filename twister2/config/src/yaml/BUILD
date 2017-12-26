@@ -20,3 +20,8 @@ filegroup(
     name = "conf-nodesmpi-yaml",
     srcs = glob(["conf/nodesmpi/*"]),
 )
+
+filegroup(
+    name = "conf-aurora-yaml",
+    srcs = glob(["conf/aurora/*"]),
+)
