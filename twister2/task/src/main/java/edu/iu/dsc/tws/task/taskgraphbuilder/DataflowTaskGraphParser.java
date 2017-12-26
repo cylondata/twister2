@@ -80,18 +80,12 @@ public class DataflowTaskGraphParser {
         + "\t" + "and Task Object is:" + mapper);
 
     if (dataflowTaskgraph.outDegreeOf(mapper) == 0) {
-      //mapper.setTaskExecutionWeight(mapper.getTaskPriority());
-      //return (int) mapper.getTaskExecutionWeight();
       return 1;
     } else {
       Set<DataFlowOperation> taskEdgesOf = dataflowTaskgraph.outgoingTaskEdgesOf(mapper);
       Stream<Task> taskStream = taskEdgesOf.stream().map(dataflowTaskgraph::getTaskEdgeTarget);
       int maxWeightOfNeighbours = taskStream.map(
           next -> dataflowTaskGraphParse(dataflowTaskgraph, next)).max(Integer::compare).get();
-
-      //int weightOfCurrent = mapper.getTaskPriority() + maxWeightOfNeighbours;
-      //mapper.setTaskExecutionWeight(weightOfCurrent);
-
       //For testing....
       int weightOfCurrent = 1 + maxWeightOfNeighbours;
       LOGGER.info("Task Edges are:" + taskEdgesOf + "\t"
