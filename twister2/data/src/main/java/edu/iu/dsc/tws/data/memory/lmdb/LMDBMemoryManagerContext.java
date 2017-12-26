@@ -33,4 +33,9 @@ public class LMDBMemoryManagerContext extends Context {
    * Name of the databse
    */
   public static final String DB_NAME = "default_twister2_lmdb";
+
+  /**
+   * File path to store the LMDB database
+   */
+  public static final String DEFAULT_FOLDER_PATH = "\tmp\twister2lmdb";
 }

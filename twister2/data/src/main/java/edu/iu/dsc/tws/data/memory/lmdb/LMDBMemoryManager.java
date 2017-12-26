@@ -21,9 +21,9 @@ import org.lmdbjava.Env;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.memory.MemoryManager;
 
+import static java.nio.ByteBuffer.allocateDirect;
 import static org.lmdbjava.DbiFlags.MDB_CREATE;
 import static org.lmdbjava.Env.create;
-import static java.nio.ByteBuffer.allocateDirect;
 
 /**
  * Memory Manger implementaion for LMDB Java
@@ -46,7 +46,7 @@ public class LMDBMemoryManager implements MemoryManager {
   /**
    * The Database for the Memory Manager
    */
-  Dbi<ByteBuffer> db;
+  private Dbi<ByteBuffer> db;
 
   public LMDBMemoryManager(Path dataPath) {
     this.lmdbDataPath = dataPath;
@@ -54,6 +54,9 @@ public class LMDBMemoryManager implements MemoryManager {
 
   @Override
   public boolean init() {
+    if (lmdbDataPath == null || lmdbDataPath.isNullOrEmpty()) {
+      lmdbDataPath = new Path(LMDBMemoryManagerContext.DEFAULT_FOLDER_PATH);
+    }
     File path = new File(lmdbDataPath.getPath());
 
     this.env = create()
