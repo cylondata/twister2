@@ -27,14 +27,14 @@ public interface DataFlowOperation {
    * Use this to inject partial results in a distributed dataflow operation
    * @param message message
    */
-  boolean sendPartial(int source, Object message);
+  boolean sendPartial(int source, Object message, int flags);
 
   /**
    * Send a send message, this call will work asynchronously
    * @param source
    * @param message
    */
-  boolean send(int source, Object message);
+  boolean send(int source, Object message, int flags);
 
   /**
    * Send the message on a specific path
@@ -43,7 +43,7 @@ public interface DataFlowOperation {
    * @param path
    * @return
    */
-  boolean send(int source, Object message, int path);
+  boolean send(int source, Object message, int flags, int path);
 
   /**
    * Send partial message on a specific path
@@ -52,7 +52,7 @@ public interface DataFlowOperation {
    * @param path
    * @return
    */
-  boolean sendPartial(int source, Object message, int path);
+  boolean sendPartial(int source, Object message, int flags, int path);
 
   /**
    * Progress the pending dataflow operations
@@ -63,4 +63,9 @@ public interface DataFlowOperation {
    * Clean up the resources
    */
   void close();
+
+  /**
+   * If this is a larger transfer of dataflow style, we need to finish
+   */
+  void finish();
 }

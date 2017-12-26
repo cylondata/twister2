@@ -26,24 +26,19 @@ public class MPIByteArrayInputStream extends InputStream {
   // the buffers which contains the message
   protected List<MPIBuffer> bufs;
 
-  // the absolute position of the current buffer
-  // protected int pos;
-  protected int mark = 0;
-
   // the current buffer index
   protected int currentBufferIndex = 0;
 
   // header size read
   protected int headerSize;
 
-  // weather we are in a grouped collective, where we need to think about message path
-  protected boolean grouped;
+  private int length;
 
-  public MPIByteArrayInputStream(List<MPIBuffer> buffers, int headerSize, boolean group) {
+  public MPIByteArrayInputStream(List<MPIBuffer> buffers, int startOffset, int len) {
     this.bufs = buffers;
     this.currentBufferIndex = 0;
-    this.headerSize = headerSize;
-    this.grouped = group;
+    this.headerSize = startOffset;
+    this.length = len;
   }
 
   public synchronized int read() {
@@ -100,10 +95,6 @@ public class MPIByteArrayInputStream extends InputStream {
       currentBufferIndex++;
       byteBuffer = bufs.get(currentBufferIndex).getByteBuffer();
       byteBuffer.rewind();
-      // if grouped first 4 bytes are for the path
-      if (grouped) {
-        byteBuffer.position(4);
-      }
       //we are at the end so return null
       if (currentBufferIndex >= bufs.size()) {
         return null;
@@ -164,11 +155,7 @@ public class MPIByteArrayInputStream extends InputStream {
           avail += b.remaining() - headerSize;
         }
       } else {
-        if (grouped) {
-          avail += b.remaining() - 4;
-        } else {
-          avail += b.remaining();
-        }
+        avail += b.remaining();
       }
     }
     return avail;

@@ -19,9 +19,8 @@ public interface MessageSerializer {
   /**
    * Initialize the serializer
    * @param cfg
-   * @param grouped
    */
-  void init(Config cfg, boolean grouped);
+  void init(Config cfg);
 
   /**
    * This method will be called repeatedly until the message is fully built

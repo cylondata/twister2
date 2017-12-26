@@ -15,14 +15,14 @@ public class Task implements Runnable, TaskInterface {
 
   private final String taskId;
   private final Thread executionThread;
-  /*private final JobId jobId;
-  private final ExecutorID executorId;
-  private final Integer taskId;
   private final TaskInformation taskInformation;
   private final TaskConfiguration taskConfiguration;
-  private final Collection<String> taskRequiredJarFiles;
+
+  /*private final Collection<String> taskRequiredJarFiles;
   private final Collection<String> taskRequiredInputFiles;
   private final Collection<String> taskClassPaths;
+  private final JobId jobId;
+  private final ExecutorID executorId;
 
   public Task(String taskId, TaskInformation taskInformation,
                 TaskConfiguration taskConfiguration, Collection<String> requiredJarFiles,
@@ -35,33 +35,37 @@ public class Task implements Runnable, TaskInterface {
         executionThread = new Thread("Twister2 Task Thread");
   }*/
 
-  public Task(String taskId, String threadName) {
+  public Task(String taskId, String threadName,
+              TaskInformation taskInformation, TaskConfiguration taskConfiguration) {
     this.taskId = taskId;
-    executionThread = new Thread(threadName);
+    this.executionThread = new Thread(threadName);
+    this.taskInformation = taskInformation;
+    this.taskConfiguration = taskConfiguration;
   }
 
-  public static void main(String[] args) {
-    Task task = new Task("1", "execution thread");
-    Thread t1 = new Thread(task);
-    t1.start();
-    //task.execute ();
-  }
-
-  /*public TaskInformation getTaskInformation() {
-        return taskInformation;
-  }
-
-  public TaskConfiguration getTaskConfiguration() {
-        return taskConfiguration;
-  }
-
-  public Collection<String> getTaskRequiredJarFiles() {
-        return taskRequiredJarFiles;
+  /*public Collection<String> getTaskRequiredJarFiles() {
+    return taskRequiredJarFiles;
   }
 
   public Collection<String> getTaskRequiredInputFiles() {
-        return taskRequiredInputFiles;
+    return taskRequiredInputFiles;
   }*/
+
+  public static void main(String[] args) {
+
+    Task task = new Task("1", "execution thread",
+        new TaskInformation(), new TaskConfiguration());
+    Thread t1 = new Thread(task);
+    t1.start();
+  }
+
+  public TaskInformation getTaskInformation() {
+    return taskInformation;
+  }
+
+  public TaskConfiguration getTaskConfiguration() {
+    return taskConfiguration;
+  }
 
   public String getTaskId() {
     return taskId;
@@ -107,5 +111,5 @@ public class Task implements Runnable, TaskInterface {
 
   public void createTask() {
   }
-
 }
+

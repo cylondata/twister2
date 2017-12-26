@@ -40,20 +40,31 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
 
   private MessageReceiver partialReceiver;
 
-  public MPIDataFlowReduce(TWSMPIChannel channel, Set<Integer> sources, int destination,
-                           MessageReceiver finalRcvr, MessageReceiver partialRcvr) {
-    super(channel);
+  private int index = 0;
 
+  private int pathToUse = MPIContext.DEFAULT_PATH;
+
+  public MPIDataFlowReduce(TWSMPIChannel channel, Set<Integer> sources, int destination,
+                           MessageReceiver finalRcvr,
+                           MessageReceiver partialRcvr, int indx, int p) {
+    super(channel);
+    this.index = indx;
     this.sources = sources;
     this.destination = destination;
     this.finalReceiver = finalRcvr;
     this.partialReceiver = partialRcvr;
+    this.pathToUse = p;
+  }
+
+  public MPIDataFlowReduce(TWSMPIChannel channel, Set<Integer> sources, int destination,
+                           MessageReceiver finalRcvr, MessageReceiver partialRcvr) {
+    this(channel, sources, destination, finalRcvr, partialRcvr, 0, 0);
   }
 
   public void setupRouting() {
     // we only have one path
     this.router = new InvertedBinaryTreeRouter(config, instancePlan,
-        destination, sources);
+        destination, sources, index);
 
     // initialize the receive
     if (this.partialReceiver != null && !isLastReceiver()) {
@@ -82,12 +93,16 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
     }
     Set<Integer> execs = router.receivingExecutors();
     for (int e : execs) {
+      int capacity = maxReceiveBuffers * 2 * receiveExecutorsSize;
       Queue<Pair<Object, MPIMessage>> pendingReceiveMessages =
           new ArrayBlockingQueue<Pair<Object, MPIMessage>>(
-              maxReceiveBuffers * 2 * receiveExecutorsSize);
+              capacity);
       pendingReceiveMessagesPerSource.put(e, pendingReceiveMessages);
+      pendingReceiveDeSerializations.put(e, new ArrayBlockingQueue<MPIMessage>(capacity));
     }
   }
+
+
 
   @Override
   protected boolean isLast(int source, int path, int taskIdentifier) {
@@ -110,17 +125,17 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
 //    LOG.info(String.format("%d received message from %d", instancePlan.getThisExecutor(),
 //        currentMessage.getHeader().getSourceId()));
     // check weather this message is for a sub task
-    if (!isLast(header.getSourceId(), header.getPath(), messageDestId)
+    if (!isLast(header.getSourceId(), header.getFlags(), messageDestId)
         && partialReceiver != null) {
 //      LOG.info(String.format("%d calling partial receiver", instancePlan.getThisExecutor()));
-      return partialReceiver.onMessage(header.getSourceId(), header.getPath(),
+      return partialReceiver.onMessage(header.getSourceId(), MPIContext.DEFAULT_PATH,
           router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
-              MPIContext.DEFAULT_PATH), object);
+              MPIContext.DEFAULT_PATH), header.getFlags(), object);
     } else {
 //      LOG.info(String.format("%d calling fina receiver", instancePlan.getThisExecutor()));
-      return finalReceiver.onMessage(header.getSourceId(), header.getPath(),
+      return finalReceiver.onMessage(header.getSourceId(), MPIContext.DEFAULT_PATH,
           router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
-              MPIContext.DEFAULT_PATH), object);
+              MPIContext.DEFAULT_PATH), header.getFlags(), object);
     }
   }
 
@@ -186,21 +201,26 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
   }
 
   @Override
-  protected boolean receiveSendInternally(int source, int t, int path, Object message) {
+  protected boolean receiveSendInternally(int source, int t, int path, int flags, Object message) {
     // check weather this is the last task
     if (router.isLastReceiver()) {
 //      LOG.info(String.format("%d Calling directly final receiver %d",
 //          instancePlan.getThisExecutor(), source));
-      return finalReceiver.onMessage(source, path, t, message);
+      return finalReceiver.onMessage(source, path, t, flags, message);
     } else {
-      return partialReceiver.onMessage(source, path, t, message);
+      return partialReceiver.onMessage(source, path, t, flags, message);
     }
   }
 
   @Override
-  public boolean sendPartial(int source, Object message) {
+  public boolean send(int source, Object message, int flags) {
+    return sendMessage(source, message, pathToUse, flags);
+  }
+
+  @Override
+  public boolean sendPartial(int source, Object message, int flags) {
     // now what we need to do
-    return sendMessagePartial(source, message, MPIContext.DEFAULT_PATH);
+    return sendMessagePartial(source, message, pathToUse, flags);
   }
 
   @Override
@@ -208,7 +228,7 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
     return router.receivingExecutors();
   }
 
-  protected Map<Integer, List<Integer>> receiveExpectedTaskIds() {
+  public Map<Integer, List<Integer>> receiveExpectedTaskIds() {
     Map<Integer, List<Integer>> integerMapMap = router.receiveExpectedTaskIds();
     // add the main task to receive from iteself
     int key = router.mainTaskOfExecutor(instancePlan.getThisExecutor(), MPIContext.DEFAULT_PATH);

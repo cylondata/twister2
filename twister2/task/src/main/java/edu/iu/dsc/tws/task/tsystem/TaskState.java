@@ -44,6 +44,6 @@ public enum TaskState {
   /**
    * The task went to unknown state
    **/
-  UNKNOWN;
+  UNKNOWN
 
 }

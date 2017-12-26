@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.comms.mpi.io;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -21,13 +20,12 @@ import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.mpi.MPIBuffer;
 import edu.iu.dsc.tws.comms.mpi.MPIMessage;
+import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
 public class MPIMessageDeSerializer implements MessageDeSerializer {
   private static final Logger LOG = Logger.getLogger(MPIMessageDeSerializer.class.getName());
 
   private KryoSerializer serializer;
-
-  private boolean grouped;
 
   private MPIBuffer tempBuf;
 
@@ -36,59 +34,30 @@ public class MPIMessageDeSerializer implements MessageDeSerializer {
   }
 
   @Override
-  public void init(Config cfg, boolean grped) {
-    this.grouped = grped;
+  public void init(Config cfg) {
     tempBuf = new MPIBuffer(1024);
   }
 
   @Override
-  public Object build(Object message, Object partialObject, int edge) {
+  public Object build(Object partialObject, int edge) {
     MPIMessage currentMessage = (MPIMessage) partialObject;
-    MPIBuffer buffer = (MPIBuffer) message;
-
-    // lets rewind to 0
-    ByteBuffer byteBuffer = buffer.getByteBuffer();
-    byteBuffer.position(buffer.getSize());
-    byteBuffer.flip();
-//    LOG.info("Build message with buffer containing: " + byteBuffer.remaining()
-//        + " size: " + buffer.getSize());
-
-    if (currentMessage.getHeader() == null) {
-      buildHeader(buffer, currentMessage, edge);
-    }
-
-    if (!currentMessage.isComplete()) {
-      currentMessage.addBuffer(buffer);
-      currentMessage.build();
-    }
-
-    // we received a message, we need to determine weather we need to
-    // forward to another node and process
-    if (currentMessage.isComplete()) {
-      return buildMessage(currentMessage);
-    }
-
-    return null;
+    return buildMessage(currentMessage);
   }
 
-  private void buildHeader(MPIBuffer buffer, MPIMessage message, int edge) {
+  public MessageHeader buildHeader(MPIBuffer buffer, int edge) {
     int sourceId = buffer.getByteBuffer().getInt();
-    int path = buffer.getByteBuffer().getInt();
+    int flags = buffer.getByteBuffer().getInt();
     int subEdge = buffer.getByteBuffer().getInt();
     int length = buffer.getByteBuffer().getInt();
 
     MessageHeader.Builder headerBuilder = MessageHeader.newBuilder(
         sourceId, edge, length);
     // set the path
-    headerBuilder.path(path);
-    headerBuilder.subEdge(subEdge);
+    headerBuilder.flags(flags);
+    headerBuilder.destination(subEdge);
 
     // first build the header
-    message.setHeader(headerBuilder.build());
-//    LOG.info(String.format("Received message header: %d %d %d %d",
-//        sourceId, path, subEdge, length));
-    // we set the 20 header size for now
-    message.setHeaderSize(16);
+    return headerBuilder.build();
   }
 
   private Object buildMessage(MPIMessage message) {
@@ -123,7 +92,8 @@ public class MPIMessageDeSerializer implements MessageDeSerializer {
     MPIByteArrayInputStream input = null;
     try {
       //todo: headersize
-      input = new MPIByteArrayInputStream(message.getBuffers(), message.getHeaderSize(), grouped);
+      input = new MPIByteArrayInputStream(message.getBuffers(), message.getHeaderSize(),
+          message.getHeader().getLength());
       return serializer.deserialize(input);
     } finally {
       if (input != null) {

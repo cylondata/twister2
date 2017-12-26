@@ -11,7 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.taskgraphbuilder;
 
-public class Task2 extends Mapper {
+import java.util.logging.Logger;
+
+public class Task2 extends TaskMapper {
+
+  private static final Logger LOGGER = Logger.getLogger(Task2.class.getName());
 
   private String id;
 
@@ -19,27 +23,26 @@ public class Task2 extends Mapper {
     super(id, priorityValue);
     this.id = id;
   }
-
   @Override
   public void execute() {
     for (int i = 0; i < 10; i++) {
-      System.out.println("Task execution" + "\t" + id);
+      LOGGER.info("Task execution" + "\t" + id);
     }
   }
 
   @Override
-  public void execute(Mapper mapper) {
+  public void execute(TaskMapper taskMapper) {
     for (int i = 0; i < 10; i++) {
-      System.out.println("Task execution" + "\t" + id);
+      LOGGER.info("Task execution" + "\t" + id);
     }
   }
 
   @Override
   public void execute(String message) {
     for (int i = 0; i < 10; i++) {
-      System.out.println("Task execution" + "\t" + id + "\t" + message);
+      LOGGER.info("Task execution" + "\t" + id + "\t" + message);
     }
   }
-
 }
+
 

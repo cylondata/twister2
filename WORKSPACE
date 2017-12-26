@@ -107,3 +107,8 @@ maven_jar(
   name = "akka_remote",
   artifact = "com.typesafe.akka:akka-remote:2.5.6",
 )
+
+maven_jar(
+  name ="net_openhft_chronicle_queue",
+  artifact = "net.openhft:chronicle-queue:4.6.55",
+)

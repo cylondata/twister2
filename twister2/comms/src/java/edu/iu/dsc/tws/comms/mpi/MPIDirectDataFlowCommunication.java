@@ -57,6 +57,8 @@ public class MPIDirectDataFlowCommunication extends MPIDataFlowOperation {
           new ArrayBlockingQueue<Pair<Object, MPISendMessage>>(
               MPIContext.sendPendingMax(config));
       pendingSendMessagesPerSource.put(s, pendingSendMessages);
+      pendingReceiveDeSerializations.put(s, new ArrayBlockingQueue<MPIMessage>(
+          MPIContext.sendPendingMax(config)));
     }
   }
 
@@ -69,18 +71,18 @@ public class MPIDirectDataFlowCommunication extends MPIDataFlowOperation {
   protected boolean receiveMessage(MPIMessage currentMessage, Object object) {
     MessageHeader header = currentMessage.getHeader();
     // check weather this message is for a sub task
-    return finalReceiver.onMessage(header.getSourceId(), header.getPath(), destination, object);
+    return finalReceiver.onMessage(header.getSourceId(), 0, destination, header.getFlags(), object);
   }
 
   @Override
-  protected boolean receiveSendInternally(int source, int t, int path, Object message) {
+  protected boolean receiveSendInternally(int source, int t, int path, int flags, Object message) {
     // we only have one destination in this case
     if (t != destination) {
       throw new RuntimeException("We only have one destination");
     }
 
     // okay this must be for the
-    return finalReceiver.onMessage(source, path, t, message);
+    return finalReceiver.onMessage(source, path, t, flags, message);
   }
 
   @Override
@@ -93,7 +95,7 @@ public class MPIDirectDataFlowCommunication extends MPIDataFlowOperation {
   }
 
   @Override
-  public boolean sendPartial(int source, Object message) {
+  public boolean sendPartial(int source, Object message, int flags) {
     throw new RuntimeException("This method is not used by direct communication");
   }
 

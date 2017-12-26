@@ -24,14 +24,14 @@ public class DataflowTaskGraphMain extends DataflowTaskGraphGenerator {
     DataflowTaskGraphGenerator dataflowTaskGraphGenerator =
         new DataflowTaskGraphGenerator();
 
-    Mapper task1 = new Mapper("1", 1) {
+    TaskMapper task1 = new TaskMapper("1", 1) {
       @Override
       public void execute() {
         System.out.println("I am in execute method 1");
       }
 
       @Override
-      public void execute(Mapper mapper) {
+      public void execute(TaskMapper mapper) {
         System.out.println("I am in execute method 2");
       }
 
@@ -40,7 +40,7 @@ public class DataflowTaskGraphMain extends DataflowTaskGraphGenerator {
       }
     };
 
-    Mapper task2 = new Mapper("2", 2) {
+    TaskMapper task2 = new TaskMapper("2", 2) {
       @Override
       public void execute() {
         System.out.println("I am in execute method 1");
@@ -52,12 +52,12 @@ public class DataflowTaskGraphMain extends DataflowTaskGraphGenerator {
       }
 
       @Override
-      public void execute(Mapper mapper) {
+      public void execute(TaskMapper mapper) {
         System.out.println("I am in execute method 2");
       }
     };
 
-    Mapper task3 = new Mapper("3", 4) {
+    TaskMapper task3 = new TaskMapper("3", 4) {
       @Override
       public void execute() {
         System.out.println("I am in execute method 1");
@@ -69,12 +69,12 @@ public class DataflowTaskGraphMain extends DataflowTaskGraphGenerator {
       }
 
       @Override
-      public void execute(Mapper mapper) {
+      public void execute(TaskMapper mapper) {
         System.out.println("I am in execute method 2");
       }
     };
 
-    Mapper task4 = new Mapper("4", 3) {
+    TaskMapper task4 = new TaskMapper("4", 3) {
       @Override
       public void execute() {
         System.out.println("I am in execute method 1");
@@ -86,7 +86,7 @@ public class DataflowTaskGraphMain extends DataflowTaskGraphGenerator {
       }
 
       @Override
-      public void execute(Mapper mapper) {
+      public void execute(TaskMapper mapper) {
         System.out.println("I am in execute method 2");
       }
     };
@@ -99,29 +99,23 @@ public class DataflowTaskGraphMain extends DataflowTaskGraphGenerator {
                 .generateTaskGraph (task2, task1)
                 .generateTaskGraph (task3, task2, task1);
 
-    this.generateDataflowGraph(task1, task2, cManager1)
-                .generateDataflowGraph(task2, task3, cManager2)
-                .generateDataflowGraph(task3, task1, cManager3);*/
+    this.generateDataflowTaskGraph(task1, task2, cManager1)
+                .generateDataflowTaskGraph(task2, task3, cManager2)
+                .generateDataflowTaskGraph(task3, task1, cManager3);*/
 
-    //This condition is not working for task1 -> task2
-    // cManager1 is assigned as a task edge for other
-    //tasks null values are assigned.
-    /*this.generateDataflowGraph(task1, task2, cManager1)
-                .generateDataflowGraph(task2, task3, cManager1)
-                .generateDataflowGraph(task3, task1, cManager1);*/
-
-    this.generateDataflowGraph(task1, task2, new CManager("he"))
-        .generateDataflowGraph(task2, task3, new CManager("te"))
-        .generateDataflowGraph(task3, task1, new CManager("test"));
+    this.generateDataflowTaskGraph(task1, task2, new CManager("he"))
+        .generateDataflowTaskGraph(task2, task3, new CManager("te"))
+        .generateDataflowTaskGraph(task3, task1, new CManager("test"));
   }
 
   public static void main(String[] args) {
-    DataflowTaskGraphGenerator dataflowTaskGraphGenerator = new DataflowTaskGraphMain();
+    DataflowTaskGraphGenerator dataflowTaskGraphGenerator =
+        new DataflowTaskGraphMain();
     System.out.println("Generated Task Graph Is:" + dataflowTaskGraphGenerator);
 
-    /*DataflowTaskGraphParser dataflowTaskGraphParser =
+    DataflowTaskGraphParser dataflowTaskGraphParser =
         new DataflowTaskGraphParser(dataflowTaskGraphGenerator);
-    dataflowTaskGraphParser.taskGraphParseAndSchedule();*/
+    dataflowTaskGraphParser.dataflowTaskGraphParseAndSchedule();
   }
 }
 

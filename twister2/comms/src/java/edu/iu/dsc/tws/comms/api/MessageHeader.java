@@ -43,7 +43,7 @@ public final class MessageHeader {
   /**
    * Different paths for grouped collectives
    */
-  private int path;
+  private int flags;
 
   private MessageHeader(int srcId, int e, int l) {
     this.sourceId = srcId;
@@ -68,8 +68,8 @@ public final class MessageHeader {
     return length;
   }
 
-  public int getPath() {
-    return path;
+  public int getFlags() {
+    return flags;
   }
 
   public int getDestinationIdentifier() {
@@ -100,17 +100,17 @@ public final class MessageHeader {
       return this;
     }
 
-    public Builder subEdge(int edge) {
+    public Builder destination(int edge) {
       header.destinationIdentifier = edge;
       return this;
     }
 
-    public Builder path(int p) {
-      header.path = p;
+    public Builder flags(int p) {
+      header.flags = p;
       return this;
     }
 
-    public Builder lenght(int l) {
+    public Builder length(int l) {
       header.length = l;
       return this;
     }

@@ -26,6 +26,8 @@ public class Node {
   private Node parent;
   private int taskId;
   private int groupId;
+  private int groupLevel;
+  private int execLevel;
 
   public Node(int taskId, int groupId) {
     this.taskId = taskId;
@@ -93,6 +95,22 @@ public class Node {
 
   public List<Integer> getDirectChildren() {
     return directChildren;
+  }
+
+  public int getGroupLevel() {
+    return groupLevel;
+  }
+
+  public int getExecLevel() {
+    return execLevel;
+  }
+
+  public void setGroupLevel(int groupLevel) {
+    this.groupLevel = groupLevel;
+  }
+
+  public void setExecLevel(int execLevel) {
+    this.execLevel = execLevel;
   }
 
   @Override

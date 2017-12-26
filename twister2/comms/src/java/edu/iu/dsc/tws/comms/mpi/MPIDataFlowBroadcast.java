@@ -58,12 +58,14 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
     // check weather this message is for a sub task
 
 //      LOG.info(String.format("%d calling fina receiver", instancePlan.getThisExecutor()));
-    return finalReceiver.onMessage(header.getSourceId(), header.getPath(),
-        router.mainTaskOfExecutor(instancePlan.getThisExecutor(), MPIContext.DEFAULT_PATH), object);
+    return finalReceiver.onMessage(
+        header.getSourceId(), MPIContext.DEFAULT_PATH,
+        router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
+            MPIContext.DEFAULT_PATH), header.getFlags(), object);
   }
 
   @Override
-  public boolean sendPartial(int src, Object message) {
+  public boolean sendPartial(int src, Object message, int flags) {
     throw new RuntimeException("Not supported method");
   }
 
@@ -73,19 +75,6 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
     ArrayBlockingQueue<Pair<Object, MPISendMessage>> pendingSendMessages =
         pendingSendMessagesPerSource.get(src);
 
-//    internalRoutesForSend(src, internalRoutes);
-
-//    LOG.info(String.format("%d down internal routes for send %d: %s",
-//        instancePlan.getThisExecutor(), src, internalRoutes));
-//
-//    // now lets get the external routes to send
-//    externalRoutesForSend(src, externalRoutes);
-//    LOG.info(String.format("%d down External routes for send %d: %s",
-//        instancePlan.getThisExecutor(), src, externalRoutes));
-    // we need to serialize for sending over the wire
-    // LOG.log(Level.INFO, "Sending message of type: " + type);
-    // this is a originating message. we are going to put ref count to 0 for now and
-    // increment it later
     MPIMessage mpiMessage = new MPIMessage(src, type, MPIMessageDirection.OUT, this);
 
     // create a send message to keep track of the serialization
@@ -95,7 +84,8 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
       di = routingParameters.getDestinationId();
     }
     MPISendMessage sendMessage = new MPISendMessage(src, mpiMessage, edge,
-        di, MPIContext.DEFAULT_PATH, routingParameters.getInternalRoutes(),
+        di, MPIContext.DEFAULT_PATH, currentMessage.getHeader().getFlags(),
+        routingParameters.getInternalRoutes(),
         routingParameters.getExternalRoutes());
 
     // now try to put this into pending
@@ -130,10 +120,12 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
     }
     Set<Integer> execs = router.receivingExecutors();
     for (int e : execs) {
+      int capacity = maxReceiveBuffers * 2 * receiveExecutorsSize;
       Queue<Pair<Object, MPIMessage>> pendingReceiveMessages =
           new ArrayBlockingQueue<Pair<Object, MPIMessage>>(
-              maxReceiveBuffers * 2 * receiveExecutorsSize);
+              capacity);
       pendingReceiveMessagesPerSource.put(e, pendingReceiveMessages);
+      pendingReceiveDeSerializations.put(e, new ArrayBlockingQueue<MPIMessage>(capacity));
     }
   }
 
@@ -172,8 +164,8 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
   }
 
   @Override
-  protected boolean receiveSendInternally(int src, int t, int path, Object message) {
-    return finalReceiver.onMessage(src, path, t, message);
+  protected boolean receiveSendInternally(int src, int t, int path, int flags, Object message) {
+    return finalReceiver.onMessage(src, path, t, flags, message);
   }
 
   @Override
@@ -181,7 +173,7 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
     return router.receivingExecutors();
   }
 
-  protected Map<Integer, List<Integer>> receiveExpectedTaskIds() {
+  public Map<Integer, List<Integer>> receiveExpectedTaskIds() {
     return router.receiveExpectedTaskIds();
   }
 

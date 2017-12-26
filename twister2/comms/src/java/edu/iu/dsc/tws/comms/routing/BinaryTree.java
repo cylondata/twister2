@@ -31,6 +31,8 @@ public class BinaryTree {
   private TaskPlan taskPlan;
   private int root;
   private Set<Integer> nodes;
+  private int maxLevelsAtExecutor = 0;
+  private int maxLevelsAtGroups = 0;
 
   public BinaryTree(int interNodeDegree, int intraNodeDegree, TaskPlan taskPlan,
                     int source, Set<Integer> destinations) {
@@ -39,6 +41,7 @@ public class BinaryTree {
     this.taskPlan = taskPlan;
     this.root = source;
     this.nodes = destinations;
+    this.maxLevelsAtExecutor = 0;
     LOG.info(String.format("Building tree with root: %d nodes: %s", root, nodes.toString()));
   }
 
@@ -121,13 +124,15 @@ public class BinaryTree {
           current.addChild(e);
           e.setParent(current);
           queue.add(e);
+          e.setGroupLevel(maxLevelsAtGroups);
         } else {
-          throw new RuntimeException("Stream manager with 0 components for building tree");
+          throw new RuntimeException("Group with 0 components for building tree");
         }
         i++;
       } else {
         current = queue.poll();
         currentInterNodeDegree = current.getChildren().size() + interNodeDegree;
+        maxLevelsAtGroups++;
       }
     }
     return rootNode;
@@ -155,9 +160,10 @@ public class BinaryTree {
       executorIds.add(0, rootExecutor);
     }
 
+    int execLevel = 0;
     // create the root of the tree
-    Node rootNode = createTreeeNode(groupId, executorIds.get(0), index);
-
+    Node rootNode = createTreeNode(groupId, executorIds.get(0), index);
+    rootNode.setExecLevel(execLevel);
     // now lets create the tree
     Queue<Node> queue = new LinkedList<>();
     Node current = rootNode;
@@ -165,23 +171,29 @@ public class BinaryTree {
     while (i < executorIds.size()) {
       if (current.getChildren().size() < intraNodeDegree) {
         // create a tree node and add it to the current node as a child
-        Node e = createTreeeNode(groupId, executorIds.get(i), index);
+        Node e = createTreeNode(groupId, executorIds.get(i), index);
         current.addChild(e);
         e.setParent(current);
-        LOG.info(String.format("%d Create node with parent %s -> %s",
-            taskPlan.getThisExecutor(), e, current));
+        e.setExecLevel(execLevel);
+//        LOG.info(String.format("%d Create node with parent %s -> %s",
+//            taskPlan.getThisExecutor(), e, current));
         queue.add(e);
         i++;
       } else {
+        execLevel++;
         // the current node is filled, lets move to the next
         current = queue.poll();
       }
     }
 
+    if (execLevel > maxLevelsAtExecutor) {
+      maxLevelsAtExecutor = execLevel;
+    }
+
     return rootNode;
   }
 
-  private Node createTreeeNode(int groupId, int executorId, int rotateIndex) {
+  private Node createTreeNode(int groupId, int executorId, int rotateIndex) {
     Set<Integer> tasksOfExecutor = getTasksInExecutor(executorId);
     if (tasksOfExecutor == null) {
       throw new RuntimeException("At this point we should have at least one task");
@@ -194,11 +206,13 @@ public class BinaryTree {
     boolean rootPresent = channelsOfExecutorList.contains(root);
     if (rootPresent) {
       channelsOfExecutorList.remove(new Integer(root));
-      channelsOfExecutorList.add(0, root);
     }
 
     // we will rotate according to rotate index
     channelsOfExecutorList = rotateList(channelsOfExecutorList, rotateIndex);
+    if (rootPresent) {
+      channelsOfExecutorList.add(0, root);
+    }
 
     int firstTaskId = channelsOfExecutorList.get(0);
     // this task act as the tree node

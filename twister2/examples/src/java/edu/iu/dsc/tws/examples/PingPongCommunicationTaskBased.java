@@ -120,7 +120,7 @@ public class PingPongCommunicationTaskBased implements IContainer {
     }
 
     @Override
-    public boolean onMessage(int source, int path, int target, Object object) {
+    public boolean onMessage(int source, int path, int target, int flags, Object object) {
       count++;
       if (count % 10000 == 0) {
         LOG.info("received message: " + count);
@@ -130,12 +130,17 @@ public class PingPongCommunicationTaskBased implements IContainer {
       }
       return true;
     }
+
+    @Override
+    public void progress() {
+
+    }
   }
 
   /**
    * RevieceWorker
    */
-  private class RecieveWorker extends SinkTask {
+  private class RecieveWorker extends SinkTask<Object> {
 
     @Override
     public Message execute() {
@@ -151,7 +156,7 @@ public class PingPongCommunicationTaskBased implements IContainer {
   /**
    * We are running the map in a separate thread
    */
-  private class MapWorker extends SourceTask {
+  private class MapWorker extends SourceTask<Object> {
     private int sendCount = 0;
 
     MapWorker(int tid, DataFlowOperation dataFlowOperation) {
@@ -166,7 +171,7 @@ public class PingPongCommunicationTaskBased implements IContainer {
         IntData data = generateData();
         // lets generate a message
 
-        while (!getDataFlowOperation().send(0, data)) {
+        while (!getDataFlowOperation().send(0, data, 0)) {
           // lets wait a litte and try again
           try {
             Thread.sleep(1);

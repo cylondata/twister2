@@ -22,6 +22,8 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.mpi.MPIBuffer;
 import edu.iu.dsc.tws.comms.mpi.MPIMessage;
 import edu.iu.dsc.tws.comms.mpi.MPISendMessage;
+import edu.iu.dsc.tws.comms.mpi.io.types.ObjectSerializer;
+import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
 public class MPIMessageSerializer implements MessageSerializer {
   private static final Logger LOG = Logger.getLogger(MPIMessageSerializer.class.getName());
@@ -29,7 +31,7 @@ public class MPIMessageSerializer implements MessageSerializer {
   private Queue<MPIBuffer> sendBuffers;
   private KryoSerializer serializer;
   private Config config;
-  private boolean grouped;
+  private ObjectSerializer objectSerializer;
 
   public MPIMessageSerializer(Queue<MPIBuffer> buffers, KryoSerializer kryoSerializer) {
     this.sendBuffers = buffers;
@@ -37,9 +39,9 @@ public class MPIMessageSerializer implements MessageSerializer {
   }
 
   @Override
-  public void init(Config cfg, boolean grped) {
+  public void init(Config cfg) {
     this.config = cfg;
-    this.grouped = grped;
+    objectSerializer = new ObjectSerializer(serializer);
   }
 
   @Override
@@ -78,7 +80,6 @@ public class MPIMessageSerializer implements MessageSerializer {
         MPIMessage mpiMessage = sendMessage.getMPIMessage();
         // mark the original message as complete
         mpiMessage.setComplete(true);
-//        LOG.info("Message FULLY serialized");
       } else {
         LOG.info("Message NOT FULLY serialized");
       }
@@ -90,12 +91,11 @@ public class MPIMessageSerializer implements MessageSerializer {
     if (buffer.getCapacity() < 16) {
       throw new RuntimeException("The buffers should be able to hold the complete header");
     }
-//    LOG.info("Building header");
     ByteBuffer byteBuffer = buffer.getByteBuffer();
     // now lets put the content of header in
     byteBuffer.putInt(sendMessage.getSource());
     // the path we are on, if not grouped it will be 0 and ignored
-    byteBuffer.putInt(sendMessage.getPath());
+    byteBuffer.putInt(sendMessage.getFlags());
     byteBuffer.putInt(sendMessage.getDestintationIdentifier());
     // we add 0 for now and late change it
     byteBuffer.putInt(0);
@@ -115,7 +115,6 @@ public class MPIMessageSerializer implements MessageSerializer {
   private void serializeBody(Object payload,
                              MPISendMessage sendMessage, MPIBuffer buffer) {
     MessageType type = sendMessage.getMPIMessage().getType();
-//    LOG.log(Level.INFO, "Serializing body with type: " + type);
     switch (type) {
       case INTEGER:
         break;
@@ -124,7 +123,7 @@ public class MPIMessageSerializer implements MessageSerializer {
       case DOUBLE:
         break;
       case OBJECT:
-        serializeObject(payload, sendMessage, buffer);
+        objectSerializer.serializeObject(payload, sendMessage, buffer);
         break;
       case BYTE:
         break;
@@ -148,72 +147,11 @@ public class MPIMessageSerializer implements MessageSerializer {
       // now lets set the header
       MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
           sendMessage.getEdge(), dataBuffer.getSize());
-      builder.subEdge(sendMessage.getDestintationIdentifier());
+      builder.destination(sendMessage.getDestintationIdentifier());
       sendMessage.getMPIMessage().setHeader(builder.build());
-
-//      sendMessage.setSendBytes(data);
-//      LOG.log(Level.INFO, String.format("Finished adding header %d %d %d %d",
-//          sendMessage.getSource(), sendMessage.getEdge(), sendMessage.getPath(), data.length));
     }
     buffer.setSize(16 + dataBuffer.getSize());
     // okay we are done with the message
     sendMessage.setSendState(MPISendMessage.SendState.SERIALIZED);
-  }
-
-  /**
-   * Serializes a java object using kryo serialization
-   *
-   * @param object
-   * @param sendMessage
-   * @param buffer
-   */
-  private void serializeObject(Object object, MPISendMessage sendMessage, MPIBuffer buffer) {
-    byte[] data;
-    int dataPosition;
-    ByteBuffer byteBuffer = buffer.getByteBuffer();
-    if (sendMessage.serializedState() == MPISendMessage.SendState.HEADER_BUILT) {
-      // okay we need to serialize the data
-      data = serializer.serialize(object);
-      // at this point we know the length of the data
-      byteBuffer.putInt(12, data.length);
-      // now lets set the header
-      MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
-          sendMessage.getEdge(), data.length);
-      builder.subEdge(sendMessage.getDestintationIdentifier());
-      sendMessage.getMPIMessage().setHeader(builder.build());
-      dataPosition = 0;
-      sendMessage.setSendBytes(data);
-//      LOG.log(Level.INFO, String.format("Finished adding header %d %d %d %d",
-//          sendMessage.getSource(), sendMessage.getEdge(), sendMessage.getPath(), data.length));
-    } else {
-      data = sendMessage.getSendBytes();
-      dataPosition = sendMessage.getByteCopied();
-    }
-
-    if (grouped && MPISendMessage.SendState.BODY_BUILT == sendMessage.serializedState()) {
-      // we need to set the path at the begining
-      byteBuffer.putInt(sendMessage.getPath());
-    }
-
-    int remainingToCopy = data.length - dataPosition;
-    // check how much space we have
-    int bufferSpace = byteBuffer.capacity() - byteBuffer.position();
-
-    int copyBytes = remainingToCopy > bufferSpace ? bufferSpace : remainingToCopy;
-    // check how much space left in the buffer
-    byteBuffer.put(data, dataPosition, copyBytes);
-    sendMessage.setByteCopied(dataPosition + copyBytes);
-
-    // now set the size of the buffer
-//    LOG.log(Level.INFO, String.format("Serialize object body with buffer size: %d copyBytes: "
-//        + "%d remainingCopy: %d", byteBuffer.position(), copyBytes, remainingToCopy));
-    buffer.setSize(byteBuffer.position());
-
-    // okay we are done with the message
-    if (copyBytes == remainingToCopy) {
-      sendMessage.setSendState(MPISendMessage.SendState.SERIALIZED);
-    } else {
-      sendMessage.setSendState(MPISendMessage.SendState.BODY_BUILT);
-    }
   }
 }
