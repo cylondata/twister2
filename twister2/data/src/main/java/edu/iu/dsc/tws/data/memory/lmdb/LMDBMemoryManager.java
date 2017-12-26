@@ -16,12 +16,12 @@ import java.nio.ByteBuffer;
 
 import org.lmdbjava.Dbi;
 import org.lmdbjava.Env;
-import static org.lmdbjava.Env.create;
-import static org.lmdbjava.DbiFlags.MDB_CREATE;
 
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.memory.MemoryManager;
 
+import static org.lmdbjava.DbiFlags.MDB_CREATE;
+import static org.lmdbjava.Env.create;
 
 /**
  * Memory Manger implementaion for LMDB Java
