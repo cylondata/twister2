@@ -30,7 +30,6 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
 
   private Queue<MPIBuffer> sendBuffers;
   private KryoSerializer serializer;
-  private Config config;
   private ObjectSerializer objectSerializer;
 
   public MPIMultiMessageSerializer(Queue<MPIBuffer> buffers, KryoSerializer kryoSerializer) {
@@ -69,8 +68,8 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
         sendMessage.setSendState(MPISendMessage.SendState.HEADER_BUILT);
       }
 
-      if (sendMessage.serializedState() == MPISendMessage.SendState.HEADER_BUILT ||
-          sendMessage.serializedState() == MPISendMessage.SendState.BODY_BUILT) {
+      if (sendMessage.serializedState() == MPISendMessage.SendState.HEADER_BUILT
+          || sendMessage.serializedState() == MPISendMessage.SendState.BODY_BUILT) {
         // build the body
         // first we need to serialize the body if needed
         serializeBody(message, sendMessage, buffer);
@@ -114,7 +113,7 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
    * @param buffer
    * @return true if the message is completely written
    */
-  private void serializeMessage(Object payload,
+  private boolean serializeMessage(MultiObject payload,
                              MPISendMessage sendMessage, MPIBuffer buffer) {
     MessageType type = sendMessage.getMPIMessage().getType();
     switch (type) {
@@ -125,8 +124,8 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
       case DOUBLE:
         break;
       case OBJECT:
-        objectSerializer.serializeObject(payload, sendMessage, buffer);
-        break;
+        return serializeObject(payload,
+            (SerializeState) sendMessage.getSerializationState(), buffer);
       case BYTE:
         break;
       case STRING:
@@ -136,6 +135,7 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
       default:
         break;
     }
+    return false;
   }
 
   @SuppressWarnings("rawtypes")
@@ -147,35 +147,151 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
     int startIndex = state.getCurrentObject();
 
     int remaining = buffer.getCapacity();
-    int copyBytes = 0;
-
     ByteBuffer byteBuffer = buffer.getByteBuffer();
-    for (int i = startIndex; i < objectList.size(); i++) {
-      Object o = objectList.get(i);
-      if (i == 0) {
-        // we have the header at the begining
-        remaining -= 16;
-        // we put the number of messages here
-        byteBuffer.putInt(12, objectList.size());
-      }
-
-      if (o instanceof MPIMessage) {
-        MPIMessage mpiMessage = (MPIMessage) o;
-        int bufferIndex = state.getBufferNo();
-        // we need to copy the buffers
-        List<MPIBuffer> buffers = mpiMessage.getBuffers();
-        for (int j = bufferIndex; j < buffers.size(); j++) {
-          MPIBuffer mpiBuffer = buffers.get(j);
+    // we will copy until we have space left or we are have serialized all the objects
+    while (remaining > 6 && state.getCurrentObject() < objectList.size()) {
+      for (int i = startIndex; i < objectList.size(); i++) {
+        Object o = objectList.get(i);
+        if (i == 0) {
+          // we have the header at the begining
+          remaining -= 16;
+          // we put the number of messages here
+          byteBuffer.putInt(12, objectList.size());
         }
-      } else {
-        serializeMessage(o, sendMessage, buffer);
+
+        if (o instanceof MPIMessage) {
+          MPIMessage mpiMessage = (MPIMessage) o;
+          boolean complete = serializeBufferedMessage(mpiMessage, state, buffer);
+          // we copied this completely
+          if (complete) {
+            state.setCurrentObject(startIndex + 1);
+          }
+        } else {
+          boolean complete = serializeMessage((MultiObject) o, sendMessage, buffer);
+          if (complete) {
+            state.setCurrentObject(startIndex + 1);
+          }
+        }
       }
+      // check how much spache left in this buffer
+      remaining = buffer.getByteBuffer().remaining();
+    }
+
+    if (state.getCurrentObject() == objectList.size()) {
+      sendMessage.setSendState(MPISendMessage.SendState.SERIALIZED);
     }
   }
 
-  private void buildMessageHeader(MPIBuffer buffer, int offset, int length, int source) {
+  /**
+   * Serialize a message in buffers.
+   * @param message
+   * @param state
+   * @param targetBuffer
+   * @return the number of complete messages written
+   */
+  private boolean serializeBufferedMessage(MPIMessage message, SerializeState state,
+                                           MPIBuffer targetBuffer) {
+    ByteBuffer targetByteBuffer = targetBuffer.getByteBuffer();
+    // the target remaining space left
+    int targetRemainingSpace = targetByteBuffer.remaining();
+    // the current buffer number
+    int currentSourceBuffer = state.getBufferNo();
+    // bytes already copied from this buffer
+    int bytesCopiedFromSource = state.getBytesCopied();
+    int canCopy = 0;
+    int needsCopy = 0;
+    List<MPIBuffer> buffers = message.getBuffers();
+    MPIBuffer currentMPIBuffer = null;
+    while (targetRemainingSpace > 0) {
+      currentMPIBuffer = buffers.get(currentSourceBuffer);
+      needsCopy = currentMPIBuffer.getSize() - bytesCopiedFromSource;
+      // 0th buffer has the header
+      if (currentSourceBuffer == 0) {
+        needsCopy -= 16;
+        // we add 16 because,
+        bytesCopiedFromSource += 16;
+      }
+
+      canCopy = needsCopy > targetRemainingSpace ? targetRemainingSpace : needsCopy;
+      // todo check this method
+      targetByteBuffer.put(currentMPIBuffer.getByteBuffer().array(),
+          bytesCopiedFromSource, canCopy);
+
+      // the target buffer is full, we need to return
+      if (needsCopy > targetRemainingSpace) {
+        bytesCopiedFromSource += canCopy;
+        break;
+      } else {
+        // we have more space in the target buffer, we can go to the next source buffer
+        bytesCopiedFromSource += canCopy;
+        targetRemainingSpace -= canCopy;
+        currentSourceBuffer++;
+      }
+    }
+
+    // set the data size of the target buffer
+    targetBuffer.setSize(bytesCopiedFromSource);
+
+    if (currentSourceBuffer == buffers.size() - 1 && currentMPIBuffer != null
+        && bytesCopiedFromSource == currentMPIBuffer.getSize()) {
+      state.setBufferNo(0);
+      state.setBytesCopied(0);
+      return true;
+    } else {
+      state.setBufferNo(currentSourceBuffer);
+      state.setBytesCopied(bytesCopiedFromSource);
+      return false;
+    }
+  }
+
+  private void buildMessageHeader(MPIBuffer buffer, int length, int source) {
     ByteBuffer byteBuffer = buffer.getByteBuffer();
-    byteBuffer.putInt(offset, length);
-    byteBuffer.putInt(offset + 4, source);
+    byteBuffer.putInt(length);
+    byteBuffer.putShort((short) source);
+  }
+
+  /**
+   * Serializes a java object using kryo serialization
+   *
+   * @param object
+   * @param state
+   * @param targetBuffer
+   */
+  public boolean serializeObject(MultiObject object, SerializeState state,
+                              MPIBuffer targetBuffer) {
+    byte[] data;
+    int dataPosition = 0;
+    ByteBuffer byteBuffer = targetBuffer.getByteBuffer();
+    if (state.getBytesCopied() == 0) {
+      // okay we need to serialize the data
+      data = serializer.serialize(object.getObject());
+      // at this point we know the length of the data
+      buildMessageHeader(targetBuffer, data.length, object.getSource());
+    } else {
+      data = state.getData();
+      dataPosition = state.getBytesCopied();
+    }
+
+    int remainingToCopy = data.length - dataPosition;
+    // check how much space we have
+    int bufferSpace = byteBuffer.capacity() - byteBuffer.position();
+
+    int copyBytes = remainingToCopy > bufferSpace ? bufferSpace : remainingToCopy;
+    // check how much space left in the buffer
+    byteBuffer.put(data, dataPosition, copyBytes);
+    state.setBytesCopied(dataPosition + copyBytes);
+
+    // now set the size of the buffer
+    targetBuffer.setSize(byteBuffer.position());
+
+    // okay we are done with the message
+    if (copyBytes == remainingToCopy) {
+      state.setBytesCopied(0);
+      state.setBufferNo(0);
+      state.setData(null);
+      return true;
+    } else {
+      return false;
+    }
   }
 }

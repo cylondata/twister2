@@ -19,10 +19,22 @@ public class SerializeState {
   private int currentObject;
   // bytes copied of the current object
   private int bytesCopied;
-  // buffer no we are working on
+  // buffer no we are working on, this is for MPI Messages
   private int bufferNo;
   // the serialized data of the current object
   private byte[] data;
+  // the total bytes, including the length and task for each message
+  private int totalBytes;
+  // length header built
+  private boolean headerBuilt;
+
+  public int getTotalBytes() {
+    return totalBytes;
+  }
+
+  public void setTotalBytes(int totalBytes) {
+    this.totalBytes = totalBytes;
+  }
 
   public int getCurrentObject() {
     return currentObject;
@@ -54,5 +66,13 @@ public class SerializeState {
 
   public void setData(byte[] data) {
     this.data = data;
+  }
+
+  public boolean isHeaderBuilt() {
+    return headerBuilt;
+  }
+
+  public void setHeaderBuilt(boolean headerBuilt) {
+    this.headerBuilt = headerBuilt;
   }
 }

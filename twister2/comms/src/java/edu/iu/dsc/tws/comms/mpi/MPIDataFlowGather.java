@@ -28,7 +28,6 @@ import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.mpi.io.MPIGatherReceiver;
 import edu.iu.dsc.tws.comms.mpi.io.MultiObject;
-import edu.iu.dsc.tws.comms.mpi.io.types.ObjectSerializer;
 import edu.iu.dsc.tws.comms.routing.InvertedBinaryTreeRouter;
 
 public class MPIDataFlowGather extends MPIDataFlowOperation {
