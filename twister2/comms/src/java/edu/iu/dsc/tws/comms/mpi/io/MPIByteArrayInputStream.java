@@ -30,14 +30,13 @@ public class MPIByteArrayInputStream extends InputStream {
   protected int currentBufferIndex = 0;
 
   // header size read
-  protected int headerSize;
+  protected int startOffSet;
 
   private int length;
 
-  public MPIByteArrayInputStream(List<MPIBuffer> buffers, int startOffset, int len) {
+  public MPIByteArrayInputStream(List<MPIBuffer> buffers, int len) {
     this.bufs = buffers;
     this.currentBufferIndex = 0;
-    this.headerSize = startOffset;
     this.length = len;
   }
 
@@ -77,17 +76,6 @@ public class MPIByteArrayInputStream extends InputStream {
     ByteBuffer byteBuffer = bufs.get(currentBufferIndex).getByteBuffer();
     // this is the intial time we are reading
     int pos = byteBuffer.position();
-    // we are at the 0th position, we need to skip header
-    if (currentBufferIndex == 0 && pos == 0) {
-      if (byteBuffer.remaining() < headerSize) {
-        throw new RuntimeException("The buffer doesn't contain data or complete header");
-      }
-      // lets rewind the buffer so the position becomes 0
-      byteBuffer.rewind();
-      // now skip the header size
-      byteBuffer.position(headerSize);
-      pos = headerSize;
-    }
 
     // now check if we need to go to the next buffer
     if (pos >= byteBuffer.limit() - 1) {
@@ -115,15 +103,6 @@ public class MPIByteArrayInputStream extends InputStream {
       long needSkip = n - skipped;
       int bufPos = b.position();
 
-      // we need to skip header
-      if (i == 0) {
-        if (bufPos < headerSize) {
-          // lets go to the header
-          b.position(headerSize);
-          bufPos = headerSize;
-        }
-      }
-
       avail = b.remaining() - bufPos;
       // now check how much we need to move here
       if (needSkip >= avail) {
@@ -144,21 +123,7 @@ public class MPIByteArrayInputStream extends InputStream {
   }
 
   public synchronized int available() {
-    int avail = 0;
-    for (int i = currentBufferIndex; i < bufs.size(); i++) {
-      ByteBuffer b = bufs.get(i).getByteBuffer();
-      if (i == 0) {
-        int position = b.position();
-        if (position > headerSize) {
-          avail += b.remaining() - position;
-        } else {
-          avail += b.remaining() - headerSize;
-        }
-      } else {
-        avail += b.remaining();
-      }
-    }
-    return avail;
+    return length;
   }
 
   public boolean markSupported() {

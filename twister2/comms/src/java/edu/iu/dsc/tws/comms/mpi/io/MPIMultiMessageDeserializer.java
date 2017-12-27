@@ -12,6 +12,9 @@
 package edu.iu.dsc.tws.comms.mpi.io;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -22,47 +25,64 @@ import edu.iu.dsc.tws.comms.mpi.MPIBuffer;
 import edu.iu.dsc.tws.comms.mpi.MPIMessage;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
-public class MPIMessageDeSerializer implements MessageDeSerializer {
-  private static final Logger LOG = Logger.getLogger(MPIMessageDeSerializer.class.getName());
+public class MPIMultiMessageDeserializer implements MessageDeSerializer {
+  private static final Logger LOG = Logger.getLogger(MPIMultiMessageDeserializer.class.getName());
 
   private KryoSerializer serializer;
 
-  private MPIBuffer tempBuf;
-
-  public MPIMessageDeSerializer(KryoSerializer kryoSerializer) {
+  public MPIMultiMessageDeserializer(KryoSerializer kryoSerializer) {
     this.serializer = kryoSerializer;
   }
 
   @Override
   public void init(Config cfg) {
-    tempBuf = new MPIBuffer(1024);
+
   }
 
   @Override
   public Object build(Object partialObject, int edge) {
     MPIMessage currentMessage = (MPIMessage) partialObject;
-    return buildMessage(currentMessage);
+    int readLength = 0;
+    int bufferIndex = 0;
+    List<MPIBuffer> buffers = currentMessage.getBuffers();
+    List<MultiObject> returnList = new ArrayList<>();
+    while (readLength < currentMessage.getHeader().getLength()) {
+      List<MPIBuffer> messageBuffers = new ArrayList<>();
+      // now read the header
+      MPIBuffer mpiBuffer = buffers.get(bufferIndex);
+      ByteBuffer byteBuffer = mpiBuffer.getByteBuffer();
+      int length = byteBuffer.getInt();
+      int source = byteBuffer.getInt();
+
+      int tempLength = 0;
+      while (tempLength < length) {
+        MPIBuffer e = buffers.get(bufferIndex);
+        messageBuffers.add(e);
+        tempLength += e.getSize();
+      }
+      // calculate the offset
+      MultiObject multiObject =  new MultiObject(source, buildMessage(currentMessage.getType(),
+          messageBuffers, length));
+      returnList.add(multiObject);
+    }
+    return returnList;
   }
 
+  @Override
   public MessageHeader buildHeader(MPIBuffer buffer, int edge) {
     int sourceId = buffer.getByteBuffer().getInt();
     int flags = buffer.getByteBuffer().getInt();
-    int subEdge = buffer.getByteBuffer().getInt();
+    int destId = buffer.getByteBuffer().getInt();
     int length = buffer.getByteBuffer().getInt();
 
     MessageHeader.Builder headerBuilder = MessageHeader.newBuilder(
         sourceId, edge, length);
-    // set the path
     headerBuilder.flags(flags);
-    headerBuilder.destination(subEdge);
-
-    // first build the header
+    headerBuilder.destination(destId);
     return headerBuilder.build();
   }
 
-  private Object buildMessage(MPIMessage message) {
-    MessageType type = message.getType();
-
+  private Object buildMessage(MessageType type, List<MPIBuffer> message, int length) {
     switch (type) {
       case INTEGER:
         break;
@@ -71,29 +91,24 @@ public class MPIMessageDeSerializer implements MessageDeSerializer {
       case DOUBLE:
         break;
       case OBJECT:
-        return buildObject(message);
+        return buildObject(message, length);
       case BYTE:
         break;
       case STRING:
         break;
       case BUFFER:
-        return buildBuffer(message);
+        break;
       default:
         break;
     }
     return null;
   }
 
-  private Object buildBuffer(MPIMessage message) {
-    return tempBuf;
-  }
-
-  private Object buildObject(MPIMessage message) {
+  private Object buildObject(List<MPIBuffer> buffers, int length) {
     MPIByteArrayInputStream input = null;
     try {
       //todo: headersize
-      input = new MPIByteArrayInputStream(message.getBuffers(),
-          message.getHeader().getLength());
+      input = new MPIByteArrayInputStream(buffers, length);
       return serializer.deserialize(input);
     } finally {
       if (input != null) {

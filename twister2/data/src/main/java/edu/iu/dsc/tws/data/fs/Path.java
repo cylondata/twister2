@@ -343,4 +343,14 @@ public class Path implements Serializable {
     final int start = hasWindowsDrive(uri.getPath(), true) ? 3 : 0;
     return uri.getPath().startsWith(SEPARATOR, start);
   }
+
+  /**
+   * Check if the path is null or empty
+   */
+  public boolean isNullOrEmpty() {
+    if (uri == null || uri.equals("")) {
+      return true;
+    }
+    return false;
+  }
 }
