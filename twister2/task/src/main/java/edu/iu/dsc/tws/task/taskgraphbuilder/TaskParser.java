@@ -56,8 +56,14 @@ public class TaskParser {
         if (containerId == 0) {
           executor.execute(processedTaskVertices.iterator().next());
         } else if (containerId == 1) {
-          processedTaskVertices.iterator().next();
-          executor.execute(processedTaskVertices.iterator().next());
+          int index = 0;
+          for (TaskMapper processedTask : processedTaskVertices) {
+            if (index == 0) {
+              ++index;
+            } else if (index == 1) {
+              executor.execute(processedTask);
+            }
+          }
         }
       }
     }
