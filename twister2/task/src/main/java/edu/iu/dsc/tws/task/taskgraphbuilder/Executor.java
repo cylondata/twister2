@@ -28,6 +28,10 @@ public class Executor implements Runnable {
     //task.run();
   }
 
+  public void execute(TaskMapper taskMapper) {
+
+  }
+
   @Override
   public void run() {
     System.out.println("hello execution finished");
