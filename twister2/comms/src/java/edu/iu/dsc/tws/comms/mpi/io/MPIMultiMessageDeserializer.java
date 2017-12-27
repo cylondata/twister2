@@ -46,23 +46,40 @@ public class MPIMultiMessageDeserializer implements MessageDeSerializer {
     int bufferIndex = 0;
     List<MPIBuffer> buffers = currentMessage.getBuffers();
     List<MultiObject> returnList = new ArrayList<>();
-    while (readLength < currentMessage.getHeader().getLength()) {
+    MessageHeader header = currentMessage.getHeader();
+
+    if (header == null) {
+      throw new RuntimeException("Header must be built before the message");
+    }
+
+    while (readLength < header.getLength()) {
       List<MPIBuffer> messageBuffers = new ArrayList<>();
       // now read the header
       MPIBuffer mpiBuffer = buffers.get(bufferIndex);
       ByteBuffer byteBuffer = mpiBuffer.getByteBuffer();
       int length = byteBuffer.getInt();
-      int source = byteBuffer.getInt();
+      int source = byteBuffer.getShort();
 
       int tempLength = 0;
+      int tempBufferIndex = bufferIndex;
       while (tempLength < length) {
-        MPIBuffer e = buffers.get(bufferIndex);
-        messageBuffers.add(e);
-        tempLength += e.getSize();
+        mpiBuffer = buffers.get(tempBufferIndex);
+        messageBuffers.add(mpiBuffer);
+        tempLength += mpiBuffer.getByteBuffer().remaining();
+        tempBufferIndex++;
       }
-      // calculate the offset
-      MultiObject multiObject =  new MultiObject(source, buildMessage(currentMessage.getType(),
-          messageBuffers, length));
+
+      Object object = buildMessage(currentMessage.getType(),
+          messageBuffers, length);
+      readLength += length + 6;
+      byteBuffer = mpiBuffer.getByteBuffer();
+      if (byteBuffer.remaining() > 0) {
+        bufferIndex = tempBufferIndex - 1;
+      } else {
+        bufferIndex = tempBufferIndex;
+      }
+
+      MultiObject multiObject =  new MultiObject(source, object);
       returnList.add(multiObject);
     }
     return returnList;
@@ -107,7 +124,6 @@ public class MPIMultiMessageDeserializer implements MessageDeSerializer {
   private Object buildObject(List<MPIBuffer> buffers, int length) {
     MPIByteArrayInputStream input = null;
     try {
-      //todo: headersize
       input = new MPIByteArrayInputStream(buffers, length);
       return serializer.deserialize(input);
     } finally {
