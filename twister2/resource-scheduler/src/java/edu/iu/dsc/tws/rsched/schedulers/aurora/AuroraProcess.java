@@ -62,7 +62,7 @@ public class AuroraProcess {
           AuroraClientContext.cluster(config),
           AuroraClientContext.role(config),
           AuroraClientContext.environment(config),
-          Context.auroraScript(config),
+          AuroraClientContext.auroraScript(config),
           true);
 
       boolean jobSubmitted = controller.createJob(envs);
@@ -84,6 +84,8 @@ public class AuroraProcess {
    *   twister2_home: home directory for twister2
    *   config_dir: config directory for twister2 project
    *   cluster_name: it should be "aurora"
+   *   packagePath: path of twister2 tar.gz file to be uploaded to Mesos container
+   *   packageFile: filename of twister2 tar.gz file to be uploaded to Mesos container
    * @return cli options
    */
   private static Options setupOptions() {
@@ -117,7 +119,7 @@ public class AuroraProcess {
         .desc("Package path")
         .longOpt("package_path")
         .hasArgs()
-        .argName("path to the package file")
+        .argName("path to twister2 package file")
         .required()
         .build();
 
@@ -125,7 +127,7 @@ public class AuroraProcess {
         .desc("Package file name")
         .longOpt("package_file")
         .hasArgs()
-        .argName("filename for the package file")
+        .argName("filename for twister2 package")
         .required()
         .build();
 
@@ -155,6 +157,12 @@ public class AuroraProcess {
             + "twister_home: %s config_dir: %s cluster_name: %s",
         twister2Home, configDir, clusterName));
 
+    try {
+//      Reflection.initialize(Class.forName("edu.iu.dsc.tws.rsched.schedulers.aurora.AuroraClientContext"));
+      Class.forName("edu.iu.dsc.tws.rsched.schedulers.aurora.AuroraClientContext");
+    } catch (ClassNotFoundException e) {
+      e.printStackTrace();
+    }
     Config config = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterName);
 
     return Config.newBuilder().putAll(config).
@@ -167,6 +175,7 @@ public class AuroraProcess {
 
   /**
    * put relevant config parameters to a HashMap to be used as environment variables
+   * when submitting jobs
    * @param config
    * @return
    */
