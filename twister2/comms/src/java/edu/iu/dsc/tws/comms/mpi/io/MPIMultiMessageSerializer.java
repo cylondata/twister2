@@ -152,36 +152,36 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
     int startIndex = state.getCurrentObject();
 
     int remaining = buffer.getCapacity();
-    ByteBuffer byteBuffer = buffer.getByteBuffer();
-    // we will copy until we have space left or we are have serialized all the objects
-    while (remaining > 6 && state.getCurrentObject() < objectList.size() - 1) {
-      for (int i = startIndex; i < objectList.size(); i++) {
-        Object o = objectList.get(i);
-        if (i == 0) {
-          // we have the header at the begining
-          remaining -= 16;
-          // we put the number of messages here
-          byteBuffer.putInt(12, objectList.size());
-        }
 
-        if (o instanceof MPIMessage) {
-          MPIMessage mpiMessage = (MPIMessage) o;
-          boolean complete = serializeBufferedMessage(mpiMessage, state, buffer);
-          // we copied this completely
-          if (complete) {
-            state.setCurrentObject(startIndex + 1);
-          }
-        } else {
-          boolean complete = serializeMessage((MultiObject) o, sendMessage, buffer);
-          if (complete) {
-            state.setCurrentObject(startIndex + 1);
-          }
-        }
-      }
-      // check how much spache left in this buffer
-      remaining = buffer.getByteBuffer().remaining();
+    // we cannot use this buffer
+    if (remaining < 6) {
+      return;
     }
 
+    ByteBuffer byteBuffer = buffer.getByteBuffer();
+    // we will copy until we have space left or we are have serialized all the objects
+    for (int i = startIndex; i < objectList.size(); i++) {
+      Object o = objectList.get(i);
+      if (o instanceof MPIMessage) {
+        MPIMessage mpiMessage = (MPIMessage) o;
+        boolean complete = serializeBufferedMessage(mpiMessage, state, buffer);
+        // we copied this completely
+        if (complete) {
+          state.setCurrentObject(startIndex + 1);
+        }
+      } else {
+        boolean complete = serializeMessage((MultiObject) o, sendMessage, buffer);
+        if (complete) {
+          state.setCurrentObject(startIndex + 1);
+        }
+      }
+
+      // check how much space left in this buffer
+      remaining = buffer.getByteBuffer().remaining();
+      if (!(remaining > 6 && state.getCurrentObject() < objectList.size() - 1)) {
+        break;
+      }
+    }
     if (state.getCurrentObject() == objectList.size()) {
       sendMessage.setSendState(MPISendMessage.SendState.SERIALIZED);
     }
