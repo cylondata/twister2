@@ -31,4 +31,11 @@ public interface MemoryManager {
    * @return true of the key value pair was added, false otherwise
    */
   boolean put(byte[] key, byte[] value);
+
+  /**
+   * Get the corresponding value for the given key from the store
+   * @param key
+   * @return
+   */
+  byte[] get(byte[] key);
 }
