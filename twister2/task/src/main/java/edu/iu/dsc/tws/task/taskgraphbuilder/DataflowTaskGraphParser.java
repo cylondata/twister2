@@ -24,6 +24,7 @@ public class DataflowTaskGraphParser {
 
   private static final Logger LOGGER = Logger.getLogger(
       DataflowTaskGraphParser.class.getName());
+
   private static int jobId = 0;
   private DataflowTaskGraphGenerator dataflowTaskGraph;
   private DataflowTaskGraphParser dataflowTaskGraphParser;
@@ -58,11 +59,10 @@ public class DataflowTaskGraphParser {
   }
 
   private Set<Task> dataflowTaskGraphPrioritize(DataflowTaskGraphGenerator taskGraph) {
+    final IDataflowTaskGraph<Task, DataFlowOperation>
+        dataflowTaskgraph = taskGraph.getDataflowGraph();
 
-    final IDataflowTaskGraph<Task, DataFlowOperation> dataflowTaskgraph
-        = taskGraph.getDataflowGraph();
     Set<Task> taskVertices = dataflowTaskgraph.getTaskVertexSet();
-
     try {
       taskVertices.stream()
           .filter(task -> dataflowTaskgraph.inDegreeOf(task) == 0)
@@ -82,10 +82,13 @@ public class DataflowTaskGraphParser {
     if (dataflowTaskgraph.outDegreeOf(mapper) == 0) {
       return 1;
     } else {
-      Set<DataFlowOperation> taskEdgesOf = dataflowTaskgraph.outgoingTaskEdgesOf(mapper);
-      Stream<Task> taskStream = taskEdgesOf.stream().map(dataflowTaskgraph::getTaskEdgeTarget);
+      Set<DataFlowOperation> taskEdgesOf = dataflowTaskgraph.
+          outgoingTaskEdgesOf(mapper);
+      Stream<Task> taskStream = taskEdgesOf.stream().map(
+          dataflowTaskgraph::getTaskEdgeTarget);
       int maxWeightOfNeighbours = taskStream.map(
-          next -> dataflowTaskGraphParse(dataflowTaskgraph, next)).max(Integer::compare).get();
+          next -> dataflowTaskGraphParse(dataflowTaskgraph, next)).
+          max(Integer::compare).get();
       //For testing....
       int weightOfCurrent = 1 + maxWeightOfNeighbours;
       LOGGER.info("Task Edges are:" + taskEdgesOf + "\t"

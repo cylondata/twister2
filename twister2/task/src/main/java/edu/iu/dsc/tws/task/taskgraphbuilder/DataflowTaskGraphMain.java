@@ -116,6 +116,10 @@ public class DataflowTaskGraphMain extends DataflowTaskGraphGenerator {
     DataflowTaskGraphParser dataflowTaskGraphParser =
         new DataflowTaskGraphParser(dataflowTaskGraphGenerator);
     dataflowTaskGraphParser.dataflowTaskGraphParseAndSchedule();
+
+    /*TaskParser TaskGraphParser = new TaskParser(dataflowTaskGraphGenerator);
+    TaskGraphParser.taskGraphParseAndSchedule(0);
+    TaskGraphParser.taskGraphParseAndSchedule(1);*/
   }
 }
 

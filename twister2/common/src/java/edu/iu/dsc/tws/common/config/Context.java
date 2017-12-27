@@ -50,8 +50,6 @@ public class Context {
       "twister2.config.file.uploader.yaml",  "${TWISTER2_CONF}/system.yaml");
   public static final ConfigEntry OVERRIDE_YAML = new ConfigEntry(
       "twister2.config.file.override.yaml",  "${TWISTER2_CONF}/override.yaml");
-  public static final ConfigEntry AURORA_SCRIPT = new ConfigEntry(
-      "twister2.resource.scheduler.aurora.script", "${TWISTER2_CONF}/twister2.aurora");
   public static final ConfigEntry CLUSTER_HOME = new ConfigEntry(
       "twister2.directory.cluster.home", "./core");
   public static final ConfigEntry CLUSTER_CONF = new ConfigEntry(
@@ -89,7 +87,6 @@ public class Context {
     defaults.put(RESOURCE_SCHEDULER_YAML.getKey(), RESOURCE_SCHEDULER_YAML.getDefaultValue());
     defaults.put(NETWORK_YAML.getKey(), NETWORK_YAML.getDefaultValue());
     defaults.put(SYSTEM_YAML.getKey(), SYSTEM_YAML.getDefaultValue());
-    defaults.put(AURORA_SCRIPT.getKey(), AURORA_SCRIPT.getDefaultValue());
   }
 
   protected Context() {
@@ -114,10 +111,6 @@ public class Context {
 
   public static String clientConfigurationFile(Config cfg) {
     return cfg.getStringValue(CLIENT_YAML);
-  }
-
-  public static String auroraScript(Config cfg) {
-    return cfg.getStringValue(AURORA_SCRIPT);
   }
 
   public static String clusterName(Config cfg) {

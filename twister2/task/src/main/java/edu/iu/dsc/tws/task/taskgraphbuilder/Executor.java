@@ -26,6 +26,11 @@ public class Executor implements Runnable {
 
   public void execute(Task task, Class<DataFlowOperation> dataFlowOperationClass) {
     //task.run();
+    System.out.println("Receiving the task:" + task);
+  }
+
+  public void execute(TaskMapper taskMapper) {
+    System.out.println("Just for testing");
   }
 
   @Override

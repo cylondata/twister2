@@ -3,7 +3,9 @@
 ################################################################################
 
 # aurora python script to submit a job to Aurora Scheduler
-#twister2.resource.scheduler.aurora.script: "/root/twister2/twister2.aurora"
+# its default value is defined as the following in the code
+# can be reset from this config file if desired
+# twister2.resource.scheduler.aurora.script: "${TWISTER2_CONF}/twister2.aurora"
 
 # cluster name aurora scheduler runs in
 twister2.resource.scheduler.aurora.cluster: "example"
