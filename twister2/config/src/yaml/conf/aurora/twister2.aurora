@@ -1,10 +1,12 @@
-# path of the twister core packge
-pth = '/root/twister2/'
-# filename of the twister2 package
-fn='twister2-client.tar.gz'
+# these two are set from command line when starting AuroraProcess
+# the path of the twister2 package to be uploaded to Mesos container
+pth = '{{TWISTER2_PACKAGE_PATH}}'
+# filename of the twister2 package to be uploaded to Mesos container
+# fn='twister2-client.tar.gz'
+fn='{{TWISTER2_PACKAGE_FILE}}'
 
-# one Java job submission
-# two processes: one file copy and the other to run java code 
+# one Java job submission to Aurora Scheduler
+# two processes: one is for file copy and the other is to run java code in the container
 
 # a process to copy project package file to the sandbox
 copy_java = Process(
@@ -25,7 +27,6 @@ run_java = Process(
 # describe the task
 java_task = SequentialTask(
   processes = [copy_java, run_java],
-#  resources = Resources(cpu = '{{CPUS_PER_CONTAINER}}', ram = 1*GB, disk = 1*GB)
   resources = Resources(cpu = '{{CPUS_PER_CONTAINER}}', ram = '{{RAM_PER_CONTAINER}}', disk = '{{DISK_PER_CONTAINER}}')
 )
 

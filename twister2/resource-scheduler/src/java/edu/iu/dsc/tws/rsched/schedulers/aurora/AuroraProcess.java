@@ -54,8 +54,8 @@ public class AuroraProcess {
 
       // get environment variables to set when executing aurora file
       Map<AuroraField, String> envs = getEnvVariables(config);
-//      System.out.println("\nall aurora environment variables");
-//      Test.printEnvs(envs);
+      System.out.println("\nall aurora environment variables");
+      Test.printEnvs(envs);
 
       //construct the controller to submit the job to Aurora Scheduler
       AuroraClientController controller = new AuroraClientController(SchedulerContext.jobName(config),
@@ -113,9 +113,27 @@ public class AuroraProcess {
         .required()
         .build();
 
+    Option packagePath = Option.builder("p")
+        .desc("Package path")
+        .longOpt("package_path")
+        .hasArgs()
+        .argName("path to the package file")
+        .required()
+        .build();
+
+    Option packageFile = Option.builder("f")
+        .desc("Package file name")
+        .longOpt("package_file")
+        .hasArgs()
+        .argName("filename for the package file")
+        .required()
+        .build();
+
     options.addOption(twister2Home);
     options.addOption(configDirectory);
     options.addOption(clusterName);
+    options.addOption(packagePath);
+    options.addOption(packageFile);
 
     return options;
   }
@@ -130,6 +148,8 @@ public class AuroraProcess {
     String twister2Home = cmd.getOptionValue("twister2_home");
     String configDir = cmd.getOptionValue("config_dir");
     String clusterName = cmd.getOptionValue("cluster_name");
+    String packagePath = cmd.getOptionValue("package_path");
+    String packageFile = cmd.getOptionValue("package_file");
 
     LOG.log(Level.INFO, String.format("Initializing process with "
             + "twister_home: %s config_dir: %s cluster_name: %s",
@@ -138,8 +158,11 @@ public class AuroraProcess {
     Config config = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterName);
 
     return Config.newBuilder().putAll(config).
-        put(AuroraClientContext.TWISTER2_HOME.getKey(), twister2Home).
-        put(AuroraClientContext.TWISTER2_CLUSTER_NAME, clusterName).build();
+        put(SchedulerContext.TWISTER2_HOME.getKey(), twister2Home).
+        put(SchedulerContext.TWISTER2_CLUSTER_NAME, clusterName).
+        put(AuroraClientContext.TWISTER2_PACKAGE_PATH, packagePath).
+        put(AuroraClientContext.TWISTER2_PACKAGE_FILE, packageFile).
+        build();
   }
 
   /**
@@ -149,6 +172,8 @@ public class AuroraProcess {
    */
   public static Map<AuroraField, String> getEnvVariables(Config config){
     HashMap<AuroraField, String> envs = new HashMap<AuroraField, String>();
+    envs.put(AuroraField.TWISTER2_PACKAGE_PATH, AuroraClientContext.packagePath(config));
+    envs.put(AuroraField.TWISTER2_PACKAGE_FILE, AuroraClientContext.packageFile(config));
     envs.put(AuroraField.CLUSTER, AuroraClientContext.cluster(config));
     envs.put(AuroraField.ENVIRONMENT, AuroraClientContext.environment(config));
     envs.put(AuroraField.ROLE, AuroraClientContext.role(config));

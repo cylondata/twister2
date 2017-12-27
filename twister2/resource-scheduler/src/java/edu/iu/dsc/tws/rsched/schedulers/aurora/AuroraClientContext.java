@@ -18,6 +18,10 @@ import edu.iu.dsc.tws.rsched.core.SchedulerContext;
  * State parameters for Aurora Client
  */
 public class AuroraClientContext extends SchedulerContext{
+  // these two constants show the path and file to upload to aurora containers
+  public static final String TWISTER2_PACKAGE_PATH = "twister2.package.path";
+  public static final String TWISTER2_PACKAGE_FILE = "twister2.package.file";
+
   public static final String CLUSTER = "twister2.resource.scheduler.aurora.cluster";
   public static final String ROLE = "twister2.resource.scheduler.aurora.role";
   public static final String ENVIRONMENT = "twister2.resource.scheduler.aurora.env";
@@ -31,6 +35,14 @@ public class AuroraClientContext extends SchedulerContext{
 
   public static final int DEFAULT_RAM_SIZE = 1073741824; // 1GB
   public static final int DEFAULT_DISK_SIZE = 1073741824; // 1GB
+
+  public static String packagePath(Config cfg) {
+    return cfg.getStringValue(TWISTER2_PACKAGE_PATH);
+  }
+
+  public static String packageFile(Config cfg) {
+    return cfg.getStringValue(TWISTER2_PACKAGE_FILE);
+  }
 
   public static String cluster(Config cfg) {
     return cfg.getStringValue(CLUSTER);
