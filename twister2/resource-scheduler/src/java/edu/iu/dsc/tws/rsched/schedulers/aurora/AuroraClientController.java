@@ -33,8 +33,6 @@ package edu.iu.dsc.tws.rsched.schedulers.aurora;
   import java.util.Map;
   import java.util.logging.Logger;
 
-  import com.google.common.annotations.VisibleForTesting;
-
   import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
 
 /**
@@ -123,7 +121,6 @@ class AuroraClientController {
   }
 
   // Utils method for unit tests
-  @VisibleForTesting
   boolean runProcess(List<String> auroraCmd) {
     StringBuilder stdout = new StringBuilder();
     StringBuilder stderr = new StringBuilder();
