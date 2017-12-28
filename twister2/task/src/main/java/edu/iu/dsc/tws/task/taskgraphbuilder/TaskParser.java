@@ -30,6 +30,10 @@ public class TaskParser {
     this.dataflowTaskGraph = taskgraph;
   }
 
+  /**
+   * This is an entry method to invoke the dataflow task graph
+   * prioritizer to prioritize the tasks which is ready for execution.
+   */
   public void taskGraphParseAndSchedule() {
     Set<TaskMapper> processedTaskVertices;
     if (dataflowTaskGraph != null) {
@@ -48,19 +52,28 @@ public class TaskParser {
   }
 
   public void taskGraphParseAndSchedule(int containerId) {
+
     Set<TaskMapper> processedTaskVertices;
     if (dataflowTaskGraph != null) {
+
       processedTaskVertices = dataflowTaskGraphPrioritize(this.dataflowTaskGraph);
       processedTaskVertices.forEach(System.out::println);
+
       if (!processedTaskVertices.isEmpty()) {
+
         if (containerId == 0) {
           executor.execute(processedTaskVertices.iterator().next());
         } else if (containerId == 1) {
           int index = 0;
+          //If the index value is greater than 1, job should be submit it to
+          //through pipelined task mechanism...!
           for (TaskMapper processedTask : processedTaskVertices) {
             if (index == 0) {
               ++index;
             } else if (index == 1) {
+              executor.execute(processedTask);
+              ++index;
+            } else if (index > 1) { //this condition should be properly written
               executor.execute(processedTask);
             }
           }
@@ -69,6 +82,10 @@ public class TaskParser {
     }
   }
 
+  /**
+   * This method calls the dataflow task graph parser method to prioritize
+   * the tasks for the execution.
+   */
   public Set<TaskMapper> dataflowTaskGraphPrioritize(DataflowTaskGraphGenerator taskGraph) {
     final IDataflowTaskGraph<TaskMapper, CManager> dataflowGraph =
         taskGraph.getDataflowTaskGraph();
@@ -83,6 +100,10 @@ public class TaskParser {
     return taskVertices;
   }
 
+  /**
+   * This is the simple dataflow task graph parser method and it should be replaced
+   * with an optimized scheduling mechanism.
+   */
   private int dataflowTaskGraphParse(final IDataflowTaskGraph<TaskMapper,
       CManager> dataflowTaskgraph, final TaskMapper mapper) {
 
@@ -94,16 +115,15 @@ public class TaskParser {
     } else {
       Set<CManager> taskEdgesOf = dataflowTaskgraph.
           outgoingTaskEdgesOf(mapper);
+
       Stream<TaskMapper> taskStream = taskEdgesOf.stream().map(
           dataflowTaskgraph::getTaskEdgeTarget);
-      int maxWeightOfNeighbours = taskStream.map(
+
+      int adjacentTaskWeights = taskStream.map(
           next -> dataflowTaskGraphParse(dataflowTaskgraph, next)).
           max(Integer::compare).get();
-      //For testing....
-      int weightOfCurrent = 1 + maxWeightOfNeighbours;
-      LOGGER.info("Task Edges are:" + taskEdgesOf + "\t"
-          + "taskStream:" + taskStream.getClass().getName() + "\t"
-          + "Weight of the current task:" + weightOfCurrent);
+
+      int weightOfCurrent = 1 + adjacentTaskWeights;
       return weightOfCurrent;
     }
   }
