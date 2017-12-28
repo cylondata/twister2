@@ -26,6 +26,7 @@ import edu.iu.dsc.tws.comms.mpi.MPIMessageReleaseCallback;
 import edu.iu.dsc.tws.comms.mpi.MPISendMessage;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
+@SuppressWarnings({"rawtypes", "unchecked"})
 public final class Test {
   private KryoSerializer serializer;
 
@@ -53,6 +54,7 @@ public final class Test {
     }
   }
 
+  @SuppressWarnings("rawtypes")
   public void runTest() {
     IntData data = new IntData();
     List list = new ArrayList<>();
@@ -62,6 +64,7 @@ public final class Test {
     deserialize(message);
   }
 
+  @SuppressWarnings("rawtypes")
   public void runTest2() {
     IntData data = new IntData(10);
     List list = new ArrayList<>();

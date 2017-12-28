@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.basic.batch;
+package edu.iu.dsc.tws.examples;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,13 +27,11 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.examples.IntData;
-import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
-public class BaseBatchAggregate implements IContainer {
-  private static final Logger LOG = Logger.getLogger(BaseBatchAggregate.class.getName());
+public class BasicGatherCommunication implements IContainer {
+  private static final Logger LOG = Logger.getLogger(edu.iu.dsc.tws.examples.basic.batch.BaseBatchAggregate.class.getName());
 
   private DataFlowOperation aggregate;
 
@@ -179,6 +177,7 @@ public class BaseBatchAggregate implements IContainer {
       }
 
       try {
+        LOG.info(String.format("Final received message: target %d source %d", target, source));
         List<Object> m = messages.get(target).get(source);
         Integer c = counts.get(target).get(source);
         if (m.size() > 128) {
@@ -240,7 +239,7 @@ public class BaseBatchAggregate implements IContainer {
    * @return IntData
    */
   private IntData generateData() {
-    int s = 64000;
+    int s = 10;
     int[] d = new int[s];
     for (int i = 0; i < s; i++) {
       d[i] = i;
@@ -248,3 +247,4 @@ public class BaseBatchAggregate implements IContainer {
     return new IntData(d);
   }
 }
+

@@ -17,6 +17,7 @@ import java.util.Queue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageSerializer;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.mpi.MPIBuffer;
@@ -84,6 +85,12 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
         SerializeState state = (SerializeState) sendMessage.getSerializationState();
         mpiMessage.getBuffers().get(0).getByteBuffer().putInt(
             12, state.getTotalBytes());
+
+        MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
+            sendMessage.getEdge(), state.getTotalBytes());
+        builder.destination(sendMessage.getDestintationIdentifier());
+        sendMessage.getMPIMessage().setHeader(builder.build());
+        state.setTotalBytes(0);
         // mark the original message as complete
         mpiMessage.setComplete(true);
       } else {
@@ -278,6 +285,7 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
       buildMessageHeader(targetBuffer, data.length, object.getSource());
       // add the header bytes to the total bytes
       totalBytes += 6;
+      state.setData(data);
     } else {
       data = state.getData();
       dataPosition = state.getBytesCopied();

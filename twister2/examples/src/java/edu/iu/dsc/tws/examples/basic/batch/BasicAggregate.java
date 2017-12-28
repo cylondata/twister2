@@ -9,15 +9,8 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.core;
+package edu.iu.dsc.tws.examples.basic.batch;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.config.ConfigLoader;
+public final class BasicAggregate {
 
-public final class DirectChannel {
-  public DirectChannel(String configurationFile) {
-    Config config = ConfigLoader.loadComponentConfig(configurationFile);
-
-    // now lets
-  }
 }
