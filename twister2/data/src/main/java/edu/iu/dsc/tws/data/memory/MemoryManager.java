@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.memory;
 
+import java.nio.ByteBuffer;
+
 /**
  * base interface for memory managers. Memory managers are responsible of keeping data in memoory
  * for various requirements. The memory manager is also responsible of writing data to disk when
@@ -20,12 +22,12 @@ public interface MemoryManager {
 
   /**
    * Initializes the Memory manager
-   * @return
    */
   boolean init();
 
   /**
    * Stores the give key value pair in the memory manager
+   *
    * @param key key of the pair
    * @param value value to be stored
    * @return true of the key value pair was added, false otherwise
@@ -33,9 +35,24 @@ public interface MemoryManager {
   boolean put(byte[] key, byte[] value);
 
   /**
+   * Stores the give key value pair in the memory manager
+   */
+  boolean put(byte[] key, ByteBuffer value);
+
+  /**
+   * Stores the give key value pair in the memory manager
+   */
+  boolean put(long key, ByteBuffer value);
+
+  /**
+   * Stores the give key value pair in the memory manager
+   */
+  boolean put(long key, byte[] value);
+
+  /**
    * Get the corresponding value for the given key from the store
-   * @param key
-   * @return
    */
   byte[] get(byte[] key);
+
+
 }
