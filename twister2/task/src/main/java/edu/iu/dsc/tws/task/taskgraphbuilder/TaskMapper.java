@@ -23,23 +23,6 @@ public abstract class TaskMapper implements Runnable {
     this.taskPriority = taskpriority;
   }
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (!(o instanceof TaskMapper)) {
-      return false;
-    }
-    TaskMapper taskMapper = (TaskMapper) o;
-    return taskId != null ? taskId.equals(taskMapper.taskId) : taskMapper.taskId == null;
-  }
-
-  @Override
-  public int hashCode() {
-    return taskId != null ? taskId.hashCode() : 0;
-  }
-
   public float getExecutionWeight() {
     return taskExecutionWeight;
   }

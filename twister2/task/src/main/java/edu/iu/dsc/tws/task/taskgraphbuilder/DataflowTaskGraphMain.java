@@ -12,7 +12,7 @@
 package edu.iu.dsc.tws.task.taskgraphbuilder;
 
 /***
- * This is the main method to call the dataflow class for generating the dataflow task graph.
+ * This is the main method for testing the dataflow task graph generation.
  */
 public class DataflowTaskGraphMain extends DataflowTaskGraphGenerator {
 
