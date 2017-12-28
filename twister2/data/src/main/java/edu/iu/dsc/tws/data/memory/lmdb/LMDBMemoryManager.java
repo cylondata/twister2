@@ -17,6 +17,7 @@ import java.util.logging.Logger;
 
 import org.lmdbjava.Dbi;
 import org.lmdbjava.Env;
+import org.lmdbjava.Txn;
 
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.memory.MemoryManager;
@@ -67,6 +68,22 @@ public class LMDBMemoryManager implements MemoryManager {
     db = env.openDbi(LMDBMemoryManagerContext.DB_NAME, MDB_CREATE);
 
     return false;
+  }
+
+  @Override
+  public byte[] get(byte[] key) {
+    if (key.length > 511) {
+      LOG.info("Key size lager than 511 bytes which is the limit for LMDB key values");
+      return null;
+    }
+
+    Txn<ByteBuffer> txn = env.txnRead();
+    final ByteBuffer keyBuffer = allocateDirect(key.length);
+    keyBuffer.put(key).flip();
+    final ByteBuffer found = db.get(txn, keyBuffer);
+    byte[] results = new byte[found.limit()];
+    found.get(results);
+    return results;
   }
 
   /**
