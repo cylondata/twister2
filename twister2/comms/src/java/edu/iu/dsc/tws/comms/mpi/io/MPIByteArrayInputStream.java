@@ -29,10 +29,9 @@ public class MPIByteArrayInputStream extends InputStream {
   // the current buffer index
   protected int currentBufferIndex = 0;
 
-  // header size read
-  protected int startOffSet;
-
   private int length;
+
+  private int copiedBytes = 0;
 
   public MPIByteArrayInputStream(List<MPIBuffer> buffers, int len) {
     this.bufs = buffers;
@@ -48,6 +47,7 @@ public class MPIByteArrayInputStream extends InputStream {
     }
     // check to see if this buffer has this information
     if (byteBuffer.remaining() >= 1) {
+      copiedBytes++;
       return byteBuffer.get();
     } else {
       throw new RuntimeException("Failed to read the next byte");
@@ -60,11 +60,18 @@ public class MPIByteArrayInputStream extends InputStream {
     if (byteBuffer == null) {
       return -1;
     }
+    int canCopy = length - copiedBytes;
     // check to see if this buffer has this information
     if (byteBuffer.remaining() >= 1) {
       // we can copy upto len or remaining
-      int copiedLength = byteBuffer.remaining() > len ? len : byteBuffer.remaining();
+      int copiedLength = 0;
+      if (byteBuffer.remaining() > len) {
+        copiedLength = len > canCopy ? canCopy : len;
+      } else {
+        copiedLength = byteBuffer.remaining() > canCopy ? canCopy : byteBuffer.remaining();
+      }
       byteBuffer.get(b, off, copiedLength);
+      copiedBytes += copiedLength;
       // increment position
       return copiedLength;
     } else {
@@ -73,6 +80,10 @@ public class MPIByteArrayInputStream extends InputStream {
   }
 
   private ByteBuffer getReadBuffer() {
+    if (copiedBytes >= length) {
+      return null;
+    }
+
     ByteBuffer byteBuffer = bufs.get(currentBufferIndex).getByteBuffer();
     // this is the intial time we are reading
     int pos = byteBuffer.position();
@@ -104,15 +115,20 @@ public class MPIByteArrayInputStream extends InputStream {
       int bufPos = b.position();
 
       avail = b.remaining() - bufPos;
+      int canCopy = length - (copiedBytes + skipped);
       // now check how much we need to move here
       if (needSkip >= avail) {
+        avail = canCopy > avail ? avail : canCopy;
         // we go to the end
         b.position(bufPos + avail);
         currentBufferIndex++;
         skipped += avail;
+        copiedBytes += skipped;
       } else {
+        needSkip = canCopy > needSkip ? needSkip : canCopy;
         b.position((int) (bufPos + needSkip));
         skipped += needSkip;
+        copiedBytes += skipped;
       }
 
       if (skipped >= n) {
@@ -134,6 +150,8 @@ public class MPIByteArrayInputStream extends InputStream {
   }
 
   public synchronized void reset() {
+    copiedBytes = 0;
+    currentBufferIndex = 0;
   }
 
   public void close() throws IOException {

@@ -21,6 +21,14 @@ public class IntData {
   public IntData() {
   }
 
+  public IntData(int size) {
+    int[] d = new int[size];
+    for (int i = 0; i < size; i++) {
+      d[i] = i;
+    }
+    this.data = d;
+  }
+
   public int[] getData() {
     return data;
   }
