@@ -27,8 +27,11 @@ import org.apache.commons.lang3.tuple.Pair;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.mpi.io.MPIGatherReceiver;
+import edu.iu.dsc.tws.comms.mpi.io.MPIMultiMessageDeserializer;
+import edu.iu.dsc.tws.comms.mpi.io.MPIMultiMessageSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.MultiObject;
 import edu.iu.dsc.tws.comms.routing.InvertedBinaryTreeRouter;
+import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
 public class MPIDataFlowGather extends MPIDataFlowOperation {
   private static final Logger LOG = Logger.getLogger(MPIDataFlowGather.class.getName());
@@ -84,6 +87,18 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
   public MPIDataFlowGather(TWSMPIChannel channel, Set<Integer> sources, int destination,
                            MessageReceiver finalRcvr, MPIGatherReceiver partialRcvr) {
     this(channel, sources, destination, finalRcvr, partialRcvr, 0, 0);
+  }
+
+  @Override
+  protected void initSerializers() {
+    kryoSerializer = new KryoSerializer();
+    kryoSerializer.init(new HashMap<String, Object>());
+
+    messageDeSerializer = new MPIMultiMessageDeserializer(kryoSerializer);
+    messageSerializer = new MPIMultiMessageSerializer(sendBuffers, kryoSerializer);
+    // initialize the serializers
+    messageSerializer.init(config);
+    messageDeSerializer.init(config);
   }
 
   public void setupRouting() {
@@ -322,6 +337,7 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
     public boolean onMessage(int source, int path, int target, int flags, Object object) {
       // add the object to the map
       boolean canAdd = true;
+      LOG.info(String.format("Partial received message: target %d source %d", target, source));
       List<Object> m = messages.get(target).get(source);
       Integer c = counts.get(target).get(source);
       if (m.size() > 128) {
