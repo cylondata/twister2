@@ -9,6 +9,7 @@ common_deps_files = [
     "//twister2/common/src/java:config-java",
     "//twister2/common/src/java:common-java",
     "//twister2/comms/src/java:comms-java",
+    "//twister2/data/src/main/java:data-java",
 ]
 
 java_library(

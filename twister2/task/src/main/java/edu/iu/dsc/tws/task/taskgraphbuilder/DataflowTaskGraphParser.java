@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.task.taskgraphbuilder;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
@@ -25,24 +24,25 @@ public class DataflowTaskGraphParser {
   private static final Logger LOGGER = Logger.getLogger(
       DataflowTaskGraphParser.class.getName());
 
-  private static int jobId = 0;
   private DataflowTaskGraphGenerator dataflowTaskGraph;
   private DataflowTaskGraphParser dataflowTaskGraphParser;
   private Executor executor = new Executor();
   private DataFlowOperation dataFlowOperation = null;
-  private AtomicInteger totalRunningTasks = new AtomicInteger(0);
 
   public DataflowTaskGraphParser(DataflowTaskGraphGenerator taskgraph) {
     this.dataflowTaskGraph = taskgraph;
   }
 
   @SuppressWarnings("unchecked")
+  /**
+   * This is an entry method to invoke the dataflow task graph
+   * prioritizer to prioritize the tasks.
+   */
   public Set<Task> dataflowTaskGraphParseAndSchedule() {
-    Set<Task> processedTaskVertices = new HashSet<>();
 
+    Set<Task> processedTaskVertices = new HashSet<>();
     if (dataflowTaskGraph != null) {
       processedTaskVertices = dataflowTaskGraphPrioritize(this.dataflowTaskGraph);
-
       LOGGER.info("Processed Task Vertices Size Is:"
           + processedTaskVertices.size() + "\t" + processedTaskVertices);
       try {
@@ -50,7 +50,6 @@ public class DataflowTaskGraphParser {
         processedTaskVertices.stream().
             forEach(Mapper -> executor.execute(Mapper,
                 (Class<DataFlowOperation>) dataFlowOperation.getClass()));
-        ++jobId;
       } catch (Exception e) {
         e.printStackTrace();
       }
@@ -58,10 +57,15 @@ public class DataflowTaskGraphParser {
     return processedTaskVertices;
   }
 
+  /**
+   * /**
+   * This method calls the dataflow task graph parser method to prioritize
+   * the tasks which is ready for the execution.
+   */
   private Set<Task> dataflowTaskGraphPrioritize(DataflowTaskGraphGenerator taskGraph) {
+
     final IDataflowTaskGraph<Task, DataFlowOperation>
         dataflowTaskgraph = taskGraph.getDataflowGraph();
-
     Set<Task> taskVertices = dataflowTaskgraph.getTaskVertexSet();
     try {
       taskVertices.stream()
@@ -73,6 +77,10 @@ public class DataflowTaskGraphParser {
     return taskVertices;
   }
 
+  /**
+   * This is the simple dataflow task graph parser method and it should be replaced
+   * with an optimized scheduling mechanism.
+   */
   private int dataflowTaskGraphParse(final IDataflowTaskGraph<Task,
       DataFlowOperation> dataflowTaskgraph, final Task mapper) {
 
@@ -82,18 +90,17 @@ public class DataflowTaskGraphParser {
     if (dataflowTaskgraph.outDegreeOf(mapper) == 0) {
       return 1;
     } else {
+
       Set<DataFlowOperation> taskEdgesOf = dataflowTaskgraph.
           outgoingTaskEdgesOf(mapper);
+
       Stream<Task> taskStream = taskEdgesOf.stream().map(
           dataflowTaskgraph::getTaskEdgeTarget);
-      int maxWeightOfNeighbours = taskStream.map(
+
+      int adjacentTaskWeights = taskStream.map(
           next -> dataflowTaskGraphParse(dataflowTaskgraph, next)).
           max(Integer::compare).get();
-      //For testing....
-      int weightOfCurrent = 1 + maxWeightOfNeighbours;
-      LOGGER.info("Task Edges are:" + taskEdgesOf + "\t"
-          + "taskStream:" + taskStream.getClass().getName() + "\t"
-          + "Weight of the current task:" + weightOfCurrent);
+      int weightOfCurrent = 1 + adjacentTaskWeights;
       return weightOfCurrent;
     }
   }
