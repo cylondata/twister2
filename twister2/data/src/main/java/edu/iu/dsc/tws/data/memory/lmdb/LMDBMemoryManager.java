@@ -125,10 +125,40 @@ public class LMDBMemoryManager implements MemoryManager {
 
     final ByteBuffer keyBuffer = allocateDirect(key.length);
     final ByteBuffer valBuffer = allocateDirect(value.length);
-    keyBuffer.put(key).flip();
-    keyBuffer.put(value).flip();
-    db.put(keyBuffer, valBuffer);
-    return true;
+    keyBuffer.put(key);
+    valBuffer.put(value);
+    return put(keyBuffer, valBuffer);
+  }
+
+  @Override
+  public boolean put(byte[] key, ByteBuffer value) {
+
+    if (key.length > 511) {
+      LOG.info("Key size lager than 511 bytes which is the limit for LMDB key values");
+      return false;
+    }
+
+    final ByteBuffer keyBuffer = allocateDirect(key.length);
+    keyBuffer.put(key);
+    return put(keyBuffer, value);
+  }
+
+  @Override
+  public boolean put(long key, ByteBuffer value) {
+
+    final ByteBuffer keyBuffer = allocateDirect(Long.BYTES);
+    keyBuffer.putLong(0, key);
+    return put(keyBuffer, value);
+  }
+
+  @Override
+  public boolean put(long key, byte[] value) {
+
+    final ByteBuffer keyBuffer = allocateDirect(Long.BYTES);
+    final ByteBuffer valBuffer = allocateDirect(value.length);
+    keyBuffer.putLong(0, key);
+    valBuffer.put(value);
+    return put(keyBuffer, valBuffer);
   }
 
   public Path getLmdbDataPath() {
