@@ -72,27 +72,82 @@ public class LMDBMemoryManager implements MemoryManager {
   }
 
   @Override
-  public byte[] get(byte[] key) {
+  public ByteBuffer get(ByteBuffer key) {
+    if (key.position() != 0) {
+      key.flip();
+    }
+
+    if (key.limit() > 511) {
+      LOG.info("Key size lager than 511 bytes which is the limit for LMDB key values");
+      return null;
+    }
+    // details in LMDB for clarity
+    // To fetch any data from LMDB we need a Txn. A Txn is very important in
+    // LmdbJava because it offers ACID characteristics and internally holds a
+    // read-only key buffer and read-only value buffer. These read-only buffers
+    // are always the same two Java objects, but point to different LMDB-managed
+    // memory as we use Dbi (and Cursor) methods. These read-only buffers remain
+    // valid only until the Txn is released or the next Dbi or Cursor call. If
+    // you need data afterwards, you should copy the bytes to your own buffer.
+    //TODO: does the value returned from db.get and tnx.val() have the same data? need to check
+    Txn<ByteBuffer> txn = env.txnRead();
+    db.get(txn, key);
+    return txn.val();
+  }
+
+  @Override
+  public ByteBuffer get(byte[] key) {
     if (key.length > 511) {
       LOG.info("Key size lager than 511 bytes which is the limit for LMDB key values");
       return null;
     }
 
-    Txn<ByteBuffer> txn = env.txnRead();
     final ByteBuffer keyBuffer = allocateDirect(key.length);
-    keyBuffer.put(key).flip();
-    final ByteBuffer found = db.get(txn, keyBuffer);
-    byte[] results = new byte[found.limit()];
-    found.get(results);
-    return results;
+    keyBuffer.put(key);
+    return get(keyBuffer);
   }
 
-  public byte[] get(long key) {
-
-    Txn<ByteBuffer> txn = env.txnRead();
+  @Override
+  public ByteBuffer get(long key) {
     final ByteBuffer keyBuffer = allocateDirect(Long.BYTES);
     keyBuffer.putLong(0, key);
-    final ByteBuffer found = db.get(txn, keyBuffer);
+    return get(keyBuffer);
+  }
+
+  @Override
+  public byte[] getBytes(byte[] key) {
+    if (key.length > 511) {
+      LOG.info("Key size lager than 511 bytes which is the limit for LMDB key values");
+      return null;
+    }
+
+    final ByteBuffer keyBuffer = allocateDirect(key.length);
+    keyBuffer.put(key);
+    return getBytes(keyBuffer);
+  }
+
+  @Override
+  public byte[] getBytes(long key) {
+
+    final ByteBuffer keyBuffer = allocateDirect(Long.BYTES);
+    keyBuffer.putLong(0, key);
+    return getBytes(key);
+  }
+
+  @Override
+  public byte[] getBytes(ByteBuffer key) {
+
+    if (key.position() != 0) {
+      key.flip();
+    }
+
+    if (key.limit() > 511) {
+      LOG.info("Key size lager than 511 bytes which is the limit for LMDB key values");
+      return null;
+    }
+
+    Txn<ByteBuffer> txn = env.txnRead();
+    final ByteBuffer found = db.get(txn, key);
     byte[] results = new byte[found.limit()];
     found.get(results);
     return results;
