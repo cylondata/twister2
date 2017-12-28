@@ -55,6 +55,11 @@ public interface MemoryManager {
   byte[] get(byte[] key);
 
   /**
+   * Get the corresponding value for the given key from the store
+   */
+  byte[] get(long key);
+
+  /**
    * checks if the given key is in the memory manager
    *
    * @param key key to be checked
