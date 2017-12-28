@@ -24,7 +24,6 @@ import edu.iu.dsc.tws.comms.mpi.MPIMessage;
 import edu.iu.dsc.tws.comms.mpi.MPIMessageDirection;
 import edu.iu.dsc.tws.comms.mpi.MPIMessageReleaseCallback;
 import edu.iu.dsc.tws.comms.mpi.MPISendMessage;
-import edu.iu.dsc.tws.comms.mpi.io.types.ObjectSerializer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
 public final class Test {
