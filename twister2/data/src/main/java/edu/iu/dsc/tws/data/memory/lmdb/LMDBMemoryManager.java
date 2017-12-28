@@ -51,6 +51,7 @@ public class LMDBMemoryManager implements MemoryManager {
 
   public LMDBMemoryManager(Path dataPath) {
     this.lmdbDataPath = dataPath;
+    init();
   }
 
   @Override
@@ -67,7 +68,7 @@ public class LMDBMemoryManager implements MemoryManager {
 
     db = env.openDbi(LMDBMemoryManagerContext.DB_NAME, MDB_CREATE);
 
-    return false;
+    return true;
   }
 
   @Override
@@ -84,6 +85,49 @@ public class LMDBMemoryManager implements MemoryManager {
     byte[] results = new byte[found.limit()];
     found.get(results);
     return results;
+  }
+
+  public byte[] get(long key) {
+
+    Txn<ByteBuffer> txn = env.txnRead();
+    final ByteBuffer keyBuffer = allocateDirect(Long.BYTES);
+    keyBuffer.putLong(0, key);
+    final ByteBuffer found = db.get(txn, keyBuffer);
+    byte[] results = new byte[found.limit()];
+    found.get(results);
+    return results;
+  }
+
+  @Override
+  public boolean containsKey(byte[] key) {
+    if (key.length > 511) {
+      LOG.info("Key size lager than 511 bytes which is the limit for LMDB key values");
+      return false;
+    }
+
+    Txn<ByteBuffer> txn = env.txnRead();
+    final ByteBuffer keyBuffer = allocateDirect(key.length);
+    keyBuffer.put(key).flip();
+    final ByteBuffer found = db.get(txn, keyBuffer);
+
+    if (found == null) {
+      return false;
+    }
+    return true;
+  }
+
+  @Override
+  public boolean containsKey(long key) {
+
+    Txn<ByteBuffer> txn = env.txnRead();
+    final ByteBuffer keyBuffer = allocateDirect(Long.BYTES);
+    keyBuffer.putLong(0, key);
+    final ByteBuffer found = db.get(txn, keyBuffer);
+
+    if (found == null) {
+      return false;
+    }
+    return true;
   }
 
   /**
