@@ -158,7 +158,6 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
       return;
     }
 
-    ByteBuffer byteBuffer = buffer.getByteBuffer();
     // we will copy until we have space left or we are have serialized all the objects
     for (int i = startIndex; i < objectList.size(); i++) {
       Object o = objectList.get(i);
@@ -167,18 +166,18 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
         boolean complete = serializeBufferedMessage(mpiMessage, state, buffer);
         // we copied this completely
         if (complete) {
-          state.setCurrentObject(startIndex + 1);
+          state.setCurrentObject(i + 1);
         }
       } else {
         boolean complete = serializeMessage((MultiObject) o, sendMessage, buffer);
         if (complete) {
-          state.setCurrentObject(startIndex + 1);
+          state.setCurrentObject(i + 1);
         }
       }
 
       // check how much space left in this buffer
       remaining = buffer.getByteBuffer().remaining();
-      if (!(remaining > 6 && state.getCurrentObject() < objectList.size() - 1)) {
+      if (!(remaining > 6 && state.getCurrentObject() < objectList.size())) {
         break;
       }
     }

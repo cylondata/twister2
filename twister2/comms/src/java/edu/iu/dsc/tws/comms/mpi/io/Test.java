@@ -78,8 +78,10 @@ public final class Test {
   }
 
   private MPIMessage serializeObject(Object object, int source) {
-    MultiObject multiObject = new MultiObject(source, object);
-    MultiObject multiObject2 = new MultiObject(source, object);
+    IntData data1 = new IntData(10);
+    MultiObject multiObject = new MultiObject(source, data1);
+    IntData data2 = new IntData(100);
+    MultiObject multiObject2 = new MultiObject(source, data2);
     List<Object> list = new ArrayList<>();
     list.add(multiObject);
     list.add(multiObject2);
