@@ -32,11 +32,14 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
   private Queue<MPIBuffer> sendBuffers;
   private KryoSerializer serializer;
   private ObjectSerializer objectSerializer;
+  private int executor;
 
-  public MPIMultiMessageSerializer(Queue<MPIBuffer> buffers, KryoSerializer kryoSerializer) {
+  public MPIMultiMessageSerializer(Queue<MPIBuffer> buffers,
+                                   KryoSerializer kryoSerializer, int exec) {
     this.sendBuffers = buffers;
     this.serializer = kryoSerializer;
     this.objectSerializer = new ObjectSerializer(serializer);
+    this.executor = exec;
   }
 
   @Override
@@ -83,14 +86,20 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
       mpiMessage.addBuffer(buffer);
       if (sendMessage.serializedState() == MPISendMessage.SendState.SERIALIZED) {
         SerializeState state = (SerializeState) sendMessage.getSerializationState();
+        int totalBytes = state.getTotalBytes();
         mpiMessage.getBuffers().get(0).getByteBuffer().putInt(
-            12, state.getTotalBytes());
+            12, totalBytes);
 
         MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
-            sendMessage.getEdge(), state.getTotalBytes());
+            sendMessage.getEdge(), totalBytes);
         builder.destination(sendMessage.getDestintationIdentifier());
         sendMessage.getMPIMessage().setHeader(builder.build());
+//        if (message instanceof List) {
+//          LOG.info(String.format("%d serialize length %d size %d",
+//              executor, totalBytes, ((List) message).size()));
+//        }
         state.setTotalBytes(0);
+
         // mark the original message as complete
         mpiMessage.setComplete(true);
       } else {
@@ -245,7 +254,7 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
     }
 
     // set the data size of the target buffer
-    targetBuffer.setSize(bytesCopiedFromSource);
+    targetBuffer.setSize(targetByteBuffer.position());
     state.setTotalBytes(totalBytes);
     if (currentSourceBuffer == buffers.size() && currentMPIBuffer != null
         && bytesCopiedFromSource == currentMPIBuffer.getSize()) {
