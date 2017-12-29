@@ -68,6 +68,7 @@ public class SlurmCommand extends MPICommand {
     mpiCommand.add(map.get("container_class").toString());
     mpiCommand.add(twister2Home);
     mpiCommand.add(twister2Home);
+    mpiCommand.add(Paths.get(configDirectoryName, nodesFileName).toString());
 
     return mpiCommand;
   }
