@@ -14,11 +14,10 @@ package edu.iu.dsc.tws.examples.basic;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
-import edu.iu.dsc.tws.examples.BaseReduceCommunication;
 import edu.iu.dsc.tws.examples.BasicGatherCommunication;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 
-public class BasicGatherJob {
+public final class BasicGatherJob {
   private BasicGatherJob() {
   }
 

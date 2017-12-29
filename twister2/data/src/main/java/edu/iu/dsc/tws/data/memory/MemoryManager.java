@@ -27,6 +27,11 @@ public interface MemoryManager {
 
   /**
    * Stores the give key value pair in the memory manager
+   */
+  boolean put(ByteBuffer key, ByteBuffer value);
+
+  /**
+   * Stores the give key value pair in the memory manager
    *
    * @param key key of the pair
    * @param value value to be stored
@@ -50,14 +55,34 @@ public interface MemoryManager {
   boolean put(long key, byte[] value);
 
   /**
-   * Get the corresponding value for the given key from the store
+   * Get the corresponding value as ByteBuffer for the given key from the store
    */
-  byte[] get(byte[] key);
+  ByteBuffer get(ByteBuffer key);
 
   /**
-   * Get the corresponding value for the given key from the store
+   * Get the corresponding value as ByteBuffer for the given key from the store
    */
-  byte[] get(long key);
+  ByteBuffer get(byte[] key);
+
+  /**
+   * Get the corresponding value as ByteBuffer for the given key from the store
+   */
+  ByteBuffer get(long key);
+
+  /**
+   * Get the corresponding value as bytes for the given key from the store
+   */
+  byte[] getBytes(byte[] key);
+
+  /**
+   * Get the corresponding value as bytes for the given key from the store
+   */
+  byte[] getBytes(long key);
+
+  /**
+   * Get the corresponding value as bytes for the given key from the store
+   */
+  byte[] getBytes(ByteBuffer keye);
 
   /**
    * checks if the given key is in the memory manager

@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.rsched.schedulers.mpi;
 
 import java.io.File;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -73,7 +74,8 @@ public class MPIController implements IController {
     LOG.log(Level.INFO, "Launching job in Slurm scheduler with no of containers = "
         + containers);
 
-    boolean jobCreated = createJob(this.workingDirectory, resourcePlan, job);
+    String jobDirectory = Paths.get(this.workingDirectory, job.getJobName()).toString();
+    boolean jobCreated = createJob(this.workingDirectory, jobDirectory, resourcePlan, job);
 
     if (!jobCreated) {
       LOG.log(Level.SEVERE, "Failed to create job");
@@ -104,7 +106,7 @@ public class MPIController implements IController {
    * @param jobWorkingDirectory working directory
    * @return true if the job creation is successful
    */
-  public boolean createJob(String jobWorkingDirectory,
+  public boolean createJob(String jobWorkingDirectory, String twister2Home,
                            RequestedResources resources, JobAPI.Job job) {
     // get the command to run the job on Slurm cluster
     List<String> slurmCmd = command.mpiCommand(jobWorkingDirectory, resources, job);
@@ -125,7 +127,7 @@ public class MPIController implements IController {
     LOG.log(Level.INFO, "Executing job [" + jobWorkingDirectory + "]:",
         Arrays.toString(cmdArray));
     StringBuilder stderr = new StringBuilder();
-    return runProcess(jobWorkingDirectory, cmdArray, stderr);
+    return runProcess(twister2Home, cmdArray, stderr);
   }
 
   /**

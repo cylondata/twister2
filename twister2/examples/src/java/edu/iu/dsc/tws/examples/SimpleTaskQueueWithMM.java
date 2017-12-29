@@ -66,7 +66,6 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.mpi.io.types.ObjectDeserializer;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.memory.MemoryManager;
 import edu.iu.dsc.tws.data.memory.lmdb.LMDBMemoryManager;
@@ -207,11 +206,11 @@ public class SimpleTaskQueueWithMM implements IContainer {
       }
       String data = content.getContent().toString();
       if (Integer.parseInt(data) % 1000 == 0) {
-        long keytemp = 1234l;
-        byte[] init = Longs.toByteArray(1l);
-        long val = 1l;
+        long keytemp = 1234L;
+        byte[] init = Longs.toByteArray(1L);
+        long val = 1L;
         if (getMemoryManager().containsKey(keytemp)) {
-          byte[] temp = getMemoryManager().get(keytemp);
+          byte[] temp = getMemoryManager().getBytes(keytemp);
           final ByteBuffer valBuffer = allocateDirect(Long.BYTES);
           valBuffer.put(temp, 0, temp.length);
           val = valBuffer.getLong();
@@ -219,7 +218,8 @@ public class SimpleTaskQueueWithMM implements IContainer {
           init = Longs.toByteArray(val);
         }
         getMemoryManager().put(keytemp, init);
-        System.out.println(((String) content.getContent()).toString() + " Value of mapped long : " + val);
+        System.out.println(((String) content.getContent()).toString()
+            + " Value of mapped long : " + val);
       }
       return null;
     }

@@ -1,11 +1,5 @@
 #!/usr/bin/env bash
 
-# arg1: the heron executable
-# arg2: arguments to executable
-
-#SBATCH --ntasks-per-node=1
-#SBATCH --time=00:30:00
-
 em="\"\""
 cp=""
 if [ $em != $2 ]; then

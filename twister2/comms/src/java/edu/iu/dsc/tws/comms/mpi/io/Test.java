@@ -46,7 +46,7 @@ public final class Test {
   public Test() {
     serializer = new KryoSerializer();
     serializer.init(null);
-    multiMessageSerializer = new MPIMultiMessageSerializer(bufferQueue, serializer);
+    multiMessageSerializer = new MPIMultiMessageSerializer(bufferQueue, serializer, 0);
     mpiMultiMessageDeserializer = new MPIMultiMessageDeserializer(serializer);
 
     for (int i = 0; i < 100; i++) {

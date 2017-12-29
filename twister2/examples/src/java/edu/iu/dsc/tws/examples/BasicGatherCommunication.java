@@ -31,7 +31,7 @@ import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
 public class BasicGatherCommunication implements IContainer {
-  private static final Logger LOG = Logger.getLogger(edu.iu.dsc.tws.examples.basic.batch.BaseBatchAggregate.class.getName());
+  private static final Logger LOG = Logger.getLogger(BasicGatherCommunication.class.getName());
 
   private DataFlowOperation aggregate;
 
@@ -177,12 +177,18 @@ public class BasicGatherCommunication implements IContainer {
       }
 
       try {
-        LOG.info(String.format("Final received message: target %d source %d", target, source));
         List<Object> m = messages.get(target).get(source);
+        if (messages.get(target) == null) {
+          throw new RuntimeException(String.format("%d Partial receive error %d", id, target));
+        }
         Integer c = counts.get(target).get(source);
         if (m.size() > 128) {
+//          LOG.info(String.format("%d Final true: target %d source %d",
+//              id, target, source));
           canAdd = false;
         } else {
+//          LOG.info(String.format("%d Final false: target %d source %d",
+//              id, target, source));
           m.add(object);
           counts.get(target).put(source, c + 1);
         }
@@ -239,7 +245,7 @@ public class BasicGatherCommunication implements IContainer {
    * @return IntData
    */
   private IntData generateData() {
-    int s = 10;
+    int s = 100;
     int[] d = new int[s];
     for (int i = 0; i < s; i++) {
       d[i] = i;

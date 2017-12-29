@@ -95,7 +95,7 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
     kryoSerializer.init(new HashMap<String, Object>());
 
     messageDeSerializer = new MPIMultiMessageDeserializer(kryoSerializer);
-    messageSerializer = new MPIMultiMessageSerializer(sendBuffers, kryoSerializer);
+    messageSerializer = new MPIMultiMessageSerializer(sendBuffers, kryoSerializer, executor);
     // initialize the serializers
     messageSerializer.init(config);
     messageDeSerializer.init(config);
@@ -188,14 +188,13 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
     if (!isLast(header.getSourceId(), header.getFlags(), messageDestId)
         && partialReceiver != null) {
       return partialReceiver.onMessage(header.getSourceId(),
-          MPIContext.DEFAULT_PATH, header.getFlags(),
+          MPIContext.DEFAULT_PATH,
           router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
-              MPIContext.DEFAULT_PATH), currentMessage);
+              MPIContext.DEFAULT_PATH), header.getFlags(), currentMessage);
     } else {
       return finalReceiver.onMessage(header.getSourceId(),
-          MPIContext.DEFAULT_PATH, header.getFlags(),
-          router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
-              MPIContext.DEFAULT_PATH), object);
+          MPIContext.DEFAULT_PATH, router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
+              MPIContext.DEFAULT_PATH), header.getFlags(), object);
     }
   }
 
@@ -337,14 +336,19 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
     public boolean onMessage(int source, int path, int target, int flags, Object object) {
       // add the object to the map
       boolean canAdd = true;
-      LOG.info(String.format("Partial received message: target %d source %d", target, source));
+
+      if (messages.get(target) == null) {
+        throw new RuntimeException(String.format("%d Partial receive error %d", executor, target));
+      }
       List<Object> m = messages.get(target).get(source);
       Integer c = counts.get(target).get(source);
       if (m.size() > 128) {
         canAdd = false;
+//       LOG.info(String.format("%d Partial false: target %d source %d", executor, target, source));
       } else {
         // we need to increment the reference count to make the buffers available
         // other wise they will bre reclaimed
+//        LOG.info(String.format("%d Partial true: target %d source %d", executor, target, source));
         if (object instanceof MPIMessage) {
           ((MPIMessage) object).incrementRefCount();
         }
@@ -385,6 +389,8 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
                 Integer i = e.getValue();
                 cMap.put(e.getKey(), i - 1);
               }
+//              LOG.info(String.format("%d Send partial true: target %d objects %d",
+//                  executor, t, out.size()));
             } else {
               canProgress = false;
             }
