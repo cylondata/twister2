@@ -75,7 +75,7 @@ public class MPIController implements IController {
         + containers);
 
     String jobDirectory = Paths.get(this.workingDirectory, job.getJobName()).toString();
-    boolean jobCreated = createJob(jobDirectory, resourcePlan, job);
+    boolean jobCreated = createJob(this.workingDirectory, jobDirectory, resourcePlan, job);
 
     if (!jobCreated) {
       LOG.log(Level.SEVERE, "Failed to create job");
@@ -106,7 +106,7 @@ public class MPIController implements IController {
    * @param jobWorkingDirectory working directory
    * @return true if the job creation is successful
    */
-  public boolean createJob(String jobWorkingDirectory,
+  public boolean createJob(String jobWorkingDirectory, String twister2Home,
                            RequestedResources resources, JobAPI.Job job) {
     // get the command to run the job on Slurm cluster
     List<String> slurmCmd = command.mpiCommand(jobWorkingDirectory, resources, job);
@@ -127,7 +127,7 @@ public class MPIController implements IController {
     LOG.log(Level.INFO, "Executing job [" + jobWorkingDirectory + "]:",
         Arrays.toString(cmdArray));
     StringBuilder stderr = new StringBuilder();
-    return runProcess(jobWorkingDirectory, cmdArray, stderr);
+    return runProcess(twister2Home, cmdArray, stderr);
   }
 
   /**
