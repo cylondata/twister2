@@ -173,7 +173,8 @@ public class BaseKeyedReduceCommunication implements IContainer {
     private long start = System.nanoTime();
 
     @Override
-    public void init(Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
+    public void init(Config cfg, DataFlowOperation op,
+                     Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
       Map<Integer, List<Integer>> exp = expectedIds.get(reduceTask);
       for (Map.Entry<Integer, List<Integer>> e : exp.entrySet()) {
         Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
@@ -279,7 +280,8 @@ public class BaseKeyedReduceCommunication implements IContainer {
     private long start = System.nanoTime();
 
     @Override
-    public void init(Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
+    public void init(Config cfg, DataFlowOperation op,
+                     Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
       Map<Integer, List<Integer>> exp = expectedIds.get(reduceTask);
 
       for (Map.Entry<Integer, List<Integer>> e : exp.entrySet()) {

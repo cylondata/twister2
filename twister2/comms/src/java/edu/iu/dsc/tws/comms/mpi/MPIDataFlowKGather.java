@@ -24,7 +24,6 @@ import edu.iu.dsc.tws.comms.api.KeyedMessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.mpi.io.MPIGatherReceiver;
 
 public class MPIDataFlowKGather implements DataFlowOperation {
   // the source tasks
@@ -126,8 +125,8 @@ public class MPIDataFlowKGather implements DataFlowOperation {
       finalReceives.put(dest, reduce.receiveExpectedTaskIds());
     }
 
-    finalReceiver.init(finalReceives);
-    partialReceiver.init(partialReceives);
+    finalReceiver.init(config, this, finalReceives);
+    partialReceiver.init(config, this, partialReceives);
   }
 
   @Override
@@ -136,7 +135,7 @@ public class MPIDataFlowKGather implements DataFlowOperation {
     throw new RuntimeException("Not implemented");
   }
 
-  private class ReducePartialReceiver implements MPIGatherReceiver {
+  private class ReducePartialReceiver implements MessageReceiver {
     private int destination;
 
     ReducePartialReceiver(int dst) {
@@ -144,7 +143,7 @@ public class MPIDataFlowKGather implements DataFlowOperation {
     }
 
     @Override
-    public void init(Map<Integer, List<Integer>> expectedIds) {
+    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     }
 
     @Override
@@ -165,7 +164,7 @@ public class MPIDataFlowKGather implements DataFlowOperation {
     }
 
     @Override
-    public void init(Map<Integer, List<Integer>> expectedIds) {
+    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     }
 
     @Override

@@ -24,9 +24,10 @@ import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.Pair;
 
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
-import edu.iu.dsc.tws.comms.mpi.io.MPIGatherReceiver;
 import edu.iu.dsc.tws.comms.mpi.io.MPIMultiMessageDeserializer;
 import edu.iu.dsc.tws.comms.mpi.io.MPIMultiMessageSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.MultiObject;
@@ -50,7 +51,7 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
 
   private MessageReceiver finalReceiver;
 
-  private MPIGatherReceiver partialReceiver;
+  private MessageReceiver partialReceiver;
 
   private int index = 0;
 
@@ -74,7 +75,7 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
 
   public MPIDataFlowGather(TWSMPIChannel channel, Set<Integer> sources, int destination,
                            MessageReceiver finalRcvr,
-                           MPIGatherReceiver partialRcvr, int indx, int p) {
+                           MessageReceiver partialRcvr, int indx, int p) {
     super(channel);
     this.index = indx;
     this.sources = sources;
@@ -82,11 +83,6 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
     this.finalReceiver = finalRcvr;
     this.partialReceiver = partialRcvr;
     this.pathToUse = p;
-  }
-
-  public MPIDataFlowGather(TWSMPIChannel channel, Set<Integer> sources, int destination,
-                           MessageReceiver finalRcvr, MPIGatherReceiver partialRcvr) {
-    this(channel, sources, destination, finalRcvr, partialRcvr, 0, 0);
   }
 
   @Override
@@ -108,11 +104,11 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
 
     // initialize the receive
     if (this.partialReceiver != null && !isLastReceiver()) {
-      partialReceiver.init(receiveExpectedTaskIds());
+      partialReceiver.init(config, this, receiveExpectedTaskIds());
     }
 
     if (this.finalReceiver != null && isLastReceiver()) {
-      this.finalReceiver.init(receiveExpectedTaskIds());
+      this.finalReceiver.init(config, this, receiveExpectedTaskIds());
     }
 
     Set<Integer> srcs = router.sendQueueIds();
@@ -309,7 +305,7 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
     partialReceiver.progress();
   }
 
-  private class PartialGather implements MPIGatherReceiver {
+  private class PartialGather implements MessageReceiver {
     // lets keep track of the messages
     // for each task we need to keep track of incoming messages
     private Map<Integer, Map<Integer, List<Object>>> messages = new TreeMap<>();
@@ -317,7 +313,7 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
     private int currentIndex = 0;
 
     @Override
-    public void init(Map<Integer, List<Integer>> expectedIds) {
+    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
       for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
         Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
         Map<Integer, Integer> countsPerTask = new HashMap<>();

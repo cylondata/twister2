@@ -137,7 +137,7 @@ public class BaseLoadBalanceCommunication implements IContainer {
     private int count = 0;
     private long start = System.nanoTime();
     @Override
-    public void init(Map<Integer, List<Integer>> expectedIds) {
+    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
       for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
         LOG.info(String.format("%d Final Task %d receives from %s",
             id, e.getKey(), e.getValue().toString()));

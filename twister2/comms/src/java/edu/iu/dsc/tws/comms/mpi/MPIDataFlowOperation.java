@@ -242,7 +242,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
     return sendMessage(source, message, MPIContext.DEFAULT_PATH, flags);
   }
 
-  protected boolean sendMessagePartial(int source, Object object, int path,
+  public boolean sendMessagePartial(int source, Object object, int path,
                                        int flags, MessageType t) {
     lock.lock();
     try {
@@ -551,5 +551,17 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
 
   @Override
   public void finish() {
+  }
+
+  public TaskPlan getInstancePlan() {
+    return instancePlan;
+  }
+
+  public Config getConfig() {
+    return config;
+  }
+
+  public MessageType getType() {
+    return type;
   }
 }

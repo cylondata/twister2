@@ -116,7 +116,7 @@ public class PingPongCommunicationTaskBased implements IContainer {
     private int count = 0;
 
     @Override
-    public void init(Map<Integer, List<Integer>> expectedIds) {
+    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     }
 
     @Override

@@ -97,7 +97,7 @@ public class MPIDataFlowLoadBalance extends MPIDataFlowOperation {
         instancePlan.getThisExecutor()));
 
     if (this.finalReceiver != null && isLastReceiver()) {
-      this.finalReceiver.init(receiveExpectedTaskIds());
+      this.finalReceiver.init(config, this, receiveExpectedTaskIds());
     }
 
     Set<Integer> srcs = TaskPlanUtils.getTasksOfThisExecutor(instancePlan, sources);

@@ -78,14 +78,14 @@ public class MPIDataFlowAllReduce implements DataFlowOperation {
     reduce = new MPIDataFlowReduce(channel, sources, middleTask,
         finalRcvr, partialReceiver);
     reduce.init(config, type, instancePlan, reduceEdge);
-    Map<Integer, List<Integer>> receiveExpects = reduce.receiveExpectedTaskIds();
-    finalRcvr.init(receiveExpects);
-    partialReceiver.init(receiveExpects);
+//    Map<Integer, List<Integer>> receiveExpects = reduce.receiveExpectedTaskIds();
+//    finalRcvr.init(receiveExpects);
+//    partialReceiver.init(receiveExpects);
 
     broadcast = new MPIDataFlowBroadcast(channel, middleTask, destinations, finalReceiver);
     broadcast.init(config, type, instancePlan, broadCastEdge);
-    Map<Integer, List<Integer>> broadCastExpects = broadcast.receiveExpectedTaskIds();
-    finalReceiver.init(broadCastExpects);
+//    Map<Integer, List<Integer>> broadCastExpects = broadcast.receiveExpectedTaskIds();
+//    finalReceiver.init(broadCastExpects);
   }
 
   @Override
@@ -134,7 +134,7 @@ public class MPIDataFlowAllReduce implements DataFlowOperation {
     private int count = 0;
 
     @Override
-    public void init(Map<Integer, List<Integer>> expectedIds) {
+    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
       for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
         Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
         Map<Integer, Integer> countsPerTask = new HashMap<>();

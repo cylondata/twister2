@@ -14,6 +14,8 @@ package edu.iu.dsc.tws.comms.api;
 import java.util.List;
 import java.util.Map;
 
+import edu.iu.dsc.tws.common.config.Config;
+
 public interface KeyedMessageReceiver {
   /**
    * Initialize the message receiver with tasks from which messages are expected
@@ -23,7 +25,8 @@ public interface KeyedMessageReceiver {
    *
    * @param expectedIds expected task ids
    */
-  void init(Map<Integer, Map<Integer, List<Integer>>> expectedIds);
+  void init(Config cfg, DataFlowOperation op,
+            Map<Integer, Map<Integer, List<Integer>>> expectedIds);
 
   /**
    * The actual message callback

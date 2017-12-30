@@ -73,8 +73,6 @@ public class BaseBatchAggregate implements IContainer {
 
     LOG.info("Setting up reduce dataflow operation");
     try {
-      // this method calls the init method
-      // I think this is wrong
       aggregate = channel.gather(newCfg, MessageType.OBJECT, 0, sources,
           dest, new FinalReduceReceive());
 
@@ -152,7 +150,7 @@ public class BaseBatchAggregate implements IContainer {
     private long start = System.nanoTime();
 
     @Override
-    public void init(Map<Integer, List<Integer>> expectedIds) {
+    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
       for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
         Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
         Map<Integer, Integer> countsPerTask = new HashMap<>();

@@ -98,7 +98,7 @@ public class MPIDataFlowBroadcast extends MPIDataFlowOperation {
     router = new BinaryTreeRouter(config, instancePlan, source, destinations);
 
     if (this.finalReceiver != null) {
-      this.finalReceiver.init(receiveExpectedTaskIds());
+      this.finalReceiver.init(config, this, receiveExpectedTaskIds());
     } else {
       throw new RuntimeException("Final receiver is required");
     }
