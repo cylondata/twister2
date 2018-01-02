@@ -39,20 +39,24 @@ import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 /**
  * This is the main class that allocates the resources and starts the processes required
- *
+ * <p>
  * These are the steps for submitting a job
- *
+ * <p>
  * 1. Figure out the environment from the place where this is executed
- *    We will take properties from java system < environment < job
+ * We will take properties from java system < environment < job
  * 1. Create the job information file and save it
  * 2. Create a job package with jars and job information file to be uploaded to the cluster
- *
  */
 public class ResourceAllocator {
   public static final Logger LOG = Logger.getLogger(ResourceAllocator.class.getName());
 
   private JobAPI.Job updatedJob;
 
+  /**
+   * loadConfig
+   * @param cfg
+   * @return
+   */
   public static Config loadConfig(Map<String, Object> cfg) {
 
     try {
@@ -128,7 +132,7 @@ public class ResourceAllocator {
     }
 
     String tempDirPathString = tempDirPath.toString();
-    String jobFilePath =  tempDirPathString + "/" + job.getJobName() + ".job";
+    String jobFilePath = tempDirPathString + "/" + job.getJobName() + ".job";
 
     // now we need to copy the actual job binary files here
     JobAPI.JobFormat.Builder format = JobAPI.JobFormat.newBuilder();
@@ -343,13 +347,13 @@ public class ResourceAllocator {
     JobAPI.JobResources jobResources = job.getJobResources();
     int noOfContainers = jobResources.getNoOfContainers();
     double memd = jobResources.getContainer().getAvailableMemory();
-    int mem = (int)memd;
+    int mem = (int) memd;
     ResourceContainer container = new ResourceContainer(
         (int) jobResources.getContainer().getAvailableCPU(),
         mem,
         mem); // this is for disk
 
-    System.out.println("availableMemory: "+mem);
+    System.out.println("availableMemory: " + mem);
 
     return new RequestedResources(noOfContainers, container);
   }

@@ -24,7 +24,7 @@ import edu.iu.dsc.tws.comms.mpi.MPIContext;
 import edu.iu.dsc.tws.comms.mpi.MPIDataFlowOperation;
 
 public class StreamingFinalGatherReceiver implements MessageReceiver {
-  private final static Logger LOG = Logger.getLogger(StreamingFinalGatherReceiver.class.getName());
+  private static final Logger LOG = Logger.getLogger(StreamingFinalGatherReceiver.class.getName());
   // lets keep track of the messages
   // for each task we need to keep track of incoming messages
   private Map<Integer, Map<Integer, List<Object>>> messages = new HashMap<>();
