@@ -9,31 +9,10 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.mpi.io;
+package edu.iu.dsc.tws.comms.api;
 
-public class IntData {
-  private int[] data;
-
-  public IntData(int[] data) {
-    this.data = data;
-  }
-
-  public IntData() {
-  }
-
-  public IntData(int size) {
-    int[] d = new int[size];
-    for (int i = 0; i < size; i++) {
-      d[i] = i;
-    }
-    this.data = d;
-  }
-
-  public int[] getData() {
-    return data;
-  }
-
-  public void setData(int[] data) {
-    this.data = data;
-  }
+public enum  MessagingMode {
+  STREAMING,
+  BOUNDED_STREAMING,
+  BATCH,
 }

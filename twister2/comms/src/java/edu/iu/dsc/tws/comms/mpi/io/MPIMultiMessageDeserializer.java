@@ -69,8 +69,7 @@ public class MPIMultiMessageDeserializer implements MessageDeSerializer {
         tempBufferIndex++;
       }
 
-      Object object = buildMessage(currentMessage.getType(),
-          messageBuffers, length);
+      Object object = buildMessage(currentMessage.getType(), messageBuffers, length);
       readLength += length + 6;
       byteBuffer = mpiBuffer.getByteBuffer();
       if (byteBuffer.remaining() > 0) {

@@ -20,26 +20,25 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.mpi.MPIContext;
+import edu.iu.dsc.tws.comms.mpi.MPIDataFlowOperation;
 
-public class GatherFileBasedReceiver implements MessageReceiver {
-  private static final Logger LOG = Logger.getLogger(GatherFileBasedReceiver.class.getName());
+public class StreamingFinalGatherReceiver implements MessageReceiver {
+  private final static Logger LOG = Logger.getLogger(StreamingFinalGatherReceiver.class.getName());
   // lets keep track of the messages
   // for each task we need to keep track of incoming messages
   private Map<Integer, Map<Integer, List<Object>>> messages = new HashMap<>();
   private Map<Integer, Map<Integer, Integer>> counts = new HashMap<>();
 
-  private int count = 0;
-
   private long start = System.nanoTime();
 
-  private int id;
-
-  public GatherFileBasedReceiver(int id) {
-    this.id = id;
-  }
+  private int sendPendingMax = 128;
 
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+    MPIDataFlowOperation dataFlowOperation = (MPIDataFlowOperation) op;
+    sendPendingMax = MPIContext.sendPendingMax(cfg);
+
     for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
       Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
       Map<Integer, Integer> countsPerTask = new HashMap<>();
@@ -50,7 +49,8 @@ public class GatherFileBasedReceiver implements MessageReceiver {
       }
 
       LOG.info(String.format("%d Final Task %d receives from %s",
-          id, e.getKey(), e.getValue().toString()));
+          dataFlowOperation.getInstancePlan().getThisExecutor(),
+          e.getKey(), e.getValue().toString()));
 
       messages.put(e.getKey(), messagesPerTask);
       counts.put(e.getKey(), countsPerTask);
@@ -61,26 +61,19 @@ public class GatherFileBasedReceiver implements MessageReceiver {
   public boolean onMessage(int source, int path, int target, int flags, Object object) {
     // add the object to the map
     boolean canAdd = true;
-    if (count == 0) {
-      start = System.nanoTime();
-    }
-
     try {
       List<Object> m = messages.get(target).get(source);
       Integer c = counts.get(target).get(source);
-      if (m.size() > 128) {
+      if (m.size() > sendPendingMax) {
         canAdd = false;
       } else {
         m.add(object);
         counts.get(target).put(source, c + 1);
       }
-
       return canAdd;
     } catch (Throwable t) {
-
-      t.printStackTrace();
+      throw new RuntimeException("Error occurred", t);
     }
-    return true;
   }
 
   public void progress() {
@@ -102,19 +95,6 @@ public class GatherFileBasedReceiver implements MessageReceiver {
         if (found) {
           for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
             o = e.getValue().remove(0);
-          }
-          if (o != null) {
-            count++;
-            if (count % 1000 == 0) {
-              LOG.info(String.format("%d Last %d count: %d %s",
-                  id, t, count, counts));
-            }
-            if (count >= 10000) {
-              LOG.info("Total time: " + (System.nanoTime() - start) / 1000000
-                  + " Count: " + count);
-            }
-          } else {
-            LOG.severe("We cannot find an object and this is not correct");
           }
         }
       }

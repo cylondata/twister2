@@ -24,11 +24,15 @@ import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.Pair;
 
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
-import edu.iu.dsc.tws.comms.mpi.io.MPIGatherReceiver;
+import edu.iu.dsc.tws.comms.mpi.io.MPIMultiMessageDeserializer;
+import edu.iu.dsc.tws.comms.mpi.io.MPIMultiMessageSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.MultiObject;
 import edu.iu.dsc.tws.comms.routing.InvertedBinaryTreeRouter;
+import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
 public class MPIDataFlowGather extends MPIDataFlowOperation {
   private static final Logger LOG = Logger.getLogger(MPIDataFlowGather.class.getName());
@@ -47,7 +51,7 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
 
   private MessageReceiver finalReceiver;
 
-  private MPIGatherReceiver partialReceiver;
+  private MessageReceiver partialReceiver;
 
   private int index = 0;
 
@@ -71,7 +75,7 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
 
   public MPIDataFlowGather(TWSMPIChannel channel, Set<Integer> sources, int destination,
                            MessageReceiver finalRcvr,
-                           MPIGatherReceiver partialRcvr, int indx, int p) {
+                           MessageReceiver partialRcvr, int indx, int p) {
     super(channel);
     this.index = indx;
     this.sources = sources;
@@ -81,9 +85,16 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
     this.pathToUse = p;
   }
 
-  public MPIDataFlowGather(TWSMPIChannel channel, Set<Integer> sources, int destination,
-                           MessageReceiver finalRcvr, MPIGatherReceiver partialRcvr) {
-    this(channel, sources, destination, finalRcvr, partialRcvr, 0, 0);
+  @Override
+  protected void initSerializers() {
+    kryoSerializer = new KryoSerializer();
+    kryoSerializer.init(new HashMap<String, Object>());
+
+    messageDeSerializer = new MPIMultiMessageDeserializer(kryoSerializer);
+    messageSerializer = new MPIMultiMessageSerializer(sendBuffers, kryoSerializer, executor);
+    // initialize the serializers
+    messageSerializer.init(config);
+    messageDeSerializer.init(config);
   }
 
   public void setupRouting() {
@@ -93,11 +104,11 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
 
     // initialize the receive
     if (this.partialReceiver != null && !isLastReceiver()) {
-      partialReceiver.init(receiveExpectedTaskIds());
+      partialReceiver.init(config, this, receiveExpectedTaskIds());
     }
 
     if (this.finalReceiver != null && isLastReceiver()) {
-      this.finalReceiver.init(receiveExpectedTaskIds());
+      this.finalReceiver.init(config, this, receiveExpectedTaskIds());
     }
 
     Set<Integer> srcs = router.sendQueueIds();
@@ -173,14 +184,13 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
     if (!isLast(header.getSourceId(), header.getFlags(), messageDestId)
         && partialReceiver != null) {
       return partialReceiver.onMessage(header.getSourceId(),
-          MPIContext.DEFAULT_PATH, header.getFlags(),
+          MPIContext.DEFAULT_PATH,
           router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
-              MPIContext.DEFAULT_PATH), currentMessage);
+              MPIContext.DEFAULT_PATH), header.getFlags(), currentMessage);
     } else {
       return finalReceiver.onMessage(header.getSourceId(),
-          MPIContext.DEFAULT_PATH, header.getFlags(),
-          router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
-              MPIContext.DEFAULT_PATH), object);
+          MPIContext.DEFAULT_PATH, router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
+              MPIContext.DEFAULT_PATH), header.getFlags(), object);
     }
   }
 
@@ -295,7 +305,7 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
     partialReceiver.progress();
   }
 
-  private class PartialGather implements MPIGatherReceiver {
+  private class PartialGather implements MessageReceiver {
     // lets keep track of the messages
     // for each task we need to keep track of incoming messages
     private Map<Integer, Map<Integer, List<Object>>> messages = new TreeMap<>();
@@ -303,7 +313,7 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
     private int currentIndex = 0;
 
     @Override
-    public void init(Map<Integer, List<Integer>> expectedIds) {
+    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
       for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
         Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
         Map<Integer, Integer> countsPerTask = new HashMap<>();
@@ -322,13 +332,19 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
     public boolean onMessage(int source, int path, int target, int flags, Object object) {
       // add the object to the map
       boolean canAdd = true;
+
+      if (messages.get(target) == null) {
+        throw new RuntimeException(String.format("%d Partial receive error %d", executor, target));
+      }
       List<Object> m = messages.get(target).get(source);
       Integer c = counts.get(target).get(source);
       if (m.size() > 128) {
         canAdd = false;
+//       LOG.info(String.format("%d Partial false: target %d source %d", executor, target, source));
       } else {
         // we need to increment the reference count to make the buffers available
         // other wise they will bre reclaimed
+//        LOG.info(String.format("%d Partial true: target %d source %d", executor, target, source));
         if (object instanceof MPIMessage) {
           ((MPIMessage) object).incrementRefCount();
         }
@@ -369,6 +385,8 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
                 Integer i = e.getValue();
                 cMap.put(e.getKey(), i - 1);
               }
+//              LOG.info(String.format("%d Send partial true: target %d objects %d",
+//                  executor, t, out.size()));
             } else {
               canProgress = false;
             }

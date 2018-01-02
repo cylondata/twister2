@@ -47,7 +47,7 @@ public class MPIDirectDataFlowCommunication extends MPIDataFlowOperation {
     this.router = new DirectRouter(instancePlan, sources, destination);
 
     if (this.finalReceiver != null && isLastReceiver()) {
-      this.finalReceiver.init(receiveExpectedTaskIds());
+      this.finalReceiver.init(config, this, receiveExpectedTaskIds());
     }
 
     Set<Integer> srcs = TaskPlanUtils.getTasksOfThisExecutor(instancePlan, sources);

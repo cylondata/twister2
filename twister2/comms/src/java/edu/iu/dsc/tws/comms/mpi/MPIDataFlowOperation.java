@@ -242,7 +242,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
     return sendMessage(source, message, MPIContext.DEFAULT_PATH, flags);
   }
 
-  protected boolean sendMessagePartial(int source, Object object, int path,
+  public boolean sendMessagePartial(int source, Object object, int path,
                                        int flags, MessageType t) {
     lock.lock();
     try {
@@ -518,6 +518,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
     lock.lock();
     try {
       // we need to try to build the message here, we may need many more messages to complete
+//      LOG.info(String.format("%d received message from %d", executor, id));
       MPIMessage currentMessage = currentMessages.get(id);
       ByteBuffer byteBuffer = buffer.getByteBuffer();
       byteBuffer.position(buffer.getSize());
@@ -526,7 +527,8 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
         currentMessage = new MPIMessage(id, type, MPIMessageDirection.IN, this);
         currentMessages.put(id, currentMessage);
         MessageHeader header = messageDeSerializer.buildHeader(buffer, e);
-        // we set the 20 header size for now
+//        LOG.info(String.format("%d header source %d length %d", executor,
+//            header.getSourceId(), header.getLength()));
         currentMessage.setHeader(header);
         currentMessage.setHeaderSize(16);
       }
@@ -549,5 +551,17 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
 
   @Override
   public void finish() {
+  }
+
+  public TaskPlan getInstancePlan() {
+    return instancePlan;
+  }
+
+  public Config getConfig() {
+    return config;
+  }
+
+  public MessageType getType() {
+    return type;
   }
 }

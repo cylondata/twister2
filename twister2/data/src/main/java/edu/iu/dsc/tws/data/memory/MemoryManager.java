@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.memory;
 
+import java.nio.ByteBuffer;
+
 /**
  * base interface for memory managers. Memory managers are responsible of keeping data in memoory
  * for various requirements. The memory manager is also responsible of writing data to disk when
@@ -20,15 +22,81 @@ public interface MemoryManager {
 
   /**
    * Initializes the Memory manager
-   * @return
    */
   boolean init();
 
   /**
    * Stores the give key value pair in the memory manager
+   */
+  boolean put(ByteBuffer key, ByteBuffer value);
+
+  /**
+   * Stores the give key value pair in the memory manager
+   *
    * @param key key of the pair
    * @param value value to be stored
    * @return true of the key value pair was added, false otherwise
    */
   boolean put(byte[] key, byte[] value);
+
+  /**
+   * Stores the give key value pair in the memory manager
+   */
+  boolean put(byte[] key, ByteBuffer value);
+
+  /**
+   * Stores the give key value pair in the memory manager
+   */
+  boolean put(long key, ByteBuffer value);
+
+  /**
+   * Stores the give key value pair in the memory manager
+   */
+  boolean put(long key, byte[] value);
+
+  /**
+   * Get the corresponding value as ByteBuffer for the given key from the store
+   */
+  ByteBuffer get(ByteBuffer key);
+
+  /**
+   * Get the corresponding value as ByteBuffer for the given key from the store
+   */
+  ByteBuffer get(byte[] key);
+
+  /**
+   * Get the corresponding value as ByteBuffer for the given key from the store
+   */
+  ByteBuffer get(long key);
+
+  /**
+   * Get the corresponding value as bytes for the given key from the store
+   */
+  byte[] getBytes(byte[] key);
+
+  /**
+   * Get the corresponding value as bytes for the given key from the store
+   */
+  byte[] getBytes(long key);
+
+  /**
+   * Get the corresponding value as bytes for the given key from the store
+   */
+  byte[] getBytes(ByteBuffer keye);
+
+  /**
+   * checks if the given key is in the memory manager
+   *
+   * @param key key to be checked
+   * @return true if the key is present, false otherwise
+   */
+  boolean containsKey(byte[] key);
+
+  /**
+   * checks if the given key is in the memory manager
+   *
+   * @param key key to be checked
+   * @return true if the key is present, false otherwise
+   */
+  boolean containsKey(long key);
 }

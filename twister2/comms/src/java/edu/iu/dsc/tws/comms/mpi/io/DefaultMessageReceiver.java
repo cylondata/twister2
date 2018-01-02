@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.Message;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 
@@ -27,7 +29,7 @@ public class DefaultMessageReceiver implements MessageReceiver {
 
 
   @Override
-  public void init(Map<Integer, List<Integer>> expectedIds) {
+  public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
   }
 
   @Override

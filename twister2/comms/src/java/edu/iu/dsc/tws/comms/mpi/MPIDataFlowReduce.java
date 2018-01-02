@@ -68,11 +68,11 @@ public class MPIDataFlowReduce extends MPIDataFlowOperation {
 
     // initialize the receive
     if (this.partialReceiver != null && !isLastReceiver()) {
-      partialReceiver.init(receiveExpectedTaskIds());
+      partialReceiver.init(config, this, receiveExpectedTaskIds());
     }
 
     if (this.finalReceiver != null && isLastReceiver()) {
-      this.finalReceiver.init(receiveExpectedTaskIds());
+      this.finalReceiver.init(config, this, receiveExpectedTaskIds());
     }
 
     LOG.info(String.format("%d all send tasks: %s", executor, router.sendQueueIds()));

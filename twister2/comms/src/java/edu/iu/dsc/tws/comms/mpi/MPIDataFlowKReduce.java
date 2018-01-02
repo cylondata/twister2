@@ -127,8 +127,8 @@ public class MPIDataFlowKReduce implements DataFlowOperation {
       finalReceives.put(dest, reduce.receiveExpectedTaskIds());
     }
 
-    finalReceiver.init(finalReceives);
-    partialReceiver.init(partialReceives);
+    finalReceiver.init(config, this, finalReceives);
+    partialReceiver.init(config, this, partialReceives);
   }
 
   @Override
@@ -145,7 +145,7 @@ public class MPIDataFlowKReduce implements DataFlowOperation {
     }
 
     @Override
-    public void init(Map<Integer, List<Integer>> expectedIds) {
+    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     }
 
     @Override
@@ -166,7 +166,7 @@ public class MPIDataFlowKReduce implements DataFlowOperation {
     }
 
     @Override
-    public void init(Map<Integer, List<Integer>> expectedIds) {
+    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     }
 
     @Override

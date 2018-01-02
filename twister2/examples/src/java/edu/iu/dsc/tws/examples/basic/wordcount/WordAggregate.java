@@ -15,13 +15,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.KeyedMessageReceiver;
 
 public class WordAggregate implements KeyedMessageReceiver {
   private static final Logger LOG = Logger.getLogger(WordAggregate.class.getName());
 
   @Override
-  public void init(Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
+  public void init(Config cfg, DataFlowOperation op,
+                   Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
 
   }
 

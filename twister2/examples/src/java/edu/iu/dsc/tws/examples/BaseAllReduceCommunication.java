@@ -172,7 +172,7 @@ public class BaseAllReduceCommunication implements IContainer {
      * @param expectedIds expected task ids
      */
     @Override
-    public void init(Map<Integer, List<Integer>> expectedIds) {
+    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
       for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
         Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
         Map<Integer, Integer> countsPerTask = new HashMap<>();
@@ -267,7 +267,7 @@ public class BaseAllReduceCommunication implements IContainer {
 
   private class FinalReduceReceive implements MessageReceiver {
     private int count = 0;
-    public void init(Map<Integer, List<Integer>> expectedIds) {
+    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
       for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
         LOG.info(String.format("%d Final Task %d receives from %s",
             id, e.getKey(), e.getValue().toString()));

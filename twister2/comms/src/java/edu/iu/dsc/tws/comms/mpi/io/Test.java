@@ -26,6 +26,7 @@ import edu.iu.dsc.tws.comms.mpi.MPIMessageReleaseCallback;
 import edu.iu.dsc.tws.comms.mpi.MPISendMessage;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
+@SuppressWarnings({"rawtypes", "unchecked"})
 public final class Test {
   private KryoSerializer serializer;
 
@@ -39,13 +40,13 @@ public final class Test {
     System.out.println("aaaa");
 
     Test test = new Test();
-    test.runTest();
+    test.runTest2();
   }
 
   public Test() {
     serializer = new KryoSerializer();
     serializer.init(null);
-    multiMessageSerializer = new MPIMultiMessageSerializer(bufferQueue, serializer);
+    multiMessageSerializer = new MPIMultiMessageSerializer(bufferQueue, serializer, 0);
     mpiMultiMessageDeserializer = new MPIMultiMessageDeserializer(serializer);
 
     for (int i = 0; i < 100; i++) {
@@ -53,11 +54,39 @@ public final class Test {
     }
   }
 
+  @SuppressWarnings("rawtypes")
   public void runTest() {
     IntData data = new IntData();
-    MPIMessage message = serializeObject(data, 1);
+    List list = new ArrayList<>();
+    list.add(data);
+    MPIMessage message = serializeObject(list, 1);
 
     deserialize(message);
+  }
+
+  @SuppressWarnings("rawtypes")
+  public void runTest2() {
+    IntData data = new IntData(10);
+    List list = new ArrayList<>();
+    list.add(new MultiObject(1, data));
+    data = new IntData(1000);
+    list.add(new MultiObject(1, data));
+    MPIMessage message = serializeObject(list, 1);
+
+    data = new IntData(100);
+    list = new ArrayList<>();
+    list.add(new MultiObject(1, data));
+    data = new IntData(10);
+    list.add(new MultiObject(1, data));
+    MPIMessage message2 = serializeObject(list, 1);
+
+    list = new ArrayList<>();
+    list.add(message);
+    list.add(message2);
+
+    MPIMessage second = serializeObject(list, 1);
+
+    deserialize(second);
   }
 
   private void deserialize(MPIMessage message) {
@@ -74,23 +103,27 @@ public final class Test {
     System.out.println(String.format("%d %d %d", header.getLength(),
         header.getSourceId(), header.getEdge()));
     Object d = mpiMultiMessageDeserializer.build(message, 0);
+    List list = (List) d;
+    for (Object o : list) {
+      if (o instanceof MultiObject) {
+        System.out.println(((MultiObject) o).getSource());
+        if (((MultiObject) o).getObject() instanceof IntData) {
+          System.out.println("Length: "
+              + ((IntData) ((MultiObject) o).getObject()).getData().length);
+        }
+      }
+    }
     System.out.println("End");
   }
 
-  private MPIMessage serializeObject(Object object, int source) {
-    MultiObject multiObject = new MultiObject(source, object);
-    MultiObject multiObject2 = new MultiObject(source, object);
-    List<Object> list = new ArrayList<>();
-    list.add(multiObject);
-    list.add(multiObject2);
-
+  private MPIMessage serializeObject(List object, int source) {
     MPIMessage mpiMessage = new MPIMessage(source, MessageType.OBJECT,
         MPIMessageDirection.OUT, new MessageListener());
 
     int di = -1;
     MPISendMessage sendMessage = new MPISendMessage(source, mpiMessage, 0,
         di, 0, MPIContext.FLAGS_MULTI_MSG, null, null);
-    multiMessageSerializer.build(list, sendMessage);
+    multiMessageSerializer.build(object, sendMessage);
 
     return mpiMessage;
   }

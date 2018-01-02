@@ -137,7 +137,7 @@ public class BaseBroadcastCommunication implements IContainer {
 
   private class BCastReceive implements MessageReceiver {
     private int count = 0;
-    public void init(Map<Integer, List<Integer>> expectedIds) {
+    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
       for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
         LOG.info(String.format("%d Final Task %d receives from %s",
             id, e.getKey(), e.getValue().toString()));

@@ -13,11 +13,13 @@ package edu.iu.dsc.tws.comms.mpi;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
 
 public class MPIMessage {
+  private static final Logger LOG = Logger.getLogger(MPIMessage.class.getName());
   /**
    * List of buffers filled with the message
    */
@@ -168,7 +170,7 @@ public class MPIMessage {
       for (MPIBuffer buffer : buffers) {
         currentSize += buffer.getByteBuffer().remaining();
       }
-//      System.out.println(String.format("Current size %d length %d", currentSize,
+//      LOG.info(String.format("Current size %d length %d", currentSize,
 //          header.getLength()));
       if (currentSize == header.getLength()) {
         complete = true;

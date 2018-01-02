@@ -8,6 +8,7 @@ common_deps_files = [
     "//twister2/task/src/main/java:task-java",
     "//twister2/api/src/java:api-java",
     "//twister2/data/src/main/java:data-java",
+    "@com_google_guava_guava//jar",
    ]
 
 java_library(

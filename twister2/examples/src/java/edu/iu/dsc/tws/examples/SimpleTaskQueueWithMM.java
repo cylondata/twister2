@@ -21,8 +21,34 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 package edu.iu.dsc.tws.examples;
 
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -31,6 +57,8 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.google.common.primitives.Longs;
+
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
@@ -38,6 +66,9 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.data.fs.Path;
+import edu.iu.dsc.tws.data.memory.MemoryManager;
+import edu.iu.dsc.tws.data.memory.lmdb.LMDBMemoryManager;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import edu.iu.dsc.tws.task.api.LinkedQueue;
@@ -45,9 +76,10 @@ import edu.iu.dsc.tws.task.api.Message;
 import edu.iu.dsc.tws.task.api.SinkTask;
 import edu.iu.dsc.tws.task.api.SourceTask;
 import edu.iu.dsc.tws.task.core.TaskExecutorFixedThread;
+import static java.nio.ByteBuffer.allocateDirect;
 
-public class PingPongCommunicationTaskBased implements IContainer {
-  private static final Logger LOG = Logger.getLogger(PingPongCommunicationTaskBased.
+public class SimpleTaskQueueWithMM implements IContainer {
+  private static final Logger LOG = Logger.getLogger(SimpleTaskQueueWithMM.
       class.getName());
 
   private DataFlowOperation direct;
@@ -100,14 +132,25 @@ public class PingPongCommunicationTaskBased implements IContainer {
         dests, new PingPongReceive());
     taskExecutor.initCommunication(channel, direct);
 
+    //Memory Manager
+    Path dataPath = new Path("/home/pulasthi/work/twister2/lmdbdatabase");
+    MemoryManager memoryManager = new LMDBMemoryManager(dataPath);
     if (containerId == 0) {
       // the map thread where data is produced
       LOG.log(Level.INFO, "Starting map thread");
-      taskExecutor.registerTask(new MapWorker(0, direct));
-      LOG.log(Level.INFO, "registered map thread");
+      SourceTask<Object> mapTask = new MapWorker(0, direct);
+      mapTask.setMemoryManager(memoryManager);
+      taskExecutor.registerTask(mapTask);
       taskExecutor.submitTask(0);
       taskExecutor.progres();
+
     } else if (containerId == 1) {
+      ArrayList<Integer> inq = new ArrayList<>();
+      inq.add(0);
+      taskExecutor.setTaskMessageProcessLimit(10000);
+      SinkTask<Object> recTask = new RecieveWorker(1);
+      recTask.setMemoryManager(memoryManager);
+      taskExecutor.registerSinkTask(recTask, inq);
       taskExecutor.progres();
     }
   }
@@ -122,10 +165,12 @@ public class PingPongCommunicationTaskBased implements IContainer {
     @Override
     public boolean onMessage(int source, int path, int target, int flags, Object object) {
       count++;
-      if (count % 10000 == 0) {
+      if (count % 50000 == 0) {
         LOG.info("received message: " + count);
       }
-      if (count == 100000) {
+      taskExecutor.submitMessage(0, "" + count);
+
+      if (count == 10) {
         status = Status.LOAD_RECEIVE_FINISHED;
       }
       return true;
@@ -142,6 +187,10 @@ public class PingPongCommunicationTaskBased implements IContainer {
    */
   private class RecieveWorker extends SinkTask<Object> {
 
+    RecieveWorker(int tid) {
+      super(tid);
+    }
+
     @Override
     public Message execute() {
       return null;
@@ -149,6 +198,29 @@ public class PingPongCommunicationTaskBased implements IContainer {
 
     @Override
     public Message execute(Message content) {
+      try {
+        // Sleep for a while
+        Thread.sleep(1);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+      String data = content.getContent().toString();
+      if (Integer.parseInt(data) % 1000 == 0) {
+        long keytemp = 1234L;
+        byte[] init = Longs.toByteArray(1L);
+        long val = 1L;
+        if (getMemoryManager().containsKey(keytemp)) {
+          byte[] temp = getMemoryManager().getBytes(keytemp);
+          final ByteBuffer valBuffer = allocateDirect(Long.BYTES);
+          valBuffer.put(temp, 0, temp.length);
+          val = valBuffer.getLong();
+          val = val + 1;
+          init = Longs.toByteArray(val);
+        }
+        getMemoryManager().put(keytemp, init);
+        System.out.println(((String) content.getContent()).toString()
+            + " Value of mapped long : " + val);
+      }
       return null;
     }
   }
