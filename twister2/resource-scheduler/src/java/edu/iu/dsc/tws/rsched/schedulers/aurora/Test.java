@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.aurora;
 
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
 import java.io.File;
 import java.util.HashMap;
@@ -58,42 +59,41 @@ public class Test {
   }
 
   public static void testJobCreate(){
+
     String auroraFile = "/root/twister2/twister2test.aurora";
     String cluster = "example";
     String role = "www-data";
     String env = "devel";
     String jobName = "hello";
-    AuroraClientController controller = new AuroraClientController(jobName, cluster, role, env, auroraFile, true);
 
-    HashMap<AuroraField, String> bindings = new HashMap<AuroraField, String>();
-    bindings.put(AuroraField.CLUSTER, "example");
-    bindings.put(AuroraField.ENVIRONMENT, "devel");
-    bindings.put(AuroraField.ROLE, "www-data");
-    bindings.put(AuroraField.JOB_NAME, "hello");
-    bindings.put(AuroraField.NUMBER_OF_CONTAINERS, "1");
-    bindings.put(AuroraField.CPUS_PER_CONTAINER, "1");
+    AuroraClientController controller = new AuroraClientController(cluster, role, env, jobName, true);
+
+    Config.Builder builder = Config.newBuilder();
+    builder.put(AuroraClientContext.CLUSTER, cluster);
+    builder.put(AuroraClientContext.ROLE, role);
+    builder.put(AuroraClientContext.ENVIRONMENT, env);
+    builder.put(AuroraClientContext.AURORA_JOB_NAME, jobName);
+
+    builder.put(AuroraClientContext.AURORA_SCRIPT.getKey(), auroraFile);
+//    builder.put(AuroraClientContext.TWISTER2_PACKAGE_PATH, "/root/twister2");
+//    builder.put(AuroraClientContext.TWISTER2_PACKAGE_FILE, "twister2-client.tar.gz");
+
+    builder.put(AuroraClientContext.NUMBER_OF_CONTAINERS, "1");
+    builder.put(AuroraClientContext.CPUS_PER_CONTAINER, "1");
     String ramAndDiskSize = "" + 1*1024*1024*1024; // 1GB in bytes
-    bindings.put(AuroraField.RAM_PER_CONTAINER, ramAndDiskSize);
-    bindings.put(AuroraField.DISK_PER_CONTAINER, ramAndDiskSize);
-//    bindings.put(AuroraField.DISK_PER_CONTAINER, "1*GB"); // it requires int
+    builder.put(AuroraClientContext.RAM_PER_CONTAINER, ramAndDiskSize);
+    builder.put(AuroraClientContext.DISK_PER_CONTAINER, ramAndDiskSize);
+    Config config = builder.build();
 
-    boolean result = controller.createJob(bindings);
-    if(result)
-      System.out.println("job submission is successfull");
-    else
-      System.out.println("job submission is unsuccessfull");
-  }
+    System.out.println("number of config parameters: "+config.size());
+    System.out.println(config);
 
-  public static void testJobCreate2(){
-    String auroraFile = "/vagrant/aurora_hello/pyhello.aurora";
-    String jobName = "hello";
-    String cluster = "example";
-    String role = "www-data";
-    String env = "devel";
-    AuroraClientController controller = new AuroraClientController(jobName, cluster, role, env, auroraFile, true);
+    // get environment variables from config
+    Map<AuroraField, String> bindings = AuroraJobSubmitter.constructEnvVariables(config);
+    // print all environment variables for debugging
+    AuroraJobSubmitter.printEnvs(bindings);
 
-    HashMap<AuroraField, String> bindings = new HashMap<AuroraField, String>();
-    boolean result = controller.createJob(bindings);
+    boolean result = controller.createJob(bindings, auroraFile);
     if(result)
       System.out.println("job submission is successfull");
     else
@@ -101,17 +101,17 @@ public class Test {
   }
 
   public static void testJobKill(){
-    String auroraFile = "/vagrant/aurora_hello/pyhello.aurora";
-    String jobName = "hello";
     String cluster = "example";
     String role = "www-data";
     String env = "devel";
-    AuroraClientController controller = new AuroraClientController(jobName, cluster, role, env, auroraFile, true);
+    String jobName = "hello";
+
+    AuroraClientController controller = new AuroraClientController(cluster, role, env, jobName, true);
     boolean result = controller.killJob();
     if(result)
-      System.out.println("job submission is successfull");
+      System.out.println("job kill is successfull");
     else
-      System.out.println("job submission is unsuccessfull");
+      System.out.println("job kill is unsuccessfull");
   }
 
   public static void testLoadConfig(){
@@ -129,29 +129,6 @@ public class Test {
         System.out.println(key+" ClassCastException: "+e.getMessage());
       }
     }
-  }
-
-  public static void printConfig(Config config){
-    int size = config.size();
-    System.out.println("number of configs: "+size);
-    Set<String> keys = config.getKeySet();
-
-    for (String key: keys) {
-      try {
-        System.out.println(key + ": " + config.getStringValue(key));
-      }catch(java.lang.ClassCastException e){
-        System.out.println(key+" ClassCastException: "+e.getMessage());
-      }
-    }
-  }
-
-  public static void printEnvs(Map<AuroraField, String> envs){
-    Set<AuroraField> keys = envs.keySet();
-
-    for (AuroraField key: keys) {
-      System.out.println(key + ": " + envs.get(key));
-    }
-
   }
 
 }
