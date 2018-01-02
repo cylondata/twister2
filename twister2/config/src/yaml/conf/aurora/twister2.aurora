@@ -18,7 +18,7 @@ javacmd = 'java -cp ' \
   'twister2-dist/lib/libresource-scheduler-java.jar:' \
   'twister2-dist/lib/libconfig-java.jar:' \
   'twister2-dist/lib/snakeyaml-1.15.jar:' \
-  ' edu.iu.dsc.tws.rsched.schedulers.aurora.WorkerTest'
+  ' edu.iu.dsc.tws.rsched.schedulers.aurora.WorkerHello'
 
 run_java = Process(
   name = 'testjava',
@@ -34,7 +34,7 @@ java_job = Job(
   cluster = '{{CLUSTER}}',
   environment = '{{ENVIRONMENT}}',
   role = '{{ROLE}}',
-  name = '{{JOB_NAME}}',
+  name = '{{AURORA_JOB_NAME}}',
   task = java_task,
   instances = '{{NUMBER_OF_CONTAINERS}}'
 )

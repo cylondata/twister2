@@ -19,19 +19,21 @@ import edu.iu.dsc.tws.rsched.core.SchedulerContext;
  * State parameters for Aurora Client
  */
 public class AuroraClientContext extends SchedulerContext{
+
   public static final ConfigEntry AURORA_SCRIPT = new ConfigEntry(
       "twister2.resource.scheduler.aurora.script", "${TWISTER2_CONF}/twister2.aurora");
 
-  // these two constants show the path and file to upload to aurora containers
-  public static final String TWISTER2_PACKAGE_PATH = "twister2.package.path";
-  public static final String TWISTER2_PACKAGE_FILE = "twister2.package.file";
+  public static final ConfigEntry TWISTER2_PACKAGE_FILE = new ConfigEntry(
+      "twister2.resource.scheduler.aurora.package.file", "twister2-client.tar.gz");
+
+  public static final ConfigEntry TWISTER2_PACKAGE_PATH = new ConfigEntry(
+      "twister2.resource.scheduler.aurora.package.path", "${TWISTER2_HOME}");
 
   public static final String CLUSTER = "twister2.resource.scheduler.aurora.cluster";
   public static final String ROLE = "twister2.resource.scheduler.aurora.role";
   public static final String ENVIRONMENT = "twister2.resource.scheduler.aurora.env";
+  public static final String AURORA_JOB_NAME = "twister2.resource.scheduler.aurora.jobname";
 
-  // JOB_NAME is defined in the upper class of SchedulerContext
-  // public static final String JOB_NAME = "twister2.job.name";
   public static final String CPUS_PER_CONTAINER = "twister2.cpu_per_container";
   public static final String RAM_PER_CONTAINER = "twister2.ram_per_container";
   public static final String DISK_PER_CONTAINER = "twister2.disk_per_container";
@@ -42,6 +44,8 @@ public class AuroraClientContext extends SchedulerContext{
 
   static {
     defaults.put(AURORA_SCRIPT.getKey(), AURORA_SCRIPT.getDefaultValue());
+    defaults.put(TWISTER2_PACKAGE_PATH.getKey(), TWISTER2_PACKAGE_PATH.getDefaultValue());
+    defaults.put(TWISTER2_PACKAGE_FILE.getKey(), TWISTER2_PACKAGE_FILE.getDefaultValue());
   }
 
   public static String auroraScript(Config cfg) {
@@ -66,6 +70,10 @@ public class AuroraClientContext extends SchedulerContext{
 
   public static String environment(Config cfg) {
     return cfg.getStringValue(ENVIRONMENT);
+  }
+
+  public static String auroraJobName(Config cfg) {
+    return cfg.getStringValue(AURORA_JOB_NAME);
   }
 
   public static String cpusPerContainer(Config cfg) {

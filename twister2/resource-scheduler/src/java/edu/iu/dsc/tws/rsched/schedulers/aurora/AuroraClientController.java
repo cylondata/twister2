@@ -29,10 +29,15 @@ package edu.iu.dsc.tws.rsched.schedulers.aurora;
   import java.io.File;
   import java.util.ArrayList;
   import java.util.Arrays;
+  import java.util.HashMap;
   import java.util.List;
   import java.util.Map;
+  import java.util.Set;
+  import java.util.logging.Level;
   import java.util.logging.Logger;
 
+  import edu.iu.dsc.tws.common.config.Config;
+  import edu.iu.dsc.tws.rsched.core.SchedulerContext;
   import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
 
 /**
@@ -43,21 +48,15 @@ class AuroraClientController {
 
   private final String jobSpec;
   private final boolean isVerbose;
-  private final String auroraFilename;
 
-  AuroraClientController(
-      String jobName,
-      String cluster,
-      String role,
-      String env,
-      String auroraFilename,
-      boolean isVerbose) {
-    this.auroraFilename = auroraFilename;
-    this.isVerbose = isVerbose;
+  public AuroraClientController(String cluster, String role, String env, String jobName,
+                                boolean isVerbose){
     this.jobSpec = String.format("%s/%s/%s/%s", cluster, role, env, jobName);
+    this.isVerbose = isVerbose;
   }
 
-  public boolean createJob(Map<AuroraField, String> bindings) {
+  public boolean createJob(Map<AuroraField, String> bindings, String auroraFilename) {
+    // construct Aurora command to run from command line
     List<String> auroraCmd =
         new ArrayList<>(Arrays.asList("aurora", "job", "create", "--wait-until", "RUNNING"));
 
@@ -73,7 +72,16 @@ class AuroraClientController {
       auroraCmd.add("--verbose");
     }
 
-    return runProcess(auroraCmd);
+    return printForTesting(auroraCmd);
+//    return runProcess(auroraCmd);
+  }
+
+  private boolean printForTesting(List<String> auroraCmd){
+    System.out.println("State of AuroraClientController: ");
+    System.out.println("jobSpec: "+ jobSpec);
+    System.out.println("auroraCmd: "+ auroraCmd);
+
+    return true;
   }
 
   // Kill an aurora job

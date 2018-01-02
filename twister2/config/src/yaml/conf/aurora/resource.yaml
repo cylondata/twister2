@@ -13,9 +13,9 @@ twister2.resource.scheduler.mpi.home: ""
 # the package uri
 twister2.system.package.uri: "${TWISTER2_DIST}/twister2-core.tar.gz"
 # the resource manager class
-twister2.class.state.manager: "edu.iu.dsc.tws.rsched.statemanagers.fs.SharedFileSystemStateManager"
+# twister2.class.state.manager: "edu.iu.dsc.tws.rsched.statemanagers.fs.SharedFileSystemStateManager"
 # the launcher class
-twister2.class.launcher: "edu.iu.dsc.tws.rsched.schedulers.mpi.MPILauncher"
+# twister2.class.launcher: "edu.iu.dsc.tws.rsched.schedulers.mpi.MPILauncher"
 # the uplaoder class
-twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader"
+# twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader"
 

@@ -58,7 +58,8 @@ public class AuroraProcess {
       Test.printEnvs(envs);
 
       //construct the controller to submit the job to Aurora Scheduler
-      AuroraClientController controller = new AuroraClientController(SchedulerContext.jobName(config),
+      AuroraClientController controller = new AuroraClientController(
+          SchedulerContext.jobName(config),
           AuroraClientContext.cluster(config),
           AuroraClientContext.role(config),
           AuroraClientContext.environment(config),
