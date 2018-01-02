@@ -26,19 +26,14 @@ package edu.iu.dsc.tws.rsched.schedulers.aurora;
 // This class is modified from:
 // com.twitter.heron.scheduler.aurora.AuroraCLIController
 
-  import java.io.File;
-  import java.util.ArrayList;
-  import java.util.Arrays;
-  import java.util.HashMap;
-  import java.util.List;
-  import java.util.Map;
-  import java.util.Set;
-  import java.util.logging.Level;
-  import java.util.logging.Logger;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Logger;
 
-  import edu.iu.dsc.tws.common.config.Config;
-  import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-  import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
+import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
 
 /**
  * A controller class to submit jobs to an Aurora Scheduler
@@ -49,8 +44,8 @@ class AuroraClientController {
   private final String jobSpec;
   private final boolean isVerbose;
 
-  public AuroraClientController(String cluster, String role, String env, String jobName,
-                                boolean isVerbose){
+  AuroraClientController(String cluster, String role, String env, String jobName,
+                                boolean isVerbose) {
     this.jobSpec = String.format("%s/%s/%s/%s", cluster, role, env, jobName);
     this.isVerbose = isVerbose;
   }
@@ -76,10 +71,10 @@ class AuroraClientController {
 //    return runProcess(auroraCmd);
   }
 
-  private boolean printForTesting(List<String> auroraCmd){
+  private boolean printForTesting(List<String> auroraCmd) {
     System.out.println("State of AuroraClientController: ");
-    System.out.println("jobSpec: "+ jobSpec);
-    System.out.println("auroraCmd: "+ auroraCmd);
+    System.out.println("jobSpec: " + jobSpec);
+    System.out.println("auroraCmd: " + auroraCmd);
 
     return true;
   }
@@ -110,7 +105,6 @@ class AuroraClientController {
 
   /**
    * add new containers to this job
-   * @param count
    */
   public void addContainers(Integer count) {
     //aurora job add <cluster>/<role>/<env>/<name>/<instance_id> <count>
@@ -133,7 +127,8 @@ class AuroraClientController {
     StringBuilder stdout = new StringBuilder();
     StringBuilder stderr = new StringBuilder();
     int status =
-        ProcessUtils.runSyncProcess(false, auroraCmd.toArray(new String[auroraCmd.size()]), stderr, new File("."));
+        ProcessUtils.runSyncProcess(false, auroraCmd.toArray(
+            new String[auroraCmd.size()]), stderr, new File("."));
 
     if (status != 0) {
       LOG.severe(String.format(

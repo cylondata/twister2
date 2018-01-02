@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.rsched.schedulers.aurora;
 
 import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -25,21 +24,21 @@ import edu.iu.dsc.tws.rsched.spi.scheduler.ILauncher;
  * submit a job to Aurora Scheduler using AuroraClientController
  */
 
-public class AuroraLauncher implements ILauncher{
+public class AuroraLauncher implements ILauncher {
   private static final Logger LOG = Logger.getLogger(AuroraLauncher.class.getName());
 
   private Config config;
-  AuroraClientController controller;
+  private AuroraClientController controller;
 
   @Override
-  public void initialize(Config config){
-    this.config = config;
+  public void initialize(Config conf) {
+    this.config = conf;
 
     //construct the controller to submit the job to Aurora Scheduler
-    String cluster = AuroraClientContext.cluster(config);
-    String role = AuroraClientContext.role(config);
-    String env = AuroraClientContext.environment(config);
-    String jobName = AuroraClientContext.auroraJobName(config);
+    String cluster = AuroraClientContext.cluster(conf);
+    String role = AuroraClientContext.role(conf);
+    String env = AuroraClientContext.environment(conf);
+    String jobName = AuroraClientContext.auroraJobName(conf);
     controller = new AuroraClientController(cluster, role, env, jobName, true);
   }
 
@@ -50,7 +49,7 @@ public class AuroraLauncher implements ILauncher{
    * @return true if the request is granted
    */
   @Override
-  public boolean launch(RequestedResources resourceRequest, JobAPI.Job job){
+  public boolean launch(RequestedResources resourceRequest, JobAPI.Job job) {
 
     // get aurora file name to execute when submitting the job
     String auroraFilename = AuroraClientContext.auroraScript(config);
@@ -60,10 +59,10 @@ public class AuroraLauncher implements ILauncher{
 
     // convert RequestedResources to environment variables
     ResourceContainer container = resourceRequest.getContainer();
-    bindings.put(AuroraField.CPUS_PER_CONTAINER, container.getNoOfCpus()+"");
-    bindings.put(AuroraField.RAM_PER_CONTAINER, container.getMemoryInBytes()+"");
-    bindings.put(AuroraField.DISK_PER_CONTAINER, container.getDiskInBytes()+"");
-    bindings.put(AuroraField.NUMBER_OF_CONTAINERS, resourceRequest.getNoOfContainers()+"");
+    bindings.put(AuroraField.CPUS_PER_CONTAINER, container.getNoOfCpus() + "");
+    bindings.put(AuroraField.RAM_PER_CONTAINER, container.getMemoryInBytes() + "");
+    bindings.put(AuroraField.DISK_PER_CONTAINER, container.getDiskInBytes() + "");
+    bindings.put(AuroraField.NUMBER_OF_CONTAINERS, resourceRequest.getNoOfContainers() + "");
 
     AuroraJobSubmitter.printEnvs(bindings);
 
@@ -74,7 +73,7 @@ public class AuroraLauncher implements ILauncher{
    * Cleanup any resources
    */
   @Override
-  public void close(){
+  public void close() {
 
   }
 }

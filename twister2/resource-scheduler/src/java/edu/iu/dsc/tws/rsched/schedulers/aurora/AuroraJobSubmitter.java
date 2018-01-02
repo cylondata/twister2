@@ -32,8 +32,9 @@ import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 /**
  * This is the class to submit Twister2 jobs to AuroraCluster
  */
-public class AuroraJobSubmitter {
+public final class AuroraJobSubmitter {
   private static final Logger LOG = Logger.getLogger(AuroraJobSubmitter.class.getName());
+
   private AuroraJobSubmitter() {
   }
 
@@ -50,7 +51,7 @@ public class AuroraJobSubmitter {
       // we are loading the configuration for all the components
       Config config = loadConfigurations(cmd);
       System.out.println("all config entries");
-      System.out.println("number of config parameters: "+config.size());
+      System.out.println("number of config parameters: " + config.size());
       System.out.println(config);
 
       //construct the controller to submit the job to Aurora Scheduler
@@ -59,7 +60,8 @@ public class AuroraJobSubmitter {
       String env = AuroraClientContext.environment(config);
       String jobName = AuroraClientContext.auroraJobName(config);
 
-      AuroraClientController controller = new AuroraClientController(cluster, role, env, jobName, true);
+      AuroraClientController controller = new AuroraClientController(
+          cluster, role, env, jobName, true);
 
       // get aurora file name to execute when submitting the job
       String auroraFilename = AuroraClientContext.auroraScript(config);
@@ -70,10 +72,11 @@ public class AuroraJobSubmitter {
       printEnvs(bindings);
 
       boolean jobSubmitted = controller.createJob(bindings, auroraFilename);
-      if(jobSubmitted)
+      if (jobSubmitted) {
         LOG.log(Level.INFO, "job submission is successfull ...");
-      else
+      } else {
         LOG.log(Level.SEVERE, "job submission to Aurora failed ...");
+      }
 
     } catch (ParseException e) {
       HelpFormatter formatter = new HelpFormatter();
@@ -85,11 +88,12 @@ public class AuroraJobSubmitter {
   /**
    * Setup the command line options for AuroraJobSubmitter
    * It gets three command line parameters:
-   *   twister2_home: home directory for twister2
-   *   config_dir: config directory for twister2 project
-   *   cluster_name: it should be "aurora"
-   *   packagePath: path of twister2 tar.gz file to be uploaded to Mesos container
-   *   packageFile: filename of twister2 tar.gz file to be uploaded to Mesos container
+   * twister2_home: home directory for twister2
+   * config_dir: config directory for twister2 project
+   * cluster_name: it should be "aurora"
+   * packagePath: path of twister2 tar.gz file to be uploaded to Mesos container
+   * packageFile: filename of twister2 tar.gz file to be uploaded to Mesos container
+   *
    * @return cli options
    */
   private static Options setupOptions() {
@@ -147,7 +151,7 @@ public class AuroraJobSubmitter {
   /**
    * read config parameters from configuration files
    * all config files are in a single directory
-   * @param cmd
+   *
    * @return Config object that has values from config files and from command line
    */
   private static Config loadConfigurations(CommandLine cmd) {
@@ -162,7 +166,8 @@ public class AuroraJobSubmitter {
         twister2Home, configDir, clusterName));
 
     try {
-//      Reflection.initialize(Class.forName("edu.iu.dsc.tws.rsched.schedulers.aurora.AuroraClientContext"));
+//      Reflection.initialize(Class.forName(
+// "edu.iu.dsc.tws.rsched.schedulers.aurora.AuroraClientContext"));
       Class.forName(AuroraClientContext.class.getName());
     } catch (ClassNotFoundException e) {
       e.printStackTrace();
@@ -174,16 +179,14 @@ public class AuroraJobSubmitter {
         put(SchedulerContext.TWISTER2_CLUSTER_NAME, clusterName).
 //        put(AuroraClientContext.TWISTER2_PACKAGE_PATH, packagePath).
 //        put(AuroraClientContext.TWISTER2_PACKAGE_FILE, packageFile).
-        build();
+    build();
   }
 
   /**
    * put relevant config parameters to a HashMap to be used as environment variables
    * when submitting jobs
-   * @param config
-   * @return
    */
-  public static Map<AuroraField, String> constructEnvVariables(Config config){
+  public static Map<AuroraField, String> constructEnvVariables(Config config) {
     HashMap<AuroraField, String> envs = new HashMap<AuroraField, String>();
     envs.put(AuroraField.TWISTER2_PACKAGE_PATH, AuroraClientContext.packagePath(config));
     envs.put(AuroraField.TWISTER2_PACKAGE_FILE, AuroraClientContext.packageFile(config));
@@ -192,21 +195,20 @@ public class AuroraJobSubmitter {
     envs.put(AuroraField.ROLE, AuroraClientContext.role(config));
     envs.put(AuroraField.AURORA_JOB_NAME, AuroraClientContext.auroraJobName(config));
     envs.put(AuroraField.CPUS_PER_CONTAINER, AuroraClientContext.cpusPerContainer(config));
-    envs.put(AuroraField.RAM_PER_CONTAINER, AuroraClientContext.ramPerContainer(config)+"");
-    envs.put(AuroraField.DISK_PER_CONTAINER, AuroraClientContext.diskPerContainer(config)+"");
+    envs.put(AuroraField.RAM_PER_CONTAINER, AuroraClientContext.ramPerContainer(config) + "");
+    envs.put(AuroraField.DISK_PER_CONTAINER, AuroraClientContext.diskPerContainer(config) + "");
     envs.put(AuroraField.NUMBER_OF_CONTAINERS, AuroraClientContext.numberOfContainers(config));
     return envs;
   }
 
   /**
    * print all environment variables for debuging purposes
-   * @param envs
    */
-  public static void printEnvs(Map<AuroraField, String> envs){
+  public static void printEnvs(Map<AuroraField, String> envs) {
     LOG.log(Level.INFO, "All environment variables when submitting Aurora job");
     Set<AuroraField> keys = envs.keySet();
 
-    for (AuroraField key: keys) {
+    for (AuroraField key : keys) {
       System.out.println(key + ": " + envs.get(key));
     }
   }
