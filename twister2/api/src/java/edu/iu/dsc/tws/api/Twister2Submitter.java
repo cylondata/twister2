@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.api;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
@@ -34,5 +35,18 @@ public final class Twister2Submitter {
     // launch the luancher
     ResourceAllocator resourceAllocator = new ResourceAllocator();
     resourceAllocator.submitJob(job);
+  }
+
+  /**
+   * Submit a basic job with only container and communications
+   * @param basicJob basic job
+   */
+  public static void submitAuroraJob(BasicJob basicJob, Config config) {
+    // save the job to state manager
+    JobAPI.Job job = basicJob.serialize();
+
+    // launch the luancher
+    ResourceAllocator resourceAllocator = new ResourceAllocator();
+    resourceAllocator.submitAuroraJob(job, config);
   }
 }

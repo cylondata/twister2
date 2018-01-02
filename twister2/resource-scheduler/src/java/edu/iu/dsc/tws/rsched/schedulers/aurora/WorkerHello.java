@@ -11,10 +11,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.aurora;
 
-public class WorkerTest {
+public class WorkerHello {
   public static void main(String[] args){
 
-    System.out.println("Hellllooo from WorkerTest class");
+    System.out.println("Hellllooo from WorkerHello class");
     System.out.println("I am working");
     System.out.println("Now I am exiting :( ");
   }

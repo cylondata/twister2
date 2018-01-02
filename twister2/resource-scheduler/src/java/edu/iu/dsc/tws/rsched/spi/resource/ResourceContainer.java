@@ -29,6 +29,9 @@ public class ResourceContainer {
   // memory available to the container
   private int memoryMegaBytes;
 
+  // memory available to the container
+  private int diskMegaBytes;
+
   public ResourceContainer(int id) {
     this.id = id;
   }
@@ -36,6 +39,12 @@ public class ResourceContainer {
   public ResourceContainer(int noOfCpus, int memoryMegaBytes) {
     this.noOfCpus = noOfCpus;
     this.memoryMegaBytes = memoryMegaBytes;
+  }
+
+  public ResourceContainer(int noOfCpus, int memoryMegaBytes, int diskMegaBytes) {
+    this.noOfCpus = noOfCpus;
+    this.memoryMegaBytes = memoryMegaBytes;
+    this.diskMegaBytes = diskMegaBytes;
   }
 
   public int getId() {
@@ -57,4 +66,17 @@ public class ResourceContainer {
   public int getMemoryMegaBytes() {
     return memoryMegaBytes;
   }
+
+  public long getMemoryInBytes() {
+    return memoryMegaBytes * 1024 * 1024L;
+  }
+
+  public int getDiskMegaBytes() {
+    return diskMegaBytes;
+  }
+
+  public long getDiskInBytes() {
+    return diskMegaBytes * 1024 * 1024L;
+  }
+
 }

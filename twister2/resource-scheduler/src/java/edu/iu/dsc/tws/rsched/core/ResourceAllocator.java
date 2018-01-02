@@ -25,6 +25,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.schedulers.aurora.AuroraClientContext;
 import edu.iu.dsc.tws.rsched.schedulers.mpi.MPIContext;
 import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
@@ -52,7 +53,13 @@ public class ResourceAllocator {
 
   private JobAPI.Job updatedJob;
 
-  private Config loadConfig(Map<String, Object> cfg) {
+  public static Config loadConfig(Map<String, Object> cfg) {
+
+    try {
+      Class.forName(AuroraClientContext.class.getName());
+    } catch (ClassNotFoundException e) {
+      e.printStackTrace();
+    }
     // first lets read the essential properties from java system properties
     String twister2Home = System.getProperty(SchedulerContext.TWISTER_2_HOME);
     String configDir = System.getProperty(SchedulerContext.CONFIG_DIR);
@@ -249,12 +256,100 @@ public class ResourceAllocator {
     launcher.launch(requestedResources, updatedJob);
   }
 
+  /**
+   * Submit the job to the cluster
+   *
+   * @param job the actual job
+   */
+  public void submitAuroraJob(JobAPI.Job job, Config config) {
+
+    // lets prepare the job files
+//    String jobDirectory = prepareJobFiles(config, job);
+
+//    String statemgrClass = SchedulerContext.stateManagerClass(config);
+//    if (statemgrClass == null) {
+//      throw new RuntimeException("The state manager class must be spcified");
+//    }
+
+    String launcherClass = SchedulerContext.launcherClass(config);
+    if (launcherClass == null) {
+      throw new RuntimeException("The launcher class must be specified");
+    }
+
+//    String uploaderClass = SchedulerContext.uploaderClass(config);
+//    if (uploaderClass == null) {
+//      throw new RuntimeException("The uploader class must be specified");
+//    }
+
+    ILauncher launcher;
+//    IUploader uploader;
+//    IStateManager statemgr;
+
+    // create an instance of state manager
+//    try {
+//      statemgr = ReflectionUtils.newInstance(statemgrClass);
+//    } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
+//      throw new JobSubmissionException(
+//          String.format("Failed to instantiate state manager class '%s'", statemgrClass), e);
+//    }
+
+    // create an instance of launcher
+    try {
+      launcher = ReflectionUtils.newInstance(launcherClass);
+    } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
+      throw new LauncherException(
+          String.format("Failed to instantiate launcher class '%s'", launcherClass), e);
+    }
+
+    // create an instance of uploader
+//    try {
+//      uploader = ReflectionUtils.newInstance(uploaderClass);
+//    } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
+//      throw new UploaderException(
+//          String.format("Failed to instantiate uploader class '%s'", uploaderClass), e);
+//    }
+
+//    LOG.log(Level.INFO, "Initialize state manager");
+//    // initialize the state manager
+//    statemgr.initialize(config);
+
+//    LOG.log(Level.INFO, "Initialize uploader");
+//    // now upload the content of the package
+//    uploader.initialize(config);
+//    // gives the url of the file to be uploaded
+//    LOG.log(Level.INFO, "Calling uploader to upload the package content");
+//    URI packageURI = uploader.uploadPackage(jobDirectory);
+
+    // now launch the launcher
+    // Update the runtime config with the packageURI
+//    Config runtimeAll = Config.newBuilder()
+//        .putAll(config)
+//        .put(SchedulerContext.JOB_PACKAGE_URI, packageURI)
+//        .build();
+
+    // this is a handler chain based execution in resource allocator. We need to
+    // make it more formal as such
+    launcher.initialize(config);
+
+    RequestedResources requestedResources = buildRequestedResources(job);
+    if (requestedResources == null) {
+      throw new RuntimeException("Failed to build the requested resources");
+    }
+
+    launcher.launch(requestedResources, job);
+  }
+
   private RequestedResources buildRequestedResources(JobAPI.Job job) {
     JobAPI.JobResources jobResources = job.getJobResources();
     int noOfContainers = jobResources.getNoOfContainers();
+    double memd = jobResources.getContainer().getAvailableMemory();
+    int mem = (int)memd;
     ResourceContainer container = new ResourceContainer(
         (int) jobResources.getContainer().getAvailableCPU(),
-        (int) jobResources.getContainer().getAvailableMemory());
+        mem,
+        mem); // this is for disk
+
+    System.out.println("availableMemory: "+mem);
 
     return new RequestedResources(noOfContainers, container);
   }
