@@ -13,15 +13,15 @@ package edu.iu.dsc.tws.examples.basic;
 
 import java.util.HashMap;
 
-import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
+
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.schedulers.aurora.AuroraClientContext;
-import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
-import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.schedulers.aurora.WorkerHello;
+import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
+
 
 public final class BasicAuroraJob {
   private BasicAuroraJob() {
@@ -35,8 +35,8 @@ public final class BasicAuroraJob {
     System.out.println(config);
 
     int cpus = Integer.parseInt(AuroraClientContext.cpusPerContainer(config));
-    int ramMegaBytes = AuroraClientContext.ramPerContainer(config)/(1024*1024);
-    int diskMegaBytes = AuroraClientContext.diskPerContainer(config)/(1024*1024);
+    int ramMegaBytes = AuroraClientContext.ramPerContainer(config) / (1024 * 1024);
+    int diskMegaBytes = AuroraClientContext.diskPerContainer(config) / (1024 * 1024);
     int containers = Integer.parseInt(AuroraClientContext.cpusPerContainer(config));
     ResourceContainer resourceContainer = new ResourceContainer(cpus, ramMegaBytes, diskMegaBytes);
 
