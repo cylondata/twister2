@@ -59,12 +59,14 @@ public class LMDBMemoryManager implements MemoryManager {
     if (lmdbDataPath == null || lmdbDataPath.isNullOrEmpty()) {
       lmdbDataPath = new Path(LMDBMemoryManagerContext.DEFAULT_FOLDER_PATH);
     }
-    File path = new File(lmdbDataPath.getPath());
+    final File path = new File(lmdbDataPath.getPath());
 
     this.env = create()
         .setMapSize(LMDBMemoryManagerContext.MAP_SIZE_LIMIT)
         .setMaxDbs(LMDBMemoryManagerContext.MAX_DB_INSTANCES)
+        .setMaxReaders(LMDBMemoryManagerContext.MAX_READERS)
         .open(path);
+
 
     db = env.openDbi(LMDBMemoryManagerContext.DB_NAME, MDB_CREATE);
 

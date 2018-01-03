@@ -63,6 +63,24 @@ def twister2_client_lib_task_files():
         "//twister2/task/src/main/java:task-java",
     ]
 
+def twister2_client_lib_data_files():
+    return [
+        "//twister2/data/src/main/java:data-java",
+    ]
+
+def twister2_client_lib_data_lmdb_files():
+    return [
+        "//twister2/data/src/main/java:data-java",
+        "@lmdb_java//jar",
+        "@lmdbjava_native_linux//jar",
+        "@lmdbjava_native_windows//jar",
+        "@lmdbjava_native_osx//jar",
+        "@com_github_jnr_ffi//jar",
+        "@com_github_jnr_constants//jar",
+        "@com_github_jnr_jffi//jar",
+        "//third_party:com_github_jnr_jffi_native",
+    ]
+
 def twister2_client_lib_communication_files():
     return [
         "//twister2/comms/src/java:comms-java",
