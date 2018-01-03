@@ -19,7 +19,7 @@ import edu.iu.dsc.tws.task.api.Task;
 /**
  * This is the main class for creating the dataflow task graph.
  */
-public class DataflowTaskGraphGenerator {
+public class DataflowTaskGraphGenerator implements IDataflowTaskGraphGenerator {
 
   private static final Logger LOGGER = Logger.getLogger(
       DataflowTaskGraphGenerator.class.getName());
@@ -111,6 +111,18 @@ public class DataflowTaskGraphGenerator {
     LOGGER.info("Generated Dataflow Task Graph with Vertices is:"
         + taskGraph.getTaskVertexSet().size());
     return this;
+  }
+
+  @Override
+  public DataflowTaskGraphGenerator generateTaskGraph(
+      Task sourceTask, Task... sinkTask) {
+    return null;
+  }
+
+  @Override
+  public DataflowTaskGraphGenerator generateDataflowTaskGraph(
+      Task sourceTask, Task sinkTask, CManager... cManagerTask) {
+    return null;
   }
 }
 
