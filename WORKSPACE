@@ -3,6 +3,11 @@ maven_server(
   url = "http://central.maven.org/maven2/",
 )
 
+maven_server(
+    name = "local",
+    url = "file:///home/pulasthi/.m2/repository/"
+)
+
 maven_jar(
   name = "com_google_protobuf_protobuf_java",
   artifact = "com.google.protobuf:protobuf-java:2.5.0",
@@ -116,4 +121,41 @@ maven_jar(
 maven_jar(
   name ="lmdb_java",
   artifact = "org.lmdbjava:lmdbjava:0.6.0",
+)
+
+
+maven_jar(
+  name ="lmdbjava_native_linux",
+  artifact = "org.lmdbjava:lmdbjava-native-linux-x86_64:0.9.21-1",
+)
+
+maven_jar(
+  name ="lmdbjava_native_windows",
+  artifact = "org.lmdbjava:lmdbjava-native-windows-x86_64:0.9.21-1",
+)
+
+maven_jar(
+  name ="lmdbjava_native_osx",
+  artifact = "org.lmdbjava:lmdbjava-native-osx-x86_64:0.9.21-1",
+)
+
+maven_jar(
+  name ="com_github_jnr_ffi",
+  artifact = "com.github.jnr:jnr-ffi:2.1.7",
+)
+
+maven_jar(
+  name ="com_github_jnr_constants",
+  artifact = "com.github.jnr:jnr-constants:0.9.9",
+)
+
+maven_jar(
+  name ="com_github_jnr_jffi",
+  artifact = "com.github.jnr:jffi:1.2.16",
+)
+
+maven_jar(
+  name ="com_github_jnr_jffi_native",
+  artifact = "com.github.jnr:jffi-native:1.2.16",
+   server = "local",
 )
