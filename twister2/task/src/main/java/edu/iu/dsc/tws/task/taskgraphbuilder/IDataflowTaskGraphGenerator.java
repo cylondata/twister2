@@ -30,5 +30,14 @@ public interface IDataflowTaskGraphGenerator {
   DataflowTaskGraphGenerator generateDataflowTaskGraph(Task taskMapperTask1,
                                                        Task taskMapperTask2,
                                                        CManager... cManagerTask);
+
+  DataflowTaskGraphGenerator generateTaskGraph(TaskMapper sourceTask,
+                                               TaskMapper... sinkTask);
+
+
+  DataflowTaskGraphGenerator generateDataflowTaskGraph(TaskMapper taskMapperTask1,
+                                                       TaskMapper taskMapperTask2,
+                                                       CManager... cManagerTask);
+
 }
 

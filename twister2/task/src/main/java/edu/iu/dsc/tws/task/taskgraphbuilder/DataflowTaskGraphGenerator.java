@@ -113,12 +113,22 @@ public class DataflowTaskGraphGenerator implements IDataflowTaskGraphGenerator {
     return this;
   }
 
+  /**
+   * It should be implemented later for the required use cases.
+   */
   @Override
   public DataflowTaskGraphGenerator generateTaskGraph(
       Task sourceTask, Task... sinkTask) {
     return null;
   }
 
+  /**
+   * It should be implemented later for the required use cases.
+   * @param sourceTask
+   * @param sinkTask
+   * @param cManagerTask
+   * @return
+   */
   @Override
   public DataflowTaskGraphGenerator generateDataflowTaskGraph(
       Task sourceTask, Task sinkTask, CManager... cManagerTask) {

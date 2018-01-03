@@ -15,6 +15,9 @@ import java.util.Set;
 
 import edu.iu.dsc.tws.task.api.Task;
 
+/**
+ * This is the main interface for the dataflow task graph parser.
+ */
 public interface IDataflowTaskGraphParser {
 
   Set<Task> dataflowTaskGraphParseAndSchedule();
