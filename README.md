@@ -27,5 +27,8 @@ bazel build --config=ubuntu //scripts/package:tarpkgs
 
 ## Running
 
-To run an twister2 application use the twister2 command.
+To run an twister2 application use the twister2 command. Example command
 
+You need to install OpenMPI 3.0 in order to run the following applciation.
+
+./bin/twister2 submit nodesmpi jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.basic.BasicReduceJob
