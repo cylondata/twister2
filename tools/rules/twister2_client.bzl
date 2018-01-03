@@ -78,7 +78,7 @@ def twister2_client_lib_data_lmdb_files():
         "@com_github_jnr_ffi//jar",
         "@com_github_jnr_constants//jar",
         "@com_github_jnr_jffi//jar",
-        "@com_github_jnr_jffi_native//jar",
+        "//third_party:com_github_jnr_jffi_native",
     ]
 
 def twister2_client_lib_communication_files():

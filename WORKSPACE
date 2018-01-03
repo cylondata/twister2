@@ -3,11 +3,6 @@ maven_server(
   url = "http://central.maven.org/maven2/",
 )
 
-maven_server(
-    name = "local",
-    url = "file:///home/pulasthi/.m2/repository/"
-)
-
 maven_jar(
   name = "com_google_protobuf_protobuf_java",
   artifact = "com.google.protobuf:protobuf-java:2.5.0",
@@ -152,10 +147,4 @@ maven_jar(
 maven_jar(
   name ="com_github_jnr_jffi",
   artifact = "com.github.jnr:jffi:1.2.16",
-)
-
-maven_jar(
-  name ="com_github_jnr_jffi_native",
-  artifact = "com.github.jnr:jffi-native:1.2.16",
-   server = "local",
 )
