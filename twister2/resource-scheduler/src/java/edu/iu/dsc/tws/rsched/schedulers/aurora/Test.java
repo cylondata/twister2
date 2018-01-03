@@ -69,7 +69,7 @@ public class Test {
     AuroraClientController controller = new AuroraClientController(cluster, role, env, jobName, true);
 
     Config.Builder builder = Config.newBuilder();
-    builder.put(AuroraClientContext.CLUSTER, cluster);
+    builder.put(AuroraClientContext.AURORA_CLUSTER_NAME, cluster);
     builder.put(AuroraClientContext.ROLE, role);
     builder.put(AuroraClientContext.ENVIRONMENT, env);
     builder.put(AuroraClientContext.AURORA_JOB_NAME, jobName);
@@ -89,9 +89,9 @@ public class Test {
     System.out.println(config);
 
     // get environment variables from config
-    Map<AuroraField, String> bindings = AuroraJobSubmitter.constructEnvVariables(config);
+    Map<AuroraField, String> bindings = AuroraLauncher.constructEnvVariables(config);
     // print all environment variables for debugging
-    AuroraJobSubmitter.printEnvs(bindings);
+    AuroraLauncher.printEnvs(bindings);
 
     boolean result = controller.createJob(bindings, auroraFile);
     if(result)

@@ -54,7 +54,7 @@ public class AuroraJobSubmitter {
       System.out.println(config);
 
       //construct the controller to submit the job to Aurora Scheduler
-      String cluster = AuroraClientContext.cluster(config);
+      String cluster = AuroraClientContext.auroraClusterName(config);
       String role = AuroraClientContext.role(config);
       String env = AuroraClientContext.environment(config);
       String jobName = AuroraClientContext.auroraJobName(config);
@@ -65,9 +65,9 @@ public class AuroraJobSubmitter {
       String auroraFilename = AuroraClientContext.auroraScript(config);
 
       // get environment variables from config
-      Map<AuroraField, String> bindings = constructEnvVariables(config);
+      Map<AuroraField, String> bindings = AuroraLauncher.constructEnvVariables(config);
       // print all environment variables for debugging
-      printEnvs(bindings);
+      AuroraLauncher.printEnvs(bindings);
 
       boolean jobSubmitted = controller.createJob(bindings, auroraFilename);
       if(jobSubmitted)
@@ -177,37 +177,4 @@ public class AuroraJobSubmitter {
         build();
   }
 
-  /**
-   * put relevant config parameters to a HashMap to be used as environment variables
-   * when submitting jobs
-   * @param config
-   * @return
-   */
-  public static Map<AuroraField, String> constructEnvVariables(Config config){
-    HashMap<AuroraField, String> envs = new HashMap<AuroraField, String>();
-    envs.put(AuroraField.TWISTER2_PACKAGE_PATH, AuroraClientContext.packagePath(config));
-    envs.put(AuroraField.TWISTER2_PACKAGE_FILE, AuroraClientContext.packageFile(config));
-    envs.put(AuroraField.CLUSTER, AuroraClientContext.cluster(config));
-    envs.put(AuroraField.ENVIRONMENT, AuroraClientContext.environment(config));
-    envs.put(AuroraField.ROLE, AuroraClientContext.role(config));
-    envs.put(AuroraField.AURORA_JOB_NAME, AuroraClientContext.auroraJobName(config));
-    envs.put(AuroraField.CPUS_PER_CONTAINER, AuroraClientContext.cpusPerContainer(config));
-    envs.put(AuroraField.RAM_PER_CONTAINER, AuroraClientContext.ramPerContainer(config)+"");
-    envs.put(AuroraField.DISK_PER_CONTAINER, AuroraClientContext.diskPerContainer(config)+"");
-    envs.put(AuroraField.NUMBER_OF_CONTAINERS, AuroraClientContext.numberOfContainers(config));
-    return envs;
-  }
-
-  /**
-   * print all environment variables for debuging purposes
-   * @param envs
-   */
-  public static void printEnvs(Map<AuroraField, String> envs){
-    LOG.log(Level.INFO, "All environment variables when submitting Aurora job");
-    Set<AuroraField> keys = envs.keySet();
-
-    for (AuroraField key: keys) {
-      System.out.println(key + ": " + envs.get(key));
-    }
-  }
 }

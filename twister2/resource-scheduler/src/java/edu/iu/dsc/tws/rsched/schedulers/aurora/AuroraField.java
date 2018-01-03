@@ -16,7 +16,7 @@ package edu.iu.dsc.tws.rsched.schedulers.aurora;
  * Field names passed to aurora controllers during job creation
  */
 public enum AuroraField {
-  CLUSTER,
+  AURORA_CLUSTER_NAME,
   ENVIRONMENT,
   ROLE,
   AURORA_JOB_NAME,

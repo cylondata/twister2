@@ -27,9 +27,9 @@ public class AuroraClientContext extends SchedulerContext{
       "twister2.resource.scheduler.aurora.package.file", "twister2-client.tar.gz");
 
   public static final ConfigEntry TWISTER2_PACKAGE_PATH = new ConfigEntry(
-      "twister2.resource.scheduler.aurora.package.path", "${TWISTER2_HOME}");
+      "twister2.resource.scheduler.aurora.package.path", "${TWISTER2_HOME}/");
 
-  public static final String CLUSTER = "twister2.resource.scheduler.aurora.cluster";
+  public static final String AURORA_CLUSTER_NAME = "twister2.resource.scheduler.aurora.cluster";
   public static final String ROLE = "twister2.resource.scheduler.aurora.role";
   public static final String ENVIRONMENT = "twister2.resource.scheduler.aurora.env";
   public static final String AURORA_JOB_NAME = "twister2.resource.scheduler.aurora.jobname";
@@ -60,8 +60,8 @@ public class AuroraClientContext extends SchedulerContext{
     return cfg.getStringValue(TWISTER2_PACKAGE_FILE);
   }
 
-  public static String cluster(Config cfg) {
-    return cfg.getStringValue(CLUSTER);
+  public static String auroraClusterName(Config cfg) {
+    return cfg.getStringValue(AURORA_CLUSTER_NAME);
   }
 
   public static String role(Config cfg) {

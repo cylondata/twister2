@@ -72,8 +72,8 @@ class AuroraClientController {
       auroraCmd.add("--verbose");
     }
 
-    return printForTesting(auroraCmd);
-//    return runProcess(auroraCmd);
+//    return printForTesting(auroraCmd);
+    return runProcess(auroraCmd);
   }
 
   private boolean printForTesting(List<String> auroraCmd){
