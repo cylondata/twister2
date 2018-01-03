@@ -108,10 +108,8 @@ public abstract class DataflowTaskGraphAbstraction<TV, TE>
     } else if (containsTaskEdge(taskEdge)) {
       return false;
     }
-
     assertTaskVertexExist(taskVertex1);
     assertTaskVertexExist(taskVertex2);
-
     DirectedDataflowTaskEdge directedDataflowTaskEdge =
         createDirectedDataflowTaskEdge(taskEdge, taskVertex1, taskVertex2);
     dataflowTaskEdgeMap.put(taskEdge, directedDataflowTaskEdge);
@@ -230,7 +228,7 @@ public abstract class DataflowTaskGraphAbstraction<TV, TE>
 
   @Override
   public TV getTaskEdgeSource(TE taskEdge) {
-    return dataflowTaskGraphUtils.uncheckedCast(
+    return dataflowTaskGraphUtils.DataflowTaskGraphCast(
         getDataflowTaskEdge(taskEdge).sourceTaskVertex,
         dataflowTaskGraphUtils);
 
@@ -238,7 +236,7 @@ public abstract class DataflowTaskGraphAbstraction<TV, TE>
 
   @Override
   public TV getTaskEdgeTarget(TE taskEdge) {
-    return dataflowTaskGraphUtils.uncheckedCast(
+    return dataflowTaskGraphUtils.DataflowTaskGraphCast(
         getDataflowTaskEdge(taskEdge).targetTaskVertex,
         dataflowTaskGraphUtils);
   }
@@ -367,10 +365,10 @@ public abstract class DataflowTaskGraphAbstraction<TV, TE>
 
     @Override
     public Set<TE> taskEdgesOf(TV taskVertex) {
-      TaskArraySet<TE> inAndOut =
+      TaskArraySet<TE> incomingOutgoingTaskSet =
           new TaskArraySet<TE>(getTaskEdgeContainer(taskVertex).incomingTaskEdge);
-      inAndOut.addAll(getTaskEdgeContainer(taskVertex).outgoingTaskEdge);
-      return Collections.unmodifiableSet(inAndOut);
+      incomingOutgoingTaskSet.addAll(getTaskEdgeContainer(taskVertex).outgoingTaskEdge);
+      return Collections.unmodifiableSet(incomingOutgoingTaskSet);
     }
 
     @Override
@@ -433,7 +431,8 @@ public abstract class DataflowTaskGraphAbstraction<TV, TE>
     }
   }
 
-  private class TaskArrayListFactory<TV, TE> implements IDataflowTaskEdgeSetFactory<TV, TE> {
+  private class TaskArrayListFactory<TV, TE> implements
+      IDataflowTaskEdgeSetFactory<TV, TE> {
     public Set<TE> createTaskEdgeSet(TV taskVertex) {
       return new TaskArraySet<TE>(1);
     }

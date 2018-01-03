@@ -14,7 +14,8 @@ package edu.iu.dsc.tws.task.taskgraphbuilder;
 public class DataflowTaskGraphUtils<T> {
 
   @SuppressWarnings("unchecked")
-  public <T> T uncheckedCast(Object object, DataflowTaskGraphUtils<T> typeDecl) {
+  public <T> T DataflowTaskGraphCast(Object object,
+                                     DataflowTaskGraphUtils<T> dataflowTaskGraphUtils) {
     return (T) object;
   }
 }

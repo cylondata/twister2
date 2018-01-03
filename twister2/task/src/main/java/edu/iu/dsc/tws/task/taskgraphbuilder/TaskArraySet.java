@@ -17,7 +17,9 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
 
-public class TaskArraySet<TE> extends ArrayList<TE> implements Set<TE> {
+public class TaskArraySet<TE>
+    extends ArrayList<TE>
+    implements Set<TE> {
 
   private static final long serialVersionUID = 444444442442443242L;
 
@@ -54,4 +56,3 @@ public class TaskArraySet<TE> extends ArrayList<TE> implements Set<TE> {
     }
   }
 }
-
