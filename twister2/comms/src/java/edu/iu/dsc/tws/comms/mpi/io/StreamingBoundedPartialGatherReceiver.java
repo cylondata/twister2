@@ -79,6 +79,9 @@ public class StreamingBoundedPartialGatherReceiver implements MessageReceiver {
     return canAdd;
   }
 
+  /**
+   * progress
+   */
   public void progress() {
     for (int t : messages.keySet()) {
       boolean canProgress = true;

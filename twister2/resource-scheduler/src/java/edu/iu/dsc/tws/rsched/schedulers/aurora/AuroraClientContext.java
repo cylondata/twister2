@@ -18,7 +18,7 @@ import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 /**
  * State parameters for Aurora Client
  */
-public class AuroraClientContext extends SchedulerContext{
+public class AuroraClientContext extends SchedulerContext {
 
   public static final ConfigEntry AURORA_SCRIPT = new ConfigEntry(
       "twister2.resource.scheduler.aurora.script", "${TWISTER2_CONF}/twister2.aurora");

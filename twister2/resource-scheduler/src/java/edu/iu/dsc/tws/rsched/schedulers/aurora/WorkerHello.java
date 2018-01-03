@@ -11,8 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.aurora;
 
-public class WorkerHello {
-  public static void main(String[] args){
+public final class WorkerHello {
+
+  private WorkerHello() {
+
+  }
+
+  public static void main(String[] args) {
 
     System.out.println("Hellllooo from WorkerHello class");
     System.out.println("I am working");

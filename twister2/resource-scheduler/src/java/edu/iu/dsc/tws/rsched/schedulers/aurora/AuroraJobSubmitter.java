@@ -32,8 +32,9 @@ import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 /**
  * This is the class to submit Twister2 jobs to AuroraCluster
  */
-public class AuroraJobSubmitter {
+public final class AuroraJobSubmitter {
   private static final Logger LOG = Logger.getLogger(AuroraJobSubmitter.class.getName());
+
   private AuroraJobSubmitter() {
   }
 
@@ -50,7 +51,7 @@ public class AuroraJobSubmitter {
       // we are loading the configuration for all the components
       Config config = loadConfigurations(cmd);
       System.out.println("all config entries");
-      System.out.println("number of config parameters: "+config.size());
+      System.out.println("number of config parameters: " + config.size());
       System.out.println(config);
 
       //construct the controller to submit the job to Aurora Scheduler
@@ -59,7 +60,8 @@ public class AuroraJobSubmitter {
       String env = AuroraClientContext.environment(config);
       String jobName = AuroraClientContext.auroraJobName(config);
 
-      AuroraClientController controller = new AuroraClientController(cluster, role, env, jobName, true);
+      AuroraClientController controller = new AuroraClientController(
+          cluster, role, env, jobName, true);
 
       // get aurora file name to execute when submitting the job
       String auroraFilename = AuroraClientContext.auroraScript(config);
@@ -70,10 +72,11 @@ public class AuroraJobSubmitter {
       AuroraLauncher.printEnvs(bindings);
 
       boolean jobSubmitted = controller.createJob(bindings, auroraFilename);
-      if(jobSubmitted)
+      if (jobSubmitted) {
         LOG.log(Level.INFO, "job submission is successfull ...");
-      else
+      } else {
         LOG.log(Level.SEVERE, "job submission to Aurora failed ...");
+      }
 
     } catch (ParseException e) {
       HelpFormatter formatter = new HelpFormatter();
@@ -85,11 +88,12 @@ public class AuroraJobSubmitter {
   /**
    * Setup the command line options for AuroraJobSubmitter
    * It gets three command line parameters:
-   *   twister2_home: home directory for twister2
-   *   config_dir: config directory for twister2 project
-   *   cluster_name: it should be "aurora"
-   *   packagePath: path of twister2 tar.gz file to be uploaded to Mesos container
-   *   packageFile: filename of twister2 tar.gz file to be uploaded to Mesos container
+   * twister2_home: home directory for twister2
+   * config_dir: config directory for twister2 project
+   * cluster_name: it should be "aurora"
+   * packagePath: path of twister2 tar.gz file to be uploaded to Mesos container
+   * packageFile: filename of twister2 tar.gz file to be uploaded to Mesos container
+   *
    * @return cli options
    */
   private static Options setupOptions() {
@@ -147,7 +151,7 @@ public class AuroraJobSubmitter {
   /**
    * read config parameters from configuration files
    * all config files are in a single directory
-   * @param cmd
+   *
    * @return Config object that has values from config files and from command line
    */
   private static Config loadConfigurations(CommandLine cmd) {
@@ -162,7 +166,8 @@ public class AuroraJobSubmitter {
         twister2Home, configDir, clusterName));
 
     try {
-//      Reflection.initialize(Class.forName("edu.iu.dsc.tws.rsched.schedulers.aurora.AuroraClientContext"));
+//      Reflection.initialize(Class.forName(
+// "edu.iu.dsc.tws.rsched.schedulers.aurora.AuroraClientContext"));
       Class.forName(AuroraClientContext.class.getName());
     } catch (ClassNotFoundException e) {
       e.printStackTrace();
@@ -174,7 +179,7 @@ public class AuroraJobSubmitter {
         put(SchedulerContext.TWISTER2_CLUSTER_NAME, clusterName).
 //        put(AuroraClientContext.TWISTER2_PACKAGE_PATH, packagePath).
 //        put(AuroraClientContext.TWISTER2_PACKAGE_FILE, packageFile).
-        build();
+    build();
   }
 
 }
