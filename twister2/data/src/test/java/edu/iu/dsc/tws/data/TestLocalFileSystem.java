@@ -26,9 +26,11 @@ public class TestLocalFileSystem {
 
   public static void main(String[] args) {
     Config.Builder builder = new Config.Builder();
-    builder.put("input.file.path","/home/pulasthi/git/twister2/twister2/data/src/test/resources/TextInputFormatTestFile.text");
+    builder.put("input.file.path", "/home/pulasthi/git/twister2/twister2/data/src/test"
+        + "/resources/TextInputFormatTestFile.text");
     Config txtFileConf = builder.build();
-    Path path = new Path("/home/pulasthi/git/twister2/twister2/data/src/test/resources/TextInputFormatTestFile.text");
+    Path path = new Path("/home/pulasthi/git/twister2/twister2/data/src/test/resources"
+        + "/TextInputFormatTestFile.text");
     InputFormat txtInput = new TextInputFormatter(path);
     txtInput.configure(txtFileConf);
     int minSplits = 8;
@@ -36,10 +38,10 @@ public class TestLocalFileSystem {
     try {
       InputSplit[] inputSplits = txtInput.createInputSplits(minSplits);
       InputSplitAssigner inputSplitAssigner = txtInput.getInputSplitAssigner(inputSplits);
-      InputSplit cur = inputSplitAssigner.getNextInputSplit(null,0);
+      InputSplit cur = inputSplitAssigner.getNextInputSplit(null, 0);
       txtInput.open(cur);
       String line = "";
-      line = (String)txtInput.nextRecord(line);
+      line = (String) txtInput.nextRecord(line);
       System.out.println(line);
     } catch (Exception e) {
       e.printStackTrace();

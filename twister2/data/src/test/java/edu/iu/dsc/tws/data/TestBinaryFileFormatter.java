@@ -30,10 +30,11 @@ import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
 public class TestBinaryFileFormatter {
   public static void main(String[] args) {
     Config.Builder builder = new Config.Builder();
-    builder.put("input.file.path","/home/pulasthi/git/twister2/twister2/data/src/test/resources/2000.bin");
+    builder.put("input.file.path", "/home/pulasthi/git/twister2/twister2/"
+        + "data/src/test/resources/2000.bin");
     Config txtFileConf = builder.build();
     Path path = new Path("/home/pulasthi/git/twister2/twister2/data/src/test/resources/2000.bin");
-    InputFormat binaryInputFormatter = new BinaryInputFormatter(path,2000*Short.BYTES);
+    InputFormat binaryInputFormatter = new BinaryInputFormatter(path, 2000 * Short.BYTES);
     binaryInputFormatter.configure(txtFileConf);
     int minSplits = 8;
     double expectedSum = 1.97973979E8;
@@ -43,20 +44,21 @@ public class TestBinaryFileFormatter {
 
     try {
       InputSplit[] inputSplits = binaryInputFormatter.createInputSplits(minSplits);
-      InputSplitAssigner inputSplitAssigner = binaryInputFormatter.getInputSplitAssigner(inputSplits);
+      InputSplitAssigner inputSplitAssigner = binaryInputFormatter.
+          getInputSplitAssigner(inputSplits);
       InputSplit currentSplit;
       byte[] line = new byte[4000];
       ByteBuffer byteBuffer = ByteBuffer.allocate(4000);
       byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
-      while ((currentSplit = inputSplitAssigner.getNextInputSplit(null,0)) != null){
+      while ((currentSplit = inputSplitAssigner.getNextInputSplit(null, 0)) != null) {
         binaryInputFormatter.open(currentSplit);
-        while(binaryInputFormatter.nextRecord(line) != null){
+        while (binaryInputFormatter.nextRecord(line) != null) {
           byteBuffer.clear();
           byteBuffer.put(line);
           byteBuffer.flip();
           buffer = byteBuffer.asShortBuffer();
           short[] shortArray = new short[2000];
-          ((ShortBuffer)buffer).get(shortArray);
+          ((ShortBuffer) buffer).get(shortArray);
           for (short i : shortArray) {
             newSum += i;
             count++;

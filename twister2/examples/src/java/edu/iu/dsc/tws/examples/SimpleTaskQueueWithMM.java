@@ -48,7 +48,6 @@
 package edu.iu.dsc.tws.examples;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -62,7 +61,6 @@ import com.google.common.primitives.Longs;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
-import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
@@ -71,7 +69,6 @@ import edu.iu.dsc.tws.data.memory.MemoryManager;
 import edu.iu.dsc.tws.data.memory.lmdb.LMDBMemoryManager;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
-import edu.iu.dsc.tws.task.api.LinkedQueue;
 import edu.iu.dsc.tws.task.api.Message;
 import edu.iu.dsc.tws.task.api.SinkTask;
 import edu.iu.dsc.tws.task.api.SourceTask;
@@ -117,6 +114,17 @@ public class SimpleTaskQueueWithMM implements IContainer {
     Map<String, Object> newCfg = new HashMap<>();
 
     LOG.info("Setting up reduce dataflow operation");
+
+    Path dataPath = new Path("/home/pulasthi/work/twister2/lmdbdatabase");
+    MemoryManager memoryManager = new LMDBMemoryManager(dataPath);
+    byte[] val = Longs.toByteArray(1231212121213L);
+    memoryManager.put(1234L, val);
+
+    ByteBuffer results = memoryManager.get(1234L);
+    long res = results.getLong();
+    if (res == 1231212121213L) {
+      System.out.println("Correct");
+    }
     // this method calls the init method
     // I think this is wrong
     //TODO: Does the task genereate the communication or is it done by a controller for examples
@@ -125,34 +133,34 @@ public class SimpleTaskQueueWithMM implements IContainer {
     //TODO: if the task creates the dataflowop does the task progress it or the executor
 
     //TODO : FOR NOW the dataflowop is created at container and sent to task
-    LinkedQueue<Message> pongQueue = new LinkedQueue<Message>();
-    taskExecutor.registerQueue(0, pongQueue);
-
-    direct = channel.direct(newCfg, MessageType.OBJECT, 0, sources,
-        dests, new PingPongReceive());
-    taskExecutor.initCommunication(channel, direct);
+//    LinkedQueue<Message> pongQueue = new LinkedQueue<Message>();
+//    taskExecutor.registerQueue(0, pongQueue);
+//
+//    direct = channel.direct(newCfg, MessageType.OBJECT, 0, sources,
+//        dests, new PingPongReceive());
+//    taskExecutor.initCommunication(channel, direct);
 
     //Memory Manager
-    Path dataPath = new Path("/home/pulasthi/work/twister2/lmdbdatabase");
-    MemoryManager memoryManager = new LMDBMemoryManager(dataPath);
-    if (containerId == 0) {
-      // the map thread where data is produced
-      LOG.log(Level.INFO, "Starting map thread");
-      SourceTask<Object> mapTask = new MapWorker(0, direct);
-      mapTask.setMemoryManager(memoryManager);
-      taskExecutor.registerTask(mapTask);
-      taskExecutor.submitTask(0);
-      taskExecutor.progres();
-
-    } else if (containerId == 1) {
-      ArrayList<Integer> inq = new ArrayList<>();
-      inq.add(0);
-      taskExecutor.setTaskMessageProcessLimit(10000);
-      SinkTask<Object> recTask = new RecieveWorker(1);
-      recTask.setMemoryManager(memoryManager);
-      taskExecutor.registerSinkTask(recTask, inq);
-      taskExecutor.progres();
-    }
+//    Path dataPath = new Path("/home/pulasthi/work/twister2/lmdbdatabase");
+//    MemoryManager memoryManager = new LMDBMemoryManager(dataPath);
+//    if (containerId == 0) {
+//      // the map thread where data is produced
+//      LOG.log(Level.INFO, "Starting map thread");
+//      SourceTask<Object> mapTask = new MapWorker(0, direct);
+//      mapTask.setMemoryManager(memoryManager);
+//      taskExecutor.registerTask(mapTask);
+//      taskExecutor.submitTask(0);
+//      taskExecutor.progres();
+//
+//    } else if (containerId == 1) {
+//      ArrayList<Integer> inq = new ArrayList<>();
+//      inq.add(0);
+//      taskExecutor.setTaskMessageProcessLimit(10000);
+//      SinkTask<Object> recTask = new RecieveWorker(1);
+//      recTask.setMemoryManager(memoryManager);
+//      taskExecutor.registerSinkTask(recTask, inq);
+//      taskExecutor.progres();
+//    }
   }
 
   private class PingPongReceive implements MessageReceiver {
