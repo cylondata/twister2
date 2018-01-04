@@ -47,10 +47,10 @@ public final class Test {
     serializer = new KryoSerializer();
     serializer.init(null);
     multiMessageSerializer = new MPIMultiMessageSerializer(bufferQueue, serializer, 0);
-    mpiMultiMessageDeserializer = new MPIMultiMessageDeserializer(serializer);
+    mpiMultiMessageDeserializer = new MPIMultiMessageDeserializer(serializer, 0);
 
     for (int i = 0; i < 100; i++) {
-      bufferQueue.offer(new MPIBuffer(1024000));
+      bufferQueue.offer(new MPIBuffer(256));
     }
   }
 
@@ -66,23 +66,25 @@ public final class Test {
 
   @SuppressWarnings("rawtypes")
   public void runTest2() {
-    IntData data = new IntData(10);
+    IntData data = new IntData(128);
     List list = new ArrayList<>();
     list.add(new MultiObject(1, data));
-    data = new IntData(1000);
+    data = new IntData(128);
     list.add(new MultiObject(1, data));
     MPIMessage message = serializeObject(list, 1);
 
-    data = new IntData(100);
+    data = new IntData(128);
     list = new ArrayList<>();
     list.add(new MultiObject(1, data));
-    data = new IntData(10);
+    data = new IntData(128);
     list.add(new MultiObject(1, data));
     MPIMessage message2 = serializeObject(list, 1);
 
     list = new ArrayList<>();
     list.add(message);
     list.add(message2);
+//    data = new IntData(128000);
+//    list.add(new MultiObject(1, data));
 
     MPIMessage second = serializeObject(list, 1);
 
