@@ -23,10 +23,10 @@ import edu.iu.dsc.tws.task.api.Message;
 import edu.iu.dsc.tws.task.api.SinkTask;
 import edu.iu.dsc.tws.task.api.SourceTask;
 import edu.iu.dsc.tws.task.api.Task;
-import edu.iu.dsc.tws.task.core.TaskExecutionOptimizer;
 import edu.iu.dsc.tws.task.core.TaskExecutorFixedThread;
 import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraphGenerator;
 import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraphParser;
+
 
 public class TaskGraphExample implements IContainer {
 
@@ -34,11 +34,12 @@ public class TaskGraphExample implements IContainer {
 
   private DataFlowOperation direct;
   private TaskExecutorFixedThread taskExecutor;
-  private TaskExecutionOptimizer taskExecutionOptimizer;
+  private Set<Task> parsedTaskSet;
 
   //to call the dataflow task graph generator
   private DataflowTaskGraphGenerator dataflowTaskGraph = null;
   private DataflowTaskGraphParser dataflowTaskGraphParser = null;
+
   private Status status;
 
   /**
@@ -67,15 +68,12 @@ public class TaskGraphExample implements IContainer {
         destination, new TaskGraphExample.PingPongReceive());
     taskExecutor.initCommunication(channel, direct);
 
+    //For Dataflow Task Graph Generation call the dataflow task graph generator
     MapWorker sourceTask = new MapWorker(0, direct);
     ReceiveWorker sinkTask = new ReceiveWorker(1);
 
-    //For Dataflow Task Graph Generation call the dataflow task graph generator
-    dataflowTaskGraph = new DataflowTaskGraphGenerator().
-        generateDataflowGraph(sourceTask, sinkTask, direct);
-
-    Set<Task> parsedTaskSet = null;
-
+    dataflowTaskGraph = new DataflowTaskGraphGenerator().generateDataflowGraph(
+        sourceTask, sinkTask, direct);
     if (dataflowTaskGraph != null) {
       dataflowTaskGraphParser = new DataflowTaskGraphParser(dataflowTaskGraph);
       parsedTaskSet = dataflowTaskGraphParser.dataflowTaskGraphParseAndSchedule();
@@ -83,7 +81,9 @@ public class TaskGraphExample implements IContainer {
 
     if (!parsedTaskSet.isEmpty()) {
       if (containerId == 0) {
+        LOG.info("Job in if loop is::::::::::::" + parsedTaskSet.iterator().next());
         taskExecutor.registerTask(parsedTaskSet.iterator().next());
+        //taskExecutor.registerTask(new MapWorker(0, direct));
         taskExecutor.submitTask(0);
         taskExecutor.progres();
       } else if (containerId == 1) {
@@ -92,6 +92,7 @@ public class TaskGraphExample implements IContainer {
           if (index == 0) {
             ++index;
           } else if (index == 1) {
+            LOG.info("Job in else loop is::::::::::::" + processedTask);
             ArrayList<Integer> inq = new ArrayList<>();
             inq.add(0);
             taskExecutor.setTaskMessageProcessLimit(10000);
@@ -154,44 +155,6 @@ public class TaskGraphExample implements IContainer {
     MAP_FINISHED,
     LOAD_RECEIVE_FINISHED,
   }
-
-  private class PingPongReceive implements MessageReceiver {
-    private int count = 0;
-
-    @Override
-    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-    }
-
-    /**
-     * The actual message callback
-     *
-     * @param object the actual message
-     */
-    @Override
-    public boolean onMessage(int source, int path, int target, int flags, Object object) {
-      return false;
-    }
-
-    /**
-     * This method will be called by the progress
-     */
-    @Override
-    public void progress() {
-    }
-
-    public boolean onMessage(int source, int path, int target, Object object) {
-      count++;
-      if (count % 50000 == 0) {
-        LOG.info("received message: " + count);
-      }
-      taskExecutor.submitMessage(0, "" + count);
-      if (count == 10) {
-        status = TaskGraphExample.Status.LOAD_RECEIVE_FINISHED;
-      }
-      return true;
-    }
-  }
-
   private class ReceiveWorker extends SinkTask<Task> {
 
     ReceiveWorker(int tid) {
@@ -255,4 +218,33 @@ public class TaskGraphExample implements IContainer {
       return execute();
     }
   }
+
+  private class PingPongReceive implements MessageReceiver {
+    private int count = 0;
+
+    @Override
+    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+    }
+
+    @Override
+    public boolean onMessage(int source, int path, int target, int flags, Object object) {
+      count++;
+      if (count % 50000 == 0) {
+        LOG.info("received message: " + count);
+      }
+      taskExecutor.submitMessage(0, "" + count);
+
+      if (count == 10) {
+        status = Status.LOAD_RECEIVE_FINISHED;
+      }
+      return true;
+    }
+
+    @Override
+    public void progress() {
+
+    }
+  }
 }
+
+
