@@ -37,7 +37,7 @@ public class NodeCommand extends MPICommand {
                                     RequestedResources resourcePlan, JobAPI.Job job) {
     String twister2Home = Paths.get(workingDirectory, job.getJobName()).toString();
     String configDirectoryName = Paths.get(workingDirectory,
-        job.getJobName(), SchedulerContext.clusterName(config)).toString();
+        job.getJobName(), SchedulerContext.clusterType(config)).toString();
     String nodesFileName = MPIContext.nodeFiles(config);
 
     // lets construct the mpi command to launch

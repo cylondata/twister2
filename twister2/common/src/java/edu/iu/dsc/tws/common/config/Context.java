@@ -63,7 +63,7 @@ public class Context {
 
   // an internal property to represent the container id
   public static final String TWISTER2_CONTAINER_ID = "twister2.container.id";
-  public static final String TWISTER2_CLUSTER_NAME = "twister2.cluster.name";
+  public static final String TWISTER2_CLUSTER_TYPE = "twister2.cluster.type";
 
   static {
     substitutions.put("TWISTER2_HOME", TWISTER2_HOME);
@@ -113,8 +113,8 @@ public class Context {
     return cfg.getStringValue(CLIENT_YAML);
   }
 
-  public static String clusterName(Config cfg) {
-    return cfg.getStringValue(TWISTER2_CLUSTER_NAME);
+  public static String clusterType(Config cfg) {
+    return cfg.getStringValue(TWISTER2_CLUSTER_TYPE);
   }
 
   public static String containerId(Config cfg) {

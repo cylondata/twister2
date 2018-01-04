@@ -12,7 +12,26 @@
 package edu.iu.dsc.tws.api;
 
 import java.util.HashMap;
+import java.util.Set;
 
+import edu.iu.dsc.tws.common.config.Config;
+
+/**
+ * These are the set of configuration parameters that will be transferred to Worker processes
+ * For now, we put all config parameters to this list
+ * But later on, we may only put the parameters that are relevant to Worker processes
+ */
 public class JobConfig extends HashMap<String, String> {
   private static final long serialVersionUID = 6585146860991205058L;
+
+  public void putConfig(Config config) {
+    Set<String> keys = config.getKeySet();
+
+    for (String key : keys) {
+      if (config.get(key) != null) {
+        put(key, config.get(key).toString());
+      }
+    }
+  }
+
 }

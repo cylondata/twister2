@@ -90,7 +90,7 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
     kryoSerializer = new KryoSerializer();
     kryoSerializer.init(new HashMap<String, Object>());
 
-    messageDeSerializer = new MPIMultiMessageDeserializer(kryoSerializer);
+    messageDeSerializer = new MPIMultiMessageDeserializer(kryoSerializer, executor);
     messageSerializer = new MPIMultiMessageSerializer(sendBuffers, kryoSerializer, executor);
     // initialize the serializers
     messageSerializer.init(config);
@@ -344,7 +344,8 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
       } else {
         // we need to increment the reference count to make the buffers available
         // other wise they will bre reclaimed
-//        LOG.info(String.format("%d Partial true: target %d source %d", executor, target, source));
+//        LOG.info(String.format("%d Partial true: target %d source %d %s",
+//            executor, target, source, counts.get(target)));
         if (object instanceof MPIMessage) {
           ((MPIMessage) object).incrementRefCount();
         }
@@ -378,6 +379,7 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
               } else {
                 out.add(e1);
               }
+              e.getValue().remove(0);
             }
             if (sendMessagePartial(t, out, 0,
                 MPIContext.FLAGS_MULTI_MSG, type)) {
@@ -385,8 +387,8 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
                 Integer i = e.getValue();
                 cMap.put(e.getKey(), i - 1);
               }
-//              LOG.info(String.format("%d Send partial true: target %d objects %d",
-//                  executor, t, out.size()));
+//              LOG.info(String.format("%d Send partial true: target %d objects %d %s",
+//                  executor, t, out.size(), cMap));
             } else {
               canProgress = false;
             }

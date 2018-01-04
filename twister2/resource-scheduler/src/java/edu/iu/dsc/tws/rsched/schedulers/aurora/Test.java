@@ -24,8 +24,8 @@ public final class Test {
   public static void main(String[] args) {
     System.out.println("Helloooo test from twister2");
 //    testProcessUtils();
-//    testLoadConfig();
-    testJobSubmission(args);
+    testLoadConfig();
+//    testJobSubmission(args);
   }
 
   private Test() {
@@ -128,19 +128,15 @@ public final class Test {
   }
 
   public static void testLoadConfig() {
-    String twister2Home = "/home/auyar/projects/twister2";
-    String configPath = "/home/auyar/projects/twister2/twister2/config/src/yaml/conf/aurora";
+    String twister2Home = "/home/auyar/projects/temp";
+    String configPath = "/home/auyar/projects/temp/twister2-dist/conf/aurora";
     Config config = ConfigLoader.loadConfig(twister2Home, configPath);
     int size = config.size();
     System.out.println("number of configs: " + size);
     Set<String> keys = config.getKeySet();
 
     for (String key : keys) {
-      try {
-        System.out.println(key + ": " + config.getStringValue(key));
-      } catch (java.lang.ClassCastException e) {
-        System.out.println(key + " ClassCastException: " + e.getMessage());
-      }
+      System.out.println(key + ": " + config.get(key).toString());
     }
   }
 
