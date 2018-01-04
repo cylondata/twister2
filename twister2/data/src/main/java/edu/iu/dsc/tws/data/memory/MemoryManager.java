@@ -26,6 +26,16 @@ public interface MemoryManager {
   boolean init();
 
   /**
+   * Appends the given byte buffer to the current value in the store.
+   * If the store does not contain the given key append works as a put operation
+   * @param key key to append to
+   * @param value value to be appended
+   * @return true if append was performed, false otherwise
+   */
+  boolean append(ByteBuffer key, ByteBuffer value);
+
+  boolean append(long key, ByteBuffer value);
+  /**
    * Stores the give key value pair in the memory manager
    */
   boolean put(ByteBuffer key, ByteBuffer value);
@@ -41,6 +51,7 @@ public interface MemoryManager {
 
   /**
    * Stores the give key value pair in the memory manager
+   * if the key already exists the new value will be added to the key
    */
   boolean put(byte[] key, ByteBuffer value);
 
@@ -69,6 +80,7 @@ public interface MemoryManager {
    */
   ByteBuffer get(long key);
 
+
   /**
    * Get the corresponding value as bytes for the given key from the store
    */
@@ -90,6 +102,14 @@ public interface MemoryManager {
    * @param key key to be checked
    * @return true if the key is present, false otherwise
    */
+  boolean containsKey(ByteBuffer key);
+
+  /**
+   * checks if the given key is in the memory manager
+   *
+   * @param key key to be checked
+   * @return true if the key is present, false otherwise
+   */
   boolean containsKey(byte[] key);
 
   /**
@@ -99,4 +119,6 @@ public interface MemoryManager {
    * @return true if the key is present, false otherwise
    */
   boolean containsKey(long key);
+
+
 }
