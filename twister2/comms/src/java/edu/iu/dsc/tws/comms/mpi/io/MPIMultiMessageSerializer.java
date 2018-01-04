@@ -102,8 +102,8 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
 
         // mark the original message as complete
         mpiMessage.setComplete(true);
-      } else {
-        LOG.info("Message NOT FULLY serialized");
+//      } else {
+//        LOG.info("Message NOT FULLY serialized");
       }
     }
     return sendMessage;
@@ -183,11 +183,15 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
         // we copied this completely
         if (complete) {
           state.setCurrentObject(i + 1);
+        } else {
+          break;
         }
       } else {
         boolean complete = serializeMessage((MultiObject) o, sendMessage, buffer);
         if (complete) {
           state.setCurrentObject(i + 1);
+        } else {
+          break;
         }
       }
 
@@ -227,13 +231,14 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
     while (targetRemainingSpace > 0 && currentSourceBuffer < buffers.size()) {
       currentMPIBuffer = buffers.get(currentSourceBuffer);
       ByteBuffer currentSourceByteBuffer = currentMPIBuffer.getByteBuffer();
-      needsCopy = currentMPIBuffer.getSize() - bytesCopiedFromSource;
       // 0th buffer has the header
-      if (currentSourceBuffer == 0) {
-        needsCopy -= 16;
+      if (currentSourceBuffer == 0 && bytesCopiedFromSource == 0) {
         // we add 16 because,
         bytesCopiedFromSource += 16;
       }
+      needsCopy = currentMPIBuffer.getSize() - bytesCopiedFromSource;
+//      LOG.info(String.format("%d position %d %d", executor, bytesCopiedFromSource,
+//          currentSourceByteBuffer.limit()));
       currentSourceByteBuffer.position(bytesCopiedFromSource);
 
       canCopy = needsCopy > targetRemainingSpace ? targetRemainingSpace : needsCopy;
@@ -241,23 +246,29 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
       // todo check this method
       targetByteBuffer.put(tempBytes, 0, canCopy);
       totalBytes += canCopy;
+      targetRemainingSpace -= canCopy;
+      bytesCopiedFromSource += canCopy;
+
       // the target buffer is full, we need to return
-      if (needsCopy > targetRemainingSpace) {
-        bytesCopiedFromSource += canCopy;
+      if (targetRemainingSpace < 6) {
+        // now check weather we can move to the next source buffer
+        if (canCopy == needsCopy) {
+          currentSourceBuffer++;
+          bytesCopiedFromSource = 0;
+        }
         break;
-      } else {
-        // we have more space in the target buffer, we can go to the next source buffer
-        bytesCopiedFromSource += canCopy;
-        targetRemainingSpace -= canCopy;
-        currentSourceBuffer++;
       }
+
+      // if there is space we will copy everything from the source buffer and we need to move
+      // to next
+      currentSourceBuffer++;
+      bytesCopiedFromSource = 0;
     }
 
     // set the data size of the target buffer
     targetBuffer.setSize(targetByteBuffer.position());
     state.setTotalBytes(totalBytes);
-    if (currentSourceBuffer == buffers.size() && currentMPIBuffer != null
-        && bytesCopiedFromSource == currentMPIBuffer.getSize()) {
+    if (currentSourceBuffer == buffers.size() && currentMPIBuffer != null) {
       state.setBufferNo(0);
       state.setBytesCopied(0);
       return true;

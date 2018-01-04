@@ -11,21 +11,17 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.taskgraphbuilder;
 
-public class DataflowTaskVertexFactory<TV> implements IDataflowTaskVertexFactory<TV> {
+import java.util.Set;
 
-  private Class<? extends TV> taskVertexClass;
+import edu.iu.dsc.tws.task.api.Task;
 
-  public DataflowTaskVertexFactory(Class<? extends TV> taskVertexClass) {
-    this.taskVertexClass = taskVertexClass;
-  }
+/**
+ * This is the main interface for the dataflow task graph parser.
+ */
+public interface IDataflowTaskGraphParser {
 
-  @Override
-  public TV createTaskVertex() throws IllegalAccessException {
-    try {
-      return taskVertexClass.newInstance();
-    } catch (InstantiationException e) {
-      throw new RuntimeException("instance creation failed", e);
-    }
-  }
+  Set<Task> dataflowTaskGraphParseAndSchedule();
+
+  Set<Task> dataflowTaskGraphParseAndSchedule(int containerId);
 }
 

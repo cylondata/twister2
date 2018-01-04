@@ -115,7 +115,7 @@ public class BasicGatherCommunication implements IContainer {
         LOG.log(Level.INFO, "Starting map worker: " + id);
 //      MPIBuffer data = new MPIBuffer(1024);
         IntData data = generateData();
-        for (int i = 0; i < 11000; i++) {
+        for (int i = 0; i < 100; i++) {
           // lets generate a message
           while (!aggregate.send(task, data, 0)) {
             // lets wait a litte and try again
@@ -206,6 +206,7 @@ public class BasicGatherCommunication implements IContainer {
         while (canProgress) {
           // now check weather we have the messages for this source
           Map<Integer, List<Object>> map = messages.get(t);
+          Map<Integer, Integer> cMap = counts.get(t);
           boolean found = true;
           Object o = null;
           for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
@@ -220,9 +221,13 @@ public class BasicGatherCommunication implements IContainer {
             for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
               o = e.getValue().remove(0);
             }
+            for (Map.Entry<Integer, Integer> e : cMap.entrySet()) {
+              Integer i = e.getValue();
+              cMap.put(e.getKey(), i - 1);
+            }
             if (o != null) {
               count++;
-              if (count % 1000 == 0) {
+              if (count % 1 == 0) {
                 LOG.info(String.format("%d Last %d count: %d %s",
                     id, t, count, counts));
               }
@@ -245,7 +250,7 @@ public class BasicGatherCommunication implements IContainer {
    * @return IntData
    */
   private IntData generateData() {
-    int s = 100;
+    int s = 12800;
     int[] d = new int[s];
     for (int i = 0; i < s; i++) {
       d[i] = i;

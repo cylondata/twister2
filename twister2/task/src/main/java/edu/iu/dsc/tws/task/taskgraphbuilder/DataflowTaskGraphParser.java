@@ -47,15 +47,16 @@ public class DataflowTaskGraphParser {
           + processedTaskVertices.size() + "\t" + processedTaskVertices);
       try {
         processedTaskVertices.forEach(System.out::println);
-        processedTaskVertices.stream().
+        /*processedTaskVertices.stream().
             forEach(Mapper -> executor.execute(Mapper,
-                (Class<DataFlowOperation>) dataFlowOperation.getClass()));
+                (Class<DataFlowOperation>) dataFlowOperation.getClass()));*/
       } catch (Exception e) {
         e.printStackTrace();
       }
     }
     return processedTaskVertices;
   }
+
 
   /**
    * /**

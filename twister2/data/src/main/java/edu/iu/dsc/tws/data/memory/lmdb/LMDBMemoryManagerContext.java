@@ -21,13 +21,18 @@ public class LMDBMemoryManagerContext extends Context {
    * Map size for the database. This specifies how large the DB might be. Over-estimating is OK.
    * value set to 2GB
    */
-  public static final long MAP_SIZE_LIMIT = 1024 * 1024 * 1024 * 2;
+  public static final long MAP_SIZE_LIMIT = 1024 * 1024 * 2;
 
   /**
    * specifies the maximum number of DBs will be created in 1 environment.
    * value set to 1
    */
   public static final int MAX_DB_INSTANCES = 1;
+
+  /**
+   * The maximum number of readers set for an env
+   */
+  public static final int MAX_READERS = 128;
 
   /**
    * Name of the databse

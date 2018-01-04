@@ -12,6 +12,8 @@ load("/tools/rules/twister2_client", "twister2_client_lib_task_scheduler_files")
 load("/tools/rules/twister2_client", "twister2_client_lib_resource_scheduler_files")
 load("/tools/rules/twister2_client", "twister2_client_lib_api_files")
 load("/tools/rules/twister2_client", "twister2_client_lib_task_files")
+load("/tools/rules/twister2_client", "twister2_client_lib_data_files")
+load("/tools/rules/twister2_client", "twister2_client_lib_data_lmdb_files")
 load("/tools/rules/twister2_client", "twister2_client_lib_communication_files")
 load("/tools/rules/twister2_client", "twister2_client_example_files")
 load("/tools/rules/twister2_client", "twister2_client_lib_common_files")
@@ -120,6 +122,8 @@ pkg_tar(
         ":twister2-client-communication",
         ":twister2-client-examples",
         ":twister2-client-lib-common",
+        ":twister2-client-lib-data-lmdb",
+
     ],
 )
 
@@ -166,6 +170,19 @@ pkg_tar(
 )
 
 pkg_tar(
+    name = "twister2-client-lib-data",
+    package_dir = "lib",
+    files = twister2_client_lib_data_files(),
+)
+
+pkg_tar(
+    name = "twister2-client-lib-data-lmdb",
+    package_dir = "lib",
+    files = twister2_client_lib_data_lmdb_files(),
+)
+
+
+pkg_tar(
     name = "twister2-client-lib-resource-scheduler",
     package_dir = "lib",
     files = twister2_client_lib_resource_scheduler_files(),
@@ -200,3 +217,5 @@ pkg_tar(
     package_dir = "examples",
     files = twister2_client_example_files(),
 )
+
+
