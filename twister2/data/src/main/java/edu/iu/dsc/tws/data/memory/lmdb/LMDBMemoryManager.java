@@ -302,6 +302,39 @@ public class LMDBMemoryManager implements MemoryManager {
     return put(keyBuffer, valBuffer);
   }
 
+  @Override
+  public boolean delete(ByteBuffer key) {
+    if (db == null) {
+      throw new RuntimeException("LMDB database has not been configured."
+          + " Please initialize database");
+    }
+
+    if (key.position() != 0) {
+      key.flip();
+    }
+
+    if (key.limit() > 511) {
+      LOG.info("Key size lager than 511 bytes which is the limit for LMDB key values");
+      return false;
+    }
+
+    return db.delete(key);
+  }
+
+  @Override
+  public boolean delete(byte[] key) {
+    final ByteBuffer keyBuffer = allocateDirect(key.length);
+    keyBuffer.put(key);
+    return delete(keyBuffer);
+  }
+
+  @Override
+  public boolean delete(long key) {
+    final ByteBuffer keyBuffer = allocateDirect(Long.BYTES);
+    keyBuffer.putLong(0, key);
+    return delete(keyBuffer);
+  }
+
   public Path getLmdbDataPath() {
     return lmdbDataPath;
   }
