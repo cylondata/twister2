@@ -26,7 +26,7 @@ public final class BasicJob {
   private String containerClass;
   private ResourceContainer requestedResource;
   private int noOfContainers;
-  private JobConfig config = new JobConfig();
+  private JobConfig config;
 
   private BasicJob() {
   }
@@ -113,17 +113,15 @@ public final class BasicJob {
       return this;
     }
 
-    public BasicJobBuilder addConfig(String key, String value) {
-      basicJob.config.put(key, value);
-      return this;
-    }
-
-    public BasicJobBuilder addAllConfig(Map<String, String> all) {
-      basicJob.config.putAll(all);
+    public BasicJobBuilder setConfig(JobConfig config) {
+      basicJob.config = config;
       return this;
     }
 
     public BasicJob build() {
+      if (basicJob.config == null) {
+        basicJob.config = new JobConfig();
+      }
       return basicJob;
     }
   }
