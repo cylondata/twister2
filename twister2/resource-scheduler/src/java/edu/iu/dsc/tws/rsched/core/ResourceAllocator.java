@@ -346,14 +346,10 @@ public class ResourceAllocator {
   private RequestedResources buildRequestedResources(JobAPI.Job job) {
     JobAPI.JobResources jobResources = job.getJobResources();
     int noOfContainers = jobResources.getNoOfContainers();
-    double memd = jobResources.getContainer().getAvailableMemory();
-    int mem = (int) memd;
     ResourceContainer container = new ResourceContainer(
         (int) jobResources.getContainer().getAvailableCPU(),
-        mem,
-        mem); // this is for disk
-
-    System.out.println("availableMemory: " + mem);
+        (int) jobResources.getContainer().getAvailableMemory(),
+        (int) jobResources.getContainer().getAvailableDisk());
 
     return new RequestedResources(noOfContainers, container);
   }

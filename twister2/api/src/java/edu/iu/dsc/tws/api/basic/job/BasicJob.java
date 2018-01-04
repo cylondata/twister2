@@ -55,8 +55,7 @@ public final class BasicJob {
     ResourceAPI.ComputeResource.Builder computeResourceBuilder =
         ResourceAPI.ComputeResource.newBuilder();
     computeResourceBuilder.setAvailableCPU(requestedResource.getNoOfCpus());
-    computeResourceBuilder.setAvailableDisk(1);
-
+    computeResourceBuilder.setAvailableDisk(requestedResource.getDiskMegaBytes());
     computeResourceBuilder.setAvailableMemory(requestedResource.getMemoryMegaBytes());
     jobResourceBuilder.setContainer(computeResourceBuilder);
 
