@@ -30,8 +30,11 @@ public class MPIMultiMessageDeserializer implements MessageDeSerializer {
 
   private KryoSerializer serializer;
 
-  public MPIMultiMessageDeserializer(KryoSerializer kryoSerializer) {
+  private int executor;
+
+  public MPIMultiMessageDeserializer(KryoSerializer kryoSerializer, int exec) {
     this.serializer = kryoSerializer;
+    this.executor = exec;
   }
 
   @Override
@@ -67,6 +70,8 @@ public class MPIMultiMessageDeserializer implements MessageDeSerializer {
         messageBuffers.add(mpiBuffer);
         tempLength += mpiBuffer.getByteBuffer().remaining();
         tempBufferIndex++;
+//        LOG.info(String.format("%d temp %d length %d readLength %d",
+//            executor, tempLength, length, readLength));
       }
 
       Object object = buildMessage(currentMessage.getType(), messageBuffers, length);

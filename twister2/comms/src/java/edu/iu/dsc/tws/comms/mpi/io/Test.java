@@ -68,16 +68,16 @@ public final class Test {
   public void runTest2() {
     IntData data = new IntData(128);
     List list = new ArrayList<>();
-    list.add(new MultiObject(1, data));
+    list.add(new MultiObject(0, data));
     data = new IntData(128);
     list.add(new MultiObject(1, data));
     MPIMessage message = serializeObject(list, 1);
 
     data = new IntData(128);
     list = new ArrayList<>();
-    list.add(new MultiObject(1, data));
+    list.add(new MultiObject(2, data));
     data = new IntData(128);
-    list.add(new MultiObject(1, data));
+    list.add(new MultiObject(3, data));
     MPIMessage message2 = serializeObject(list, 1);
 
     list = new ArrayList<>();
@@ -94,6 +94,7 @@ public final class Test {
   private void deserialize(MPIMessage message) {
     List<MPIBuffer> buffers = message.getBuffers();
     for (MPIBuffer mpiBuffer : buffers) {
+      mpiBuffer.getByteBuffer().flip();
       mpiBuffer.getByteBuffer().rewind();
     }
 
