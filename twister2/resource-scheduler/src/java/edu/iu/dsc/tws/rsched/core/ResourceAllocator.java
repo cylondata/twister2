@@ -67,7 +67,7 @@ public class ResourceAllocator {
     // first lets read the essential properties from java system properties
     String twister2Home = System.getProperty(SchedulerContext.TWISTER_2_HOME);
     String configDir = System.getProperty(SchedulerContext.CONFIG_DIR);
-    String clusterName = System.getProperty(SchedulerContext.CLUSTER_NAME);
+    String clusterType = System.getProperty(SchedulerContext.CLUSTER_TYPE);
     // lets get the job jar file from system properties or environment
     String jobJar = System.getProperty(SchedulerContext.JOB_FILE);
 
@@ -82,8 +82,8 @@ public class ResourceAllocator {
       configDir = (String) environmentProperties.get(SchedulerContext.CONFIG_DIR);
     }
 
-    if (environmentProperties.containsKey(SchedulerContext.CLUSTER_NAME)) {
-      clusterName = (String) environmentProperties.get(SchedulerContext.CLUSTER_NAME);
+    if (environmentProperties.containsKey(SchedulerContext.CLUSTER_TYPE)) {
+      clusterType = (String) environmentProperties.get(SchedulerContext.CLUSTER_TYPE);
     }
 
     if (environmentProperties.containsKey(SchedulerContext.JOB_FILE)) {
@@ -95,11 +95,11 @@ public class ResourceAllocator {
     }
 
     LOG.log(Level.INFO, String.format("Loading configuration with twister2_home: %s and "
-        + "configuration: %s and cluster: %s", twister2Home, configDir, clusterName));
-    Config config = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterName);
+        + "configuration: %s and cluster: %s", twister2Home, configDir, clusterType));
+    Config config = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterType);
     return Config.newBuilder().putAll(config).
         put(MPIContext.TWISTER2_HOME.getKey(), twister2Home).
-        put(MPIContext.TWISTER2_CLUSTER_NAME, clusterName).
+        put(MPIContext.TWISTER2_CLUSTER_TYPE, clusterType).
         put(MPIContext.JOB_FILE, jobJar).
         putAll(environmentProperties).putAll(cfg).build();
   }

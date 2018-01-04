@@ -42,7 +42,7 @@ public class SchedulerContext extends Context {
    */
   public static final String TWISTER_2_HOME = "twister2_home";
   public static final String CONFIG_DIR = "config_dir";
-  public static final String CLUSTER_NAME = "cluster_name";
+  public static final String CLUSTER_TYPE = "cluster_type";
   public static final String JOB_FILE = "job_file";
   public static final String WORKING_DIRECTORY = "twister2.working_directory";
 
@@ -98,7 +98,7 @@ public class SchedulerContext extends Context {
     return cfg.getStringValue(JOB_FILE);
   }
 
-  public static String clusterName(Config cfg) {
-    return cfg.getStringValue(TWISTER2_CLUSTER_NAME);
+  public static String clusterType(Config cfg) {
+    return cfg.getStringValue(TWISTER2_CLUSTER_TYPE);
   }
 }

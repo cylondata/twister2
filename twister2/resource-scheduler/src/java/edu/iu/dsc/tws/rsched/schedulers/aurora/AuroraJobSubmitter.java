@@ -88,7 +88,7 @@ public final class AuroraJobSubmitter {
    * It gets three command line parameters:
    * twister2_home: home directory for twister2
    * config_dir: config directory for twister2 project
-   * cluster_name: it should be "aurora"
+   * cluster_type: it should be "aurora"
    * packagePath: path of twister2 tar.gz file to be uploaded to Mesos container
    * packageFile: filename of twister2 tar.gz file to be uploaded to Mesos container
    *
@@ -113,11 +113,11 @@ public final class AuroraJobSubmitter {
         .required()
         .build();
 
-    Option clusterName = Option.builder("n")
-        .desc("The clustr name")
-        .longOpt("cluster_name")
+    Option clusterType = Option.builder("n")
+        .desc("The clustr type")
+        .longOpt("cluster_type")
         .hasArgs()
-        .argName("cluster name")
+        .argName("cluster type")
         .required()
         .build();
 
@@ -139,7 +139,7 @@ public final class AuroraJobSubmitter {
 
     options.addOption(twister2Home);
     options.addOption(configDirectory);
-    options.addOption(clusterName);
+    options.addOption(clusterType);
 //    options.addOption(packagePath);
 //    options.addOption(packageFile);
 
@@ -155,13 +155,13 @@ public final class AuroraJobSubmitter {
   private static Config loadConfigurations(CommandLine cmd) {
     String twister2Home = cmd.getOptionValue("twister2_home");
     String configDir = cmd.getOptionValue("config_dir");
-    String clusterName = cmd.getOptionValue("cluster_name");
+    String clusterType = cmd.getOptionValue("cluster_type");
 //    String packagePath = cmd.getOptionValue("package_path");
 //    String packageFile = cmd.getOptionValue("package_file");
 
     LOG.log(Level.INFO, String.format("Initializing process with "
-            + "twister_home: %s config_dir: %s cluster_name: %s",
-        twister2Home, configDir, clusterName));
+            + "twister_home: %s config_dir: %s cluster_type: %s",
+        twister2Home, configDir, clusterType));
 
     try {
 //      Reflection.initialize(Class.forName(
@@ -170,11 +170,11 @@ public final class AuroraJobSubmitter {
     } catch (ClassNotFoundException e) {
       e.printStackTrace();
     }
-    Config config = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterName);
+    Config config = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterType);
 
     return Config.newBuilder().putAll(config).
         put(SchedulerContext.TWISTER2_HOME.getKey(), twister2Home).
-        put(SchedulerContext.TWISTER2_CLUSTER_NAME, clusterName).
+        put(SchedulerContext.TWISTER2_CLUSTER_TYPE, clusterType).
 //        put(AuroraClientContext.TWISTER2_PACKAGE_PATH, packagePath).
 //        put(AuroraClientContext.TWISTER2_PACKAGE_FILE, packageFile).
     build();

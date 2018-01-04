@@ -55,7 +55,7 @@ public class SlurmCommand extends MPICommand {
                                     RequestedResources resourcePlan, JobAPI.Job job) {
     String twister2Home = Paths.get(workingDirectory, job.getJobName()).toString();
     String configDirectoryName = Paths.get(workingDirectory,
-        job.getJobName(), SchedulerContext.clusterName(config)).toString();
+        job.getJobName(), SchedulerContext.clusterType(config)).toString();
 
     // lets construct the mpi command to launch
     List<String> mpiCommand = mpiCommand(getScriptPath(), 1);

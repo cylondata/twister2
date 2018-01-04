@@ -62,7 +62,7 @@ def setup_java_system_properties(cl_args):
     # lets set the system property
     java_system_props.append("twister2_home=" + twister2_home)
     # set the cluster name property
-    java_system_props.append("cluster_name=" + cl_args["cluster"])
+    java_system_props.append("cluster_type=" + cl_args["cluster"])
     # set the job file
     java_system_props.append("job_file=" + cl_args['job-file-name'])
     print twister2_home

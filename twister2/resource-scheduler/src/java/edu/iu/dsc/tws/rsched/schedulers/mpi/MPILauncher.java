@@ -46,7 +46,7 @@ public class MPILauncher implements ILauncher {
   @Override
   public boolean launch(RequestedResources resourcePlan, JobAPI.Job job) {
     LOG.log(Level.INFO, "Launching job for cluster {0}",
-        MPIContext.clusterName(config));
+        MPIContext.clusterType(config));
 
     if (!setupWorkingDirectory(job)) {
       throw new RuntimeException("Failed to setup the directory");

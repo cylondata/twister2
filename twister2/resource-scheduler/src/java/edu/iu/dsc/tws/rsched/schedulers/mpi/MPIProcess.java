@@ -112,18 +112,18 @@ public final class MPIProcess {
         .required()
         .build();
 
-    Option clusterName = Option.builder("n")
-        .desc("The clustr name")
-        .longOpt("cluster_name")
+    Option clusterType = Option.builder("n")
+        .desc("The clustr type")
+        .longOpt("cluster_type")
         .hasArgs()
-        .argName("cluster name")
+        .argName("cluster type")
         .required()
         .build();
 
     options.addOption(twister2Home);
     options.addOption(containerClass);
     options.addOption(configDirectory);
-    options.addOption(clusterName);
+    options.addOption(clusterType);
 
     return options;
   }
@@ -132,18 +132,18 @@ public final class MPIProcess {
     String twister2Home = cmd.getOptionValue("twister2_home");
     String container = cmd.getOptionValue("container_class");
     String configDir = cmd.getOptionValue("config_dir");
-    String clusterName = cmd.getOptionValue("cluster_name");
+    String clusterType = cmd.getOptionValue("cluster_type");
 
     LOG.log(Level.INFO, String.format("Initializing process with "
-        + "twister_home: %s container_class: %s config_dir: %s cluster_name: %s",
-        twister2Home, container, configDir, clusterName));
+        + "twister_home: %s container_class: %s config_dir: %s cluster_type: %s",
+        twister2Home, container, configDir, clusterType));
 
-    Config config = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterName);
+    Config config = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterType);
     return Config.newBuilder().putAll(config).
         put(MPIContext.TWISTER2_HOME.getKey(), twister2Home).
         put(MPIContext.TWISTER2_JOB_BASIC_CONTAINER_CLASS, container).
         put(MPIContext.TWISTER2_CONTAINER_ID, id).
-        put(MPIContext.TWISTER2_CLUSTER_NAME, clusterName).build();
+        put(MPIContext.TWISTER2_CLUSTER_TYPE, clusterType).build();
   }
 
   private static void master(Config config, int rank) {
@@ -186,7 +186,7 @@ public final class MPIProcess {
     try {
       int rank = MPI.COMM_WORLD.getRank();
       ResourcePlan resourcePlan = new ResourcePlan(
-          MPIContext.clusterName(config), MPI.COMM_WORLD.getRank());
+          MPIContext.clusterType(config), MPI.COMM_WORLD.getRank());
 
       String processName = MPI.getProcessorName();
       char[] processNameChars = new char[processName.length()];
