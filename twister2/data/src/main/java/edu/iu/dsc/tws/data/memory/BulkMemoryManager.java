@@ -60,6 +60,12 @@ public class BulkMemoryManager extends AbstractMemoryManager {
    */
   private Map<String, LinkedList<ByteBuffer>> keyMapBuffers;
 
+  /**
+   * Keeps track of the collective size of byte buffers for each key that is currently held
+   * in the keyMapBuffers
+   */
+  private Map<String, Integer> keyBufferSizes;
+
   public BulkMemoryManager(Path dataPath) {
     //TODO : This needs to be loaded from a configuration file
     //TODO: need to add Singleton pattern to make sure only one instance of MM is created per
@@ -217,9 +223,7 @@ public class BulkMemoryManager extends AbstractMemoryManager {
     // If this is the last value write all the values to store
     if (currentCount + 1 == stats[0]) {
 
-      keyMap.remove(key);
-      keyMapCurrent.remove(key);
-      keyMapBuffers.remove(key);
+      close(key);
     } else if ((currentCount + 1) % stats[1] == 0) {
       // write to store if the step has been met
 
@@ -229,6 +233,54 @@ public class BulkMemoryManager extends AbstractMemoryManager {
       keyMapBuffers.get(key).add(value);
     }
     //TODO : check if the return is correct just a place holder for now
+    return true;
+  }
+
+  /**
+   * Makes sure all the data that is held in the BulkMemoryManager is pushed into the
+   * memory store
+   */
+  public boolean flush(String key) {
+    ByteBuffer temp = ByteBuffer.allocateDirect(keyBufferSizes.get(key));
+    LinkedList<ByteBuffer> buffers = keyMapBuffers.get(key);
+    while (!buffers.isEmpty()) {
+      temp.put(buffers.poll());
+    }
+    //Since we got all the buffer values reset the size
+    keyBufferSizes.put(key, 0);
+    return memoryManager.put(key.getBytes(), temp);
+  }
+
+  /**
+   * Slight variation of flush for so that the last ByteBuffer does not need to be copied into the
+   * map
+   *
+   * @param key key to flush
+   * @param last the last value that needs to be appended to the ByteBuffers that correspond to the
+   * given key
+   */
+  public boolean flush(String key, ByteBuffer last) {
+    ByteBuffer temp = ByteBuffer.allocateDirect(keyBufferSizes.get(key) + last.limit());
+    LinkedList<ByteBuffer> buffers = keyMapBuffers.get(key);
+    while (!buffers.isEmpty()) {
+      temp.put(buffers.poll());
+    }
+    temp.put(last);
+    //Since we got all the buffer values reset the size
+    keyBufferSizes.put(key, 0);
+    return memoryManager.put(key.getBytes(), temp);
+  }
+
+  /**
+   * Closing the key will make the BulkMemoryManager to flush the current data into the store and
+   * delete all the key information. This is done once we know that no more values will be sent for
+   * this key
+   */
+  public boolean close(String key) {
+    flush(key);
+    keyMap.remove(key);
+    keyMapCurrent.remove(key);
+    keyMapBuffers.remove(key);
     return true;
   }
 }
