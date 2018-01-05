@@ -61,8 +61,8 @@ public class SimpleTaskGraph implements IContainer {
 
     Map<String, Object> newCfg = new HashMap<>();
     LinkedQueue<Message> pongQueue = new LinkedQueue<Message>();
-
     taskExecutor.registerQueue(0, pongQueue);
+
     direct = channel.direct(newCfg, MessageType.OBJECT, 0, sources,
         destination, new SimpleTaskGraph.PingPongReceive());
     taskExecutor.initCommunication(channel, direct);
@@ -137,26 +137,6 @@ public class SimpleTaskGraph implements IContainer {
     }*/
   }
 
-  /**
-   * Generate data with an integer array
-   *
-   * @return IntData
-   */
-  private IntData generateData() {
-    LOG.info("I am in data generation");
-    int[] d = new int[10];
-    for (int i = 0; i < 10; i++) {
-      d[i] = i;
-    }
-    return new IntData(d);
-  }
-
-
-  private enum Status {
-    INIT,
-    MAP_FINISHED,
-    LOAD_RECEIVE_FINISHED,
-  }
 
   private class PingPongReceive implements MessageReceiver {
     private int count = 0;
@@ -234,6 +214,27 @@ public class SimpleTaskGraph implements IContainer {
       return execute();
     }
   }
+
+  /**
+   * Generate data with an integer array
+   *
+   * @return IntData
+   */
+  private IntData generateData() {
+    int[] d = new int[10];
+    for (int i = 0; i < 10; i++) {
+      d[i] = i;
+    }
+    return new IntData(d);
+  }
+
+  private enum Status {
+    INIT,
+    MAP_FINISHED,
+    LOAD_RECEIVE_FINISHED,
+  }
+
 }
+
 
 
