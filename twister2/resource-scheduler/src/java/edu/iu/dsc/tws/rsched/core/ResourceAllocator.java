@@ -110,8 +110,7 @@ public class ResourceAllocator {
   private String prepareJobFiles(Config config, JobAPI.Job job) {
     // lets first save the job file
     // lets write the job into file, this will be used for job creation
-    String tempDirectory = SchedulerContext.jobClientTempDirectory(config)
-        + "/" + job.getJobName();
+    String tempDirectory = SchedulerContext.jobClientTempDirectory(config) + "/" + job.getJobName();
     try {
       Files.createDirectories(Paths.get(tempDirectory));
     } catch (IOException e) {
@@ -125,8 +124,7 @@ public class ResourceAllocator {
 
     Path tempDirPath = null;
     try {
-      tempDirPath = Files.createTempDirectory(Paths.get(tempDirectory),
-          job.getJobName());
+      tempDirPath = Files.createTempDirectory(Paths.get(tempDirectory), job.getJobName());
     } catch (IOException e) {
       throw new RuntimeException("Failed to create temp directory: " + tempDirectory, e);
     }
@@ -147,8 +145,7 @@ public class ResourceAllocator {
     }
 
     // copy the job jar file
-    LOG.log(Level.INFO, String.format("Copy job jar: %s to %s",
-        jobFile, tempDirPathString));
+    LOG.log(Level.INFO, String.format("Copy job jar: %s to %s", jobFile, tempDirPathString));
     if (!FileUtils.copyFileToDirectory(jobFile, tempDirPathString)) {
       throw new RuntimeException("Failed to copy the job jar file: "
           + jobFile + " to:" + tempDirPathString);
@@ -158,7 +155,7 @@ public class ResourceAllocator {
     String twister2CorePackage = SchedulerContext.systemPackageUrl(config);
     String confDir = SchedulerContext.conf(config);
 
-    // copy the dist pakache
+    // copy the conf directory
     LOG.log(Level.INFO, String.format("Copy configuration: %s to %s",
         confDir, tempDirPathString));
     if (!FileUtils.copyDirectoryToDirectory(confDir, tempDirPathString)) {
@@ -166,6 +163,7 @@ public class ResourceAllocator {
           + confDir + " to: " + tempDirPathString);
     }
 
+    // copy the dist package
     LOG.log(Level.INFO, String.format("Copy core package: %s to %s",
         twister2CorePackage, tempDirPathString));
     if (!FileUtils.copyFileToDirectory(twister2CorePackage, tempDirPathString)) {
@@ -180,10 +178,7 @@ public class ResourceAllocator {
    *
    * @param job the actual job
    */
-  public void submitJob(JobAPI.Job job) {
-    // first lets load the configurations
-    Config config = loadConfig(new HashMap<>());
-
+  public void submitJob(JobAPI.Job job, Config config) {
     // lets prepare the job files
     String jobDirectory = prepareJobFiles(config, job);
 
@@ -261,41 +256,43 @@ public class ResourceAllocator {
   }
 
   /**
-   * Submit the job to the cluster
+   * Submit the job to aurora cluster
+   * this method is for testing during development
+   * need to be deleted.
    *
    * @param job the actual job
    */
   public void submitAuroraJob(JobAPI.Job job, Config config) {
 
     // lets prepare the job files
-//    String jobDirectory = prepareJobFiles(config, job);
+    String jobDirectory = prepareJobFiles(config, job);
 
-//    String statemgrClass = SchedulerContext.stateManagerClass(config);
-//    if (statemgrClass == null) {
-//      throw new RuntimeException("The state manager class must be spcified");
-//    }
+    String statemgrClass = SchedulerContext.stateManagerClass(config);
+    if (statemgrClass == null) {
+      throw new RuntimeException("The state manager class must be spcified");
+    }
 
     String launcherClass = SchedulerContext.launcherClass(config);
     if (launcherClass == null) {
       throw new RuntimeException("The launcher class must be specified");
     }
 
-//    String uploaderClass = SchedulerContext.uploaderClass(config);
-//    if (uploaderClass == null) {
-//      throw new RuntimeException("The uploader class must be specified");
-//    }
+    String uploaderClass = SchedulerContext.uploaderClass(config);
+    if (uploaderClass == null) {
+      throw new RuntimeException("The uploader class must be specified");
+    }
 
     ILauncher launcher;
-//    IUploader uploader;
-//    IStateManager statemgr;
+    IUploader uploader;
+    IStateManager statemgr;
 
     // create an instance of state manager
-//    try {
-//      statemgr = ReflectionUtils.newInstance(statemgrClass);
-//    } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
-//      throw new JobSubmissionException(
-//          String.format("Failed to instantiate state manager class '%s'", statemgrClass), e);
-//    }
+    try {
+      statemgr = ReflectionUtils.newInstance(statemgrClass);
+    } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
+      throw new JobSubmissionException(
+          String.format("Failed to instantiate state manager class '%s'", statemgrClass), e);
+    }
 
     // create an instance of launcher
     try {
@@ -306,41 +303,51 @@ public class ResourceAllocator {
     }
 
     // create an instance of uploader
-//    try {
-//      uploader = ReflectionUtils.newInstance(uploaderClass);
-//    } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
-//      throw new UploaderException(
-//          String.format("Failed to instantiate uploader class '%s'", uploaderClass), e);
-//    }
+    try {
+      uploader = ReflectionUtils.newInstance(uploaderClass);
+    } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
+      throw new UploaderException(
+          String.format("Failed to instantiate uploader class '%s'", uploaderClass), e);
+    }
 
-//    LOG.log(Level.INFO, "Initialize state manager");
-//    // initialize the state manager
-//    statemgr.initialize(config);
+    LOG.log(Level.INFO, "Initialize state manager");
+    // initialize the state manager
+    statemgr.initialize(config);
 
-//    LOG.log(Level.INFO, "Initialize uploader");
-//    // now upload the content of the package
-//    uploader.initialize(config);
-//    // gives the url of the file to be uploaded
-//    LOG.log(Level.INFO, "Calling uploader to upload the package content");
-//    URI packageURI = uploader.uploadPackage(jobDirectory);
+    LOG.log(Level.INFO, "Initialize uploader");
+    // now upload the content of the package
+    uploader.initialize(config);
+    // gives the url of the file to be uploaded
+    LOG.log(Level.INFO, "Calling uploader to upload the package content");
+    URI packageURI = uploader.uploadPackage(jobDirectory);
 
     // now launch the launcher
     // Update the runtime config with the packageURI
-//    Config runtimeAll = Config.newBuilder()
-//        .putAll(config)
-//        .put(SchedulerContext.JOB_PACKAGE_URI, packageURI)
-//        .build();
+    Config runtimeAll = Config.newBuilder()
+        .putAll(config)
+        .put(SchedulerContext.JOB_PACKAGE_URI, packageURI)
+        .build();
+
+//    System.out.println("temp jobDirectory: " + jobDirectory);
+//    System.out.println("packageURI: " + packageURI);
+//    System.out.println("read a char to wait ...");
+//    try {
+//      int read = System.in.read();
+//      System.exit(0);
+//    } catch (IOException e) {
+//      e.printStackTrace();
+//    }
 
     // this is a handler chain based execution in resource allocator. We need to
     // make it more formal as such
-    launcher.initialize(config);
+    launcher.initialize(runtimeAll);
 
     RequestedResources requestedResources = buildRequestedResources(job);
     if (requestedResources == null) {
       throw new RuntimeException("Failed to build the requested resources");
     }
 
-    launcher.launch(requestedResources, job);
+    launcher.launch(requestedResources, updatedJob);
   }
 
   private RequestedResources buildRequestedResources(JobAPI.Job job) {

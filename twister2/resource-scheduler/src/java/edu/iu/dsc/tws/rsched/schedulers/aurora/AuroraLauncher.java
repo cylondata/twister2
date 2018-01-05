@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.scheduler.ILauncher;
@@ -98,6 +99,7 @@ public class AuroraLauncher implements ILauncher {
     envs.put(AuroraField.RAM_PER_CONTAINER, AuroraClientContext.ramPerContainer(config) + "");
     envs.put(AuroraField.DISK_PER_CONTAINER, AuroraClientContext.diskPerContainer(config) + "");
     envs.put(AuroraField.NUMBER_OF_CONTAINERS, AuroraClientContext.numberOfContainers(config));
+    envs.put(AuroraField.JOB_PACKAGE_URI, SchedulerContext.jobPackageUri(config).toString());
     return envs;
   }
 

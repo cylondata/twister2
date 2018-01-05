@@ -55,7 +55,7 @@ public final class BasicAuroraJob {
         .build();
 
     // now submit the job
-    Twister2Submitter.submitAuroraJob(basicJob, config);
+    Twister2Submitter.submitContainerJob(basicJob, config);
 //    jobWriteTest(basicJob);
 //    jobReadTest();
   }
