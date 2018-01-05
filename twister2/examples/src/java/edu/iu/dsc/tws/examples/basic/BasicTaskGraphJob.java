@@ -11,10 +11,14 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.basic;
 
+import java.util.HashMap;
+
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
-import edu.iu.dsc.tws.examples.TaskGraphExample;
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.examples.SimpleTaskGraph;
+import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 
 public final class BasicTaskGraphJob {
@@ -22,15 +26,23 @@ public final class BasicTaskGraphJob {
   }
 
   public static void main(String[] args) {
-    BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
+    // first load the configurations from command line and config files
+    Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
-    jobBuilder.setName("basic-taskgraph");
-    jobBuilder.setContainerClass(TaskGraphExample.class.getName());
-    //jobBuilder.setContainerClass(TaskGraphEx.class.getName());
-    jobBuilder.setRequestResource(
-        new ResourceContainer(2, 1024), 2);
+    // build JobConfig
+    JobConfig jobConfig = new JobConfig();
+    jobConfig.putConfig(config);
 
-    Twister2Submitter.submitContainerJob(jobBuilder.build(), new JobConfig());
+    // build the job
+    BasicJob basicJob = BasicJob.newBuilder()
+        .setName("basic-taskgraph")
+        .setContainerClass(SimpleTaskGraph.class.getName())
+        .setRequestResource(new ResourceContainer(2, 1024), 2)
+        .setConfig(jobConfig)
+        .build();
+
+    // now submit the job
+    Twister2Submitter.submitContainerJob(basicJob, config);
   }
 }
 

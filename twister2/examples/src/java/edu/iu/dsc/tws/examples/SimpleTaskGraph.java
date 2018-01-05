@@ -28,9 +28,9 @@ import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraphGenerator;
 import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraphParser;
 
 
-public class TaskGraphExample implements IContainer {
+public class SimpleTaskGraph implements IContainer {
 
-  private static final Logger LOG = Logger.getLogger(TaskGraphExample.class.getName());
+  private static final Logger LOG = Logger.getLogger(SimpleTaskGraph.class.getName());
 
   private DataFlowOperation direct;
   private TaskExecutorFixedThread taskExecutor;
@@ -39,7 +39,6 @@ public class TaskGraphExample implements IContainer {
   //to call the dataflow task graph generator
   private DataflowTaskGraphGenerator dataflowTaskGraph = null;
   private DataflowTaskGraphParser dataflowTaskGraphParser = null;
-
   private Status status;
 
   /**
@@ -50,7 +49,7 @@ public class TaskGraphExample implements IContainer {
     LOG.log(Level.INFO, "Starting the example with container id: " + plan.getThisId());
 
     taskExecutor = new TaskExecutorFixedThread();
-    this.status = TaskGraphExample.Status.INIT;
+    this.status = Status.INIT;
 
     TaskPlan taskPlan = Utils.createTaskPlan(cfg, plan);
     TWSNetwork network = new TWSNetwork(cfg, taskPlan);
@@ -62,15 +61,15 @@ public class TaskGraphExample implements IContainer {
 
     Map<String, Object> newCfg = new HashMap<>();
     LinkedQueue<Message> pongQueue = new LinkedQueue<Message>();
-
     taskExecutor.registerQueue(0, pongQueue);
+
     direct = channel.direct(newCfg, MessageType.OBJECT, 0, sources,
-        destination, new TaskGraphExample.PingPongReceive());
+        destination, new SimpleTaskGraph.PingPongReceive());
     taskExecutor.initCommunication(channel, direct);
 
     //For Dataflow Task Graph Generation call the dataflow task graph generator
     MapWorker sourceTask = new MapWorker(0, direct);
-    ReceiveWorker sinkTask = new ReceiveWorker(1);
+    ReceiveWorker sinkTask = new ReceiveWorker();
 
     dataflowTaskGraph = new DataflowTaskGraphGenerator().generateDataflowGraph(
         sourceTask, sinkTask, direct);
@@ -99,9 +98,10 @@ public class TaskGraphExample implements IContainer {
             taskExecutor.registerSinkTask(processedTask, inq);
             taskExecutor.progres();
             ++index;
-          } else if (index > 1) {
+          } else if (index > 1) { //Just for verification
             LOG.info("Task Index is greater than 1");
             LOG.info("Submit the job to pipeline task");
+            break;
           }
         }
       }
@@ -137,6 +137,84 @@ public class TaskGraphExample implements IContainer {
     }*/
   }
 
+
+  private class PingPongReceive implements MessageReceiver {
+    private int count = 0;
+
+    @Override
+    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+    }
+
+    @Override
+    public boolean onMessage(int source, int path, int target, int flags, Object object) {
+      count++;
+      if (count % 10000 == 0) {
+        LOG.info("received message: " + count);
+      }
+      if (count == 100000) {
+        status = Status.LOAD_RECEIVE_FINISHED;
+      }
+      return true;
+    }
+
+    @Override
+    public void progress() {
+
+    }
+  }
+
+  private class ReceiveWorker extends SinkTask<Object> {
+
+    @Override
+    public Message execute() {
+      return null;
+    }
+
+    @Override
+    public Message execute(Message content) {
+      return null;
+    }
+  }
+
+  /**
+   * We are running the map in a separate thread
+   */
+  private class MapWorker extends SourceTask<Object> {
+    private int sendCount = 0;
+
+    MapWorker(int tid, DataFlowOperation dataFlowOperation) {
+      super(tid, dataFlowOperation);
+
+    }
+
+    @Override
+    public Message execute() {
+      LOG.log(Level.INFO, "Starting map worker");
+      for (int i = 0; i < 100000; i++) { //100000
+        IntData data = generateData();
+        // lets generate a message
+
+        while (!getDataFlowOperation().send(0, data, 0)) {
+          // lets wait a litte and try again
+          try {
+            Thread.sleep(1);
+          } catch (InterruptedException e) {
+            e.printStackTrace();
+          }
+        }
+        sendCount++;
+        Thread.yield();
+      }
+      status = Status.MAP_FINISHED;
+      return null;
+    }
+
+    @Override
+    public Message execute(Message content) {
+      return execute();
+    }
+  }
+
   /**
    * Generate data with an integer array
    *
@@ -155,96 +233,8 @@ public class TaskGraphExample implements IContainer {
     MAP_FINISHED,
     LOAD_RECEIVE_FINISHED,
   }
-  private class ReceiveWorker extends SinkTask<Task> {
 
-    ReceiveWorker(int tid) {
-      super(tid);
-    }
-
-    @Override
-    public Message execute() {
-      return null;
-    }
-
-    @Override
-    public Message execute(Message content) {
-      try {
-        // Sleep for a while
-        Thread.sleep(1);
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
-      String data = content.getContent().toString();
-      if (Integer.parseInt(data) % 1000 == 0) {
-        System.out.println(((String) content.getContent()).toString());
-      }
-      return null;
-    }
-  }
-
-  /**
-   * We are running the map in a separate thread
-   */
-  private class MapWorker extends SourceTask<Task> {
-    private int sendCount = 0;
-
-    MapWorker(int tid, DataFlowOperation dataFlowOperation) {
-      super(tid, dataFlowOperation);
-    }
-
-    @Override
-    public Message execute() {
-      LOG.log(Level.INFO, "Starting map worker");
-      for (int i = 0; i < 100000; i++) {
-        IntData data = generateData();
-        // lets generate a message
-        // while (!getDataFlowOperation().send(0, data)) {
-        // lets wait a litte and try again
-        try {
-          Thread.sleep(1);
-        } catch (InterruptedException e) {
-          e.printStackTrace();
-        }
-      }
-      sendCount++;
-      Thread.yield();
-      //}
-      status = TaskGraphExample.Status.MAP_FINISHED;
-      return null;
-    }
-
-    @Override
-    public Message execute(Message content) {
-      return execute();
-    }
-  }
-
-  private class PingPongReceive implements MessageReceiver {
-    private int count = 0;
-
-    @Override
-    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-    }
-
-    @Override
-    public boolean onMessage(int source, int path, int target, int flags, Object object) {
-      count++;
-      if (count % 50000 == 0) {
-        LOG.info("received message: " + count);
-      }
-      taskExecutor.submitMessage(0, "" + count);
-
-      if (count == 10) {
-        status = Status.LOAD_RECEIVE_FINISHED;
-      }
-      return true;
-    }
-
-    @Override
-    public void progress() {
-
-    }
-  }
 }
+
 
 
