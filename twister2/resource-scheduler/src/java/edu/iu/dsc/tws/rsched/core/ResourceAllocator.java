@@ -53,8 +53,8 @@ public class ResourceAllocator {
   private JobAPI.Job updatedJob;
 
   /**
-   * loadConfig
-   * @param cfg
+   * loadConfig from config files and also from envirobnment variables
+   * @param cfg the config values in this map will be put into returned Config
    * @return
    */
   public static Config loadConfig(Map<String, Object> cfg) {
@@ -97,11 +97,14 @@ public class ResourceAllocator {
     LOG.log(Level.INFO, String.format("Loading configuration with twister2_home: %s and "
         + "configuration: %s and cluster: %s", twister2Home, configDir, clusterType));
     Config config = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterType);
-    return Config.newBuilder().putAll(config).
+    return Config.newBuilder().
+        putAll(config).
         put(MPIContext.TWISTER2_HOME.getKey(), twister2Home).
         put(MPIContext.TWISTER2_CLUSTER_TYPE, clusterType).
         put(MPIContext.JOB_FILE, jobJar).
-        putAll(environmentProperties).putAll(cfg).build();
+        putAll(environmentProperties).
+        putAll(cfg).
+        build();
   }
 
   /**
