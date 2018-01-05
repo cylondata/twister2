@@ -20,7 +20,7 @@ import org.lmdbjava.Env;
 import org.lmdbjava.Txn;
 
 import edu.iu.dsc.tws.data.fs.Path;
-import edu.iu.dsc.tws.data.memory.MemoryManager;
+import edu.iu.dsc.tws.data.memory.AbstractMemoryManager;
 
 import static java.nio.ByteBuffer.allocateDirect;
 import static org.lmdbjava.DbiFlags.MDB_CREATE;
@@ -31,7 +31,7 @@ import static org.lmdbjava.Env.create;
  * Memory Manger implementaion for LMDB Java
  * https://github.com/lmdbjava/lmdbjava
  */
-public class LMDBMemoryManager implements MemoryManager {
+public class LMDBMemoryManager extends AbstractMemoryManager {
 
   private static final Logger LOG = Logger.getLogger(LMDBMemoryManager.class.getName());
 
