@@ -11,10 +11,31 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.memory;
 
+
+import java.nio.ByteBuffer;
+
+import static java.nio.ByteBuffer.allocateDirect;
+
 /**
  * Abstract Memory Manager. This class contains some of the methods that need to be shared between
  * all the memory manager implementations
  */
 public abstract class AbstractMemoryManager implements MemoryManager {
 
+
+  public Object getDeserialized(ByteBuffer key) {
+    return null;
+  }
+
+  public Object getDeserialized(byte[] key) {
+    final ByteBuffer keyBuffer = allocateDirect(key.length);
+    keyBuffer.put(key);
+    return getDeserialized(keyBuffer);
+  }
+
+  public Object getDeserialized(long key) {
+    final ByteBuffer keyBuffer = allocateDirect(Long.BYTES);
+    keyBuffer.putLong(0, key);
+    return getDeserialized(keyBuffer);
+  }
 }
