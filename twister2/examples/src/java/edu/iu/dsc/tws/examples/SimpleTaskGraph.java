@@ -28,9 +28,9 @@ import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraphGenerator;
 import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraphParser;
 
 
-public class TaskGraphExample implements IContainer {
+public class SimpleTaskGraph implements IContainer {
 
-  private static final Logger LOG = Logger.getLogger(TaskGraphExample.class.getName());
+  private static final Logger LOG = Logger.getLogger(SimpleTaskGraph.class.getName());
 
   private DataFlowOperation direct;
   private TaskExecutorFixedThread taskExecutor;
@@ -50,7 +50,7 @@ public class TaskGraphExample implements IContainer {
     LOG.log(Level.INFO, "Starting the example with container id: " + plan.getThisId());
 
     taskExecutor = new TaskExecutorFixedThread();
-    this.status = TaskGraphExample.Status.INIT;
+    this.status = SimpleTaskGraph.Status.INIT;
 
     TaskPlan taskPlan = Utils.createTaskPlan(cfg, plan);
     TWSNetwork network = new TWSNetwork(cfg, taskPlan);
@@ -65,7 +65,7 @@ public class TaskGraphExample implements IContainer {
 
     taskExecutor.registerQueue(0, pongQueue);
     direct = channel.direct(newCfg, MessageType.OBJECT, 0, sources,
-        destination, new TaskGraphExample.PingPongReceive());
+        destination, new SimpleTaskGraph.PingPongReceive());
     taskExecutor.initCommunication(channel, direct);
 
     //For Dataflow Task Graph Generation call the dataflow task graph generator
@@ -99,9 +99,10 @@ public class TaskGraphExample implements IContainer {
             taskExecutor.registerSinkTask(processedTask, inq);
             taskExecutor.progres();
             ++index;
-          } else if (index > 1) {
+          } else if (index > 1) { //Just for verification
             LOG.info("Task Index is greater than 1");
             LOG.info("Submit the job to pipeline task");
+            break;
           }
         }
       }
@@ -155,6 +156,7 @@ public class TaskGraphExample implements IContainer {
     MAP_FINISHED,
     LOAD_RECEIVE_FINISHED,
   }
+
   private class ReceiveWorker extends SinkTask<Task> {
 
     ReceiveWorker(int tid) {
@@ -209,7 +211,7 @@ public class TaskGraphExample implements IContainer {
       sendCount++;
       Thread.yield();
       //}
-      status = TaskGraphExample.Status.MAP_FINISHED;
+      status = SimpleTaskGraph.Status.MAP_FINISHED;
       return null;
     }
 

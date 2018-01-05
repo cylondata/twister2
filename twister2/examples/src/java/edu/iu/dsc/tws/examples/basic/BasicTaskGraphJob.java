@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.examples.basic;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
-import edu.iu.dsc.tws.examples.TaskGraphExample;
+import edu.iu.dsc.tws.examples.SimpleTaskGraph;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 
 public final class BasicTaskGraphJob {
@@ -25,7 +25,7 @@ public final class BasicTaskGraphJob {
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
 
     jobBuilder.setName("basic-taskgraph");
-    jobBuilder.setContainerClass(TaskGraphExample.class.getName());
+    jobBuilder.setContainerClass(SimpleTaskGraph.class.getName());
     //jobBuilder.setContainerClass(TaskGraphEx.class.getName());
     jobBuilder.setRequestResource(
         new ResourceContainer(2, 1024), 2);
