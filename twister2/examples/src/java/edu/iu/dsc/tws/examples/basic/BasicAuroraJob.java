@@ -13,9 +13,11 @@ package edu.iu.dsc.tws.examples.basic;
 
 import java.util.HashMap;
 
-import edu.iu.dsc.tws.api.Twister2Submitter;
-import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.api.JobConfig;
+import edu.iu.dsc.tws.api.Twister2Submitter;
+
+import edu.iu.dsc.tws.api.basic.job.BasicJob;
+
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -62,7 +64,6 @@ public final class BasicAuroraJob {
 
   /**
    * test method for BasicJob write to a file
-   * @param basicJob
    */
   public static void jobWriteTest(BasicJob basicJob) {
     String file = "testJobFile";
@@ -74,18 +75,18 @@ public final class BasicAuroraJob {
    */
   public static void jobReadTest() {
     String file = "testJobFile";
-    JobAPI.Job job= JobUtils.readJobFile(null, file);
-    System.out.println("job name: "+job.getJobName());
-    System.out.println("job container class name: "+job.getContainer().getClassName());
-    System.out.println("job containers: "+job.getJobResources().getNoOfContainers());
-    System.out.println("CPUs: "+job.getJobResources().getContainer().getAvailableCPU());
-    System.out.println("RAM: "+job.getJobResources().getContainer().getAvailableMemory());
-    System.out.println("Disk: "+job.getJobResources().getContainer().getAvailableDisk());
+    JobAPI.Job job = JobUtils.readJobFile(null, file);
+    System.out.println("job name: " + job.getJobName());
+    System.out.println("job container class name: " + job.getContainer().getClassName());
+    System.out.println("job containers: " + job.getJobResources().getNoOfContainers());
+    System.out.println("CPUs: " + job.getJobResources().getContainer().getAvailableCPU());
+    System.out.println("RAM: " + job.getJobResources().getContainer().getAvailableMemory());
+    System.out.println("Disk: " + job.getJobResources().getContainer().getAvailableDisk());
     JobAPI.Config conf = job.getConfig();
-    System.out.println("number of key-values in conf: "+conf.getKvsCount());
+    System.out.println("number of key-values in conf: " + conf.getKvsCount());
 
-    for(JobAPI.Config.KeyValue kv : conf.getKvsList()) {
-      System.out.println(kv.getKey() +": "+kv.getValue());
+    for (JobAPI.Config.KeyValue kv : conf.getKvsList()) {
+      System.out.println(kv.getKey() + ": " + kv.getValue());
     }
 
   }

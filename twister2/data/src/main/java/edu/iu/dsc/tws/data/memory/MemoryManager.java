@@ -96,7 +96,7 @@ public interface MemoryManager {
   /**
    * Get the corresponding value as bytes for the given key from the store
    */
-  byte[] getBytes(ByteBuffer keye);
+  byte[] getBytes(ByteBuffer key);
 
   /**
    * checks if the given key is in the memory manager
