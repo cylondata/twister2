@@ -17,7 +17,7 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.examples.BaseAllReduceCommunication;
+import edu.iu.dsc.tws.examples.basic.comms.BaseAllReduceCommunication;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 

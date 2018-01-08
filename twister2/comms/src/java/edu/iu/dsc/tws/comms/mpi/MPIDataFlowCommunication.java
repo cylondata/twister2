@@ -171,4 +171,21 @@ public class MPIDataFlowCommunication extends DataFlowCommunication {
     dataFlowOperation.init(mergedCfg, type, instancePlan, edge1);
     return dataFlowOperation;
   }
+
+  @Override
+  public DataFlowOperation keyedGather(Map<String, Object> properties, MessageType type,
+                                       Set<Integer> edge,
+                                       Set<Integer> sourceTasks, Set<Integer> destTasks,
+                                       KeyedMessageReceiver receiver) {
+    // merge with the user specified configuration, user specified will take precedence
+    Config mergedCfg = Config.newBuilder().putAll(config).putAll(properties).build();
+
+    // create the dataflow operation
+    DataFlowOperation dataFlowOperation = new MPIDataFlowKGather(channel,
+        sourceTasks, destTasks, receiver, edge);
+
+    // intialize the operation
+    dataFlowOperation.init(mergedCfg, type, instancePlan, 0);
+    return dataFlowOperation;
+  }
 }

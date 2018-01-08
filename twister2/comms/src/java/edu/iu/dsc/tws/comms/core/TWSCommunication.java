@@ -62,4 +62,9 @@ public interface TWSCommunication {
                            Set<Integer> sourceTasks, int destTask,
                            MessageReceiver receiver,
                            MessageReceiver partialRecvr);
+
+  DataFlowOperation keyedGather(Map<String, Object> properties, MessageType type,
+                                Set<Integer> edge,
+                                Set<Integer> sourceTasks, Set<Integer> destTasks,
+                                KeyedMessageReceiver receiver);
 }
