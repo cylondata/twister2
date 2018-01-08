@@ -46,6 +46,12 @@ public final class ProcessUtils {
     return pb;
   }
 
+
+  public static int runProcess(String cmdline, StringBuilder outputBuilder) {
+    return runSyncProcess(true,  splitTokens(cmdline), outputBuilder, null);
+
+  }
+
   public static int runSyncProcess(
       boolean isInheritIO, String[] cmdline, StringBuilder outputBuilder, File workingDirectory) {
     return runSyncProcess(isInheritIO, cmdline, outputBuilder, workingDirectory,
@@ -253,4 +259,6 @@ public final class ProcessUtils {
     }
     return cmdarray;
   }
+
+
 }

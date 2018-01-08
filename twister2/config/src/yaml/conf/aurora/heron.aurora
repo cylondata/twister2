@@ -1,0 +1,96 @@
+"""
+Launch a Twister2 job as a single aurora job with multiple instances.
+"""
+
+#twister2_core_release_uri = '{{CORE_PACKAGE_URI}}'
+#core_package_file = '{{CORE_PACKAGE_FILE}}'
+core_release_path = "/root/twister2/"
+core_release_file = "twister2-client.tar.gz"
+
+# --- processes ---
+fetch_heron_system = Process(
+  name = 'fetch_twister2_core',
+  cmdline = 'cp %s%s . && tar zxf %s' % (core_release_path, core_release_file, core_release_file)
+)
+
+fetch_user_package = Process(
+  name = 'fetch_user_package',
+  cmdline = 'curl %s -o %s && tar zxf %s' % (heron_topology_jar_uri, topology_package_file, topology_package_file)
+)
+
+command_to_start_executor = \
+  '{{EXECUTOR_BINARY}}' \
+  ' --shard={{mesos.instance}}' \
+  ' --topology-name={{TOPOLOGY_NAME}}' \
+  ' --topology-id={{TOPOLOGY_ID}}' \
+  ' --topology-defn-file={{TOPOLOGY_DEFINITION_FILE}}' \
+  ' --state-manager-connection={{STATEMGR_CONNECTION_STRING}}' \
+  ' --state-manager-root={{STATEMGR_ROOT_PATH}}' \
+  ' --tmaster-binary={{TMASTER_BINARY}}' \
+  ' --stmgr-binary={{STMGR_BINARY}}' \
+  ' --metrics-manager-classpath="{{METRICSMGR_CLASSPATH}}"' \
+  ' --instance-jvm-opts={{INSTANCE_JVM_OPTS_IN_BASE64}}' \
+  ' --classpath="{{TOPOLOGY_CLASSPATH}}"' \
+  ' --master-port={{thermos.ports[port1]}}' \
+  ' --tmaster-controller-port={{thermos.ports[port2]}}' \
+  ' --tmaster-stats-port={{thermos.ports[port3]}}' \
+  ' --heron-internals-config-file={{SYSTEM_YAML}}' \
+  ' --override-config-file={{OVERRIDE_YAML}} ' \
+  ' --component-ram-map={{COMPONENT_RAMMAP}}' \
+  ' --component-jvm-opts={{COMPONENT_JVM_OPTS_IN_BASE64}}' \
+  ' --pkg-type={{TOPOLOGY_PACKAGE_TYPE}}' \
+  ' --topology-binary-file={{TOPOLOGY_BINARY_FILE}}' \
+  ' --heron-java-home={{JAVA_HOME}}' \
+  ' --shell-port={{thermos.ports[http]}}' \
+  ' --heron-shell-binary={{SHELL_BINARY}}' \
+  ' --metrics-manager-port={{thermos.ports[port4]}}' \
+  ' --cluster={{CLUSTER}}' \
+  ' --role={{ROLE}}' \
+  ' --environment={{ENVIRON}}' \
+  ' --instance-classpath="{{INSTANCE_CLASSPATH}}"' \
+  ' --metrics-sinks-config-file={{METRICS_YAML}}' \
+  ' --scheduler-classpath="{{SCHEDULER_CLASSPATH}}"' \
+  ' --scheduler-port="{{thermos.ports[scheduler]}}"' \
+  ' --python-instance-binary={{PYTHON_INSTANCE_BINARY}}' \
+  ' --cpp-instance-binary={{CPP_INSTANCE_BINARY}}' \
+  ' --metricscache-manager-classpath={{METRICSCACHEMGR_CLASSPATH}}' \
+  ' --metricscache-manager-master-port={{thermos.ports[metricscachemgr_masterport]}}' \
+  ' --metricscache-manager-stats-port={{thermos.ports[metricscachemgr_statsport]}}' \
+  ' --is-stateful={{IS_STATEFUL_ENABLED}}' \
+  ' --checkpoint-manager-classpath="{{CKPTMGR_CLASSPATH}}"' \
+  ' --checkpoint-manager-port={{thermos.ports[ckptmgr_port]}}' \
+  ' --stateful-config-file={{STATEFUL_CONFIG_YAML}}' \
+  ' --health-manager-mode={{HEALTHMGR_MODE}}' \
+  ' --health-manager-classpath={{HEALTHMGR_CLASSPATH}}'
+
+launch_heron_executor = Process(
+  name = 'launch_heron_executor',
+  cmdline = command_to_start_executor,
+  max_failures = 1
+)
+
+discover_profiler_port = Process(
+  name = 'discover_profiler_port',
+  cmdline = 'echo {{thermos.ports[yourkit]}} > yourkit.port'
+)
+
+# --- tasks ---
+heron_task = SequentialTask(
+  name = 'setup_and_run',
+  processes = [fetch_heron_system, fetch_user_package, launch_heron_executor, discover_profiler_port],
+  resources = Resources(cpu = '{{CPUS_PER_CONTAINER}}', ram = '{{RAM_PER_CONTAINER}}', disk = '{{DISK_PER_CONTAINER}}')
+)
+
+# -- jobs ---
+jobs = [
+  Job(
+    name = '{{TOPOLOGY_NAME}}',
+    cluster = '{{CLUSTER}}',
+    role = '{{ROLE}}',
+    environment = '{{ENVIRON}}',
+    service = False,
+    task = twister2_task,
+    instances = '{{NUM_CONTAINERS}}',
+    announce = Announcer(primary_port = 'http')
+  )
+]

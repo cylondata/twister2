@@ -48,7 +48,7 @@ public class BulkMemoryManager extends AbstractMemoryManager {
    * Keeps the limits and step sizes for each key that is added
    * the double array has 2 values 1st contains the limit and the second contains the step size
    */
-  private Map<String, double[]> keyMap;
+  private Map<String, Integer> keyMap;
 
   /**
    * Keeps the current submitted count for a given key
@@ -59,6 +59,12 @@ public class BulkMemoryManager extends AbstractMemoryManager {
    * Keeps the ByteBuffers that need to be written
    */
   private Map<String, LinkedList<ByteBuffer>> keyMapBuffers;
+
+  /**
+   * Keeps track of the collective size of byte buffers for each key that is currently held
+   * in the keyMapBuffers
+   */
+  private Map<String, Integer> keyBufferSizes;
 
   public BulkMemoryManager(Path dataPath) {
     //TODO : This needs to be loaded from a configuration file
@@ -71,7 +77,7 @@ public class BulkMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean init() {
-    keyMap = new ConcurrentHashMap<String, double[]>();
+    keyMap = new ConcurrentHashMap<String, Integer>();
     keyMapCurrent = new ConcurrentHashMap<String, Integer>();
     keyMapBuffers = new ConcurrentHashMap<String, LinkedList<ByteBuffer>>();
     return false;
@@ -172,11 +178,11 @@ public class BulkMemoryManager extends AbstractMemoryManager {
     return memoryManager.delete(key);
   }
 
-  public Map<String, double[]> getKeyMap() {
+  public Map<String, Integer> getKeyMap() {
     return keyMap;
   }
 
-  public void setKeyMap(Map<String, double[]> keyMap) {
+  public void setKeyMap(Map<String, Integer> keyMap) {
     this.keyMap = keyMap;
   }
 
@@ -184,21 +190,23 @@ public class BulkMemoryManager extends AbstractMemoryManager {
    * Register the key
    *
    * @param key key value to be registered
-   * @param limit the maximum number of values that will be submitted
    * @param step the step size. The Memory manager will write to the store once this value
    * is reached
    * @return true if the key was registered and false if the key is already present
    */
-  public boolean registerKey(String key, int limit, int step) {
+  public boolean registerKey(String key, int step) {
     //TODO : do we have knowledge of the size of each byteBuffer?
     if (keyMap.containsKey(key)) {
       return false;
     }
-    double[] temp = {limit, step};
-    keyMap.put(key, temp);
+    keyMap.put(key, step);
     keyMapCurrent.put(key, 0);
     keyMapBuffers.put(key, new LinkedList<ByteBuffer>());
     return true;
+  }
+
+  public boolean registerKey(String key) {
+    return registerKey(key, MemoryManagerContext.BULK_MM_STEP_SIZE);
   }
 
   /**
@@ -212,23 +220,67 @@ public class BulkMemoryManager extends AbstractMemoryManager {
     }
     //TODO: need to make sure that there are no memory leaks here
     //TODO: do we need to lock on key value? will more than 1 thread submit the same key
-    double[] stats = keyMap.get(key);
+    int step = keyMap.get(key);
     int currentCount = keyMapCurrent.get(key);
     // If this is the last value write all the values to store
-    if (currentCount + 1 == stats[0]) {
-
-      keyMap.remove(key);
-      keyMapCurrent.remove(key);
-      keyMapBuffers.remove(key);
-    } else if ((currentCount + 1) % stats[1] == 0) {
+    if ((currentCount + 1) % step == 0) {
       // write to store if the step has been met
-
+      flush(key, value);
       keyMapCurrent.put(key, currentCount + 1);
     } else {
       keyMapCurrent.put(key, currentCount + 1);
       keyMapBuffers.get(key).add(value);
+      keyBufferSizes.put(key, keyBufferSizes.get(key) + value.limit());
     }
     //TODO : check if the return is correct just a place holder for now
+    return true;
+  }
+
+  /**
+   * Makes sure all the data that is held in the BulkMemoryManager is pushed into the
+   * memory store
+   */
+  public boolean flush(String key) {
+    ByteBuffer temp = ByteBuffer.allocateDirect(keyBufferSizes.get(key));
+    LinkedList<ByteBuffer> buffers = keyMapBuffers.get(key);
+    while (!buffers.isEmpty()) {
+      temp.put(buffers.poll());
+    }
+    //Since we got all the buffer values reset the size
+    keyBufferSizes.put(key, 0);
+    return memoryManager.put(key.getBytes(), temp);
+  }
+
+  /**
+   * Slight variation of flush for so that the last ByteBuffer does not need to be copied into the
+   * map
+   *
+   * @param key key to flush
+   * @param last the last value that needs to be appended to the ByteBuffers that correspond to the
+   * given key
+   */
+  public boolean flush(String key, ByteBuffer last) {
+    ByteBuffer temp = ByteBuffer.allocateDirect(keyBufferSizes.get(key) + last.limit());
+    LinkedList<ByteBuffer> buffers = keyMapBuffers.get(key);
+    while (!buffers.isEmpty()) {
+      temp.put(buffers.poll());
+    }
+    temp.put(last);
+    //Since we got all the buffer values reset the size
+    keyBufferSizes.put(key, 0);
+    return memoryManager.put(key.getBytes(), temp);
+  }
+
+  /**
+   * Closing the key will make the BulkMemoryManager to flush the current data into the store and
+   * delete all the key information. This is done once we know that no more values will be sent for
+   * this key
+   */
+  public boolean close(String key) {
+    flush(key);
+    keyMap.remove(key);
+    keyMapCurrent.remove(key);
+    keyMapBuffers.remove(key);
     return true;
   }
 }

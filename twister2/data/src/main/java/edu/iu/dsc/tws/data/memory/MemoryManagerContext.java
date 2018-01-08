@@ -9,22 +9,17 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+package edu.iu.dsc.tws.data.memory;
 
-package edu.iu.dsc.tws.rsched.schedulers.aurora;
+import edu.iu.dsc.tws.common.config.Context;
 
 /**
- * Field names passed to aurora controllers during job creation
+ * Created by pulasthi on 1/5/18.
  */
-public enum AuroraField {
-  AURORA_CLUSTER_NAME,
-  ENVIRONMENT,
-  ROLE,
-  AURORA_JOB_NAME,
-  CPUS_PER_CONTAINER,
-  DISK_PER_CONTAINER,
-  RAM_PER_CONTAINER,
-  NUMBER_OF_CONTAINERS,
-  TWISTER2_PACKAGE_PATH,
-  TWISTER2_PACKAGE_FILE,
-  JOB_PACKAGE_URI,
+public class MemoryManagerContext extends Context {
+
+  /**
+   * Default step size of the Bulk Memory Manager.
+   */
+  public static final int BULK_MM_STEP_SIZE = 4;
 }

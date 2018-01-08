@@ -384,11 +384,11 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
         int id = currentMessage.getOriginatingId();
         Queue<Pair<Object, MPIMessage>> pendingReceiveMessages =
             pendingReceiveMessagesPerSource.get(id);
-        receiveCount++;
-        if (receiveCount % 1 == 0) {
-          LOG.info(String.format("%d received message %d %d %d",
-              executor, id, receiveCount, pendingReceiveMessages.size()));
-        }
+//        receiveCount++;
+//        if (receiveCount % 1 == 0) {
+//          LOG.info(String.format("%d received message %d %d %d",
+//              executor, id, receiveCount, pendingReceiveMessages.size()));
+//        }
         currentMessage.setReceivedState(MPIMessage.ReceivedState.INIT);
         if (pendingReceiveMessages.size() > 0) {
           if (!pendingReceiveMessages.offer(new ImmutablePair<>(object, currentMessage))) {

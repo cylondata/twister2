@@ -28,25 +28,12 @@ public final class Twister2Submitter {
    * Submit a basic job with only container and communications
    * @param basicJob basic job
    */
-  public static void submitContainerJob(BasicJob basicJob, JobConfig jobConfig) {
+  public static void submitContainerJob(BasicJob basicJob, Config config) {
     // save the job to state manager
     JobAPI.Job job = basicJob.serialize();
 
     // launch the luancher
     ResourceAllocator resourceAllocator = new ResourceAllocator();
-    resourceAllocator.submitJob(job);
-  }
-
-  /**
-   * Submit a basic job with only container and communications
-   * @param basicJob basic job
-   */
-  public static void submitAuroraJob(BasicJob basicJob, Config config) {
-    // save the job to state manager
-    JobAPI.Job job = basicJob.serialize();
-
-    // launch the luancher
-    ResourceAllocator resourceAllocator = new ResourceAllocator();
-    resourceAllocator.submitAuroraJob(job, config);
+    resourceAllocator.submitJob(job, config);
   }
 }

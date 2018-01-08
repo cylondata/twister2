@@ -9,7 +9,19 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples;
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+package edu.iu.dsc.tws.examples.basic.comms;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,6 +39,8 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.examples.IntData;
+import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
@@ -74,7 +88,7 @@ public class BasicGatherCommunication implements IContainer {
       // this method calls the init method
       // I think this is wrong
       aggregate = channel.gather(newCfg, MessageType.OBJECT, 0, sources,
-          dest, new FinalReduceReceive());
+          dest, new FinalGatherReceive());
 
       for (int i = 0; i < noOfTasksPerExecutor; i++) {
         // the map thread where data is produced
@@ -139,7 +153,7 @@ public class BasicGatherCommunication implements IContainer {
     }
   }
 
-  private class FinalReduceReceive implements MessageReceiver {
+  private class FinalGatherReceive implements MessageReceiver {
     // lets keep track of the messages
     // for each task we need to keep track of incoming messages
     private Map<Integer, Map<Integer, List<Object>>> messages = new HashMap<>();
