@@ -48,7 +48,7 @@ public class BulkMemoryManager extends AbstractMemoryManager {
    * Keeps the limits and step sizes for each key that is added
    * the double array has 2 values 1st contains the limit and the second contains the step size
    */
-  private Map<String, double[]> keyMap;
+  private Map<String, Integer> keyMap;
 
   /**
    * Keeps the current submitted count for a given key
@@ -77,7 +77,7 @@ public class BulkMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean init() {
-    keyMap = new ConcurrentHashMap<String, double[]>();
+    keyMap = new ConcurrentHashMap<String, Integer>();
     keyMapCurrent = new ConcurrentHashMap<String, Integer>();
     keyMapBuffers = new ConcurrentHashMap<String, LinkedList<ByteBuffer>>();
     return false;
@@ -178,11 +178,11 @@ public class BulkMemoryManager extends AbstractMemoryManager {
     return memoryManager.delete(key);
   }
 
-  public Map<String, double[]> getKeyMap() {
+  public Map<String, Integer> getKeyMap() {
     return keyMap;
   }
 
-  public void setKeyMap(Map<String, double[]> keyMap) {
+  public void setKeyMap(Map<String, Integer> keyMap) {
     this.keyMap = keyMap;
   }
 
@@ -190,21 +190,23 @@ public class BulkMemoryManager extends AbstractMemoryManager {
    * Register the key
    *
    * @param key key value to be registered
-   * @param limit the maximum number of values that will be submitted
    * @param step the step size. The Memory manager will write to the store once this value
    * is reached
    * @return true if the key was registered and false if the key is already present
    */
-  public boolean registerKey(String key, int limit, int step) {
+  public boolean registerKey(String key, int step) {
     //TODO : do we have knowledge of the size of each byteBuffer?
     if (keyMap.containsKey(key)) {
       return false;
     }
-    double[] temp = {limit, step};
-    keyMap.put(key, temp);
+    keyMap.put(key, step);
     keyMapCurrent.put(key, 0);
     keyMapBuffers.put(key, new LinkedList<ByteBuffer>());
     return true;
+  }
+
+  public boolean registerKey(String key) {
+    return registerKey(key, MemoryManagerContext.BULK_MM_STEP_SIZE);
   }
 
   /**
@@ -218,19 +220,17 @@ public class BulkMemoryManager extends AbstractMemoryManager {
     }
     //TODO: need to make sure that there are no memory leaks here
     //TODO: do we need to lock on key value? will more than 1 thread submit the same key
-    double[] stats = keyMap.get(key);
+    int step = keyMap.get(key);
     int currentCount = keyMapCurrent.get(key);
     // If this is the last value write all the values to store
-    if (currentCount + 1 == stats[0]) {
-
-      close(key);
-    } else if ((currentCount + 1) % stats[1] == 0) {
+    if ((currentCount + 1) % step == 0) {
       // write to store if the step has been met
-
+      flush(key, value);
       keyMapCurrent.put(key, currentCount + 1);
     } else {
       keyMapCurrent.put(key, currentCount + 1);
       keyMapBuffers.get(key).add(value);
+      keyBufferSizes.put(key, keyBufferSizes.get(key) + value.limit());
     }
     //TODO : check if the return is correct just a place holder for now
     return true;
