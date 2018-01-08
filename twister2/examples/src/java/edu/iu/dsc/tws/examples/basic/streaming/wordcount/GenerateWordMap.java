@@ -34,6 +34,8 @@ public class GenerateWordMap implements Runnable {
 
   private List<Integer> destinations;
 
+  private RandomString randomString;
+
   public GenerateWordMap(Config config, DataFlowOperation operation, int words,
                          List<Integer> dests, int tId) {
     this.operation = operation;
@@ -42,6 +44,7 @@ public class GenerateWordMap implements Runnable {
     this.destinations = dests;
     this.taskId = tId;
     this.noOfDestinations = destinations.size();
+    this.randomString = new RandomString(MAX_CHARS, new Random(), RandomString.ALPHANUM);
   }
 
   @Override
@@ -58,11 +61,6 @@ public class GenerateWordMap implements Runnable {
   }
 
   private String generateWord() {
-    int wordLength = (int) Math.ceil(random.nextDouble() * 100);
-    // now lets generate a word
-    for (int i = 0; i < wordLength; i++) {
-      tempCharacters[i] = (char) (random.nextDouble() * 255);
-    }
-    return new String(tempCharacters);
+    return randomString.nextRandomSizeString();
   }
 }
