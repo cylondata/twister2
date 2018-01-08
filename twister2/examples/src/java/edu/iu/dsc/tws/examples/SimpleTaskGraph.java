@@ -137,6 +137,24 @@ public class SimpleTaskGraph implements IContainer {
     }*/
   }
 
+  /**
+   * Generate data with an integer array
+   *
+   * @return IntData
+   */
+  private IntData generateData() {
+    int[] d = new int[10];
+    for (int i = 0; i < 10; i++) {
+      d[i] = i;
+    }
+    return new IntData(d);
+  }
+
+  private enum Status {
+    INIT,
+    MAP_FINISHED,
+    LOAD_RECEIVE_FINISHED,
+  }
 
   private class PingPongReceive implements MessageReceiver {
     private int count = 0;
@@ -184,7 +202,6 @@ public class SimpleTaskGraph implements IContainer {
 
     MapWorker(int tid, DataFlowOperation dataFlowOperation) {
       super(tid, dataFlowOperation);
-
     }
 
     @Override
@@ -192,10 +209,7 @@ public class SimpleTaskGraph implements IContainer {
       LOG.log(Level.INFO, "Starting map worker");
       for (int i = 0; i < 100000; i++) { //100000
         IntData data = generateData();
-        // lets generate a message
-
         while (!getDataFlowOperation().send(0, data, 0)) {
-          // lets wait a litte and try again
           try {
             Thread.sleep(1);
           } catch (InterruptedException e) {
@@ -213,25 +227,6 @@ public class SimpleTaskGraph implements IContainer {
     public Message execute(Message content) {
       return execute();
     }
-  }
-
-  /**
-   * Generate data with an integer array
-   *
-   * @return IntData
-   */
-  private IntData generateData() {
-    int[] d = new int[10];
-    for (int i = 0; i < 10; i++) {
-      d[i] = i;
-    }
-    return new IntData(d);
-  }
-
-  private enum Status {
-    INIT,
-    MAP_FINISHED,
-    LOAD_RECEIVE_FINISHED,
   }
 
 }

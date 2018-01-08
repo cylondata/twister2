@@ -9,18 +9,6 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
 package edu.iu.dsc.tws.examples;
 
 import java.util.ArrayList;
@@ -95,6 +83,7 @@ public class SimpleMultiTaskGraph implements IContainer {
     //For Dataflow Task Graph Generation call the dataflow task graph generator
     MapWorker sourceTask = new MapWorker(0, direct);
     ReceiveWorker sinkTask = new ReceiveWorker(1);
+    //later we can add a different task
     ReceiveWorker sinkTask1 = new ReceiveWorker(2);
 
     dataflowTaskGraph = new DataflowTaskGraphGenerator()
@@ -106,7 +95,8 @@ public class SimpleMultiTaskGraph implements IContainer {
       parsedTaskSet = dataflowTaskGraphParser.dataflowTaskGraphParseAndSchedule();
     }
 
-    //This loop should be properly written...!
+    //This loop should be properly written...! We will add the complex logic once
+    //the taskgraph scheduler is constructed...!
     if (!parsedTaskSet.isEmpty() && containerId > 1) {
       List<Task> taskList = new ArrayList<>();
       for (Task processedTasks : parsedTaskSet) {
@@ -178,21 +168,20 @@ public class SimpleMultiTaskGraph implements IContainer {
     @Override
     public Message execute() {
       LOG.log(Level.INFO, "Starting map worker");
-      for (int i = 0; i < 100000; i++) {
+      for (int i = 0; i < 100000; i++) { //100000
         IntData data = generateData();
-        // lets generate a message
-        // while (!getDataFlowOperation().send(0, data)) {
-        // lets wait a litte and try again
-        try {
-          Thread.sleep(1);
-        } catch (InterruptedException e) {
-          e.printStackTrace();
+
+        while (!getDataFlowOperation().send(0, data, 0)) {
+          try {
+            Thread.sleep(1);
+          } catch (InterruptedException e) {
+            e.printStackTrace();
+          }
         }
+        sendCount++;
+        Thread.yield();
       }
-      sendCount++;
-      Thread.yield();
-      //}
-      status = SimpleMultiTaskGraph.Status.MAP_FINISHED;
+      status = Status.MAP_FINISHED;
       return null;
     }
 
@@ -225,7 +214,6 @@ public class SimpleMultiTaskGraph implements IContainer {
 
     @Override
     public void progress() {
-
     }
   }
 }

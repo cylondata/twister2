@@ -1,3 +1,14 @@
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 package edu.iu.dsc.tws.examples;
 
 import java.util.ArrayList;
@@ -32,6 +43,7 @@ public class SimpleCxMultiTaskGraph implements IContainer {
   private static final Logger LOG = Logger.getLogger(SimpleTaskGraph.class.getName());
 
   private DataFlowOperation direct;
+  private DataFlowOperation direct1;
   private TaskExecutorFixedThread taskExecutor;
   private Set<Task> parsedTaskSet;
 
@@ -66,6 +78,10 @@ public class SimpleCxMultiTaskGraph implements IContainer {
         destination, new SimpleCxMultiTaskGraph.PingPongReceive());
     taskExecutor.initCommunication(channel, direct);
 
+    direct1 = channel.direct(newCfg, MessageType.OBJECT, 1, sources,
+        destination, new SimpleCxMultiTaskGraph.PingPongReceive());
+    taskExecutor.initCommunication(channel, direct1);
+
     //For Dataflow Task Graph Generation call the dataflow task graph generator
     MapWorker sourceTask = new MapWorker(0, direct);
     ReceiveWorker sinkTask = new ReceiveWorker();
@@ -75,7 +91,7 @@ public class SimpleCxMultiTaskGraph implements IContainer {
     //task 0 -> task 2 create different task edge or communication channel
     dataflowTaskGraph = new DataflowTaskGraphGenerator()
         .generateDataflowGraph(sourceTask, sinkTask, direct)
-        .generateDataflowGraph(sourceTask, sinkTask1, direct);
+        .generateDataflowGraph(sourceTask, sinkTask1, direct1);
 
     if (dataflowTaskGraph != null) {
       dataflowTaskGraphParser = new DataflowTaskGraphParser(dataflowTaskGraph);
@@ -84,7 +100,7 @@ public class SimpleCxMultiTaskGraph implements IContainer {
 
     if (!parsedTaskSet.isEmpty()) {
       if (containerId == 0) {
-        LOG.info("Job in if loop is::::::::::::" + parsedTaskSet.iterator().next());
+        LOG.log(Level.INFO, "Job In If Loop" + parsedTaskSet.iterator().next());
         taskExecutor.registerTask(parsedTaskSet.iterator().next());
         taskExecutor.submitTask(0);
         taskExecutor.progres();
@@ -124,6 +140,7 @@ public class SimpleCxMultiTaskGraph implements IContainer {
    */
   private IntData generateData() {
     int[] d = new int[10];
+    LOG.info("I am in generate data method");
     for (int i = 0; i < 10; i++) {
       d[i] = i;
     }
@@ -186,12 +203,9 @@ public class SimpleCxMultiTaskGraph implements IContainer {
     @Override
     public Message execute() {
       LOG.log(Level.INFO, "Starting map worker");
-      for (int i = 0; i < 100000; i++) { //100000
+      for (int i = 0; i < 10000; i++) { //100000
         IntData data = generateData();
-        // lets generate a message
-
         while (!getDataFlowOperation().send(0, data, 0)) {
-          // lets wait a litte and try again
           try {
             Thread.sleep(1);
           } catch (InterruptedException e) {

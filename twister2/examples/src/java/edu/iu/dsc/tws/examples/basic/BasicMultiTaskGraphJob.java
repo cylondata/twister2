@@ -34,6 +34,8 @@ public final class BasicMultiTaskGraphJob {
     JobConfig jobConfig = new JobConfig();
     jobConfig.putConfig(config);
 
+    //Task 0, Task 1, and Task 2 are independent pipelined tasks.
+
     // build the job
     BasicJob basicJob = BasicJob.newBuilder()
         .setName("basic-multitaskgraph")
