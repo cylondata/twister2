@@ -20,8 +20,8 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 
-public final class BaseWordCountJob {
-  private BaseWordCountJob() {
+public final class WordCountJob {
+  private WordCountJob() {
   }
 
   public static void main(String[] args) {

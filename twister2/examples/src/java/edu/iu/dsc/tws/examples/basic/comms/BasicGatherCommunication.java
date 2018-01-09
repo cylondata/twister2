@@ -141,7 +141,7 @@ public class BasicGatherCommunication implements IContainer {
           }
 //          LOG.info(String.format("%d sending to %d", id, task)
 //              + " count: " + sendCount++);
-          if (i % 1000 == 0) {
+          if (i % 10 == 0) {
             LOG.info(String.format("%d sent %d", id, i));
           }
           Thread.yield();
@@ -196,7 +196,7 @@ public class BasicGatherCommunication implements IContainer {
           throw new RuntimeException(String.format("%d Partial receive error %d", id, target));
         }
         Integer c = counts.get(target).get(source);
-        if (m.size() > 128) {
+        if (m.size() > 16) {
 //          LOG.info(String.format("%d Final true: target %d source %d",
 //              id, target, source));
           canAdd = false;
@@ -264,7 +264,7 @@ public class BasicGatherCommunication implements IContainer {
    * @return IntData
    */
   private IntData generateData() {
-    int s = 12800;
+    int s = 128000;
     int[] d = new int[s];
     for (int i = 0; i < s; i++) {
       d[i] = i;

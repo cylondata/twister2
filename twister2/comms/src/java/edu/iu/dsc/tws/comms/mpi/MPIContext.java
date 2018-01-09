@@ -32,11 +32,11 @@ public class MPIContext extends CommunicationContext {
   public static final int FLAGS_MULTI_MSG = 1 << 29;
 
   public static int bufferSize(Config cfg) {
-    return cfg.getIntegerValue(BUFFER_SIZE, 256000);
+    return cfg.getIntegerValue(BUFFER_SIZE, 2048000);
   }
 
   public static int sendBuffersCount(Config cfg) {
-    return cfg.getIntegerValue(SEND_BUFFERS_COUNT, 128);
+    return cfg.getIntegerValue(SEND_BUFFERS_COUNT, 16);
   }
 
   public static int broadcastBufferCount(Config cfg) {
@@ -45,11 +45,11 @@ public class MPIContext extends CommunicationContext {
   }
 
   public static int receiveBufferCount(Config cfg) {
-    return cfg.getIntegerValue(RECEIVE_BUFFERS_COUNT, 128);
+    return cfg.getIntegerValue(RECEIVE_BUFFERS_COUNT, 32);
   }
 
   public static int sendPendingMax(Config cfg) {
-    return cfg.getIntegerValue(SEND_PENDING_MAX, 128);
+    return cfg.getIntegerValue(SEND_PENDING_MAX, 16);
   }
 }
 

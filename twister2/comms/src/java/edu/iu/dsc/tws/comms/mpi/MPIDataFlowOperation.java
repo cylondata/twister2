@@ -42,6 +42,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
     MPIMessageListener, MPIMessageReleaseCallback {
   private static final Logger LOG = Logger.getLogger(MPIDataFlowOperation.class.getName());
 
+  public static final int MAX_ATTEMPTS = 1000;
   // the configuration
   protected Config config;
   // the task plan
@@ -301,6 +302,23 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
     }
   }
 
+  private int sendMessageToTargetAttempts = 0;
+  private Map<Integer, Integer> sendMessageInternalAttempts = new HashMap<>();
+  private Map<Integer, Integer> receiveMessageAttempts = new HashMap<>();
+
+  private int updateAttemptMap(Map<Integer, Integer> map, int id, int count) {
+    int attempt = 0;
+    if (map.containsKey(id)) {
+      attempt = map.get(id);
+    }
+    attempt += count;
+    if (attempt < 0) {
+      attempt = 0;
+    }
+    map.put(id, attempt);
+    return attempt;
+  }
+
   @Override
   public void progress() {
     lock.lock();
@@ -323,7 +341,14 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
                   mpiSendMessage.getPath(), mpiSendMessage.getFlags(), messageObject);
               if (!receiveAccepted) {
                 canProgress = false;
+                int attempt = updateAttemptMap(sendMessageInternalAttempts, i, 1);
+                if (attempt > MAX_ATTEMPTS) {
+                  LOG.info(String.format("%d Send message internal attempts %d",
+                      executor, attempt));
+                }
                 break;
+              } else {
+                updateAttemptMap(sendMessageInternalAttempts, i, -1);
               }
             }
             if (canProgress) {
@@ -353,8 +378,16 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
                 // if no longer accepts stop
                 if (!sendAccepted) {
                   canProgress = false;
+                  sendMessageToTargetAttempts++;
+                  if (sendMessageToTargetAttempts > MAX_ATTEMPTS) {
+                    LOG.info(String.format("%d Send message target attempts %d",
+                        executor, sendMessageToTargetAttempts));
+                  }
                   break;
                 } else {
+                  if (sendMessageToTargetAttempts > 0) {
+                    sendMessageToTargetAttempts--;
+                  }
                   mpiSendMessage.incrementAcceptedExternalSends();
                   noOfExternalSends++;
                 }
@@ -417,7 +450,14 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
               throw new RuntimeException(executor + " We should have enough space: "
                   + pendingReceiveMessages.size());
             }
+            int attempt = updateAttemptMap(receiveMessageAttempts, id, 1);
+            if (attempt >  MAX_ATTEMPTS) {
+              LOG.info(String.format("%d Send message internal attempts %d",
+                  executor, attempt));
+            }
             continue;
+          } else {
+            updateAttemptMap(receiveMessageAttempts, id, -1);
           }
           // okay lets try to free the buffers of this message
           currentMessage.release();
@@ -445,14 +485,28 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
             }
             currentMessage.setReceivedState(MPIMessage.ReceivedState.RECEIVE);
             if (!receiveMessage(currentMessage, object)) {
+              int attempt = updateAttemptMap(receiveMessageAttempts, 0, 1);
+              if (attempt > MAX_ATTEMPTS) {
+                LOG.info(String.format("%d on message attempts %d",
+                    executor, attempt));
+              }
               break;
+            } else {
+              updateAttemptMap(receiveMessageAttempts, 0, -1);
             }
             currentMessage.release();
             pendingReceiveMessages.poll();
           } else if (state == MPIMessage.ReceivedState.RECEIVE) {
             currentMessage.setReceivedState(MPIMessage.ReceivedState.RECEIVE);
             if (!receiveMessage(currentMessage, object)) {
+              int attempt = updateAttemptMap(receiveMessageAttempts, 0, 1);
+              if (attempt > MAX_ATTEMPTS) {
+                LOG.info(String.format("%d on message attempts %d",
+                    executor, attempt));
+              }
               break;
+            } else {
+              updateAttemptMap(receiveMessageAttempts, 0, -1);
             }
             currentMessage.release();
             pendingReceiveMessages.poll();
