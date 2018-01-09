@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 
-public class KMeansJob {
+public final class KMeansJob {
   private KMeansJob() {
   }
 

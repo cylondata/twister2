@@ -25,7 +25,7 @@ import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
-public class KMeansUtils {
+public final class KMeansUtils {
   private static final Logger LOG = Logger.getLogger(KMeansUtils.class.getName());
 
   private KMeansUtils() {
