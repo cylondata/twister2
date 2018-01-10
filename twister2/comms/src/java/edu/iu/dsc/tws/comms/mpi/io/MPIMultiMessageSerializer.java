@@ -271,6 +271,7 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
     if (currentSourceBuffer == buffers.size() && currentMPIBuffer != null) {
       state.setBufferNo(0);
       state.setBytesCopied(0);
+      message.release();
       return true;
     } else {
       state.setBufferNo(currentSourceBuffer);

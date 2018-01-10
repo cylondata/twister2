@@ -15,6 +15,7 @@
 package edu.iu.dsc.tws.rsched.uploaders.scp;
 
 import java.util.logging.Logger;
+
 import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
 
 public class ScpController {
@@ -38,7 +39,7 @@ public class ScpController {
     // an example ssh command created by the format looks like this:
     // ssh -i ~/.ssh/id_rsa -p 23 user@example.com mkdir -p /twister2/repository/...
     String command = String.format("ssh %s %s mkdir -p %s", sshOptions, sshConnection, dir);
-    return 0 == ProcessUtils.runProcess( command, null);
+    return 0 == ProcessUtils.runProcess(command, null);
   }
 
   public boolean copyFromLocalFile(String source, String destination) {

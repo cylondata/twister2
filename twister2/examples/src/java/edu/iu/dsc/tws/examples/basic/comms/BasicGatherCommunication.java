@@ -9,7 +9,19 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples;
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+package edu.iu.dsc.tws.examples.basic.comms;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,13 +39,15 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.examples.IntData;
+import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
-public class BaseAllReduceCommunication implements IContainer {
-  private static final Logger LOG = Logger.getLogger(BaseAllReduceCommunication.class.getName());
+public class BasicGatherCommunication implements IContainer {
+  private static final Logger LOG = Logger.getLogger(BasicGatherCommunication.class.getName());
 
-  private DataFlowOperation allReduce;
+  private DataFlowOperation aggregate;
 
   private ResourcePlan resourcePlan;
 
@@ -45,14 +59,6 @@ public class BaseAllReduceCommunication implements IContainer {
 
   private int noOfTasksPerExecutor = 2;
 
-  private enum Status {
-    INIT,
-    MAP_FINISHED,
-    LOAD_RECEIVE_FINISHED,
-  }
-
-  private Status status;
-
   @Override
   public void init(Config cfg, int containerId, ResourcePlan plan) {
     LOG.log(Level.INFO, "Starting the example with container id: " + plan.getThisId());
@@ -60,7 +66,6 @@ public class BaseAllReduceCommunication implements IContainer {
     this.config = cfg;
     this.resourcePlan = plan;
     this.id = containerId;
-    this.status = Status.INIT;
     this.noOfTasksPerExecutor = NO_OF_TASKS / plan.noOfContainers();
 
     // lets create the task plan
@@ -71,12 +76,8 @@ public class BaseAllReduceCommunication implements IContainer {
     TWSCommunication channel = network.getDataFlowTWSCommunication();
 
     Set<Integer> sources = new HashSet<>();
-    for (int i = 0; i < NO_OF_TASKS / 2; i++) {
+    for (int i = 0; i < NO_OF_TASKS; i++) {
       sources.add(i);
-    }
-    Set<Integer> destinations = new HashSet<>();
-    for (int i = 0; i < NO_OF_TASKS / 2; i++) {
-      destinations.add(NO_OF_TASKS / 2 + i);
     }
     int dest = NO_OF_TASKS;
 
@@ -86,16 +87,14 @@ public class BaseAllReduceCommunication implements IContainer {
     try {
       // this method calls the init method
       // I think this is wrong
-      allReduce = channel.allReduce(newCfg, MessageType.OBJECT, 0, 1, sources,
-          destinations, dest, new FinalReduceReceive(), new PartialReduceWorker());
+      aggregate = channel.gather(newCfg, MessageType.OBJECT, 0, sources,
+          dest, new FinalGatherReceive());
 
-      if (id == 0 || id == 1) {
-        for (int i = 0; i < noOfTasksPerExecutor; i++) {
-          // the map thread where data is produced
-          LOG.info(String.format("%d Starting %d", id, i + id * noOfTasksPerExecutor));
-          Thread mapThread = new Thread(new MapWorker(i + id * noOfTasksPerExecutor));
-          mapThread.start();
-        }
+      for (int i = 0; i < noOfTasksPerExecutor; i++) {
+        // the map thread where data is produced
+        LOG.info(String.format("%d Starting %d", id, i + id * noOfTasksPerExecutor));
+        Thread mapThread = new Thread(new MapWorker(i + id * noOfTasksPerExecutor));
+        mapThread.start();
       }
       // we need to progress the communication
       while (true) {
@@ -103,7 +102,7 @@ public class BaseAllReduceCommunication implements IContainer {
           // progress the channel
           channel.progress();
           // we should progress the communication directive
-          allReduce.progress();
+          aggregate.progress();
           Thread.yield();
         } catch (Throwable t) {
           t.printStackTrace();
@@ -130,9 +129,9 @@ public class BaseAllReduceCommunication implements IContainer {
         LOG.log(Level.INFO, "Starting map worker: " + id);
 //      MPIBuffer data = new MPIBuffer(1024);
         IntData data = generateData();
-        for (int i = 0; i < 10000; i++) {
+        for (int i = 0; i < 100; i++) {
           // lets generate a message
-          while (!allReduce.send(task, data, 0)) {
+          while (!aggregate.send(task, data, 0)) {
             // lets wait a litte and try again
             try {
               Thread.sleep(1);
@@ -142,35 +141,28 @@ public class BaseAllReduceCommunication implements IContainer {
           }
 //          LOG.info(String.format("%d sending to %d", id, task)
 //              + " count: " + sendCount++);
-          if (i % 1000 == 0) {
+          if (i % 10 == 0) {
             LOG.info(String.format("%d sent %d", id, i));
           }
           Thread.yield();
         }
         LOG.info(String.format("%d Done sending", id));
-        status = Status.MAP_FINISHED;
       } catch (Throwable t) {
         t.printStackTrace();
       }
     }
   }
 
-  /**
-   * Reduce class will work on the reduce messages.
-   */
-  private class PartialReduceWorker implements MessageReceiver {
-
+  private class FinalGatherReceive implements MessageReceiver {
     // lets keep track of the messages
     // for each task we need to keep track of incoming messages
     private Map<Integer, Map<Integer, List<Object>>> messages = new HashMap<>();
     private Map<Integer, Map<Integer, Integer>> counts = new HashMap<>();
 
     private int count = 0;
-    /**
-     * For each task in this exector, we will receive from the list of tasks in the given path
-     *
-     * @param expectedIds expected task ids
-     */
+
+    private long start = System.nanoTime();
+
     @Override
     public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
       for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
@@ -182,7 +174,7 @@ public class BaseAllReduceCommunication implements IContainer {
           countsPerTask.put(i, 0);
         }
 
-        LOG.info(String.format("%d Partial Task %d receives from %s",
+        LOG.info(String.format("%d Final Task %d receives from %s",
             id, e.getKey(), e.getValue().toString()));
 
         messages.put(e.getKey(), messagesPerTask);
@@ -191,24 +183,28 @@ public class BaseAllReduceCommunication implements IContainer {
     }
 
     @Override
-    public boolean onMessage(int source, int path, int target,  int flags, Object object) {
-//      LOG.info(String.format("%d Message received for partial %d from %d", id, target, source));
+    public boolean onMessage(int source, int path, int target, int flags, Object object) {
       // add the object to the map
       boolean canAdd = true;
+      if (count == 0) {
+        start = System.nanoTime();
+      }
+
       try {
         List<Object> m = messages.get(target).get(source);
+        if (messages.get(target) == null) {
+          throw new RuntimeException(String.format("%d Partial receive error %d", id, target));
+        }
         Integer c = counts.get(target).get(source);
-        if (m.size() > 128) {
-//          if (count % 10 == 0) {
-//            LOG.info(String.format("%d Partial false %d %d", id, source, m.size()));
-//          }
+        if (m.size() > 16) {
+//          LOG.info(String.format("%d Final true: target %d source %d",
+//              id, target, source));
           canAdd = false;
         } else {
-//          if (count % 10 == 0) {
-//          }
+//          LOG.info(String.format("%d Final false: target %d source %d",
+//              id, target, source));
           m.add(object);
           counts.get(target).put(source, c + 1);
-//          LOG.info(String.format("%d Partial true %d %d %s", id, source, m.size(), counts));
         }
 
         return canAdd;
@@ -236,57 +232,29 @@ public class BaseAllReduceCommunication implements IContainer {
             }
           }
           if (found) {
+            for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
+              o = e.getValue().remove(0);
+            }
+            for (Map.Entry<Integer, Integer> e : cMap.entrySet()) {
+              Integer i = e.getValue();
+              cMap.put(e.getKey(), i - 1);
+            }
             if (o != null) {
-              if (allReduce.sendPartial(t, o, 0)) {
-                count++;
-                for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
-                  o = e.getValue().remove(0);
-                }
-                for (Map.Entry<Integer, Integer> e : cMap.entrySet()) {
-                  Integer i = e.getValue();
-                  cMap.put(e.getKey(), i - 1);
-                }
-//                  LOG.info(String.format("%d reduce send true", id));
-              } else {
-                canProgress = false;
-//                  LOG.info(String.format("%d reduce send false", id));
-              }
-              if (count % 1000 == 0) {
-                LOG.info(String.format("%d Inject partial %d count: %d %s",
+              count++;
+              if (count % 100 == 0) {
+                LOG.info(String.format("%d Last %d count: %d %s",
                     id, t, count, counts));
               }
+              if (count >= 100) {
+                LOG.info("Total time: " + (System.nanoTime() - start) / 1000000
+                    + " Count: " + count);
+              }
             } else {
-              canProgress = false;
               LOG.severe("We cannot find an object and this is not correct");
             }
           }
         }
       }
-    }
-  }
-
-  private class FinalReduceReceive implements MessageReceiver {
-    private int count = 0;
-    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-      for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
-        LOG.info(String.format("%d Final Task %d receives from %s",
-            id, e.getKey(), e.getValue().toString()));
-      }
-    }
-
-    @Override
-    public boolean onMessage(int source, int path, int target, int flags, Object object) {
-      count++;
-      if (count % 1000 == 0) {
-        LOG.info("Message received for last: " + source + " target: "
-            + target + " count: " + count);
-      }
-      return true;
-    }
-
-    @Override
-    public void progress() {
-
     }
   }
 
@@ -296,7 +264,7 @@ public class BaseAllReduceCommunication implements IContainer {
    * @return IntData
    */
   private IntData generateData() {
-    int s = 64000;
+    int s = 128000;
     int[] d = new int[s];
     for (int i = 0; i < s; i++) {
       d[i] = i;
@@ -304,3 +272,4 @@ public class BaseAllReduceCommunication implements IContainer {
     return new IntData(d);
   }
 }
+

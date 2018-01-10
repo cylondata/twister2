@@ -35,9 +35,6 @@ public class MPIDataFlowKGather implements DataFlowOperation {
   // one reduce for each destination
   private Map<Integer, MPIDataFlowGather> gatherMap;
 
-  // the partial receiver
-  private KeyedMessageReceiver partialReceiver;
-
   // the final receiver
   private KeyedMessageReceiver finalReceiver;
 
@@ -49,12 +46,10 @@ public class MPIDataFlowKGather implements DataFlowOperation {
 
   public MPIDataFlowKGather(TWSMPIChannel chnl,
                             Set<Integer> sources, Set<Integer> destination,
-                            KeyedMessageReceiver finalRecv,
-                            KeyedMessageReceiver partialRecv, Set<Integer> es) {
+                            KeyedMessageReceiver finalRecv, Set<Integer> es) {
     this.channel = chnl;
     this.sources = sources;
     this.destinations = destination;
-    this.partialReceiver = partialRecv;
     this.finalReceiver = finalRecv;
     this.edges = es;
     this.gatherMap = new HashMap<>();
@@ -93,7 +88,6 @@ public class MPIDataFlowKGather implements DataFlowOperation {
       reduce.progress();
     }
     finalReceiver.progress();
-    partialReceiver.progress();
   }
 
   @Override
@@ -107,26 +101,22 @@ public class MPIDataFlowKGather implements DataFlowOperation {
   @Override
   public void init(Config config, MessageType type, TaskPlan instancePlan, int edge) {
     executor = instancePlan.getThisExecutor();
-    Map<Integer, Map<Integer, List<Integer>>> partialReceives = new HashMap<>();
     Map<Integer, Map<Integer, List<Integer>>> finalReceives = new HashMap<>();
     List<Integer> edgeList = new ArrayList<>(edges);
     Collections.sort(edgeList);
     int count = 0;
     for (int dest : destinations) {
-      ReducePartialReceiver partialRcvr = new ReducePartialReceiver(dest);
-      ReduceFinalReceiver finalRcvr = new ReduceFinalReceiver(dest);
-      MPIDataFlowGather reduce = new MPIDataFlowGather(channel, sources, dest,
-          finalRcvr, partialRcvr, count, dest);
-      reduce.init(config, type, instancePlan, edgeList.get(count));
-      gatherMap.put(dest, reduce);
+      GatherFinalReceiver finalRcvr = new GatherFinalReceiver(dest);
+      MPIDataFlowGather gather = new MPIDataFlowGather(channel, sources, dest,
+          finalRcvr, count, dest);
+      gather.init(config, type, instancePlan, edgeList.get(count));
+      gatherMap.put(dest, gather);
       count++;
 
-      partialReceives.put(dest, reduce.receiveExpectedTaskIds());
-      finalReceives.put(dest, reduce.receiveExpectedTaskIds());
+      finalReceives.put(dest, gather.receiveExpectedTaskIds());
     }
 
     finalReceiver.init(config, this, finalReceives);
-    partialReceiver.init(config, this, partialReceives);
   }
 
   @Override
@@ -135,31 +125,10 @@ public class MPIDataFlowKGather implements DataFlowOperation {
     throw new RuntimeException("Not implemented");
   }
 
-  private class ReducePartialReceiver implements MessageReceiver {
+  private class GatherFinalReceiver implements MessageReceiver {
     private int destination;
 
-    ReducePartialReceiver(int dst) {
-      this.destination = dst;
-    }
-
-    @Override
-    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-    }
-
-    @Override
-    public boolean onMessage(int source, int path, int target, int flags, Object object) {
-//      LOG.info(String.format("%d received message %d %d %d", executor, path, target, source));
-      return partialReceiver.onMessage(source, destination, target, flags, object);
-    }
-
-    public void progress() {
-    }
-  }
-
-  private class ReduceFinalReceiver implements MessageReceiver {
-    private int destination;
-
-    ReduceFinalReceiver(int dest) {
+    GatherFinalReceiver(int dest) {
       this.destination = dest;
     }
 

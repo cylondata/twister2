@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.basic.wordcount;
+package edu.iu.dsc.tws.examples.basic;
 
 import java.util.HashMap;
 
@@ -17,16 +17,15 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.examples.BaseKeyedReduceCommunication;
+import edu.iu.dsc.tws.examples.SimpleCxMultiTaskGraph;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 
-public final class BaseWordCountJob {
-  private BaseWordCountJob() {
+public final class BasicCxMultiTaskGraphJob {
+  private BasicCxMultiTaskGraphJob() {
   }
 
   public static void main(String[] args) {
-
     // first load the configurations from command line and config files
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
@@ -34,13 +33,18 @@ public final class BaseWordCountJob {
     JobConfig jobConfig = new JobConfig();
     jobConfig.putConfig(config);
 
-    BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
-    jobBuilder.setName("basic-wordcount");
-    jobBuilder.setContainerClass(BaseKeyedReduceCommunication.class.getName());
-    jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 4);
-    jobBuilder.setConfig(jobConfig);
+    //Task 0 provide input to Task 1 & Task 2 independent Parallel Tasks.
+
+    // build the job
+    BasicJob basicJob = BasicJob.newBuilder()
+        .setName("basic-cxmultitaskgraph")
+        .setContainerClass(SimpleCxMultiTaskGraph.class.getName()) //will be updated soon
+        .setRequestResource(new ResourceContainer(2, 1024), 3)
+        .setConfig(jobConfig)
+        .build();
 
     // now submit the job
-    Twister2Submitter.submitContainerJob(jobBuilder.build(), config);
+    Twister2Submitter.submitContainerJob(basicJob, config);
   }
 }
+

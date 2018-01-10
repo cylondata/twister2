@@ -1,3 +1,14 @@
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 package edu.iu.dsc.tws.examples;
 
 import java.util.ArrayList;
@@ -23,22 +34,24 @@ import edu.iu.dsc.tws.task.api.Message;
 import edu.iu.dsc.tws.task.api.SinkTask;
 import edu.iu.dsc.tws.task.api.SourceTask;
 import edu.iu.dsc.tws.task.api.Task;
+import edu.iu.dsc.tws.task.core.PipelinedTask;
+import edu.iu.dsc.tws.task.core.TaskExecutionOptimizer;
 import edu.iu.dsc.tws.task.core.TaskExecutorFixedThread;
 import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraphGenerator;
 import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraphParser;
 
+public class SimpleMultiTaskGraph implements IContainer {
 
-public class SimpleTaskGraph implements IContainer {
-
-  private static final Logger LOG = Logger.getLogger(SimpleTaskGraph.class.getName());
+  private static final Logger LOG = Logger.getLogger(SimpleMultiTaskGraph.class.getName());
 
   private DataFlowOperation direct;
   private TaskExecutorFixedThread taskExecutor;
-  private Set<Task> parsedTaskSet;
+  private TaskExecutionOptimizer taskExecutionOptimizer;
 
   //to call the dataflow task graph generator
   private DataflowTaskGraphGenerator dataflowTaskGraph = null;
   private DataflowTaskGraphParser dataflowTaskGraphParser = null;
+  private Set<Task> parsedTaskSet;
   private Status status;
 
   /**
@@ -49,7 +62,7 @@ public class SimpleTaskGraph implements IContainer {
     LOG.log(Level.INFO, "Starting the example with container id: " + plan.getThisId());
 
     taskExecutor = new TaskExecutorFixedThread();
-    this.status = Status.INIT;
+    this.status = SimpleMultiTaskGraph.Status.INIT;
 
     TaskPlan taskPlan = Utils.createTaskPlan(cfg, plan);
     TWSNetwork network = new TWSNetwork(cfg, taskPlan);
@@ -61,80 +74,39 @@ public class SimpleTaskGraph implements IContainer {
 
     Map<String, Object> newCfg = new HashMap<>();
     LinkedQueue<Message> pongQueue = new LinkedQueue<Message>();
-    taskExecutor.registerQueue(0, pongQueue);
 
+    taskExecutor.registerQueue(0, pongQueue);
     direct = channel.direct(newCfg, MessageType.OBJECT, 0, sources,
-        destination, new SimpleTaskGraph.PingPongReceive());
+        destination, new SimpleMultiTaskGraph.PingPongReceive());
     taskExecutor.initCommunication(channel, direct);
 
     //For Dataflow Task Graph Generation call the dataflow task graph generator
     MapWorker sourceTask = new MapWorker(0, direct);
-    ReceiveWorker sinkTask = new ReceiveWorker();
+    ReceiveWorker sinkTask = new ReceiveWorker(1);
+    //later we can add a different task
+    ReceiveWorker sinkTask1 = new ReceiveWorker(2);
 
-    dataflowTaskGraph = new DataflowTaskGraphGenerator().generateDataflowGraph(
-        sourceTask, sinkTask, direct);
+    dataflowTaskGraph = new DataflowTaskGraphGenerator()
+        .generateDataflowGraph(sourceTask, sinkTask, direct)
+        .generateDataflowGraph(sinkTask, sinkTask1, direct);
+
     if (dataflowTaskGraph != null) {
       dataflowTaskGraphParser = new DataflowTaskGraphParser(dataflowTaskGraph);
       parsedTaskSet = dataflowTaskGraphParser.dataflowTaskGraphParseAndSchedule();
     }
 
-    if (!parsedTaskSet.isEmpty()) {
-      if (containerId == 0) {
-        LOG.info("Job in if loop is::::::::::::" + parsedTaskSet.iterator().next());
-        taskExecutor.registerTask(parsedTaskSet.iterator().next());
-        //taskExecutor.registerTask(new MapWorker(0, direct));
-        taskExecutor.submitTask(0);
-        taskExecutor.progres();
-      } else if (containerId == 1) {
-        int index = 0;
-        for (Task processedTask : parsedTaskSet) {
-          if (index == 0) {
-            ++index;
-          } else if (index == 1) {
-            LOG.info("Job in else loop is::::::::::::" + processedTask);
-            ArrayList<Integer> inq = new ArrayList<>();
-            inq.add(0);
-            taskExecutor.setTaskMessageProcessLimit(10000);
-            taskExecutor.registerSinkTask(processedTask, inq);
-            taskExecutor.progres();
-            ++index;
-          } else if (index > 1) { //Just for verification
-            LOG.info("Task Index is greater than 1");
-            LOG.info("Submit the job to pipeline task");
-            break;
-          }
-        }
+    //This loop should be properly written...! We will add the complex logic once
+    //the taskgraph scheduler is constructed...!
+    if (!parsedTaskSet.isEmpty() && containerId > 1) {
+      List<Task> taskList = new ArrayList<>();
+      for (Task processedTasks : parsedTaskSet) {
+        taskList.add(processedTasks);
       }
+      LOG.info("Submitting Pipeline Task:" + taskList.size());
+      taskExecutionOptimizer = new TaskExecutionOptimizer(taskExecutor);
+      PipelinedTask pipelinedTask = new PipelinedTask(1, taskList);
+      pipelinedTask.execute();
     }
-
-    //This scheduling loop will be used in the future, leave it for reference.
-    /*int index = 0;
-    if (!parsedTaskSet.isEmpty()) {
-      for (Task processedTask : parsedTaskSet) {
-        if (containerId == index) {
-          taskExecutor.registerTask(processedTask);
-          taskExecutor.submitTask(0);
-          taskExecutor.progres();
-          index++;
-        } else if (index == 1) {
-          ArrayList<Integer> inq = new ArrayList<>();
-          inq.add(0);
-          taskExecutor.setTaskMessageProcessLimit(10000);
-          taskExecutor.registerSinkTask(processedTask, inq);
-          taskExecutor.progres();
-          index++;
-        } else if(index > 1){
-          List<Task> taskList = new ArrayList<>();
-          for (Task processedTasks : parsedTaskSet) {
-            taskList.add(processedTasks);
-          }
-          //This loop should be properly written...!
-          taskExecutionOptimizer = new TaskExecutionOptimizer(taskExecutor);
-          Map<Integer, List<Task>> taskMap = new HashMap<>();
-          taskMap.put(1, taskList);
-        }
-      }
-    }*/
   }
 
   /**
@@ -156,32 +128,11 @@ public class SimpleTaskGraph implements IContainer {
     LOAD_RECEIVE_FINISHED,
   }
 
-  private class PingPongReceive implements MessageReceiver {
-    private int count = 0;
+  private class ReceiveWorker extends SinkTask<Task> {
 
-    @Override
-    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+    ReceiveWorker(int tid) {
+      super(tid);
     }
-
-    @Override
-    public boolean onMessage(int source, int path, int target, int flags, Object object) {
-      count++;
-      if (count % 10000 == 0) {
-        LOG.info("received message: " + count);
-      }
-      if (count == 100000) {
-        status = Status.LOAD_RECEIVE_FINISHED;
-      }
-      return true;
-    }
-
-    @Override
-    public void progress() {
-
-    }
-  }
-
-  private class ReceiveWorker extends SinkTask<Object> {
 
     @Override
     public Message execute() {
@@ -190,6 +141,16 @@ public class SimpleTaskGraph implements IContainer {
 
     @Override
     public Message execute(Message content) {
+      try {
+        // Sleep for a while
+        Thread.sleep(1);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+      String data = content.getContent().toString();
+      if (Integer.parseInt(data) % 1000 == 0) {
+        System.out.println(((String) content.getContent()).toString());
+      }
       return null;
     }
   }
@@ -197,7 +158,7 @@ public class SimpleTaskGraph implements IContainer {
   /**
    * We are running the map in a separate thread
    */
-  private class MapWorker extends SourceTask<Object> {
+  private class MapWorker extends SourceTask<Task> {
     private int sendCount = 0;
 
     MapWorker(int tid, DataFlowOperation dataFlowOperation) {
@@ -209,6 +170,7 @@ public class SimpleTaskGraph implements IContainer {
       LOG.log(Level.INFO, "Starting map worker");
       for (int i = 0; i < 100000; i++) { //100000
         IntData data = generateData();
+
         while (!getDataFlowOperation().send(0, data, 0)) {
           try {
             Thread.sleep(1);
@@ -229,7 +191,31 @@ public class SimpleTaskGraph implements IContainer {
     }
   }
 
-}
+  private class PingPongReceive implements MessageReceiver {
+    private int count = 0;
 
+    @Override
+    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+    }
+
+    @Override
+    public boolean onMessage(int source, int path, int target, int flags, Object object) {
+      count++;
+      if (count % 50000 == 0) {
+        LOG.info("received message: " + count);
+      }
+      taskExecutor.submitMessage(0, "" + count);
+
+      if (count == 10) {
+        status = Status.LOAD_RECEIVE_FINISHED;
+      }
+      return true;
+    }
+
+    @Override
+    public void progress() {
+    }
+  }
+}
 
 

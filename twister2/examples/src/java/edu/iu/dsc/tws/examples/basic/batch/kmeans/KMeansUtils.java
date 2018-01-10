@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.basic.wordcount;
+package edu.iu.dsc.tws.examples.basic.batch.kmeans;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,10 +25,10 @@ import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
-public final class WordCountUtils {
-  private static final Logger LOG = Logger.getLogger(WordCountUtils.class.getName());
+public final class KMeansUtils {
+  private static final Logger LOG = Logger.getLogger(KMeansUtils.class.getName());
 
-  private WordCountUtils() {
+  private KMeansUtils() {
   }
 
   /**

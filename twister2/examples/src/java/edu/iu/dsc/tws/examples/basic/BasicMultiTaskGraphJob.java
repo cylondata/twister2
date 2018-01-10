@@ -17,15 +17,16 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.examples.basic.comms.BasicGatherCommunication;
+import edu.iu.dsc.tws.examples.SimpleMultiTaskGraph;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 
-public final class BasicGatherJob {
-  private BasicGatherJob() {
+public final class BasicMultiTaskGraphJob {
+  private BasicMultiTaskGraphJob() {
   }
 
   public static void main(String[] args) {
+
     // first load the configurations from command line and config files
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
@@ -33,16 +34,18 @@ public final class BasicGatherJob {
     JobConfig jobConfig = new JobConfig();
     jobConfig.putConfig(config);
 
+    //Task 0, Task 1, and Task 2 are independent pipelined tasks.
+
     // build the job
     BasicJob basicJob = BasicJob.newBuilder()
-        .setName("basic-gather")
-        .setContainerClass(BasicGatherCommunication.class.getName())
-        .setRequestResource(new ResourceContainer(2, 1024), 16)
+        .setName("basic-multitaskgraph")
+        .setContainerClass(SimpleMultiTaskGraph.class.getName())
+        .setRequestResource(new ResourceContainer(2, 1024), 3)
         .setConfig(jobConfig)
         .build();
 
     // now submit the job
     Twister2Submitter.submitContainerJob(basicJob, config);
-
   }
 }
+

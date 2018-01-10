@@ -61,11 +61,10 @@ public class ScpUploader implements IUploader {
   }
 
 
-
   @Override
-  public void initialize(Config config) {
-    this.config=config;
-    this.controller=getScpController();
+  public void initialize(Config cfg) {
+    this.config = cfg;
+    this.controller = getScpController();
     this.destinationDirectory = ScpContext.uploaderJobDirectory(config);
   }
 
@@ -87,7 +86,8 @@ public class ScpUploader implements IUploader {
               destinationDirectory));
     }
 
-    LOG.log(Level.INFO, String.format("Uploading the file from local file system to remote machine: %s -> %s.",
+    LOG.log(Level.INFO, String.format(
+        "Uploading the file from local file system to remote machine: %s -> %s.",
         sourceLocation, destinationDirectory));
     try {
       if (!this.controller.copyFromLocalFile(sourceLocation, destinationDirectory)) {
@@ -98,15 +98,11 @@ public class ScpUploader implements IUploader {
       }
       LOG.log(Level.INFO, String.format("Uploaded to remote machine: %s -> %s.",
           sourceLocation, destinationDirectory));
-      return new URI(destinationDirectory +"/"+ fileName);
-    }
-    catch (URISyntaxException e) {
+      return new URI(destinationDirectory + "/" + fileName);
+    } catch (URISyntaxException e) {
       throw new RuntimeException("Invalid file path for topology package destination: "
           + destinationDirectory, e);
     }
-
-
-
   }
 
   @Override

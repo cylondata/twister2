@@ -338,7 +338,7 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
       }
       List<Object> m = messages.get(target).get(source);
       Integer c = counts.get(target).get(source);
-      if (m.size() > 128) {
+      if (m.size() > 16) {
         canAdd = false;
 //       LOG.info(String.format("%d Partial false: target %d source %d", executor, target, source));
       } else {
@@ -368,6 +368,10 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
               found = false;
               canProgress = false;
             }
+//            if (e.getValue().size() != cMap.get(e.getKey())) {
+//              LOG.info(String.format("%d COUNT and SIZE NOT %d != %d",
+//                  executor, e.getValue().size(), cMap.get(e.getKey())));
+//            }
           }
 
           if (found) {
@@ -379,13 +383,15 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
               } else {
                 out.add(e1);
               }
-              e.getValue().remove(0);
             }
             if (sendMessagePartial(t, out, 0,
                 MPIContext.FLAGS_MULTI_MSG, type)) {
+              for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
+                e.getValue().remove(0);
+              }
               for (Map.Entry<Integer, Integer> e : cMap.entrySet()) {
                 Integer i = e.getValue();
-                cMap.put(e.getKey(), i - 1);
+                e.setValue(i - 1);
               }
 //              LOG.info(String.format("%d Send partial true: target %d objects %d %s",
 //                  executor, t, out.size(), cMap));
