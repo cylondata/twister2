@@ -9,6 +9,18 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 package edu.iu.dsc.tws.task.taskgraphbuilder;
 
 import java.util.HashSet;
@@ -19,7 +31,7 @@ import java.util.stream.Stream;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.task.api.Task;
 
-public class DataflowTaskGraphParser {
+public class DataflowTaskGraphParser implements IDataflowTaskGraphParser {
 
   private static final Logger LOGGER = Logger.getLogger(
       DataflowTaskGraphParser.class.getName());
@@ -57,14 +69,17 @@ public class DataflowTaskGraphParser {
     return processedTaskVertices;
   }
 
+  //This method will be used in the future.
+  @Override
+  public Set<Task> dataflowTaskGraphParseAndSchedule(int containerId) {
+    return null;
+  }
 
   /**
-   * /**
    * This method calls the dataflow task graph parser method to prioritize
    * the tasks which is ready for the execution.
    */
   private Set<Task> dataflowTaskGraphPrioritize(DataflowTaskGraphGenerator taskGraph) {
-
     final IDataflowTaskGraph<Task, DataFlowOperation>
         dataflowTaskgraph = taskGraph.getDataflowGraph();
     Set<Task> taskVertices = dataflowTaskgraph.getTaskVertexSet();
@@ -91,7 +106,6 @@ public class DataflowTaskGraphParser {
     if (dataflowTaskgraph.outDegreeOf(mapper) == 0) {
       return 1;
     } else {
-
       Set<DataFlowOperation> taskEdgesOf = dataflowTaskgraph.
           outgoingTaskEdgesOf(mapper);
 
@@ -106,4 +120,3 @@ public class DataflowTaskGraphParser {
     }
   }
 }
-

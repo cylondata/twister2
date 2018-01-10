@@ -9,6 +9,18 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 package edu.iu.dsc.tws.task.taskgraphbuilder;
 
 import java.util.ArrayList;
@@ -27,7 +39,7 @@ public abstract class DataflowTaskGraphAbstraction<TV, TE>
     implements ITaskGraph<TV, TE> {
 
   private IDataflowTaskEdgeFactory<TV, TE> dataflowTaskEdgeFactory;
-  private DirectedDataflowGraph<TV, TE> directedDataflowTaskGraph = null;
+  private DirectedDataflowTaskGraphAbstraction<TV, TE> directedDataflowTaskGraph = null;
   private Map<TE, DirectedDataflowTaskEdge> dataflowTaskEdgeMap;
   private IDataflowTaskEdgeSetFactory<TV, TE> dataflowTaskEdgeSetFactory;
   private DataflowTaskGraphUtils<TV> dataflowTaskGraphUtils = null;
@@ -300,7 +312,7 @@ public abstract class DataflowTaskGraphAbstraction<TV, TE>
   }
 
 
-  public DirectedDataflowGraph<TV, TE> createDirectedDataflowGraph() {
+  public DirectedDataflowTaskGraphAbstraction<TV, TE> createDirectedDataflowGraph() {
     if (this instanceof DataflowTaskGraph<?, ?>) {
       return createDirectedDataflowTaskGraph();
     } else {
@@ -312,7 +324,8 @@ public abstract class DataflowTaskGraphAbstraction<TV, TE>
     return new DirectedDataflowTaskGraph();
   }
 
-  public class DirectedDataflowTaskGraph extends DirectedDataflowGraph<TV, TE> {
+  public class DirectedDataflowTaskGraph extends
+      DirectedDataflowTaskGraphAbstraction<TV, TE> {
 
     protected Map<TV, DirectedDataflowTaskEdgeCreator<TV, TE>> taskVertexMap;
 
@@ -365,10 +378,10 @@ public abstract class DataflowTaskGraphAbstraction<TV, TE>
 
     @Override
     public Set<TE> taskEdgesOf(TV taskVertex) {
-      TaskArraySet<TE> incomingOutgoingTaskSet =
+      TaskArraySet<TE> inOutTaskEdgeSet =
           new TaskArraySet<TE>(getTaskEdgeContainer(taskVertex).incomingTaskEdge);
-      incomingOutgoingTaskSet.addAll(getTaskEdgeContainer(taskVertex).outgoingTaskEdge);
-      return Collections.unmodifiableSet(incomingOutgoingTaskSet);
+      inOutTaskEdgeSet.addAll(getTaskEdgeContainer(taskVertex).outgoingTaskEdge);
+      return Collections.unmodifiableSet(inOutTaskEdgeSet);
     }
 
     @Override
@@ -413,13 +426,11 @@ public abstract class DataflowTaskGraphAbstraction<TV, TE>
 
     private DirectedDataflowTaskEdgeCreator<TV, TE> getTaskEdgeContainer(
         TV taskVertex) {
-
       assertTaskVertexExist(taskVertex);
       DirectedDataflowTaskEdgeCreator<TV, TE> ec = taskVertexMap.get(taskVertex);
       if (ec == null) {
         try {
-          ec = new DirectedDataflowTaskEdgeCreator<>(
-              dataflowTaskEdgeSetFactory, taskVertex);
+          ec = new DirectedDataflowTaskEdgeCreator<>(dataflowTaskEdgeSetFactory, taskVertex);
         } catch (InstantiationException e) {
           e.printStackTrace();
         } catch (IllegalAccessException e) {

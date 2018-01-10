@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.memory;
 
+import java.nio.charset.Charset;
+
 import edu.iu.dsc.tws.common.config.Context;
 
 /**
@@ -22,4 +24,9 @@ public class MemoryManagerContext extends Context {
    * Default step size of the Bulk Memory Manager.
    */
   public static final int BULK_MM_STEP_SIZE = 4;
+
+  /**
+   * Charset used in the memory manager
+   */
+  public static final Charset DEFAULT_CHARSET = Charset.forName("UTF-8");
 }
