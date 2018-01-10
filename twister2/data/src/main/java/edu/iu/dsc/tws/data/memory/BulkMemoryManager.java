@@ -248,7 +248,8 @@ public class BulkMemoryManager extends AbstractMemoryManager {
     }
     //Since we got all the buffer values reset the size
     keyBufferSizes.put(key, 0);
-    return memoryManager.put(key.getBytes(), temp);
+    return memoryManager.put(ByteBuffer.wrap(key.getBytes(MemoryManagerContext.DEFAULT_CHARSET)),
+        temp);
   }
 
   /**
@@ -268,7 +269,8 @@ public class BulkMemoryManager extends AbstractMemoryManager {
     temp.put(last);
     //Since we got all the buffer values reset the size
     keyBufferSizes.put(key, 0);
-    return memoryManager.put(key.getBytes(), temp);
+    return memoryManager.put(ByteBuffer.wrap(key.getBytes(MemoryManagerContext.DEFAULT_CHARSET)),
+        temp);
   }
 
   /**
