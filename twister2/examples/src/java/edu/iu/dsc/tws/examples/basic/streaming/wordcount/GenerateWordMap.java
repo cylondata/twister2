@@ -16,6 +16,7 @@ import java.util.Random;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.examples.utils.RandomString;
 
 public class GenerateWordMap implements Runnable {
   private DataFlowOperation operation;
