@@ -245,7 +245,7 @@ public class BasicGatherCommunication implements IContainer {
                 LOG.info(String.format("%d Last %d count: %d %s",
                     id, t, count, counts));
               }
-              if (count >= 10000) {
+              if (count >= 100) {
                 LOG.info("Total time: " + (System.nanoTime() - start) / 1000000
                     + " Count: " + count);
               }
