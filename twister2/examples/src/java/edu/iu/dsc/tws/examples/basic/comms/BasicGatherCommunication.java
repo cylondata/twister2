@@ -55,7 +55,7 @@ public class BasicGatherCommunication implements IContainer {
 
   private Config config;
 
-  private static final int NO_OF_TASKS = 8;
+  private static final int NO_OF_TASKS = 16;
 
   private int noOfTasksPerExecutor = 2;
 

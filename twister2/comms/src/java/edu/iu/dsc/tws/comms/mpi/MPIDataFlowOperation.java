@@ -90,7 +90,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
 
   protected KryoSerializer kryoSerializer;
 
-  protected boolean bounded;
+  protected boolean debug;
 
   /**
    * A lock to serialize access to the resources
@@ -107,7 +107,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
     this.instancePlan = plan;
     this.edge = graphEdge;
     this.type = messageType;
-    this.bounded = false;
+    this.debug = false;
     this.executor = instancePlan.getThisExecutor();
 
     int noOfSendBuffers = MPIContext.broadcastBufferCount(config);
@@ -342,7 +342,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
               if (!receiveAccepted) {
                 canProgress = false;
                 int attempt = updateAttemptMap(sendMessageInternalAttempts, i, 1);
-                if (attempt > MAX_ATTEMPTS) {
+                if (debug && attempt > MAX_ATTEMPTS) {
                   LOG.info(String.format("%d Send message internal attempts %d",
                       executor, attempt));
                 }
@@ -451,7 +451,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
                   + pendingReceiveMessages.size());
             }
             int attempt = updateAttemptMap(receiveMessageAttempts, id, 1);
-            if (attempt >  MAX_ATTEMPTS) {
+            if (debug && attempt >  MAX_ATTEMPTS) {
               LOG.info(String.format("%d Send message internal attempts %d",
                   executor, attempt));
             }
@@ -486,7 +486,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
             currentMessage.setReceivedState(MPIMessage.ReceivedState.RECEIVE);
             if (!receiveMessage(currentMessage, object)) {
               int attempt = updateAttemptMap(receiveMessageAttempts, 0, 1);
-              if (attempt > MAX_ATTEMPTS) {
+              if (debug && attempt > MAX_ATTEMPTS) {
                 LOG.info(String.format("%d on message attempts %d",
                     executor, attempt));
               }
@@ -500,7 +500,7 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
             currentMessage.setReceivedState(MPIMessage.ReceivedState.RECEIVE);
             if (!receiveMessage(currentMessage, object)) {
               int attempt = updateAttemptMap(receiveMessageAttempts, 0, 1);
-              if (attempt > MAX_ATTEMPTS) {
+              if (debug && attempt > MAX_ATTEMPTS) {
                 LOG.info(String.format("%d on message attempts %d",
                     executor, attempt));
               }
