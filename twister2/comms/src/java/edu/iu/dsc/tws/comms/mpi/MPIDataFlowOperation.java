@@ -583,6 +583,8 @@ public abstract class MPIDataFlowOperation implements DataFlowOperation,
         MessageHeader header = messageDeSerializer.buildHeader(buffer, e);
 //        LOG.info(String.format("%d header source %d length %d", executor,
 //            header.getSourceId(), header.getLength()));
+        //TODO: What if we check the dest id and if its the id of the current running thread
+        //TODO: Write to the memory manager, Still need to take out the massages
         currentMessage.setHeader(header);
         currentMessage.setHeaderSize(16);
       }
