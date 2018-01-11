@@ -133,11 +133,11 @@ public class BulkMemoryManager extends AbstractMemoryManager {
     return memoryManager.get(key);
   }
 
-  public ByteBuffer get(String key){
+  public ByteBuffer get(String key) {
     // if the key given is already in the keyMap we need to flush the key
     //TODO: Do we flush the key and get the data from the memory store or do we get what
     //TODO: we can from the keymap and then get the rest of the store
-    if(keyMap.containsKey(key)){
+    if (keyMap.containsKey(key)) {
       flush(key);
     }
 
