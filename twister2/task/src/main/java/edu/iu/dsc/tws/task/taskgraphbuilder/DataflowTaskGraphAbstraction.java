@@ -21,6 +21,18 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 package edu.iu.dsc.tws.task.taskgraphbuilder;
 
 import java.util.ArrayList;
@@ -90,8 +102,8 @@ public abstract class DataflowTaskGraphAbstraction<TV, TE>
   @Override
   public TE addTaskEdge(TV sourceTaskVertex, TV targetTaskVertex) {
 
-    assertTaskVertexExist(sourceTaskVertex);
-    assertTaskVertexExist(targetTaskVertex);
+    validateTaskVertex(sourceTaskVertex);
+    validateTaskVertex(targetTaskVertex);
 
     TE taskEdge = null;
     try {
@@ -108,7 +120,7 @@ public abstract class DataflowTaskGraphAbstraction<TV, TE>
       DirectedDataflowTaskEdge directedDataflowTaskEdge =
           createDirectedDataflowTaskEdge(taskEdge, sourceTaskVertex, targetTaskVertex);
       dataflowTaskEdgeMap.put(taskEdge, directedDataflowTaskEdge);
-      directedDataflowTaskGraph.addTaskEdgeToTouchingVertices(taskEdge);
+      directedDataflowTaskGraph.addTaskEdgeTVertices(taskEdge);
       return taskEdge;
     }
   }
@@ -120,12 +132,15 @@ public abstract class DataflowTaskGraphAbstraction<TV, TE>
     } else if (containsTaskEdge(taskEdge)) {
       return false;
     }
-    assertTaskVertexExist(taskVertex1);
-    assertTaskVertexExist(taskVertex2);
+
+    validateTaskVertex(taskVertex1);
+    validateTaskVertex(taskVertex2);
+
     DirectedDataflowTaskEdge directedDataflowTaskEdge =
         createDirectedDataflowTaskEdge(taskEdge, taskVertex1, taskVertex2);
     dataflowTaskEdgeMap.put(taskEdge, directedDataflowTaskEdge);
-    directedDataflowTaskGraph.addTaskEdgeToTouchingVertices(taskEdge);
+    directedDataflowTaskGraph.addTaskEdgeTVertices(taskEdge);
+
     return true;
   }
 
@@ -133,6 +148,7 @@ public abstract class DataflowTaskGraphAbstraction<TV, TE>
       TE taskEdge, TV sourceTaskVertex, TV targetTaskVertex) {
 
     DirectedDataflowTaskEdge directedDataflowTaskEdge;
+
     if (taskEdge instanceof DirectedDataflowTaskEdge) {
       directedDataflowTaskEdge = (DirectedDataflowTaskEdge) taskEdge;
     } else {
@@ -151,7 +167,8 @@ public abstract class DataflowTaskGraphAbstraction<TV, TE>
   }
 
   public Set<TE> getAllTaskEdges(TV sourceTaskVertex, TV targetTaskVertex) {
-    return directedDataflowTaskGraph.getAllTaskEdges(sourceTaskVertex, targetTaskVertex);
+    return directedDataflowTaskGraph.getAllTaskEdges(
+        sourceTaskVertex, targetTaskVertex);
   }
 
   @Override
@@ -165,9 +182,6 @@ public abstract class DataflowTaskGraphAbstraction<TV, TE>
     return flag;
   }
 
-  /**
-   * This method returns the set of incoming task edges of the particular task vertex.
-   */
   public Set<TE> incomingTaskEdgesOf(TV taskVertex) {
     return directedDataflowTaskGraph.incomingTaskEdgesOf(taskVertex);
   }
@@ -179,7 +193,7 @@ public abstract class DataflowTaskGraphAbstraction<TV, TE>
   public TE removeTaskEdge(TV sourceVertex, TV targetVertex) {
     TE taskEdge = getTaskEdge(sourceVertex, targetVertex);
     if (taskEdge != null) {
-      directedDataflowTaskGraph.removeTaskEdgeFromTouchingVertices(taskEdge);
+      directedDataflowTaskGraph.removeTaskEdgeTVertices(taskEdge);
       dataflowTaskEdgeMap.remove(taskEdge);
     }
     return taskEdge;
@@ -187,7 +201,7 @@ public abstract class DataflowTaskGraphAbstraction<TV, TE>
 
   public boolean removeTaskEdge(TE taskEdge) {
     if (containsTaskEdge(taskEdge)) {
-      directedDataflowTaskGraph.removeTaskEdgeFromTouchingVertices(taskEdge);
+      directedDataflowTaskGraph.removeTaskEdgeTVertices(taskEdge);
       dataflowTaskEdgeMap.remove(taskEdge);
       return true;
     } else {
@@ -224,17 +238,17 @@ public abstract class DataflowTaskGraphAbstraction<TV, TE>
   }
 
   public Set<TE> taskEdgesOf(TV taskVertex) {
-    this.assertTaskVertexExist(taskVertex);
+    this.validateTaskVertex(taskVertex);
     return directedDataflowTaskGraph.taskEdgesOf(taskVertex);
   }
 
   public Set<TE> outgoingTaskEdgesOf(TV taskVertex) {
-    this.assertTaskVertexExist(taskVertex);
+    this.validateTaskVertex(taskVertex);
     return directedDataflowTaskGraph.outgoingTaskEdgesOf(taskVertex);
   }
 
   public int inDegreeOf(TV taskVertex) {
-    this.assertTaskVertexExist(taskVertex);
+    this.validateTaskVertex(taskVertex);
     return directedDataflowTaskGraph.inDegreeOf(taskVertex);
   }
 
@@ -282,14 +296,14 @@ public abstract class DataflowTaskGraphAbstraction<TV, TE>
     return flag;
   }
 
-  protected boolean assertTaskVertexExist(TV taskVertex) {
+  protected boolean validateTaskVertex(TV taskVertex) {
     if (containsTaskVertex(taskVertex)) {
       return true;
     } else if (taskVertex == null) {
       throw new NullPointerException();
     } else {
       throw new IllegalArgumentException(
-          "task vertex doesn't exist in task graph: " + taskVertex.toString());
+          "No task vertex in this task graph: " + taskVertex.toString());
     }
   }
 
@@ -405,7 +419,7 @@ public abstract class DataflowTaskGraphAbstraction<TV, TE>
     }
 
     @Override
-    public void addTaskEdgeToTouchingVertices(TE taskEdge) {
+    public void addTaskEdgeTVertices(TE taskEdge) {
 
       TV source = getTaskEdgeSource(taskEdge);
       TV target = getTaskEdgeTarget(taskEdge);
@@ -415,7 +429,7 @@ public abstract class DataflowTaskGraphAbstraction<TV, TE>
     }
 
     @Override
-    public void removeTaskEdgeFromTouchingVertices(TE taskEdge) {
+    public void removeTaskEdgeTVertices(TE taskEdge) {
 
       TV source = getTaskEdgeSource(taskEdge);
       TV target = getTaskEdgeSource(taskEdge);
@@ -426,7 +440,7 @@ public abstract class DataflowTaskGraphAbstraction<TV, TE>
 
     private DirectedDataflowTaskEdgeCreator<TV, TE> getTaskEdgeContainer(
         TV taskVertex) {
-      assertTaskVertexExist(taskVertex);
+      validateTaskVertex(taskVertex);
       DirectedDataflowTaskEdgeCreator<TV, TE> ec = taskVertexMap.get(taskVertex);
       if (ec == null) {
         try {

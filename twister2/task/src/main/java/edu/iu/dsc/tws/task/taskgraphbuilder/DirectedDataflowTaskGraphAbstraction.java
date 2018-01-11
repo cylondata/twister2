@@ -29,9 +29,9 @@ public abstract class DirectedDataflowTaskGraphAbstraction<TV, TE> {
 
   public abstract void addTaskVertex(TV taskVertex);
 
-  public abstract void addTaskEdgeToTouchingVertices(TE taskEdge);
+  public abstract void addTaskEdgeTVertices(TE taskEdge);
 
-  public abstract void removeTaskEdgeFromTouchingVertices(TE taskEdge);
+  public abstract void removeTaskEdgeTVertices(TE taskEdge);
 
   public abstract Set<TV> getTaskVertexSet();
 

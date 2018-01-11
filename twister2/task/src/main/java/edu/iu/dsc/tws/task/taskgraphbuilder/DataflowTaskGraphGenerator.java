@@ -120,6 +120,18 @@ public class DataflowTaskGraphGenerator implements IDataflowTaskGraphGenerator {
     return this;
   }
 
+  public void removeTaskVertex(TaskMapper mapperTask) {
+    System.out.println("Mapper task done to be removed:" + mapperTask);
+    this.dataflowTaskGraph.removeTaskVertex(mapperTask);
+    System.out.println("Now the task graph is:" + this.dataflowTaskGraph);
+  }
+
+  public void removeTaskVertex(Task mapperTask) {
+    System.out.println("Mapper task done to be removed:" + mapperTask);
+    this.dataflowGraph.removeTaskVertex(mapperTask);
+    System.out.println("Now the task graph is:" + this.dataflowTaskGraph);
+  }
+
   /**
    * It should be implemented later for the required use cases.
    */
