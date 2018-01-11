@@ -11,6 +11,8 @@ We use Jira for tracking the progress of twister2.
 
 [Jira](https://twister2.atlassian.net)
 
+The google groups mailing list can be used to ask questions and discussions "twister2@googlegroups.com"
+
 ## Compiling
 
 The project uses bazel build system. We are using the 0.30 version of bazel.
