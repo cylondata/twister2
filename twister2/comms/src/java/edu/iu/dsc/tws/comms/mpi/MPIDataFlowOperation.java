@@ -28,11 +28,11 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.mpi.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
-import edu.iu.dsc.tws.comms.mpi.io.MessageSerializer;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.mpi.io.MessageDeSerializer;
+import edu.iu.dsc.tws.comms.mpi.io.MessageSerializer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
 public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageReleaseCallback {
@@ -183,6 +183,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
                                     int flags, RoutingParameters routingParameters) {
     lock.lock();
     try {
+//      LOG.info(String.format("%d send message partial %d", executor, source));
       // for partial sends we use minus value to find the correct queue
       ArrayBlockingQueue<Pair<Object, MPISendMessage>> pendingSendMessages =
           pendingSendMessagesPerSource.get(source * -1 - 1);
@@ -207,10 +208,11 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
     }
   }
 
-  protected boolean sendMessage(int source, Object message, int path,
+  public boolean sendMessage(int source, Object message, int path,
                                 int flags, RoutingParameters routingParameters) {
     lock.lock();
     try {
+//      LOG.info(String.format("%d send message %d", executor, source));
       ArrayBlockingQueue<Pair<Object, MPISendMessage>> pendingSendMessages =
           pendingSendMessagesPerSource.get(source);
 

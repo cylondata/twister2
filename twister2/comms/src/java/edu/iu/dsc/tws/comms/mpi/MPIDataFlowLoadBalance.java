@@ -246,7 +246,7 @@ public class MPIDataFlowLoadBalance implements DataFlowOperation, MPIMessageRece
 
   @Override
   public boolean passMessageDownstream(Object object, MPIMessage currentMessage) {
-    return false;
+    return true;
   }
 
   protected Set<Integer> receivingExecutors() {

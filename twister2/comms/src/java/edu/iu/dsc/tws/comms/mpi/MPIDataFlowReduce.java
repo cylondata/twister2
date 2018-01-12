@@ -177,7 +177,7 @@ public class MPIDataFlowReduce implements DataFlowOperation, MPIMessageReceiver 
 
   @Override
   public boolean passMessageDownstream(Object object, MPIMessage currentMessage) {
-    return false;
+    return true;
   }
 
   @Override
