@@ -4,6 +4,11 @@ maven_server(
 )
 
 maven_jar(
+  name = "org_apache_commons_commons_compress",
+  artifact = "org.apache.commons:commons-compress:1.15",
+)
+
+maven_jar(
   name = "com_google_protobuf_protobuf_java",
   artifact = "com.google.protobuf:protobuf-java:2.5.0",
 )

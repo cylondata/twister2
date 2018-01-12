@@ -51,6 +51,7 @@ def twister2_client_lib_resource_scheduler_files():
         "@com_google_protobuf_protobuf_java//jar",
         "//twister2/proto:proto_job_state_java",
         "@commons_io_commons_io//jar",
+        "@org_apache_commons_commons_compress//jar",
     ]
 
 def twister2_client_lib_api_files():
