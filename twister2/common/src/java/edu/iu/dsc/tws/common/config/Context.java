@@ -47,7 +47,7 @@ public class Context {
   public static final ConfigEntry UPLOADER_YAML = new ConfigEntry(
       "twister2.config.file.uploader.yaml",  "${TWISTER2_CONF}/uploader.yaml");
   public static final ConfigEntry SYSTEM_YAML = new ConfigEntry(
-      "twister2.config.file.uploader.yaml",  "${TWISTER2_CONF}/system.yaml");
+      "twister2.config.file.system.yaml",  "${TWISTER2_CONF}/system.yaml");
   public static final ConfigEntry OVERRIDE_YAML = new ConfigEntry(
       "twister2.config.file.override.yaml",  "${TWISTER2_CONF}/override.yaml");
   public static final ConfigEntry CLUSTER_HOME = new ConfigEntry(
@@ -87,6 +87,7 @@ public class Context {
     defaults.put(RESOURCE_SCHEDULER_YAML.getKey(), RESOURCE_SCHEDULER_YAML.getDefaultValue());
     defaults.put(NETWORK_YAML.getKey(), NETWORK_YAML.getDefaultValue());
     defaults.put(SYSTEM_YAML.getKey(), SYSTEM_YAML.getDefaultValue());
+    defaults.put(UPLOADER_YAML.getKey(), UPLOADER_YAML.getDefaultValue());
   }
 
   protected Context() {
