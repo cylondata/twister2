@@ -37,7 +37,7 @@ public final class BasicGatherJob {
     BasicJob basicJob = BasicJob.newBuilder()
         .setName("basic-gather")
         .setContainerClass(BasicGatherCommunication.class.getName())
-        .setRequestResource(new ResourceContainer(2, 1024), 4)
+        .setRequestResource(new ResourceContainer(2, 1024), 16)
         .setConfig(jobConfig)
         .build();
 

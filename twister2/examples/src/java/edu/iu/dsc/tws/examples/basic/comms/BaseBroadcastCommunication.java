@@ -170,7 +170,6 @@ public class BaseBroadcastCommunication implements IContainer {
 
     @Override
     public void progress() {
-
     }
   }
 

@@ -11,51 +11,60 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi;
 
-import java.util.Set;
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.core.TaskPlan;
 
-public class MPIDataFlowPartition extends MPIDataFlowOperation {
-
-  public MPIDataFlowPartition(TWSMPIChannel channel) {
-    super(channel);
-  }
-
-  @Override
-  protected void setupRouting() {
-
-  }
+public class MPIDataFlowPartition implements DataFlowOperation {
 
   @Override
-  protected boolean isLastReceiver() {
-    return false;
-  }
+  public void init(Config config, MessageType type, TaskPlan instancePlan, int edge) {
 
-  @Override
-  protected RoutingParameters sendRoutingParameters(int source, int path) {
-    return null;
-  }
-
-  @Override
-  protected boolean receiveSendInternally(int source, int t, int path, int flags, Object message) {
-    return false;
-  }
-
-  @Override
-  protected Set<Integer> receivingExecutors() {
-    return null;
-  }
-
-  @Override
-  protected boolean isLast(int source, int path, int taskIdentifier) {
-    return false;
-  }
-
-  @Override
-  protected boolean receiveMessage(MPIMessage currentMessage, Object object) {
-    return false;
   }
 
   @Override
   public boolean sendPartial(int source, Object message, int flags) {
     return false;
+  }
+
+  @Override
+  public boolean send(int source, Object message, int flags) {
+    return false;
+  }
+
+  @Override
+  public boolean send(int source, Object message, int flags, int path) {
+    return false;
+  }
+
+  @Override
+  public boolean sendPartial(int source, Object message, int flags, int path) {
+    return false;
+  }
+
+  @Override
+  public void progress() {
+
+  }
+
+  @Override
+  public void close() {
+
+  }
+
+  @Override
+  public void finish() {
+
+  }
+
+  @Override
+  public MessageType getType() {
+    return null;
+  }
+
+  @Override
+  public TaskPlan getTaskPlan() {
+    return null;
   }
 }

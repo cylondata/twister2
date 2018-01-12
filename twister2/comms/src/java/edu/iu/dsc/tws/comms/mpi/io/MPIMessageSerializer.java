@@ -17,7 +17,6 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
-import edu.iu.dsc.tws.comms.api.MessageSerializer;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.mpi.MPIBuffer;
 import edu.iu.dsc.tws.comms.mpi.MPIMessage;
@@ -33,14 +32,14 @@ public class MPIMessageSerializer implements MessageSerializer {
   private Config config;
   private ObjectSerializer objectSerializer;
 
-  public MPIMessageSerializer(Queue<MPIBuffer> buffers, KryoSerializer kryoSerializer) {
-    this.sendBuffers = buffers;
+  public MPIMessageSerializer(KryoSerializer kryoSerializer) {
     this.serializer = kryoSerializer;
   }
 
   @Override
-  public void init(Config cfg) {
+  public void init(Config cfg, Queue<MPIBuffer> buffers) {
     this.config = cfg;
+    this.sendBuffers = buffers;
     objectSerializer = new ObjectSerializer(serializer);
   }
 

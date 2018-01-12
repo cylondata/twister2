@@ -9,6 +9,18 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 package edu.iu.dsc.tws.task.taskgraphbuilder;
 
 import java.util.logging.Logger;
@@ -67,14 +79,13 @@ public class DataflowTaskGraphGenerator implements IDataflowTaskGraphGenerator {
       this.dataflowGraph.addTaskVertex(sourceTask);
       this.dataflowGraph.addTaskVertex(sinkTask);
       for (DataFlowOperation dataflowOperation1 : dataFlowOperation) {
-        this.dataflowGraph.addTaskEdge(sourceTask, sinkTask, dataFlowOperation[0]);
+        this.dataflowGraph.addTaskEdge(
+            sourceTask, sinkTask, dataFlowOperation[0]);
       }
-    } catch (Exception iae) {
+    } catch (IllegalArgumentException iae) {
       iae.printStackTrace();
     }
     LOGGER.info("Generated Dataflow Task Graph Is:" + taskGraph);
-    LOGGER.info("Generated Dataflow Task Graph with Vertices is:"
-        + taskGraph.getTaskVertexSet().size());
     return this;
   }
 
@@ -88,10 +99,7 @@ public class DataflowTaskGraphGenerator implements IDataflowTaskGraphGenerator {
     } catch (IllegalArgumentException iae) {
       iae.printStackTrace();
     }
-
     LOGGER.info("Generated Dataflow Task Graph Is:" + taskGraph);
-    LOGGER.info("Generated Dataflow Task Graph with Vertices is:"
-        + taskGraph.getTaskVertexSet().size());
     return this;
   }
 
@@ -102,15 +110,26 @@ public class DataflowTaskGraphGenerator implements IDataflowTaskGraphGenerator {
       this.dataflowTaskGraph.addTaskVertex(taskMapperTask1);
       this.dataflowTaskGraph.addTaskVertex(taskMapperTask2);
       for (CManager cManagerTask1 : cManagerTask) {
-        this.dataflowTaskGraph.addTaskEdge(taskMapperTask1, taskMapperTask2, cManagerTask[0]);
+        this.dataflowTaskGraph.addTaskEdge(
+            taskMapperTask1, taskMapperTask2, cManagerTask[0]);
       }
-    } catch (Exception iae) {
+    } catch (IllegalArgumentException iae) {
       iae.printStackTrace();
     }
     LOGGER.info("Generated Dataflow Task Graph Is:" + taskGraph);
-    LOGGER.info("Generated Dataflow Task Graph with Vertices is:"
-        + taskGraph.getTaskVertexSet().size());
     return this;
+  }
+
+  public void removeTaskVertex(TaskMapper mapperTask) {
+    System.out.println("Mapper task done to be removed:" + mapperTask);
+    this.dataflowTaskGraph.removeTaskVertex(mapperTask);
+    System.out.println("Now the task graph is:" + this.dataflowTaskGraph);
+  }
+
+  public void removeTaskVertex(Task mapperTask) {
+    System.out.println("Mapper task done to be removed:" + mapperTask);
+    this.dataflowGraph.removeTaskVertex(mapperTask);
+    System.out.println("Now the task graph is:" + this.dataflowTaskGraph);
   }
 
   /**
@@ -119,20 +138,18 @@ public class DataflowTaskGraphGenerator implements IDataflowTaskGraphGenerator {
   @Override
   public DataflowTaskGraphGenerator generateTaskGraph(
       Task sourceTask, Task... sinkTask) {
-    return null;
+
+    return this;
   }
 
   /**
    * It should be implemented later for the required use cases.
-   * @param sourceTask
-   * @param sinkTask
-   * @param cManagerTask
-   * @return
    */
   @Override
   public DataflowTaskGraphGenerator generateDataflowTaskGraph(
       Task sourceTask, Task sinkTask, CManager... cManagerTask) {
-    return null;
+
+    return this;
   }
 }
 

@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -41,6 +42,7 @@ import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.examples.IntData;
 import edu.iu.dsc.tws.examples.Utils;
+import edu.iu.dsc.tws.examples.utils.RandomString;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
@@ -55,9 +57,13 @@ public class BasicGatherCommunication implements IContainer {
 
   private Config config;
 
-  private static final int NO_OF_TASKS = 8;
+  private static final int NO_OF_TASKS = 16;
 
   private int noOfTasksPerExecutor = 2;
+
+  private RandomString randomString;
+
+  private long startTime = 0;
 
   @Override
   public void init(Config cfg, int containerId, ResourcePlan plan) {
@@ -67,6 +73,7 @@ public class BasicGatherCommunication implements IContainer {
     this.resourcePlan = plan;
     this.id = containerId;
     this.noOfTasksPerExecutor = NO_OF_TASKS / plan.noOfContainers();
+    this.randomString = new RandomString(128000, new Random(), RandomString.ALPHANUM);
 
     // lets create the task plan
     TaskPlan taskPlan = Utils.createReduceTaskPlan(cfg, plan, NO_OF_TASKS);
@@ -128,8 +135,9 @@ public class BasicGatherCommunication implements IContainer {
       try {
         LOG.log(Level.INFO, "Starting map worker: " + id);
 //      MPIBuffer data = new MPIBuffer(1024);
-        IntData data = generateData();
+        startTime = System.nanoTime();
         for (int i = 0; i < 100; i++) {
+          String data = generateStringData();
           // lets generate a message
           while (!aggregate.send(task, data, 0)) {
             // lets wait a litte and try again
@@ -141,9 +149,9 @@ public class BasicGatherCommunication implements IContainer {
           }
 //          LOG.info(String.format("%d sending to %d", id, task)
 //              + " count: " + sendCount++);
-          if (i % 10 == 0) {
-            LOG.info(String.format("%d sent %d", id, i));
-          }
+//          if (i % 10 == 0) {
+//            LOG.info(String.format("%d sent %d", id, i));
+//          }
           Thread.yield();
         }
         LOG.info(String.format("%d Done sending", id));
@@ -245,9 +253,9 @@ public class BasicGatherCommunication implements IContainer {
                 LOG.info(String.format("%d Last %d count: %d %s",
                     id, t, count, counts));
               }
-              if (count >= 10000) {
+              if (count >= 1) {
                 LOG.info("Total time: " + (System.nanoTime() - start) / 1000000
-                    + " Count: " + count);
+                    + " Count: " + count + " total: " + (System.nanoTime() - startTime));
               }
             } else {
               LOG.severe("We cannot find an object and this is not correct");
@@ -270,6 +278,10 @@ public class BasicGatherCommunication implements IContainer {
       d[i] = i;
     }
     return new IntData(d);
+  }
+
+  private String generateStringData() {
+    return randomString.nextString();
   }
 }
 

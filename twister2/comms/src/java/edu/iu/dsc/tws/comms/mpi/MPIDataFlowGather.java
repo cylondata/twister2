@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.comms.mpi;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -28,18 +27,18 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.mpi.io.MPIMultiMessageDeserializer;
 import edu.iu.dsc.tws.comms.mpi.io.MPIMultiMessageSerializer;
+import edu.iu.dsc.tws.comms.mpi.io.MessageDeSerializer;
+import edu.iu.dsc.tws.comms.mpi.io.MessageSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.MultiObject;
 import edu.iu.dsc.tws.comms.routing.InvertedBinaryTreeRouter;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
-public class MPIDataFlowGather extends MPIDataFlowOperation {
+public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver {
   private static final Logger LOG = Logger.getLogger(MPIDataFlowGather.class.getName());
-
-  public MPIDataFlowGather(TWSMPIChannel channel) {
-    super(channel);
-  }
 
   // the source tasks
   protected Set<Integer> sources;
@@ -61,108 +60,54 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
 
   private boolean batch = false;
 
+  private MPIDataFlowOperation delegete;
+  private Config config;
+  private TaskPlan instancePlan;
+  private int executor;
+  private MessageType type;
+
   public MPIDataFlowGather(TWSMPIChannel channel, Set<Integer> sources, int destination,
                            MessageReceiver finalRcvr,
                            int indx, int p) {
-    super(channel);
     this.index = indx;
     this.sources = sources;
     this.destination = destination;
     this.finalReceiver = finalRcvr;
     this.partialReceiver = new PartialGather();
     this.pathToUse = p;
+
+    this.delegete = new MPIDataFlowOperation(channel);
   }
 
   public MPIDataFlowGather(TWSMPIChannel channel, Set<Integer> sources, int destination,
                            MessageReceiver finalRcvr,
                            MessageReceiver partialRcvr, int indx, int p) {
-    super(channel);
     this.index = indx;
     this.sources = sources;
     this.destination = destination;
     this.finalReceiver = finalRcvr;
     this.partialReceiver = partialRcvr;
     this.pathToUse = p;
+
+    this.delegete = new MPIDataFlowOperation(channel);
   }
 
-  @Override
-  protected void initSerializers() {
-    kryoSerializer = new KryoSerializer();
-    kryoSerializer.init(new HashMap<String, Object>());
-
-    messageDeSerializer = new MPIMultiMessageDeserializer(kryoSerializer, executor);
-    messageSerializer = new MPIMultiMessageSerializer(sendBuffers, kryoSerializer, executor);
-    // initialize the serializers
-    messageSerializer.init(config);
-    messageDeSerializer.init(config);
-  }
+//  @Override
+//  protected void initSerializers() {
+//    kryoSerializer = new KryoSerializer();
+//    kryoSerializer.init(new HashMap<String, Object>());
+//
+//    messageDeSerializer = new MPIMultiMessageDeserializer(kryoSerializer, executor);
+//    messageSerializer = new MPIMultiMessageSerializer(sendBuffers, kryoSerializer, executor);
+//    // initialize the serializers
+//    messageSerializer.init(config);
+//    messageDeSerializer.init(config);
+//  }
 
   public void setupRouting() {
-    // we only have one path
-    this.router = new InvertedBinaryTreeRouter(config, instancePlan,
-        destination, sources, index);
 
-    // initialize the receive
-    if (this.partialReceiver != null && !isLastReceiver()) {
-      partialReceiver.init(config, this, receiveExpectedTaskIds());
-    }
-
-    if (this.finalReceiver != null && isLastReceiver()) {
-      this.finalReceiver.init(config, this, receiveExpectedTaskIds());
-    }
-
-    Set<Integer> srcs = router.sendQueueIds();
-    for (int s : srcs) {
-      // later look at how not to allocate pairs for this each time
-      ArrayBlockingQueue<Pair<Object, MPISendMessage>> pendingSendMessages =
-          new ArrayBlockingQueue<Pair<Object, MPISendMessage>>(
-              MPIContext.sendPendingMax(config));
-      pendingSendMessagesPerSource.put(s, pendingSendMessages);
-    }
-
-    int maxReceiveBuffers = MPIContext.receiveBufferCount(config);
-    int receiveExecutorsSize = receivingExecutors().size();
-    if (receiveExecutorsSize == 0) {
-      receiveExecutorsSize = 1;
-    }
-    Set<Integer> execs = router.receivingExecutors();
-    for (int e : execs) {
-      int capacity = maxReceiveBuffers * 2 * receiveExecutorsSize;
-      Queue<Pair<Object, MPIMessage>> pendingReceiveMessages =
-          new ArrayBlockingQueue<Pair<Object, MPIMessage>>(
-              capacity);
-      pendingReceiveMessagesPerSource.put(e, pendingReceiveMessages);
-      pendingReceiveDeSerializations.put(e, new ArrayBlockingQueue<MPIMessage>(capacity));
-    }
   }
 
-  /**
-   * Setup the receives and send sendBuffers
-   */
-  protected void setupCommunication() {
-    // we will receive from these
-    int maxReceiveBuffers = MPIContext.receiveBufferCount(config);
-    int receiveBufferSize = MPIContext.bufferSize(config);
-    for (Integer recv : receivingExecutors()) {
-      Queue<MPIBuffer> recvList = new LinkedList<>();
-      for (int i = 0; i < maxReceiveBuffers; i++) {
-        recvList.add(new MPIBuffer(receiveBufferSize));
-      }
-      // register with the channel
-      channel.receiveMessage(recv, edge, this, recvList);
-      receiveBuffers.put(recv, recvList);
-    }
-
-    // configure the send sendBuffers
-    int sendBufferSize = MPIContext.bufferSize(config);
-    int sendBufferCount = MPIContext.sendBuffersCount(config);
-    for (int i = 0; i < sendBufferCount; i++) {
-      MPIBuffer buffer = new MPIBuffer(sendBufferSize);
-      sendBuffers.offer(buffer);
-    }
-  }
-
-  @Override
   protected boolean isLast(int source, int path, int taskIdentifier) {
     return router.isLastReceiver();
   }
@@ -175,7 +120,7 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
    * @param object
    */
   @Override
-  protected boolean receiveMessage(MPIMessage currentMessage, Object object) {
+  public boolean receiveMessage(MPIMessage currentMessage, Object object) {
     MessageHeader header = currentMessage.getHeader();
 
     // we always receive to the main task
@@ -194,8 +139,7 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
     }
   }
 
-  @Override
-  protected RoutingParameters partialSendRoutingParameters(int source, int path) {
+  private RoutingParameters partialSendRoutingParameters(int source, int path) {
     RoutingParameters routingParameters = new RoutingParameters();
     // get the expected routes
     Map<Integer, Set<Integer>> internalRoutes = router.getInternalSendTasks(source);
@@ -224,8 +168,7 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
     return routingParameters;
   }
 
-  @Override
-  protected RoutingParameters sendRoutingParameters(int source, int path) {
+  private RoutingParameters sendRoutingParameters(int source, int path) {
     RoutingParameters routingParameters = new RoutingParameters();
 
     // get the expected routes
@@ -250,13 +193,11 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
     return routingParameters;
   }
 
-  @Override
-  protected boolean isLastReceiver() {
+  private boolean isLastReceiver() {
     return router.isLastReceiver();
   }
 
-  @Override
-  protected boolean receiveSendInternally(int source, int t, int path, int flags, Object message) {
+  public boolean receiveSendInternally(int source, int t, int path, int flags, Object message) {
     // check weather this is the last task
     if (router.isLastReceiver()) {
       return finalReceiver.onMessage(source, path, t, flags, message);
@@ -267,17 +208,95 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
   }
 
   @Override
+  public boolean passMessageDownstream(Object object, MPIMessage currentMessage) {
+    return false;
+  }
+
+  @Override
   public boolean send(int source, Object message, int flags) {
-    return sendMessage(source, message, pathToUse, flags);
+    return delegete.sendMessage(source, message, pathToUse, flags,
+        sendRoutingParameters(source, pathToUse));
+  }
+
+  @Override
+  public boolean send(int source, Object message, int flags, int path) {
+    return false;
+  }
+
+  @Override
+  public boolean sendPartial(int source, Object message, int flags, int path) {
+    return delegete.sendMessagePartial(source, message, path, flags,
+        partialSendRoutingParameters(source, path));
+  }
+
+  @Override
+  public void init(Config cfg, MessageType t, TaskPlan taskPlan, int edge) {
+    this.type = t;
+    this.instancePlan = taskPlan;
+    this.executor = taskPlan.getThisExecutor();
+    // we only have one path
+    this.router = new InvertedBinaryTreeRouter(cfg, taskPlan,
+        destination, sources, index);
+
+    // initialize the receive
+    if (this.partialReceiver != null && !isLastReceiver()) {
+      partialReceiver.init(cfg, this, receiveExpectedTaskIds());
+    }
+
+    if (this.finalReceiver != null && isLastReceiver()) {
+      this.finalReceiver.init(cfg, this, receiveExpectedTaskIds());
+    }
+
+    Map<Integer, ArrayBlockingQueue<Pair<Object, MPISendMessage>>> pendingSendMessagesPerSource =
+        new HashMap<>();
+    Map<Integer, Queue<Pair<Object, MPIMessage>>> pendingReceiveMessagesPerSource = new HashMap<>();
+    Map<Integer, Queue<MPIMessage>> pendingReceiveDeSerializations = new HashMap<>();
+
+    Set<Integer> srcs = router.sendQueueIds();
+    for (int s : srcs) {
+      // later look at how not to allocate pairs for this each time
+      ArrayBlockingQueue<Pair<Object, MPISendMessage>> pendingSendMessages =
+          new ArrayBlockingQueue<Pair<Object, MPISendMessage>>(
+              MPIContext.sendPendingMax(cfg));
+      pendingSendMessagesPerSource.put(s, pendingSendMessages);
+    }
+
+    int maxReceiveBuffers = MPIContext.receiveBufferCount(cfg);
+    int receiveExecutorsSize = receivingExecutors().size();
+    if (receiveExecutorsSize == 0) {
+      receiveExecutorsSize = 1;
+    }
+    Set<Integer> execs = router.receivingExecutors();
+    for (int e : execs) {
+      int capacity = maxReceiveBuffers * 2 * receiveExecutorsSize;
+      Queue<Pair<Object, MPIMessage>> pendingReceiveMessages =
+          new ArrayBlockingQueue<Pair<Object, MPIMessage>>(
+              capacity);
+      pendingReceiveMessagesPerSource.put(e, pendingReceiveMessages);
+      pendingReceiveDeSerializations.put(e, new ArrayBlockingQueue<MPIMessage>(capacity));
+    }
+
+    KryoSerializer kryoSerializer = new KryoSerializer();
+    kryoSerializer.init(new HashMap<String, Object>());
+
+    MessageDeSerializer messageDeSerializer =
+        new MPIMultiMessageDeserializer(kryoSerializer, executor);
+    MessageSerializer messageSerializer =
+        new MPIMultiMessageSerializer(kryoSerializer, executor);
+
+    delegete.init(cfg, t, taskPlan, edge,
+        router.receivingExecutors(), router.isLastReceiver(), this,
+        pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
+        pendingReceiveDeSerializations, messageSerializer, messageDeSerializer);
   }
 
   @Override
   public boolean sendPartial(int source, Object message, int flags) {
     // now what we need to do
-    return sendMessagePartial(source, message, pathToUse, flags);
+    return delegete.sendMessagePartial(source, message, pathToUse, flags,
+        partialSendRoutingParameters(source, pathToUse));
   }
 
-  @Override
   protected Set<Integer> receivingExecutors() {
     return router.receivingExecutors();
   }
@@ -299,10 +318,30 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
 
   @Override
   public void progress() {
-    super.progress();
+    delegete.progress();
 
     finalReceiver.progress();
     partialReceiver.progress();
+  }
+
+  @Override
+  public void close() {
+
+  }
+
+  @Override
+  public void finish() {
+
+  }
+
+  @Override
+  public MessageType getType() {
+    return type;
+  }
+
+  @Override
+  public TaskPlan getTaskPlan() {
+    return instancePlan;
   }
 
   private class PartialGather implements MessageReceiver {
@@ -384,8 +423,7 @@ public class MPIDataFlowGather extends MPIDataFlowOperation {
                 out.add(e1);
               }
             }
-            if (sendMessagePartial(t, out, 0,
-                MPIContext.FLAGS_MULTI_MSG, type)) {
+            if (sendPartial(t, out, 0, MPIContext.FLAGS_MULTI_MSG)) {
               for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
                 e.getValue().remove(0);
               }

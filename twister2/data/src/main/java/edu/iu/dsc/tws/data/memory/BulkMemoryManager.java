@@ -133,6 +133,17 @@ public class BulkMemoryManager extends AbstractMemoryManager {
     return memoryManager.get(key);
   }
 
+  public ByteBuffer get(String key) {
+    // if the key given is already in the keyMap we need to flush the key
+    //TODO: Do we flush the key and get the data from the memory store or do we get what
+    //TODO: we can from the keymap and then get the rest of the store
+    if (keyMap.containsKey(key)) {
+      flush(key);
+    }
+
+    return memoryManager.get(ByteBuffer.wrap(key.getBytes(MemoryManagerContext.DEFAULT_CHARSET)));
+  }
+
   @Override
   public byte[] getBytes(byte[] key) {
     return memoryManager.getBytes(key);
@@ -248,7 +259,8 @@ public class BulkMemoryManager extends AbstractMemoryManager {
     }
     //Since we got all the buffer values reset the size
     keyBufferSizes.put(key, 0);
-    return memoryManager.put(key.getBytes(), temp);
+    return memoryManager.put(ByteBuffer.wrap(key.getBytes(MemoryManagerContext.DEFAULT_CHARSET)),
+        temp);
   }
 
   /**
@@ -268,7 +280,8 @@ public class BulkMemoryManager extends AbstractMemoryManager {
     temp.put(last);
     //Since we got all the buffer values reset the size
     keyBufferSizes.put(key, 0);
-    return memoryManager.put(key.getBytes(), temp);
+    return memoryManager.put(ByteBuffer.wrap(key.getBytes(MemoryManagerContext.DEFAULT_CHARSET)),
+        temp);
   }
 
   /**

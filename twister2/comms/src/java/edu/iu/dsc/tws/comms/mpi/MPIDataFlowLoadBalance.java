@@ -22,12 +22,21 @@ import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.Pair;
 
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.mpi.io.MPIMessageDeSerializer;
+import edu.iu.dsc.tws.comms.mpi.io.MPIMessageSerializer;
+import edu.iu.dsc.tws.comms.mpi.io.MessageDeSerializer;
+import edu.iu.dsc.tws.comms.mpi.io.MessageSerializer;
 import edu.iu.dsc.tws.comms.routing.LoadBalanceRouter;
+import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
-public class MPIDataFlowLoadBalance extends MPIDataFlowOperation {
+public class MPIDataFlowLoadBalance implements DataFlowOperation, MPIMessageReceiver {
   private static final Logger LOG = Logger.getLogger(MPIDataFlowLoadBalance.class.getName());
 
   private Set<Integer> sources;
@@ -41,6 +50,12 @@ public class MPIDataFlowLoadBalance extends MPIDataFlowOperation {
   private Set<Integer> thisTasks;
   private MessageReceiver finalReceiver;
 
+  private MPIDataFlowOperation delegete;
+  private Config config;
+  private TaskPlan instancePlan;
+  private int executor;
+  private MessageType type;
+
   /**
    * A place holder for keeping the internal and external destinations
    */
@@ -52,11 +67,11 @@ public class MPIDataFlowLoadBalance extends MPIDataFlowOperation {
 
   public MPIDataFlowLoadBalance(TWSMPIChannel channel, Set<Integer> srcs,
                                 Set<Integer> dests, MessageReceiver finalRcvr) {
-    super(channel);
     this.sources = srcs;
     this.destinations = dests;
     this.destinationIndex = new HashMap<>();
     this.destinationsList = new ArrayList<>(destinations);
+    this.delegete = new MPIDataFlowOperation(channel);
 
     for (int s : sources) {
       destinationIndex.put(s, 0);
@@ -66,15 +81,22 @@ public class MPIDataFlowLoadBalance extends MPIDataFlowOperation {
   }
 
   protected void setupRouting() {
-    this.thisSources = TaskPlanUtils.getTasksOfThisExecutor(instancePlan, sources);
+
+  }
+
+  @Override
+  public void init(Config cfg, MessageType t, TaskPlan taskPlan, int edge) {
+    this.thisSources = TaskPlanUtils.getTasksOfThisExecutor(taskPlan, sources);
     LOG.info(String.format("%d setup loadbalance routing %s",
-        instancePlan.getThisExecutor(), thisSources));
-    this.thisTasks = instancePlan.getTasksOfThisExecutor();
-    this.router = new LoadBalanceRouter(instancePlan, sources, destinations);
+        taskPlan.getThisExecutor(), thisSources));
+    this.thisTasks = taskPlan.getTasksOfThisExecutor();
+    this.router = new LoadBalanceRouter(taskPlan, sources, destinations);
     Map<Integer, Set<Integer>> internal = router.getInternalSendTasks(0);
     Map<Integer, Set<Integer>> external = router.getExternalSendTasks(0);
+    this.instancePlan = taskPlan;
+    this.type = t;
 
-    LOG.info(String.format("%d adding internal/external routing", instancePlan.getThisExecutor()));
+    LOG.info(String.format("%d adding internal/external routing", taskPlan.getThisExecutor()));
     try {
       for (int s : thisSources) {
         Set<Integer> integerSetMap = internal.get(s);
@@ -87,29 +109,35 @@ public class MPIDataFlowLoadBalance extends MPIDataFlowOperation {
           this.dests.external.addAll(integerSetMap1);
         }
         LOG.info(String.format("%d adding internal/external routing %d",
-            instancePlan.getThisExecutor(), s));
+            taskPlan.getThisExecutor(), s));
         break;
       }
-    } catch (Throwable t) {
-      t.printStackTrace();
+    } catch (Throwable te) {
+      te.printStackTrace();
     }
     LOG.info(String.format("%d done adding internal/external routing",
-        instancePlan.getThisExecutor()));
+        taskPlan.getThisExecutor()));
 
     if (this.finalReceiver != null && isLastReceiver()) {
-      this.finalReceiver.init(config, this, receiveExpectedTaskIds());
+      this.finalReceiver.init(cfg, this, receiveExpectedTaskIds());
     }
 
-    Set<Integer> srcs = TaskPlanUtils.getTasksOfThisExecutor(instancePlan, sources);
+    Map<Integer, ArrayBlockingQueue<Pair<Object, MPISendMessage>>> pendingSendMessagesPerSource =
+        new HashMap<>();
+    Map<Integer, Queue<Pair<Object, MPIMessage>>> pendingReceiveMessagesPerSource = new HashMap<>();
+    Map<Integer, Queue<MPIMessage>> pendingReceiveDeSerializations = new HashMap<>();
+
+
+    Set<Integer> srcs = TaskPlanUtils.getTasksOfThisExecutor(taskPlan, sources);
     for (int s : srcs) {
       // later look at how not to allocate pairs for this each time
       ArrayBlockingQueue<Pair<Object, MPISendMessage>> pendingSendMessages =
           new ArrayBlockingQueue<Pair<Object, MPISendMessage>>(
-              MPIContext.sendPendingMax(config));
+              MPIContext.sendPendingMax(cfg));
       pendingSendMessagesPerSource.put(s, pendingSendMessages);
     }
 
-    int maxReceiveBuffers = MPIContext.receiveBufferCount(config);
+    int maxReceiveBuffers = MPIContext.receiveBufferCount(cfg);
     int receiveExecutorsSize = receivingExecutors().size();
     if (receiveExecutorsSize == 0) {
       receiveExecutorsSize = 1;
@@ -123,6 +151,17 @@ public class MPIDataFlowLoadBalance extends MPIDataFlowOperation {
       pendingReceiveMessagesPerSource.put(e, pendingReceiveMessages);
       pendingReceiveDeSerializations.put(e, new ArrayBlockingQueue<MPIMessage>(capacity));
     }
+
+    KryoSerializer kryoSerializer = new KryoSerializer();
+    kryoSerializer.init(new HashMap<String, Object>());
+
+    MessageDeSerializer messageDeSerializer = new MPIMessageDeSerializer(kryoSerializer);
+    MessageSerializer messageSerializer = new MPIMessageSerializer(kryoSerializer);
+
+    delegete.init(cfg, t, taskPlan, edge,
+        router.receivingExecutors(), router.isLastReceiver(), this,
+        pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
+        pendingReceiveDeSerializations, messageSerializer, messageDeSerializer);
   }
 
   @Override
@@ -131,12 +170,45 @@ public class MPIDataFlowLoadBalance extends MPIDataFlowOperation {
   }
 
   @Override
-  protected RoutingParameters partialSendRoutingParameters(int source, int path) {
-    throw new RuntimeException("Method not supported");
+  public boolean send(int source, Object message, int flags) {
+    return delegete.sendMessage(source, message, 0, flags, sendRoutingParameters(source, 0));
   }
 
   @Override
-  protected RoutingParameters sendRoutingParameters(int source, int path) {
+  public boolean send(int source, Object message, int flags, int path) {
+    return delegete.sendMessage(source, message, path, flags, sendRoutingParameters(source, path));
+  }
+
+  @Override
+  public boolean sendPartial(int source, Object message, int flags, int path) {
+    throw new RuntimeException("Not supported method");
+  }
+
+  @Override
+  public void progress() {
+    delegete.progress();
+    finalReceiver.progress();
+  }
+
+  @Override
+  public void close() {
+  }
+
+  @Override
+  public void finish() {
+  }
+
+  @Override
+  public MessageType getType() {
+    return type;
+  }
+
+  @Override
+  public TaskPlan getTaskPlan() {
+    return instancePlan;
+  }
+
+  private RoutingParameters sendRoutingParameters(int source, int path) {
     RoutingParameters routingParameters = new RoutingParameters();
     int destination = 0;
 
@@ -167,13 +239,16 @@ public class MPIDataFlowLoadBalance extends MPIDataFlowOperation {
     return routingParameters;
   }
 
-  @Override
-  protected boolean receiveSendInternally(int source, int t, int path, int flags, Object message) {
+  public boolean receiveSendInternally(int source, int t, int path, int flags, Object message) {
     // okay this must be for the
     return finalReceiver.onMessage(source, path, t, flags, message);
   }
 
   @Override
+  public boolean passMessageDownstream(Object object, MPIMessage currentMessage) {
+    return false;
+  }
+
   protected Set<Integer> receivingExecutors() {
     return router.receivingExecutors();
   }
@@ -182,13 +257,11 @@ public class MPIDataFlowLoadBalance extends MPIDataFlowOperation {
     return router.receiveExpectedTaskIds();
   }
 
-  @Override
   protected boolean isLast(int source, int path, int taskIdentifier) {
     return destinations.contains(taskIdentifier);
   }
 
-  @Override
-  protected boolean receiveMessage(MPIMessage currentMessage, Object object) {
+  public boolean receiveMessage(MPIMessage currentMessage, Object object) {
     MessageHeader header = currentMessage.getHeader();
 
     return finalReceiver.onMessage(header.getSourceId(), MPIContext.DEFAULT_PATH,
@@ -196,7 +269,6 @@ public class MPIDataFlowLoadBalance extends MPIDataFlowOperation {
             MPIContext.DEFAULT_PATH), header.getFlags(), object);
   }
 
-  @Override
   protected boolean isLastReceiver() {
     return true;
   }

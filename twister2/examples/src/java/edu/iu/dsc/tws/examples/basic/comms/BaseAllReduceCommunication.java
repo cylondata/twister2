@@ -214,7 +214,7 @@ public class BaseAllReduceCommunication implements IContainer {
         Integer c = counts.get(target).get(source);
         if (m.size() > 128) {
 //          if (count % 10 == 0) {
-//            LOG.info(String.format("%d Partial false %d %d", id, source, m.size()));
+          LOG.info(String.format("%d Partial false %d %d", id, source, m.size()));
 //          }
           canAdd = false;
         } else {
@@ -222,7 +222,7 @@ public class BaseAllReduceCommunication implements IContainer {
 //          }
           m.add(object);
           counts.get(target).put(source, c + 1);
-//          LOG.info(String.format("%d Partial true %d %d %s", id, source, m.size(), counts));
+          LOG.info(String.format("%d Partial true %d %d %s", id, source, m.size(), counts));
         }
 
         return canAdd;
@@ -265,7 +265,7 @@ public class BaseAllReduceCommunication implements IContainer {
                 canProgress = false;
 //                  LOG.info(String.format("%d reduce send false", id));
               }
-              if (count % 1000 == 0) {
+              if (count % 1 == 0) {
                 LOG.info(String.format("%d Inject partial %d count: %d %s",
                     id, t, count, counts));
               }

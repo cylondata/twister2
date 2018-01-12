@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.mpi.MPIBuffer;

@@ -121,6 +121,16 @@ public class MPIDataFlowAllGather implements DataFlowOperation {
   public void finish() {
   }
 
+  @Override
+  public MessageType getType() {
+    return null;
+  }
+
+  @Override
+  public TaskPlan getTaskPlan() {
+    return null;
+  }
+
   private class ReduceFinalReceiver implements MessageReceiver {
     // lets keep track of the messages
     // for each task we need to keep track of incoming messages
