@@ -62,22 +62,22 @@ public class MPIDataFlowKGather implements DataFlowOperation {
 
   @Override
   public boolean send(int source, Object message, int flags, int path) {
-    MPIDataFlowOperation reduce = gatherMap.get(path);
-    if (reduce == null) {
+    MPIDataFlowGather gather = gatherMap.get(path);
+    if (gather == null) {
       throw new RuntimeException("Un-expected destination: " + path);
     }
-    boolean send = reduce.send(source, message, flags, path);
+    boolean send = gather.send(source, message, flags, path);
 //  LOG.info(String.format("%d sending message on reduce: %d %d %b", executor, path, source, send));
     return send;
   }
 
   @Override
   public boolean sendPartial(int source, Object message, int path, int flags) {
-    MPIDataFlowOperation reduce = gatherMap.get(path);
-    if (reduce == null) {
+    MPIDataFlowGather gather = gatherMap.get(path);
+    if (gather == null) {
       throw new RuntimeException("Un-expected destination: " + path);
     }
-    boolean send = reduce.sendPartial(source, message, flags, path);
+    boolean send = gather.sendPartial(source, message, flags, path);
 //  LOG.info(String.format("%d sending message on reduce: %d %d %b", executor, path, source, send));
     return send;
   }
@@ -96,6 +96,16 @@ public class MPIDataFlowKGather implements DataFlowOperation {
 
   @Override
   public void finish() {
+  }
+
+  @Override
+  public MessageType getType() {
+    return null;
+  }
+
+  @Override
+  public TaskPlan getTaskPlan() {
+    return null;
   }
 
   @Override

@@ -69,7 +69,7 @@ public class MPIDataFlowKReduce implements DataFlowOperation {
 
   @Override
   public boolean send(int source, Object message, int flags, int path) {
-    MPIDataFlowOperation reduce = reduceMap.get(path);
+    MPIDataFlowReduce reduce = reduceMap.get(path);
     if (reduce == null) {
       throw new RuntimeException("Un-expected destination: " + path);
     }
@@ -80,7 +80,7 @@ public class MPIDataFlowKReduce implements DataFlowOperation {
 
   @Override
   public boolean sendPartial(int source, Object message, int flags, int path) {
-    MPIDataFlowOperation reduce = reduceMap.get(path);
+    MPIDataFlowReduce reduce = reduceMap.get(path);
     if (reduce == null) {
       throw new RuntimeException("Un-expected destination: " + path);
     }
@@ -104,6 +104,16 @@ public class MPIDataFlowKReduce implements DataFlowOperation {
 
   @Override
   public void finish() {
+  }
+
+  @Override
+  public MessageType getType() {
+    return null;
+  }
+
+  @Override
+  public TaskPlan getTaskPlan() {
+    return null;
   }
 
   @Override

@@ -1,5 +1,3 @@
-//  Copyright 2017 Twitter. All rights reserved.
-//
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
@@ -11,22 +9,10 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.api;
+package edu.iu.dsc.tws.comms.mpi;
 
-import edu.iu.dsc.tws.common.config.Config;
-
-public interface MessageSerializer {
-  /**
-   * Initialize the serializer
-   * @param cfg
-   */
-  void init(Config cfg);
-
-  /**
-   * This method will be called repeatedly until the message is fully built
-   * @param message
-   * @param partialBuildObject
-   * @return
-   */
-  Object build(Object message, Object partialBuildObject);
+public interface MPIMessageReceiver {
+  boolean receiveMessage(MPIMessage currentMessage, Object object);
+  boolean receiveSendInternally(int source, int t, int path, int flags, Object message);
+  boolean passMessageDownstream(Object object, MPIMessage currentMessage);
 }

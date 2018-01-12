@@ -55,6 +55,10 @@ public class MPIDataFlowAllReduce implements DataFlowOperation {
 
   private int broadCastEdge;
 
+  private MessageType type;
+
+  private TaskPlan taskPlan;
+
   public MPIDataFlowAllReduce(TWSMPIChannel chnl,
                               Set<Integer> sources, Set<Integer> destination, int middleTask,
                               MessageReceiver finalRecv,
@@ -72,18 +76,22 @@ public class MPIDataFlowAllReduce implements DataFlowOperation {
   }
 
   @Override
-  public void init(Config config, MessageType type, TaskPlan instancePlan, int edge) {
+  public void init(Config config, MessageType t, TaskPlan instancePlan, int edge) {
+    this.type = t;
     this.executor = instancePlan.getThisExecutor();
+    this.taskPlan = instancePlan;
+    this.executor = taskPlan.getThisExecutor();
+
     ReduceFinalReceiver finalRcvr = new ReduceFinalReceiver();
     reduce = new MPIDataFlowReduce(channel, sources, middleTask,
         finalRcvr, partialReceiver);
-    reduce.init(config, type, instancePlan, reduceEdge);
+    reduce.init(config, t, instancePlan, reduceEdge);
 //    Map<Integer, List<Integer>> receiveExpects = reduce.receiveExpectedTaskIds();
 //    finalRcvr.init(receiveExpects);
 //    partialReceiver.init(receiveExpects);
 
     broadcast = new MPIDataFlowBroadcast(channel, middleTask, destinations, finalReceiver);
-    broadcast.init(config, type, instancePlan, broadCastEdge);
+    broadcast.init(config, t, instancePlan, broadCastEdge);
 //    Map<Integer, List<Integer>> broadCastExpects = broadcast.receiveExpectedTaskIds();
 //    finalReceiver.init(broadCastExpects);
   }
@@ -123,6 +131,16 @@ public class MPIDataFlowAllReduce implements DataFlowOperation {
 
   @Override
   public void finish() {
+  }
+
+  @Override
+  public MessageType getType() {
+    return type;
+  }
+
+  @Override
+  public TaskPlan getTaskPlan() {
+    return taskPlan;
   }
 
   private class ReduceFinalReceiver implements MessageReceiver {
@@ -201,10 +219,10 @@ public class MPIDataFlowAllReduce implements DataFlowOperation {
                 Integer i = e.getValue();
                 cMap.put(e.getKey(), i - 1);
               }
-//                  LOG.info(String.format("%d reduce send true", id));
+              LOG.info(String.format("%d reduce send true", executor));
             } else {
               canProgress = false;
-//                  LOG.info(String.format("%d reduce send false", id));
+              LOG.info(String.format("%d reduce send false", executor));
             }
           }
         }

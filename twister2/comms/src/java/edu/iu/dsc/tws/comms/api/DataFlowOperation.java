@@ -68,4 +68,8 @@ public interface DataFlowOperation {
    * If this is a larger transfer of dataflow style, we need to finish
    */
   void finish();
+
+  MessageType getType();
+
+  TaskPlan getTaskPlan();
 }

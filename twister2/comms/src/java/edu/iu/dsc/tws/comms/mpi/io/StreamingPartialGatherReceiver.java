@@ -54,7 +54,7 @@ public class StreamingPartialGatherReceiver implements MessageReceiver {
 
     if (messages.get(target) == null) {
       throw new RuntimeException(String.format("%d Partial receive error %d",
-          operation.getInstancePlan().getThisExecutor(), target));
+          operation.getTaskPlan().getThisExecutor(), target));
     }
     List<Object> messageLists = messages.get(target).get(source);
     if (messageLists.size() > sendPendingMax) {
@@ -92,8 +92,8 @@ public class StreamingPartialGatherReceiver implements MessageReceiver {
               out.add(object);
             }
           }
-          if (!operation.sendMessagePartial(t, out, 0,
-              MPIContext.FLAGS_MULTI_MSG, operation.getType())) {
+          if (!operation.sendPartial(t, out,
+              MPIContext.FLAGS_MULTI_MSG, 0)) {
             canProgress = false;
           }
         }

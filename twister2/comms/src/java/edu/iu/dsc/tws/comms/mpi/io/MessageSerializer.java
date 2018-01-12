@@ -9,15 +9,25 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.api;
+package edu.iu.dsc.tws.comms.mpi.io;
+
+import java.util.Queue;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.mpi.MPIBuffer;
 
-public interface MessageDeSerializer {
-  void init(Config cfg);
+public interface MessageSerializer {
+  /**
+   * Initialize the serializer
+   * @param cfg
+   */
+  void init(Config cfg, Queue<MPIBuffer> sendBuffs);
 
-  Object build(Object partialObject, int edge);
-
-  MessageHeader buildHeader(MPIBuffer buffer, int edge);
+  /**
+   * This method will be called repeatedly until the message is fully built
+   * @param message
+   * @param partialBuildObject
+   * @return
+   */
+  Object build(Object message, Object partialBuildObject);
 }

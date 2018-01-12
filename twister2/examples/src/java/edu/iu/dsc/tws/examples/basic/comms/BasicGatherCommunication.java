@@ -246,11 +246,11 @@ public class BasicGatherCommunication implements IContainer {
             }
             if (o != null) {
               count++;
-              if (count % 100 == 0) {
+              if (count % 1 == 0) {
                 LOG.info(String.format("%d Last %d count: %d %s",
                     id, t, count, counts));
               }
-              if (count >= 100) {
+              if (count >= 1) {
                 LOG.info("Total time: " + (System.nanoTime() - start) / 1000000
                     + " Count: " + count);
               }
