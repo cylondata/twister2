@@ -35,6 +35,7 @@ import edu.iu.dsc.tws.rsched.spi.uploaders.IUploader;
 import edu.iu.dsc.tws.rsched.spi.uploaders.UploaderException;
 import edu.iu.dsc.tws.rsched.utils.FileUtils;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
+import edu.iu.dsc.tws.rsched.utils.TarGzipPacker;
 
 /**
  * This is the main class that allocates the resources and starts the processes required
@@ -176,13 +177,90 @@ public class ResourceAllocator {
   }
 
   /**
+   * Create the job files to be uploaded into the cluster
+   */
+  private String prepareJobFiles2(Config config, JobAPI.Job job) {
+    // lets first save the job file
+    // lets write the job into file, this will be used for job creation
+    String tempDirectory = SchedulerContext.jobClientTempDirectory(config) + "/" + job.getJobName();
+    try {
+      Files.createDirectories(Paths.get(tempDirectory));
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to create the base temp directory for job", e);
+    }
+
+    String jobFile = SchedulerContext.jobFile(config);
+    if (jobFile == null) {
+      throw new RuntimeException("Job file cannot be null");
+    }
+
+    Path tempDirPath = null;
+    try {
+      tempDirPath = Files.createTempDirectory(Paths.get(tempDirectory), job.getJobName());
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to create temp directory: " + tempDirectory, e);
+    }
+
+    String tempDirPathString = tempDirPath.toString();
+    String jobFilePath = tempDirPathString + "/" + job.getJobName() + ".job";
+
+    // now we need to copy the actual job binary files here
+    JobAPI.JobFormat.Builder format = JobAPI.JobFormat.newBuilder();
+    format.setType(JobAPI.JobFormatType.SHUFFLE);
+    format.setJobFile(Paths.get(jobFile).getFileName().toString());
+
+    // now lets set the updates
+    updatedJob = JobAPI.Job.newBuilder(job).setJobFormat(format).build();
+    boolean write = JobUtils.writeJobFile(updatedJob, jobFilePath);
+    if (!write) {
+      throw new RuntimeException("Failed to write the job file");
+    }
+
+    // copy the job jar file
+    LOG.log(Level.INFO, String.format("Copy job jar: %s to %s", jobFile, tempDirPathString));
+    if (!FileUtils.copyFileToDirectory(jobFile, tempDirPathString)) {
+      throw new RuntimeException("Failed to copy the job jar file: "
+          + jobFile + " to:" + tempDirPathString);
+    }
+
+    // copy the job files
+    String twister2CorePackage = SchedulerContext.systemPackageUrl(config);
+    String confDir = SchedulerContext.conf(config);
+
+    // copy the conf directory
+    LOG.log(Level.INFO, String.format("Copy configuration: %s to %s",
+        confDir, tempDirPathString));
+    if (!FileUtils.copyDirectoryToDirectory(confDir, tempDirPathString)) {
+      throw new RuntimeException("Failed to copy the configuration: "
+          + confDir + " to: " + tempDirPathString);
+    }
+
+    // copy the dist package
+    LOG.log(Level.INFO, String.format("Copy core package: %s to %s",
+        twister2CorePackage, tempDirPathString));
+    if (!FileUtils.copyFileToDirectory(twister2CorePackage, tempDirPathString)) {
+      throw new RuntimeException("Failed to copy the core package");
+    }
+
+    // construct an archive file with: job file, job jar and conf dir
+    TarGzipPacker packer = TarGzipPacker.createTarGzipPacker(tempDirPathString, config);
+    packer.addFileToArchive(jobFilePath); // job file
+    packer.addFileToArchive(jobFile); // job jar file
+    packer.addDirectoryToArchive(confDir); // conf dir
+    packer.close();
+
+    return tempDirPathString;
+  }
+
+  /**
    * Submit the job to the cluster
    *
    * @param job the actual job
    */
   public void submitJob(JobAPI.Job job, Config config) {
     // lets prepare the job files
-    String jobDirectory = prepareJobFiles(config, job);
+//    String jobDirectory = prepareJobFiles(config, job);
+    String jobDirectory = prepareJobFiles2(config, job);
 
     String statemgrClass = SchedulerContext.stateManagerClass(config);
     if (statemgrClass == null) {
