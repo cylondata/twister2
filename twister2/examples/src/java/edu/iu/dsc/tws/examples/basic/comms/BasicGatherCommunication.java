@@ -63,6 +63,8 @@ public class BasicGatherCommunication implements IContainer {
 
   private RandomString randomString;
 
+  private long startTime = 0;
+
   @Override
   public void init(Config cfg, int containerId, ResourcePlan plan) {
     LOG.log(Level.INFO, "Starting the example with container id: " + plan.getThisId());
@@ -133,6 +135,7 @@ public class BasicGatherCommunication implements IContainer {
       try {
         LOG.log(Level.INFO, "Starting map worker: " + id);
 //      MPIBuffer data = new MPIBuffer(1024);
+        startTime = System.nanoTime();
         for (int i = 0; i < 100; i++) {
           String data = generateStringData();
           // lets generate a message
@@ -252,7 +255,7 @@ public class BasicGatherCommunication implements IContainer {
               }
               if (count >= 100) {
                 LOG.info("Total time: " + (System.nanoTime() - start) / 1000000
-                    + " Count: " + count);
+                    + " Count: " + count + " total: " + (System.nanoTime() - startTime));
               }
             } else {
               LOG.severe("We cannot find an object and this is not correct");
