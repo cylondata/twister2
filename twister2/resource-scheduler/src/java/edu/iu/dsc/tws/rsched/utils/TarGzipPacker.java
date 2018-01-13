@@ -33,12 +33,12 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
 public final class TarGzipPacker {
-  TarArchiveOutputStream tarOutputStream;
-  Path archiveFile;
-  private static final String dirPrefixForArchive = "./twister2-core/";
+  private TarArchiveOutputStream tarOutputStream;
+  private Path archiveFile;
+  private static final String DIR_PREFIX_FOR_ARCHIVE = "./twister2-core/";
 
   /**
-   *
+   * Pack
    * @param archiveFile
    * @param tarOutputStream
    */
@@ -48,7 +48,7 @@ public final class TarGzipPacker {
   }
 
   /**
-   *
+   * Create
    * @param targetDir
    * @return
    */
@@ -64,7 +64,7 @@ public final class TarGzipPacker {
       TarArchiveOutputStream tarOutputStream = new TarArchiveOutputStream(gzipOutputStream);
 
       return new TarGzipPacker(archiveFile, tarOutputStream);
-    }catch(IOException ioe){
+    } catch (IOException ioe) {
       System.out.println("can not create archive file");
       ioe.printStackTrace();
       return null;
@@ -75,6 +75,7 @@ public final class TarGzipPacker {
    * given tar.gz file will be copied to this tar.gz file.
    * all files will be transferred to new tar.gz file one by one.
    * original directory structure will be kept intact
+   *
    * @param tarGzipFile the archive file to be copied to the new archive
    */
   public void addTarGzipToArchive(String tarGzipFile) {
@@ -94,24 +95,25 @@ public final class TarGzipPacker {
       }
 
       tarInputStream.close();
-    }catch (IOException ioe){
+    } catch (IOException ioe) {
       ioe.printStackTrace();
     }
   }
 
   /**
    * add one file to tar.gz file
+   *
    * @param filename full path file name to be added to the jar
    */
   public void addFileToArchive(String filename) {
     File file = new File(filename);
-    addFileToArchive(file, dirPrefixForArchive);
+    addFileToArchive(file, DIR_PREFIX_FOR_ARCHIVE);
   }
 
   /**
    * add one file to tar.gz file
+   *
    * @param file file to be added to the tar.gz
-   * @dirPrefixForTar directory structure of this file in tar.gz
    */
   public void addFileToArchive(File file, String dirPrefixForTar) {
     try {
@@ -132,14 +134,15 @@ public final class TarGzipPacker {
    * add all files in the given directory to the tar.gz file
    * add the given prefix to all files in tar names
    * do not copy files recursively. Only one level copying.
+   *
    * @param path of the firectory to be added
    */
   public void addDirectoryToArchive(String path) {
 
     File dir = new File(path);
 
-    String prefix = dirPrefixForArchive + dir.getName() + "/";
-    for (File file: dir.listFiles()) {
+    String prefix = DIR_PREFIX_FOR_ARCHIVE + dir.getName() + "/";
+    for (File file : dir.listFiles()) {
       addFileToArchive(file, prefix);
     }
   }
