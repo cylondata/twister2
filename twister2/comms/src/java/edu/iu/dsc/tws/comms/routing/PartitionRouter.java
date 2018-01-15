@@ -21,8 +21,8 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 
-public class LoadBalanceRouter {
-  private static final Logger LOG = Logger.getLogger(LoadBalanceRouter.class.getName());
+public class PartitionRouter {
+  private static final Logger LOG = Logger.getLogger(PartitionRouter.class.getName());
   // the task plan
   private TaskPlan taskPlan;
   // task -> (path -> tasks)
@@ -40,7 +40,7 @@ public class LoadBalanceRouter {
    * @param srscs
    * @param dests
    */
-  public LoadBalanceRouter(TaskPlan plan, Set<Integer> srscs, Set<Integer> dests) {
+  public PartitionRouter(TaskPlan plan, Set<Integer> srscs, Set<Integer> dests) {
     this.taskPlan = plan;
 
     this.externalSendTasks = new HashMap<>();
@@ -74,7 +74,7 @@ public class LoadBalanceRouter {
       }
     }
 
-    receiveExecutors = LoadBalanceRouter.getExecutorsHostingTasks(plan, srscs);
+    receiveExecutors = PartitionRouter.getExecutorsHostingTasks(plan, srscs);
     // we are not interested in our own
     receiveExecutors.remove(taskPlan.getThisExecutor());
 

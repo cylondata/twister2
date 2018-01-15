@@ -11,17 +11,34 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi.io;
 
-public class MultiObject {
-  private int source;
+import edu.iu.dsc.tws.comms.api.MessageType;
 
-  private Object object;
+/**
+ * Keyed content is serialized given priority and serialized as two parts of key and object.
+ */
+public class KeyedContent {
+  private final Object source;
 
-  public MultiObject(int source, Object object) {
+  private final Object object;
+
+  private MessageType keyType = MessageType.SHORT;
+
+  private MessageType contentType;
+
+  public KeyedContent(int source, Object object) {
     this.source = source;
     this.object = object;
   }
 
-  public int getSource() {
+  public MessageType getKeyType() {
+    return keyType;
+  }
+
+  public void setKeyType(MessageType keyType) {
+    this.keyType = keyType;
+  }
+
+  public Object getSource() {
     return source;
   }
 

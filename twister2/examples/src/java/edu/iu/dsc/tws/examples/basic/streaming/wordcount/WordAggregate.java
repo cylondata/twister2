@@ -19,7 +19,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.KeyedMessageReceiver;
-import edu.iu.dsc.tws.comms.mpi.io.MultiObject;
+import edu.iu.dsc.tws.comms.mpi.io.KeyedContent;
 
 public class WordAggregate implements KeyedMessageReceiver {
   private static final Logger LOG = Logger.getLogger(WordAggregate.class.getName());
@@ -41,12 +41,12 @@ public class WordAggregate implements KeyedMessageReceiver {
     if (object instanceof List) {
       for (Object o : (List) object) {
         LOG.info("Object: " + o);
-        if (o instanceof MultiObject) {
-          addValue(((MultiObject) o).getObject().toString());
+        if (o instanceof KeyedContent) {
+          addValue(((KeyedContent) o).getObject().toString());
         }
       }
-    } else if (object instanceof MultiObject) {
-      String value = ((MultiObject) object).getObject().toString();
+    } else if (object instanceof KeyedContent) {
+      String value = ((KeyedContent) object).getObject().toString();
       addValue(value);
     } else {
       addValue(object.toString());

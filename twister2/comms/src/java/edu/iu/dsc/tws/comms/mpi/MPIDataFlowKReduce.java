@@ -68,23 +68,23 @@ public class MPIDataFlowKReduce implements DataFlowOperation {
   }
 
   @Override
-  public boolean send(int source, Object message, int flags, int path) {
-    MPIDataFlowReduce reduce = reduceMap.get(path);
+  public boolean send(int source, Object message, int flags, int dest) {
+    MPIDataFlowReduce reduce = reduceMap.get(dest);
     if (reduce == null) {
-      throw new RuntimeException("Un-expected destination: " + path);
+      throw new RuntimeException("Un-expected destination: " + dest);
     }
-    boolean send = reduce.send(source, message, path);
+    boolean send = reduce.send(source, message, dest);
 //  LOG.info(String.format("%d sending message on reduce: %d %d %b", executor, path, source, send));
     return send;
   }
 
   @Override
-  public boolean sendPartial(int source, Object message, int flags, int path) {
-    MPIDataFlowReduce reduce = reduceMap.get(path);
+  public boolean sendPartial(int source, Object message, int flags, int dest) {
+    MPIDataFlowReduce reduce = reduceMap.get(dest);
     if (reduce == null) {
-      throw new RuntimeException("Un-expected destination: " + path);
+      throw new RuntimeException("Un-expected destination: " + dest);
     }
-    boolean send = reduce.sendPartial(source, message, path);
+    boolean send = reduce.sendPartial(source, message, dest);
 //  LOG.info(String.format("%d sending message on reduce: %d %d %b", executor, path, source, send));
     return send;
   }

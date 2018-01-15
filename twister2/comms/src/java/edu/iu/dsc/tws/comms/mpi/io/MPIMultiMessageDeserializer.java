@@ -47,7 +47,7 @@ public class MPIMultiMessageDeserializer implements MessageDeSerializer {
     int readLength = 0;
     int bufferIndex = 0;
     List<MPIBuffer> buffers = currentMessage.getBuffers();
-    List<MultiObject> returnList = new ArrayList<>();
+    List<KeyedContent> returnList = new ArrayList<>();
     MessageHeader header = currentMessage.getHeader();
 
     if (header == null) {
@@ -60,6 +60,7 @@ public class MPIMultiMessageDeserializer implements MessageDeSerializer {
       MPIBuffer mpiBuffer = buffers.get(bufferIndex);
       ByteBuffer byteBuffer = mpiBuffer.getByteBuffer();
       int length = byteBuffer.getInt();
+      int keyLength = byteBuffer.getInt();
       int source = byteBuffer.getShort();
 
       int tempLength = 0;
@@ -82,8 +83,8 @@ public class MPIMultiMessageDeserializer implements MessageDeSerializer {
         bufferIndex = tempBufferIndex;
       }
 
-      MultiObject multiObject =  new MultiObject(source, object);
-      returnList.add(multiObject);
+      KeyedContent keyedContent =  new KeyedContent(source, object);
+      returnList.add(keyedContent);
     }
     return returnList;
   }

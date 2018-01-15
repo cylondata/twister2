@@ -29,11 +29,11 @@ import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.mpi.io.KeyedContent;
 import edu.iu.dsc.tws.comms.mpi.io.MPIMultiMessageDeserializer;
 import edu.iu.dsc.tws.comms.mpi.io.MPIMultiMessageSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.MessageSerializer;
-import edu.iu.dsc.tws.comms.mpi.io.MultiObject;
 import edu.iu.dsc.tws.comms.routing.InvertedBinaryTreeRouter;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
@@ -92,23 +92,7 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
     this.delegete = new MPIDataFlowOperation(channel);
   }
 
-//  @Override
-//  protected void initSerializers() {
-//    kryoSerializer = new KryoSerializer();
-//    kryoSerializer.init(new HashMap<String, Object>());
-//
-//    messageDeSerializer = new MPIMultiMessageDeserializer(kryoSerializer, executor);
-//    messageSerializer = new MPIMultiMessageSerializer(sendBuffers, kryoSerializer, executor);
-//    // initialize the serializers
-//    messageSerializer.init(config);
-//    messageDeSerializer.init(config);
-//  }
-
-  public void setupRouting() {
-
-  }
-
-  protected boolean isLast(int source, int path, int taskIdentifier) {
+  protected boolean isLast() {
     return router.isLastReceiver();
   }
 
@@ -126,7 +110,7 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
     // we always receive to the main task
     int messageDestId = currentMessage.getHeader().getDestinationIdentifier();
     // check weather this message is for a sub task
-    if (!isLast(header.getSourceId(), header.getFlags(), messageDestId)
+    if (!isLast()
         && partialReceiver != null) {
       return partialReceiver.onMessage(header.getSourceId(),
           MPIContext.DEFAULT_PATH,
@@ -219,14 +203,14 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
   }
 
   @Override
-  public boolean send(int source, Object message, int flags, int path) {
+  public boolean send(int source, Object message, int flags, int dest) {
     return false;
   }
 
   @Override
-  public boolean sendPartial(int source, Object message, int flags, int path) {
-    return delegete.sendMessagePartial(source, message, path, flags,
-        partialSendRoutingParameters(source, path));
+  public boolean sendPartial(int source, Object message, int flags, int dest) {
+    return delegete.sendMessagePartial(source, message, dest, flags,
+        partialSendRoutingParameters(source, dest));
   }
 
   @Override
@@ -407,10 +391,6 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
               found = false;
               canProgress = false;
             }
-//            if (e.getValue().size() != cMap.get(e.getKey())) {
-//              LOG.info(String.format("%d COUNT and SIZE NOT %d != %d",
-//                  executor, e.getValue().size(), cMap.get(e.getKey())));
-//            }
           }
 
           if (found) {
@@ -418,7 +398,10 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
             for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
               Object e1 = e.getValue().get(0);
               if (!(e1 instanceof MPIMessage)) {
-                out.add(new MultiObject(e.getKey(), e1));
+                // we use the source task id as the key
+                KeyedContent keyedContent = new KeyedContent(e.getKey(), e1);
+                keyedContent.setKeyType(MessageType.SHORT);
+                out.add(keyedContent);
               } else {
                 out.add(e1);
               }
@@ -431,8 +414,6 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
                 Integer i = e.getValue();
                 e.setValue(i - 1);
               }
-//              LOG.info(String.format("%d Send partial true: target %d objects %d %s",
-//                  executor, t, out.size(), cMap));
             } else {
               canProgress = false;
             }

@@ -187,15 +187,15 @@ public class MPIDataFlowReduce implements DataFlowOperation, MPIMessageReceiver 
   }
 
   @Override
-  public boolean send(int source, Object message, int flags, int path) {
-    return delegete.sendMessage(source, message, path, flags,
+  public boolean send(int source, Object message, int flags, int dest) {
+    return delegete.sendMessage(source, message, dest, flags,
         sendRoutingParameters(source, pathToUse));
   }
 
   @Override
-  public boolean sendPartial(int source, Object message, int flags, int path) {
-    return delegete.sendMessagePartial(source, message, path, flags,
-        partialSendRoutingParameters(source, path));
+  public boolean sendPartial(int source, Object message, int flags, int dest) {
+    return delegete.sendMessagePartial(source, message, dest, flags,
+        partialSendRoutingParameters(source, dest));
   }
 
   @Override

@@ -69,16 +69,16 @@ public final class Test {
   public void runTest2() {
     IntData data = new IntData(128);
     List list = new ArrayList<>();
-    list.add(new MultiObject(0, data));
+    list.add(new KeyedContent(0, data));
     data = new IntData(128);
-    list.add(new MultiObject(1, data));
+    list.add(new KeyedContent(1, data));
     MPIMessage message = serializeObject(list, 1);
 
     data = new IntData(128);
     list = new ArrayList<>();
-    list.add(new MultiObject(2, data));
+    list.add(new KeyedContent(2, data));
     data = new IntData(128);
-    list.add(new MultiObject(3, data));
+    list.add(new KeyedContent(3, data));
     MPIMessage message2 = serializeObject(list, 1);
 
     list = new ArrayList<>();
@@ -109,11 +109,11 @@ public final class Test {
     Object d = mpiMultiMessageDeserializer.build(message, 0);
     List list = (List) d;
     for (Object o : list) {
-      if (o instanceof MultiObject) {
-        System.out.println(((MultiObject) o).getSource());
-        if (((MultiObject) o).getObject() instanceof IntData) {
+      if (o instanceof KeyedContent) {
+        System.out.println(((KeyedContent) o).getSource());
+        if (((KeyedContent) o).getObject() instanceof IntData) {
           System.out.println("Length: "
-              + ((IntData) ((MultiObject) o).getObject()).getData().length);
+              + ((IntData) ((KeyedContent) o).getObject()).getData().length);
         }
       }
     }

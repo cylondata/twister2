@@ -87,7 +87,7 @@ public class StreamingPartialGatherReceiver implements MessageReceiver {
           for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
             Object object = e.getValue().get(0);
             if (!(object instanceof MPIMessage)) {
-              out.add(new MultiObject(e.getKey(), object));
+              out.add(new KeyedContent(e.getKey(), object));
             } else {
               out.add(object);
             }

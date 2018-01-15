@@ -61,23 +61,23 @@ public class MPIDataFlowKGather implements DataFlowOperation {
   }
 
   @Override
-  public boolean send(int source, Object message, int flags, int path) {
-    MPIDataFlowGather gather = gatherMap.get(path);
+  public boolean send(int source, Object message, int flags, int dest) {
+    MPIDataFlowGather gather = gatherMap.get(dest);
     if (gather == null) {
-      throw new RuntimeException("Un-expected destination: " + path);
+      throw new RuntimeException("Un-expected destination: " + dest);
     }
-    boolean send = gather.send(source, message, flags, path);
+    boolean send = gather.send(source, message, flags, dest);
 //  LOG.info(String.format("%d sending message on reduce: %d %d %b", executor, path, source, send));
     return send;
   }
 
   @Override
-  public boolean sendPartial(int source, Object message, int path, int flags) {
+  public boolean sendPartial(int source, Object message, int path, int dest) {
     MPIDataFlowGather gather = gatherMap.get(path);
     if (gather == null) {
       throw new RuntimeException("Un-expected destination: " + path);
     }
-    boolean send = gather.sendPartial(source, message, flags, path);
+    boolean send = gather.sendPartial(source, message, dest, path);
 //  LOG.info(String.format("%d sending message on reduce: %d %d %b", executor, path, source, send));
     return send;
   }

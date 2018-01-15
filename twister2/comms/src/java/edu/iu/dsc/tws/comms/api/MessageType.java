@@ -20,5 +20,7 @@ public enum  MessageType {
   DOUBLE,
   OBJECT,
   BUFFER,
-  MULTI_BUFFER,
+  EMPTY,
+  SHORT,
+  KEYED,
 }
