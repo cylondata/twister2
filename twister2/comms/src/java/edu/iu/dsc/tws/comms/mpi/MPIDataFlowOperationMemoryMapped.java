@@ -47,11 +47,13 @@ import edu.iu.dsc.tws.comms.mpi.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.MessageSerializer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.data.fs.Path;
+import edu.iu.dsc.tws.data.memory.BulkMemoryManager;
 import edu.iu.dsc.tws.data.memory.MemoryManager;
-import edu.iu.dsc.tws.data.memory.lmdb.LMDBMemoryManager;
 
-public class MPIDataFlowOperationMemoryMapped implements MPIMessageListener, MPIMessageReleaseCallback {
-  private static final Logger LOG = Logger.getLogger(MPIDataFlowOperationMemoryMapped.class.getName());
+public class MPIDataFlowOperationMemoryMapped
+    implements MPIMessageListener, MPIMessageReleaseCallback {
+  private static final Logger LOG = Logger.getLogger(
+      MPIDataFlowOperationMemoryMapped.class.getName());
 
   public static final int MAX_ATTEMPTS = 1000;
   // the configuration
@@ -167,7 +169,7 @@ public class MPIDataFlowOperationMemoryMapped implements MPIMessageListener, MPI
 
     //TODO : need to load this from config file, both the type of memory manager and the datapath
     Path dataPath = new Path("/home/pulasthi/work/twister2/lmdbdatabase");
-    this.memoryManager = new LMDBMemoryManager(dataPath);
+    this.memoryManager = new BulkMemoryManager(dataPath);
   }
 
   protected void initSerializers() {
@@ -233,7 +235,7 @@ public class MPIDataFlowOperationMemoryMapped implements MPIMessageListener, MPI
   }
 
   public boolean sendMessage(int source, Object message, int path,
-                                int flags, RoutingParameters routingParameters) {
+                             int flags, RoutingParameters routingParameters) {
     lock.lock();
     try {
 //      LOG.info(String.format("%d send message %d", executor, source));
@@ -413,7 +415,7 @@ public class MPIDataFlowOperationMemoryMapped implements MPIMessageListener, MPI
                   + pendingReceiveMessages.size());
             }
             int attempt = updateAttemptMap(receiveMessageAttempts, id, 1);
-            if (debug && attempt >  MAX_ATTEMPTS) {
+            if (debug && attempt > MAX_ATTEMPTS) {
               LOG.info(String.format("%d Send message internal attempts %d",
                   executor, attempt));
             }
@@ -551,6 +553,10 @@ public class MPIDataFlowOperationMemoryMapped implements MPIMessageListener, MPI
       if (currentMessage.isComplete()) {
         //TODO: if this is the last task we can add the messages to the state manager here
         //TODO: The rest we need to add at the progress function
+        //How to find the current task id or will just the executor work?
+        if (currentMessage.getHeader().getDestinationIdentifier() == executor) {
+          // add to store
+        }
         currentMessages.remove(id);
         Queue<MPIMessage> deserializeQueue = pendingReceiveDeSerializations.get(id);
         if (!deserializeQueue.offer(currentMessage)) {
