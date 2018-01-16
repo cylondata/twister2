@@ -33,7 +33,6 @@ import edu.iu.dsc.tws.comms.mpi.io.MPIMultiMessageDeserializer;
 import edu.iu.dsc.tws.comms.mpi.io.MPIMultiMessageSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.MessageSerializer;
-import edu.iu.dsc.tws.comms.mpi.io.MultiObject;
 import edu.iu.dsc.tws.comms.routing.InvertedBinaryTreeRouter;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
@@ -92,23 +91,7 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
     this.delegete = new MPIDataFlowOperation(channel);
   }
 
-//  @Override
-//  protected void initSerializers() {
-//    kryoSerializer = new KryoSerializer();
-//    kryoSerializer.init(new HashMap<String, Object>());
-//
-//    messageDeSerializer = new MPIMultiMessageDeserializer(kryoSerializer, executor);
-//    messageSerializer = new MPIMultiMessageSerializer(sendBuffers, kryoSerializer, executor);
-//    // initialize the serializers
-//    messageSerializer.init(config);
-//    messageDeSerializer.init(config);
-//  }
-
-  public void setupRouting() {
-
-  }
-
-  protected boolean isLast(int source, int path, int taskIdentifier) {
+  protected boolean isLast() {
     return router.isLastReceiver();
   }
 
@@ -126,7 +109,7 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
     // we always receive to the main task
     int messageDestId = currentMessage.getHeader().getDestinationIdentifier();
     // check weather this message is for a sub task
-    if (!isLast(header.getSourceId(), header.getFlags(), messageDestId)
+    if (!isLast()
         && partialReceiver != null) {
       return partialReceiver.onMessage(header.getSourceId(),
           MPIContext.DEFAULT_PATH,
@@ -219,14 +202,14 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
   }
 
   @Override
-  public boolean send(int source, Object message, int flags, int path) {
+  public boolean send(int source, Object message, int flags, int dest) {
     return false;
   }
 
   @Override
-  public boolean sendPartial(int source, Object message, int flags, int path) {
-    return delegete.sendMessagePartial(source, message, path, flags,
-        partialSendRoutingParameters(source, path));
+  public boolean sendPartial(int source, Object message, int flags, int dest) {
+    return delegete.sendMessagePartial(source, message, dest, flags,
+        partialSendRoutingParameters(source, dest));
   }
 
   @Override
@@ -379,12 +362,12 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
       Integer c = counts.get(target).get(source);
       if (m.size() > 16) {
         canAdd = false;
-//       LOG.info(String.format("%d Partial false: target %d source %d", executor, target, source));
+        LOG.info(String.format("%d Partial false: target %d source %d", executor, target, source));
       } else {
         // we need to increment the reference count to make the buffers available
         // other wise they will bre reclaimed
-//        LOG.info(String.format("%d Partial true: target %d source %d %s",
-//            executor, target, source, counts.get(target)));
+        LOG.info(String.format("%d Partial true: target %d source %d %s",
+            executor, target, source, counts.get(target)));
         if (object instanceof MPIMessage) {
           ((MPIMessage) object).incrementRefCount();
         }
@@ -407,21 +390,13 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
               found = false;
               canProgress = false;
             }
-//            if (e.getValue().size() != cMap.get(e.getKey())) {
-//              LOG.info(String.format("%d COUNT and SIZE NOT %d != %d",
-//                  executor, e.getValue().size(), cMap.get(e.getKey())));
-//            }
           }
 
           if (found) {
             List<Object> out = new ArrayList<>();
             for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
               Object e1 = e.getValue().get(0);
-              if (!(e1 instanceof MPIMessage)) {
-                out.add(new MultiObject(e.getKey(), e1));
-              } else {
-                out.add(e1);
-              }
+              out.add(e1);
             }
             if (sendPartial(t, out, 0, MPIContext.FLAGS_MULTI_MSG)) {
               for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
@@ -431,8 +406,6 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
                 Integer i = e.getValue();
                 e.setValue(i - 1);
               }
-//              LOG.info(String.format("%d Send partial true: target %d objects %d %s",
-//                  executor, t, out.size(), cMap));
             } else {
               canProgress = false;
             }

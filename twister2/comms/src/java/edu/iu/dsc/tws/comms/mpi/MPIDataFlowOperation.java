@@ -523,6 +523,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
       currentMessage.build();
 
       if (currentMessage.isComplete()) {
+//        LOG.info(String.format("%d completed recv ", executor));
         currentMessages.remove(id);
         Queue<MPIMessage> deserializeQueue = pendingReceiveDeSerializations.get(id);
         if (!deserializeQueue.offer(currentMessage)) {

@@ -27,6 +27,19 @@ public class SerializeState {
   private int totalBytes;
   // length header built
   private boolean headerBuilt;
+  // the serialized key
+  private byte[] key;
+  // length of the serialized key
+  private int keySize;
+
+  public enum Part {
+    INIT,
+    HEADER,
+    BODY,
+  }
+
+  // which part of the message is been serialized
+  private Part part = Part.INIT;
 
   public int getTotalBytes() {
     return totalBytes;
@@ -74,5 +87,29 @@ public class SerializeState {
 
   public void setHeaderBuilt(boolean headerBuilt) {
     this.headerBuilt = headerBuilt;
+  }
+
+  public byte[] getKey() {
+    return key;
+  }
+
+  public void setKey(byte[] key) {
+    this.key = key;
+  }
+
+  public Part getPart() {
+    return part;
+  }
+
+  public void setPart(Part part) {
+    this.part = part;
+  }
+
+  public int getKeySize() {
+    return keySize;
+  }
+
+  public void setKeySize(int keySize) {
+    this.keySize = keySize;
   }
 }
