@@ -1,3 +1,26 @@
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 package edu.iu.dsc.tws.examples;
 
 import java.util.ArrayList;
@@ -27,7 +50,6 @@ import edu.iu.dsc.tws.task.core.TaskExecutorFixedThread;
 import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraphGenerator;
 import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraphParser;
 
-
 public class SimpleTaskGraph implements IContainer {
 
   private static final Logger LOG = Logger.getLogger(SimpleTaskGraph.class.getName());
@@ -37,7 +59,7 @@ public class SimpleTaskGraph implements IContainer {
   private Set<Task> parsedTaskSet;
 
   //to call the dataflow task graph generator
-  private DataflowTaskGraphGenerator dataflowTaskGraph = null;
+  private DataflowTaskGraphGenerator dataflowTaskGraphGenerator = null;
   private DataflowTaskGraphParser dataflowTaskGraphParser = null;
   private Status status;
 
@@ -71,10 +93,10 @@ public class SimpleTaskGraph implements IContainer {
     MapWorker sourceTask = new MapWorker(0, direct);
     ReceiveWorker sinkTask = new ReceiveWorker();
 
-    dataflowTaskGraph = new DataflowTaskGraphGenerator().generateDataflowGraph(
+    dataflowTaskGraphGenerator = new DataflowTaskGraphGenerator().generateDataflowGraph(
         sourceTask, sinkTask, direct);
-    if (dataflowTaskGraph != null) {
-      dataflowTaskGraphParser = new DataflowTaskGraphParser(dataflowTaskGraph);
+    if (dataflowTaskGraphGenerator != null) {
+      dataflowTaskGraphParser = new DataflowTaskGraphParser(dataflowTaskGraphGenerator);
       parsedTaskSet = dataflowTaskGraphParser.dataflowTaskGraphParseAndSchedule();
     }
 
@@ -85,6 +107,7 @@ public class SimpleTaskGraph implements IContainer {
         //taskExecutor.registerTask(new MapWorker(0, direct));
         taskExecutor.submitTask(0);
         taskExecutor.progres();
+        ///dataflowTaskGraphGenerator.removeTaskVertex(parsedTaskSet.iterator().next());
       } else if (containerId == 1) {
         int index = 0;
         for (Task processedTask : parsedTaskSet) {
@@ -97,6 +120,7 @@ public class SimpleTaskGraph implements IContainer {
             taskExecutor.setTaskMessageProcessLimit(10000);
             taskExecutor.registerSinkTask(processedTask, inq);
             taskExecutor.progres();
+            ///dataflowTaskGraphGenerator.removeTaskVertex(parsedTaskSet.iterator().next());
             ++index;
           } else if (index > 1) { //Just for verification
             LOG.info("Task Index is greater than 1");
@@ -155,6 +179,7 @@ public class SimpleTaskGraph implements IContainer {
     MAP_FINISHED,
     LOAD_RECEIVE_FINISHED,
   }
+
 
   private class PingPongReceive implements MessageReceiver {
     private int count = 0;
