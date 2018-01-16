@@ -23,7 +23,7 @@ public class OperationMemoryManager {
 
   private MemoryManager parent;
 
-  public OperationMemoryManager(int opID, MemoryManager parentMM){
+  public OperationMemoryManager(int opID, MemoryManager parentMM) {
     this.operationID = opID;
     this.parent = parentMM;
     init();
@@ -34,11 +34,11 @@ public class OperationMemoryManager {
   }
 
   public boolean append(ByteBuffer key, ByteBuffer value) {
-    return parent.append(operationID, key,value);
+    return parent.append(operationID, key, value);
   }
 
   public boolean append(long key, ByteBuffer value) {
-    return parent.append(operationID, key,value);
+    return parent.append(operationID, key, value);
   }
 
   public boolean put(ByteBuffer key, ByteBuffer value) {

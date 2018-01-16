@@ -143,7 +143,8 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
       flush(opID, key);
     }
 
-    return memoryManager.get(opID, ByteBuffer.wrap(key.getBytes(MemoryManagerContext.DEFAULT_CHARSET)));
+    return memoryManager.get(opID, ByteBuffer.wrap(
+        key.getBytes(MemoryManagerContext.DEFAULT_CHARSET)));
   }
 
   @Override
@@ -193,7 +194,7 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
 
   @Override
   public OperationMemoryManager addOperation(int opID) {
-    if(operationMap.containsKey(opID)){
+    if (operationMap.containsKey(opID)) {
       return null;
     }
     OperationMemoryManager temp = new OperationMemoryManager(opID, this);
@@ -272,7 +273,8 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
     }
     //Since we got all the buffer values reset the size
     keyBufferSizes.put(key, 0);
-    return memoryManager.put(opID, ByteBuffer.wrap(key.getBytes(MemoryManagerContext.DEFAULT_CHARSET)),
+    return memoryManager.put(opID, ByteBuffer.wrap(key.getBytes(
+        MemoryManagerContext.DEFAULT_CHARSET)),
         temp);
   }
 
@@ -293,14 +295,15 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
     temp.put(last);
     //Since we got all the buffer values reset the size
     keyBufferSizes.put(key, 0);
-    return memoryManager.put(opID, ByteBuffer.wrap(key.getBytes(MemoryManagerContext.DEFAULT_CHARSET)),
+    return memoryManager.put(opID, ByteBuffer.wrap(key.getBytes(
+        MemoryManagerContext.DEFAULT_CHARSET)),
         temp);
   }
 
   /**
-   * Closing the key will make the BufferedMemoryManager to flush the current data into the store and
-   * delete all the key information. This is done once we know that no more values will be sent for
-   * this key
+   * Closing the key will make the BufferedMemoryManager to flush the current data into the store
+   * and delete all the key information. This is done once we know that no more values will be sent
+   * for this key
    */
   public boolean close(int opID, String key) {
     flush(opID, key);

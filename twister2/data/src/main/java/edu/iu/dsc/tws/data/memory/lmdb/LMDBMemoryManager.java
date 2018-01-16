@@ -81,7 +81,7 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
 
   @Override
   public ByteBuffer get(int opID, ByteBuffer key) {
-    if(!dbMap.containsKey(opID)){
+    if (!dbMap.containsKey(opID)) {
       LOG.info("The given operation does not have a corresponding store specified");
       return null;
     }
@@ -163,7 +163,7 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
 
   @Override
   public byte[] getBytes(int opID, ByteBuffer key) {
-    if(!dbMap.containsKey(opID)){
+    if (!dbMap.containsKey(opID)) {
       LOG.info("The given operation does not have a corresponding store specified");
       return null;
     }
@@ -186,7 +186,7 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean containsKey(int opID, ByteBuffer key) {
-    if(!dbMap.containsKey(opID)){
+    if (!dbMap.containsKey(opID)) {
       LOG.info("The given operation does not have a corresponding store specified");
       return false;
     }
@@ -254,7 +254,7 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
    * @return true if value was added, false otherwise
    */
   public boolean put(int opID, ByteBuffer key, ByteBuffer value) {
-    if(!dbMap.containsKey(opID)){
+    if (!dbMap.containsKey(opID)) {
       LOG.info("The given operation does not have a corresponding store specified");
       return false;
     }
@@ -328,7 +328,7 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean delete(int opID, ByteBuffer key) {
-    if(!dbMap.containsKey(opID)){
+    if (!dbMap.containsKey(opID)) {
       LOG.info("The given operation does not have a corresponding store specified");
       return false;
     }
@@ -367,8 +367,6 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
   /**
    * At this level the method does not return an OperationMemoryManager since the implementaion
    * does not handle OperationMemoryManager's
-   * @param opID
-   * @return
    */
   @Override
   public OperationMemoryManager addOperation(int opID) {
