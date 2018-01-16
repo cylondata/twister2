@@ -47,7 +47,7 @@ import edu.iu.dsc.tws.comms.mpi.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.MessageSerializer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.data.fs.Path;
-import edu.iu.dsc.tws.data.memory.BulkMemoryManager;
+import edu.iu.dsc.tws.data.memory.BufferedMemoryManager;
 import edu.iu.dsc.tws.data.memory.MemoryManager;
 
 public class MPIDataFlowOperationMemoryMapped
@@ -169,7 +169,7 @@ public class MPIDataFlowOperationMemoryMapped
 
     //TODO : need to load this from config file, both the type of memory manager and the datapath
     Path dataPath = new Path("/home/pulasthi/work/twister2/lmdbdatabase");
-    this.memoryManager = new BulkMemoryManager(dataPath);
+    this.memoryManager = new BufferedMemoryManager(dataPath);
   }
 
   protected void initSerializers() {

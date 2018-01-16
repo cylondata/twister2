@@ -36,9 +36,9 @@ import edu.iu.dsc.tws.data.memory.lmdb.LMDBMemoryManager;
 /**
  * Inserts into the memory store in batches. Only one instance per executor.
  */
-public class BulkMemoryManager extends AbstractMemoryManager {
+public class BufferedMemoryManager extends AbstractMemoryManager {
 
-  private static final Logger LOG = Logger.getLogger(BulkMemoryManager.class.getName());
+  private static final Logger LOG = Logger.getLogger(BufferedMemoryManager.class.getName());
 
   /**
    * Memory manager implementaion
@@ -67,7 +67,7 @@ public class BulkMemoryManager extends AbstractMemoryManager {
    */
   private Map<String, Integer> keyBufferSizes;
 
-  public BulkMemoryManager(Path dataPath) {
+  public BufferedMemoryManager(Path dataPath) {
     //TODO : This needs to be loaded from a configuration file
     //TODO: need to add Singleton pattern to make sure only one instance of MM is created per
     //executor
@@ -239,7 +239,7 @@ public class BulkMemoryManager extends AbstractMemoryManager {
   public boolean putBulk(int opID, String key, ByteBuffer value) {
     if (!keyMap.containsKey(key)) {
       LOG.info(String.format("No entry for the given key : %s .The key needs to"
-          + " be registered with the BulkMemoryManager", key));
+          + " be registered with the BufferedMemoryManager", key));
       return false;
     }
     //TODO: need to make sure that there are no memory leaks here
@@ -261,7 +261,7 @@ public class BulkMemoryManager extends AbstractMemoryManager {
   }
 
   /**
-   * Makes sure all the data that is held in the BulkMemoryManager is pushed into the
+   * Makes sure all the data that is held in the BufferedMemoryManager is pushed into the
    * memory store
    */
   public boolean flush(int opID, String key) {
@@ -298,7 +298,7 @@ public class BulkMemoryManager extends AbstractMemoryManager {
   }
 
   /**
-   * Closing the key will make the BulkMemoryManager to flush the current data into the store and
+   * Closing the key will make the BufferedMemoryManager to flush the current data into the store and
    * delete all the key information. This is done once we know that no more values will be sent for
    * this key
    */
