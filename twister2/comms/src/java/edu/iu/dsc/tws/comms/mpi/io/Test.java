@@ -50,8 +50,8 @@ public final class Test {
     multiMessageSerializer.init(null, bufferQueue);
     mpiMultiMessageDeserializer = new MPIMultiMessageDeserializer(serializer, 0);
 
-    for (int i = 0; i < 100; i++) {
-      bufferQueue.offer(new MPIBuffer(256));
+    for (int i = 0; i < 10; i++) {
+      bufferQueue.offer(new MPIBuffer(2048000));
     }
   }
 
@@ -67,29 +67,32 @@ public final class Test {
 
   @SuppressWarnings("rawtypes")
   public void runTest2() {
-    IntData data = new IntData(128);
+    IntData data = new IntData(128000);
     List list = new ArrayList<>();
-    list.add(new KeyedContent(0, data));
-    data = new IntData(128);
-    list.add(new KeyedContent(1, data));
+    list.add(new KeyedContent(new Short((short) 0), data));
+    data = new IntData(128000);
+    list.add(new KeyedContent(new Short((short) 1), data));
     MPIMessage message = serializeObject(list, 1);
+    System.out.println("Serialized first");
+    deserialize(message);
 
-    data = new IntData(128);
-    list = new ArrayList<>();
-    list.add(new KeyedContent(2, data));
-    data = new IntData(128);
-    list.add(new KeyedContent(3, data));
-    MPIMessage message2 = serializeObject(list, 1);
-
-    list = new ArrayList<>();
-    list.add(message);
-    list.add(message2);
 //    data = new IntData(128000);
-//    list.add(new MultiObject(1, data));
-
-    MPIMessage second = serializeObject(list, 1);
-
-    deserialize(second);
+//    list = new ArrayList<>();
+//    list.add(new KeyedContent(new Short((short) 2), data));
+//    data = new IntData(128000);
+//    list.add(new KeyedContent(new Short((short) 3), data));
+//    MPIMessage message2 = serializeObject(list, 1);
+////    System.out.println("Serialized second");
+////
+//    list = new ArrayList<>();
+//    list.add(message);
+//    list.add(message2);
+////    data = new IntData(128000);
+////    list.add(new MultiObject(1, data));
+//
+//    MPIMessage second = serializeObject(list, 1);
+//
+//    deserialize(second);
   }
 
   private void deserialize(MPIMessage message) {
@@ -121,7 +124,7 @@ public final class Test {
   }
 
   private MPIMessage serializeObject(List object, int source) {
-    MPIMessage mpiMessage = new MPIMessage(source, MessageType.OBJECT,
+    MPIMessage mpiMessage = new MPIMessage(source, MessageType.KEYED,
         MPIMessageDirection.OUT, new MessageListener());
 
     int di = -1;

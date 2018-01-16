@@ -504,7 +504,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
     lock.lock();
     try {
       // we need to try to build the message here, we may need many more messages to complete
-//      LOG.info(String.format("%d received message from %d", executor, id));
+      LOG.info(String.format("%d received message from %d", executor, id));
       MPIMessage currentMessage = currentMessages.get(id);
       ByteBuffer byteBuffer = buffer.getByteBuffer();
       byteBuffer.position(buffer.getSize());
@@ -513,8 +513,8 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
         currentMessage = new MPIMessage(id, type, MPIMessageDirection.IN, this);
         currentMessages.put(id, currentMessage);
         MessageHeader header = messageDeSerializer.buildHeader(buffer, e);
-//        LOG.info(String.format("%d header source %d length %d", executor,
-//            header.getSourceId(), header.getLength()));
+        LOG.info(String.format("%d header source %d length %d", executor,
+            header.getSourceId(), header.getLength()));
         currentMessage.setHeader(header);
         currentMessage.setHeaderSize(16);
       }
@@ -523,6 +523,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
       currentMessage.build();
 
       if (currentMessage.isComplete()) {
+        LOG.info(String.format("%d completed recv ", executor));
         currentMessages.remove(id);
         Queue<MPIMessage> deserializeQueue = pendingReceiveDeSerializations.get(id);
         if (!deserializeQueue.offer(currentMessage)) {

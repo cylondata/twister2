@@ -363,12 +363,12 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
       Integer c = counts.get(target).get(source);
       if (m.size() > 16) {
         canAdd = false;
-//       LOG.info(String.format("%d Partial false: target %d source %d", executor, target, source));
+        LOG.info(String.format("%d Partial false: target %d source %d", executor, target, source));
       } else {
         // we need to increment the reference count to make the buffers available
         // other wise they will bre reclaimed
-//        LOG.info(String.format("%d Partial true: target %d source %d %s",
-//            executor, target, source, counts.get(target)));
+        LOG.info(String.format("%d Partial true: target %d source %d %s",
+            executor, target, source, counts.get(target)));
         if (object instanceof MPIMessage) {
           ((MPIMessage) object).incrementRefCount();
         }
@@ -399,8 +399,8 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
               Object e1 = e.getValue().get(0);
               if (!(e1 instanceof MPIMessage)) {
                 // we use the source task id as the key
-                KeyedContent keyedContent = new KeyedContent(e.getKey(), e1);
-                keyedContent.setKeyType(MessageType.SHORT);
+                KeyedContent keyedContent = new KeyedContent(e.getKey(), e1,
+                    MessageType.INTEGER, MessageType.OBJECT);
                 out.add(keyedContent);
               } else {
                 out.add(e1);

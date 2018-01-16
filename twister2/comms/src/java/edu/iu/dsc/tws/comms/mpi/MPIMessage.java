@@ -62,7 +62,7 @@ public class MPIMessage {
   /**
    * If a keyed message, the key being used
    */
-  private MessageType keyType = MessageType.SHORT;
+  private MessageType keyType = MessageType.INTEGER;
 
   /**
    * Number of bytes in the header
@@ -152,8 +152,8 @@ public class MPIMessage {
       for (MPIBuffer buffer : buffers) {
         currentSize += buffer.getByteBuffer().remaining();
       }
-//      LOG.info(String.format("Current size %d length %d", currentSize,
-//          header.getLength()));
+      LOG.info(String.format("Current size %d length %d", currentSize,
+          header.getLength()));
       if (currentSize == header.getLength()) {
         complete = true;
         return true;
