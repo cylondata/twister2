@@ -13,6 +13,8 @@ package edu.iu.dsc.tws.data.memory.lmdb;
 
 import java.io.File;
 import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import org.lmdbjava.Dbi;
@@ -21,10 +23,10 @@ import org.lmdbjava.Txn;
 
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.memory.AbstractMemoryManager;
+import edu.iu.dsc.tws.data.memory.OperationMemoryManager;
 
 import static java.nio.ByteBuffer.allocateDirect;
 import static org.lmdbjava.DbiFlags.MDB_CREATE;
-import static org.lmdbjava.DbiFlags.MDB_DUPSORT;
 import static org.lmdbjava.Env.create;
 
 /**
@@ -46,9 +48,12 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
   private Env<ByteBuffer> env;
 
   /**
-   * The Database for the Memory Manager
+   * The Default Database for the Memory Manager
+   * This can be used to store data that is not realated to any operation
    */
   private Dbi<ByteBuffer> db;
+
+  private Map<Integer, Dbi<ByteBuffer>> dbMap;
 
   public LMDBMemoryManager(Path dataPath) {
     this.lmdbDataPath = dataPath;
@@ -69,13 +74,18 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
         .open(path);
 
     // The database supports duplicate values for a single key
-    db = env.openDbi(LMDBMemoryManagerContext.DB_NAME, MDB_CREATE, MDB_DUPSORT);
-
+    db = env.openDbi(LMDBMemoryManagerContext.DB_NAME, MDB_CREATE);
+    dbMap = new HashMap<Integer, Dbi<ByteBuffer>>();
     return true;
   }
 
   @Override
-  public ByteBuffer get(ByteBuffer key) {
+  public ByteBuffer get(int opID, ByteBuffer key) {
+    if(!dbMap.containsKey(opID)){
+      LOG.info("The given operation does not have a corresponding store specified");
+      return null;
+    }
+    Dbi<ByteBuffer> currentDB = dbMap.get(opID);
     if (key.position() != 0) {
       key.flip();
     }
@@ -95,13 +105,13 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
     //TODO: does the value returned from db.get and tnx.val() have the same data? need to check
     Txn<ByteBuffer> txn = env.txnRead();
 
-    ByteBuffer result = db.get(txn, key);
+    ByteBuffer result = currentDB.get(txn, key);
     txn.close();
     return result;
   }
 
   @Override
-  public ByteBuffer get(byte[] key) {
+  public ByteBuffer get(int opID, byte[] key) {
     if (key.length > 511) {
       LOG.info("Key size lager than 511 bytes which is the limit for LMDB key values");
       return null;
@@ -109,14 +119,14 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
 
     final ByteBuffer keyBuffer = allocateDirect(key.length);
     keyBuffer.put(key);
-    return get(keyBuffer);
+    return get(opID, keyBuffer);
   }
 
   @Override
-  public ByteBuffer get(long key) {
+  public ByteBuffer get(int opID, long key) {
     final ByteBuffer keyBuffer = allocateDirect(Long.BYTES);
     keyBuffer.putLong(0, key);
-    return get(keyBuffer);
+    return get(opID, keyBuffer);
   }
 
   public ByteBuffer getAll(ByteBuffer key) {
@@ -132,7 +142,7 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
   }
 
   @Override
-  public byte[] getBytes(byte[] key) {
+  public byte[] getBytes(int opID, byte[] key) {
     if (key.length > 511) {
       LOG.info("Key size lager than 511 bytes which is the limit for LMDB key values");
       return null;
@@ -140,20 +150,24 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
 
     final ByteBuffer keyBuffer = allocateDirect(key.length);
     keyBuffer.put(key);
-    return getBytes(keyBuffer);
+    return getBytes(opID, keyBuffer);
   }
 
   @Override
-  public byte[] getBytes(long key) {
+  public byte[] getBytes(int opID, long key) {
 
     final ByteBuffer keyBuffer = allocateDirect(Long.BYTES);
     keyBuffer.putLong(0, key);
-    return getBytes(key);
+    return getBytes(opID, key);
   }
 
   @Override
-  public byte[] getBytes(ByteBuffer key) {
-
+  public byte[] getBytes(int opID, ByteBuffer key) {
+    if(!dbMap.containsKey(opID)){
+      LOG.info("The given operation does not have a corresponding store specified");
+      return null;
+    }
+    Dbi<ByteBuffer> currentDB = dbMap.get(opID);
     if (key.position() != 0) {
       key.flip();
     }
@@ -164,20 +178,25 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
     }
 
     Txn<ByteBuffer> txn = env.txnRead();
-    final ByteBuffer found = db.get(txn, key);
+    final ByteBuffer found = currentDB.get(txn, key);
     byte[] results = new byte[found.limit()];
     found.get(results);
     return results;
   }
 
   @Override
-  public boolean containsKey(ByteBuffer key) {
+  public boolean containsKey(int opID, ByteBuffer key) {
+    if(!dbMap.containsKey(opID)){
+      LOG.info("The given operation does not have a corresponding store specified");
+      return false;
+    }
+    Dbi<ByteBuffer> currentDB = dbMap.get(opID);
     if (key.limit() > 511) {
       LOG.info("Key size lager than 511 bytes which is the limit for LMDB key values");
       return false;
     }
     Txn<ByteBuffer> txn = env.txnRead();
-    final ByteBuffer found = db.get(txn, key);
+    final ByteBuffer found = currentDB.get(txn, key);
 
     if (found == null) {
       return false;
@@ -186,7 +205,7 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
   }
 
   @Override
-  public boolean containsKey(byte[] key) {
+  public boolean containsKey(int opID, byte[] key) {
     if (key.length > 511) {
       LOG.info("Key size lager than 511 bytes which is the limit for LMDB key values");
       return false;
@@ -195,36 +214,36 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
     final ByteBuffer keyBuffer = allocateDirect(key.length);
     keyBuffer.put(key).flip();
 
-    return containsKey(keyBuffer);
+    return containsKey(opID, keyBuffer);
   }
 
   @Override
-  public boolean containsKey(long key) {
+  public boolean containsKey(int opID, long key) {
     final ByteBuffer keyBuffer = allocateDirect(Long.BYTES);
     keyBuffer.putLong(0, key);
 
-    return containsKey(keyBuffer);
+    return containsKey(opID, keyBuffer);
   }
 
   @Override
-  public boolean append(ByteBuffer key, ByteBuffer value) {
-    ByteBuffer results = get(key);
+  public boolean append(int opID, ByteBuffer key, ByteBuffer value) {
+    ByteBuffer results = get(opID, key);
     if (results == null) {
-      return put(key, value);
+      return put(opID, key, value);
     }
 
     int capacity = results.limit() + value.limit();
     ByteBuffer appended = ByteBuffer.allocateDirect(capacity)
         .put(results)
         .put(value);
-    return put(key, appended);
+    return put(opID, key, appended);
   }
 
   @Override
-  public boolean append(long key, ByteBuffer value) {
+  public boolean append(int opID, long key, ByteBuffer value) {
     final ByteBuffer keyBuffer = allocateDirect(Long.BYTES);
     keyBuffer.putLong(0, key);
-    return append(keyBuffer, value);
+    return append(opID, keyBuffer, value);
   }
 
   /**
@@ -234,8 +253,13 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
    * @param value the value to be added
    * @return true if value was added, false otherwise
    */
-  public boolean put(ByteBuffer key, ByteBuffer value) {
-    if (db == null) {
+  public boolean put(int opID, ByteBuffer key, ByteBuffer value) {
+    if(!dbMap.containsKey(opID)){
+      LOG.info("The given operation does not have a corresponding store specified");
+      return false;
+    }
+    Dbi<ByteBuffer> currentDB = dbMap.get(opID);
+    if (currentDB == null) {
       throw new RuntimeException("LMDB database has not been configured."
           + " Please initialize database");
     }
@@ -252,12 +276,12 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
       LOG.info("Key size lager than 511 bytes which is the limit for LMDB key values");
       return false;
     }
-    db.put(key, value);
+    currentDB.put(key, value);
     return true;
   }
 
   @Override
-  public boolean put(byte[] key, byte[] value) {
+  public boolean put(int opID, byte[] key, byte[] value) {
 
     if (key.length > 511) {
       LOG.info("Key size lager than 511 bytes which is the limit for LMDB key values");
@@ -268,11 +292,11 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
     final ByteBuffer valBuffer = allocateDirect(value.length);
     keyBuffer.put(key);
     valBuffer.put(value);
-    return put(keyBuffer, valBuffer);
+    return put(opID, keyBuffer, valBuffer);
   }
 
   @Override
-  public boolean put(byte[] key, ByteBuffer value) {
+  public boolean put(int opID, byte[] key, ByteBuffer value) {
 
     if (key.length > 511) {
       LOG.info("Key size lager than 511 bytes which is the limit for LMDB key values");
@@ -281,30 +305,35 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
 
     final ByteBuffer keyBuffer = allocateDirect(key.length);
     keyBuffer.put(key);
-    return put(keyBuffer, value);
+    return put(opID, keyBuffer, value);
   }
 
   @Override
-  public boolean put(long key, ByteBuffer value) {
+  public boolean put(int opID, long key, ByteBuffer value) {
 
     final ByteBuffer keyBuffer = allocateDirect(Long.BYTES);
     keyBuffer.putLong(0, key);
-    return put(keyBuffer, value);
+    return put(opID, keyBuffer, value);
   }
 
   @Override
-  public boolean put(long key, byte[] value) {
+  public boolean put(int opID, long key, byte[] value) {
 
     final ByteBuffer keyBuffer = allocateDirect(Long.BYTES);
     final ByteBuffer valBuffer = allocateDirect(value.length);
     keyBuffer.putLong(0, key);
     valBuffer.put(value);
-    return put(keyBuffer, valBuffer);
+    return put(opID, keyBuffer, valBuffer);
   }
 
   @Override
-  public boolean delete(ByteBuffer key) {
-    if (db == null) {
+  public boolean delete(int opID, ByteBuffer key) {
+    if(!dbMap.containsKey(opID)){
+      LOG.info("The given operation does not have a corresponding store specified");
+      return false;
+    }
+    Dbi<ByteBuffer> currentDB = dbMap.get(opID);
+    if (currentDB == null) {
       throw new RuntimeException("LMDB database has not been configured."
           + " Please initialize database");
     }
@@ -318,21 +347,33 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
       return false;
     }
 
-    return db.delete(key);
+    return currentDB.delete(key);
   }
 
   @Override
-  public boolean delete(byte[] key) {
+  public boolean delete(int opID, byte[] key) {
     final ByteBuffer keyBuffer = allocateDirect(key.length);
     keyBuffer.put(key);
-    return delete(keyBuffer);
+    return delete(opID, keyBuffer);
   }
 
   @Override
-  public boolean delete(long key) {
+  public boolean delete(int opID, long key) {
     final ByteBuffer keyBuffer = allocateDirect(Long.BYTES);
     keyBuffer.putLong(0, key);
-    return delete(keyBuffer);
+    return delete(opID, keyBuffer);
+  }
+
+  /**
+   * At this level the method does not return an OperationMemoryManager since the implementaion
+   * does not handle OperationMemoryManager's
+   * @param opID
+   * @return
+   */
+  @Override
+  public OperationMemoryManager addOperation(int opID) {
+    dbMap.put(opID, env.openDbi(String.valueOf(opID), MDB_CREATE));
+    return null;
   }
 
   public Path getLmdbDataPath() {
