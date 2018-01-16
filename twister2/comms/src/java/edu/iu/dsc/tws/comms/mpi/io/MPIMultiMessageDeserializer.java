@@ -52,7 +52,7 @@ public class MPIMultiMessageDeserializer implements MessageDeSerializer {
     if (header == null) {
       throw new RuntimeException("Header must be built before the message");
     }
-    LOG.info(String.format("%d deserilizing message", executor));
+//    LOG.info(String.format("%d deserilizing message", executor));
     while (readLength < header.getLength()) {
       List<MPIBuffer> messageBuffers = new ArrayList<>();
       MPIBuffer mpiBuffer = buffers.get(bufferIndex);
@@ -66,9 +66,9 @@ public class MPIMultiMessageDeserializer implements MessageDeSerializer {
         messageBuffers.add(mpiBuffer);
         tempLength += mpiBuffer.getByteBuffer().remaining();
         tempBufferIndex++;
-        LOG.info(String.format("%d temp %d length %d readLength %d header %d buf_pos %d",
-            executor, tempLength, length, readLength, header.getLength(),
-            mpiBuffer.getByteBuffer().position()));
+//        LOG.info(String.format("%d temp %d length %d readLength %d header %d buf_pos %d",
+//            executor, tempLength, length, readLength, header.getLength(),
+//            mpiBuffer.getByteBuffer().position()));
       }
 
       Object object = buildMessage(currentMessage, messageBuffers, length);
@@ -87,6 +87,7 @@ public class MPIMultiMessageDeserializer implements MessageDeSerializer {
 
   @Override
   public MessageHeader buildHeader(MPIBuffer buffer, int edge) {
+//   LOG.info(String.format("%d read header pos: %d", executor, buffer.getByteBuffer().position()));
     int sourceId = buffer.getByteBuffer().getInt();
     int flags = buffer.getByteBuffer().getInt();
     int destId = buffer.getByteBuffer().getInt();
@@ -134,6 +135,8 @@ public class MPIMultiMessageDeserializer implements MessageDeSerializer {
       case INTEGER:
         keyLength = 4;
         currentIndex = getReadIndex(buffers, currentIndex, 4);
+//        LOG.info(String.format("%d read key pos: %d", executor,
+//            buffers.get(currentIndex).getByteBuffer().position()));
         key = buffers.get(currentIndex).getByteBuffer().getInt();
         break;
       case SHORT:

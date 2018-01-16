@@ -29,7 +29,6 @@ import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.mpi.io.KeyedContent;
 import edu.iu.dsc.tws.comms.mpi.io.MPIMultiMessageDeserializer;
 import edu.iu.dsc.tws.comms.mpi.io.MPIMultiMessageSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.MessageDeSerializer;
@@ -397,14 +396,7 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
             List<Object> out = new ArrayList<>();
             for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
               Object e1 = e.getValue().get(0);
-              if (!(e1 instanceof MPIMessage)) {
-                // we use the source task id as the key
-                KeyedContent keyedContent = new KeyedContent(e.getKey(), e1,
-                    MessageType.INTEGER, MessageType.OBJECT);
-                out.add(keyedContent);
-              } else {
-                out.add(e1);
-              }
+              out.add(e1);
             }
             if (sendPartial(t, out, 0, MPIContext.FLAGS_MULTI_MSG)) {
               for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {

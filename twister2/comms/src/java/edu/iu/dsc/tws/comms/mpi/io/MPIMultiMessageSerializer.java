@@ -111,6 +111,7 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
       throw new RuntimeException("The buffers should be able to hold the complete header");
     }
     ByteBuffer byteBuffer = buffer.getByteBuffer();
+//    LOG.info(String.format("%d adding header pos: %d", executor, byteBuffer.position()));
     // now lets put the content of header in
     byteBuffer.putInt(sendMessage.getSource());
     // the path we are on, if not grouped it will be 0 and ignored
@@ -279,8 +280,9 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
     }
   }
 
-  private void buildMessageHeader(MPIBuffer buffer, int length) {
+  private void buildSubMessageHeader(MPIBuffer buffer, int length) {
     ByteBuffer byteBuffer = buffer.getByteBuffer();
+//    LOG.info(String.format("%d adding sub-header pos: %d", executor, byteBuffer.position()));
     byteBuffer.putInt(length);
   }
 
@@ -298,7 +300,7 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
       data = serializer.serialize(object);
 
       // at this point we know the length of the data
-      buildMessageHeader(targetBuffer, data.length);
+      buildSubMessageHeader(targetBuffer, data.length);
       // add the header bytes to the total bytes
       totalBytes += NORMAL_SUB_MESSAGE_HEADER_SIZE;
       state.setData(data);
@@ -342,7 +344,7 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
       // okay we need to serialize the data
       data = serializer.serialize(content.getObject());
       // at this point we know the length of the data
-      buildMessageHeader(targetBuffer, data.length + keyLength);
+      buildSubMessageHeader(targetBuffer, data.length + keyLength);
       // add the header bytes to the total bytes
       totalBytes += NORMAL_SUB_MESSAGE_HEADER_SIZE;
       state.setData(data);
@@ -367,6 +369,7 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
     int bufferSpace = byteBuffer.capacity() - byteBuffer.position();
 
     int copyBytes = remainingToCopy > bufferSpace ? bufferSpace : remainingToCopy;
+//    LOG.info(String.format("%d copy keyed pos: %d", executor, byteBuffer.position()));
     // check how much space left in the buffer
     byteBuffer.put(data, dataPosition, copyBytes);
     state.setBytesCopied(dataPosition + copyBytes);
@@ -423,6 +426,8 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
 
   private void copyKeyToBuffer(KeyedContent content,
                                ByteBuffer targetBuffer, SerializeState state) {
+//    LOG.info(String.format("%d copy key: %d", executor, targetBuffer.position()));
+
     switch (content.getKeyType()) {
       case INTEGER:
         if (targetBuffer.remaining() > 4) {
