@@ -40,19 +40,19 @@ public interface DataFlowOperation {
    * Send the message on a specific path
    * @param source
    * @param message
-   * @param path
+   * @param dest
    * @return
    */
-  boolean send(int source, Object message, int flags, int path);
+  boolean send(int source, Object message, int flags, int dest);
 
   /**
    * Send partial message on a specific path
    * @param source
    * @param message
-   * @param path
+   * @param dest
    * @return
    */
-  boolean sendPartial(int source, Object message, int flags, int path);
+  boolean sendPartial(int source, Object message, int flags, int dest);
 
   /**
    * Progress the pending dataflow operations

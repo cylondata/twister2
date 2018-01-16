@@ -128,12 +128,12 @@ public class MPIDirectDataFlowCommunication implements DataFlowOperation, MPIMes
   }
 
   @Override
-  public boolean send(int source, Object message, int flags, int path) {
-    return delegete.sendMessage(source, message, path, flags, sendRoutingParameters(source, path));
+  public boolean send(int source, Object message, int flags, int dest) {
+    return delegete.sendMessage(source, message, dest, flags, sendRoutingParameters(source, dest));
   }
 
   @Override
-  public boolean sendPartial(int source, Object message, int flags, int path) {
+  public boolean sendPartial(int source, Object message, int flags, int dest) {
     return false;
   }
 
