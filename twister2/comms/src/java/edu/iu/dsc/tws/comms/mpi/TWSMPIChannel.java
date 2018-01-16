@@ -292,8 +292,8 @@ public class TWSMPIChannel {
           Status status = r.request.testStatus();
           if (status != null) {
             if (!status.isCancelled()) {
-              LOG.info(String.format("%d Receive completed: from %d size %d",
-                  executor, receiveRequests.rank, status.getCount(MPI.BYTE)));
+//              LOG.info(String.format("%d Receive completed: from %d size %d",
+//                  executor, receiveRequests.rank, status.getCount(MPI.BYTE)));
 //               lets call the callback about the receive complete
               r.buffer.setSize(status.getCount(MPI.BYTE));
               receiveRequests.callback.onReceiveComplete(
