@@ -60,6 +60,11 @@ public class MPIMessage {
   private MessageType type;
 
   /**
+   * If a keyed message, the key being used
+   */
+  private MessageType keyType = MessageType.INTEGER;
+
+  /**
    * Number of bytes in the header
    */
   private int headerSize;
@@ -78,17 +83,6 @@ public class MPIMessage {
   public MPIMessage() {
   }
 
-  public MPIMessage(MessageType messageType,
-                    MPIMessageDirection messageDirection,
-                    MPIMessageReleaseCallback releaseListener) {
-    this.refCount = 0;
-    this.messageDirection = messageDirection;
-    this.releaseListener = releaseListener;
-    this.complete = false;
-    this.type = messageType;
-    this.receivedState = ReceivedState.INIT;
-  }
-
   public MPIMessage(int originatingId, MessageType messageType,
                     MPIMessageDirection messageDirection,
                     MPIMessageReleaseCallback releaseListener) {
@@ -98,18 +92,6 @@ public class MPIMessage {
     this.originatingId = originatingId;
     this.complete = false;
     this.type = messageType;
-    this.receivedState = ReceivedState.INIT;
-  }
-
-  public MPIMessage(int originatingId, MessageType messageType, MessageHeader header, int refCount,
-                    MPIMessageDirection type, MPIMessageReleaseCallback releaseListener) {
-    this.type = messageType;
-    this.header = header;
-    this.refCount = refCount;
-    this.messageDirection = type;
-    this.releaseListener = releaseListener;
-    this.originatingId = originatingId;
-    this.complete = false;
     this.receivedState = ReceivedState.INIT;
   }
 
@@ -206,5 +188,13 @@ public class MPIMessage {
 
   public void setReceivedState(ReceivedState receivedState) {
     this.receivedState = receivedState;
+  }
+
+  public void setKeyType(MessageType keyType) {
+    this.keyType = keyType;
+  }
+
+  public MessageType getKeyType() {
+    return keyType;
   }
 }

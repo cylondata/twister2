@@ -131,6 +131,8 @@ public class MPIMessageSerializer implements MessageSerializer {
       case BUFFER:
         serializeBuffer(payload, sendMessage, buffer);
         break;
+      case KEYED:
+
       default:
         break;
     }

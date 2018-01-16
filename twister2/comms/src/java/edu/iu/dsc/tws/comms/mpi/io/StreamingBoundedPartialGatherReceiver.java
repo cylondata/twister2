@@ -120,7 +120,7 @@ public class StreamingBoundedPartialGatherReceiver implements MessageReceiver {
             if (objectList.size() > 0) {
               Object object = objectList.get(0);
               if (!(object instanceof MPIMessage)) {
-                out.add(new MultiObject(e.getKey(), object));
+                out.add(new KeyedContent(e.getKey(), object));
               } else {
                 out.add(object);
               }

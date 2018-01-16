@@ -21,6 +21,30 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 package edu.iu.dsc.tws.examples;
 
 import java.util.ArrayList;
@@ -50,16 +74,17 @@ import edu.iu.dsc.tws.task.core.TaskExecutorFixedThread;
 import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraphGenerator;
 import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraphParser;
 
-public class SimpleTaskGraph implements IContainer {
+public class MultiTaskGraphExample implements IContainer {
 
   private static final Logger LOG = Logger.getLogger(SimpleTaskGraph.class.getName());
 
   private DataFlowOperation direct;
+  private DataFlowOperation direct1;
   private TaskExecutorFixedThread taskExecutor;
   private Set<Task> parsedTaskSet;
 
   //to call the dataflow task graph generator
-  private DataflowTaskGraphGenerator dataflowTaskGraphGenerator = null;
+  private DataflowTaskGraphGenerator dataflowTaskGraph = null;
   private DataflowTaskGraphParser dataflowTaskGraphParser = null;
   private Status status;
 
@@ -86,79 +111,112 @@ public class SimpleTaskGraph implements IContainer {
     taskExecutor.registerQueue(0, pongQueue);
 
     direct = channel.direct(newCfg, MessageType.OBJECT, 0, sources,
-        destination, new SimpleTaskGraph.PingPongReceive());
+        destination, new MultiTaskGraphExample.PingPongReceive());
     taskExecutor.initCommunication(channel, direct);
+
+    direct1 = channel.direct(newCfg, MessageType.OBJECT, 1, sources,
+        destination, new MultiTaskGraphExample.PingPongReceive());
+    taskExecutor.initCommunication(channel, direct1);
 
     //For Dataflow Task Graph Generation call the dataflow task graph generator
     MapWorker sourceTask = new MapWorker(0, direct);
-    ReceiveWorker sinkTask = new ReceiveWorker();
+    ReceiveWorker sinkTask1 = new ReceiveWorker();
+    ReceiveWorker sinkTask2 = new ReceiveWorker();
+    ReceiveWorker sinkTask3 = new ReceiveWorker();
 
-    dataflowTaskGraphGenerator = new DataflowTaskGraphGenerator().generateDataflowGraph(
-        sourceTask, sinkTask, direct);
-    if (dataflowTaskGraphGenerator != null) {
-      dataflowTaskGraphParser = new DataflowTaskGraphParser(dataflowTaskGraphGenerator);
+
+   /* Source Task (Task0) ------> SinkTask1 (Task 1)
+   *        |               (1)      |
+   *        |                        |
+   *   (1)  |                        |  (2)
+   *        |                        |
+   *        |                        |
+   *        V               (2)      V
+   *   SinkTask2 (Task 2) -----> SinkTask3 (Task 3)
+   *
+   *   Here, (1) represents Task 1 and Task 2 starts simultaneously (receive input
+    *  from source task (Task 0), whereas (2) represents Task 3 receives input
+    *  from Task 1 & Task 2.
+   */
+
+    dataflowTaskGraph = new DataflowTaskGraphGenerator()
+        .generateDataflowGraph(sourceTask, sinkTask1, direct)
+        .generateDataflowGraph(sourceTask, sinkTask2, direct1)
+        .generateDataflowGraph(sinkTask1, sinkTask3, direct1)
+        .generateDataflowGraph(sinkTask2, sinkTask3, direct1);
+
+    if (dataflowTaskGraph != null) {
+      dataflowTaskGraphParser = new DataflowTaskGraphParser(dataflowTaskGraph);
       parsedTaskSet = dataflowTaskGraphParser.dataflowTaskGraphParseAndSchedule();
     }
 
     if (!parsedTaskSet.isEmpty()) {
       if (containerId == 0) {
-        LOG.info("Job in if loop is::::::::::::" + parsedTaskSet.iterator().next());
+        LOG.log(Level.INFO, "Parsed Job Value:" + parsedTaskSet.iterator().next());
         taskExecutor.registerTask(parsedTaskSet.iterator().next());
-        //taskExecutor.registerTask(new MapWorker(0, direct));
         taskExecutor.submitTask(0);
         taskExecutor.progres();
-        ///dataflowTaskGraphGenerator.removeTaskVertex(parsedTaskSet.iterator().next());
       } else if (containerId == 1) {
         int index = 0;
         for (Task processedTask : parsedTaskSet) {
           if (index == 0) {
             ++index;
           } else if (index == 1) {
-            LOG.info("Job in else loop is::::::::::::" + processedTask);
             ArrayList<Integer> inq = new ArrayList<>();
             inq.add(0);
             taskExecutor.setTaskMessageProcessLimit(10000);
             taskExecutor.registerSinkTask(processedTask, inq);
             taskExecutor.progres();
-            ///dataflowTaskGraphGenerator.removeTaskVertex(parsedTaskSet.iterator().next());
             ++index;
-          } else if (index > 1) { //Just for verification
+          } else if (index > 2) {
             LOG.info("Task Index is greater than 1");
-            LOG.info("Submit the job to pipeline task");
+            break;
+          }
+        }
+      } else if (containerId == 2) { //This loop should be modified for the complex task graphs
+        int index = 0;
+        for (Task processedTask : parsedTaskSet) {
+          if (index == 0) {
+            ++index;
+          } else if (index == 1) {
+            ++index;
+          } else if (index == 2) {
+            ArrayList<Integer> inq1 = new ArrayList<>();
+            inq1.add(0);
+            taskExecutor.setTaskMessageProcessLimit(10000);
+            taskExecutor.registerSinkTask(processedTask, inq1);
+            taskExecutor.progres();
+            ++index;
+          } else if (index > 2) {
+            LOG.info("Task Index is greater than 2");
+            break;
+          }
+        }
+      } else if (containerId == 3) { //This loop should be modified for the complex task graphs
+        int index = 0;
+        for (Task processedTask : parsedTaskSet) {
+          if (index == 0) {
+            ++index;
+          } else if (index == 1) {
+            ++index;
+          } else if (index == 2) {
+            ++index;
+          } else if (index == 3) {
+            ArrayList<Integer> inq1 = new ArrayList<>();
+            inq1.add(1);
+            inq1.add(2);
+            taskExecutor.setTaskMessageProcessLimit(10000);
+            taskExecutor.registerSinkTask(processedTask, inq1);
+            taskExecutor.progres();
+            ++index;
+          } else if (index > 3) {
+            //it would be constructed based on the container value and no.of tasks
+            LOG.info("Task Index is greater than 3");
             break;
           }
         }
       }
     }
-
-    //This scheduling loop will be used in the future, leave it for reference.
-    /*int index = 0;
-    if (!parsedTaskSet.isEmpty()) {
-      for (Task processedTask : parsedTaskSet) {
-        if (containerId == index) {
-          taskExecutor.registerTask(processedTask);
-          taskExecutor.submitTask(0);
-          taskExecutor.progres();
-          index++;
-        } else if (index == 1) {
-          ArrayList<Integer> inq = new ArrayList<>();
-          inq.add(0);
-          taskExecutor.setTaskMessageProcessLimit(10000);
-          taskExecutor.registerSinkTask(processedTask, inq);
-          taskExecutor.progres();
-          index++;
-        } else if(index > 1){
-          List<Task> taskList = new ArrayList<>();
-          for (Task processedTasks : parsedTaskSet) {
-            taskList.add(processedTasks);
-          }
-          //This loop should be properly written...!
-          taskExecutionOptimizer = new TaskExecutionOptimizer(taskExecutor);
-          Map<Integer, List<Task>> taskMap = new HashMap<>();
-          taskMap.put(1, taskList);
-        }
-      }
-    }*/
   }
 
   /**
@@ -168,6 +226,7 @@ public class SimpleTaskGraph implements IContainer {
    */
   private IntData generateData() {
     int[] d = new int[10];
+    LOG.info("I am in generate data method");
     for (int i = 0; i < 10; i++) {
       d[i] = i;
     }
@@ -179,7 +238,6 @@ public class SimpleTaskGraph implements IContainer {
     MAP_FINISHED,
     LOAD_RECEIVE_FINISHED,
   }
-
 
   private class PingPongReceive implements MessageReceiver {
     private int count = 0;
@@ -202,7 +260,6 @@ public class SimpleTaskGraph implements IContainer {
 
     @Override
     public void progress() {
-
     }
   }
 
@@ -232,7 +289,7 @@ public class SimpleTaskGraph implements IContainer {
     @Override
     public Message execute() {
       LOG.log(Level.INFO, "Starting map worker");
-      for (int i = 0; i < 100000; i++) { //100000
+      for (int i = 0; i < 10000; i++) { //100000
         IntData data = generateData();
         while (!getDataFlowOperation().send(0, data, 0)) {
           try {
@@ -253,8 +310,8 @@ public class SimpleTaskGraph implements IContainer {
       return execute();
     }
   }
-
 }
+
 
 
 
