@@ -22,6 +22,7 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.mpi.MPIBuffer;
 import edu.iu.dsc.tws.comms.mpi.MPIMessage;
 import edu.iu.dsc.tws.comms.mpi.MPISendMessage;
+import edu.iu.dsc.tws.comms.mpi.io.types.KeySerializer;
 import edu.iu.dsc.tws.comms.mpi.io.types.ObjectSerializer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
@@ -67,7 +68,9 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
 
     // we set the serialize state here, this will be used by subsequent calls
     // to keep track of the serialization progress of this message
-    sendMessage.setSerializationState(new SerializeState());
+    if (sendMessage.getSerializationState() == null) {
+      sendMessage.setSerializationState(new SerializeState());
+    }
 
     while (sendBuffers.size() > 0 && sendMessage.serializedState()
         != MPISendMessage.SendState.SERIALIZED) {
@@ -89,7 +92,7 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
       // okay we are adding this buffer
       mpiMessage.addBuffer(buffer);
       if (sendMessage.serializedState() == MPISendMessage.SendState.SERIALIZED) {
-        SerializeState state = (SerializeState) sendMessage.getSerializationState();
+        SerializeState state = sendMessage.getSerializationState();
         int totalBytes = state.getTotalBytes();
         mpiMessage.getBuffers().get(0).getByteBuffer().putInt(12, totalBytes);
 
@@ -142,7 +145,7 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
         break;
       case OBJECT:
         return serializeObject(payload,
-            (SerializeState) sendMessage.getSerializationState(), buffer);
+            sendMessage.getSerializationState(), buffer);
       case BYTE:
         break;
       case STRING:
@@ -151,7 +154,7 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
         break;
       case KEYED:
         return serializeKeyedObject((KeyedContent) payload,
-            (SerializeState) sendMessage.getSerializationState(), buffer);
+            sendMessage.getSerializationState(), buffer);
       default:
         break;
     }
@@ -161,8 +164,7 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
   @SuppressWarnings("rawtypes")
   private void serializeBody(Object object, MPISendMessage sendMessage, MPIBuffer buffer) {
     List objectList = (List) object;
-    SerializeState state =
-        (SerializeState) sendMessage.getSerializationState();
+    SerializeState state = sendMessage.getSerializationState();
 
     int startIndex = state.getCurrentObject();
 
@@ -280,10 +282,14 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
     }
   }
 
-  private void buildSubMessageHeader(MPIBuffer buffer, int length) {
+  private boolean buildSubMessageHeader(MPIBuffer buffer, int length) {
     ByteBuffer byteBuffer = buffer.getByteBuffer();
+    if (byteBuffer.remaining() < 4) {
+      return false;
+    }
 //    LOG.info(String.format("%d adding sub-header pos: %d", executor, byteBuffer.position()));
     byteBuffer.putInt(length);
+    return true;
   }
 
   /**
@@ -298,12 +304,14 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
     if (state.getBytesCopied() == 0) {
       // okay we need to serialize the data
       data = serializer.serialize(object);
-
+      state.setData(data);
       // at this point we know the length of the data
-      buildSubMessageHeader(targetBuffer, data.length);
+      if (!buildSubMessageHeader(targetBuffer, data.length)) {
+        LOG.warning("We should always be able to build the header in the current buffer");
+        return false;
+      }
       // add the header bytes to the total bytes
       totalBytes += NORMAL_SUB_MESSAGE_HEADER_SIZE;
-      state.setData(data);
     } else {
       data = state.getData();
       dataPosition = state.getBytesCopied();
@@ -340,20 +348,29 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
     int totalBytes = state.getTotalBytes();
     // okay we need to serialize the header
     if (state.getPart() == SerializeState.Part.INIT) {
-      int keyLength = serializeKey(content, targetBuffer.getByteBuffer(), state);
+      int keyLength = KeySerializer.serializeKey(content.getSource(),
+          content.getKeyType(), state, serializer);
       // okay we need to serialize the data
       data = serializer.serialize(content.getObject());
       // at this point we know the length of the data
-      buildSubMessageHeader(targetBuffer, data.length + keyLength);
+      if (!buildSubMessageHeader(targetBuffer, data.length + keyLength)) {
+        LOG.warning("We should always be able to build the header in the current buffer");
+        return false;
+      }
       // add the header bytes to the total bytes
       totalBytes += NORMAL_SUB_MESSAGE_HEADER_SIZE;
       state.setData(data);
-
-      copyKeyToBuffer(content, targetBuffer.getByteBuffer(), state);
     }
 
-    if (state.getPart() == SerializeState.Part.HEADER) {
-      copyKeyToBuffer(content, targetBuffer.getByteBuffer(), state);
+    if (state.getPart() == SerializeState.Part.INIT
+        || state.getPart() == SerializeState.Part.HEADER) {
+      boolean complete = KeySerializer.copyKeyToBuffer(content.getSource(),
+          content.getKeyType(), targetBuffer.getByteBuffer(), state, serializer);
+      if (complete) {
+        state.setPart(SerializeState.Part.BODY);
+      } else {
+        state.setPart(SerializeState.Part.HEADER);
+      }
     }
 
     // now we can serialize the body
@@ -392,129 +409,5 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
     }
   }
 
-  private int serializeKey(KeyedContent content, ByteBuffer targetBuffer, SerializeState state) {
-    switch (content.getKeyType()) {
-      case INTEGER:
-        return 4;
-      case SHORT:
-        return 2;
-      case LONG:
-        return 8;
-      case DOUBLE:
-        return 8;
-      case OBJECT:
-        if (state.getKey() == null) {
-          byte[] serialize = serializer.serialize(content.getSource());
-          state.setKey(serialize);
-        }
-        return state.getKey().length;
-      case BYTE:
-        if (state.getKey() == null) {
-          state.setKey((byte[]) content.getSource());
-        }
-        return state.getKey().length;
-      case STRING:
-        if (state.getKey() == null) {
-          state.setKey(((String) content.getSource()).getBytes());
-        }
-        return state.getKey().length;
-      default:
-        break;
-    }
-    return 0;
-  }
 
-  private void copyKeyToBuffer(KeyedContent content,
-                               ByteBuffer targetBuffer, SerializeState state) {
-//    LOG.info(String.format("%d copy key: %d", executor, targetBuffer.position()));
-
-    switch (content.getKeyType()) {
-      case INTEGER:
-        if (targetBuffer.remaining() > 4) {
-          targetBuffer.putInt((Integer) content.getSource());
-          state.setPart(SerializeState.Part.BODY);
-          state.setTotalBytes(state.getTotalBytes() + 4);
-          state.setKeySize(4);
-        }
-        break;
-      case SHORT:
-        if (targetBuffer.remaining() > 2) {
-          targetBuffer.putShort((short) content.getSource());
-          state.setPart(SerializeState.Part.BODY);
-          state.setTotalBytes(state.getTotalBytes() + 2);
-          state.setKeySize(2);
-        }
-        break;
-      case LONG:
-        if (targetBuffer.remaining() > 8) {
-          targetBuffer.putLong((Long) content.getSource());
-          state.setPart(SerializeState.Part.BODY);
-          state.setTotalBytes(state.getTotalBytes() + 8);
-          state.setKeySize(8);
-        }
-        break;
-      case DOUBLE:
-        if (targetBuffer.remaining() > 8) {
-          targetBuffer.putDouble((Double) content.getSource());
-          state.setPart(SerializeState.Part.BODY);
-          state.setTotalBytes(state.getTotalBytes() + 8);
-          state.setKeySize(8);
-        }
-        break;
-      case OBJECT:
-        if (state.getKey() == null) {
-          byte[] serialize = serializer.serialize(content.getSource());
-          state.setKey(serialize);
-        }
-        copyKeyBytes(targetBuffer, state);
-        break;
-      case BYTE:
-        if (state.getKey() == null) {
-          state.setKey((byte[]) content.getSource());
-        }
-        copyKeyBytes(targetBuffer, state);
-        break;
-      case STRING:
-        if (state.getKey() == null) {
-          state.setKey(((String) content.getSource()).getBytes());
-        }
-        copyKeyBytes(targetBuffer, state);
-        break;
-      default:
-        break;
-    }
-  }
-
-  private int copyKeyBytes(ByteBuffer targetBuffer, SerializeState state) {
-    int totalBytes = state.getTotalBytes();
-    int remainingCapacity = targetBuffer.remaining();
-    int bytesCopied = state.getBytesCopied();
-
-    byte[] key = state.getKey();
-    if (bytesCopied == 0 && remainingCapacity > 4) {
-      targetBuffer.putInt(key.length);
-      totalBytes += 4;
-    } else {
-      return 0;
-    }
-
-    int remainingToCopy = key.length - bytesCopied;
-    int canCopy = remainingCapacity > remainingToCopy ? remainingToCopy : remainingCapacity;
-    // copy
-    targetBuffer.put(key, bytesCopied, canCopy);
-    totalBytes += canCopy;
-    // we set the tolal bytes copied so far
-    state.setTotalBytes(totalBytes);
-    // we copied everything
-    if (canCopy == remainingToCopy) {
-      state.setKey(null);
-      state.setBytesCopied(0);
-      state.setPart(SerializeState.Part.BODY);
-    } else {
-      state.setBytesCopied(canCopy + bytesCopied);
-    }
-    // we will use this size later
-    state.setKeySize(key.length + 4);
-    return key.length;
-  }
 }

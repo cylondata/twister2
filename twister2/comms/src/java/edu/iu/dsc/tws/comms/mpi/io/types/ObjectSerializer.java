@@ -13,9 +13,9 @@ package edu.iu.dsc.tws.comms.mpi.io.types;
 
 import java.nio.ByteBuffer;
 
-import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.mpi.MPIBuffer;
 import edu.iu.dsc.tws.comms.mpi.MPISendMessage;
+import edu.iu.dsc.tws.comms.mpi.io.SerializeState;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
 public class ObjectSerializer {
@@ -30,28 +30,23 @@ public class ObjectSerializer {
    *
    * @param object
    * @param sendMessage
-   * @param buffer
+   * @param targetBuffer
    */
-  public void serializeObject(Object object, MPISendMessage sendMessage, MPIBuffer buffer) {
+  public boolean serializeObject(Object object,
+                                 MPISendMessage sendMessage, MPIBuffer targetBuffer) {
     byte[] data;
-    int dataPosition;
-    ByteBuffer byteBuffer = buffer.getByteBuffer();
-    if (sendMessage.serializedState() == MPISendMessage.SendState.HEADER_BUILT) {
+    int dataPosition = 0;
+    ByteBuffer byteBuffer = targetBuffer.getByteBuffer();
+    SerializeState state = sendMessage.getSerializationState();
+    int totalBytes = state.getTotalBytes();
+    if (state.getBytesCopied() == 0) {
       // okay we need to serialize the data
       data = serializer.serialize(object);
-      // at this point we know the length of the data
-      byteBuffer.putInt(12, data.length);
-      // now lets set the header
-      MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
-          sendMessage.getEdge(), data.length);
-      builder.destination(sendMessage.getDestintationIdentifier());
-      sendMessage.getMPIMessage().setHeader(builder.build());
-      dataPosition = 0;
-      sendMessage.setSerializationState(data);
+      state.setData(data);
 //      LOG.log(Level.INFO, String.format("Finished adding header %d %d %d %d",
 //          sendMessage.getSource(), sendMessage.getEdge(), sendMessage.getPath(), data.length));
     } else {
-      data = (byte[]) sendMessage.getSerializationState();
+      data = sendMessage.getSerializationState().getData();
       dataPosition = sendMessage.getByteCopied();
     }
 
@@ -63,17 +58,12 @@ public class ObjectSerializer {
     // check how much space left in the buffer
     byteBuffer.put(data, dataPosition, copyBytes);
     sendMessage.setByteCopied(dataPosition + copyBytes);
-
-    // now set the size of the buffer
+    state.setTotalBytes(totalBytes + copyBytes);
 //    LOG.log(Level.INFO, String.format("Serialize object body with buffer size: %d copyBytes: "
 //        + "%d remainingCopy: %d", byteBuffer.position(), copyBytes, remainingToCopy));
-    buffer.setSize(byteBuffer.position());
-
+    // now set the size of the buffer
+    targetBuffer.setSize(byteBuffer.position());
     // okay we are done with the message
-    if (copyBytes == remainingToCopy) {
-      sendMessage.setSendState(MPISendMessage.SendState.SERIALIZED);
-    } else {
-      sendMessage.setSendState(MPISendMessage.SendState.BODY_BUILT);
-    }
+    return copyBytes == remainingToCopy;
   }
 }

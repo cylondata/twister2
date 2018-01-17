@@ -25,6 +25,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
@@ -55,12 +56,7 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
 
   private int pathToUse = MPIContext.DEFAULT_PATH;
 
-  private int gatherLimit = 1;
-
-  private boolean batch = false;
-
   private MPIDataFlowOperation delegete;
-  private Config config;
   private TaskPlan instancePlan;
   private int executor;
   private MessageType type;
@@ -398,7 +394,7 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
               Object e1 = e.getValue().get(0);
               out.add(e1);
             }
-            if (sendPartial(t, out, 0, MPIContext.FLAGS_MULTI_MSG)) {
+            if (sendPartial(t, out, 0, MessageFlags.FLAGS_MULTI_MSG)) {
               for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
                 e.getValue().remove(0);
               }

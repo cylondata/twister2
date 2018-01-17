@@ -19,6 +19,7 @@ import java.util.TreeMap;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.mpi.MPIContext;
 import edu.iu.dsc.tws.comms.mpi.MPIDataFlowGather;
@@ -71,7 +72,7 @@ public class StreamingBoundedPartialGatherReceiver implements MessageReceiver {
       if (object instanceof MPIMessage) {
         ((MPIMessage) object).incrementRefCount();
       }
-      if ((flags & MPIContext.FLAGS_LAST) == MPIContext.FLAGS_LAST) {
+      if ((flags & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) {
         finished.get(target).put(source, true);
       }
       messageLists.add(object);
@@ -126,8 +127,7 @@ public class StreamingBoundedPartialGatherReceiver implements MessageReceiver {
               }
             }
           }
-          if (!operation.sendPartial(t, out,
-              MPIContext.FLAGS_MULTI_MSG, 0)) {
+          if (!operation.sendPartial(t, out, MessageFlags.FLAGS_MULTI_MSG, 0)) {
             canProgress = false;
           }
         }
