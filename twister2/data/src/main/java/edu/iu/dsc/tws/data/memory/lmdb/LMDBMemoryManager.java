@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.data.memory.lmdb;
 
 import java.io.File;
+import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
@@ -129,6 +130,16 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
     return get(opID, keyBuffer);
   }
 
+  @Override
+  public ByteBuffer get(int opID, String key) {
+    return null;
+  }
+
+  @Override
+  public <T extends Serializable> ByteBuffer get(int opID, T key) {
+    return null;
+  }
+
   public ByteBuffer getAll(ByteBuffer key) {
     if (key.position() != 0) {
       key.flip();
@@ -159,6 +170,16 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
     final ByteBuffer keyBuffer = allocateDirect(Long.BYTES);
     keyBuffer.putLong(0, key);
     return getBytes(opID, key);
+  }
+
+  @Override
+  public byte[] getBytes(int opID, String key) {
+    return new byte[0];
+  }
+
+  @Override
+  public <T extends Serializable> byte[] getBytes(int opID, T key) {
+    return new byte[0];
   }
 
   @Override
@@ -226,6 +247,16 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
   }
 
   @Override
+  public boolean containsKey(int opID, String key) {
+    return false;
+  }
+
+  @Override
+  public <T extends Serializable> boolean containsKey(int opID, T key) {
+    return false;
+  }
+
+  @Override
   public boolean append(int opID, ByteBuffer key, ByteBuffer value) {
     ByteBuffer results = get(opID, key);
     if (results == null) {
@@ -240,10 +271,25 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
   }
 
   @Override
+  public boolean append(int opID, byte[] key, ByteBuffer value) {
+    return false;
+  }
+
+  @Override
   public boolean append(int opID, long key, ByteBuffer value) {
     final ByteBuffer keyBuffer = allocateDirect(Long.BYTES);
     keyBuffer.putLong(0, key);
     return append(opID, keyBuffer, value);
+  }
+
+  @Override
+  public boolean append(int opID, String key, ByteBuffer value) {
+    return false;
+  }
+
+  @Override
+  public <T extends Serializable> boolean append(int opID, T key, ByteBuffer value) {
+    return false;
   }
 
   /**
@@ -317,6 +363,16 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
   }
 
   @Override
+  public boolean put(int opID, String key, ByteBuffer value) {
+    return false;
+  }
+
+  @Override
+  public <T extends Serializable> boolean put(int opID, T key, ByteBuffer value) {
+    return false;
+  }
+
+  @Override
   public boolean put(int opID, long key, byte[] value) {
 
     final ByteBuffer keyBuffer = allocateDirect(Long.BYTES);
@@ -324,6 +380,16 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
     keyBuffer.putLong(0, key);
     valBuffer.put(value);
     return put(opID, keyBuffer, valBuffer);
+  }
+
+  @Override
+  public boolean put(int opID, String key, byte[] value) {
+    return false;
+  }
+
+  @Override
+  public <T extends Serializable> boolean put(int opID, T key, byte[] value) {
+    return false;
   }
 
   @Override
@@ -364,6 +430,16 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
     return delete(opID, keyBuffer);
   }
 
+  @Override
+  public boolean delete(int opID, String key) {
+    return false;
+  }
+
+  @Override
+  public <T extends Serializable> boolean delete(int opID, T key) {
+    return false;
+  }
+
   /**
    * At this level the method does not return an OperationMemoryManager since the implementaion
    * does not handle OperationMemoryManager's
@@ -372,6 +448,56 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
   public OperationMemoryManager addOperation(int opID) {
     dbMap.put(opID, env.openDbi(String.valueOf(opID), MDB_CREATE));
     return null;
+  }
+
+  @Override
+  public boolean flush(int opID, ByteBuffer key) {
+    return false;
+  }
+
+  @Override
+  public boolean flush(int opID, byte[] key) {
+    return false;
+  }
+
+  @Override
+  public boolean flush(int opID, long key) {
+    return false;
+  }
+
+  @Override
+  public boolean flush(int opID, String key) {
+    return false;
+  }
+
+  @Override
+  public <T extends Serializable> boolean flush(int opID, T key) {
+    return false;
+  }
+
+  @Override
+  public boolean close(int opID, ByteBuffer key) {
+    return false;
+  }
+
+  @Override
+  public boolean close(int opID, byte[] key) {
+    return false;
+  }
+
+  @Override
+  public boolean close(int opID, long key) {
+    return false;
+  }
+
+  @Override
+  public boolean close(int opID, String key) {
+    return false;
+  }
+
+  @Override
+  public <T extends Serializable> boolean close(int opID, T key) {
+    return false;
   }
 
   public Path getLmdbDataPath() {
