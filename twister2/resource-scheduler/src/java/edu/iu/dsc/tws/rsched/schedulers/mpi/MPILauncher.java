@@ -44,6 +44,12 @@ public class MPILauncher implements ILauncher {
   }
 
   @Override
+  public boolean terminateJob(String jobName) {
+    // not implemented yet
+    return false;
+  }
+
+  @Override
   public boolean launch(RequestedResources resourcePlan, JobAPI.Job job) {
     LOG.log(Level.INFO, "Launching job for cluster {0}",
         MPIContext.clusterType(config));
@@ -68,7 +74,7 @@ public class MPILauncher implements ILauncher {
    */
   protected boolean setupWorkingDirectory(JobAPI.Job job) {
     // get the path of core release URI
-    String corePackage = MPIContext.corePackageName(config);
+    String corePackage = MPIContext.corePackageFileName(config);
 
     // Form the job package's URI
     String jobPackageURI = MPIContext.jobPackageUri(config).toString();

@@ -24,7 +24,6 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.schedulers.aurora.AuroraClientContext;
 import edu.iu.dsc.tws.rsched.schedulers.mpi.MPIContext;
 import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
@@ -59,11 +58,6 @@ public class ResourceAllocator {
    */
   public static Config loadConfig(Map<String, Object> cfg) {
 
-    try {
-      Class.forName(AuroraClientContext.class.getName());
-    } catch (ClassNotFoundException e) {
-      e.printStackTrace();
-    }
     // first lets read the essential properties from java system properties
     String twister2Home = System.getProperty(SchedulerContext.TWISTER_2_HOME);
     String configDir = System.getProperty(SchedulerContext.CONFIG_DIR);
@@ -189,8 +183,8 @@ public class ResourceAllocator {
       throw new RuntimeException("Failed to create the base temp directory for job", e);
     }
 
-    String jobFile = SchedulerContext.jobFile(config);
-    if (jobFile == null) {
+    String jobJarFile = SchedulerContext.jobFile(config);
+    if (jobJarFile == null) {
       throw new RuntimeException("Job file cannot be null");
     }
 
@@ -201,53 +195,53 @@ public class ResourceAllocator {
       throw new RuntimeException("Failed to create temp directory: " + tempDirectory, e);
     }
 
+    // temp directory to put archive files
     String tempDirPathString = tempDirPath.toString();
-    String jobFilePath = tempDirPathString + "/" + job.getJobName() + ".job";
 
-    // now we need to copy the actual job binary files here
-    JobAPI.JobFormat.Builder format = JobAPI.JobFormat.newBuilder();
-    format.setType(JobAPI.JobFormatType.SHUFFLE);
-    format.setJobFile(Paths.get(jobFile).getFileName().toString());
-
-    // now lets set the updates
-    updatedJob = JobAPI.Job.newBuilder(job).setJobFormat(format).build();
-    boolean write = JobUtils.writeJobFile(updatedJob, jobFilePath);
-    if (!write) {
-      throw new RuntimeException("Failed to write the job file");
-    }
-
-    // copy the job jar file
-    LOG.log(Level.INFO, String.format("Copy job jar: %s to %s", jobFile, tempDirPathString));
-    if (!FileUtils.copyFileToDirectory(jobFile, tempDirPathString)) {
-      throw new RuntimeException("Failed to copy the job jar file: "
-          + jobFile + " to:" + tempDirPathString);
-    }
-
-    // copy the job files
+    // copy the core dist package to temp directory
     String twister2CorePackage = SchedulerContext.systemPackageUrl(config);
-    String confDir = SchedulerContext.conf(config);
-
-    // copy the conf directory
-    LOG.log(Level.INFO, String.format("Copy configuration: %s to %s",
-        confDir, tempDirPathString));
-    if (!FileUtils.copyDirectoryToDirectory(confDir, tempDirPathString)) {
-      throw new RuntimeException("Failed to copy the configuration: "
-          + confDir + " to: " + tempDirPathString);
-    }
-
-    // copy the dist package
     LOG.log(Level.INFO, String.format("Copy core package: %s to %s",
         twister2CorePackage, tempDirPathString));
     if (!FileUtils.copyFileToDirectory(twister2CorePackage, tempDirPathString)) {
       throw new RuntimeException("Failed to copy the core package");
     }
 
-    // construct an archive file with: job file, job jar and conf dir
+    // construct an archive file with: job description file, job jar and conf dir
     TarGzipPacker packer = TarGzipPacker.createTarGzipPacker(tempDirPathString, config);
-    packer.addFileToArchive(jobFilePath); // job file
-    packer.addFileToArchive(jobFile); // job jar file
-    packer.addDirectoryToArchive(confDir); // conf dir
+    if (packer == null) {
+      throw new RuntimeException("Failed to created the archive file.");
+    }
+
+    // first update the job description
+    JobAPI.JobFormat.Builder format = JobAPI.JobFormat.newBuilder();
+    format.setType(JobAPI.JobFormatType.SHUFFLE);
+    format.setJobFile(Paths.get(jobJarFile).getFileName().toString());
+    updatedJob = JobAPI.Job.newBuilder(job).setJobFormat(format).build();
+
+    // add job description file to the archive
+    String jobDescFileName = job.getJobName() + ".job";
+    boolean added = packer.addFileToArchive(jobDescFileName, updatedJob.toByteArray());
+    if (!added) {
+      throw new RuntimeException("Failed to add the job description file to the archive: "
+          + jobDescFileName);
+    }
+
+    // add job jar file to the archive
+    added = packer.addFileToArchive(jobJarFile);
+    if (!added) {
+      throw new RuntimeException("Failed to add the job jar file to the archive: " + jobJarFile);
+    }
+
+    // add conf dir to the archive
+    String confDir = SchedulerContext.conf(config);
+    added = packer.addDirectoryToArchive(confDir);
+    if (!added) {
+      throw new RuntimeException("Failed to add the conf dir to the archive: " + confDir);
+    }
+
+    // close the archive file
     packer.close();
+    LOG.log(Level.INFO, "Archive file created: " + packer.getArchiveFileName());
 
     return tempDirPathString;
   }
@@ -255,7 +249,7 @@ public class ResourceAllocator {
   /**
    * Submit the job to the cluster
    *
-   * @param job the actual job
+   * @param job the actual job description
    */
   public void submitJob(JobAPI.Job job, Config config) {
     // lets prepare the job files
@@ -316,11 +310,16 @@ public class ResourceAllocator {
     LOG.log(Level.INFO, "Calling uploader to upload the package content");
     URI packageURI = uploader.uploadPackage(jobDirectory);
 
+    // this is a temporary solution
+    String packagesPath = "root@149.165.150.81:/root/.twister2/repository/";
+
     // now launch the launcher
     // Update the runtime config with the packageURI
     Config runtimeAll = Config.newBuilder()
         .putAll(config)
-        .put(SchedulerContext.JOB_PACKAGE_URI, packageURI)
+        .put(SchedulerContext.TWISTER2_PACKAGES_PATH, packageURI.toString())
+//        .put(SchedulerContext.TWISTER2_PACKAGES_PATH, packagesPath)
+//        .put(SchedulerContext.JOB_PACKAGE_URI, packageURI)
         .build();
 
     // this is a handler chain based execution in resource allocator. We need to
@@ -428,6 +427,53 @@ public class ResourceAllocator {
     }
 
     launcher.launch(requestedResources, updatedJob);
+  }
+
+  /**
+   * Terminate a job
+   *
+   * @param jobName the name of the job to terminate
+   */
+  public void terminateJob(String jobName, Config config) {
+
+    String statemgrClass = SchedulerContext.stateManagerClass(config);
+    if (statemgrClass == null) {
+      throw new RuntimeException("The state manager class must be spcified");
+    }
+
+    String launcherClass = SchedulerContext.launcherClass(config);
+    if (launcherClass == null) {
+      throw new RuntimeException("The launcher class must be specified");
+    }
+
+    ILauncher launcher;
+    IStateManager statemgr;
+
+    // create an instance of state manager
+    try {
+      statemgr = ReflectionUtils.newInstance(statemgrClass);
+    } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
+      throw new JobSubmissionException(
+          String.format("Failed to instantiate state manager class '%s'", statemgrClass), e);
+    }
+
+    // create an instance of launcher
+    try {
+      launcher = ReflectionUtils.newInstance(launcherClass);
+    } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
+      throw new LauncherException(
+          String.format("Failed to instantiate launcher class '%s'", launcherClass), e);
+    }
+
+    // let the state manager know that we are killing this job??
+    // statemgr.initialize(config);
+
+    // initialize the launcher and terminate the job
+    launcher.initialize(config);
+    boolean terminated = launcher.terminateJob(jobName);
+    if (!terminated) {
+      LOG.log(Level.SEVERE, "Could not terminate the job");
+    }
   }
 
   private RequestedResources buildRequestedResources(JobAPI.Job job) {

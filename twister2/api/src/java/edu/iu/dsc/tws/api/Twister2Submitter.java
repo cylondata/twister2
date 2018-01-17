@@ -36,4 +36,13 @@ public final class Twister2Submitter {
     ResourceAllocator resourceAllocator = new ResourceAllocator();
     resourceAllocator.submitJob(job, config);
   }
+
+  /**
+   * Submit a basic job with only container and communications
+   */
+  public static void terminateJob(String jobName, Config config) {
+    // launch the luancher
+    ResourceAllocator resourceAllocator = new ResourceAllocator();
+    resourceAllocator.terminateJob(jobName, config);
+  }
 }
