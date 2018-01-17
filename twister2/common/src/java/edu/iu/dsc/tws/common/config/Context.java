@@ -60,6 +60,9 @@ public class Context {
       "twister2.job", null, "JOB");
   public static final ConfigEntry CLUSTER = new ConfigEntry(
       "twister2.cluster", null, "CLUSTER");
+  public static final ConfigEntry AURORA_SCRIPT = new ConfigEntry(
+      "twister2.resource.scheduler.aurora.script", "${TWISTER2_CONF}/twister2.aurora");
+
 
   // an internal property to represent the container id
   public static final String TWISTER2_CONTAINER_ID = "twister2.container.id";
@@ -88,6 +91,7 @@ public class Context {
     defaults.put(NETWORK_YAML.getKey(), NETWORK_YAML.getDefaultValue());
     defaults.put(SYSTEM_YAML.getKey(), SYSTEM_YAML.getDefaultValue());
     defaults.put(UPLOADER_YAML.getKey(), UPLOADER_YAML.getDefaultValue());
+    defaults.put(AURORA_SCRIPT.getKey(), AURORA_SCRIPT.getDefaultValue());
   }
 
   protected Context() {
@@ -137,4 +141,9 @@ public class Context {
   public static String libDirectory(Config cfg) {
     return cfg.getStringValue(TWISTER2_LIB);
   }
+
+  public static String auroraScript(Config cfg) {
+    return cfg.getStringValue(AURORA_SCRIPT);
+  }
+
 }
