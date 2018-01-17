@@ -64,6 +64,7 @@ public class AuroraLauncher implements ILauncher {
     // convert RequestedResources to environment variables, override previous values from config
     ResourceContainer container = resourceRequest.getContainer();
     bindings.put(AuroraField.JOB_NAME, jobName);
+    bindings.put(AuroraField.CONTAINER_CLASS, job.getContainer().getClassName());
     bindings.put(AuroraField.CPUS_PER_CONTAINER, container.getNoOfCpus() + "");
     bindings.put(AuroraField.RAM_PER_CONTAINER, container.getMemoryInBytes() + "");
     bindings.put(AuroraField.DISK_PER_CONTAINER, container.getDiskInBytes() + "");

@@ -19,7 +19,7 @@ javacmd = 'cd twister2-core && java -cp ' \
   'lib/libresource-scheduler-java.jar:' \
   'lib/libconfig-java.jar:' \
   'lib/snakeyaml-1.15.jar:' \
-  ' edu.iu.dsc.tws.rsched.schedulers.aurora.WorkerHello'
+  ' {{CONTAINER_CLASS}}'
 
 run_java = Process(
   name = 'testjava',
