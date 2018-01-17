@@ -50,6 +50,7 @@ public class ResourceAllocator {
   public static final Logger LOG = Logger.getLogger(ResourceAllocator.class.getName());
 
   private JobAPI.Job updatedJob;
+  private Config updatedConfig;
 
   /**
    * loadConfig from config files and also from envirobnment variables
@@ -226,6 +227,12 @@ public class ResourceAllocator {
           + jobDescFileName);
     }
 
+    // add the job description filename to the config
+    updatedConfig = Config.newBuilder()
+        .putAll(config)
+        .put(SchedulerContext.JOB_DESCRIPTION_FILE, jobDescFileName)
+        .build();
+
     // add job jar file to the archive
     added = packer.addFileToArchive(jobJarFile);
     if (!added) {
@@ -315,8 +322,8 @@ public class ResourceAllocator {
 
     // now launch the launcher
     // Update the runtime config with the packageURI
-    Config runtimeAll = Config.newBuilder()
-        .putAll(config)
+    updatedConfig = Config.newBuilder()
+        .putAll(updatedConfig)
         .put(SchedulerContext.TWISTER2_PACKAGES_PATH, packageURI.toString())
 //        .put(SchedulerContext.TWISTER2_PACKAGES_PATH, packagesPath)
 //        .put(SchedulerContext.JOB_PACKAGE_URI, packageURI)
@@ -324,7 +331,7 @@ public class ResourceAllocator {
 
     // this is a handler chain based execution in resource allocator. We need to
     // make it more formal as such
-    launcher.initialize(runtimeAll);
+    launcher.initialize(updatedConfig);
 
     RequestedResources requestedResources = buildRequestedResources(updatedJob);
     if (requestedResources == null) {
