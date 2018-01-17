@@ -47,7 +47,7 @@ public class ObjectSerializer {
 //          sendMessage.getSource(), sendMessage.getEdge(), sendMessage.getPath(), data.length));
     } else {
       data = sendMessage.getSerializationState().getData();
-      dataPosition = sendMessage.getByteCopied();
+      dataPosition = state.getBytesCopied();
     }
 
     int remainingToCopy = data.length - dataPosition;
@@ -57,13 +57,21 @@ public class ObjectSerializer {
     int copyBytes = remainingToCopy > bufferSpace ? bufferSpace : remainingToCopy;
     // check how much space left in the buffer
     byteBuffer.put(data, dataPosition, copyBytes);
-    sendMessage.setByteCopied(dataPosition + copyBytes);
+    state.setBytesCopied(dataPosition + copyBytes);
     state.setTotalBytes(totalBytes + copyBytes);
 //    LOG.log(Level.INFO, String.format("Serialize object body with buffer size: %d copyBytes: "
 //        + "%d remainingCopy: %d", byteBuffer.position(), copyBytes, remainingToCopy));
     // now set the size of the buffer
     targetBuffer.setSize(byteBuffer.position());
     // okay we are done with the message
-    return copyBytes == remainingToCopy;
+    // okay we are done with the message
+    if (copyBytes == remainingToCopy) {
+      state.setBytesCopied(0);
+      state.setBufferNo(0);
+      state.setData(null);
+      return true;
+    } else {
+      return false;
+    }
   }
 }

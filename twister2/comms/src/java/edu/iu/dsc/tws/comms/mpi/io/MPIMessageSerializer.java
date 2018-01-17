@@ -31,16 +31,18 @@ public class MPIMessageSerializer implements MessageSerializer {
   private KryoSerializer serializer;
   private Config config;
   private ObjectSerializer objectSerializer;
+  private boolean keyed;
 
   public MPIMessageSerializer(KryoSerializer kryoSerializer) {
     this.serializer = kryoSerializer;
   }
 
   @Override
-  public void init(Config cfg, Queue<MPIBuffer> buffers) {
+  public void init(Config cfg, Queue<MPIBuffer> buffers, boolean k) {
     this.config = cfg;
     this.sendBuffers = buffers;
     objectSerializer = new ObjectSerializer(serializer);
+    this.keyed = k;
   }
 
   @Override
@@ -143,7 +145,6 @@ public class MPIMessageSerializer implements MessageSerializer {
         break;
       case BUFFER:
         return serializeBuffer(payload, sendMessage, buffer);
-      case KEYED:
       default:
         break;
     }

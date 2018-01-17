@@ -114,7 +114,7 @@ public class MPIDirectDataFlowCommunication implements DataFlowOperation, MPIMes
 
     delegete.init(cfg, t, taskPlan, edge, router.receivingExecutors(),
         isLastReceiver(), this, pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
-        pendingReceiveDeSerializations, messageSerializer, messageDeSerializer);
+        pendingReceiveDeSerializations, messageSerializer, messageDeSerializer, false);
   }
 
   @Override

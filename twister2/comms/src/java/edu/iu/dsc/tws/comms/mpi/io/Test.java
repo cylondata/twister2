@@ -47,11 +47,12 @@ public final class Test {
     serializer = new KryoSerializer();
     serializer.init(null);
     multiMessageSerializer = new MPIMultiMessageSerializer(serializer, 0);
-    multiMessageSerializer.init(null, bufferQueue);
+    multiMessageSerializer.init(null, bufferQueue, true);
     mpiMultiMessageDeserializer = new MPIMultiMessageDeserializer(serializer, 0);
+    mpiMultiMessageDeserializer.init(null, true);
 
     for (int i = 0; i < 10; i++) {
-      bufferQueue.offer(new MPIBuffer(2048000));
+      bufferQueue.offer(new MPIBuffer(2048));
     }
   }
 
@@ -67,10 +68,10 @@ public final class Test {
 
   @SuppressWarnings("rawtypes")
   public void runTest2() {
-    IntData data = new IntData(128000);
+    IntData data = new IntData(128);
     List list = new ArrayList<>();
     list.add(new KeyedContent(new Short((short) 0), data));
-    data = new IntData(128000);
+    data = new IntData(128);
     list.add(new KeyedContent(new Short((short) 1), data));
     MPIMessage message = serializeObject(list, 1);
     System.out.println("Serialized first");
@@ -105,6 +106,7 @@ public final class Test {
     if (message.isComplete()) {
       System.out.printf("Complete message");
     }
+    message.setKeyType(MessageType.SHORT);
     MessageHeader header = mpiMultiMessageDeserializer.buildHeader(message.getBuffers().get(0), 0);
     message.setHeader(header);
     System.out.println(String.format("%d %d %d", header.getLength(),
@@ -124,8 +126,9 @@ public final class Test {
   }
 
   private MPIMessage serializeObject(List object, int source) {
-    MPIMessage mpiMessage = new MPIMessage(source, MessageType.KEYED,
+    MPIMessage mpiMessage = new MPIMessage(source, MessageType.OBJECT,
         MPIMessageDirection.OUT, new MessageListener());
+    mpiMessage.setKeyType(MessageType.INTEGER);
 
     int di = -1;
     MPISendMessage sendMessage = new MPISendMessage(source, mpiMessage, 0,

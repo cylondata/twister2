@@ -118,7 +118,7 @@ public class MPIDataFlowKGather implements DataFlowOperation {
     for (int dest : destinations) {
       GatherFinalReceiver finalRcvr = new GatherFinalReceiver(dest);
       MPIDataFlowGather gather = new MPIDataFlowGather(channel, sources, dest,
-          finalRcvr, count, dest);
+          finalRcvr, count, dest, config, type, instancePlan, edgeList.get(count));
       gather.init(config, type, instancePlan, edgeList.get(count));
       gatherMap.put(dest, gather);
       count++;

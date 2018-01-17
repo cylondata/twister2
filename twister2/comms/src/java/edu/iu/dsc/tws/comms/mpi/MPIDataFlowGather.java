@@ -60,29 +60,49 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
   private TaskPlan instancePlan;
   private int executor;
   private MessageType type;
+  private MessageType keyType;
+  private boolean isKeyed;
 
   public MPIDataFlowGather(TWSMPIChannel channel, Set<Integer> sources, int destination,
                            MessageReceiver finalRcvr,
-                           int indx, int p) {
-    this.index = indx;
-    this.sources = sources;
-    this.destination = destination;
-    this.finalReceiver = finalRcvr;
-    this.partialReceiver = new PartialGather();
-    this.pathToUse = p;
-
-    this.delegete = new MPIDataFlowOperation(channel);
+                           int indx, int p,
+                           Config cfg, MessageType t, TaskPlan taskPlan, int edge) {
+    this(channel, sources, destination, finalRcvr, new PartialGather(),
+        indx, p, cfg, t, taskPlan, edge);
   }
 
   public MPIDataFlowGather(TWSMPIChannel channel, Set<Integer> sources, int destination,
                            MessageReceiver finalRcvr,
-                           MessageReceiver partialRcvr, int indx, int p) {
+                           int indx, int p,
+                           Config cfg, MessageType t, MessageType keyType,
+                           TaskPlan taskPlan, int edge) {
+    this(channel, sources, destination, finalRcvr, new PartialGather(),
+        indx, p, cfg, t, keyType, taskPlan, edge);
+    this.isKeyed = true;
+  }
+
+  public MPIDataFlowGather(TWSMPIChannel channel, Set<Integer> sources, int destination,
+                           MessageReceiver finalRcvr,
+                           MessageReceiver partialRcvr, int indx, int p,
+                           Config cfg, MessageType t, TaskPlan taskPlan, int edge) {
+    this(channel, sources, destination, finalRcvr, partialRcvr,
+        indx, p, cfg, t, MessageType.SHORT, taskPlan, edge);
+    this.isKeyed = false;
+  }
+
+  public MPIDataFlowGather(TWSMPIChannel channel, Set<Integer> sources, int destination,
+                           MessageReceiver finalRcvr,
+                           MessageReceiver partialRcvr, int indx, int p,
+                           Config cfg, MessageType t, MessageType kt, TaskPlan taskPlan, int edge) {
     this.index = indx;
     this.sources = sources;
     this.destination = destination;
     this.finalReceiver = finalRcvr;
     this.partialReceiver = partialRcvr;
     this.pathToUse = p;
+    this.keyType = kt;
+    this.instancePlan = taskPlan;
+    this.isKeyed = true;
 
     this.delegete = new MPIDataFlowOperation(channel);
   }
@@ -266,7 +286,8 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
     delegete.init(cfg, t, taskPlan, edge,
         router.receivingExecutors(), router.isLastReceiver(), this,
         pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
-        pendingReceiveDeSerializations, messageSerializer, messageDeSerializer);
+        pendingReceiveDeSerializations, messageSerializer, messageDeSerializer, isKeyed);
+    delegete.setKeyType(keyType);
   }
 
   @Override
@@ -323,12 +344,14 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
     return instancePlan;
   }
 
-  private class PartialGather implements MessageReceiver {
+  private static class PartialGather implements MessageReceiver {
     // lets keep track of the messages
     // for each task we need to keep track of incoming messages
     private Map<Integer, Map<Integer, List<Object>>> messages = new TreeMap<>();
     private Map<Integer, Map<Integer, Integer>> counts = new HashMap<>();
     private int currentIndex = 0;
+    private DataFlowOperation dataFlowOperation;
+    private int executor;
 
     @Override
     public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
@@ -344,6 +367,8 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
         messages.put(e.getKey(), messagesPerTask);
         counts.put(e.getKey(), countsPerTask);
       }
+      this.dataFlowOperation = op;
+      this.executor = dataFlowOperation.getTaskPlan().getThisExecutor();
     }
 
     @Override
@@ -394,7 +419,7 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
               Object e1 = e.getValue().get(0);
               out.add(e1);
             }
-            if (sendPartial(t, out, 0, MessageFlags.FLAGS_MULTI_MSG)) {
+            if (dataFlowOperation.sendPartial(t, out, 0, MessageFlags.FLAGS_MULTI_MSG)) {
               for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
                 e.getValue().remove(0);
               }

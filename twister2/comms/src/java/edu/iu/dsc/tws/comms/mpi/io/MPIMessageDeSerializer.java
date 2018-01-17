@@ -28,13 +28,16 @@ public class MPIMessageDeSerializer implements MessageDeSerializer {
 
   private MPIBuffer tempBuf;
 
+  private boolean keyed;
+
   public MPIMessageDeSerializer(KryoSerializer kryoSerializer) {
     this.serializer = kryoSerializer;
   }
 
   @Override
-  public void init(Config cfg) {
-    tempBuf = new MPIBuffer(1024);
+  public void init(Config cfg, boolean k) {
+    this.tempBuf = new MPIBuffer(1024);
+    this.keyed = k;
   }
 
   @Override

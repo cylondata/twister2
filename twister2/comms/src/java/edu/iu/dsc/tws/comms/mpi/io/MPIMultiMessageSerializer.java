@@ -23,6 +23,7 @@ import edu.iu.dsc.tws.comms.mpi.MPIBuffer;
 import edu.iu.dsc.tws.comms.mpi.MPIMessage;
 import edu.iu.dsc.tws.comms.mpi.MPISendMessage;
 import edu.iu.dsc.tws.comms.mpi.io.types.KeySerializer;
+import edu.iu.dsc.tws.comms.mpi.io.types.KeyedObjectSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.types.ObjectSerializer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
@@ -40,6 +41,8 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
   // for s normal message we only put the length
   private static final int NORMAL_SUB_MESSAGE_HEADER_SIZE = 4;
 
+  private boolean keyed;
+
   public MPIMultiMessageSerializer(KryoSerializer kryoSerializer, int exec) {
     this.serializer = kryoSerializer;
     this.objectSerializer = new ObjectSerializer(serializer);
@@ -47,8 +50,9 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
   }
 
   @Override
-  public void init(Config cfg, Queue<MPIBuffer> buffers) {
+  public void init(Config cfg, Queue<MPIBuffer> buffers, boolean k) {
     this.sendBuffers = buffers;
+    this.keyed = k;
   }
 
   @Override
@@ -144,17 +148,19 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
       case DOUBLE:
         break;
       case OBJECT:
-        return serializeObject(payload,
-            sendMessage.getSerializationState(), buffer);
+        if (!keyed) {
+          return serializeObject(payload,
+              sendMessage.getSerializationState(), buffer);
+        } else {
+          return serializeKeyedObject((KeyedContent) payload,
+              sendMessage.getSerializationState(), buffer);
+        }
       case BYTE:
         break;
       case STRING:
         break;
       case BUFFER:
         break;
-      case KEYED:
-        return serializeKeyedObject((KeyedContent) payload,
-            sendMessage.getSerializationState(), buffer);
       default:
         break;
     }
@@ -341,6 +347,76 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
   }
 
   private boolean serializeKeyedObject(KeyedContent content, SerializeState state,
+                                       MPIBuffer targetBuffer) {
+    Object data;
+    ByteBuffer byteBuffer = targetBuffer.getByteBuffer();
+    // okay we need to serialize the header
+    if (state.getPart() == SerializeState.Part.INIT) {
+      int keyLength = KeySerializer.serializeKey(content.getSource(),
+          content.getKeyType(), state, serializer);
+      // okay we need to serialize the data
+      int dataLength = KeyedObjectSerializer.serializeObject(content.getObject(),
+          content.getContentType(), state, serializer);
+      LOG.info(String.format("%d serialize data length: %d pos %d",
+          executor, dataLength, byteBuffer.position()));
+      // at this point we know the length of the data
+      if (!buildSubMessageHeader(targetBuffer, dataLength + keyLength)) {
+        LOG.warning("We should always be able to build the header in the current buffer");
+        return false;
+      }
+      // add the header bytes to the total bytes
+      state.setTotalBytes(state.getTotalBytes() + NORMAL_SUB_MESSAGE_HEADER_SIZE);
+      LOG.info(String.format("%d pos after header %d",
+          executor, byteBuffer.position()));
+      LOG.info(String.format("%d total after header %d",
+          executor, state.getTotalBytes()));
+    }
+
+    if (state.getPart() == SerializeState.Part.INIT
+        || state.getPart() == SerializeState.Part.HEADER) {
+      boolean complete = KeySerializer.copyKeyToBuffer(content.getSource(),
+          content.getKeyType(), targetBuffer.getByteBuffer(), state, serializer);
+      LOG.info(String.format("%d pos after key copy %d",
+          executor, byteBuffer.position()));
+      LOG.info(String.format("%d total after key %d",
+          executor, state.getTotalBytes()));
+      if (complete) {
+        state.setPart(SerializeState.Part.BODY);
+      } else {
+        state.setPart(SerializeState.Part.HEADER);
+      }
+    }
+
+    // now we can serialize the body
+    if (state.getPart() != SerializeState.Part.BODY) {
+      return false;
+    }
+
+    data = state.getData();
+    boolean completed = KeyedObjectSerializer.copyObjectToBuffer(data,
+        content.getContentType(), byteBuffer, state, serializer);
+    LOG.info(String.format("%d pos after data %d",
+        executor, byteBuffer.position()));
+    // now set the size of the buffer
+    targetBuffer.setSize(byteBuffer.position());
+
+    // okay we are done with the message
+    if (completed) {
+      // add the key size at the end to total size
+      LOG.info(String.format("%d total after complete %d",
+          executor, state.getTotalBytes()));
+      state.setBytesCopied(0);
+      state.setBufferNo(0);
+      state.setData(null);
+      state.setPart(SerializeState.Part.INIT);
+      state.setKeySize(0);
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  private boolean serializeKeyedObject2(KeyedContent content, SerializeState state,
                                       MPIBuffer targetBuffer) {
     byte[] data;
     int dataPosition = 0;

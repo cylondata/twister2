@@ -9,25 +9,8 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.mpi.io;
+package edu.iu.dsc.tws.comms.mpi.io.types;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.MessageHeader;
-import edu.iu.dsc.tws.comms.mpi.MPIBuffer;
+public class DataSerializer {
 
-public class FileBasedDeserializer implements MessageDeSerializer {
-  @Override
-  public void init(Config cfg) {
-
-  }
-
-  @Override
-  public Object build(Object partialObject, int edge) {
-    return null;
-  }
-
-  @Override
-  public MessageHeader buildHeader(MPIBuffer buffer, int edge) {
-    return null;
-  }
 }
