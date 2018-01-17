@@ -1,9 +1,10 @@
-# these two are set from command line when starting AuroraProcess
-# the path of the twister2 package to be uploaded to Mesos container
-pth = '{{TWISTER2_PACKAGE_PATH}}'
-# filename of the twister2 package to be uploaded to Mesos container
-# fn='twister2-client.tar.gz'
-fn='{{TWISTER2_PACKAGE_FILE}}'
+# Path of the twister2 core and job package to be uploaded to Mesos container excluding finename
+path = '{{TWISTER2_PACKAGES_PATH}}'
+# filename of the twister2 core package to be uploaded to Mesos container
+# coreFN='twister2-core.tar.gz'
+coreFN='{{CORE_PACKAGE_FILENAME}}'
+# twister2 job package filename
+jobFN = '{{JOB_PACKAGE_FILENAME}}'
 
 # one Java job submission to Aurora Scheduler
 # two processes: one is for file copy and the other is to run java code in the container
@@ -11,14 +12,31 @@ fn='{{TWISTER2_PACKAGE_FILE}}'
 # a process to copy project package file to the sandbox
 copy_java = Process(
   name = 'fetch2',
-  cmdline = 'cp %s%s . && chmod +x %s && tar zxf %s && echo %s%s copied' % (pth, fn, fn, fn, pth, fn))
+  cmdline = 'scp %s%s . && tar xf %s && scp %s%s . && tar xf %s && echo %s %s copied' % (path, coreFN, coreFN, path, jobFN, jobFN, coreFN, jobFN))
+
+# first construct classpath to run Java container class
+jcp = '-cp ' \
+  'lib/libresource-scheduler-java.jar:' \
+  'lib/snakeyaml-1.15.jar' \
+  'lib/commons-io-2.5.jar:' \
+  'lib/libconfig-java.jar:' \
+  'lib/protobuf-java-2.5.0.jar:' \
+  'lib/guava-18.0.jar:' \
+  'lib/libapi-java.jar:' \
+  'lib/libproto_resource_scheduler_java.jar:' \
+  'lib/libproto_job_java.jar:' \
+  'lib/libproto_job_state_java.jar:' \
+  'lib/libtaskscheduler-java.jar:' \
+  'lib/ompijavabinding-3.0.0.jar:' \
+  'lib/libcommon-java.jar:' \
+  'lib/libcomms-java.jar'
+
+# construct environment variables
+envs = ' -Djob_desc_file={{JOB_DESCRIPTION_FILE}}' \
+  ' -Dtest_test={{JOB_DESCRIPTION_FILE}}'
 
 # java command to run the worker in sandboxes
-javacmd = 'java -cp ' \
-  'twister2-dist/lib/libresource-scheduler-java.jar:' \
-  'twister2-dist/lib/libconfig-java.jar:' \
-  'twister2-dist/lib/snakeyaml-1.15.jar:' \
-  ' edu.iu.dsc.tws.rsched.schedulers.aurora.WorkerHello'
+javacmd = 'cd twister2-core && java %s %s  {{CONTAINER_CLASS}}' % (jcp, envs) 
 
 run_java = Process(
   name = 'testjava',
@@ -34,7 +52,7 @@ java_job = Job(
   cluster = '{{AURORA_CLUSTER_NAME}}',
   environment = '{{ENVIRONMENT}}',
   role = '{{ROLE}}',
-  name = '{{AURORA_JOB_NAME}}',
+  name = '{{JOB_NAME}}',
   task = java_task,
   instances = '{{NUMBER_OF_CONTAINERS}}'
 )

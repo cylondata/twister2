@@ -58,8 +58,28 @@ public final class BasicAuroraJob {
 
     // now submit the job
     Twister2Submitter.submitContainerJob(basicJob, config);
+
+    // now terminate the job
+    terminateJob(config);
 //    jobWriteTest(basicJob);
 //    jobReadTest();
+  }
+
+  /**
+   * wait some time and terminate the job
+   */
+  public static void terminateJob(Config config) {
+
+    long waitTime = 10000;
+    try {
+      System.out.println("Waiting " + waitTime + " ms. Will terminate the job afterward .... ");
+      Thread.sleep(10000);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+
+    String jobName = "basic-aurora";
+    Twister2Submitter.terminateJob(jobName, config);
   }
 
   /**
@@ -74,8 +94,8 @@ public final class BasicAuroraJob {
    * test method to read BasicJob file
    */
   public static void jobReadTest() {
-    String file = "testJobFile";
-    JobAPI.Job job = JobUtils.readJobFile(null, file);
+    String fl = "/tmp/basic-aurora/basic-aurora3354891958097304472/twister2-core/basic-aurora.job";
+    JobAPI.Job job = JobUtils.readJobFile(null, fl);
     System.out.println("job name: " + job.getJobName());
     System.out.println("job container class name: " + job.getContainer().getClassName());
     System.out.println("job containers: " + job.getJobResources().getNoOfContainers());
@@ -83,7 +103,7 @@ public final class BasicAuroraJob {
     System.out.println("RAM: " + job.getJobResources().getContainer().getAvailableMemory());
     System.out.println("Disk: " + job.getJobResources().getContainer().getAvailableDisk());
     JobAPI.Config conf = job.getConfig();
-    System.out.println("number of key-values in conf: " + conf.getKvsCount());
+    System.out.println("number of key-values in job conf: " + conf.getKvsCount());
 
     for (JobAPI.Config.KeyValue kv : conf.getKvsList()) {
       System.out.println(kv.getKey() + ": " + kv.getValue());

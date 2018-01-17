@@ -32,18 +32,10 @@ public class AuroraLauncher implements ILauncher {
   private static final Logger LOG = Logger.getLogger(AuroraLauncher.class.getName());
 
   private Config config;
-  private AuroraClientController controller;
 
   @Override
   public void initialize(Config conf) {
     this.config = conf;
-
-    //construct the controller to submit the job to Aurora Scheduler
-    String cluster = AuroraClientContext.auroraClusterName(config);
-    String role = AuroraClientContext.role(config);
-    String env = AuroraClientContext.environment(config);
-    String jobName = AuroraClientContext.auroraJobName(config);
-    controller = new AuroraClientController(cluster, role, env, jobName, true);
   }
 
   /**
@@ -55,14 +47,24 @@ public class AuroraLauncher implements ILauncher {
   @Override
   public boolean launch(RequestedResources resourceRequest, JobAPI.Job job) {
 
+    //construct the controller to submit the job to Aurora Scheduler
+    String cluster = AuroraClientContext.auroraClusterName(config);
+    String role = AuroraClientContext.role(config);
+    String env = AuroraClientContext.environment(config);
+    String jobName = job.getJobName();
+    AuroraClientController controller =
+        new AuroraClientController(cluster, role, env, jobName, true);
+
     // get aurora file name to execute when submitting the job
     String auroraFilename = AuroraClientContext.auroraScript(config);
 
     // get environment variables from config
     Map<AuroraField, String> bindings = constructEnvVariables(config);
 
-    // convert RequestedResources to environment variables
+    // convert RequestedResources to environment variables, override previous values from config
     ResourceContainer container = resourceRequest.getContainer();
+    bindings.put(AuroraField.JOB_NAME, jobName);
+    bindings.put(AuroraField.CONTAINER_CLASS, job.getContainer().getClassName());
     bindings.put(AuroraField.CPUS_PER_CONTAINER, container.getNoOfCpus() + "");
     bindings.put(AuroraField.RAM_PER_CONTAINER, container.getMemoryInBytes() + "");
     bindings.put(AuroraField.DISK_PER_CONTAINER, container.getDiskInBytes() + "");
@@ -74,11 +76,24 @@ public class AuroraLauncher implements ILauncher {
   }
 
   /**
-   * Cleanup any resources
+   * Close up any resources
    */
   @Override
   public void close() {
+  }
 
+  /**
+   * Terminate the Aurora Job
+   */
+  @Override
+  public boolean terminateJob(String jobName) {
+    //construct the controller to submit the job to Aurora Scheduler
+    String cluster = AuroraClientContext.auroraClusterName(config);
+    String role = AuroraClientContext.role(config);
+    String env = AuroraClientContext.environment(config);
+    AuroraClientController controller =
+        new AuroraClientController(cluster, role, env, jobName, true);
+    return controller.killJob();
   }
 
   /**
@@ -89,17 +104,18 @@ public class AuroraLauncher implements ILauncher {
    */
   public static Map<AuroraField, String> constructEnvVariables(Config config) {
     HashMap<AuroraField, String> envs = new HashMap<AuroraField, String>();
-    envs.put(AuroraField.TWISTER2_PACKAGE_PATH, AuroraClientContext.packagePath(config) + "/");
-    envs.put(AuroraField.TWISTER2_PACKAGE_FILE, AuroraClientContext.packageFile(config));
+    envs.put(AuroraField.CORE_PACKAGE_FILENAME, SchedulerContext.corePackageFileName(config));
+    envs.put(AuroraField.JOB_PACKAGE_FILENAME, SchedulerContext.jobPackageFileName(config));
     envs.put(AuroraField.AURORA_CLUSTER_NAME, AuroraClientContext.auroraClusterName(config));
     envs.put(AuroraField.ENVIRONMENT, AuroraClientContext.environment(config));
     envs.put(AuroraField.ROLE, AuroraClientContext.role(config));
-    envs.put(AuroraField.AURORA_JOB_NAME, AuroraClientContext.auroraJobName(config));
+    envs.put(AuroraField.JOB_NAME, SchedulerContext.jobName(config));
     envs.put(AuroraField.CPUS_PER_CONTAINER, AuroraClientContext.cpusPerContainer(config));
     envs.put(AuroraField.RAM_PER_CONTAINER, AuroraClientContext.ramPerContainer(config) + "");
     envs.put(AuroraField.DISK_PER_CONTAINER, AuroraClientContext.diskPerContainer(config) + "");
     envs.put(AuroraField.NUMBER_OF_CONTAINERS, AuroraClientContext.numberOfContainers(config));
-    envs.put(AuroraField.JOB_PACKAGE_URI, SchedulerContext.jobPackageUri(config).toString());
+    envs.put(AuroraField.TWISTER2_PACKAGES_PATH, SchedulerContext.packagesPath(config));
+    envs.put(AuroraField.JOB_DESCRIPTION_FILE, SchedulerContext.jobDescriptionFile(config));
     return envs;
   }
 

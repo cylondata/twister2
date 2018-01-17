@@ -44,14 +44,19 @@ public class SchedulerContext extends Context {
   public static final String CONFIG_DIR = "config_dir";
   public static final String CLUSTER_TYPE = "cluster_type";
   public static final String JOB_FILE = "job_file";
+  public static final String JOB_DESCRIPTION_FILE_CMD_VAR = "job_desc_file";
+  public static final String JOB_DESCRIPTION_FILE = "twister2.job.description.file";
+
   public static final String WORKING_DIRECTORY = "twister2.working_directory";
 
-  public static final String TWISTER2_CORE_PACKAGE_DEFAULT = "twister2-core.tar.gz";
-  public static final String TWISTER2_CORE_PACKAGE = "twister2.package.core";
+  public static final String CORE_PACKAGE_FILENAME_DEFAULT = "twister2-core.tar.gz";
+  public static final String CORE_PACKAGE_FILENAME = "twister2.package.core";
 
-  public static final String TWISTER2_JOB_PACKAGE_DEFAULT = "twister2-job.tar.gz";
-  public static final String TWISTER2_JOB_PACKAGE = "twister2.package.job";
+  public static final String JOB_PACKAGE_FILENAME_DEFAULT = "twister2-job.tar.gz";
+  public static final String JOB_PACKAGE_FILENAME = "twister2.package.job";
 
+  // The path from where the workers will transfer twister2 tar.gz packages
+  public static final String TWISTER2_PACKAGES_PATH = "twister2.packages.path";
 
   public static String stateManagerClass(Config cfg) {
     return cfg.getStringValue(STATE_MANAGER_CLASS);
@@ -73,6 +78,14 @@ public class SchedulerContext extends Context {
     return cfg.getStringValue(JOB_NAME);
   }
 
+  public static String jobDescriptionFile(Config cfg) {
+    return cfg.getStringValue(JOB_DESCRIPTION_FILE);
+  }
+
+  public static String packagesPath(Config cfg) {
+    return cfg.getStringValue(TWISTER2_PACKAGES_PATH);
+  }
+
   public static String stateManegerRootPath(Config cfg) {
     return cfg.getStringValue(STATE_MANAGER_ROOT_PATH);
   }
@@ -85,12 +98,12 @@ public class SchedulerContext extends Context {
     return (URI) cfg.get(JOB_PACKAGE_URI);
   }
 
-  public static String corePackageName(Config cfg) {
-    return cfg.getStringValue(TWISTER2_CORE_PACKAGE, TWISTER2_CORE_PACKAGE_DEFAULT);
+  public static String corePackageFileName(Config cfg) {
+    return cfg.getStringValue(CORE_PACKAGE_FILENAME, CORE_PACKAGE_FILENAME_DEFAULT);
   }
 
-  public static String jobPackageName(Config cfg) {
-    return cfg.getStringValue(TWISTER2_JOB_PACKAGE, TWISTER2_JOB_PACKAGE_DEFAULT);
+  public static String jobPackageFileName(Config cfg) {
+    return cfg.getStringValue(JOB_PACKAGE_FILENAME, JOB_PACKAGE_FILENAME_DEFAULT);
   }
 
   public static String jobBasicContainerClass(Config cfg) {

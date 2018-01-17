@@ -5,5 +5,6 @@ twister2.class.state.manager: "edu.iu.dsc.tws.rsched.statemanagers.fs.SharedFile
 # launcher class for aurora submission
 twister2.class.launcher: edu.iu.dsc.tws.rsched.schedulers.aurora.AuroraLauncher
 # the uplaoder class
-twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.scp.ScpUploader"
+# twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.scp.ScpUploader"
+twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.NullUploader"
 

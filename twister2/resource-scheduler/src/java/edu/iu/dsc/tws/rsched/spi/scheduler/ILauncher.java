@@ -33,6 +33,11 @@ public interface ILauncher extends AutoCloseable {
   void close();
 
   /**
+   * terminate the submitted job
+   */
+  boolean terminateJob(String jobName);
+
+  /**
    * Launch the processes according to the resource plan. An implementation fo this class will
    *
    * @param resourceRequest requested resources

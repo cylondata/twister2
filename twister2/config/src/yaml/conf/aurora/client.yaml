@@ -27,8 +27,8 @@ twister2.resource.scheduler.aurora.role: "www-data"
 twister2.resource.scheduler.aurora.env: "devel"
 
 # aurora job name
-# twister2.job.name: "hello"
-twister2.resource.scheduler.aurora.jobname: "hello"
+twister2.job.name: "basic-aurora"
+# twister2.resource.scheduler.aurora.jobname: "basic-aurora"
 
 # number of CPUs for this job
 twister2.cpu_per_container: "1"

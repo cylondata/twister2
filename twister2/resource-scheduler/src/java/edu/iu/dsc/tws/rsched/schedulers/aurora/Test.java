@@ -18,6 +18,7 @@ import java.util.Set;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
 
 public final class Test {
@@ -82,7 +83,7 @@ public final class Test {
     builder.put(AuroraClientContext.AURORA_CLUSTER_NAME, cluster);
     builder.put(AuroraClientContext.ROLE, role);
     builder.put(AuroraClientContext.ENVIRONMENT, env);
-    builder.put(AuroraClientContext.AURORA_JOB_NAME, jobName);
+    builder.put(SchedulerContext.JOB_NAME, jobName);
 
     builder.put(AuroraClientContext.AURORA_SCRIPT.getKey(), auroraFile);
 //    builder.put(AuroraClientContext.TWISTER2_PACKAGE_PATH, "/root/twister2");
