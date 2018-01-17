@@ -56,7 +56,7 @@ public final class AuroraJobSubmitter {
       String cluster = AuroraClientContext.auroraClusterName(config);
       String role = AuroraClientContext.role(config);
       String env = AuroraClientContext.environment(config);
-      String jobName = AuroraClientContext.auroraJobName(config);
+      String jobName = SchedulerContext.jobName(config);
 
       AuroraClientController controller = new AuroraClientController(
           cluster, role, env, jobName, true);
