@@ -13,6 +13,8 @@ package edu.iu.dsc.tws.data.memory;
 
 
 import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
 
 import static java.nio.ByteBuffer.allocateDirect;
 
@@ -22,6 +24,15 @@ import static java.nio.ByteBuffer.allocateDirect;
  */
 public abstract class AbstractMemoryManager implements MemoryManager {
 
+
+  /**
+   * Map that keeps all the OperationMemoryManager's
+   */
+  protected Map<Integer, OperationMemoryManager> operationMap;
+
+  protected AbstractMemoryManager() {
+    operationMap = new HashMap<Integer, OperationMemoryManager>();
+  }
 
   public Object getDeserialized(ByteBuffer key) {
     return null;
