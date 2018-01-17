@@ -14,12 +14,29 @@ copy_java = Process(
   name = 'fetch2',
   cmdline = 'scp %s%s . && tar xf %s && scp %s%s . && tar xf %s && echo %s %s copied' % (path, coreFN, coreFN, path, jobFN, jobFN, coreFN, jobFN))
 
-# java command to run the worker in sandboxes
-javacmd = 'cd twister2-core && java -cp ' \
+# first construct classpath to run Java container class
+jcp = '-cp ' \
   'lib/libresource-scheduler-java.jar:' \
+  'lib/snakeyaml-1.15.jar' \
+  'lib/commons-io-2.5.jar:' \
   'lib/libconfig-java.jar:' \
-  'lib/snakeyaml-1.15.jar:' \
-  ' {{CONTAINER_CLASS}}'
+  'lib/protobuf-java-2.5.0.jar:' \
+  'lib/guava-18.0.jar:' \
+  'lib/libapi-java.jar:' \
+  'lib/libproto_resource_scheduler_java.jar:' \
+  'lib/libproto_job_java.jar:' \
+  'lib/libproto_job_state_java.jar:' \
+  'lib/libtaskscheduler-java.jar:' \
+  'lib/ompijavabinding-3.0.0.jar:' \
+  'lib/libcommon-java.jar:' \
+  'lib/libcomms-java.jar'
+
+# construct environment variables
+envs = ' -Djob_desc_file={{JOB_DESCRIPTION_FILE}}' \
+  ' -Dtest_test={{JOB_DESCRIPTION_FILE}}'
+
+# java command to run the worker in sandboxes
+javacmd = 'cd twister2-core && java %s %s  {{CONTAINER_CLASS}}' % (jcp, envs) 
 
 run_java = Process(
   name = 'testjava',

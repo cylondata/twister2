@@ -44,6 +44,9 @@ public class SchedulerContext extends Context {
   public static final String CONFIG_DIR = "config_dir";
   public static final String CLUSTER_TYPE = "cluster_type";
   public static final String JOB_FILE = "job_file";
+  public static final String JOB_DESCRIPTION_FILE_CMD_VAR = "job_desc_file";
+  public static final String JOB_DESCRIPTION_FILE = "twister2.job.description.file";
+
   public static final String WORKING_DIRECTORY = "twister2.working_directory";
 
   public static final String CORE_PACKAGE_FILENAME_DEFAULT = "twister2-core.tar.gz";
@@ -73,6 +76,10 @@ public class SchedulerContext extends Context {
 
   public static String jobName(Config cfg) {
     return cfg.getStringValue(JOB_NAME);
+  }
+
+  public static String jobDescriptionFile(Config cfg) {
+    return cfg.getStringValue(JOB_DESCRIPTION_FILE);
   }
 
   public static String packagesPath(Config cfg) {
