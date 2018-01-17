@@ -22,14 +22,14 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.mpi.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.mpi.io.MessageSerializer;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.mpi.io.MPIMessageDeSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.MPIMessageSerializer;
+import edu.iu.dsc.tws.comms.mpi.io.MessageDeSerializer;
+import edu.iu.dsc.tws.comms.mpi.io.MessageSerializer;
 import edu.iu.dsc.tws.comms.routing.DirectRouter;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
@@ -128,12 +128,12 @@ public class MPIDirectDataFlowCommunication implements DataFlowOperation, MPIMes
   }
 
   @Override
-  public boolean send(int source, Object message, int flags, int path) {
-    return delegete.sendMessage(source, message, path, flags, sendRoutingParameters(source, path));
+  public boolean send(int source, Object message, int flags, int dest) {
+    return delegete.sendMessage(source, message, dest, flags, sendRoutingParameters(source, dest));
   }
 
   @Override
-  public boolean sendPartial(int source, Object message, int flags, int path) {
+  public boolean sendPartial(int source, Object message, int flags, int dest) {
     return false;
   }
 

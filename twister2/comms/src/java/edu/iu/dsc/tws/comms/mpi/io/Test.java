@@ -16,10 +16,10 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.mpi.MPIBuffer;
-import edu.iu.dsc.tws.comms.mpi.MPIContext;
 import edu.iu.dsc.tws.comms.mpi.MPIMessage;
 import edu.iu.dsc.tws.comms.mpi.MPIMessageDirection;
 import edu.iu.dsc.tws.comms.mpi.MPIMessageReleaseCallback;
@@ -50,8 +50,8 @@ public final class Test {
     multiMessageSerializer.init(null, bufferQueue);
     mpiMultiMessageDeserializer = new MPIMultiMessageDeserializer(serializer, 0);
 
-    for (int i = 0; i < 100; i++) {
-      bufferQueue.offer(new MPIBuffer(256));
+    for (int i = 0; i < 10; i++) {
+      bufferQueue.offer(new MPIBuffer(2048000));
     }
   }
 
@@ -67,29 +67,32 @@ public final class Test {
 
   @SuppressWarnings("rawtypes")
   public void runTest2() {
-    IntData data = new IntData(128);
+    IntData data = new IntData(128000);
     List list = new ArrayList<>();
-    list.add(new MultiObject(0, data));
-    data = new IntData(128);
-    list.add(new MultiObject(1, data));
+    list.add(new KeyedContent(new Short((short) 0), data));
+    data = new IntData(128000);
+    list.add(new KeyedContent(new Short((short) 1), data));
     MPIMessage message = serializeObject(list, 1);
+    System.out.println("Serialized first");
+    deserialize(message);
 
-    data = new IntData(128);
-    list = new ArrayList<>();
-    list.add(new MultiObject(2, data));
-    data = new IntData(128);
-    list.add(new MultiObject(3, data));
-    MPIMessage message2 = serializeObject(list, 1);
-
-    list = new ArrayList<>();
-    list.add(message);
-    list.add(message2);
 //    data = new IntData(128000);
-//    list.add(new MultiObject(1, data));
-
-    MPIMessage second = serializeObject(list, 1);
-
-    deserialize(second);
+//    list = new ArrayList<>();
+//    list.add(new KeyedContent(new Short((short) 2), data));
+//    data = new IntData(128000);
+//    list.add(new KeyedContent(new Short((short) 3), data));
+//    MPIMessage message2 = serializeObject(list, 1);
+////    System.out.println("Serialized second");
+////
+//    list = new ArrayList<>();
+//    list.add(message);
+//    list.add(message2);
+////    data = new IntData(128000);
+////    list.add(new MultiObject(1, data));
+//
+//    MPIMessage second = serializeObject(list, 1);
+//
+//    deserialize(second);
   }
 
   private void deserialize(MPIMessage message) {
@@ -109,11 +112,11 @@ public final class Test {
     Object d = mpiMultiMessageDeserializer.build(message, 0);
     List list = (List) d;
     for (Object o : list) {
-      if (o instanceof MultiObject) {
-        System.out.println(((MultiObject) o).getSource());
-        if (((MultiObject) o).getObject() instanceof IntData) {
+      if (o instanceof KeyedContent) {
+        System.out.println(((KeyedContent) o).getSource());
+        if (((KeyedContent) o).getObject() instanceof IntData) {
           System.out.println("Length: "
-              + ((IntData) ((MultiObject) o).getObject()).getData().length);
+              + ((IntData) ((KeyedContent) o).getObject()).getData().length);
         }
       }
     }
@@ -121,12 +124,12 @@ public final class Test {
   }
 
   private MPIMessage serializeObject(List object, int source) {
-    MPIMessage mpiMessage = new MPIMessage(source, MessageType.OBJECT,
+    MPIMessage mpiMessage = new MPIMessage(source, MessageType.KEYED,
         MPIMessageDirection.OUT, new MessageListener());
 
     int di = -1;
     MPISendMessage sendMessage = new MPISendMessage(source, mpiMessage, 0,
-        di, 0, MPIContext.FLAGS_MULTI_MSG, null, null);
+        di, 0, MessageFlags.FLAGS_MULTI_MSG, null, null);
     multiMessageSerializer.build(object, sendMessage);
 
     return mpiMessage;

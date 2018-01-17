@@ -13,13 +13,15 @@ package edu.iu.dsc.tws.comms.mpi;
 
 import java.util.Set;
 
+import edu.iu.dsc.tws.comms.mpi.io.SerializeState;
+
 /**
  * Keep track of a MPI message while it is transisitioning through the send phases
  */
 public class MPISendMessage {
   // keep track of the serialized bytes in case we don't
   // have enough space in the send buffers
-  protected Object serializationState;
+  protected SerializeState serializationState;
 
   //number of bytes copied to the network buffers so far
   private int byteCopied = 0;
@@ -98,11 +100,11 @@ public class MPISendMessage {
     return ref;
   }
 
-  public void setSerializationState(Object serializationState) {
+  public void setSerializationState(SerializeState serializationState) {
     this.serializationState = serializationState;
   }
 
-  public Object getSerializationState() {
+  public SerializeState getSerializationState() {
     return serializationState;
   }
 

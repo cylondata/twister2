@@ -24,6 +24,7 @@
 package edu.iu.dsc.tws.data.memory;
 
 import java.nio.ByteBuffer;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,9 +36,9 @@ import edu.iu.dsc.tws.data.memory.lmdb.LMDBMemoryManager;
 /**
  * Inserts into the memory store in batches. Only one instance per executor.
  */
-public class BulkMemoryManager extends AbstractMemoryManager {
+public class BufferedMemoryManager extends AbstractMemoryManager {
 
-  private static final Logger LOG = Logger.getLogger(BulkMemoryManager.class.getName());
+  private static final Logger LOG = Logger.getLogger(BufferedMemoryManager.class.getName());
 
   /**
    * Memory manager implementaion
@@ -66,7 +67,7 @@ public class BulkMemoryManager extends AbstractMemoryManager {
    */
   private Map<String, Integer> keyBufferSizes;
 
-  public BulkMemoryManager(Path dataPath) {
+  public BufferedMemoryManager(Path dataPath) {
     //TODO : This needs to be loaded from a configuration file
     //TODO: need to add Singleton pattern to make sure only one instance of MM is created per
     //executor
@@ -80,113 +81,126 @@ public class BulkMemoryManager extends AbstractMemoryManager {
     keyMap = new ConcurrentHashMap<String, Integer>();
     keyMapCurrent = new ConcurrentHashMap<String, Integer>();
     keyMapBuffers = new ConcurrentHashMap<String, LinkedList<ByteBuffer>>();
+    operationMap = new HashMap<Integer, OperationMemoryManager>();
     return false;
   }
 
   @Override
-  public boolean append(ByteBuffer key, ByteBuffer value) {
-    return memoryManager.append(key, value);
+  public boolean append(int opID, ByteBuffer key, ByteBuffer value) {
+    return memoryManager.append(opID, key, value);
   }
 
   @Override
-  public boolean append(long key, ByteBuffer value) {
-    return memoryManager.append(key, value);
+  public boolean append(int opID, long key, ByteBuffer value) {
+    return memoryManager.append(opID, key, value);
   }
 
   @Override
-  public boolean put(ByteBuffer key, ByteBuffer value) {
-    return memoryManager.put(key, value);
+  public boolean put(int opID, ByteBuffer key, ByteBuffer value) {
+    return memoryManager.put(opID, key, value);
   }
 
   @Override
-  public boolean put(byte[] key, byte[] value) {
-    return memoryManager.put(key, value);
+  public boolean put(int opID, byte[] key, byte[] value) {
+    return memoryManager.put(opID, key, value);
   }
 
   @Override
-  public boolean put(byte[] key, ByteBuffer value) {
-    return memoryManager.put(key, value);
+  public boolean put(int opID, byte[] key, ByteBuffer value) {
+    return memoryManager.put(opID, key, value);
   }
 
   @Override
-  public boolean put(long key, ByteBuffer value) {
-    return memoryManager.put(key, value);
+  public boolean put(int opID, long key, ByteBuffer value) {
+    return memoryManager.put(opID, key, value);
   }
 
   @Override
-  public boolean put(long key, byte[] value) {
-    return memoryManager.put(key, value);
+  public boolean put(int opID, long key, byte[] value) {
+    return memoryManager.put(opID, key, value);
   }
 
   @Override
-  public ByteBuffer get(ByteBuffer key) {
-    return memoryManager.get(key);
+  public ByteBuffer get(int opID, ByteBuffer key) {
+    return memoryManager.get(opID, key);
   }
 
   @Override
-  public ByteBuffer get(byte[] key) {
-    return memoryManager.get(key);
+  public ByteBuffer get(int opID, byte[] key) {
+    return memoryManager.get(opID, key);
   }
 
   @Override
-  public ByteBuffer get(long key) {
-    return memoryManager.get(key);
+  public ByteBuffer get(int opID, long key) {
+    return memoryManager.get(opID, key);
   }
 
-  public ByteBuffer get(String key) {
+  public ByteBuffer get(int opID, String key) {
     // if the key given is already in the keyMap we need to flush the key
     //TODO: Do we flush the key and get the data from the memory store or do we get what
     //TODO: we can from the keymap and then get the rest of the store
     if (keyMap.containsKey(key)) {
-      flush(key);
+      flush(opID, key);
     }
 
-    return memoryManager.get(ByteBuffer.wrap(key.getBytes(MemoryManagerContext.DEFAULT_CHARSET)));
+    return memoryManager.get(opID, ByteBuffer.wrap(
+        key.getBytes(MemoryManagerContext.DEFAULT_CHARSET)));
   }
 
   @Override
-  public byte[] getBytes(byte[] key) {
-    return memoryManager.getBytes(key);
+  public byte[] getBytes(int opID, byte[] key) {
+    return memoryManager.getBytes(opID, key);
   }
 
   @Override
-  public byte[] getBytes(long key) {
-    return memoryManager.getBytes(key);
+  public byte[] getBytes(int opID, long key) {
+    return memoryManager.getBytes(opID, key);
   }
 
   @Override
-  public byte[] getBytes(ByteBuffer key) {
-    return memoryManager.getBytes(key);
+  public byte[] getBytes(int opID, ByteBuffer key) {
+    return memoryManager.getBytes(opID, key);
   }
 
   @Override
-  public boolean containsKey(ByteBuffer key) {
-    return memoryManager.containsKey(key);
+  public boolean containsKey(int opID, ByteBuffer key) {
+    return memoryManager.containsKey(opID, key);
   }
 
   @Override
-  public boolean containsKey(byte[] key) {
-    return memoryManager.containsKey(key);
+  public boolean containsKey(int opID, byte[] key) {
+    return memoryManager.containsKey(opID, key);
   }
 
   @Override
-  public boolean containsKey(long key) {
-    return memoryManager.containsKey(key);
+  public boolean containsKey(int opID, long key) {
+    return memoryManager.containsKey(opID, key);
   }
 
   @Override
-  public boolean delete(ByteBuffer key) {
-    return memoryManager.delete(key);
+  public boolean delete(int opID, ByteBuffer key) {
+    return memoryManager.delete(opID, key);
   }
 
   @Override
-  public boolean delete(byte[] key) {
-    return memoryManager.delete(key);
+  public boolean delete(int opID, byte[] key) {
+    return memoryManager.delete(opID, key);
   }
 
   @Override
-  public boolean delete(long key) {
-    return memoryManager.delete(key);
+  public boolean delete(int opID, long key) {
+    return memoryManager.delete(opID, key);
+  }
+
+  @Override
+  public OperationMemoryManager addOperation(int opID) {
+    if (operationMap.containsKey(opID)) {
+      return null;
+    }
+    OperationMemoryManager temp = new OperationMemoryManager(opID, this);
+    memoryManager.addOperation(opID);
+    operationMap.put(opID, temp);
+    return temp;
   }
 
   public Map<String, Integer> getKeyMap() {
@@ -223,10 +237,10 @@ public class BulkMemoryManager extends AbstractMemoryManager {
   /**
    * Buffers the inputs before submitting it to the store
    */
-  public boolean putBulk(String key, ByteBuffer value) {
+  public boolean putBulk(int opID, String key, ByteBuffer value) {
     if (!keyMap.containsKey(key)) {
       LOG.info(String.format("No entry for the given key : %s .The key needs to"
-          + " be registered with the BulkMemoryManager", key));
+          + " be registered with the BufferedMemoryManager", key));
       return false;
     }
     //TODO: need to make sure that there are no memory leaks here
@@ -236,7 +250,7 @@ public class BulkMemoryManager extends AbstractMemoryManager {
     // If this is the last value write all the values to store
     if ((currentCount + 1) % step == 0) {
       // write to store if the step has been met
-      flush(key, value);
+      flush(opID, key, value);
       keyMapCurrent.put(key, currentCount + 1);
     } else {
       keyMapCurrent.put(key, currentCount + 1);
@@ -248,10 +262,10 @@ public class BulkMemoryManager extends AbstractMemoryManager {
   }
 
   /**
-   * Makes sure all the data that is held in the BulkMemoryManager is pushed into the
+   * Makes sure all the data that is held in the BufferedMemoryManager is pushed into the
    * memory store
    */
-  public boolean flush(String key) {
+  public boolean flush(int opID, String key) {
     ByteBuffer temp = ByteBuffer.allocateDirect(keyBufferSizes.get(key));
     LinkedList<ByteBuffer> buffers = keyMapBuffers.get(key);
     while (!buffers.isEmpty()) {
@@ -259,7 +273,8 @@ public class BulkMemoryManager extends AbstractMemoryManager {
     }
     //Since we got all the buffer values reset the size
     keyBufferSizes.put(key, 0);
-    return memoryManager.put(ByteBuffer.wrap(key.getBytes(MemoryManagerContext.DEFAULT_CHARSET)),
+    return memoryManager.put(opID, ByteBuffer.wrap(key.getBytes(
+        MemoryManagerContext.DEFAULT_CHARSET)),
         temp);
   }
 
@@ -271,7 +286,7 @@ public class BulkMemoryManager extends AbstractMemoryManager {
    * @param last the last value that needs to be appended to the ByteBuffers that correspond to the
    * given key
    */
-  public boolean flush(String key, ByteBuffer last) {
+  public boolean flush(int opID, String key, ByteBuffer last) {
     ByteBuffer temp = ByteBuffer.allocateDirect(keyBufferSizes.get(key) + last.limit());
     LinkedList<ByteBuffer> buffers = keyMapBuffers.get(key);
     while (!buffers.isEmpty()) {
@@ -280,17 +295,18 @@ public class BulkMemoryManager extends AbstractMemoryManager {
     temp.put(last);
     //Since we got all the buffer values reset the size
     keyBufferSizes.put(key, 0);
-    return memoryManager.put(ByteBuffer.wrap(key.getBytes(MemoryManagerContext.DEFAULT_CHARSET)),
+    return memoryManager.put(opID, ByteBuffer.wrap(key.getBytes(
+        MemoryManagerContext.DEFAULT_CHARSET)),
         temp);
   }
 
   /**
-   * Closing the key will make the BulkMemoryManager to flush the current data into the store and
-   * delete all the key information. This is done once we know that no more values will be sent for
-   * this key
+   * Closing the key will make the BufferedMemoryManager to flush the current data into the store
+   * and delete all the key information. This is done once we know that no more values will be sent
+   * for this key
    */
-  public boolean close(String key) {
-    flush(key);
+  public boolean close(int opID, String key) {
+    flush(opID, key);
     keyMap.remove(key);
     keyMapCurrent.remove(key);
     keyMapBuffers.remove(key);

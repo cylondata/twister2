@@ -44,7 +44,7 @@ public final class TarGzipPacker {
 
   TarArchiveOutputStream tarOutputStream;
   Path archiveFile;
-  private static final String dirPrefixForArchive = "./twister2-core/";
+  private static final String DIR_PREFIX_FOR_ARCHIVE = "./twister2-core/";
 
   /**
    * create the class object from create method
@@ -73,8 +73,7 @@ public final class TarGzipPacker {
       TarArchiveOutputStream tarOutputStream = new TarArchiveOutputStream(gzipOutputStream);
 
       return new TarGzipPacker(archiveFile, tarOutputStream);
-    }catch(IOException ioe){
-      ioe.printStackTrace();
+    } catch (IOException ioe) {
       LOG.log(Level.SEVERE, "Archive file can not be created: " + archiveFile, ioe);
       return null;
     }
@@ -91,6 +90,7 @@ public final class TarGzipPacker {
    * given tar.gz file will be copied to this tar.gz file.
    * all files will be transferred to new tar.gz file one by one.
    * original directory structure will be kept intact
+   *
    * @param tarGzipFile the archive file to be copied to the new archive
    */
   public boolean addTarGzipToArchive(String tarGzipFile) {
@@ -123,13 +123,13 @@ public final class TarGzipPacker {
    */
   public boolean addFileToArchive(String filename) {
     File file = new File(filename);
-    return addFileToArchive(file, dirPrefixForArchive);
+    return addFileToArchive(file, DIR_PREFIX_FOR_ARCHIVE);
   }
 
   /**
    * add one file to tar.gz file
+   *
    * @param file file to be added to the tar.gz
-   * @dirPrefixForTar directory structure of this file in tar.gz
    */
   public boolean addFileToArchive(File file, String dirPrefixForTar) {
     try {
@@ -152,13 +152,14 @@ public final class TarGzipPacker {
    * add all files in the given directory to the tar.gz file
    * add the given prefix to all files in tar names
    * do not copy files recursively. Only one level copying.
+   *
    * @param path of the firectory to be added
    */
   public boolean addDirectoryToArchive(String path) {
 
     File dir = new File(path);
 
-    String prefix = dirPrefixForArchive + dir.getName() + "/";
+    String prefix = DIR_PREFIX_FOR_ARCHIVE + dir.getName() + "/";
     for (File file: dir.listFiles()) {
       boolean added = addFileToArchive(file, prefix);
       if(!added) {
@@ -176,7 +177,7 @@ public final class TarGzipPacker {
    */
   public boolean addFileToArchive(String filename, byte[] contents) {
 
-    String filePathInTar = dirPrefixForArchive + filename;
+    String filePathInTar = DIR_PREFIX_FOR_ARCHIVE + filename;
     try {
       TarArchiveEntry entry = new TarArchiveEntry(filePathInTar);
       entry.setSize(contents.length);

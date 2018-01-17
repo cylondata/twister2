@@ -43,7 +43,7 @@ public class Context {
   public static final ConfigEntry RESOURCE_SCHEDULER_YAML = new ConfigEntry(
       "twister2.config.file.scheduler.yaml", "${TWISTER2_CONF}/resource.yaml");
   public static final ConfigEntry NETWORK_YAML = new ConfigEntry(
-      "twister2.config.file.system.yaml",    "${TWISTER2_CONF}/network.yaml");
+      "twister2.config.file.network.yaml",    "${TWISTER2_CONF}/network.yaml");
   public static final ConfigEntry UPLOADER_YAML = new ConfigEntry(
       "twister2.config.file.uploader.yaml",  "${TWISTER2_CONF}/uploader.yaml");
   public static final ConfigEntry SYSTEM_YAML = new ConfigEntry(

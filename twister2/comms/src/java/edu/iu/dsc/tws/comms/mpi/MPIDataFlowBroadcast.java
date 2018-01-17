@@ -165,12 +165,12 @@ public class MPIDataFlowBroadcast implements DataFlowOperation, MPIMessageReceiv
   }
 
   @Override
-  public boolean send(int src, Object message, int flags, int path) {
-    return delegete.sendMessage(src, message, path, flags, sendRoutingParameters(src, 0));
+  public boolean send(int src, Object message, int flags, int dest) {
+    return delegete.sendMessage(src, message, dest, flags, sendRoutingParameters(src, 0));
   }
 
   @Override
-  public boolean sendPartial(int src, Object message, int flags, int path) {
+  public boolean sendPartial(int src, Object message, int flags, int dest) {
     return false;
   }
 

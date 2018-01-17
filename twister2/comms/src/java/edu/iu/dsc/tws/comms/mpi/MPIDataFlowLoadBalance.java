@@ -32,7 +32,7 @@ import edu.iu.dsc.tws.comms.mpi.io.MPIMessageDeSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.MPIMessageSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.MessageSerializer;
-import edu.iu.dsc.tws.comms.routing.LoadBalanceRouter;
+import edu.iu.dsc.tws.comms.routing.PartitionRouter;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
@@ -41,7 +41,7 @@ public class MPIDataFlowLoadBalance implements DataFlowOperation, MPIMessageRece
 
   private Set<Integer> sources;
   private Set<Integer> destinations;
-  private LoadBalanceRouter router;
+  private PartitionRouter router;
 
   private Map<Integer, Integer> destinationIndex;
   private Set<Integer> thisSources;
@@ -90,7 +90,7 @@ public class MPIDataFlowLoadBalance implements DataFlowOperation, MPIMessageRece
     LOG.info(String.format("%d setup loadbalance routing %s",
         taskPlan.getThisExecutor(), thisSources));
     this.thisTasks = taskPlan.getTasksOfThisExecutor();
-    this.router = new LoadBalanceRouter(taskPlan, sources, destinations);
+    this.router = new PartitionRouter(taskPlan, sources, destinations);
     Map<Integer, Set<Integer>> internal = router.getInternalSendTasks(0);
     Map<Integer, Set<Integer>> external = router.getExternalSendTasks(0);
     this.instancePlan = taskPlan;
@@ -175,12 +175,12 @@ public class MPIDataFlowLoadBalance implements DataFlowOperation, MPIMessageRece
   }
 
   @Override
-  public boolean send(int source, Object message, int flags, int path) {
-    return delegete.sendMessage(source, message, path, flags, sendRoutingParameters(source, path));
+  public boolean send(int source, Object message, int flags, int dest) {
+    return delegete.sendMessage(source, message, dest, flags, sendRoutingParameters(source, dest));
   }
 
   @Override
-  public boolean sendPartial(int source, Object message, int flags, int path) {
+  public boolean sendPartial(int source, Object message, int flags, int dest) {
     throw new RuntimeException("Not supported method");
   }
 
@@ -246,7 +246,7 @@ public class MPIDataFlowLoadBalance implements DataFlowOperation, MPIMessageRece
 
   @Override
   public boolean passMessageDownstream(Object object, MPIMessage currentMessage) {
-    return false;
+    return true;
   }
 
   protected Set<Integer> receivingExecutors() {

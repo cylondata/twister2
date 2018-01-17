@@ -40,6 +40,7 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.mpi.io.KeyedContent;
 import edu.iu.dsc.tws.examples.IntData;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.utils.RandomString;
@@ -57,7 +58,7 @@ public class BasicGatherCommunication implements IContainer {
 
   private Config config;
 
-  private static final int NO_OF_TASKS = 16;
+  private static final int NO_OF_TASKS = 8;
 
   private int noOfTasksPerExecutor = 2;
 
@@ -94,7 +95,7 @@ public class BasicGatherCommunication implements IContainer {
     try {
       // this method calls the init method
       // I think this is wrong
-      aggregate = channel.gather(newCfg, MessageType.OBJECT, 0, sources,
+      aggregate = channel.gather(newCfg, MessageType.KEYED, 0, sources,
           dest, new FinalGatherReceive());
 
       for (int i = 0; i < noOfTasksPerExecutor; i++) {
@@ -139,7 +140,8 @@ public class BasicGatherCommunication implements IContainer {
         for (int i = 0; i < 100; i++) {
           String data = generateStringData();
           // lets generate a message
-          while (!aggregate.send(task, data, 0)) {
+          while (!aggregate.send(task, new KeyedContent(task, data,
+              MessageType.INTEGER, MessageType.OBJECT), 0)) {
             // lets wait a litte and try again
             try {
               Thread.sleep(1);
@@ -205,12 +207,12 @@ public class BasicGatherCommunication implements IContainer {
         }
         Integer c = counts.get(target).get(source);
         if (m.size() > 16) {
-//          LOG.info(String.format("%d Final true: target %d source %d",
-//              id, target, source));
+          LOG.info(String.format("%d Final true: target %d source %d %s",
+              id, target, source, counts));
           canAdd = false;
         } else {
-//          LOG.info(String.format("%d Final false: target %d source %d",
-//              id, target, source));
+          LOG.info(String.format("%d Final false: target %d source %d %s",
+              id, target, source, counts));
           m.add(object);
           counts.get(target).put(source, c + 1);
         }

@@ -9,6 +9,18 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi;
 
 import java.nio.ByteBuffer;
@@ -34,9 +46,14 @@ import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.mpi.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.MessageSerializer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
+import edu.iu.dsc.tws.data.fs.Path;
+import edu.iu.dsc.tws.data.memory.BufferedMemoryManager;
+import edu.iu.dsc.tws.data.memory.MemoryManager;
 
-public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageReleaseCallback {
-  private static final Logger LOG = Logger.getLogger(MPIDataFlowOperation.class.getName());
+public class MPIDataFlowOperationMemoryMapped
+    implements MPIMessageListener, MPIMessageReleaseCallback {
+  private static final Logger LOG = Logger.getLogger(
+      MPIDataFlowOperationMemoryMapped.class.getName());
 
   public static final int MAX_ATTEMPTS = 1000;
   // the configuration
@@ -98,7 +115,12 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
    */
   protected final Lock lock = new ReentrantLock();
 
-  public MPIDataFlowOperation(TWSMPIChannel channel) {
+  /**
+   * Memory manager that will be used to store buffers to memory store.
+   */
+  private MemoryManager memoryManager;
+
+  public MPIDataFlowOperationMemoryMapped(TWSMPIChannel channel) {
     this.channel = channel;
   }
 
@@ -144,6 +166,10 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
     // initialize the serializers
     LOG.info(String.format("%d setup initializers", instancePlan.getThisExecutor()));
     initSerializers();
+
+    //TODO : need to load this from config file, both the type of memory manager and the datapath
+    Path dataPath = new Path("/home/pulasthi/work/twister2/lmdbdatabase");
+    this.memoryManager = new BufferedMemoryManager(dataPath);
   }
 
   protected void initSerializers() {
@@ -209,7 +235,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
   }
 
   public boolean sendMessage(int source, Object message, int path,
-                                int flags, RoutingParameters routingParameters) {
+                             int flags, RoutingParameters routingParameters) {
     lock.lock();
     try {
 //      LOG.info(String.format("%d send message %d", executor, source));
@@ -272,6 +298,8 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
             // send it internally
             for (Integer i : mpiSendMessage.getInternalSends()) {
               // okay now we need to check weather this is the last place
+              //TODO: if this is the last task do we serialize internal messages and add it to
+              //TODO: Memory Manager. it can be done here
               boolean receiveAccepted = receiver.receiveSendInternally(
                   mpiSendMessage.getSource(), i, mpiSendMessage.getPath(),
                   mpiSendMessage.getFlags(), messageObject);
@@ -387,7 +415,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
                   + pendingReceiveMessages.size());
             }
             int attempt = updateAttemptMap(receiveMessageAttempts, id, 1);
-            if (debug && attempt >  MAX_ATTEMPTS) {
+            if (debug && attempt > MAX_ATTEMPTS) {
               LOG.info(String.format("%d Send message internal attempts %d",
                   executor, attempt));
             }
@@ -523,7 +551,12 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
       currentMessage.build();
 
       if (currentMessage.isComplete()) {
-//        LOG.info(String.format("%d completed recv ", executor));
+        //TODO: if this is the last task we can add the messages to the state manager here
+        //TODO: The rest we need to add at the progress function
+        //How to find the current task id or will just the executor work?
+        if (currentMessage.getHeader().getDestinationIdentifier() == executor) {
+          // add to store
+        }
         currentMessages.remove(id);
         Queue<MPIMessage> deserializeQueue = pendingReceiveDeSerializations.get(id);
         if (!deserializeQueue.offer(currentMessage)) {

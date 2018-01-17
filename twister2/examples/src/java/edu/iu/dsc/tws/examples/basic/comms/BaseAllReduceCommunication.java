@@ -265,7 +265,7 @@ public class BaseAllReduceCommunication implements IContainer {
                 canProgress = false;
 //                  LOG.info(String.format("%d reduce send false", id));
               }
-              if (count % 1 == 0) {
+              if (count % 100 == 0) {
                 LOG.info(String.format("%d Inject partial %d count: %d %s",
                     id, t, count, counts));
               }

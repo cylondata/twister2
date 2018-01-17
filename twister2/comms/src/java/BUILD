@@ -12,6 +12,7 @@ common_deps_files = [
     "//third_party:ompi_javabinding_java",
     "//twister2/common/src/java:config-java",
     "//twister2/common/src/java:common-java",
+      "//twister2/data/src/main/java:data-java",
     "@net_openhft_chronicle_queue//jar",
 ]
 

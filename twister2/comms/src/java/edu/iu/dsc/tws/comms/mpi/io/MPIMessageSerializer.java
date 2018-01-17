@@ -53,6 +53,10 @@ public class MPIMessageSerializer implements MessageSerializer {
       return sendMessage;
     }
 
+    if (sendMessage.getSerializationState() == null) {
+      sendMessage.setSerializationState(new SerializeState());
+    }
+
     while (sendBuffers.size() > 0 && sendMessage.serializedState()
         != MPISendMessage.SendState.SERIALIZED) {
       MPIBuffer buffer = sendBuffers.poll();
@@ -64,19 +68,29 @@ public class MPIMessageSerializer implements MessageSerializer {
         sendMessage.setSendState(MPISendMessage.SendState.HEADER_BUILT);
       }
 
-      if (sendMessage.serializedState() == MPISendMessage.SendState.HEADER_BUILT) {
+      if (sendMessage.serializedState() == MPISendMessage.SendState.HEADER_BUILT
+          || sendMessage.serializedState() == MPISendMessage.SendState.BODY_BUILT) {
         // build the body
         // first we need to serialize the body if needed
-        serializeBody(message, sendMessage, buffer);
-      } else if (sendMessage.serializedState() == MPISendMessage.SendState.BODY_BUILT) {
-        // further build the body
-        serializeBody(message, sendMessage, buffer);
+        boolean complete = serializeBody(message, sendMessage, buffer);
+        if (complete) {
+          sendMessage.setSendState(MPISendMessage.SendState.SERIALIZED);
+        }
       }
-
       // okay we are adding this buffer
       sendMessage.getMPIMessage().addBuffer(buffer);
       if (sendMessage.serializedState() == MPISendMessage.SendState.SERIALIZED) {
         MPIMessage mpiMessage = sendMessage.getMPIMessage();
+        SerializeState state = sendMessage.getSerializationState();
+        int totalBytes = state.getTotalBytes();
+        mpiMessage.getBuffers().get(0).getByteBuffer().putInt(12, totalBytes);
+
+        MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
+            sendMessage.getEdge(), totalBytes);
+        builder.destination(sendMessage.getDestintationIdentifier());
+        sendMessage.getMPIMessage().setHeader(builder.build());
+        state.setTotalBytes(0);
+
         // mark the original message as complete
         mpiMessage.setComplete(true);
       } else {
@@ -111,7 +125,7 @@ public class MPIMessageSerializer implements MessageSerializer {
    * @param buffer
    * @return true if the message is completely written
    */
-  private void serializeBody(Object payload,
+  private boolean serializeBody(Object payload,
                              MPISendMessage sendMessage, MPIBuffer buffer) {
     MessageType type = sendMessage.getMPIMessage().getType();
     switch (type) {
@@ -122,21 +136,21 @@ public class MPIMessageSerializer implements MessageSerializer {
       case DOUBLE:
         break;
       case OBJECT:
-        objectSerializer.serializeObject(payload, sendMessage, buffer);
-        break;
+        return objectSerializer.serializeObject(payload, sendMessage, buffer);
       case BYTE:
         break;
       case STRING:
         break;
       case BUFFER:
-        serializeBuffer(payload, sendMessage, buffer);
-        break;
+        return serializeBuffer(payload, sendMessage, buffer);
+      case KEYED:
       default:
         break;
     }
+    return false;
   }
 
-  private void serializeBuffer(Object object, MPISendMessage sendMessage, MPIBuffer buffer) {
+  private boolean serializeBuffer(Object object, MPISendMessage sendMessage, MPIBuffer buffer) {
     MPIBuffer dataBuffer = (MPIBuffer) object;
     ByteBuffer byteBuffer = buffer.getByteBuffer();
     if (sendMessage.serializedState() == MPISendMessage.SendState.HEADER_BUILT) {
@@ -152,5 +166,6 @@ public class MPIMessageSerializer implements MessageSerializer {
     buffer.setSize(16 + dataBuffer.getSize());
     // okay we are done with the message
     sendMessage.setSendState(MPISendMessage.SendState.SERIALIZED);
+    return true;
   }
 }
