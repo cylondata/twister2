@@ -16,6 +16,8 @@ import java.nio.ByteBuffer;
 /**
  * This controls the memory manager for a single operation. An example of an operation is a
  * gather, reduce.
+ * Note: This class needs to implment all the methods in the Memory Manager interface without the
+ * operationID parameter
  */
 public class OperationMemoryManager {
 
@@ -45,15 +47,15 @@ public class OperationMemoryManager {
     return parent.put(operationID, key, value);
   }
 
-  public boolean put(byte[] key, byte[] value) {
-    return parent.put(operationID, key, value);
-  }
-
   public boolean put(byte[] key, ByteBuffer value) {
     return parent.put(operationID, key, value);
   }
 
   public boolean put(long key, ByteBuffer value) {
+    return parent.put(operationID, key, value);
+  }
+
+  public boolean put(byte[] key, byte[] value) {
     return parent.put(operationID, key, value);
   }
 

@@ -23,6 +23,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.memory;
 
+import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -91,8 +92,23 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
   }
 
   @Override
+  public boolean append(int opID, byte[] key, ByteBuffer value) {
+    return false;
+  }
+
+  @Override
   public boolean append(int opID, long key, ByteBuffer value) {
     return memoryManager.append(opID, key, value);
+  }
+
+  @Override
+  public boolean append(int opID, String key, ByteBuffer value) {
+    return false;
+  }
+
+  @Override
+  public <T extends Serializable> boolean append(int opID, T key, ByteBuffer value) {
+    return false;
   }
 
   @Override
@@ -116,8 +132,28 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
   }
 
   @Override
+  public boolean put(int opID, String key, ByteBuffer value) {
+    return false;
+  }
+
+  @Override
+  public <T extends Serializable> boolean put(int opID, T key, ByteBuffer value) {
+    return false;
+  }
+
+  @Override
   public boolean put(int opID, long key, byte[] value) {
     return memoryManager.put(opID, key, value);
+  }
+
+  @Override
+  public boolean put(int opID, String key, byte[] value) {
+    return false;
+  }
+
+  @Override
+  public <T extends Serializable> boolean put(int opID, T key, byte[] value) {
+    return false;
   }
 
   @Override
@@ -148,6 +184,11 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
   }
 
   @Override
+  public <T extends Serializable> ByteBuffer get(int opID, T key) {
+    return null;
+  }
+
+  @Override
   public byte[] getBytes(int opID, byte[] key) {
     return memoryManager.getBytes(opID, key);
   }
@@ -155,6 +196,16 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
   @Override
   public byte[] getBytes(int opID, long key) {
     return memoryManager.getBytes(opID, key);
+  }
+
+  @Override
+  public byte[] getBytes(int opID, String key) {
+    return new byte[0];
+  }
+
+  @Override
+  public <T extends Serializable> byte[] getBytes(int opID, T key) {
+    return new byte[0];
   }
 
   @Override
@@ -178,6 +229,16 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
   }
 
   @Override
+  public boolean containsKey(int opID, String key) {
+    return false;
+  }
+
+  @Override
+  public <T extends Serializable> boolean containsKey(int opID, T key) {
+    return false;
+  }
+
+  @Override
   public boolean delete(int opID, ByteBuffer key) {
     return memoryManager.delete(opID, key);
   }
@@ -193,6 +254,16 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
   }
 
   @Override
+  public boolean delete(int opID, String key) {
+    return false;
+  }
+
+  @Override
+  public <T extends Serializable> boolean delete(int opID, T key) {
+    return false;
+  }
+
+  @Override
   public OperationMemoryManager addOperation(int opID) {
     if (operationMap.containsKey(opID)) {
       return null;
@@ -201,6 +272,21 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
     memoryManager.addOperation(opID);
     operationMap.put(opID, temp);
     return temp;
+  }
+
+  @Override
+  public boolean flush(int opID, ByteBuffer key) {
+    return false;
+  }
+
+  @Override
+  public boolean flush(int opID, byte[] key) {
+    return false;
+  }
+
+  @Override
+  public boolean flush(int opID, long key) {
+    return false;
   }
 
   public Map<String, Integer> getKeyMap() {
@@ -239,9 +325,7 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
    */
   public boolean putBulk(int opID, String key, ByteBuffer value) {
     if (!keyMap.containsKey(key)) {
-      LOG.info(String.format("No entry for the given key : %s .The key needs to"
-          + " be registered with the BufferedMemoryManager", key));
-      return false;
+      registerKey(key, MemoryManagerContext.BULK_MM_STEP_SIZE);
     }
     //TODO: need to make sure that there are no memory leaks here
     //TODO: do we need to lock on key value? will more than 1 thread submit the same key
@@ -278,6 +362,26 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
         temp);
   }
 
+  @Override
+  public <T extends Serializable> boolean flush(int opID, T key) {
+    return false;
+  }
+
+  @Override
+  public boolean close(int opID, ByteBuffer key) {
+    return false;
+  }
+
+  @Override
+  public boolean close(int opID, byte[] key) {
+    return false;
+  }
+
+  @Override
+  public boolean close(int opID, long key) {
+    return false;
+  }
+
   /**
    * Slight variation of flush for so that the last ByteBuffer does not need to be copied into the
    * map
@@ -311,5 +415,10 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
     keyMapCurrent.remove(key);
     keyMapBuffers.remove(key);
     return true;
+  }
+
+  @Override
+  public <T extends Serializable> boolean close(int opID, T key) {
+    return false;
   }
 }
