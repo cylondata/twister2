@@ -21,6 +21,7 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.mpi.MPIBuffer;
 import edu.iu.dsc.tws.comms.mpi.MPIMessage;
 import edu.iu.dsc.tws.comms.mpi.MPISendMessage;
+import edu.iu.dsc.tws.comms.mpi.io.types.DataSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.types.ObjectSerializer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
@@ -132,23 +133,64 @@ public class MPIMessageSerializer implements MessageSerializer {
     MessageType type = sendMessage.getMPIMessage().getType();
     switch (type) {
       case INTEGER:
-        break;
+        return serializeData(payload, sendMessage.getSerializationState(), buffer, type);
       case LONG:
-        break;
+        return serializeData(payload, sendMessage.getSerializationState(), buffer, type);
       case DOUBLE:
-        break;
+        return serializeData(payload, sendMessage.getSerializationState(), buffer, type);
       case OBJECT:
-        return objectSerializer.serializeObject(payload, sendMessage, buffer);
+        return serializeData(payload, sendMessage.getSerializationState(), buffer, type);
       case BYTE:
-        break;
+        return serializeData(payload, sendMessage.getSerializationState(), buffer, type);
       case STRING:
-        break;
+        return serializeData(payload, sendMessage.getSerializationState(), buffer, type);
       case BUFFER:
         return serializeBuffer(payload, sendMessage, buffer);
       default:
         break;
     }
     return false;
+  }
+
+  private boolean serializeData(Object content, SerializeState state,
+                                MPIBuffer targetBuffer, MessageType messageType) {
+    ByteBuffer byteBuffer = targetBuffer.getByteBuffer();
+    // okay we need to serialize the header
+    if (state.getPart() == SerializeState.Part.INIT) {
+      // okay we need to serialize the data
+      int dataLength = DataSerializer.serializeData(content, messageType, state, serializer);
+      LOG.info(String.format("serialize data length: %d pos %d",
+          dataLength, byteBuffer.position()));
+      // add the header bytes to the total bytes
+      state.setPart(SerializeState.Part.BODY);
+    }
+
+    // now we can serialize the body
+    if (state.getPart() != SerializeState.Part.BODY) {
+      return false;
+    }
+
+    boolean completed = DataSerializer.copyDataToBuffer(content,
+        messageType, byteBuffer, state, serializer);
+    LOG.info(String.format("pos after data %d",
+        byteBuffer.position()));
+    // now set the size of the buffer
+    targetBuffer.setSize(byteBuffer.position());
+
+    // okay we are done with the message
+    if (completed) {
+      // add the key size at the end to total size
+      LOG.info(String.format("total after complete %d",
+          state.getTotalBytes()));
+      state.setBytesCopied(0);
+      state.setBufferNo(0);
+      state.setData(null);
+      state.setPart(SerializeState.Part.INIT);
+      state.setKeySize(0);
+      return true;
+    } else {
+      return false;
+    }
   }
 
   private boolean serializeBuffer(Object object, MPISendMessage sendMessage, MPIBuffer buffer) {
