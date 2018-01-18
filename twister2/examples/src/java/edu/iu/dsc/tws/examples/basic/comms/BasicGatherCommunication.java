@@ -100,6 +100,9 @@ public class BasicGatherCommunication implements IContainer {
       aggregate = channel.gather(newCfg, MessageType.OBJECT, MessageType.INTEGER,  0, sources,
           dest, new FinalGatherReceive());
 
+//      aggregate = channel.gather(newCfg, MessageType.OBJECT, 0, sources,
+//          dest, new FinalGatherReceive());
+
       for (int i = 0; i < noOfTasksPerExecutor; i++) {
         // the map thread where data is produced
         LOG.info(String.format("%d Starting %d", id, i + id * noOfTasksPerExecutor));
@@ -142,8 +145,10 @@ public class BasicGatherCommunication implements IContainer {
         for (int i = 0; i < 1; i++) {
           String data = generateStringData();
           // lets generate a message
-          while (!aggregate.send(task, new KeyedContent(task, data,
-              MessageType.INTEGER, MessageType.OBJECT), 0)) {
+          KeyedContent mesage = new KeyedContent(task, data,
+              MessageType.INTEGER, MessageType.OBJECT);
+//
+          while (!aggregate.send(task, mesage, 0)) {
             // lets wait a litte and try again
             try {
               Thread.sleep(1);

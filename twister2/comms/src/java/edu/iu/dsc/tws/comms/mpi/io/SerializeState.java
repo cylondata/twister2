@@ -49,6 +49,11 @@ public class SerializeState {
     this.totalBytes = totalBytes;
   }
 
+  public int addTotalBytes(int bytes) {
+    totalBytes += bytes;
+    return totalBytes;
+  }
+
   public int getCurrentObject() {
     return currentObject;
   }
