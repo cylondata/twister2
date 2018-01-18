@@ -11,17 +11,20 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi.io;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
+
+import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.mpi.MPIBuffer;
 import edu.iu.dsc.tws.comms.mpi.MPIMessage;
+import edu.iu.dsc.tws.comms.mpi.io.types.DataDeserializer;
+import edu.iu.dsc.tws.comms.mpi.io.types.KeyDeserializer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
 public class MPIMultiMessageDeserializer implements MessageDeSerializer {
@@ -105,127 +108,14 @@ public class MPIMultiMessageDeserializer implements MessageDeSerializer {
 
   private Object buildMessage(MPIMessage mpiMessage, List<MPIBuffer> message, int length) {
     MessageType type = mpiMessage.getType();
-    switch (type) {
-      case INTEGER:
-        break;
-      case LONG:
-        break;
-      case DOUBLE:
-        break;
-      case OBJECT:
-        if (keyed) {
-          return buildKeyedMessage(mpiMessage.getKeyType(), type, message, length);
-        } else {
-          return buildObject(message, length);
-        }
-      case BYTE:
-        break;
-      case STRING:
-        break;
-      case BUFFER:
-        break;
-      default:
-        break;
-    }
-    return null;
-  }
+    if (keyed) {
+      Pair<Object, Integer> keyPair = KeyDeserializer.deserializeKey(mpiMessage.getKeyType(),
+          message, serializer);
 
-  private KeyedContent buildKeyedMessage(MessageType keyType, MessageType contentType,
-                                         List<MPIBuffer> buffers, int length) {
-    int currentIndex = 0;
-    int keyLength = 0;
-    Object key = null;
-    // first we need to read the key type
-    switch (keyType) {
-      case INTEGER:
-        keyLength = 4;
-        currentIndex = getReadIndex(buffers, currentIndex, 4);
-//        LOG.info(String.format("%d read key pos: %d", executor,
-//            buffers.get(currentIndex).getByteBuffer().position()));
-        key = buffers.get(currentIndex).getByteBuffer().getInt();
-        break;
-      case SHORT:
-        keyLength = 2;
-        currentIndex = getReadIndex(buffers, currentIndex, 2);
-        key = buffers.get(currentIndex).getByteBuffer().getShort();
-        break;
-      case LONG:
-        keyLength = 8;
-        currentIndex = getReadIndex(buffers, currentIndex, 8);
-        key = buffers.get(currentIndex).getByteBuffer().getInt();
-        break;
-      case DOUBLE:
-        keyLength = 8;
-        currentIndex = getReadIndex(buffers, currentIndex, 8);
-        key = buffers.get(currentIndex).getByteBuffer().getInt();
-        break;
-      case OBJECT:
-        currentIndex = getReadIndex(buffers, currentIndex, 4);
-        keyLength = buffers.get(currentIndex).getByteBuffer().getInt();
-        key = buildObject(buffers, keyLength);
-        break;
-      case BYTE:
-        currentIndex = getReadIndex(buffers, currentIndex, 4);
-        keyLength = buffers.get(currentIndex).getByteBuffer().getInt();
-        key = readBytes(buffers, keyLength);
-        break;
-      case STRING:
-        currentIndex = getReadIndex(buffers, currentIndex, 4);
-        keyLength = buffers.get(currentIndex).getByteBuffer().getInt();
-        key = new String(readBytes(buffers, keyLength));
-        break;
-      default:
-        break;
-    }
-
-    // now lets read the object
-    int objectLength = length - keyLength;
-    Object object = buildObject(buffers, objectLength);
-    return new KeyedContent(key, object);
-  }
-
-  private byte[] readBytes(List<MPIBuffer> buffers, int length) {
-    byte[] bytes = new byte[length];
-    int currentRead = 0;
-    int index = 0;
-    while (currentRead < length) {
-      ByteBuffer byteBuffer = buffers.get(index).getByteBuffer();
-      int remaining = byteBuffer.remaining();
-      int needRead = length - currentRead;
-      int canRead =  remaining > needRead ? needRead : remaining;
-      byteBuffer.get(bytes, currentRead, canRead);
-      currentRead += canRead;
-      index++;
-      if (index >= buffers.size()) {
-        throw new RuntimeException("Error in buffer management");
-      }
-    }
-    return bytes;
-  }
-
-  private int getReadIndex(List<MPIBuffer> buffers, int currentIndex, int expectedSize) {
-    for (int i = currentIndex; i < buffers.size(); i++) {
-      ByteBuffer byteBuffer = buffers.get(i).getByteBuffer();
-      int remaining = byteBuffer.remaining();
-      if (remaining > expectedSize) {
-        return i;
-      }
-    }
-    throw new RuntimeException("Something is wrong in the buffer management");
-  }
-
-  private Object buildObject(List<MPIBuffer> buffers, int length) {
-    MPIByteArrayInputStream input = null;
-    try {
-      input = new MPIByteArrayInputStream(buffers, length);
-      return serializer.deserialize(input);
-    } finally {
-      if (input != null) {
-        try {
-          input.close();
-        } catch (IOException ignore) {
-        }
-      }
+      return DataDeserializer.deserializeData(message, length - keyPair.getValue(),
+          serializer, type);
+    } else {
+      return DataDeserializer.deserializeData(message, length, serializer, type);
     }
   }
 }

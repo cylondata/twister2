@@ -24,7 +24,6 @@ import edu.iu.dsc.tws.comms.mpi.MPIMessage;
 import edu.iu.dsc.tws.comms.mpi.MPISendMessage;
 import edu.iu.dsc.tws.comms.mpi.io.types.DataSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.types.KeySerializer;
-import edu.iu.dsc.tws.comms.mpi.io.types.ObjectSerializer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
 public class MPIMultiMessageSerializer implements MessageSerializer {
@@ -32,7 +31,6 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
 
   private Queue<MPIBuffer> sendBuffers;
   private KryoSerializer serializer;
-  private ObjectSerializer objectSerializer;
   private int executor;
 
   private static final int HEADER_SIZE = 16;
@@ -45,7 +43,6 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
 
   public MPIMultiMessageSerializer(KryoSerializer kryoSerializer, int exec) {
     this.serializer = kryoSerializer;
-    this.objectSerializer = new ObjectSerializer(serializer);
     this.executor = exec;
   }
 
@@ -140,32 +137,14 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
   private boolean serializeMessage(Object payload,
                                    MPISendMessage sendMessage, MPIBuffer buffer) {
     MessageType type = sendMessage.getMPIMessage().getType();
-    switch (type) {
-      case INTEGER:
-        break;
-      case LONG:
-        break;
-      case DOUBLE:
-        break;
-      case OBJECT:
-        if (!keyed) {
-          return serializeData(payload,
-              sendMessage.getSerializationState(), buffer, type);
-        } else {
-          KeyedContent kc = (KeyedContent) payload;
-          return serializeKeyedData(kc.getObject(), kc.getSource(),
-              sendMessage.getSerializationState(), buffer, kc.getContentType(), kc.getKeyType());
-        }
-      case BYTE:
-        break;
-      case STRING:
-        break;
-      case BUFFER:
-        break;
-      default:
-        break;
+    if (!keyed) {
+      return serializeData(payload,
+          sendMessage.getSerializationState(), buffer, type);
+    } else {
+      KeyedContent kc = (KeyedContent) payload;
+      return serializeKeyedData(kc.getObject(), kc.getSource(),
+          sendMessage.getSerializationState(), buffer, kc.getContentType(), kc.getKeyType());
     }
-    return false;
   }
 
   @SuppressWarnings("rawtypes")

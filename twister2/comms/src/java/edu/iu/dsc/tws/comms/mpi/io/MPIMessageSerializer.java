@@ -22,7 +22,7 @@ import edu.iu.dsc.tws.comms.mpi.MPIBuffer;
 import edu.iu.dsc.tws.comms.mpi.MPIMessage;
 import edu.iu.dsc.tws.comms.mpi.MPISendMessage;
 import edu.iu.dsc.tws.comms.mpi.io.types.DataSerializer;
-import edu.iu.dsc.tws.comms.mpi.io.types.ObjectSerializer;
+import edu.iu.dsc.tws.comms.mpi.io.types.KeySerializer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
 public class MPIMessageSerializer implements MessageSerializer {
@@ -31,8 +31,14 @@ public class MPIMessageSerializer implements MessageSerializer {
   private Queue<MPIBuffer> sendBuffers;
   private KryoSerializer serializer;
   private Config config;
-  private ObjectSerializer objectSerializer;
   private boolean keyed;
+  private int executor;
+
+  private static final int HEADER_SIZE = 16;
+  // we need to put the message length and key length if keyed message
+  private static final int MAX_SUB_MESSAGE_HEADER_SPACE = 4 + 4;
+  // for s normal message we only put the length
+  private static final int NORMAL_SUB_MESSAGE_HEADER_SIZE = 4;
 
   public MPIMessageSerializer(KryoSerializer kryoSerializer) {
     this.serializer = kryoSerializer;
@@ -42,7 +48,6 @@ public class MPIMessageSerializer implements MessageSerializer {
   public void init(Config cfg, Queue<MPIBuffer> buffers, boolean k) {
     this.config = cfg;
     this.sendBuffers = buffers;
-    objectSerializer = new ObjectSerializer(serializer);
     this.keyed = k;
   }
 
@@ -131,25 +136,78 @@ public class MPIMessageSerializer implements MessageSerializer {
   private boolean serializeBody(Object payload,
                              MPISendMessage sendMessage, MPIBuffer buffer) {
     MessageType type = sendMessage.getMPIMessage().getType();
-    switch (type) {
-      case INTEGER:
+    if (type == MessageType.OBJECT || type == MessageType.INTEGER || type == MessageType.LONG
+        || type == MessageType.DOUBLE || type == MessageType.BYTE || type == MessageType.STRING) {
+      if (!keyed) {
         return serializeData(payload, sendMessage.getSerializationState(), buffer, type);
-      case LONG:
-        return serializeData(payload, sendMessage.getSerializationState(), buffer, type);
-      case DOUBLE:
-        return serializeData(payload, sendMessage.getSerializationState(), buffer, type);
-      case OBJECT:
-        return serializeData(payload, sendMessage.getSerializationState(), buffer, type);
-      case BYTE:
-        return serializeData(payload, sendMessage.getSerializationState(), buffer, type);
-      case STRING:
-        return serializeData(payload, sendMessage.getSerializationState(), buffer, type);
-      case BUFFER:
-        return serializeBuffer(payload, sendMessage, buffer);
-      default:
-        break;
+      } else {
+        KeyedContent keyedContent = (KeyedContent) payload;
+        return serializeKeyedData(keyedContent.getObject(), keyedContent.getSource(),
+            sendMessage.getSerializationState(), buffer, type, keyedContent.getKeyType());
+      }
+    }
+    if (type == MessageType.BUFFER) {
+      return serializeBuffer(payload, sendMessage, buffer);
     }
     return false;
+  }
+
+  private boolean serializeKeyedData(Object content, Object key, SerializeState state,
+                                     MPIBuffer targetBuffer, MessageType contentType,
+                                     MessageType keyType) {
+    ByteBuffer byteBuffer = targetBuffer.getByteBuffer();
+    // okay we need to serialize the header
+    if (state.getPart() == SerializeState.Part.INIT) {
+      int keyLength = KeySerializer.serializeKey(key,
+          keyType, state, serializer);
+      // okay we need to serialize the data
+      int dataLength = DataSerializer.serializeData(content,
+          contentType, state, serializer);
+      LOG.info(String.format("%d serialize data length: %d pos %d",
+          executor, dataLength, byteBuffer.position()));
+    }
+
+    if (state.getPart() == SerializeState.Part.INIT
+        || state.getPart() == SerializeState.Part.HEADER) {
+      boolean complete = KeySerializer.copyKeyToBuffer(key,
+          keyType, targetBuffer.getByteBuffer(), state, serializer);
+      LOG.info(String.format("%d pos after key copy %d",
+          executor, byteBuffer.position()));
+      LOG.info(String.format("%d total after key %d",
+          executor, state.getTotalBytes()));
+      if (complete) {
+        state.setPart(SerializeState.Part.BODY);
+      } else {
+        state.setPart(SerializeState.Part.HEADER);
+      }
+    }
+
+    // now we can serialize the body
+    if (state.getPart() != SerializeState.Part.BODY) {
+      return false;
+    }
+
+    boolean completed = DataSerializer.copyDataToBuffer(content,
+        contentType, byteBuffer, state, serializer);
+    LOG.info(String.format("%d pos after data %d",
+        executor, byteBuffer.position()));
+    // now set the size of the buffer
+    targetBuffer.setSize(byteBuffer.position());
+
+    // okay we are done with the message
+    if (completed) {
+      // add the key size at the end to total size
+      LOG.info(String.format("%d total after complete %d",
+          executor, state.getTotalBytes()));
+      state.setBytesCopied(0);
+      state.setBufferNo(0);
+      state.setData(null);
+      state.setPart(SerializeState.Part.INIT);
+      state.setKeySize(0);
+      return true;
+    } else {
+      return false;
+    }
   }
 
   private boolean serializeData(Object content, SerializeState state,
