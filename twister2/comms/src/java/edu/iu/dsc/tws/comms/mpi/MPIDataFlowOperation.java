@@ -52,6 +52,9 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
   // we may have multiple routes throughus
 
   protected MessageType type;
+  protected MessageType keyType = MessageType.SHORT;
+  protected boolean isKeyed = false;
+
   protected int executor;
   private int sendCountPartial = 0;
   private int sendCountFull = 0;
@@ -103,14 +106,13 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
   }
 
   public void init(Config cfg, MessageType messageType, TaskPlan plan,
-                   int graphEdge, Set<Integer> recvExecutors,
-                   boolean lastReceiver, MPIMessageReceiver msgReceiver,
-                   Map<Integer, ArrayBlockingQueue<Pair<Object, MPISendMessage>>>
-                       pendingSendPerSource,
-                   Map<Integer, Queue<Pair<Object, MPIMessage>>> pRMPS,
-                   Map<Integer, Queue<MPIMessage>> pendingReceiveDesrialize,
-                   MessageSerializer serializer,
-                   MessageDeSerializer deSerializer) {
+               int graphEdge, Set<Integer> recvExecutors,
+               boolean lastReceiver, MPIMessageReceiver msgReceiver,
+               Map<Integer, ArrayBlockingQueue<Pair<Object, MPISendMessage>>> pendingSendPerSource,
+               Map<Integer, Queue<Pair<Object, MPIMessage>>> pRMPS,
+               Map<Integer, Queue<MPIMessage>> pendingReceiveDesrialize,
+               MessageSerializer serializer,
+               MessageDeSerializer deSerializer, boolean k) {
     this.config = cfg;
     this.instancePlan = plan;
     this.edge = graphEdge;
@@ -120,6 +122,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
     this.receivingExecutors = recvExecutors;
     this.isLastReceiver = lastReceiver;
     this.receiver = msgReceiver;
+    this.isKeyed = k;
 
     this.pendingReceiveMessagesPerSource = pRMPS;
     this.pendingSendMessagesPerSource = pendingSendPerSource;
@@ -148,8 +151,8 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
 
   protected void initSerializers() {
     // initialize the serializers
-    messageSerializer.init(config, sendBuffers);
-    messageDeSerializer.init(config);
+    messageSerializer.init(config, sendBuffers, isKeyed);
+    messageDeSerializer.init(config, isKeyed);
   }
 
   /**
@@ -511,6 +514,9 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
       byteBuffer.flip();
       if (currentMessage == null) {
         currentMessage = new MPIMessage(id, type, MPIMessageDirection.IN, this);
+        if (isKeyed) {
+          currentMessage.setKeyType(keyType);
+        }
         currentMessages.put(id, currentMessage);
         MessageHeader header = messageDeSerializer.buildHeader(buffer, e);
 //        LOG.info(String.format("%d header source %d length %d", executor,
@@ -546,5 +552,9 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
 
   public MessageType getType() {
     return type;
+  }
+
+  public void setKeyType(MessageType keyType) {
+    this.keyType = keyType;
   }
 }

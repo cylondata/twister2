@@ -21,30 +21,6 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
 package edu.iu.dsc.tws.examples;
 
 import java.util.ArrayList;
@@ -73,11 +49,13 @@ import edu.iu.dsc.tws.task.api.Task;
 import edu.iu.dsc.tws.task.core.TaskExecutorFixedThread;
 import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraphGenerator;
 import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraphParser;
+import edu.iu.dsc.tws.task.taskgraphbuilder.TaskGraphScheduler;
 
 public class MultiTaskGraphExample implements IContainer {
 
   private static final Logger LOG = Logger.getLogger(SimpleTaskGraph.class.getName());
 
+  private DataFlowOperation gather;
   private DataFlowOperation direct;
   private DataFlowOperation direct1;
   private TaskExecutorFixedThread taskExecutor;
@@ -118,6 +96,11 @@ public class MultiTaskGraphExample implements IContainer {
         destination, new MultiTaskGraphExample.PingPongReceive());
     taskExecutor.initCommunication(channel, direct1);
 
+    MessageReceiver receiver = null;
+
+    gather = channel.gather(newCfg, MessageType.OBJECT, 0, sources,
+        destination, receiver);
+
     //For Dataflow Task Graph Generation call the dataflow task graph generator
     MapWorker sourceTask = new MapWorker(0, direct);
     ReceiveWorker sinkTask1 = new ReceiveWorker();
@@ -150,7 +133,26 @@ public class MultiTaskGraphExample implements IContainer {
       parsedTaskSet = dataflowTaskGraphParser.dataflowTaskGraphParseAndSchedule();
     }
 
+    //This code is for moving the explicit scheduling outside of the example program
     if (!parsedTaskSet.isEmpty()) {
+      TaskGraphScheduler taskGraphScheduler = new TaskGraphScheduler();
+      if (containerId == 0) {
+        LOG.log(Level.INFO, "Parsed Job Value:" + parsedTaskSet.iterator().next());
+        taskExecutor.registerTask(parsedTaskSet.iterator().next());
+        taskExecutor.submitTask(0);
+        taskExecutor.progres();
+      } else if (containerId > 0) {
+        Map<Task, ArrayList<Integer>> taskMap = taskGraphScheduler.taskgraphScheduler(
+            parsedTaskSet, containerId);
+        taskExecutor.setTaskMessageProcessLimit(10000);
+        for (Map.Entry<Task, ArrayList<Integer>> taskEntry : taskMap.entrySet()) {
+          taskExecutor.registerSinkTask(taskEntry.getKey(), taskEntry.getValue());
+          taskExecutor.progres();
+        }
+      }
+    }
+
+    /*if (!parsedTaskSet.isEmpty()) {
       if (containerId == 0) {
         LOG.log(Level.INFO, "Parsed Job Value:" + parsedTaskSet.iterator().next());
         taskExecutor.registerTask(parsedTaskSet.iterator().next());
@@ -216,7 +218,7 @@ public class MultiTaskGraphExample implements IContainer {
           }
         }
       }
-    }
+    }*/
   }
 
   /**

@@ -11,11 +11,14 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.memory;
 
+import java.io.Serializable;
 import java.nio.ByteBuffer;
 
 /**
  * This controls the memory manager for a single operation. An example of an operation is a
  * gather, reduce.
+ * Note: This class needs to implment all the methods in the Memory Manager interface without the
+ * operationID parameter
  */
 public class OperationMemoryManager {
 
@@ -37,15 +40,23 @@ public class OperationMemoryManager {
     return parent.append(operationID, key, value);
   }
 
+  public boolean append(byte[] key, ByteBuffer value) {
+    return parent.append(operationID, key, value);
+  }
+
   public boolean append(long key, ByteBuffer value) {
     return parent.append(operationID, key, value);
   }
 
-  public boolean put(ByteBuffer key, ByteBuffer value) {
-    return parent.put(operationID, key, value);
+  public boolean append(String key, ByteBuffer value) {
+    return parent.append(operationID, key, value);
   }
 
-  public boolean put(byte[] key, byte[] value) {
+  public <T extends Serializable> boolean append(T key, ByteBuffer value) {
+    return parent.append(operationID, key, value);
+  }
+
+  public boolean put(ByteBuffer key, ByteBuffer value) {
     return parent.put(operationID, key, value);
   }
 
@@ -57,7 +68,27 @@ public class OperationMemoryManager {
     return parent.put(operationID, key, value);
   }
 
+  public boolean put(String key, ByteBuffer value) {
+    return parent.put(operationID, key, value);
+  }
+
+  public <T extends Serializable> boolean put(T key, ByteBuffer value) {
+    return parent.put(operationID, key, value);
+  }
+
+  public boolean put(byte[] key, byte[] value) {
+    return parent.put(operationID, key, value);
+  }
+
   public boolean put(long key, byte[] value) {
+    return parent.put(operationID, key, value);
+  }
+
+  public boolean put(String key, byte[] value) {
+    return parent.put(operationID, key, value);
+  }
+
+  public <T extends Serializable> boolean put(T key, byte[] value) {
     return parent.put(operationID, key, value);
   }
 
@@ -73,6 +104,18 @@ public class OperationMemoryManager {
     return parent.get(operationID, key);
   }
 
+  public ByteBuffer get(String key) {
+    return parent.get(operationID, key);
+  }
+
+  public <T extends Serializable> ByteBuffer get(T key) {
+    return parent.get(operationID, key);
+  }
+
+  public byte[] getBytes(ByteBuffer key) {
+    return parent.getBytes(operationID, key);
+  }
+
   public byte[] getBytes(byte[] key) {
     return parent.getBytes(operationID, key);
   }
@@ -81,7 +124,11 @@ public class OperationMemoryManager {
     return parent.getBytes(operationID, key);
   }
 
-  public byte[] getBytes(ByteBuffer key) {
+  public byte[] getBytes(String key) {
+    return parent.getBytes(operationID, key);
+  }
+
+  public <T extends Serializable> byte[] getBytes(T key) {
     return parent.getBytes(operationID, key);
   }
 
@@ -97,6 +144,14 @@ public class OperationMemoryManager {
     return parent.containsKey(operationID, key);
   }
 
+  public boolean containsKey(String key) {
+    return parent.containsKey(operationID, key);
+  }
+
+  public <T extends Serializable> boolean containsKey(T key) {
+    return parent.containsKey(operationID, key);
+  }
+
   public boolean delete(ByteBuffer key) {
     return parent.delete(operationID, key);
   }
@@ -107,6 +162,50 @@ public class OperationMemoryManager {
 
   public boolean delete(long key) {
     return parent.delete(operationID, key);
+  }
+
+  public boolean delete(String key) {
+    return parent.delete(operationID, key);
+  }
+
+  public <T extends Serializable> boolean delete(T key) {
+    return parent.delete(operationID, key);
+  }
+
+  public boolean flush(ByteBuffer key) {
+    return parent.flush(operationID, key);
+  }
+
+  public boolean flush(byte[] key) {
+    return parent.flush(operationID, key);
+  }
+
+  public boolean flush(long key) {
+    return parent.flush(operationID, key);
+  }
+
+  public boolean flush(String key) {
+    return parent.flush(operationID, key);
+  }
+
+  public <T extends Serializable> boolean flush(int opID, T key) {
+    return parent.flush(operationID, key);
+  }
+
+  public boolean close(ByteBuffer key) {
+    return parent.close(operationID, key);
+  }
+
+  public boolean close(byte[] key) {
+    return parent.close(operationID, key);
+  }
+
+  public boolean close(long key) {
+    return parent.close(operationID, key);
+  }
+
+  public boolean close(String key) {
+    return parent.close(operationID, key);
   }
 
   public int getOperationID() {

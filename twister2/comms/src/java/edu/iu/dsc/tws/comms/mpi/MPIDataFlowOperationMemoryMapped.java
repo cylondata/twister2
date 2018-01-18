@@ -174,8 +174,9 @@ public class MPIDataFlowOperationMemoryMapped
 
   protected void initSerializers() {
     // initialize the serializers
-    messageSerializer.init(config, sendBuffers);
-    messageDeSerializer.init(config);
+    // TODO : check this because we are setting to false
+    messageSerializer.init(config, sendBuffers, false);
+    messageDeSerializer.init(config, false);
   }
 
   /**

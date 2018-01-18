@@ -31,13 +31,16 @@ public class MPIMultiMessageDeserializer implements MessageDeSerializer {
 
   private int executor;
 
+  private boolean keyed;
+
   public MPIMultiMessageDeserializer(KryoSerializer kryoSerializer, int exec) {
     this.serializer = kryoSerializer;
     this.executor = exec;
   }
 
   @Override
-  public void init(Config cfg) {
+  public void init(Config cfg, boolean k) {
+    this.keyed = k;
   }
 
   @Override
@@ -110,15 +113,17 @@ public class MPIMultiMessageDeserializer implements MessageDeSerializer {
       case DOUBLE:
         break;
       case OBJECT:
-        return buildObject(message, length);
+        if (keyed) {
+          return buildKeyedMessage(mpiMessage.getKeyType(), type, message, length);
+        } else {
+          return buildObject(message, length);
+        }
       case BYTE:
         break;
       case STRING:
         break;
       case BUFFER:
         break;
-      case KEYED:
-        return buildKeyedMessage(mpiMessage.getKeyType(), type, message, length);
       default:
         break;
     }

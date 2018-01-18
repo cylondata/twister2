@@ -333,7 +333,7 @@ public class ResourceAllocator {
         .putAll(updatedConfig)
         .put(SchedulerContext.TWISTER2_PACKAGES_PATH, scpPath)
 //        .put(SchedulerContext.TWISTER2_PACKAGES_PATH, packagesPath)
-//        .put(SchedulerContext.JOB_PACKAGE_URI, packageURI)
+        .put(SchedulerContext.JOB_PACKAGE_URI, packageURI)
         .build();
 
     // this is a handler chain based execution in resource allocator. We need to
@@ -413,7 +413,7 @@ public class ResourceAllocator {
     // gives the url of the file to be uploaded
     LOG.log(Level.INFO, "Calling uploader to upload the package content");
     URI packageURI = uploader.uploadPackage(jobDirectory);
-
+    LOG.log(Level.INFO, "Uploaded file to URL: " + packageURI.toString());
     // now launch the launcher
     // Update the runtime config with the packageURI
     Config runtimeAll = Config.newBuilder()

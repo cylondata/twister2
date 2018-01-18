@@ -58,6 +58,11 @@ public interface TWSCommunication {
                            MessageReceiver receiver);
 
   DataFlowOperation gather(Map<String, Object> properties, MessageType type,
+                           MessageType keyType, int edge1,
+                           Set<Integer> sourceTasks, int destTask,
+                           MessageReceiver receiver);
+
+  DataFlowOperation gather(Map<String, Object> properties, MessageType type,
                            int edge1,
                            Set<Integer> sourceTasks, int destTask,
                            MessageReceiver receiver,

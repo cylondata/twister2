@@ -161,7 +161,7 @@ public class MPIDataFlowLoadBalance implements DataFlowOperation, MPIMessageRece
     delegete.init(cfg, t, taskPlan, edge,
         router.receivingExecutors(), router.isLastReceiver(), this,
         pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
-        pendingReceiveDeSerializations, messageSerializer, messageDeSerializer);
+        pendingReceiveDeSerializations, messageSerializer, messageDeSerializer, false);
   }
 
   @Override

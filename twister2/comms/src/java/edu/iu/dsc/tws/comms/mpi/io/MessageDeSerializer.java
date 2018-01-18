@@ -28,7 +28,7 @@ import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.mpi.MPIBuffer;
 
 public interface MessageDeSerializer {
-  void init(Config cfg);
+  void init(Config cfg, boolean keyed);
 
   Object build(Object partialObject, int edge);
 

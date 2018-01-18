@@ -21,7 +21,7 @@ import edu.iu.dsc.tws.rsched.spi.uploaders.UploaderException;
 /**
  * a class to use when no uploading is necessary
  */
-public class NullUploader implements IUploader{
+public class NullUploader implements IUploader {
 
   /**
    * Initialize the uploader

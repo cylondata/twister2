@@ -72,7 +72,7 @@ public class MPIDataFlowAllGather implements DataFlowOperation {
     this.executor = instancePlan.getThisExecutor();
     ReduceFinalReceiver finalRcvr = new ReduceFinalReceiver();
     reduce = new MPIDataFlowGather(channel, sources, middleTask,
-        finalRcvr, partialReceiver, 0, 0);
+        finalRcvr, partialReceiver, 0, 0, config, type, instancePlan, edge);
     reduce.init(config, type, instancePlan, reduceEdge);
 //    Map<Integer, List<Integer>> receiveExpects = reduce.receiveExpectedTaskIds();
 //    finalRcvr.init(receiveExpects);
