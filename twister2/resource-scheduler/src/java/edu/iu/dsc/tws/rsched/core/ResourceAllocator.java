@@ -32,6 +32,7 @@ import edu.iu.dsc.tws.rsched.spi.scheduler.LauncherException;
 import edu.iu.dsc.tws.rsched.spi.statemanager.IStateManager;
 import edu.iu.dsc.tws.rsched.spi.uploaders.IUploader;
 import edu.iu.dsc.tws.rsched.spi.uploaders.UploaderException;
+import edu.iu.dsc.tws.rsched.uploaders.scp.ScpContext;
 import edu.iu.dsc.tws.rsched.utils.FileUtils;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import edu.iu.dsc.tws.rsched.utils.TarGzipPacker;
@@ -317,14 +318,20 @@ public class ResourceAllocator {
     LOG.log(Level.INFO, "Calling uploader to upload the package content");
     URI packageURI = uploader.uploadPackage(jobDirectory);
 
+    // add scp address as a prefix to returned URI: user@ip
+    String scpServerAdress = ScpContext.scpConnection(updatedConfig);
+    String scpPath = scpServerAdress + ":" + packageURI.toString() + "/";
+    LOG.log(Level.INFO, "SCP PATH to copy files from: " + scpPath);
+
     // this is a temporary solution
-    String packagesPath = "root@149.165.150.81:/root/.twister2/repository/";
+//    String packagesPath = "root@149.165.150.81:/root/.twister2/repository/";
+//    String packagesPath = "149.165.150.81:~/.twister2/repository/";
 
     // now launch the launcher
     // Update the runtime config with the packageURI
     updatedConfig = Config.newBuilder()
         .putAll(updatedConfig)
-        .put(SchedulerContext.TWISTER2_PACKAGES_PATH, packageURI.toString())
+        .put(SchedulerContext.TWISTER2_PACKAGES_PATH, scpPath)
 //        .put(SchedulerContext.TWISTER2_PACKAGES_PATH, packagesPath)
 //        .put(SchedulerContext.JOB_PACKAGE_URI, packageURI)
         .build();
