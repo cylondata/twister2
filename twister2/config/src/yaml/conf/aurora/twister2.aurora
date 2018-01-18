@@ -29,7 +29,8 @@ jcp = '-cp ' \
   'lib/libtaskscheduler-java.jar:' \
   'lib/ompijavabinding-3.0.0.jar:' \
   'lib/libcommon-java.jar:' \
-  'lib/libcomms-java.jar'
+  'lib/libcomms-java.jar:' \
+  '{{USER_JOB_JAR_FILE}}'
 
 # construct environment variables
 envs = ' -Djob_desc_file={{JOB_DESCRIPTION_FILE}}' \

@@ -66,7 +66,7 @@ public final class WorkerHello {
     String configDir = System.getProperty(SchedulerContext.CONFIG_DIR);
     String clusterType = System.getProperty(SchedulerContext.CLUSTER_TYPE);
     // lets get the job jar file from system properties or environment
-    String jobJar = System.getProperty(SchedulerContext.JOB_FILE);
+    String jobJar = System.getProperty(SchedulerContext.USER_JOB_JAR_FILE);
 
     // now lets see weather these are overridden in environment variables
     Map<String, Object> environmentProperties = JobUtils.readCommandLineOpts();
@@ -83,8 +83,8 @@ public final class WorkerHello {
       clusterType = (String) environmentProperties.get(SchedulerContext.CLUSTER_TYPE);
     }
 
-    if (environmentProperties.containsKey(SchedulerContext.JOB_FILE)) {
-      jobJar = (String) environmentProperties.get(SchedulerContext.JOB_FILE);
+    if (environmentProperties.containsKey(SchedulerContext.USER_JOB_JAR_FILE)) {
+      jobJar = (String) environmentProperties.get(SchedulerContext.USER_JOB_JAR_FILE);
     }
 
     if (configDir == null) {
@@ -98,7 +98,7 @@ public final class WorkerHello {
         putAll(config).
         put(MPIContext.TWISTER2_HOME.getKey(), twister2Home).
         put(MPIContext.TWISTER2_CLUSTER_TYPE, clusterType).
-        put(MPIContext.JOB_FILE, jobJar).
+        put(MPIContext.USER_JOB_JAR_FILE, jobJar).
         putAll(environmentProperties).
         putAll(cfg).
         build();

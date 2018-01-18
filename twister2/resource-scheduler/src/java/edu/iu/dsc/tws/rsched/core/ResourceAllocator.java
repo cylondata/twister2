@@ -65,7 +65,7 @@ public class ResourceAllocator {
     String configDir = System.getProperty(SchedulerContext.CONFIG_DIR);
     String clusterType = System.getProperty(SchedulerContext.CLUSTER_TYPE);
     // lets get the job jar file from system properties or environment
-    String jobJar = System.getProperty(SchedulerContext.JOB_FILE);
+    String jobJar = System.getProperty(SchedulerContext.USER_JOB_JAR_FILE);
 
     // now lets see weather these are overridden in environment variables
     Map<String, Object> environmentProperties = JobUtils.readCommandLineOpts();
@@ -82,8 +82,8 @@ public class ResourceAllocator {
       clusterType = (String) environmentProperties.get(SchedulerContext.CLUSTER_TYPE);
     }
 
-    if (environmentProperties.containsKey(SchedulerContext.JOB_FILE)) {
-      jobJar = (String) environmentProperties.get(SchedulerContext.JOB_FILE);
+    if (environmentProperties.containsKey(SchedulerContext.USER_JOB_JAR_FILE)) {
+      jobJar = (String) environmentProperties.get(SchedulerContext.USER_JOB_JAR_FILE);
     }
 
     if (configDir == null) {
@@ -97,7 +97,7 @@ public class ResourceAllocator {
         putAll(config).
         put(MPIContext.TWISTER2_HOME.getKey(), twister2Home).
         put(MPIContext.TWISTER2_CLUSTER_TYPE, clusterType).
-        put(MPIContext.JOB_FILE, jobJar).
+        put(MPIContext.USER_JOB_JAR_FILE, jobJar).
         putAll(environmentProperties).
         putAll(cfg).
         build();
@@ -116,7 +116,7 @@ public class ResourceAllocator {
       throw new RuntimeException("Failed to create the base temp directory for job", e);
     }
 
-    String jobFile = SchedulerContext.jobFile(config);
+    String jobFile = SchedulerContext.userJobJarFile(config);
     if (jobFile == null) {
       throw new RuntimeException("Job file cannot be null");
     }
@@ -185,7 +185,7 @@ public class ResourceAllocator {
       throw new RuntimeException("Failed to create the base temp directory for job", e);
     }
 
-    String jobJarFile = SchedulerContext.jobFile(config);
+    String jobJarFile = SchedulerContext.userJobJarFile(config);
     if (jobJarFile == null) {
       throw new RuntimeException("Job file cannot be null");
     }
@@ -215,9 +215,11 @@ public class ResourceAllocator {
     }
 
     // first update the job description
+    // get file name without directory
+    String jobJarFileName = Paths.get(jobJarFile).getFileName().toString();
     JobAPI.JobFormat.Builder format = JobAPI.JobFormat.newBuilder();
     format.setType(JobAPI.JobFormatType.SHUFFLE);
-    format.setJobFile(Paths.get(jobJarFile).getFileName().toString());
+    format.setJobFile(jobJarFileName);
     updatedJob = JobAPI.Job.newBuilder(job).setJobFormat(format).build();
 
     // add job description file to the archive
@@ -231,6 +233,7 @@ public class ResourceAllocator {
     // add the job description filename to the config
     updatedConfig = Config.newBuilder()
         .putAll(config)
+        .put(SchedulerContext.USER_JOB_JAR_FILE, jobJarFileName)
         .put(SchedulerContext.JOB_DESCRIPTION_FILE, jobDescFileName)
         .build();
 
