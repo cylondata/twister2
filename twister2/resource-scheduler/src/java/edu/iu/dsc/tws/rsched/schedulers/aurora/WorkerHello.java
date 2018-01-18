@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.aurora;
 
-import java.util.Map;
+import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -38,10 +38,22 @@ public final class WorkerHello {
     System.out.println();
     System.out.println("Job description file: " + jobDescFile);
     printJob(job);
+
+    Config config = loadConfig();
+    config = overrideConfigs(job, config);
+
+    System.out.println();
+    System.out.println("Config from files: ");
+    System.out.println(config.toString());
+
+//    config = Config.newBuilder()
+//        .putAll(job.getConfig().)
+//        .build();
   }
 
   public static void printJob(JobAPI.Job job) {
     System.out.println("Job name: " + job.getJobName());
+    System.out.println("Job file: " + job.getJobFormat().getJobFile());
     System.out.println("job containers: " + job.getJobResources().getNoOfContainers());
     System.out.println("CPUs: " + job.getJobResources().getContainer().getAvailableCPU());
     System.out.println("RAM: " + job.getJobResources().getContainer().getAvailableMemory());
@@ -55,56 +67,44 @@ public final class WorkerHello {
   }
 
   /**
-   * loadConfig from config files and also from envirobnment variables
-   * @param cfg the config values in this map will be put into returned Config
+   * loadConfig from config files
    * @return
    */
-  public static Config loadConfig(Map<String, Object> cfg) {
+  public static Config loadConfig() {
 
     // first lets read the essential properties from java system properties
-    String twister2Home = System.getProperty(SchedulerContext.TWISTER_2_HOME);
-    String configDir = System.getProperty(SchedulerContext.CONFIG_DIR);
+    String twister2Home = Paths.get("").toAbsolutePath().toString();
     String clusterType = System.getProperty(SchedulerContext.CLUSTER_TYPE);
-    // lets get the job jar file from system properties or environment
-    String jobJar = System.getProperty(SchedulerContext.USER_JOB_JAR_FILE);
-
-    // now lets see weather these are overridden in environment variables
-    Map<String, Object> environmentProperties = JobUtils.readCommandLineOpts();
-
-    if (environmentProperties.containsKey(SchedulerContext.TWISTER_2_HOME)) {
-      twister2Home = (String) environmentProperties.get(SchedulerContext.CONFIG_DIR);
-    }
-
-    if (environmentProperties.containsKey(SchedulerContext.CONFIG_DIR)) {
-      configDir = (String) environmentProperties.get(SchedulerContext.CONFIG_DIR);
-    }
-
-    if (environmentProperties.containsKey(SchedulerContext.CLUSTER_TYPE)) {
-      clusterType = (String) environmentProperties.get(SchedulerContext.CLUSTER_TYPE);
-    }
-
-    if (environmentProperties.containsKey(SchedulerContext.USER_JOB_JAR_FILE)) {
-      jobJar = (String) environmentProperties.get(SchedulerContext.USER_JOB_JAR_FILE);
-    }
-
-    if (configDir == null) {
-      configDir = twister2Home + "/conf";
-    }
+    String configDir = twister2Home + "/" + clusterType;
 
     LOG.log(Level.INFO, String.format("Loading configuration with twister2_home: %s and "
-        + "configuration: %s and cluster: %s", twister2Home, configDir, clusterType));
-    Config config = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterType);
+        + "configuration: %s", twister2Home, configDir));
+    Config config = ConfigLoader.loadConfig(twister2Home, configDir);
     return Config.newBuilder().
         putAll(config).
         put(MPIContext.TWISTER2_HOME.getKey(), twister2Home).
+        put(MPIContext.TWISTER2_CONF.getKey(), configDir).
         put(MPIContext.TWISTER2_CLUSTER_TYPE, clusterType).
-        put(MPIContext.USER_JOB_JAR_FILE, jobJar).
-        putAll(environmentProperties).
-        putAll(cfg).
         build();
   }
 
+  /**
+   * configs from job object will override the ones in config from files if any
+   * @return
+   */
+  public static Config overrideConfigs(JobAPI.Job job, Config config) {
 
+    Config.Builder builder = Config.newBuilder().putAll(config);
+
+    JobAPI.Config conf = job.getConfig();
+    System.out.println("\nnumber of configs to override from job conf: " + conf.getKvsCount());
+    for (JobAPI.Config.KeyValue kv : conf.getKvsList()) {
+      System.out.println(kv.getKey() + ": " + kv.getValue());
+      builder.put(kv.getKey(), kv.getValue());
+    }
+
+    return builder.build();
+  }
 
 
 }

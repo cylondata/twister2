@@ -46,7 +46,9 @@ public final class BasicAuroraJob {
 
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
-    jobConfig.putConfig(config);
+//    jobConfig.putConfig(config); // no point for putting all config
+// some configs that will be needed at workers can be put.
+//    jobConfig.put("twister2.job.some.property", "some.value");
 
     // build the job
     BasicJob basicJob = BasicJob.newBuilder()
