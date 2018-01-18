@@ -34,7 +34,7 @@ jcp = '-cp ' \
 
 # construct environment variables
 envs = ' -Djob_desc_file={{JOB_DESCRIPTION_FILE}}' \
-  ' -Dtest_test={{JOB_DESCRIPTION_FILE}}'
+  ' -Dcluster_type={{CLUSTER_TYPE}}'
 
 # java command to run the worker in sandboxes
 javacmd = 'cd twister2-core && java %s %s  {{CONTAINER_CLASS}}' % (jcp, envs) 

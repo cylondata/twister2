@@ -117,6 +117,7 @@ public class AuroraLauncher implements ILauncher {
     envs.put(AuroraField.TWISTER2_PACKAGES_PATH, SchedulerContext.packagesPath(config));
     envs.put(AuroraField.JOB_DESCRIPTION_FILE, SchedulerContext.jobDescriptionFile(config));
     envs.put(AuroraField.USER_JOB_JAR_FILE, SchedulerContext.userJobJarFile(config));
+    envs.put(AuroraField.CLUSTER_TYPE, SchedulerContext.clusterType(config));
     return envs;
   }
 

@@ -230,13 +230,6 @@ public class ResourceAllocator {
           + jobDescFileName);
     }
 
-    // add the job description filename to the config
-    updatedConfig = Config.newBuilder()
-        .putAll(config)
-        .put(SchedulerContext.USER_JOB_JAR_FILE, jobJarFileName)
-        .put(SchedulerContext.JOB_DESCRIPTION_FILE, jobDescFileName)
-        .build();
-
     // add job jar file to the archive
     added = packer.addFileToArchive(jobJarFile);
     if (!added) {
@@ -253,6 +246,13 @@ public class ResourceAllocator {
     // close the archive file
     packer.close();
     LOG.log(Level.INFO, "Archive file created: " + packer.getArchiveFileName());
+
+    // add the job description filename, userJobJar and conf directory to the config
+    updatedConfig = Config.newBuilder()
+        .putAll(config)
+        .put(SchedulerContext.USER_JOB_JAR_FILE, jobJarFileName)
+        .put(SchedulerContext.JOB_DESCRIPTION_FILE, jobDescFileName)
+        .build();
 
     return tempDirPathString;
   }
