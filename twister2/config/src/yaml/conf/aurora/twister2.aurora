@@ -17,7 +17,7 @@ copy_java = Process(
 # first construct classpath to run Java container class
 jcp = '-cp ' \
   'lib/libresource-scheduler-java.jar:' \
-  'lib/snakeyaml-1.15.jar' \
+  'lib/snakeyaml-1.15.jar:' \
   'lib/commons-io-2.5.jar:' \
   'lib/libconfig-java.jar:' \
   'lib/protobuf-java-2.5.0.jar:' \
