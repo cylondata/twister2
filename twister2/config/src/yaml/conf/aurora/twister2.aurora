@@ -32,9 +32,13 @@ jcp = '-cp ' \
   'twister2-core/lib/libcomms-java.jar:' \
   'twister2-job/{{USER_JOB_JAR_FILE}}'
 
-# construct environment variables
+# construct environment variables, get some ports for testing
 envs = ' -Djob_desc_file={{JOB_DESCRIPTION_FILE}}' \
-  ' -Dcluster_type={{CLUSTER_TYPE}}'
+  ' -Dcluster_type={{CLUSTER_TYPE}}' \
+  ' -DhttpPort={{thermos.ports[http]}}' \
+  ' -DtcpPort={{thermos.ports[tcp]}}' \
+  ' -DudpPort={{thermos.ports[udp]}}' \
+  ' -DanyPort={{thermos.ports[any]}}'
 
 # java command to run the worker in sandboxes
 javacmd = 'java %s %s  {{CONTAINER_CLASS}}' % (jcp, envs) 

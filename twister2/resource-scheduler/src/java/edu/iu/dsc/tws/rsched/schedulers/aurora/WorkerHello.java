@@ -35,6 +35,11 @@ public final class WorkerHello {
     jobDescFile = DIR_PREFIX_FOR_JOB_ARCHIVE + jobDescFile;
     JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
 
+    System.out.println("httpPort: " + System.getProperty("httpPort"));
+    System.out.println("tcpPort: " + System.getProperty("tcpPort"));
+    System.out.println("udpPort: " + System.getProperty("udpPort"));
+    System.out.println("anyPort: " + System.getProperty("anyPort"));
+
     System.out.println("Hellllooo from WorkerHello class");
     System.out.println("I am working");
     System.out.println();
