@@ -34,7 +34,7 @@ import org.apache.commons.compress.utils.IOUtils;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-
+import static edu.iu.dsc.tws.common.config.Context.DIR_PREFIX_FOR_JOB_ARCHIVE;
 /**
  * a class to generate a tar.gz file.
  * Used to pack multiple files into an archive file
@@ -44,7 +44,6 @@ public final class TarGzipPacker {
 
   private TarArchiveOutputStream tarOutputStream;
   private Path archiveFile;
-  private static final String DIR_PREFIX_FOR_ARCHIVE = "./twister2-core/";
 
   /**
    * create the class object from create method
@@ -121,7 +120,7 @@ public final class TarGzipPacker {
    */
   public boolean addFileToArchive(String filename) {
     File file = new File(filename);
-    return addFileToArchive(file, DIR_PREFIX_FOR_ARCHIVE);
+    return addFileToArchive(file, DIR_PREFIX_FOR_JOB_ARCHIVE);
   }
 
   /**
@@ -157,7 +156,7 @@ public final class TarGzipPacker {
 
     File dir = new File(path);
 
-    String prefix = DIR_PREFIX_FOR_ARCHIVE + dir.getName() + "/";
+    String prefix = DIR_PREFIX_FOR_JOB_ARCHIVE + dir.getName() + "/";
     for (File file : dir.listFiles()) {
       boolean added = addFileToArchive(file, prefix);
       if (!added) {
@@ -175,7 +174,7 @@ public final class TarGzipPacker {
    */
   public boolean addFileToArchive(String filename, byte[] contents) {
 
-    String filePathInTar = DIR_PREFIX_FOR_ARCHIVE + filename;
+    String filePathInTar = DIR_PREFIX_FOR_JOB_ARCHIVE + filename;
     try {
       TarArchiveEntry entry = new TarArchiveEntry(filePathInTar);
       entry.setSize(contents.length);

@@ -21,6 +21,7 @@ import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.mpi.MPIContext;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
+import static edu.iu.dsc.tws.common.config.Context.DIR_PREFIX_FOR_JOB_ARCHIVE;
 
 public final class WorkerHello {
   public static final Logger LOG = Logger.getLogger(WorkerHello.class.getName());
@@ -31,6 +32,7 @@ public final class WorkerHello {
   public static void main(String[] args) {
 
     String jobDescFile = System.getProperty(SchedulerContext.JOB_DESCRIPTION_FILE_CMD_VAR);
+    jobDescFile = DIR_PREFIX_FOR_JOB_ARCHIVE + jobDescFile;
     JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
 
     System.out.println("Hellllooo from WorkerHello class");
@@ -75,7 +77,7 @@ public final class WorkerHello {
     // first lets read the essential properties from java system properties
     String twister2Home = Paths.get("").toAbsolutePath().toString();
     String clusterType = System.getProperty(SchedulerContext.CLUSTER_TYPE);
-    String configDir = twister2Home + "/" + clusterType;
+    String configDir = twister2Home + "/" + DIR_PREFIX_FOR_JOB_ARCHIVE + clusterType;
 
     LOG.log(Level.INFO, String.format("Loading configuration with twister2_home: %s and "
         + "configuration: %s", twister2Home, configDir));

@@ -16,28 +16,28 @@ copy_java = Process(
 
 # first construct classpath to run Java container class
 jcp = '-cp ' \
-  'lib/libresource-scheduler-java.jar:' \
-  'lib/snakeyaml-1.15.jar:' \
-  'lib/commons-io-2.5.jar:' \
-  'lib/libconfig-java.jar:' \
-  'lib/protobuf-java-2.5.0.jar:' \
-  'lib/guava-18.0.jar:' \
-  'lib/libapi-java.jar:' \
-  'lib/libproto_resource_scheduler_java.jar:' \
-  'lib/libproto_job_java.jar:' \
-  'lib/libproto_job_state_java.jar:' \
-  'lib/libtaskscheduler-java.jar:' \
-  'lib/ompijavabinding-3.0.0.jar:' \
-  'lib/libcommon-java.jar:' \
-  'lib/libcomms-java.jar:' \
-  '{{USER_JOB_JAR_FILE}}'
+  'twister2-core/lib/libresource-scheduler-java.jar:' \
+  'twister2-core/lib/snakeyaml-1.15.jar:' \
+  'twister2-core/lib/commons-io-2.5.jar:' \
+  'twister2-core/lib/libconfig-java.jar:' \
+  'twister2-core/lib/protobuf-java-2.5.0.jar:' \
+  'twister2-core/lib/guava-18.0.jar:' \
+  'twister2-core/lib/libapi-java.jar:' \
+  'twister2-core/lib/libproto_resource_scheduler_java.jar:' \
+  'twister2-core/lib/libproto_job_java.jar:' \
+  'twister2-core/lib/libproto_job_state_java.jar:' \
+  'twister2-core/lib/libtaskscheduler-java.jar:' \
+  'twister2-core/lib/ompijavabinding-3.0.0.jar:' \
+  'twister2-core/lib/libcommon-java.jar:' \
+  'twister2-core/lib/libcomms-java.jar:' \
+  'twister2-job/{{USER_JOB_JAR_FILE}}'
 
 # construct environment variables
 envs = ' -Djob_desc_file={{JOB_DESCRIPTION_FILE}}' \
   ' -Dcluster_type={{CLUSTER_TYPE}}'
 
 # java command to run the worker in sandboxes
-javacmd = 'cd twister2-core && java %s %s  {{CONTAINER_CLASS}}' % (jcp, envs) 
+javacmd = 'java %s %s  {{CONTAINER_CLASS}}' % (jcp, envs) 
 
 run_java = Process(
   name = 'testjava',
