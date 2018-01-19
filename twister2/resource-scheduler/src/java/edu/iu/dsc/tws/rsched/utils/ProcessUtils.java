@@ -224,6 +224,16 @@ public final class ProcessUtils {
     return ret == 0;
   }
 
+  public static boolean extractPackageWithoutDir(
+      String packageName, String targetFolder, boolean isVerbose, boolean isInheritIO) {
+    String cmd = String.format("tar -xvf %s --strip-components 1", packageName);
+
+    int ret = runSyncProcess(isInheritIO,
+        splitTokens(cmd), new StringBuilder(), new File(targetFolder));
+
+    return ret == 0;
+  }
+
   public static boolean createTarPackage(
       String packageName, String outputName, String targetFolder,
       boolean isVerbose, boolean isInheritIO) {

@@ -46,6 +46,11 @@ public final class ResourceSchedulerUtils {
           corePackagePath, dst));
       return false;
     }
+
+    ProcessUtils.extractPackageWithoutDir(workingDirectory + "/" + jobName
+            + "/twister2-job.tar.gz",
+        workingDirectory + "/" + jobName, true, false);
+
     return true;
   }
 
