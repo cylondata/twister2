@@ -24,8 +24,8 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.mpi.MPIContext;
 import edu.iu.dsc.tws.comms.mpi.MPIMessage;
 
-public class BatchGatherPartialReceiver implements MessageReceiver {
-  private static final Logger LOG = Logger.getLogger(BatchGatherPartialReceiver.class.getName());
+public class GatherBatchPartialReceiver implements MessageReceiver {
+  private static final Logger LOG = Logger.getLogger(GatherBatchPartialReceiver.class.getName());
 
   // lets keep track of the messages
   // for each task we need to keep track of incoming messages
@@ -73,7 +73,9 @@ public class BatchGatherPartialReceiver implements MessageReceiver {
         ((MPIMessage) object).incrementRefCount();
       }
       m.add(object);
-      finishedMessages.put(source, true);
+      if ((flags & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) {
+        finishedMessages.put(source, true);
+      }
     }
     return canAdd;
   }

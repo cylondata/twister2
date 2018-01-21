@@ -9,31 +9,29 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.api;
+package edu.iu.dsc.tws.comms.mpi.io;
 
 import java.util.List;
 import java.util.Map;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.MessageReceiver;
 
-public interface KeyedMessageReceiver {
-  /**
-   * Initialize the message receiver with tasks from which messages are expected
-   * For each sub edge in graph, for each path, gives the expected task ids
-   *
-   * subedge -> (path -> ids)
-   *
-   * @param expectedIds expected task ids
-   */
-  void init(Config cfg, DataFlowOperation op,
-            Map<Integer, Map<Integer, List<Integer>>> expectedIds);
+public class GatherBatchKeyedFinalReceiver implements MessageReceiver {
+  @Override
+  public void init(Config cfg, DataFlowOperation op,
+                   Map<Integer, List<Integer>> expectedIds) {
 
-  /**
-   * The actual message callback
-   *
-   * @param object the actual message
-   */
-  boolean onMessage(int source, int path, int target, int flags, Object object);
+  }
 
-  void progress();
+  @Override
+  public boolean onMessage(int source, int path, int target, int flags, Object object) {
+    return false;
+  }
+
+  @Override
+  public void progress() {
+
+  }
 }

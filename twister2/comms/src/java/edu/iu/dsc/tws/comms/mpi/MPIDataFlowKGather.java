@@ -20,7 +20,6 @@ import java.util.Set;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.KeyedMessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
@@ -36,7 +35,7 @@ public class MPIDataFlowKGather implements DataFlowOperation {
   private Map<Integer, MPIDataFlowGather> gatherMap;
 
   // the final receiver
-  private KeyedMessageReceiver finalReceiver;
+  private MessageReceiver finalReceiver;
 
   private TWSMPIChannel channel;
 
@@ -50,7 +49,7 @@ public class MPIDataFlowKGather implements DataFlowOperation {
 
   public MPIDataFlowKGather(TWSMPIChannel chnl,
                             Set<Integer> sources, Set<Integer> destination,
-                            KeyedMessageReceiver finalRecv, Set<Integer> es) {
+                            MessageReceiver finalRecv, Set<Integer> es) {
     this.channel = chnl;
     this.sources = sources;
     this.destinations = destination;
@@ -118,7 +117,7 @@ public class MPIDataFlowKGather implements DataFlowOperation {
     this.type = t;
     this.plan = instancePlan;
 
-    Map<Integer, Map<Integer, List<Integer>>> finalReceives = new HashMap<>();
+    Map<Integer, List<Integer>> finalReceives = new HashMap<>();
     List<Integer> edgeList = new ArrayList<>(edges);
     Collections.sort(edgeList);
     int count = 0;
@@ -130,7 +129,9 @@ public class MPIDataFlowKGather implements DataFlowOperation {
       gatherMap.put(dest, gather);
       count++;
 
-      finalReceives.put(dest, gather.receiveExpectedTaskIds());
+      for (Map.Entry<Integer, List<Integer>> e : gather.receiveExpectedTaskIds().entrySet()) {
+        finalReceives.put(e.getKey(), e.getValue());
+      }
     }
 
     finalReceiver.init(config, this, finalReceives);

@@ -18,7 +18,6 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.KeyedMessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.DataFlowCommunication;
@@ -108,8 +107,8 @@ public class MPIDataFlowCommunication extends DataFlowCommunication {
   public DataFlowOperation keyedReduce(Map<String, Object> properties, MessageType type,
                                        Set<Integer> edge,
                                        Set<Integer> sourceTasks, Set<Integer> destTasks,
-                                       KeyedMessageReceiver receiver,
-                                       KeyedMessageReceiver partial) {
+                                       MessageReceiver receiver,
+                                       MessageReceiver partial) {
     // merge with the user specified configuration, user specified will take precedence
     Config mergedCfg = Config.newBuilder().putAll(config).putAll(properties).build();
 
@@ -192,7 +191,7 @@ public class MPIDataFlowCommunication extends DataFlowCommunication {
   public DataFlowOperation keyedGather(Map<String, Object> properties, MessageType type,
                                        Set<Integer> edge,
                                        Set<Integer> sourceTasks, Set<Integer> destTasks,
-                                       KeyedMessageReceiver receiver) {
+                                       MessageReceiver receiver) {
     // merge with the user specified configuration, user specified will take precedence
     Config mergedCfg = Config.newBuilder().putAll(config).putAll(properties).build();
 

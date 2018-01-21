@@ -20,7 +20,6 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.GatherBatchReceiver;
-import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.mpi.MPIContext;
 import edu.iu.dsc.tws.comms.mpi.MPIMessage;
@@ -32,6 +31,7 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
   // for each task we need to keep track of incoming messages
   private Map<Integer, Map<Integer, List<Object>>> messages = new HashMap<>();
   private Map<Integer, Map<Integer, Boolean>> finished = new HashMap<>();
+  private Map<Integer, List<Object>> finalMessages = new HashMap<>();
   private DataFlowOperation dataFlowOperation;
   private int executor;
   private int sendPendingMax = 128;
@@ -57,9 +57,11 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
       }
       messages.put(e.getKey(), messagesPerTask);
       finished.put(e.getKey(), finishedPerTask);
+      finalMessages.put(e.getKey(), new ArrayList<>());
     }
     this.dataFlowOperation = op;
     this.executor = dataFlowOperation.getTaskPlan().getThisExecutor();
+    this.gatherBatchReceiver.init(cfg, op, expectedIds);
   }
 
   @Override
@@ -67,9 +69,6 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
     // add the object to the map
     boolean canAdd = true;
 
-    if (messages.get(target) == null) {
-      throw new RuntimeException(String.format("%d Partial receive error %d", executor, target));
-    }
     List<Object> m = messages.get(target).get(source);
     Map<Integer, Boolean> finishedMessages = finished.get(target);
     if (m.size() > sendPendingMax) {
@@ -86,39 +85,34 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
 
   public void progress() {
     for (int t : messages.keySet()) {
-      boolean canProgress = true;
-      while (canProgress) {
-        // now check weather we have the messages for this source
-        Map<Integer, List<Object>> map = messages.get(t);
-        Map<Integer, Boolean> finishedForTarget = finished.get(t);
-        boolean found = true;
-        for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
-          if (e.getValue().size() == 0 && !finishedForTarget.get(e.getKey())) {
-            found = false;
-            canProgress = false;
-          }
+      boolean allFinished = true;
+      // now check weather we have the messages for this source
+      Map<Integer, List<Object>> map = messages.get(t);
+      Map<Integer, Boolean> finishedForTarget = finished.get(t);
+      boolean found = true;
+      for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
+        if (e.getValue().size() == 0 && !finishedForTarget.get(e.getKey())) {
+          found = false;
         }
+      }
 
-        if (found) {
-          List<Object> out = new ArrayList<>();
-          for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
-            List<Object> valueList = e.getValue();
-            if (valueList.size() > 0) {
-              Object value = valueList.get(0);
-              out.add(value);
-            }
-          }
-          if (dataFlowOperation.sendPartial(t, out, 0, MessageFlags.FLAGS_MULTI_MSG)) {
-            for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
-              List<Object> value = e.getValue();
-              if (value.size() > 0) {
-                value.remove(0);
-              }
-            }
-          } else {
-            canProgress = false;
+      if (found) {
+        List<Object> out = new ArrayList<>();
+        for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
+          List<Object> valueList = e.getValue();
+          if (valueList.size() > 0) {
+            Object value = valueList.get(0);
+            out.add(value);
+            allFinished = false;
           }
         }
+        finalMessages.get(t).addAll(out);
+      } else {
+        allFinished = false;
+      }
+
+      if (allFinished) {
+        gatherBatchReceiver.receive(t, finalMessages.get(t).iterator());
       }
     }
   }
