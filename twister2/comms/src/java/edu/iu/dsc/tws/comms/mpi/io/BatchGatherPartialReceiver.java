@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -25,12 +24,13 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.mpi.MPIContext;
 import edu.iu.dsc.tws.comms.mpi.MPIMessage;
 
-public class StreamingPartialGatherReceiver implements MessageReceiver {
-  private static final Logger LOG = Logger.getLogger(
-      StreamingPartialGatherReceiver.class.getName());
+public class BatchGatherPartialReceiver implements MessageReceiver {
+  private static final Logger LOG = Logger.getLogger(BatchGatherPartialReceiver.class.getName());
+
   // lets keep track of the messages
   // for each task we need to keep track of incoming messages
-  private Map<Integer, Map<Integer, List<Object>>> messages = new TreeMap<>();
+  private Map<Integer, Map<Integer, List<Object>>> messages = new HashMap<>();
+  private Map<Integer, Map<Integer, Boolean>> finished = new HashMap<>();
   private DataFlowOperation dataFlowOperation;
   private int executor;
   private int sendPendingMax = 128;
@@ -43,11 +43,14 @@ public class StreamingPartialGatherReceiver implements MessageReceiver {
     LOG.info(String.format("%d expected ids %s", executor, expectedIds));
     for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
       Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
+      Map<Integer, Boolean> finishedPerTask = new HashMap<>();
 
       for (int i : e.getValue()) {
         messagesPerTask.put(i, new ArrayList<Object>());
+        finishedPerTask.put(i, false);
       }
       messages.put(e.getKey(), messagesPerTask);
+      finished.put(e.getKey(), finishedPerTask);
     }
     this.dataFlowOperation = op;
     this.executor = dataFlowOperation.getTaskPlan().getThisExecutor();
@@ -62,6 +65,7 @@ public class StreamingPartialGatherReceiver implements MessageReceiver {
       throw new RuntimeException(String.format("%d Partial receive error %d", executor, target));
     }
     List<Object> m = messages.get(target).get(source);
+    Map<Integer, Boolean> finishedMessages = finished.get(target);
     if (m.size() > sendPendingMax) {
       canAdd = false;
     } else {
@@ -69,6 +73,7 @@ public class StreamingPartialGatherReceiver implements MessageReceiver {
         ((MPIMessage) object).incrementRefCount();
       }
       m.add(object);
+      finishedMessages.put(source, true);
     }
     return canAdd;
   }
@@ -79,9 +84,10 @@ public class StreamingPartialGatherReceiver implements MessageReceiver {
       while (canProgress) {
         // now check weather we have the messages for this source
         Map<Integer, List<Object>> map = messages.get(t);
+        Map<Integer, Boolean> finishedForTarget = finished.get(t);
         boolean found = true;
         for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
-          if (e.getValue().size() == 0) {
+          if (e.getValue().size() == 0 && !finishedForTarget.get(e.getKey())) {
             found = false;
             canProgress = false;
           }
@@ -90,13 +96,18 @@ public class StreamingPartialGatherReceiver implements MessageReceiver {
         if (found) {
           List<Object> out = new ArrayList<>();
           for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
-            Object e1 = e.getValue().get(0);
-            out.add(e1);
+            List<Object> valueList = e.getValue();
+            if (valueList.size() > 0) {
+              Object value = valueList.get(0);
+              out.add(value);
+            }
           }
           if (dataFlowOperation.sendPartial(t, out, 0, MessageFlags.FLAGS_MULTI_MSG)) {
             for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
               List<Object> value = e.getValue();
-              value.remove(0);
+              if (value.size() > 0) {
+                value.remove(0);
+              }
             }
           } else {
             canProgress = false;
@@ -106,3 +117,4 @@ public class StreamingPartialGatherReceiver implements MessageReceiver {
     }
   }
 }
+

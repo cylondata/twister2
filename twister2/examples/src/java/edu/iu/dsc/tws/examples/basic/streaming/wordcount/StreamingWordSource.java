@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.basic.streaming.wordcount;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.logging.Logger;
@@ -44,8 +45,10 @@ public class StreamingWordSource implements Runnable {
 
   private int executor;
 
+  private List<String> sampleWords = new ArrayList<>();
+
   public StreamingWordSource(Config config, DataFlowOperation operation, int words,
-                             List<Integer> dests, int tId) {
+                             List<Integer> dests, int tId, int noOfSampleWords) {
     this.operation = operation;
     this.tempCharacters = new char[MAX_CHARS];
     this.noOfWords = words;
@@ -54,14 +57,21 @@ public class StreamingWordSource implements Runnable {
     this.noOfDestinations = destinations.size();
     this.randomString = new RandomString(MAX_CHARS, new Random(), RandomString.ALPHANUM);
     this.executor = operation.getTaskPlan().getThisExecutor();
+
+    for (int i = 0; i < noOfSampleWords; i++) {
+      sampleWords.add(randomString.nextRandomSizeString());
+    }
   }
 
   @Override
   public void run() {
+    int nextIndex = 0;
     for (int i = 0; i < noOfWords; i++) {
-      String word = generateWord();
+      String word = sampleWords.get(random.nextInt(sampleWords.size()));
       int destIndex = Math.abs(word.hashCode() % noOfDestinations);
-      int dest = destinations.get(destIndex);
+      nextIndex = nextIndex % noOfDestinations;
+      int dest = destinations.get(nextIndex);
+      nextIndex++;
       // lets try to process if send doesn't succeed
       while (!operation.send(taskId, word, 0, dest)) {
         try {

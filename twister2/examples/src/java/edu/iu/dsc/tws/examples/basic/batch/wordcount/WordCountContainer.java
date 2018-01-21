@@ -83,7 +83,7 @@ public class WordCountContainer implements IContainer {
           // the map thread where data is produced
           LOG.info(String.format("%d Starting %d", id, i + id * noOfTasksPerExecutor));
           Thread mapThread = new Thread(new StreamingWordSource(config, keyGather, 1000,
-              new ArrayList<>(destinations), noOfTasksPerExecutor * id + i));
+              new ArrayList<>(destinations), noOfTasksPerExecutor * id + i, 200));
           mapThread.start();
         }
       }
