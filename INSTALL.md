@@ -1,5 +1,5 @@
 # Prerequisites
------
+
 1. Operating System
   * Twister2 is tested and known to work on,
     *  Red Hat Enterprise Linux Server release 7
@@ -51,7 +51,6 @@
   ```
 
 # Compiling Twister2
-----
 
 The following commands can be used to compile Twister2
 
