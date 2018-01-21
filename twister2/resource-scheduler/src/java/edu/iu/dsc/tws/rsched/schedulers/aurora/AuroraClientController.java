@@ -128,7 +128,7 @@ class AuroraClientController {
     StringBuilder stderr = new StringBuilder();
     int status =
         ProcessUtils.runSyncProcess(false, auroraCmd.toArray(
-            new String[auroraCmd.size()]), stderr, new File("."));
+            new String[auroraCmd.size()]), stderr, new File("."), false);
 
     if (status != 0) {
       LOG.severe(String.format(

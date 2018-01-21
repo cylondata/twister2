@@ -44,6 +44,10 @@ public class MPIDataFlowKGather implements DataFlowOperation {
 
   private int executor;
 
+  private TaskPlan plan;
+
+  private MessageType type;
+
   public MPIDataFlowKGather(TWSMPIChannel chnl,
                             Set<Integer> sources, Set<Integer> destination,
                             KeyedMessageReceiver finalRecv, Set<Integer> es) {
@@ -100,17 +104,20 @@ public class MPIDataFlowKGather implements DataFlowOperation {
 
   @Override
   public MessageType getType() {
-    return null;
+    return type;
   }
 
   @Override
   public TaskPlan getTaskPlan() {
-    return null;
+    return plan;
   }
 
   @Override
-  public void init(Config config, MessageType type, TaskPlan instancePlan, int edge) {
+  public void init(Config config, MessageType t, TaskPlan instancePlan, int edge) {
     executor = instancePlan.getThisExecutor();
+    this.type = t;
+    this.plan = instancePlan;
+
     Map<Integer, Map<Integer, List<Integer>>> finalReceives = new HashMap<>();
     List<Integer> edgeList = new ArrayList<>(edges);
     Collections.sort(edgeList);
@@ -118,8 +125,8 @@ public class MPIDataFlowKGather implements DataFlowOperation {
     for (int dest : destinations) {
       GatherFinalReceiver finalRcvr = new GatherFinalReceiver(dest);
       MPIDataFlowGather gather = new MPIDataFlowGather(channel, sources, dest,
-          finalRcvr, count, dest, config, type, instancePlan, edgeList.get(count));
-      gather.init(config, type, instancePlan, edgeList.get(count));
+          finalRcvr, count, dest, config, t, instancePlan, edgeList.get(count));
+      gather.init(config, t, instancePlan, edgeList.get(count));
       gatherMap.put(dest, gather);
       count++;
 

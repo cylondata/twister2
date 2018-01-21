@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.KeyedMessageReceiver;
+import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.mpi.io.KeyedContent;
 
 public class WordAggregate implements KeyedMessageReceiver {
@@ -28,12 +29,18 @@ public class WordAggregate implements KeyedMessageReceiver {
 
   private DataFlowOperation operation;
 
+  private int totalCount = 0;
+
   private Map<String, Integer> wordCounts = new HashMap<>();
+
+  private int executor;
 
   @Override
   public void init(Config cfg, DataFlowOperation op,
                    Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
-
+    TaskPlan plan = op.getTaskPlan();
+    this.executor = op.getTaskPlan().getThisExecutor();
+    LOG.info(String.format("%d final expected task ids %s", plan.getThisExecutor(), expectedIds));
   }
 
   @Override
@@ -43,6 +50,8 @@ public class WordAggregate implements KeyedMessageReceiver {
         LOG.info("Object: " + o);
         if (o instanceof KeyedContent) {
           addValue(((KeyedContent) o).getObject().toString());
+        } else {
+          addValue(o.toString());
         }
       }
     } else if (object instanceof KeyedContent) {
@@ -51,7 +60,6 @@ public class WordAggregate implements KeyedMessageReceiver {
     } else {
       addValue(object.toString());
     }
-
 
     return true;
   }
@@ -62,8 +70,9 @@ public class WordAggregate implements KeyedMessageReceiver {
       count = wordCounts.get(value);
     }
     count++;
+    totalCount++;
     wordCounts.put(value, count);
-    LOG.info("Words: " + wordCounts);
+    LOG.info(String.format("%d Words: %d", executor, totalCount));
   }
 
   @Override

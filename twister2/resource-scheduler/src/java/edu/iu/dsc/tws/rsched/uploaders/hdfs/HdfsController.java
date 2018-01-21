@@ -25,22 +25,22 @@ public class HdfsController {
 
   public boolean exists(String filePath) {
     String command = String.format("hadoop --config %s fs -test -e %s", configDir, filePath);
-    return 0 == ProcessUtils.runProcess(command, null);
+    return 0 == ProcessUtils.runProcess(command, null, false);
   }
 
   public boolean mkdirs(String dir) {
     String command = String.format("hadoop --config %s fs -mkdir -p %s", configDir, dir);
-    return 0 == ProcessUtils.runProcess(command, null);
+    return 0 == ProcessUtils.runProcess(command, null, false);
   }
 
   public boolean copyFromLocalFile(String source, String destination) {
     String command = String.format("hadoop --config %s fs -copyFromLocal -f %s %s",
         configDir, source, destination);
-    return 0 == ProcessUtils.runProcess(command, null);
+    return 0 == ProcessUtils.runProcess(command, null, false);
   }
 
   public boolean delete(String filePath) {
     String command = String.format("hadoop --config %s fs -rm %s", configDir, filePath);
-    return 0 == ProcessUtils.runProcess(command, null);
+    return 0 == ProcessUtils.runProcess(command, null, false);
   }
 }

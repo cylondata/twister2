@@ -13,12 +13,15 @@ package edu.iu.dsc.tws.examples.basic.streaming.wordcount;
 
 import java.util.List;
 import java.util.Random;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.examples.utils.RandomString;
 
-public class GenerateWordMap implements Runnable {
+public class StreamingWordSource implements Runnable {
+  private static final Logger LOG = Logger.getLogger(StreamingWordSource.class.getName());
+
   private DataFlowOperation operation;
 
   private Random random = new Random();
@@ -37,8 +40,12 @@ public class GenerateWordMap implements Runnable {
 
   private RandomString randomString;
 
-  public GenerateWordMap(Config config, DataFlowOperation operation, int words,
-                         List<Integer> dests, int tId) {
+  private int noOfWordsSent;
+
+  private int executor;
+
+  public StreamingWordSource(Config config, DataFlowOperation operation, int words,
+                             List<Integer> dests, int tId) {
     this.operation = operation;
     this.tempCharacters = new char[MAX_CHARS];
     this.noOfWords = words;
@@ -46,6 +53,7 @@ public class GenerateWordMap implements Runnable {
     this.taskId = tId;
     this.noOfDestinations = destinations.size();
     this.randomString = new RandomString(MAX_CHARS, new Random(), RandomString.ALPHANUM);
+    this.executor = operation.getTaskPlan().getThisExecutor();
   }
 
   @Override
@@ -56,8 +64,14 @@ public class GenerateWordMap implements Runnable {
       int dest = destinations.get(destIndex);
       // lets try to process if send doesn't succeed
       while (!operation.send(taskId, word, 0, dest)) {
-        operation.progress();
+        try {
+          Thread.sleep(1);
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
       }
+      noOfWordsSent++;
+      LOG.info(String.format("%d %d Sending word true %d", executor, taskId, noOfWordsSent));
     }
   }
 

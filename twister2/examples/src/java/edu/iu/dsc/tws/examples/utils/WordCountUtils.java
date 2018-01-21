@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.basic.streaming.wordcount;
+package edu.iu.dsc.tws.examples.utils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -78,24 +78,10 @@ public final class WordCountUtils {
       i++;
     }
 
-    String print = printMap(executorToGraphNodes);
-    LOG.info("Executor To Graph: " + print);
-    print = printMap(groupsToExeuctors);
-    LOG.info("Groups to executors: " + print);
+    LOG.info(String.format("%d Executor To Graph: %s", plan.getThisId(), executorToGraphNodes));
+    LOG.info(String.format("%d Groups to executors: %s", plan.getThisId(), groupsToExeuctors));
     // now lets create the task plan of this, we assume we have map tasks in all the processes
     // and reduce task in 0th process
     return new TaskPlan(executorToGraphNodes, groupsToExeuctors, thisExecutor);
-  }
-
-  private static String printMap(Map<Integer, Set<Integer>> map) {
-    StringBuilder sb = new StringBuilder();
-    for (Map.Entry<Integer, Set<Integer>> e : map.entrySet()) {
-      sb.append(e.getKey() + " : ");
-      for (Integer i : e.getValue()) {
-        sb.append(i).append(" ");
-      }
-      sb.append("\n");
-    }
-    return sb.toString();
   }
 }

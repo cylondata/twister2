@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.basic.streaming.wordcount;
+package edu.iu.dsc.tws.examples.basic.batch.wordcount;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,6 +24,8 @@ import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.mpi.MPIDataFlowKGather;
+import edu.iu.dsc.tws.examples.basic.streaming.wordcount.StreamingWordSource;
+import edu.iu.dsc.tws.examples.basic.streaming.wordcount.WordAggregate;
 import edu.iu.dsc.tws.examples.utils.WordCountUtils;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
@@ -37,7 +39,7 @@ public class WordCountContainer implements IContainer {
 
   private TWSCommunication channel;
 
-  private static final int NO_OF_TASKS = 8;
+  private static final int NO_OF_TASKS = 16;
 
   private Config config;
 
@@ -70,6 +72,8 @@ public class WordCountContainer implements IContainer {
     Map<String, Object> newCfg = new HashMap<>();
     LOG.info("Setting up reduce dataflow operation");
     try {
+      // this method calls the init method
+      // I think this is wrong
       keyGather = (MPIDataFlowKGather) channel.keyedGather(newCfg, MessageType.OBJECT,
           destinations, sources,
           destinations, new WordAggregate());
@@ -110,7 +114,5 @@ public class WordCountContainer implements IContainer {
     for (int i = 0; i < NO_OF_TASKS / 2; i++) {
       destinations.add(NO_OF_TASKS / 2 + i);
     }
-    LOG.info(String.format("%d sources %s destinations %s",
-        taskPlan.getThisExecutor(), sources, destinations));
   }
 }
