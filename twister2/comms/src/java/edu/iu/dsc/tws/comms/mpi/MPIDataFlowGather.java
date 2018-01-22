@@ -445,7 +445,7 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
               Object e1 = e.getValue().get(0);
               out.add(e1);
             }
-            if (dataFlowOperation.sendPartial(t, out, 0, MessageFlags.FLAGS_MULTI_MSG)) {
+            if (dataFlowOperation.sendPartial(t, out, MessageFlags.FLAGS_MULTI_MSG, t)) {
               for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
                 List<Object> value = e.getValue();
                 if (value.size() == 0) {

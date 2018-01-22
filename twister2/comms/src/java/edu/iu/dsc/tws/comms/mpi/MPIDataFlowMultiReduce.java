@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
@@ -24,7 +25,8 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 
-public class MPIDataFlowKGather implements DataFlowOperation {
+public class MPIDataFlowMultiReduce implements DataFlowOperation {
+  private static final Logger LOG = Logger.getLogger(MPIDataFlowMultiReduce.class.getName());
   // the source tasks
   protected Set<Integer> sources;
 
@@ -32,7 +34,10 @@ public class MPIDataFlowKGather implements DataFlowOperation {
   private Set<Integer> destinations;
 
   // one reduce for each destination
-  private Map<Integer, MPIDataFlowGather> gatherMap;
+  private Map<Integer, MPIDataFlowReduce> reduceMap;
+
+  // the partial receiver
+  private MessageReceiver partialReceiver;
 
   // the final receiver
   private MessageReceiver finalReceiver;
@@ -43,19 +48,17 @@ public class MPIDataFlowKGather implements DataFlowOperation {
 
   private int executor;
 
-  private TaskPlan plan;
-
-  private MessageType type;
-
-  public MPIDataFlowKGather(TWSMPIChannel chnl,
-                            Set<Integer> sources, Set<Integer> destination,
-                            MessageReceiver finalRecv, Set<Integer> es) {
+  public MPIDataFlowMultiReduce(TWSMPIChannel chnl,
+                                Set<Integer> sources, Set<Integer> destination,
+                                MessageReceiver finalRecv,
+                                MessageReceiver partialRecv, Set<Integer> es) {
     this.channel = chnl;
     this.sources = sources;
     this.destinations = destination;
+    this.partialReceiver = partialRecv;
     this.finalReceiver = finalRecv;
     this.edges = es;
-    this.gatherMap = new HashMap<>();
+    this.reduceMap = new HashMap<>();
   }
 
   @Override
@@ -65,32 +68,33 @@ public class MPIDataFlowKGather implements DataFlowOperation {
 
   @Override
   public boolean send(int source, Object message, int flags, int dest) {
-    MPIDataFlowGather gather = gatherMap.get(dest);
-    if (gather == null) {
+    MPIDataFlowReduce reduce = reduceMap.get(dest);
+    if (reduce == null) {
       throw new RuntimeException("Un-expected destination: " + dest);
     }
-    boolean send = gather.send(source, message, flags, dest);
+    boolean send = reduce.send(source, message, dest);
 //  LOG.info(String.format("%d sending message on reduce: %d %d %b", executor, path, source, send));
     return send;
   }
 
   @Override
-  public boolean sendPartial(int source, Object message, int path, int dest) {
-    MPIDataFlowGather gather = gatherMap.get(path);
-    if (gather == null) {
-      throw new RuntimeException("Un-expected destination: " + path);
+  public boolean sendPartial(int source, Object message, int flags, int dest) {
+    MPIDataFlowReduce reduce = reduceMap.get(dest);
+    if (reduce == null) {
+      throw new RuntimeException("Un-expected destination: " + dest);
     }
-    boolean send = gather.sendPartial(source, message, dest, path);
+    boolean send = reduce.sendPartial(source, message, dest);
 //  LOG.info(String.format("%d sending message on reduce: %d %d %b", executor, path, source, send));
     return send;
   }
 
   @Override
   public void progress() {
-    for (MPIDataFlowGather reduce : gatherMap.values()) {
+    for (MPIDataFlowReduce reduce : reduceMap.values()) {
       reduce.progress();
     }
     finalReceiver.progress();
+    partialReceiver.progress();
   }
 
   @Override
@@ -103,38 +107,39 @@ public class MPIDataFlowKGather implements DataFlowOperation {
 
   @Override
   public MessageType getType() {
-    return type;
+    return null;
   }
 
   @Override
   public TaskPlan getTaskPlan() {
-    return plan;
+    return null;
   }
 
   @Override
-  public void init(Config config, MessageType t, TaskPlan instancePlan, int edge) {
+  public void init(Config config, MessageType type, TaskPlan instancePlan, int edge) {
     executor = instancePlan.getThisExecutor();
-    this.type = t;
-    this.plan = instancePlan;
-
+    Map<Integer, List<Integer>> partialReceives = new HashMap<>();
     Map<Integer, List<Integer>> finalReceives = new HashMap<>();
     List<Integer> edgeList = new ArrayList<>(edges);
     Collections.sort(edgeList);
     int count = 0;
     for (int dest : destinations) {
-      GatherFinalReceiver finalRcvr = new GatherFinalReceiver(dest);
-      MPIDataFlowGather gather = new MPIDataFlowGather(channel, sources, dest,
-          finalRcvr, count, dest, config, t, instancePlan, edgeList.get(count));
-      gather.init(config, t, instancePlan, edgeList.get(count));
-      gatherMap.put(dest, gather);
+      ReducePartialReceiver partialRcvr = new ReducePartialReceiver(dest);
+      ReduceFinalReceiver finalRcvr = new ReduceFinalReceiver(dest);
+      MPIDataFlowReduce reduce = new MPIDataFlowReduce(channel, sources, dest,
+          finalRcvr, partialRcvr, count, dest);
+      reduce.init(config, type, instancePlan, edgeList.get(count));
+      reduceMap.put(dest, reduce);
       count++;
 
-      for (Map.Entry<Integer, List<Integer>> e : gather.receiveExpectedTaskIds().entrySet()) {
+      for (Map.Entry<Integer, List<Integer>> e : reduce.receiveExpectedTaskIds().entrySet()) {
+        partialReceives.put(e.getKey(), e.getValue());
         finalReceives.put(e.getKey(), e.getValue());
       }
     }
 
     finalReceiver.init(config, this, finalReceives);
+    partialReceiver.init(config, this, partialReceives);
   }
 
   @Override
@@ -143,10 +148,31 @@ public class MPIDataFlowKGather implements DataFlowOperation {
     throw new RuntimeException("Not implemented");
   }
 
-  private class GatherFinalReceiver implements MessageReceiver {
+  private class ReducePartialReceiver implements MessageReceiver {
     private int destination;
 
-    GatherFinalReceiver(int dest) {
+    ReducePartialReceiver(int dst) {
+      this.destination = dst;
+    }
+
+    @Override
+    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+    }
+
+    @Override
+    public boolean onMessage(int source, int path, int target, int flags, Object object) {
+//      LOG.info(String.format("%d received message %d %d %d", executor, path, target, source));
+      return partialReceiver.onMessage(source, destination, target, flags, object);
+    }
+
+    public void progress() {
+    }
+  }
+
+  private class ReduceFinalReceiver implements MessageReceiver {
+    private int destination;
+
+    ReduceFinalReceiver(int dest) {
       this.destination = dest;
     }
 

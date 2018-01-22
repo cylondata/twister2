@@ -104,7 +104,7 @@ public class GatherBatchPartialReceiver implements MessageReceiver {
               out.add(value);
             }
           }
-          if (dataFlowOperation.sendPartial(t, out, 0, MessageFlags.FLAGS_MULTI_MSG)) {
+          if (dataFlowOperation.sendPartial(t, out, MessageFlags.FLAGS_MULTI_MSG, t)) {
             for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
               List<Object> value = e.getValue();
               if (value.size() > 0) {

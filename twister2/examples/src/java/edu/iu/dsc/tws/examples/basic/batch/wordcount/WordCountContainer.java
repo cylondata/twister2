@@ -23,9 +23,9 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.mpi.MPIDataFlowKGather;
-import edu.iu.dsc.tws.examples.basic.streaming.wordcount.StreamingWordSource;
-import edu.iu.dsc.tws.examples.basic.streaming.wordcount.WordAggregate;
+import edu.iu.dsc.tws.comms.mpi.MPIDataFlowMultiGather;
+import edu.iu.dsc.tws.comms.mpi.io.GatherBatchFinalReceiver;
+import edu.iu.dsc.tws.comms.mpi.io.GatherBatchPartialReceiver;
 import edu.iu.dsc.tws.examples.utils.WordCountUtils;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
@@ -33,7 +33,7 @@ import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 public class WordCountContainer implements IContainer {
   private static final Logger LOG = Logger.getLogger(WordCountContainer.class.getName());
 
-  private MPIDataFlowKGather keyGather;
+  private MPIDataFlowMultiGather keyGather;
 
   private TWSNetwork network;
 
@@ -74,15 +74,15 @@ public class WordCountContainer implements IContainer {
     try {
       // this method calls the init method
       // I think this is wrong
-      keyGather = (MPIDataFlowKGather) channel.keyedGather(newCfg, MessageType.OBJECT,
-          destinations, sources,
-          destinations, new WordAggregate());
+      keyGather = (MPIDataFlowMultiGather) channel.keyedGather(newCfg, MessageType.OBJECT,
+          destinations, sources, destinations,
+          new GatherBatchPartialReceiver(), new GatherBatchFinalReceiver(new WordAggregator()));
 
       if (id < 2) {
         for (int i = 0; i < noOfTasksPerExecutor; i++) {
           // the map thread where data is produced
           LOG.info(String.format("%d Starting %d", id, i + id * noOfTasksPerExecutor));
-          Thread mapThread = new Thread(new StreamingWordSource(config, keyGather, 1000,
+          Thread mapThread = new Thread(new BatchWordSource(config, keyGather, 1000,
               new ArrayList<>(destinations), noOfTasksPerExecutor * id + i, 200));
           mapThread.start();
         }
