@@ -21,13 +21,12 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.KeyedMessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 
-public class MPIDataFlowKReduce implements DataFlowOperation {
-  private static final Logger LOG = Logger.getLogger(MPIDataFlowKReduce.class.getName());
+public class MPIDataFlowMultiReduce implements DataFlowOperation {
+  private static final Logger LOG = Logger.getLogger(MPIDataFlowMultiReduce.class.getName());
   // the source tasks
   protected Set<Integer> sources;
 
@@ -38,10 +37,10 @@ public class MPIDataFlowKReduce implements DataFlowOperation {
   private Map<Integer, MPIDataFlowReduce> reduceMap;
 
   // the partial receiver
-  private KeyedMessageReceiver partialReceiver;
+  private MessageReceiver partialReceiver;
 
   // the final receiver
-  private KeyedMessageReceiver finalReceiver;
+  private MessageReceiver finalReceiver;
 
   private TWSMPIChannel channel;
 
@@ -49,10 +48,10 @@ public class MPIDataFlowKReduce implements DataFlowOperation {
 
   private int executor;
 
-  public MPIDataFlowKReduce(TWSMPIChannel chnl,
-                            Set<Integer> sources, Set<Integer> destination,
-                            KeyedMessageReceiver finalRecv,
-                            KeyedMessageReceiver partialRecv, Set<Integer> es) {
+  public MPIDataFlowMultiReduce(TWSMPIChannel chnl,
+                                Set<Integer> sources, Set<Integer> destination,
+                                MessageReceiver finalRecv,
+                                MessageReceiver partialRecv, Set<Integer> es) {
     this.channel = chnl;
     this.sources = sources;
     this.destinations = destination;
@@ -119,8 +118,8 @@ public class MPIDataFlowKReduce implements DataFlowOperation {
   @Override
   public void init(Config config, MessageType type, TaskPlan instancePlan, int edge) {
     executor = instancePlan.getThisExecutor();
-    Map<Integer, Map<Integer, List<Integer>>> partialReceives = new HashMap<>();
-    Map<Integer, Map<Integer, List<Integer>>> finalReceives = new HashMap<>();
+    Map<Integer, List<Integer>> partialReceives = new HashMap<>();
+    Map<Integer, List<Integer>> finalReceives = new HashMap<>();
     List<Integer> edgeList = new ArrayList<>(edges);
     Collections.sort(edgeList);
     int count = 0;
@@ -133,8 +132,10 @@ public class MPIDataFlowKReduce implements DataFlowOperation {
       reduceMap.put(dest, reduce);
       count++;
 
-      partialReceives.put(dest, reduce.receiveExpectedTaskIds());
-      finalReceives.put(dest, reduce.receiveExpectedTaskIds());
+      for (Map.Entry<Integer, List<Integer>> e : reduce.receiveExpectedTaskIds().entrySet()) {
+        partialReceives.put(e.getKey(), e.getValue());
+        finalReceives.put(e.getKey(), e.getValue());
+      }
     }
 
     finalReceiver.init(config, this, finalReceives);

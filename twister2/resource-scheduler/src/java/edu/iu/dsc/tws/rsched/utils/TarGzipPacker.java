@@ -34,7 +34,7 @@ import org.apache.commons.compress.utils.IOUtils;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-
+import static edu.iu.dsc.tws.common.config.Context.DIR_PREFIX_FOR_JOB_ARCHIVE;
 /**
  * a class to generate a tar.gz file.
  * Used to pack multiple files into an archive file
@@ -42,14 +42,11 @@ import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 public final class TarGzipPacker {
   public static final Logger LOG = Logger.getLogger(TarGzipPacker.class.getName());
 
-  TarArchiveOutputStream tarOutputStream;
-  Path archiveFile;
-  private static final String DIR_PREFIX_FOR_ARCHIVE = "./twister2-core/";
+  private TarArchiveOutputStream tarOutputStream;
+  private Path archiveFile;
 
   /**
    * create the class object from create method
-   * @param archiveFile
-   * @param tarOutputStream
    */
   private TarGzipPacker(Path archiveFile, TarArchiveOutputStream tarOutputStream) {
     this.archiveFile = archiveFile;
@@ -58,8 +55,6 @@ public final class TarGzipPacker {
 
   /**
    * create TarGzipPacker object
-   * @param targetDir
-   * @return
    */
   public static TarGzipPacker createTarGzipPacker(String targetDir, Config config) {
     // this should be received from config
@@ -80,6 +75,7 @@ public final class TarGzipPacker {
   }
 
   /**
+   * Get name
    * @return archive filename with path
    */
   public String getArchiveFileName() {
@@ -111,7 +107,7 @@ public final class TarGzipPacker {
 
       tarInputStream.close();
       return true;
-    }catch (IOException ioe){
+    } catch (IOException ioe) {
       LOG.log(Level.SEVERE, "Archive File can not be added: " + tarGzipFile, ioe);
       return false;
     }
@@ -119,11 +115,12 @@ public final class TarGzipPacker {
 
   /**
    * add one file to tar.gz file
+   *
    * @param filename full path of the file name to be added to the jar
    */
   public boolean addFileToArchive(String filename) {
     File file = new File(filename);
-    return addFileToArchive(file, DIR_PREFIX_FOR_ARCHIVE);
+    return addFileToArchive(file, DIR_PREFIX_FOR_JOB_ARCHIVE);
   }
 
   /**
@@ -159,10 +156,10 @@ public final class TarGzipPacker {
 
     File dir = new File(path);
 
-    String prefix = DIR_PREFIX_FOR_ARCHIVE + dir.getName() + "/";
-    for (File file: dir.listFiles()) {
+    String prefix = DIR_PREFIX_FOR_JOB_ARCHIVE + dir.getName() + "/";
+    for (File file : dir.listFiles()) {
       boolean added = addFileToArchive(file, prefix);
-      if(!added) {
+      if (!added) {
         return false;
       }
     }
@@ -172,12 +169,12 @@ public final class TarGzipPacker {
   /**
    * add one file to tar.gz file
    * file is created from the given byte array
+   *
    * @param filename file to be added to the tar.gz
-   * @dirPrefixForTar directory structure of this file in tar.gz
    */
   public boolean addFileToArchive(String filename, byte[] contents) {
 
-    String filePathInTar = DIR_PREFIX_FOR_ARCHIVE + filename;
+    String filePathInTar = DIR_PREFIX_FOR_JOB_ARCHIVE + filename;
     try {
       TarArchiveEntry entry = new TarArchiveEntry(filePathInTar);
       entry.setSize(contents.length);

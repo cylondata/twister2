@@ -208,7 +208,6 @@ public final class MPIProcess {
         receiveSizes[i] = countReceive.get(i);
         displacements[i] = sum;
         sum += receiveSizes[i];
-        LOG.log(Level.INFO, String.format("Process %d: receive size %d", rank, receiveSizes[i]));
       }
       // first we need to send the expected number of characters
       //  MPI.COMM_WORLD.allGather(countSend, 1, MPI.INT, countReceive, worldSize, MPI.INT);
@@ -228,7 +227,7 @@ public final class MPIProcess {
         char[] c = new char[receiveSizes[i]];
         receiveBuffer.get(c);
         processNames.put(i, new String(c));
-        LOG.info(String.format("Process %d name: %s", i, processNames.get(i)));
+        LOG.log(Level.FINE, String.format("Process %d name: %s", i, processNames.get(i)));
       }
 
       // now lets add the containers

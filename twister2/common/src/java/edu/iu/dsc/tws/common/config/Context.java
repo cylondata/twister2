@@ -68,6 +68,8 @@ public class Context {
   public static final String TWISTER2_CONTAINER_ID = "twister2.container.id";
   public static final String TWISTER2_CLUSTER_TYPE = "twister2.cluster.type";
 
+  public static final String DIR_PREFIX_FOR_JOB_ARCHIVE = "twister2-job/";
+
   static {
     substitutions.put("TWISTER2_HOME", TWISTER2_HOME);
     substitutions.put("HOME", HOME);

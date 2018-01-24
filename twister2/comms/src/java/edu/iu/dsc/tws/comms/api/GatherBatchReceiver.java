@@ -9,25 +9,15 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.mpi.io;
+package edu.iu.dsc.tws.comms.api;
+
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.MessageHeader;
-import edu.iu.dsc.tws.comms.mpi.MPIBuffer;
 
-public class FileBasedDeserializer implements MessageDeSerializer {
-  @Override
-  public void init(Config cfg) {
-
-  }
-
-  @Override
-  public Object build(Object partialObject, int edge) {
-    return null;
-  }
-
-  @Override
-  public MessageHeader buildHeader(MPIBuffer buffer, int edge) {
-    return null;
-  }
+public interface GatherBatchReceiver {
+  void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds);
+  void receive(int target, Iterator<Object> it);
 }

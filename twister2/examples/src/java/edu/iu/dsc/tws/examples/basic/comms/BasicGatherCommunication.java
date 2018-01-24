@@ -92,11 +92,16 @@ public class BasicGatherCommunication implements IContainer {
     Map<String, Object> newCfg = new HashMap<>();
 
     LOG.info("Setting up reduce dataflow operation");
+
     try {
       // this method calls the init method
       // I think this is wrong
-      aggregate = channel.gather(newCfg, MessageType.KEYED, 0, sources,
+
+      aggregate = channel.gather(newCfg, MessageType.OBJECT, MessageType.INTEGER,  0, sources,
           dest, new FinalGatherReceive());
+
+//      aggregate = channel.gather(newCfg, MessageType.OBJECT, 0, sources,
+//          dest, new FinalGatherReceive());
 
       for (int i = 0; i < noOfTasksPerExecutor; i++) {
         // the map thread where data is produced
@@ -137,11 +142,13 @@ public class BasicGatherCommunication implements IContainer {
         LOG.log(Level.INFO, "Starting map worker: " + id);
 //      MPIBuffer data = new MPIBuffer(1024);
         startTime = System.nanoTime();
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 1; i++) {
           String data = generateStringData();
           // lets generate a message
-          while (!aggregate.send(task, new KeyedContent(task, data,
-              MessageType.INTEGER, MessageType.OBJECT), 0)) {
+          KeyedContent mesage = new KeyedContent(task, data,
+              MessageType.INTEGER, MessageType.OBJECT);
+//
+          while (!aggregate.send(task, mesage, 0)) {
             // lets wait a litte and try again
             try {
               Thread.sleep(1);

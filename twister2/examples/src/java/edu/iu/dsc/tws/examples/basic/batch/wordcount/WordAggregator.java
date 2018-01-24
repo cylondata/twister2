@@ -9,21 +9,21 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.basic.streaming.wordcount;
+package edu.iu.dsc.tws.examples.basic.batch.wordcount;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.api.GatherBatchReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.mpi.io.KeyedContent;
 
-public class WordAggregate implements MessageReceiver {
-  private static final Logger LOG = Logger.getLogger(WordAggregate.class.getName());
+public class WordAggregator implements GatherBatchReceiver {
+  private static final Logger LOG = Logger.getLogger(WordAggregator.class.getName());
 
   private Config config;
 
@@ -44,39 +44,7 @@ public class WordAggregate implements MessageReceiver {
   }
 
   @Override
-  public boolean onMessage(int source, int path, int target, int flags, Object object) {
-    if (object instanceof List) {
-      for (Object o : (List) object) {
-        LOG.info("Object: " + o);
-        if (o instanceof KeyedContent) {
-          addValue(((KeyedContent) o).getObject().toString());
-        } else {
-          addValue(o.toString());
-        }
-      }
-    } else if (object instanceof KeyedContent) {
-      String value = ((KeyedContent) object).getObject().toString();
-      addValue(value);
-    } else {
-      addValue(object.toString());
-    }
+  public void receive(int target, Iterator<Object> it) {
 
-    return true;
-  }
-
-  private void addValue(String value) {
-    int count = 0;
-    if (wordCounts.containsKey(value)) {
-      count = wordCounts.get(value);
-    }
-    count++;
-    totalCount++;
-    wordCounts.put(value, count);
-    LOG.info(String.format("%d Words: %d", executor, totalCount));
-  }
-
-  @Override
-  public void progress() {
-    // nothing to do here
   }
 }

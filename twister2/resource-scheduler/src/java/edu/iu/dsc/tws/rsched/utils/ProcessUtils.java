@@ -47,24 +47,27 @@ public final class ProcessUtils {
   }
 
 
-  public static int runProcess(String cmdline, StringBuilder outputBuilder) {
-    return runSyncProcess(true,  splitTokens(cmdline), outputBuilder, null);
+  public static int runProcess(String cmdline, StringBuilder outputBuilder, boolean isVerbose) {
+    return runSyncProcess(true,  splitTokens(cmdline), outputBuilder, null, isVerbose);
 
   }
 
   public static int runSyncProcess(
-      boolean isInheritIO, String[] cmdline, StringBuilder outputBuilder, File workingDirectory) {
+      boolean isInheritIO, String[] cmdline,
+      StringBuilder outputBuilder, File workingDirectory,
+      boolean isVerbose) {
     return runSyncProcess(isInheritIO, cmdline, outputBuilder, workingDirectory,
-        new HashMap<String, String>());
+        new HashMap<String, String>(), isVerbose);
   }
 
   private static Thread createAsyncStreamThread(final InputStream input,
-                                                final StringBuilder processOutputStringBuilder) {
+                                                final StringBuilder processOutputStringBuilder,
+                                                final boolean isVerbose) {
     Thread thread = new Thread() {
       @Override
       public void run() {
         // do not buffer
-        LOG.log(Level.INFO, "Process output (stdout+stderr):");
+        LOG.log(Level.FINE, "Process output (stdout+stderr):");
         BufferedReader reader = new BufferedReader(new InputStreamReader(input), 1);
         while (true) {
           String line = null;
@@ -98,11 +101,12 @@ public final class ProcessUtils {
    */
   private static int runSyncProcess(
       boolean isInheritIO, String[] cmdline,
-      StringBuilder outputBuilder, File workingDirectory, Map<String, String> envs) {
+      StringBuilder outputBuilder, File workingDirectory,
+      Map<String, String> envs, boolean isVerbose) {
     final StringBuilder builder = outputBuilder == null ? new StringBuilder() : outputBuilder;
 
     // Log the command for debugging
-    LOG.log(Level.INFO, "Running synced process: ``{0}''''", joinString(cmdline));
+    LOG.log(Level.FINE, "Running synced process: ``{0}''''", joinString(cmdline));
     ProcessBuilder pb = getProcessBuilder(isInheritIO, cmdline, workingDirectory, envs);
     /* combine input stream and error stream into stderr because
        1. this preserves order of process's stdout/stderr message
@@ -125,7 +129,7 @@ public final class ProcessUtils {
     // because stream is not read while waiting for the process to complete.
     // If buffer becomes full, it can block the "process" as well,
     // preventing all progress for both the "process" and the current thread.
-    Thread outputsThread = createAsyncStreamThread(process.getInputStream(), builder);
+    Thread outputsThread = createAsyncStreamThread(process.getInputStream(), builder, isVerbose);
 
     try {
       outputsThread.start();
@@ -209,7 +213,7 @@ public final class ProcessUtils {
     // using curl copy the url to the target file
     String cmd = String.format("curl %s -o %s", uri, destination);
     int ret = runSyncProcess(isInheritIO,
-        splitTokens(cmd), new StringBuilder(), parentDirectory);
+        splitTokens(cmd), new StringBuilder(), parentDirectory, isVerbose);
 
     return ret == 0;
   }
@@ -219,7 +223,17 @@ public final class ProcessUtils {
     String cmd = String.format("tar -xvf %s", packageName);
 
     int ret = runSyncProcess(isInheritIO,
-        splitTokens(cmd), new StringBuilder(), new File(targetFolder));
+        splitTokens(cmd), new StringBuilder(), new File(targetFolder), isVerbose);
+
+    return ret == 0;
+  }
+
+  public static boolean extractPackageWithoutDir(
+      String packageName, String targetFolder, boolean isVerbose, boolean isInheritIO) {
+    String cmd = String.format("tar -xvf %s --strip-components 1", packageName);
+
+    int ret = runSyncProcess(isInheritIO,
+        splitTokens(cmd), new StringBuilder(), new File(targetFolder), isVerbose);
 
     return ret == 0;
   }
@@ -230,7 +244,7 @@ public final class ProcessUtils {
     String cmd = String.format("tar -cvf %s %s", packageName, outputName);
 
     int ret = runSyncProcess(isInheritIO,
-        splitTokens(cmd), new StringBuilder(), new File(targetFolder));
+        splitTokens(cmd), new StringBuilder(), new File(targetFolder), isVerbose);
 
     return ret == 0;
   }

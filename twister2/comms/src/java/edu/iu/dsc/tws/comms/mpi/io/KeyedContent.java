@@ -23,7 +23,7 @@ public class KeyedContent {
 
   private MessageType keyType = MessageType.SHORT;
 
-  private MessageType contentType;
+  private MessageType contentType = MessageType.OBJECT;
 
   public KeyedContent(Object source, Object object) {
     this.source = source;
@@ -52,5 +52,9 @@ public class KeyedContent {
 
   public Object getObject() {
     return object;
+  }
+
+  public MessageType getContentType() {
+    return contentType;
   }
 }

@@ -19,68 +19,65 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.mpi.MPIContext;
+import edu.iu.dsc.tws.comms.mpi.MPIMessage;
 
-public class GatherFileBasedReceiver implements MessageReceiver {
-  private static final Logger LOG = Logger.getLogger(GatherFileBasedReceiver.class.getName());
+public class GatherBatchPartialReceiver implements MessageReceiver {
+  private static final Logger LOG = Logger.getLogger(GatherBatchPartialReceiver.class.getName());
+
   // lets keep track of the messages
   // for each task we need to keep track of incoming messages
   private Map<Integer, Map<Integer, List<Object>>> messages = new HashMap<>();
-  private Map<Integer, Map<Integer, Integer>> counts = new HashMap<>();
-
-  private int count = 0;
-
-  private long start = System.nanoTime();
-
-  private int id;
-
-  public GatherFileBasedReceiver(int id) {
-    this.id = id;
-  }
+  private Map<Integer, Map<Integer, Boolean>> finished = new HashMap<>();
+  private DataFlowOperation dataFlowOperation;
+  private int executor;
+  private int sendPendingMax = 128;
 
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+    executor = op.getTaskPlan().getThisExecutor();
+    sendPendingMax = MPIContext.sendPendingMax(cfg);
+
+    LOG.info(String.format("%d expected ids %s", executor, expectedIds));
     for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
       Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
-      Map<Integer, Integer> countsPerTask = new HashMap<>();
+      Map<Integer, Boolean> finishedPerTask = new HashMap<>();
 
       for (int i : e.getValue()) {
         messagesPerTask.put(i, new ArrayList<Object>());
-        countsPerTask.put(i, 0);
+        finishedPerTask.put(i, false);
       }
-
-      LOG.info(String.format("%d Final Task %d receives from %s",
-          id, e.getKey(), e.getValue().toString()));
-
       messages.put(e.getKey(), messagesPerTask);
-      counts.put(e.getKey(), countsPerTask);
+      finished.put(e.getKey(), finishedPerTask);
     }
+    this.dataFlowOperation = op;
+    this.executor = dataFlowOperation.getTaskPlan().getThisExecutor();
   }
 
   @Override
   public boolean onMessage(int source, int path, int target, int flags, Object object) {
     // add the object to the map
     boolean canAdd = true;
-    if (count == 0) {
-      start = System.nanoTime();
-    }
 
-    try {
-      List<Object> m = messages.get(target).get(source);
-      Integer c = counts.get(target).get(source);
-      if (m.size() > 128) {
-        canAdd = false;
-      } else {
-        m.add(object);
-        counts.get(target).put(source, c + 1);
+    if (messages.get(target) == null) {
+      throw new RuntimeException(String.format("%d Partial receive error %d", executor, target));
+    }
+    List<Object> m = messages.get(target).get(source);
+    Map<Integer, Boolean> finishedMessages = finished.get(target);
+    if (m.size() > sendPendingMax) {
+      canAdd = false;
+    } else {
+      if (object instanceof MPIMessage) {
+        ((MPIMessage) object).incrementRefCount();
       }
-
-      return canAdd;
-    } catch (Throwable t) {
-
-      t.printStackTrace();
+      m.add(object);
+      if ((flags & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) {
+        finishedMessages.put(source, true);
+      }
     }
-    return true;
+    return canAdd;
   }
 
   public void progress() {
@@ -89,35 +86,37 @@ public class GatherFileBasedReceiver implements MessageReceiver {
       while (canProgress) {
         // now check weather we have the messages for this source
         Map<Integer, List<Object>> map = messages.get(t);
+        Map<Integer, Boolean> finishedForTarget = finished.get(t);
         boolean found = true;
-        Object o = null;
         for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
-          if (e.getValue().size() == 0) {
+          if (e.getValue().size() == 0 && !finishedForTarget.get(e.getKey())) {
             found = false;
             canProgress = false;
-          } else {
-            o = e.getValue().get(0);
           }
         }
+
         if (found) {
+          List<Object> out = new ArrayList<>();
           for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
-            o = e.getValue().remove(0);
-          }
-          if (o != null) {
-            count++;
-            if (count % 1000 == 0) {
-              LOG.info(String.format("%d Last %d count: %d %s",
-                  id, t, count, counts));
+            List<Object> valueList = e.getValue();
+            if (valueList.size() > 0) {
+              Object value = valueList.get(0);
+              out.add(value);
             }
-            if (count >= 10000) {
-              LOG.info("Total time: " + (System.nanoTime() - start) / 1000000
-                  + " Count: " + count);
+          }
+          if (dataFlowOperation.sendPartial(t, out, MessageFlags.FLAGS_MULTI_MSG, t)) {
+            for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
+              List<Object> value = e.getValue();
+              if (value.size() > 0) {
+                value.remove(0);
+              }
             }
           } else {
-            LOG.severe("We cannot find an object and this is not correct");
+            canProgress = false;
           }
         }
       }
     }
   }
 }
+

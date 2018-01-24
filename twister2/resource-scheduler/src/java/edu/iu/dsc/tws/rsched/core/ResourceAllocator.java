@@ -32,6 +32,7 @@ import edu.iu.dsc.tws.rsched.spi.scheduler.LauncherException;
 import edu.iu.dsc.tws.rsched.spi.statemanager.IStateManager;
 import edu.iu.dsc.tws.rsched.spi.uploaders.IUploader;
 import edu.iu.dsc.tws.rsched.spi.uploaders.UploaderException;
+import edu.iu.dsc.tws.rsched.uploaders.scp.ScpContext;
 import edu.iu.dsc.tws.rsched.utils.FileUtils;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import edu.iu.dsc.tws.rsched.utils.TarGzipPacker;
@@ -64,7 +65,7 @@ public class ResourceAllocator {
     String configDir = System.getProperty(SchedulerContext.CONFIG_DIR);
     String clusterType = System.getProperty(SchedulerContext.CLUSTER_TYPE);
     // lets get the job jar file from system properties or environment
-    String jobJar = System.getProperty(SchedulerContext.JOB_FILE);
+    String jobJar = System.getProperty(SchedulerContext.USER_JOB_JAR_FILE);
 
     // now lets see weather these are overridden in environment variables
     Map<String, Object> environmentProperties = JobUtils.readCommandLineOpts();
@@ -81,8 +82,8 @@ public class ResourceAllocator {
       clusterType = (String) environmentProperties.get(SchedulerContext.CLUSTER_TYPE);
     }
 
-    if (environmentProperties.containsKey(SchedulerContext.JOB_FILE)) {
-      jobJar = (String) environmentProperties.get(SchedulerContext.JOB_FILE);
+    if (environmentProperties.containsKey(SchedulerContext.USER_JOB_JAR_FILE)) {
+      jobJar = (String) environmentProperties.get(SchedulerContext.USER_JOB_JAR_FILE);
     }
 
     if (configDir == null) {
@@ -96,7 +97,7 @@ public class ResourceAllocator {
         putAll(config).
         put(MPIContext.TWISTER2_HOME.getKey(), twister2Home).
         put(MPIContext.TWISTER2_CLUSTER_TYPE, clusterType).
-        put(MPIContext.JOB_FILE, jobJar).
+        put(MPIContext.USER_JOB_JAR_FILE, jobJar).
         putAll(environmentProperties).
         putAll(cfg).
         build();
@@ -105,7 +106,7 @@ public class ResourceAllocator {
   /**
    * Create the job files to be uploaded into the cluster
    */
-  private String prepareJobFiles(Config config, JobAPI.Job job) {
+  private String prepareJobFilesOld(Config config, JobAPI.Job job) {
     // lets first save the job file
     // lets write the job into file, this will be used for job creation
     String tempDirectory = SchedulerContext.jobClientTempDirectory(config) + "/" + job.getJobName();
@@ -115,7 +116,7 @@ public class ResourceAllocator {
       throw new RuntimeException("Failed to create the base temp directory for job", e);
     }
 
-    String jobFile = SchedulerContext.jobFile(config);
+    String jobFile = SchedulerContext.userJobJarFile(config);
     if (jobFile == null) {
       throw new RuntimeException("Job file cannot be null");
     }
@@ -174,7 +175,7 @@ public class ResourceAllocator {
   /**
    * Create the job files to be uploaded into the cluster
    */
-  private String prepareJobFiles2(Config config, JobAPI.Job job) {
+  private String prepareJobFiles(Config config, JobAPI.Job job) {
     // lets first save the job file
     // lets write the job into file, this will be used for job creation
     String tempDirectory = SchedulerContext.jobClientTempDirectory(config) + "/" + job.getJobName();
@@ -184,7 +185,7 @@ public class ResourceAllocator {
       throw new RuntimeException("Failed to create the base temp directory for job", e);
     }
 
-    String jobJarFile = SchedulerContext.jobFile(config);
+    String jobJarFile = SchedulerContext.userJobJarFile(config);
     if (jobJarFile == null) {
       throw new RuntimeException("Job file cannot be null");
     }
@@ -214,9 +215,11 @@ public class ResourceAllocator {
     }
 
     // first update the job description
+    // get file name without directory
+    String jobJarFileName = Paths.get(jobJarFile).getFileName().toString();
     JobAPI.JobFormat.Builder format = JobAPI.JobFormat.newBuilder();
     format.setType(JobAPI.JobFormatType.SHUFFLE);
-    format.setJobFile(Paths.get(jobJarFile).getFileName().toString());
+    format.setJobFile(jobJarFileName);
     updatedJob = JobAPI.Job.newBuilder(job).setJobFormat(format).build();
 
     // add job description file to the archive
@@ -226,12 +229,6 @@ public class ResourceAllocator {
       throw new RuntimeException("Failed to add the job description file to the archive: "
           + jobDescFileName);
     }
-
-    // add the job description filename to the config
-    updatedConfig = Config.newBuilder()
-        .putAll(config)
-        .put(SchedulerContext.JOB_DESCRIPTION_FILE, jobDescFileName)
-        .build();
 
     // add job jar file to the archive
     added = packer.addFileToArchive(jobJarFile);
@@ -250,6 +247,13 @@ public class ResourceAllocator {
     packer.close();
     LOG.log(Level.INFO, "Archive file created: " + packer.getArchiveFileName());
 
+    // add the job description filename, userJobJar and conf directory to the config
+    updatedConfig = Config.newBuilder()
+        .putAll(config)
+        .put(SchedulerContext.USER_JOB_JAR_FILE, jobJarFileName)
+        .put(SchedulerContext.JOB_DESCRIPTION_FILE, jobDescFileName)
+        .build();
+
     return tempDirPathString;
   }
 
@@ -260,97 +264,7 @@ public class ResourceAllocator {
    */
   public void submitJob(JobAPI.Job job, Config config) {
     // lets prepare the job files
-//    String jobDirectory = prepareJobFiles(config, job);
-    String jobDirectory = prepareJobFiles2(config, job);
-
-    String statemgrClass = SchedulerContext.stateManagerClass(config);
-    if (statemgrClass == null) {
-      throw new RuntimeException("The state manager class must be spcified");
-    }
-
-    String launcherClass = SchedulerContext.launcherClass(config);
-    if (launcherClass == null) {
-      throw new RuntimeException("The launcher class must be specified");
-    }
-
-    String uploaderClass = SchedulerContext.uploaderClass(config);
-    if (uploaderClass == null) {
-      throw new RuntimeException("The uploader class must be specified");
-    }
-
-    ILauncher launcher;
-    IUploader uploader;
-    IStateManager statemgr;
-
-    // create an instance of state manager
-    try {
-      statemgr = ReflectionUtils.newInstance(statemgrClass);
-    } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
-      throw new JobSubmissionException(
-          String.format("Failed to instantiate state manager class '%s'", statemgrClass), e);
-    }
-
-    // create an instance of launcher
-    try {
-      launcher = ReflectionUtils.newInstance(launcherClass);
-    } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
-      throw new LauncherException(
-          String.format("Failed to instantiate launcher class '%s'", launcherClass), e);
-    }
-
-    // create an instance of uploader
-    try {
-      uploader = ReflectionUtils.newInstance(uploaderClass);
-    } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
-      throw new UploaderException(
-          String.format("Failed to instantiate uploader class '%s'", uploaderClass), e);
-    }
-
-    LOG.log(Level.INFO, "Initialize state manager");
-    // initialize the state manager
-    statemgr.initialize(config);
-
-    LOG.log(Level.INFO, "Initialize uploader");
-    // now upload the content of the package
-    uploader.initialize(config);
-    // gives the url of the file to be uploaded
-    LOG.log(Level.INFO, "Calling uploader to upload the package content");
-    URI packageURI = uploader.uploadPackage(jobDirectory);
-
-    // this is a temporary solution
-    String packagesPath = "root@149.165.150.81:/root/.twister2/repository/";
-
-    // now launch the launcher
-    // Update the runtime config with the packageURI
-    updatedConfig = Config.newBuilder()
-        .putAll(updatedConfig)
-        .put(SchedulerContext.TWISTER2_PACKAGES_PATH, packageURI.toString())
-//        .put(SchedulerContext.TWISTER2_PACKAGES_PATH, packagesPath)
-//        .put(SchedulerContext.JOB_PACKAGE_URI, packageURI)
-        .build();
-
-    // this is a handler chain based execution in resource allocator. We need to
-    // make it more formal as such
-    launcher.initialize(updatedConfig);
-
-    RequestedResources requestedResources = buildRequestedResources(updatedJob);
-    if (requestedResources == null) {
-      throw new RuntimeException("Failed to build the requested resources");
-    }
-
-    launcher.launch(requestedResources, updatedJob);
-  }
-
-  /**
-   * Submit the job to aurora cluster
-   * this method is for testing during development
-   * need to be deleted.
-   *
-   * @param job the actual job
-   */
-  public void submitAuroraJob(JobAPI.Job job, Config config) {
-
-    // lets prepare the job files
+//    String jobDirectory = prepareJobFilesOld(config, job);
     String jobDirectory = prepareJobFiles(config, job);
 
     String statemgrClass = SchedulerContext.stateManagerClass(config);
@@ -407,28 +321,29 @@ public class ResourceAllocator {
     LOG.log(Level.INFO, "Calling uploader to upload the package content");
     URI packageURI = uploader.uploadPackage(jobDirectory);
 
+    // add scp address as a prefix to returned URI: user@ip
+    String scpServerAdress = ScpContext.scpConnection(updatedConfig);
+    String scpPath = scpServerAdress + ":" + packageURI.toString() + "/";
+    LOG.log(Level.INFO, "SCP PATH to copy files from: " + scpPath);
+
+    // this is a temporary solution
+//    String packagesPath = "root@149.165.150.81:/root/.twister2/repository/";
+//    String packagesPath = "149.165.150.81:~/.twister2/repository/";
+
     // now launch the launcher
     // Update the runtime config with the packageURI
-    Config runtimeAll = Config.newBuilder()
-        .putAll(config)
+    updatedConfig = Config.newBuilder()
+        .putAll(updatedConfig)
+        .put(SchedulerContext.TWISTER2_PACKAGES_PATH, scpPath)
+//        .put(SchedulerContext.TWISTER2_PACKAGES_PATH, packagesPath)
         .put(SchedulerContext.JOB_PACKAGE_URI, packageURI)
         .build();
 
-//    System.out.println("temp jobDirectory: " + jobDirectory);
-//    System.out.println("packageURI: " + packageURI);
-//    System.out.println("read a char to wait ...");
-//    try {
-//      int read = System.in.read();
-//      System.exit(0);
-//    } catch (IOException e) {
-//      e.printStackTrace();
-//    }
-
     // this is a handler chain based execution in resource allocator. We need to
     // make it more formal as such
-    launcher.initialize(runtimeAll);
+    launcher.initialize(updatedConfig);
 
-    RequestedResources requestedResources = buildRequestedResources(job);
+    RequestedResources requestedResources = buildRequestedResources(updatedJob);
     if (requestedResources == null) {
       throw new RuntimeException("Failed to build the requested resources");
     }

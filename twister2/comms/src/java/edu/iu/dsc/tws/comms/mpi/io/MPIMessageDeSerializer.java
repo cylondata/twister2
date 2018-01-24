@@ -11,14 +11,17 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi.io;
 
-import java.io.IOException;
 import java.util.logging.Logger;
+
+import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.mpi.MPIBuffer;
 import edu.iu.dsc.tws.comms.mpi.MPIMessage;
+import edu.iu.dsc.tws.comms.mpi.io.types.DataDeserializer;
+import edu.iu.dsc.tws.comms.mpi.io.types.KeyDeserializer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
 public class MPIMessageDeSerializer implements MessageDeSerializer {
@@ -26,15 +29,15 @@ public class MPIMessageDeSerializer implements MessageDeSerializer {
 
   private KryoSerializer serializer;
 
-  private MPIBuffer tempBuf;
+  private boolean keyed;
 
   public MPIMessageDeSerializer(KryoSerializer kryoSerializer) {
     this.serializer = kryoSerializer;
   }
 
   @Override
-  public void init(Config cfg) {
-    tempBuf = new MPIBuffer(1024);
+  public void init(Config cfg, boolean k) {
+    this.keyed = k;
   }
 
   @Override
@@ -62,45 +65,15 @@ public class MPIMessageDeSerializer implements MessageDeSerializer {
   private Object buildMessage(MPIMessage message) {
     MessageType type = message.getType();
 
-    switch (type) {
-      case INTEGER:
-        break;
-      case LONG:
-        break;
-      case DOUBLE:
-        break;
-      case OBJECT:
-        return buildObject(message);
-      case BYTE:
-        break;
-      case STRING:
-        break;
-      case BUFFER:
-        return buildBuffer(message);
-      default:
-        break;
-    }
-    return null;
-  }
+    if (!keyed) {
+      return DataDeserializer.deserializeData(message.getBuffers(),
+          message.getHeader().getLength(), serializer, type);
+    } else {
+      Pair<Object, Integer> keyPair = KeyDeserializer.deserializeKey(message.getKeyType(),
+          message.getBuffers(), serializer);
 
-  private Object buildBuffer(MPIMessage message) {
-    return tempBuf;
-  }
-
-  private Object buildObject(MPIMessage message) {
-    MPIByteArrayInputStream input = null;
-    try {
-      //todo: headersize
-      input = new MPIByteArrayInputStream(message.getBuffers(),
-          message.getHeader().getLength());
-      return serializer.deserialize(input);
-    } finally {
-      if (input != null) {
-        try {
-          input.close();
-        } catch (IOException ignore) {
-        }
-      }
+      return DataDeserializer.deserializeData(message.getBuffers(),
+          message.getHeader().getLength() - keyPair.getValue(), serializer, type);
     }
   }
 }

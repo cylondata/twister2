@@ -13,6 +13,3 @@ twister2.uploader.ssh.command.options: "-i /.ssh/id_rsa"
 # The ssh connection string sets the remote user name and host used by the uploader.
 twister2.uploader.ssh.command.connection: "root@149.165.150.81"
 
-# The ssh connection string sets the remote user name and host used by the uploader.
-twister2.uploader.upload.core: "1"
-

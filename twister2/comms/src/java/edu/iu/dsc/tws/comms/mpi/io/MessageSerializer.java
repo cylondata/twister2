@@ -21,7 +21,7 @@ public interface MessageSerializer {
    * Initialize the serializer
    * @param cfg
    */
-  void init(Config cfg, Queue<MPIBuffer> sendBuffs);
+  void init(Config cfg, Queue<MPIBuffer> sendBuffs, boolean keyed);
 
   /**
    * This method will be called repeatedly until the message is fully built

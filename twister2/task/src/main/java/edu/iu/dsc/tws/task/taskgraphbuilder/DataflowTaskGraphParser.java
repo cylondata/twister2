@@ -37,9 +37,6 @@ public class DataflowTaskGraphParser implements IDataflowTaskGraphParser {
       DataflowTaskGraphParser.class.getName());
 
   private DataflowTaskGraphGenerator dataflowTaskGraph;
-  private DataflowTaskGraphParser dataflowTaskGraphParser;
-  private Executor executor = new Executor();
-  private DataFlowOperation dataFlowOperation = null;
 
   public DataflowTaskGraphParser(DataflowTaskGraphGenerator taskgraph) {
     this.dataflowTaskGraph = taskgraph;
@@ -57,14 +54,6 @@ public class DataflowTaskGraphParser implements IDataflowTaskGraphParser {
       processedTaskVertices = dataflowTaskGraphPrioritize(this.dataflowTaskGraph);
       LOGGER.info("Processed Task Vertices Size Is:"
           + processedTaskVertices.size() + "\t" + processedTaskVertices);
-      try {
-        processedTaskVertices.forEach(System.out::println);
-        /*processedTaskVertices.stream().
-            forEach(Mapper -> executor.execute(Mapper,
-                (Class<DataFlowOperation>) dataFlowOperation.getClass()));*/
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
     }
     return processedTaskVertices;
   }

@@ -60,29 +60,49 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
   private TaskPlan instancePlan;
   private int executor;
   private MessageType type;
+  private MessageType keyType;
+  private boolean isKeyed;
 
   public MPIDataFlowGather(TWSMPIChannel channel, Set<Integer> sources, int destination,
                            MessageReceiver finalRcvr,
-                           int indx, int p) {
-    this.index = indx;
-    this.sources = sources;
-    this.destination = destination;
-    this.finalReceiver = finalRcvr;
-    this.partialReceiver = new PartialGather();
-    this.pathToUse = p;
-
-    this.delegete = new MPIDataFlowOperation(channel);
+                           int indx, int p,
+                           Config cfg, MessageType t, TaskPlan taskPlan, int edge) {
+    this(channel, sources, destination, finalRcvr, new PartialGather(),
+        indx, p, cfg, t, taskPlan, edge);
   }
 
   public MPIDataFlowGather(TWSMPIChannel channel, Set<Integer> sources, int destination,
                            MessageReceiver finalRcvr,
-                           MessageReceiver partialRcvr, int indx, int p) {
+                           int indx, int p,
+                           Config cfg, MessageType t, MessageType keyType,
+                           TaskPlan taskPlan, int edge) {
+    this(channel, sources, destination, finalRcvr, new PartialGather(),
+        indx, p, cfg, t, keyType, taskPlan, edge);
+    this.isKeyed = true;
+  }
+
+  public MPIDataFlowGather(TWSMPIChannel channel, Set<Integer> sources, int destination,
+                           MessageReceiver finalRcvr,
+                           MessageReceiver partialRcvr, int indx, int p,
+                           Config cfg, MessageType t, TaskPlan taskPlan, int edge) {
+    this(channel, sources, destination, finalRcvr, partialRcvr,
+        indx, p, cfg, t, MessageType.SHORT, taskPlan, edge);
+    this.isKeyed = false;
+  }
+
+  public MPIDataFlowGather(TWSMPIChannel channel, Set<Integer> sources, int destination,
+                           MessageReceiver finalRcvr,
+                           MessageReceiver partialRcvr, int indx, int p,
+                           Config cfg, MessageType t, MessageType kt, TaskPlan taskPlan, int edge) {
     this.index = indx;
     this.sources = sources;
     this.destination = destination;
     this.finalReceiver = finalRcvr;
     this.partialReceiver = partialRcvr;
     this.pathToUse = p;
+    this.keyType = kt;
+    this.instancePlan = taskPlan;
+    this.isKeyed = true;
 
     this.delegete = new MPIDataFlowOperation(channel);
   }
@@ -199,7 +219,8 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
 
   @Override
   public boolean send(int source, Object message, int flags, int dest) {
-    return false;
+    return delegete.sendMessage(source, message, dest, flags,
+        sendRoutingParameters(source, dest));
   }
 
   @Override
@@ -266,7 +287,8 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
     delegete.init(cfg, t, taskPlan, edge,
         router.receivingExecutors(), router.isLastReceiver(), this,
         pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
-        pendingReceiveDeSerializations, messageSerializer, messageDeSerializer);
+        pendingReceiveDeSerializations, messageSerializer, messageDeSerializer, isKeyed);
+    delegete.setKeyType(keyType);
   }
 
   @Override
@@ -323,15 +345,21 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
     return instancePlan;
   }
 
-  private class PartialGather implements MessageReceiver {
+  private static class PartialGather implements MessageReceiver {
     // lets keep track of the messages
     // for each task we need to keep track of incoming messages
     private Map<Integer, Map<Integer, List<Object>>> messages = new TreeMap<>();
     private Map<Integer, Map<Integer, Integer>> counts = new HashMap<>();
     private int currentIndex = 0;
+    private DataFlowOperation dataFlowOperation;
+    private int executor;
+    private String threadName;
 
     @Override
     public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+      executor = op.getTaskPlan().getThisExecutor();
+
+      LOG.info(String.format("%d expected ids %s", executor, expectedIds));
       for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
         Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
         Map<Integer, Integer> countsPerTask = new HashMap<>();
@@ -344,6 +372,8 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
         messages.put(e.getKey(), messagesPerTask);
         counts.put(e.getKey(), countsPerTask);
       }
+      this.dataFlowOperation = op;
+      this.executor = dataFlowOperation.getTaskPlan().getThisExecutor();
     }
 
     @Override
@@ -351,6 +381,14 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
       // add the object to the map
       boolean canAdd = true;
 
+      if (this.threadName == null) {
+        this.threadName = Thread.currentThread().getName();
+      }
+      String tn = Thread.currentThread().getName();
+      if (!tn.equals(threadName)) {
+        throw new RuntimeException(String.format("%d Threads are not equal %s %s",
+            executor, threadName, tn));
+      }
       if (messages.get(target) == null) {
         throw new RuntimeException(String.format("%d Partial receive error %d", executor, target));
       }
@@ -358,12 +396,12 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
       Integer c = counts.get(target).get(source);
       if (m.size() > 16) {
         canAdd = false;
-        LOG.info(String.format("%d Partial false: target %d source %d", executor, target, source));
+//       LOG.info(String.format("%d Partial false: target %d source %d", executor, target, source));
       } else {
         // we need to increment the reference count to make the buffers available
         // other wise they will bre reclaimed
-        LOG.info(String.format("%d Partial true: target %d source %d %s",
-            executor, target, source, counts.get(target)));
+//        LOG.info(String.format("%d Partial true: target %d source %d %s",
+//            executor, target, source, counts.get(target)));
         if (object instanceof MPIMessage) {
           ((MPIMessage) object).incrementRefCount();
         }
@@ -374,6 +412,15 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
     }
 
     public void progress() {
+      if (this.threadName == null) {
+        this.threadName = Thread.currentThread().getName();
+      }
+      String tn = Thread.currentThread().getName();
+      if (!tn.equals(threadName)) {
+        throw new RuntimeException(String.format("%d Threads are not equal %s %s",
+            executor, threadName, tn));
+      }
+
       for (int t : messages.keySet()) {
         boolean canProgress = true;
         while (canProgress) {
@@ -388,15 +435,23 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
             }
           }
 
+          if (map.entrySet().size() == 0) {
+            LOG.info(String.format("%d entry size is ZERO %d %s", executor, t, counts));
+          }
+
           if (found) {
             List<Object> out = new ArrayList<>();
             for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
               Object e1 = e.getValue().get(0);
               out.add(e1);
             }
-            if (sendPartial(t, out, 0, MessageFlags.FLAGS_MULTI_MSG)) {
+            if (dataFlowOperation.sendPartial(t, out, MessageFlags.FLAGS_MULTI_MSG, t)) {
               for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
-                e.getValue().remove(0);
+                List<Object> value = e.getValue();
+                if (value.size() == 0) {
+                  LOG.info(String.format("%d list size ZERO task %d %d", executor, t, e.getKey()));
+                }
+                value.remove(0);
               }
               for (Map.Entry<Integer, Integer> e : cMap.entrySet()) {
                 Integer i = e.getValue();

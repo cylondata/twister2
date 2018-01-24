@@ -21,6 +21,5 @@ public enum  MessageType {
   OBJECT,
   BUFFER,
   EMPTY,
-  SHORT,
-  KEYED,
+  SHORT;
 }

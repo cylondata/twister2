@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.basic.streaming.wordcount;
+package edu.iu.dsc.tws.examples.basic.batch.wordcount;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,6 +24,8 @@ import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.mpi.MPIDataFlowMultiGather;
+import edu.iu.dsc.tws.comms.mpi.io.GatherBatchFinalReceiver;
+import edu.iu.dsc.tws.comms.mpi.io.GatherBatchPartialReceiver;
 import edu.iu.dsc.tws.examples.utils.WordCountUtils;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
@@ -37,7 +39,7 @@ public class WordCountContainer implements IContainer {
 
   private TWSCommunication channel;
 
-  private static final int NO_OF_TASKS = 8;
+  private static final int NO_OF_TASKS = 16;
 
   private Config config;
 
@@ -70,15 +72,17 @@ public class WordCountContainer implements IContainer {
     Map<String, Object> newCfg = new HashMap<>();
     LOG.info("Setting up reduce dataflow operation");
     try {
+      // this method calls the init method
+      // I think this is wrong
       keyGather = (MPIDataFlowMultiGather) channel.keyedGather(newCfg, MessageType.OBJECT,
-          destinations, sources,
-          destinations, new WordAggregate());
+          destinations, sources, destinations,
+          new GatherBatchPartialReceiver(), new GatherBatchFinalReceiver(new WordAggregator()));
 
       if (id < 2) {
         for (int i = 0; i < noOfTasksPerExecutor; i++) {
           // the map thread where data is produced
           LOG.info(String.format("%d Starting %d", id, i + id * noOfTasksPerExecutor));
-          Thread mapThread = new Thread(new StreamingWordSource(config, keyGather, 1000,
+          Thread mapThread = new Thread(new BatchWordSource(config, keyGather, 1000,
               new ArrayList<>(destinations), noOfTasksPerExecutor * id + i, 200));
           mapThread.start();
         }
@@ -110,7 +114,5 @@ public class WordCountContainer implements IContainer {
     for (int i = 0; i < NO_OF_TASKS / 2; i++) {
       destinations.add(NO_OF_TASKS / 2 + i);
     }
-    LOG.info(String.format("%d sources %s destinations %s",
-        taskPlan.getThisExecutor(), sources, destinations));
   }
 }

@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.basic.streaming.wordcount;
+package edu.iu.dsc.tws.examples.basic.batch.wordcount;
 
 import java.util.HashMap;
 
@@ -21,11 +21,11 @@ import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 
 public final class WordCountJob {
+
   private WordCountJob() {
   }
 
   public static void main(String[] args) {
-
     // first load the configurations from command line and config files
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
@@ -34,7 +34,7 @@ public final class WordCountJob {
     jobConfig.putConfig(config);
 
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
-    jobBuilder.setName("streaming-wordcount");
+    jobBuilder.setName("batch-wordcount");
     jobBuilder.setContainerClass(WordCountContainer.class.getName());
     jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);

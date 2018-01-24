@@ -136,6 +136,6 @@ public class MPIController implements IController {
   protected boolean runProcess(String jobWorkingDirectory, String[] slurmCmd,
                                StringBuilder stderr) {
     File file = jobWorkingDirectory == null ? null : new File(jobWorkingDirectory);
-    return 0 == ProcessUtils.runSyncProcess(false, slurmCmd, stderr, file);
+    return 0 == ProcessUtils.runSyncProcess(false, slurmCmd, stderr, file, false);
   }
 }

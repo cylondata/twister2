@@ -21,7 +21,7 @@ import edu.iu.dsc.tws.rsched.spi.uploaders.UploaderException;
 /**
  * a class to use when no uploading is necessary
  */
-public class NullUploader implements IUploader{
+public class NullUploader implements IUploader {
 
   /**
    * Initialize the uploader
@@ -35,7 +35,7 @@ public class NullUploader implements IUploader{
    */
   public URI uploadPackage(String sourceLocation) throws UploaderException {
     try {
-      return new URI("null://uploader:1234/temp");
+      return new URI("/root/.twister2/repository");
     } catch (URISyntaxException e) {
       throw new UploaderException("Don't know how to convert to URI");
     }
