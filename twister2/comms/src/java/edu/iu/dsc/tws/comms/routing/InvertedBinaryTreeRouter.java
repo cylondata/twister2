@@ -162,7 +162,8 @@ public class InvertedBinaryTreeRouter {
     if (o != null) {
       return (int) o;
     } else {
-      throw new RuntimeException(executor + " Unexpected source requesting destination: " + source);
+      throw new RuntimeException(String.format("%d Unexpected source - %s requesting destination",
+          executor, source));
     }
   }
 

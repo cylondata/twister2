@@ -18,11 +18,11 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.api.MultiMessageReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.mpi.io.KeyedContent;
 
-public class WordAggregate implements MessageReceiver {
+public class WordAggregate implements MultiMessageReceiver {
   private static final Logger LOG = Logger.getLogger(WordAggregate.class.getName());
 
   private Config config;
@@ -37,7 +37,7 @@ public class WordAggregate implements MessageReceiver {
 
   @Override
   public void init(Config cfg, DataFlowOperation op,
-                   Map<Integer, List<Integer>> expectedIds) {
+                   Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
     TaskPlan plan = op.getTaskPlan();
     this.executor = op.getTaskPlan().getThisExecutor();
     LOG.info(String.format("%d final expected task ids %s", plan.getThisExecutor(), expectedIds));

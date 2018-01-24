@@ -20,6 +20,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MultiMessageReceiver;
 import edu.iu.dsc.tws.comms.core.DataFlowCommunication;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 
@@ -191,7 +192,7 @@ public class MPIDataFlowCommunication extends DataFlowCommunication {
   public DataFlowOperation keyedGather(Map<String, Object> properties, MessageType type,
                                        Set<Integer> edge,
                                        Set<Integer> sourceTasks, Set<Integer> destTasks,
-                                       MessageReceiver receiver) {
+                                       MultiMessageReceiver receiver) {
     // merge with the user specified configuration, user specified will take precedence
     Config mergedCfg = Config.newBuilder().putAll(config).putAll(properties).build();
 
@@ -208,13 +209,14 @@ public class MPIDataFlowCommunication extends DataFlowCommunication {
   public DataFlowOperation keyedGather(Map<String, Object> properties, MessageType type,
                                        Set<Integer> edge,
                                        Set<Integer> sourceTasks, Set<Integer> destTasks,
-                                       MessageReceiver receiver, MessageReceiver partialRecvr) {
+                                       MultiMessageReceiver receiver,
+                                       MultiMessageReceiver partialRecvr) {
     // merge with the user specified configuration, user specified will take precedence
     Config mergedCfg = Config.newBuilder().putAll(config).putAll(properties).build();
 
     // create the dataflow operation
     DataFlowOperation dataFlowOperation = new MPIDataFlowMultiGather(channel,
-        sourceTasks, destTasks, receiver, edge);
+        sourceTasks, destTasks, receiver, partialRecvr, edge);
 
     // intialize the operation
     dataFlowOperation.init(mergedCfg, type, instancePlan, 0);

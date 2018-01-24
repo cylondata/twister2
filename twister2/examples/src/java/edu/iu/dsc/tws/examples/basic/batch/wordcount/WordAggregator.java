@@ -45,6 +45,8 @@ public class WordAggregator implements GatherBatchReceiver {
 
   @Override
   public void receive(int target, Iterator<Object> it) {
-
+    while (it.hasNext()) {
+      LOG.info(String.format("%d Final word %s", executor, it.next()));
+    }
   }
 }

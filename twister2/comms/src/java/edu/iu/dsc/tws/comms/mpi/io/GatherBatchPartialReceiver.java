@@ -30,27 +30,36 @@ public class GatherBatchPartialReceiver implements MessageReceiver {
   // lets keep track of the messages
   // for each task we need to keep track of incoming messages
   private Map<Integer, Map<Integer, List<Object>>> messages = new HashMap<>();
+  private Map<Integer, Map<Integer, Integer>> counts = new HashMap<>();
   private Map<Integer, Map<Integer, Boolean>> finished = new HashMap<>();
   private DataFlowOperation dataFlowOperation;
   private int executor;
   private int sendPendingMax = 128;
+  private int destination;
+
+  public GatherBatchPartialReceiver(int dst) {
+    this.destination = dst;
+  }
 
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     executor = op.getTaskPlan().getThisExecutor();
     sendPendingMax = MPIContext.sendPendingMax(cfg);
 
-    LOG.info(String.format("%d expected ids %s", executor, expectedIds));
+    LOG.info(String.format("%d gather partial expected ids %s", executor, expectedIds));
     for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
       Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
       Map<Integer, Boolean> finishedPerTask = new HashMap<>();
+      Map<Integer, Integer> countsPerTask = new HashMap<>();
 
       for (int i : e.getValue()) {
         messagesPerTask.put(i, new ArrayList<Object>());
         finishedPerTask.put(i, false);
+        countsPerTask.put(i, 0);
       }
       messages.put(e.getKey(), messagesPerTask);
       finished.put(e.getKey(), finishedPerTask);
+      counts.put(e.getKey(), countsPerTask);
     }
     this.dataFlowOperation = op;
     this.executor = dataFlowOperation.getTaskPlan().getThisExecutor();
@@ -66,12 +75,18 @@ public class GatherBatchPartialReceiver implements MessageReceiver {
     }
     List<Object> m = messages.get(target).get(source);
     Map<Integer, Boolean> finishedMessages = finished.get(target);
+
     if (m.size() > sendPendingMax) {
+      LOG.info(String.format("%d Partial add FALSE target %d source %d", executor, target, source));
       canAdd = false;
     } else {
+      LOG.info(String.format("%d Partial add TRUE target %d source %d", executor, target, source));
       if (object instanceof MPIMessage) {
         ((MPIMessage) object).incrementRefCount();
       }
+      Integer c = counts.get(target).get(source);
+      counts.get(target).put(source, c + 1);
+
       m.add(object);
       if ((flags & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) {
         finishedMessages.put(source, true);
@@ -80,6 +95,7 @@ public class GatherBatchPartialReceiver implements MessageReceiver {
     return canAdd;
   }
 
+  @Override
   public void progress() {
     for (int t : messages.keySet()) {
       boolean canProgress = true;
@@ -87,11 +103,21 @@ public class GatherBatchPartialReceiver implements MessageReceiver {
         // now check weather we have the messages for this source
         Map<Integer, List<Object>> map = messages.get(t);
         Map<Integer, Boolean> finishedForTarget = finished.get(t);
+        Map<Integer, Integer> countMap = counts.get(t);
+        LOG.info(String.format("%d gather partial counts %s", executor, countMap));
         boolean found = true;
+        boolean allFinished = true;
         for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
           if (e.getValue().size() == 0 && !finishedForTarget.get(e.getKey())) {
             found = false;
             canProgress = false;
+          }
+
+          if (!finishedForTarget.get(e.getKey())) {
+            allFinished = false;
+          } else {
+            LOG.info(String.format("%d partial finished receiving to %d from %d",
+                executor, t, e.getKey()));
           }
         }
 
@@ -104,12 +130,20 @@ public class GatherBatchPartialReceiver implements MessageReceiver {
               out.add(value);
             }
           }
-          if (dataFlowOperation.sendPartial(t, out, MessageFlags.FLAGS_MULTI_MSG, t)) {
+          int flags = 0;
+          if (allFinished) {
+            flags = MessageFlags.FLAGS_LAST;
+          }
+          if (dataFlowOperation.sendPartial(t, out, flags, destination)) {
             for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
               List<Object> value = e.getValue();
               if (value.size() > 0) {
                 value.remove(0);
               }
+            }
+            for (Map.Entry<Integer, Integer> e : countMap.entrySet()) {
+              Integer i = e.getValue();
+              e.setValue(i - 1);
             }
           } else {
             canProgress = false;

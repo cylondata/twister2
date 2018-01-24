@@ -22,6 +22,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MultiMessageReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 
 public class MPIDataFlowMultiGather implements DataFlowOperation {
@@ -35,9 +36,9 @@ public class MPIDataFlowMultiGather implements DataFlowOperation {
   private Map<Integer, MPIDataFlowGather> gatherMap;
 
   // the final receiver
-  private MessageReceiver finalReceiver;
+  private MultiMessageReceiver finalReceiver;
 
-  private MessageReceiver partialReceiver;
+  private MultiMessageReceiver partialReceiver;
 
   private TWSMPIChannel channel;
 
@@ -51,7 +52,7 @@ public class MPIDataFlowMultiGather implements DataFlowOperation {
 
   public MPIDataFlowMultiGather(TWSMPIChannel chnl,
                                 Set<Integer> sources, Set<Integer> destination,
-                                MessageReceiver finalRecv, Set<Integer> es) {
+                                MultiMessageReceiver finalRecv, Set<Integer> es) {
     this.channel = chnl;
     this.sources = sources;
     this.destinations = destination;
@@ -61,7 +62,7 @@ public class MPIDataFlowMultiGather implements DataFlowOperation {
   }
 
   public MPIDataFlowMultiGather(TWSMPIChannel chnl, Set<Integer> sources, Set<Integer> destination,
-                                MessageReceiver finalRecv, MessageReceiver partialRecv,
+                                MultiMessageReceiver finalRecv, MultiMessageReceiver partialRecv,
                                 Set<Integer> es) {
     this.channel = chnl;
     this.sources = sources;
@@ -81,7 +82,8 @@ public class MPIDataFlowMultiGather implements DataFlowOperation {
   public boolean send(int source, Object message, int flags, int dest) {
     MPIDataFlowGather gather = gatherMap.get(dest);
     if (gather == null) {
-      throw new RuntimeException(String.format("%d Un-expected destination: %d", executor, dest));
+      throw new RuntimeException(String.format("%d Un-expected destination: %d %s",
+          executor, dest, gatherMap.keySet()));
     }
     boolean send = gather.send(source, message, flags, dest);
 //  LOG.info(String.format("%d sending message on reduce: %d %d %b", executor, path, source, send));
@@ -89,12 +91,13 @@ public class MPIDataFlowMultiGather implements DataFlowOperation {
   }
 
   @Override
-  public boolean sendPartial(int source, Object message, int path, int dest) {
-    MPIDataFlowGather gather = gatherMap.get(path);
+  public boolean sendPartial(int source, Object message, int flags, int dest) {
+    MPIDataFlowGather gather = gatherMap.get(dest);
     if (gather == null) {
-      throw new RuntimeException(String.format("%d Un-expected destination: %d", executor, dest));
+      throw new RuntimeException(String.format("%d Un-expected destination: %d %s",
+          executor, dest, gatherMap.keySet()));
     }
-    boolean send = gather.sendPartial(source, message, dest, path);
+    boolean send = gather.sendPartial(source, message, dest, flags);
 //  LOG.info(String.format("%d sending message on reduce: %d %d %b", executor, path, source, send));
     return send;
   }
@@ -103,6 +106,9 @@ public class MPIDataFlowMultiGather implements DataFlowOperation {
   public void progress() {
     for (MPIDataFlowGather reduce : gatherMap.values()) {
       reduce.progress();
+    }
+    if (partialReceiver != null) {
+      partialReceiver.progress();
     }
     finalReceiver.progress();
   }
@@ -131,8 +137,8 @@ public class MPIDataFlowMultiGather implements DataFlowOperation {
     this.type = t;
     this.plan = instancePlan;
 
-    Map<Integer, List<Integer>> finalReceives = new HashMap<>();
-    Map<Integer, List<Integer>> partialReceives = new HashMap<>();
+    Map<Integer, Map<Integer, List<Integer>>> finalReceives = new HashMap<>();
+    Map<Integer, Map<Integer, List<Integer>>> partialReceives = new HashMap<>();
     List<Integer> edgeList = new ArrayList<>(edges);
     Collections.sort(edgeList);
     int count = 0;
@@ -143,7 +149,7 @@ public class MPIDataFlowMultiGather implements DataFlowOperation {
       if (partialReceiver != null) {
         partialRcvr = new GatherPartialReceiver(dest);
         gather = new MPIDataFlowGather(channel, sources, dest,
-            finalRcvr, partialRcvr, count, dest, config, t, instancePlan, edgeList.get(count));
+            partialRcvr, finalRcvr, count, dest, config, t, instancePlan, edgeList.get(count));
       } else {
         gather = new MPIDataFlowGather(channel, sources, dest,
             finalRcvr, count, dest, config, t, instancePlan, edgeList.get(count));
@@ -153,10 +159,13 @@ public class MPIDataFlowMultiGather implements DataFlowOperation {
       gatherMap.put(dest, gather);
       count++;
 
-      for (Map.Entry<Integer, List<Integer>> e : gather.receiveExpectedTaskIds().entrySet()) {
-        finalReceives.put(e.getKey(), e.getValue());
-        partialReceives.put(e.getKey(), e.getValue());
-      }
+      Map<Integer, List<Integer>> expectedTaskIds = gather.receiveExpectedTaskIds();
+//      for (Map.Entry<Integer, List<Integer>> e : expectedTaskIds.entrySet()) {
+//        finalReceives.put(e.getKey(), e.getValue());
+//        partialReceives.put(e.getKey(), e.getValue());
+//      }
+      finalReceives.put(dest, expectedTaskIds);
+      partialReceives.put(dest, expectedTaskIds);
     }
 
     finalReceiver.init(config, this, finalReceives);

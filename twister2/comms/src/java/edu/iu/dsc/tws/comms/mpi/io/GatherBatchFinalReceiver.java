@@ -20,6 +20,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.GatherBatchReceiver;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.mpi.MPIContext;
 import edu.iu.dsc.tws.comms.mpi.MPIMessage;
@@ -32,6 +33,7 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
   private Map<Integer, Map<Integer, List<Object>>> messages = new HashMap<>();
   private Map<Integer, Map<Integer, Boolean>> finished = new HashMap<>();
   private Map<Integer, List<Object>> finalMessages = new HashMap<>();
+  private Map<Integer, Map<Integer, Integer>> counts = new HashMap<>();
   private DataFlowOperation dataFlowOperation;
   private int executor;
   private int sendPendingMax = 128;
@@ -50,14 +52,17 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
     for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
       Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
       Map<Integer, Boolean> finishedPerTask = new HashMap<>();
+      Map<Integer, Integer> countsPerTask = new HashMap<>();
 
       for (int i : e.getValue()) {
         messagesPerTask.put(i, new ArrayList<Object>());
         finishedPerTask.put(i, false);
+        countsPerTask.put(i, 0);
       }
       messages.put(e.getKey(), messagesPerTask);
       finished.put(e.getKey(), finishedPerTask);
       finalMessages.put(e.getKey(), new ArrayList<>());
+      counts.put(e.getKey(), countsPerTask);
     }
     this.dataFlowOperation = op;
     this.executor = dataFlowOperation.getTaskPlan().getThisExecutor();
@@ -77,8 +82,14 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
       if (object instanceof MPIMessage) {
         ((MPIMessage) object).incrementRefCount();
       }
+
+      Integer c = counts.get(target).get(source);
+      counts.get(target).put(source, c + 1);
+
       m.add(object);
-      finishedMessages.put(source, true);
+      if ((flags & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) {
+        finishedMessages.put(source, true);
+      }
     }
     return canAdd;
   }
@@ -89,6 +100,9 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
       // now check weather we have the messages for this source
       Map<Integer, List<Object>> map = messages.get(t);
       Map<Integer, Boolean> finishedForTarget = finished.get(t);
+      Map<Integer, Integer> countMap = counts.get(t);
+      LOG.info(String.format("%d gather final counts %s", executor, countMap));
+
       boolean found = true;
       for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
         if (e.getValue().size() == 0 && !finishedForTarget.get(e.getKey())) {

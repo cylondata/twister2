@@ -18,6 +18,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.examples.utils.RandomString;
 
 public class BatchWordSource implements Runnable {
@@ -72,8 +73,12 @@ public class BatchWordSource implements Runnable {
       nextIndex = nextIndex % noOfDestinations;
       int dest = destinations.get(nextIndex);
       nextIndex++;
+      int flags = 0;
+      if (i == noOfWords - 1) {
+        flags = MessageFlags.FLAGS_LAST;
+      }
       // lets try to process if send doesn't succeed
-      while (!operation.send(taskId, word, 0, dest)) {
+      while (!operation.send(taskId, word, flags, dest)) {
         try {
           Thread.sleep(1);
         } catch (InterruptedException e) {

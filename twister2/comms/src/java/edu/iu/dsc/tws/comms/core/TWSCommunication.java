@@ -18,6 +18,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MultiMessageReceiver;
 
 public interface TWSCommunication {
   void init(Config config, TaskPlan taskPlan);
@@ -70,10 +71,10 @@ public interface TWSCommunication {
   DataFlowOperation keyedGather(Map<String, Object> properties, MessageType type,
                                 Set<Integer> edge,
                                 Set<Integer> sourceTasks, Set<Integer> destTasks,
-                                MessageReceiver receiver);
+                                MultiMessageReceiver receiver);
 
   DataFlowOperation keyedGather(Map<String, Object> properties, MessageType type,
                                 Set<Integer> edge,
                                 Set<Integer> sourceTasks, Set<Integer> destTasks,
-                                MessageReceiver receiver, MessageReceiver partialRecvr);
+                                MultiMessageReceiver receiver, MultiMessageReceiver partialRecvr);
 }

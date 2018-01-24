@@ -17,4 +17,5 @@ public final class MessageFlags {
 
   public static final int FLAGS_LAST = 1 << 30;
   public static final int FLAGS_MULTI_MSG = 1 << 29;
+  public static final int FLAGS_EMPTY = 1 << 28;
 }

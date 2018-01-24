@@ -24,8 +24,8 @@ import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.mpi.MPIDataFlowMultiGather;
-import edu.iu.dsc.tws.comms.mpi.io.GatherBatchFinalReceiver;
-import edu.iu.dsc.tws.comms.mpi.io.GatherBatchPartialReceiver;
+import edu.iu.dsc.tws.comms.mpi.io.GatherMultiBatchFinalReceiver;
+import edu.iu.dsc.tws.comms.mpi.io.GatherMultiBatchPartialReceiver;
 import edu.iu.dsc.tws.examples.utils.WordCountUtils;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
@@ -76,13 +76,14 @@ public class WordCountContainer implements IContainer {
       // I think this is wrong
       keyGather = (MPIDataFlowMultiGather) channel.keyedGather(newCfg, MessageType.OBJECT,
           destinations, sources, destinations,
-          new GatherBatchPartialReceiver(), new GatherBatchFinalReceiver(new WordAggregator()));
+          new GatherMultiBatchFinalReceiver(new WordAggregator()),
+          new GatherMultiBatchPartialReceiver());
 
       if (id < 2) {
         for (int i = 0; i < noOfTasksPerExecutor; i++) {
           // the map thread where data is produced
           LOG.info(String.format("%d Starting %d", id, i + id * noOfTasksPerExecutor));
-          Thread mapThread = new Thread(new BatchWordSource(config, keyGather, 1000,
+          Thread mapThread = new Thread(new BatchWordSource(config, keyGather, 10,
               new ArrayList<>(destinations), noOfTasksPerExecutor * id + i, 200));
           mapThread.start();
         }
