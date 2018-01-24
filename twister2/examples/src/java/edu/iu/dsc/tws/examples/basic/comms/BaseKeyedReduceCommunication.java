@@ -34,7 +34,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.KeyedMessageReceiver;
+import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
@@ -175,7 +175,7 @@ public class BaseKeyedReduceCommunication implements IContainer {
   /**
    * Reduce class will work on the reduce messages.
    */
-  private class PartialReduceWorker implements KeyedMessageReceiver {
+  private class PartialReduceWorker implements MessageReceiver {
 
     // lets keep track of the messages
     // for each task we need to keep track of incoming messages
@@ -188,8 +188,8 @@ public class BaseKeyedReduceCommunication implements IContainer {
 
     @Override
     public void init(Config cfg, DataFlowOperation op,
-                     Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
-      Map<Integer, List<Integer>> exp = expectedIds.get(reduceTask);
+                     Map<Integer, List<Integer>> expectedIds) {
+      Map<Integer, List<Integer>> exp = expectedIds;
       for (Map.Entry<Integer, List<Integer>> e : exp.entrySet()) {
         Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
         Map<Integer, Integer> countsPerTask = new HashMap<>();
@@ -283,7 +283,7 @@ public class BaseKeyedReduceCommunication implements IContainer {
     }
   }
 
-  private class FinalReduceReceive implements KeyedMessageReceiver {
+  private class FinalReduceReceive implements MessageReceiver {
     // lets keep track of the messages
     // for each task we need to keep track of incoming messages
     private Map<Integer, Map<Integer, List<Object>>> messages = new HashMap<>();
@@ -295,10 +295,9 @@ public class BaseKeyedReduceCommunication implements IContainer {
 
     @Override
     public void init(Config cfg, DataFlowOperation op,
-                     Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
-      Map<Integer, List<Integer>> exp = expectedIds.get(reduceTask);
+                     Map<Integer, List<Integer>> expectedIds) {
 
-      for (Map.Entry<Integer, List<Integer>> e : exp.entrySet()) {
+      for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
         Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
         Map<Integer, Integer> countsPerTask = new HashMap<>();
 

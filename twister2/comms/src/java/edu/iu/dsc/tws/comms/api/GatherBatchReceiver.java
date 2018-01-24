@@ -11,29 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.api;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import edu.iu.dsc.tws.common.config.Config;
 
-public interface KeyedMessageReceiver {
-  /**
-   * Initialize the message receiver with tasks from which messages are expected
-   * For each sub edge in graph, for each path, gives the expected task ids
-   *
-   * subedge -> (path -> ids)
-   *
-   * @param expectedIds expected task ids
-   */
-  void init(Config cfg, DataFlowOperation op,
-            Map<Integer, Map<Integer, List<Integer>>> expectedIds);
-
-  /**
-   * The actual message callback
-   *
-   * @param object the actual message
-   */
-  boolean onMessage(int source, int path, int target, int flags, Object object);
-
-  void progress();
+public interface GatherBatchReceiver {
+  void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds);
+  void receive(int target, Iterator<Object> it);
 }

@@ -38,7 +38,11 @@ public class ScpController {
     // an example ssh command created by the format looks like this:
     // ssh -i ~/.ssh/id_rsa -p 23 user@example.com mkdir -p /twister2/repository/...
     String command = String.format("ssh %s %s mkdir -p %s", sshOptions, sshConnection, dir);
+<<<<<<< HEAD
     return 0 == ProcessUtils.runProcess( command, null);
+=======
+    return 0 == ProcessUtils.runProcess(command, null, false);
+>>>>>>> b281bedce330ef3edbb9bc01467a9df2a0b28abb
   }
 
   public boolean copyFromLocalFile(String source, String destination) {
@@ -46,7 +50,7 @@ public class ScpController {
     // scp -i ~/.ssh/id_rsa -p 23 ./foo.tar.gz user@example.com:/twister2/foo.tar.gz
     String command =
         String.format("scp %s %s %s:%s", scpOptions, source, scpConnection, destination);
-    return 0 == ProcessUtils.runProcess(command, null);
+    return 0 == ProcessUtils.runProcess(command, null, false);
   }
   public boolean copyFromLocalDirectory(String source, String destination) {
     // an example rsync command created by the format looks like this:
@@ -58,6 +62,6 @@ public class ScpController {
 
   public boolean delete(String filePath) {
     String command = String.format("ssh %s %s rm -rf %s", sshOptions, sshConnection, filePath);
-    return 0 == ProcessUtils.runProcess(command, null);
+    return 0 == ProcessUtils.runProcess(command, null, false);
   }
 }

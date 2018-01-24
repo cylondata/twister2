@@ -16,7 +16,6 @@ import java.util.Set;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.KeyedMessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 
@@ -43,7 +42,7 @@ public interface TWSCommunication {
 
   DataFlowOperation keyedReduce(Map<String, Object> properties, MessageType type, Set<Integer> edge,
                                 Set<Integer> sourceTasks, Set<Integer> destTasks,
-                                KeyedMessageReceiver receiver, KeyedMessageReceiver partial);
+                                MessageReceiver receiver, MessageReceiver partial);
 
   DataFlowOperation allReduce(Map<String, Object> properties, MessageType type,
                                 int edge1, int edge2,
@@ -71,5 +70,10 @@ public interface TWSCommunication {
   DataFlowOperation keyedGather(Map<String, Object> properties, MessageType type,
                                 Set<Integer> edge,
                                 Set<Integer> sourceTasks, Set<Integer> destTasks,
-                                KeyedMessageReceiver receiver);
+                                MessageReceiver receiver);
+
+  DataFlowOperation keyedGather(Map<String, Object> properties, MessageType type,
+                                Set<Integer> edge,
+                                Set<Integer> sourceTasks, Set<Integer> destTasks,
+                                MessageReceiver receiver, MessageReceiver partialRecvr);
 }

@@ -9,16 +9,20 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.basic.streaming.wordcount;
+package edu.iu.dsc.tws.examples.basic.batch.wordcount;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.examples.utils.RandomString;
 
-public class GenerateWordMap implements Runnable {
+public class BatchWordSource implements Runnable {
+  private static final Logger LOG = Logger.getLogger(BatchWordSource.class.getName());
+
   private DataFlowOperation operation;
 
   private Random random = new Random();
@@ -37,8 +41,14 @@ public class GenerateWordMap implements Runnable {
 
   private RandomString randomString;
 
-  public GenerateWordMap(Config config, DataFlowOperation operation, int words,
-                         List<Integer> dests, int tId) {
+  private int noOfWordsSent;
+
+  private int executor;
+
+  private List<String> sampleWords = new ArrayList<>();
+
+  public BatchWordSource(Config config, DataFlowOperation operation, int words,
+                         List<Integer> dests, int tId, int noOfSampleWords) {
     this.operation = operation;
     this.tempCharacters = new char[MAX_CHARS];
     this.noOfWords = words;
@@ -46,18 +56,32 @@ public class GenerateWordMap implements Runnable {
     this.taskId = tId;
     this.noOfDestinations = destinations.size();
     this.randomString = new RandomString(MAX_CHARS, new Random(), RandomString.ALPHANUM);
+    this.executor = operation.getTaskPlan().getThisExecutor();
+
+    for (int i = 0; i < noOfSampleWords; i++) {
+      sampleWords.add(randomString.nextRandomSizeString());
+    }
   }
 
   @Override
   public void run() {
+    int nextIndex = 0;
     for (int i = 0; i < noOfWords; i++) {
-      String word = generateWord();
+      String word = sampleWords.get(random.nextInt(sampleWords.size()));
       int destIndex = Math.abs(word.hashCode() % noOfDestinations);
-      int dest = destinations.get(destIndex);
+      nextIndex = nextIndex % noOfDestinations;
+      int dest = destinations.get(nextIndex);
+      nextIndex++;
       // lets try to process if send doesn't succeed
       while (!operation.send(taskId, word, 0, dest)) {
-        operation.progress();
+        try {
+          Thread.sleep(1);
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
       }
+      noOfWordsSent++;
+      LOG.info(String.format("%d %d Sending word true %d", executor, taskId, noOfWordsSent));
     }
   }
 

@@ -18,7 +18,6 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.KeyedMessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.DataFlowCommunication;
@@ -108,13 +107,13 @@ public class MPIDataFlowCommunication extends DataFlowCommunication {
   public DataFlowOperation keyedReduce(Map<String, Object> properties, MessageType type,
                                        Set<Integer> edge,
                                        Set<Integer> sourceTasks, Set<Integer> destTasks,
-                                       KeyedMessageReceiver receiver,
-                                       KeyedMessageReceiver partial) {
+                                       MessageReceiver receiver,
+                                       MessageReceiver partial) {
     // merge with the user specified configuration, user specified will take precedence
     Config mergedCfg = Config.newBuilder().putAll(config).putAll(properties).build();
 
     // create the dataflow operation
-    DataFlowOperation dataFlowOperation = new MPIDataFlowKReduce(channel,
+    DataFlowOperation dataFlowOperation = new MPIDataFlowMultiReduce(channel,
         sourceTasks, destTasks, receiver, partial, edge);
 
     // intialize the operation
@@ -192,12 +191,29 @@ public class MPIDataFlowCommunication extends DataFlowCommunication {
   public DataFlowOperation keyedGather(Map<String, Object> properties, MessageType type,
                                        Set<Integer> edge,
                                        Set<Integer> sourceTasks, Set<Integer> destTasks,
-                                       KeyedMessageReceiver receiver) {
+                                       MessageReceiver receiver) {
     // merge with the user specified configuration, user specified will take precedence
     Config mergedCfg = Config.newBuilder().putAll(config).putAll(properties).build();
 
     // create the dataflow operation
-    DataFlowOperation dataFlowOperation = new MPIDataFlowKGather(channel,
+    DataFlowOperation dataFlowOperation = new MPIDataFlowMultiGather(channel,
+        sourceTasks, destTasks, receiver, edge);
+
+    // intialize the operation
+    dataFlowOperation.init(mergedCfg, type, instancePlan, 0);
+    return dataFlowOperation;
+  }
+
+  @Override
+  public DataFlowOperation keyedGather(Map<String, Object> properties, MessageType type,
+                                       Set<Integer> edge,
+                                       Set<Integer> sourceTasks, Set<Integer> destTasks,
+                                       MessageReceiver receiver, MessageReceiver partialRecvr) {
+    // merge with the user specified configuration, user specified will take precedence
+    Config mergedCfg = Config.newBuilder().putAll(config).putAll(properties).build();
+
+    // create the dataflow operation
+    DataFlowOperation dataFlowOperation = new MPIDataFlowMultiGather(channel,
         sourceTasks, destTasks, receiver, edge);
 
     // intialize the operation
