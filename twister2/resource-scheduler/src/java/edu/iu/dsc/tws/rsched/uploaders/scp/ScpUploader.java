@@ -61,10 +61,11 @@ public class ScpUploader implements IUploader {
   }
 
 
+
   @Override
-  public void initialize(Config cfg) {
-    this.config = cfg;
-    this.controller = getScpController();
+  public void initialize(Config config) {
+    this.config=config;
+    this.controller=getScpController();
     this.destinationDirectory = ScpContext.uploaderJobDirectory(config);
   }
 
@@ -73,8 +74,8 @@ public class ScpUploader implements IUploader {
 
     File file = new File(sourceLocation);
     String fileName = file.getName();
-    boolean fileExists = file.isFile();
-    if (!fileExists) {
+    boolean dirExist = file.isDirectory();
+    if (!dirExist) {
       throw new UploaderException(
           String.format("Job package does not exist at '%s'", sourceLocation));
     }
@@ -86,11 +87,10 @@ public class ScpUploader implements IUploader {
               destinationDirectory));
     }
 
-    LOG.log(Level.INFO, String.format(
-        "Uploading the file from local file system to remote machine: %s -> %s.",
+    LOG.log(Level.INFO, String.format("Uploading the file from local file system to remote machine: %s -> %s.",
         sourceLocation, destinationDirectory));
     try {
-      if (!this.controller.copyFromLocalFile(sourceLocation, destinationDirectory)) {
+      if (!this.controller.copyFromLocalDirectory(sourceLocation, destinationDirectory)) {
         throw new UploaderException(
             String.format(
                 "Failed to upload the file from local file system to remote machine: %s -> %s.",
@@ -98,8 +98,9 @@ public class ScpUploader implements IUploader {
       }
       LOG.log(Level.INFO, String.format("Uploaded to remote machine: %s -> %s.",
           sourceLocation, destinationDirectory));
-      return new URI(destinationDirectory + "/" + fileName);
-    } catch (URISyntaxException e) {
+      return new URI(destinationDirectory +"/"+ fileName);
+    }
+    catch (URISyntaxException e) {
       throw new RuntimeException("Invalid file path for topology package destination: "
           + destinationDirectory, e);
     }
