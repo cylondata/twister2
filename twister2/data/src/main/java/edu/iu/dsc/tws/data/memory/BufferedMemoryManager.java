@@ -31,12 +31,16 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
+import com.google.common.primitives.Longs;
+
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.memory.lmdb.LMDBMemoryManager;
 
 /**
  * Inserts into the memory store in batches. Only one instance per executor.
  */
+//TODO: need to address the issue of converting bytebuffers to string keys to improve performance
+//TODO: one option would be to implement custom byteBuffer that is comparable
 public class BufferedMemoryManager extends AbstractMemoryManager {
 
   private static final Logger LOG = Logger.getLogger(BufferedMemoryManager.class.getName());
@@ -362,26 +366,6 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
         temp);
   }
 
-  @Override
-  public <T extends Serializable> boolean flush(int opID, T key) {
-    return false;
-  }
-
-  @Override
-  public boolean close(int opID, ByteBuffer key) {
-    return false;
-  }
-
-  @Override
-  public boolean close(int opID, byte[] key) {
-    return false;
-  }
-
-  @Override
-  public boolean close(int opID, long key) {
-    return false;
-  }
-
   /**
    * Slight variation of flush for so that the last ByteBuffer does not need to be copied into the
    * map
@@ -404,11 +388,32 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
         temp);
   }
 
+  @Override
+  public <T extends Serializable> boolean flush(int opID, T key) {
+    return false;
+  }
+
+  @Override
+  public boolean close(int opID, ByteBuffer key) {
+    return close(opID, new String(key.array(), java.nio.charset.StandardCharsets.UTF_8));
+  }
+
+  @Override
+  public boolean close(int opID, byte[] key) {
+    return close(opID, new String(key, java.nio.charset.StandardCharsets.UTF_8));
+  }
+
+  @Override
+  public boolean close(int opID, long key) {
+    return close(opID, new String(Longs.toByteArray(key), java.nio.charset.StandardCharsets.UTF_8));
+  }
+
   /**
    * Closing the key will make the BufferedMemoryManager to flush the current data into the store
    * and delete all the key information. This is done once we know that no more values will be sent
    * for this key
    */
+  @Override
   public boolean close(int opID, String key) {
     flush(opID, key);
     keyMap.remove(key);

@@ -5,6 +5,7 @@ common_deps_files = [
     "//twister2/common/src/java:config-java",
     "//twister2/common/src/java:common-java",
     "//third_party:com_github_jnr_jffi_native",
+    "@com_google_guava_guava//jar",
     "@lmdb_java//jar",
     "@lmdbjava_native_linux//jar",
     "@lmdbjava_native_windows//jar",
