@@ -61,6 +61,7 @@ import com.google.common.primitives.Longs;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
@@ -69,6 +70,7 @@ import edu.iu.dsc.tws.data.memory.MemoryManager;
 import edu.iu.dsc.tws.data.memory.lmdb.LMDBMemoryManager;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
+import edu.iu.dsc.tws.task.api.LinkedQueue;
 import edu.iu.dsc.tws.task.api.Message;
 import edu.iu.dsc.tws.task.api.SinkTask;
 import edu.iu.dsc.tws.task.api.SourceTask;
@@ -117,14 +119,8 @@ public class SimpleTaskQueueWithMM implements IContainer {
 
     Path dataPath = new Path("/home/pulasthi/work/twister2/lmdbdatabase");
     MemoryManager memoryManager = new LMDBMemoryManager(dataPath);
-    byte[] val = Longs.toByteArray(1231212121213L);
-    memoryManager.put(1234L, val);
 
-    ByteBuffer results = memoryManager.get(1234L);
-    long res = results.getLong();
-    if (res == 1231212121213L) {
-      System.out.println("Correct");
-    }
+
     // this method calls the init method
     // I think this is wrong
     //TODO: Does the task genereate the communication or is it done by a controller for examples
@@ -133,26 +129,67 @@ public class SimpleTaskQueueWithMM implements IContainer {
     //TODO: if the task creates the dataflowop does the task progress it or the executor
 
     //TODO : FOR NOW the dataflowop is created at container and sent to task
-//    LinkedQueue<Message> pongQueue = new LinkedQueue<Message>();
-//    taskExecutor.registerQueue(0, pongQueue);
-//
-//    direct = channel.direct(newCfg, MessageType.OBJECT, 0, sources,
-//        dests, new PingPongReceive());
-//    taskExecutor.initCommunication(channel, direct);
+    LinkedQueue<Message> pongQueue = new LinkedQueue<Message>();
+    taskExecutor.registerQueue(0, pongQueue);
+
+    direct = channel.direct(newCfg, MessageType.OBJECT, 0, sources,
+        dests, new PingPongReceive());
+    taskExecutor.initCommunication(channel, direct);
 
     //Memory Manager
-//    Path dataPath = new Path("/home/pulasthi/work/twister2/lmdbdatabase");
-//    MemoryManager memoryManager = new LMDBMemoryManager(dataPath);
-//    if (containerId == 0) {
-//      // the map thread where data is produced
+    if (containerId == 0) {
+      byte[] val = Longs.toByteArray(1231212121213L);
+      byte[] val2 = Longs.toByteArray(22222222L);
+      ByteBuffer valbuf = ByteBuffer.allocateDirect(8192);
+      memoryManager.put(0, 1234L, valbuf);
+      memoryManager.put(0, 1233L, val);
+      memoryManager.put(0, 2233L, val2);
+      // the map thread where data is produced
 //      LOG.log(Level.INFO, "Starting map thread");
 //      SourceTask<Object> mapTask = new MapWorker(0, direct);
 //      mapTask.setMemoryManager(memoryManager);
 //      taskExecutor.registerTask(mapTask);
 //      taskExecutor.submitTask(0);
 //      taskExecutor.progres();
-//
-//    } else if (containerId == 1) {
+
+    } else if (containerId == 1) {
+      byte[] val3 = Longs.toByteArray(3333333L);
+      ByteBuffer val3buf = ByteBuffer.wrap(val3);
+      try {
+        Thread.sleep(2000);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+      ByteBuffer results = memoryManager.get(0, 1234L);
+      if (results.limit() == 8192) {
+        System.out.println("Correct " + results.limit());
+      }
+
+      ByteBuffer valbuf2 = ByteBuffer.allocateDirect(16192);
+      memoryManager.put(0, 1234L, valbuf2);
+      results = memoryManager.get(0, 1234L);
+      if (results.limit() == 16192) {
+        System.out.println("Correct " + results.limit());
+      }
+
+
+      ByteBuffer results2 = memoryManager.get(0, 1232323L);
+
+      ByteBuffer results3 = memoryManager.get(0, 1233L);
+      if (results2 == null) {
+
+        System.out.println("Missing key is null");
+      }
+      if (results3.getLong() == 1231212121213L) {
+        System.out.println("Long value is correct");
+      }
+
+      memoryManager.append(0, 2233L, val3buf);
+
+      ByteBuffer resultsappend = memoryManager.get(0, 2233L);
+      System.out.println("Long value 1 :" + resultsappend.getLong());
+      System.out.println("Long value 1 :" + resultsappend.getLong());
+
 //      ArrayList<Integer> inq = new ArrayList<>();
 //      inq.add(0);
 //      taskExecutor.setTaskMessageProcessLimit(10000);
@@ -160,7 +197,7 @@ public class SimpleTaskQueueWithMM implements IContainer {
 //      recTask.setMemoryManager(memoryManager);
 //      taskExecutor.registerSinkTask(recTask, inq);
 //      taskExecutor.progres();
-//    }
+    }
   }
 
   private class PingPongReceive implements MessageReceiver {
@@ -217,15 +254,15 @@ public class SimpleTaskQueueWithMM implements IContainer {
         long keytemp = 1234L;
         byte[] init = Longs.toByteArray(1L);
         long val = 1L;
-        if (getMemoryManager().containsKey(keytemp)) {
-          byte[] temp = getMemoryManager().getBytes(keytemp);
+        if (getMemoryManager().containsKey(0, keytemp)) {
+          byte[] temp = getMemoryManager().getBytes(0, keytemp);
           final ByteBuffer valBuffer = allocateDirect(Long.BYTES);
           valBuffer.put(temp, 0, temp.length);
           val = valBuffer.getLong();
           val = val + 1;
           init = Longs.toByteArray(val);
         }
-        getMemoryManager().put(keytemp, init);
+        getMemoryManager().put(0, keytemp, init);
         System.out.println(((String) content.getContent()).toString()
             + " Value of mapped long : " + val);
       }
