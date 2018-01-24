@@ -33,7 +33,7 @@ public class ScpContext extends SchedulerContext {
    */
   public static final String uploaderJobDirectory(Config cfg) {
     return TokenSub.substitute(cfg, cfg.getStringValue(UPLOAD_DIRECTORY,
-        "${HOME}/.twister2/repository"), Context.substitutions);
+        "/root/.twister2/repository/"), Context.substitutions);
   }
 
   public static String scpOptions(Config config) {
