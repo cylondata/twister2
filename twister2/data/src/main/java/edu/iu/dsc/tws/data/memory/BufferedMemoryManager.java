@@ -92,7 +92,7 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean append(int opID, ByteBuffer key, ByteBuffer value) {
-    return memoryManager.append(opID, key, value);
+    return put(opID, key, value);
   }
 
   /*@Override
@@ -107,7 +107,7 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean append(int opID, String key, ByteBuffer value) {
-    return false;
+    return put(opID, key, value);
   }
 
   /*@Override
@@ -117,7 +117,9 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean put(int opID, ByteBuffer key, ByteBuffer value) {
-    return memoryManager.put(opID, key, value);
+    String keyString = new String(key.array(), java.nio.charset.StandardCharsets.UTF_8);
+    registerKey(opID, keyString);
+    return putBulk(opID, keyString, value);
   }
 
   /*@Override
@@ -137,7 +139,8 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean put(int opID, String key, ByteBuffer value) {
-    return false;
+    registerKey(opID, key);
+    return putBulk(opID,key,value);
   }
 
   /*@Override
@@ -162,6 +165,10 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
 
   @Override
   public ByteBuffer get(int opID, ByteBuffer key) {
+    String keyString = new String(key.array(), java.nio.charset.StandardCharsets.UTF_8);
+    if (keyMap.get(opID).containsKey(keyString)) {
+      flush(opID, keyString);
+    }
     return memoryManager.get(opID, key);
   }
 
@@ -179,7 +186,7 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
     // if the key given is already in the keyMap we need to flush the key
     //TODO: Do we flush the key and get the data from the memory store or do we get what
     //TODO: we can from the keymap and then get the rest of the store
-    if (keyMap.containsKey(key)) {
+    if (keyMap.get(opID).containsKey(key)) {
       flush(opID, key);
     }
 
@@ -234,7 +241,10 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean containsKey(int opID, String key) {
-    return false;
+    if(keyMap.get(opID).containsKey(key)){
+      return true;
+    }
+    return memoryManager.containsKey(opID, key);
   }
 
   /*@Override
@@ -382,9 +392,15 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
     }
     //Since we got all the buffer values reset the size
     keyBufferSizes.get(opID).put(key, 0);
-    return memoryManager.put(opID, ByteBuffer.wrap(key.getBytes(
-        MemoryManagerContext.DEFAULT_CHARSET)),
-        temp);
+    if(memoryManager.containsKey(opID, key)){
+      return memoryManager.append(opID, ByteBuffer.wrap(key.getBytes(
+          MemoryManagerContext.DEFAULT_CHARSET)),
+          temp);
+    }else{
+      return memoryManager.put(opID, ByteBuffer.wrap(key.getBytes(
+          MemoryManagerContext.DEFAULT_CHARSET)),
+          temp);
+    }
   }
 
   /**
@@ -404,9 +420,15 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
     temp.put(last);
     //Since we got all the buffer values reset the size
     keyBufferSizes.get(opID).put(key, 0);
-    return memoryManager.put(opID, ByteBuffer.wrap(key.getBytes(
-        MemoryManagerContext.DEFAULT_CHARSET)),
-        temp);
+    if(memoryManager.containsKey(opID, key)){
+      return memoryManager.append(opID, ByteBuffer.wrap(key.getBytes(
+          MemoryManagerContext.DEFAULT_CHARSET)),
+          temp);
+    }else{
+      return memoryManager.put(opID, ByteBuffer.wrap(key.getBytes(
+          MemoryManagerContext.DEFAULT_CHARSET)),
+          temp);
+    }
   }
 
   /*@Override
