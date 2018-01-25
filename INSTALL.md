@@ -79,3 +79,12 @@ bazel-bin/scripts/package
 
 You can exctract the `bazel-bin/scripts/package/twister2-client.tar.gz` to run Twister2.
 
+If you get errors make sure you have the pre-requisites installed
+
+```
+sudo apt-get install git build-essential automake cmake libtool-bin zip libunwind-setjmp0-dev zlib1g-dev unzip pkg-config python-setuptools -y
+
+sudo apt-get install  python-dev python-pip
+```
+
+
