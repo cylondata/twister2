@@ -75,7 +75,6 @@ import edu.iu.dsc.tws.task.api.Message;
 import edu.iu.dsc.tws.task.api.SinkTask;
 import edu.iu.dsc.tws.task.api.SourceTask;
 import edu.iu.dsc.tws.task.core.TaskExecutorFixedThread;
-import static java.nio.ByteBuffer.allocateDirect;
 
 public class SimpleTaskQueueWithMM implements IContainer {
   private static final Logger LOG = Logger.getLogger(SimpleTaskQueueWithMM.
@@ -141,9 +140,9 @@ public class SimpleTaskQueueWithMM implements IContainer {
       byte[] val = Longs.toByteArray(1231212121213L);
       byte[] val2 = Longs.toByteArray(22222222L);
       ByteBuffer valbuf = ByteBuffer.allocateDirect(8192);
-      memoryManager.put(0, 1234L, valbuf);
-      memoryManager.put(0, 1233L, val);
-      memoryManager.put(0, 2233L, val2);
+      memoryManager.put(0, "temp", valbuf);
+//      memoryManager.put(0, "temp", val);
+//      memoryManager.put(0, "temp", val2);
       // the map thread where data is produced
 //      LOG.log(Level.INFO, "Starting map thread");
 //      SourceTask<Object> mapTask = new MapWorker(0, direct);
@@ -160,22 +159,22 @@ public class SimpleTaskQueueWithMM implements IContainer {
       } catch (InterruptedException e) {
         e.printStackTrace();
       }
-      ByteBuffer results = memoryManager.get(0, 1234L);
+      ByteBuffer results = memoryManager.get(0, "temp");
       if (results.limit() == 8192) {
         System.out.println("Correct " + results.limit());
       }
 
       ByteBuffer valbuf2 = ByteBuffer.allocateDirect(16192);
-      memoryManager.put(0, 1234L, valbuf2);
-      results = memoryManager.get(0, 1234L);
+      memoryManager.put(0, "temp", valbuf2);
+      results = memoryManager.get(0, "temp");
       if (results.limit() == 16192) {
         System.out.println("Correct " + results.limit());
       }
 
 
-      ByteBuffer results2 = memoryManager.get(0, 1232323L);
+      ByteBuffer results2 = memoryManager.get(0, "temp");
 
-      ByteBuffer results3 = memoryManager.get(0, 1233L);
+      ByteBuffer results3 = memoryManager.get(0, "temp");
       if (results2 == null) {
 
         System.out.println("Missing key is null");
@@ -184,9 +183,9 @@ public class SimpleTaskQueueWithMM implements IContainer {
         System.out.println("Long value is correct");
       }
 
-      memoryManager.append(0, 2233L, val3buf);
+      memoryManager.append(0, "temp", val3buf);
 
-      ByteBuffer resultsappend = memoryManager.get(0, 2233L);
+      ByteBuffer resultsappend = memoryManager.get(0, "temp");
       System.out.println("Long value 1 :" + resultsappend.getLong());
       System.out.println("Long value 1 :" + resultsappend.getLong());
 
@@ -254,15 +253,15 @@ public class SimpleTaskQueueWithMM implements IContainer {
         long keytemp = 1234L;
         byte[] init = Longs.toByteArray(1L);
         long val = 1L;
-        if (getMemoryManager().containsKey(0, keytemp)) {
-          byte[] temp = getMemoryManager().getBytes(0, keytemp);
-          final ByteBuffer valBuffer = allocateDirect(Long.BYTES);
-          valBuffer.put(temp, 0, temp.length);
-          val = valBuffer.getLong();
-          val = val + 1;
-          init = Longs.toByteArray(val);
+        if (getMemoryManager().containsKey(0, "temp")) {
+//          byte[] temp = getMemoryManager().getBytes(0, keytemp);
+//          final ByteBuffer valBuffer = allocateDirect(Long.BYTES);
+//          valBuffer.put(temp, 0, temp.length);
+//          val = valBuffer.getLong();
+//          val = val + 1;
+//          init = Longs.toByteArray(val);
         }
-        getMemoryManager().put(0, keytemp, init);
+        //getMemoryManager().put(0, "temp", init);
         System.out.println(((String) content.getContent()).toString()
             + " Value of mapped long : " + val);
       }
