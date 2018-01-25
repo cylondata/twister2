@@ -18,7 +18,19 @@
    sudo apt-get install g++
 ```
 
-4. OpenMPI
+4. Installing maven and configure it as follows :
+
+```
+  wget http://mirrors.ibiblio.org/apache/maven/maven-3/3.5.2/binaries/apache-maven-3.5.2-bin.tar.gz
+```  
+  Extract this to a directory called maven configure the environmental variables
+```  
+  MAVEN_HOME=<path-to-maven-directory>
+  PATH=$MAVEN_HOME/bin:$PATH
+  export MAVEN_HOME PATH
+```
+
+5. OpenMPI
   * We recommend using `OpenMPI 3.0.0`
 
   * Download OpenMPI 3.0.0 from https://www.open-mpi.org/software/ompi/v3.0/downloads/openmpi-3.0.0.tar.gz
@@ -44,18 +56,6 @@
     mvn install:install-file -DcreateChecksum=true -Dpackaging=jar -Dfile=$OMPI_300/ompi/mpi/java/java/mpi.jar -DgroupId=ompi -DartifactId=ompijavabinding -Dversion=3.0.0
   ```
   * Few examples are available in `$OMPI_300/examples`. Please use `mpijavac` with other parameters similar to `javac` command to compile OpenMPI Java programs. Once compiled `mpirun [options] java -cp <classpath> class-name arguments` command with proper values set as arguments will run the MPI Java program.
-
-5. Installing maven and configure it as follows :
-
-```
-  wget http://mirrors.ibiblio.org/apache/maven/maven-3/3.5.2/binaries/apache-maven-3.5.2-bin.tar.gz
-```  
-  Extract this to a directory called maven configure the environmental variables
-```  
-  MAVEN_HOME=<path-to-maven-directory>
-  PATH=$MAVEN_HOME/bin:$PATH
-  export MAVEN_HOME PATH
-```
   
 6. Bazel build system
   * Twister2 requires Bazel build system version 0.30.
