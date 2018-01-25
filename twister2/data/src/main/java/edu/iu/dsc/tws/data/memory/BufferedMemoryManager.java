@@ -23,7 +23,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.memory;
 
-import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -31,7 +30,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
-import com.google.common.primitives.Longs;
 
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.memory.lmdb.LMDBMemoryManager;
@@ -97,7 +95,7 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
     return memoryManager.append(opID, key, value);
   }
 
-  @Override
+  /*@Override
   public boolean append(int opID, byte[] key, ByteBuffer value) {
     return false;
   }
@@ -105,24 +103,24 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
   @Override
   public boolean append(int opID, long key, ByteBuffer value) {
     return memoryManager.append(opID, key, value);
-  }
+  }*/
 
   @Override
   public boolean append(int opID, String key, ByteBuffer value) {
     return false;
   }
 
-  @Override
+  /*@Override
   public <T extends Serializable> boolean append(int opID, T key, ByteBuffer value) {
     return false;
-  }
+  }*/
 
   @Override
   public boolean put(int opID, ByteBuffer key, ByteBuffer value) {
     return memoryManager.put(opID, key, value);
   }
 
-  @Override
+  /*@Override
   public boolean put(int opID, byte[] key, byte[] value) {
     return memoryManager.put(opID, key, value);
   }
@@ -135,14 +133,14 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
   @Override
   public boolean put(int opID, long key, ByteBuffer value) {
     return memoryManager.put(opID, key, value);
-  }
+  }*/
 
   @Override
   public boolean put(int opID, String key, ByteBuffer value) {
     return false;
   }
 
-  @Override
+  /*@Override
   public <T extends Serializable> boolean put(int opID, T key, ByteBuffer value) {
     return false;
   }
@@ -150,9 +148,9 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
   @Override
   public boolean put(int opID, long key, byte[] value) {
     return memoryManager.put(opID, key, value);
-  }
+  }*/
 
-  @Override
+  /*@Override
   public boolean put(int opID, String key, byte[] value) {
     return false;
   }
@@ -160,14 +158,14 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
   @Override
   public <T extends Serializable> boolean put(int opID, T key, byte[] value) {
     return false;
-  }
+  }*/
 
   @Override
   public ByteBuffer get(int opID, ByteBuffer key) {
     return memoryManager.get(opID, key);
   }
 
-  @Override
+  /*@Override
   public ByteBuffer get(int opID, byte[] key) {
     return memoryManager.get(opID, key);
   }
@@ -175,7 +173,7 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
   @Override
   public ByteBuffer get(int opID, long key) {
     return memoryManager.get(opID, key);
-  }
+  }*/
 
   public ByteBuffer get(int opID, String key) {
     // if the key given is already in the keyMap we need to flush the key
@@ -189,7 +187,7 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
         key.getBytes(MemoryManagerContext.DEFAULT_CHARSET)));
   }
 
-  @Override
+  /*@Override
   public <T extends Serializable> ByteBuffer get(int opID, T key) {
     return null;
   }
@@ -217,14 +215,14 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
   @Override
   public byte[] getBytes(int opID, ByteBuffer key) {
     return memoryManager.getBytes(opID, key);
-  }
+  }*/
 
   @Override
   public boolean containsKey(int opID, ByteBuffer key) {
     return memoryManager.containsKey(opID, key);
   }
 
-  @Override
+  /*@Override
   public boolean containsKey(int opID, byte[] key) {
     return memoryManager.containsKey(opID, key);
   }
@@ -232,41 +230,54 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
   @Override
   public boolean containsKey(int opID, long key) {
     return memoryManager.containsKey(opID, key);
-  }
+  }*/
 
   @Override
   public boolean containsKey(int opID, String key) {
     return false;
   }
 
-  @Override
+  /*@Override
   public <T extends Serializable> boolean containsKey(int opID, T key) {
     return false;
-  }
+  }*/
 
   @Override
   public boolean delete(int opID, ByteBuffer key) {
+    deleteFromBMM(opID, new String(key.array(), java.nio.charset.StandardCharsets.UTF_8));
     return memoryManager.delete(opID, key);
   }
 
-  @Override
+  /*@Override
   public boolean delete(int opID, byte[] key) {
+    deleteFromBMM(opID, new String(key, java.nio.charset.StandardCharsets.UTF_8));
     return memoryManager.delete(opID, key);
   }
 
   @Override
   public boolean delete(int opID, long key) {
+    deleteFromBMM(opID, new String(Longs.toByteArray(key),java.nio.charset.StandardCharsets.UTF_8));
     return memoryManager.delete(opID, key);
-  }
+  }*/
 
   @Override
   public boolean delete(int opID, String key) {
-    return false;
+    deleteFromBMM(opID, key);
+    return memoryManager.delete(opID, key);
   }
 
-  @Override
+  /*@Override
   public <T extends Serializable> boolean delete(int opID, T key) {
-    return false;
+    //TODO : Need to think about the 511 key size constraint in lmdb, need to check that for other
+    //scenarios as well
+    return memoryManager.delete(opID, key);
+  }*/
+
+  public void deleteFromBMM(int opID, String key) {
+    keyMap.get(opID).remove(key);
+    keyMapCurrent.get(opID).remove(key);
+    keyMapBuffers.get(opID).remove(key);
+    keyBufferSizes.get(opID).remove(key);
   }
 
   @Override
@@ -282,6 +293,17 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
     keyBufferSizes.put(opID, new ConcurrentHashMap<String, Integer>());
     operationMap.put(opID, temp);
     return temp;
+  }
+
+  @Override
+  public boolean removeOperation(int opID) {
+    memoryManager.removeOperation(opID);
+    keyMap.remove(opID);
+    keyMapCurrent.remove(opID);
+    keyMapBuffers.remove(opID);
+    keyBufferSizes.remove(opID);
+    operationMap.remove(opID);
+    return true;
   }
 
   /**
@@ -300,6 +322,7 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
     keyMap.get(opID).put(key, step);
     keyMapCurrent.get(opID).put(key, 0);
     keyMapBuffers.get(opID).put(key, new LinkedList<ByteBuffer>());
+    keyBufferSizes.get(opID).put(key, 0);
     return true;
   }
 
@@ -337,7 +360,7 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
     return flush(opID, new String(key.array(), java.nio.charset.StandardCharsets.UTF_8));
   }
 
-  @Override
+  /*@Override
   public boolean flush(int opID, byte[] key) {
     return flush(opID, new String(key, java.nio.charset.StandardCharsets.UTF_8));
   }
@@ -345,7 +368,7 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
   @Override
   public boolean flush(int opID, long key) {
     return flush(opID, new String(Longs.toByteArray(key), java.nio.charset.StandardCharsets.UTF_8));
-  }
+  }*/
 
   /**
    * Makes sure all the data that is held in the BufferedMemoryManager is pushed into the
@@ -386,17 +409,17 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
         temp);
   }
 
-  @Override
+  /*@Override
   public <T extends Serializable> boolean flush(int opID, T key) {
     return false;
-  }
+  }*/
 
   @Override
   public boolean close(int opID, ByteBuffer key) {
     return close(opID, new String(key.array(), java.nio.charset.StandardCharsets.UTF_8));
   }
 
-  @Override
+  /*@Override
   public boolean close(int opID, byte[] key) {
     return close(opID, new String(key, java.nio.charset.StandardCharsets.UTF_8));
   }
@@ -404,7 +427,7 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
   @Override
   public boolean close(int opID, long key) {
     return close(opID, new String(Longs.toByteArray(key), java.nio.charset.StandardCharsets.UTF_8));
-  }
+  }*/
 
   /**
    * Closing the key will make the BufferedMemoryManager to flush the current data into the store
@@ -414,14 +437,15 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
   @Override
   public boolean close(int opID, String key) {
     flush(opID, key);
-    keyMap.remove(key);
-    keyMapCurrent.remove(key);
-    keyMapBuffers.remove(key);
+    keyMap.get(opID).remove(key);
+    keyMapCurrent.get(opID).remove(key);
+    keyMapBuffers.get(opID).remove(key);
+    keyBufferSizes.get(opID).remove(key);
     return true;
   }
 
-  @Override
+  /*@Override
   public <T extends Serializable> boolean close(int opID, T key) {
     return false;
-  }
+  }*/
 }

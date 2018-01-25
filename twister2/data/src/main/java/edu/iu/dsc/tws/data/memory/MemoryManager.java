@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.memory;
 
-import java.io.Serializable;
 import java.nio.ByteBuffer;
 
 /**
@@ -37,13 +36,13 @@ public interface MemoryManager {
    */
   boolean append(int opID, ByteBuffer key, ByteBuffer value);
 
-  boolean append(int opID, byte[] key, ByteBuffer value);
+  /*boolean append(int opID, byte[] key, ByteBuffer value);
 
-  boolean append(int opID, long key, ByteBuffer value);
+  boolean append(int opID, long key, ByteBuffer value);*/
 
   boolean append(int opID, String key, ByteBuffer value);
 
-  <T extends Serializable> boolean append(int opID, T key, ByteBuffer value);
+  /*<T extends Serializable> boolean append(int opID, T key, ByteBuffer value);*/
 
   /**
    * Stores the give key value pair in the memory manager
@@ -54,16 +53,16 @@ public interface MemoryManager {
    * Stores the give key value pair in the memory manager
    * if the key already exists the new value will be added to the key
    */
-  boolean put(int opID, byte[] key, ByteBuffer value);
+  /*boolean put(int opID, byte[] key, ByteBuffer value);
 
-  /**
+  *//**
    * Stores the give key value pair in the memory manager
-   */
-  boolean put(int opID, long key, ByteBuffer value);
+   *//*
+  boolean put(int opID, long key, ByteBuffer value);*/
 
   boolean put(int opID, String key, ByteBuffer value);
 
-  <T extends Serializable> boolean put(int opID, T key, ByteBuffer value);
+  /*<T extends Serializable> boolean put(int opID, T key, ByteBuffer value);*/
 
   /**
    * Stores the give key value pair in the memory manager
@@ -72,16 +71,16 @@ public interface MemoryManager {
    * @param value value to be stored
    * @return true of the key value pair was added, false otherwise
    */
-  boolean put(int opID, byte[] key, byte[] value);
+  /*boolean put(int opID, byte[] key, byte[] value);
 
-  /**
+  *//**
    * Stores the give key value pair in the memory manager
-   */
+   *//*
   boolean put(int opID, long key, byte[] value);
 
   boolean put(int opID, String key, byte[] value);
 
-  <T extends Serializable> boolean put(int opID, T key, byte[] value);
+  <T extends Serializable> boolean put(int opID, T key, byte[] value);*/
 
   /**
    * Get the corresponding value as ByteBuffer for the given key from the store
@@ -91,36 +90,36 @@ public interface MemoryManager {
   /**
    * Get the corresponding value as ByteBuffer for the given key from the store
    */
-  ByteBuffer get(int opID, byte[] key);
+  /*ByteBuffer get(int opID, byte[] key);
 
-  /**
+  *//**
    * Get the corresponding value as ByteBuffer for the given key from the store
-   */
-  ByteBuffer get(int opID, long key);
+   *//*
+  ByteBuffer get(int opID, long key);*/
 
   ByteBuffer get(int opID, String key);
 
-  <T extends Serializable> ByteBuffer get(int opID, T key);
+  /*<T extends Serializable> ByteBuffer get(int opID, T key);
 
   byte[] getBytes(int opID, ByteBuffer key);
 
-  /**
+  *//**
    * Get the corresponding value as bytes for the given key from the store
-   */
+   *//*
   byte[] getBytes(int opID, byte[] key);
 
-  /**
+  *//**
    * Get the corresponding value as bytes for the given key from the store
-   */
+   *//*
   byte[] getBytes(int opID, long key);
 
-  /**
+  *//**
    * Get the corresponding value as bytes for the given key from the store
-   */
+   *//*
 
   byte[] getBytes(int opID, String key);
 
-  <T extends Serializable> byte[] getBytes(int opID, T key);
+  <T extends Serializable> byte[] getBytes(int opID, T key);*/
 
 
   /**
@@ -137,19 +136,19 @@ public interface MemoryManager {
    * @param key key to be checked
    * @return true if the key is present, false otherwise
    */
-  boolean containsKey(int opID, byte[] key);
+  /*boolean containsKey(int opID, byte[] key);
 
-  /**
+  *//**
    * checks if the given key is in the memory manager
    *
    * @param key key to be checked
    * @return true if the key is present, false otherwise
-   */
-  boolean containsKey(int opID, long key);
+   *//*
+  boolean containsKey(int opID, long key);*/
 
   boolean containsKey(int opID, String key);
 
-  <T extends Serializable> boolean containsKey(int opID, T key);
+  /*<T extends Serializable> boolean containsKey(int opID, T key);*/
 
   /**
    * delete the given key from the store
@@ -158,17 +157,17 @@ public interface MemoryManager {
 
   /**
    * delete the given key from the store
-   */
+   *//*
   boolean delete(int opID, byte[] key);
 
-  /**
+  *//**
    * delete the given key from the store
-   */
-  boolean delete(int opID, long key);
+   *//*
+  boolean delete(int opID, long key);*/
 
   boolean delete(int opID, String key);
 
-  <T extends Serializable> boolean delete(int opID, T key);
+  /*<T extends Serializable> boolean delete(int opID, T key);*/
 
   /**
    * Add an memory manager instance for the given operation
@@ -176,6 +175,14 @@ public interface MemoryManager {
    * @return returns the memory manager or null (Null is returned at the base layer)
    */
   OperationMemoryManager addOperation(int opID);
+
+  /**
+   * Remove an operation from the memory manager. This will result in loss of all the data related
+   * to the operation in the memory manager
+   * @param opID operation id to be removed
+   * @return true if the operation was removed, false otherwise
+   */
+  boolean removeOperation(int opID);
 
   /**
    * Flush all the data into the store. This method is needed only if buffering is done at the
@@ -186,13 +193,13 @@ public interface MemoryManager {
    */
   boolean flush(int opID, ByteBuffer key);
 
-  boolean flush(int opID, byte[] key);
+  /*boolean flush(int opID, byte[] key);
 
-  boolean flush(int opID, long key);
+  boolean flush(int opID, long key);*/
 
   boolean flush(int opID, String key);
 
-  <T extends Serializable> boolean flush(int opID, T key);
+  /*<T extends Serializable> boolean flush(int opID, T key);*/
 
   /**
    * flush and close the given key. After close is performed the key data will only be available in
@@ -203,12 +210,12 @@ public interface MemoryManager {
    */
   boolean close(int opID, ByteBuffer key);
 
-  boolean close(int opID, byte[] key);
+  /*boolean close(int opID, byte[] key);
 
-  boolean close(int opID, long key);
+  boolean close(int opID, long key);*/
 
   boolean close(int opID, String key);
 
-  <T extends Serializable> boolean close(int opID, T key);
+  /*<T extends Serializable> boolean close(int opID, T key);*/
 
 }
