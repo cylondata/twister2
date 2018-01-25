@@ -38,6 +38,7 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
   private int executor;
   private int sendPendingMax = 128;
   private GatherBatchReceiver gatherBatchReceiver;
+  private Map<Integer, Boolean> batchDone = new HashMap<>();
 
   public GatherBatchFinalReceiver(GatherBatchReceiver gatherBatchReceiver) {
     this.gatherBatchReceiver = gatherBatchReceiver;
@@ -48,7 +49,7 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
     executor = op.getTaskPlan().getThisExecutor();
     sendPendingMax = MPIContext.sendPendingMax(cfg);
 
-    LOG.info(String.format("%d expected ids %s", executor, expectedIds));
+    LOG.fine(String.format("%d expected ids %s", executor, expectedIds));
     for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
       Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
       Map<Integer, Boolean> finishedPerTask = new HashMap<>();
@@ -63,6 +64,7 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
       finished.put(e.getKey(), finishedPerTask);
       finalMessages.put(e.getKey(), new ArrayList<>());
       counts.put(e.getKey(), countsPerTask);
+      batchDone.put(e.getKey(), false);
     }
     this.dataFlowOperation = op;
     this.executor = dataFlowOperation.getTaskPlan().getThisExecutor();
@@ -78,7 +80,9 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
     Map<Integer, Boolean> finishedMessages = finished.get(target);
     if (m.size() > sendPendingMax) {
       canAdd = false;
+//      LOG.info(String.format("%d Final add FALSE target %d source %d", executor, target, source));
     } else {
+//      LOG.info(String.format("%d Final add TRUE target %d source %d", executor, target, source));
       if (object instanceof MPIMessage) {
         ((MPIMessage) object).incrementRefCount();
       }
@@ -88,6 +92,7 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
 
       m.add(object);
       if ((flags & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) {
+//        LOG.info(String.format("%d Final LAST target %d source %d", executor, target, source));
         finishedMessages.put(source, true);
       }
     }
@@ -96,18 +101,30 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
 
   public void progress() {
     for (int t : messages.keySet()) {
+      if (batchDone.get(t)) {
+        continue;
+      }
+
       boolean allFinished = true;
       // now check weather we have the messages for this source
       Map<Integer, List<Object>> map = messages.get(t);
       Map<Integer, Boolean> finishedForTarget = finished.get(t);
       Map<Integer, Integer> countMap = counts.get(t);
-      LOG.info(String.format("%d gather final counts %s", executor, countMap));
+//      LOG.info(String.format("%d gather final counts %d %s %s", executor, t, countMap,
+//          finishedForTarget));
 
       boolean found = true;
       for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
         if (e.getValue().size() == 0 && !finishedForTarget.get(e.getKey())) {
           found = false;
         }
+
+        if (!finishedForTarget.get(e.getKey())) {
+          allFinished = false;
+        } /*else {
+          LOG.info(String.format("%d final finished receiving to %d from %d",
+              executor, t, e.getKey()));
+        }*/
       }
 
       if (found) {
@@ -118,14 +135,21 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
             Object value = valueList.get(0);
             out.add(value);
             allFinished = false;
+            valueList.remove(0);
           }
         }
+//        for (Map.Entry<Integer, Integer> e : countMap.entrySet()) {
+//          Integer i = e.getValue();
+//          e.setValue(i - 1);
+//        }
         finalMessages.get(t).addAll(out);
       } else {
         allFinished = false;
       }
 
       if (allFinished) {
+        LOG.info(String.format("%d final all finished %d", executor, t));
+        batchDone.put(t, true);
         gatherBatchReceiver.receive(t, finalMessages.get(t).iterator());
       }
     }

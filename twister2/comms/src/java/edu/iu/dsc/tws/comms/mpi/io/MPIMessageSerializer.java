@@ -102,7 +102,7 @@ public class MPIMessageSerializer implements MessageSerializer {
         // mark the original message as complete
         mpiMessage.setComplete(true);
       } else {
-        LOG.info("Message NOT FULLY serialized");
+        LOG.fine("Message NOT FULLY serialized");
       }
     }
     return sendMessage;
@@ -163,18 +163,18 @@ public class MPIMessageSerializer implements MessageSerializer {
       // okay we need to serialize the data
       int dataLength = DataSerializer.serializeData(content,
           contentType, state, serializer);
-      LOG.info(String.format("%d serialize data length: %d pos %d",
-          executor, dataLength, byteBuffer.position()));
+//      LOG.info(String.format("%d serialize data length: %d pos %d",
+//          executor, dataLength, byteBuffer.position()));
     }
 
     if (state.getPart() == SerializeState.Part.INIT
         || state.getPart() == SerializeState.Part.HEADER) {
       boolean complete = KeySerializer.copyKeyToBuffer(key,
           keyType, targetBuffer.getByteBuffer(), state, serializer);
-      LOG.info(String.format("%d pos after key copy %d",
-          executor, byteBuffer.position()));
-      LOG.info(String.format("%d total after key %d",
-          executor, state.getTotalBytes()));
+//      LOG.info(String.format("%d pos after key copy %d",
+//          executor, byteBuffer.position()));
+//      LOG.info(String.format("%d total after key %d",
+//          executor, state.getTotalBytes()));
       if (complete) {
         state.setPart(SerializeState.Part.BODY);
       } else {
@@ -189,16 +189,16 @@ public class MPIMessageSerializer implements MessageSerializer {
 
     boolean completed = DataSerializer.copyDataToBuffer(content,
         contentType, byteBuffer, state, serializer);
-    LOG.info(String.format("%d pos after data %d",
-        executor, byteBuffer.position()));
+//    LOG.info(String.format("%d pos after data %d",
+//        executor, byteBuffer.position()));
     // now set the size of the buffer
     targetBuffer.setSize(byteBuffer.position());
 
     // okay we are done with the message
     if (completed) {
       // add the key size at the end to total size
-      LOG.info(String.format("%d total after complete %d",
-          executor, state.getTotalBytes()));
+//      LOG.info(String.format("%d total after complete %d",
+//          executor, state.getTotalBytes()));
       state.setBytesCopied(0);
       state.setBufferNo(0);
       state.setData(null);
@@ -217,8 +217,8 @@ public class MPIMessageSerializer implements MessageSerializer {
     if (state.getPart() == SerializeState.Part.INIT) {
       // okay we need to serialize the data
       int dataLength = DataSerializer.serializeData(content, messageType, state, serializer);
-      LOG.info(String.format("serialize data length: %d pos %d",
-          dataLength, byteBuffer.position()));
+//      LOG.info(String.format("serialize data length: %d pos %d",
+//          dataLength, byteBuffer.position()));
       // add the header bytes to the total bytes
       state.setPart(SerializeState.Part.BODY);
     }
@@ -230,16 +230,16 @@ public class MPIMessageSerializer implements MessageSerializer {
 
     boolean completed = DataSerializer.copyDataToBuffer(content,
         messageType, byteBuffer, state, serializer);
-    LOG.info(String.format("pos after data %d",
-        byteBuffer.position()));
+//    LOG.info(String.format("pos after data %d",
+//        byteBuffer.position()));
     // now set the size of the buffer
     targetBuffer.setSize(byteBuffer.position());
 
     // okay we are done with the message
     if (completed) {
       // add the key size at the end to total size
-      LOG.info(String.format("total after complete %d",
-          state.getTotalBytes()));
+//      LOG.info(String.format("total after complete %d",
+//          state.getTotalBytes()));
       state.setBytesCopied(0);
       state.setBufferNo(0);
       state.setData(null);

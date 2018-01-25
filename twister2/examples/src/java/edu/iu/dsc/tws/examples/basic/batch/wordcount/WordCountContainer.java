@@ -82,8 +82,8 @@ public class WordCountContainer implements IContainer {
       if (id < 2) {
         for (int i = 0; i < noOfTasksPerExecutor; i++) {
           // the map thread where data is produced
-          LOG.info(String.format("%d Starting %d", id, i + id * noOfTasksPerExecutor));
-          Thread mapThread = new Thread(new BatchWordSource(config, keyGather, 10,
+          LOG.info(String.format("%d Starting thread %d", id, i + id * noOfTasksPerExecutor));
+          Thread mapThread = new Thread(new BatchWordSource(config, keyGather, 1000,
               new ArrayList<>(destinations), noOfTasksPerExecutor * id + i, 200));
           mapThread.start();
         }

@@ -140,12 +140,12 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
     }
     this.receiveBuffers = new HashMap<>();
 
-    LOG.info(String.format("%d setup communication", instancePlan.getThisExecutor()));
+    LOG.fine(String.format("%d setup communication", instancePlan.getThisExecutor()));
     // now setup the sends and receives
     setupCommunication();
 
     // initialize the serializers
-    LOG.info(String.format("%d setup initializers", instancePlan.getThisExecutor()));
+    LOG.fine(String.format("%d setup initializers", instancePlan.getThisExecutor()));
     initSerializers();
   }
 
@@ -168,7 +168,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
         recvList.add(new MPIBuffer(receiveBufferSize));
       }
       // register with the channel
-      LOG.info(instancePlan.getThisExecutor() + " Register to receive from: " + recv);
+      LOG.fine(instancePlan.getThisExecutor() + " Register to receive from: " + recv);
       channel.receiveMessage(recv, edge, this, recvList);
       receiveBuffers.put(recv, recvList);
     }

@@ -97,7 +97,7 @@ public class KeyedInvertedBinaryTreeRouter {
           thisExecutorTasksOfOperation.add(t);
         }
       }
-      LOG.info(String.format("%d Executor Tasks: %s", plan.getThisExecutor(),
+      LOG.fine(String.format("%d Executor Tasks: %s", plan.getThisExecutor(),
           thisExecutorTasksOfOperation.toString()));
 
       // now lets construct the receive tasks tasks
@@ -108,7 +108,7 @@ public class KeyedInvertedBinaryTreeRouter {
         // okay this is the main task of this executor
         if (search != null) {
           mainTask.put(path, search.getTaskId());
-          LOG.info(String.format("%d main task: %s", plan.getThisExecutor(), mainTask));
+          LOG.fine(String.format("%d main task: %s", plan.getThisExecutor(), mainTask));
           // this is the only task that receives messages
           for (int k : search.getRemoteChildrenIds()) {
             receiveExecutors.add(plan.getExecutorForChannel(k));
@@ -129,7 +129,7 @@ public class KeyedInvertedBinaryTreeRouter {
           List<Integer> directChildren = search.getDirectChildren();
 
           if (t == path) {
-            LOG.log(Level.INFO, String.format("%d direct children %s",
+            LOG.log(Level.FINE, String.format("%d direct children %s",
                 plan.getThisExecutor(), directChildren));
           }
 
@@ -177,7 +177,7 @@ public class KeyedInvertedBinaryTreeRouter {
             mainTaskLast = true;
           }
         } else {
-          LOG.info(String.format("%d doesn't have a node in tree: %d", plan.getThisExecutor(), t));
+          LOG.fine(String.format("%d doesn't have a node in tree: %d", plan.getThisExecutor(), t));
         }
       }
     }

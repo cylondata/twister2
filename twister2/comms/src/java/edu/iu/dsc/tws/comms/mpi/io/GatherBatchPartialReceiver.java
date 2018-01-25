@@ -17,6 +17,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import com.sun.org.apache.xerces.internal.impl.dv.xs.BooleanDV;
+import com.sun.org.apache.xpath.internal.operations.Bool;
+
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
@@ -36,6 +39,7 @@ public class GatherBatchPartialReceiver implements MessageReceiver {
   private int executor;
   private int sendPendingMax = 128;
   private int destination;
+  private Map<Integer, Boolean> batchDone = new HashMap<>();
 
   public GatherBatchPartialReceiver(int dst) {
     this.destination = dst;
@@ -46,7 +50,7 @@ public class GatherBatchPartialReceiver implements MessageReceiver {
     executor = op.getTaskPlan().getThisExecutor();
     sendPendingMax = MPIContext.sendPendingMax(cfg);
 
-    LOG.info(String.format("%d gather partial expected ids %s", executor, expectedIds));
+    LOG.fine(String.format("%d gather partial expected ids %s", executor, expectedIds));
     for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
       Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
       Map<Integer, Boolean> finishedPerTask = new HashMap<>();
@@ -60,6 +64,7 @@ public class GatherBatchPartialReceiver implements MessageReceiver {
       messages.put(e.getKey(), messagesPerTask);
       finished.put(e.getKey(), finishedPerTask);
       counts.put(e.getKey(), countsPerTask);
+      batchDone.put(e.getKey(), false);
     }
     this.dataFlowOperation = op;
     this.executor = dataFlowOperation.getTaskPlan().getThisExecutor();
@@ -77,10 +82,10 @@ public class GatherBatchPartialReceiver implements MessageReceiver {
     Map<Integer, Boolean> finishedMessages = finished.get(target);
 
     if (m.size() > sendPendingMax) {
-      LOG.info(String.format("%d Partial add FALSE target %d source %d", executor, target, source));
+//     LOG.info(String.format("%d Partial add FALSE target %d source %d", executor, target, source));
       canAdd = false;
     } else {
-      LOG.info(String.format("%d Partial add TRUE target %d source %d", executor, target, source));
+//     LOG.info(String.format("%d Partial add TRUE target %d source %d", executor, target, source));
       if (object instanceof MPIMessage) {
         ((MPIMessage) object).incrementRefCount();
       }
@@ -98,13 +103,17 @@ public class GatherBatchPartialReceiver implements MessageReceiver {
   @Override
   public void progress() {
     for (int t : messages.keySet()) {
+      if (batchDone.get(t)) {
+        continue;
+      }
       boolean canProgress = true;
       while (canProgress) {
         // now check weather we have the messages for this source
         Map<Integer, List<Object>> map = messages.get(t);
         Map<Integer, Boolean> finishedForTarget = finished.get(t);
         Map<Integer, Integer> countMap = counts.get(t);
-        LOG.info(String.format("%d gather partial counts %s", executor, countMap));
+//        LOG.info(String.format("%d gather partial path %d counts %s",
+//            executor, destination, countMap));
         boolean found = true;
         boolean allFinished = true;
         for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
@@ -115,10 +124,10 @@ public class GatherBatchPartialReceiver implements MessageReceiver {
 
           if (!finishedForTarget.get(e.getKey())) {
             allFinished = false;
-          } else {
-            LOG.info(String.format("%d partial finished receiving to %d from %d",
-                executor, t, e.getKey()));
-          }
+          } /*else {
+            LOG.info(String.format("%d partial finished receiving to %d from %d path %d",
+                executor, t, e.getKey(), destination));
+          }*/
         }
 
         if (found) {
@@ -132,6 +141,9 @@ public class GatherBatchPartialReceiver implements MessageReceiver {
           }
           int flags = 0;
           if (allFinished) {
+//            LOG.info(String.format("%d partial all finished path %d %d %s",
+//                executor, destination, t, batchDone));
+            batchDone.put(t, true);
             flags = MessageFlags.FLAGS_LAST;
           }
           if (dataFlowOperation.sendPartial(t, out, flags, destination)) {
@@ -144,6 +156,11 @@ public class GatherBatchPartialReceiver implements MessageReceiver {
             for (Map.Entry<Integer, Integer> e : countMap.entrySet()) {
               Integer i = e.getValue();
               e.setValue(i - 1);
+            }
+            if (allFinished) {
+              batchDone.put(t, true);
+              // we don't want to go through the while loop for this one
+              break;
             }
           } else {
             canProgress = false;

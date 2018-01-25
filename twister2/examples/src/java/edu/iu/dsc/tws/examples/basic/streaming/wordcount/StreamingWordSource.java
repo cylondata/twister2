@@ -29,7 +29,7 @@ public class StreamingWordSource implements Runnable {
 
   private char[] tempCharacters;
 
-  private static final int MAX_CHARS = 100;
+  private static final int MAX_CHARS = 5;
 
   private int noOfWords;
 
@@ -81,7 +81,7 @@ public class StreamingWordSource implements Runnable {
         }
       }
       noOfWordsSent++;
-      LOG.info(String.format("%d %d Sending word true %d", executor, taskId, noOfWordsSent));
+//      LOG.info(String.format("%d %d Sending word true %d", executor, taskId, noOfWordsSent));
     }
   }
 

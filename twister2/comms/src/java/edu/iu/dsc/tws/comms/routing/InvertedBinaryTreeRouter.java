@@ -64,7 +64,7 @@ public class InvertedBinaryTreeRouter {
         thisExecutorTasksOfOperation.add(t);
       }
     }
-    LOG.info(String.format("%d Executor Tasks: %s", plan.getThisExecutor(),
+    LOG.fine(String.format("%d Executor Tasks: %s", plan.getThisExecutor(),
         thisExecutorTasksOfOperation.toString()));
     this.destinationIdentifiers = new HashMap<>();
     // construct the map of receiving ids
@@ -84,7 +84,7 @@ public class InvertedBinaryTreeRouter {
       // okay this is the main task of this executor
       if (search != null) {
         mainTask = search.getTaskId();
-        LOG.info(String.format("%d main task: %d", plan.getThisExecutor(), mainTask));
+        LOG.fine(String.format("%d main task: %d", plan.getThisExecutor(), mainTask));
         // this is the only task that receives messages
         for (int k : search.getRemoteChildrenIds()) {
           receiveExecutors.add(plan.getExecutorForChannel(k));
@@ -112,7 +112,7 @@ public class InvertedBinaryTreeRouter {
           mainTaskLast = true;
         }
       } else {
-        LOG.info(String.format("%d doesn't have a node in tree: %d", plan.getThisExecutor(), t));
+        LOG.fine(String.format("%d doesn't have a node in tree: %d", plan.getThisExecutor(), t));
       }
     }
 

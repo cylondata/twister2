@@ -78,8 +78,8 @@ public final class WordCountUtils {
       i++;
     }
 
-    LOG.info(String.format("%d Executor To Graph: %s", plan.getThisId(), executorToGraphNodes));
-    LOG.info(String.format("%d Groups to executors: %s", plan.getThisId(), groupsToExeuctors));
+    LOG.fine(String.format("%d Executor To Graph: %s", plan.getThisId(), executorToGraphNodes));
+    LOG.fine(String.format("%d Groups to executors: %s", plan.getThisId(), groupsToExeuctors));
     // now lets create the task plan of this, we assume we have map tasks in all the processes
     // and reduce task in 0th process
     return new TaskPlan(executorToGraphNodes, groupsToExeuctors, thisExecutor);

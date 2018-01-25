@@ -99,6 +99,10 @@ public class MPIMultiMessageDeserializer implements MessageDeSerializer {
     int destId = buffer.getByteBuffer().getInt();
     int length = buffer.getByteBuffer().getInt();
 
+//    if ((flags & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) {
+//      LOG.info(String.format("%d RECV LAST SET %d", executor, flags));
+//    }
+
     MessageHeader.Builder headerBuilder = MessageHeader.newBuilder(
         sourceId, edge, length);
     headerBuilder.flags(flags);

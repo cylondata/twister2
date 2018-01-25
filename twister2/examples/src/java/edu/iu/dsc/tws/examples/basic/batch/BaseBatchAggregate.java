@@ -78,7 +78,7 @@ public class BaseBatchAggregate implements IContainer {
 
       for (int i = 0; i < noOfTasksPerExecutor; i++) {
         // the map thread where data is produced
-        LOG.info(String.format("%d Starting %d", id, i + id * noOfTasksPerExecutor));
+        LOG.info(String.format("%d Starting thread %d", id, i + id * noOfTasksPerExecutor));
         Thread mapThread = new Thread(new MapWorker(i + id * noOfTasksPerExecutor));
         mapThread.start();
       }

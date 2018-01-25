@@ -40,14 +40,13 @@ public class WordAggregate implements MultiMessageReceiver {
                    Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
     TaskPlan plan = op.getTaskPlan();
     this.executor = op.getTaskPlan().getThisExecutor();
-    LOG.info(String.format("%d final expected task ids %s", plan.getThisExecutor(), expectedIds));
+    LOG.fine(String.format("%d final expected task ids %s", plan.getThisExecutor(), expectedIds));
   }
 
   @Override
   public boolean onMessage(int source, int path, int target, int flags, Object object) {
     if (object instanceof List) {
       for (Object o : (List) object) {
-        LOG.info("Object: " + o);
         if (o instanceof KeyedContent) {
           addValue(((KeyedContent) o).getObject().toString());
         } else {
@@ -72,7 +71,9 @@ public class WordAggregate implements MultiMessageReceiver {
     count++;
     totalCount++;
     wordCounts.put(value, count);
-    LOG.info(String.format("%d Words: %d", executor, totalCount));
+    if (totalCount % 100 == 0) {
+      LOG.info(String.format("%d Received words: %d map: %s", executor, totalCount, wordCounts));
+    }
   }
 
   @Override

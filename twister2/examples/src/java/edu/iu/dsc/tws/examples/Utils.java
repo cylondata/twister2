@@ -75,9 +75,9 @@ public final class Utils {
     }
 
     String print = printMap(executorToGraphNodes);
-    LOG.info("Executor To Graph: " + print);
+    LOG.fine("Executor To Graph: " + print);
     print = printMap(groupsToExeuctors);
-    LOG.info("Groups to executors: " + print);
+    LOG.fine("Groups to executors: " + print);
     // now lets create the task plan of this, we assume we have map tasks in all the processes
     // and reduce task in 0th process
     return new TaskPlan(executorToGraphNodes, groupsToExeuctors, thisExecutor);
@@ -134,9 +134,9 @@ public final class Utils {
     }
 
     String print = printMap(executorToGraphNodes);
-    LOG.info("Executor To Graph: " + print);
+    LOG.fine("Executor To Graph: " + print);
     print = printMap(groupsToExeuctors);
-    LOG.info("Groups to executors: " + print);
+    LOG.fine("Groups to executors: " + print);
     // now lets create the task plan of this, we assume we have map tasks in all the processes
     // and reduce task in 0th process
     return new TaskPlan(executorToGraphNodes, groupsToExeuctors, thisExecutor);

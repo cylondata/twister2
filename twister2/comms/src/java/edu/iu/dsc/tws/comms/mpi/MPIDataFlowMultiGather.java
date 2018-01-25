@@ -97,7 +97,7 @@ public class MPIDataFlowMultiGather implements DataFlowOperation {
       throw new RuntimeException(String.format("%d Un-expected destination: %d %s",
           executor, dest, gatherMap.keySet()));
     }
-    boolean send = gather.sendPartial(source, message, dest, flags);
+    boolean send = gather.sendPartial(source, message, flags, dest);
 //  LOG.info(String.format("%d sending message on reduce: %d %d %b", executor, path, source, send));
     return send;
   }
@@ -149,7 +149,7 @@ public class MPIDataFlowMultiGather implements DataFlowOperation {
       if (partialReceiver != null) {
         partialRcvr = new GatherPartialReceiver(dest);
         gather = new MPIDataFlowGather(channel, sources, dest,
-            partialRcvr, finalRcvr, count, dest, config, t, instancePlan, edgeList.get(count));
+            finalRcvr, partialRcvr, count, dest, config, t, instancePlan, edgeList.get(count));
       } else {
         gather = new MPIDataFlowGather(channel, sources, dest,
             finalRcvr, count, dest, config, t, instancePlan, edgeList.get(count));

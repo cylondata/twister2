@@ -120,6 +120,11 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
     byteBuffer.putInt(sendMessage.getSource());
     // the path we are on, if not grouped it will be 0 and ignored
     byteBuffer.putInt(sendMessage.getFlags());
+//    if ((sendMessage.getFlags() & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) {
+//      LOG.info(String.format("%d SEND LAST SET %d", executor, sendMessage.getFlags()));
+//    } else {
+//      LOG.info(String.format("%d SEND FLAGS %d", executor, sendMessage.getFlags()));
+//    }
     byteBuffer.putInt(sendMessage.getDestintationIdentifier());
     // we add 0 for now and late change it
     byteBuffer.putInt(noOfMessage);
@@ -336,8 +341,8 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
     if (state.getPart() == SerializeState.Part.INIT) {
       // okay we need to serialize the data
       int dataLength = DataSerializer.serializeData(content, messageType, state, serializer);
-      LOG.info(String.format("%d serialize data length: %d pos %d",
-          executor, dataLength, byteBuffer.position()));
+//      LOG.info(String.format("%d serialize data length: %d pos %d",
+//          executor, dataLength, byteBuffer.position()));
 
       if (!buildSubMessageHeader(targetBuffer, dataLength)) {
         LOG.warning("We should always be able to build the header in the current buffer");
@@ -355,16 +360,16 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
 
     boolean completed = DataSerializer.copyDataToBuffer(content,
         messageType, byteBuffer, state, serializer);
-    LOG.info(String.format("%d pos after data %d",
-        executor, byteBuffer.position()));
+//    LOG.info(String.format("%d pos after data %d",
+//        executor, byteBuffer.position()));
     // now set the size of the buffer
     targetBuffer.setSize(byteBuffer.position());
 
     // okay we are done with the message
     if (completed) {
       // add the key size at the end to total size
-      LOG.info(String.format("%d total after complete %d",
-          executor, state.getTotalBytes()));
+//      LOG.info(String.format("%d total after complete %d",
+//          executor, state.getTotalBytes()));
       state.setBytesCopied(0);
       state.setBufferNo(0);
       state.setData(null);

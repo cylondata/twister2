@@ -30,7 +30,7 @@ public class BatchWordSource implements Runnable {
 
   private char[] tempCharacters;
 
-  private static final int MAX_CHARS = 100;
+  private static final int MAX_CHARS = 5;
 
   private int noOfWords;
 
@@ -74,7 +74,7 @@ public class BatchWordSource implements Runnable {
       int dest = destinations.get(nextIndex);
       nextIndex++;
       int flags = 0;
-      if (i == noOfWords - 1) {
+      if (i >= (noOfWords - noOfDestinations)) {
         flags = MessageFlags.FLAGS_LAST;
       }
       // lets try to process if send doesn't succeed
@@ -86,7 +86,7 @@ public class BatchWordSource implements Runnable {
         }
       }
       noOfWordsSent++;
-      LOG.info(String.format("%d %d Sending word true %d", executor, taskId, noOfWordsSent));
+//      LOG.info(String.format("%d %d Sending word true %d", executor, taskId, noOfWordsSent));
     }
   }
 

@@ -42,7 +42,7 @@ public class BinaryTree {
     this.root = source;
     this.nodes = destinations;
     this.maxLevelsAtExecutor = 0;
-    LOG.info(String.format("Building tree with root: %d nodes: %s", root, nodes.toString()));
+    LOG.fine(String.format("Building tree with root: %d nodes: %s", root, nodes.toString()));
   }
 
   public static Node search(Node root, int taskId) {
@@ -95,7 +95,7 @@ public class BinaryTree {
     // get the groups hosting the component
     // rotate according to index, this will create a unique tree for each index
     List<Integer> groups = rotateList(new ArrayList<>(getGroupsHostingTasks(nodes)), index);
-    LOG.log(Level.INFO, taskPlan.getThisExecutor() + " Groups for binary tree: " + groups);
+    LOG.log(Level.FINE, taskPlan.getThisExecutor() + " Groups for binary tree: " + groups);
     if (groups.size() == 0) {
       LOG.log(Level.WARNING, "Groups for destinations is zero");
       return null;

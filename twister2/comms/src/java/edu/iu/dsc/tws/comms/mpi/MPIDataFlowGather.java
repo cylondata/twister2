@@ -127,11 +127,13 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
     // check weather this message is for a sub task
     if (!isLast()
         && partialReceiver != null) {
+//      LOG.info(String.format("%d calling PARTIAL receiver %d", executor, header.getSourceId()));
       return partialReceiver.onMessage(header.getSourceId(),
           MPIContext.DEFAULT_PATH,
           router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
               MPIContext.DEFAULT_PATH), header.getFlags(), currentMessage);
     } else {
+//      LOG.info(String.format("%d calling FINAL receiver %d", executor, header.getSourceId()));
       return finalReceiver.onMessage(header.getSourceId(),
           MPIContext.DEFAULT_PATH, router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
               MPIContext.DEFAULT_PATH), header.getFlags(), object);
@@ -199,8 +201,12 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
   public boolean receiveSendInternally(int source, int t, int path, int flags, Object message) {
     // check weather this is the last task
     if (router.isLastReceiver()) {
+//      LOG.info(String.format("%d internally FINAL receiver %d %s", executor, source,
+//          finalReceiver.getClass().getName()));
       return finalReceiver.onMessage(source, path, t, flags, message);
     } else {
+//      LOG.info(String.format("%d internally PARTIAL receiver %d %s", executor, source,
+//          partialReceiver.getClass().getName()));
       // now we need to serialize this to the buffer
       return partialReceiver.onMessage(source, path, t, flags, message);
     }

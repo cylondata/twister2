@@ -40,13 +40,27 @@ public class WordAggregator implements GatherBatchReceiver {
                    Map<Integer, List<Integer>> expectedIds) {
     TaskPlan plan = op.getTaskPlan();
     this.executor = op.getTaskPlan().getThisExecutor();
-    LOG.info(String.format("%d final expected task ids %s", plan.getThisExecutor(), expectedIds));
+    LOG.fine(String.format("%d final expected task ids %s", plan.getThisExecutor(), expectedIds));
   }
 
   @Override
   public void receive(int target, Iterator<Object> it) {
+    Map<String, Integer> wordCounts = new HashMap<>();
     while (it.hasNext()) {
-      LOG.info(String.format("%d Final word %s", executor, it.next()));
+      Object next = it.next();
+      if (next instanceof List) {
+        for (Object o : (List) next) {
+          int count = 0;
+          String value = o.toString();
+          if (wordCounts.containsKey(value)) {
+            count = wordCounts.get(value);
+          }
+          count++;
+          totalCount++;
+          wordCounts.put(value, count);
+        }
+      }
     }
+    LOG.info(String.format("%d Final word %s", executor, wordCounts));
   }
 }
