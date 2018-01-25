@@ -47,8 +47,17 @@
   ```
     chmod +x bazel-0.3.0-installer-linux-x86_64.sh
     ./bazel-0.3.0-installer-linux-x86_64.sh --user
-    export PATH=$HOME/bin:4PATH
+    export PATH=$HOME/bin:$PATH
   ```
+5. Required libraries
+
+```
+sudo apt-get install git build-essential automake cmake libtool-bin zip libunwind-setjmp0-dev zlib1g-dev unzip pkg-config python-setuptools -y
+```
+
+``` 
+sudo apt-get install  python-dev python-pip
+```
 
 # Compiling Twister2
 
