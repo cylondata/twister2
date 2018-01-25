@@ -278,20 +278,6 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
     return temp;
   }
 
-  @Override
-  public boolean flush(int opID, ByteBuffer key) {
-    return false;
-  }
-
-  @Override
-  public boolean flush(int opID, byte[] key) {
-    return false;
-  }
-
-  @Override
-  public boolean flush(int opID, long key) {
-    return false;
-  }
 
   public Map<String, Integer> getKeyMap() {
     return keyMap;
@@ -347,6 +333,21 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
     }
     //TODO : check if the return is correct just a place holder for now
     return true;
+  }
+
+  @Override
+  public boolean flush(int opID, ByteBuffer key) {
+    return flush(opID, new String(key.array(), java.nio.charset.StandardCharsets.UTF_8));
+  }
+
+  @Override
+  public boolean flush(int opID, byte[] key) {
+    return flush(opID, new String(key, java.nio.charset.StandardCharsets.UTF_8));
+  }
+
+  @Override
+  public boolean flush(int opID, long key) {
+    return flush(opID, new String(Longs.toByteArray(key), java.nio.charset.StandardCharsets.UTF_8));
   }
 
   /**

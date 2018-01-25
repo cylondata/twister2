@@ -99,6 +99,9 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
     return canAdd;
   }
 
+  /**
+   * Method used to progress work
+   */
   public void progress() {
     for (int t : messages.keySet()) {
       if (batchDone.get(t)) {

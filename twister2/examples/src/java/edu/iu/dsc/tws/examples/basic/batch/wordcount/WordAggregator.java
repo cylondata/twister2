@@ -45,22 +45,22 @@ public class WordAggregator implements GatherBatchReceiver {
 
   @Override
   public void receive(int target, Iterator<Object> it) {
-    Map<String, Integer> wordCounts = new HashMap<>();
+    Map<String, Integer> localwordCounts = new HashMap<>();
     while (it.hasNext()) {
       Object next = it.next();
       if (next instanceof List) {
         for (Object o : (List) next) {
           int count = 0;
           String value = o.toString();
-          if (wordCounts.containsKey(value)) {
-            count = wordCounts.get(value);
+          if (localwordCounts.containsKey(value)) {
+            count = localwordCounts.get(value);
           }
           count++;
           totalCount++;
-          wordCounts.put(value, count);
+          localwordCounts.put(value, count);
         }
       }
     }
-    LOG.info(String.format("%d Final word %s", executor, wordCounts));
+    LOG.info(String.format("%d Final word %s", executor, localwordCounts));
   }
 }

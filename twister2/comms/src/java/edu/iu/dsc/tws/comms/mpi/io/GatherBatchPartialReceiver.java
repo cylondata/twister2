@@ -17,9 +17,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import com.sun.org.apache.xerces.internal.impl.dv.xs.BooleanDV;
-import com.sun.org.apache.xpath.internal.operations.Bool;
-
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
@@ -82,10 +79,10 @@ public class GatherBatchPartialReceiver implements MessageReceiver {
     Map<Integer, Boolean> finishedMessages = finished.get(target);
 
     if (m.size() > sendPendingMax) {
-//     LOG.info(String.format("%d Partial add FALSE target %d source %d", executor, target, source));
+//   LOG.info(String.format("%d Partial add FALSE target %d source %d", executor, target, source));
       canAdd = false;
     } else {
-//     LOG.info(String.format("%d Partial add TRUE target %d source %d", executor, target, source));
+//   LOG.info(String.format("%d Partial add TRUE target %d source %d", executor, target, source));
       if (object instanceof MPIMessage) {
         ((MPIMessage) object).incrementRefCount();
       }

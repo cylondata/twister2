@@ -15,23 +15,26 @@ import java.net.URI;
 
 import edu.iu.dsc.tws.common.config.Config;
 
-public class ScpTest {
-  public static void main(String [] args){
+public final class ScpTest {
+
+  private ScpTest() {
+  }
+
+  public static void main(String[] args) {
 
 
-
-    Config config=Config.newBuilder().put(ScpContext.UPLOAD_DIRECTORY,"/vagrant").
-        put(ScpContext.TWISTER2_UPLOADER_SCP_OPTIONS,"").
-        put(ScpContext.TWISTER2_UPLOADER_SCP_CONNECTION,"root@149.165.150.81").
-        put(ScpContext.TWISTER2_UPLOADER_SSH_OPTIONS,"-i /Users/user1/.ssh/id_rsa").
-        put(ScpContext.TWISTER2_UPLOADER_SSH_CONNECTION,"root@149.165.150.81").build();
+    Config config = Config.newBuilder().put(ScpContext.UPLOAD_DIRECTORY, "/vagrant").
+        put(ScpContext.TWISTER2_UPLOADER_SCP_OPTIONS, "").
+        put(ScpContext.TWISTER2_UPLOADER_SCP_CONNECTION, "root@149.165.150.81").
+        put(ScpContext.TWISTER2_UPLOADER_SSH_OPTIONS, "-i /Users/user1/.ssh/id_rsa").
+        put(ScpContext.TWISTER2_UPLOADER_SSH_CONNECTION, "root@149.165.150.81").build();
 
     ScpUploader uploader = new ScpUploader();
     uploader.initialize(config);
 
     //upload
-    URI destURI=uploader.uploadPackage("/Users/user1/Desktop/tobecopied");
-    System.out.println("File path in remote machine is "+destURI);
+    URI destURI = uploader.uploadPackage("/Users/user1/Desktop/tobecopied");
+    System.out.println("File path in remote machine is " + destURI);
 
 
     //delete
