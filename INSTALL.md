@@ -13,7 +13,12 @@
     PATH=$JAVA_HOME/bin:$PATH
     export JAVA_HOME PATH
   ```
-3. OpenMPI
+3. Install g++ compiler if you are wokring on Ubuntu 14.04 . To do that run the following command :
+```
+   sudo apt-get install g++
+```
+
+4. OpenMPI
   * We recommend using `OpenMPI 3.0.0`
 
   * Download OpenMPI 3.0.0 from https://www.open-mpi.org/software/ompi/v3.0/downloads/openmpi-3.0.0.tar.gz
@@ -39,7 +44,20 @@
     mvn install:install-file -DcreateChecksum=true -Dpackaging=jar -Dfile=$OMPI_300/ompi/mpi/java/java/mpi.jar -DgroupId=ompi -DartifactId=ompijavabinding -Dversion=3.0.0
   ```
   * Few examples are available in `$OMPI_300/examples`. Please use `mpijavac` with other parameters similar to `javac` command to compile OpenMPI Java programs. Once compiled `mpirun [options] java -cp <classpath> class-name arguments` command with proper values set as arguments will run the MPI Java program.
-4. Bazel build system
+
+5. Installing maven and configure it as follows :
+
+```
+  wget http://mirrors.ibiblio.org/apache/maven/maven-3/3.5.2/binaries/apache-maven-3.5.2-bin.tar.gz
+```  
+  Extract this to a directory called maven configure the environmental variables
+```  
+  MAVEN_HOME=<path-to-maven-directory>
+  PATH=$MAVEN_HOME/bin:$PATH
+  export MAVEN_HOME PATH
+```
+  
+6. Bazel build system
   * Twister2 requires Bazel build system version 0.30.
   * Download bazel from https://github.com/bazelbuild/bazel/releases/download/0.3.0/bazel-0.3.0-installer-linux-x86_64.sh
   * Execute the following commands
@@ -49,7 +67,7 @@
     ./bazel-0.3.0-installer-linux-x86_64.sh --user
     export PATH=$HOME/bin:$PATH
   ```
-5. Required libraries
+7. Required libraries
 
 ```
 sudo apt-get install git build-essential automake cmake libtool-bin zip libunwind-setjmp0-dev zlib1g-dev unzip pkg-config python-setuptools -y
