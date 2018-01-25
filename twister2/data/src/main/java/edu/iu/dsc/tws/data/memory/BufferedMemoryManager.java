@@ -54,23 +54,23 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
    * Keeps the limits and step sizes for each key that is added
    * the double array has 2 values 1st contains the limit and the second contains the step size
    */
-  private Map<String, Integer> keyMap;
+  private Map<Integer, Map<String, Integer>> keyMap;
 
   /**
    * Keeps the current submitted count for a given key
    */
-  private Map<String, Integer> keyMapCurrent;
+  private Map<Integer, Map<String, Integer>> keyMapCurrent;
 
   /**
    * Keeps the ByteBuffers that need to be written
    */
-  private Map<String, LinkedList<ByteBuffer>> keyMapBuffers;
+  private Map<Integer, Map<String, LinkedList<ByteBuffer>>> keyMapBuffers;
 
   /**
    * Keeps track of the collective size of byte buffers for each key that is currently held
    * in the keyMapBuffers
    */
-  private Map<String, Integer> keyBufferSizes;
+  private Map<Integer, Map<String, Integer>> keyBufferSizes;
 
   public BufferedMemoryManager(Path dataPath) {
     //TODO : This needs to be loaded from a configuration file
@@ -83,9 +83,11 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean init() {
-    keyMap = new ConcurrentHashMap<String, Integer>();
-    keyMapCurrent = new ConcurrentHashMap<String, Integer>();
-    keyMapBuffers = new ConcurrentHashMap<String, LinkedList<ByteBuffer>>();
+
+    keyMap = new HashMap<Integer, Map<String, Integer>>();
+    keyMapCurrent = new HashMap<Integer, Map<String, Integer>>();
+    keyMapBuffers = new HashMap<Integer, Map<String, LinkedList<ByteBuffer>>>();
+    keyBufferSizes = new HashMap<Integer, Map<String, Integer>>();
     operationMap = new HashMap<Integer, OperationMemoryManager>();
     return false;
   }
@@ -274,17 +276,12 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
     }
     OperationMemoryManager temp = new OperationMemoryManager(opID, this);
     memoryManager.addOperation(opID);
+    keyMap.put(opID, new ConcurrentHashMap<String, Integer>());
+    keyMapCurrent.put(opID, new ConcurrentHashMap<String, Integer>());
+    keyMapBuffers.put(opID, new ConcurrentHashMap<String, LinkedList<ByteBuffer>>());
+    keyBufferSizes.put(opID, new ConcurrentHashMap<String, Integer>());
     operationMap.put(opID, temp);
     return temp;
-  }
-
-
-  public Map<String, Integer> getKeyMap() {
-    return keyMap;
-  }
-
-  public void setKeyMap(Map<String, Integer> keyMap) {
-    this.keyMap = keyMap;
   }
 
   /**
@@ -295,19 +292,19 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
    * is reached
    * @return true if the key was registered and false if the key is already present
    */
-  public boolean registerKey(String key, int step) {
+  public boolean registerKey(int opID, String key, int step) {
     //TODO : do we have knowledge of the size of each byteBuffer?
     if (keyMap.containsKey(key)) {
       return false;
     }
-    keyMap.put(key, step);
-    keyMapCurrent.put(key, 0);
-    keyMapBuffers.put(key, new LinkedList<ByteBuffer>());
+    keyMap.get(opID).put(key, step);
+    keyMapCurrent.get(opID).put(key, 0);
+    keyMapBuffers.get(opID).put(key, new LinkedList<ByteBuffer>());
     return true;
   }
 
-  public boolean registerKey(String key) {
-    return registerKey(key, MemoryManagerContext.BULK_MM_STEP_SIZE);
+  public boolean registerKey(int opID, String key) {
+    return registerKey(opID, key, MemoryManagerContext.BULK_MM_STEP_SIZE);
   }
 
   /**
@@ -315,21 +312,21 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
    */
   public boolean putBulk(int opID, String key, ByteBuffer value) {
     if (!keyMap.containsKey(key)) {
-      registerKey(key, MemoryManagerContext.BULK_MM_STEP_SIZE);
+      registerKey(opID, key, MemoryManagerContext.BULK_MM_STEP_SIZE);
     }
     //TODO: need to make sure that there are no memory leaks here
     //TODO: do we need to lock on key value? will more than 1 thread submit the same key
-    int step = keyMap.get(key);
-    int currentCount = keyMapCurrent.get(key);
+    int step = keyMap.get(opID).get(key);
+    int currentCount = keyMapCurrent.get(opID).get(key);
     // If this is the last value write all the values to store
     if ((currentCount + 1) % step == 0) {
       // write to store if the step has been met
       flush(opID, key, value);
-      keyMapCurrent.put(key, currentCount + 1);
+      keyMapCurrent.get(opID).put(key, currentCount + 1);
     } else {
-      keyMapCurrent.put(key, currentCount + 1);
-      keyMapBuffers.get(key).add(value);
-      keyBufferSizes.put(key, keyBufferSizes.get(key) + value.limit());
+      keyMapCurrent.get(opID).put(key, currentCount + 1);
+      keyMapBuffers.get(opID).get(key).add(value);
+      keyBufferSizes.get(opID).put(key, keyBufferSizes.get(opID).get(key) + value.limit());
     }
     //TODO : check if the return is correct just a place holder for now
     return true;
@@ -355,13 +352,13 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
    * memory store
    */
   public boolean flush(int opID, String key) {
-    ByteBuffer temp = ByteBuffer.allocateDirect(keyBufferSizes.get(key));
-    LinkedList<ByteBuffer> buffers = keyMapBuffers.get(key);
+    ByteBuffer temp = ByteBuffer.allocateDirect(keyBufferSizes.get(opID).get(key));
+    LinkedList<ByteBuffer> buffers = keyMapBuffers.get(opID).get(key);
     while (!buffers.isEmpty()) {
       temp.put(buffers.poll());
     }
     //Since we got all the buffer values reset the size
-    keyBufferSizes.put(key, 0);
+    keyBufferSizes.get(opID).put(key, 0);
     return memoryManager.put(opID, ByteBuffer.wrap(key.getBytes(
         MemoryManagerContext.DEFAULT_CHARSET)),
         temp);
@@ -376,14 +373,14 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
    * given key
    */
   public boolean flush(int opID, String key, ByteBuffer last) {
-    ByteBuffer temp = ByteBuffer.allocateDirect(keyBufferSizes.get(key) + last.limit());
-    LinkedList<ByteBuffer> buffers = keyMapBuffers.get(key);
+    ByteBuffer temp = ByteBuffer.allocateDirect(keyBufferSizes.get(opID).get(key) + last.limit());
+    LinkedList<ByteBuffer> buffers = keyMapBuffers.get(opID).get(key);
     while (!buffers.isEmpty()) {
       temp.put(buffers.poll());
     }
     temp.put(last);
     //Since we got all the buffer values reset the size
-    keyBufferSizes.put(key, 0);
+    keyBufferSizes.get(opID).put(key, 0);
     return memoryManager.put(opID, ByteBuffer.wrap(key.getBytes(
         MemoryManagerContext.DEFAULT_CHARSET)),
         temp);
