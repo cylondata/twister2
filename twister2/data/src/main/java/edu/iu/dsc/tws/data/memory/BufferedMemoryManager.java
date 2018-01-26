@@ -140,7 +140,7 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
   @Override
   public boolean put(int opID, String key, ByteBuffer value) {
     registerKey(opID, key);
-    return putBulk(opID,key,value);
+    return putBulk(opID, key, value);
   }
 
   /*@Override
@@ -241,7 +241,7 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean containsKey(int opID, String key) {
-    if(keyMap.get(opID).containsKey(key)){
+    if (keyMap.get(opID).containsKey(key)) {
       return true;
     }
     return memoryManager.containsKey(opID, key);
@@ -392,11 +392,11 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
     }
     //Since we got all the buffer values reset the size
     keyBufferSizes.get(opID).put(key, 0);
-    if(memoryManager.containsKey(opID, key)){
+    if (memoryManager.containsKey(opID, key)) {
       return memoryManager.append(opID, ByteBuffer.wrap(key.getBytes(
           MemoryManagerContext.DEFAULT_CHARSET)),
           temp);
-    }else{
+    } else {
       return memoryManager.put(opID, ByteBuffer.wrap(key.getBytes(
           MemoryManagerContext.DEFAULT_CHARSET)),
           temp);
@@ -420,11 +420,11 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
     temp.put(last);
     //Since we got all the buffer values reset the size
     keyBufferSizes.get(opID).put(key, 0);
-    if(memoryManager.containsKey(opID, key)){
+    if (memoryManager.containsKey(opID, key)) {
       return memoryManager.append(opID, ByteBuffer.wrap(key.getBytes(
           MemoryManagerContext.DEFAULT_CHARSET)),
           temp);
-    }else{
+    } else {
       return memoryManager.put(opID, ByteBuffer.wrap(key.getBytes(
           MemoryManagerContext.DEFAULT_CHARSET)),
           temp);
