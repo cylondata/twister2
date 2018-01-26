@@ -108,8 +108,8 @@ public class MPIDataFlowCommunication extends DataFlowCommunication {
   public DataFlowOperation keyedReduce(Map<String, Object> properties, MessageType type,
                                        Set<Integer> edge,
                                        Set<Integer> sourceTasks, Set<Integer> destTasks,
-                                       MessageReceiver receiver,
-                                       MessageReceiver partial) {
+                                       MultiMessageReceiver receiver,
+                                       MultiMessageReceiver partial) {
     // merge with the user specified configuration, user specified will take precedence
     Config mergedCfg = Config.newBuilder().putAll(config).putAll(properties).build();
 

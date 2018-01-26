@@ -43,7 +43,7 @@ public interface TWSCommunication {
 
   DataFlowOperation keyedReduce(Map<String, Object> properties, MessageType type, Set<Integer> edge,
                                 Set<Integer> sourceTasks, Set<Integer> destTasks,
-                                MessageReceiver receiver, MessageReceiver partial);
+                                MultiMessageReceiver receiver, MultiMessageReceiver partial);
 
   DataFlowOperation allReduce(Map<String, Object> properties, MessageType type,
                                 int edge1, int edge2,

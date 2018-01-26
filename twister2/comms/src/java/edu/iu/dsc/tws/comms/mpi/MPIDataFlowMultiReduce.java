@@ -23,6 +23,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MultiMessageReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 
 public class MPIDataFlowMultiReduce implements DataFlowOperation {
@@ -37,10 +38,10 @@ public class MPIDataFlowMultiReduce implements DataFlowOperation {
   private Map<Integer, MPIDataFlowReduce> reduceMap;
 
   // the partial receiver
-  private MessageReceiver partialReceiver;
+  private MultiMessageReceiver partialReceiver;
 
   // the final receiver
-  private MessageReceiver finalReceiver;
+  private MultiMessageReceiver finalReceiver;
 
   private TWSMPIChannel channel;
 
@@ -50,8 +51,8 @@ public class MPIDataFlowMultiReduce implements DataFlowOperation {
 
   public MPIDataFlowMultiReduce(TWSMPIChannel chnl,
                                 Set<Integer> sources, Set<Integer> destination,
-                                MessageReceiver finalRecv,
-                                MessageReceiver partialRecv, Set<Integer> es) {
+                                MultiMessageReceiver finalRecv,
+                                MultiMessageReceiver partialRecv, Set<Integer> es) {
     this.channel = chnl;
     this.sources = sources;
     this.destinations = destination;
@@ -118,8 +119,8 @@ public class MPIDataFlowMultiReduce implements DataFlowOperation {
   @Override
   public void init(Config config, MessageType type, TaskPlan instancePlan, int edge) {
     executor = instancePlan.getThisExecutor();
-    Map<Integer, List<Integer>> partialReceives = new HashMap<>();
-    Map<Integer, List<Integer>> finalReceives = new HashMap<>();
+    Map<Integer, Map<Integer, List<Integer>>> partialReceives = new HashMap<>();
+    Map<Integer, Map<Integer, List<Integer>>> finalReceives = new HashMap<>();
     List<Integer> edgeList = new ArrayList<>(edges);
     Collections.sort(edgeList);
     int count = 0;
@@ -132,10 +133,9 @@ public class MPIDataFlowMultiReduce implements DataFlowOperation {
       reduceMap.put(dest, reduce);
       count++;
 
-      for (Map.Entry<Integer, List<Integer>> e : reduce.receiveExpectedTaskIds().entrySet()) {
-        partialReceives.put(e.getKey(), e.getValue());
-        finalReceives.put(e.getKey(), e.getValue());
-      }
+      Map<Integer, List<Integer>> expectedTaskIds = reduce.receiveExpectedTaskIds();
+      partialReceives.put(dest, expectedTaskIds);
+      finalReceives.put(dest, expectedTaskIds);
     }
 
     finalReceiver.init(config, this, finalReceives);
