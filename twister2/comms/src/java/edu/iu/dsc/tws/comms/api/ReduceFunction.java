@@ -14,26 +14,9 @@ package edu.iu.dsc.tws.comms.api;
 import java.util.List;
 import java.util.Map;
 
-public interface BoundedMessageReceiver {
-  /**
-   * Initialize the message receiver with tasks from which messages are expected
-   * For each sub edge in graph, for each path, gives the expected task ids
-   *
-   * target -> source tasks
-   *
-   * @param expectedIds expected task ids
-   */
-  void init(Map<Integer, List<Integer>> expectedIds);
+import edu.iu.dsc.tws.common.config.Config;
 
-  /**
-   * The actual message callback
-   *
-   * @param object the actual message
-   */
-  boolean onMessage(int source, int path, int target, int flags, Object object, boolean last);
-
-  /**
-   * This method will be called by the progress
-   */
-  void progress();
+public interface ReduceFunction {
+  void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds);
+  Object reduce(Object t1, Object t2);
 }

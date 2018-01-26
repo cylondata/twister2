@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -92,7 +93,7 @@ public class WordCountContainer implements IContainer {
           keyGather.progress();
           Thread.yield();
         } catch (Throwable t) {
-          t.printStackTrace();
+          LOG.log(Level.SEVERE, "Something bad happened", t);
         }
       }
     } catch (Throwable t) {

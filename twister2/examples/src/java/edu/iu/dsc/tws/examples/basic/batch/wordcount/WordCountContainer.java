@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -71,37 +72,33 @@ public class WordCountContainer implements IContainer {
 
     Map<String, Object> newCfg = new HashMap<>();
     LOG.info("Setting up reduce dataflow operation");
-    try {
       // this method calls the init method
       // I think this is wrong
-      keyGather = (MPIDataFlowMultiGather) channel.keyedGather(newCfg, MessageType.OBJECT,
-          destinations, sources, destinations,
-          new GatherMultiBatchFinalReceiver(new WordAggregator()),
-          new GatherMultiBatchPartialReceiver());
+    keyGather = (MPIDataFlowMultiGather) channel.keyedGather(newCfg, MessageType.OBJECT,
+        destinations, sources, destinations,
+        new GatherMultiBatchFinalReceiver(new WordAggregator()),
+        new GatherMultiBatchPartialReceiver());
 
-      if (id < 2) {
-        for (int i = 0; i < noOfTasksPerExecutor; i++) {
-          // the map thread where data is produced
-          LOG.info(String.format("%d Starting thread %d", id, i + id * noOfTasksPerExecutor));
-          Thread mapThread = new Thread(new BatchWordSource(config, keyGather, 1000,
-              new ArrayList<>(destinations), noOfTasksPerExecutor * id + i, 200));
-          mapThread.start();
-        }
+    if (id < 2) {
+      for (int i = 0; i < noOfTasksPerExecutor; i++) {
+        // the map thread where data is produced
+        LOG.info(String.format("%d Starting thread %d", id, i + id * noOfTasksPerExecutor));
+        Thread mapThread = new Thread(new BatchWordSource(config, keyGather, 1000,
+            new ArrayList<>(destinations), noOfTasksPerExecutor * id + i, 200));
+        mapThread.start();
       }
-      // we need to progress the communication
-      while (true) {
-        try {
-          // progress the channel
-          channel.progress();
-          // we should progress the communication directive
-          keyGather.progress();
-          Thread.yield();
-        } catch (Throwable t) {
-          t.printStackTrace();
-        }
+    }
+    // we need to progress the communication
+    while (true) {
+      try {
+        // progress the channel
+        channel.progress();
+        // we should progress the communication directive
+        keyGather.progress();
+        Thread.yield();
+      } catch (Throwable t) {
+        LOG.log(Level.SEVERE, "Something bad happened", t);
       }
-    } catch (Throwable t) {
-      t.printStackTrace();
     }
   }
 

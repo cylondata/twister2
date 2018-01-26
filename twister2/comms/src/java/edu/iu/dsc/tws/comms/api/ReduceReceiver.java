@@ -11,5 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.api;
 
-public class BoundedKeyedMessageReceiver {
+import java.util.List;
+import java.util.Map;
+
+import edu.iu.dsc.tws.common.config.Config;
+
+public interface ReduceReceiver {
+  void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds);
+  boolean receive(int target, Object object);
 }
