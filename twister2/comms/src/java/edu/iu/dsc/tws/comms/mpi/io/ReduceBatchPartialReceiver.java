@@ -21,11 +21,14 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.mpi.MPIContext;
 import edu.iu.dsc.tws.comms.mpi.MPIMessage;
 
-public class GatherBatchPartialReceiver implements MessageReceiver {
-  private static final Logger LOG = Logger.getLogger(GatherBatchPartialReceiver.class.getName());
+public class ReduceBatchPartialReceiver implements MessageReceiver {
+  private static final Logger LOG = Logger.getLogger(ReduceBatchPartialReceiver.class.getName());
+
+  private ReduceFunction reduceFunction;
 
   // lets keep track of the messages
   // for each task we need to keep track of incoming messages
@@ -38,8 +41,9 @@ public class GatherBatchPartialReceiver implements MessageReceiver {
   private int destination;
   private Map<Integer, Boolean> batchDone = new HashMap<>();
 
-  public GatherBatchPartialReceiver(int dst) {
+  public ReduceBatchPartialReceiver(int dst, ReduceFunction reduce) {
     this.destination = dst;
+    this.reduceFunction = reduce;
   }
 
   @Override
@@ -104,12 +108,14 @@ public class GatherBatchPartialReceiver implements MessageReceiver {
       boolean canProgress = true;
       while (canProgress) {
         // now check weather we have the messages for this source
-        Map<Integer, List<Object>> map = messages.get(t);
+        Map<Integer, List<Object>> messagePerTarget = messages.get(t);
         Map<Integer, Boolean> finishedForTarget = finished.get(t);
         Map<Integer, Integer> countMap = counts.get(t);
+        LOG.info(String.format("%d reduce partial counts %d %s %s", executor, t, countMap,
+            finishedForTarget));
         boolean found = true;
         boolean allFinished = true;
-        for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
+        for (Map.Entry<Integer, List<Object>> e : messagePerTarget.entrySet()) {
           if (e.getValue().size() == 0 && !finishedForTarget.get(e.getKey())) {
             found = false;
             canProgress = false;
@@ -121,31 +127,50 @@ public class GatherBatchPartialReceiver implements MessageReceiver {
         }
 
         if (found) {
-          List<Object> out = new ArrayList<>();
-          for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
+          Object previous = null;
+          for (Map.Entry<Integer, List<Object>> e : messagePerTarget.entrySet()) {
             List<Object> valueList = e.getValue();
             if (valueList.size() > 0) {
-              Object value = valueList.get(0);
-              out.add(value);
+              if (previous == null) {
+                previous = e.getValue().get(0);
+              } else {
+                Object current = e.getValue().get(0);
+                previous = reduceFunction.reduce(previous, current);
+              }
             }
           }
+
           int flags = 0;
+          boolean last;
           if (allFinished) {
-            batchDone.put(t, true);
-            flags = MessageFlags.FLAGS_LAST;
+            last = true;
+            for (Map.Entry<Integer, List<Object>> e : messagePerTarget.entrySet()) {
+              List<Object> valueList = e.getValue();
+              if (valueList.size() > 1) {
+                last = false;
+              }
+            }
+            if (last) {
+              flags = MessageFlags.FLAGS_LAST;
+            }
           }
-          if (dataFlowOperation.sendPartial(t, out, flags, destination)) {
-            for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
+
+          if (dataFlowOperation.sendPartial(t, previous, flags, destination)) {
+            boolean allZero = true;
+            for (Map.Entry<Integer, List<Object>> e : messagePerTarget.entrySet()) {
               List<Object> value = e.getValue();
               if (value.size() > 0) {
                 value.remove(0);
               }
+              if (value.size() != 0) {
+                allZero = false;
+              }
             }
-            for (Map.Entry<Integer, Integer> e : countMap.entrySet()) {
-              Integer i = e.getValue();
-              e.setValue(i - 1);
-            }
-            if (allFinished) {
+//            for (Map.Entry<Integer, Integer> e : countMap.entrySet()) {
+//              Integer i = e.getValue();
+//              e.setValue(i - 1);
+//            }
+            if (allFinished && allZero) {
               batchDone.put(t, true);
               // we don't want to go through the while loop for this one
               break;
@@ -158,4 +183,3 @@ public class GatherBatchPartialReceiver implements MessageReceiver {
     }
   }
 }
-

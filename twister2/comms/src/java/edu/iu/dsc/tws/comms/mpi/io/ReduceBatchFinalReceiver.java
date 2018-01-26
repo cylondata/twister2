@@ -21,25 +21,32 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.api.ReduceFunction;
+import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 import edu.iu.dsc.tws.comms.mpi.MPIContext;
 import edu.iu.dsc.tws.comms.mpi.MPIMessage;
 
-public class GatherBatchPartialReceiver implements MessageReceiver {
-  private static final Logger LOG = Logger.getLogger(GatherBatchPartialReceiver.class.getName());
+public class ReduceBatchFinalReceiver implements MessageReceiver {
+  private static final Logger LOG = Logger.getLogger(ReduceBatchFinalReceiver.class.getName());
+
+  private ReduceFunction reduceFunction;
+
+  private ReduceReceiver reduceReceiver;
 
   // lets keep track of the messages
   // for each task we need to keep track of incoming messages
   private Map<Integer, Map<Integer, List<Object>>> messages = new HashMap<>();
-  private Map<Integer, Map<Integer, Integer>> counts = new HashMap<>();
   private Map<Integer, Map<Integer, Boolean>> finished = new HashMap<>();
+  private Map<Integer, List<Object>> finalMessages = new HashMap<>();
+  private Map<Integer, Map<Integer, Integer>> counts = new HashMap<>();
   private DataFlowOperation dataFlowOperation;
   private int executor;
   private int sendPendingMax = 128;
-  private int destination;
   private Map<Integer, Boolean> batchDone = new HashMap<>();
 
-  public GatherBatchPartialReceiver(int dst) {
-    this.destination = dst;
+  public ReduceBatchFinalReceiver(ReduceFunction reduce, ReduceReceiver receiver) {
+    this.reduceFunction = reduce;
+    this.reduceReceiver = receiver;
   }
 
   @Override
@@ -47,7 +54,7 @@ public class GatherBatchPartialReceiver implements MessageReceiver {
     executor = op.getTaskPlan().getThisExecutor();
     sendPendingMax = MPIContext.sendPendingMax(cfg);
 
-    LOG.fine(String.format("%d gather partial expected ids %s", executor, expectedIds));
+    LOG.fine(String.format("%d expected ids %s", executor, expectedIds));
     for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
       Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
       Map<Integer, Boolean> finishedPerTask = new HashMap<>();
@@ -60,6 +67,7 @@ public class GatherBatchPartialReceiver implements MessageReceiver {
       }
       messages.put(e.getKey(), messagesPerTask);
       finished.put(e.getKey(), finishedPerTask);
+      finalMessages.put(e.getKey(), new ArrayList<>());
       counts.put(e.getKey(), countsPerTask);
       batchDone.put(e.getKey(), false);
     }
@@ -72,90 +80,92 @@ public class GatherBatchPartialReceiver implements MessageReceiver {
     // add the object to the map
     boolean canAdd = true;
 
-    if (messages.get(target) == null) {
-      throw new RuntimeException(String.format("%d Partial receive error %d", executor, target));
-    }
     List<Object> m = messages.get(target).get(source);
     Map<Integer, Boolean> finishedMessages = finished.get(target);
-
     if (m.size() > sendPendingMax) {
       canAdd = false;
+      LOG.info(String.format("%d Final add FALSE target %d source %d %s",
+          executor, target, source, counts.get(target)));
     } else {
+      LOG.info(String.format("%d Final add TRUE target %d source %d", executor, target, source));
       if (object instanceof MPIMessage) {
         ((MPIMessage) object).incrementRefCount();
       }
+
       Integer c = counts.get(target).get(source);
       counts.get(target).put(source, c + 1);
 
       m.add(object);
       if ((flags & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) {
+        LOG.info(String.format("%d Final LAST target %d source %d", executor, target, source));
         finishedMessages.put(source, true);
       }
     }
     return canAdd;
   }
 
-  @Override
+  /**
+   * Method used to progress work
+   */
   public void progress() {
     for (int t : messages.keySet()) {
       if (batchDone.get(t)) {
         continue;
       }
-      boolean canProgress = true;
-      while (canProgress) {
-        // now check weather we have the messages for this source
-        Map<Integer, List<Object>> map = messages.get(t);
-        Map<Integer, Boolean> finishedForTarget = finished.get(t);
-        Map<Integer, Integer> countMap = counts.get(t);
-        boolean found = true;
-        boolean allFinished = true;
+
+      boolean allFinished = true;
+      // now check weather we have the messages for this source
+      Map<Integer, List<Object>> map = messages.get(t);
+      Map<Integer, Boolean> finishedForTarget = finished.get(t);
+      Map<Integer, Integer> countMap = counts.get(t);
+      LOG.info(String.format("%d reduce final counts %d %s %s", executor, t, countMap,
+          finishedForTarget));
+      boolean found = true;
+      for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
+        if (e.getValue().size() == 0 && !finishedForTarget.get(e.getKey())) {
+          found = false;
+        }
+
+        if (!finishedForTarget.get(e.getKey())) {
+          allFinished = false;
+        }
+      }
+
+      if (found) {
+        List<Object> out = new ArrayList<>();
         for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
-          if (e.getValue().size() == 0 && !finishedForTarget.get(e.getKey())) {
-            found = false;
-            canProgress = false;
-          }
-
-          if (!finishedForTarget.get(e.getKey())) {
+          List<Object> valueList = e.getValue();
+          if (valueList.size() > 0) {
+            Object value = valueList.get(0);
+            out.add(value);
             allFinished = false;
+            valueList.remove(0);
           }
         }
+//        for (Map.Entry<Integer, Integer> e : countMap.entrySet()) {
+//          Integer i = e.getValue();
+//          e.setValue(i - 1);
+//        }
+        finalMessages.get(t).addAll(out);
+      } else {
+        allFinished = false;
+      }
 
-        if (found) {
-          List<Object> out = new ArrayList<>();
-          for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
-            List<Object> valueList = e.getValue();
-            if (valueList.size() > 0) {
-              Object value = valueList.get(0);
-              out.add(value);
-            }
-          }
-          int flags = 0;
-          if (allFinished) {
-            batchDone.put(t, true);
-            flags = MessageFlags.FLAGS_LAST;
-          }
-          if (dataFlowOperation.sendPartial(t, out, flags, destination)) {
-            for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
-              List<Object> value = e.getValue();
-              if (value.size() > 0) {
-                value.remove(0);
-              }
-            }
-            for (Map.Entry<Integer, Integer> e : countMap.entrySet()) {
-              Integer i = e.getValue();
-              e.setValue(i - 1);
-            }
-            if (allFinished) {
-              batchDone.put(t, true);
-              // we don't want to go through the while loop for this one
-              break;
-            }
+      if (allFinished) {
+        LOG.info(String.format("%d final all finished %d", executor, t));
+        batchDone.put(t, true);
+        Object previous = null;
+        List<Object> finalMessagePerTask = finalMessages.get(t);
+        for (int i = 0; i < finalMessagePerTask.size(); i++) {
+          if (previous == null) {
+            previous = finalMessagePerTask.get(i);
           } else {
-            canProgress = false;
+            Object current = finalMessagePerTask.get(i);
+            previous = reduceFunction.reduce(previous, current);
           }
         }
+        reduceReceiver.receive(t, previous);
       }
     }
   }
 }
-
