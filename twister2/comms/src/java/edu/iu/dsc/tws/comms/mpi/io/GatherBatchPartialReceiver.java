@@ -131,21 +131,33 @@ public class GatherBatchPartialReceiver implements MessageReceiver {
           }
           int flags = 0;
           if (allFinished) {
-            batchDone.put(t, true);
-            flags = MessageFlags.FLAGS_LAST;
+            boolean last = true;
+            for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
+              List<Object> valueList = e.getValue();
+              if (valueList.size() > 1) {
+                last = false;
+              }
+            }
+            if (last) {
+              flags = MessageFlags.FLAGS_LAST;
+            }
           }
           if (dataFlowOperation.sendPartial(t, out, flags, destination)) {
+            boolean allZero = true;
             for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
               List<Object> value = e.getValue();
               if (value.size() > 0) {
                 value.remove(0);
+              }
+              if (value.size() != 0) {
+                allZero = false;
               }
             }
             for (Map.Entry<Integer, Integer> e : countMap.entrySet()) {
               Integer i = e.getValue();
               e.setValue(i - 1);
             }
-            if (allFinished) {
+            if (allFinished && allZero) {
               batchDone.put(t, true);
               // we don't want to go through the while loop for this one
               break;
