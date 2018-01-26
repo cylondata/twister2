@@ -376,6 +376,10 @@ public class MPIDataFlowOperationMemoryMapped
           continue;
         }
 
+        //If this is the last receiver then we need to write the data into the memory manager
+        if (isLastReceiver) {
+          writeToMemoryManager(currentMessage);
+        }
         Object object = messageDeSerializer.build(currentMessage,
             currentMessage.getHeader().getEdge());
         // if the message is complete, send it further down and call the receiver
@@ -481,6 +485,14 @@ public class MPIDataFlowOperationMemoryMapped
     } finally {
       lock.unlock();
     }
+  }
+
+  /**
+   * extracts the data from the message and writes to the memory manager using the key
+   *
+   * @param currentMessage message to be parsed
+   */
+  private void writeToMemoryManager(MPIMessage currentMessage) {
   }
 
   private boolean sendMessageToTarget(MPIMessage msgObj1, int i) {
