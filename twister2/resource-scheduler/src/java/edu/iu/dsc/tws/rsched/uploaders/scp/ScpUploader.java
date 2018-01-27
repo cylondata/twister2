@@ -70,7 +70,7 @@ public class ScpUploader implements IUploader {
 
   @Override
   public URI uploadPackage(String sourceLocation) throws UploaderException {
-    String source = source + "/";
+    String source = sourceLocation + "/";
     File file = new File(source);
     String fileName = file.getName();
     boolean dirExist = file.isDirectory();
@@ -86,8 +86,8 @@ public class ScpUploader implements IUploader {
 //              destinationDirectory));
 //    }
 
-    LOG.log(Level.INFO, String.format("Uploading the file from local" +
-                    " file system to remote machine: %s -> %s.",
+    LOG.log(Level.INFO, String.format("Uploading the file from local"
+                    + " file system to remote machine: %s -> %s.",
             source, destinationDirectory));
     try {
       if (!this.controller.copyFromLocalDirectory(source, destinationDirectory)) {
