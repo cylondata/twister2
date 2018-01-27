@@ -70,35 +70,35 @@ public class ScpUploader implements IUploader {
 
   @Override
   public URI uploadPackage(String sourceLocation) throws UploaderException {
-
-    File file = new File(sourceLocation);
+    String source = source + "/";
+    File file = new File(source);
     String fileName = file.getName();
     boolean dirExist = file.isDirectory();
     if (!dirExist) {
       throw new UploaderException(
-          String.format("Job package does not exist at '%s'", sourceLocation));
+          String.format("Job package does not exist at '%s'", source));
     }
 
-    if (!this.controller.mkdirsIfNotExists(destinationDirectory)) {
-      throw new UploaderException(
-          String.format(
-              "Failed to create directories required for uploading the topology %s",
-              destinationDirectory));
-    }
+//    if (!this.controller.mkdirsIfNotExists(destinationDirectory)) {
+//      throw new UploaderException(
+//          String.format(
+//              "Failed to create directories required for uploading the topology %s",
+//              destinationDirectory));
+//    }
 
-    LOG.log(Level.INFO, String.format("Uploading the file from local"
-            + " file system to remote machine: %s -> %s.",
-        sourceLocation, destinationDirectory));
+    LOG.log(Level.INFO, String.format("Uploading the file from local" +
+                    " file system to remote machine: %s -> %s.",
+            source, destinationDirectory));
     try {
-      if (!this.controller.copyFromLocalDirectory(sourceLocation, destinationDirectory)) {
+      if (!this.controller.copyFromLocalDirectory(source, destinationDirectory)) {
         throw new UploaderException(
             String.format(
                 "Failed to upload the file from local file system to remote machine: %s -> %s.",
-                sourceLocation, destinationDirectory));
+                source, destinationDirectory));
       }
       LOG.log(Level.INFO, String.format("Uploaded to remote machine: %s -> %s.",
-          sourceLocation, destinationDirectory));
-      return new URI(destinationDirectory + "/" + fileName);
+          source, destinationDirectory));
+      return new URI(destinationDirectory);
     } catch (URISyntaxException e) {
       throw new RuntimeException("Invalid file path for topology package destination: "
           + destinationDirectory, e);
