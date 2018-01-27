@@ -1,6 +1,7 @@
 # the directory where the file will be uploaded, make sure the user has the necessary permissions
 # to upload the file here.
 twister2.uploader.directory: "/root/.twister2/repository/"
+twister2.uploader.directory.repository: "/root/.twister2/repository/"
 # This is the scp command options that will be used by the uploader, this can be used to
 # specify custom options such as the location of ssh keys.
 twister2.uploader.scp.command.options: ""
