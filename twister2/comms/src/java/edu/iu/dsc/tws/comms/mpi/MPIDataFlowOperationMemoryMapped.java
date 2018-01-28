@@ -24,8 +24,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 
-import com.sun.deploy.net.protocol.chrome.ChromeURLConnection;
-
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -528,35 +526,36 @@ public class MPIDataFlowOperationMemoryMapped implements MPIMessageListener,
    *
    * @param currentMessage message to be parsed
    */
+  @SuppressWarnings({"rawtypes", "unchecked"})
   private void writeToMemoryManager(MPIMessage currentMessage) {
     Object data = messageDeSerializer.getDataBuffers(currentMessage, edge);
     int sourceID = currentMessage.getHeader().getSourceId();
     int noOfMessages = 1;
     boolean isList = false;
-    if(data instanceof List){
-     noOfMessages = ((List)data).size();
+    if (data instanceof List) {
+      noOfMessages = ((List) data).size();
       isList = true;
     }
 
     if (isList) {
-      List objectList = (List)data;
+      List objectList = (List) data;
       for (Object message : objectList) {
-        if(isKeyed){
-          Pair<ByteBuffer, ByteBuffer> tempPair = (Pair<ByteBuffer, ByteBuffer>)message;
+        if (isKeyed) {
+          Pair<ByteBuffer, ByteBuffer> tempPair = (Pair<ByteBuffer, ByteBuffer>) message;
           operationMemoryManager.append(tempPair.getKey(), tempPair.getValue());
-        }else{
-          ByteBuffer dataBuffer = (ByteBuffer)message;
+        } else {
+          ByteBuffer dataBuffer = (ByteBuffer) message;
           ByteBuffer keyBuffer = ByteBuffer.allocateDirect(Integer.BYTES);
           keyBuffer.putInt(sourceID);
           operationMemoryManager.append(keyBuffer, dataBuffer);
         }
       }
     } else {
-      if(isKeyed){
-        Pair<ByteBuffer, ByteBuffer> tempPair = (Pair<ByteBuffer, ByteBuffer>)data;
+      if (isKeyed) {
+        Pair<ByteBuffer, ByteBuffer> tempPair = (Pair<ByteBuffer, ByteBuffer>) data;
         operationMemoryManager.append(tempPair.getKey(), tempPair.getValue());
-      }else{
-        ByteBuffer dataBuffer = (ByteBuffer)data;
+      } else {
+        ByteBuffer dataBuffer = (ByteBuffer) data;
         ByteBuffer keyBuffer = ByteBuffer.allocateDirect(Integer.BYTES);
         keyBuffer.putInt(sourceID);
         operationMemoryManager.append(keyBuffer, dataBuffer);
