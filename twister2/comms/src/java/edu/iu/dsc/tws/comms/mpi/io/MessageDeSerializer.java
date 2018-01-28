@@ -39,7 +39,7 @@ public interface MessageDeSerializer {
    * @param partialObject object that contains the buffers
    * @param edge id of the edge
    * @return if single message and not keyed returns the data. if keyed returns a pair of
-   * {key,data}. if there are multiple sub messages returns a single data object for non keyed and
+   * {key,data}. if there are multiple sub messages returns a list of data object for non keyed and
    * a list of {key,data} for keyed operations
    */
   Object getDataBuffers(Object partialObject, int edge);

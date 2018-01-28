@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -92,6 +93,67 @@ public class MPIMultiMessageDeserializer implements MessageDeSerializer {
   }
 
   @Override
+  public Object getDataBuffers(Object partialObject, int edge) {
+    //TODO:
+    MPIMessage currentMessage = (MPIMessage) partialObject;
+    int readLength = 0;
+    int bufferIndex = 0;
+    List<MPIBuffer> buffers = currentMessage.getBuffers();
+    List<Object> returnList = new ArrayList<>();
+    MessageHeader header = currentMessage.getHeader();
+
+    if (header == null) {
+      throw new RuntimeException("Header must be built before the message");
+    }
+//    LOG.info(String.format("%d deserilizing message", executor));
+    while (readLength < header.getLength()) {
+      List<MPIBuffer> messageBuffers = new ArrayList<>();
+      MPIBuffer mpiBuffer = buffers.get(bufferIndex);
+      ByteBuffer byteBuffer = mpiBuffer.getByteBuffer();
+      // now read the length
+      int length = byteBuffer.getInt();
+      int tempLength = 0;
+      int tempBufferIndex = bufferIndex;
+      while (tempLength < length) {
+        mpiBuffer = buffers.get(tempBufferIndex);
+        messageBuffers.add(mpiBuffer);
+        tempLength += mpiBuffer.getByteBuffer().remaining();
+        tempBufferIndex++;
+//        LOG.info(String.format("%d temp %d length %d readLength %d header %d buf_pos %d",
+//            executor, tempLength, length, readLength, header.getLength(),
+//            mpiBuffer.getByteBuffer().position()));
+      }
+
+      Object object = getSingleDataBuffers(currentMessage, messageBuffers, length);
+      readLength += length + 4;
+      byteBuffer = mpiBuffer.getByteBuffer();
+      if (byteBuffer.remaining() > 0) {
+        bufferIndex = tempBufferIndex - 1;
+      } else {
+        bufferIndex = tempBufferIndex;
+      }
+
+      returnList.add(object);
+    }
+    return returnList;
+  }
+  public Object getSingleDataBuffers(MPIMessage mpiMessage, List<MPIBuffer> message, int length) {
+    MessageType type = mpiMessage.getType();
+
+    if (!keyed) {
+      return DataDeserializer.getAsByteBuffer(message,
+          length);
+    } else {
+      Pair<Integer, ByteBuffer> keyPair = KeyDeserializer.
+          getKeyAsByteBuffer(mpiMessage.getKeyType(),
+              message);
+      ByteBuffer data = DataDeserializer.getAsByteBuffer(message,
+          length - keyPair.getKey());
+      return new ImmutablePair<>(keyPair.getValue(), data);
+    }
+  }
+
+  @Override
   public MessageHeader buildHeader(MPIBuffer buffer, int edge) {
 //   LOG.info(String.format("%d read header pos: %d", executor, buffer.getByteBuffer().position()));
     int sourceId = buffer.getByteBuffer().getInt();
@@ -108,11 +170,6 @@ public class MPIMultiMessageDeserializer implements MessageDeSerializer {
     headerBuilder.flags(flags);
     headerBuilder.destination(destId);
     return headerBuilder.build();
-  }
-
-  @Override
-  public Object getDataBuffers(Object partialObject, int edge) {
-    return null;
   }
 
   private Object buildMessage(MPIMessage mpiMessage, List<MPIBuffer> message, int length) {
