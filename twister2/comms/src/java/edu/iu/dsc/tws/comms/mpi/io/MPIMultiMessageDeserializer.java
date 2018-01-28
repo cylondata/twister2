@@ -110,6 +110,11 @@ public class MPIMultiMessageDeserializer implements MessageDeSerializer {
     return headerBuilder.build();
   }
 
+  @Override
+  public Object getDataBuffers(Object partialObject, int edge) {
+    return null;
+  }
+
   private Object buildMessage(MPIMessage mpiMessage, List<MPIBuffer> message, int length) {
     MessageType type = mpiMessage.getType();
     if (keyed) {

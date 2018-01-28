@@ -23,11 +23,6 @@ public final class DataSerializer {
 
   /**
    * Serialize the key and set it to the state
-   * @param content
-   * @param type
-   * @param state
-   * @param serializer
-   * @return
    */
   public static int serializeData(Object content, MessageType type,
                                   SerializeState state, KryoSerializer serializer) {
@@ -63,14 +58,16 @@ public final class DataSerializer {
     return 0;
   }
 
+  public static ByteBuffer getserializedData(Object content, KryoSerializer serializer) {
+    byte[] serialize = serializer.serialize(content);
+    //TODO : check if there is amore memory efficient method to do this
+    ByteBuffer dataBuffer = ByteBuffer.allocateDirect(serialize.length);
+    dataBuffer.put(serialize);
+    return dataBuffer;
+  }
+
   /**
    * Copy the key to the buffer
-   * @param data
-   * @param keyType
-   * @param targetBuffer
-   * @param state
-   * @param serializer
-   * @return
    */
   public static boolean copyDataToBuffer(Object data, MessageType keyType,
                                          ByteBuffer targetBuffer, SerializeState state,

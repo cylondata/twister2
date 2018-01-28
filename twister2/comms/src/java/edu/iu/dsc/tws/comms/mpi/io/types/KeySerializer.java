@@ -23,11 +23,6 @@ public final class KeySerializer {
 
   /**
    * Serialize the key and set it to the state
-   * @param key
-   * @param type
-   * @param state
-   * @param serializer
-   * @return
    */
   public static int serializeKey(Object key, MessageType type,
                                  SerializeState state, KryoSerializer serializer) {
@@ -63,13 +58,22 @@ public final class KeySerializer {
   }
 
   /**
+   * returns the key object as a bytebuffer
+   *
+   * @param key the key to be serialized
+   * @param serializer the serializer used to create the byte stream from the object
+   * @return ByteBuffer with the key
+   */
+  public static ByteBuffer getserializedKey(Object key, KryoSerializer serializer) {
+    byte[] serialize = serializer.serialize(key);
+    //TODO : check if there is amore memory efficient method to do this
+    ByteBuffer keyBuffer = ByteBuffer.allocateDirect(serialize.length);
+    keyBuffer.put(serialize);
+    return keyBuffer;
+  }
+
+  /**
    * Copy the key to the buffer
-   * @param key
-   * @param keyType
-   * @param targetBuffer
-   * @param state
-   * @param serializer
-   * @return
    */
   public static boolean copyKeyToBuffer(Object key, MessageType keyType,
                                         ByteBuffer targetBuffer, SerializeState state,

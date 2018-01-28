@@ -11,8 +11,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi.io;
 
+import java.nio.ByteBuffer;
 import java.util.logging.Logger;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -60,6 +62,24 @@ public class MPIMessageDeSerializer implements MessageDeSerializer {
 
     // first build the header
     return headerBuilder.build();
+  }
+
+  @Override
+  public Object getDataBuffers(Object partialObject, int edge) {
+    MPIMessage currentMessage = (MPIMessage) partialObject;
+    MessageType type = currentMessage.getType();
+
+    if (!keyed) {
+      return DataDeserializer.getAsByteBuffer(currentMessage.getBuffers(),
+          currentMessage.getHeader().getLength());
+    } else {
+      Pair<Integer, ByteBuffer> keyPair = KeyDeserializer.
+          getKeyAsByteBuffer(currentMessage.getKeyType(),
+          currentMessage.getBuffers());
+      ByteBuffer data = DataDeserializer.getAsByteBuffer(currentMessage.getBuffers(),
+          currentMessage.getHeader().getLength() - keyPair.getKey());
+      return new ImmutablePair<>(keyPair.getValue(), data);
+    }
   }
 
   private Object buildMessage(MPIMessage message) {

@@ -33,4 +33,14 @@ public interface MessageDeSerializer {
   Object build(Object partialObject, int edge);
 
   MessageHeader buildHeader(MPIBuffer buffer, int edge);
+
+  /**
+   * Returns the data buffers for the given message.
+   * @param partialObject object that contains the buffers
+   * @param edge id of the edge
+   * @return if single message and not keyed returns the data. if keyed returns a pair of
+   * {key,data}. if there are multiple sub messages returns a single data object for non keyed and
+   * a list of {key,data} for keyed operations
+   */
+  Object getDataBuffers(Object partialObject, int edge);
 }

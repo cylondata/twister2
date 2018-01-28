@@ -53,6 +53,38 @@ public final class DataDeserializer {
     return null;
   }
 
+  public static ByteBuffer getAsByteBuffer(List<MPIBuffer> buffers, int length) {
+    ByteBuffer data = ByteBuffer.allocateDirect(length);
+    //We will try to reuse this array when possible
+    byte[] tempByteArray = new byte[buffers.get(0).getCapacity()];
+    int canCopy = 0;
+    int bufferIndex = 0;
+    int copiedBytes = 0;
+    ByteBuffer tempbyteBuffer;
+    //TODO: need to check if this is correctly copying the data
+    //TODO: Also check if the created bytes may be too big
+    //TODO: check of MPIBuffer always has the correct size
+    while (copiedBytes < length) {
+      tempbyteBuffer = buffers.get(bufferIndex).getByteBuffer();
+      canCopy = buffers.get(bufferIndex).getSize() - tempbyteBuffer.position();
+
+      //If we don't need all the bytes just take what we want
+      if (canCopy + copiedBytes > length) {
+        canCopy = length - copiedBytes;
+      }
+
+      if (tempByteArray.length < canCopy) {
+        //We need a bigger temp array
+        tempByteArray = new byte[canCopy];
+      }
+      tempbyteBuffer.get(tempByteArray, 0, canCopy);
+      data.put(tempByteArray, 0, canCopy);
+      copiedBytes += canCopy;
+    }
+
+    return data;
+  }
+
   public static Object deserializeObject(List<MPIBuffer> buffers, int length,
                                          KryoSerializer serializer) {
     MPIByteArrayInputStream input = null;
@@ -159,4 +191,5 @@ public final class DataDeserializer {
     }
     return -1;
   }
+
 }

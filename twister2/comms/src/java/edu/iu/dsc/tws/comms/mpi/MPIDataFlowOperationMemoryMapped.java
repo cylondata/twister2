@@ -9,18 +9,6 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi;
 
 import java.nio.ByteBuffer;
@@ -43,17 +31,19 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.mpi.io.KeyedContent;
 import edu.iu.dsc.tws.comms.mpi.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.MessageSerializer;
+import edu.iu.dsc.tws.comms.mpi.io.types.DataSerializer;
+import edu.iu.dsc.tws.comms.mpi.io.types.KeySerializer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.memory.BufferedMemoryManager;
 import edu.iu.dsc.tws.data.memory.MemoryManager;
 
-public class MPIDataFlowOperationMemoryMapped
-    implements MPIMessageListener, MPIMessageReleaseCallback {
-  private static final Logger LOG = Logger.getLogger(
-      MPIDataFlowOperationMemoryMapped.class.getName());
+public class MPIDataFlowOperationMemoryMapped implements MPIMessageListener,
+    MPIMessageReleaseCallback {
+  private static final Logger LOG = Logger.getLogger(MPIDataFlowOperation.class.getName());
 
   public static final int MAX_ATTEMPTS = 1000;
   // the configuration
@@ -69,6 +59,9 @@ public class MPIDataFlowOperationMemoryMapped
   // we may have multiple routes throughus
 
   protected MessageType type;
+  protected MessageType keyType = MessageType.SHORT;
+  protected boolean isKeyed = false;
+
   protected int executor;
   private int sendCountPartial = 0;
   private int sendCountFull = 0;
@@ -132,7 +125,7 @@ public class MPIDataFlowOperationMemoryMapped
                    Map<Integer, Queue<Pair<Object, MPIMessage>>> pRMPS,
                    Map<Integer, Queue<MPIMessage>> pendingReceiveDesrialize,
                    MessageSerializer serializer,
-                   MessageDeSerializer deSerializer) {
+                   MessageDeSerializer deSerializer, boolean k) {
     this.config = cfg;
     this.instancePlan = plan;
     this.edge = graphEdge;
@@ -142,6 +135,7 @@ public class MPIDataFlowOperationMemoryMapped
     this.receivingExecutors = recvExecutors;
     this.isLastReceiver = lastReceiver;
     this.receiver = msgReceiver;
+    this.isKeyed = k;
 
     this.pendingReceiveMessagesPerSource = pRMPS;
     this.pendingSendMessagesPerSource = pendingSendPerSource;
@@ -159,12 +153,12 @@ public class MPIDataFlowOperationMemoryMapped
     }
     this.receiveBuffers = new HashMap<>();
 
-    LOG.info(String.format("%d setup communication", instancePlan.getThisExecutor()));
+    LOG.fine(String.format("%d setup communication", instancePlan.getThisExecutor()));
     // now setup the sends and receives
     setupCommunication();
 
     // initialize the serializers
-    LOG.info(String.format("%d setup initializers", instancePlan.getThisExecutor()));
+    LOG.fine(String.format("%d setup initializers", instancePlan.getThisExecutor()));
     initSerializers();
 
     //TODO : need to load this from config file, both the type of memory manager and the datapath
@@ -174,9 +168,8 @@ public class MPIDataFlowOperationMemoryMapped
 
   protected void initSerializers() {
     // initialize the serializers
-    // TODO : check this because we are setting to false
-    messageSerializer.init(config, sendBuffers, false);
-    messageDeSerializer.init(config, false);
+    messageSerializer.init(config, sendBuffers, isKeyed);
+    messageDeSerializer.init(config, isKeyed);
   }
 
   /**
@@ -192,7 +185,7 @@ public class MPIDataFlowOperationMemoryMapped
         recvList.add(new MPIBuffer(receiveBufferSize));
       }
       // register with the channel
-      LOG.info(instancePlan.getThisExecutor() + " Register to receive from: " + recv);
+      LOG.fine(instancePlan.getThisExecutor() + " Register to receive from: " + recv);
       channel.receiveMessage(recv, edge, this, recvList);
       receiveBuffers.put(recv, recvList);
     }
@@ -298,9 +291,12 @@ public class MPIDataFlowOperationMemoryMapped
           if (mpiSendMessage.serializedState() == MPISendMessage.SendState.INIT) {
             // send it internally
             for (Integer i : mpiSendMessage.getInternalSends()) {
-              // okay now we need to check weather this is the last place
               //TODO: if this is the last task do we serialize internal messages and add it to
               //TODO: Memory Manager. it can be done here
+              if (isLastReceiver) {
+                serializeAndWriteToMemoryManager(mpiSendMessage, messageObject);
+              }
+
               boolean receiveAccepted = receiver.receiveSendInternally(
                   mpiSendMessage.getSource(), i, mpiSendMessage.getPath(),
                   mpiSendMessage.getFlags(), messageObject);
@@ -375,15 +371,14 @@ public class MPIDataFlowOperationMemoryMapped
         if (currentMessage == null) {
           continue;
         }
-
-        //If this is the last receiver then we need to write the data into the memory manager
-        if (isLastReceiver) {
-          writeToMemoryManager(currentMessage);
-        }
         Object object = messageDeSerializer.build(currentMessage,
             currentMessage.getHeader().getEdge());
         // if the message is complete, send it further down and call the receiver
         int id = currentMessage.getOriginatingId();
+        //If this is the last receiver then we need to write the data into the memory manager
+        if (isLastReceiver) {
+          writeToMemoryManager(currentMessage);
+        }
         Queue<Pair<Object, MPIMessage>> pendingReceiveMessages =
             pendingReceiveMessagesPerSource.get(id);
 //        receiveCount++;
@@ -488,11 +483,44 @@ public class MPIDataFlowOperationMemoryMapped
   }
 
   /**
+   * Serialize the message object and send it to store
+   *
+   * @param mpiSendMessage mpi send message that has information
+   * @param messageObject object to be sent
+   */
+  private void serializeAndWriteToMemoryManager(MPISendMessage mpiSendMessage,
+                                                Object messageObject) {
+    if (isKeyed) {
+      KeyedContent kc = (KeyedContent) messageObject;
+      ByteBuffer keyBuffer = KeySerializer.getserializedKey(kc.getSource(), kryoSerializer);
+      ByteBuffer dataBuffer = DataSerializer.getserializedData(kc.getObject(), kryoSerializer);
+      //TODO : need to generate operation key and use it
+      memoryManager.addOperation(0);
+      memoryManager.put(0, keyBuffer, dataBuffer);
+    } else {
+      //if this is not a keyed operation we will use the source task id as the key
+      //Will be implmented after further looking into the use case
+      int key = mpiSendMessage.getSource();
+      ByteBuffer keyBuffer = ByteBuffer.allocateDirect(Integer.BYTES);
+      keyBuffer.putInt(key);
+      ByteBuffer dataBuffer = DataSerializer.getserializedData(messageObject, kryoSerializer);
+      //TODO : need to generate operation key and use it
+      memoryManager.addOperation(0);
+      memoryManager.put(0, keyBuffer, dataBuffer);
+    }
+  }
+
+  /**
    * extracts the data from the message and writes to the memory manager using the key
    *
    * @param currentMessage message to be parsed
    */
   private void writeToMemoryManager(MPIMessage currentMessage) {
+    if (isKeyed) {
+      //dasd
+    } else {
+      //adasda
+    }
   }
 
   private boolean sendMessageToTarget(MPIMessage msgObj1, int i) {
@@ -552,6 +580,9 @@ public class MPIDataFlowOperationMemoryMapped
       byteBuffer.flip();
       if (currentMessage == null) {
         currentMessage = new MPIMessage(id, type, MPIMessageDirection.IN, this);
+        if (isKeyed) {
+          currentMessage.setKeyType(keyType);
+        }
         currentMessages.put(id, currentMessage);
         MessageHeader header = messageDeSerializer.buildHeader(buffer, e);
 //        LOG.info(String.format("%d header source %d length %d", executor,
@@ -564,12 +595,7 @@ public class MPIDataFlowOperationMemoryMapped
       currentMessage.build();
 
       if (currentMessage.isComplete()) {
-        //TODO: if this is the last task we can add the messages to the state manager here
-        //TODO: The rest we need to add at the progress function
-        //How to find the current task id or will just the executor work?
-        if (currentMessage.getHeader().getDestinationIdentifier() == executor) {
-          // add to store
-        }
+//        LOG.info(String.format("%d completed recv ", executor));
         currentMessages.remove(id);
         Queue<MPIMessage> deserializeQueue = pendingReceiveDeSerializations.get(id);
         if (!deserializeQueue.offer(currentMessage)) {
@@ -592,5 +618,9 @@ public class MPIDataFlowOperationMemoryMapped
 
   public MessageType getType() {
     return type;
+  }
+
+  public void setKeyType(MessageType keyType) {
+    this.keyType = keyType;
   }
 }
