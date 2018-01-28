@@ -40,7 +40,7 @@ import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiver {
   private static final Logger LOG = Logger.getLogger(MPIDataFlowPartition.class.getName());
 
-  private enum PartitionStratergy {
+  public enum PartitionStratergy {
     RANDOM,  // load balancing
     KEYED,   // hash key based
     DIRECT,  // direct task based
@@ -76,12 +76,14 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
   }
 
   public MPIDataFlowPartition(TWSMPIChannel channel, Set<Integer> srcs,
-                                Set<Integer> dests, MessageReceiver finalRcvr) {
+                              Set<Integer> dests, MessageReceiver finalRcvr,
+                              PartitionStratergy stratergy) {
     this.sources = srcs;
     this.destinations = dests;
     this.destinationIndex = new HashMap<>();
     this.destinationsList = new ArrayList<>(destinations);
     this.delegete = new MPIDataFlowOperation(channel);
+    this.partitionStratergy = stratergy;
 
     for (int s : sources) {
       destinationIndex.put(s, 0);
@@ -177,6 +179,11 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
   }
 
   @Override
+  public boolean sendPartial(int source, Object message, int flags, int dest) {
+    throw new RuntimeException("Not supported method");
+  }
+
+  @Override
   public boolean send(int source, Object message, int flags) {
     return delegete.sendMessage(source, message, 0, flags, sendRoutingParameters(source, 0));
   }
@@ -184,11 +191,6 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
   @Override
   public boolean send(int source, Object message, int flags, int dest) {
     return delegete.sendMessage(source, message, dest, flags, sendRoutingParameters(source, dest));
-  }
-
-  @Override
-  public boolean sendPartial(int source, Object message, int flags, int dest) {
-    throw new RuntimeException("Not supported method");
   }
 
   @Override

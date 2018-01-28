@@ -131,20 +131,12 @@ public class TWSMPIChannel {
    * @return true if the message is accepted to be sent
    */
   public boolean sendMessage(int id, MPIMessage message, MPIMessageListener callback) {
-//    LOG.log(Level.INFO, "lock 1 " + executor);
-//    lock.lock();
-//    try {
     boolean offer = pendingSends.offer(
         new MPISendRequests(id, message.getHeader().getEdge(), message, callback));
     if (offer) {
       pendingSendCount++;
     }
-//    LOG.info(String.format("%d Pending sends count: %d wait: %d id:%d total: %d",
-//        executor, pendingSends.size(), waitForCompletionSends.size(), id, pendingSendCount));
     return offer;
-//    } finally {
-//      lock.unlock();
-//    }
   }
 
   /**
@@ -156,14 +148,8 @@ public class TWSMPIChannel {
    */
   public boolean receiveMessage(int rank, int stream,
                                 MPIMessageListener callback, Queue<MPIBuffer> receiveBuffers) {
-//    LOG.log(Level.INFO, "lock 2 " + executor);
-//    lock.lock();
-//    try {
     return registeredReceives.add(new MPIReceiveRequests(rank, stream, callback,
         receiveBuffers));
-//    } finally {
-////      lock.unlock();
-//    }
   }
 
   /**
@@ -177,10 +163,6 @@ public class TWSMPIChannel {
       try {
         sendCount++;
         MPIBuffer buffer = message.getBuffers().get(i);
-//        if (sendCount % 1 == 0) {
-//          LOG.info(String.format("%d Sending message to: %d size: %d sendCount: %d", executor,
-//              requests.rank, buffer.getSize(), sendCount));
-//        }
         Request request = comm.iSend(buffer.getByteBuffer(), buffer.getSize(),
             MPI.BYTE, requests.rank, message.getHeader().getEdge());
         // register to the loop to make progress on the send
@@ -221,13 +203,8 @@ public class TWSMPIChannel {
    * Progress the communications that are pending
    */
   public void progress() {
-//    LOG.log(Level.INFO, "lock 3 " + executor);
-//    lock.lock();
-//    try {
-//    LOG.log(Level.INFO, "Progress: pendingSends: " + pendingSends.size());
-      // we should rate limit here
+    // we should rate limit here
     while (pendingSends.size() > 0) {
-//      LOG.info(String.format("%d Pending sends %d", executor, pendingSends.size()));
       // post the message
       MPISendRequests sendRequests = pendingSends.poll();
       // post the send
@@ -235,16 +212,12 @@ public class TWSMPIChannel {
       waitForCompletionSends.add(sendRequests);
     }
 
-//    LOG.log(Level.INFO, "Pending sends done");
     for (int i = 0; i < registeredReceives.size(); i++) {
       MPIReceiveRequests receiveRequests = registeredReceives.get(i);
       // okay we have more buffers to be posted
       if (receiveRequests.availableBuffers.size() > 0) {
-//        LOG.info(String.format("%d Posting receive request: %d", executor, receiveRequests.rank));
         postReceive(receiveRequests);
-      } /*else {
-//          LOG.info("No receive buffers available for posting: " + receiveRequests.rank);
-      }*/
+      }
     }
 
     Iterator<MPISendRequests> sendRequestsIterator = waitForCompletionSends.iterator();
@@ -252,15 +225,11 @@ public class TWSMPIChannel {
       MPISendRequests sendRequests = sendRequestsIterator.next();
       Iterator<MPIRequest> requestIterator = sendRequests.pendingSends.iterator();
       while (requestIterator.hasNext()) {
-//        LOG.info("Loooping");
-//        LOG.log(Level.INFO, "Waiting for completion sends");
         MPIRequest r = requestIterator.next();
         try {
-//          LOG.info("Testing send status");
           Status status = r.request.testStatus();
           // this request has finished
           if (status != null) {
-//            LOG.log(Level.INFO, executor + " Send finished");
             requestIterator.remove();
           }
         } catch (MPIException e) {
@@ -279,16 +248,11 @@ public class TWSMPIChannel {
 
 
     for (int i = 0; i < registeredReceives.size(); i++) {
-
       MPIReceiveRequests receiveRequests = registeredReceives.get(i);
-//      LOG.info(String.format("%d Going through Pending receives: %d pending %d",
-//          executor, registeredReceives.size(), receiveRequests.pendingRequests.size()));
       try {
         Iterator<MPIRequest> requestIterator = receiveRequests.pendingRequests.iterator();
         while (requestIterator.hasNext()) {
           MPIRequest r = requestIterator.next();
-//          LOG.info(String.format("%d Testing receive status %d pending %d", executor,
-//              receiveRequests.rank, receiveRequests.pendingRequests.size()));
           Status status = r.request.testStatus();
           if (status != null) {
             if (!status.isCancelled()) {
@@ -311,9 +275,6 @@ public class TWSMPIChannel {
         throw new RuntimeException("Twister2Network failure", e);
       }
     }
-//    } finally {
-//      lock.unlock();
-//    }
   }
 }
 

@@ -18,8 +18,6 @@ package edu.iu.dsc.tws.comms.api;
  * information with the message.
  */
 public final class MessageHeader {
-  public static final int HEADER_SIZE = 20;
-
   /**
    * The source task id where this message originated from
    */
