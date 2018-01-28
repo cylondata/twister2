@@ -39,6 +39,7 @@ import edu.iu.dsc.tws.data.memory.lmdb.LMDBMemoryManager;
  */
 //TODO: need to address the issue of converting bytebuffers to string keys to improve performance
 //TODO: one option would be to implement custom byteBuffer that is comparable
+  //TODO : Need to make the BMM work like a normal map. put should replace any exsisting value.
 public class BufferedMemoryManager extends AbstractMemoryManager {
 
   private static final Logger LOG = Logger.getLogger(BufferedMemoryManager.class.getName());

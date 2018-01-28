@@ -24,6 +24,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 
+import com.sun.deploy.net.protocol.chrome.ChromeURLConnection;
+
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -40,6 +42,7 @@ import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.memory.BufferedMemoryManager;
 import edu.iu.dsc.tws.data.memory.MemoryManager;
+import edu.iu.dsc.tws.data.memory.OperationMemoryManager;
 
 public class MPIDataFlowOperationMemoryMapped implements MPIMessageListener,
     MPIMessageReleaseCallback {
@@ -113,6 +116,16 @@ public class MPIDataFlowOperationMemoryMapped implements MPIMessageListener,
    */
   private MemoryManager memoryManager;
 
+  /**
+   * OperationMemoryManager for this instance.
+   */
+  private OperationMemoryManager operationMemoryManager;
+
+  /**
+   * Id of this operation. This will be used when storing the operation data in the memory store.
+   */
+  private int opertionID = 1234;
+
   public MPIDataFlowOperationMemoryMapped(TWSMPIChannel channel) {
     this.channel = channel;
   }
@@ -162,8 +175,10 @@ public class MPIDataFlowOperationMemoryMapped implements MPIMessageListener,
     initSerializers();
 
     //TODO : need to load this from config file, both the type of memory manager and the datapath
+    //TODO : need to make the memory manager available globally
     Path dataPath = new Path("/home/pulasthi/work/twister2/lmdbdatabase");
     this.memoryManager = new BufferedMemoryManager(dataPath);
+    this.operationMemoryManager = memoryManager.addOperation(opertionID);
   }
 
   protected void initSerializers() {
@@ -495,8 +510,7 @@ public class MPIDataFlowOperationMemoryMapped implements MPIMessageListener,
       ByteBuffer keyBuffer = KeySerializer.getserializedKey(kc.getSource(), kryoSerializer);
       ByteBuffer dataBuffer = DataSerializer.getserializedData(kc.getObject(), kryoSerializer);
       //TODO : need to generate operation key and use it
-      memoryManager.addOperation(0);
-      memoryManager.put(0, keyBuffer, dataBuffer);
+      operationMemoryManager.put(keyBuffer, dataBuffer);
     } else {
       //if this is not a keyed operation we will use the source task id as the key
       //Will be implmented after further looking into the use case
@@ -505,8 +519,7 @@ public class MPIDataFlowOperationMemoryMapped implements MPIMessageListener,
       keyBuffer.putInt(key);
       ByteBuffer dataBuffer = DataSerializer.getserializedData(messageObject, kryoSerializer);
       //TODO : need to generate operation key and use it
-      memoryManager.addOperation(0);
-      memoryManager.put(0, keyBuffer, dataBuffer);
+      operationMemoryManager.put(keyBuffer, dataBuffer);
     }
   }
 
@@ -516,10 +529,38 @@ public class MPIDataFlowOperationMemoryMapped implements MPIMessageListener,
    * @param currentMessage message to be parsed
    */
   private void writeToMemoryManager(MPIMessage currentMessage) {
-    if (isKeyed) {
-      //dasd
+    Object data = messageDeSerializer.getDataBuffers(currentMessage, edge);
+    int sourceID = currentMessage.getHeader().getSourceId();
+    int noOfMessages = 1;
+    boolean isList = false;
+    if(data instanceof List){
+     noOfMessages = ((List)data).size();
+      isList = true;
+    }
+
+    if (isList) {
+      List objectList = (List)data;
+      for (Object message : objectList) {
+        if(isKeyed){
+          Pair<ByteBuffer, ByteBuffer> tempPair = (Pair<ByteBuffer, ByteBuffer>)message;
+          operationMemoryManager.append(tempPair.getKey(), tempPair.getValue());
+        }else{
+          ByteBuffer dataBuffer = (ByteBuffer)message;
+          ByteBuffer keyBuffer = ByteBuffer.allocateDirect(Integer.BYTES);
+          keyBuffer.putInt(sourceID);
+          operationMemoryManager.append(keyBuffer, dataBuffer);
+        }
+      }
     } else {
-      //adasda
+      if(isKeyed){
+        Pair<ByteBuffer, ByteBuffer> tempPair = (Pair<ByteBuffer, ByteBuffer>)data;
+        operationMemoryManager.append(tempPair.getKey(), tempPair.getValue());
+      }else{
+        ByteBuffer dataBuffer = (ByteBuffer)data;
+        ByteBuffer keyBuffer = ByteBuffer.allocateDirect(Integer.BYTES);
+        keyBuffer.putInt(sourceID);
+        operationMemoryManager.append(keyBuffer, dataBuffer);
+      }
     }
   }
 
@@ -622,5 +663,13 @@ public class MPIDataFlowOperationMemoryMapped implements MPIMessageListener,
 
   public void setKeyType(MessageType keyType) {
     this.keyType = keyType;
+  }
+
+  public int getOpertionID() {
+    return opertionID;
+  }
+
+  public void setOpertionID(int opertionID) {
+    this.opertionID = opertionID;
   }
 }
