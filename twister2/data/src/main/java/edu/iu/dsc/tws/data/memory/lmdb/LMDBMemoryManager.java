@@ -446,7 +446,7 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
   @Override
   public OperationMemoryManager addOperation(int opID) {
     dbMap.put(opID, env.openDbi(String.valueOf(opID), MDB_CREATE));
-    return null;
+    return new OperationMemoryManager(opID, this);
   }
 
   @Override
