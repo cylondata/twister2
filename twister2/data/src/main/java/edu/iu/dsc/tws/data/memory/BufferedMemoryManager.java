@@ -326,7 +326,7 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
    */
   public boolean registerKey(int opID, String key, int step) {
     //TODO : do we have knowledge of the size of each byteBuffer?
-    if (keyMap.containsKey(key)) {
+    if (keyMap.containsKey(opID)) {
       return false;
     }
     keyMap.get(opID).put(key, step);
@@ -345,7 +345,7 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
    * will be replaced
    */
   public boolean putBulk(int opID, String key, ByteBuffer value) {
-    if (!keyMap.containsKey(key) && !memoryManager.containsKey(opID, key)) {
+    if (!keyMap.containsKey(opID) && !memoryManager.containsKey(opID, key)) {
       registerKey(opID, key, MemoryManagerContext.BULK_MM_STEP_SIZE);
     } else {
       //If the key is already present we need to replace its value so we need to clear the data
