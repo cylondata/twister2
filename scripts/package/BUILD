@@ -46,7 +46,7 @@ filegroup(
 pkg_tar(
     name = "twister2-core",
     extension = "tar.gz",
-    # files = generated_release_files,
+    # srcs = generated_release_files,
     package_dir = "twister2-core",
     deps = [
         ":twister2-core-lib-resource-scheduler",
@@ -62,43 +62,43 @@ pkg_tar(
 pkg_tar(
     name = "twister2-core-lib-api",
     package_dir = "lib",
-    files = twister2_client_lib_api_files(),
+    srcs = twister2_client_lib_api_files(),
 )
 
 pkg_tar(
     name = "twister2-core-lib-task",
     package_dir = "lib",
-    files = twister2_client_lib_task_files(),
+    srcs = twister2_client_lib_task_files(),
 )
 
 pkg_tar(
     name = "twister2-core-lib-resource-scheduler",
     package_dir = "lib",
-    files = twister2_client_lib_resource_scheduler_files(),
+    srcs = twister2_client_lib_resource_scheduler_files(),
 )
 
 pkg_tar(
     name = "twister2-core-lib-task-scheduler",
     package_dir = "lib",
-    files = twister2_client_lib_task_scheduler_files(),
+    srcs = twister2_client_lib_task_scheduler_files(),
 )
 
 pkg_tar(
     name = "twister2-core-lib-third_party",
     package_dir = "lib",
-    files = twister2_client_lib_third_party_files(),
+    srcs = twister2_client_lib_third_party_files(),
 )
 
 pkg_tar(
     name = "twister2-core-lib-communication",
     package_dir = "lib",
-    files = twister2_client_lib_communication_files(),
+    srcs = twister2_client_lib_communication_files(),
 )
 
 pkg_tar(
     name = "twister2-core-lib-common",
     package_dir = "lib",
-    files = twister2_client_lib_common_files(),
+    srcs = twister2_client_lib_common_files(),
 )
 
 # twister2 client packaging
@@ -106,7 +106,7 @@ pkg_tar(
 pkg_tar(
     name = "twister2-client",
     extension = "tar.gz",
-    # files = generated_release_files,
+    # srcs = generated_release_files,
     package_dir = "twister2-dist",
     deps = [
         ":twister2-client-bin",
@@ -130,92 +130,92 @@ pkg_tar(
 pkg_tar(
     name = "twister2-client-conf-slurmmpi",
     package_dir = "conf/slurmmpi",
-    files = twister2_client_slurmmpi_files(),
+    srcs = twister2_client_slurmmpi_files(),
 )
 
 pkg_tar(
     name = "twister2-client-conf-nodesmpi",
     package_dir = "conf/nodesmpi",
-    files = twister2_client_nodesmpi_files(),
+    srcs = twister2_client_nodesmpi_files(),
 )
 
 pkg_tar(
     name = "twister2-client-conf-aurora",
     package_dir = "conf/aurora",
-    files = twister2_client_aurora_files(),
+    srcs = twister2_client_aurora_files(),
 )
 
 pkg_tar(
     name = "twister2-client-dist",
     package_dir = "dist",
-    files = [":twister2-core"],
+    srcs = [":twister2-core"],
 )
 
 pkg_tar(
     name = "twister2-client-bin",
     package_dir = "bin",
-    files = twister2_client_bin_files(),
+    srcs = twister2_client_bin_files(),
 )
 
 pkg_tar(
     name = "twister2-client-lib-api",
     package_dir = "lib",
-    files = twister2_client_lib_api_files(),
+    srcs = twister2_client_lib_api_files(),
 )
 
 pkg_tar(
     name = "twister2-client-lib-task",
     package_dir = "lib",
-    files = twister2_client_lib_task_files(),
+    srcs = twister2_client_lib_task_files(),
 )
 
 pkg_tar(
     name = "twister2-client-lib-data",
     package_dir = "lib",
-    files = twister2_client_lib_data_files(),
+    srcs = twister2_client_lib_data_files(),
 )
 
 pkg_tar(
     name = "twister2-client-lib-data-lmdb",
     package_dir = "lib",
-    files = twister2_client_lib_data_lmdb_files(),
+    srcs = twister2_client_lib_data_lmdb_files(),
 )
 
 
 pkg_tar(
     name = "twister2-client-lib-resource-scheduler",
     package_dir = "lib",
-    files = twister2_client_lib_resource_scheduler_files(),
+    srcs = twister2_client_lib_resource_scheduler_files(),
 )
 
 pkg_tar(
     name = "twister2-client-lib-task-scheduler",
     package_dir = "lib",
-    files = twister2_client_lib_task_scheduler_files(),
+    srcs = twister2_client_lib_task_scheduler_files(),
 )
 
 pkg_tar(
     name = "twister2-client-lib-third_party",
     package_dir = "lib",
-    files = twister2_client_lib_third_party_files(),
+    srcs = twister2_client_lib_third_party_files(),
 )
 
 pkg_tar(
     name = "twister2-client-communication",
     package_dir = "lib",
-    files = twister2_client_lib_communication_files(),
+    srcs = twister2_client_lib_communication_files(),
 )
 
 pkg_tar(
     name = "twister2-client-lib-common",
     package_dir = "lib",
-    files = twister2_client_lib_common_files(),
+    srcs = twister2_client_lib_common_files(),
 )
 
 pkg_tar(
     name = "twister2-client-examples",
     package_dir = "examples",
-    files = twister2_client_example_files(),
+    srcs = twister2_client_example_files(),
 )
 
 

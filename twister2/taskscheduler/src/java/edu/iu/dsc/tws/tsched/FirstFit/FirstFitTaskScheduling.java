@@ -177,8 +177,8 @@ public class FirstFitTaskScheduling {
                     this.maximumContainerResourceValue, this.paddingPercentage);*/
       //ramRequirements.add(new RequiredRam(taskName, requiredResource.getRam()));
 
-      if (taskRamMap.containsKey(taskNameSet)) {
-        instanceRAM = taskRamMap.get(taskNameSet);
+      if (taskRamMap.containsKey(taskName)) {
+        instanceRAM = taskRamMap.get(taskName);
       }
       //RequiredRam requiredRam = new RequiredRam (taskName, instanceRAM);
       //ramRequirements.add (requiredRam);

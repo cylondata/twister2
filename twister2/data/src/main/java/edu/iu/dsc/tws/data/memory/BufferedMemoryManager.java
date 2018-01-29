@@ -327,7 +327,7 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
    */
   public boolean registerKey(int opID, String key, int step) {
     //TODO : do we have knowledge of the size of each byteBuffer?
-    if (keyMap.containsKey(key)) {
+    if (keyMap.containsKey(opID)) {
       return false;
     }
     keyMap.get(opID).put(key, step);
@@ -345,7 +345,7 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
    * Buffers the inputs before submitting it to the store
    */
   public boolean putBulk(int opID, String key, ByteBuffer value) {
-    if (!keyMap.containsKey(key)) {
+    if (!keyMap.containsKey(opID)) {
       registerKey(opID, key, MemoryManagerContext.BULK_MM_STEP_SIZE);
     }
     //TODO: need to make sure that there are no memory leaks here
