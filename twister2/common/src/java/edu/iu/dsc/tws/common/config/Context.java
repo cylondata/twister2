@@ -97,7 +97,6 @@ public class Context {
   }
 
   protected Context() {
-
   }
 
   public static String taskConfigurationFile(Config cfg) {
@@ -148,4 +147,7 @@ public class Context {
     return cfg.getStringValue(AURORA_SCRIPT);
   }
 
+  public static String twister2Home(Config cfg) {
+    return cfg.getStringValue(TWISTER2_HOME);
+  }
 }
