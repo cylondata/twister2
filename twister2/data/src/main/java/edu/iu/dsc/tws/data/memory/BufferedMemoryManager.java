@@ -363,7 +363,7 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
    * Buffers the inputs before submitting to the store. The new values will be appended to the end
    */
   public boolean appendBulk(int opID, String key, ByteBuffer value) {
-    if (!keyMap.containsKey(key)) {
+    if (!keyMap.containsKey(opID)) {
       registerKey(opID, key, MemoryManagerContext.BULK_MM_STEP_SIZE);
     }
     //TODO: need to make sure that there are no memory leaks here
