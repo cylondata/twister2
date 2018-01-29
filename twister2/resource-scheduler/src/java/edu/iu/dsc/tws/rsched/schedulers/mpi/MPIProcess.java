@@ -29,9 +29,11 @@ import org.apache.commons.cli.ParseException;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
+import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 import mpi.MPI;
 import mpi.MPIException;
@@ -62,7 +64,6 @@ public final class MPIProcess {
       // load the configuration
       // we are loading the configuration for all the components
       Config config = loadConfigurations(cmd, rank);
-
       // normal worker
       LOG.log(Level.INFO, "A worker process is starting...");
       worker(config, rank);
@@ -120,10 +121,18 @@ public final class MPIProcess {
         .required()
         .build();
 
+    Option jobName = Option.builder("j")
+        .desc("Job name")
+        .longOpt("job_name")
+        .hasArgs()
+        .argName("job name")
+        .required()
+        .build();
     options.addOption(twister2Home);
     options.addOption(containerClass);
     options.addOption(configDirectory);
     options.addOption(clusterType);
+    options.addOption(jobName);
 
     return options;
   }
@@ -133,17 +142,31 @@ public final class MPIProcess {
     String container = cmd.getOptionValue("container_class");
     String configDir = cmd.getOptionValue("config_dir");
     String clusterType = cmd.getOptionValue("cluster_type");
+    String jobName = cmd.getOptionValue("job_name");
 
     LOG.log(Level.INFO, String.format("Initializing process with "
         + "twister_home: %s container_class: %s config_dir: %s cluster_type: %s",
         twister2Home, container, configDir, clusterType));
 
     Config config = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterType);
-    return Config.newBuilder().putAll(config).
+
+    Config workerConfig = Config.newBuilder().putAll(config).
         put(MPIContext.TWISTER2_HOME.getKey(), twister2Home).
         put(MPIContext.TWISTER2_JOB_BASIC_CONTAINER_CLASS, container).
         put(MPIContext.TWISTER2_CONTAINER_ID, id).
         put(MPIContext.TWISTER2_CLUSTER_TYPE, clusterType).build();
+
+    String jobDescFile = JobUtils.getJobDescriptionFilePath(jobName, workerConfig);
+    JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
+
+    Config updatedConfig = JobUtils.overrideConfigs(job, config);
+
+    updatedConfig = Config.newBuilder().putAll(updatedConfig).
+        put(MPIContext.TWISTER2_HOME.getKey(), twister2Home).
+        put(MPIContext.TWISTER2_JOB_BASIC_CONTAINER_CLASS, container).
+        put(MPIContext.TWISTER2_CONTAINER_ID, id).
+        put(MPIContext.TWISTER2_CLUSTER_TYPE, clusterType).build();
+    return updatedConfig;
   }
 
   private static void master(Config config, int rank) {
@@ -163,7 +186,8 @@ public final class MPIProcess {
       container = (IContainer) object;
       LOG.info("loaded container class: " + containerClass);
     } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-      LOG.log(Level.SEVERE, "failed to load the container class", e);
+      LOG.log(Level.SEVERE, String.format("failed to load the container class %s",
+          containerClass), e);
       throw new RuntimeException(e);
     }
 

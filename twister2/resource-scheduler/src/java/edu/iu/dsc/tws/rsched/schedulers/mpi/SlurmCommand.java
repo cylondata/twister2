@@ -65,6 +65,7 @@ public class SlurmCommand extends MPICommand {
     mpiCommand.add(map.get("java_props").toString());
     mpiCommand.add(map.get("classpath").toString());
     mpiCommand.add(map.get("container_class").toString());
+    mpiCommand.add(job.getJobName());
     mpiCommand.add(twister2Home);
     mpiCommand.add(twister2Home);
 

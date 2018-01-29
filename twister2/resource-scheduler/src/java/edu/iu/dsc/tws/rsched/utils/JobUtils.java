@@ -21,6 +21,7 @@ import java.util.logging.Logger;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
@@ -107,5 +108,23 @@ public final class JobUtils {
       }
     }
     return classPath;
+  }
+
+  /**
+   * configs from job object will override the ones in config from files if any
+   * @return
+   */
+  public static Config overrideConfigs(JobAPI.Job job, Config config) {
+    Config.Builder builder = Config.newBuilder().putAll(config);
+    JobAPI.Config conf = job.getConfig();
+    for (JobAPI.Config.KeyValue kv : conf.getKvsList()) {
+      builder.put(kv.getKey(), kv.getValue());
+    }
+    return builder.build();
+  }
+
+  public static String getJobDescriptionFilePath(String jobFileName, Config config) {
+    String home = Context.twister2Home(config);
+    return Paths.get(home, jobFileName + ".job").toAbsolutePath().toString();
   }
 }
