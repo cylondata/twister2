@@ -23,6 +23,7 @@ import org.lmdbjava.Txn;
 
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.memory.AbstractMemoryManager;
+import edu.iu.dsc.tws.data.memory.MemoryManagerContext;
 import edu.iu.dsc.tws.data.memory.OperationMemoryManager;
 
 import static org.lmdbjava.DbiFlags.MDB_CREATE;
@@ -130,7 +131,7 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
 
   @Override
   public ByteBuffer get(int opID, String key) {
-    return null;
+    return get(opID, ByteBuffer.wrap(key.getBytes(MemoryManagerContext.DEFAULT_CHARSET)));
   }
 
   /*@Override
@@ -246,7 +247,7 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean containsKey(int opID, String key) {
-    return false;
+    return containsKey(opID, ByteBuffer.wrap(key.getBytes(MemoryManagerContext.DEFAULT_CHARSET)));
   }
 
   /*@Override
@@ -282,7 +283,7 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean append(int opID, String key, ByteBuffer value) {
-    return false;
+    return append(opID, ByteBuffer.wrap(key.getBytes(MemoryManagerContext.DEFAULT_CHARSET)), value);
   }
 
   /*@Override
@@ -362,7 +363,7 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean put(int opID, String key, ByteBuffer value) {
-    return false;
+    return put(opID, ByteBuffer.wrap(key.getBytes(MemoryManagerContext.DEFAULT_CHARSET)), value);
   }
 
   /*@Override
@@ -430,7 +431,7 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean delete(int opID, String key) {
-    return false;
+    return delete(opID, ByteBuffer.wrap(key.getBytes(MemoryManagerContext.DEFAULT_CHARSET)));
   }
 
   /*@Override
@@ -445,7 +446,7 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
   @Override
   public OperationMemoryManager addOperation(int opID) {
     dbMap.put(opID, env.openDbi(String.valueOf(opID), MDB_CREATE));
-    return null;
+    return new OperationMemoryManager(opID, this);
   }
 
   @Override

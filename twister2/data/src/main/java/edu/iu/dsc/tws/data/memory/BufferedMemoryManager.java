@@ -39,7 +39,7 @@ import edu.iu.dsc.tws.data.memory.lmdb.LMDBMemoryManager;
  */
 //TODO: need to address the issue of converting bytebuffers to string keys to improve performance
 //TODO: one option would be to implement custom byteBuffer that is comparable
-  //TODO : Need to make the BMM work like a normal map. put should replace any exsisting value.
+//TODO : Need to make the BMM work like a normal map. put should replace any exsisting value.
 public class BufferedMemoryManager extends AbstractMemoryManager {
 
   private static final Logger LOG = Logger.getLogger(BufferedMemoryManager.class.getName());
@@ -93,7 +93,8 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean append(int opID, ByteBuffer key, ByteBuffer value) {
-    return put(opID, key, value);
+    String keyString = new String(key.array(), MemoryManagerContext.DEFAULT_CHARSET);
+    return appendBulk(opID, keyString, value);
   }
 
   /*@Override
@@ -108,7 +109,7 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean append(int opID, String key, ByteBuffer value) {
-    return put(opID, key, value);
+    return appendBulk(opID, key, value);
   }
 
   /*@Override
@@ -118,8 +119,7 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean put(int opID, ByteBuffer key, ByteBuffer value) {
-    String keyString = new String(key.array(), java.nio.charset.StandardCharsets.UTF_8);
-    registerKey(opID, keyString);
+    String keyString = new String(key.array(), MemoryManagerContext.DEFAULT_CHARSET);
     return putBulk(opID, keyString, value);
   }
 
@@ -140,7 +140,6 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean put(int opID, String key, ByteBuffer value) {
-    registerKey(opID, key);
     return putBulk(opID, key, value);
   }
 
@@ -166,7 +165,7 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
 
   @Override
   public ByteBuffer get(int opID, ByteBuffer key) {
-    String keyString = new String(key.array(), java.nio.charset.StandardCharsets.UTF_8);
+    String keyString = new String(key.array(), MemoryManagerContext.DEFAULT_CHARSET);
     if (keyMap.get(opID).containsKey(keyString)) {
       flush(opID, keyString);
     }
@@ -227,7 +226,7 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean containsKey(int opID, ByteBuffer key) {
-    return memoryManager.containsKey(opID, key);
+    return containsKey(opID, new String(key.array(), MemoryManagerContext.DEFAULT_CHARSET));
   }
 
   /*@Override
@@ -327,7 +326,7 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
    */
   public boolean registerKey(int opID, String key, int step) {
     //TODO : do we have knowledge of the size of each byteBuffer?
-    if (keyMap.containsKey(opID)) {
+    if (keyMap.containsKey(key)) {
       return false;
     }
     keyMap.get(opID).put(key, step);
@@ -342,10 +341,29 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
   }
 
   /**
-   * Buffers the inputs before submitting it to the store
+   * Buffers the inputs before submitting it to the store. If the value is already present it
+   * will be replaced
    */
   public boolean putBulk(int opID, String key, ByteBuffer value) {
-    if (!keyMap.containsKey(opID)) {
+    if (!keyMap.containsKey(key) && !memoryManager.containsKey(opID, key)) {
+      registerKey(opID, key, MemoryManagerContext.BULK_MM_STEP_SIZE);
+    } else {
+      //If the key is already present we need to replace its value so we need to clear the data
+      delete(opID, key);
+      registerKey(opID, key, MemoryManagerContext.BULK_MM_STEP_SIZE);
+    }
+
+    keyMapCurrent.get(opID).put(key, 1);
+    keyMapBuffers.get(opID).get(key).add(value);
+    keyBufferSizes.get(opID).put(key, keyBufferSizes.get(opID).get(key) + value.limit());
+    return true;
+  }
+
+  /**
+   * Buffers the inputs before submitting to the store. The new values will be appended to the end
+   */
+  public boolean appendBulk(int opID, String key, ByteBuffer value) {
+    if (!keyMap.containsKey(key)) {
       registerKey(opID, key, MemoryManagerContext.BULK_MM_STEP_SIZE);
     }
     //TODO: need to make sure that there are no memory leaks here
