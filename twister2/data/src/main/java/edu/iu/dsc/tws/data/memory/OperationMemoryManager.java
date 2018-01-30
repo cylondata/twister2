@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.data.memory;
 
 import java.nio.ByteBuffer;
+import java.util.Iterator;
 
 /**
  * This controls the memory manager for a single operation. An example of an operation is a
@@ -221,5 +222,13 @@ public class OperationMemoryManager {
 
   public void setParent(MemoryManager parent) {
     this.parent = parent;
+  }
+
+  /**
+   * returns the deserialized data as a iterator
+   * @return
+   */
+  public Iterator<Object> iterator() {
+    return null;
   }
 }

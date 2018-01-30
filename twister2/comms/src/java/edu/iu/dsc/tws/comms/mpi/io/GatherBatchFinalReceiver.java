@@ -24,6 +24,7 @@ import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.mpi.MPIContext;
 import edu.iu.dsc.tws.comms.mpi.MPIMessage;
+import edu.iu.dsc.tws.data.memory.OperationMemoryManager;
 
 public class GatherBatchFinalReceiver implements MessageReceiver {
   private static final Logger LOG = Logger.getLogger(GatherBatchFinalReceiver.class.getName());
@@ -39,6 +40,7 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
   private int sendPendingMax = 128;
   private GatherBatchReceiver gatherBatchReceiver;
   private Map<Integer, Boolean> batchDone = new HashMap<>();
+  private boolean isStoreBased;
 
   public GatherBatchFinalReceiver(GatherBatchReceiver gatherBatchReceiver) {
     this.gatherBatchReceiver = gatherBatchReceiver;
@@ -48,7 +50,7 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     executor = op.getTaskPlan().getThisExecutor();
     sendPendingMax = MPIContext.sendPendingMax(cfg);
-
+    isStoreBased = false;
     LOG.fine(String.format("%d expected ids %s", executor, expectedIds));
     for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
       Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
@@ -85,6 +87,9 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
 //      LOG.info(String.format("%d Final add TRUE target %d source %d", executor, target, source));
       if (object instanceof MPIMessage) {
         ((MPIMessage) object).incrementRefCount();
+        //TODO: how to handle refcount with store based data, is it needed?
+      } else if (object instanceof OperationMemoryManager) {
+        isStoreBased = true;
       }
 
       Integer c = counts.get(target).get(source);
@@ -153,7 +158,12 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
       if (allFinished) {
         LOG.info(String.format("%d final all finished %d", executor, t));
         batchDone.put(t, true);
-        gatherBatchReceiver.receive(t, finalMessages.get(t).iterator());
+        if (!isStoreBased) {
+          gatherBatchReceiver.receive(t, finalMessages.get(t).iterator());
+        } else {
+          OperationMemoryManager temp = (OperationMemoryManager) finalMessages.get(t).get(0);
+          gatherBatchReceiver.receive(t, temp.iterator());
+        }
       }
     }
   }
