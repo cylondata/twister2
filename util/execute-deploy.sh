@@ -37,24 +37,27 @@ deploy_library() {
   javadoc=$3
   pomfile=$4
   bazel build $library $srcjar $javadoc
-
+  echo mvn -e $MVN_GOAL -Dfile=$(library_output_file $library) -DpomFile=$pomfile "${EXTRA_MAVEN_ARGS[@]:+${EXTRA_MAVEN_ARGS[@]}}"
   mvn -e $MVN_GOAL \
     -Dfile=$(library_output_file $library) \
-    -Djavadoc=$(library_output_file $javadoc) \
     -DpomFile=$pomfile \
-    -Dsources=$(library_output_file $srcjar) \
     "${EXTRA_MAVEN_ARGS[@]:+${EXTRA_MAVEN_ARGS[@]}}"
 }
 
 deploy_library \
-  twister2/data/src/main/java:libdata-java.jar \
-  twister2/data/src/main/java:libdata-java.jar \
-  twister2/data/src/main/java:libdata-java.jar \
+  twister2/data/src/main/java/libdata-java.jar \
+  twister2/data/src/main/java/libdata-java.jar \
+  twister2/data/src/main/java/libdata-java.jar \
   data.pom.xml
 
 deploy_library \
-  twister2/common/src/java:libcommon-java.jar \
-  twister2/common/src/java:libcommon-java.jar \
-  twister2/common/src/java:libcommon-java.jar \
+  twister2/common/src/java/libcommon-java.jar \
+  twister2/common/src/java/libcommon-java.jar \
+  twister2/common/src/java/libcommon-java.jar \
   common.pom.xml
 
+deploy_library \
+  twister2/comms/src/java/libcomms-java.jar \
+  twister2/comms/src/java/libcomms-java.jar \
+  twister2/comms/src/java/libcomms-java.jar \
+  comms.pom.xml
