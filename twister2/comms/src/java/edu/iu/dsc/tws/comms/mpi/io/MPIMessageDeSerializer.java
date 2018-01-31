@@ -71,13 +71,13 @@ public class MPIMessageDeSerializer implements MessageDeSerializer {
 
     if (!keyed) {
       return DataDeserializer.getAsByteBuffer(currentMessage.getBuffers(),
-          currentMessage.getHeader().getLength());
+          currentMessage.getHeader().getLength(), type);
     } else {
       Pair<Integer, ByteBuffer> keyPair = KeyDeserializer.
           getKeyAsByteBuffer(currentMessage.getKeyType(),
           currentMessage.getBuffers());
       ByteBuffer data = DataDeserializer.getAsByteBuffer(currentMessage.getBuffers(),
-          currentMessage.getHeader().getLength() - keyPair.getKey());
+          currentMessage.getHeader().getLength() - keyPair.getKey(), type);
       return new ImmutablePair<>(keyPair.getValue(), data);
     }
   }

@@ -37,6 +37,7 @@ import edu.iu.dsc.tws.comms.mpi.io.MessageSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.types.DataSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.types.KeySerializer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
+import edu.iu.dsc.tws.comms.utils.MessageTypeConverter;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.memory.BufferedMemoryManager;
 import edu.iu.dsc.tws.data.memory.MemoryManager;
@@ -124,10 +125,14 @@ public class MPIDataFlowOperationMemoryMapped implements MPIMessageListener,
    */
   private int opertionID = 1234;
 
+
   public MPIDataFlowOperationMemoryMapped(TWSMPIChannel channel) {
     this.channel = channel;
   }
 
+  /**
+   * init method
+   */
   public void init(Config cfg, MessageType messageType, TaskPlan plan,
                    int graphEdge, Set<Integer> recvExecutors,
                    boolean lastReceiver, MPIMessageReceiver msgReceiver,
@@ -176,7 +181,14 @@ public class MPIDataFlowOperationMemoryMapped implements MPIMessageListener,
     //TODO : need to make the memory manager available globally
     Path dataPath = new Path("/home/pulasthi/work/twister2/lmdbdatabase");
     this.memoryManager = new BufferedMemoryManager(dataPath);
-    this.operationMemoryManager = memoryManager.addOperation(opertionID);
+    if (isKeyed) {
+      this.operationMemoryManager = memoryManager.addOperation(opertionID,
+          MessageTypeConverter.toDataMessageType(messageType));
+    } else {
+      this.operationMemoryManager = memoryManager.addOperation(opertionID,
+          MessageTypeConverter.toDataMessageType(messageType),
+          MessageTypeConverter.toDataMessageType(keyType));
+    }
   }
 
   protected void initSerializers() {
@@ -688,6 +700,7 @@ public class MPIDataFlowOperationMemoryMapped implements MPIMessageListener,
 
   public void setKeyType(MessageType keyType) {
     this.keyType = keyType;
+    operationMemoryManager.setKeyType(MessageTypeConverter.toDataMessageType(keyType));
   }
 
   public int getOpertionID() {

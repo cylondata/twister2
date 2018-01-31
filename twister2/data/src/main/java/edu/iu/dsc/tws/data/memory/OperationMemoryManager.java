@@ -14,11 +14,16 @@ package edu.iu.dsc.tws.data.memory;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
 
+import edu.iu.dsc.tws.data.memory.utils.DataMessageType;
+
 /**
  * This controls the memory manager for a single operation. An example of an operation is a
  * gather, reduce.
  * Note: This class needs to implment all the methods in the Memory Manager interface without the
  * operationID parameter
+ *
+ * TODO: We can latter look into making the operation manager typed. Based on the messageType
+ * TODO: Then the get methods such as the iterator can directly return the typed objects
  */
 public class OperationMemoryManager {
 
@@ -26,9 +31,28 @@ public class OperationMemoryManager {
 
   private MemoryManager parent;
 
-  public OperationMemoryManager(int opID, MemoryManager parentMM) {
+  /**
+   * is true if the associated operation is keyed
+   */
+  private boolean isKeyed;
+
+  private DataMessageType keyType;
+
+  private DataMessageType messageType;
+
+  public OperationMemoryManager(int opID, DataMessageType type, MemoryManager parentMM) {
     this.operationID = opID;
     this.parent = parentMM;
+    this.messageType = type;
+    init();
+  }
+
+  public OperationMemoryManager(int opID, DataMessageType type, DataMessageType keyType,
+                                MemoryManager parentMM) {
+    this.operationID = opID;
+    this.parent = parentMM;
+    this.messageType = type;
+    this.keyType = keyType;
     init();
   }
 
@@ -226,9 +250,35 @@ public class OperationMemoryManager {
 
   /**
    * returns the deserialized data as a iterator
-   * @return
+   * if the operation is keyed the iterator will return a list of pairs
+   * if the operation is not keyed it will return a list of objects
    */
   public Iterator<Object> iterator() {
+
     return null;
+  }
+
+  public DataMessageType getKeyType() {
+    return keyType;
+  }
+
+  public void setKeyType(DataMessageType keyType) {
+    this.keyType = keyType;
+  }
+
+  public DataMessageType getMessageType() {
+    return messageType;
+  }
+
+  public void setMessageType(DataMessageType messageType) {
+    this.messageType = messageType;
+  }
+
+  public boolean isKeyed() {
+    return isKeyed;
+  }
+
+  public void setKeyed(boolean keyed) {
+    isKeyed = keyed;
   }
 }

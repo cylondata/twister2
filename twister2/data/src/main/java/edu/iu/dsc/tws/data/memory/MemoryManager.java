@@ -13,6 +13,8 @@ package edu.iu.dsc.tws.data.memory;
 
 import java.nio.ByteBuffer;
 
+import edu.iu.dsc.tws.data.memory.utils.DataMessageType;
+
 /**
  * base interface for memory managers. Memory managers are responsible of keeping data in memoory
  * for various requirements. The memory manager is also responsible of writing data to disk when
@@ -174,7 +176,10 @@ public interface MemoryManager {
    *
    * @return returns the memory manager or null (Null is returned at the base layer)
    */
-  OperationMemoryManager addOperation(int opID);
+  OperationMemoryManager addOperation(int opID, DataMessageType type);
+
+  OperationMemoryManager addOperation(int opID, DataMessageType messageType,
+                                      DataMessageType keyType);
 
   /**
    * Remove an operation from the memory manager. This will result in loss of all the data related

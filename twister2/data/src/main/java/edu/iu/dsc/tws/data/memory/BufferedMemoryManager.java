@@ -31,8 +31,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 
+
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.memory.lmdb.LMDBMemoryManager;
+import edu.iu.dsc.tws.data.memory.utils.DataMessageType;
 
 /**
  * Inserts into the memory store in batches. Only one instance per executor.
@@ -291,12 +293,28 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
   }
 
   @Override
-  public OperationMemoryManager addOperation(int opID) {
+  public OperationMemoryManager addOperation(int opID, DataMessageType type) {
     if (operationMap.containsKey(opID)) {
       return null;
     }
-    OperationMemoryManager temp = new OperationMemoryManager(opID, this);
-    memoryManager.addOperation(opID);
+    OperationMemoryManager temp = new OperationMemoryManager(opID, type, this);
+    memoryManager.addOperation(opID, type);
+    keyMap.put(opID, new ConcurrentHashMap<String, Integer>());
+    keyMapCurrent.put(opID, new ConcurrentHashMap<String, Integer>());
+    keyMapBuffers.put(opID, new ConcurrentHashMap<String, LinkedList<ByteBuffer>>());
+    keyBufferSizes.put(opID, new ConcurrentHashMap<String, Integer>());
+    operationMap.put(opID, temp);
+    return temp;
+  }
+
+  @Override
+  public OperationMemoryManager addOperation(int opID, DataMessageType type,
+                                             DataMessageType keyType) {
+    if (operationMap.containsKey(opID)) {
+      return null;
+    }
+    OperationMemoryManager temp = new OperationMemoryManager(opID, type, keyType, this);
+    memoryManager.addOperation(opID, keyType, type);
     keyMap.put(opID, new ConcurrentHashMap<String, Integer>());
     keyMapCurrent.put(opID, new ConcurrentHashMap<String, Integer>());
     keyMapBuffers.put(opID, new ConcurrentHashMap<String, LinkedList<ByteBuffer>>());

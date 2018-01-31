@@ -21,10 +21,13 @@ import org.lmdbjava.Dbi;
 import org.lmdbjava.Env;
 import org.lmdbjava.Txn;
 
+
+
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.memory.AbstractMemoryManager;
 import edu.iu.dsc.tws.data.memory.MemoryManagerContext;
 import edu.iu.dsc.tws.data.memory.OperationMemoryManager;
+import edu.iu.dsc.tws.data.memory.utils.DataMessageType;
 
 import static org.lmdbjava.DbiFlags.MDB_CREATE;
 import static org.lmdbjava.Env.create;
@@ -444,9 +447,16 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
    * does not handle OperationMemoryManager's
    */
   @Override
-  public OperationMemoryManager addOperation(int opID) {
+  public OperationMemoryManager addOperation(int opID, DataMessageType messageType) {
     dbMap.put(opID, env.openDbi(String.valueOf(opID), MDB_CREATE));
-    return new OperationMemoryManager(opID, this);
+    return new OperationMemoryManager(opID, messageType, this);
+  }
+
+  @Override
+  public OperationMemoryManager addOperation(int opID, DataMessageType messageType,
+                                             DataMessageType keyType) {
+    dbMap.put(opID, env.openDbi(String.valueOf(opID), MDB_CREATE));
+    return new OperationMemoryManager(opID, messageType, keyType, this);
   }
 
   @Override

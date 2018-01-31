@@ -53,8 +53,17 @@ public final class DataDeserializer {
     return null;
   }
 
-  public static ByteBuffer getAsByteBuffer(List<MPIBuffer> buffers, int length) {
-    ByteBuffer data = ByteBuffer.allocateDirect(length);
+  public static ByteBuffer getAsByteBuffer(List<MPIBuffer> buffers, int length, MessageType type) {
+    //If the message type is object we need to add the length of each object to the
+    //bytestream so we can separate objects
+    ByteBuffer data;
+    if (type == MessageType.OBJECT) {
+      data = ByteBuffer.allocateDirect(length + 4);
+      data.putInt(length);
+    } else {
+      data = ByteBuffer.allocateDirect(length);
+    }
+
     //We will try to reuse this array when possible
     byte[] tempByteArray = new byte[buffers.get(0).getCapacity()];
     int canCopy = 0;
@@ -80,6 +89,7 @@ public final class DataDeserializer {
       tempbyteBuffer.get(tempByteArray, 0, canCopy);
       data.put(tempByteArray, 0, canCopy);
       copiedBytes += canCopy;
+      bufferIndex++;
     }
 
     return data;
