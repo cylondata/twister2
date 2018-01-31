@@ -11,6 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.tcp;
 
+import java.io.IOException;
+import java.nio.channels.ClosedChannelException;
+import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.util.Iterator;
@@ -19,8 +22,10 @@ import java.util.Set;
 public class Channel {
   private final Selector selector;
 
-  public Channel(Selector selector) {
-    this.selector = selector;
+  public Channel() throws IOException {
+    selector = Selector.open();
+
+    addNIOLooperTasks();
   }
 
   private void handleSelectedKeys() {
@@ -59,5 +64,111 @@ public class Channel {
 
   public void clear() {
 
+  }
+
+  /**
+   * Followings are the register, unregister, isRegister for different
+   * operations for the selector and channel
+   */
+  public void registerRead(SelectableChannel channel, ISelectHandler callback)
+      throws ClosedChannelException {
+    assert channel.keyFor(selector) == null
+        || (channel.keyFor(selector).interestOps() & SelectionKey.OP_CONNECT) == 0;
+    addInterest(channel, SelectionKey.OP_READ, callback);
+  }
+
+  public void unregisterRead(SelectableChannel channel) {
+    removeInterest(channel, SelectionKey.OP_READ);
+  }
+
+  public boolean isReadRegistered(SelectableChannel channel) {
+    return isInterestRegistered(channel, SelectionKey.OP_READ);
+  }
+
+  public void registerConnect(SelectableChannel channel, ISelectHandler callback)
+      throws ClosedChannelException {
+    // This channel should be first use
+    assert channel.keyFor(selector) == null;
+    addInterest(channel, SelectionKey.OP_CONNECT, callback);
+  }
+
+  public void unregisterConnect(SelectableChannel channel) {
+    removeInterest(channel, SelectionKey.OP_CONNECT);
+  }
+
+  public boolean isConnectRegistered(SelectableChannel channel) {
+    return isInterestRegistered(channel, SelectionKey.OP_CONNECT);
+  }
+
+  public void registerAccept(SelectableChannel channel, ISelectHandler callback)
+      throws ClosedChannelException {
+    addInterest(channel, SelectionKey.OP_ACCEPT, callback);
+  }
+
+  public void unregisterAccept(SelectableChannel channel) {
+    removeInterest(channel, SelectionKey.OP_ACCEPT);
+  }
+
+  public boolean isAcceptRegistered(SelectableChannel channel) {
+    return isInterestRegistered(channel, SelectionKey.OP_ACCEPT);
+  }
+
+  public void registerWrite(SelectableChannel channel, ISelectHandler callback)
+      throws ClosedChannelException {
+    addInterest(channel, SelectionKey.OP_WRITE, callback);
+  }
+
+  public void unregisterWrite(SelectableChannel channel) {
+    removeInterest(channel, SelectionKey.OP_WRITE);
+  }
+
+  public boolean isWriteRegistered(SelectableChannel channel) {
+    return isInterestRegistered(channel, SelectionKey.OP_WRITE);
+  }
+
+  private void addInterest(SelectableChannel channel,
+                           int operation,
+                           ISelectHandler callback)
+      throws ClosedChannelException {
+
+    SelectionKey key = channel.keyFor(selector);
+
+    if (key == null) {
+      channel.register(selector, operation, callback);
+    } else if (!key.isValid()) {
+      throw new RuntimeException(
+          String.format("Unable to add %d in %s due to key is invalid", operation, channel));
+    } else {
+      // Key is not null and key is valid
+      if ((key.interestOps() & operation) != 0) {
+        throw new RuntimeException(
+            String.format("%d has been registered in %s", operation, channel));
+      }
+      if (key.attachment() == null) {
+        key.attach(callback);
+      } else {
+        if (callback != key.attachment()) {
+          throw new RuntimeException("Unmatched SelectHandler has already been attached"
+              + " for other operation");
+        }
+        // If call == key.attachment
+        // Just skip
+      }
+      key.interestOps(key.interestOps() | operation);
+    }
+  }
+
+  private void removeInterest(SelectableChannel channel, int operation) {
+    SelectionKey key = channel.keyFor(selector);
+
+    // Exception would be thrown if key is null or key is inValid
+    // We do not need double check it ahead
+    key.interestOps(key.interestOps() & (~operation));
+  }
+
+  private boolean isInterestRegistered(SelectableChannel channel, int operation) {
+    SelectionKey key = channel.keyFor(selector);
+
+    return key != null && (key.interestOps() & operation) != 0;
   }
 }
