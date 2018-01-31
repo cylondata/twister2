@@ -46,7 +46,7 @@ public final class MessageTypeConverter {
       case SHORT:
         return DataMessageType.SHORT;
       default:
-        throw new RuntimeException("The given Message type does not have a corressponding"
+        throw new RuntimeException("The given Message type does not have a corresponding"
             + " DataMessageType");
     }
   }
