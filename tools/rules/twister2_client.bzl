@@ -52,6 +52,10 @@ def twister2_client_lib_resource_scheduler_files():
         "//twister2/proto:proto_job_state_java",
         "@commons_io_commons_io//jar",
         "@org_apache_commons_commons_compress//jar",
+        "@org_apache_curator_curator_client//jar",
+        "@org_apache_curator_curator_framework//jar",
+        "@org_apache_curator_curator_recipes//jar",
+        "@org_apache_zookeeper_zookeeper//jar",
     ]
 
 def twister2_client_lib_api_files():

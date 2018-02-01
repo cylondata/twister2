@@ -9,6 +9,26 @@ maven_jar(
 )
 
 maven_jar(
+  name = "org_apache_curator_curator_client",
+  artifact = "org.apache.curator:curator-client:4.0.0",
+)
+
+maven_jar(
+  name = "org_apache_curator_curator_framework",
+  artifact = "org.apache.curator:curator-framework:4.0.0",
+)
+
+maven_jar(
+  name = "org_apache_curator_curator_recipes",
+  artifact = "org.apache.curator:curator-recipes:4.0.0",
+)
+
+maven_jar(
+  name = "org_apache_zookeeper_zookeeper",
+  artifact = "org.apache.zookeeper:zookeeper:3.4.11",
+)
+
+maven_jar(
   name = "com_google_protobuf_protobuf_java",
   artifact = "com.google.protobuf:protobuf-java:3.4.0",
 )

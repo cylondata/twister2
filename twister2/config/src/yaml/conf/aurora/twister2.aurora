@@ -20,7 +20,7 @@ jcp = '-cp ' \
   'twister2-core/lib/snakeyaml-1.15.jar:' \
   'twister2-core/lib/commons-io-2.5.jar:' \
   'twister2-core/lib/libconfig-java.jar:' \
-  'twister2-core/lib/protobuf-java-2.5.0.jar:' \
+  'twister2-core/lib/protobuf-java-3.4.0.jar:' \
   'twister2-core/lib/guava-18.0.jar:' \
   'twister2-core/lib/libapi-java.jar:' \
   'twister2-core/lib/libproto_resource_scheduler_java.jar:' \
@@ -30,11 +30,17 @@ jcp = '-cp ' \
   'twister2-core/lib/ompijavabinding-3.0.0.jar:' \
   'twister2-core/lib/libcommon-java.jar:' \
   'twister2-core/lib/libcomms-java.jar:' \
+  'twister2-core/lib/curator-client-4.0.0.jar:' \
+  'twister2-core/lib/curator-framework-4.0.0.jar:' \
+  'twister2-core/lib/curator-recipes-4.0.0.jar:' \
+  'twister2-core/lib/zookeeper-3.4.11.jar:' \
   'twister2-job/{{USER_JOB_JAR_FILE}}'
 
 # construct environment variables, get some ports for testing
 envs = ' -Djob_desc_file={{JOB_DESCRIPTION_FILE}}' \
   ' -Dcluster_type={{CLUSTER_TYPE}}' \
+  ' -Dhostname={{mesos.hostname}}' \
+  ' -DtaskID={{thermos.task_id}}' \
   ' -DhttpPort={{thermos.ports[http]}}' \
   ' -DtcpPort={{thermos.ports[tcp]}}' \
   ' -DudpPort={{thermos.ports[udp]}}' \
