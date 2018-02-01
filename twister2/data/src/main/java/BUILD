@@ -13,7 +13,7 @@ common_deps_files = [
     "@lmdbjava_native_osx//jar",
     "@com_github_jnr_ffi//jar",
     "@com_github_jnr_constants//jar",
-
+    "@commons_lang_commons_lang//jar",
 ]
 
 java_library(

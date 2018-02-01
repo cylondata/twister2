@@ -235,9 +235,9 @@ public interface MemoryManager {
   /*<T extends Serializable> boolean close(int opID, T key);*/
 
   Iterator<Object> getIterator(int opID, DataMessageType keyType, DataMessageType valueType,
-                               KryoMemorySerializer serializer);
+                               KryoMemorySerializer deSerializer);
 
   Iterator<Object> getIterator(int opID, DataMessageType valueType,
-                               KryoMemorySerializer serializer);
+                               KryoMemorySerializer deSerializer);
 
 }

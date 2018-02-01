@@ -504,19 +504,15 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
   }
 
   @Override
-  public Iterator<Object> getIterator(int opID, DataMessageType keyType,
-                                      DataMessageType valueType, KryoMemorySerializer serializer) {
-
-
-    return null;
+  public Iterator<Object> getIterator(int opID, DataMessageType keyType, DataMessageType valueType,
+                                      KryoMemorySerializer deSerializer) {
+    return memoryManager.getIterator(opID, keyType, valueType, deSerializer);
   }
 
   @Override
   public Iterator<Object> getIterator(int opID, DataMessageType valueType,
-                                      KryoMemorySerializer serializer) {
-
-
-    return null;
+                                      KryoMemorySerializer deSerializer) {
+    return memoryManager.getIterator(opID, valueType, deSerializer);
   }
 
   /*@Override

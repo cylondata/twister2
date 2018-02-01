@@ -13,11 +13,14 @@ package edu.iu.dsc.tws.data.memory.lmdb;
 
 import java.io.File;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.lmdbjava.CursorIterator;
 import org.lmdbjava.Dbi;
 import org.lmdbjava.Env;
@@ -527,17 +530,18 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
       LOG.info("The given operation does not have a corresponding store specified");
       return null;
     }
+    List<Object> results = new ArrayList<>();
     Dbi<ByteBuffer> currentDB = dbMap.get(opID);
     Txn<ByteBuffer> txn = env.txnRead();
     try (CursorIterator<ByteBuffer> it = currentDB.iterate(txn, KeyRange.all())) {
       for (final CursorIterator.KeyVal<ByteBuffer> kv : it.iterable()) {
         Object key = MemoryDeserializer.deserializeKey(kv.key(), keyType, deSerializer);
         Object value = MemoryDeserializer.deserializeValue(kv.val(), valueType, deSerializer);
-
+        results.add(new ImmutablePair<>(key, value));
       }
     }
     txn.close();
-    return null;
+    return results.iterator();
   }
 
   /**
@@ -551,17 +555,17 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
       LOG.info("The given operation does not have a corresponding store specified");
       return null;
     }
+    List<Object> results = new ArrayList<>();
     Dbi<ByteBuffer> currentDB = dbMap.get(opID);
     Txn<ByteBuffer> txn = env.txnRead();
     try (CursorIterator<ByteBuffer> it = currentDB.iterate(txn, KeyRange.all())) {
       for (final CursorIterator.KeyVal<ByteBuffer> kv : it.iterable()) {
         Object value = MemoryDeserializer.deserializeValue(kv.val(), valueType, deSerializer);
-
-
+        results.add(value);
       }
     }
     txn.close();
-    return null;
+    return results.iterator();
   }
 
  /* @Override
