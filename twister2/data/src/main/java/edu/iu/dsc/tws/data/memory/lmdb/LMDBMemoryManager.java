@@ -24,12 +24,13 @@ import org.lmdbjava.Env;
 import org.lmdbjava.KeyRange;
 import org.lmdbjava.Txn;
 
-
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.memory.AbstractMemoryManager;
 import edu.iu.dsc.tws.data.memory.MemoryManagerContext;
 import edu.iu.dsc.tws.data.memory.OperationMemoryManager;
 import edu.iu.dsc.tws.data.memory.utils.DataMessageType;
+import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
+import edu.iu.dsc.tws.data.utils.MemoryDeserializer;
 
 import static org.lmdbjava.DbiFlags.MDB_CREATE;
 import static org.lmdbjava.Env.create;
@@ -520,7 +521,8 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
    */
   @Override
   public Iterator<Object> getIterator(int opID, DataMessageType keyType,
-                                      DataMessageType valueType) {
+                                      DataMessageType valueType,
+                                      KryoMemorySerializer deSerializer) {
     if (!dbMap.containsKey(opID)) {
       LOG.info("The given operation does not have a corresponding store specified");
       return null;
@@ -529,8 +531,8 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
     Txn<ByteBuffer> txn = env.txnRead();
     try (CursorIterator<ByteBuffer> it = currentDB.iterate(txn, KeyRange.all())) {
       for (final CursorIterator.KeyVal<ByteBuffer> kv : it.iterable()) {
-        //  Object key = MemoryDeserializer.deserializeKey(kv.key(), keyType);
-        //  Object value = MemoryDeserializer.deserializeValue(kv.val(), valueType);
+        Object key = MemoryDeserializer.deserializeKey(kv.key(), keyType, deSerializer);
+        Object value = MemoryDeserializer.deserializeValue(kv.val(), valueType, deSerializer);
 
       }
     }
@@ -543,7 +545,8 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
    * This method assumes that the keys are int's and that the do not need to be returned
    */
   @Override
-  public Iterator<Object> getIterator(int opID, DataMessageType valueType) {
+  public Iterator<Object> getIterator(int opID, DataMessageType valueType,
+                                      KryoMemorySerializer deSerializer) {
     if (!dbMap.containsKey(opID)) {
       LOG.info("The given operation does not have a corresponding store specified");
       return null;
@@ -552,7 +555,7 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
     Txn<ByteBuffer> txn = env.txnRead();
     try (CursorIterator<ByteBuffer> it = currentDB.iterate(txn, KeyRange.all())) {
       for (final CursorIterator.KeyVal<ByteBuffer> kv : it.iterable()) {
-        // Object value = MemoryDeserializer.deserializeValue(kv.val(), valueType);
+        Object value = MemoryDeserializer.deserializeValue(kv.val(), valueType, deSerializer);
 
 
       }

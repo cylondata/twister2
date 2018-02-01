@@ -12,9 +12,11 @@
 package edu.iu.dsc.tws.data.memory;
 
 import java.nio.ByteBuffer;
+import java.util.HashMap;
 import java.util.Iterator;
 
 import edu.iu.dsc.tws.data.memory.utils.DataMessageType;
+import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 
 /**
  * This controls the memory manager for a single operation. An example of an operation is a
@@ -40,10 +42,14 @@ public class OperationMemoryManager {
 
   private DataMessageType messageType;
 
+  private KryoMemorySerializer deSerializer;
+
   public OperationMemoryManager(int opID, DataMessageType type, MemoryManager parentMM) {
     this.operationID = opID;
     this.memoryManager = parentMM;
     this.messageType = type;
+    this.deSerializer = new KryoMemorySerializer();
+    deSerializer.init(new HashMap<String, Object>());
     init();
   }
 
@@ -53,6 +59,8 @@ public class OperationMemoryManager {
     this.memoryManager = parentMM;
     this.messageType = type;
     this.keyType = keyType;
+    this.deSerializer = new KryoMemorySerializer();
+    deSerializer.init(new HashMap<String, Object>());
     init();
   }
 
@@ -255,9 +263,9 @@ public class OperationMemoryManager {
    */
   public Iterator<Object> iterator() {
     if (isKeyed) {
-      return memoryManager.getIterator(operationID, keyType, messageType);
+      return memoryManager.getIterator(operationID, keyType, messageType, deSerializer);
     } else {
-      return memoryManager.getIterator(operationID, messageType);
+      return memoryManager.getIterator(operationID, messageType, deSerializer);
     }
   }
 

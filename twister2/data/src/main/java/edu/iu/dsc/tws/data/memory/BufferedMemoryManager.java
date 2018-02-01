@@ -34,6 +34,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.memory.lmdb.LMDBMemoryManager;
 import edu.iu.dsc.tws.data.memory.utils.DataMessageType;
+import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 
 /**
  * Inserts into the memory store in batches. Only one instance per executor.
@@ -504,14 +505,15 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
 
   @Override
   public Iterator<Object> getIterator(int opID, DataMessageType keyType,
-                                      DataMessageType valueType) {
+                                      DataMessageType valueType, KryoMemorySerializer serializer) {
 
 
     return null;
   }
 
   @Override
-  public Iterator<Object> getIterator(int opID, DataMessageType valueType) {
+  public Iterator<Object> getIterator(int opID, DataMessageType valueType,
+                                      KryoMemorySerializer serializer) {
 
 
     return null;
