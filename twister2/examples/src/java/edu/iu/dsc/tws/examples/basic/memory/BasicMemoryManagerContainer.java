@@ -39,6 +39,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -146,6 +147,9 @@ public class BasicMemoryManagerContainer implements IContainer {
 //    }
   }
 
+  /**
+   * test primitives with memory manager
+   */
   public boolean testPrimitives() {
     LOG.info("## Running LMDB primitives test ##");
 
@@ -166,13 +170,97 @@ public class BasicMemoryManagerContainer implements IContainer {
 
     ByteBuffer results = op.get(key);
     int res = results.getInt();
-    if (res == testInt) {
-      System.out.println("true");
-    } else {
+    if (res != testInt) {
       allPassed = false;
-      System.out.println("false");
     }
-    return true;
+
+    if (allPassed) {
+      System.out.println("Passed int test");
+    }
+    //test int array, put should replace the current value
+    int[] testarray = {234, 14123, 534, 6345};
+    value = ByteBuffer.allocateDirect(16);
+    for (int i : testarray) {
+      value.putInt(i);
+    }
+
+    op.put(key, value);
+    results = op.get(key);
+    for (int i : testarray) {
+      if (i != results.getInt()) {
+        allPassed = false;
+      }
+    }
+    if (allPassed) {
+      System.out.println("Passed int array test");
+    }
+
+    // get retuls with iterator
+    Iterator<Object> iter = op.iterator();
+    int[] dataset = (int[]) iter.next();
+    for (int i = 0; i < dataset.length; i++) {
+      if (dataset[i] != testarray[i]) {
+        allPassed = false;
+      }
+    }
+    if (allPassed) {
+      System.out.println("Passed int array iterator test, number of values returned by"
+          + "iterator : " + 1);
+    }
+    // iterator with more than 1 key will test that keys are sorted properly
+    int[][] datamultiarray = {{1, 11, 111, 1111}, {2, 22, 222, 2222}, {3, 33, 333, 3333},
+        {4, 44, 444, 4444}};
+    key.clear();
+    value.clear();
+    key.putInt(4);
+    for (int i : datamultiarray[3]) {
+      value.putInt(i);
+    }
+    op.put(key, value);
+
+    key.clear();
+    value.clear();
+    key.putInt(1);
+    for (int i : datamultiarray[0]) {
+      value.putInt(i);
+    }
+    op.put(key, value);
+
+    key.clear();
+    value.clear();
+    key.putInt(3);
+    for (int i : datamultiarray[2]) {
+      value.putInt(i);
+    }
+    op.put(key, value);
+
+    key.clear();
+    value.clear();
+    key.putInt(2);
+    for (int i : datamultiarray[1]) {
+      value.putInt(i);
+    }
+    op.put(key, value);
+
+    Iterator<Object> itermulti = op.iterator();
+    int itercount = 0;
+    itercount = 0;
+    while (itermulti.hasNext()) {
+      dataset = (int[]) itermulti.next();
+      for (int i = 0; i < 4; i++) {
+        if (dataset[i] != datamultiarray[itercount][i]) {
+          allPassed = false;
+        }
+      }
+      itercount++;
+    }
+
+    if (allPassed) {
+      System.out.println("Passed int multi array iterator test, number of values returned by"
+          + "iterator : " + itercount);
+    }
+
+    return allPassed;
   }
 
   /**
