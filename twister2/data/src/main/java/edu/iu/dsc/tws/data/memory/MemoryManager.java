@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.data.memory;
 
 import java.nio.ByteBuffer;
+import java.util.Iterator;
 
 import edu.iu.dsc.tws.data.memory.utils.DataMessageType;
 
@@ -222,5 +223,9 @@ public interface MemoryManager {
   boolean close(int opID, String key);
 
   /*<T extends Serializable> boolean close(int opID, T key);*/
+
+  Iterator<Object> getIterator(int opID, DataMessageType keyType, DataMessageType valueType);
+
+  Iterator<Object> getIterator(int opID, DataMessageType valueType);
 
 }

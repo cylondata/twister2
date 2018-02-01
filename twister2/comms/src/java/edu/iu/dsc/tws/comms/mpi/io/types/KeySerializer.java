@@ -64,12 +64,51 @@ public final class KeySerializer {
    * @param serializer the serializer used to create the byte stream from the object
    * @return ByteBuffer with the key
    */
-  public static ByteBuffer getserializedKey(Object key, KryoSerializer serializer) {
-    byte[] serialize = serializer.serialize(key);
-    //TODO : check if there is amore memory efficient method to do this
-    ByteBuffer keyBuffer = ByteBuffer.allocateDirect(serialize.length);
-    keyBuffer.put(serialize);
-    return keyBuffer;
+  public static ByteBuffer getserializedKey(Object key, SerializeState state,
+                                            MessageType keyType, KryoSerializer serializer) {
+    ByteBuffer keyBuffer;
+    switch (keyType) {
+      case INTEGER:
+        keyBuffer = ByteBuffer.allocateDirect(4);
+        keyBuffer.putInt((Integer) key);
+        return keyBuffer;
+      case SHORT:
+        keyBuffer = ByteBuffer.allocateDirect(2);
+        keyBuffer.putShort((Short) key);
+        return keyBuffer;
+      case LONG:
+        keyBuffer = ByteBuffer.allocateDirect(8);
+        keyBuffer.putLong((Long) key);
+        return keyBuffer;
+      case DOUBLE:
+        keyBuffer = ByteBuffer.allocateDirect(8);
+        keyBuffer.putDouble((Double) key);
+        return keyBuffer;
+      case OBJECT:
+        if (state.getKey() == null) {
+          byte[] serialize = serializer.serialize(key);
+          state.setKey(serialize);
+        }
+        keyBuffer = ByteBuffer.allocateDirect(state.getKey().length);
+        keyBuffer.put(state.getKey());
+        return keyBuffer;
+      case BYTE:
+        if (state.getKey() == null) {
+          state.setKey((byte[]) key);
+        }
+        keyBuffer = ByteBuffer.allocateDirect(state.getKey().length);
+        keyBuffer.put(state.getKey());
+        return keyBuffer;
+      case STRING:
+        if (state.getKey() == null) {
+          state.setKey(((String) key).getBytes());
+        }
+        keyBuffer = ByteBuffer.allocateDirect(state.getKey().length);
+        keyBuffer.put(state.getKey());
+        return keyBuffer;
+      default:
+        return null;
+    }
   }
 
   /**

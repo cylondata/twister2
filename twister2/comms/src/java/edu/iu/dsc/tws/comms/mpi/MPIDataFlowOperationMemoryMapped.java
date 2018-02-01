@@ -543,8 +543,10 @@ public class MPIDataFlowOperationMemoryMapped implements MPIMessageListener,
                                                    Object messageObject) {
     if (isKeyed) {
       KeyedContent kc = (KeyedContent) messageObject;
-      ByteBuffer keyBuffer = KeySerializer.getserializedKey(kc.getSource(), kryoSerializer);
-      ByteBuffer dataBuffer = DataSerializer.getserializedData(kc.getObject(), kryoSerializer);
+      ByteBuffer keyBuffer = KeySerializer.getserializedKey(kc.getSource(),
+          mpiSendMessage.getSerializationState(), keyType, kryoSerializer);
+      ByteBuffer dataBuffer = DataSerializer.getserializedData(kc.getObject(),
+          type, kryoSerializer);
       //TODO : need to generate operation key and use it
       return operationMemoryManager.put(keyBuffer, dataBuffer);
     } else {
@@ -553,7 +555,7 @@ public class MPIDataFlowOperationMemoryMapped implements MPIMessageListener,
       int key = mpiSendMessage.getSource();
       ByteBuffer keyBuffer = ByteBuffer.allocateDirect(Integer.BYTES);
       keyBuffer.putInt(key);
-      ByteBuffer dataBuffer = DataSerializer.getserializedData(messageObject, kryoSerializer);
+      ByteBuffer dataBuffer = DataSerializer.getserializedData(messageObject, type, kryoSerializer);
       //TODO : need to generate operation key and use it
       return operationMemoryManager.put(keyBuffer, dataBuffer);
     }

@@ -57,7 +57,8 @@ public final class DataDeserializer {
     //If the message type is object we need to add the length of each object to the
     //bytestream so we can separate objects
     ByteBuffer data;
-    if (type == MessageType.OBJECT) {
+    if (type == MessageType.OBJECT || type == MessageType.BUFFER || type == MessageType.BYTE
+        || type == MessageType.STRING) {
       data = ByteBuffer.allocateDirect(length + 4);
       data.putInt(length);
     } else {

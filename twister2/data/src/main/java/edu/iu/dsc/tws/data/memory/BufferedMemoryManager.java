@@ -25,12 +25,11 @@ package edu.iu.dsc.tws.data.memory;
 
 import java.nio.ByteBuffer;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
-
-
 
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.memory.lmdb.LMDBMemoryManager;
@@ -501,6 +500,21 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
     keyMapBuffers.get(opID).remove(key);
     keyBufferSizes.get(opID).remove(key);
     return true;
+  }
+
+  @Override
+  public Iterator<Object> getIterator(int opID, DataMessageType keyType,
+                                      DataMessageType valueType) {
+
+
+    return null;
+  }
+
+  @Override
+  public Iterator<Object> getIterator(int opID, DataMessageType valueType) {
+
+
+    return null;
   }
 
   /*@Override

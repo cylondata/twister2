@@ -14,13 +14,15 @@ package edu.iu.dsc.tws.data.memory.lmdb;
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import org.lmdbjava.CursorIterator;
 import org.lmdbjava.Dbi;
 import org.lmdbjava.Env;
+import org.lmdbjava.KeyRange;
 import org.lmdbjava.Txn;
-
 
 
 import edu.iu.dsc.tws.data.fs.Path;
@@ -511,6 +513,52 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
   @Override
   public boolean close(int opID, String key) {
     return false;
+  }
+
+  /**
+   * Returns an iterator that contains all the byte buffers for the given operation
+   */
+  @Override
+  public Iterator<Object> getIterator(int opID, DataMessageType keyType,
+                                      DataMessageType valueType) {
+    if (!dbMap.containsKey(opID)) {
+      LOG.info("The given operation does not have a corresponding store specified");
+      return null;
+    }
+    Dbi<ByteBuffer> currentDB = dbMap.get(opID);
+    Txn<ByteBuffer> txn = env.txnRead();
+    try (CursorIterator<ByteBuffer> it = currentDB.iterate(txn, KeyRange.all())) {
+      for (final CursorIterator.KeyVal<ByteBuffer> kv : it.iterable()) {
+        //  Object key = MemoryDeserializer.deserializeKey(kv.key(), keyType);
+        //  Object value = MemoryDeserializer.deserializeValue(kv.val(), valueType);
+
+      }
+    }
+    txn.close();
+    return null;
+  }
+
+  /**
+   * Returns an iterator that contains all the byte buffers for the given operation
+   * This method assumes that the keys are int's and that the do not need to be returned
+   */
+  @Override
+  public Iterator<Object> getIterator(int opID, DataMessageType valueType) {
+    if (!dbMap.containsKey(opID)) {
+      LOG.info("The given operation does not have a corresponding store specified");
+      return null;
+    }
+    Dbi<ByteBuffer> currentDB = dbMap.get(opID);
+    Txn<ByteBuffer> txn = env.txnRead();
+    try (CursorIterator<ByteBuffer> it = currentDB.iterate(txn, KeyRange.all())) {
+      for (final CursorIterator.KeyVal<ByteBuffer> kv : it.iterable()) {
+        // Object value = MemoryDeserializer.deserializeValue(kv.val(), valueType);
+
+
+      }
+    }
+    txn.close();
+    return null;
   }
 
  /* @Override

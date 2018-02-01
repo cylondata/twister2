@@ -16,6 +16,7 @@ import java.nio.ByteBuffer;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.mpi.io.SerializeState;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
+import edu.iu.dsc.tws.data.memory.MemoryManagerContext;
 
 public final class DataSerializer {
   private DataSerializer() {
@@ -48,7 +49,7 @@ public final class DataSerializer {
         return state.getData().length;
       case STRING:
         if (state.getData() == null) {
-          byte[] serialize = serializer.serialize(content);
+          byte[] serialize = ((String) content).getBytes(MemoryManagerContext.DEFAULT_CHARSET);
           state.setData(serialize);
         }
         return state.getData().length;
@@ -58,13 +59,80 @@ public final class DataSerializer {
     return 0;
   }
 
-  public static ByteBuffer getserializedData(Object content, KryoSerializer serializer) {
-    byte[] serialize = serializer.serialize(content);
-    //TODO : check if there is amore memory efficient method to do this
-    ByteBuffer dataBuffer = ByteBuffer.allocateDirect(serialize.length);
-    dataBuffer.put(serialize);
-    return dataBuffer;
+  /**
+   * get serialized data
+   */
+  public static ByteBuffer getserializedData(Object content, MessageType messageType,
+                                             KryoSerializer serializer) {
+    ByteBuffer dataBuffer;
+    switch (messageType) {
+      case INTEGER:
+        int[] intdata = (int[]) content;
+        dataBuffer = ByteBuffer.allocateDirect(intdata.length * 4);
+        copyIntegers(intdata, dataBuffer);
+        return dataBuffer;
+      case SHORT:
+        short[] shortdata = (short[]) content;
+        dataBuffer = ByteBuffer.allocateDirect(shortdata.length * 2);
+        copyShorts(shortdata, dataBuffer);
+        return dataBuffer;
+      case LONG:
+        long[] longdata = (long[]) content;
+        dataBuffer = ByteBuffer.allocateDirect(longdata.length * 8);
+        copyLongs(longdata, dataBuffer);
+        return dataBuffer;
+      case DOUBLE:
+        double[] doubledata = (double[]) content;
+        dataBuffer = ByteBuffer.allocateDirect(doubledata.length * 8);
+        copyDoubles(doubledata, dataBuffer);
+        return dataBuffer;
+      case OBJECT:
+        byte[] serialize = serializer.serialize(content);
+        dataBuffer = ByteBuffer.allocateDirect(serialize.length + 4);
+        dataBuffer.putInt(serialize.length);
+        dataBuffer.put(serialize);
+        return dataBuffer;
+      case BYTE:
+        byte[] bytedata = (byte[]) content;
+        dataBuffer = ByteBuffer.allocateDirect(bytedata.length + 4);
+        dataBuffer.putInt(bytedata.length);
+        dataBuffer.put(bytedata);
+        return dataBuffer;
+      case STRING:
+        byte[] stringdata = ((String) content).getBytes(MemoryManagerContext.DEFAULT_CHARSET);
+        dataBuffer = ByteBuffer.allocateDirect(stringdata.length + 4);
+        dataBuffer.putInt(stringdata.length);
+        dataBuffer.put(stringdata);
+        return dataBuffer;
+      default:
+        return null;
+    }
   }
+
+  private static void copyIntegers(int[] data, ByteBuffer dataBuffer) {
+    for (int i : data) {
+      dataBuffer.putInt(i);
+    }
+  }
+
+  private static void copyShorts(short[] data, ByteBuffer dataBuffer) {
+    for (short i : data) {
+      dataBuffer.putShort(i);
+    }
+  }
+
+  private static void copyLongs(long[] data, ByteBuffer dataBuffer) {
+    for (long i : data) {
+      dataBuffer.putLong(i);
+    }
+  }
+
+  private static void copyDoubles(double[] data, ByteBuffer dataBuffer) {
+    for (double i : data) {
+      dataBuffer.putDouble(i);
+    }
+  }
+
 
   /**
    * Copy the key to the buffer
@@ -95,7 +163,7 @@ public final class DataSerializer {
         return copyDataBytes(targetBuffer, state);
       case STRING:
         if (state.getData() == null) {
-          state.setData(((String) data).getBytes());
+          state.setData(((String) data).getBytes(MemoryManagerContext.DEFAULT_CHARSET));
         }
         return copyDataBytes(targetBuffer, state);
       default:
