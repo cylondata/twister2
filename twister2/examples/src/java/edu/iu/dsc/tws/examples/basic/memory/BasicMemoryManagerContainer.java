@@ -58,6 +58,7 @@ import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.mpi.io.KeyedContent;
 import edu.iu.dsc.tws.data.fs.Path;
+import edu.iu.dsc.tws.data.memory.BufferedMemoryManager;
 import edu.iu.dsc.tws.data.memory.MemoryManager;
 import edu.iu.dsc.tws.data.memory.OperationMemoryManager;
 import edu.iu.dsc.tws.data.memory.lmdb.LMDBMemoryManager;
@@ -112,8 +113,10 @@ public class BasicMemoryManagerContainer implements IContainer {
 
     Map<String, Object> newCfg = new HashMap<>();
     LOG.info("###################### Running LMDB unit tests ######################");
-    testPrimitives();
+    testPrimitivesLMDB();
 
+    LOG.info("################# Running BufferedMemoryManager unit tests ##################");
+    testPrimitivesBuffered();
 //    try {
 //      // this method calls the init method
 //      // I think this is wrong
@@ -148,9 +151,9 @@ public class BasicMemoryManagerContainer implements IContainer {
   }
 
   /**
-   * test primitives with memory manager
+   * test primitives with LMDB memory manager
    */
-  public boolean testPrimitives() {
+  public boolean testPrimitivesLMDB() {
     LOG.info("## Running LMDB primitives test ##");
 
     boolean allPassed = true;
@@ -175,7 +178,7 @@ public class BasicMemoryManagerContainer implements IContainer {
     }
 
     if (allPassed) {
-      System.out.println("Passed int test");
+      System.out.println("Passed LMDB int test");
     }
     //test int array, put should replace the current value
     int[] testarray = {234, 14123, 534, 6345};
@@ -192,7 +195,7 @@ public class BasicMemoryManagerContainer implements IContainer {
       }
     }
     if (allPassed) {
-      System.out.println("Passed int array test");
+      System.out.println("Passed LMDB int array test");
     }
 
     // get retuls with iterator
@@ -204,7 +207,7 @@ public class BasicMemoryManagerContainer implements IContainer {
       }
     }
     if (allPassed) {
-      System.out.println("Passed int array iterator test, number of values returned by"
+      System.out.println("Passed LMDB int array iterator test, number of values returned by"
           + "iterator : " + 1);
     }
     // iterator with more than 1 key will test that keys are sorted properly
@@ -246,6 +249,9 @@ public class BasicMemoryManagerContainer implements IContainer {
     int itercount = 0;
     itercount = 0;
     while (itermulti.hasNext()) {
+      if (itercount > 3) {
+        break;
+      }
       dataset = (int[]) itermulti.next();
       for (int i = 0; i < 4; i++) {
         if (dataset[i] != datamultiarray[itercount][i]) {
@@ -256,8 +262,196 @@ public class BasicMemoryManagerContainer implements IContainer {
     }
 
     if (allPassed) {
-      System.out.println("Passed int multi array iterator test, number of values returned by"
+      System.out.println("Passed LMDB int multi array iterator test, number of values returned by"
           + "iterator : " + itercount);
+    }
+
+
+    //test append function
+    key.clear();
+    value.clear();
+    key.putInt(6);
+    for (int i : datamultiarray[0]) {
+      value.putInt(i);
+    }
+    op.put(key, value);
+    value.clear();
+    for (int i : datamultiarray[1]) {
+      value.putInt(i);
+    }
+    op.append(key, value);
+
+    results = op.get(key);
+    System.out.println("BasicMemoryManagerContainer Result Length : " + results.remaining());
+    for (int i : datamultiarray[0]) {
+      int itemp = results.getInt();
+      if (i != itemp) {
+        allPassed = false;
+      }
+    }
+    for (int i : datamultiarray[1]) {
+      int itemp = results.getInt();
+      if (i != itemp) {
+        allPassed = false;
+      }
+    }
+
+    if (allPassed) {
+      System.out.println("Passed LMDB int array append test");
+    }
+
+    return allPassed;
+  }
+
+  /**
+   * test primitives with Buffered memory manager
+   */
+  public boolean testPrimitivesBuffered() {
+    LOG.info("## Running BufferedMemoryManager primitives test ##");
+
+    boolean allPassed = true;
+    Path dataPath = new Path("/home/pulasthi/work/twister2/lmdbdatabase2");
+    MemoryManager memoryManager = new BufferedMemoryManager(dataPath);
+    int opID = 1;
+    OperationMemoryManager op = memoryManager.addOperation(opID, DataMessageType.INTEGER);
+
+    //Test single integer operation
+    ByteBuffer key = ByteBuffer.allocateDirect(4);
+    ByteBuffer value = ByteBuffer.allocateDirect(4);
+    key.putInt(1);
+    int testInt = 1231212121;
+    byte[] val = Ints.toByteArray(testInt);
+    value.put(val);
+    op.put(key, value);
+
+    ByteBuffer results = op.get(key);
+    int res = results.getInt();
+    if (res != testInt) {
+      allPassed = false;
+    }
+
+    if (allPassed) {
+      System.out.println("Passed BufferedMemoryManager int test");
+    }
+    //test int array, put should replace the current value
+    int[] testarray = {234, 14123, 534, 6345};
+    value = ByteBuffer.allocateDirect(16);
+    ByteBuffer value2 = ByteBuffer.allocateDirect(16);
+    ByteBuffer value3 = ByteBuffer.allocateDirect(16);
+    ByteBuffer value4 = ByteBuffer.allocateDirect(16);
+
+    for (int i : testarray) {
+      value.putInt(i);
+    }
+
+    op.put(key, value);
+    results = op.get(key);
+    for (int i : testarray) {
+      if (i != results.getInt()) {
+        allPassed = false;
+      }
+    }
+    if (allPassed) {
+      System.out.println("Passed BufferedMemoryManager int array test");
+    }
+
+    // get retuls with iterator
+    Iterator<Object> iter = op.iterator();
+    int[] dataset = (int[]) iter.next();
+    for (int i = 0; i < dataset.length; i++) {
+      if (dataset[i] != testarray[i]) {
+        allPassed = false;
+      }
+    }
+    if (allPassed) {
+      System.out.println("Passed BufferedMemoryManager int array iterator test,"
+          + " number of values returned by"
+          + "iterator : " + 1);
+    }
+
+    op.delete(key);
+    // iterator with more than 1 key will test that keys are sorted properly
+    int[][] datamultiarray = {{1, 11, 111, 1111}, {2, 22, 222, 2222}, {3, 33, 333, 3333},
+        {4, 44, 444, 4444}};
+    key.clear();
+    value.clear();
+    key.putInt(4);
+    for (int i : datamultiarray[3]) {
+      value.putInt(i);
+    }
+    op.put(key, value);
+
+    key.clear();
+    key.putInt(1);
+    for (int i : datamultiarray[0]) {
+      value2.putInt(i);
+    }
+    op.put(key, value2);
+
+    key.clear();
+    key.putInt(3);
+    for (int i : datamultiarray[2]) {
+      value3.putInt(i);
+    }
+    op.put(key, value3);
+
+    key.clear();
+    key.putInt(2);
+    for (int i : datamultiarray[1]) {
+      value4.putInt(i);
+    }
+    op.put(key, value4);
+
+    Iterator<Object> itermulti = op.iterator();
+    int itercount = 0;
+    itercount = 0;
+    while (itermulti.hasNext()) {
+      if (itercount > 3) {
+        break;
+      }
+      dataset = (int[]) itermulti.next();
+      for (int i = 0; i < 4; i++) {
+        if (dataset[i] != datamultiarray[itercount][i]) {
+          allPassed = false;
+        }
+      }
+      itercount++;
+    }
+
+    if (allPassed) {
+      System.out.println("Passed BufferedMemoryManager int multi array iterator test,"
+          + " number of values returned by"
+          + "iterator : " + itercount);
+    }
+
+    //test append function
+    key.clear();
+    value2.clear();
+    key.putInt(6);
+    for (int i : datamultiarray[0]) {
+      value2.putInt(i);
+    }
+    op.put(key, value2);
+    value3.clear();
+    for (int i : datamultiarray[1]) {
+      value3.putInt(i);
+    }
+    op.append(key, value3);
+
+    results = op.get(key);
+    for (int i : datamultiarray[0]) {
+      if (i != results.getInt()) {
+        allPassed = false;
+      }
+    }
+    for (int i : datamultiarray[1]) {
+      if (i != results.getInt()) {
+        allPassed = false;
+      }
+    }
+
+    if (allPassed) {
+      System.out.println("Passed LMDB int array append test");
     }
 
     return allPassed;
