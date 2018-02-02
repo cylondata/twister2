@@ -192,8 +192,7 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
       flush(opID, key);
     }
 
-    return memoryManager.get(opID, ByteBuffer.wrap(
-        key.getBytes(MemoryManagerContext.DEFAULT_CHARSET)));
+    return memoryManager.get(opID, key);
   }
 
   /*@Override
@@ -430,12 +429,10 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
     //Since we got all the buffer values reset the size
     keyBufferSizes.get(opID).put(key, 0);
     if (memoryManager.containsKey(opID, key)) {
-      return memoryManager.append(opID, ByteBuffer.wrap(key.getBytes(
-          MemoryManagerContext.DEFAULT_CHARSET)),
+      return memoryManager.append(opID, key,
           temp);
     } else {
-      return memoryManager.put(opID, ByteBuffer.wrap(key.getBytes(
-          MemoryManagerContext.DEFAULT_CHARSET)),
+      return memoryManager.put(opID, key,
           temp);
     }
   }
@@ -458,12 +455,10 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
     //Since we got all the buffer values reset the size
     keyBufferSizes.get(opID).put(key, 0);
     if (memoryManager.containsKey(opID, key)) {
-      return memoryManager.append(opID, ByteBuffer.wrap(key.getBytes(
-          MemoryManagerContext.DEFAULT_CHARSET)),
+      return memoryManager.append(opID, key,
           temp);
     } else {
-      return memoryManager.put(opID, ByteBuffer.wrap(key.getBytes(
-          MemoryManagerContext.DEFAULT_CHARSET)),
+      return memoryManager.put(opID, key,
           temp);
     }
   }

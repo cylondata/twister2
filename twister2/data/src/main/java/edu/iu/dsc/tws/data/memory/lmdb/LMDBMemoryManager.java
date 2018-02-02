@@ -140,7 +140,10 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
 
   @Override
   public ByteBuffer get(int opID, String key) {
-    return get(opID, ByteBuffer.wrap(key.getBytes(MemoryManagerContext.DEFAULT_CHARSET)));
+    ByteBuffer temp = MemoryManagerContext.DEFAULT_CHARSET.encode(key);
+    ByteBuffer keyBuffer = ByteBuffer.allocateDirect(temp.limit());
+    keyBuffer.put(temp);
+    return get(opID, keyBuffer);
   }
 
   /*@Override
@@ -256,7 +259,10 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean containsKey(int opID, String key) {
-    return containsKey(opID, ByteBuffer.wrap(key.getBytes(MemoryManagerContext.DEFAULT_CHARSET)));
+    ByteBuffer temp = MemoryManagerContext.DEFAULT_CHARSET.encode(key);
+    ByteBuffer keyBuffer = ByteBuffer.allocateDirect(temp.limit());
+    keyBuffer.put(temp);
+    return containsKey(opID, keyBuffer);
   }
 
   /*@Override
@@ -299,7 +305,10 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean append(int opID, String key, ByteBuffer value) {
-    return append(opID, ByteBuffer.wrap(key.getBytes(MemoryManagerContext.DEFAULT_CHARSET)), value);
+    ByteBuffer temp = MemoryManagerContext.DEFAULT_CHARSET.encode(key);
+    ByteBuffer keyBuffer = ByteBuffer.allocateDirect(temp.limit());
+    keyBuffer.put(temp);
+    return append(opID, keyBuffer, value);
   }
 
   /*@Override
@@ -379,7 +388,10 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean put(int opID, String key, ByteBuffer value) {
-    return put(opID, ByteBuffer.wrap(key.getBytes(MemoryManagerContext.DEFAULT_CHARSET)), value);
+    ByteBuffer temp = MemoryManagerContext.DEFAULT_CHARSET.encode(key);
+    ByteBuffer keyBuffer = ByteBuffer.allocateDirect(temp.limit());
+    keyBuffer.put(temp);
+    return put(opID, keyBuffer, value);
   }
 
   /*@Override
@@ -447,7 +459,11 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean delete(int opID, String key) {
-    return delete(opID, ByteBuffer.wrap(key.getBytes(MemoryManagerContext.DEFAULT_CHARSET)));
+    //TODO check if there is better method to get direct byte buffer from String
+    ByteBuffer temp = MemoryManagerContext.DEFAULT_CHARSET.encode(key);
+    ByteBuffer keyBuffer = ByteBuffer.allocateDirect(temp.limit());
+    keyBuffer.put(temp);
+    return delete(opID, keyBuffer);
   }
 
   /*@Override
