@@ -279,8 +279,6 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
     if (value.position() != 0) {
       value.flip();
     }
-    System.out.println("LMDBMemoryManager append results length :" + results.remaining());
-    System.out.println("LMDBMemoryManager append value length :" + value.remaining());
     if (results == null) {
       return put(opID, key, value);
     }
@@ -289,7 +287,6 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
     ByteBuffer appended = ByteBuffer.allocateDirect(capacity)
         .put(results)
         .put(value);
-    System.out.println("LMDBMemoryManager append appended length :" + appended.limit());
 
     return put(opID, key, appended);
   }

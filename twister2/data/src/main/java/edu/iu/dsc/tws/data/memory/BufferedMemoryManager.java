@@ -487,6 +487,16 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
     }
   }
 
+  /**
+   * Flush all the keys that are stored for the given operation id.
+   * this must be called before a range of keys will be read as in the iterator methods
+   */
+  public boolean flushAll(int opID) {
+    for (String s : keyMap.get(opID).keySet()) {
+      flush(opID, s);
+    }
+    return true;
+  }
   /*@Override
   public <T extends Serializable> boolean flush(int opID, T key) {
     return false;
@@ -528,12 +538,14 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
   @Override
   public Iterator<Object> getIterator(int opID, DataMessageType keyType, DataMessageType valueType,
                                       KryoMemorySerializer deSerializer) {
+    flushAll(opID);
     return memoryManager.getIterator(opID, keyType, valueType, deSerializer);
   }
 
   @Override
   public Iterator<Object> getIterator(int opID, DataMessageType valueType,
                                       KryoMemorySerializer deSerializer) {
+    flushAll(opID);
     return memoryManager.getIterator(opID, valueType, deSerializer);
   }
 
