@@ -222,6 +222,9 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
       LOG.info("The given operation does not have a corresponding store specified");
       return false;
     }
+    if (key.position() != 0) {
+      key.flip();
+    }
     Dbi<ByteBuffer> currentDB = dbMap.get(opID);
     if (key.limit() > 511) {
       LOG.info("Key size lager than 511 bytes which is the limit for LMDB key values");
@@ -229,7 +232,7 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
     }
     Txn<ByteBuffer> txn = env.txnRead();
     final ByteBuffer found = currentDB.get(txn, key);
-
+    txn.close();
     if (found == null) {
       return false;
     }
@@ -439,7 +442,6 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
       LOG.info("Key size lager than 511 bytes which is the limit for LMDB key values");
       return false;
     }
-
     return currentDB.delete(key);
   }
 

@@ -95,6 +95,9 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean append(int opID, ByteBuffer key, ByteBuffer value) {
+    if (key.position() != 0) {
+      key.flip();
+    }
     String keyString = MemoryManagerContext.DEFAULT_CHARSET.decode(key).toString();
     return appendBulk(opID, keyString, value);
   }
@@ -121,6 +124,9 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean put(int opID, ByteBuffer key, ByteBuffer value) {
+    if (key.position() != 0) {
+      key.flip();
+    }
     String keyString = MemoryManagerContext.DEFAULT_CHARSET.decode(key).toString();
     return putBulk(opID, keyString, value);
   }
@@ -167,6 +173,9 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
 
   @Override
   public ByteBuffer get(int opID, ByteBuffer key) {
+    if (key.position() != 0) {
+      key.flip();
+    }
     String keyString = MemoryManagerContext.DEFAULT_CHARSET.decode(key).toString();
     if (keyMap.get(opID).containsKey(keyString)) {
       flush(opID, keyString);
@@ -227,6 +236,9 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean containsKey(int opID, ByteBuffer key) {
+    if (key.position() != 0) {
+      key.flip();
+    }
     return containsKey(opID, MemoryManagerContext.DEFAULT_CHARSET.decode(key).toString());
   }
 
@@ -255,6 +267,9 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean delete(int opID, ByteBuffer key) {
+    if (key.position() != 0) {
+      key.flip();
+    }
     deleteFromBMM(opID, MemoryManagerContext.DEFAULT_CHARSET.decode(key).toString());
     return memoryManager.delete(opID, key);
   }
@@ -343,7 +358,7 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
    */
   public boolean registerKey(int opID, String key, int step) {
     //TODO : do we have knowledge of the size of each byteBuffer?
-    if (keyMap.containsKey(opID)) {
+    if (keyMap.get(opID).containsKey(key)) {
       return false;
     }
     keyMap.get(opID).put(key, step);
@@ -362,7 +377,10 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
    * will be replaced
    */
   public boolean putBulk(int opID, String key, ByteBuffer value) {
-    if (!keyMap.containsKey(opID) && !memoryManager.containsKey(opID, key)) {
+    if (value.position() != 0) {
+      value.flip();
+    }
+    if (!keyMap.get(opID).containsKey(key) && !memoryManager.containsKey(opID, key)) {
       registerKey(opID, key, MemoryManagerContext.BULK_MM_STEP_SIZE);
     } else {
       //If the key is already present we need to replace its value so we need to clear the data
@@ -380,7 +398,10 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
    * Buffers the inputs before submitting to the store. The new values will be appended to the end
    */
   public boolean appendBulk(int opID, String key, ByteBuffer value) {
-    if (!keyMap.containsKey(opID)) {
+    if (value.position() != 0) {
+      value.flip();
+    }
+    if (!keyMap.get(opID).containsKey(key)) {
       registerKey(opID, key, MemoryManagerContext.BULK_MM_STEP_SIZE);
     }
     //TODO: need to make sure that there are no memory leaks here
@@ -403,6 +424,9 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean flush(int opID, ByteBuffer key) {
+    if (key.position() != 0) {
+      key.flip();
+    }
     return flush(opID, MemoryManagerContext.DEFAULT_CHARSET.decode(key).toString());
   }
 
@@ -470,6 +494,9 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean close(int opID, ByteBuffer key) {
+    if (key.position() != 0) {
+      key.flip();
+    }
     return close(opID, MemoryManagerContext.DEFAULT_CHARSET.decode(key).toString());
   }
 
