@@ -33,7 +33,9 @@ public final class MemoryDeserializer {
       case SHORT:
         return key.getShort();
       case OBJECT:
-        return serializer.deserialize(key.array());
+        byte[] temp = new byte[key.remaining()];
+        key.get(temp);
+        return serializer.deserialize(temp);
       default:
         break;
     }
@@ -102,6 +104,8 @@ public final class MemoryDeserializer {
       throw new RuntimeException("The given data buffer does not have the bytes for the object");
     }
     //TODO: check if ByteBuffer.array only returns the remining data bytes
-    return serializer.deserialize(data.array());
+    byte[] temp = new byte[data.remaining()];
+    data.get(temp);
+    return serializer.deserialize(temp);
   }
 }
