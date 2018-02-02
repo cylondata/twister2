@@ -95,7 +95,7 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean append(int opID, ByteBuffer key, ByteBuffer value) {
-    String keyString = new String(key.array(), MemoryManagerContext.DEFAULT_CHARSET);
+    String keyString = MemoryManagerContext.DEFAULT_CHARSET.decode(key).toString();
     return appendBulk(opID, keyString, value);
   }
 
@@ -121,7 +121,7 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean put(int opID, ByteBuffer key, ByteBuffer value) {
-    String keyString = new String(key.array(), MemoryManagerContext.DEFAULT_CHARSET);
+    String keyString = MemoryManagerContext.DEFAULT_CHARSET.decode(key).toString();
     return putBulk(opID, keyString, value);
   }
 
@@ -167,7 +167,7 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
 
   @Override
   public ByteBuffer get(int opID, ByteBuffer key) {
-    String keyString = new String(key.array(), MemoryManagerContext.DEFAULT_CHARSET);
+    String keyString = MemoryManagerContext.DEFAULT_CHARSET.decode(key).toString();
     if (keyMap.get(opID).containsKey(keyString)) {
       flush(opID, keyString);
     }
@@ -228,7 +228,7 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean containsKey(int opID, ByteBuffer key) {
-    return containsKey(opID, new String(key.array(), MemoryManagerContext.DEFAULT_CHARSET));
+    return containsKey(opID, MemoryManagerContext.DEFAULT_CHARSET.decode(key).toString());
   }
 
   /*@Override
@@ -256,7 +256,7 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean delete(int opID, ByteBuffer key) {
-    deleteFromBMM(opID, new String(key.array(), java.nio.charset.StandardCharsets.UTF_8));
+    deleteFromBMM(opID, MemoryManagerContext.DEFAULT_CHARSET.decode(key).toString());
     return memoryManager.delete(opID, key);
   }
 
@@ -404,7 +404,7 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean flush(int opID, ByteBuffer key) {
-    return flush(opID, new String(key.array(), java.nio.charset.StandardCharsets.UTF_8));
+    return flush(opID, MemoryManagerContext.DEFAULT_CHARSET.decode(key).toString());
   }
 
   /*@Override
@@ -475,7 +475,7 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean close(int opID, ByteBuffer key) {
-    return close(opID, new String(key.array(), java.nio.charset.StandardCharsets.UTF_8));
+    return close(opID, MemoryManagerContext.DEFAULT_CHARSET.decode(key).toString());
   }
 
   /*@Override
