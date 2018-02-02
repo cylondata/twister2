@@ -58,13 +58,13 @@
   * Few examples are available in `$OMPI_300/examples`. Please use `mpijavac` with other parameters similar to `javac` command to compile OpenMPI Java programs. Once compiled `mpirun [options] java -cp <classpath> class-name arguments` command with proper values set as arguments will run the MPI Java program.
   
 6. Bazel build system
-  * Twister2 requires Bazel build system version 0.30.
-  * Download bazel from https://github.com/bazelbuild/bazel/releases/download/0.3.0/bazel-0.3.0-installer-linux-x86_64.sh
+  * Twister2 requires Bazel build system version 0.8.1
+  * Download bazel from https://github.com/bazelbuild/bazel/releases/download/0.8.1/bazel-0.8.1-installer-linux-x86_64.sh
   * Execute the following commands
 
   ```
-    chmod +x bazel-0.3.0-installer-linux-x86_64.sh
-    ./bazel-0.3.0-installer-linux-x86_64.sh --user
+    chmod +x bazel-0.8.1-installer-linux-x86_64.sh
+    ./bazel-0.8.1-installer-linux-x86_64.sh --user
     export PATH=$HOME/bin:$PATH
   ```
 7. Required libraries
