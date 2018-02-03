@@ -37,7 +37,6 @@ package edu.iu.dsc.tws.examples.basic.memory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -54,7 +53,6 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.examples.IntData;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.utils.RandomString;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
@@ -183,7 +181,7 @@ public class BasicMemoryManagerGatherCommunication implements IContainer {
   private class FinalGatherReceive implements MessageReceiver {
     // lets keep track of the messages
     // for each task we need to keep track of incoming messages
-    List<Integer> dataList;
+    private List<Integer> dataList;
 
     private int count = 0;
 
