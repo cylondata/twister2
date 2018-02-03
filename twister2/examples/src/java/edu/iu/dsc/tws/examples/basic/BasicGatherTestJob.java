@@ -33,8 +33,8 @@ import edu.iu.dsc.tws.examples.basic.memory.BasicMemoryManagerGatherCommunicatio
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 
-public final class MemoryManagerGatherJob {
-  private MemoryManagerGatherJob() {
+public final class BasicGatherTestJob {
+  private BasicGatherTestJob() {
   }
 
   public static void main(String[] args) {
