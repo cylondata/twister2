@@ -58,6 +58,13 @@ public class SchedulerContext extends Context {
   // The path from where the workers will transfer twister2 tar.gz packages
   public static final String TWISTER2_PACKAGES_PATH = "twister2.packages.path";
 
+  // ZooKeeper server IP address and port number
+  // They should be given in conf files
+  public static final String ZOOKEEPER_SERVER_IP = "twister2.zookeeper.server.ip";
+  public static final String ZOOKEEPER_SERVER_PORT = "twister2.zookeeper.server.port";
+  public static final String MAX_WAIT_TIME_FOR_ALL_WORKERS_TO_JOIN =
+      "twister2.zookeeper.max.wait.time.for.all.workers.to.join";
+
   public static String stateManagerClass(Config cfg) {
     return cfg.getStringValue(STATE_MANAGER_CLASS);
   }
@@ -120,5 +127,17 @@ public class SchedulerContext extends Context {
 
   public static String clusterType(Config cfg) {
     return cfg.getStringValue(TWISTER2_CLUSTER_TYPE);
+  }
+
+  public static String zooKeeperServerIP(Config cfg) {
+    return cfg.getStringValue(ZOOKEEPER_SERVER_IP);
+  }
+
+  public static String zooKeeperServerPort(Config cfg) {
+    return cfg.getStringValue(ZOOKEEPER_SERVER_PORT);
+  }
+
+  public static int maxWaitTimeForAllWorkersToJoin(Config cfg) {
+    return Integer.parseInt(cfg.getStringValue(MAX_WAIT_TIME_FOR_ALL_WORKERS_TO_JOIN));
   }
 }

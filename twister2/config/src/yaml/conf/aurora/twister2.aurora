@@ -34,6 +34,8 @@ jcp = '-cp ' \
   'twister2-core/lib/curator-framework-4.0.0.jar:' \
   'twister2-core/lib/curator-recipes-4.0.0.jar:' \
   'twister2-core/lib/zookeeper-3.4.11.jar:' \
+  'twister2-core/lib/slf4j-api-1.7.7.jar:' \
+  'twister2-core/lib/slf4j-jdk14-1.7.7.jar:' \
   'twister2-job/{{USER_JOB_JAR_FILE}}'
 
 # construct environment variables, get some ports for testing
@@ -41,10 +43,7 @@ envs = ' -Djob_desc_file={{JOB_DESCRIPTION_FILE}}' \
   ' -Dcluster_type={{CLUSTER_TYPE}}' \
   ' -Dhostname={{mesos.hostname}}' \
   ' -DtaskID={{thermos.task_id}}' \
-  ' -DhttpPort={{thermos.ports[http]}}' \
-  ' -DtcpPort={{thermos.ports[tcp]}}' \
-  ' -DudpPort={{thermos.ports[udp]}}' \
-  ' -DanyPort={{thermos.ports[any]}}'
+  ' -DtcpPort={{thermos.ports[tcp]}}'
 
 # java command to run the worker in sandboxes
 javacmd = 'java %s %s  {{CONTAINER_CLASS}}' % (jcp, envs) 

@@ -11,13 +11,18 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.aurora;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.bootstrap.WorkerInfo;
+import edu.iu.dsc.tws.rsched.bootstrap.ZKController;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.mpi.MPIContext;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
@@ -26,38 +31,177 @@ import static edu.iu.dsc.tws.common.config.Context.DIR_PREFIX_FOR_JOB_ARCHIVE;
 public final class WorkerHello {
   public static final Logger LOG = Logger.getLogger(WorkerHello.class.getName());
 
-  private WorkerHello() {
+  private InetAddress workerAddress;
+  private int workerPort;
+  private String mesosTaskID;
+  private Config config;
+  private JobAPI.Job job;
+  private ZKController zkController;
+
+  private WorkerHello(InetAddress workerAddress, int workerPort, String mesosTaskID) {
+    this.workerAddress = workerAddress;
+    this.workerPort = workerPort;
+    this.mesosTaskID = mesosTaskID;
+  }
+
+  /**
+   * create a WorkerHello object by getting values from system property
+   * @return
+   */
+  public static WorkerHello createWorkerHello() {
+    String hostname =  System.getProperty("hostname");
+    String portStr =  System.getProperty("tcpPort");
+    String mesosTaskID = System.getProperty("taskID");
+    try {
+      InetAddress workerIP = InetAddress.getByName(hostname);
+      int port = Integer.parseInt(portStr);
+      return new WorkerHello(workerIP, port, mesosTaskID);
+    } catch (UnknownHostException e) {
+      LOG.log(Level.SEVERE, "worker ip address is not valid: " + hostname, e);
+      throw new RuntimeException(e);
+    }
+  }
+
+  /**
+   * read job description file and construct job object
+   */
+  private void readJobDescFile() {
+    String jobDescFile = System.getProperty(SchedulerContext.JOB_DESCRIPTION_FILE_CMD_VAR);
+    jobDescFile = DIR_PREFIX_FOR_JOB_ARCHIVE + jobDescFile;
+    job = JobUtils.readJobFile(null, jobDescFile);
+
+    // printing for testing
+    LOG.log(Level.INFO, "Job description file is read: " + jobDescFile);
+  }
+
+  /**
+   * loadConfig from config files
+   * @return
+   */
+  public void loadConfig() {
+
+    // first lets read the essential properties from java system properties
+    String twister2Home = Paths.get("").toAbsolutePath().toString();
+    String clusterType = System.getProperty(SchedulerContext.CLUSTER_TYPE);
+    String configDir = twister2Home + "/" + DIR_PREFIX_FOR_JOB_ARCHIVE + clusterType;
+
+    LOG.log(Level.INFO, String.format("Loading configuration with twister2_home: %s and "
+        + "configuration: %s", twister2Home, configDir));
+    Config conf = ConfigLoader.loadConfig(twister2Home, configDir);
+    config = Config.newBuilder().
+        putAll(conf).
+        put(MPIContext.TWISTER2_HOME.getKey(), twister2Home).
+        put(MPIContext.TWISTER2_CONF.getKey(), configDir).
+        put(MPIContext.TWISTER2_CLUSTER_TYPE, clusterType).
+        build();
+
+    LOG.log(Level.INFO, "Config files are read from directory: " + configDir);
+  }
+
+  /**
+   * configs from job object will override the ones in config from files if any
+   * @return
+   */
+  public void overrideConfigsFromJob() {
+
+    Config.Builder builder = Config.newBuilder().putAll(config);
+
+    JobAPI.Config conf = job.getConfig();
+    LOG.log(Level.INFO, "Number of configs to override from job conf: " + conf.getKvsCount());
+
+    for (JobAPI.Config.KeyValue kv : conf.getKvsList()) {
+      builder.put(kv.getKey(), kv.getValue());
+      LOG.log(Level.INFO, "Overriden conf key-value pair: " + kv.getKey() + ": " + kv.getValue());
+    }
+
+    config = builder.build();
+  }
+
+  public void initializeWithZooKeeper() {
+    String zkServerAddress = SchedulerContext.zooKeeperServerIP(config);
+    String zkServerPort = SchedulerContext.zooKeeperServerPort(config);
+    String zkServer = zkServerAddress + ":" + zkServerPort;
+
+    long startTime = System.currentTimeMillis();
+    String workerHostPort = workerAddress.getHostAddress() + ":" + workerPort;
+    zkController = new ZKController(zkServer, job.getJobName(), workerHostPort);
+    zkController.initialize();
+    long duration = System.currentTimeMillis() - startTime;
+    System.out.println("Initialization for the worker: " + zkController.getWorkerInfo()
+        + " took: " + duration + "ms");
+  }
+
+  /**
+   * needs to close down when finished computation
+   */
+  public void waitAndGetAllWorkers() {
+    int numberOfWorkers = job.getJobResources().getNoOfContainers();
+    System.out.println("Waiting for " + numberOfWorkers + " workers to join .........");
+
+    // the amount of time to wait for all workers to join a job
+    int timeLimit =  SchedulerContext.maxWaitTimeForAllWorkersToJoin(config);
+    long startTime = System.currentTimeMillis();
+    List<WorkerInfo> workers = zkController.waitForAllWorkersToJoin(numberOfWorkers, timeLimit);
+    long duration = System.currentTimeMillis() - startTime;
+
+    if (workers == null) {
+      LOG.log(Level.SEVERE, "Could not get full worker list. timeout limit has been reached !!!!"
+          + "Waited " + timeLimit + " ms.");
+    } else {
+      LOG.log(Level.INFO, "Waited " + duration + " ms for all workers to join.");
+
+      System.out.println("list of current workers in the job: ");
+      zkController.printWorkers(workers);
+
+      System.out.println();
+      System.out.println("list of all joined workers to the job: ");
+      zkController.printWorkers(zkController.getAllJoinedWorkers());
+    }
+  }
+
+  /**
+   * needs to close down when finished computation
+   */
+  public void close() {
+    zkController.close();
   }
 
   public static void main(String[] args) {
 
-    String jobDescFile = System.getProperty(SchedulerContext.JOB_DESCRIPTION_FILE_CMD_VAR);
-    jobDescFile = DIR_PREFIX_FOR_JOB_ARCHIVE + jobDescFile;
-    JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
+    // create the worker
+    WorkerHello worker = createWorkerHello();
+    System.out.println("worker IP: " + worker.workerAddress.getHostAddress());
+    System.out.println("worker Port: " + worker.workerPort);
+    System.out.println("worker mesosTaskID: " + worker.mesosTaskID);
 
-    System.out.println("httpPort: " + System.getProperty("httpPort"));
-    System.out.println("tcpPort: " + System.getProperty("tcpPort"));
-    System.out.println("udpPort: " + System.getProperty("udpPort"));
-    System.out.println("anyPort: " + System.getProperty("anyPort"));
+    // read job description file
+    worker.readJobDescFile();
+    printJob(worker.job);
 
-    System.out.println("Hellllooo from WorkerHello class");
-    System.out.println("I am working");
-    System.out.println();
-    System.out.println("Job description file: " + jobDescFile);
-    printJob(job);
-
-    Config config = loadConfig();
-    config = overrideConfigs(job, config);
-
-    System.out.println();
+    // load config files
+    worker.loadConfig();
     System.out.println("Config from files: ");
-    System.out.println(config.toString());
+    System.out.println(worker.config.toString());
 
-//    config = Config.newBuilder()
-//        .putAll(job.getConfig().)
-//        .build();
+    // override config files with values from job config if any
+    worker.overrideConfigsFromJob();
+
+    // get unique workerID and let other workers know about this worker in the job
+    worker.initializeWithZooKeeper();
+
+    // get the number of workers from some where
+    // wait for all of them
+    // print their list and exit
+    worker.waitAndGetAllWorkers();
+
+    // close the things, let others know that it is done
+    worker.close();
   }
 
+  /**
+   * a test method to print a job
+   * @param job
+   */
   public static void printJob(JobAPI.Job job) {
     System.out.println("Job name: " + job.getJobName());
     System.out.println("Job file: " + job.getJobFormat().getJobFile());
@@ -67,51 +211,9 @@ public final class WorkerHello {
     System.out.println("Disk: " + job.getJobResources().getContainer().getAvailableDisk());
 
     JobAPI.Config conf = job.getConfig();
-    System.out.println("\nnumber of key-values in job conf: " + conf.getKvsCount());
+    System.out.println("number of key-values in job conf: " + conf.getKvsCount());
     for (JobAPI.Config.KeyValue kv : conf.getKvsList()) {
       System.out.println(kv.getKey() + ": " + kv.getValue());
     }
   }
-
-  /**
-   * loadConfig from config files
-   * @return
-   */
-  public static Config loadConfig() {
-
-    // first lets read the essential properties from java system properties
-    String twister2Home = Paths.get("").toAbsolutePath().toString();
-    String clusterType = System.getProperty(SchedulerContext.CLUSTER_TYPE);
-    String configDir = twister2Home + "/" + DIR_PREFIX_FOR_JOB_ARCHIVE + clusterType;
-
-    LOG.log(Level.INFO, String.format("Loading configuration with twister2_home: %s and "
-        + "configuration: %s", twister2Home, configDir));
-    Config config = ConfigLoader.loadConfig(twister2Home, configDir);
-    return Config.newBuilder().
-        putAll(config).
-        put(MPIContext.TWISTER2_HOME.getKey(), twister2Home).
-        put(MPIContext.TWISTER2_CONF.getKey(), configDir).
-        put(MPIContext.TWISTER2_CLUSTER_TYPE, clusterType).
-        build();
-  }
-
-  /**
-   * configs from job object will override the ones in config from files if any
-   * @return
-   */
-  public static Config overrideConfigs(JobAPI.Job job, Config config) {
-
-    Config.Builder builder = Config.newBuilder().putAll(config);
-
-    JobAPI.Config conf = job.getConfig();
-    System.out.println("\nnumber of configs to override from job conf: " + conf.getKvsCount());
-    for (JobAPI.Config.KeyValue kv : conf.getKvsList()) {
-      System.out.println(kv.getKey() + ": " + kv.getValue());
-      builder.put(kv.getKey(), kv.getValue());
-    }
-
-    return builder.build();
-  }
-
-
 }

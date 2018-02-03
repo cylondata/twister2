@@ -40,7 +40,7 @@ twister2.ram_per_container: "1073741824"
 twister2.disk_per_container: "1073741824"
 
 # number of instances for the task
-twister2.number_of_containers: "1"
+twister2.number_of_containers: "10"
 
 
 
