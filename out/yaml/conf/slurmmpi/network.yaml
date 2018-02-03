@@ -1,1 +1,0 @@
-twister2.network.dataflow.class: "edu.iu.dsc.tws.comms.mpi.MPIDataFlowCommunication"
