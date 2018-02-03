@@ -409,7 +409,6 @@ public class MPIDataFlowOperationMemoryMapped implements MPIMessageListener,
         //If this is the last receiver we save to memory store
         if (isLastReceiver) {
           writeToMemoryManager(currentMessage);
-          currentMessage.release();
           currentMessage.setReceivedState(MPIMessage.ReceivedState.RECEIVE);
           if (!receiver.receiveMessage(currentMessage, operationMemoryManager)) {
             int attempt = updateAttemptMap(receiveMessageAttempts, id, 1);
@@ -421,7 +420,6 @@ public class MPIDataFlowOperationMemoryMapped implements MPIMessageListener,
           } else {
             updateAttemptMap(receiveMessageAttempts, id, -1);
           }
-
         } else {
           Object object = messageDeSerializer.build(currentMessage,
               currentMessage.getHeader().getEdge());

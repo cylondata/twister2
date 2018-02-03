@@ -167,4 +167,13 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
       }
     }
   }
+
+  public boolean isStoreBased() {
+    return isStoreBased;
+  }
+
+  public void setStoreBased(boolean storeBased) {
+    isStoreBased = storeBased;
+  }
+
 }

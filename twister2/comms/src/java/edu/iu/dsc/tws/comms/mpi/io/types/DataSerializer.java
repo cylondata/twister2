@@ -177,7 +177,7 @@ public final class DataSerializer {
     int remainingCapacity = targetBuffer.remaining();
     int bytesCopied = state.getBytesCopied();
 
-    int remainingToCopy = data.length - bytesCopied / 8;
+    int remainingToCopy = data.length * 8 - bytesCopied;
     int canCopy = (remainingCapacity > remainingToCopy ? remainingToCopy : remainingCapacity) / 8;
     // copy
     int offSet = bytesCopied / 8;
@@ -188,7 +188,7 @@ public final class DataSerializer {
     // we set the tolal bytes copied so far
     state.setTotalBytes(totalBytes);
     // we copied everything
-    if (canCopy == remainingToCopy) {
+    if ((canCopy * 8) == remainingToCopy) {
       state.setData(null);
       state.setBytesCopied(0);
       return true;
@@ -203,7 +203,7 @@ public final class DataSerializer {
     int remainingCapacity = targetBuffer.remaining();
     int bytesCopied = state.getBytesCopied();
 
-    int remainingToCopy = data.length - bytesCopied / 2;
+    int remainingToCopy = data.length * 2 - bytesCopied;
     int canCopy = (remainingCapacity > remainingToCopy ? remainingToCopy : remainingCapacity) / 2;
     // copy
     int offSet = bytesCopied / 2;
@@ -214,7 +214,7 @@ public final class DataSerializer {
     // we set the tolal bytes copied so far
     state.setTotalBytes(totalBytes);
     // we copied everything
-    if (canCopy == remainingToCopy) {
+    if ((canCopy * 2) == remainingToCopy) {
       state.setData(null);
       state.setBytesCopied(0);
       return true;
@@ -228,8 +228,7 @@ public final class DataSerializer {
     int totalBytes = state.getTotalBytes();
     int remainingCapacity = targetBuffer.remaining();
     int bytesCopied = state.getBytesCopied();
-
-    int remainingToCopy = data.length - bytesCopied / 8;
+    int remainingToCopy = data.length * 8 - bytesCopied;
     int canCopy = (remainingCapacity > remainingToCopy ? remainingToCopy : remainingCapacity) / 8;
     // copy
     int offSet = bytesCopied / 8;
@@ -240,7 +239,7 @@ public final class DataSerializer {
     // we set the tolal bytes copied so far
     state.setTotalBytes(totalBytes);
     // we copied everything
-    if (canCopy == remainingToCopy) {
+    if ((canCopy * 8) == remainingToCopy) {
       state.setData(null);
       state.setBytesCopied(0);
       return true;
@@ -254,8 +253,7 @@ public final class DataSerializer {
     int totalBytes = state.getTotalBytes();
     int remainingCapacity = targetBuffer.remaining();
     int bytesCopied = state.getBytesCopied();
-
-    int remainingToCopy = data.length - bytesCopied / 4;
+    int remainingToCopy = data.length * 4 - bytesCopied;
     int canCopy = (remainingCapacity > remainingToCopy ? remainingToCopy : remainingCapacity) / 4;
     // copy
     int offSet = bytesCopied / 4;
@@ -266,7 +264,7 @@ public final class DataSerializer {
     // we set the tolal bytes copied so far
     state.setTotalBytes(totalBytes);
     // we copied everything
-    if (canCopy == remainingToCopy) {
+    if ((canCopy * 4) == remainingToCopy) {
       state.setData(null);
       state.setBytesCopied(0);
       return true;

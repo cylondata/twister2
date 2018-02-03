@@ -119,7 +119,7 @@ public final class DataDeserializer {
     for (int i = 0; i < noOfDoubles; i++) {
       ByteBuffer byteBuffer = buffers.get(bufferIndex).getByteBuffer();
       int remaining = byteBuffer.remaining();
-      if (remaining > 8) {
+      if (remaining >= 8) {
         returnDoubles[i] = byteBuffer.getDouble();
       } else {
         bufferIndex = getReadBuffer(buffers, 8, bufferIndex);
@@ -138,12 +138,12 @@ public final class DataDeserializer {
     for (int i = 0; i < noOfDoubles; i++) {
       ByteBuffer byteBuffer = buffers.get(bufferIndex).getByteBuffer();
       int remaining = byteBuffer.remaining();
-      if (remaining > 4) {
+      if (remaining >= 4) {
         returnDoubles[i] = byteBuffer.getInt();
       } else {
         bufferIndex = getReadBuffer(buffers, 4, bufferIndex);
         if (bufferIndex < 0) {
-          throw new RuntimeException("We should always have the doubles");
+          throw new RuntimeException("We should always have the ints");
         }
       }
     }
@@ -157,12 +157,12 @@ public final class DataDeserializer {
     for (int i = 0; i < noOfDoubles; i++) {
       ByteBuffer byteBuffer = buffers.get(bufferIndex).getByteBuffer();
       int remaining = byteBuffer.remaining();
-      if (remaining > 2) {
+      if (remaining >= 2) {
         returnDoubles[i] = byteBuffer.getShort();
       } else {
         bufferIndex = getReadBuffer(buffers, 4, bufferIndex);
         if (bufferIndex < 0) {
-          throw new RuntimeException("We should always have the doubles");
+          throw new RuntimeException("We should always have the shorts");
         }
       }
     }
@@ -176,12 +176,12 @@ public final class DataDeserializer {
     for (int i = 0; i < noOfDoubles; i++) {
       ByteBuffer byteBuffer = buffers.get(bufferIndex).getByteBuffer();
       int remaining = byteBuffer.remaining();
-      if (remaining > 8) {
+      if (remaining >= 8) {
         returnDoubles[i] = byteBuffer.getLong();
       } else {
         bufferIndex = getReadBuffer(buffers, 8, bufferIndex);
         if (bufferIndex < 0) {
-          throw new RuntimeException("We should always have the doubles");
+          throw new RuntimeException("We should always have the longs");
         }
       }
     }
@@ -194,7 +194,7 @@ public final class DataDeserializer {
     for (int i = currentBufferIndex; i < bufs.size(); i++) {
       ByteBuffer byteBuffer = bufs.get(i).getByteBuffer();
       // now check if we need to go to the next buffer
-      if (byteBuffer.remaining() < size) {
+      if (byteBuffer.remaining() > size) {
         // if we are at the end we need to move to next
         byteBuffer.rewind();
         return i;
