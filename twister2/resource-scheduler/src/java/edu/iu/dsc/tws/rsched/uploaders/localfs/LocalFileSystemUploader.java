@@ -73,12 +73,14 @@ public class LocalFileSystemUploader implements IUploader {
     LOG.log(Level.INFO, String.format("Copying job directory at '%s' to target "
         + "working directory '%s'", sourceLocation, filePath.toString()));
     try {
-      if (!FileUtils.copyDirectoryToDirectory(sourceLocation, destinationDirectory)) {
+      //if (!FileUtils.copyDirectoryToDirectory(sourceLocation, destinationDirectory)) {
+      if (!FileUtils.copyDirectory(sourceLocation, destinationDirectory)) {
         throw new RuntimeException(String.format("Failed to copy directory %s to %s",
             filePath.toString(), destinationDirectory));
       }
-      return new URI(Paths.get(destinationDirectory, directoryName).toString());
-    } catch (URISyntaxException e) {
+      //return new URI(Paths.get(destinationDirectory, directoryName).toString());//previous version
+      return new URI(destinationDirectory);
+    }  catch (URISyntaxException e) {
       throw new RuntimeException("Invalid file path for topology package destination: "
           + destinationDirectory, e);
     }

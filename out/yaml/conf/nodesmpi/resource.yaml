@@ -1,0 +1,20 @@
+# working directory
+twister2.resource.scheduler.mpi.working.directory: "${HOME}/.twister2/jobs"
+# mode of the mpi scheduler
+twsiter2.resource.scheduler.mpi.mode: "node"
+# the job id file
+twister2.resource.scheduler.mpi.job.id: ""
+# slurm script to run
+twister2.resource.scheduler.mpi.shell.script: "mpi.sh"
+# slurm partition
+twister2.resource.scheduler.slurm.partition: ""
+# the mpirun command location
+twister2.resource.scheduler.mpi.home: ""
+# the package uri
+twister2.system.package.uri: "${TWISTER2_DIST}/twister2-core.tar.gz"
+# the resource manager class
+twister2.class.state.manager: "edu.iu.dsc.tws.rsched.statemanagers.fs.SharedFileSystemStateManager"
+# the launcher class
+twister2.class.launcher: "edu.iu.dsc.tws.rsched.schedulers.mpi.MPILauncher"
+# the uplaoder class
+twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader"

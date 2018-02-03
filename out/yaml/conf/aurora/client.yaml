@@ -1,0 +1,46 @@
+################################################################################
+# Client configuration parameters for submission of twister2 jobs
+################################################################################
+
+# aurora python script to submit a job to Aurora Scheduler
+# its default value is defined as the following in the code
+# can be reset from this config file if desired
+# twister2.resource.scheduler.aurora.script: "${TWISTER2_CONF}/twister2.aurora"
+
+# the twister2 package file to be uploaded to the sandboxes in Mesos 
+# its default value is defined as below in the code. 
+# can be reset from this file if desired
+# twister2.resource.scheduler.aurora.package.file: "twister2-client.tar.gz"
+
+# the twister2 package path to be uploaded to the sandboxes in Mesos 
+# its default value is defined as below in the code. 
+# can be reset from this file if desired
+# twister2.resource.scheduler.aurora.package.path: "${TWISTER2_HOME}"
+
+# cluster name aurora scheduler runs in
+twister2.resource.scheduler.aurora.cluster: "example"
+
+# role in cluster
+twister2.resource.scheduler.aurora.role: "www-data"
+
+# environment name
+twister2.resource.scheduler.aurora.env: "devel"
+
+# aurora job name
+twister2.job.name: "basic-aurora"
+# twister2.resource.scheduler.aurora.jobname: "basic-aurora"
+
+# number of CPUs for this job
+twister2.cpu_per_container: "1"
+
+# amount of memory for each CPU in bytes, 1GB=1024*1024*1024
+twister2.ram_per_container: "1073741824"
+
+# amount of hard disk space on each CPU in bytes, 1GB=1024*1024*1024
+twister2.disk_per_container: "1073741824"
+
+# number of instances for the task
+twister2.number_of_containers: "10"
+
+
+

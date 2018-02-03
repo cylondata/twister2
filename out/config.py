@@ -1,0 +1,414 @@
+# Copyright 2016 Twitter. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+'''config.py: util functions for config, mainly for twister2-cli'''
+
+import argparse
+import contextlib
+import getpass
+import os
+import sys
+import subprocess
+import tarfile
+import tempfile
+import yaml
+
+from twister2.tools.cli.src.python.log import Log
+
+# pylint: disable=logging-not-lazy
+
+# default environ tag, if not provided
+ENVIRON = "default"
+
+# directories for twister2 distribution
+BIN_DIR = "bin"
+CONF_DIR = "conf"
+ETC_DIR = "etc"
+LIB_DIR = "lib"
+CLI_DIR = ".twister2"
+RELEASE_YAML = "release.yaml"
+ZIPPED_RELEASE_YAML = "scripts/packages/release.yaml"
+OVERRIDE_YAML = "override.yaml"
+
+# directories for twister2 sandbox
+SANDBOX_CONF_DIR = "./twister2-conf"
+
+# config file for twister2 cli
+CLIENT_YAML = "client.yaml"
+
+# cli configs for role and env
+IS_ROLE_REQUIRED = "twister2.config.is.role.required"
+IS_ENV_REQUIRED = "twister2.config.is.env.required"
+
+
+def create_tar(tar_filename, files, config_dir, config_files):
+    '''
+    Create a tar file with a given set of files
+    '''
+    with contextlib.closing(tarfile.open(tar_filename, 'w:gz', dereference=True)) as tar:
+        for filename in files:
+            if os.path.isfile(filename):
+                tar.add(filename, arcname=os.path.basename(filename))
+            else:
+                raise Exception("%s is not an existing file" % filename)
+
+        if os.path.isdir(config_dir):
+            tar.add(config_dir, arcname=get_twister2_sandbox_conf_dir())
+        else:
+            raise Exception("%s is not an existing directory" % config_dir)
+
+        for filename in config_files:
+            if os.path.isfile(filename):
+                arcfile = os.path.join(get_twister2_sandbox_conf_dir(), os.path.basename(filename))
+                tar.add(filename, arcname=arcfile)
+            else:
+                raise Exception("%s is not an existing file" % filename)
+
+
+def get_subparser(parser, command):
+    '''
+    Retrieve the given subparser from parser
+    '''
+    # pylint: disable=protected-access
+    subparsers_actions = [action for action in parser._actions
+                          if isinstance(action, argparse._SubParsersAction)]
+
+    # there will probably only be one subparser_action,
+    # but better save than sorry
+    for subparsers_action in subparsers_actions:
+        # get all subparsers
+        for choice, subparser in subparsers_action.choices.items():
+            if choice == command:
+                return subparser
+    return None
+
+
+def cygpath(x):
+    '''
+    normalized class path on cygwin
+    '''
+    command = ['cygpath', '-wp', x]
+    p = subprocess.Popen(command, stdout=subprocess.PIPE)
+    result = p.communicate()
+    output = result[0]
+    lines = output.split("\n")
+    return lines[0]
+
+
+def identity(x):
+    '''
+    identity function
+    '''
+    return x
+
+
+def normalized_class_path(x):
+    '''
+    normalize path
+    '''
+    if sys.platform == 'cygwin':
+        return cygpath(x)
+    return identity(x)
+
+
+def get_classpath(jars):
+    '''
+    Get the normalized class path of all jars
+    '''
+    return ':'.join(map(normalized_class_path, jars))
+
+
+def get_twister2_dir():
+    """
+    This will extract twister2 directory from .pex file.
+
+    For example,
+    when __file__ is '/Users/twister2-user/bin/twister2/twister2/tools/common/src/python/utils/config.pyc', and
+    its real path is '/Users/twister2-user/.twister2/bin/twister2/tools/common/src/python/utils/config.pyc',
+    the internal variable ``path`` would be '/Users/twister2-user/.twister2', which is the twister2 directory
+
+    This means the variable `go_above_dirs` below is 9.
+
+    :return: root location of the .pex file
+    """
+    go_above_dirs = 8
+    path = "/".join(os.path.realpath(__file__).split('/')[:-go_above_dirs])
+    return normalized_class_path(path)
+
+def get_zipped_twister2_dir():
+    """
+    This will extract twister2 directory from .pex file,
+    with `zip_safe = False' Bazel flag added when building this .pex file
+
+    For example,
+    when __file__'s real path is
+      '/Users/twister2-user/.pex/code/xxxyyy/twister2/tools/common/src/python/utils/config.pyc', and
+    the internal variable ``path`` would be '/Users/twister2-user/.pex/code/xxxyyy/',
+    which is the root PEX directory
+
+    This means the variable `go_above_dirs` below is 7.
+
+    :return: root location of the .pex file.
+    """
+    go_above_dirs = 7
+    path = "/".join(os.path.realpath(__file__).split('/')[:-go_above_dirs])
+    return normalized_class_path(path)
+
+################################################################################
+# Get the root of twister2 dir and various sub directories depending on platform
+################################################################################
+def get_twister2_bin_dir():
+    """
+    This will provide twister2 bin directory from .pex file.
+    :return: absolute path of twister2 lib directory
+    """
+    bin_path = os.path.join(get_twister2_dir(), BIN_DIR)
+    return bin_path
+
+
+def get_twister2_conf_dir():
+    """
+    This will provide twister2 conf directory from .pex file.
+    :return: absolute path of twister2 conf directory
+    """
+    conf_path = os.path.join(get_twister2_dir(), CONF_DIR)
+    return conf_path
+
+
+def get_twister2_lib_dir():
+    """
+    This will provide twister2 lib directory from .pex file.
+    :return: absolute path of twister2 lib directory
+    """
+    lib_path = os.path.join(get_twister2_dir(), LIB_DIR)
+    return lib_path
+
+
+def get_twister2_release_file():
+    """
+    This will provide the path to twister2 release.yaml file
+    :return: absolute path of twister2 release.yaml file
+    """
+    return os.path.join(get_twister2_dir(), RELEASE_YAML)
+
+
+def get_zipped_twister2_release_file():
+    """
+    This will provide the path to twister2 release.yaml file.
+    To be used for .pex file built with `zip_safe = False` flag.
+    For example, `twister2-ui'.
+
+    :return: absolute path of twister2 release.yaml file
+    """
+    return os.path.join(get_zipped_twister2_dir(), ZIPPED_RELEASE_YAML)
+
+
+def get_twister2_cluster_conf_dir(cluster, default_config_path):
+    """
+    This will provide twister2 cluster config directory, if config path is default
+    :return: absolute path of twister2 cluster conf directory
+    """
+    return os.path.join(default_config_path, cluster)
+
+
+def get_twister2_sandbox_conf_dir():
+    """
+    This will provide twister2 conf directory in the sandbox
+    :return: relative path of twister2 sandbox conf directory
+    """
+    return SANDBOX_CONF_DIR
+
+
+def get_twister2_libs(local_jars):
+    """Get all the twister2 lib jars with the absolute paths"""
+    twister2_lib_dir = get_twister2_lib_dir()
+    twister2_libs = [os.path.join(twister2_lib_dir, f) for f in local_jars]
+    return twister2_libs
+
+
+def get_twister2_cluster(cluster_role_env):
+    """Get the cluster to which topology is submitted"""
+    return cluster_role_env.split('/')[0]
+
+
+# pylint: disable=too-many-branches
+def parse_cluster_role_env(cluster_role_env, config_path):
+    """Parse cluster/[role]/[environ], supply default, if not provided, not required"""
+    parts = cluster_role_env.split('/')[:3]
+    Log.info("Using config file under %s" % config_path)
+    if not os.path.isdir(config_path):
+        Log.error("Config path cluster directory does not exist: %s" % config_path)
+        raise Exception("Invalid config path")
+
+    # if cluster/role/env is not completely provided, check further
+    if len(parts) < 3:
+
+        cli_conf_file = os.path.join(config_path, CLIENT_YAML)
+
+        # if client conf doesn't exist, use default value
+        if not os.path.isfile(cli_conf_file):
+            if len(parts) == 1:
+                parts.append(getpass.getuser())
+            if len(parts) == 2:
+                parts.append(ENVIRON)
+        else:
+            cli_confs = {}
+            with open(cli_conf_file, 'r') as conf_file:
+                tmp_confs = yaml.load(conf_file)
+                # the return value of yaml.load can be None if conf_file is an empty file
+                if tmp_confs is not None:
+                    cli_confs = tmp_confs
+                else:
+                    print "Failed to read: %s due to it is empty" % (CLIENT_YAML)
+
+            # if role is required but not provided, raise exception
+            if len(parts) == 1:
+                if (IS_ROLE_REQUIRED in cli_confs) and (cli_confs[IS_ROLE_REQUIRED] is True):
+                    raise Exception("role required but not provided (cluster/role/env = %s). See %s in %s"
+                                    % (cluster_role_env, IS_ROLE_REQUIRED, CLIENT_YAML))
+                else:
+                    parts.append(getpass.getuser())
+
+            # if environ is required but not provided, raise exception
+            if len(parts) == 2:
+                if (IS_ENV_REQUIRED in cli_confs) and (cli_confs[IS_ENV_REQUIRED] is True):
+                    raise Exception("environ required but not provided (cluster/role/env = %s). See %s in %s"
+                                    % (cluster_role_env, IS_ENV_REQUIRED, CLIENT_YAML))
+                else:
+                    parts.append(ENVIRON)
+
+    # if cluster or role or environ is empty, print
+    if len(parts[0]) == 0 or len(parts[1]) == 0 or len(parts[2]) == 0:
+        print "Failed to parse"
+        sys.exit(1)
+
+    return (parts[0], parts[1], parts[2])
+
+
+################################################################################
+# Parse the command line for overriding the defaults
+################################################################################
+def parse_override_config(namespace):
+    """Parse the command line for overriding the defaults"""
+    try:
+        tmp_dir = tempfile.mkdtemp()
+        override_config_file = os.path.join(tmp_dir, OVERRIDE_YAML)
+        with open(override_config_file, 'w') as f:
+            for config in namespace:
+                f.write("%s\n" % config.replace('=', ': '))
+
+        return override_config_file
+    except Exception as e:
+        raise Exception("Failed to parse override config: %s" % str(e))
+
+
+def get_java_path():
+    """Get the path of java executable"""
+    java_home = os.environ.get("JAVA_HOME")
+    return os.path.join(java_home, BIN_DIR, "java")
+
+
+def check_java_home_set():
+    """Check if the java home set"""
+    # check if environ variable is set
+    if "JAVA_HOME" not in os.environ:
+        Log.error("JAVA_HOME not set")
+        return False
+
+    # check if the value set is correct
+    java_path = get_java_path()
+    if os.path.isfile(java_path) and os.access(java_path, os.X_OK):
+        return True
+
+    Log.error("JAVA_HOME/bin/java either does not exist or not an executable")
+    return False
+
+
+def check_release_file_exists():
+    """Check if the release.yaml file exists"""
+    release_file = get_twister2_release_file()
+
+    # if the file does not exist and is not a file
+    if not os.path.isfile(release_file):
+        Log.error("Required file not found: %s" % release_file)
+        return False
+
+    return True
+
+def print_build_info(zipped_pex=False):
+    """Print build_info from release.yaml
+
+    :param zipped_pex: True if the PEX file is built with flag `zip_safe=False'.
+    """
+    if zipped_pex:
+        release_file = get_zipped_twister2_release_file()
+    else:
+        release_file = get_twister2_release_file()
+    with open(release_file) as release_info:
+        for line in release_info:
+            print line,
+
+def get_version_number(zipped_pex=False):
+    """Print version from release.yaml
+
+    :param zipped_pex: True if the PEX file is built with flag `zip_safe=False'.
+    """
+    if zipped_pex:
+        release_file = get_zipped_twister2_release_file()
+    else:
+        release_file = get_twister2_release_file()
+    with open(release_file) as release_info:
+        for line in release_info:
+            trunks = line[:-1].split(' ')
+            if trunks[0] == 'twister2.build.version':
+                return trunks[-1].replace("'", "")
+        return 'unknown'
+
+
+def insert_bool(param, command_args):
+    '''
+    :param param:
+    :param command_args:
+    :return:
+    '''
+    index = 0
+    found = False
+    for lelem in command_args:
+        if lelem == '--' and not found:
+            break
+        if lelem == param:
+            found = True
+            break
+        index = index + 1
+
+    if found:
+        command_args.insert(index + 1, 'True')
+    return command_args
+
+
+def insert_bool_values(command_line_args):
+    '''
+    :param command_line_args:
+    :return:
+    '''
+    args1 = insert_bool('--verbose', command_line_args)
+    args2 = insert_bool('--deploy-deactivated', args1)
+    return args2
+
+class SubcommandHelpFormatter(argparse.RawDescriptionHelpFormatter):
+    def _format_action(self, action):
+        # pylint: disable=bad-super-call
+        parts = super(argparse.RawDescriptionHelpFormatter, self)._format_action(action)
+        if action.nargs == argparse.PARSER:
+            parts = "\n".join(parts.split("\n")[1:])
+        return parts
