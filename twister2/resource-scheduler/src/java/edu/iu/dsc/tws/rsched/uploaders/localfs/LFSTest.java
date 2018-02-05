@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.rsched.uploaders.localfs;
 import java.io.IOException;
 import java.net.URI;
 
-import com.sun.jndi.toolkit.url.Uri;
+//import com.sun.jndi.toolkit.url.Uri;
 
 import edu.iu.dsc.tws.common.config.Config;
 
@@ -25,15 +25,11 @@ public final class LFSTest {
 
   public static void main(String[] args) throws IOException {
 
-
-    Config config = Config.newBuilder().put(FsContext.UPLOAD_DIRECTORY, "/home/user/Desktop/test1/").build();
-//
-    LocalFileSystemUploader lsf=new LocalFileSystemUploader();
+    Config config = Config.newBuilder().put(FsContext.UPLOAD_DIRECTORY,
+                "/home/user/Desktop/test1/").build();
+    LocalFileSystemUploader lsf = new LocalFileSystemUploader();
     lsf.initialize(config);
-    URI returned=lsf.uploadPackage("/home/user/Desktop/tobecopied/");
+    URI returned = lsf.uploadPackage("/home/user/Desktop/tobecopied/");
     System.out.printf(returned.toString());
-
-
   }
-
 }
