@@ -31,7 +31,6 @@ public final class BasicCxMultiTaskGraphJob {
 
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
-    jobConfig.putConfig(config);
 
     //Task 0 provide input to Task 1 & Task 2 independent Parallel Tasks.
 

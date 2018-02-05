@@ -27,7 +27,7 @@ public class LMDBMemoryManagerContext extends Context {
    * specifies the maximum number of DBs will be created in 1 environment.
    * value set to 1
    */
-  public static final int MAX_DB_INSTANCES = 1;
+  public static final int MAX_DB_INSTANCES = 10;
 
   /**
    * The maximum number of readers set for an env

@@ -13,10 +13,11 @@ package edu.iu.dsc.tws.data.memory;
 
 import java.nio.ByteBuffer;
 
-import com.google.common.primitives.Longs;
+import com.google.common.primitives.Ints;
 
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.memory.lmdb.LMDBMemoryManager;
+import edu.iu.dsc.tws.data.memory.utils.DataMessageType;
 
 /**
  * Created by pulasthi on 1/2/18.
@@ -24,15 +25,34 @@ import edu.iu.dsc.tws.data.memory.lmdb.LMDBMemoryManager;
 public class LMDBTest {
   public static void main(String[] args) {
     //Memory Manager
+    LMDBTest test = new LMDBTest();
+    test.testPrimitives();
+  }
+
+  public boolean testPrimitives() {
+    boolean allPassed = true;
     Path dataPath = new Path("/home/pulasthi/work/twister2/lmdbdatabase");
     MemoryManager memoryManager = new LMDBMemoryManager(dataPath);
-    byte[] val = Longs.toByteArray(1231212121213L);
-    memoryManager.put(1234L, val);
+    int opID = 1;
+    memoryManager.addOperation(opID, DataMessageType.INTEGER);
 
-    ByteBuffer results = memoryManager.get(1234L);
-    long res = results.getLong();
-    if(res == 1231212121213L){
-      System.out.println("Correct");
+    //Test single integer operation
+    ByteBuffer key = ByteBuffer.allocateDirect(4);
+    ByteBuffer value = ByteBuffer.allocateDirect(4);
+    key.putInt(1);
+    int testInt = 1231212121;
+    byte[] val = Ints.toByteArray(testInt);
+    value.put(val);
+    memoryManager.put(0, key, value);
+
+    ByteBuffer results = memoryManager.get(opID, key);
+    int res = results.getInt();
+    if (res == testInt) {
+      System.out.println("true");
+    } else {
+      allPassed = false;
+      System.out.println("false");
     }
+    return true;
   }
 }

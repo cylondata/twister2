@@ -53,8 +53,18 @@ public final class DataDeserializer {
     return null;
   }
 
-  public static ByteBuffer getAsByteBuffer(List<MPIBuffer> buffers, int length) {
-    ByteBuffer data = ByteBuffer.allocateDirect(length);
+  public static ByteBuffer getAsByteBuffer(List<MPIBuffer> buffers, int length, MessageType type) {
+    //If the message type is object we need to add the length of each object to the
+    //bytestream so we can separate objects
+    ByteBuffer data;
+    if (type == MessageType.OBJECT || type == MessageType.BUFFER || type == MessageType.BYTE
+        || type == MessageType.STRING) {
+      data = ByteBuffer.allocateDirect(length + 4);
+      data.putInt(length);
+    } else {
+      data = ByteBuffer.allocateDirect(length);
+    }
+
     //We will try to reuse this array when possible
     byte[] tempByteArray = new byte[buffers.get(0).getCapacity()];
     int canCopy = 0;
@@ -80,6 +90,7 @@ public final class DataDeserializer {
       tempbyteBuffer.get(tempByteArray, 0, canCopy);
       data.put(tempByteArray, 0, canCopy);
       copiedBytes += canCopy;
+      bufferIndex++;
     }
 
     return data;
@@ -108,7 +119,7 @@ public final class DataDeserializer {
     for (int i = 0; i < noOfDoubles; i++) {
       ByteBuffer byteBuffer = buffers.get(bufferIndex).getByteBuffer();
       int remaining = byteBuffer.remaining();
-      if (remaining > 8) {
+      if (remaining >= 8) {
         returnDoubles[i] = byteBuffer.getDouble();
       } else {
         bufferIndex = getReadBuffer(buffers, 8, bufferIndex);
@@ -127,12 +138,12 @@ public final class DataDeserializer {
     for (int i = 0; i < noOfDoubles; i++) {
       ByteBuffer byteBuffer = buffers.get(bufferIndex).getByteBuffer();
       int remaining = byteBuffer.remaining();
-      if (remaining > 4) {
+      if (remaining >= 4) {
         returnDoubles[i] = byteBuffer.getInt();
       } else {
         bufferIndex = getReadBuffer(buffers, 4, bufferIndex);
         if (bufferIndex < 0) {
-          throw new RuntimeException("We should always have the doubles");
+          throw new RuntimeException("We should always have the ints");
         }
       }
     }
@@ -146,12 +157,12 @@ public final class DataDeserializer {
     for (int i = 0; i < noOfDoubles; i++) {
       ByteBuffer byteBuffer = buffers.get(bufferIndex).getByteBuffer();
       int remaining = byteBuffer.remaining();
-      if (remaining > 2) {
+      if (remaining >= 2) {
         returnDoubles[i] = byteBuffer.getShort();
       } else {
         bufferIndex = getReadBuffer(buffers, 4, bufferIndex);
         if (bufferIndex < 0) {
-          throw new RuntimeException("We should always have the doubles");
+          throw new RuntimeException("We should always have the shorts");
         }
       }
     }
@@ -165,12 +176,12 @@ public final class DataDeserializer {
     for (int i = 0; i < noOfDoubles; i++) {
       ByteBuffer byteBuffer = buffers.get(bufferIndex).getByteBuffer();
       int remaining = byteBuffer.remaining();
-      if (remaining > 8) {
+      if (remaining >= 8) {
         returnDoubles[i] = byteBuffer.getLong();
       } else {
         bufferIndex = getReadBuffer(buffers, 8, bufferIndex);
         if (bufferIndex < 0) {
-          throw new RuntimeException("We should always have the doubles");
+          throw new RuntimeException("We should always have the longs");
         }
       }
     }
@@ -183,7 +194,7 @@ public final class DataDeserializer {
     for (int i = currentBufferIndex; i < bufs.size(); i++) {
       ByteBuffer byteBuffer = bufs.get(i).getByteBuffer();
       // now check if we need to go to the next buffer
-      if (byteBuffer.remaining() < size) {
+      if (byteBuffer.remaining() > size) {
         // if we are at the end we need to move to next
         byteBuffer.rewind();
         return i;

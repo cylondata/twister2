@@ -31,7 +31,6 @@ public final class BasicAllReduceJob {
 
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
-    jobConfig.putConfig(config);
 
     // build the job
     BasicJob basicJob = BasicJob.newBuilder()

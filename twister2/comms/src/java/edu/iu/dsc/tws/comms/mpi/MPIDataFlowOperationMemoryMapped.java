@@ -37,6 +37,7 @@ import edu.iu.dsc.tws.comms.mpi.io.MessageSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.types.DataSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.types.KeySerializer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
+import edu.iu.dsc.tws.comms.utils.MessageTypeConverter;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.memory.BufferedMemoryManager;
 import edu.iu.dsc.tws.data.memory.MemoryManager;
@@ -124,10 +125,14 @@ public class MPIDataFlowOperationMemoryMapped implements MPIMessageListener,
    */
   private int opertionID = 1234;
 
+
   public MPIDataFlowOperationMemoryMapped(TWSMPIChannel channel) {
     this.channel = channel;
   }
 
+  /**
+   * init method
+   */
   public void init(Config cfg, MessageType messageType, TaskPlan plan,
                    int graphEdge, Set<Integer> recvExecutors,
                    boolean lastReceiver, MPIMessageReceiver msgReceiver,
@@ -176,7 +181,14 @@ public class MPIDataFlowOperationMemoryMapped implements MPIMessageListener,
     //TODO : need to make the memory manager available globally
     Path dataPath = new Path("/home/pulasthi/work/twister2/lmdbdatabase");
     this.memoryManager = new BufferedMemoryManager(dataPath);
-    this.operationMemoryManager = memoryManager.addOperation(opertionID);
+    if (isKeyed) {
+      this.operationMemoryManager = memoryManager.addOperation(opertionID,
+          MessageTypeConverter.toDataMessageType(messageType));
+    } else {
+      this.operationMemoryManager = memoryManager.addOperation(opertionID,
+          MessageTypeConverter.toDataMessageType(messageType),
+          MessageTypeConverter.toDataMessageType(keyType));
+    }
   }
 
   protected void initSerializers() {
@@ -397,7 +409,6 @@ public class MPIDataFlowOperationMemoryMapped implements MPIMessageListener,
         //If this is the last receiver we save to memory store
         if (isLastReceiver) {
           writeToMemoryManager(currentMessage);
-          currentMessage.release();
           currentMessage.setReceivedState(MPIMessage.ReceivedState.RECEIVE);
           if (!receiver.receiveMessage(currentMessage, operationMemoryManager)) {
             int attempt = updateAttemptMap(receiveMessageAttempts, id, 1);
@@ -409,7 +420,6 @@ public class MPIDataFlowOperationMemoryMapped implements MPIMessageListener,
           } else {
             updateAttemptMap(receiveMessageAttempts, id, -1);
           }
-
         } else {
           Object object = messageDeSerializer.build(currentMessage,
               currentMessage.getHeader().getEdge());
@@ -531,8 +541,10 @@ public class MPIDataFlowOperationMemoryMapped implements MPIMessageListener,
                                                    Object messageObject) {
     if (isKeyed) {
       KeyedContent kc = (KeyedContent) messageObject;
-      ByteBuffer keyBuffer = KeySerializer.getserializedKey(kc.getSource(), kryoSerializer);
-      ByteBuffer dataBuffer = DataSerializer.getserializedData(kc.getObject(), kryoSerializer);
+      ByteBuffer keyBuffer = KeySerializer.getserializedKey(kc.getSource(),
+          mpiSendMessage.getSerializationState(), keyType, kryoSerializer);
+      ByteBuffer dataBuffer = DataSerializer.getserializedData(kc.getObject(),
+          type, kryoSerializer);
       //TODO : need to generate operation key and use it
       return operationMemoryManager.put(keyBuffer, dataBuffer);
     } else {
@@ -541,7 +553,7 @@ public class MPIDataFlowOperationMemoryMapped implements MPIMessageListener,
       int key = mpiSendMessage.getSource();
       ByteBuffer keyBuffer = ByteBuffer.allocateDirect(Integer.BYTES);
       keyBuffer.putInt(key);
-      ByteBuffer dataBuffer = DataSerializer.getserializedData(messageObject, kryoSerializer);
+      ByteBuffer dataBuffer = DataSerializer.getserializedData(messageObject, type, kryoSerializer);
       //TODO : need to generate operation key and use it
       return operationMemoryManager.put(keyBuffer, dataBuffer);
     }
@@ -688,6 +700,7 @@ public class MPIDataFlowOperationMemoryMapped implements MPIMessageListener,
 
   public void setKeyType(MessageType keyType) {
     this.keyType = keyType;
+    operationMemoryManager.setKeyType(MessageTypeConverter.toDataMessageType(keyType));
   }
 
   public int getOpertionID() {

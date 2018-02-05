@@ -13,18 +13,27 @@ package edu.iu.dsc.tws.data.memory.lmdb;
 
 import java.io.File;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.lmdbjava.CursorIterator;
 import org.lmdbjava.Dbi;
 import org.lmdbjava.Env;
+import org.lmdbjava.KeyRange;
 import org.lmdbjava.Txn;
 
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.memory.AbstractMemoryManager;
 import edu.iu.dsc.tws.data.memory.MemoryManagerContext;
 import edu.iu.dsc.tws.data.memory.OperationMemoryManager;
+import edu.iu.dsc.tws.data.memory.utils.DataMessageType;
+import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
+import edu.iu.dsc.tws.data.utils.MemoryDeserializer;
 
 import static org.lmdbjava.DbiFlags.MDB_CREATE;
 import static org.lmdbjava.Env.create;
@@ -131,7 +140,10 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
 
   @Override
   public ByteBuffer get(int opID, String key) {
-    return get(opID, ByteBuffer.wrap(key.getBytes(MemoryManagerContext.DEFAULT_CHARSET)));
+    ByteBuffer temp = MemoryManagerContext.DEFAULT_CHARSET.encode(key);
+    ByteBuffer keyBuffer = ByteBuffer.allocateDirect(temp.limit());
+    keyBuffer.put(temp);
+    return get(opID, keyBuffer);
   }
 
   /*@Override
@@ -210,6 +222,9 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
       LOG.info("The given operation does not have a corresponding store specified");
       return false;
     }
+    if (key.position() != 0) {
+      key.flip();
+    }
     Dbi<ByteBuffer> currentDB = dbMap.get(opID);
     if (key.limit() > 511) {
       LOG.info("Key size lager than 511 bytes which is the limit for LMDB key values");
@@ -217,7 +232,7 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
     }
     Txn<ByteBuffer> txn = env.txnRead();
     final ByteBuffer found = currentDB.get(txn, key);
-
+    txn.close();
     if (found == null) {
       return false;
     }
@@ -247,7 +262,10 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean containsKey(int opID, String key) {
-    return containsKey(opID, ByteBuffer.wrap(key.getBytes(MemoryManagerContext.DEFAULT_CHARSET)));
+    ByteBuffer temp = MemoryManagerContext.DEFAULT_CHARSET.encode(key);
+    ByteBuffer keyBuffer = ByteBuffer.allocateDirect(temp.limit());
+    keyBuffer.put(temp);
+    return containsKey(opID, keyBuffer);
   }
 
   /*@Override
@@ -258,6 +276,9 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
   @Override
   public boolean append(int opID, ByteBuffer key, ByteBuffer value) {
     ByteBuffer results = get(opID, key);
+    if (value.position() != 0) {
+      value.flip();
+    }
     if (results == null) {
       return put(opID, key, value);
     }
@@ -266,6 +287,7 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
     ByteBuffer appended = ByteBuffer.allocateDirect(capacity)
         .put(results)
         .put(value);
+
     return put(opID, key, appended);
   }
 
@@ -283,7 +305,10 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean append(int opID, String key, ByteBuffer value) {
-    return append(opID, ByteBuffer.wrap(key.getBytes(MemoryManagerContext.DEFAULT_CHARSET)), value);
+    ByteBuffer temp = MemoryManagerContext.DEFAULT_CHARSET.encode(key);
+    ByteBuffer keyBuffer = ByteBuffer.allocateDirect(temp.limit());
+    keyBuffer.put(temp);
+    return append(opID, keyBuffer, value);
   }
 
   /*@Override
@@ -363,7 +388,10 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean put(int opID, String key, ByteBuffer value) {
-    return put(opID, ByteBuffer.wrap(key.getBytes(MemoryManagerContext.DEFAULT_CHARSET)), value);
+    ByteBuffer temp = MemoryManagerContext.DEFAULT_CHARSET.encode(key);
+    ByteBuffer keyBuffer = ByteBuffer.allocateDirect(temp.limit());
+    keyBuffer.put(temp);
+    return put(opID, keyBuffer, value);
   }
 
   /*@Override
@@ -411,7 +439,6 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
       LOG.info("Key size lager than 511 bytes which is the limit for LMDB key values");
       return false;
     }
-
     return currentDB.delete(key);
   }
 
@@ -431,7 +458,11 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean delete(int opID, String key) {
-    return delete(opID, ByteBuffer.wrap(key.getBytes(MemoryManagerContext.DEFAULT_CHARSET)));
+    //TODO check if there is better method to get direct byte buffer from String
+    ByteBuffer temp = MemoryManagerContext.DEFAULT_CHARSET.encode(key);
+    ByteBuffer keyBuffer = ByteBuffer.allocateDirect(temp.limit());
+    keyBuffer.put(temp);
+    return delete(opID, keyBuffer);
   }
 
   /*@Override
@@ -444,9 +475,16 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
    * does not handle OperationMemoryManager's
    */
   @Override
-  public OperationMemoryManager addOperation(int opID) {
+  public OperationMemoryManager addOperation(int opID, DataMessageType messageType) {
     dbMap.put(opID, env.openDbi(String.valueOf(opID), MDB_CREATE));
-    return new OperationMemoryManager(opID, this);
+    return new OperationMemoryManager(opID, messageType, this);
+  }
+
+  @Override
+  public OperationMemoryManager addOperation(int opID, DataMessageType messageType,
+                                             DataMessageType keyType) {
+    dbMap.put(opID, env.openDbi(String.valueOf(opID), MDB_CREATE));
+    return new OperationMemoryManager(opID, messageType, keyType, this);
   }
 
   @Override
@@ -501,6 +539,55 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
   @Override
   public boolean close(int opID, String key) {
     return false;
+  }
+
+  /**
+   * Returns an iterator that contains all the byte buffers for the given operation
+   */
+  @Override
+  public Iterator<Object> getIterator(int opID, DataMessageType keyType,
+                                      DataMessageType valueType,
+                                      KryoMemorySerializer deSerializer) {
+    if (!dbMap.containsKey(opID)) {
+      LOG.info("The given operation does not have a corresponding store specified");
+      return null;
+    }
+    List<Object> results = new ArrayList<>();
+    Dbi<ByteBuffer> currentDB = dbMap.get(opID);
+    Txn<ByteBuffer> txn = env.txnRead();
+    try (CursorIterator<ByteBuffer> it = currentDB.iterate(txn, KeyRange.all())) {
+      for (final CursorIterator.KeyVal<ByteBuffer> kv : it.iterable()) {
+        Object key = MemoryDeserializer.deserializeKey(kv.key(), keyType, deSerializer);
+        Object value = MemoryDeserializer.deserializeValue(kv.val(), valueType, deSerializer);
+        results.add(new ImmutablePair<>(key, value));
+      }
+    }
+    txn.close();
+    return results.iterator();
+  }
+
+  /**
+   * Returns an iterator that contains all the byte buffers for the given operation
+   * This method assumes that the keys are int's and that the do not need to be returned
+   */
+  @Override
+  public Iterator<Object> getIterator(int opID, DataMessageType valueType,
+                                      KryoMemorySerializer deSerializer) {
+    if (!dbMap.containsKey(opID)) {
+      LOG.info("The given operation does not have a corresponding store specified");
+      return null;
+    }
+    List<Object> results = new ArrayList<>();
+    Dbi<ByteBuffer> currentDB = dbMap.get(opID);
+    Txn<ByteBuffer> txn = env.txnRead();
+    try (CursorIterator<ByteBuffer> it = currentDB.iterate(txn, KeyRange.all())) {
+      for (final CursorIterator.KeyVal<ByteBuffer> kv : it.iterable()) {
+        Object value = MemoryDeserializer.deserializeValue(kv.val(), valueType, deSerializer);
+        results.add(value);
+      }
+    }
+    txn.close();
+    return results.iterator();
   }
 
  /* @Override

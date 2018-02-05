@@ -31,7 +31,6 @@ public final class WordCountJob {
 
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
-    jobConfig.putConfig(config);
 
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
     jobBuilder.setName("streaming-wordcount");

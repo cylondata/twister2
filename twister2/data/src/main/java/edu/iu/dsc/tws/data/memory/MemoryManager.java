@@ -12,6 +12,10 @@
 package edu.iu.dsc.tws.data.memory;
 
 import java.nio.ByteBuffer;
+import java.util.Iterator;
+
+import edu.iu.dsc.tws.data.memory.utils.DataMessageType;
+import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 
 /**
  * base interface for memory managers. Memory managers are responsible of keeping data in memoory
@@ -55,7 +59,9 @@ public interface MemoryManager {
    */
   /*boolean put(int opID, byte[] key, ByteBuffer value);
 
-  *//**
+  */
+
+  /**
    * Stores the give key value pair in the memory manager
    *//*
   boolean put(int opID, long key, ByteBuffer value);*/
@@ -92,7 +98,9 @@ public interface MemoryManager {
    */
   /*ByteBuffer get(int opID, byte[] key);
 
-  *//**
+  */
+
+  /**
    * Get the corresponding value as ByteBuffer for the given key from the store
    *//*
   ByteBuffer get(int opID, long key);*/
@@ -138,7 +146,9 @@ public interface MemoryManager {
    */
   /*boolean containsKey(int opID, byte[] key);
 
-  *//**
+  */
+
+  /**
    * checks if the given key is in the memory manager
    *
    * @param key key to be checked
@@ -160,7 +170,9 @@ public interface MemoryManager {
    *//*
   boolean delete(int opID, byte[] key);
 
-  *//**
+  */
+
+  /**
    * delete the given key from the store
    *//*
   boolean delete(int opID, long key);*/
@@ -174,11 +186,15 @@ public interface MemoryManager {
    *
    * @return returns the memory manager or null (Null is returned at the base layer)
    */
-  OperationMemoryManager addOperation(int opID);
+  OperationMemoryManager addOperation(int opID, DataMessageType type);
+
+  OperationMemoryManager addOperation(int opID, DataMessageType messageType,
+                                      DataMessageType keyType);
 
   /**
    * Remove an operation from the memory manager. This will result in loss of all the data related
    * to the operation in the memory manager
+   *
    * @param opID operation id to be removed
    * @return true if the operation was removed, false otherwise
    */
@@ -217,5 +233,11 @@ public interface MemoryManager {
   boolean close(int opID, String key);
 
   /*<T extends Serializable> boolean close(int opID, T key);*/
+
+  Iterator<Object> getIterator(int opID, DataMessageType keyType, DataMessageType valueType,
+                               KryoMemorySerializer deSerializer);
+
+  Iterator<Object> getIterator(int opID, DataMessageType valueType,
+                               KryoMemorySerializer deSerializer);
 
 }

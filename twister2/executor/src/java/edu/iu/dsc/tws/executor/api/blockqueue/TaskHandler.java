@@ -9,16 +9,13 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.executor.api;
-
-import edu.iu.dsc.tws.executor.model.Task;
+package edu.iu.dsc.tws.executor.api.blockqueue;
 
 /**
- * Created by vibhatha on 8/25/17.
+ * Created by vibhatha on 9/5/17.
  */
-public interface ITaskAddedListener {
-  public void onTaskAdded(Task task);
+public class TaskHandler {
 
-  void updateTaskAdded(Task task);
+
 
 }

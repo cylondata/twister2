@@ -1,0 +1,6 @@
+Thu Sep 14 14:36:56 EDT 2017
+ Running Twister MLR Spark Version 
+ Training the DNN
+ Completed Training 
+Training Accuracy 91.35%
+Task 3 Completed Successfully

@@ -15,5 +15,9 @@ java_library(
         "@commons_cli_commons_cli//jar",
         "@commons_io_commons_io//jar",
         "@org_apache_commons_commons_compress//jar",
+        "@org_apache_curator_curator_client//jar",
+        "@org_apache_curator_curator_framework//jar",
+        "@org_apache_curator_curator_recipes//jar",
+        "@org_apache_zookeeper_zookeeper//jar",
     ],
 )

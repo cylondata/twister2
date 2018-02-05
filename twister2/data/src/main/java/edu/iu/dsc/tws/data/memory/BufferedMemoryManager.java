@@ -25,14 +25,16 @@ package edu.iu.dsc.tws.data.memory;
 
 import java.nio.ByteBuffer;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
-
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.memory.lmdb.LMDBMemoryManager;
+import edu.iu.dsc.tws.data.memory.utils.DataMessageType;
+import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 
 /**
  * Inserts into the memory store in batches. Only one instance per executor.
@@ -93,7 +95,10 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean append(int opID, ByteBuffer key, ByteBuffer value) {
-    String keyString = new String(key.array(), MemoryManagerContext.DEFAULT_CHARSET);
+    if (key.position() != 0) {
+      key.flip();
+    }
+    String keyString = MemoryManagerContext.DEFAULT_CHARSET.decode(key).toString();
     return appendBulk(opID, keyString, value);
   }
 
@@ -119,7 +124,10 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean put(int opID, ByteBuffer key, ByteBuffer value) {
-    String keyString = new String(key.array(), MemoryManagerContext.DEFAULT_CHARSET);
+    if (key.position() != 0) {
+      key.flip();
+    }
+    String keyString = MemoryManagerContext.DEFAULT_CHARSET.decode(key).toString();
     return putBulk(opID, keyString, value);
   }
 
@@ -165,7 +173,10 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
 
   @Override
   public ByteBuffer get(int opID, ByteBuffer key) {
-    String keyString = new String(key.array(), MemoryManagerContext.DEFAULT_CHARSET);
+    if (key.position() != 0) {
+      key.flip();
+    }
+    String keyString = MemoryManagerContext.DEFAULT_CHARSET.decode(key).toString();
     if (keyMap.get(opID).containsKey(keyString)) {
       flush(opID, keyString);
     }
@@ -190,8 +201,7 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
       flush(opID, key);
     }
 
-    return memoryManager.get(opID, ByteBuffer.wrap(
-        key.getBytes(MemoryManagerContext.DEFAULT_CHARSET)));
+    return memoryManager.get(opID, key);
   }
 
   /*@Override
@@ -226,7 +236,10 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean containsKey(int opID, ByteBuffer key) {
-    return containsKey(opID, new String(key.array(), MemoryManagerContext.DEFAULT_CHARSET));
+    if (key.position() != 0) {
+      key.flip();
+    }
+    return containsKey(opID, MemoryManagerContext.DEFAULT_CHARSET.decode(key).toString());
   }
 
   /*@Override
@@ -254,7 +267,10 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean delete(int opID, ByteBuffer key) {
-    deleteFromBMM(opID, new String(key.array(), java.nio.charset.StandardCharsets.UTF_8));
+    if (key.position() != 0) {
+      key.flip();
+    }
+    deleteFromBMM(opID, MemoryManagerContext.DEFAULT_CHARSET.decode(key).toString());
     return memoryManager.delete(opID, key);
   }
 
@@ -291,12 +307,28 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
   }
 
   @Override
-  public OperationMemoryManager addOperation(int opID) {
+  public OperationMemoryManager addOperation(int opID, DataMessageType type) {
     if (operationMap.containsKey(opID)) {
       return null;
     }
-    OperationMemoryManager temp = new OperationMemoryManager(opID, this);
-    memoryManager.addOperation(opID);
+    OperationMemoryManager temp = new OperationMemoryManager(opID, type, this);
+    memoryManager.addOperation(opID, type);
+    keyMap.put(opID, new ConcurrentHashMap<String, Integer>());
+    keyMapCurrent.put(opID, new ConcurrentHashMap<String, Integer>());
+    keyMapBuffers.put(opID, new ConcurrentHashMap<String, LinkedList<ByteBuffer>>());
+    keyBufferSizes.put(opID, new ConcurrentHashMap<String, Integer>());
+    operationMap.put(opID, temp);
+    return temp;
+  }
+
+  @Override
+  public OperationMemoryManager addOperation(int opID, DataMessageType type,
+                                             DataMessageType keyType) {
+    if (operationMap.containsKey(opID)) {
+      return null;
+    }
+    OperationMemoryManager temp = new OperationMemoryManager(opID, type, keyType, this);
+    memoryManager.addOperation(opID, keyType, type);
     keyMap.put(opID, new ConcurrentHashMap<String, Integer>());
     keyMapCurrent.put(opID, new ConcurrentHashMap<String, Integer>());
     keyMapBuffers.put(opID, new ConcurrentHashMap<String, LinkedList<ByteBuffer>>());
@@ -326,7 +358,7 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
    */
   public boolean registerKey(int opID, String key, int step) {
     //TODO : do we have knowledge of the size of each byteBuffer?
-    if (keyMap.containsKey(opID)) {
+    if (keyMap.get(opID).containsKey(key)) {
       return false;
     }
     keyMap.get(opID).put(key, step);
@@ -345,7 +377,10 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
    * will be replaced
    */
   public boolean putBulk(int opID, String key, ByteBuffer value) {
-    if (!keyMap.containsKey(opID) && !memoryManager.containsKey(opID, key)) {
+    if (value.position() != 0) {
+      value.flip();
+    }
+    if (!keyMap.get(opID).containsKey(key) && !memoryManager.containsKey(opID, key)) {
       registerKey(opID, key, MemoryManagerContext.BULK_MM_STEP_SIZE);
     } else {
       //If the key is already present we need to replace its value so we need to clear the data
@@ -363,7 +398,10 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
    * Buffers the inputs before submitting to the store. The new values will be appended to the end
    */
   public boolean appendBulk(int opID, String key, ByteBuffer value) {
-    if (!keyMap.containsKey(opID)) {
+    if (value.position() != 0) {
+      value.flip();
+    }
+    if (!keyMap.get(opID).containsKey(key)) {
       registerKey(opID, key, MemoryManagerContext.BULK_MM_STEP_SIZE);
     }
     //TODO: need to make sure that there are no memory leaks here
@@ -386,7 +424,10 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean flush(int opID, ByteBuffer key) {
-    return flush(opID, new String(key.array(), java.nio.charset.StandardCharsets.UTF_8));
+    if (key.position() != 0) {
+      key.flip();
+    }
+    return flush(opID, MemoryManagerContext.DEFAULT_CHARSET.decode(key).toString());
   }
 
   /*@Override
@@ -412,12 +453,10 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
     //Since we got all the buffer values reset the size
     keyBufferSizes.get(opID).put(key, 0);
     if (memoryManager.containsKey(opID, key)) {
-      return memoryManager.append(opID, ByteBuffer.wrap(key.getBytes(
-          MemoryManagerContext.DEFAULT_CHARSET)),
+      return memoryManager.append(opID, key,
           temp);
     } else {
-      return memoryManager.put(opID, ByteBuffer.wrap(key.getBytes(
-          MemoryManagerContext.DEFAULT_CHARSET)),
+      return memoryManager.put(opID, key,
           temp);
     }
   }
@@ -440,16 +479,24 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
     //Since we got all the buffer values reset the size
     keyBufferSizes.get(opID).put(key, 0);
     if (memoryManager.containsKey(opID, key)) {
-      return memoryManager.append(opID, ByteBuffer.wrap(key.getBytes(
-          MemoryManagerContext.DEFAULT_CHARSET)),
+      return memoryManager.append(opID, key,
           temp);
     } else {
-      return memoryManager.put(opID, ByteBuffer.wrap(key.getBytes(
-          MemoryManagerContext.DEFAULT_CHARSET)),
+      return memoryManager.put(opID, key,
           temp);
     }
   }
 
+  /**
+   * Flush all the keys that are stored for the given operation id.
+   * this must be called before a range of keys will be read as in the iterator methods
+   */
+  public boolean flushAll(int opID) {
+    for (String s : keyMap.get(opID).keySet()) {
+      flush(opID, s);
+    }
+    return true;
+  }
   /*@Override
   public <T extends Serializable> boolean flush(int opID, T key) {
     return false;
@@ -457,7 +504,10 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean close(int opID, ByteBuffer key) {
-    return close(opID, new String(key.array(), java.nio.charset.StandardCharsets.UTF_8));
+    if (key.position() != 0) {
+      key.flip();
+    }
+    return close(opID, MemoryManagerContext.DEFAULT_CHARSET.decode(key).toString());
   }
 
   /*@Override
@@ -483,6 +533,20 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
     keyMapBuffers.get(opID).remove(key);
     keyBufferSizes.get(opID).remove(key);
     return true;
+  }
+
+  @Override
+  public Iterator<Object> getIterator(int opID, DataMessageType keyType, DataMessageType valueType,
+                                      KryoMemorySerializer deSerializer) {
+    flushAll(opID);
+    return memoryManager.getIterator(opID, keyType, valueType, deSerializer);
+  }
+
+  @Override
+  public Iterator<Object> getIterator(int opID, DataMessageType valueType,
+                                      KryoMemorySerializer deSerializer) {
+    flushAll(opID);
+    return memoryManager.getIterator(opID, valueType, deSerializer);
   }
 
   /*@Override

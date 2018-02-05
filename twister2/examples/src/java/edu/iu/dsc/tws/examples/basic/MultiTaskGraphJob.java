@@ -44,7 +44,6 @@ public final class MultiTaskGraphJob {
 
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
-    jobConfig.putConfig(config);
 
     // build the job
     BasicJob basicJob = BasicJob.newBuilder()
