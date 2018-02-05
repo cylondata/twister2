@@ -22,6 +22,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.bootstrap.WorkerInfo;
+import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKController;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.mpi.MPIContext;
@@ -118,8 +119,8 @@ public final class WorkerHello {
   }
 
   public void initializeWithZooKeeper() {
-    String zkServerAddress = SchedulerContext.zooKeeperServerIP(config);
-    String zkServerPort = SchedulerContext.zooKeeperServerPort(config);
+    String zkServerAddress = ZKContext.zooKeeperServerIP(config);
+    String zkServerPort = ZKContext.zooKeeperServerPort(config);
     String zkServer = zkServerAddress + ":" + zkServerPort;
 
     long startTime = System.currentTimeMillis();
@@ -139,7 +140,7 @@ public final class WorkerHello {
     System.out.println("Waiting for " + numberOfWorkers + " workers to join .........");
 
     // the amount of time to wait for all workers to join a job
-    int timeLimit =  SchedulerContext.maxWaitTimeForAllWorkersToJoin(config);
+    int timeLimit =  ZKContext.maxWaitTimeForAllWorkersToJoin(config);
     long startTime = System.currentTimeMillis();
     List<WorkerInfo> workers = zkController.waitForAllWorkersToJoin(numberOfWorkers, timeLimit);
     long duration = System.currentTimeMillis() - startTime;

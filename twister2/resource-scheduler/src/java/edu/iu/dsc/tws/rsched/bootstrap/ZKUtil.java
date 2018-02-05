@@ -19,7 +19,7 @@ import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+import static edu.iu.dsc.tws.rsched.bootstrap.ZKContext.ROOT_NODE;
 
 /**
  * this class provides methods to construct znode path names for jobs and workers
@@ -27,8 +27,6 @@ import edu.iu.dsc.tws.rsched.core.SchedulerContext;
  */
 public final class ZKUtil {
   public static final Logger LOG = Logger.getLogger(ZKUtil.class.getName());
-
-  public static final String ROOT_NODE = "/twister2";
 
   private ZKUtil() {
   }
@@ -40,8 +38,8 @@ public final class ZKUtil {
    */
   public static CuratorFramework connectToServer(Config config) {
 
-    String zkServerAddress = SchedulerContext.zooKeeperServerIP(config);
-    String zkServerPort = SchedulerContext.zooKeeperServerPort(config);
+    String zkServerAddress = ZKContext.zooKeeperServerIP(config);
+    String zkServerPort = ZKContext.zooKeeperServerPort(config);
     String zkServer = zkServerAddress + ":" + zkServerPort;
 
     try {
