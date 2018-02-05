@@ -9,10 +9,11 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.tcp;
+package edu.iu.dsc.tws.comms.tcp.net;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.core.CommunicationContext;
+import edu.iu.dsc.tws.comms.core.NetworkInfo;
 
 public class TCPContext extends CommunicationContext {
   public static final String TWISTER2_WRITE_SIZE = "twister2.tcp.write.size";
@@ -27,6 +28,9 @@ public class TCPContext extends CommunicationContext {
 
   public static final String TWISTER2_SEND_BUFF_SIZE = "twister2.tcp.send.buffer.size";
   public static final String TWISTER2_RECV_BUFF_SIZE = "twister2.tcp.recv.buffer.size";
+
+  public static final String NETWORK_HOSTNAME = "twister2.tcp.hostname";
+  public static final String NETWORK_PORT = "twister2.tcp.port";
 
   public static int getNetworkWriteBatchSize(Config cfg, int def) {
     return cfg.getIntegerValue(TWISTER2_WRITE_SIZE, def);
@@ -54,5 +58,13 @@ public class TCPContext extends CommunicationContext {
 
   public static int getMaximumPacketSize(Config cfg, int def) {
     return cfg.getIntegerValue(TWISTER2_MAX_PACKET_SIZE, def);
+  }
+
+  public static String getHostName(NetworkInfo networkInfo) {
+    return networkInfo.getProperties().get(NETWORK_HOSTNAME).toString();
+  }
+
+  public static int getPort(NetworkInfo networkInfo) {
+    return (int) networkInfo.getProperties().get(NETWORK_PORT);
   }
 }

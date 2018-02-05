@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.tcp;
+package edu.iu.dsc.tws.comms.tcp.net;
 
 import java.io.IOException;
 import java.nio.channels.ClosedChannelException;
@@ -18,14 +18,29 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.logging.Logger;
 
-public class Channel {
-  private final Selector selector;
+public class Progress {
+  private static final Logger LOG = Logger.getLogger(Progress.class.getName());
 
-  public Channel() throws IOException {
-    selector = Selector.open();
+  private Selector selector;
 
-    addNIOLooperTasks();
+  public Progress() {
+    try {
+      selector = Selector.open();
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to open selector");
+    }
+  }
+
+  public void loop() {
+    try {
+      selector.selectNow();
+
+      handleSelectedKeys();
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to select");
+    }
   }
 
   private void handleSelectedKeys() {
@@ -62,15 +77,7 @@ public class Channel {
     }
   }
 
-  public void clear() {
-
-  }
-
-  /**
-   * Followings are the register, unregister, isRegister for different
-   * operations for the selector and channel
-   */
-  public void registerRead(SelectableChannel channel, ISelectHandler callback)
+  public void registerRead(SelectableChannel channel, SelectHandler callback)
       throws ClosedChannelException {
     assert channel.keyFor(selector) == null
         || (channel.keyFor(selector).interestOps() & SelectionKey.OP_CONNECT) == 0;
@@ -85,7 +92,7 @@ public class Channel {
     return isInterestRegistered(channel, SelectionKey.OP_READ);
   }
 
-  public void registerConnect(SelectableChannel channel, ISelectHandler callback)
+  public void registerConnect(SelectableChannel channel, SelectHandler callback)
       throws ClosedChannelException {
     // This channel should be first use
     assert channel.keyFor(selector) == null;
@@ -100,7 +107,7 @@ public class Channel {
     return isInterestRegistered(channel, SelectionKey.OP_CONNECT);
   }
 
-  public void registerAccept(SelectableChannel channel, ISelectHandler callback)
+  public void registerAccept(SelectableChannel channel, SelectHandler callback)
       throws ClosedChannelException {
     addInterest(channel, SelectionKey.OP_ACCEPT, callback);
   }
@@ -113,7 +120,7 @@ public class Channel {
     return isInterestRegistered(channel, SelectionKey.OP_ACCEPT);
   }
 
-  public void registerWrite(SelectableChannel channel, ISelectHandler callback)
+  public void registerWrite(SelectableChannel channel, SelectHandler callback)
       throws ClosedChannelException {
     addInterest(channel, SelectionKey.OP_WRITE, callback);
   }
@@ -128,7 +135,7 @@ public class Channel {
 
   private void addInterest(SelectableChannel channel,
                            int operation,
-                           ISelectHandler callback)
+                           SelectHandler callback)
       throws ClosedChannelException {
 
     SelectionKey key = channel.keyFor(selector);
@@ -170,5 +177,12 @@ public class Channel {
     SelectionKey key = channel.keyFor(selector);
 
     return key != null && (key.interestOps() & operation) != 0;
+  }
+
+  public void removeAllInterest(SelectableChannel channel) {
+    SelectionKey key = channel.keyFor(selector);
+    if (key != null) {
+      key.cancel();
+    }
   }
 }

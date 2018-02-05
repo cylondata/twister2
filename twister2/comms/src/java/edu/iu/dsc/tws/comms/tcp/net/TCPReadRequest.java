@@ -9,10 +9,12 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.tcp;
+package edu.iu.dsc.tws.comms.tcp.net;
 
-public class Progress {
-  public void loop() {
+import java.nio.ByteBuffer;
 
+public class TCPReadRequest extends TCPRequest {
+  TCPReadRequest(ByteBuffer buffer, int e) {
+    super(buffer, e);
   }
 }

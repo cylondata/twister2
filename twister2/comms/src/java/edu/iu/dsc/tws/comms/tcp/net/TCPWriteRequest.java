@@ -9,15 +9,19 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.tcp;
+package edu.iu.dsc.tws.comms.tcp.net;
 
-// defines some status codes
-public enum StatusCode {
-  OK,
-  WRITE_ERROR,
-  READ_ERROR,
-  INVALID_PACKET,
-  CONNECT_ERROR,
-  CLOSE_ERROR,
-  TIMEOUT_ERROR
+import java.nio.ByteBuffer;
+
+public class TCPWriteRequest extends TCPRequest {
+  private int length;
+
+  TCPWriteRequest(ByteBuffer buffer, int e, int length) {
+    super(buffer, e);
+    this.length = length;
+  }
+
+  public int getLength() {
+    return length;
+  }
 }
