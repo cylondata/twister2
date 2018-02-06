@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.comms.tcp.master;
 
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -120,5 +121,25 @@ public class TCPMaster {
     public void onSendComplete(SocketChannel channel, TCPWriteRequest writeRequest) {
 
     }
+  }
+
+  public static void main(String[] args) {
+    int noOfProcs = Integer.parseInt(args[1]);
+    int procId = Integer.parseInt(args[0]);
+
+    NetworkInfo networkInfo = new NetworkInfo(procId);
+    networkInfo.addProperty(TCPContext.NETWORK_HOSTNAME, "localhost");
+    networkInfo.addProperty(TCPContext.NETWORK_PORT, 8764);
+
+    List<NetworkInfo> list = new ArrayList<>();
+    for (int i = 0; i < noOfProcs; i++) {
+      NetworkInfo info = new NetworkInfo(procId);
+      info.addProperty(TCPContext.NETWORK_HOSTNAME, "localhost");
+      info.addProperty(TCPContext.NETWORK_PORT, 8765 + i);
+      list.add(info);
+    }
+
+    TCPMaster master = new TCPMaster(Config.newBuilder().build(), list, networkInfo);
+    master.start();
   }
 }

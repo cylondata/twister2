@@ -41,6 +41,8 @@ public class TCPWorker {
 
   private SocketChannel clientSocketChannel;
 
+  private boolean isReady = false;
+
   public TCPWorker(Config cfg, NetworkInfo master) {
     this.config = cfg;
     this.masterInfo = master;
@@ -59,8 +61,10 @@ public class TCPWorker {
     // now lets start a connection to master
     masterClient = new Client(hostName, port, config, progress, new MasterEventHandler());
     masterClient.connect();
+  }
 
-    while (true) {
+  public void waitForSync() {
+    while (!isReady) {
       progress.loop();
     }
   }
@@ -72,7 +76,7 @@ public class TCPWorker {
   private class MasterEventHandler implements MessageHandler {
     @Override
     public void onError(SocketChannel channel) {
-
+      LOG.log(Level.SEVERE, "Error happened on connection: " + channel);
     }
 
     @Override
@@ -84,12 +88,13 @@ public class TCPWorker {
 
     @Override
     public void onClose(SocketChannel channel) {
-
+      LOG.log(Level.INFO, "Connection closed: " + channel);
     }
 
     @Override
     public void onReceiveComplete(SocketChannel channel, TCPReadRequest readRequest) {
       LOG.log(Level.INFO, "Received the hello response");
+      isReady = true;
     }
 
     @Override

@@ -29,3 +29,19 @@ java_binary(
     main_class = "edu.iu.dsc.tws.comms.mpi.io.Test",
     jvm_flags = ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005"],
 )
+
+java_binary(
+    name = "comms-java-master",
+    srcs = glob(["**/*.java"]),
+    deps = common_deps_files,
+    main_class = "edu.iu.dsc.tws.comms.tcp.master.TCPMaster",
+    jvm_flags = ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005"],
+)
+
+java_binary(
+    name = "comms-java-channel",
+    srcs = glob(["**/*.java"]),
+    deps = common_deps_files,
+    main_class = "edu.iu.dsc.tws.comms.tcp.net.TCPChannel",
+    jvm_flags = ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5006"],
+)
