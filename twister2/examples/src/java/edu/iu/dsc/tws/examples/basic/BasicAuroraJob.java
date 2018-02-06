@@ -21,6 +21,7 @@ import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.aurora.AuroraClientContext;
 import edu.iu.dsc.tws.rsched.schedulers.aurora.WorkerHello;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
@@ -41,7 +42,8 @@ public final class BasicAuroraJob {
     int cpus = Integer.parseInt(AuroraClientContext.cpusPerContainer(config));
     int ramMegaBytes = AuroraClientContext.ramPerContainer(config) / (1024 * 1024);
     int diskMegaBytes = AuroraClientContext.diskPerContainer(config) / (1024 * 1024);
-    int containers = Integer.parseInt(AuroraClientContext.cpusPerContainer(config));
+    int containers = Integer.parseInt(AuroraClientContext.numberOfContainers(config));
+    String jobName = SchedulerContext.jobName(config);
     ResourceContainer resourceContainer = new ResourceContainer(cpus, ramMegaBytes, diskMegaBytes);
 
     // build JobConfig
@@ -52,7 +54,7 @@ public final class BasicAuroraJob {
 
     // build the job
     BasicJob basicJob = BasicJob.newBuilder()
-        .setName("basic-aurora")
+        .setName(jobName)
         .setContainerClass(WorkerHello.class.getName())
         .setRequestResource(resourceContainer, containers)
         .setConfig(jobConfig)
@@ -72,13 +74,13 @@ public final class BasicAuroraJob {
    */
   public static void terminateJob(Config config) {
 
-    long waitTime = 10000;
-    try {
-      System.out.println("Waiting " + waitTime + " ms. Will terminate the job afterward .... ");
-      Thread.sleep(10000);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
+//    long waitTime = 100000;
+//    try {
+//      System.out.println("Waiting " + waitTime + " ms. Will terminate the job afterward .... ");
+//      Thread.sleep(waitTime);
+//    } catch (InterruptedException e) {
+//      e.printStackTrace();
+//    }
 
     String jobName = "basic-aurora";
     Twister2Submitter.terminateJob(jobName, config);

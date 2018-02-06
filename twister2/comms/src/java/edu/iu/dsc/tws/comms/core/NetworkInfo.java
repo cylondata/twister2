@@ -21,39 +21,38 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.basic;
+package edu.iu.dsc.tws.comms.core;
 
 import java.util.HashMap;
+import java.util.Map;
 
-import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.Twister2Submitter;
-import edu.iu.dsc.tws.api.basic.job.BasicJob;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.examples.basic.memory.BasicMemoryManagerContainer;
-import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
+public class NetworkInfo {
+  private final int procId;
 
-public final class MemoryManagerTestJob {
-  private MemoryManagerTestJob() {
+  private Map<String, Object> properties;
+
+  public NetworkInfo(int procId) {
+    this.procId = procId;
+    this.properties = new HashMap<>();
   }
 
-  public static void main(String[] args) {
-    // first load the configurations from command line and config files
-    Config config = ResourceAllocator.loadConfig(new HashMap<>());
+  public void addProperty(String prop, Object val) {
+    properties.put(prop, val);
+  }
 
-    // build JobConfig
-    JobConfig jobConfig = new JobConfig();
+  public void addAllProperties(Map<String, Object> props) {
+    properties.putAll(props);
+  }
 
-    // build the job
-    BasicJob basicJob = BasicJob.newBuilder()
-        .setName("basic-gather")
-        .setContainerClass(BasicMemoryManagerContainer.class.getName())
-        .setRequestResource(new ResourceContainer(2, 1024), 1)
-        .setConfig(jobConfig)
-        .build();
+  public Map<String, Object> getProperties() {
+    return properties;
+  }
 
-    // now submit the job
-    Twister2Submitter.submitContainerJob(basicJob, config);
+  public Object getProperty(String prop) {
+    return properties.get(prop);
+  }
 
+  public int getProcId() {
+    return procId;
   }
 }

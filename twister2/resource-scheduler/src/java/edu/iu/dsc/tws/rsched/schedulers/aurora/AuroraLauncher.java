@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.bootstrap.ZKUtil;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
@@ -47,11 +48,19 @@ public class AuroraLauncher implements ILauncher {
   @Override
   public boolean launch(RequestedResources resourceRequest, JobAPI.Job job) {
 
+    String jobName = job.getJobName();
+
+    // first check whether there is an active job running with same name on ZooKeeper
+    if (ZKUtil.isThereAnActiveJob(jobName, config)) {
+      throw new RuntimeException("There is an active job in ZooKeeper with same name."
+          + "\nFirst try to kill that job. Run terminate job command."
+          + "\nThis job is not submitted to Aurora Server");
+    }
+
     //construct the controller to submit the job to Aurora Scheduler
     String cluster = AuroraClientContext.auroraClusterName(config);
     String role = AuroraClientContext.role(config);
     String env = AuroraClientContext.environment(config);
-    String jobName = job.getJobName();
     AuroraClientController controller =
         new AuroraClientController(cluster, role, env, jobName, true);
 
@@ -87,13 +96,25 @@ public class AuroraLauncher implements ILauncher {
    */
   @Override
   public boolean terminateJob(String jobName) {
+
     //construct the controller to submit the job to Aurora Scheduler
     String cluster = AuroraClientContext.auroraClusterName(config);
     String role = AuroraClientContext.role(config);
     String env = AuroraClientContext.environment(config);
     AuroraClientController controller =
         new AuroraClientController(cluster, role, env, jobName, true);
-    return controller.killJob();
+
+    boolean killedAuroraJob = controller.killJob();
+    if (killedAuroraJob) {
+      LOG.log(Level.INFO, "Aurora job kill command succeeded.");
+    } else {
+      LOG.log(Level.SEVERE, "Aurora job kill command failed.");
+    }
+
+    // first clear ZooKeeper data
+    boolean deletedZKNodes = ZKUtil.terminateJob(jobName, config);
+
+    return killedAuroraJob && deletedZKNodes;
   }
 
   /**
