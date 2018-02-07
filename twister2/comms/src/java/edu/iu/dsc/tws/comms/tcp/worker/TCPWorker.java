@@ -69,8 +69,14 @@ public class TCPWorker {
     }
   }
 
-  public void send() {
+  public void sendAndPost() {
+    ByteBuffer byteBuffer = ByteBuffer.allocate(4);
+    masterClient.receive(clientSocketChannel, byteBuffer, 4, 0);
+
     TCPWriteRequest request = masterClient.send(clientSocketChannel, sendBuffer, 4, 0);
+    if (request == null) {
+      LOG.log(Level.WARNING, "Message sending not accepted");
+    }
   }
 
   private class MasterEventHandler implements MessageHandler {
@@ -83,7 +89,7 @@ public class TCPWorker {
     public void onConnect(SocketChannel channel, StatusCode status) {
       LOG.log(Level.INFO, "Client connected to master: " + channel);
       clientSocketChannel = channel;
-      send();
+      sendAndPost();
     }
 
     @Override

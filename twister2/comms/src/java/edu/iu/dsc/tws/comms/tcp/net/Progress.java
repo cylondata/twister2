@@ -53,8 +53,6 @@ public class Progress {
       SelectHandler callback = (SelectHandler) key.attachment();
 
       if (!key.isValid()) {
-        // This method key.channel() will continue to return the channel even after the
-        // key is cancelled.
         callback.handleError(key.channel());
         continue;
       }
