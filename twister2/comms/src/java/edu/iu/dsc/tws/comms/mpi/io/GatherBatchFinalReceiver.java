@@ -41,6 +41,7 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
   private GatherBatchReceiver gatherBatchReceiver;
   private Map<Integer, Boolean> batchDone = new HashMap<>();
   private boolean isStoreBased;
+  private Map<Integer, OperationMemoryManager> memoryManagers;
 
   public GatherBatchFinalReceiver(GatherBatchReceiver gatherBatchReceiver) {
     this.gatherBatchReceiver = gatherBatchReceiver;
@@ -68,6 +69,7 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
       counts.put(e.getKey(), countsPerTask);
       batchDone.put(e.getKey(), false);
     }
+    this.memoryManagers = new HashMap<>();
     this.dataFlowOperation = op;
     this.executor = dataFlowOperation.getTaskPlan().getThisExecutor();
     this.gatherBatchReceiver.init(cfg, op, expectedIds);
@@ -90,12 +92,16 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
         //TODO: how to handle refcount with store based data, is it needed?
       } else if (object instanceof OperationMemoryManager) {
         isStoreBased = true;
+        memoryManagers.put(target, (OperationMemoryManager) object);
       }
 
       Integer c = counts.get(target).get(source);
       counts.get(target).put(source, c + 1);
 
-      m.add(object);
+      if (!isStoreBased) {
+        m.add(object);
+      }
+
       if ((flags & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) {
 //        LOG.info(String.format("%d Final LAST target %d source %d", executor, target, source));
         finishedMessages.put(source, true);
@@ -120,40 +126,49 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
       Map<Integer, Integer> countMap = counts.get(t);
 //      LOG.info(String.format("%d gather final counts %d %s %s", executor, t, countMap,
 //          finishedForTarget));
+      if (!isStoreBased) {
+        boolean found = true;
+        for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
+          if (e.getValue().size() == 0 && !finishedForTarget.get(e.getKey())) {
+            found = false;
+          }
 
-      boolean found = true;
-      for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
-        if (e.getValue().size() == 0 && !finishedForTarget.get(e.getKey())) {
-          found = false;
-        }
-
-        if (!finishedForTarget.get(e.getKey())) {
-          allFinished = false;
-        } /*else {
+          if (!finishedForTarget.get(e.getKey())) {
+            allFinished = false;
+          } /*else {
           LOG.info(String.format("%d final finished receiving to %d from %d",
               executor, t, e.getKey()));
         }*/
-      }
-
-      if (found) {
-        List<Object> out = new ArrayList<>();
-        for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
-          List<Object> valueList = e.getValue();
-          if (valueList.size() > 0) {
-            Object value = valueList.get(0);
-            out.add(value);
-            allFinished = false;
-            valueList.remove(0);
-          }
         }
+
+        if (found) {
+          List<Object> out = new ArrayList<>();
+          for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
+            List<Object> valueList = e.getValue();
+            if (valueList.size() > 0) {
+              Object value = valueList.get(0);
+              out.add(value);
+              allFinished = false;
+              valueList.remove(0);
+            }
+          }
 //        for (Map.Entry<Integer, Integer> e : countMap.entrySet()) {
 //          Integer i = e.getValue();
 //          e.setValue(i - 1);
 //        }
-        finalMessages.get(t).addAll(out);
+          finalMessages.get(t).addAll(out);
+        } else {
+          allFinished = false;
+        }
       } else {
-        allFinished = false;
+
+        for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
+          if (!finishedForTarget.get(e.getKey())) {
+            allFinished = false;
+          }
+        }
       }
+
 
       if (allFinished) {
         LOG.info(String.format("%d final all finished %d", executor, t));
@@ -161,8 +176,7 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
         if (!isStoreBased) {
           gatherBatchReceiver.receive(t, finalMessages.get(t).iterator());
         } else {
-          OperationMemoryManager temp = (OperationMemoryManager) finalMessages.get(t).get(0);
-          gatherBatchReceiver.receive(t, temp.iterator());
+          gatherBatchReceiver.receive(t, memoryManagers.get(t).iterator());
         }
       }
     }

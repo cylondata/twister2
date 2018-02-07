@@ -214,7 +214,6 @@ public class BasicGatherTestCommunication implements IContainer {
         start = System.nanoTime();
       }
       if (object instanceof List) {
-        System.out.println("LIST LIST LIST");
         List<Object> datalist = (List<Object>) object;
         for (Object o : datalist) {
           int[] data = (int[]) o;

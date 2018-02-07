@@ -60,6 +60,7 @@
 package edu.iu.dsc.tws.examples.basic.comms;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -73,11 +74,13 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.GatherBatchReceiver;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.mpi.io.GatherBatchFinalReceiver;
+import edu.iu.dsc.tws.comms.mpi.io.GatherBatchPartialReceiver;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.utils.RandomString;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
@@ -128,14 +131,15 @@ public class BasicGatherBatchTestCommunication implements IContainer {
 
     Map<String, Object> newCfg = new HashMap<>();
 
-    LOG.info("Setting up reduce dataflow operation");
+    LOG.info("Setting up gather dataflow operation");
 
     try {
       // this method calls the init method
       // I think this is wrong
 
       aggregate = channel.gather(newCfg, MessageType.INTEGER, 0, sources,
-          dest, new GatherBatchFinalReceiver(new FinalGatherReceive()));
+          dest, new GatherBatchFinalReceiver(new FinalGatherReceive()),
+          new GatherBatchPartialReceiver(dest));
 
 //      aggregate = channel.gather(newCfg, MessageType.OBJECT, 0, sources,
 //          dest, new FinalGatherReceive());
@@ -186,7 +190,10 @@ public class BasicGatherBatchTestCommunication implements IContainer {
 //          KeyedContent mesage = new KeyedContent(task, data,
 //              MessageType.INTEGER, MessageType.OBJECT);
 //
-          while (!aggregate.send(task, data, 0)) {
+          //Set the last message with the corerct flag. Since we only send one message we set it
+          //on the first call itself
+          int flags = MessageFlags.FLAGS_LAST;
+          while (!aggregate.send(task, data, flags)) {
             // lets wait a litte and try again
             try {
               Thread.sleep(1);
@@ -218,13 +225,27 @@ public class BasicGatherBatchTestCommunication implements IContainer {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void receive(int target, Iterator<Object> it) {
       int itercount = 0;
+      Object temp;
+
       while (it.hasNext()) {
         itercount++;
-        it.next();
+        temp = it.next();
+        if (temp instanceof List) {
+          List<Object> datalist = (List<Object>) temp;
+          for (Object o : datalist) {
+            int[] data = (int[]) o;
+            dataList.add(data[0]);
+          }
+        } else {
+          int[] data = (int[]) temp;
+          dataList.add(data[0]);
+        }
       }
-      System.out.println("Iter count : " + itercount);
+      LOG.info("Gather results (only the first int of each array)"
+          + Arrays.toString(dataList.toArray()));
     }
 
     public void progress() {

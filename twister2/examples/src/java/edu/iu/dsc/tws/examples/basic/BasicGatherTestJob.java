@@ -46,7 +46,7 @@ public final class BasicGatherTestJob {
 
     // build the job
     BasicJob basicJob = BasicJob.newBuilder()
-        .setName("basic-gather")
+        .setName("basic-gather-int-array")
         .setContainerClass(BasicGatherTestCommunication.class.getName())
         .setRequestResource(new ResourceContainer(2, 1024), 4)
         .setConfig(jobConfig)
