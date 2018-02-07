@@ -31,6 +31,8 @@ import org.apache.curator.utils.CloseableUtils;
 import org.apache.curator.utils.ZKPaths;
 import org.apache.zookeeper.CreateMode;
 
+import edu.iu.dsc.tws.common.config.Config;
+
 /**
  * gets unique workerID's for each client by using DistributedAtomicInteger
  * gets the current list of all workers from PathChildrenCache
@@ -59,15 +61,15 @@ public class ZKController {
   private PersistentNode thisNode;
   private PathChildrenCache childrenCache;
   private DistributedAtomicInteger dai;
+  private Config config;
 
-  public ZKController(String zkAddress, String jobName, String hostAndPort) {
-    this.zkAddress = zkAddress;
+  public ZKController(Config config, String jobName, String hostAndPort) {
+    this.config = config;
     this.hostAndPort = hostAndPort;
     this.jobName = jobName;
-    this.jobPath = ZKUtil.constructJobPath(jobName);
-    this.daiPath = ZKUtil.constructJobDaiPath(jobName);
-    this.lockPath = ZKUtil.constructJobLockPath(jobName);
-    workerInfo = new WorkerInfo(hostAndPort, -1);
+    this.jobPath = ZKUtil.constructJobPath(config, jobName);
+    this.daiPath = ZKUtil.constructJobDaiPath(config, jobName);
+    this.lockPath = ZKUtil.constructJobLockPath(config, jobName);
   }
 
   /**
@@ -77,15 +79,21 @@ public class ZKController {
    * @return
    */
   public boolean initialize() {
+    String zkServerAddress = ZKContext.zooKeeperServerIP(config);
+    String zkServerPort = ZKContext.zooKeeperServerPort(config);
+    zkAddress = zkServerAddress + ":" + zkServerPort;
+
     try {
       client = CuratorFrameworkFactory.newClient(zkAddress, new ExponentialBackoffRetry(1000, 3));
       client.start();
 
       dai = new DistributedAtomicInteger(client, daiPath, new ExponentialBackoffRetry(1000, 3));
 
-      // check whether the job node exist, if not, get a workeID
+      // check whether the job node exist, if not, get a workerID
+      // if the job node does not exists, it means that this is not rejoining
       if (client.checkExists().forPath(jobPath) == null) {
-        createWorkerID();
+        int workerID = createWorkerID();
+        workerInfo = new WorkerInfo(hostAndPort, workerID);
         createWorkerZnode();
         appendWorkerInfo();
 
@@ -96,13 +104,15 @@ public class ZKController {
         String parentStr = new String(parentData);
 
         if (parentStr.indexOf(hostAndPort) < 0) {
-          createWorkerID();
+          int workerID = createWorkerID();
+          workerInfo = new WorkerInfo(hostAndPort, workerID);
           createWorkerZnode();
           appendWorkerInfo();
 
           // if this worker is coming from a failure, get the ID from the parent content
         } else {
-          getWorkerIDFromParentData(parentStr);
+          int workerID = getWorkerIDFromParentData(parentStr);
+          workerInfo = new WorkerInfo(hostAndPort, workerID);
           createWorkerZnode();
         }
       }
@@ -128,14 +138,13 @@ public class ZKController {
   /**
    * create worker ID for this worker by increasing shared DistributedAtomicInteger
    */
-  private void createWorkerID() {
+  private int createWorkerID() {
     try {
       AtomicValue<Integer> incremented = dai.increment();
       if (incremented.succeeded()) {
         int workerID = incremented.preValue();
         LOG.log(Level.INFO, "Unique WorkerID generated: " + workerID);
-        workerInfo.setWorkerID(workerID);
-        return;
+        return workerID;
       } else {
         createWorkerID();
       }
@@ -143,6 +152,8 @@ public class ZKController {
       LOG.log(Level.SEVERE, "Failed to generate a unique workerID. Will try again ...", e);
       createWorkerID();
     }
+
+    return -1;
   }
 
   /**
@@ -188,9 +199,10 @@ public class ZKController {
    * parse the data of parent znode and retrieve the worker ID for this worker
    * @param parentStr
    */
-  private void getWorkerIDFromParentData(String parentStr) {
-    workerInfo.setWorkerIDByParsing(parentStr);
+  private int getWorkerIDFromParentData(String parentStr) {
+    int workerID = WorkerInfo.getWorkerIDByParsing(parentStr, hostAndPort);
     LOG.log(Level.INFO, "Using workerID from previous session: " + workerInfo.getWorkerID());
+    return workerID;
   }
 
 
@@ -385,7 +397,7 @@ public class ZKController {
         // if this is the last worker, delete znodes for the job
         if (noOfChildren == 1) {
           LOG.log(Level.INFO, "This is the last worker to finish. Deleting job znodes.");
-          ZKUtil.deleteJobZNodes(client, jobName);
+          ZKUtil.deleteJobZNodes(config, client, jobName);
         }
         CloseableUtils.closeQuietly(client);
       } catch (Exception e) {

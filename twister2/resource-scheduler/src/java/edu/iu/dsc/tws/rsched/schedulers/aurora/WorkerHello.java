@@ -39,10 +39,7 @@ public final class WorkerHello {
   private JobAPI.Job job;
   private ZKController zkController;
 
-  private WorkerHello(InetAddress workerAddress, int workerPort, String mesosTaskID) {
-    this.workerAddress = workerAddress;
-    this.workerPort = workerPort;
-    this.mesosTaskID = mesosTaskID;
+  private WorkerHello() {
   }
 
   /**
@@ -50,17 +47,36 @@ public final class WorkerHello {
    * @return
    */
   public static WorkerHello createWorkerHello() {
+    WorkerHello worker = new WorkerHello();
     String hostname =  System.getProperty("hostname");
     String portStr =  System.getProperty("tcpPort");
-    String mesosTaskID = System.getProperty("taskID");
+    worker.mesosTaskID = System.getProperty("taskID");
     try {
-      InetAddress workerIP = InetAddress.getByName(hostname);
-      int port = Integer.parseInt(portStr);
-      return new WorkerHello(workerIP, port, mesosTaskID);
+      worker.workerAddress = InetAddress.getByName(hostname);
+      worker.workerPort = Integer.parseInt(portStr);
+      LOG.log(Level.INFO, "worker IP: " + hostname + " workerPort: " + portStr);
+      LOG.log(Level.INFO, "worker mesosTaskID: " + worker.mesosTaskID);
     } catch (UnknownHostException e) {
       LOG.log(Level.SEVERE, "worker ip address is not valid: " + hostname, e);
       throw new RuntimeException(e);
     }
+
+    // read job description file
+    worker.readJobDescFile();
+    printJob(worker.job);
+
+    // load config files
+    worker.loadConfig();
+//    System.out.println("Config from files: ");
+//    System.out.println(worker.config.toString());
+
+    // override config files with values from job config if any
+    worker.overrideConfigsFromJob();
+
+    // get unique workerID and let other workers know about this worker in the job
+    worker.initializeWithZooKeeper();
+
+    return worker;
   }
 
   /**
@@ -119,13 +135,10 @@ public final class WorkerHello {
   }
 
   public void initializeWithZooKeeper() {
-    String zkServerAddress = ZKContext.zooKeeperServerIP(config);
-    String zkServerPort = ZKContext.zooKeeperServerPort(config);
-    String zkServer = zkServerAddress + ":" + zkServerPort;
 
     long startTime = System.currentTimeMillis();
     String workerHostPort = workerAddress.getHostAddress() + ":" + workerPort;
-    zkController = new ZKController(zkServer, job.getJobName(), workerHostPort);
+    zkController = new ZKController(config, job.getJobName(), workerHostPort);
     zkController.initialize();
     long duration = System.currentTimeMillis() - startTime;
     System.out.println("Initialization for the worker: " + zkController.getWorkerInfo()
@@ -171,29 +184,20 @@ public final class WorkerHello {
 
     // create the worker
     WorkerHello worker = createWorkerHello();
-    System.out.println("worker IP: " + worker.workerAddress.getHostAddress());
-    System.out.println("worker Port: " + worker.workerPort);
-    System.out.println("worker mesosTaskID: " + worker.mesosTaskID);
-
-    // read job description file
-    worker.readJobDescFile();
-    printJob(worker.job);
-
-    // load config files
-    worker.loadConfig();
-    System.out.println("Config from files: ");
-    System.out.println(worker.config.toString());
-
-    // override config files with values from job config if any
-    worker.overrideConfigsFromJob();
-
-    // get unique workerID and let other workers know about this worker in the job
-    worker.initializeWithZooKeeper();
 
     // get the number of workers from some where
     // wait for all of them
     // print their list and exit
     worker.waitAndGetAllWorkers();
+
+    // wait some random amount of time before finishing
+    long duration = (long) (Math.random() * 1000);
+    try {
+      System.out.println("Sleeping " + duration + "ms. Then will close.");
+      Thread.sleep(duration);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
 
     // close the things, let others know that it is done
     worker.close();
