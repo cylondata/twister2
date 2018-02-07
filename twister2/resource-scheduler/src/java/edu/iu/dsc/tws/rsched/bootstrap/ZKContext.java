@@ -18,7 +18,8 @@ import edu.iu.dsc.tws.common.config.Config;
 public final class ZKContext {
   public static final Logger LOG = Logger.getLogger(ZKContext.class.getName());
 
-  public static final String ROOT_NODE = "/twister2";
+  public static final String ROOT_NODE = "twister2.zookeeper.root.node.path";
+  public static final String ROOT_NODE_DEFAULT = "/twister2";
 
   // ZooKeeper server IP address and port number
   // They should be given in conf files
@@ -28,6 +29,10 @@ public final class ZKContext {
       "twister2.zookeeper.max.wait.time.for.all.workers.to.join";
 
   private ZKContext() { }
+
+  public static String rootNode(Config cfg) {
+    return cfg.getStringValue(ROOT_NODE, ROOT_NODE_DEFAULT);
+  }
 
   public static String zooKeeperServerIP(Config cfg) {
     return cfg.getStringValue(ZOOKEEPER_SERVER_IP);
@@ -40,4 +45,6 @@ public final class ZKContext {
   public static int maxWaitTimeForAllWorkersToJoin(Config cfg) {
     return Integer.parseInt(cfg.getStringValue(MAX_WAIT_TIME_FOR_ALL_WORKERS_TO_JOIN));
   }
+
+
 }

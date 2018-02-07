@@ -75,12 +75,12 @@ public class WorkerInfo {
    * parse job znode content and set the id of this worker
    * @param str
    */
-  public void setWorkerIDByParsing(String str) {
+  public static int getWorkerIDByParsing(String str, String workerName) {
     int workerNameIndex = str.indexOf(workerName);
     int idStartIndex = str.indexOf("=", workerNameIndex) + 1;
     int idEndIndex = str.indexOf(";", idStartIndex);
     String idStr = str.substring(idStartIndex, idEndIndex);
-    workerID = Integer.parseInt(idStr);
+    return Integer.parseInt(idStr);
   }
 
   public void setWorkerID(int workerID) {

@@ -74,13 +74,13 @@ public final class BasicAuroraJob {
    */
   public static void terminateJob(Config config) {
 
-//    long waitTime = 100000;
-//    try {
-//      System.out.println("Waiting " + waitTime + " ms. Will terminate the job afterward .... ");
-//      Thread.sleep(waitTime);
-//    } catch (InterruptedException e) {
-//      e.printStackTrace();
-//    }
+    long waitTime = 100000;
+    try {
+      System.out.println("Waiting " + waitTime + " ms. Will terminate the job afterward .... ");
+      Thread.sleep(waitTime);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
 
     String jobName = "basic-aurora";
     Twister2Submitter.terminateJob(jobName, config);

@@ -19,7 +19,7 @@ import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 
 import edu.iu.dsc.tws.common.config.Config;
-import static edu.iu.dsc.tws.rsched.bootstrap.ZKContext.ROOT_NODE;
+//import static edu.iu.dsc.tws.rsched.bootstrap.ZKContext.ROOT_NODE;
 
 /**
  * this class provides methods to construct znode path names for jobs and workers
@@ -66,7 +66,7 @@ public final class ZKUtil {
     try {
       CuratorFramework client = connectToServer(config);
 
-      String jobPath = constructJobPath(jobName);
+      String jobPath = constructJobPath(config, jobName);
 
       // check whether the job node exists, if not, return false, nothing to do
       if (client.checkExists().forPath(jobPath) == null) {
@@ -74,7 +74,7 @@ public final class ZKUtil {
 
         // if the node exists but does not have any children, remove the job related znodes
       } else if (client.getChildren().forPath(jobPath).size() == 0) {
-        deleteJobZNodes(client, jobName);
+        deleteJobZNodes(config, client, jobName);
         client.close();
 
         return false;
@@ -96,8 +96,8 @@ public final class ZKUtil {
    * @param jobName
    * @return
    */
-  public static String constructJobPath(String jobName) {
-    return ROOT_NODE + "/" + jobName;
+  public static String constructJobPath(Config config, String jobName) {
+    return ZKContext.rootNode(config) + "/" + jobName;
   }
 
   /**
@@ -105,8 +105,8 @@ public final class ZKUtil {
    * @param jobName
    * @return
    */
-  public static String constructJobDaiPath(String jobName) {
-    return ROOT_NODE + "/" + jobName + "-dai";
+  public static String constructJobDaiPath(Config config, String jobName) {
+    return ZKContext.rootNode(config) + "/" + jobName + "-dai";
   }
 
   /**
@@ -114,8 +114,8 @@ public final class ZKUtil {
    * @param jobName
    * @return
    */
-  public static String constructJobLockPath(String jobName) {
-    return ROOT_NODE + "/" + jobName + "-lock";
+  public static String constructJobLockPath(Config config, String jobName) {
+    return ZKContext.rootNode(config) + "/" + jobName + "-lock";
   }
 
   /**
@@ -123,9 +123,9 @@ public final class ZKUtil {
    * @param jobName
    * @return
    */
-  public static boolean deleteJobZNodes(CuratorFramework client, String jobName) {
+  public static boolean deleteJobZNodes(Config config, CuratorFramework client, String jobName) {
     try {
-      String jobPath = constructJobPath(jobName);
+      String jobPath = constructJobPath(config, jobName);
       if (client.checkExists().forPath(jobPath) != null) {
 //        client.delete().guaranteed().deletingChildrenIfNeeded().forPath(jobPath);
         client.delete().deletingChildrenIfNeeded().forPath(jobPath);
@@ -135,7 +135,7 @@ public final class ZKUtil {
       }
 
       // delete distributed atomic integer znode
-      String daiPath = constructJobDaiPath(jobName);
+      String daiPath = constructJobDaiPath(config, jobName);
       if (client.checkExists().forPath(daiPath) != null) {
         client.delete().guaranteed().deletingChildrenIfNeeded().forPath(daiPath);
         LOG.log(Level.INFO, "Distributed atomic integer znode deleted from ZooKeeper: " + daiPath);
@@ -145,7 +145,7 @@ public final class ZKUtil {
       }
 
       // delete distributed lock znode
-      String lockPath = constructJobLockPath(jobName);
+      String lockPath = constructJobLockPath(config, jobName);
       if (client.checkExists().forPath(lockPath) != null) {
         client.delete().guaranteed().deletingChildrenIfNeeded().forPath(lockPath);
         LOG.log(Level.INFO, "Distributed lock znode deleted from ZooKeeper: " + lockPath);
@@ -168,7 +168,7 @@ public final class ZKUtil {
   public static boolean terminateJob(String jobName, Config config) {
     try {
       CuratorFramework client = connectToServer(config);
-      boolean deleteResult = deleteJobZNodes(client, jobName);
+      boolean deleteResult = deleteJobZNodes(config, client, jobName);
       client.close();
       return deleteResult;
     } catch (Exception e) {
