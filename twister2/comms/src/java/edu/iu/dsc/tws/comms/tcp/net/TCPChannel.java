@@ -123,7 +123,7 @@ public class TCPChannel {
 
     //now wait for the handshakes to happen
     while (clientsConnected != (networkInfos.size() - 1)
-        && (clientsCompleted != networkInfos.size() - 1)) {
+        || (clientsCompleted != networkInfos.size() - 1)) {
       looper.loop();
     }
     LOG.log(Level.INFO, "Everybody connected: " + clientsConnected + " " + clientsCompleted);
@@ -132,7 +132,7 @@ public class TCPChannel {
   public TCPRequest iSend(ByteBuffer buffer, int size, int procId, int edge) {
     SocketChannel ch = clientChannel.get(procId);
     if (ch == null) {
-      LOG.log(Level.INFO, "Cannot send on an un-connected channel");
+      LOG.log(Level.INFO, "Cannot send on an un-connected channel to: " + procId);
       return null;
     }
     Client client = clients.get(procId);
@@ -142,7 +142,7 @@ public class TCPChannel {
   public TCPRequest iRecv(ByteBuffer buffer, int size, int procId, int edge) {
     SocketChannel ch = serverChannel.get(procId);
     if (ch == null) {
-      LOG.log(Level.INFO, "Cannot receive on an un-connected channel");
+      LOG.log(Level.INFO, "Cannot receive on an un-connected channel to: " + procId);
       return null;
     }
     return server.receive(ch, buffer, size, edge);
@@ -187,13 +187,13 @@ public class TCPChannel {
 
     @Override
     public void onReceiveComplete(SocketChannel channel, TCPReadRequest readRequest) {
-      LOG.log(Level.INFO, "Server received message");
       if (readRequest.getEdge() == -1) {
         ByteBuffer buffer = readRequest.getByteBuffer();
         int destProc = buffer.getInt();
         // add this to
         invertedServerChannels.put(channel, destProc);
         serverChannel.put(destProc, channel);
+        LOG.log(Level.INFO, "Server received hello message from: " + destProc);
         buffer.clear();
         helloReceiveByteBuffers.add(buffer);
         clientsConnected++;
