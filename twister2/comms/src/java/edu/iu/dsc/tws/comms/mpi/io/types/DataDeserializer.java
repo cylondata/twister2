@@ -53,6 +53,9 @@ public final class DataDeserializer {
     return null;
   }
 
+  /**
+   * get bytes
+   */
   public static ByteBuffer getAsByteBuffer(List<MPIBuffer> buffers, int length, MessageType type) {
     //If the message type is object we need to add the length of each object to the
     //bytestream so we can separate objects

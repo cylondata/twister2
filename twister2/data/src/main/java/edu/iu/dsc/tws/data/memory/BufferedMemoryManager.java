@@ -24,6 +24,7 @@
 package edu.iu.dsc.tws.data.memory;
 
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -537,16 +538,16 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
 
   @Override
   public Iterator<Object> getIterator(int opID, DataMessageType keyType, DataMessageType valueType,
-                                      KryoMemorySerializer deSerializer) {
+                                      KryoMemorySerializer deSerializer, ByteOrder order) {
     flushAll(opID);
-    return memoryManager.getIterator(opID, keyType, valueType, deSerializer);
+    return memoryManager.getIterator(opID, keyType, valueType, deSerializer, order);
   }
 
   @Override
   public Iterator<Object> getIterator(int opID, DataMessageType valueType,
-                                      KryoMemorySerializer deSerializer) {
+                                      KryoMemorySerializer deSerializer, ByteOrder order) {
     flushAll(opID);
-    return memoryManager.getIterator(opID, valueType, deSerializer);
+    return memoryManager.getIterator(opID, valueType, deSerializer, order);
   }
 
   /*@Override

@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi.io;
 
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -79,7 +80,6 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
   public boolean onMessage(int source, int path, int target, int flags, Object object) {
     // add the object to the map
     boolean canAdd = true;
-
     List<Object> m = messages.get(target).get(source);
     Map<Integer, Boolean> finishedMessages = finished.get(target);
     if (m.size() > sendPendingMax) {
@@ -176,7 +176,7 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
         if (!isStoreBased) {
           gatherBatchReceiver.receive(t, finalMessages.get(t).iterator());
         } else {
-          gatherBatchReceiver.receive(t, memoryManagers.get(t).iterator());
+          gatherBatchReceiver.receive(t, memoryManagers.get(t).iterator(ByteOrder.nativeOrder()));
         }
       }
     }
