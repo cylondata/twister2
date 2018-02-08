@@ -176,20 +176,6 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
     // initialize the serializers
     LOG.fine(String.format("%d setup initializers", instancePlan.getThisExecutor()));
     initSerializers();
-
-    //TODO : need to load this from config file, both the type of memory manager and the datapath
-    //TODO : need to make the memory manager available globally
-    opertionID = (int) System.currentTimeMillis();
-    Path dataPath = new Path("/home/pulasthi/work/twister2/lmdbdatabase");
-    this.memoryManager = new LMDBMemoryManager(dataPath);
-    if (!isKeyed) {
-      this.operationMemoryManager = memoryManager.addOperation(opertionID,
-          MessageTypeConverter.toDataMessageType(messageType));
-    } else {
-      this.operationMemoryManager = memoryManager.addOperation(opertionID,
-          MessageTypeConverter.toDataMessageType(messageType),
-          MessageTypeConverter.toDataMessageType(keyType));
-    }
   }
 
   protected void initSerializers() {
@@ -718,5 +704,20 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
 
   public void setStoreBased(boolean storeBased) {
     isStoreBased = storeBased;
+    if(isStoreBased){
+      //TODO : need to load this from config file, both the type of memory manager and the datapath
+      //TODO : need to make the memory manager available globally
+      opertionID = (int) System.currentTimeMillis();
+      Path dataPath = new Path("/home/pulasthi/work/twister2/lmdbdatabase");
+      this.memoryManager = new LMDBMemoryManager(dataPath);
+      if (!isKeyed) {
+        this.operationMemoryManager = memoryManager.addOperation(opertionID,
+            MessageTypeConverter.toDataMessageType(type));
+      } else {
+        this.operationMemoryManager = memoryManager.addOperation(opertionID,
+            MessageTypeConverter.toDataMessageType(type),
+            MessageTypeConverter.toDataMessageType(keyType));
+      }
+    }
   }
 }
