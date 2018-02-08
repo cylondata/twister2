@@ -160,4 +160,8 @@ public class Client implements SelectHandler {
 
     isConnected = false;
   }
+
+  SocketChannel getSocketChannel() {
+    return socketChannel;
+  }
 }
