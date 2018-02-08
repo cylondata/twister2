@@ -136,7 +136,11 @@ public class Server implements SelectHandler {
         socketChannel.socket().setTcpNoDelay(true);
 
         Channel channel = new Channel(config, progress, this, socketChannel, messageHandler);
+        channel.enableReading();
+        channel.enableWriting();
         connectedChannels.put(socketChannel, channel);
+
+        messageHandler.onConnect(socketChannel, StatusCode.SUCCESS);
       }
     } catch (IOException e) {
       LOG.log(Level.SEVERE, "Error while accepting a new connection ", e);

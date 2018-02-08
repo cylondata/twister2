@@ -48,6 +48,8 @@ public class TCPMaster {
 
   private Map<Integer, SocketChannel> channelIntegerMap = new HashMap<>();
 
+  private List<SocketChannel> connectedChannels = new ArrayList<>();
+
   public TCPMaster(Config cfg, List<NetworkInfo> infoList, NetworkInfo netInfo) {
     this.config = cfg;
     this.thisNetworkInfo = netInfo;
@@ -62,18 +64,15 @@ public class TCPMaster {
     server = new Server(config, hostName, port, progress, new ServerEventHandler());
     server.start();
 
-    postReceives();
-
     while (true) {
       progress.loop();
     }
   }
 
   public void postReceives() {
-    for (NetworkInfo info : workerInfoList) {
-      SocketChannel channel = channelIntegerMap.get(info.getProcId());
+    for (SocketChannel ch : connectedChannels) {
       ByteBuffer receiveBuffer = ByteBuffer.allocate(4);
-      server.send(channel, receiveBuffer, 4, 0);
+      server.receive(ch, receiveBuffer, 4, 0);
     }
   }
 
@@ -95,6 +94,10 @@ public class TCPMaster {
     @Override
     public void onConnect(SocketChannel channel, StatusCode status) {
       LOG.log(Level.INFO, "Connected : " + channel);
+      connectedChannels.add(channel);
+      if (connectedChannels.size() == workerInfoList.size()) {
+        postReceives();
+      }
     }
 
     @Override
@@ -107,6 +110,7 @@ public class TCPMaster {
       // read the process no
       ByteBuffer buffer = readRequest.getByteBuffer();
       int processNo = buffer.getInt();
+      LOG.log(Level.INFO, "Receive complete from: " + processNo);
       if (channelIntegerMap.containsKey(processNo)) {
         LOG.log(Level.WARNING, String.format("Already received worker id from %d", processNo));
       }

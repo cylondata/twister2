@@ -80,6 +80,7 @@ public class Channel {
   }
 
   public void read() {
+    LOG.info("Reading from channel: " + socketChannel);
     while (pendingReceives.size() > 0) {
       TCPReadRequest readRequest = readRequest(socketChannel);
 
@@ -119,6 +120,7 @@ public class Channel {
         selectHandler.handleError(socketChannel);
         return;
       } else {
+        LOG.log(Level.INFO, "Send complete");
         // remove the request
         pendingSends.poll();
         writeRequest.setComplete(true);
@@ -127,9 +129,9 @@ public class Channel {
       }
     }
 
-    if (pendingSends.size() == 0) {
-      disableWriting();
-    }
+//    if (pendingSends.size() == 0) {
+//      disableWriting();
+//    }
   }
 
   private int writeRequest(SocketChannel channel, TCPWriteRequest request) {
@@ -137,12 +139,12 @@ public class Channel {
     int written = 0;
     if (writeStatus == DataStatus.INIT) {
       // lets flip the buffer
-      buffer.flip();
       writeHeader.clear();
       writeStatus = DataStatus.HEADER;
 
       writeHeader.putInt(request.getLength());
       writeHeader.putInt(request.getEdge());
+      writeHeader.flip();
     }
 
     if (writeStatus == DataStatus.HEADER) {
@@ -155,7 +157,8 @@ public class Channel {
     }
 
     if (writeStatus == DataStatus.BODY) {
-      written = writeToChannel(channel, request.getByteBuffer());
+      buffer.flip();
+      written = writeToChannel(channel, buffer);
       if (written < 0) {
         return written;
       } else if (written == 0) {
@@ -173,6 +176,7 @@ public class Channel {
     int wrote = 0;
     try {
       wrote = channel.write(buffer);
+      LOG.info("Wrote " + wrote);
     } catch (IOException e) {
       LOG.log(Level.SEVERE, "Error writing to channel ", e);
       return -1;
@@ -181,6 +185,8 @@ public class Channel {
   }
 
   private TCPReadRequest readRequest(SocketChannel channel) {
+    LOG.log(Level.INFO, "Reading...");
+
     if (readStatus == DataStatus.INIT) {
       readHeader.clear();
       readStatus = DataStatus.HEADER;
@@ -229,6 +235,7 @@ public class Channel {
       } else if (retVal == 0) {
         readSize = 0;
         readEdge = 0;
+        buffer.flip();
 
         TCPReadRequest ret = readingRequest;
         readingRequest = null;

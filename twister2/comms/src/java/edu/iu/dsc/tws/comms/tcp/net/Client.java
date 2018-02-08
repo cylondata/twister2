@@ -140,6 +140,8 @@ public class Client implements SelectHandler {
       return;
     }
     channel = new Channel(config, progress, this, socketChannel, messageHandler);
+    channel.enableReading();
+    channel.enableWriting();
 
     isConnected = true;
     messageHandler.onConnect(socketChannel, StatusCode.SUCCESS);
