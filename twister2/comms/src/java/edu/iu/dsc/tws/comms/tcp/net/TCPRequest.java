@@ -58,4 +58,8 @@ public abstract class TCPRequest {
   void setComplete(boolean complete) {
     this.complete = complete;
   }
+
+  public boolean isComplete() {
+    return complete;
+  }
 }

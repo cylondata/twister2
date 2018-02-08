@@ -61,6 +61,9 @@ public class TCPChannel {
   private List<ByteBuffer> helloSendByteBuffers;
   private List<ByteBuffer> helloReceiveByteBuffers;
 
+  private int clientsCompleted = 0;
+  private int clientsConnected = 0;
+
   public TCPChannel(Config cfg, List<NetworkInfo> workerInfo, NetworkInfo info, NetworkInfo mInfo) {
     config = cfg;
     networkInfos = workerInfo;
@@ -101,7 +104,7 @@ public class TCPChannel {
     worker = new TCPWorker(config, masterInfo);
     worker.start();
     worker.waitForSync();
-
+    LOG.log(Level.INFO, "Workers are synced..");
     // after sync we need to connect to all the servers
     for (NetworkInfo info : networkInfos) {
       if (info.getProcId() == thisInfo.getProcId()) {
@@ -117,6 +120,13 @@ public class TCPChannel {
       clients.put(info.getProcId(), client);
       invertedClientChannels.put(client.getSocketChannel(), info.getProcId());
     }
+
+    //now wait for the handshakes to happen
+    while (clientsConnected != (networkInfos.size() - 1)
+        && (clientsCompleted != networkInfos.size() - 1)) {
+      looper.loop();
+    }
+    LOG.log(Level.INFO, "Everybody connected: " + clientsConnected + " " + clientsCompleted);
   }
 
   public TCPRequest iSend(ByteBuffer buffer, int size, int procId, int edge) {
@@ -163,6 +173,7 @@ public class TCPChannel {
 
     @Override
     public void onConnect(SocketChannel channel, StatusCode status) {
+      LOG.log(Level.INFO, "Server connected to client");
       serverSocketChannels.add(channel);
       postHelloMessage(channel);
     }
@@ -176,6 +187,7 @@ public class TCPChannel {
 
     @Override
     public void onReceiveComplete(SocketChannel channel, TCPReadRequest readRequest) {
+      LOG.log(Level.INFO, "Server received message");
       if (readRequest.getEdge() == -1) {
         ByteBuffer buffer = readRequest.getByteBuffer();
         int destProc = buffer.getInt();
@@ -184,12 +196,14 @@ public class TCPChannel {
         serverChannel.put(destProc, channel);
         buffer.clear();
         helloReceiveByteBuffers.add(buffer);
+        clientsConnected++;
       }
       readRequest.setComplete(true);
     }
 
     @Override
     public void onSendComplete(SocketChannel channel, TCPWriteRequest writeRequest) {
+      LOG.log(Level.INFO, "Server send complete");
       writeRequest.setComplete(true);
     }
   }
@@ -202,6 +216,7 @@ public class TCPChannel {
 
     @Override
     public void onConnect(SocketChannel channel, StatusCode status) {
+      LOG.log(Level.INFO, "Client connected to server: " + channel);
       clientSocketChannels.add(channel);
       Integer key = invertedClientChannels.get(channel);
       // we need to send a hello message to server
@@ -218,16 +233,19 @@ public class TCPChannel {
 
     @Override
     public void onReceiveComplete(SocketChannel channel, TCPReadRequest readRequest) {
+      LOG.log(Level.INFO, "Client received message");
       readRequest.setComplete(true);
     }
 
     @Override
     public void onSendComplete(SocketChannel channel, TCPWriteRequest writeRequest) {
+      LOG.log(Level.INFO, "Client send complete");
       writeRequest.setComplete(true);
       if (writeRequest.getEdge() == -1) {
         ByteBuffer buffer = writeRequest.getByteBuffer();
         buffer.clear();
         helloSendByteBuffers.add(buffer);
+        clientsConnected++;
       }
     }
   }
@@ -242,7 +260,7 @@ public class TCPChannel {
 
     List<NetworkInfo> list = new ArrayList<>();
     for (int i = 0; i < noOfProcs; i++) {
-      NetworkInfo info = new NetworkInfo(procId);
+      NetworkInfo info = new NetworkInfo(i);
       info.addProperty(TCPContext.NETWORK_HOSTNAME, "localhost");
       info.addProperty(TCPContext.NETWORK_PORT, 8765 + i);
       list.add(info);
@@ -251,5 +269,34 @@ public class TCPChannel {
     TCPChannel master = new TCPChannel(Config.newBuilder().build(), list,
         list.get(procId), networkInfo);
     master.start();
+
+    int destProcId = 0;
+    if (procId == 0) {
+      destProcId = 1;
+    }
+
+    List<TCPRequest> readRequests = new ArrayList<>();
+    List<TCPRequest> writeRequests = new ArrayList<>();
+    // now lets send 5 messages
+    for (int i = 0; i < 5; i++) {
+      ByteBuffer byteBuffer = ByteBuffer.allocate(128);
+      TCPRequest write = master.iSend(byteBuffer, 128, destProcId, 1);
+      writeRequests.add(write);
+
+      ByteBuffer receiveBuffer = ByteBuffer.allocate(128);
+      TCPRequest read = master.iRecv(receiveBuffer, 128, destProcId, 1);
+      readRequests.add(read);
+    }
+
+    for (int i = 0; i < 5; i++) {
+      TCPRequest w = writeRequests.get(i);
+      if (w.isComplete()) {
+        LOG.info("Write complete");
+      }
+      TCPRequest r = readRequests.get(i);
+      if (r.isComplete()) {
+        LOG.info("Read complete");
+      }
+    }
   }
 }
