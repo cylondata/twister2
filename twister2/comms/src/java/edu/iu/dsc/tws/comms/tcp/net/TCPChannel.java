@@ -47,8 +47,19 @@ public class TCPChannel {
 
   private Map<Integer, SocketChannel> clientChannel;
 
+  private Map<SocketChannel, Integer> invertedClientChannels;
+  private Map<SocketChannel, Integer> invertedServerChannels;
+
   private Map<Integer, SocketChannel> serverChannel;
 
+  private List<SocketChannel> serverSocketChannels;
+
+  private List<SocketChannel> clientSocketChannels;
+
+  // we use a pre-allocated set of buffers to send the hello messages to
+  // the servers connected to by the client, so each client will send this message
+  private List<ByteBuffer> helloSendByteBuffers;
+  private List<ByteBuffer> helloReceiveByteBuffers;
 
   public TCPChannel(Config cfg, List<NetworkInfo> workerInfo, NetworkInfo info, NetworkInfo mInfo) {
     config = cfg;
@@ -58,12 +69,21 @@ public class TCPChannel {
 
     clientChannel = new HashMap<>();
     serverChannel = new HashMap<>();
+    invertedClientChannels = new HashMap<>();
+    invertedServerChannels = new HashMap<>();
+
     clients = new HashMap<>();
+    serverSocketChannels = new ArrayList<>();
+    clientSocketChannels = new ArrayList<>();
     looper = new Progress();
 
     networkInfoMap = new HashMap<>();
+    helloSendByteBuffers = new ArrayList<>();
+    helloReceiveByteBuffers = new ArrayList<>();
     for (NetworkInfo ni : workerInfo) {
       networkInfoMap.put(ni.getProcId(), ni);
+      helloSendByteBuffers.add(ByteBuffer.allocate(4));
+      helloReceiveByteBuffers.add(ByteBuffer.allocate(4));
     }
   }
 
@@ -95,6 +115,7 @@ public class TCPChannel {
           looper, new ClientChannelMessageHandler());
       client.connect();
       clients.put(info.getProcId(), client);
+      invertedClientChannels.put(client.getSocketChannel(), info.getProcId());
     }
   }
 
@@ -104,7 +125,8 @@ public class TCPChannel {
       LOG.log(Level.INFO, "Cannot send on an un-connected channel");
       return null;
     }
-    return server.send(ch, buffer, size, edge);
+    Client client = clients.get(procId);
+    return client.send(ch, buffer, size, edge);
   }
 
   public TCPRequest iRecv(ByteBuffer buffer, int size, int procId, int edge) {
@@ -120,31 +142,55 @@ public class TCPChannel {
     looper.loop();
   }
 
+  private void sendHelloMessage(int destProcId, SocketChannel sc) {
+    ByteBuffer buffer = helloSendByteBuffers.remove(0);
+    buffer.putInt(thisInfo.getProcId());
+
+    Client client = clients.get(destProcId);
+    client.send(sc, buffer, 4, -1);
+  }
+
+  private void postHelloMessage(SocketChannel sc) {
+    ByteBuffer buffer = helloReceiveByteBuffers.remove(0);
+    server.receive(sc, buffer, 4, -1);
+  }
+
   private class ChannelServerMessageHandler implements MessageHandler {
 
     @Override
     public void onError(SocketChannel channel) {
-
     }
 
     @Override
     public void onConnect(SocketChannel channel, StatusCode status) {
-
+      serverSocketChannels.add(channel);
+      postHelloMessage(channel);
     }
 
     @Override
     public void onClose(SocketChannel channel) {
-
+      if (!serverSocketChannels.remove(channel)) {
+        LOG.warning("Removing an un-exsting channel: " + channel);
+      }
     }
 
     @Override
     public void onReceiveComplete(SocketChannel channel, TCPReadRequest readRequest) {
-
+      if (readRequest.getEdge() == -1) {
+        ByteBuffer buffer = readRequest.getByteBuffer();
+        int destProc = buffer.getInt();
+        // add this to
+        invertedServerChannels.put(channel, destProc);
+        serverChannel.put(destProc, channel);
+        buffer.clear();
+        helloReceiveByteBuffers.add(buffer);
+      }
+      readRequest.setComplete(true);
     }
 
     @Override
     public void onSendComplete(SocketChannel channel, TCPWriteRequest writeRequest) {
-
+      writeRequest.setComplete(true);
     }
   }
 
@@ -156,22 +202,33 @@ public class TCPChannel {
 
     @Override
     public void onConnect(SocketChannel channel, StatusCode status) {
-
+      clientSocketChannels.add(channel);
+      Integer key = invertedClientChannels.get(channel);
+      // we need to send a hello message to server
+      sendHelloMessage(key, channel);
+      clientChannel.put(key, channel);
     }
 
     @Override
     public void onClose(SocketChannel channel) {
-
+      if (!clientSocketChannels.remove(channel)) {
+        LOG.warning("Removing an un-exsting channel: " + channel);
+      }
     }
 
     @Override
     public void onReceiveComplete(SocketChannel channel, TCPReadRequest readRequest) {
-
+      readRequest.setComplete(true);
     }
 
     @Override
     public void onSendComplete(SocketChannel channel, TCPWriteRequest writeRequest) {
-
+      writeRequest.setComplete(true);
+      if (writeRequest.getEdge() == -1) {
+        ByteBuffer buffer = writeRequest.getByteBuffer();
+        buffer.clear();
+        helloSendByteBuffers.add(buffer);
+      }
     }
   }
 
