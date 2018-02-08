@@ -176,6 +176,9 @@ public class BasicMemoryManagerContainer implements IContainer {
     // iterator with more than 1 key will test that keys are sorted properly
     int[][] datamultiarray = {{1, 11, 111, 1111}, {2, 22, 222, 2222}, {3, 33, 333, 3333},
         {4, 44, 444, 4444}};
+    ByteBuffer value2 = ByteBuffer.allocateDirect(16);
+    ByteBuffer value3 = ByteBuffer.allocateDirect(16);
+    ByteBuffer value4 = ByteBuffer.allocateDirect(16);
     key.clear();
     value.clear();
     key.putInt(4);

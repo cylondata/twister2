@@ -143,6 +143,12 @@ public class MPIDataFlowAllReduce implements DataFlowOperation {
     return taskPlan;
   }
 
+  @Override
+  public void setMemoryMapped(boolean memoryMapped) {
+    reduce.setMemoryMapped(memoryMapped);
+    broadcast.setMemoryMapped(memoryMapped);
+  }
+
   private class ReduceFinalReceiver implements MessageReceiver {
     // lets keep track of the messages
     // for each task we need to keep track of incoming messages

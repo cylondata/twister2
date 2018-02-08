@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.data.memory.lmdb;
 
 import java.io.File;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -547,7 +548,7 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
   @Override
   public Iterator<Object> getIterator(int opID, DataMessageType keyType,
                                       DataMessageType valueType,
-                                      KryoMemorySerializer deSerializer) {
+                                      KryoMemorySerializer deSerializer, ByteOrder order) {
     if (!dbMap.containsKey(opID)) {
       LOG.info("The given operation does not have a corresponding store specified");
       return null;
@@ -557,8 +558,10 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
     Txn<ByteBuffer> txn = env.txnRead();
     try (CursorIterator<ByteBuffer> it = currentDB.iterate(txn, KeyRange.all())) {
       for (final CursorIterator.KeyVal<ByteBuffer> kv : it.iterable()) {
-        Object key = MemoryDeserializer.deserializeKey(kv.key(), keyType, deSerializer);
-        Object value = MemoryDeserializer.deserializeValue(kv.val(), valueType, deSerializer);
+        Object key = MemoryDeserializer.deserializeKey(kv.key().order(order),
+            keyType, deSerializer);
+        Object value = MemoryDeserializer.deserializeValue(kv.val().order(order),
+            valueType, deSerializer);
         results.add(new ImmutablePair<>(key, value));
       }
     }
@@ -572,7 +575,7 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
    */
   @Override
   public Iterator<Object> getIterator(int opID, DataMessageType valueType,
-                                      KryoMemorySerializer deSerializer) {
+                                      KryoMemorySerializer deSerializer, ByteOrder order) {
     if (!dbMap.containsKey(opID)) {
       LOG.info("The given operation does not have a corresponding store specified");
       return null;
@@ -582,7 +585,8 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
     Txn<ByteBuffer> txn = env.txnRead();
     try (CursorIterator<ByteBuffer> it = currentDB.iterate(txn, KeyRange.all())) {
       for (final CursorIterator.KeyVal<ByteBuffer> kv : it.iterable()) {
-        Object value = MemoryDeserializer.deserializeValue(kv.val(), valueType, deSerializer);
+        Object value = MemoryDeserializer.deserializeValue(kv.val().order(order),
+            valueType, deSerializer);
         results.add(value);
       }
     }

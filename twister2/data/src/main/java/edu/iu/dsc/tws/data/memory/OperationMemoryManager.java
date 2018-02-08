@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.data.memory;
 
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.HashMap;
 import java.util.Iterator;
 
@@ -43,6 +44,8 @@ public class OperationMemoryManager {
   private DataMessageType messageType;
 
   private KryoMemorySerializer deSerializer;
+
+  private ByteOrder byteOrder = ByteOrder.BIG_ENDIAN;
 
   public OperationMemoryManager(int opID, DataMessageType type, MemoryManager parentMM) {
     this.operationID = opID;
@@ -265,9 +268,17 @@ public class OperationMemoryManager {
    */
   public Iterator<Object> iterator() {
     if (isKeyed) {
-      return memoryManager.getIterator(operationID, keyType, messageType, deSerializer);
+      return memoryManager.getIterator(operationID, keyType, messageType, deSerializer, byteOrder);
     } else {
-      return memoryManager.getIterator(operationID, messageType, deSerializer);
+      return memoryManager.getIterator(operationID, messageType, deSerializer, byteOrder);
+    }
+  }
+
+  public Iterator<Object> iterator(ByteOrder order) {
+    if (isKeyed) {
+      return memoryManager.getIterator(operationID, keyType, messageType, deSerializer, order);
+    } else {
+      return memoryManager.getIterator(operationID, messageType, deSerializer, order);
     }
   }
 

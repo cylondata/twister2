@@ -83,6 +83,11 @@ public class MPIDataFlowBroadcast implements DataFlowOperation, MPIMessageReceiv
     return instancePlan;
   }
 
+  @Override
+  public void setMemoryMapped(boolean memoryMapped) {
+    delegete.setStoreBased(memoryMapped);
+  }
+
   public boolean receiveMessage(MPIMessage currentMessage, Object object) {
     MessageHeader header = currentMessage.getHeader();
 

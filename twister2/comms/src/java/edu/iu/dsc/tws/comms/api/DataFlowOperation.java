@@ -72,4 +72,10 @@ public interface DataFlowOperation {
   MessageType getType();
 
   TaskPlan getTaskPlan();
+
+  /**
+   * if set to true the operation will be memory mapped
+   * @param memoryMapped
+   */
+  void setMemoryMapped(boolean memoryMapped);
 }

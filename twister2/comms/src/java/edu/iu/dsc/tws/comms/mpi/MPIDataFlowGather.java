@@ -351,6 +351,11 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
     return instancePlan;
   }
 
+  @Override
+  public void setMemoryMapped(boolean memoryMapped) {
+    delegete.setStoreBased(memoryMapped);
+  }
+
   private static class PartialGather implements MessageReceiver {
     // lets keep track of the messages
     // for each task we need to keep track of incoming messages

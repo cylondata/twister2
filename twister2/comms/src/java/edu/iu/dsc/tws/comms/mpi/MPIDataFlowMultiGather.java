@@ -132,6 +132,15 @@ public class MPIDataFlowMultiGather implements DataFlowOperation {
   }
 
   @Override
+  public void setMemoryMapped(boolean memoryMapped) {
+    //Needs to be called after init
+    for (MPIDataFlowGather mpiDataFlowGather : gatherMap.values()) {
+      mpiDataFlowGather.setMemoryMapped(memoryMapped);
+    }
+
+  }
+
+  @Override
   public void init(Config config, MessageType t, TaskPlan instancePlan, int edge) {
     executor = instancePlan.getThisExecutor();
     this.type = t;

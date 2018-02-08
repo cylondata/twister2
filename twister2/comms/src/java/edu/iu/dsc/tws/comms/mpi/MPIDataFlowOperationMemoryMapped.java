@@ -39,9 +39,9 @@ import edu.iu.dsc.tws.comms.mpi.io.types.KeySerializer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.comms.utils.MessageTypeConverter;
 import edu.iu.dsc.tws.data.fs.Path;
-import edu.iu.dsc.tws.data.memory.BufferedMemoryManager;
 import edu.iu.dsc.tws.data.memory.MemoryManager;
 import edu.iu.dsc.tws.data.memory.OperationMemoryManager;
+import edu.iu.dsc.tws.data.memory.lmdb.LMDBMemoryManager;
 
 public class MPIDataFlowOperationMemoryMapped implements MPIMessageListener,
     MPIMessageReleaseCallback {
@@ -180,8 +180,8 @@ public class MPIDataFlowOperationMemoryMapped implements MPIMessageListener,
     //TODO : need to load this from config file, both the type of memory manager and the datapath
     //TODO : need to make the memory manager available globally
     Path dataPath = new Path("/home/pulasthi/work/twister2/lmdbdatabase");
-    this.memoryManager = new BufferedMemoryManager(dataPath);
-    if (isKeyed) {
+    this.memoryManager = new LMDBMemoryManager(dataPath);
+    if (!isKeyed) {
       this.operationMemoryManager = memoryManager.addOperation(opertionID,
           MessageTypeConverter.toDataMessageType(messageType));
     } else {
@@ -401,11 +401,12 @@ public class MPIDataFlowOperationMemoryMapped implements MPIMessageListener,
 
       for (Map.Entry<Integer, Queue<MPIMessage>> it : pendingReceiveDeSerializations.entrySet()) {
         MPIMessage currentMessage = it.getValue().poll();
-        int id = currentMessage.getOriginatingId();
 
         if (currentMessage == null) {
           continue;
         }
+        int id = currentMessage.getOriginatingId();
+
         //If this is the last receiver we save to memory store
         if (isLastReceiver) {
           writeToMemoryManager(currentMessage);
