@@ -117,6 +117,14 @@ public class MPIDataFlowMultiReduce implements DataFlowOperation {
   }
 
   @Override
+  public void setMemoryMapped(boolean memoryMapped) {
+    //Needs to be called after init
+    for (MPIDataFlowReduce mpiDataFlowGather : reduceMap.values()) {
+      mpiDataFlowGather.setMemoryMapped(memoryMapped);
+    }
+  }
+
+  @Override
   public void init(Config config, MessageType type, TaskPlan instancePlan, int edge) {
     executor = instancePlan.getThisExecutor();
     Map<Integer, Map<Integer, List<Integer>>> partialReceives = new HashMap<>();

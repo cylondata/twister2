@@ -31,9 +31,17 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.mpi.io.KeyedContent;
 import edu.iu.dsc.tws.comms.mpi.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.MessageSerializer;
+import edu.iu.dsc.tws.comms.mpi.io.types.DataSerializer;
+import edu.iu.dsc.tws.comms.mpi.io.types.KeySerializer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
+import edu.iu.dsc.tws.comms.utils.MessageTypeConverter;
+import edu.iu.dsc.tws.data.fs.Path;
+import edu.iu.dsc.tws.data.memory.MemoryManager;
+import edu.iu.dsc.tws.data.memory.OperationMemoryManager;
+import edu.iu.dsc.tws.data.memory.lmdb.LMDBMemoryManager;
 
 public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageReleaseCallback {
   private static final Logger LOG = Logger.getLogger(MPIDataFlowOperation.class.getName());
@@ -101,18 +109,39 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
    */
   protected final Lock lock = new ReentrantLock();
 
+  /**
+   * Memory manager that will be used to store buffers to memory store.
+   */
+  private MemoryManager memoryManager;
+
+  /**
+   * OperationMemoryManager for this instance.
+   */
+  private OperationMemoryManager operationMemoryManager;
+
+  /**
+   * Id of this operation. This will be used when storing the operation data in the memory store.
+   */
+  private int opertionID = 1234;
+
+  private boolean isStoreBased = false;
+
   public MPIDataFlowOperation(TWSMPIChannel channel) {
     this.channel = channel;
   }
 
+  /**
+   * init method
+   */
   public void init(Config cfg, MessageType messageType, TaskPlan plan,
-               int graphEdge, Set<Integer> recvExecutors,
-               boolean lastReceiver, MPIMessageReceiver msgReceiver,
-               Map<Integer, ArrayBlockingQueue<Pair<Object, MPISendMessage>>> pendingSendPerSource,
-               Map<Integer, Queue<Pair<Object, MPIMessage>>> pRMPS,
-               Map<Integer, Queue<MPIMessage>> pendingReceiveDesrialize,
-               MessageSerializer serializer,
-               MessageDeSerializer deSerializer, boolean k) {
+                   int graphEdge, Set<Integer> recvExecutors,
+                   boolean lastReceiver, MPIMessageReceiver msgReceiver,
+                   Map<Integer, ArrayBlockingQueue<Pair<Object, MPISendMessage>>>
+                       pendingSendPerSource,
+                   Map<Integer, Queue<Pair<Object, MPIMessage>>> pRMPS,
+                   Map<Integer, Queue<MPIMessage>> pendingReceiveDesrialize,
+                   MessageSerializer serializer,
+                   MessageDeSerializer deSerializer, boolean k) {
     this.config = cfg;
     this.instancePlan = plan;
     this.edge = graphEdge;
@@ -147,6 +176,20 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
     // initialize the serializers
     LOG.fine(String.format("%d setup initializers", instancePlan.getThisExecutor()));
     initSerializers();
+
+    //TODO : need to load this from config file, both the type of memory manager and the datapath
+    //TODO : need to make the memory manager available globally
+    opertionID = (int) System.currentTimeMillis();
+    Path dataPath = new Path("/home/pulasthi/work/twister2/lmdbdatabase");
+    this.memoryManager = new LMDBMemoryManager(dataPath);
+    if (!isKeyed) {
+      this.operationMemoryManager = memoryManager.addOperation(opertionID,
+          MessageTypeConverter.toDataMessageType(messageType));
+    } else {
+      this.operationMemoryManager = memoryManager.addOperation(opertionID,
+          MessageTypeConverter.toDataMessageType(messageType),
+          MessageTypeConverter.toDataMessageType(keyType));
+    }
   }
 
   protected void initSerializers() {
@@ -212,7 +255,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
   }
 
   public boolean sendMessage(int source, Object message, int path,
-                                int flags, RoutingParameters routingParameters) {
+                             int flags, RoutingParameters routingParameters) {
     lock.lock();
     try {
 //      LOG.info(String.format("%d send message %d", executor, source));
@@ -274,10 +317,22 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
           if (mpiSendMessage.serializedState() == MPISendMessage.SendState.INIT) {
             // send it internally
             for (Integer i : mpiSendMessage.getInternalSends()) {
-              // okay now we need to check weather this is the last place
-              boolean receiveAccepted = receiver.receiveSendInternally(
-                  mpiSendMessage.getSource(), i, mpiSendMessage.getPath(),
-                  mpiSendMessage.getFlags(), messageObject);
+              //TODO: if this is the last task do we serialize internal messages and add it to
+              //TODO: Memory Manager. it can be done here
+              boolean receiveAccepted;
+              if (isStoreBased && isLastReceiver) {
+                serializeAndWriteToMemoryManager(mpiSendMessage, messageObject);
+                receiveAccepted = receiver.receiveSendInternally(
+                    mpiSendMessage.getSource(), i, mpiSendMessage.getPath(),
+                    mpiSendMessage.getFlags(), operationMemoryManager);
+                //send memory manager as reply
+                //mpiSendMessage.setSerializationState();
+              } else {
+                receiveAccepted = receiver.receiveSendInternally(
+                    mpiSendMessage.getSource(), i, mpiSendMessage.getPath(),
+                    mpiSendMessage.getFlags(), messageObject);
+              }
+
               if (!receiveAccepted) {
                 canProgress = false;
                 int attempt = updateAttemptMap(sendMessageInternalAttempts, i, 1);
@@ -301,7 +356,8 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
               pendingSendMessages.poll();
               continue;
             }
-
+            //TODO: why build message after sent internally? is it for messages with multiple
+            //TODO: destinations?
             // at this point lets build the message
             MPISendMessage message = (MPISendMessage)
                 messageSerializer.build(pair.getKey(), mpiSendMessage);
@@ -349,48 +405,15 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
         if (currentMessage == null) {
           continue;
         }
-
-        Object object = messageDeSerializer.build(currentMessage,
-            currentMessage.getHeader().getEdge());
-        // if the message is complete, send it further down and call the receiver
         int id = currentMessage.getOriginatingId();
-        Queue<Pair<Object, MPIMessage>> pendingReceiveMessages =
-            pendingReceiveMessagesPerSource.get(id);
-//        receiveCount++;
-//        if (receiveCount % 1 == 0) {
-//          LOG.info(String.format("%d received message %d %d %d",
-//              executor, id, receiveCount, pendingReceiveMessages.size()));
-//        }
-        currentMessage.setReceivedState(MPIMessage.ReceivedState.INIT);
-        if (pendingReceiveMessages.size() > 0) {
-          if (!pendingReceiveMessages.offer(new ImmutablePair<>(object, currentMessage))) {
-            throw new RuntimeException(executor + " We should have enough space: "
-                + pendingReceiveMessages.size());
-          }
-        } else {
-          // we need to increment the ref count here before someone send it to another place
-          // other wise they may free it before we do
-          currentMessage.incrementRefCount();
-          currentMessage.setReceivedState(MPIMessage.ReceivedState.DOWN);
-          // we may need to pass this down to others
-          if (!receiver.passMessageDownstream(object, currentMessage)) {
-            if (!pendingReceiveMessages.offer(new ImmutablePair<>(object, currentMessage))) {
-              throw new RuntimeException(executor + " We should have enough space: "
-                  + pendingReceiveMessages.size());
-            }
-            continue;
-          }
-          // we received a message, we need to determine weather we need to
-          // forward to another node and process
-          // check weather this is a message for partial or final receiver
+
+        //If this is the last receiver we save to memory store
+        if (isStoreBased && isLastReceiver) {
+          writeToMemoryManager(currentMessage);
           currentMessage.setReceivedState(MPIMessage.ReceivedState.RECEIVE);
-          if (!receiver.receiveMessage(currentMessage, object)) {
-            if (!pendingReceiveMessages.offer(new ImmutablePair<>(object, currentMessage))) {
-              throw new RuntimeException(executor + " We should have enough space: "
-                  + pendingReceiveMessages.size());
-            }
+          if (!receiver.receiveMessage(currentMessage, operationMemoryManager)) {
             int attempt = updateAttemptMap(receiveMessageAttempts, id, 1);
-            if (debug && attempt >  MAX_ATTEMPTS) {
+            if (debug && attempt > MAX_ATTEMPTS) {
               LOG.info(String.format("%d Send message internal attempts %d",
                   executor, attempt));
             }
@@ -398,6 +421,58 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
           } else {
             updateAttemptMap(receiveMessageAttempts, id, -1);
           }
+        } else {
+          Object object = messageDeSerializer.build(currentMessage,
+              currentMessage.getHeader().getEdge());
+          // if the message is complete, send it further down and call the receiver
+          //If this is the last receiver then we need to write the data into the memory manager
+
+          Queue<Pair<Object, MPIMessage>> pendingReceiveMessages =
+              pendingReceiveMessagesPerSource.get(id);
+//        receiveCount++;
+//        if (receiveCount % 1 == 0) {
+//          LOG.info(String.format("%d received message %d %d %d",
+//              executor, id, receiveCount, pendingReceiveMessages.size()));
+//        }
+          currentMessage.setReceivedState(MPIMessage.ReceivedState.INIT);
+          if (pendingReceiveMessages.size() > 0) {
+            if (!pendingReceiveMessages.offer(new ImmutablePair<>(object, currentMessage))) {
+              throw new RuntimeException(executor + " We should have enough space: "
+                  + pendingReceiveMessages.size());
+            }
+          } else {
+            // we need to increment the ref count here before someone send it to another place
+            // other wise they may free it before we do
+            currentMessage.incrementRefCount();
+            currentMessage.setReceivedState(MPIMessage.ReceivedState.DOWN);
+            // we may need to pass this down to others
+            if (!receiver.passMessageDownstream(object, currentMessage)) {
+              if (!pendingReceiveMessages.offer(new ImmutablePair<>(object, currentMessage))) {
+                throw new RuntimeException(executor + " We should have enough space: "
+                    + pendingReceiveMessages.size());
+              }
+              continue;
+            }
+            // we received a message, we need to determine weather we need to
+            // forward to another node and process
+            // check weather this is a message for partial or final receiver
+            currentMessage.setReceivedState(MPIMessage.ReceivedState.RECEIVE);
+            if (!receiver.receiveMessage(currentMessage, object)) {
+              if (!pendingReceiveMessages.offer(new ImmutablePair<>(object, currentMessage))) {
+                throw new RuntimeException(executor + " We should have enough space: "
+                    + pendingReceiveMessages.size());
+              }
+              int attempt = updateAttemptMap(receiveMessageAttempts, id, 1);
+              if (debug && attempt > MAX_ATTEMPTS) {
+                LOG.info(String.format("%d Send message internal attempts %d",
+                    executor, attempt));
+              }
+              continue;
+            } else {
+              updateAttemptMap(receiveMessageAttempts, id, -1);
+            }
+          }
+
           // okay lets try to free the buffers of this message
           currentMessage.release();
         }
@@ -454,6 +529,76 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
       }
     } finally {
       lock.unlock();
+    }
+  }
+
+  /**
+   * Serialize the message object and send it to store
+   *
+   * @param mpiSendMessage mpi send message that has information
+   * @param messageObject object to be sent
+   */
+  private boolean serializeAndWriteToMemoryManager(MPISendMessage mpiSendMessage,
+                                                   Object messageObject) {
+    if (isKeyed) {
+      KeyedContent kc = (KeyedContent) messageObject;
+      ByteBuffer keyBuffer = KeySerializer.getserializedKey(kc.getSource(),
+          mpiSendMessage.getSerializationState(), keyType, kryoSerializer);
+      ByteBuffer dataBuffer = DataSerializer.getserializedData(kc.getObject(),
+          type, kryoSerializer);
+      //TODO : need to generate operation key and use it
+      return operationMemoryManager.put(keyBuffer, dataBuffer);
+    } else {
+      //if this is not a keyed operation we will use the source task id as the key
+      //Will be implmented after further looking into the use case
+      int key = mpiSendMessage.getSource();
+      ByteBuffer keyBuffer = ByteBuffer.allocateDirect(Integer.BYTES);
+      keyBuffer.putInt(key);
+      ByteBuffer dataBuffer = DataSerializer.getserializedData(messageObject, type, kryoSerializer);
+      //TODO : need to generate operation key and use it
+      return operationMemoryManager.put(keyBuffer, dataBuffer);
+    }
+  }
+
+  /**
+   * extracts the data from the message and writes to the memory manager using the key
+   *
+   * @param currentMessage message to be parsed
+   */
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  private void writeToMemoryManager(MPIMessage currentMessage) {
+    Object data = messageDeSerializer.getDataBuffers(currentMessage, edge);
+    int sourceID = currentMessage.getHeader().getSourceId();
+    int noOfMessages = 1;
+    boolean isList = false;
+    if (data instanceof List) {
+      noOfMessages = ((List) data).size();
+      isList = true;
+    }
+
+    if (isList) {
+      List objectList = (List) data;
+      for (Object message : objectList) {
+        if (isKeyed) {
+          Pair<ByteBuffer, ByteBuffer> tempPair = (Pair<ByteBuffer, ByteBuffer>) message;
+          operationMemoryManager.append(tempPair.getKey(), tempPair.getValue());
+        } else {
+          ByteBuffer dataBuffer = (ByteBuffer) message;
+          ByteBuffer keyBuffer = ByteBuffer.allocateDirect(Integer.BYTES);
+          keyBuffer.putInt(sourceID);
+          operationMemoryManager.append(keyBuffer, dataBuffer);
+        }
+      }
+    } else {
+      if (isKeyed) {
+        Pair<ByteBuffer, ByteBuffer> tempPair = (Pair<ByteBuffer, ByteBuffer>) data;
+        operationMemoryManager.append(tempPair.getKey(), tempPair.getValue());
+      } else {
+        ByteBuffer dataBuffer = (ByteBuffer) data;
+        ByteBuffer keyBuffer = ByteBuffer.allocateDirect(Integer.BYTES);
+        keyBuffer.putInt(sourceID);
+        operationMemoryManager.append(keyBuffer, dataBuffer);
+      }
     }
   }
 
@@ -556,5 +701,22 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
 
   public void setKeyType(MessageType keyType) {
     this.keyType = keyType;
+    operationMemoryManager.setKeyType(MessageTypeConverter.toDataMessageType(keyType));
+  }
+
+  public int getOpertionID() {
+    return opertionID;
+  }
+
+  public void setOpertionID(int opertionID) {
+    this.opertionID = opertionID;
+  }
+
+  public boolean isStoreBased() {
+    return isStoreBased;
+  }
+
+  public void setStoreBased(boolean storeBased) {
+    isStoreBased = storeBased;
   }
 }

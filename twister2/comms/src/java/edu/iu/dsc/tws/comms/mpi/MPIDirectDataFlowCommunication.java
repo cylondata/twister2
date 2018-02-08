@@ -161,6 +161,11 @@ public class MPIDirectDataFlowCommunication implements DataFlowOperation, MPIMes
     return null;
   }
 
+  @Override
+  public void setMemoryMapped(boolean memoryMapped) {
+    delegete.setStoreBased(memoryMapped);
+  }
+
   private boolean isLastReceiver() {
     return router.isLastReceiver();
   }

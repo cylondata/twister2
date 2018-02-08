@@ -56,7 +56,7 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
 
   private int pathToUse = MPIContext.DEFAULT_PATH;
 
-  private MPIDataFlowOperationMemoryMapped delegete;
+  private MPIDataFlowOperation delegete;
   private TaskPlan instancePlan;
   private int executor;
   private MessageType type;
@@ -104,7 +104,7 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
     this.instancePlan = taskPlan;
     this.isKeyed = true;
 
-    this.delegete = new MPIDataFlowOperationMemoryMapped(channel);
+    this.delegete = new MPIDataFlowOperation(channel);
   }
 
   protected boolean isLast() {
@@ -349,6 +349,11 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
   @Override
   public TaskPlan getTaskPlan() {
     return instancePlan;
+  }
+
+  @Override
+  public void setMemoryMapped(boolean memoryMapped) {
+    delegete.setStoreBased(memoryMapped);
   }
 
   private static class PartialGather implements MessageReceiver {

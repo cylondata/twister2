@@ -217,6 +217,11 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
     return instancePlan;
   }
 
+  @Override
+  public void setMemoryMapped(boolean memoryMapped) {
+    delegete.setStoreBased(memoryMapped);
+  }
+
   private RoutingParameters sendRoutingParameters(int source, int path) {
     RoutingParameters routingParameters = new RoutingParameters();
     int destination = 0;
