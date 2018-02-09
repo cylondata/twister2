@@ -89,8 +89,16 @@ public class TCPChannel {
       helloSendByteBuffers.add(ByteBuffer.allocate(4));
       helloReceiveByteBuffers.add(ByteBuffer.allocate(4));
     }
+
+    for (NetworkInfo ni : workerInfo) {
+      helloSendByteBuffers.add(ByteBuffer.allocate(4));
+      helloReceiveByteBuffers.add(ByteBuffer.allocate(4));
+    }
   }
 
+  /**
+   * Start
+   */
   public void start() {
     String hostName = TCPContext.getHostName(thisInfo);
     int port = TCPContext.getPort(thisInfo);
@@ -127,6 +135,15 @@ public class TCPChannel {
         || (clientsCompleted != networkInfos.size() - 1)) {
       looper.loop();
     }
+
+//    for (int i = 0; i < 2; i++) {
+//      try {
+//        looper.loop();
+//        Thread.sleep(10);
+//      } catch (InterruptedException e) {
+//        e.printStackTrace();
+//      }
+//    }
     LOG.log(Level.INFO, "Everybody connected: " + clientsConnected + " " + clientsCompleted);
   }
 
