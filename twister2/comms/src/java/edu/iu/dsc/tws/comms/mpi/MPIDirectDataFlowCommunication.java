@@ -53,6 +53,7 @@ public class MPIDirectDataFlowCommunication implements DataFlowOperation, MPIMes
     this.sources = srcs;
     this.destination = dest;
     this.finalReceiver = finalRcvr;
+    this.delegete = new MPIDataFlowOperation(channel);
   }
 
   @Override
@@ -111,7 +112,6 @@ public class MPIDirectDataFlowCommunication implements DataFlowOperation, MPIMes
 
     MessageDeSerializer messageDeSerializer = new MPIMessageDeSerializer(kryoSerializer);
     MessageSerializer messageSerializer = new MPIMessageSerializer(kryoSerializer);
-
     delegete.init(cfg, t, taskPlan, edge, router.receivingExecutors(),
         isLastReceiver(), this, pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
         pendingReceiveDeSerializations, messageSerializer, messageDeSerializer, false);
