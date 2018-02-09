@@ -165,6 +165,14 @@ public class TCPChannel {
     server.receive(sc, buffer, 4, -1);
   }
 
+  public void close() {
+    for (Client c : clients.values()) {
+      c.disconnect();
+    }
+
+    server.stop();
+  }
+
   private class ChannelServerMessageHandler implements MessageHandler {
 
     @Override
@@ -245,7 +253,7 @@ public class TCPChannel {
         ByteBuffer buffer = writeRequest.getByteBuffer();
         buffer.clear();
         helloSendByteBuffers.add(buffer);
-        clientsConnected++;
+        clientsCompleted++;
       }
     }
   }
@@ -288,15 +296,32 @@ public class TCPChannel {
       readRequests.add(read);
     }
 
-    for (int i = 0; i < 5; i++) {
-      TCPRequest w = writeRequests.get(i);
-      if (w.isComplete()) {
-        LOG.info("Write complete");
+    int completed = 0;
+    int writeCOmpeted = 0;
+    do {
+      completed = 0;
+      writeCOmpeted = 0;
+      master.progress();
+      for (int i = 0; i < 5; i++) {
+        TCPRequest w = writeRequests.get(i);
+        if (w.isComplete()) {
+          LOG.info("Write complete : " + writeCOmpeted);
+          writeCOmpeted++;
+        }
+        TCPRequest r = readRequests.get(i);
+        if (r.isComplete()) {
+          LOG.info("Read complete : " + completed);
+          completed++;
+        }
       }
-      TCPRequest r = readRequests.get(i);
-      if (r.isComplete()) {
-        LOG.info("Read complete");
-      }
+    } while (completed != 5 || writeCOmpeted != 5);
+
+    try {
+      Thread.sleep(1000);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
     }
+
+    master.close();
   }
 }

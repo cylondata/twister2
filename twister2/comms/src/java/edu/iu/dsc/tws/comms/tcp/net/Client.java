@@ -106,6 +106,8 @@ public class Client implements SelectHandler {
       return;
     }
 
+    channel.forceFlush();
+
     try {
       socketChannel.close();
     } catch (IOException e) {

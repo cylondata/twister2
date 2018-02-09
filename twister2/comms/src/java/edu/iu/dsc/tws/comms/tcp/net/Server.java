@@ -68,6 +68,7 @@ public class Server implements SelectHandler {
     }
     for (Map.Entry<SocketChannel, Channel> connections : connectedChannels.entrySet()) {
       SocketChannel channel = connections.getKey();
+      progress.removeAllInterest(channel);
 
       connections.getValue().clear();
     }

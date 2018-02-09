@@ -94,6 +94,8 @@ public class Channel {
   }
 
   public void clear() {
+    pendingReceives.clear();
+    pendingSends.clear();
   }
 
   public boolean addReadRequest(TCPReadRequest request) {
@@ -258,16 +260,14 @@ public class Channel {
       return -1;
     }
     if (read < 0) {
-      // We encountered an end of stream. report error
-      LOG.severe("channel.read returned negative " + read);
+      LOG.severe("channel read returned negative " + read);
       return read;
     } else {
-      // We read something
       return remaining - read;
     }
   }
 
-  public void forceFlushWithBestEffort() {
+  public void forceFlush() {
     while (!pendingSends.isEmpty()) {
       int writeState = writeRequest(socketChannel, pendingSends.poll());
       if (writeState != 0) {
