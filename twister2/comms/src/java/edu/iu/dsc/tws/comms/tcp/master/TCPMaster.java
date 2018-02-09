@@ -72,16 +72,16 @@ public class TCPMaster {
   public void postReceives() {
     for (SocketChannel ch : connectedChannels) {
       ByteBuffer receiveBuffer = ByteBuffer.allocate(4);
-      server.receive(ch, receiveBuffer, 4, 0);
+      server.receive(ch, receiveBuffer, 4, -1);
     }
   }
 
   private void sendHelloResponse() {
-    for (NetworkInfo info : workerInfoList) {
-      SocketChannel channel = channelIntegerMap.get(info.getProcId());
+    for (NetworkInfo in : workerInfoList) {
+      SocketChannel channel = channelIntegerMap.get(in.getProcId());
       ByteBuffer sendBuffer = ByteBuffer.allocate(4);
       sendBuffer.putInt(0);
-      server.send(channel, sendBuffer, 4, 0);
+      server.send(channel, sendBuffer, 4, -1);
     }
   }
 
@@ -117,6 +117,7 @@ public class TCPMaster {
       channelIntegerMap.put(processNo, channel);
 
       if (channelIntegerMap.keySet().size() == workerInfoList.size()) {
+        LOG.log(Level.INFO, "Received from all the servers, sending responses");
         sendHelloResponse();
       }
     }
@@ -137,7 +138,7 @@ public class TCPMaster {
 
     List<NetworkInfo> list = new ArrayList<>();
     for (int i = 0; i < noOfProcs; i++) {
-      NetworkInfo info = new NetworkInfo(procId);
+      NetworkInfo info = new NetworkInfo(i);
       info.addProperty(TCPContext.NETWORK_HOSTNAME, "localhost");
       info.addProperty(TCPContext.NETWORK_PORT, 8765 + i);
       list.add(info);

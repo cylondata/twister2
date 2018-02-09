@@ -71,9 +71,9 @@ public class TCPWorker {
 
   public void sendAndPost() {
     ByteBuffer byteBuffer = ByteBuffer.allocate(4);
-    masterClient.receive(clientSocketChannel, byteBuffer, 4, 0);
+    masterClient.receive(clientSocketChannel, byteBuffer, 4, -1);
 
-    TCPWriteRequest request = masterClient.send(clientSocketChannel, sendBuffer, 4, 0);
+    TCPWriteRequest request = masterClient.send(clientSocketChannel, sendBuffer, 4, -1);
     if (request == null) {
       LOG.log(Level.WARNING, "Message sending not accepted");
     }
