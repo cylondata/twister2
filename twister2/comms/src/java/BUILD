@@ -43,7 +43,7 @@ java_binary(
     srcs = glob(["**/*.java"]),
     deps = common_deps_files,
     main_class = "edu.iu.dsc.tws.comms.tcp.net.TCPChannel",
-    jvm_flags = ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5006"],
+    jvm_flags = ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5006"],
 )
 
 java_binary(

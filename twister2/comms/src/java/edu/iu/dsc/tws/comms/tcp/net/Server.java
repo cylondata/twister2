@@ -98,7 +98,7 @@ public class Server implements SelectHandler {
       return null;
     }
 
-    TCPReadRequest request = new TCPReadRequest(buffer, edge);
+    TCPReadRequest request = new TCPReadRequest(buffer, edge, size);
     channel.addReadRequest(request);
 
     return request;

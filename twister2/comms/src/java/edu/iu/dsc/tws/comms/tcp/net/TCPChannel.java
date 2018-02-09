@@ -15,6 +15,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -285,39 +286,55 @@ public class TCPChannel {
 
     List<TCPRequest> readRequests = new ArrayList<>();
     List<TCPRequest> writeRequests = new ArrayList<>();
+    final int messages = 5;
     // now lets send 5 messages
-    for (int i = 0; i < 5; i++) {
-      ByteBuffer byteBuffer = ByteBuffer.allocate(128);
-      TCPRequest write = master.iSend(byteBuffer, 128, destProcId, 1);
-      writeRequests.add(write);
-
-      ByteBuffer receiveBuffer = ByteBuffer.allocate(128);
-      TCPRequest read = master.iRecv(receiveBuffer, 128, destProcId, 1);
-      readRequests.add(read);
+    for (int i = 0; i < messages; i++) {
+      if (destProcId == 0) {
+        ByteBuffer byteBuffer = ByteBuffer.allocate(8);
+        byteBuffer.putInt(1);
+        byteBuffer.putInt(2);
+        TCPRequest write = master.iSend(byteBuffer, 8, destProcId, 1);
+        writeRequests.add(write);
+      } else {
+        ByteBuffer receiveBuffer = ByteBuffer.allocate(8);
+        TCPRequest read = master.iRecv(receiveBuffer, 8, destProcId, 1);
+        readRequests.add(read);
+      }
     }
 
     int completed = 0;
     int writeCOmpeted = 0;
     do {
-      completed = 0;
-      writeCOmpeted = 0;
       master.progress();
-      for (int i = 0; i < 5; i++) {
-        TCPRequest w = writeRequests.get(i);
-        if (w.isComplete()) {
-          LOG.info("Write complete : " + writeCOmpeted);
-          writeCOmpeted++;
+      if (destProcId == 0) {
+        Iterator<TCPRequest> wItr = writeRequests.iterator();
+        while (wItr.hasNext()) {
+          TCPRequest w = wItr.next();
+          if (w.isComplete()) {
+            LOG.info("Write complete : " + writeCOmpeted);
+            writeCOmpeted++;
+            wItr.remove();
+          }
         }
-        TCPRequest r = readRequests.get(i);
-        if (r.isComplete()) {
-          LOG.info("Read complete : " + completed);
-          completed++;
+      } else {
+        Iterator<TCPRequest> rItr = readRequests.iterator();
+        while (rItr.hasNext()) {
+          TCPRequest r = rItr.next();
+          if (r.isComplete()) {
+            ByteBuffer buffer = r.getByteBuffer();
+            LOG.info("Size: " + buffer.remaining());
+            int first = buffer.getInt();
+            int second = buffer.getInt();
+            LOG.info("Read complete : " + completed + " " + first + " " + second);
+            completed++;
+            rItr.remove();
+          }
         }
       }
-    } while (completed != 5 || writeCOmpeted != 5);
+    } while (completed != messages && writeCOmpeted != messages);
 
     try {
-      Thread.sleep(1000);
+      Thread.sleep(60000);
     } catch (InterruptedException e) {
       e.printStackTrace();
     }

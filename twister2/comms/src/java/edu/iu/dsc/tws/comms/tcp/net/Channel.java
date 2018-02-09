@@ -80,7 +80,7 @@ public class Channel {
   }
 
   public void read() {
-    LOG.info("Reading from channel: " + socketChannel);
+//    LOG.info("Reading from channel: " + socketChannel);
     while (pendingReceives.size() > 0) {
       TCPReadRequest readRequest = readRequest(socketChannel);
 
@@ -100,10 +100,17 @@ public class Channel {
 
   public boolean addReadRequest(TCPReadRequest request) {
     Queue<TCPReadRequest> readRequests = getReadRequest(request.getEdge());
+    ByteBuffer byteBuffer = request.getByteBuffer();
+    byteBuffer.position(0);
+    byteBuffer.limit(request.getLength());
+
     return readRequests.offer(request);
   }
 
   public boolean addWriteRequest(TCPWriteRequest request) {
+    ByteBuffer byteBuffer = request.getByteBuffer();
+    byteBuffer.position(request.getLength());
+
     return pendingSends.offer(request);
   }
 
@@ -187,8 +194,6 @@ public class Channel {
   }
 
   private TCPReadRequest readRequest(SocketChannel channel) {
-    LOG.log(Level.INFO, "Reading...");
-
     if (readStatus == DataStatus.INIT) {
       readHeader.clear();
       readStatus = DataStatus.HEADER;
@@ -217,7 +222,6 @@ public class Channel {
         }
         readingRequest = readRequests.poll();
         buffer = readingRequest.getByteBuffer();
-        buffer.clear();
         buffer.limit(readSize);
       } else {
         buffer = readingRequest.getByteBuffer();
@@ -228,10 +232,9 @@ public class Channel {
         readSize = 0;
         readEdge = 0;
 
-        TCPReadRequest ret = readingRequest;
         readingRequest = null;
-        writeStatus = DataStatus.INIT;
-
+        readStatus = DataStatus.INIT;
+        LOG.log(Level.SEVERE, "Failed to read");
         // handle the error
         return null;
       } else if (retVal == 0) {
@@ -241,7 +244,7 @@ public class Channel {
 
         TCPReadRequest ret = readingRequest;
         readingRequest = null;
-        writeStatus = DataStatus.INIT;
+        readStatus = DataStatus.INIT;
         return ret;
       } else {
         return null;

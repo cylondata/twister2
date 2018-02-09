@@ -16,9 +16,9 @@ import java.nio.ByteBuffer;
 public class TCPWriteRequest extends TCPRequest {
   private int length;
 
-  TCPWriteRequest(ByteBuffer buffer, int e, int length) {
+  TCPWriteRequest(ByteBuffer buffer, int e, int size) {
     super(buffer, e);
-    this.length = length;
+    this.length = size;
   }
 
   public int getLength() {

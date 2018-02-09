@@ -14,7 +14,14 @@ package edu.iu.dsc.tws.comms.tcp.net;
 import java.nio.ByteBuffer;
 
 public class TCPReadRequest extends TCPRequest {
-  TCPReadRequest(ByteBuffer buffer, int e) {
+  private int length;
+
+  TCPReadRequest(ByteBuffer buffer, int e, int size) {
     super(buffer, e);
+    this.length = size;
+  }
+
+  public int getLength() {
+    return length;
   }
 }
