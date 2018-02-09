@@ -128,6 +128,10 @@ public class TCPMaster {
     }
   }
 
+  public void stop() {
+    server.stop();
+  }
+
   public static void main(String[] args) {
     int noOfProcs = Integer.parseInt(args[1]);
     int procId = Integer.parseInt(args[0]);

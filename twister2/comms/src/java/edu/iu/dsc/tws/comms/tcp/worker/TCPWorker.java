@@ -69,6 +69,10 @@ public class TCPWorker {
     }
   }
 
+  public void stop() {
+    masterClient.disconnect();
+  }
+
   public void sendAndPost() {
     ByteBuffer byteBuffer = ByteBuffer.allocate(4);
     masterClient.receive(clientSocketChannel, byteBuffer, 4, -1);

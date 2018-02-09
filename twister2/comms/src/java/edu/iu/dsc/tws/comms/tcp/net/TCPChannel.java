@@ -30,8 +30,6 @@ public class TCPChannel {
 
   private Server server;
 
-  private TCPWorker worker;
-
   private Map<Integer, Client> clients;
 
   private Progress looper;
@@ -41,8 +39,6 @@ public class TCPChannel {
   private List<NetworkInfo> networkInfos;
 
   private NetworkInfo thisInfo;
-
-  private NetworkInfo masterInfo;
 
   private Map<Integer, NetworkInfo> networkInfoMap;
 
@@ -65,11 +61,10 @@ public class TCPChannel {
   private int clientsCompleted = 0;
   private int clientsConnected = 0;
 
-  public TCPChannel(Config cfg, List<NetworkInfo> workerInfo, NetworkInfo info, NetworkInfo mInfo) {
+  public TCPChannel(Config cfg, List<NetworkInfo> workerInfo, NetworkInfo info) {
     config = cfg;
     networkInfos = workerInfo;
     thisInfo = info;
-    masterInfo = mInfo;
 
     clientChannel = new HashMap<>();
     serverChannel = new HashMap<>();
@@ -99,7 +94,7 @@ public class TCPChannel {
   /**
    * Start
    */
-  public void start() {
+  public void startFirstPhase() {
     String hostName = TCPContext.getHostName(thisInfo);
     int port = TCPContext.getPort(thisInfo);
 
@@ -108,12 +103,9 @@ public class TCPChannel {
     // lets connect to other
     server = new Server(config, hostName, port, looper, new ChannelServerMessageHandler());
     server.start();
+  }
 
-    // now we need to sync the workers to start the servers
-    worker = new TCPWorker(config, masterInfo);
-    worker.start();
-    worker.waitForSync();
-    LOG.log(Level.INFO, "Workers are synced..");
+  public void startSecondPhase() {
     // after sync we need to connect to all the servers
     for (NetworkInfo info : networkInfos) {
       if (info.getProcId() == thisInfo.getProcId()) {
@@ -136,14 +128,6 @@ public class TCPChannel {
       looper.loop();
     }
 
-//    for (int i = 0; i < 2; i++) {
-//      try {
-//        looper.loop();
-//        Thread.sleep(10);
-//      } catch (InterruptedException e) {
-//        e.printStackTrace();
-//      }
-//    }
     LOG.log(Level.INFO, "Everybody connected: " + clientsConnected + " " + clientsCompleted);
   }
 
@@ -183,7 +167,7 @@ public class TCPChannel {
     server.receive(sc, buffer, 4, -1);
   }
 
-  public void close() {
+  public void stop() {
     for (Client c : clients.values()) {
       c.disconnect();
     }
@@ -293,8 +277,15 @@ public class TCPChannel {
     }
 
     TCPChannel master = new TCPChannel(Config.newBuilder().build(), list,
-        list.get(procId), networkInfo);
-    master.start();
+        list.get(procId));
+    master.startFirstPhase();
+
+    TCPWorker worker = new TCPWorker(Config.newBuilder().build(), networkInfo);
+    worker.start();
+    worker.waitForSync();
+    LOG.log(Level.INFO, "Workers are synced..");
+
+    master.startSecondPhase();
 
     int destProcId = 0;
     if (procId == 0) {
@@ -356,6 +347,7 @@ public class TCPChannel {
       e.printStackTrace();
     }
 
-    master.close();
+    worker.stop();
+    master.stop();
   }
 }
