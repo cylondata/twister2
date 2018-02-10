@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.core;
 
+import java.nio.ByteOrder;
+
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 
@@ -18,6 +20,7 @@ public class CommunicationContext extends Context {
   public static final String DATAFLOW_COMMUNICATION_CLASS = "twister2.network.dataflow.class";
   private static final String INTER_NODE_DEGREE = "network.routing.inter.node.degree";
   private static final String INTRA_NODE_DEGREE = "network.routing.intra.node.degree";
+  public static final ByteOrder DEFAULT_BYTEORDER = ByteOrder.BIG_ENDIAN;
 
   public static String communicationClass(Config cfg) {
     return cfg.getStringValue(DATAFLOW_COMMUNICATION_CLASS);

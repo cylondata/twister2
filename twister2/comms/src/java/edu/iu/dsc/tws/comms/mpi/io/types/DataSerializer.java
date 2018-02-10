@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.comms.mpi.io.types;
 
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.mpi.io.SerializeState;
@@ -69,41 +68,39 @@ public final class DataSerializer {
     switch (messageType) {
       case INTEGER:
         int[] intdata = (int[]) content;
-        dataBuffer = ByteBuffer.allocateDirect(intdata.length * 4).order(ByteOrder.nativeOrder());
+        dataBuffer = ByteBuffer.allocateDirect(intdata.length * 4);
         copyIntegers(intdata, dataBuffer);
         return dataBuffer;
       case SHORT:
         short[] shortdata = (short[]) content;
-        dataBuffer = ByteBuffer.allocateDirect(shortdata.length * 2).order(ByteOrder.nativeOrder());
+        dataBuffer = ByteBuffer.allocateDirect(shortdata.length * 2);
         copyShorts(shortdata, dataBuffer);
         return dataBuffer;
       case LONG:
         long[] longdata = (long[]) content;
-        dataBuffer = ByteBuffer.allocateDirect(longdata.length * 8).order(ByteOrder.nativeOrder());
+        dataBuffer = ByteBuffer.allocateDirect(longdata.length * 8);
         copyLongs(longdata, dataBuffer);
         return dataBuffer;
       case DOUBLE:
         double[] doubledata = (double[]) content;
-        dataBuffer = ByteBuffer.allocateDirect(doubledata.length * 8)
-            .order(ByteOrder.nativeOrder());
+        dataBuffer = ByteBuffer.allocateDirect(doubledata.length * 8);
         copyDoubles(doubledata, dataBuffer);
         return dataBuffer;
       case OBJECT:
         byte[] serialize = serializer.serialize(content);
-        dataBuffer = ByteBuffer.allocateDirect(serialize.length + 4).order(ByteOrder.nativeOrder());
+        dataBuffer = ByteBuffer.allocateDirect(serialize.length + 4);
         dataBuffer.putInt(serialize.length);
         dataBuffer.put(serialize);
         return dataBuffer;
       case BYTE:
         byte[] bytedata = (byte[]) content;
-        dataBuffer = ByteBuffer.allocateDirect(bytedata.length + 4).order(ByteOrder.nativeOrder());
+        dataBuffer = ByteBuffer.allocateDirect(bytedata.length + 4);
         dataBuffer.putInt(bytedata.length);
         dataBuffer.put(bytedata);
         return dataBuffer;
       case STRING:
         byte[] stringdata = ((String) content).getBytes(MemoryManagerContext.DEFAULT_CHARSET);
-        dataBuffer = ByteBuffer.allocateDirect(stringdata.length + 4)
-            .order(ByteOrder.nativeOrder());
+        dataBuffer = ByteBuffer.allocateDirect(stringdata.length + 4);
         dataBuffer.putInt(stringdata.length);
         dataBuffer.put(stringdata);
         return dataBuffer;
