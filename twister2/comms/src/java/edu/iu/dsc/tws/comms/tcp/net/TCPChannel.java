@@ -330,7 +330,7 @@ public class TCPChannel {
           TCPRequest r = rItr.next();
           if (r.isComplete()) {
             ByteBuffer buffer = r.getByteBuffer();
-            LOG.info("Size: " + buffer.remaining());
+//            LOG.info("Size: " + buffer.remaining());
             int first = buffer.getInt();
             int second = buffer.getInt();
             LOG.info("Read complete : " + completed + " " + first + " " + second);

@@ -154,6 +154,8 @@ public class Channel {
       writeHeader.putInt(request.getLength());
       writeHeader.putInt(request.getEdge());
       writeHeader.flip();
+      LOG.log(Level.INFO, String.format("WRITE Header %d %d",
+          request.getLength(), request.getEdge()));
     }
 
     if (writeStatus == DataStatus.HEADER) {
@@ -171,6 +173,7 @@ public class Channel {
       if (written < 0) {
         return written;
       } else if (written == 0) {
+        LOG.log(Level.INFO, String.format("WRITE BODY %d", buffer.limit()));
         writeStatus = DataStatus.INIT;
         return written;
       }
@@ -197,6 +200,7 @@ public class Channel {
     if (readStatus == DataStatus.INIT) {
       readHeader.clear();
       readStatus = DataStatus.HEADER;
+      LOG.log(Level.INFO, "READ Header INIT");
     }
 
     if (readStatus == DataStatus.HEADER) {
@@ -211,6 +215,7 @@ public class Channel {
       readSize = readHeader.getInt();
       readEdge = readHeader.getInt();
       readStatus = DataStatus.BODY;
+      LOG.log(Level.INFO, String.format("READ Header %d %d", readSize, readEdge));
     }
 
     if (readStatus == DataStatus.BODY) {
@@ -245,8 +250,10 @@ public class Channel {
         TCPReadRequest ret = readingRequest;
         readingRequest = null;
         readStatus = DataStatus.INIT;
+        LOG.log(Level.INFO, String.format("READ Body %d", buffer.limit()));
         return ret;
       } else {
+        LOG.log(Level.INFO, String.format("READ Body not COMPLETE %d %d", buffer.limit(), retVal));
         return null;
       }
     }
@@ -258,6 +265,7 @@ public class Channel {
     int read;
     try {
       read = channel.read(buffer);
+      LOG.log(Level.INFO, "Read size: " + read);
     } catch (IOException e) {
       LOG.log(Level.SEVERE, "Error in channel.read ", e);
       return -1;

@@ -35,7 +35,7 @@ java_binary(
     srcs = glob(["**/*.java"]),
     deps = common_deps_files,
     main_class = "edu.iu.dsc.tws.comms.tcp.master.TCPMaster",
-    jvm_flags = ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"],
+    jvm_flags = ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005 -Djava.util.logging.config.file=twister2/config/src/yaml/conf/nodesmpi/logger.properties"],
 )
 
 java_binary(
@@ -43,7 +43,7 @@ java_binary(
     srcs = glob(["**/*.java"]),
     deps = common_deps_files,
     main_class = "edu.iu.dsc.tws.comms.tcp.net.TCPChannel",
-    jvm_flags = ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5006"],
+    jvm_flags = ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5006 -Djava.util.logging.config.file=twister2/config/src/yaml/conf/nodesmpi/logger.properties"],
 )
 
 java_binary(
@@ -51,5 +51,5 @@ java_binary(
     srcs = glob(["**/*.java"]),
     deps = common_deps_files,
     main_class = "edu.iu.dsc.tws.comms.tcp.net.TCPChannel",
-    jvm_flags = ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5007"],
+    jvm_flags = ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5007 -Djava.util.logging.config.file=twister2/config/src/yaml/conf/nodesmpi/logger.properties"],
 )
