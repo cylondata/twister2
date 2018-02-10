@@ -196,7 +196,7 @@ public class TCPChannel {
     }
 
     @Override
-    public void onReceiveComplete(SocketChannel channel, TCPReadRequest readRequest) {
+    public void onReceiveComplete(SocketChannel channel, TCPRequest readRequest) {
       if (readRequest.getEdge() == -1) {
         ByteBuffer buffer = readRequest.getByteBuffer();
         int destProc = buffer.getInt();
@@ -212,7 +212,7 @@ public class TCPChannel {
     }
 
     @Override
-    public void onSendComplete(SocketChannel channel, TCPWriteRequest writeRequest) {
+    public void onSendComplete(SocketChannel channel, TCPRequest writeRequest) {
       LOG.log(Level.INFO, "Server send complete");
       writeRequest.setComplete(true);
     }
@@ -242,13 +242,13 @@ public class TCPChannel {
     }
 
     @Override
-    public void onReceiveComplete(SocketChannel channel, TCPReadRequest readRequest) {
+    public void onReceiveComplete(SocketChannel channel, TCPRequest readRequest) {
       LOG.log(Level.INFO, "Client received message");
       readRequest.setComplete(true);
     }
 
     @Override
-    public void onSendComplete(SocketChannel channel, TCPWriteRequest writeRequest) {
+    public void onSendComplete(SocketChannel channel, TCPRequest writeRequest) {
       LOG.log(Level.INFO, "Client send complete");
       writeRequest.setComplete(true);
       if (writeRequest.getEdge() == -1) {

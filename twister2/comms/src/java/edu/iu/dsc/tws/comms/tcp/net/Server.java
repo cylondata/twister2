@@ -80,25 +80,25 @@ public class Server implements SelectHandler {
     }
   }
 
-  public TCPWriteRequest send(SocketChannel sc, ByteBuffer buffer, int size, int edge) {
+  public TCPRequest send(SocketChannel sc, ByteBuffer buffer, int size, int edge) {
     Channel channel = connectedChannels.get(sc);
     if (channel == null) {
       return null;
     }
 
-    TCPWriteRequest request = new TCPWriteRequest(buffer, edge, size);
+    TCPRequest request = new TCPRequest(buffer, edge, size);
     channel.addWriteRequest(request);
 
     return request;
   }
 
-  public TCPReadRequest receive(SocketChannel sc, ByteBuffer buffer, int size, int edge) {
+  public TCPRequest receive(SocketChannel sc, ByteBuffer buffer, int size, int edge) {
     Channel channel = connectedChannels.get(sc);
     if (channel == null) {
       return null;
     }
 
-    TCPReadRequest request = new TCPReadRequest(buffer, edge, size);
+    TCPRequest request = new TCPRequest(buffer, edge, size);
     channel.addReadRequest(request);
 
     return request;
@@ -152,6 +152,7 @@ public class Server implements SelectHandler {
   @Override
   public void handleError(SelectableChannel ch) {
     SocketAddress channelAddress = ((SocketChannel) ch).socket().getRemoteSocketAddress();
+    LOG.log(Level.INFO, "Connection is closed: " + channelAddress);
     Channel channel = connectedChannels.get(ch);
     if (channel == null) {
       LOG.warning("Error occurred in non-existing channel");

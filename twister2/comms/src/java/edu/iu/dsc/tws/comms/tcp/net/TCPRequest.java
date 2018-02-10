@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.comms.tcp.net;
 
 import java.nio.ByteBuffer;
 
-public abstract class TCPRequest {
+public class TCPRequest {
   private final ByteBuffer byteBuffer;
 
   private int position;
@@ -24,12 +24,23 @@ public abstract class TCPRequest {
 
   private boolean complete;
 
+  private int length;
+
   TCPRequest(ByteBuffer buffer, int e) {
     this.byteBuffer = buffer;
     this.edge = e;
     this.position = 0;
     this.status = new TCPStatus();
     this.complete = false;
+  }
+
+  public TCPRequest(ByteBuffer buffer, int e, int l) {
+    this.byteBuffer = buffer;
+    this.edge = e;
+    this.position = 0;
+    this.status = new TCPStatus();
+    this.complete = false;
+    this.length = l;
   }
 
   public TCPStatus testStatus() {
@@ -61,5 +72,9 @@ public abstract class TCPRequest {
 
   public boolean isComplete() {
     return complete;
+  }
+
+  public int getLength() {
+    return length;
   }
 }

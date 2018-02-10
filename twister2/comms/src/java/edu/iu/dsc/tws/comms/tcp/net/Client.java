@@ -66,7 +66,7 @@ public class Client implements SelectHandler {
     return true;
   }
 
-  public TCPWriteRequest send(SocketChannel sc, ByteBuffer buffer, int size, int edge) {
+  public TCPRequest send(SocketChannel sc, ByteBuffer buffer, int size, int edge) {
     if (sc != socketChannel) {
       return null;
     }
@@ -75,13 +75,13 @@ public class Client implements SelectHandler {
       return null;
     }
 
-    TCPWriteRequest request = new TCPWriteRequest(buffer, edge, size);
+    TCPRequest request = new TCPRequest(buffer, edge, size);
     channel.addWriteRequest(request);
 
     return request;
   }
 
-  public TCPReadRequest receive(SocketChannel sc, ByteBuffer buffer, int size, int edge) {
+  public TCPRequest receive(SocketChannel sc, ByteBuffer buffer, int size, int edge) {
     if (sc != socketChannel) {
       return null;
     }
@@ -90,7 +90,7 @@ public class Client implements SelectHandler {
       return null;
     }
 
-    TCPReadRequest request = new TCPReadRequest(buffer, edge, size);
+    TCPRequest request = new TCPRequest(buffer, edge, size);
     channel.addReadRequest(request);
 
     return request;
@@ -105,6 +105,8 @@ public class Client implements SelectHandler {
 
     try {
       socketChannel.close();
+      // we call the onclose with null value
+      messageHandler.onClose(null);
     } catch (IOException e) {
       LOG.log(Level.SEVERE, "Failed to stop Client", e);
     }

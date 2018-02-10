@@ -27,8 +27,7 @@ import edu.iu.dsc.tws.comms.tcp.net.Progress;
 import edu.iu.dsc.tws.comms.tcp.net.Server;
 import edu.iu.dsc.tws.comms.tcp.net.StatusCode;
 import edu.iu.dsc.tws.comms.tcp.net.TCPContext;
-import edu.iu.dsc.tws.comms.tcp.net.TCPReadRequest;
-import edu.iu.dsc.tws.comms.tcp.net.TCPWriteRequest;
+import edu.iu.dsc.tws.comms.tcp.net.TCPRequest;
 
 /**
  * The master process to synchronize the creation of connections
@@ -106,7 +105,7 @@ public class TCPMaster {
     }
 
     @Override
-    public void onReceiveComplete(SocketChannel channel, TCPReadRequest readRequest) {
+    public void onReceiveComplete(SocketChannel channel, TCPRequest readRequest) {
       // read the process no
       ByteBuffer buffer = readRequest.getByteBuffer();
       int processNo = buffer.getInt();
@@ -123,7 +122,7 @@ public class TCPMaster {
     }
 
     @Override
-    public void onSendComplete(SocketChannel channel, TCPWriteRequest writeRequest) {
+    public void onSendComplete(SocketChannel channel, TCPRequest writeRequest) {
 
     }
   }
