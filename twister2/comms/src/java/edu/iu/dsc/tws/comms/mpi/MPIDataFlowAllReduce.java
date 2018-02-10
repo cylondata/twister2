@@ -36,9 +36,6 @@ public class MPIDataFlowAllReduce implements DataFlowOperation {
   // the destination task
   private Set<Integer> destinations;
 
-  // one reduce for each destination
-  private Map<Integer, MPIDataFlowReduce> reduceMap;
-
   // the partial receiver
   private MessageReceiver partialReceiver;
 
@@ -69,7 +66,6 @@ public class MPIDataFlowAllReduce implements DataFlowOperation {
     this.destinations = destination;
     this.partialReceiver = partialRecv;
     this.finalReceiver = finalRecv;
-    this.reduceMap = new HashMap<>();
     this.reduceEdge = redEdge;
     this.broadCastEdge = broadEdge;
     this.middleTask = middleTask;
