@@ -91,8 +91,8 @@ public class MPIDataFlowCommunication extends DataFlowCommunication {
   }
 
   public DataFlowOperation loadBalance(Map<String, Object> properties, MessageType type, int edge,
-                                  Set<Integer> sourceTasks, Set<Integer> destTasks,
-                                  MessageReceiver receiver) {
+                                       Set<Integer> sourceTasks, Set<Integer> destTasks,
+                                       MessageReceiver receiver) {
     // merge with the user specified configuration, user specified will take precedence
     Config mergedCfg = Config.newBuilder().putAll(config).putAll(properties).build();
 
@@ -123,11 +123,11 @@ public class MPIDataFlowCommunication extends DataFlowCommunication {
   }
 
   public DataFlowOperation allReduce(Map<String, Object> properties, MessageType type,
-                                       int edge1, int edge2,
-                                       Set<Integer> sourceTasks, Set<Integer> destTasks,
-                                       int middleTask,
-                                       MessageReceiver receiver,
-                                       MessageReceiver partial) {
+                                     int edge1, int edge2,
+                                     Set<Integer> sourceTasks, Set<Integer> destTasks,
+                                     int middleTask,
+                                     MessageReceiver receiver,
+                                     MessageReceiver partial) {
     // merge with the user specified configuration, user specified will take precedence
     Config mergedCfg = Config.newBuilder().putAll(config).putAll(properties).build();
 
@@ -141,9 +141,9 @@ public class MPIDataFlowCommunication extends DataFlowCommunication {
   }
 
   public DataFlowOperation gather(Map<String, Object> properties, MessageType type,
-                                     int edge1,
-                                     Set<Integer> sourceTasks, int destTask,
-                                     MessageReceiver receiver) {
+                                  int edge1,
+                                  Set<Integer> sourceTasks, int destTask,
+                                  MessageReceiver receiver) {
     // merge with the user specified configuration, user specified will take precedence
     Config mergedCfg = Config.newBuilder().putAll(config).putAll(properties).build();
 
@@ -166,6 +166,23 @@ public class MPIDataFlowCommunication extends DataFlowCommunication {
     // create the dataflow operation
     DataFlowOperation dataFlowOperation = new MPIDataFlowGather(channel,
         sourceTasks, destTask, receiver, 0, 0, mergedCfg, type, keyType, instancePlan, edge1);
+
+    // intialize the operation
+    dataFlowOperation.init(mergedCfg, type, instancePlan, edge1);
+    return dataFlowOperation;
+  }
+
+  @Override
+  public DataFlowOperation gather(Map<String, Object> properties, MessageType type,
+                                  MessageType keyType, int edge1, Set<Integer> sourceTasks,
+                                  int destTask, MessageReceiver receiver,
+                                  MessageReceiver partialRecvr) {
+    // merge with the user specified configuration, user specified will take precedence
+    Config mergedCfg = Config.newBuilder().putAll(config).putAll(properties).build();
+
+    // create the dataflow operation
+    DataFlowOperation dataFlowOperation = new MPIDataFlowGather(channel, sourceTasks, destTask,
+        receiver, partialRecvr, 0, 0, mergedCfg, type, keyType, instancePlan, edge1);
 
     // intialize the operation
     dataFlowOperation.init(mergedCfg, type, instancePlan, edge1);

@@ -26,12 +26,12 @@ public interface TWSCommunication {
   void progress();
 
   DataFlowOperation reduce(Map<String, Object> properties, MessageType type, int edge,
-                            Set<Integer> sourceTasks, int destTask,
-                            MessageReceiver reduceReceiver, MessageReceiver partialReceiver);
+                           Set<Integer> sourceTasks, int destTask,
+                           MessageReceiver reduceReceiver, MessageReceiver partialReceiver);
 
   DataFlowOperation broadCast(Map<String, Object> properties, MessageType type, int edge,
-                               int sourceTask, Set<Integer> destTasks,
-                               MessageReceiver receiver);
+                              int sourceTask, Set<Integer> destTasks,
+                              MessageReceiver receiver);
 
   DataFlowOperation direct(Map<String, Object> properties, MessageType type, int edge,
                            Set<Integer> sourceTasks, int destTask,
@@ -46,11 +46,11 @@ public interface TWSCommunication {
                                 MultiMessageReceiver receiver, MultiMessageReceiver partial);
 
   DataFlowOperation allReduce(Map<String, Object> properties, MessageType type,
-                                int edge1, int edge2,
-                                Set<Integer> sourceTasks, Set<Integer> destTasks,
-                                int middleTask,
-                                MessageReceiver receiver,
-                                MessageReceiver partial);
+                              int edge1, int edge2,
+                              Set<Integer> sourceTasks, Set<Integer> destTasks,
+                              int middleTask,
+                              MessageReceiver receiver,
+                              MessageReceiver partial);
 
   DataFlowOperation gather(Map<String, Object> properties, MessageType type,
                            int edge1,
@@ -61,6 +61,12 @@ public interface TWSCommunication {
                            MessageType keyType, int edge1,
                            Set<Integer> sourceTasks, int destTask,
                            MessageReceiver receiver);
+
+  DataFlowOperation gather(Map<String, Object> properties, MessageType type,
+                           MessageType keyType, int edge1,
+                           Set<Integer> sourceTasks, int destTask,
+                           MessageReceiver receiver,
+                           MessageReceiver partialRecvr);
 
   DataFlowOperation gather(Map<String, Object> properties, MessageType type,
                            int edge1,

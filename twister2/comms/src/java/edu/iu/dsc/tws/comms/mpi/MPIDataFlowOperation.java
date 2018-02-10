@@ -710,7 +710,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
       //TODO : need to load this from config file, both the type of memory manager and the datapath
       //TODO : need to make the memory manager available globally
       opertionID = (int) System.currentTimeMillis();
-      Path dataPath = new Path("/home/vibhatha/work/twister2/lmdbdatabase");
+      Path dataPath = new Path("/home/pulasthi/work/twister2/lmdbdatabase");
       this.memoryManager = new LMDBMemoryManager(dataPath);
       if (!isKeyed) {
         this.operationMemoryManager = memoryManager.addOperation(opertionID,

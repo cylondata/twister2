@@ -13,6 +13,8 @@ package edu.iu.dsc.tws.comms.mpi;
 
 import java.nio.ByteBuffer;
 
+import edu.iu.dsc.tws.comms.core.CommunicationContext;
+
 import mpi.MPI;
 
 public class MPIBuffer {
@@ -23,6 +25,7 @@ public class MPIBuffer {
   public MPIBuffer(int capacity) {
     this.capacity = capacity;
     this.byteBuffer = MPI.newByteBuffer(capacity);
+    this.byteBuffer.order(CommunicationContext.DEFAULT_BYTEORDER);
   }
 
   public void setSize(int size) {
