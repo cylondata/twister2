@@ -130,10 +130,6 @@ public class Server implements SelectHandler {
       SocketChannel socketChannel = serverSocketChannel.accept();
       if (socketChannel != null) {
         socketChannel.configureBlocking(false);
-        socketChannel.socket().setSendBufferSize(
-            TCPContext.getSocketSendBufferSize(config, 1024));
-        socketChannel.socket().setReceiveBufferSize(
-            TCPContext.getSocketReceivedBufferSize(config, 1024));
         socketChannel.socket().setTcpNoDelay(true);
 
         Channel channel = new Channel(config, progress, this, socketChannel, messageHandler);

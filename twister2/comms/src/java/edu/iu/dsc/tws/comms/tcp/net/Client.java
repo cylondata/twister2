@@ -50,12 +50,7 @@ public class Client implements SelectHandler {
     try {
       socketChannel = SocketChannel.open();
       socketChannel.configureBlocking(false);
-
       socketChannel.socket().setTcpNoDelay(true);
-      socketChannel.socket().setSendBufferSize(
-          TCPContext.getSocketSendBufferSize(config, 1024));
-      socketChannel.socket().setReceiveBufferSize(
-          TCPContext.getSocketReceivedBufferSize(config, 1024));
 
       LOG.log(Level.INFO, "Connecting to endpoint: " + address);
       if (socketChannel.connect(address)) {
