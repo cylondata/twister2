@@ -29,6 +29,7 @@ import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.mpi.io.MPIMultiMessageDeserializer;
 import edu.iu.dsc.tws.comms.mpi.io.MPIMultiMessageSerializer;
@@ -63,7 +64,7 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
   private MessageType keyType;
   private boolean isKeyed;
 
-  public MPIDataFlowGather(TWSMPIChannel channel, Set<Integer> sources, int destination,
+  public MPIDataFlowGather(TWSChannel channel, Set<Integer> sources, int destination,
                            MessageReceiver finalRcvr,
                            int indx, int p,
                            Config cfg, MessageType t, TaskPlan taskPlan, int edge) {
@@ -71,7 +72,7 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
         indx, p, cfg, t, taskPlan, edge);
   }
 
-  public MPIDataFlowGather(TWSMPIChannel channel, Set<Integer> sources, int destination,
+  public MPIDataFlowGather(TWSChannel channel, Set<Integer> sources, int destination,
                            MessageReceiver finalRcvr,
                            int indx, int p,
                            Config cfg, MessageType t, MessageType keyType,
@@ -81,7 +82,7 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
     this.isKeyed = true;
   }
 
-  public MPIDataFlowGather(TWSMPIChannel channel, Set<Integer> sources, int destination,
+  public MPIDataFlowGather(TWSChannel channel, Set<Integer> sources, int destination,
                            MessageReceiver finalRcvr,
                            MessageReceiver partialRcvr, int indx, int p,
                            Config cfg, MessageType t, TaskPlan taskPlan, int edge) {
@@ -90,7 +91,7 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
     this.isKeyed = false;
   }
 
-  public MPIDataFlowGather(TWSMPIChannel channel, Set<Integer> sources, int destination,
+  public MPIDataFlowGather(TWSChannel channel, Set<Integer> sources, int destination,
                            MessageReceiver finalRcvr,
                            MessageReceiver partialRcvr, int indx, int p,
                            Config cfg, MessageType t, MessageType kt, TaskPlan taskPlan, int edge) {

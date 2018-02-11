@@ -25,6 +25,7 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.mpi.io.MPIMessageDeSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.MPIMessageSerializer;
@@ -47,7 +48,7 @@ public class MPIDirectDataFlowCommunication implements DataFlowOperation, MPIMes
   private TaskPlan instancePlan;
   private int executor;
 
-  public MPIDirectDataFlowCommunication(TWSMPIChannel channel,
+  public MPIDirectDataFlowCommunication(TWSChannel channel,
                                         Set<Integer> srcs, int dest,
                                         MessageReceiver finalRcvr) {
     this.sources = srcs;

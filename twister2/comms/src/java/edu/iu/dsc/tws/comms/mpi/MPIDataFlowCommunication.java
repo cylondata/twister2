@@ -21,6 +21,7 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.MultiMessageReceiver;
+import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.DataFlowCommunication;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 
@@ -29,7 +30,7 @@ import mpi.MPI;
 public class MPIDataFlowCommunication extends DataFlowCommunication {
   private static final Logger LOG = Logger.getLogger(MPIDataFlowCommunication.class.getName());
 
-  private TWSMPIChannel channel;
+  private TWSChannel channel;
 
   @Override
   public void init(Config cfg, TaskPlan taskPlan) {
