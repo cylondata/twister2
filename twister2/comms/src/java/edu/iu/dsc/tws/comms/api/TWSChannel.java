@@ -29,7 +29,7 @@ import edu.iu.dsc.tws.comms.mpi.MPIBuffer;
 import edu.iu.dsc.tws.comms.mpi.MPIMessage;
 import edu.iu.dsc.tws.comms.mpi.MPIMessageListener;
 
-public interface NetChannel {
+public interface TWSChannel {
   boolean sendMessage(int id, MPIMessage message, MPIMessageListener callback);
 
   boolean receiveMessage(int rank, int stream,

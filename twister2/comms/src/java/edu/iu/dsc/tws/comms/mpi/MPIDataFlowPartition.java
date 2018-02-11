@@ -27,7 +27,6 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.api.MessagingMode;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.mpi.io.MPIMessageDeSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.MPIMessageSerializer;
@@ -47,7 +46,6 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
   }
 
   private PartitionStratergy partitionStratergy;
-  private MessagingMode messagingMode;
 
   private Set<Integer> sources;
   private Set<Integer> destinations;
@@ -90,10 +88,6 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
     }
 
     this.finalReceiver = finalRcvr;
-  }
-
-  protected void setupRouting() {
-
   }
 
   @Override

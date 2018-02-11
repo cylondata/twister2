@@ -22,7 +22,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.NetChannel;
+import edu.iu.dsc.tws.comms.api.TWSChannel;
 
 import mpi.Intracomm;
 import mpi.MPI;
@@ -36,7 +36,7 @@ import mpi.Status;
  * The transport threads doesn't handle the message serialization and it is left to the
  * application level.
  */
-public class TWSMPIChannel implements NetChannel {
+public class TWSMPIChannel implements TWSChannel {
   private static final Logger LOG = Logger.getLogger(TWSMPIChannel.class.getName());
 
   // a lock object to be used
