@@ -30,6 +30,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.mpi.io.KeyedContent;
 import edu.iu.dsc.tws.comms.mpi.io.MessageDeSerializer;
@@ -54,7 +55,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
 
   protected int edge;
   // the router that gives us the possible routes
-  protected TWSMPIChannel channel;
+  protected TWSChannel channel;
   protected MessageDeSerializer messageDeSerializer;
   protected MessageSerializer messageSerializer;
   // we may have multiple routes throughus
@@ -126,7 +127,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
 
   private boolean isStoreBased = false;
 
-  public MPIDataFlowOperation(TWSMPIChannel channel) {
+  public MPIDataFlowOperation(TWSChannel channel) {
     this.channel = channel;
   }
 

@@ -27,6 +27,7 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.mpi.io.MPIMessageDeSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.MPIMessageSerializer;
@@ -73,7 +74,7 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
     List<Integer> external = new ArrayList<>();
   }
 
-  public MPIDataFlowPartition(TWSMPIChannel channel, Set<Integer> srcs,
+  public MPIDataFlowPartition(TWSChannel channel, Set<Integer> srcs,
                               Set<Integer> dests, MessageReceiver finalRcvr,
                               PartitionStratergy stratergy) {
     this.sources = srcs;

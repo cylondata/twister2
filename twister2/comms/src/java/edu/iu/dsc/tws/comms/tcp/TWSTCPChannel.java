@@ -106,11 +106,12 @@ public class TWSTCPChannel implements TWSChannel {
 
   private TCPChannel comm;
 
-  public TWSTCPChannel(Config config, int exec) {
+  public TWSTCPChannel(Config config, int exec, TCPChannel net) {
     this.pendingSends = new ArrayBlockingQueue<TCPSendRequests>(1024);
     this.registeredReceives = Collections.synchronizedList(new ArrayList<>(1024));
     this.waitForCompletionSends = Collections.synchronizedList(new ArrayList<>(1024));
     this.executor = exec;
+    this.comm = net;
   }
 
   /**

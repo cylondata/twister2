@@ -22,6 +22,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 
 public class MPIDataFlowAllReduce implements DataFlowOperation {
@@ -42,7 +43,7 @@ public class MPIDataFlowAllReduce implements DataFlowOperation {
   // the final receiver
   private MessageReceiver finalReceiver;
 
-  private TWSMPIChannel channel;
+  private TWSChannel channel;
 
   private int executor;
 
@@ -56,7 +57,7 @@ public class MPIDataFlowAllReduce implements DataFlowOperation {
 
   private TaskPlan taskPlan;
 
-  public MPIDataFlowAllReduce(TWSMPIChannel chnl,
+  public MPIDataFlowAllReduce(TWSChannel chnl,
                               Set<Integer> sources, Set<Integer> destination, int middleTask,
                               MessageReceiver finalRecv,
                               MessageReceiver partialRecv,
