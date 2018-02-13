@@ -23,6 +23,8 @@ package edu.iu.dsc.tws.rsched.bootstrap;
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Objects;
 import java.util.logging.Logger;
 
@@ -43,6 +45,23 @@ public class WorkerInfo {
 
   public int getWorkerID() {
     return workerID;
+  }
+
+  public InetAddress getWorkerIP() {
+
+    String ipStr = workerName.substring(0, workerName.indexOf(":"));
+    try {
+      InetAddress ip = InetAddress.getByName(ipStr);
+      return ip;
+    } catch (UnknownHostException e) {
+      e.printStackTrace();
+      return null;
+    }
+  }
+
+  public int getWorkerPort() {
+    String portStr = workerName.substring(workerName.indexOf(":") + 1);
+    return Integer.parseInt(portStr);
   }
 
   public byte[] getWorkerIDAsBytes() {

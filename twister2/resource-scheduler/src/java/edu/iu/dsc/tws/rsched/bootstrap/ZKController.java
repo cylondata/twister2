@@ -249,6 +249,8 @@ public class ZKController {
 
     for (WorkerInfo worker: workers) {
       System.out.println(worker);
+//      System.out.println(worker.getWorkerIP().getHostAddress()
+//          + ":" + worker.getWorkerPort() + ":" + worker.getWorkerID());
     }
   }
 
