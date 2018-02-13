@@ -13,9 +13,9 @@ package edu.iu.dsc.tws.task.api;
 
 public interface ITaskStatGen {
 
-  public TaskStats getTaskQueueStat();
-  public TaskStats getSimpleTaskStat();
-  public TaskStats getMultiTaskStat();
-  public TaskStats getSimpleTaskGraphStat();
+  TaskStats getTaskQueueStat();
+  TaskStats getSimpleTaskStat();
+  TaskStats getMultiTaskStat();
+  TaskStats getSimpleTaskGraphStat();
 
 }
