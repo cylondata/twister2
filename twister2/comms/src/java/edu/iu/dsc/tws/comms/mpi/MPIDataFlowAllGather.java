@@ -22,6 +22,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 
 public class MPIDataFlowAllGather implements DataFlowOperation {
@@ -42,7 +43,7 @@ public class MPIDataFlowAllGather implements DataFlowOperation {
   // the final receiver
   private MessageReceiver finalReceiver;
 
-  private TWSMPIChannel channel;
+  private TWSChannel channel;
 
   private int executor;
 
@@ -52,7 +53,7 @@ public class MPIDataFlowAllGather implements DataFlowOperation {
 
   private int broadCastEdge;
 
-  public MPIDataFlowAllGather(TWSMPIChannel chnl,
+  public MPIDataFlowAllGather(TWSChannel chnl,
                               Set<Integer> sources, Set<Integer> destination, int middleTask,
                               MessageReceiver finalRecv,
                               MessageReceiver partialRecv,
@@ -129,6 +130,12 @@ public class MPIDataFlowAllGather implements DataFlowOperation {
   @Override
   public TaskPlan getTaskPlan() {
     return null;
+  }
+
+  @Override
+  public void setMemoryMapped(boolean memoryMapped) {
+    reduce.setMemoryMapped(memoryMapped);
+    broadcast.setMemoryMapped(memoryMapped);
   }
 
   private class ReduceFinalReceiver implements MessageReceiver {

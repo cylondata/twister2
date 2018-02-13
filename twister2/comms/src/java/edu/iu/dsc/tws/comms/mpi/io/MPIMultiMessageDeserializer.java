@@ -94,7 +94,6 @@ public class MPIMultiMessageDeserializer implements MessageDeSerializer {
 
   @Override
   public Object getDataBuffers(Object partialObject, int edge) {
-    //TODO:
     MPIMessage currentMessage = (MPIMessage) partialObject;
     int readLength = 0;
     int bufferIndex = 0;
@@ -137,6 +136,7 @@ public class MPIMultiMessageDeserializer implements MessageDeSerializer {
     }
     return returnList;
   }
+
   public Object getSingleDataBuffers(MPIMessage mpiMessage, List<MPIBuffer> message, int length) {
     MessageType type = mpiMessage.getType();
 

@@ -68,6 +68,7 @@ public class Server implements SelectHandler {
     }
     for (Map.Entry<SocketChannel, Channel> connections : connectedChannels.entrySet()) {
       SocketChannel channel = connections.getKey();
+      progress.removeAllInterest(channel);
 
       connections.getValue().clear();
     }
@@ -79,25 +80,25 @@ public class Server implements SelectHandler {
     }
   }
 
-  public TCPWriteRequest send(SocketChannel sc, ByteBuffer buffer, int size, int edge) {
+  public TCPRequest send(SocketChannel sc, ByteBuffer buffer, int size, int edge) {
     Channel channel = connectedChannels.get(sc);
     if (channel == null) {
       return null;
     }
 
-    TCPWriteRequest request = new TCPWriteRequest(buffer, edge, size);
+    TCPRequest request = new TCPRequest(buffer, edge, size);
     channel.addWriteRequest(request);
 
     return request;
   }
 
-  public TCPReadRequest receive(SocketChannel sc, ByteBuffer buffer, int size, int edge) {
+  public TCPRequest receive(SocketChannel sc, ByteBuffer buffer, int size, int edge) {
     Channel channel = connectedChannels.get(sc);
     if (channel == null) {
       return null;
     }
 
-    TCPReadRequest request = new TCPReadRequest(buffer, edge);
+    TCPRequest request = new TCPRequest(buffer, edge, size);
     channel.addReadRequest(request);
 
     return request;
@@ -129,14 +130,14 @@ public class Server implements SelectHandler {
       SocketChannel socketChannel = serverSocketChannel.accept();
       if (socketChannel != null) {
         socketChannel.configureBlocking(false);
-        socketChannel.socket().setSendBufferSize(
-            TCPContext.getSocketSendBufferSize(config, 1024));
-        socketChannel.socket().setReceiveBufferSize(
-            TCPContext.getSocketReceivedBufferSize(config, 1024));
         socketChannel.socket().setTcpNoDelay(true);
 
         Channel channel = new Channel(config, progress, this, socketChannel, messageHandler);
+        channel.enableReading();
+        channel.enableWriting();
         connectedChannels.put(socketChannel, channel);
+
+        messageHandler.onConnect(socketChannel, StatusCode.SUCCESS);
       }
     } catch (IOException e) {
       LOG.log(Level.SEVERE, "Error while accepting a new connection ", e);
@@ -151,6 +152,7 @@ public class Server implements SelectHandler {
   @Override
   public void handleError(SelectableChannel ch) {
     SocketAddress channelAddress = ((SocketChannel) ch).socket().getRemoteSocketAddress();
+    LOG.log(Level.INFO, "Connection is closed: " + channelAddress);
     Channel channel = connectedChannels.get(ch);
     if (channel == null) {
       LOG.warning("Error occurred in non-existing channel");

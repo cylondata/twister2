@@ -27,9 +27,9 @@ import edu.iu.dsc.tws.common.config.Config;
 public class Channel {
   private static final Logger LOG = Logger.getLogger(Channel.class.getName());
 
-  private Queue<TCPWriteRequest> pendingSends;
+  private Queue<TCPRequest> pendingSends;
 
-  private Map<Integer, Queue<TCPReadRequest>> pendingReceives;
+  private Map<Integer, Queue<TCPRequest>> pendingReceives;
 
   private final SocketChannel socketChannel;
 
@@ -41,7 +41,7 @@ public class Channel {
 
   private ByteBuffer writeHeader;
 
-  private TCPReadRequest readingRequest;
+  private TCPRequest readingRequest;
 
   private int readEdge;
 
@@ -80,8 +80,9 @@ public class Channel {
   }
 
   public void read() {
+//    LOG.info("Reading from channel: " + socketChannel);
     while (pendingReceives.size() > 0) {
-      TCPReadRequest readRequest = readRequest(socketChannel);
+      TCPRequest readRequest = readRequest(socketChannel);
 
       if (readRequest != null) {
         readRequest.setComplete(true);
@@ -93,20 +94,29 @@ public class Channel {
   }
 
   public void clear() {
+    pendingReceives.clear();
+    pendingSends.clear();
   }
 
-  public boolean addReadRequest(TCPReadRequest request) {
-    Queue<TCPReadRequest> readRequests = getReadRequest(request.getEdge());
+  public boolean addReadRequest(TCPRequest request) {
+    Queue<TCPRequest> readRequests = getReadRequest(request.getEdge());
+    ByteBuffer byteBuffer = request.getByteBuffer();
+    byteBuffer.position(0);
+    byteBuffer.limit(request.getLength());
+
     return readRequests.offer(request);
   }
 
-  public boolean addWriteRequest(TCPWriteRequest request) {
+  public boolean addWriteRequest(TCPRequest request) {
+    ByteBuffer byteBuffer = request.getByteBuffer();
+    byteBuffer.position(request.getLength());
+
     return pendingSends.offer(request);
   }
 
   public void write() {
     while (pendingSends.size() > 0) {
-      TCPWriteRequest writeRequest = pendingSends.peek();
+      TCPRequest writeRequest = pendingSends.peek();
       if (writeRequest == null) {
         break;
       }
@@ -119,6 +129,7 @@ public class Channel {
         selectHandler.handleError(socketChannel);
         return;
       } else {
+        LOG.log(Level.INFO, "Send complete");
         // remove the request
         pendingSends.poll();
         writeRequest.setComplete(true);
@@ -127,22 +138,24 @@ public class Channel {
       }
     }
 
-    if (pendingSends.size() == 0) {
-      disableWriting();
-    }
+//    if (pendingSends.size() == 0) {
+//      disableWriting();
+//    }
   }
 
-  private int writeRequest(SocketChannel channel, TCPWriteRequest request) {
+  private int writeRequest(SocketChannel channel, TCPRequest request) {
     ByteBuffer buffer = request.getByteBuffer();
     int written = 0;
     if (writeStatus == DataStatus.INIT) {
       // lets flip the buffer
-      buffer.flip();
       writeHeader.clear();
       writeStatus = DataStatus.HEADER;
 
       writeHeader.putInt(request.getLength());
       writeHeader.putInt(request.getEdge());
+      writeHeader.flip();
+      LOG.log(Level.INFO, String.format("WRITE Header %d %d",
+          request.getLength(), request.getEdge()));
     }
 
     if (writeStatus == DataStatus.HEADER) {
@@ -155,10 +168,12 @@ public class Channel {
     }
 
     if (writeStatus == DataStatus.BODY) {
-      written = writeToChannel(channel, request.getByteBuffer());
+      buffer.flip();
+      written = writeToChannel(channel, buffer);
       if (written < 0) {
         return written;
       } else if (written == 0) {
+        LOG.log(Level.INFO, String.format("WRITE BODY %d", buffer.limit()));
         writeStatus = DataStatus.INIT;
         return written;
       }
@@ -173,6 +188,7 @@ public class Channel {
     int wrote = 0;
     try {
       wrote = channel.write(buffer);
+      LOG.info("Wrote " + wrote);
     } catch (IOException e) {
       LOG.log(Level.SEVERE, "Error writing to channel ", e);
       return -1;
@@ -180,10 +196,11 @@ public class Channel {
     return remaining - wrote;
   }
 
-  private TCPReadRequest readRequest(SocketChannel channel) {
+  private TCPRequest readRequest(SocketChannel channel) {
     if (readStatus == DataStatus.INIT) {
       readHeader.clear();
       readStatus = DataStatus.HEADER;
+      LOG.log(Level.INFO, "READ Header INIT");
     }
 
     if (readStatus == DataStatus.HEADER) {
@@ -198,18 +215,18 @@ public class Channel {
       readSize = readHeader.getInt();
       readEdge = readHeader.getInt();
       readStatus = DataStatus.BODY;
+      LOG.log(Level.INFO, String.format("READ Header %d %d", readSize, readEdge));
     }
 
     if (readStatus == DataStatus.BODY) {
       ByteBuffer buffer;
       if (readingRequest == null) {
-        Queue<TCPReadRequest> readRequests = getReadRequest(readEdge);
+        Queue<TCPRequest> readRequests = getReadRequest(readEdge);
         if (readRequests.size() == 0) {
           return null;
         }
         readingRequest = readRequests.poll();
         buffer = readingRequest.getByteBuffer();
-        buffer.clear();
         buffer.limit(readSize);
       } else {
         buffer = readingRequest.getByteBuffer();
@@ -220,21 +237,23 @@ public class Channel {
         readSize = 0;
         readEdge = 0;
 
-        TCPReadRequest ret = readingRequest;
         readingRequest = null;
-        writeStatus = DataStatus.INIT;
-
+        readStatus = DataStatus.INIT;
+        LOG.log(Level.SEVERE, "Failed to read");
         // handle the error
         return null;
       } else if (retVal == 0) {
         readSize = 0;
         readEdge = 0;
+        buffer.flip();
 
-        TCPReadRequest ret = readingRequest;
+        TCPRequest ret = readingRequest;
         readingRequest = null;
-        writeStatus = DataStatus.INIT;
+        readStatus = DataStatus.INIT;
+        LOG.log(Level.INFO, String.format("READ Body %d", buffer.limit()));
         return ret;
       } else {
+        LOG.log(Level.INFO, String.format("READ Body not COMPLETE %d %d", buffer.limit(), retVal));
         return null;
       }
     }
@@ -246,21 +265,20 @@ public class Channel {
     int read;
     try {
       read = channel.read(buffer);
+      LOG.log(Level.INFO, "Read size: " + read);
     } catch (IOException e) {
       LOG.log(Level.SEVERE, "Error in channel.read ", e);
       return -1;
     }
     if (read < 0) {
-      // We encountered an end of stream. report error
-      LOG.severe("channel.read returned negative " + read);
+      LOG.log(Level.SEVERE, "channel read returned negative " + read);
       return read;
     } else {
-      // We read something
       return remaining - read;
     }
   }
 
-  public void forceFlushWithBestEffort() {
+  public void forceFlush() {
     while (!pendingSends.isEmpty()) {
       int writeState = writeRequest(socketChannel, pendingSends.poll());
       if (writeState != 0) {
@@ -301,8 +319,8 @@ public class Channel {
     }
   }
 
-  private Queue<TCPReadRequest> getReadRequest(int e) {
-    Queue<TCPReadRequest> readRequests = pendingReceives.get(e);
+  private Queue<TCPRequest> getReadRequest(int e) {
+    Queue<TCPRequest> readRequests = pendingReceives.get(e);
     if (readRequests == null) {
       readRequests = new ArrayBlockingQueue<>(1024);
       pendingReceives.put(e, readRequests);

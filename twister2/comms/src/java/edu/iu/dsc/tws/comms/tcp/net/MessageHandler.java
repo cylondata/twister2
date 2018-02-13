@@ -20,7 +20,7 @@ public interface MessageHandler {
 
   void onClose(SocketChannel channel);
 
-  void onReceiveComplete(SocketChannel channel, TCPReadRequest readRequest);
+  void onReceiveComplete(SocketChannel channel, TCPRequest readRequest);
 
-  void onSendComplete(SocketChannel channel, TCPWriteRequest writeRequest);
+  void onSendComplete(SocketChannel channel, TCPRequest writeRequest);
 }

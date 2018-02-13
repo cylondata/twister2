@@ -27,8 +27,7 @@ import edu.iu.dsc.tws.comms.tcp.net.Progress;
 import edu.iu.dsc.tws.comms.tcp.net.Server;
 import edu.iu.dsc.tws.comms.tcp.net.StatusCode;
 import edu.iu.dsc.tws.comms.tcp.net.TCPContext;
-import edu.iu.dsc.tws.comms.tcp.net.TCPReadRequest;
-import edu.iu.dsc.tws.comms.tcp.net.TCPWriteRequest;
+import edu.iu.dsc.tws.comms.tcp.net.TCPRequest;
 
 /**
  * The master process to synchronize the creation of connections
@@ -48,6 +47,8 @@ public class TCPMaster {
 
   private Map<Integer, SocketChannel> channelIntegerMap = new HashMap<>();
 
+  private List<SocketChannel> connectedChannels = new ArrayList<>();
+
   public TCPMaster(Config cfg, List<NetworkInfo> infoList, NetworkInfo netInfo) {
     this.config = cfg;
     this.thisNetworkInfo = netInfo;
@@ -62,27 +63,24 @@ public class TCPMaster {
     server = new Server(config, hostName, port, progress, new ServerEventHandler());
     server.start();
 
-    postReceives();
-
     while (true) {
       progress.loop();
     }
   }
 
   public void postReceives() {
-    for (NetworkInfo info : workerInfoList) {
-      SocketChannel channel = channelIntegerMap.get(info.getProcId());
+    for (SocketChannel ch : connectedChannels) {
       ByteBuffer receiveBuffer = ByteBuffer.allocate(4);
-      server.send(channel, receiveBuffer, 4, 0);
+      server.receive(ch, receiveBuffer, 4, -1);
     }
   }
 
   private void sendHelloResponse() {
-    for (NetworkInfo info : workerInfoList) {
-      SocketChannel channel = channelIntegerMap.get(info.getProcId());
+    for (NetworkInfo in : workerInfoList) {
+      SocketChannel channel = channelIntegerMap.get(in.getProcId());
       ByteBuffer sendBuffer = ByteBuffer.allocate(4);
       sendBuffer.putInt(0);
-      server.send(channel, sendBuffer, 4, 0);
+      server.send(channel, sendBuffer, 4, -1);
     }
   }
 
@@ -95,6 +93,10 @@ public class TCPMaster {
     @Override
     public void onConnect(SocketChannel channel, StatusCode status) {
       LOG.log(Level.INFO, "Connected : " + channel);
+      connectedChannels.add(channel);
+      if (connectedChannels.size() == workerInfoList.size()) {
+        postReceives();
+      }
     }
 
     @Override
@@ -103,24 +105,30 @@ public class TCPMaster {
     }
 
     @Override
-    public void onReceiveComplete(SocketChannel channel, TCPReadRequest readRequest) {
+    public void onReceiveComplete(SocketChannel channel, TCPRequest readRequest) {
       // read the process no
       ByteBuffer buffer = readRequest.getByteBuffer();
       int processNo = buffer.getInt();
+      LOG.log(Level.INFO, "Receive complete from: " + processNo);
       if (channelIntegerMap.containsKey(processNo)) {
         LOG.log(Level.WARNING, String.format("Already received worker id from %d", processNo));
       }
       channelIntegerMap.put(processNo, channel);
 
       if (channelIntegerMap.keySet().size() == workerInfoList.size()) {
+        LOG.log(Level.INFO, "Received from all the servers, sending responses");
         sendHelloResponse();
       }
     }
 
     @Override
-    public void onSendComplete(SocketChannel channel, TCPWriteRequest writeRequest) {
+    public void onSendComplete(SocketChannel channel, TCPRequest writeRequest) {
 
     }
+  }
+
+  public void stop() {
+    server.stop();
   }
 
   public static void main(String[] args) {
@@ -133,7 +141,7 @@ public class TCPMaster {
 
     List<NetworkInfo> list = new ArrayList<>();
     for (int i = 0; i < noOfProcs; i++) {
-      NetworkInfo info = new NetworkInfo(procId);
+      NetworkInfo info = new NetworkInfo(i);
       info.addProperty(TCPContext.NETWORK_HOSTNAME, "localhost");
       info.addProperty(TCPContext.NETWORK_PORT, 8765 + i);
       list.add(info);

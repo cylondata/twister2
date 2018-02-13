@@ -25,6 +25,7 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.mpi.io.MPIMessageDeSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.MPIMessageSerializer;
@@ -47,12 +48,13 @@ public class MPIDirectDataFlowCommunication implements DataFlowOperation, MPIMes
   private TaskPlan instancePlan;
   private int executor;
 
-  public MPIDirectDataFlowCommunication(TWSMPIChannel channel,
+  public MPIDirectDataFlowCommunication(TWSChannel channel,
                                         Set<Integer> srcs, int dest,
                                         MessageReceiver finalRcvr) {
     this.sources = srcs;
     this.destination = dest;
     this.finalReceiver = finalRcvr;
+    this.delegete = new MPIDataFlowOperation(channel);
   }
 
   @Override
@@ -111,7 +113,6 @@ public class MPIDirectDataFlowCommunication implements DataFlowOperation, MPIMes
 
     MessageDeSerializer messageDeSerializer = new MPIMessageDeSerializer(kryoSerializer);
     MessageSerializer messageSerializer = new MPIMessageSerializer(kryoSerializer);
-
     delegete.init(cfg, t, taskPlan, edge, router.receivingExecutors(),
         isLastReceiver(), this, pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
         pendingReceiveDeSerializations, messageSerializer, messageDeSerializer, false);
@@ -159,6 +160,11 @@ public class MPIDirectDataFlowCommunication implements DataFlowOperation, MPIMes
   @Override
   public TaskPlan getTaskPlan() {
     return null;
+  }
+
+  @Override
+  public void setMemoryMapped(boolean memoryMapped) {
+    delegete.setStoreBased(memoryMapped);
   }
 
   private boolean isLastReceiver() {

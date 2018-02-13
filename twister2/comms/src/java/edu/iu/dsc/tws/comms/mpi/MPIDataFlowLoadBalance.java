@@ -27,6 +27,7 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.mpi.io.MPIMessageDeSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.MPIMessageSerializer;
@@ -65,7 +66,7 @@ public class MPIDataFlowLoadBalance implements DataFlowOperation, MPIMessageRece
     List<Integer> external = new ArrayList<>();
   }
 
-  public MPIDataFlowLoadBalance(TWSMPIChannel channel, Set<Integer> srcs,
+  public MPIDataFlowLoadBalance(TWSChannel channel, Set<Integer> srcs,
                                 Set<Integer> dests, MessageReceiver finalRcvr) {
     this.sources = srcs;
     this.destinations = dests;
@@ -206,6 +207,11 @@ public class MPIDataFlowLoadBalance implements DataFlowOperation, MPIMessageRece
   @Override
   public TaskPlan getTaskPlan() {
     return instancePlan;
+  }
+
+  @Override
+  public void setMemoryMapped(boolean memoryMapped) {
+    delegete.setStoreBased(memoryMapped);
   }
 
   private RoutingParameters sendRoutingParameters(int source, int path) {

@@ -1,6 +1,0 @@
-Thu Sep 14 14:36:56 EDT 2017
- Running Twister SVM MPJ Version 
- Training the DNN
- Completed Training 
-Training Accuracy 91.35%
-Task 2 Completed Successfully

@@ -23,6 +23,7 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.MultiMessageReceiver;
+import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 
 public class MPIDataFlowMultiGather implements DataFlowOperation {
@@ -40,7 +41,7 @@ public class MPIDataFlowMultiGather implements DataFlowOperation {
 
   private MultiMessageReceiver partialReceiver;
 
-  private TWSMPIChannel channel;
+  private TWSChannel channel;
 
   private Set<Integer> edges;
 
@@ -50,7 +51,7 @@ public class MPIDataFlowMultiGather implements DataFlowOperation {
 
   private MessageType type;
 
-  public MPIDataFlowMultiGather(TWSMPIChannel chnl,
+  public MPIDataFlowMultiGather(TWSChannel chnl,
                                 Set<Integer> sources, Set<Integer> destination,
                                 MultiMessageReceiver finalRecv, Set<Integer> es) {
     this.channel = chnl;
@@ -61,7 +62,7 @@ public class MPIDataFlowMultiGather implements DataFlowOperation {
     this.gatherMap = new HashMap<>();
   }
 
-  public MPIDataFlowMultiGather(TWSMPIChannel chnl, Set<Integer> sources, Set<Integer> destination,
+  public MPIDataFlowMultiGather(TWSChannel chnl, Set<Integer> sources, Set<Integer> destination,
                                 MultiMessageReceiver finalRecv, MultiMessageReceiver partialRecv,
                                 Set<Integer> es) {
     this.channel = chnl;
@@ -129,6 +130,15 @@ public class MPIDataFlowMultiGather implements DataFlowOperation {
   @Override
   public TaskPlan getTaskPlan() {
     return plan;
+  }
+
+  @Override
+  public void setMemoryMapped(boolean memoryMapped) {
+    //Needs to be called after init
+    for (MPIDataFlowGather mpiDataFlowGather : gatherMap.values()) {
+      mpiDataFlowGather.setMemoryMapped(memoryMapped);
+    }
+
   }
 
   @Override

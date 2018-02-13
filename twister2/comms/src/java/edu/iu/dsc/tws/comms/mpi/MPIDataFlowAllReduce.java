@@ -22,6 +22,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 
 public class MPIDataFlowAllReduce implements DataFlowOperation {
@@ -36,16 +37,13 @@ public class MPIDataFlowAllReduce implements DataFlowOperation {
   // the destination task
   private Set<Integer> destinations;
 
-  // one reduce for each destination
-  private Map<Integer, MPIDataFlowReduce> reduceMap;
-
   // the partial receiver
   private MessageReceiver partialReceiver;
 
   // the final receiver
   private MessageReceiver finalReceiver;
 
-  private TWSMPIChannel channel;
+  private TWSChannel channel;
 
   private int executor;
 
@@ -59,7 +57,7 @@ public class MPIDataFlowAllReduce implements DataFlowOperation {
 
   private TaskPlan taskPlan;
 
-  public MPIDataFlowAllReduce(TWSMPIChannel chnl,
+  public MPIDataFlowAllReduce(TWSChannel chnl,
                               Set<Integer> sources, Set<Integer> destination, int middleTask,
                               MessageReceiver finalRecv,
                               MessageReceiver partialRecv,
@@ -69,7 +67,6 @@ public class MPIDataFlowAllReduce implements DataFlowOperation {
     this.destinations = destination;
     this.partialReceiver = partialRecv;
     this.finalReceiver = finalRecv;
-    this.reduceMap = new HashMap<>();
     this.reduceEdge = redEdge;
     this.broadCastEdge = broadEdge;
     this.middleTask = middleTask;
@@ -141,6 +138,12 @@ public class MPIDataFlowAllReduce implements DataFlowOperation {
   @Override
   public TaskPlan getTaskPlan() {
     return taskPlan;
+  }
+
+  @Override
+  public void setMemoryMapped(boolean memoryMapped) {
+    reduce.setMemoryMapped(memoryMapped);
+    broadcast.setMemoryMapped(memoryMapped);
   }
 
   private class ReduceFinalReceiver implements MessageReceiver {

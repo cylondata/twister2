@@ -27,6 +27,7 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.mpi.io.MPIMessageDeSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.MPIMessageSerializer;
@@ -60,7 +61,7 @@ public class MPIDataFlowReduce implements DataFlowOperation, MPIMessageReceiver 
   private int executor;
   private MessageType type;
 
-  public MPIDataFlowReduce(TWSMPIChannel channel, Set<Integer> sources, int destination,
+  public MPIDataFlowReduce(TWSChannel channel, Set<Integer> sources, int destination,
                            MessageReceiver finalRcvr,
                            MessageReceiver partialRcvr, int indx, int p) {
     this.index = indx;
@@ -72,7 +73,7 @@ public class MPIDataFlowReduce implements DataFlowOperation, MPIMessageReceiver 
     this.delegete = new MPIDataFlowOperation(channel);
   }
 
-  public MPIDataFlowReduce(TWSMPIChannel channel, Set<Integer> sources, int destination,
+  public MPIDataFlowReduce(TWSChannel channel, Set<Integer> sources, int destination,
                            MessageReceiver finalRcvr, MessageReceiver partialRcvr) {
     this(channel, sources, destination, finalRcvr, partialRcvr, 0, 0);
   }
@@ -312,5 +313,10 @@ public class MPIDataFlowReduce implements DataFlowOperation, MPIMessageReceiver 
   @Override
   public TaskPlan getTaskPlan() {
     return instancePlan;
+  }
+
+  @Override
+  public void setMemoryMapped(boolean memoryMapped) {
+    delegete.setStoreBased(memoryMapped);
   }
 }

@@ -24,6 +24,7 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.MultiMessageReceiver;
+import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 
 public class MPIDataFlowMultiReduce implements DataFlowOperation {
@@ -43,13 +44,13 @@ public class MPIDataFlowMultiReduce implements DataFlowOperation {
   // the final receiver
   private MultiMessageReceiver finalReceiver;
 
-  private TWSMPIChannel channel;
+  private TWSChannel channel;
 
   private Set<Integer> edges;
 
   private int executor;
 
-  public MPIDataFlowMultiReduce(TWSMPIChannel chnl,
+  public MPIDataFlowMultiReduce(TWSChannel chnl,
                                 Set<Integer> sources, Set<Integer> destination,
                                 MultiMessageReceiver finalRecv,
                                 MultiMessageReceiver partialRecv, Set<Integer> es) {
@@ -114,6 +115,14 @@ public class MPIDataFlowMultiReduce implements DataFlowOperation {
   @Override
   public TaskPlan getTaskPlan() {
     return null;
+  }
+
+  @Override
+  public void setMemoryMapped(boolean memoryMapped) {
+    //Needs to be called after init
+    for (MPIDataFlowReduce mpiDataFlowGather : reduceMap.values()) {
+      mpiDataFlowGather.setMemoryMapped(memoryMapped);
+    }
   }
 
   @Override

@@ -58,7 +58,7 @@ public final class BasicGatherBatchTestJob {
 
     // build the job
     BasicJob basicJob = BasicJob.newBuilder()
-        .setName("basic-gather")
+        .setName("basic-gather-batched")
         .setContainerClass(BasicGatherBatchTestCommunication.class.getName())
         .setRequestResource(new ResourceContainer(2, 1024), 4)
         .setConfig(jobConfig)

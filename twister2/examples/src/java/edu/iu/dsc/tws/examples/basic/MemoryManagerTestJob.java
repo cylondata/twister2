@@ -46,7 +46,7 @@ public final class MemoryManagerTestJob {
 
     // build the job
     BasicJob basicJob = BasicJob.newBuilder()
-        .setName("basic-gather")
+        .setName("basic-gather-MM")
         .setContainerClass(BasicMemoryManagerContainer.class.getName())
         .setRequestResource(new ResourceContainer(2, 1024), 1)
         .setConfig(jobConfig)

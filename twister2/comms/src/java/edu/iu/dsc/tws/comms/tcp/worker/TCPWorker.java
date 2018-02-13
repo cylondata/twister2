@@ -23,8 +23,7 @@ import edu.iu.dsc.tws.comms.tcp.net.MessageHandler;
 import edu.iu.dsc.tws.comms.tcp.net.Progress;
 import edu.iu.dsc.tws.comms.tcp.net.StatusCode;
 import edu.iu.dsc.tws.comms.tcp.net.TCPContext;
-import edu.iu.dsc.tws.comms.tcp.net.TCPReadRequest;
-import edu.iu.dsc.tws.comms.tcp.net.TCPWriteRequest;
+import edu.iu.dsc.tws.comms.tcp.net.TCPRequest;
 
 public class TCPWorker {
   private static final Logger LOG = Logger.getLogger(TCPWorker.class.getName());
@@ -69,8 +68,18 @@ public class TCPWorker {
     }
   }
 
-  public void send() {
-    TCPWriteRequest request = masterClient.send(clientSocketChannel, sendBuffer, 4, 0);
+  public void stop() {
+    masterClient.disconnect();
+  }
+
+  public void sendAndPost() {
+    ByteBuffer byteBuffer = ByteBuffer.allocate(4);
+    masterClient.receive(clientSocketChannel, byteBuffer, 4, -1);
+
+    TCPRequest request = masterClient.send(clientSocketChannel, sendBuffer, 4, -1);
+    if (request == null) {
+      LOG.log(Level.WARNING, "Message sending not accepted");
+    }
   }
 
   private class MasterEventHandler implements MessageHandler {
@@ -83,7 +92,7 @@ public class TCPWorker {
     public void onConnect(SocketChannel channel, StatusCode status) {
       LOG.log(Level.INFO, "Client connected to master: " + channel);
       clientSocketChannel = channel;
-      send();
+      sendAndPost();
     }
 
     @Override
@@ -92,13 +101,13 @@ public class TCPWorker {
     }
 
     @Override
-    public void onReceiveComplete(SocketChannel channel, TCPReadRequest readRequest) {
+    public void onReceiveComplete(SocketChannel channel, TCPRequest readRequest) {
       LOG.log(Level.INFO, "Received the hello response");
       isReady = true;
     }
 
     @Override
-    public void onSendComplete(SocketChannel channel, TCPWriteRequest writeRequest) {
+    public void onSendComplete(SocketChannel channel, TCPRequest writeRequest) {
 
     }
   }

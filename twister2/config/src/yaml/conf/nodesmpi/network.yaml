@@ -1,1 +1,2 @@
 twister2.network.dataflow.class: "edu.iu.dsc.tws.comms.mpi.MPIDataFlowCommunication"
+twister2.network.channel.class: "edu.iu.dsc.tws.comms.mpi.MPIDataFlowCommunication"

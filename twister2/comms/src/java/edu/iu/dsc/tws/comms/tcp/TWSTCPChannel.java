@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.mpi;
+package edu.iu.dsc.tws.comms.tcp;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -23,21 +23,15 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
+import edu.iu.dsc.tws.comms.mpi.MPIBuffer;
+import edu.iu.dsc.tws.comms.mpi.MPIMessage;
+import edu.iu.dsc.tws.comms.mpi.MPIMessageListener;
+import edu.iu.dsc.tws.comms.tcp.net.TCPChannel;
+import edu.iu.dsc.tws.comms.tcp.net.TCPRequest;
+import edu.iu.dsc.tws.comms.tcp.net.TCPStatus;
 
-import mpi.Intracomm;
-import mpi.MPI;
-import mpi.MPIException;
-import mpi.Request;
-import mpi.Status;
-
-/**
- * We are going to use a byte based messaging protocol.
- *
- * The transport threads doesn't handle the message serialization and it is left to the
- * application level.
- */
-public class TWSMPIChannel implements TWSChannel {
-  private static final Logger LOG = Logger.getLogger(TWSMPIChannel.class.getName());
+public class TWSTCPChannel implements TWSChannel {
+  private static final Logger LOG = Logger.getLogger(TWSTCPChannel.class.getName());
 
   // a lock object to be used
   private Lock lock = new ReentrantLock();
@@ -49,26 +43,26 @@ public class TWSMPIChannel implements TWSChannel {
   private int pendingSendCount = 0;
 
   @SuppressWarnings("VisibilityModifier")
-  private class MPIRequest {
-    Request request;
+  private class Request {
+    TCPRequest request;
     MPIBuffer buffer;
 
-    MPIRequest(Request request, MPIBuffer buffer) {
+    Request(TCPRequest request, MPIBuffer buffer) {
       this.request = request;
       this.buffer = buffer;
     }
   }
 
   @SuppressWarnings("VisibilityModifier")
-  private class MPIReceiveRequests {
-    List<MPIRequest> pendingRequests;
+  private class TCPReceiveRequests {
+    List<Request> pendingRequests;
     int rank;
     int edge;
     MPIMessageListener callback;
     Queue<MPIBuffer> availableBuffers;
 
-    MPIReceiveRequests(int rank, int e,
-                              MPIMessageListener callback, Queue<MPIBuffer> buffers) {
+    TCPReceiveRequests(int rank, int e,
+                       MPIMessageListener callback, Queue<MPIBuffer> buffers) {
       this.rank = rank;
       this.edge = e;
       this.callback = callback;
@@ -78,15 +72,15 @@ public class TWSMPIChannel implements TWSChannel {
   }
 
   @SuppressWarnings("VisibilityModifier")
-  private class MPISendRequests {
-    List<MPIRequest> pendingSends;
+  private class TCPSendRequests {
+    List<Request> pendingSends;
     int rank;
     int edge;
     MPIMessage message;
     MPIMessageListener callback;
 
-    MPISendRequests(int rank, int e,
-                           MPIMessage message, MPIMessageListener callback) {
+    TCPSendRequests(int rank, int e,
+                    MPIMessage message, MPIMessageListener callback) {
       this.rank = rank;
       this.edge = e;
       this.message = message;
@@ -96,32 +90,28 @@ public class TWSMPIChannel implements TWSChannel {
   }
 
   /**
-   * The MPI communicator
-   */
-  private final Intracomm comm;
-
-  /**
    * Pending sends waiting to be posted
    */
-  private ArrayBlockingQueue<MPISendRequests> pendingSends;
+  private ArrayBlockingQueue<TCPSendRequests> pendingSends;
 
   /**
    * These are the places where we expect to receive messages
    */
-  private List<MPIReceiveRequests> registeredReceives;
+  private List<TCPReceiveRequests> registeredReceives;
 
   /**
    * Wait for completion sends
    */
-  private List<MPISendRequests> waitForCompletionSends;
+  private List<TCPSendRequests> waitForCompletionSends;
 
+  private TCPChannel comm;
 
-  public TWSMPIChannel(Config config, Intracomm comm, int exec) {
-    this.comm = comm;
-    this.pendingSends = new ArrayBlockingQueue<MPISendRequests>(1024);
+  public TWSTCPChannel(Config config, int exec, TCPChannel net) {
+    this.pendingSends = new ArrayBlockingQueue<TCPSendRequests>(1024);
     this.registeredReceives = Collections.synchronizedList(new ArrayList<>(1024));
     this.waitForCompletionSends = Collections.synchronizedList(new ArrayList<>(1024));
     this.executor = exec;
+    this.comm = net;
   }
 
   /**
@@ -133,7 +123,7 @@ public class TWSMPIChannel implements TWSChannel {
    */
   public boolean sendMessage(int id, MPIMessage message, MPIMessageListener callback) {
     boolean offer = pendingSends.offer(
-        new MPISendRequests(id, message.getHeader().getEdge(), message, callback));
+        new TCPSendRequests(id, message.getHeader().getEdge(), message, callback));
     if (offer) {
       pendingSendCount++;
     }
@@ -149,7 +139,7 @@ public class TWSMPIChannel implements TWSChannel {
    */
   public boolean receiveMessage(int rank, int stream,
                                 MPIMessageListener callback, Queue<MPIBuffer> receiveBuffers) {
-    return registeredReceives.add(new MPIReceiveRequests(rank, stream, callback,
+    return registeredReceives.add(new TCPReceiveRequests(rank, stream, callback,
         receiveBuffers));
   }
 
@@ -158,28 +148,24 @@ public class TWSMPIChannel implements TWSChannel {
    *
    * @param requests the message
    */
-  private void postMessage(MPISendRequests requests) {
+  private void postMessage(TCPSendRequests requests) {
     MPIMessage message = requests.message;
     for (int i = 0; i < message.getBuffers().size(); i++) {
-      try {
-        sendCount++;
-        MPIBuffer buffer = message.getBuffers().get(i);
-        Request request = comm.iSend(buffer.getByteBuffer(), buffer.getSize(),
-            MPI.BYTE, requests.rank, message.getHeader().getEdge());
-        // register to the loop to make progress on the send
-        requests.pendingSends.add(new MPIRequest(request, buffer));
-      } catch (MPIException e) {
-        throw new RuntimeException("Failed to send message to rank: " + requests.rank);
-      }
+      sendCount++;
+      MPIBuffer buffer = message.getBuffers().get(i);
+      TCPRequest request = comm.iSend(buffer.getByteBuffer(), buffer.getSize(),
+          requests.rank, message.getHeader().getEdge());
+      // register to the loop to make progress on the send
+      requests.pendingSends.add(new Request(request, buffer));
     }
   }
 
-  private void postReceive(MPIReceiveRequests requests) {
+  private void postReceive(TCPReceiveRequests requests) {
     MPIBuffer byteBuffer = requests.availableBuffers.poll();
     if (byteBuffer != null) {
       // post the receive
-      Request request = postReceive(requests.rank, requests.edge, byteBuffer);
-      requests.pendingRequests.add(new MPIRequest(request, byteBuffer));
+      TCPRequest request = postReceive(requests.rank, requests.edge, byteBuffer);
+      requests.pendingRequests.add(new Request(request, byteBuffer));
     }
   }
 
@@ -190,13 +176,8 @@ public class TWSMPIChannel implements TWSChannel {
    * @param byteBuffer the buffer
    * @return the request
    */
-  private Request postReceive(int rank, int stream, MPIBuffer byteBuffer) {
-    try {
-      return comm.iRecv(byteBuffer.getByteBuffer(), byteBuffer.getCapacity(),
-          MPI.BYTE, rank, stream);
-    } catch (MPIException e) {
-      throw new RuntimeException("Failed to post the receive", e);
-    }
+  private TCPRequest postReceive(int rank, int stream, MPIBuffer byteBuffer) {
+    return comm.iRecv(byteBuffer.getByteBuffer(), byteBuffer.getCapacity(), rank, stream);
   }
 
   private int completedReceives = 0;
@@ -207,34 +188,30 @@ public class TWSMPIChannel implements TWSChannel {
     // we should rate limit here
     while (pendingSends.size() > 0) {
       // post the message
-      MPISendRequests sendRequests = pendingSends.poll();
+      TCPSendRequests sendRequests = pendingSends.poll();
       // post the send
       postMessage(sendRequests);
       waitForCompletionSends.add(sendRequests);
     }
 
     for (int i = 0; i < registeredReceives.size(); i++) {
-      MPIReceiveRequests receiveRequests = registeredReceives.get(i);
+      TCPReceiveRequests receiveRequests = registeredReceives.get(i);
       // okay we have more buffers to be posted
       if (receiveRequests.availableBuffers.size() > 0) {
         postReceive(receiveRequests);
       }
     }
 
-    Iterator<MPISendRequests> sendRequestsIterator = waitForCompletionSends.iterator();
+    Iterator<TCPSendRequests> sendRequestsIterator = waitForCompletionSends.iterator();
     while (sendRequestsIterator.hasNext()) {
-      MPISendRequests sendRequests = sendRequestsIterator.next();
-      Iterator<MPIRequest> requestIterator = sendRequests.pendingSends.iterator();
+      TCPSendRequests sendRequests = sendRequestsIterator.next();
+      Iterator<Request> requestIterator = sendRequests.pendingSends.iterator();
       while (requestIterator.hasNext()) {
-        MPIRequest r = requestIterator.next();
-        try {
-          Status status = r.request.testStatus();
-          // this request has finished
-          if (status != null) {
-            requestIterator.remove();
-          }
-        } catch (MPIException e) {
-          throw new RuntimeException("Failed to complete the send to: " + sendRequests.rank, e);
+        Request r = requestIterator.next();
+        TCPStatus status = r.request.testStatus();
+        // this request has finished
+        if (status != null) {
+          requestIterator.remove();
         }
       }
 
@@ -249,33 +226,19 @@ public class TWSMPIChannel implements TWSChannel {
 
 
     for (int i = 0; i < registeredReceives.size(); i++) {
-      MPIReceiveRequests receiveRequests = registeredReceives.get(i);
-      try {
-        Iterator<MPIRequest> requestIterator = receiveRequests.pendingRequests.iterator();
-        while (requestIterator.hasNext()) {
-          MPIRequest r = requestIterator.next();
-          Status status = r.request.testStatus();
-          if (status != null) {
-            if (!status.isCancelled()) {
-//              LOG.info(String.format("%d Receive completed: from %d size %d",
-//                  executor, receiveRequests.rank, status.getCount(MPI.BYTE)));
-//               lets call the callback about the receive complete
-              r.buffer.setSize(status.getCount(MPI.BYTE));
-              receiveRequests.callback.onReceiveComplete(
-                  receiveRequests.rank, receiveRequests.edge, r.buffer);
-//              LOG.info(String.format("%d finished calling the on complete method", executor));
-              requestIterator.remove();
-            } else {
-              throw new RuntimeException("MPI receive request cancelled");
-            }
-          }
+      TCPReceiveRequests receiveRequests = registeredReceives.get(i);
+      Iterator<Request> requestIterator = receiveRequests.pendingRequests.iterator();
+      while (requestIterator.hasNext()) {
+        Request r = requestIterator.next();
+        TCPStatus status = r.request.testStatus();
+        if (status != null) {
+          // lets call the callback about the receive complete
+          r.buffer.setSize(r.buffer.getByteBuffer().limit());
+          receiveRequests.callback.onReceiveComplete(
+              receiveRequests.rank, receiveRequests.edge, r.buffer);
+          requestIterator.remove();
         }
-        // this request has completed
-      } catch (MPIException e) {
-        LOG.severe("Twister2Network failure");
-        throw new RuntimeException("Twister2Network failure", e);
       }
     }
   }
 }
-

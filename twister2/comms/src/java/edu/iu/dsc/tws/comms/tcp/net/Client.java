@@ -50,12 +50,7 @@ public class Client implements SelectHandler {
     try {
       socketChannel = SocketChannel.open();
       socketChannel.configureBlocking(false);
-
       socketChannel.socket().setTcpNoDelay(true);
-      socketChannel.socket().setSendBufferSize(
-          TCPContext.getSocketSendBufferSize(config, 1024));
-      socketChannel.socket().setReceiveBufferSize(
-          TCPContext.getSocketReceivedBufferSize(config, 1024));
 
       LOG.log(Level.INFO, "Connecting to endpoint: " + address);
       if (socketChannel.connect(address)) {
@@ -71,7 +66,7 @@ public class Client implements SelectHandler {
     return true;
   }
 
-  public TCPWriteRequest send(SocketChannel sc, ByteBuffer buffer, int size, int edge) {
+  public TCPRequest send(SocketChannel sc, ByteBuffer buffer, int size, int edge) {
     if (sc != socketChannel) {
       return null;
     }
@@ -80,13 +75,13 @@ public class Client implements SelectHandler {
       return null;
     }
 
-    TCPWriteRequest request = new TCPWriteRequest(buffer, edge, size);
+    TCPRequest request = new TCPRequest(buffer, edge, size);
     channel.addWriteRequest(request);
 
     return request;
   }
 
-  public TCPReadRequest receive(SocketChannel sc, ByteBuffer buffer, int size, int edge) {
+  public TCPRequest receive(SocketChannel sc, ByteBuffer buffer, int size, int edge) {
     if (sc != socketChannel) {
       return null;
     }
@@ -95,7 +90,7 @@ public class Client implements SelectHandler {
       return null;
     }
 
-    TCPReadRequest request = new TCPReadRequest(buffer, edge);
+    TCPRequest request = new TCPRequest(buffer, edge, size);
     channel.addReadRequest(request);
 
     return request;
@@ -106,8 +101,12 @@ public class Client implements SelectHandler {
       return;
     }
 
+    channel.forceFlush();
+
     try {
       socketChannel.close();
+      // we call the onclose with null value
+      messageHandler.onClose(null);
     } catch (IOException e) {
       LOG.log(Level.SEVERE, "Failed to stop Client", e);
     }
@@ -140,6 +139,8 @@ public class Client implements SelectHandler {
       return;
     }
     channel = new Channel(config, progress, this, socketChannel, messageHandler);
+    channel.enableReading();
+    channel.enableWriting();
 
     isConnected = true;
     messageHandler.onConnect(socketChannel, StatusCode.SUCCESS);
@@ -157,5 +158,9 @@ public class Client implements SelectHandler {
     }
 
     isConnected = false;
+  }
+
+  SocketChannel getSocketChannel() {
+    return socketChannel;
   }
 }

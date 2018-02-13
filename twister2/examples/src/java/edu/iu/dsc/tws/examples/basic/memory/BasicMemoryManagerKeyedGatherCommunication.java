@@ -45,12 +45,37 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.basic.comms;
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+package edu.iu.dsc.tws.examples.basic.memory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -58,21 +83,27 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
+
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.api.GatherBatchReceiver;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.mpi.io.GatherBatchFinalReceiver;
+import edu.iu.dsc.tws.comms.mpi.io.GatherBatchPartialReceiver;
+import edu.iu.dsc.tws.comms.mpi.io.KeyedContent;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.utils.RandomString;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
-public class BasicGatherTestCommunication implements IContainer {
+public class BasicMemoryManagerKeyedGatherCommunication implements IContainer {
   private static final Logger LOG = Logger.
-      getLogger(BasicGatherTestCommunication.class.getName());
+      getLogger(BasicMemoryManagerKeyedGatherCommunication.class.getName());
 
   private DataFlowOperation aggregate;
 
@@ -115,14 +146,16 @@ public class BasicGatherTestCommunication implements IContainer {
 
     Map<String, Object> newCfg = new HashMap<>();
 
-    LOG.info("Setting up reduce dataflow operation");
+    LOG.info("Setting up keyed gather MM dataflow operation");
 
     try {
       // this method calls the init method
       // I think this is wrong
 
-      aggregate = channel.gather(newCfg, MessageType.INTEGER, 0, sources,
-          dest, new FinalGatherReceive());
+      aggregate = channel.gather(newCfg, MessageType.INTEGER, MessageType.INTEGER, 0, sources,
+          dest, new GatherBatchFinalReceiver(new FinalGatherReceive()),
+          new GatherBatchPartialReceiver(dest));
+      aggregate.setMemoryMapped(true);
 
 //      aggregate = channel.gather(newCfg, MessageType.OBJECT, 0, sources,
 //          dest, new FinalGatherReceive());
@@ -173,7 +206,10 @@ public class BasicGatherTestCommunication implements IContainer {
 //          KeyedContent mesage = new KeyedContent(task, data,
 //              MessageType.INTEGER, MessageType.OBJECT);
 //
-          while (!aggregate.send(task, data, 0)) {
+          int flags = MessageFlags.FLAGS_LAST;
+          KeyedContent mesage = new KeyedContent(task * 111, data,
+              MessageType.INTEGER, MessageType.INTEGER);
+          while (!aggregate.send(task, mesage, flags)) {
             // lets wait a litte and try again
             try {
               Thread.sleep(1);
@@ -190,7 +226,7 @@ public class BasicGatherTestCommunication implements IContainer {
     }
   }
 
-  private class FinalGatherReceive implements MessageReceiver {
+  private class FinalGatherReceive implements GatherBatchReceiver {
     // lets keep track of the messages
     // for each task we need to keep track of incoming messages
     private List<Integer> dataList;
@@ -206,23 +242,42 @@ public class BasicGatherTestCommunication implements IContainer {
 
     @Override
     @SuppressWarnings("unchecked")
+    public void receive(int target, Iterator<Object> it) {
+      int itercount = 0;
+      Object temp;
+      while (it.hasNext()) {
+        itercount++;
+        temp = it.next();
+        if (temp instanceof ImmutablePair) {
+          ImmutablePair<Object, Object> data = (ImmutablePair<Object, Object>) temp;
+          LOG.info("Ordered results for keyed gather : "
+              + data.getKey().toString() + " : " + Arrays.toString((int[]) data.getValue()));
+
+        }
+      }
+
+    }
+
+    @SuppressWarnings("unchecked")
     public boolean onMessage(int source, int path, int target, int flags, Object object) {
 
       // add the object to the map
-      boolean canAdd = true;
-      if (count == 0) {
-        start = System.nanoTime();
-      }
-      if (object instanceof List) {
-        List<Object> datalist = (List<Object>) object;
-        for (Object o : datalist) {
-          int[] data = (int[]) o;
-          dataList.add(data[0]);
-        }
-      } else {
-        int[] data = (int[]) object;
-        dataList.add(data[0]);
-      }
+
+//      boolean canAdd = true;
+//      if (count == 0) {
+//        start = System.nanoTime();
+//      }
+//      if (object instanceof List) {
+//        System.out.println("LIST LIST LIST");
+//        List<Object> datalist = (List<Object>) object;
+//        for (Object o : datalist) {
+//          int[] data = (int[]) o;
+//          dataList.add(data[0]);
+//        }
+//      } else {
+//        int[] data = (int[]) object;
+//        dataList.add(data[0]);
+//      }
       LOG.info("Gather results (only the first int of each array)"
           + Arrays.toString(dataList.toArray()));
 
