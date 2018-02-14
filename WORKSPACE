@@ -174,6 +174,16 @@ maven_jar(
   artifact = "com.github.jnr:jffi:1.2.16",
 )
 
+maven_jar(
+  name ="org_apache_hadoop_hdfs",
+  artifact = "org.apache.hadoop:hadoop-hdfs:2.6.0",
+)
+
+maven_jar(
+  name ="org_apache_hadoop_common",
+  artifact = "org.apache.hadoop:hadoop-common:2.6.2",
+)
+
 http_archive(
     name = "com_google_protobuf",
     urls = ["https://github.com/google/protobuf/archive/v3.4.1.tar.gz"],
