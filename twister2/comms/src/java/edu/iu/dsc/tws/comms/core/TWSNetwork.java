@@ -16,6 +16,9 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
+import edu.iu.dsc.tws.comms.mpi.TWSMPIChannel;
+
+import mpi.MPI;
 
 /**
  * Initialize the twister2 network code.
@@ -37,7 +40,8 @@ public final class TWSNetwork {
     try {
       dataFlowTWSCommunication = ReflectionUtils.newInstance(communicationClass);
       LOG.info("Created communication with class: " + communicationClass);
-      dataFlowTWSCommunication.init(config, taskPlan);
+      dataFlowTWSCommunication.init(config, taskPlan,
+          new TWSMPIChannel(config, MPI.COMM_WORLD, taskPlan.getThisExecutor()));
     } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
       LOG.severe("Failed to load the communications class: " + communicationClass);
       throw new RuntimeException(e);

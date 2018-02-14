@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.comms.mpi;
 
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -22,22 +21,33 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.MultiMessageReceiver;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.comms.core.DataFlowCommunication;
+import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 
-import mpi.MPI;
-
-public class MPIDataFlowCommunication extends DataFlowCommunication {
+public class MPIDataFlowCommunication implements TWSCommunication {
   private static final Logger LOG = Logger.getLogger(MPIDataFlowCommunication.class.getName());
 
   private TWSChannel channel;
 
-  @Override
-  public void init(Config cfg, TaskPlan taskPlan) {
-    super.init(cfg, taskPlan);
+  /**
+   * The configuration read from the configuration file
+   */
+  protected Config config;
 
-    channel = new TWSMPIChannel(cfg, MPI.COMM_WORLD, taskPlan.getThisExecutor());
-    LOG.log(Level.INFO, "Initialized MPI dataflow communication");
+  /**
+   * Instance plan containing mappings from communication specific ids to higher level task ids
+   */
+  protected TaskPlan instancePlan;
+
+
+  public MPIDataFlowCommunication() {
+  }
+
+  @Override
+  public void init(Config cfg, TaskPlan taskPlan, TWSChannel ch) {
+    this.instancePlan = taskPlan;
+    this.config = cfg;
+    this.channel = ch;
   }
 
   @Override

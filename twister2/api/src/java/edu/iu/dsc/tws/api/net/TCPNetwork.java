@@ -15,9 +15,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.core.DataFlowCommunication;
 import edu.iu.dsc.tws.comms.core.NetworkInfo;
+import edu.iu.dsc.tws.comms.core.TWSCommunication;
+import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.mpi.MPIDataFlowCommunication;
+import edu.iu.dsc.tws.comms.tcp.TWSTCPChannel;
 import edu.iu.dsc.tws.comms.tcp.net.TCPChannel;
+import edu.iu.dsc.tws.comms.tcp.net.TCPContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.bootstrap.WorkerInfo;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
@@ -29,7 +33,7 @@ import edu.iu.dsc.tws.rsched.bootstrap.ZKController;
 public class TCPNetwork {
   private TCPChannel channel;
 
-  private DataFlowCommunication dataFlowCommunication;
+  private TWSCommunication dataFlowCommunication;
 
   private ZKController zkController;
 
@@ -39,13 +43,22 @@ public class TCPNetwork {
 
   private String workerUniqueId;
 
-  public TCPNetwork(Config config, JobAPI.Job j, String wId) {
+  private TaskPlan taskPlan;
+
+  public TCPNetwork(Config config, JobAPI.Job j, String wId, TaskPlan plan) {
     this.config = config;
     this.job = j;
     this.workerUniqueId = wId;
+    this.taskPlan = plan;
   }
 
   public void initialize() {
+    NetworkInfo networkInfo = new NetworkInfo(-1);
+    // we need to first start the server part of tcp
+    // lets first start the channel
+    channel = new TCPChannel(config, networkInfo);
+    channel.startFirstPhase();
+
     // first lets intialize the zk
     zkController = new ZKController(config, job.getJobName(), workerUniqueId);
     zkController.initialize();
@@ -61,17 +74,27 @@ public class TCPNetwork {
     }
 
     List<NetworkInfo> networkInfos = new ArrayList<>();
-    NetworkInfo thisNet;
+    NetworkInfo thisNet = null;
     for (WorkerInfo info : workerInfoList) {
-      NetworkInfo networkInfo = new NetworkInfo(info.getWorkerID());
+      NetworkInfo netInfo = new NetworkInfo(info.getWorkerID());
+      netInfo.addProperty(TCPContext.NETWORK_HOSTNAME, info.getWorkerIP());
+      netInfo.addProperty(TCPContext.NETWORK_PORT, info.getWorkerPort());
       // todo: we need to have tcp information from worker info
+      if (workerUniqueId.equals(info.getWorkerName())) {
+        thisNet = netInfo;
+      }
+      networkInfos.add(netInfo);
     }
-
-    // lets first start the channel
-    channel = new TCPChannel(config, networkInfos, null);
-    channel.startFirstPhase();
-
     // now intialize with zookeeper
-    channel.startSecondPhase();
+    channel.startSecondPhase(networkInfos, thisNet);
+
+    TWSTCPChannel twstcpChannel = new TWSTCPChannel(config, taskPlan.getThisExecutor(), channel);
+    // now lets create the dataflow communication
+    dataFlowCommunication = new MPIDataFlowCommunication();
+    dataFlowCommunication.init(config, taskPlan, twstcpChannel);
+  }
+
+  public TWSCommunication getDataFlowCommunication() {
+    return dataFlowCommunication;
   }
 }
