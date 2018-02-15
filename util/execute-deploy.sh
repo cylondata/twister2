@@ -36,7 +36,8 @@ deploy_library() {
   srcjar=$2
   javadoc=$3
   pomfile=$4
-  bazel build $library $srcjar $javadoc
+  echo bazel build --config=ubuntu $library $srcjar $javadoc
+  bazel build --config=ubuntu $library $srcjar $javadoc
   echo mvn -e $MVN_GOAL -Dfile=$(library_output_file $library) -DpomFile=$pomfile "${EXTRA_MAVEN_ARGS[@]:+${EXTRA_MAVEN_ARGS[@]}}"
   mvn -e $MVN_GOAL \
     -Dfile=$(library_output_file $library) \
@@ -57,7 +58,19 @@ deploy_library \
   common.pom.xml
 
 deploy_library \
+  twister2/common/src/java/libconfig-java.jar \
+  twister2/common/src/java/libconfig-java.jar \
+  twister2/common/src/java/libconfig-java.jar \
+  config.pom.xml
+
+deploy_library \
   twister2/comms/src/java/libcomms-java.jar \
   twister2/comms/src/java/libcomms-java.jar \
   twister2/comms/src/java/libcomms-java.jar \
   comms.pom.xml
+
+deploy_library \
+  twister2/resource-scheduler/src/java/libresource-scheduler-java.jar \
+  twister2/resource-scheduler/src/java/libresource-scheduler-java.jar \
+  twister2/resource-scheduler/src/java/libresource-scheduler-java.jar \
+  resource-scheduler.pom.xml
