@@ -15,8 +15,12 @@ python $(dirname $0)/maven/generate_poms.py $VERSION_NAME \
   //twister2/api/src/java:api-java \
   //twister2/resource-scheduler/src/java:resource-scheduler-java \
   //twister2/proto:proto-resource-scheduler-java \
+  //twister2/proto:proto_resource_scheduler_java \
   //twister2/proto:proto-taskscheduleplan-java \
-  //twister2/task/src/main/java:task-java 
+  //twister2/proto:proto_job_java \
+  //twister2/proto:proto_job_state_java \
+  //twister2/proto:proto_common_java
+
 
 library_output_file() {
   library=$1
@@ -74,3 +78,45 @@ deploy_library \
   twister2/resource-scheduler/src/java/libresource-scheduler-java.jar \
   twister2/resource-scheduler/src/java/libresource-scheduler-java.jar \
   resource-scheduler.pom.xml
+
+deploy_library \
+  twister2/api/src/java/libapi-java.jar \
+  twister2/api/src/java/libapi-java.jar \
+  twister2/api/src/java/libapi-java.jar \
+  api.pom.xml
+
+deploy_library \
+  twister2/proto/libproto-resource-scheduler-java.jar \
+  twister2/proto/libproto-resource-scheduler-java.jar \
+  twister2/proto/libproto-resource-scheduler-java.jar \
+  proto-resource-scheduler.pom.xml
+
+deploy_library \
+  twister2/proto/libproto_resource_scheduler_java.jar \
+  twister2/proto/libproto_resource_scheduler_java.jar \
+  twister2/proto/libproto_resource_scheduler_java.jar \
+  proto_resource_scheduler.pom.xml
+
+deploy_library \
+  twister2/proto/libproto-taskscheduleplan-java.jar \
+  twister2/proto/libproto-taskscheduleplan-java.jar \
+  twister2/proto/libproto-taskscheduleplan-java.jar \
+  proto-taskscheduleplan.pom.xml
+
+deploy_library \
+  twister2/proto/libproto_job_java.jar \
+  twister2/proto/libproto_job_java.jar \
+  twister2/proto/libproto_job_java.jar \
+  proto_job.pom.xml
+
+deploy_library \
+  twister2/proto/libproto_job_state_java.jar \
+  twister2/proto/libproto_job_state_java.jar \
+  twister2/proto/libproto_job_state_java.jar \
+  proto_job_state.pom.xml
+
+deploy_library \
+  twister2/proto/libproto_common_java.jar \
+  twister2/proto/libproto_common_java.jar \
+  twister2/proto/libproto_common_java.jar \
+  proto_common.pom.xml
