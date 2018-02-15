@@ -21,12 +21,11 @@ public class SchedulerContext extends Context {
   public static final String SCHEDULER_CLASS = "twister2.class.scheduler";
   public static final String LAUNCHER_CLASS = "twister2.class.launcher";
   public static final String UPLOADER_CLASS = "twister2.class.uploader";
+  public static final String CONTAINER_CLASS = "twister2.job.basic.container.class";
 
   public static final String JOB_NAME = "twister2.job.name";
   public static final String STATE_MANAGER_ROOT_PATH = "twister2.state.manager.root.path";
   public static final String SYSTEM_PACKAGE_URI = "twister2.system.package.uri";
-  public static final String TWISTER2_JOB_BASIC_CONTAINER_CLASS =
-      "twister2.job.basic.container.class";
   /**
    * Internal configuration for job package url
    */
@@ -74,6 +73,10 @@ public class SchedulerContext extends Context {
     return cfg.getStringValue(LAUNCHER_CLASS);
   }
 
+  public static String containerClass(Config cfg) {
+    return cfg.getStringValue(CONTAINER_CLASS);
+  }
+
   public static String jobName(Config cfg) {
     return cfg.getStringValue(JOB_NAME);
   }
@@ -104,10 +107,6 @@ public class SchedulerContext extends Context {
 
   public static String jobPackageFileName(Config cfg) {
     return cfg.getStringValue(JOB_PACKAGE_FILENAME, JOB_PACKAGE_FILENAME_DEFAULT);
-  }
-
-  public static String jobBasicContainerClass(Config cfg) {
-    return cfg.getStringValue(TWISTER2_JOB_BASIC_CONTAINER_CLASS);
   }
 
   public static String jobClientTempDirectory(Config cfg) {

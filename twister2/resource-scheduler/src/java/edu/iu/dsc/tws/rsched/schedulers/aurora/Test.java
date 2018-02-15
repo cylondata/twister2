@@ -80,20 +80,20 @@ public final class Test {
         cluster, role, env, jobName, true);
 
     Config.Builder builder = Config.newBuilder();
-    builder.put(AuroraClientContext.AURORA_CLUSTER_NAME, cluster);
-    builder.put(AuroraClientContext.ROLE, role);
-    builder.put(AuroraClientContext.ENVIRONMENT, env);
+    builder.put(AuroraContext.AURORA_CLUSTER_NAME, cluster);
+    builder.put(AuroraContext.ROLE, role);
+    builder.put(AuroraContext.ENVIRONMENT, env);
     builder.put(SchedulerContext.JOB_NAME, jobName);
 
-    builder.put(AuroraClientContext.AURORA_SCRIPT.getKey(), auroraFile);
-//    builder.put(AuroraClientContext.TWISTER2_PACKAGE_PATH, "/root/twister2");
-//    builder.put(AuroraClientContext.TWISTER2_PACKAGE_FILE, "twister2-client.tar.gz");
+    builder.put(AuroraContext.AURORA_SCRIPT.getKey(), auroraFile);
+//    builder.put(AuroraContext.TWISTER2_PACKAGE_PATH, "/root/twister2");
+//    builder.put(AuroraContext.TWISTER2_PACKAGE_FILE, "twister2-client.tar.gz");
 
-    builder.put(AuroraClientContext.NUMBER_OF_CONTAINERS, "1");
-    builder.put(AuroraClientContext.CPUS_PER_CONTAINER, "1");
+    builder.put(AuroraContext.NUMBER_OF_CONTAINERS, "1");
+    builder.put(AuroraContext.CPUS_PER_CONTAINER, "1");
     String ramAndDiskSize = "" + 1 * 1024 * 1024 * 1024; // 1GB in bytes
-    builder.put(AuroraClientContext.RAM_PER_CONTAINER, ramAndDiskSize);
-    builder.put(AuroraClientContext.DISK_PER_CONTAINER, ramAndDiskSize);
+    builder.put(AuroraContext.RAM_PER_CONTAINER, ramAndDiskSize);
+    builder.put(AuroraContext.DISK_PER_CONTAINER, ramAndDiskSize);
     Config config = builder.build();
 
     System.out.println("number of config parameters: " + config.size());

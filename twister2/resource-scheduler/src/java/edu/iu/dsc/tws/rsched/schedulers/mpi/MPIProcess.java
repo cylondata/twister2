@@ -152,7 +152,7 @@ public final class MPIProcess {
 
     Config workerConfig = Config.newBuilder().putAll(config).
         put(MPIContext.TWISTER2_HOME.getKey(), twister2Home).
-        put(MPIContext.TWISTER2_JOB_BASIC_CONTAINER_CLASS, container).
+        put(MPIContext.CONTAINER_CLASS, container).
         put(MPIContext.TWISTER2_CONTAINER_ID, id).
         put(MPIContext.TWISTER2_CLUSTER_TYPE, clusterType).build();
 
@@ -163,7 +163,7 @@ public final class MPIProcess {
 
     updatedConfig = Config.newBuilder().putAll(updatedConfig).
         put(MPIContext.TWISTER2_HOME.getKey(), twister2Home).
-        put(MPIContext.TWISTER2_JOB_BASIC_CONTAINER_CLASS, container).
+        put(MPIContext.CONTAINER_CLASS, container).
         put(MPIContext.TWISTER2_CONTAINER_ID, id).
         put(MPIContext.TWISTER2_CLUSTER_TYPE, clusterType).build();
     return updatedConfig;
@@ -179,7 +179,7 @@ public final class MPIProcess {
     // lets create the resource plan
     ResourcePlan resourcePlan = createResourcePlan(config);
 
-    String containerClass = MPIContext.jobBasicContainerClass(config);
+    String containerClass = MPIContext.containerClass(config);
     IContainer container;
     try {
       Object object = ReflectionUtils.newInstance(containerClass);

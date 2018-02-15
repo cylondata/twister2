@@ -17,17 +17,18 @@ import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 /**
  * State parameters for Aurora Client
  */
-public class AuroraClientContext extends SchedulerContext {
+public class AuroraContext extends SchedulerContext {
 
   public static final String AURORA_CLUSTER_NAME = "twister2.resource.scheduler.aurora.cluster";
   public static final String ROLE = "twister2.resource.scheduler.aurora.role";
   public static final String ENVIRONMENT = "twister2.resource.scheduler.aurora.env";
-//  public static final String AURORA_JOB_NAME = "twister2.resource.scheduler.aurora.jobname";
 
   public static final String CPUS_PER_CONTAINER = "twister2.cpu_per_container";
   public static final String RAM_PER_CONTAINER = "twister2.ram_per_container";
   public static final String DISK_PER_CONTAINER = "twister2.disk_per_container";
   public static final String NUMBER_OF_CONTAINERS = "twister2.number_of_containers";
+
+  public static final String AURORA_WORKER_CLASS = "twister2.class.aurora.worker";
 
   public static final int DEFAULT_RAM_SIZE = 1073741824; // 1GB
   public static final int DEFAULT_DISK_SIZE = 1073741824; // 1GB
@@ -60,4 +61,7 @@ public class AuroraClientContext extends SchedulerContext {
     return cfg.getStringValue(NUMBER_OF_CONTAINERS);
   }
 
+  public static String auroraWorkerClass(Config cfg) {
+    return cfg.getStringValue(AURORA_WORKER_CLASS);
+  }
 }

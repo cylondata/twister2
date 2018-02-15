@@ -20,17 +20,19 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
+import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.bootstrap.WorkerInfo;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKController;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.rsched.schedulers.mpi.MPIContext;
+import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import static edu.iu.dsc.tws.common.config.Context.DIR_PREFIX_FOR_JOB_ARCHIVE;
 
-public final class WorkerHello {
-  public static final Logger LOG = Logger.getLogger(WorkerHello.class.getName());
+public final class AuroraWorker {
+  public static final Logger LOG = Logger.getLogger(AuroraWorker.class.getName());
 
   private InetAddress workerAddress;
   private int workerPort;
@@ -39,15 +41,15 @@ public final class WorkerHello {
   private JobAPI.Job job;
   private ZKController zkController;
 
-  private WorkerHello() {
+  private AuroraWorker() {
   }
 
   /**
-   * create a WorkerHello object by getting values from system property
+   * create a AuroraWorker object by getting values from system property
    * @return
    */
-  public static WorkerHello createWorkerHello() {
-    WorkerHello worker = new WorkerHello();
+  public static AuroraWorker createAuroraWorker() {
+    AuroraWorker worker = new AuroraWorker();
     String hostname =  System.getProperty("hostname");
     String portStr =  System.getProperty("tcpPort");
     worker.mesosTaskID = System.getProperty("taskID");
@@ -107,9 +109,9 @@ public final class WorkerHello {
     Config conf = ConfigLoader.loadConfig(twister2Home, configDir);
     config = Config.newBuilder().
         putAll(conf).
-        put(MPIContext.TWISTER2_HOME.getKey(), twister2Home).
-        put(MPIContext.TWISTER2_CONF.getKey(), configDir).
-        put(MPIContext.TWISTER2_CLUSTER_TYPE, clusterType).
+        put(Context.TWISTER2_HOME.getKey(), twister2Home).
+        put(Context.TWISTER2_CONF.getKey(), configDir).
+        put(Context.TWISTER2_CLUSTER_TYPE, clusterType).
         build();
 
     LOG.log(Level.INFO, "Config files are read from directory: " + configDir);
@@ -183,21 +185,26 @@ public final class WorkerHello {
   public static void main(String[] args) {
 
     // create the worker
-    WorkerHello worker = createWorkerHello();
+    AuroraWorker worker = createAuroraWorker();
 
     // get the number of workers from some where
     // wait for all of them
     // print their list and exit
     worker.waitAndGetAllWorkers();
 
-    // wait some random amount of time before finishing
-    long duration = (long) (Math.random() * 1000);
+    String containerClass = SchedulerContext.containerClass(worker.config);
+    IContainer container;
     try {
-      System.out.println("Sleeping " + duration + "ms. Then will close.");
-      Thread.sleep(duration);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
+      Object object = ReflectionUtils.newInstance(containerClass);
+      container = (IContainer) object;
+      LOG.info("loaded container class: " + containerClass);
+    } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+      LOG.log(Level.SEVERE, String.format("failed to load the container class %s",
+          containerClass), e);
+      throw new RuntimeException(e);
     }
+
+    container.init(worker.config, worker.zkController.getWorkerInfo().getWorkerID(), null);
 
     // close the things, let others know that it is done
     worker.close();
