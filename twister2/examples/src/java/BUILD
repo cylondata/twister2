@@ -14,6 +14,7 @@ common_deps_files = [
     "@commons_lang_commons_lang//jar",
     "@org_apache_hadoop_hdfs//jar",
     "@org_apache_hadoop_common//jar",
+    "@commons_cli_commons_cli//jar",
    ]
 
 java_library(
