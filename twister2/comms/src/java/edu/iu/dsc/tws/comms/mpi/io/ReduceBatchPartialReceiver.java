@@ -50,6 +50,8 @@ public class ReduceBatchPartialReceiver implements MessageReceiver {
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     executor = op.getTaskPlan().getThisExecutor();
     sendPendingMax = MPIContext.sendPendingMax(cfg);
+    this.dataFlowOperation = op;
+    this.executor = dataFlowOperation.getTaskPlan().getThisExecutor();
 
     LOG.fine(String.format("%d gather partial expected ids %s", executor, expectedIds));
     for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
@@ -57,18 +59,16 @@ public class ReduceBatchPartialReceiver implements MessageReceiver {
       Map<Integer, Boolean> finishedPerTask = new HashMap<>();
       Map<Integer, Integer> countsPerTask = new HashMap<>();
 
-      for (int i : e.getValue()) {
-        messagesPerTask.put(i, new ArrayList<Object>());
-        finishedPerTask.put(i, false);
-        countsPerTask.put(i, 0);
+      for (int task : e.getValue()) {
+        messagesPerTask.put(task, new ArrayList<Object>());
+        finishedPerTask.put(task, false);
+        countsPerTask.put(task, 0);
       }
       messages.put(e.getKey(), messagesPerTask);
       finished.put(e.getKey(), finishedPerTask);
       counts.put(e.getKey(), countsPerTask);
       batchDone.put(e.getKey(), false);
     }
-    this.dataFlowOperation = op;
-    this.executor = dataFlowOperation.getTaskPlan().getThisExecutor();
   }
 
   @Override
@@ -166,10 +166,10 @@ public class ReduceBatchPartialReceiver implements MessageReceiver {
                 allZero = false;
               }
             }
-//            for (Map.Entry<Integer, Integer> e : countMap.entrySet()) {
-//              Integer i = e.getValue();
-//              e.setValue(i - 1);
-//            }
+            for (Map.Entry<Integer, Integer> e : countMap.entrySet()) {
+              Integer i = e.getValue();
+              e.setValue(i - 1);
+            }
             if (allFinished && allZero) {
               batchDone.put(t, true);
               // we don't want to go through the while loop for this one

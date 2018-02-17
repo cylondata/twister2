@@ -41,7 +41,7 @@ import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
 public class BaseReduceBatchCommunication implements IContainer {
-  private static final Logger LOG = Logger.getLogger(BaseReduceHLCommunication.class.getName());
+  private static final Logger LOG = Logger.getLogger(BaseReduceBatchCommunication.class.getName());
 
   private DataFlowOperation reduce;
 
@@ -178,9 +178,7 @@ public class BaseReduceBatchCommunication implements IContainer {
     @Override
     public boolean receive(int target, Object object) {
       count++;
-      if (count % 1 == 0) {
-        LOG.info(String.format("%d Received %d", target, count));
-      }
+      LOG.info(String.format("%d Received %d", target, count));
       return true;
     }
   }

@@ -84,10 +84,11 @@ public class ReduceBatchFinalReceiver implements MessageReceiver {
     Map<Integer, Boolean> finishedMessages = finished.get(target);
     if (m.size() > sendPendingMax) {
       canAdd = false;
-      LOG.info(String.format("%d Final add FALSE target %d source %d %s",
-          executor, target, source, counts.get(target)));
+      LOG.info(String.format("%d Final add FALSE target %d source %d %s %d",
+          executor, target, source, counts.get(target), finalMessages.size()));
     } else {
-      LOG.info(String.format("%d Final add TRUE target %d source %d", executor, target, source));
+      LOG.info(String.format("%d Final add TRUE target %d source %d %d",
+          executor, target, source, finishedMessages.size()));
       if (object instanceof MPIMessage) {
         ((MPIMessage) object).incrementRefCount();
       }
@@ -142,10 +143,10 @@ public class ReduceBatchFinalReceiver implements MessageReceiver {
             valueList.remove(0);
           }
         }
-//        for (Map.Entry<Integer, Integer> e : countMap.entrySet()) {
-//          Integer i = e.getValue();
-//          e.setValue(i - 1);
-//        }
+        for (Map.Entry<Integer, Integer> e : countMap.entrySet()) {
+          Integer i = e.getValue();
+          e.setValue(i - 1);
+        }
         finalMessages.get(t).addAll(out);
       } else {
         allFinished = false;
