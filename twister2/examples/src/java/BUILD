@@ -12,8 +12,6 @@ common_deps_files = [
     "@com_google_guava_guava//jar",
     "@lmdb_java//jar",
     "@commons_lang_commons_lang//jar",
-    "@org_apache_hadoop_hdfs//jar",
-    "@org_apache_hadoop_common//jar",
     "@commons_cli_commons_cli//jar",
    ]
 
