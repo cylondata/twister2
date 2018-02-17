@@ -30,6 +30,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
@@ -268,7 +269,7 @@ public final class MPIProcess {
     int size = MPI.COMM_WORLD.getSize();
     for (int i = 0; i < size; i++) {
       ResourceContainer resourceContainer = new ResourceContainer(i);
-      resourceContainer.addProperty("PROCESS_NAME", processes.get(i));
+      resourceContainer.addProperty(SchedulerContext.WORKER_NAME, processes.get(i));
       resourcePlan.addContainer(resourceContainer);
     }
   }

@@ -56,6 +56,7 @@ public class SchedulerContext extends Context {
 
   // The path from where the workers will transfer twister2 tar.gz packages
   public static final String TWISTER2_PACKAGES_PATH = "twister2.packages.path";
+  public static final String WORKER_NAME = "WORKER_NAME";
 
   public static String stateManagerClass(Config cfg) {
     return cfg.getStringValue(STATE_MANAGER_CLASS);

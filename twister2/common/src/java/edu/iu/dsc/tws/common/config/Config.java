@@ -22,17 +22,6 @@ import java.util.logging.Logger;
 /**
  * Config is an Immutable Map of &lt;String, Object&gt; The get/set API that uses Key objects
  * should be favored over Strings. Usage of the String API should be refactored out.
- *
- * A newly created Config object holds configs that might include wildcard tokens, like
- * ${TWISTER2_HOME}/bin, ${TWISTER2_LIB}/*. Token substitution can be doneProcessing by
- * converting that config to a local or cluster config by using the {@code Config.toLocalMode} or
- * {@code Config.toClusterMode} methods.
- *
- * Local mode is for a config to be used to run Heron locally, where TWISTER2_HOME might be
- * an install dir on the local host (e.g. TWISTER2_HOME=/usr/bin/twister2).
- * Cluster mode is to be used when building configs for a remote process run on a service,
- * where all directories might be relative to the current dir by default
- * (e.g. TWISTER2_HOME=~/twister2-core).
  */
 public class Config {
   private static final Logger LOG = Logger.getLogger(Config.class.getName());

@@ -22,6 +22,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
@@ -46,7 +47,7 @@ public final class Utils {
     List<ResourceContainer> containers = plan.getContainers();
     Map<String, List<ResourceContainer>> containersPerNode = new HashMap<>();
     for (ResourceContainer c : containers) {
-      String name = (String) c.getProperty("PROCESS_NAME");
+      String name = (String) c.getProperty(SchedulerContext.WORKER_NAME);
       List<ResourceContainer> containerList;
       if (!containersPerNode.containsKey(name)) {
         containerList = new ArrayList<>();
@@ -99,7 +100,7 @@ public final class Utils {
     List<ResourceContainer> containers = plan.getContainers();
     Map<String, List<ResourceContainer>> containersPerNode = new HashMap<>();
     for (ResourceContainer c : containers) {
-      String name = (String) c.getProperty("PROCESS_NAME");
+      String name = (String) c.getProperty(SchedulerContext.WORKER_NAME);
       List<ResourceContainer> containerList;
       if (!containersPerNode.containsKey(name)) {
         containerList = new ArrayList<>();
