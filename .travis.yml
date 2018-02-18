@@ -9,6 +9,7 @@ addons:
       - pkg-config
 
 before_install:
+  - echo "s:======================================"
   - echo "Downloading bazel"
   - wget https://github.com/bazelbuild/bazel/releases/download/0.8.1/bazel_0.8.1-linux-x86_64.deb
   - sha256sum -c tools/bazel_0.8.1-linux-x86_64.deb.sha256
@@ -46,6 +47,12 @@ script:
   - echo "*****************************************"
   - mvn install:install-file -DcreateChecksum=true -Dpackaging=jar -Dfile=$OMPI_300/ompi/mpi/java/java/mpi.jar -DgroupId=ompi -DartifactId=ompijavabinding -Dversion=3.0.0
   - echo "END OF INSTALL"
+  - bazel -version
   - echo " BAZEL BUILD START"
   - bazel build --config=ubuntu twister2/... 
-
+  - echo " BAZEL BUILD END"
+  - echo "BAZEL PACKAGE START"
+  - bazel build --config=ubuntu //scripts/package:tarpkgs
+  - echo "BAZEL PACKAGE END"
+  - echo " END ALL "
+  - echo "e:============================================"  
