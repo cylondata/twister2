@@ -9,15 +9,21 @@ addons:
       - pkg-config
 
 before_install:
+  - echo "Downloading bazel"
   - wget https://github.com/bazelbuild/bazel/releases/download/0.8.1/bazel_0.8.1-linux-x86_64.deb
   - sha256sum -c tools/bazel_0.8.1-linux-x86_64.deb.sha256
   - sudo dpkg -i bazel_0.8.1-linux-x86_64.deb
+  - echo "Installing C++ and Python"
   - sudo apt-get install g++
+  - sudo apt-get install git build-essential automake cmake libtool-bin zip libunwind-setjmp0-dev zlib1g-dev unzip pkg-config python-setuptools -y
+  - sudo apt-get install  python-dev python-pip
+
 
 install:
   - wget https://www.open-mpi.org/software/ompi/v3.0/downloads/openmpi-3.0.0.tar.gz
   - tar -xzvf openmpi-3.0.0.tar.gz
   - mkdir build
+  - echo "INSTALL OPENMPI VIBHATH"
   - export BUILD=$PWD/build
   - export OMPI_300=$PWD/openmpi-3.0.0
   - export PATH=$BUILD/bin:$PATH
@@ -26,16 +32,14 @@ install:
   - ./configure --prefix=$BUILD --enable-mpi-java
   - make -j 8
   - make install
-  - sudo apt-get install git build-essential automake cmake libtool-bin zip libunwind-setjmp0-dev zlib1g-dev unzip pkg-config python-setuptools -y
-  - sudo apt-get install  python-dev python-pip
-  
+
 script:
-  - echo "=============================="
-  - echo "PATH CHECK"
+  - echo "*****************************************"
+  - echo "PATH CHECK:vb"
   - echo $OMPI_300
   - ls $PWD/build
   - mpirun -version
-  - echo "=============================="
+  - echo "*****************************************"
   - mvn install:install-file -DcreateChecksum=true -Dpackaging=jar -Dfile=$OMPI_300/ompi/mpi/java/java/mpi.jar -DgroupId=ompi -DartifactId=ompijavabinding -Dversion=3.0.0
 
 
