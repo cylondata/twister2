@@ -47,7 +47,7 @@ script:
   - echo "*****************************************"
   - mvn install:install-file -DcreateChecksum=true -Dpackaging=jar -Dfile=$OMPI_300/ompi/mpi/java/java/mpi.jar -DgroupId=ompi -DartifactId=ompijavabinding -Dversion=3.0.0
   - echo "END OF INSTALL"
-  - bazel -version
+  - bazel version
   - echo " BAZEL BUILD START"
   - bazel build --config=ubuntu twister2/... 
   - echo " BAZEL BUILD END"
