@@ -30,5 +30,5 @@ script:
   - sudo apt-get install git build-essential automake cmake libtool-bin zip libunwind-setjmp0-dev zlib1g-dev unzip pkg-config python-setuptools -y
   - sudo apt-get install  python-dev python-pip
   - bazel build --config=ubuntu twister2/...
-  - bazel build --config=ubuntu //scripts/package:tarpkgs
+  
 
