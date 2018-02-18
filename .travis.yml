@@ -56,3 +56,9 @@ script:
   - echo "BAZEL PACKAGE END"
   - echo " END ALL "
   - echo "e:============================================"  
+
+notifications:
+  slack:
+    rooms:
+      - dsc-twister:8iGGrATeSkL31CU3X9WQBNQV#general
+      - dsc-twister:8iGGrATeSkL31CU3X9WQBNQV#random
