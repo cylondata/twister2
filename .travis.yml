@@ -15,7 +15,6 @@ before_install:
   - sudo dpkg -i bazel_0.8.1-linux-x86_64.deb
   - echo "Installing C++ and Python"
   - sudo apt-get install g++
-  - sudo apt-get install git build-essential automake cmake libtool-bin zip libunwind-setjmp0-dev zlib1g-dev unzip pkg-config python-setuptools -y
   - sudo apt-get install  python-dev python-pip
 
 
