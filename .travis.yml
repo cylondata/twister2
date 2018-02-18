@@ -22,11 +22,14 @@ install:
   - wget https://www.open-mpi.org/software/ompi/v3.0/downloads/openmpi-3.0.0.tar.gz
   - tar -xzvf openmpi-3.0.0.tar.gz
   - mkdir build
+  - ls
   - echo "INSTALL OPENMPI VIBHATH"
   - export BUILD=$PWD/build
   - export OMPI_300=$PWD/openmpi-3.0.0
   - export PATH=$BUILD/bin:$PATH
   - export LD_LIBRARY_PATH=$BUILD/lib:$LD_LIBRARY_PATH
+  - echo "CHECK LS OMP:vb"
+  - ls
   - cd $OMPI_300
   - ./configure --prefix=$BUILD --enable-mpi-java
   - make -j 8
