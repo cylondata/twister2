@@ -45,8 +45,9 @@ public class TWSMPIChannel implements TWSChannel {
   private int executor;
 
   private int sendCount = 0;
-
-  private int pendingSendCount = 0;
+  private int completedSendCount = 0;
+  private int receiveCount = 0;
+  private int pendingReceiveCount = 0;
 
   @SuppressWarnings("VisibilityModifier")
   private class MPIRequest {
@@ -134,9 +135,8 @@ public class TWSMPIChannel implements TWSChannel {
   public boolean sendMessage(int id, MPIMessage message, MPIMessageListener callback) {
     boolean offer = pendingSends.offer(
         new MPISendRequests(id, message.getHeader().getEdge(), message, callback));
-    if (offer) {
-      pendingSendCount++;
-    }
+//    LOG.info(String.format("%d Pending sends count: %d wait: %d",
+//        executor, pendingSends.size(), waitForCompletionSends.size()));
     return offer;
   }
 
@@ -178,6 +178,7 @@ public class TWSMPIChannel implements TWSChannel {
     MPIBuffer byteBuffer = requests.availableBuffers.poll();
     if (byteBuffer != null) {
       // post the receive
+      pendingReceiveCount++;
       Request request = postReceive(requests.rank, requests.edge, byteBuffer);
       requests.pendingRequests.add(new MPIRequest(request, byteBuffer));
     }
@@ -231,6 +232,7 @@ public class TWSMPIChannel implements TWSChannel {
           Status status = r.request.testStatus();
           // this request has finished
           if (status != null) {
+            completedSendCount++;
             requestIterator.remove();
           }
         } catch (MPIException e) {
@@ -247,6 +249,10 @@ public class TWSMPIChannel implements TWSChannel {
       }
     }
 
+//    LOG.info(String.format(
+//        "%d sending - sent %d comp send %d receive %d pend recv %d pending sends %d waiting %d",
+//        executor, sendCount, completedSendCount, receiveCount,
+//        pendingReceiveCount, pendingSends.size(), waitForCompletionSends.size()));
 
     for (int i = 0; i < registeredReceives.size(); i++) {
       MPIReceiveRequests receiveRequests = registeredReceives.get(i);
@@ -257,8 +263,9 @@ public class TWSMPIChannel implements TWSChannel {
           Status status = r.request.testStatus();
           if (status != null) {
             if (!status.isCancelled()) {
-//              LOG.info(String.format("%d Receive completed: from %d size %d",
-//                  executor, receiveRequests.rank, status.getCount(MPI.BYTE)));
+//              LOG.info(String.format("%d Receive completed: from %d size %d %d",
+//                  executor, receiveRequests.rank, status.getCount(MPI.BYTE), ++receiveCount));
+              ++receiveCount;
 //               lets call the callback about the receive complete
               r.buffer.setSize(status.getCount(MPI.BYTE));
               receiveRequests.callback.onReceiveComplete(

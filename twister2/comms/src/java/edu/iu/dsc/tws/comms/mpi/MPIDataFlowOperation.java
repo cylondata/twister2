@@ -291,6 +291,8 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
   public void progress() {
     lock.lock();
     try {
+//      LOG.info(String.format("%d released send %d recv %d",
+//          executor, releasedSendBuffers, releasedReceivedBuffers));
       for (Map.Entry<Integer, ArrayBlockingQueue<Pair<Object, MPISendMessage>>> e
           : pendingSendMessagesPerSource.entrySet()) {
 
@@ -396,6 +398,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
 
         //If this is the last receiver we save to memory store
         if (isStoreBased && isLastReceiver) {
+          LOG.info("Store based");
           writeToMemoryManager(currentMessage);
           currentMessage.setReceivedState(MPIMessage.ReceivedState.RECEIVE);
           if (!receiver.receiveMessage(currentMessage, operationMemoryManager)) {
@@ -409,6 +412,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
             updateAttemptMap(receiveMessageAttempts, id, -1);
           }
         } else {
+
           Object object = messageDeSerializer.build(currentMessage,
               currentMessage.getHeader().getEdge());
           // if the message is complete, send it further down and call the receiver
@@ -416,9 +420,8 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
 
           Queue<Pair<Object, MPIMessage>> pendingReceiveMessages =
               pendingReceiveMessagesPerSource.get(id);
-//        receiveCount++;
 //        if (receiveCount % 1 == 0) {
-//          LOG.info(String.format("%d received message %d %d %d",
+//          LOG.info(String.format("%d deserialized received message %d %d %d",
 //              executor, id, receiveCount, pendingReceiveMessages.size()));
 //        }
           currentMessage.setReceivedState(MPIMessage.ReceivedState.INIT);
@@ -458,10 +461,9 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
             } else {
               updateAttemptMap(receiveMessageAttempts, id, -1);
             }
+            // okay lets try to free the buffers of this message
+            currentMessage.release();
           }
-
-          // okay lets try to free the buffers of this message
-          currentMessage.release();
         }
       }
 
@@ -590,7 +592,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
   }
 
   private boolean sendMessageToTarget(MPIMessage msgObj1, int i) {
-    msgObj1.incrementRefCount(1);
+    msgObj1.incrementRefCount();
     int e = instancePlan.getExecutorForChannel(i);
     return channel.sendMessage(e, msgObj1, this);
   }
@@ -609,6 +611,8 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
     message.release();
   }
 
+  private int releasedSendBuffers = 0;
+  private int releasedReceivedBuffers = 0;
   protected void releaseTheBuffers(int id, MPIMessage message) {
     lock.lock();
     try {
@@ -618,6 +622,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
           // we need to reset the buffer so it can be used again
           buffer.getByteBuffer().clear();
           list.offer(buffer);
+          releasedReceivedBuffers++;
         }
       } else if (MPIMessageDirection.OUT == message.getMessageDirection()) {
         Queue<MPIBuffer> queue = sendBuffers;
@@ -625,6 +630,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
           // we need to reset the buffer so it can be used again
           buffer.getByteBuffer().clear();
           queue.offer(buffer);
+          releasedSendBuffers++;
         }
       }
     } finally {

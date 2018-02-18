@@ -40,6 +40,7 @@ public class ReduceBatchPartialReceiver implements MessageReceiver {
   private int sendPendingMax = 128;
   private int destination;
   private Map<Integer, Boolean> batchDone = new HashMap<>();
+  private Map<Integer, Map<Integer, Integer>> totalCounts = new HashMap<>();
 
   public ReduceBatchPartialReceiver(int dst, ReduceFunction reduce) {
     this.destination = dst;
@@ -58,16 +59,19 @@ public class ReduceBatchPartialReceiver implements MessageReceiver {
       Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
       Map<Integer, Boolean> finishedPerTask = new HashMap<>();
       Map<Integer, Integer> countsPerTask = new HashMap<>();
+      Map<Integer, Integer> totalCountsPerTask = new HashMap<>();
 
       for (int task : e.getValue()) {
         messagesPerTask.put(task, new ArrayList<Object>());
         finishedPerTask.put(task, false);
         countsPerTask.put(task, 0);
+        totalCountsPerTask.put(task, 0);
       }
       messages.put(e.getKey(), messagesPerTask);
       finished.put(e.getKey(), finishedPerTask);
       counts.put(e.getKey(), countsPerTask);
       batchDone.put(e.getKey(), false);
+      totalCounts.put(e.getKey(), totalCountsPerTask);
     }
   }
 
@@ -84,12 +88,19 @@ public class ReduceBatchPartialReceiver implements MessageReceiver {
 
     if (m.size() > sendPendingMax) {
       canAdd = false;
+//      LOG.info(String.format("%d Partial add FALSE target %d source %d %s %s",
+//          executor, target, source, finishedMessages, counts.get(target)));
     } else {
+//      LOG.info(String.format("%d Partial add TRUE target %d source %d %s %s",
+//          executor, target, source, finishedMessages, counts.get(target)));
       if (object instanceof MPIMessage) {
         ((MPIMessage) object).incrementRefCount();
       }
       Integer c = counts.get(target).get(source);
       counts.get(target).put(source, c + 1);
+
+      Integer tc = totalCounts.get(target).get(source);
+      totalCounts.get(target).put(source, tc + 1);
 
       m.add(object);
       if ((flags & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) {
@@ -111,8 +122,9 @@ public class ReduceBatchPartialReceiver implements MessageReceiver {
         Map<Integer, List<Object>> messagePerTarget = messages.get(t);
         Map<Integer, Boolean> finishedForTarget = finished.get(t);
         Map<Integer, Integer> countMap = counts.get(t);
-        LOG.info(String.format("%d reduce partial counts %d %s %s", executor, t, countMap,
-            finishedForTarget));
+        Map<Integer, Integer> totalCountMap = totalCounts.get(t);
+//        LOG.info(String.format("%d reduce partial counts %d %s %s %s", executor, t,
+//            countMap, totalCountMap, finishedForTarget));
         boolean found = true;
         boolean allFinished = true;
         for (Map.Entry<Integer, List<Object>> e : messagePerTarget.entrySet()) {
@@ -176,6 +188,8 @@ public class ReduceBatchPartialReceiver implements MessageReceiver {
               break;
             }
           } else {
+//          LOG.info(String.format("%d FALSE reduce partial counts %d %s %s", executor, t, countMap,
+//                finishedForTarget));
             canProgress = false;
           }
         }
