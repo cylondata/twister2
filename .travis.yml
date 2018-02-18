@@ -23,6 +23,7 @@ install:
   - tar -xzvf openmpi-3.0.0.tar.gz
   - mkdir build
   - ls
+  - echo " START INSTALL"
   - echo "INSTALL OPENMPI VIBHATH"
   - export BUILD=$PWD/build
   - export OMPI_300=$PWD/openmpi-3.0.0
@@ -44,8 +45,7 @@ script:
   - mpirun -version
   - echo "*****************************************"
   - mvn install:install-file -DcreateChecksum=true -Dpackaging=jar -Dfile=$OMPI_300/ompi/mpi/java/java/mpi.jar -DgroupId=ompi -DartifactId=ompijavabinding -Dversion=3.0.0
-  - echo "END OF SCRIPT"
-
-
-  
+  - echo "END OF INSTALL"
+  - echo " BAZEL BUILD START"
+  - bazel build --config=ubuntu twister2/... 
 
