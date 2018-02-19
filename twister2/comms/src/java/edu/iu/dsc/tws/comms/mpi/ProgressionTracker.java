@@ -24,6 +24,7 @@ public class ProgressionTracker {
     if (items.size() == 0) {
       canProgress = false;
     } else {
+
       canProgress = true;
       this.progressItems = new ArrayBlockingQueue<>(items.size());
       for (int i : items) {
@@ -34,9 +35,14 @@ public class ProgressionTracker {
 
   public int next() {
     if (progressItems.size() > 0) {
-      return progressItems.poll();
+      Integer next = progressItems.poll();
+      if (next == null) {
+        return Integer.MIN_VALUE;
+      } else {
+        return next;
+      }
     } else {
-      return -1;
+      return Integer.MIN_VALUE;
     }
   }
 
@@ -44,7 +50,7 @@ public class ProgressionTracker {
     progressItems.offer(item);
   }
 
-  public boolean isCanProgress() {
+  public boolean canProgress() {
     return canProgress;
   }
 }

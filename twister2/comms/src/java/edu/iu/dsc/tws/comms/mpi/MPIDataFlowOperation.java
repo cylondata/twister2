@@ -194,9 +194,17 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
   }
 
   private void initProgressTrackers() {
-    sendProgressTracker = new ProgressionTracker(pendingSendMessagesPerSource.keySet());
-    receiveProgressTracker = new ProgressionTracker(pendingReceiveMessagesPerSource.keySet());
-    deserializeProgressTracker = new ProgressionTracker(pendingReceiveDeSerializations.keySet());
+    Set<Integer> items = pendingSendMessagesPerSource.keySet();
+    LOG.info(String.format("%d pendingSendMessagesPerSource %s", executor, items));
+    sendProgressTracker = new ProgressionTracker(items);
+
+    Set<Integer> items1 = pendingReceiveMessagesPerSource.keySet();
+    LOG.info(String.format("%d pendingReceiveMessagesPerSource %s", executor, items1));
+    receiveProgressTracker = new ProgressionTracker(items1);
+
+    Set<Integer> items2 = pendingReceiveDeSerializations.keySet();
+    LOG.info(String.format("%d pendingReceiveDeSerializations %s", executor, items1));
+    deserializeProgressTracker = new ProgressionTracker(items2);
   }
 
   /**
@@ -427,22 +435,28 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
    * Progress the serializations
    */
   public void progress() {
-    if (sendProgressTracker.isCanProgress()) {
+    if (sendProgressTracker.canProgress()) {
       int sendId = sendProgressTracker.next();
-      sendProgress(pendingSendMessagesPerSource.get(sendId));
-      sendProgressTracker.finish(sendId);
+      if (sendId != Integer.MIN_VALUE) {
+        sendProgress(pendingSendMessagesPerSource.get(sendId));
+        sendProgressTracker.finish(sendId);
+      }
     }
 
-    if (deserializeProgressTracker.isCanProgress()) {
+    if (deserializeProgressTracker.canProgress()) {
       int deserializeId = deserializeProgressTracker.next();
-      receiveDeserializeProgress(pendingReceiveDeSerializations.get(deserializeId).poll());
-      deserializeProgressTracker.finish(deserializeId);
+      if (deserializeId != Integer.MIN_VALUE) {
+        receiveDeserializeProgress(pendingReceiveDeSerializations.get(deserializeId).poll());
+        deserializeProgressTracker.finish(deserializeId);
+      }
     }
 
-    if (receiveProgressTracker.isCanProgress()) {
+    if (receiveProgressTracker.canProgress()) {
       int receiveId = receiveProgressTracker.next();
-      receiveProgress(pendingReceiveMessagesPerSource.get(receiveId));
-      receiveProgressTracker.finish(receiveId);
+      if (receiveId != Integer.MIN_VALUE) {
+        receiveProgress(pendingReceiveMessagesPerSource.get(receiveId));
+        receiveProgressTracker.finish(receiveId);
+      }
     }
   }
 
