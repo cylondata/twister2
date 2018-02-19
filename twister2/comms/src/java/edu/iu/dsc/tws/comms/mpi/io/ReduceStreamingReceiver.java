@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -36,6 +38,7 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
   protected DataFlowOperation operation;
   protected int sendPendingMax = 128;
   protected int destination = 0;
+  private Queue<Object> reducedValues;
 
   public ReduceStreamingReceiver(ReduceFunction function) {
     this.reduceFunction = function;
@@ -45,7 +48,8 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     this.executor = op.getTaskPlan().getThisExecutor();
     this.operation = op;
-    sendPendingMax = MPIContext.sendPendingMax(cfg);
+    this.sendPendingMax = MPIContext.sendPendingMax(cfg);
+    this.reducedValues = new ArrayBlockingQueue<>(sendPendingMax);
 
     for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
       Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
@@ -80,13 +84,14 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
     return canAdd;
   }
 
+  @Override
   public void progress() {
     for (int t : messages.keySet()) {
       boolean canProgress = true;
+      // now check weather we have the messages for this source
+      Map<Integer, List<Object>> messagePerTarget = messages.get(t);
+      Map<Integer, Integer> countsPerTarget = counts.get(t);
       while (canProgress) {
-        // now check weather we have the messages for this source
-        Map<Integer, List<Object>> messagePerTarget = messages.get(t);
-        Map<Integer, Integer> countsPerTarget = counts.get(t);
         boolean found = true;
         for (Map.Entry<Integer, List<Object>> e : messagePerTarget.entrySet()) {
           if (e.getValue().size() == 0) {
@@ -94,22 +99,29 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
             canProgress = false;
           }
         }
-        if (found) {
+        if (found && reducedValues.size() < sendPendingMax) {
           Object previous = null;
           for (Map.Entry<Integer, List<Object>> e : messagePerTarget.entrySet()) {
             if (previous == null) {
-              previous = e.getValue().get(0);
+              previous = e.getValue().remove(0);
             } else {
-              Object current = e.getValue().get(0);
+              Object current = e.getValue().remove(0);
               previous = reduceFunction.reduce(previous, current);
             }
           }
+          if (previous != null) {
+            reducedValues.offer(previous);
+          }
+        }
 
+        if (reducedValues.size() > 0) {
+          Object previous = reducedValues.peek();
           boolean handle = handleMessage(t, previous, 0, destination);
           if (handle) {
-            for (Map.Entry<Integer, List<Object>> e : messagePerTarget.entrySet()) {
-              e.getValue().remove(0);
-            }
+            reducedValues.poll();
+//            for (Map.Entry<Integer, List<Object>> e : messagePerTarget.entrySet()) {
+//              e.getValue().remove(0);
+//            }
             for (Map.Entry<Integer, Integer> e : countsPerTarget.entrySet()) {
               Integer i = e.getValue();
               countsPerTarget.put(e.getKey(), i - 1);
