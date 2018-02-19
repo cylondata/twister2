@@ -336,8 +336,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
           int startOfExternalRouts = mpiSendMessage.getAcceptedExternalSends();
           int noOfExternalSends = startOfExternalRouts;
           for (int i = startOfExternalRouts; i < exRoutes.size(); i++) {
-            boolean sendAccepted = sendMessageToTarget(message.getMPIMessage(),
-                exRoutes.get(i));
+            boolean sendAccepted = sendMessageToTarget(message.getMPIMessage(), exRoutes.get(i));
             // if no longer accepts stop
             if (!sendAccepted) {
               canProgress = false;
@@ -517,10 +516,10 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
     }
   }
 
-  private boolean sendMessageToTarget(MPIMessage msgObj1, int i) {
-    msgObj1.incrementRefCount();
+  private boolean sendMessageToTarget(MPIMessage mpiMessage, int i) {
+    mpiMessage.incrementRefCount();
     int e = instancePlan.getExecutorForChannel(i);
-    return channel.sendMessage(e, msgObj1, this);
+    return channel.sendMessage(e, mpiMessage, this);
   }
 
   @Override
