@@ -72,7 +72,14 @@ public class MPIDataFlowAllReduce implements DataFlowOperation {
     this.middleTask = middleTask;
   }
 
-  @Override
+
+  /**
+   * Initialize
+   * @param cfg
+   * @param t
+   * @param taskPlan
+   * @param edge
+   */
   public void init(Config config, MessageType t, TaskPlan instancePlan, int edge) {
     this.type = t;
     this.executor = instancePlan.getThisExecutor();

@@ -236,7 +236,14 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
         partialSendRoutingParameters(source, dest));
   }
 
-  @Override
+
+  /**
+   * Initialize
+   * @param cfg
+   * @param t
+   * @param taskPlan
+   * @param edge
+   */
   public void init(Config cfg, MessageType t, TaskPlan taskPlan, int edge) {
     this.type = t;
     this.instancePlan = taskPlan;

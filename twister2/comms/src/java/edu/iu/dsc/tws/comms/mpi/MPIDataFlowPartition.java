@@ -90,7 +90,14 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
     this.finalReceiver = finalRcvr;
   }
 
-  @Override
+
+  /**
+   * Initialize
+   * @param cfg
+   * @param t
+   * @param taskPlan
+   * @param edge
+   */
   public void init(Config cfg, MessageType t, TaskPlan taskPlan, int edge) {
     this.thisSources = TaskPlanUtils.getTasksOfThisExecutor(taskPlan, sources);
     LOG.info(String.format("%d setup loadbalance routing %s",

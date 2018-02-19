@@ -104,7 +104,14 @@ public class MPIDataFlowBroadcast implements DataFlowOperation, MPIMessageReceiv
             MPIContext.DEFAULT_PATH), header.getFlags(), object);
   }
 
-  @Override
+
+  /**
+   * Initialize
+   * @param cfg
+   * @param t
+   * @param taskPlan
+   * @param edge
+   */
   public void init(Config cfg, MessageType t, TaskPlan tPlan, int ed) {
     this.config = cfg;
     this.instancePlan = tPlan;
