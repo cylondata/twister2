@@ -183,12 +183,20 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
     // initialize the serializers
     LOG.fine(String.format("%d setup initializers", instancePlan.getThisExecutor()));
     initSerializers();
+
+    initProgressTrackers();
   }
 
   protected void initSerializers() {
     // initialize the serializers
     messageSerializer.init(config, sendBuffers, isKeyed);
     messageDeSerializer.init(config, isKeyed);
+  }
+
+  private void initProgressTrackers() {
+    sendProgressTracker = new ProgressionTracker(pendingSendMessagesPerSource.keySet());
+    receiveProgressTracker = new ProgressionTracker(pendingReceiveMessagesPerSource.keySet());
+    deserializeProgressTracker = new ProgressionTracker(pendingReceiveDeSerializations.keySet());
   }
 
   /**
@@ -420,25 +428,22 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
    * Progress the serializations
    */
   public void progress() {
-    lock.lock();
-    try {
-//      LOG.info(String.format("%d released send %d recv %d",
-//          executor, releasedSendBuffers, releasedReceivedBuffers));
-      for (Map.Entry<Integer, ArrayBlockingQueue<Pair<Object, MPISendMessage>>> e
-          : pendingSendMessagesPerSource.entrySet()) {
-        sendProgress(e.getValue());
-      }
+    if (sendProgressTracker.isCanProgress()) {
+      int sendId = sendProgressTracker.next();
+      sendProgress(pendingSendMessagesPerSource.get(sendId));
+      sendProgressTracker.finish(sendId);
+    }
 
-      for (Map.Entry<Integer, Queue<MPIMessage>> it : pendingReceiveDeSerializations.entrySet()) {
-        MPIMessage currentMessage = it.getValue().poll();
-        receiveDeserializeProgress(currentMessage);
-      }
-      for (Map.Entry<Integer, Queue<Pair<Object, MPIMessage>>> e
-          : pendingReceiveMessagesPerSource.entrySet()) {
-        receiveProgress(e.getValue());
-      }
-    } finally {
-      lock.unlock();
+    if (deserializeProgressTracker.isCanProgress()) {
+      int deserializeId = deserializeProgressTracker.next();
+      receiveDeserializeProgress(pendingReceiveDeSerializations.get(deserializeId).poll());
+      deserializeProgressTracker.finish(deserializeId);
+    }
+
+    if (receiveProgressTracker.isCanProgress()) {
+      int receiveId = receiveProgressTracker.next();
+      receiveProgress(pendingReceiveMessagesPerSource.get(receiveId));
+      receiveProgressTracker.finish(receiveId);
     }
   }
 
