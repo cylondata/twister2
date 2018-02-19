@@ -170,7 +170,7 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
 
 
       if (allFinished) {
-        LOG.info(String.format("%d final all finished %d", executor, t));
+//        LOG.info(String.format("%d final all finished %d", executor, t));
         batchDone.put(t, true);
         if (!isStoreBased) {
           gatherBatchReceiver.receive(t, finalMessages.get(t).iterator());

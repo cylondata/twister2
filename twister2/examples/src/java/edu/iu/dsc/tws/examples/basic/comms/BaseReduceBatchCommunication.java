@@ -142,7 +142,7 @@ public class BaseReduceBatchCommunication implements IContainer {
           }
 //          LOG.info(String.format("%d sending to %d", id, task)
 //              + " count: " + sendCount++);
-          if (i % 1 == 0) {
+          if (i % 100 == 0) {
             LOG.info(String.format("%d sent %d", id, i));
           }
           Thread.yield();
@@ -178,7 +178,9 @@ public class BaseReduceBatchCommunication implements IContainer {
     @Override
     public boolean receive(int target, Object object) {
       count++;
-      LOG.info(String.format("%d Received %d", target, count));
+      if (count % 1 == 0) {
+        LOG.info(String.format("%d Received %d", target, count));
+      }
       return true;
     }
   }
@@ -192,7 +194,9 @@ public class BaseReduceBatchCommunication implements IContainer {
     @Override
     public Object reduce(Object t1, Object t2) {
       count++;
-      LOG.info(String.format("Partial received %d", count));
+      if (count % 100 == 0) {
+        LOG.info(String.format("Partial received %d", count));
+      }
       return t1;
     }
   }
