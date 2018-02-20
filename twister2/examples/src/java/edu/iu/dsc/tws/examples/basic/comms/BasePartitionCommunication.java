@@ -33,64 +33,36 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
 package edu.iu.dsc.tws.examples.basic.comms;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.GatherBatchReceiver;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
+import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.mpi.io.GatherBatchFinalReceiver;
-import edu.iu.dsc.tws.comms.mpi.io.GatherBatchPartialReceiver;
+import edu.iu.dsc.tws.examples.IntData;
 import edu.iu.dsc.tws.examples.Utils;
-import edu.iu.dsc.tws.examples.utils.RandomString;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
-public class BasicGatherBatchTestCommunication implements IContainer {
-  private static final Logger LOG = Logger.
-      getLogger(BasicGatherBatchTestCommunication.class.getName());
+/**
+ * This will be a map-partition job only using the communication primitives
+ */
+public class BasePartitionCommunication implements IContainer {
+  private static final Logger LOG = Logger.getLogger(BasePartitionCommunication.class.getName());
 
-  private DataFlowOperation aggregate;
+  private DataFlowOperation partition;
 
   private ResourcePlan resourcePlan;
 
@@ -102,9 +74,13 @@ public class BasicGatherBatchTestCommunication implements IContainer {
 
   private int noOfTasksPerExecutor = 2;
 
-  private RandomString randomString;
+  private enum Status {
+    INIT,
+    MAP_FINISHED,
+    LOAD_RECEIVE_FINISHED,
+  }
 
-  private long startTime = 0;
+  private Status status;
 
   @Override
   public void init(Config cfg, int containerId, ResourcePlan plan) {
@@ -113,8 +89,8 @@ public class BasicGatherBatchTestCommunication implements IContainer {
     this.config = cfg;
     this.resourcePlan = plan;
     this.id = containerId;
+    this.status = Status.INIT;
     this.noOfTasksPerExecutor = NO_OF_TASKS / plan.noOfContainers();
-    this.randomString = new RandomString(128000, new Random(), RandomString.ALPHANUM);
 
     // lets create the task plan
     TaskPlan taskPlan = Utils.createReduceTaskPlan(cfg, plan, NO_OF_TASKS);
@@ -124,24 +100,20 @@ public class BasicGatherBatchTestCommunication implements IContainer {
     TWSCommunication channel = network.getDataFlowTWSCommunication();
 
     Set<Integer> sources = new HashSet<>();
+    Set<Integer> dests = new HashSet<>();
     for (int i = 0; i < NO_OF_TASKS; i++) {
       sources.add(i);
+      dests.add(i);
     }
-    int dest = NO_OF_TASKS;
-
     Map<String, Object> newCfg = new HashMap<>();
 
-    LOG.info("Setting up gather dataflow operation");
-
+    LOG.info("Setting up partition dataflow operation");
     try {
       // this method calls the init method
       // I think this is wrong
+      partition = channel.partition(newCfg, MessageType.INTEGER, sources,
+          dests, new FinalPartitionReciver());
 
-      aggregate = channel.gather(newCfg, MessageType.INTEGER, 0, sources,
-          dest, new GatherBatchFinalReceiver(new FinalGatherReceive()),
-          new GatherBatchPartialReceiver(dest));
-//      aggregate = channel.gather(newCfg, MessageType.OBJECT, 0, sources,
-//          dest, new FinalGatherReceive());
       for (int i = 0; i < noOfTasksPerExecutor; i++) {
         // the map thread where data is produced
         LOG.info(String.format("%d Starting %d", id, i + id * noOfTasksPerExecutor));
@@ -154,7 +126,7 @@ public class BasicGatherBatchTestCommunication implements IContainer {
           // progress the channel
           channel.progress();
           // we should progress the communication directive
-          aggregate.progress();
+          partition.progress();
           Thread.yield();
         } catch (Throwable t) {
           t.printStackTrace();
@@ -181,17 +153,12 @@ public class BasicGatherBatchTestCommunication implements IContainer {
       try {
         LOG.log(Level.INFO, "Starting map worker: " + id);
 //      MPIBuffer data = new MPIBuffer(1024);
-        startTime = System.nanoTime();
+        int[] data = {task, task * 100};
+        int dest = (task + 1) % NO_OF_TASKS;
         for (int i = 0; i < 1; i++) {
-          int[] data = {task, task * 100};
           // lets generate a message
-//          KeyedContent mesage = new KeyedContent(task, data,
-//              MessageType.INTEGER, MessageType.OBJECT);
-//
-          //Set the last message with the corerct flag. Since we only send one message we set it
-          //on the first call itself
           int flags = MessageFlags.FLAGS_LAST;
-          while (!aggregate.send(task, data, flags)) {
+          while (!partition.send(task, data, flags, dest)) {
             // lets wait a litte and try again
             try {
               Thread.sleep(1);
@@ -199,19 +166,26 @@ public class BasicGatherBatchTestCommunication implements IContainer {
               e.printStackTrace();
             }
           }
+//          LOG.info(String.format("%d sending to %d", id, task)
+//              + " count: " + sendCount++);
+          if (i % 1000 == 0) {
+            LOG.info(String.format("%d sent %d", id, i));
+          }
           Thread.yield();
         }
         LOG.info(String.format("%d Done sending", id));
+        status = Status.MAP_FINISHED;
       } catch (Throwable t) {
         t.printStackTrace();
       }
     }
   }
 
-  private class FinalGatherReceive implements GatherBatchReceiver {
+  private class FinalPartitionReciver implements MessageReceiver {
     // lets keep track of the messages
     // for each task we need to keep track of incoming messages
-    private List<Integer> dataList;
+    private Map<Integer, Map<Integer, List<Object>>> messages = new HashMap<>();
+    private Map<Integer, Map<Integer, Integer>> counts = new HashMap<>();
 
     private int count = 0;
 
@@ -219,36 +193,34 @@ public class BasicGatherBatchTestCommunication implements IContainer {
 
     @Override
     public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-      dataList = new ArrayList<Integer>();
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public void receive(int target, Iterator<Object> it) {
-      int itercount = 0;
-      Object temp;
-
-      while (it.hasNext()) {
-        itercount++;
-        temp = it.next();
-        if (temp instanceof List) {
-          List<Object> datalist = (List<Object>) temp;
-          for (Object o : datalist) {
-            int[] data = (int[]) o;
-            dataList.add(data[0]);
-          }
-        } else {
-          int[] data = (int[]) temp;
-          dataList.add(data[0]);
-        }
-      }
-      LOG.info("Gather results (only the first int of each array)"
-          + Arrays.toString(dataList.toArray()));
+    public boolean onMessage(int source, int path, int target, int flags, Object object) {
+      // add the object to the map
+      System.out.printf("Dest Task %d got message from Task %d with value %d \n", target,
+          source, ((int[]) object)[1]);
+      return true;
     }
 
     public void progress() {
 
     }
   }
-}
 
+  /**
+   * Generate data with an integer array
+   *
+   * @return IntData
+   */
+  private IntData generateData() {
+    int s = 64000;
+    int[] d = new int[s];
+    for (int i = 0; i < s; i++) {
+      d[i] = i;
+    }
+    return new IntData(d);
+  }
+
+
+}
