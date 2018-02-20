@@ -250,10 +250,10 @@ public class TWSMPIChannel implements TWSChannel {
       }
     }
 
-//    LOG.info(String.format(
-//        "%d sending - sent %d comp send %d receive %d pend recv %d pending sends %d waiting %d",
-//        executor, sendCount, completedSendCount, receiveCount,
-//        pendingReceiveCount, pendingSends.size(), waitForCompletionSends.size()));
+    LOG.info(String.format(
+        "%d sending - sent %d comp send %d receive %d pend recv %d pending sends %d waiting %d",
+        executor, sendCount, completedSendCount, receiveCount,
+        pendingReceiveCount, pendingSends.size(), waitForCompletionSends.size()));
 
     for (int i = 0; i < registeredReceives.size(); i++) {
       MPIReceiveRequests receiveRequests = registeredReceives.get(i);

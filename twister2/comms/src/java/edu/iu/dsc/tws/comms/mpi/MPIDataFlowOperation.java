@@ -20,6 +20,8 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -60,6 +62,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
   protected MessageType type;
   protected MessageType keyType = MessageType.SHORT;
   protected boolean isKeyed = false;
+  protected Lock lock = new ReentrantLock();
 
   protected int executor;
   /**
@@ -122,6 +125,11 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
   private ProgressionTracker receiveProgressTracker;
 
   private ProgressionTracker deserializeProgressTracker;
+
+  private int sendBufferReleaseCount = 0;
+  private int receiveBufferReleaseCount = 0;
+  private int sendCount = 0;
+  private int receiveCount = 0;
 
   public MPIDataFlowOperation(TWSChannel channel) {
     this.channel = channel;
@@ -291,6 +299,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
             //send memory manager as reply
             //mpiSendMessage.setSerializationState();
           } else {
+//            LOG.info("Send lock");
             receiveAccepted = receiver.receiveSendInternally(
                 mpiSendMessage.getSource(), i, mpiSendMessage.getPath(),
                 mpiSendMessage.getFlags(), messageObject);
@@ -330,6 +339,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
               canProgress = false;
               break;
             } else {
+              sendCount++;
               mpiSendMessage.incrementAcceptedExternalSends();
               noOfExternalSends++;
             }
@@ -388,6 +398,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
         currentMessage.incrementRefCount();
       }
 
+//      LOG.info("Receive lock");
       if (state == MPIMessage.ReceivedState.DOWN || state == MPIMessage.ReceivedState.INIT) {
         currentMessage.setReceivedState(MPIMessage.ReceivedState.DOWN);
         if (!receiver.passMessageDownstream(object, currentMessage)) {
@@ -414,6 +425,9 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
    * Progress the serializations
    */
   public void progress() {
+//    lock.lock();
+    LOG.info(String.format("%d send count %d receive %d send release %d receive release %d",
+        sendCount, receiveCount, sendBufferReleaseCount, receiveBufferReleaseCount));
     if (sendProgressTracker.canProgress()) {
       int sendId = sendProgressTracker.next();
       if (sendId != Integer.MIN_VALUE) {
@@ -438,6 +452,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
         receiveProgressTracker.finish(receiveId);
       }
     }
+//    lock.unlock();
   }
 
   /**
@@ -531,24 +546,22 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
   }
 
   protected void releaseTheBuffers(int id, MPIMessage message) {
-    try {
-      if (MPIMessageDirection.IN == message.getMessageDirection()) {
-        Queue<MPIBuffer> list = receiveBuffers.get(id);
-        for (MPIBuffer buffer : message.getBuffers()) {
-          // we need to reset the buffer so it can be used again
-          buffer.getByteBuffer().clear();
-          list.offer(buffer);
-        }
-      } else if (MPIMessageDirection.OUT == message.getMessageDirection()) {
-        Queue<MPIBuffer> queue = sendBuffers;
-        for (MPIBuffer buffer : message.getBuffers()) {
-          // we need to reset the buffer so it can be used again
-          buffer.getByteBuffer().clear();
-          queue.offer(buffer);
-        }
+    if (MPIMessageDirection.IN == message.getMessageDirection()) {
+      Queue<MPIBuffer> list = receiveBuffers.get(id);
+      for (MPIBuffer buffer : message.getBuffers()) {
+        // we need to reset the buffer so it can be used again
+        buffer.getByteBuffer().clear();
+        list.offer(buffer);
+        receiveBufferReleaseCount++;
       }
-    } finally {
-      int a;
+    } else if (MPIMessageDirection.OUT == message.getMessageDirection()) {
+      Queue<MPIBuffer> queue = sendBuffers;
+      for (MPIBuffer buffer : message.getBuffers()) {
+        // we need to reset the buffer so it can be used again
+        buffer.getByteBuffer().clear();
+        queue.offer(buffer);
+        sendBufferReleaseCount++;
+      }
     }
   }
 
@@ -560,6 +573,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
     ByteBuffer byteBuffer = buffer.getByteBuffer();
     byteBuffer.position(buffer.getSize());
     byteBuffer.flip();
+    receiveCount++;
     if (currentMessage == null) {
       currentMessage = new MPIMessage(id, type, MPIMessageDirection.IN, this);
       if (isKeyed) {
