@@ -245,6 +245,11 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
                              int flags, RoutingParameters routingParameters) {
     lock.lock();
     try {
+      LOG.info("sendMessage : source = " + source);
+      LOG.info("sendMessage : message = " + message.toString());
+      LOG.info("sendMessage : RoutParam = " + routingParameters.toString());
+      LOG.info("sendMessage : RoutParam Dest Id = " + routingParameters.getDestinationId());
+      LOG.info("sendMessage : Path = " + path);
 //      LOG.info(String.format("%d send message %d", executor, source));
       ArrayBlockingQueue<Pair<Object, MPISendMessage>> pendingSendMessages =
           pendingSendMessagesPerSource.get(source);
@@ -262,6 +267,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
       // now try to put this into pending
       boolean ret = pendingSendMessages.offer(
           new ImmutablePair<Object, MPISendMessage>(message, sendMessage));
+      LOG.info("Return Message Status : " + ret);
       return ret;
     } finally {
       lock.unlock();

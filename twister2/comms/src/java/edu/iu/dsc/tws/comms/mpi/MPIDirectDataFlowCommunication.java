@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -39,6 +40,7 @@ import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
  * A direct data flow operation sends peer to peer messages
  */
 public class MPIDirectDataFlowCommunication implements DataFlowOperation, MPIMessageReceiver {
+  private static final Logger LG = Logger.getLogger(MPIDirectDataFlowCommunication.class.getName());
   private Set<Integer> sources;
   private int destination;
   private DirectRouter router;
@@ -60,6 +62,14 @@ public class MPIDirectDataFlowCommunication implements DataFlowOperation, MPIMes
   @Override
   public boolean receiveMessage(MPIMessage currentMessage, Object object) {
     MessageHeader header = currentMessage.getHeader();
+    LG.info("================================================");
+    LG.info("MessageHeader : " + header.toString());
+    LG.info("MPIMessage : " + currentMessage.toString());
+    LG.info("Message Object : " + object.toString());
+    LG.info("Source ID : " + header.getSourceId());
+    LG.info("Source ID : " + header.getSourceId());
+    LG.info("================================================");
+
     // check weather this message is for a sub task
     return finalReceiver.onMessage(header.getSourceId(), 0, destination, header.getFlags(), object);
   }
@@ -125,6 +135,11 @@ public class MPIDirectDataFlowCommunication implements DataFlowOperation, MPIMes
 
   @Override
   public boolean send(int source, Object message, int flags) {
+    LG.info("================================================");
+    LG.info("Source : " + source);
+    LG.info("Message : " + message.toString());
+    LG.info("Flags : " + flags);
+    LG.info("================================================");
     return delegete.sendMessage(source, message, 0, flags, sendRoutingParameters(source, 0));
   }
 
