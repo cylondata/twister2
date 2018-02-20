@@ -42,7 +42,7 @@ public class MPIContext extends CommunicationContext {
   }
 
   public static int receiveBufferCount(Config cfg) {
-    return cfg.getIntegerValue(RECEIVE_BUFFERS_COUNT, 32);
+    return cfg.getIntegerValue(RECEIVE_BUFFERS_COUNT, 16);
   }
 
   public static int sendPendingMax(Config cfg) {

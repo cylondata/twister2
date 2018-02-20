@@ -46,7 +46,7 @@ envs = ' -Djob_desc_file={{JOB_DESCRIPTION_FILE}}' \
   ' -DtcpPort={{thermos.ports[tcp]}}'
 
 # java command to run the worker in sandboxes
-javacmd = 'java %s %s  {{CONTAINER_CLASS}}' % (jcp, envs) 
+javacmd = 'java %s %s  {{AURORA_WORKER_CLASS}}' % (jcp, envs) 
 
 run_java = Process(
   name = 'testjava',

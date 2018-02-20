@@ -30,6 +30,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
@@ -152,7 +153,7 @@ public final class MPIProcess {
 
     Config workerConfig = Config.newBuilder().putAll(config).
         put(MPIContext.TWISTER2_HOME.getKey(), twister2Home).
-        put(MPIContext.TWISTER2_JOB_BASIC_CONTAINER_CLASS, container).
+        put(MPIContext.CONTAINER_CLASS, container).
         put(MPIContext.TWISTER2_CONTAINER_ID, id).
         put(MPIContext.TWISTER2_CLUSTER_TYPE, clusterType).build();
 
@@ -163,7 +164,7 @@ public final class MPIProcess {
 
     updatedConfig = Config.newBuilder().putAll(updatedConfig).
         put(MPIContext.TWISTER2_HOME.getKey(), twister2Home).
-        put(MPIContext.TWISTER2_JOB_BASIC_CONTAINER_CLASS, container).
+        put(MPIContext.CONTAINER_CLASS, container).
         put(MPIContext.TWISTER2_CONTAINER_ID, id).
         put(MPIContext.TWISTER2_CLUSTER_TYPE, clusterType).build();
     return updatedConfig;
@@ -179,7 +180,7 @@ public final class MPIProcess {
     // lets create the resource plan
     ResourcePlan resourcePlan = createResourcePlan(config);
 
-    String containerClass = MPIContext.jobBasicContainerClass(config);
+    String containerClass = MPIContext.containerClass(config);
     IContainer container;
     try {
       Object object = ReflectionUtils.newInstance(containerClass);
@@ -268,7 +269,7 @@ public final class MPIProcess {
     int size = MPI.COMM_WORLD.getSize();
     for (int i = 0; i < size; i++) {
       ResourceContainer resourceContainer = new ResourceContainer(i);
-      resourceContainer.addProperty("PROCESS_NAME", processes.get(i));
+      resourceContainer.addProperty(SchedulerContext.WORKER_NAME, processes.get(i));
       resourcePlan.addContainer(resourceContainer);
     }
   }

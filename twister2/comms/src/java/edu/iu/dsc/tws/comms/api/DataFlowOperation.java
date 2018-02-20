@@ -11,18 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.api;
 
-import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 
 public interface DataFlowOperation {
-  /**
-   * Initialize the data flow communication
-   *
-   * @param config the network configuration
-   * @param instancePlan instance plan
-   */
-  void init(Config config, MessageType type, TaskPlan instancePlan, int edge);
-
   /**
    * Use this to inject partial results in a distributed dataflow operation
    * @param message message

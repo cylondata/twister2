@@ -42,7 +42,6 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
 
   public enum PartitionStratergy {
     RANDOM,  // load balancing
-    KEYED,   // hash key based
     DIRECT,  // direct task based
   }
 
@@ -91,7 +90,14 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
     this.finalReceiver = finalRcvr;
   }
 
-  @Override
+
+  /**
+   * Initialize
+   * @param cfg
+   * @param t
+   * @param taskPlan
+   * @param edge
+   */
   public void init(Config cfg, MessageType t, TaskPlan taskPlan, int edge) {
     this.thisSources = TaskPlanUtils.getTasksOfThisExecutor(taskPlan, sources);
     LOG.info(String.format("%d setup loadbalance routing %s",
@@ -219,28 +225,34 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
 
   private RoutingParameters sendRoutingParameters(int source, int path) {
     RoutingParameters routingParameters = new RoutingParameters();
-    int destination = 0;
+    if (partitionStratergy == PartitionStratergy.RANDOM) {
+      routingParameters.setDestinationId(0);
+      if (!destinationIndex.containsKey(source)) {
+        throw new RuntimeException(String.format(
+            "Un-expected source %d in loadbalance executor %d %s", source,
+            executor, destinationIndex));
+      }
 
-    routingParameters.setDestinationId(destination);
+      int index = destinationIndex.get(source);
+      int route = destinationsList.get(index);
 
-    if (!destinationIndex.containsKey(source)) {
-      throw new RuntimeException(String.format(
-          "Un-expected source %d in loadbalance executor %d %s", source,
-          executor, destinationIndex));
+      if (thisTasks.contains(route)) {
+        routingParameters.addInteranlRoute(route);
+      } else {
+        routingParameters.addExternalRoute(route);
+      }
+      routingParameters.setDestinationId(route);
+
+      index = (index + 1) % destinations.size();
+      destinationIndex.put(source, index);
+    } else if (partitionStratergy == PartitionStratergy.DIRECT) {
+      routingParameters.setDestinationId(path);
+      if (dests.external.contains(path)) {
+        routingParameters.addExternalRoute(path);
+      } else {
+        routingParameters.addInteranlRoute(path);
+      }
     }
-
-    int index = destinationIndex.get(source);
-    int route = destinationsList.get(index);
-
-    if (thisTasks.contains(route)) {
-      routingParameters.addInteranlRoute(route);
-    } else {
-      routingParameters.addExternalRoute(route);
-    }
-    routingParameters.setDestinationId(route);
-
-    index = (index + 1) % destinations.size();
-    destinationIndex.put(source, index);
     return routingParameters;
   }
 

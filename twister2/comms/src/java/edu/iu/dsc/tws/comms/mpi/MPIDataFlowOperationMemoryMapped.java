@@ -603,7 +603,7 @@ public class MPIDataFlowOperationMemoryMapped implements MPIMessageListener,
   }
 
   private boolean sendMessageToTarget(MPIMessage msgObj1, int i) {
-    msgObj1.incrementRefCount(1);
+    msgObj1.incrementRefCount(0);
     int e = instancePlan.getExecutorForChannel(i);
     return channel.sendMessage(e, msgObj1, this);
   }

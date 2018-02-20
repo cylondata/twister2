@@ -41,28 +41,20 @@ import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
 public class BaseReduceBatchCommunication implements IContainer {
-  private static final Logger LOG = Logger.getLogger(BaseReduceHLCommunication.class.getName());
+  private static final Logger LOG = Logger.getLogger(BaseReduceBatchCommunication.class.getName());
 
   private DataFlowOperation reduce;
 
-  private ResourcePlan resourcePlan;
-
   private int id;
 
-  private Config config;
-
   private static final int NO_OF_TASKS = 8;
-
-  private int noOfTasksPerExecutor = 2;
 
   @Override
   public void init(Config cfg, int containerId, ResourcePlan plan) {
     LOG.log(Level.INFO, "Starting the example with container id: " + plan.getThisId());
 
-    this.config = cfg;
-    this.resourcePlan = plan;
     this.id = containerId;
-    this.noOfTasksPerExecutor = NO_OF_TASKS / plan.noOfContainers();
+    int noOfTasksPerExecutor = NO_OF_TASKS / plan.noOfContainers();
 
     // lets create the task plan
     TaskPlan taskPlan = Utils.createReduceTaskPlan(cfg, plan, NO_OF_TASKS);
@@ -124,7 +116,6 @@ public class BaseReduceBatchCommunication implements IContainer {
     public void run() {
       try {
         LOG.log(Level.INFO, "Starting map worker: " + id);
-//      MPIBuffer data = new MPIBuffer(1024);
         IntData data = generateData();
         for (int i = 0; i < 1000; i++) {
           // lets generate a message
@@ -140,9 +131,7 @@ public class BaseReduceBatchCommunication implements IContainer {
               e.printStackTrace();
             }
           }
-//          LOG.info(String.format("%d sending to %d", id, task)
-//              + " count: " + sendCount++);
-          if (i % 1 == 0) {
+          if (i % 100 == 0) {
             LOG.info(String.format("%d sent %d", id, i));
           }
           Thread.yield();
@@ -194,7 +183,9 @@ public class BaseReduceBatchCommunication implements IContainer {
     @Override
     public Object reduce(Object t1, Object t2) {
       count++;
-      LOG.info(String.format("Partial received %d", count));
+      if (count % 100 == 0) {
+        LOG.info(String.format("Partial received %d", count));
+      }
       return t1;
     }
   }

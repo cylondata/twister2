@@ -1,3 +1,4 @@
+syntax = "proto2";
 package tws.proto.resource.scheduler;
 
 option java_package = "edu.iu.dsc.tws.proto.system";

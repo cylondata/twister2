@@ -94,7 +94,13 @@ public class MPIDirectDataFlowCommunication implements DataFlowOperation, MPIMes
     return this.router.receiveExpectedTaskIds();
   }
 
-  @Override
+  /**
+   * Initialize
+   * @param cfg
+   * @param t
+   * @param taskPlan
+   * @param edge
+   */
   public void init(Config cfg, MessageType t, TaskPlan taskPlan, int edge) {
     this.router = new DirectRouter(taskPlan, sources, destination);
 

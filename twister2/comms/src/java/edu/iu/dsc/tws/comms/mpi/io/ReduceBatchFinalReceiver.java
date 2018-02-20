@@ -43,6 +43,7 @@ public class ReduceBatchFinalReceiver implements MessageReceiver {
   private int executor;
   private int sendPendingMax = 128;
   private Map<Integer, Boolean> batchDone = new HashMap<>();
+  private Map<Integer, Map<Integer, Integer>> totalCounts = new HashMap<>();
 
   public ReduceBatchFinalReceiver(ReduceFunction reduce, ReduceReceiver receiver) {
     this.reduceFunction = reduce;
@@ -54,22 +55,25 @@ public class ReduceBatchFinalReceiver implements MessageReceiver {
     executor = op.getTaskPlan().getThisExecutor();
     sendPendingMax = MPIContext.sendPendingMax(cfg);
 
-    LOG.fine(String.format("%d expected ids %s", executor, expectedIds));
+//    LOG.fine(String.format("%d expected ids %s", executor, expectedIds));
     for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
       Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
       Map<Integer, Boolean> finishedPerTask = new HashMap<>();
       Map<Integer, Integer> countsPerTask = new HashMap<>();
+      Map<Integer, Integer> totalCountsPerTask = new HashMap<>();
 
       for (int i : e.getValue()) {
         messagesPerTask.put(i, new ArrayList<Object>());
         finishedPerTask.put(i, false);
         countsPerTask.put(i, 0);
+        totalCountsPerTask.put(i, 0);
       }
       messages.put(e.getKey(), messagesPerTask);
       finished.put(e.getKey(), finishedPerTask);
       finalMessages.put(e.getKey(), new ArrayList<>());
       counts.put(e.getKey(), countsPerTask);
       batchDone.put(e.getKey(), false);
+      totalCounts.put(e.getKey(), totalCountsPerTask);
     }
     this.dataFlowOperation = op;
     this.executor = dataFlowOperation.getTaskPlan().getThisExecutor();
@@ -84,10 +88,11 @@ public class ReduceBatchFinalReceiver implements MessageReceiver {
     Map<Integer, Boolean> finishedMessages = finished.get(target);
     if (m.size() > sendPendingMax) {
       canAdd = false;
-      LOG.info(String.format("%d Final add FALSE target %d source %d %s",
-          executor, target, source, counts.get(target)));
+//      LOG.info(String.format("%d Final add FALSE target %d source %d %s %d",
+//          executor, target, source, counts.get(target), finalMessages.size()));
     } else {
-      LOG.info(String.format("%d Final add TRUE target %d source %d", executor, target, source));
+//      LOG.info(String.format("%d Final add TRUE target %d source %d %d",
+//          executor, target, source, finishedMessages.size()));
       if (object instanceof MPIMessage) {
         ((MPIMessage) object).incrementRefCount();
       }
@@ -95,9 +100,12 @@ public class ReduceBatchFinalReceiver implements MessageReceiver {
       Integer c = counts.get(target).get(source);
       counts.get(target).put(source, c + 1);
 
+      Integer tc = totalCounts.get(target).get(source);
+      totalCounts.get(target).put(source, tc + 1);
+
       m.add(object);
       if ((flags & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) {
-        LOG.info(String.format("%d Final LAST target %d source %d", executor, target, source));
+//        LOG.info(String.format("%d Final LAST target %d source %d", executor, target, source));
         finishedMessages.put(source, true);
       }
     }
@@ -118,8 +126,9 @@ public class ReduceBatchFinalReceiver implements MessageReceiver {
       Map<Integer, List<Object>> map = messages.get(t);
       Map<Integer, Boolean> finishedForTarget = finished.get(t);
       Map<Integer, Integer> countMap = counts.get(t);
-      LOG.info(String.format("%d reduce final counts %d %s %s", executor, t, countMap,
-          finishedForTarget));
+      Map<Integer, Integer> totalCountMap = totalCounts.get(t);
+//      LOG.info(String.format("%d reduce final counts %d %s %s %s", executor, t, countMap,
+//          totalCountMap, finishedForTarget));
       boolean found = true;
       for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
         if (e.getValue().size() == 0 && !finishedForTarget.get(e.getKey())) {
@@ -142,17 +151,17 @@ public class ReduceBatchFinalReceiver implements MessageReceiver {
             valueList.remove(0);
           }
         }
-//        for (Map.Entry<Integer, Integer> e : countMap.entrySet()) {
-//          Integer i = e.getValue();
-//          e.setValue(i - 1);
-//        }
+        for (Map.Entry<Integer, Integer> e : countMap.entrySet()) {
+          Integer i = e.getValue();
+          e.setValue(i - 1);
+        }
         finalMessages.get(t).addAll(out);
       } else {
         allFinished = false;
       }
 
       if (allFinished) {
-        LOG.info(String.format("%d final all finished %d", executor, t));
+//        LOG.info(String.format("%d final all finished %d", executor, t));
         batchDone.put(t, true);
         Object previous = null;
         List<Object> finalMessagePerTask = finalMessages.get(t);

@@ -1,3 +1,4 @@
+syntax = "proto2";
 package tws.proto.job;
 
 option java_package = "edu.iu.dsc.tws.proto.system";

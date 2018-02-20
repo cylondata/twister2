@@ -19,9 +19,10 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.MultiMessageReceiver;
+import edu.iu.dsc.tws.comms.api.TWSChannel;
 
 public interface TWSCommunication {
-  void init(Config config, TaskPlan taskPlan);
+  void init(Config config, TaskPlan taskPlan, TWSChannel channel);
 
   void progress();
 

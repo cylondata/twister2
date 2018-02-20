@@ -37,7 +37,7 @@ import edu.iu.dsc.tws.comms.routing.InvertedBinaryTreeRouter;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
 public class MPIDataFlowReduce implements DataFlowOperation, MPIMessageReceiver {
-  private static final Logger LOG = Logger.getLogger(MPIDataFlowBroadcast.class.getName());
+  private static final Logger LOG = Logger.getLogger(MPIDataFlowReduce.class.getName());
 
   // the source tasks
   protected Set<Integer> sources;
@@ -199,7 +199,14 @@ public class MPIDataFlowReduce implements DataFlowOperation, MPIMessageReceiver 
         partialSendRoutingParameters(source, dest));
   }
 
-  @Override
+
+  /**
+   * Initialize
+   * @param cfg
+   * @param t
+   * @param taskPlan
+   * @param edge
+   */
   public void init(Config cfg, MessageType t, TaskPlan taskPlan, int edge) {
     this.instancePlan = taskPlan;
     this.config = cfg;

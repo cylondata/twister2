@@ -61,9 +61,8 @@ public class TCPChannel {
   private int clientsCompleted = 0;
   private int clientsConnected = 0;
 
-  public TCPChannel(Config cfg, List<NetworkInfo> workerInfo, NetworkInfo info) {
+  public TCPChannel(Config cfg, NetworkInfo info) {
     config = cfg;
-    networkInfos = workerInfo;
     thisInfo = info;
 
     clientChannel = new HashMap<>();
@@ -79,16 +78,6 @@ public class TCPChannel {
     networkInfoMap = new HashMap<>();
     helloSendByteBuffers = new ArrayList<>();
     helloReceiveByteBuffers = new ArrayList<>();
-    for (NetworkInfo ni : workerInfo) {
-      networkInfoMap.put(ni.getProcId(), ni);
-      helloSendByteBuffers.add(ByteBuffer.allocate(4));
-      helloReceiveByteBuffers.add(ByteBuffer.allocate(4));
-    }
-
-    for (NetworkInfo ni : workerInfo) {
-      helloSendByteBuffers.add(ByteBuffer.allocate(4));
-      helloReceiveByteBuffers.add(ByteBuffer.allocate(4));
-    }
   }
 
   /**
@@ -105,7 +94,18 @@ public class TCPChannel {
     server.start();
   }
 
-  public void startSecondPhase() {
+  public void startSecondPhase(List<NetworkInfo> workerInfo, NetworkInfo updatedThisInfo) {
+    this.networkInfos = workerInfo;
+
+    for (NetworkInfo ni : workerInfo) {
+      networkInfoMap.put(ni.getProcId(), ni);
+      helloSendByteBuffers.add(ByteBuffer.allocate(4));
+      helloReceiveByteBuffers.add(ByteBuffer.allocate(4));
+
+      helloSendByteBuffers.add(ByteBuffer.allocate(4));
+      helloReceiveByteBuffers.add(ByteBuffer.allocate(4));
+    }
+
     // after sync we need to connect to all the servers
     for (NetworkInfo info : networkInfos) {
       if (info.getProcId() == thisInfo.getProcId()) {
@@ -276,8 +276,7 @@ public class TCPChannel {
       list.add(info);
     }
 
-    TCPChannel master = new TCPChannel(Config.newBuilder().build(), list,
-        list.get(procId));
+    TCPChannel master = new TCPChannel(Config.newBuilder().build(), list.get(procId));
     master.startFirstPhase();
 
     TCPWorker worker = new TCPWorker(Config.newBuilder().build(), networkInfo);
@@ -285,7 +284,7 @@ public class TCPChannel {
     worker.waitForSync();
     LOG.log(Level.INFO, "Workers are synced..");
 
-    master.startSecondPhase();
+    master.startSecondPhase(list, networkInfo);
 
     int destProcId = 0;
     if (procId == 0) {

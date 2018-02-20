@@ -22,8 +22,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.rsched.schedulers.aurora.AuroraClientContext;
-import edu.iu.dsc.tws.rsched.schedulers.aurora.WorkerHello;
+import edu.iu.dsc.tws.rsched.schedulers.aurora.AuroraContext;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
@@ -39,23 +38,22 @@ public final class BasicAuroraJob {
     System.out.println("read config values: " + config.size());
     System.out.println(config);
 
-    int cpus = Integer.parseInt(AuroraClientContext.cpusPerContainer(config));
-    int ramMegaBytes = AuroraClientContext.ramPerContainer(config) / (1024 * 1024);
-    int diskMegaBytes = AuroraClientContext.diskPerContainer(config) / (1024 * 1024);
-    int containers = Integer.parseInt(AuroraClientContext.numberOfContainers(config));
+    int cpus = Integer.parseInt(AuroraContext.cpusPerContainer(config));
+    int ramMegaBytes = AuroraContext.ramPerContainer(config) / (1024 * 1024);
+    int diskMegaBytes = AuroraContext.diskPerContainer(config) / (1024 * 1024);
+    int containers = Integer.parseInt(AuroraContext.numberOfContainers(config));
     String jobName = SchedulerContext.jobName(config);
     ResourceContainer resourceContainer = new ResourceContainer(cpus, ramMegaBytes, diskMegaBytes);
 
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
-//    jobConfig.putConfig(config); // no point for putting all config
-// some configs that will be needed at workers can be put.
-//    jobConfig.put("twister2.job.some.property", "some.value");
+
+    String containerClass = SchedulerContext.containerClass(config);
 
     // build the job
     BasicJob basicJob = BasicJob.newBuilder()
         .setName(jobName)
-        .setContainerClass(WorkerHello.class.getName())
+        .setContainerClass(containerClass)
         .setRequestResource(resourceContainer, containers)
         .setConfig(jobConfig)
         .build();

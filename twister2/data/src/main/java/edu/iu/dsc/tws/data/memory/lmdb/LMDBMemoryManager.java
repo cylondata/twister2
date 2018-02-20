@@ -76,7 +76,9 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
       lmdbDataPath = new Path(LMDBMemoryManagerContext.DEFAULT_FOLDER_PATH);
     }
     final File path = new File(lmdbDataPath.getPath());
-
+    if (!path.exists()) {
+      path.mkdirs();
+    }
     this.env = create()
         .setMapSize(LMDBMemoryManagerContext.MAP_SIZE_LIMIT)
         .setMaxDbs(LMDBMemoryManagerContext.MAX_DB_INSTANCES)

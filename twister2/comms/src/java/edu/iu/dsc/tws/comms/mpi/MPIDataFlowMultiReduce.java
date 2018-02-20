@@ -125,7 +125,14 @@ public class MPIDataFlowMultiReduce implements DataFlowOperation {
     }
   }
 
-  @Override
+
+  /**
+   * Initialize
+   * @param cfg
+   * @param t
+   * @param taskPlan
+   * @param edge
+   */
   public void init(Config config, MessageType type, TaskPlan instancePlan, int edge) {
     executor = instancePlan.getThisExecutor();
     Map<Integer, Map<Integer, List<Integer>>> partialReceives = new HashMap<>();

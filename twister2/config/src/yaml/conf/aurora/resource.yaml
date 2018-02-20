@@ -9,6 +9,12 @@ twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.scp.ScpUploader"
 # twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.NullUploader"
 # twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader"
 
+# container class to run in workers
+twister2.job.basic.container.class: "edu.iu.dsc.tws.examples.basic.BasicAuroraContainer"
+
+# the Aurora worker class
+twister2.class.aurora.worker: "edu.iu.dsc.tws.rsched.schedulers.aurora.AuroraWorker"
+
 ###################################################################################
 # ZooKeeper related config parameters
 ###################################################################################

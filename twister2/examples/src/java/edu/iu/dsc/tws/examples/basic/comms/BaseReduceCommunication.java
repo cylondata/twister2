@@ -175,6 +175,7 @@ public class BaseReduceCommunication implements IContainer {
     // for each task we need to keep track of incoming messages
     private Map<Integer, Map<Integer, List<Object>>> messages = new HashMap<>();
     private Map<Integer, Map<Integer, Integer>> counts = new HashMap<>();
+    private Map<Integer, Map<Integer, Integer>> totalCounts = new HashMap<>();
 
     private int count = 0;
     /**
@@ -187,10 +188,13 @@ public class BaseReduceCommunication implements IContainer {
       for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
         Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
         Map<Integer, Integer> countsPerTask = new HashMap<>();
+        Map<Integer, Integer> totalCountsPerTask = new HashMap<>();
+
 
         for (int i : e.getValue()) {
           messagesPerTask.put(i, new ArrayList<Object>());
           countsPerTask.put(i, 0);
+          totalCountsPerTask.put(i, 0);
         }
 
         LOG.info(String.format("%d Partial Task %d receives from %s",
@@ -198,6 +202,7 @@ public class BaseReduceCommunication implements IContainer {
 
         messages.put(e.getKey(), messagesPerTask);
         counts.put(e.getKey(), countsPerTask);
+        totalCounts.put(e.getKey(), totalCountsPerTask);
       }
     }
 
@@ -219,6 +224,8 @@ public class BaseReduceCommunication implements IContainer {
 //          }
           m.add(object);
           counts.get(target).put(source, c + 1);
+          Integer tc = totalCounts.get(target).get(source);
+          totalCounts.get(target).put(source, tc + 1);
 //          LOG.info(String.format("%d Partial true %d %d %s", id, source, m.size(), counts));
         }
 
@@ -262,7 +269,7 @@ public class BaseReduceCommunication implements IContainer {
                 canProgress = false;
 //                LOG.info(String.format("%d reduce send false", id));
               }
-              if (count % 1000 == 0) {
+              if (count % 10 == 0) {
                 LOG.info(String.format("%d Inject partial %d count: %d %s",
                     id, t, count, counts));
               }
@@ -352,7 +359,7 @@ public class BaseReduceCommunication implements IContainer {
             }
             if (o != null) {
               count++;
-              if (count % 1000 == 0) {
+              if (count % 10 == 0) {
                 LOG.info(String.format("%d Last %d count: %d %s",
                     id, t, count, counts));
               }

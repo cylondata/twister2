@@ -53,16 +53,16 @@ public final class AuroraJobSubmitter {
       System.out.println(config);
 
       //construct the controller to submit the job to Aurora Scheduler
-      String cluster = AuroraClientContext.auroraClusterName(config);
-      String role = AuroraClientContext.role(config);
-      String env = AuroraClientContext.environment(config);
+      String cluster = AuroraContext.auroraClusterName(config);
+      String role = AuroraContext.role(config);
+      String env = AuroraContext.environment(config);
       String jobName = SchedulerContext.jobName(config);
 
       AuroraClientController controller = new AuroraClientController(
           cluster, role, env, jobName, true);
 
       // get aurora file name to execute when submitting the job
-      String auroraFilename = AuroraClientContext.auroraScript(config);
+      String auroraFilename = AuroraContext.auroraScript(config);
 
       // get environment variables from config
       Map<AuroraField, String> bindings = AuroraLauncher.constructEnvVariables(config);
@@ -165,8 +165,8 @@ public final class AuroraJobSubmitter {
 
     try {
 //      Reflection.initialize(Class.forName(
-// "edu.iu.dsc.tws.rsched.schedulers.aurora.AuroraClientContext"));
-      Class.forName(AuroraClientContext.class.getName());
+// "edu.iu.dsc.tws.rsched.schedulers.aurora.AuroraContext"));
+      Class.forName(AuroraContext.class.getName());
     } catch (ClassNotFoundException e) {
       e.printStackTrace();
     }
@@ -175,8 +175,8 @@ public final class AuroraJobSubmitter {
     return Config.newBuilder().putAll(config).
         put(SchedulerContext.TWISTER2_HOME.getKey(), twister2Home).
         put(SchedulerContext.TWISTER2_CLUSTER_TYPE, clusterType).
-//        put(AuroraClientContext.TWISTER2_PACKAGE_PATH, packagePath).
-//        put(AuroraClientContext.TWISTER2_PACKAGE_FILE, packageFile).
+//        put(AuroraContext.TWISTER2_PACKAGE_PATH, packagePath).
+//        put(AuroraContext.TWISTER2_PACKAGE_FILE, packageFile).
     build();
   }
 
