@@ -102,7 +102,9 @@ public class MPIDirectDataFlowCommunication implements DataFlowOperation, MPIMes
    * @param edge
    */
   public void init(Config cfg, MessageType t, TaskPlan taskPlan, int edge) {
+
     this.router = new DirectRouter(taskPlan, sources, destination);
+
 
     if (this.finalReceiver != null && isLastReceiver()) {
       this.finalReceiver.init(cfg, this, receiveExpectedTaskIds());

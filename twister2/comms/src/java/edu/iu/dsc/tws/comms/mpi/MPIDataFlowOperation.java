@@ -290,6 +290,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
       boolean ret = pendingSendMessages.offer(
           new ImmutablePair<Object, MPISendMessage>(message, sendMessage));
       LOG.info("Return Message Status : " + ret);
+
       return ret;
     } finally {
       lock.unlock();

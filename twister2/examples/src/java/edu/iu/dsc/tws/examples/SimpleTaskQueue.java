@@ -137,7 +137,7 @@ public class SimpleTaskQueue implements IContainer {
 
       ArrayList<Integer> inq = new ArrayList<>();
       inq.add(0);
-      taskExecutor.setTaskMessageProcessLimit(200000);
+      taskExecutor.setTaskMessageProcessLimit(100);
       taskExecutor.registerSinkTask(new RecieveWorker(1), inq);
       taskExecutor.progres();
 
@@ -200,7 +200,10 @@ public class SimpleTaskQueue implements IContainer {
         e.printStackTrace();
       }
       String data = content.getContent().toString();
-      if (Integer.parseInt(data) % 1000 == 0) {
+      LOG.info("-------------------------------------------");
+      LOG.info("RecieverWorker All Msg : " + content.getContent().toString());
+      LOG.info("-------------------------------------------");
+      if (Integer.parseInt(data) % 10 == 0) {
         LOG.info("-------------------------------------------");
         LOG.info("RecieverWorker : " + content.getContent().toString());
         LOG.info("-------------------------------------------");
@@ -226,7 +229,7 @@ public class SimpleTaskQueue implements IContainer {
       LOG.info("-------------------------------------------");
       LOG.log(Level.INFO, "Starting map worker");
       LOG.info("-------------------------------------------");
-      for (int i = 0; i < 100000; i++) {
+      for (int i = 0; i < 10; i++) {
         IntData data = generateData();
         // lets generate a message
 
