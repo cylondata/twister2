@@ -250,4 +250,16 @@ public class MPIDataFlowCommunication implements TWSCommunication {
     dataFlowOperation.init(mergedCfg, type, instancePlan, 0);
     return dataFlowOperation;
   }
+
+  @Override
+  public DataFlowOperation partition(Map<String, Object> properties, MessageType type,
+                                     Set<Integer> sourceTasks, Set<Integer> destTasks,
+                                     MessageReceiver receiver) {
+    // merge with the user specified configuration, user specified will take precedence
+    Config mergedCfg = Config.newBuilder().putAll(config).putAll(properties).build();
+    DataFlowOperation dataFlowOperation = new MPIDataFlowPartition(channel,
+        sourceTasks, destTasks, receiver, MPIDataFlowPartition.PartitionStratergy.DIRECT);
+    dataFlowOperation.init(mergedCfg, type, instancePlan, 0);
+    return dataFlowOperation;
+  }
 }
