@@ -427,7 +427,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
   public void progress() {
 //    lock.lock();
     LOG.info(String.format("%d send count %d receive %d send release %d receive release %d",
-        sendCount, receiveCount, sendBufferReleaseCount, receiveBufferReleaseCount));
+        executor, sendCount, receiveCount, sendBufferReleaseCount, receiveBufferReleaseCount));
     if (sendProgressTracker.canProgress()) {
       int sendId = sendProgressTracker.next();
       if (sendId != Integer.MIN_VALUE) {
