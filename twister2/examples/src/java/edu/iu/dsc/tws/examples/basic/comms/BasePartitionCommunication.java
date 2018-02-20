@@ -9,6 +9,30 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 package edu.iu.dsc.tws.examples.basic.comms;
 
 import java.util.HashMap;
@@ -19,42 +43,54 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.Twister2Submitter;
-import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
+import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.mpi.io.ReduceBatchFinalReceiver;
-import edu.iu.dsc.tws.comms.mpi.io.ReduceBatchPartialReceiver;
 import edu.iu.dsc.tws.examples.IntData;
 import edu.iu.dsc.tws.examples.Utils;
-import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
-import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
-public class BaseReduceBatchCommunication implements IContainer {
-  private static final Logger LOG = Logger.getLogger(BaseReduceBatchCommunication.class.getName());
+/**
+ * This will be a map-partition job only using the communication primitives
+ */
+public class BasePartitionCommunication implements IContainer {
+  private static final Logger LOG = Logger.getLogger(BasePartitionCommunication.class.getName());
 
-  private DataFlowOperation reduce;
+  private DataFlowOperation partition;
+
+  private ResourcePlan resourcePlan;
 
   private int id;
 
+  private Config config;
+
   private static final int NO_OF_TASKS = 8;
+
+  private int noOfTasksPerExecutor = 2;
+
+  private enum Status {
+    INIT,
+    MAP_FINISHED,
+    LOAD_RECEIVE_FINISHED,
+  }
+
+  private Status status;
 
   @Override
   public void init(Config cfg, int containerId, ResourcePlan plan) {
     LOG.log(Level.INFO, "Starting the example with container id: " + plan.getThisId());
 
+    this.config = cfg;
+    this.resourcePlan = plan;
     this.id = containerId;
-    int noOfTasksPerExecutor = NO_OF_TASKS / plan.noOfContainers();
+    this.status = Status.INIT;
+    this.noOfTasksPerExecutor = NO_OF_TASKS / plan.noOfContainers();
 
     // lets create the task plan
     TaskPlan taskPlan = Utils.createReduceTaskPlan(cfg, plan, NO_OF_TASKS);
@@ -64,20 +100,19 @@ public class BaseReduceBatchCommunication implements IContainer {
     TWSCommunication channel = network.getDataFlowTWSCommunication();
 
     Set<Integer> sources = new HashSet<>();
+    Set<Integer> dests = new HashSet<>();
     for (int i = 0; i < NO_OF_TASKS; i++) {
       sources.add(i);
+      dests.add(i);
     }
-    int dest = NO_OF_TASKS;
-
     Map<String, Object> newCfg = new HashMap<>();
 
-    LOG.info("Setting up reduce dataflow operation");
+    LOG.info("Setting up partition dataflow operation");
     try {
       // this method calls the init method
       // I think this is wrong
-      reduce = channel.reduce(newCfg, MessageType.OBJECT, 0, sources,
-          dest, new ReduceBatchFinalReceiver(new IdentityFunction(), new FinalReduceReceiver()),
-          new ReduceBatchPartialReceiver(dest, new IdentityFunction()));
+      partition = channel.partition(newCfg, MessageType.INTEGER, sources,
+          dests, new FinalPartitionReciver());
 
       for (int i = 0; i < noOfTasksPerExecutor; i++) {
         // the map thread where data is produced
@@ -91,7 +126,7 @@ public class BaseReduceBatchCommunication implements IContainer {
           // progress the channel
           channel.progress();
           // we should progress the communication directive
-          reduce.progress();
+          partition.progress();
           Thread.yield();
         } catch (Throwable t) {
           t.printStackTrace();
@@ -108,6 +143,7 @@ public class BaseReduceBatchCommunication implements IContainer {
   private class MapWorker implements Runnable {
     private int task = 0;
     private int sendCount = 0;
+
     MapWorker(int task) {
       this.task = task;
     }
@@ -116,31 +152,59 @@ public class BaseReduceBatchCommunication implements IContainer {
     public void run() {
       try {
         LOG.log(Level.INFO, "Starting map worker: " + id);
-        IntData data = generateData();
-        for (int i = 0; i < 1000; i++) {
+//      MPIBuffer data = new MPIBuffer(1024);
+        int[] data = {task, task * 100};
+        int dest = (task + 1) % NO_OF_TASKS;
+        for (int i = 0; i < 1; i++) {
           // lets generate a message
-          int flag = 0;
-          if (i == 1000 - 1) {
-            flag = MessageFlags.FLAGS_LAST;
-          }
-          while (!reduce.send(task, data, flag)) {
+          int flags = MessageFlags.FLAGS_LAST;
+          while (!partition.send(task, data, flags, dest)) {
             // lets wait a litte and try again
-            reduce.progress();
-//            try {
-//              Thread.sleep(1);
-//            } catch (InterruptedException e) {
-//              e.printStackTrace();
-//            }
+            try {
+              Thread.sleep(1);
+            } catch (InterruptedException e) {
+              e.printStackTrace();
+            }
           }
-          if (i % 100 == 0) {
+//          LOG.info(String.format("%d sending to %d", id, task)
+//              + " count: " + sendCount++);
+          if (i % 1000 == 0) {
             LOG.info(String.format("%d sent %d", id, i));
           }
           Thread.yield();
         }
         LOG.info(String.format("%d Done sending", id));
+        status = Status.MAP_FINISHED;
       } catch (Throwable t) {
         t.printStackTrace();
       }
+    }
+  }
+
+  private class FinalPartitionReciver implements MessageReceiver {
+    // lets keep track of the messages
+    // for each task we need to keep track of incoming messages
+    private Map<Integer, Map<Integer, List<Object>>> messages = new HashMap<>();
+    private Map<Integer, Map<Integer, Integer>> counts = new HashMap<>();
+
+    private int count = 0;
+
+    private long start = System.nanoTime();
+
+    @Override
+    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+    }
+
+    @Override
+    public boolean onMessage(int source, int path, int target, int flags, Object object) {
+      // add the object to the map
+      System.out.printf("Dest Task %d got message from Task %d with value %d \n", target,
+          source, ((int[]) object)[1]);
+      return true;
+    }
+
+    public void progress() {
+
     }
   }
 
@@ -158,55 +222,5 @@ public class BaseReduceBatchCommunication implements IContainer {
     return new IntData(d);
   }
 
-  public static class FinalReduceReceiver implements ReduceReceiver {
-    private int count = 0;
-    @Override
-    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
 
-    }
-
-    @Override
-    public boolean receive(int target, Object object) {
-      count++;
-      if (count % 1 == 0) {
-        LOG.info(String.format("%d Received %d", target, count));
-      }
-      return true;
-    }
-  }
-
-  public static class IdentityFunction implements ReduceFunction {
-    private int count = 0;
-    @Override
-    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-    }
-
-    @Override
-    public Object reduce(Object t1, Object t2) {
-      count++;
-      if (count % 10 == 0) {
-        LOG.info(String.format("Partial received %d", count));
-      }
-      return t1;
-    }
-  }
-
-  public static void main(String[] args) {
-    // first load the configurations from command line and config files
-    Config config = ResourceAllocator.loadConfig(new HashMap<>());
-
-    // build JobConfig
-    JobConfig jobConfig = new JobConfig();
-
-    // build the job
-    BasicJob basicJob = BasicJob.newBuilder()
-        .setName("basic-batch-reduce")
-        .setContainerClass(BaseReduceBatchCommunication.class.getName())
-        .setRequestResource(new ResourceContainer(2, 1024), 4)
-        .setConfig(jobConfig)
-        .build();
-
-    // now submit the job
-    Twister2Submitter.submitContainerJob(basicJob, config);
-  }
 }

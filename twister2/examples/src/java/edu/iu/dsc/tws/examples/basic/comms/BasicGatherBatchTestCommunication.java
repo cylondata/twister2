@@ -140,10 +140,8 @@ public class BasicGatherBatchTestCommunication implements IContainer {
       aggregate = channel.gather(newCfg, MessageType.INTEGER, 0, sources,
           dest, new GatherBatchFinalReceiver(new FinalGatherReceive()),
           new GatherBatchPartialReceiver(dest));
-
 //      aggregate = channel.gather(newCfg, MessageType.OBJECT, 0, sources,
 //          dest, new FinalGatherReceive());
-
       for (int i = 0; i < noOfTasksPerExecutor; i++) {
         // the map thread where data is produced
         LOG.info(String.format("%d Starting %d", id, i + id * noOfTasksPerExecutor));

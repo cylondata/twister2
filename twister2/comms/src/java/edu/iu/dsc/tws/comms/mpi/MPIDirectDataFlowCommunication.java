@@ -114,6 +114,8 @@ public class MPIDirectDataFlowCommunication implements DataFlowOperation, MPIMes
         new HashMap<>();
     Map<Integer, Queue<Pair<Object, MPIMessage>>> pendingReceiveMessagesPerSource = new HashMap<>();
     Map<Integer, Queue<MPIMessage>> pendingReceiveDeSerializations = new HashMap<>();
+    Map<Integer, MessageSerializer> serializerMap = new HashMap<>();
+    Map<Integer, MessageDeSerializer> deSerializerMap = new HashMap<>();
 
     Set<Integer> srcs = TaskPlanUtils.getTasksOfThisExecutor(taskPlan, sources);
     for (int s : srcs) {
@@ -124,16 +126,14 @@ public class MPIDirectDataFlowCommunication implements DataFlowOperation, MPIMes
       pendingSendMessagesPerSource.put(s, pendingSendMessages);
       pendingReceiveDeSerializations.put(s, new ArrayBlockingQueue<MPIMessage>(
           MPIContext.sendPendingMax(cfg)));
+      serializerMap.put(s, new MPIMessageSerializer(new KryoSerializer()));
     }
 
-    KryoSerializer kryoSerializer = new KryoSerializer();
-    kryoSerializer.init(new HashMap<String, Object>());
-
-    MessageDeSerializer messageDeSerializer = new MPIMessageDeSerializer(kryoSerializer);
-    MessageSerializer messageSerializer = new MPIMessageSerializer(kryoSerializer);
+    MessageDeSerializer messageDeSerializer = new MPIMessageDeSerializer(new KryoSerializer());
+    deSerializerMap.put(destination, messageDeSerializer);
     delegete.init(cfg, t, taskPlan, edge, router.receivingExecutors(),
         isLastReceiver(), this, pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
-        pendingReceiveDeSerializations, messageSerializer, messageDeSerializer, false);
+        pendingReceiveDeSerializations, serializerMap, deSerializerMap, false);
   }
 
   @Override
