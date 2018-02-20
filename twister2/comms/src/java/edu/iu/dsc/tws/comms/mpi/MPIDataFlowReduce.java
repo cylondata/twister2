@@ -306,13 +306,11 @@ public class MPIDataFlowReduce implements DataFlowOperation, MPIMessageReceiver 
     delegete.progress();
 
     if (finalReceiverProgress.compareAndSet(false, true)) {
-//      LOG.info("Final progreessss");
       finalReceiver.progress();
       finalReceiverProgress.compareAndSet(true, false);
     }
 
     if (partialRecevierProgress.compareAndSet(false, true)) {
-//      LOG.info("Partial progreessss");
       partialReceiver.progress();
       partialRecevierProgress.compareAndSet(true, false);
     }

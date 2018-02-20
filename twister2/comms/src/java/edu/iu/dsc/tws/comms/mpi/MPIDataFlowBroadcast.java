@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -55,6 +56,7 @@ public class MPIDataFlowBroadcast implements DataFlowOperation, MPIMessageReceiv
   private MessageType type;
   private Map<Integer, ArrayBlockingQueue<Pair<Object, MPISendMessage>>>
       pendingSendMessagesPerSource = new HashMap<>();
+  private AtomicBoolean finalReceiverProgress;
 
   public MPIDataFlowBroadcast(TWSChannel channel, int src, Set<Integer> dests,
                               MessageReceiver finalRcvr) {
@@ -63,6 +65,7 @@ public class MPIDataFlowBroadcast implements DataFlowOperation, MPIMessageReceiv
     this.finalReceiver = finalRcvr;
 
     this.delegete = new MPIDataFlowOperation(channel);
+    this.finalReceiverProgress = new AtomicBoolean(false);
   }
 
   @Override
@@ -109,8 +112,8 @@ public class MPIDataFlowBroadcast implements DataFlowOperation, MPIMessageReceiv
    * Initialize
    * @param cfg
    * @param t
-   * @param taskPlan
-   * @param edge
+   * @param tPlan
+   * @param ed
    */
   public void init(Config cfg, MessageType t, TaskPlan tPlan, int ed) {
     this.config = cfg;
@@ -194,7 +197,10 @@ public class MPIDataFlowBroadcast implements DataFlowOperation, MPIMessageReceiv
   @Override
   public void progress() {
     delegete.progress();
-    finalReceiver.progress();
+    if (finalReceiverProgress.compareAndSet(false, true)) {
+      finalReceiver.progress();
+      finalReceiverProgress.compareAndSet(true, false);
+    }
   }
 
   public boolean passMessageDownstream(Object object, MPIMessage currentMessage) {

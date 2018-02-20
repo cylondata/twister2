@@ -20,8 +20,6 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -103,11 +101,6 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
   protected boolean isLastReceiver;
 
   protected MPIMessageReceiver receiver;
-
-  /**
-   * A lock to serialize access to the resources
-   */
-  protected final Lock lock = new ReentrantLock();
 
   /**
    * Memory manager that will be used to store buffers to memory store.
