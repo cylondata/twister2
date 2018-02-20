@@ -20,8 +20,6 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -47,7 +45,6 @@ import edu.iu.dsc.tws.data.memory.lmdb.LMDBMemoryManager;
 public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageReleaseCallback {
   private static final Logger LOG = Logger.getLogger(MPIDataFlowOperation.class.getName());
 
-  public static final int MAX_ATTEMPTS = 1000;
   // the configuration
   protected Config config;
   // the task plan
@@ -56,8 +53,8 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
   protected int edge;
   // the router that gives us the possible routes
   protected TWSChannel channel;
-  protected MessageDeSerializer messageDeSerializer;
-  protected MessageSerializer messageSerializer;
+  protected Map<Integer, MessageDeSerializer> messageDeSerializer;
+  protected Map<Integer, MessageSerializer> messageSerializer;
   // we may have multiple routes throughus
 
   protected MessageType type;
@@ -65,8 +62,6 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
   protected boolean isKeyed = false;
 
   protected int executor;
-  private int sendCountPartial = 0;
-  private int sendCountFull = 0;
   /**
    * The send sendBuffers used by the operation
    */
@@ -106,11 +101,6 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
   protected MPIMessageReceiver receiver;
 
   /**
-   * A lock to serialize access to the resources
-   */
-  protected final Lock lock = new ReentrantLock();
-
-  /**
    * Memory manager that will be used to store buffers to memory store.
    */
   private MemoryManager memoryManager;
@@ -147,8 +137,8 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
                        pendingSendPerSource,
                    Map<Integer, Queue<Pair<Object, MPIMessage>>> pRMPS,
                    Map<Integer, Queue<MPIMessage>> pendingReceiveDesrialize,
-                   MessageSerializer serializer,
-                   MessageDeSerializer deSerializer, boolean k) {
+                   Map<Integer, MessageSerializer> serializer,
+                   Map<Integer, MessageDeSerializer> deSerializer, boolean k) {
     this.config = cfg;
     this.instancePlan = plan;
     this.edge = graphEdge;
@@ -189,8 +179,12 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
 
   protected void initSerializers() {
     // initialize the serializers
-    messageSerializer.init(config, sendBuffers, isKeyed);
-    messageDeSerializer.init(config, isKeyed);
+    for (MessageSerializer serializer : messageSerializer.values()) {
+      serializer.init(config, sendBuffers, isKeyed);
+    }
+    for (MessageDeSerializer deSerializer : messageDeSerializer.values()) {
+      deSerializer.init(config, isKeyed);
+    }
   }
 
   private void initProgressTrackers() {
@@ -236,61 +230,47 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
 
   public boolean sendMessagePartial(int source, Object object, int path,
                                     int flags, RoutingParameters routingParameters) {
-    lock.lock();
-    try {
-//      LOG.info(String.format("%d send message partial %d", executor, source));
-      // for partial sends we use minus value to find the correct queue
-      ArrayBlockingQueue<Pair<Object, MPISendMessage>> pendingSendMessages =
-          pendingSendMessagesPerSource.get(source * -1 - 1);
+    // for partial sends we use minus value to find the correct queue
+    ArrayBlockingQueue<Pair<Object, MPISendMessage>> pendingSendMessages =
+        pendingSendMessagesPerSource.get(source * -1 - 1);
 
-      MPIMessage mpiMessage = new MPIMessage(source, type, MPIMessageDirection.OUT, this);
-      int di = -1;
-      if (routingParameters.getExternalRoutes().size() > 0) {
-        di = routingParameters.getDestinationId();
-      }
-      // create a send message to keep track of the serialization
-      // at the intial stage the sub-edge is 0
-      MPISendMessage sendMessage = new MPISendMessage(source, mpiMessage, edge,
-          di, path, flags, routingParameters.getInternalRoutes(),
-          routingParameters.getExternalRoutes());
-
-      // now try to put this into pending
-      boolean ret = pendingSendMessages.offer(
-          new ImmutablePair<Object, MPISendMessage>(object, sendMessage));
-      return ret;
-    } finally {
-      lock.unlock();
+    MPIMessage mpiMessage = new MPIMessage(source, type, MPIMessageDirection.OUT, this);
+    int di = -1;
+    if (routingParameters.getExternalRoutes().size() > 0) {
+      di = routingParameters.getDestinationId();
     }
+    // create a send message to keep track of the serialization
+    // at the intial stage the sub-edge is 0
+    MPISendMessage sendMessage = new MPISendMessage(source, mpiMessage, edge,
+        di, path, flags, routingParameters.getInternalRoutes(),
+        routingParameters.getExternalRoutes());
+
+    // now try to put this into pending
+    boolean ret = pendingSendMessages.offer(
+        new ImmutablePair<Object, MPISendMessage>(object, sendMessage));
+    return ret;
   }
 
   public boolean sendMessage(int source, Object message, int path,
                              int flags, RoutingParameters routingParameters) {
-    lock.lock();
-    try {
-//      LOG.info(String.format("%d send message %d", executor, source));
-      ArrayBlockingQueue<Pair<Object, MPISendMessage>> pendingSendMessages =
-          pendingSendMessagesPerSource.get(source);
+    ArrayBlockingQueue<Pair<Object, MPISendMessage>> pendingSendMessages =
+        pendingSendMessagesPerSource.get(source);
+    MPIMessage mpiMessage = new MPIMessage(source, type, MPIMessageDirection.OUT, this);
 
-      MPIMessage mpiMessage = new MPIMessage(source, type, MPIMessageDirection.OUT, this);
-
-      int di = -1;
-      if (routingParameters.getExternalRoutes().size() > 0) {
-        di = routingParameters.getDestinationId();
-      }
-      MPISendMessage sendMessage = new MPISendMessage(source, mpiMessage, edge,
-          di, path, flags, routingParameters.getInternalRoutes(),
-          routingParameters.getExternalRoutes());
-
-      // now try to put this into pending
-      boolean ret = pendingSendMessages.offer(
-          new ImmutablePair<Object, MPISendMessage>(message, sendMessage));
-      return ret;
-    } finally {
-      lock.unlock();
+    int di = -1;
+    if (routingParameters.getExternalRoutes().size() > 0) {
+      di = routingParameters.getDestinationId();
     }
+    MPISendMessage sendMessage = new MPISendMessage(source, mpiMessage, edge,
+        di, path, flags, routingParameters.getInternalRoutes(),
+        routingParameters.getExternalRoutes());
+
+    // now try to put this into pending
+    return pendingSendMessages.offer(
+        new ImmutablePair<Object, MPISendMessage>(message, sendMessage));
   }
 
-  private void sendProgress(Queue<Pair<Object, MPISendMessage>> pendingSendMessages) {
+  private void sendProgress(Queue<Pair<Object, MPISendMessage>> pendingSendMessages, int sendId) {
     boolean canProgress = true;
     while (pendingSendMessages.size() > 0 && canProgress) {
       // take out pending messages
@@ -336,7 +316,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
         //TODO: destinations?
         // at this point lets build the message
         MPISendMessage message = (MPISendMessage)
-            messageSerializer.build(pair.getKey(), mpiSendMessage);
+            messageSerializer.get(sendId).build(pair.getKey(), mpiSendMessage);
 
         // okay we build the message, send it
         if (message.serializedState() == MPISendMessage.SendState.SERIALIZED) {
@@ -367,7 +347,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
     }
   }
 
-  private void receiveDeserializeProgress(MPIMessage currentMessage) {
+  private void receiveDeserializeProgress(MPIMessage currentMessage, int receiveId) {
     if (currentMessage == null) {
       return;
     }
@@ -377,14 +357,13 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
     //If this is the last receiver we save to memory store
     if (isStoreBased && isLastReceiver) {
       LOG.info("Store based");
-      writeToMemoryManager(currentMessage);
+      writeToMemoryManager(currentMessage, receiveId);
       currentMessage.setReceivedState(MPIMessage.ReceivedState.RECEIVE);
       if (!receiver.receiveMessage(currentMessage, operationMemoryManager)) {
         return;
       }
     } else {
-
-      Object object = messageDeSerializer.build(currentMessage,
+      Object object = messageDeSerializer.get(receiveId).build(currentMessage,
           currentMessage.getHeader().getEdge());
       Queue<Pair<Object, MPIMessage>> pendingReceiveMessages =
           pendingReceiveMessagesPerSource.get(id);
@@ -438,7 +417,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
     if (sendProgressTracker.canProgress()) {
       int sendId = sendProgressTracker.next();
       if (sendId != Integer.MIN_VALUE) {
-        sendProgress(pendingSendMessagesPerSource.get(sendId));
+        sendProgress(pendingSendMessagesPerSource.get(sendId), sendId);
         sendProgressTracker.finish(sendId);
       }
     }
@@ -446,7 +425,8 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
     if (deserializeProgressTracker.canProgress()) {
       int deserializeId = deserializeProgressTracker.next();
       if (deserializeId != Integer.MIN_VALUE) {
-        receiveDeserializeProgress(pendingReceiveDeSerializations.get(deserializeId).poll());
+        receiveDeserializeProgress(
+            pendingReceiveDeSerializations.get(deserializeId).poll(), deserializeId);
         deserializeProgressTracker.finish(deserializeId);
       }
     }
@@ -494,8 +474,8 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
    * @param currentMessage message to be parsed
    */
   @SuppressWarnings({"rawtypes", "unchecked"})
-  private void writeToMemoryManager(MPIMessage currentMessage) {
-    Object data = messageDeSerializer.getDataBuffers(currentMessage, edge);
+  private void writeToMemoryManager(MPIMessage currentMessage, int id) {
+    Object data = messageDeSerializer.get(id).getDataBuffers(currentMessage, edge);
     int sourceID = currentMessage.getHeader().getSourceId();
     int noOfMessages = 1;
     boolean isList = false;
@@ -550,10 +530,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
     message.release();
   }
 
-  private int releasedSendBuffers = 0;
-  private int releasedReceivedBuffers = 0;
   protected void releaseTheBuffers(int id, MPIMessage message) {
-    lock.lock();
     try {
       if (MPIMessageDirection.IN == message.getMessageDirection()) {
         Queue<MPIBuffer> list = receiveBuffers.get(id);
@@ -561,7 +538,6 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
           // we need to reset the buffer so it can be used again
           buffer.getByteBuffer().clear();
           list.offer(buffer);
-          releasedReceivedBuffers++;
         }
       } else if (MPIMessageDirection.OUT == message.getMessageDirection()) {
         Queue<MPIBuffer> queue = sendBuffers;
@@ -569,53 +545,41 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
           // we need to reset the buffer so it can be used again
           buffer.getByteBuffer().clear();
           queue.offer(buffer);
-          releasedSendBuffers++;
         }
       }
     } finally {
-      lock.unlock();
+      int a;
     }
   }
 
-  private int receiveCount = 0;
 
   @Override
   public void onReceiveComplete(int id, int e, MPIBuffer buffer) {
-    lock.lock();
-    try {
-      // we need to try to build the message here, we may need many more messages to complete
-//      LOG.info(String.format("%d received message from %d", executor, id));
-      MPIMessage currentMessage = currentMessages.get(id);
-      ByteBuffer byteBuffer = buffer.getByteBuffer();
-      byteBuffer.position(buffer.getSize());
-      byteBuffer.flip();
-      if (currentMessage == null) {
-        currentMessage = new MPIMessage(id, type, MPIMessageDirection.IN, this);
-        if (isKeyed) {
-          currentMessage.setKeyType(keyType);
-        }
-        currentMessages.put(id, currentMessage);
-        MessageHeader header = messageDeSerializer.buildHeader(buffer, e);
-//        LOG.info(String.format("%d header source %d length %d", executor,
-//            header.getSourceId(), header.getLength()));
-        currentMessage.setHeader(header);
-        currentMessage.setHeaderSize(16);
+    // we need to try to build the message here, we may need many more messages to complete
+    MPIMessage currentMessage = currentMessages.get(id);
+    ByteBuffer byteBuffer = buffer.getByteBuffer();
+    byteBuffer.position(buffer.getSize());
+    byteBuffer.flip();
+    if (currentMessage == null) {
+      currentMessage = new MPIMessage(id, type, MPIMessageDirection.IN, this);
+      if (isKeyed) {
+        currentMessage.setKeyType(keyType);
       }
-      // lets rewind to 0
-      currentMessage.addBuffer(buffer);
-      currentMessage.build();
+      currentMessages.put(id, currentMessage);
+      MessageHeader header = messageDeSerializer.get(id).buildHeader(buffer, e);
+      currentMessage.setHeader(header);
+      currentMessage.setHeaderSize(16);
+    }
+    currentMessage.addBuffer(buffer);
+    currentMessage.build();
 
-      if (currentMessage.isComplete()) {
-//        LOG.info(String.format("%d completed recv ", executor));
-        currentMessages.remove(id);
-        Queue<MPIMessage> deserializeQueue = pendingReceiveDeSerializations.get(id);
-        if (!deserializeQueue.offer(currentMessage)) {
-          throw new RuntimeException(executor + " We should have enough space: "
-              + deserializeQueue.size());
-        }
+    if (currentMessage.isComplete()) {
+      currentMessages.remove(id);
+      Queue<MPIMessage> deserializeQueue = pendingReceiveDeSerializations.get(id);
+      if (!deserializeQueue.offer(currentMessage)) {
+        throw new RuntimeException(executor + " We should have enough space: "
+            + deserializeQueue.size());
       }
-    } finally {
-      lock.unlock();
     }
   }
 

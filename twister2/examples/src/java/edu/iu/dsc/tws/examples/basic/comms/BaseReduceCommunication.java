@@ -141,7 +141,7 @@ public class BaseReduceCommunication implements IContainer {
         LOG.log(Level.INFO, "Starting map worker: " + id);
 //      MPIBuffer data = new MPIBuffer(1024);
         IntData data = generateData();
-        for (int i = 0; i < 11000; i++) {
+        for (int i = 0; i < 100; i++) { //original 11000
           // lets generate a message
           while (!reduce.send(task, data, 0)) {
             // lets wait a litte and try again
@@ -153,7 +153,7 @@ public class BaseReduceCommunication implements IContainer {
           }
 //          LOG.info(String.format("%d sending to %d", id, task)
 //              + " count: " + sendCount++);
-          if (i % 1000 == 0) {
+          if (i % 10 == 0) {
             LOG.info(String.format("%d sent %d", id, i));
           }
           Thread.yield();

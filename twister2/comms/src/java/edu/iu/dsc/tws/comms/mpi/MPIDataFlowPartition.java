@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -63,6 +64,7 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
   private TaskPlan instancePlan;
   private int executor;
   private MessageType type;
+  private AtomicBoolean finalReceiverProgress;
 
   /**
    * A place holder for keeping the internal and external destinations
@@ -88,6 +90,7 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
     }
 
     this.finalReceiver = finalRcvr;
+    this.finalReceiverProgress = new AtomicBoolean(false);
   }
 
 
@@ -136,7 +139,8 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
         new HashMap<>();
     Map<Integer, Queue<Pair<Object, MPIMessage>>> pendingReceiveMessagesPerSource = new HashMap<>();
     Map<Integer, Queue<MPIMessage>> pendingReceiveDeSerializations = new HashMap<>();
-
+    Map<Integer, MessageSerializer> serializerMap = new HashMap<>();
+    Map<Integer, MessageDeSerializer> deSerializerMap = new HashMap<>();
 
     Set<Integer> srcs = TaskPlanUtils.getTasksOfThisExecutor(taskPlan, sources);
     for (int s : srcs) {
@@ -145,6 +149,7 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
           new ArrayBlockingQueue<Pair<Object, MPISendMessage>>(
               MPIContext.sendPendingMax(cfg));
       pendingSendMessagesPerSource.put(s, pendingSendMessages);
+      serializerMap.put(s, new MPIMessageSerializer(new KryoSerializer()));
     }
 
     int maxReceiveBuffers = MPIContext.receiveBufferCount(cfg);
@@ -160,6 +165,7 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
               capacity);
       pendingReceiveMessagesPerSource.put(e, pendingReceiveMessages);
       pendingReceiveDeSerializations.put(e, new ArrayBlockingQueue<MPIMessage>(capacity));
+      deSerializerMap.put(e, new MPIMessageDeSerializer(new KryoSerializer()));
     }
 
     KryoSerializer kryoSerializer = new KryoSerializer();
@@ -171,7 +177,7 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
     delegete.init(cfg, t, taskPlan, edge,
         router.receivingExecutors(), router.isLastReceiver(), this,
         pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
-        pendingReceiveDeSerializations, messageSerializer, messageDeSerializer, false);
+        pendingReceiveDeSerializations, serializerMap, deSerializerMap, false);
   }
 
   @Override
@@ -197,7 +203,11 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
   @Override
   public void progress() {
     delegete.progress();
-    finalReceiver.progress();
+    if (finalReceiverProgress.compareAndSet(false, true)) {
+//      LOG.info("Final progreessss");
+      finalReceiver.progress();
+      finalReceiverProgress.compareAndSet(true, false);
+    }
   }
 
   @Override

@@ -97,7 +97,9 @@ public class SimpleTaskQueue implements IContainer {
     int dests = 1;
     Map<String, Object> newCfg = new HashMap<>();
 
+    LOG.info("-------------------------------------------");
     LOG.info("Setting up reduce dataflow operation");
+    LOG.info("-------------------------------------------");
     // this method calls the init method
     // I think this is wrong
     //TODO: Does the task genereate the communication or is it done by a controller for examples
@@ -115,16 +117,30 @@ public class SimpleTaskQueue implements IContainer {
 
     if (containerId == 0) {
       // the map thread where data is produced
+      LOG.info("-------------------------------------------");
       LOG.log(Level.INFO, "Starting map thread");
+      LOG.info("-------------------------------------------");
+
+      LOG.info("-------------------------------------------");
+      LOG.log(Level.INFO, "Container Id 0");
+      LOG.info("-------------------------------------------");
+
+
       taskExecutor.registerTask(new MapWorker(0, direct));
       taskExecutor.submitTask(0);
       taskExecutor.progres();
     } else if (containerId == 1) {
+
+      LOG.info("-------------------------------------------");
+      LOG.log(Level.INFO, "Container Id 1 : Receiving End");
+      LOG.info("-------------------------------------------");
+
       ArrayList<Integer> inq = new ArrayList<>();
       inq.add(0);
-      taskExecutor.setTaskMessageProcessLimit(10000);
+      taskExecutor.setTaskMessageProcessLimit(100);
       taskExecutor.registerSinkTask(new RecieveWorker(1), inq);
       taskExecutor.progres();
+
     }
   }
 
@@ -138,12 +154,18 @@ public class SimpleTaskQueue implements IContainer {
     @Override
     public boolean onMessage(int source, int path, int target, int flags, Object object) {
       count++;
+      LOG.info("-------------------------------------------");
+      LOG.info("Received message: " + count);
+      LOG.info("-------------------------------------------");
+
       if (count % 50000 == 0) {
-        LOG.info("received message: " + count);
+        LOG.info("-------------------------------------------");
+        LOG.info("Special received message: " + count);
+        LOG.info("-------------------------------------------");
       }
       taskExecutor.submitMessage(0, "" + count);
 
-      if (count == 10) {
+      if (count == 100000) {
         status = Status.LOAD_RECEIVE_FINISHED;
       }
       return true;
@@ -178,7 +200,13 @@ public class SimpleTaskQueue implements IContainer {
         e.printStackTrace();
       }
       String data = content.getContent().toString();
-      if (Integer.parseInt(data) % 1000 == 0) {
+      LOG.info("-------------------------------------------");
+      LOG.info("RecieverWorker All Msg : " + content.getContent().toString());
+      LOG.info("-------------------------------------------");
+      if (Integer.parseInt(data) % 10 == 0) {
+        LOG.info("-------------------------------------------");
+        LOG.info("RecieverWorker : " + content.getContent().toString());
+        LOG.info("-------------------------------------------");
         System.out.println(((String) content.getContent()).toString());
       }
       return null;
@@ -198,8 +226,10 @@ public class SimpleTaskQueue implements IContainer {
 
     @Override
     public Message execute() {
+      LOG.info("-------------------------------------------");
       LOG.log(Level.INFO, "Starting map worker");
-      for (int i = 0; i < 100000; i++) {
+      LOG.info("-------------------------------------------");
+      for (int i = 0; i < 10; i++) {
         IntData data = generateData();
         // lets generate a message
 
@@ -215,6 +245,9 @@ public class SimpleTaskQueue implements IContainer {
         Thread.yield();
       }
       status = Status.MAP_FINISHED;
+      LOG.info("-------------------------------------------");
+      LOG.log(Level.INFO, "Task Status " + status.toString());
+      LOG.info("-------------------------------------------");
       return null;
     }
 
