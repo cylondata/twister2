@@ -138,11 +138,7 @@ public class BaseReduceHLCommunication implements IContainer {
           // lets generate a message
           while (!reduce.send(task, data, 0)) {
             // lets wait a litte and try again
-            try {
-              Thread.sleep(1);
-            } catch (InterruptedException e) {
-              e.printStackTrace();
-            }
+            reduce.progress();
           }
 //          LOG.info(String.format("%d sending to %d", id, task)
 //              + " count: " + sendCount++);
