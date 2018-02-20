@@ -68,7 +68,14 @@ public class MPIDataFlowAllGather implements DataFlowOperation {
     this.middleTask = middleTask;
   }
 
-  @Override
+
+  /**
+   * Initialize
+   * @param cfg
+   * @param t
+   * @param taskPlan
+   * @param edge
+   */
   public void init(Config config, MessageType type, TaskPlan instancePlan, int edge) {
     this.executor = instancePlan.getThisExecutor();
     ReduceFinalReceiver finalRcvr = new ReduceFinalReceiver();

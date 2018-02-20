@@ -19,6 +19,7 @@ import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -266,7 +267,7 @@ public class TWSMPIChannel implements TWSChannel {
 //              LOG.info(String.format("%d Receive completed: from %d size %d %d",
 //                  executor, receiveRequests.rank, status.getCount(MPI.BYTE), ++receiveCount));
               ++receiveCount;
-//               lets call the callback about the receive complete
+              // lets call the callback about the receive complete
               r.buffer.setSize(status.getCount(MPI.BYTE));
               receiveRequests.callback.onReceiveComplete(
                   receiveRequests.rank, receiveRequests.edge, r.buffer);
@@ -279,7 +280,7 @@ public class TWSMPIChannel implements TWSChannel {
         }
         // this request has completed
       } catch (MPIException e) {
-        LOG.severe("Twister2Network failure");
+        LOG.log(Level.SEVERE, "Twister2Network failure", e);
         throw new RuntimeException("Twister2Network failure", e);
       }
     }

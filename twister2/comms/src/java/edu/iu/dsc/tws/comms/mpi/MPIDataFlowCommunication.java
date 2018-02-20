@@ -62,7 +62,7 @@ public class MPIDataFlowCommunication implements TWSCommunication {
     Config mergedCfg = Config.newBuilder().putAll(config).putAll(properties).build();
 
     // create the dataflow operation
-    DataFlowOperation dataFlowOperation = new MPIDataFlowReduce(channel, sourceTasks,
+    MPIDataFlowReduce dataFlowOperation = new MPIDataFlowReduce(channel, sourceTasks,
         destTask, reduceReceiver, partialReceiver);
 
     // intialize the operation
@@ -78,7 +78,7 @@ public class MPIDataFlowCommunication implements TWSCommunication {
     Config mergedCfg = Config.newBuilder().putAll(config).putAll(properties).build();
 
     // create the dataflow operation
-    DataFlowOperation dataFlowOperation = new MPIDataFlowBroadcast(channel, sourceTask,
+    MPIDataFlowBroadcast dataFlowOperation = new MPIDataFlowBroadcast(channel, sourceTask,
         destTasks, receiver);
 
     // intialize the operation
@@ -93,7 +93,7 @@ public class MPIDataFlowCommunication implements TWSCommunication {
     Config mergedCfg = Config.newBuilder().putAll(config).putAll(properties).build();
 
     // create the dataflow operation
-    DataFlowOperation dataFlowOperation = new MPIDirectDataFlowCommunication(channel,
+    MPIDirectDataFlowCommunication dataFlowOperation = new MPIDirectDataFlowCommunication(channel,
         sourceTasks, destTask, receiver);
 
     // intialize the operation
@@ -108,7 +108,7 @@ public class MPIDataFlowCommunication implements TWSCommunication {
     Config mergedCfg = Config.newBuilder().putAll(config).putAll(properties).build();
 
     // create the dataflow operation
-    DataFlowOperation dataFlowOperation = new MPIDataFlowLoadBalance(channel,
+    MPIDataFlowLoadBalance dataFlowOperation = new MPIDataFlowLoadBalance(channel,
         sourceTasks, destTasks, receiver);
 
     // intialize the operation
@@ -125,7 +125,7 @@ public class MPIDataFlowCommunication implements TWSCommunication {
     Config mergedCfg = Config.newBuilder().putAll(config).putAll(properties).build();
 
     // create the dataflow operation
-    DataFlowOperation dataFlowOperation = new MPIDataFlowMultiReduce(channel,
+    MPIDataFlowMultiReduce dataFlowOperation = new MPIDataFlowMultiReduce(channel,
         sourceTasks, destTasks, receiver, partial, edge);
 
     // intialize the operation
@@ -143,7 +143,7 @@ public class MPIDataFlowCommunication implements TWSCommunication {
     Config mergedCfg = Config.newBuilder().putAll(config).putAll(properties).build();
 
     // create the dataflow operation
-    DataFlowOperation dataFlowOperation = new MPIDataFlowAllReduce(channel,
+    MPIDataFlowAllReduce dataFlowOperation = new MPIDataFlowAllReduce(channel,
         sourceTasks, destTasks, middleTask, receiver, partial, edge1, edge2);
 
     // intialize the operation
@@ -159,7 +159,7 @@ public class MPIDataFlowCommunication implements TWSCommunication {
     Config mergedCfg = Config.newBuilder().putAll(config).putAll(properties).build();
 
     // create the dataflow operation
-    DataFlowOperation dataFlowOperation = new MPIDataFlowGather(channel,
+    MPIDataFlowGather dataFlowOperation = new MPIDataFlowGather(channel,
         sourceTasks, destTask, receiver, 0, 0, mergedCfg, type, instancePlan, edge1);
 
     // intialize the operation
@@ -175,7 +175,7 @@ public class MPIDataFlowCommunication implements TWSCommunication {
     Config mergedCfg = Config.newBuilder().putAll(config).putAll(properties).build();
 
     // create the dataflow operation
-    DataFlowOperation dataFlowOperation = new MPIDataFlowGather(channel,
+    MPIDataFlowGather dataFlowOperation = new MPIDataFlowGather(channel,
         sourceTasks, destTask, receiver, 0, 0, mergedCfg, type, keyType, instancePlan, edge1);
 
     // intialize the operation
@@ -192,7 +192,7 @@ public class MPIDataFlowCommunication implements TWSCommunication {
     Config mergedCfg = Config.newBuilder().putAll(config).putAll(properties).build();
 
     // create the dataflow operation
-    DataFlowOperation dataFlowOperation = new MPIDataFlowGather(channel, sourceTasks, destTask,
+    MPIDataFlowGather dataFlowOperation = new MPIDataFlowGather(channel, sourceTasks, destTask,
         receiver, partialRecvr, 0, 0, mergedCfg, type, keyType, instancePlan, edge1);
 
     // intialize the operation
@@ -208,7 +208,7 @@ public class MPIDataFlowCommunication implements TWSCommunication {
     Config mergedCfg = Config.newBuilder().putAll(config).putAll(properties).build();
 
     // create the dataflow operation
-    DataFlowOperation dataFlowOperation = new MPIDataFlowGather(channel,
+    MPIDataFlowGather dataFlowOperation = new MPIDataFlowGather(channel,
         sourceTasks, destTask, receiver, partialRecvr, 0, 0, mergedCfg, type, instancePlan, edge1);
 
     // intialize the operation
@@ -225,7 +225,7 @@ public class MPIDataFlowCommunication implements TWSCommunication {
     Config mergedCfg = Config.newBuilder().putAll(config).putAll(properties).build();
 
     // create the dataflow operation
-    DataFlowOperation dataFlowOperation = new MPIDataFlowMultiGather(channel,
+    MPIDataFlowMultiGather dataFlowOperation = new MPIDataFlowMultiGather(channel,
         sourceTasks, destTasks, receiver, edge);
 
     // intialize the operation
@@ -243,7 +243,7 @@ public class MPIDataFlowCommunication implements TWSCommunication {
     Config mergedCfg = Config.newBuilder().putAll(config).putAll(properties).build();
 
     // create the dataflow operation
-    DataFlowOperation dataFlowOperation = new MPIDataFlowMultiGather(channel,
+    MPIDataFlowMultiGather dataFlowOperation = new MPIDataFlowMultiGather(channel,
         sourceTasks, destTasks, receiver, partialRecvr, edge);
 
     // intialize the operation

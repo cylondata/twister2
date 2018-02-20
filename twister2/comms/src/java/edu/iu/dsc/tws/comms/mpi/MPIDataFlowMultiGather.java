@@ -141,7 +141,14 @@ public class MPIDataFlowMultiGather implements DataFlowOperation {
 
   }
 
-  @Override
+
+  /**
+   * Initialize
+   * @param cfg
+   * @param t
+   * @param taskPlan
+   * @param edge
+   */
   public void init(Config config, MessageType t, TaskPlan instancePlan, int edge) {
     executor = instancePlan.getThisExecutor();
     this.type = t;

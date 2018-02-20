@@ -55,7 +55,7 @@ public class ReduceBatchFinalReceiver implements MessageReceiver {
     executor = op.getTaskPlan().getThisExecutor();
     sendPendingMax = MPIContext.sendPendingMax(cfg);
 
-    LOG.fine(String.format("%d expected ids %s", executor, expectedIds));
+//    LOG.fine(String.format("%d expected ids %s", executor, expectedIds));
     for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
       Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
       Map<Integer, Boolean> finishedPerTask = new HashMap<>();
@@ -105,7 +105,7 @@ public class ReduceBatchFinalReceiver implements MessageReceiver {
 
       m.add(object);
       if ((flags & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) {
-        LOG.info(String.format("%d Final LAST target %d source %d", executor, target, source));
+//        LOG.info(String.format("%d Final LAST target %d source %d", executor, target, source));
         finishedMessages.put(source, true);
       }
     }
@@ -161,7 +161,7 @@ public class ReduceBatchFinalReceiver implements MessageReceiver {
       }
 
       if (allFinished) {
-        LOG.info(String.format("%d final all finished %d", executor, t));
+//        LOG.info(String.format("%d final all finished %d", executor, t));
         batchDone.put(t, true);
         Object previous = null;
         List<Object> finalMessagePerTask = finalMessages.get(t);
