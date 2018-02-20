@@ -261,7 +261,7 @@ public class MPIDataFlowCommunication implements TWSCommunication {
   }
 
   @Override
-  public DataFlowOperation partition(Map<String, Object> properties, MessageType type,
+  public DataFlowOperation partition(Map<String, Object> properties, MessageType type, int edge1,
                                      Set<Integer> sourceTasks, Set<Integer> destTasks,
                                      MessageReceiver receiver) {
     // merge with the user specified configuration, user specified will take precedence
@@ -270,7 +270,7 @@ public class MPIDataFlowCommunication implements TWSCommunication {
     MPIDataFlowPartition dataFlowOperation = new MPIDataFlowPartition(channel,
         sourceTasks, destTasks, receiver, MPIDataFlowPartition.PartitionStratergy.DIRECT);
 
-    dataFlowOperation.init(mergedCfg, type, instancePlan, 0);
+    dataFlowOperation.init(mergedCfg, type, instancePlan, edge1);
     return dataFlowOperation;
   }
 }

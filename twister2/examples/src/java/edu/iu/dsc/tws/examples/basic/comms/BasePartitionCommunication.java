@@ -111,7 +111,7 @@ public class BasePartitionCommunication implements IContainer {
     try {
       // this method calls the init method
       // I think this is wrong
-      partition = channel.partition(newCfg, MessageType.INTEGER, sources,
+      partition = channel.partition(newCfg, MessageType.INTEGER, 0, sources,
           dests, new FinalPartitionReciver());
 
       for (int i = 0; i < noOfTasksPerExecutor; i++) {
@@ -182,12 +182,6 @@ public class BasePartitionCommunication implements IContainer {
   }
 
   private class FinalPartitionReciver implements MessageReceiver {
-    // lets keep track of the messages
-    // for each task we need to keep track of incoming messages
-    private Map<Integer, Map<Integer, List<Object>>> messages = new HashMap<>();
-    private Map<Integer, Map<Integer, Integer>> counts = new HashMap<>();
-
-    private int count = 0;
 
     private long start = System.nanoTime();
 
