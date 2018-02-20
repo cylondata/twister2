@@ -125,11 +125,12 @@ public class BaseReduceBatchCommunication implements IContainer {
           }
           while (!reduce.send(task, data, flag)) {
             // lets wait a litte and try again
-            try {
-              Thread.sleep(1);
-            } catch (InterruptedException e) {
-              e.printStackTrace();
-            }
+            reduce.progress();
+//            try {
+//              Thread.sleep(1);
+//            } catch (InterruptedException e) {
+//              e.printStackTrace();
+//            }
           }
           if (i % 100 == 0) {
             LOG.info(String.format("%d sent %d", id, i));
@@ -183,7 +184,7 @@ public class BaseReduceBatchCommunication implements IContainer {
     @Override
     public Object reduce(Object t1, Object t2) {
       count++;
-      if (count % 100 == 0) {
+      if (count % 10 == 0) {
         LOG.info(String.format("Partial received %d", count));
       }
       return t1;

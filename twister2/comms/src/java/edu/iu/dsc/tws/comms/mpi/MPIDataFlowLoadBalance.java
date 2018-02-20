@@ -134,7 +134,8 @@ public class MPIDataFlowLoadBalance implements DataFlowOperation, MPIMessageRece
         new HashMap<>();
     Map<Integer, Queue<Pair<Object, MPIMessage>>> pendingReceiveMessagesPerSource = new HashMap<>();
     Map<Integer, Queue<MPIMessage>> pendingReceiveDeSerializations = new HashMap<>();
-
+    Map<Integer, MessageSerializer> serializerMap = new HashMap<>();
+    Map<Integer, MessageDeSerializer> deSerializerMap = new HashMap<>();
 
     Set<Integer> srcs = TaskPlanUtils.getTasksOfThisExecutor(taskPlan, sources);
     for (int s : srcs) {
@@ -143,6 +144,7 @@ public class MPIDataFlowLoadBalance implements DataFlowOperation, MPIMessageRece
           new ArrayBlockingQueue<Pair<Object, MPISendMessage>>(
               MPIContext.sendPendingMax(cfg));
       pendingSendMessagesPerSource.put(s, pendingSendMessages);
+      serializerMap.put(s, new MPIMessageSerializer(new KryoSerializer()));
     }
 
     int maxReceiveBuffers = MPIContext.receiveBufferCount(cfg);
@@ -158,18 +160,13 @@ public class MPIDataFlowLoadBalance implements DataFlowOperation, MPIMessageRece
               capacity);
       pendingReceiveMessagesPerSource.put(e, pendingReceiveMessages);
       pendingReceiveDeSerializations.put(e, new ArrayBlockingQueue<MPIMessage>(capacity));
+      deSerializerMap.put(e, new MPIMessageDeSerializer(new KryoSerializer()));
     }
-
-    KryoSerializer kryoSerializer = new KryoSerializer();
-    kryoSerializer.init(new HashMap<String, Object>());
-
-    MessageDeSerializer messageDeSerializer = new MPIMessageDeSerializer(kryoSerializer);
-    MessageSerializer messageSerializer = new MPIMessageSerializer(kryoSerializer);
 
     delegete.init(cfg, t, taskPlan, edge,
         router.receivingExecutors(), router.isLastReceiver(), this,
         pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
-        pendingReceiveDeSerializations, messageSerializer, messageDeSerializer, false);
+        pendingReceiveDeSerializations, serializerMap, deSerializerMap, false);
   }
 
   @Override
