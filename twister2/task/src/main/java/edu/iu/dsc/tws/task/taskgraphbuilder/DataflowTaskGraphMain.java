@@ -12,7 +12,8 @@
 package edu.iu.dsc.tws.task.taskgraphbuilder;
 
 /***
- * This is the main method for testing the dataflow task graph generation.
+ * This is the main class which acts as a reference for generating task graph
+ * and sending the generated task graph to the task graph parser and scheduler.
  */
 public class DataflowTaskGraphMain extends DataflowTaskGraphGenerator {
 
@@ -120,6 +121,9 @@ public class DataflowTaskGraphMain extends DataflowTaskGraphGenerator {
     /*TaskParser TaskGraphParser = new TaskParser(dataflowTaskGraphGenerator);
     TaskGraphParser.taskGraphParseAndSchedule(0);
     TaskGraphParser.taskGraphParseAndSchedule(1);*/
+
+    TaskGraphParser taskGraphParser = new TaskGraphParser(dataflowTaskGraphGenerator);
+    taskGraphParser.taskGraphParseAndSchedule();
   }
 }
 

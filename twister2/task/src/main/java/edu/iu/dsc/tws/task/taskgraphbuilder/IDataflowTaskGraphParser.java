@@ -22,6 +22,9 @@ public interface IDataflowTaskGraphParser {
 
   Set<Task> dataflowTaskGraphParseAndSchedule();
 
+  Set<Task> taskGraphParseAndSchedule();
+
   Set<Task> dataflowTaskGraphParseAndSchedule(int containerId);
+
 }
 
