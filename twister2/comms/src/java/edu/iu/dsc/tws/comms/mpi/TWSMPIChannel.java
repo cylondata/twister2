@@ -211,8 +211,10 @@ public class TWSMPIChannel implements TWSChannel {
       // post the message
       MPISendRequests sendRequests = pendingSends.poll();
       // post the send
-      postMessage(sendRequests);
-      waitForCompletionSends.add(sendRequests);
+      if (sendRequests != null) {
+        postMessage(sendRequests);
+        waitForCompletionSends.add(sendRequests);
+      }
     }
 
     for (int i = 0; i < registeredReceives.size(); i++) {
@@ -250,10 +252,10 @@ public class TWSMPIChannel implements TWSChannel {
       }
     }
 
-    LOG.info(String.format(
-        "%d sending - sent %d comp send %d receive %d pend recv %d pending sends %d waiting %d",
-        executor, sendCount, completedSendCount, receiveCount,
-        pendingReceiveCount, pendingSends.size(), waitForCompletionSends.size()));
+//    LOG.info(String.format(
+//        "%d sending - sent %d comp send %d receive %d pend recv %d pending sends %d waiting %d",
+//        executor, sendCount, completedSendCount, receiveCount,
+//        pendingReceiveCount, pendingSends.size(), waitForCompletionSends.size()));
 
     for (int i = 0; i < registeredReceives.size(); i++) {
       MPIReceiveRequests receiveRequests = registeredReceives.get(i);

@@ -300,9 +300,14 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
             //mpiSendMessage.setSerializationState();
           } else {
 //            LOG.info("Send lock");
-            receiveAccepted = receiver.receiveSendInternally(
-                mpiSendMessage.getSource(), i, mpiSendMessage.getPath(),
-                mpiSendMessage.getFlags(), messageObject);
+            lock.lock();
+            try {
+              receiveAccepted = receiver.receiveSendInternally(
+                  mpiSendMessage.getSource(), i, mpiSendMessage.getPath(),
+                  mpiSendMessage.getFlags(), messageObject);
+            } finally {
+              lock.unlock();
+            }
           }
 
           if (!receiveAccepted) {
@@ -399,24 +404,29 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
       }
 
 //      LOG.info("Receive lock");
-      if (state == MPIMessage.ReceivedState.DOWN || state == MPIMessage.ReceivedState.INIT) {
-        currentMessage.setReceivedState(MPIMessage.ReceivedState.DOWN);
-        if (!receiver.passMessageDownstream(object, currentMessage)) {
-          break;
+      lock.lock();
+      try {
+        if (state == MPIMessage.ReceivedState.DOWN || state == MPIMessage.ReceivedState.INIT) {
+          currentMessage.setReceivedState(MPIMessage.ReceivedState.DOWN);
+          if (!receiver.passMessageDownstream(object, currentMessage)) {
+            break;
+          }
+          currentMessage.setReceivedState(MPIMessage.ReceivedState.RECEIVE);
+          if (!receiver.receiveMessage(currentMessage, object)) {
+            break;
+          }
+          currentMessage.release();
+          pendingReceiveMessages.poll();
+        } else if (state == MPIMessage.ReceivedState.RECEIVE) {
+          currentMessage.setReceivedState(MPIMessage.ReceivedState.RECEIVE);
+          if (!receiver.receiveMessage(currentMessage, object)) {
+            break;
+          }
+          currentMessage.release();
+          pendingReceiveMessages.poll();
         }
-        currentMessage.setReceivedState(MPIMessage.ReceivedState.RECEIVE);
-        if (!receiver.receiveMessage(currentMessage, object)) {
-          break;
-        }
-        currentMessage.release();
-        pendingReceiveMessages.poll();
-      } else if (state == MPIMessage.ReceivedState.RECEIVE) {
-        currentMessage.setReceivedState(MPIMessage.ReceivedState.RECEIVE);
-        if (!receiver.receiveMessage(currentMessage, object)) {
-          break;
-        }
-        currentMessage.release();
-        pendingReceiveMessages.poll();
+      } finally {
+        lock.unlock();
       }
     }
   }
