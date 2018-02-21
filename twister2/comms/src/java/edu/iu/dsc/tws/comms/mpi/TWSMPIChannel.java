@@ -177,11 +177,12 @@ public class TWSMPIChannel implements TWSChannel {
 
   private void postReceive(MPIReceiveRequests requests) {
     MPIBuffer byteBuffer = requests.availableBuffers.poll();
-    if (byteBuffer != null) {
+    while (byteBuffer != null) {
       // post the receive
       pendingReceiveCount++;
       Request request = postReceive(requests.rank, requests.edge, byteBuffer);
       requests.pendingRequests.add(new MPIRequest(request, byteBuffer));
+      byteBuffer = requests.availableBuffers.poll();
     }
   }
 
@@ -199,6 +200,12 @@ public class TWSMPIChannel implements TWSChannel {
     } catch (MPIException e) {
       throw new RuntimeException("Failed to post the receive", e);
     }
+  }
+
+  private boolean debug = false;
+
+  public void setDebug(boolean deb) {
+    debug = deb;
   }
 
   private int completedReceives = 0;
@@ -219,6 +226,10 @@ public class TWSMPIChannel implements TWSChannel {
 
     for (int i = 0; i < registeredReceives.size(); i++) {
       MPIReceiveRequests receiveRequests = registeredReceives.get(i);
+      if (debug) {
+        LOG.info(String.format("%d available receive %d %d %s", executor, receiveRequests.rank,
+            receiveRequests.availableBuffers.size(), receiveRequests.availableBuffers.peek()));
+      }
       // okay we have more buffers to be posted
       if (receiveRequests.availableBuffers.size() > 0) {
         postReceive(receiveRequests);
@@ -252,10 +263,12 @@ public class TWSMPIChannel implements TWSChannel {
       }
     }
 
-//    LOG.info(String.format(
-//        "%d sending - sent %d comp send %d receive %d pend recv %d pending sends %d waiting %d",
-//        executor, sendCount, completedSendCount, receiveCount,
-//        pendingReceiveCount, pendingSends.size(), waitForCompletionSends.size()));
+    if (debug) {
+      LOG.info(String.format(
+          "%d sending - sent %d comp send %d receive %d pend recv %d pending sends %d waiting %d",
+          executor, sendCount, completedSendCount, receiveCount,
+          pendingReceiveCount, pendingSends.size(), waitForCompletionSends.size()));
+    }
 
     for (int i = 0; i < registeredReceives.size(); i++) {
       MPIReceiveRequests receiveRequests = registeredReceives.get(i);

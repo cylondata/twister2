@@ -19,6 +19,8 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -64,6 +66,9 @@ public class MPIDataFlowReduce implements DataFlowOperation, MPIMessageReceiver 
 
   private AtomicBoolean finalReceiverProgress;
   private AtomicBoolean partialRecevierProgress;
+
+  private Lock lock = new ReentrantLock();
+  private Lock partialLock = new ReentrantLock();
 
   public MPIDataFlowReduce(TWSChannel channel, Set<Integer> sources, int destination,
                            MessageReceiver finalRcvr,
@@ -305,14 +310,20 @@ public class MPIDataFlowReduce implements DataFlowOperation, MPIMessageReceiver 
   public void progress() {
     delegete.progress();
 
-    if (finalReceiverProgress.compareAndSet(false, true)) {
-      finalReceiver.progress();
-      finalReceiverProgress.compareAndSet(true, false);
+    if (lock.tryLock()) {
+      try {
+        finalReceiver.progress();
+      } finally {
+        lock.unlock();
+      }
     }
 
-    if (partialRecevierProgress.compareAndSet(false, true)) {
-      partialReceiver.progress();
-      partialRecevierProgress.compareAndSet(true, false);
+    if (partialLock.tryLock()) {
+      try {
+        partialReceiver.progress();
+      } finally {
+        partialLock.unlock();
+      }
     }
   }
 

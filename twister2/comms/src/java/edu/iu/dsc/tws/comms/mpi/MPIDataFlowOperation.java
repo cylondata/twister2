@@ -14,12 +14,12 @@ package edu.iu.dsc.tws.comms.mpi;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
@@ -130,6 +130,11 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
   private int receiveBufferReleaseCount = 0;
   private int sendCount = 0;
   private int receiveCount = 0;
+  private int sendsOfferred = 0;
+  private int sendsPartialOfferred = 0;
+
+  private int partialSendAttempts = 0;
+  private int sendAttempts = 0;
 
   public MPIDataFlowOperation(TWSChannel channel) {
     this.channel = channel;
@@ -217,7 +222,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
     int maxReceiveBuffers = MPIContext.receiveBufferCount(config);
     int receiveBufferSize = MPIContext.bufferSize(config);
     for (Integer recv : receivingExecutors) {
-      Queue<MPIBuffer> recvList = new LinkedList<>();
+      Queue<MPIBuffer> recvList = new LinkedBlockingQueue<>();
       for (int i = 0; i < maxReceiveBuffers; i++) {
         recvList.add(new MPIBuffer(receiveBufferSize));
       }
@@ -256,6 +261,13 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
     // now try to put this into pending
     boolean ret = pendingSendMessages.offer(
         new ImmutablePair<Object, MPISendMessage>(object, sendMessage));
+    if (!ret) {
+      partialSendAttempts++;
+    } else {
+      ((TWSMPIChannel) channel).setDebug(false);
+      partialSendAttempts = 0;
+      sendsPartialOfferred++;
+    }
     return ret;
   }
 
@@ -274,8 +286,16 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
         routingParameters.getExternalRoutes());
 
     // now try to put this into pending
-    return pendingSendMessages.offer(
+    boolean offer = pendingSendMessages.offer(
         new ImmutablePair<Object, MPISendMessage>(message, sendMessage));
+    if (!offer) {
+      sendAttempts++;
+    } else {
+      ((TWSMPIChannel) channel).setDebug(false);
+      sendAttempts = 0;
+      sendsOfferred++;
+    }
+    return offer;
   }
 
   private void sendProgress(Queue<Pair<Object, MPISendMessage>> pendingSendMessages, int sendId) {
@@ -299,7 +319,6 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
             //send memory manager as reply
             //mpiSendMessage.setSerializationState();
           } else {
-//            LOG.info("Send lock");
             lock.lock();
             try {
               receiveAccepted = receiver.receiveSendInternally(
@@ -403,7 +422,6 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
         currentMessage.incrementRefCount();
       }
 
-//      LOG.info("Receive lock");
       lock.lock();
       try {
         if (state == MPIMessage.ReceivedState.DOWN || state == MPIMessage.ReceivedState.INIT) {
@@ -435,9 +453,17 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
    * Progress the serializations
    */
   public void progress() {
-//    lock.lock();
-    LOG.info(String.format("%d send count %d receive %d send release %d receive release %d",
-        executor, sendCount, receiveCount, sendBufferReleaseCount, receiveBufferReleaseCount));
+    if (partialSendAttempts > 1000000 || sendAttempts > 1000000 || sendCount > 5900) {
+      String s = "";
+      for (Map.Entry<Integer, Queue<MPIBuffer>> e : receiveBuffers.entrySet()) {
+        s += e.getKey() + "-" + e.getValue().size() + " ";
+      }
+      LOG.info(String.format(
+          "%d send count %d receive %d send release %d receive release %d %s %d %d",
+          executor, sendCount, receiveCount, sendBufferReleaseCount,
+          receiveBufferReleaseCount, s, sendsOfferred, sendsPartialOfferred));
+      ((TWSMPIChannel) channel).setDebug(true);
+    }
     if (sendProgressTracker.canProgress()) {
       int sendId = sendProgressTracker.next();
       if (sendId != Integer.MIN_VALUE) {
@@ -462,7 +488,6 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
         receiveProgressTracker.finish(receiveId);
       }
     }
-//    lock.unlock();
   }
 
   /**
@@ -561,7 +586,9 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
       for (MPIBuffer buffer : message.getBuffers()) {
         // we need to reset the buffer so it can be used again
         buffer.getByteBuffer().clear();
-        list.offer(buffer);
+        if (!list.offer(buffer)) {
+          throw new RuntimeException("We should be able to offer the buffer");
+        }
         receiveBufferReleaseCount++;
       }
     } else if (MPIMessageDirection.OUT == message.getMessageDirection()) {
@@ -569,7 +596,9 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
       for (MPIBuffer buffer : message.getBuffers()) {
         // we need to reset the buffer so it can be used again
         buffer.getByteBuffer().clear();
-        queue.offer(buffer);
+        if (!queue.offer(buffer)) {
+          throw new RuntimeException("We should be able to offer the buffer");
+        }
         sendBufferReleaseCount++;
       }
     }
