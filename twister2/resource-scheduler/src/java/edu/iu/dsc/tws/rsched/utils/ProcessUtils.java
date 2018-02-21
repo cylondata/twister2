@@ -80,9 +80,6 @@ public final class ProcessUtils {
             break;
           } else {
             System.err.println(line);
-            if (processOutputStringBuilder != null) {
-              processOutputStringBuilder.append(line);
-            }
           }
         }
         try {

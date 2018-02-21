@@ -139,14 +139,13 @@ public class BaseReduceHLCommunication implements IContainer {
           while (!reduce.send(task, data, 0)) {
             // lets wait a litte and try again
             reduce.progress();
-            Thread.yield();
+            Thread.sleep(1);
           }
 //          LOG.info(String.format("%d sending to %d", id, task)
 //              + " count: " + sendCount++);
-          if (i % 1000 == 0) {
+          if (i % 1 == 0) {
             LOG.info(String.format("%d sent %d", id, i));
           }
-          Thread.yield();
         }
         LOG.info(String.format("%d Done sending", id));
         status = Status.MAP_FINISHED;
@@ -180,7 +179,7 @@ public class BaseReduceHLCommunication implements IContainer {
     @Override
     public boolean receive(int target, Object object) {
       count++;
-      if (count % 100 == 0) {
+      if (count % 1 == 0) {
         LOG.info(String.format("Received %d", count));
       }
       return true;
