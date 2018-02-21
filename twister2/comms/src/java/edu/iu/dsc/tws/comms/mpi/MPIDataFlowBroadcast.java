@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -51,10 +52,11 @@ public class MPIDataFlowBroadcast implements DataFlowOperation, MPIMessageReceiv
   private Config config;
   private TaskPlan instancePlan;
   private int executor;
-  private int edge;
+//  private int edge;
   private MessageType type;
   private Map<Integer, ArrayBlockingQueue<Pair<Object, MPISendMessage>>>
       pendingSendMessagesPerSource = new HashMap<>();
+  private AtomicBoolean finalReceiverProgress;
 
   public MPIDataFlowBroadcast(TWSChannel channel, int src, Set<Integer> dests,
                               MessageReceiver finalRcvr) {
@@ -63,6 +65,7 @@ public class MPIDataFlowBroadcast implements DataFlowOperation, MPIMessageReceiv
     this.finalReceiver = finalRcvr;
 
     this.delegete = new MPIDataFlowOperation(channel);
+    this.finalReceiverProgress = new AtomicBoolean(false);
   }
 
   @Override
@@ -109,8 +112,8 @@ public class MPIDataFlowBroadcast implements DataFlowOperation, MPIMessageReceiv
    * Initialize
    * @param cfg
    * @param t
-   * @param taskPlan
-   * @param edge
+   * @param tPlan
+   * @param ed
    */
   public void init(Config cfg, MessageType t, TaskPlan tPlan, int ed) {
     this.config = cfg;
@@ -130,6 +133,8 @@ public class MPIDataFlowBroadcast implements DataFlowOperation, MPIMessageReceiv
 
     Map<Integer, Queue<Pair<Object, MPIMessage>>> pendingReceiveMessagesPerSource = new HashMap<>();
     Map<Integer, Queue<MPIMessage>> pendingReceiveDeSerializations = new HashMap<>();
+    Map<Integer, MessageSerializer> serializerMap = new HashMap<>();
+    Map<Integer, MessageDeSerializer> deSerializerMap = new HashMap<>();
 
     Set<Integer> srcs = router.sendQueueIds();
     for (int s : srcs) {
@@ -138,6 +143,7 @@ public class MPIDataFlowBroadcast implements DataFlowOperation, MPIMessageReceiv
           new ArrayBlockingQueue<Pair<Object, MPISendMessage>>(
               MPIContext.sendPendingMax(cfg));
       pendingSendMessagesPerSource.put(s, pendingSendMessages);
+      serializerMap.put(s, new MPIMessageSerializer(new KryoSerializer()));
     }
 
     int maxReceiveBuffers = MPIContext.receiveBufferCount(cfg);
@@ -153,6 +159,7 @@ public class MPIDataFlowBroadcast implements DataFlowOperation, MPIMessageReceiv
               capacity);
       pendingReceiveMessagesPerSource.put(e, pendingReceiveMessages);
       pendingReceiveDeSerializations.put(e, new ArrayBlockingQueue<MPIMessage>(capacity));
+      deSerializerMap.put(e, new MPIMessageDeSerializer(new KryoSerializer()));
     }
 
     KryoSerializer kryoSerializer = new KryoSerializer();
@@ -164,7 +171,7 @@ public class MPIDataFlowBroadcast implements DataFlowOperation, MPIMessageReceiv
     delegete.init(cfg, t, tPlan, ed,
         router.receivingExecutors(), router.isLastReceiver(), this,
         pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
-        pendingReceiveDeSerializations, messageSerializer, messageDeSerializer, false);
+        pendingReceiveDeSerializations, serializerMap, deSerializerMap, false);
   }
 
   @Override
@@ -190,7 +197,10 @@ public class MPIDataFlowBroadcast implements DataFlowOperation, MPIMessageReceiv
   @Override
   public void progress() {
     delegete.progress();
-    finalReceiver.progress();
+    if (finalReceiverProgress.compareAndSet(false, true)) {
+      finalReceiver.progress();
+      finalReceiverProgress.compareAndSet(true, false);
+    }
   }
 
   public boolean passMessageDownstream(Object object, MPIMessage currentMessage) {
@@ -207,7 +217,8 @@ public class MPIDataFlowBroadcast implements DataFlowOperation, MPIMessageReceiv
     if (routingParameters.getExternalRoutes().size() > 0) {
       di = routingParameters.getDestinationId();
     }
-    MPISendMessage sendMessage = new MPISendMessage(src, mpiMessage, edge,
+    MPISendMessage sendMessage = new MPISendMessage(src, mpiMessage,
+        currentMessage.getHeader().getEdge(),
         di, MPIContext.DEFAULT_PATH, currentMessage.getHeader().getFlags(),
         routingParameters.getInternalRoutes(),
         routingParameters.getExternalRoutes());

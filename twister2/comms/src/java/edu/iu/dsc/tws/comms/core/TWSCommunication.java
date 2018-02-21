@@ -84,4 +84,8 @@ public interface TWSCommunication {
                                 Set<Integer> edge,
                                 Set<Integer> sourceTasks, Set<Integer> destTasks,
                                 MultiMessageReceiver receiver, MultiMessageReceiver partialRecvr);
+
+  DataFlowOperation partition(Map<String, Object> properties, MessageType type, int edge1,
+                              Set<Integer> sourceTasks, Set<Integer> destTasks,
+                              MessageReceiver receiver);
 }

@@ -128,9 +128,9 @@ public class MPIDataFlowMultiReduce implements DataFlowOperation {
 
   /**
    * Initialize
-   * @param cfg
-   * @param t
-   * @param taskPlan
+   * @param config
+   * @param type
+   * @param instancePlan
    * @param edge
    */
   public void init(Config config, MessageType type, TaskPlan instancePlan, int edge) {

@@ -128,7 +128,7 @@ public class BaseBroadcastCommunication implements IContainer {
     @Override
     public void run() {
       LOG.log(Level.INFO, "Starting map worker");
-      for (int i = 0; i < 5000; i++) {
+      for (int i = 0; i < 5; i++) {
         IntData data = generateData();
         // lets generate a message
 //        LOG.info("Sending message from task:" + NO_OF_TASKS);
@@ -161,7 +161,7 @@ public class BaseBroadcastCommunication implements IContainer {
     @Override
     public boolean onMessage(int source, int path, int target, int flags, Object object) {
       count++;
-      if (count % 1000 == 0) {
+      if (count % 1 == 0) {
         LOG.info("Message received for last: " + source + " target: "
             + target + " count: " + count);
       }

@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
@@ -38,6 +39,8 @@ public class TaskExecutorFixedThread implements TaskExecutor {
   private TWSCommunication channel;
   private DataFlowOperation direct;
   private boolean progres = false;
+  private static final Logger LOG = Logger.getLogger(TaskExecutorFixedThread.
+      class.getName());
 
   /**
    * Thread pool used to execute tasks
@@ -170,6 +173,12 @@ public class TaskExecutorFixedThread implements TaskExecutor {
    */
   public boolean registerTask(Task task, List<Integer> inputQueues,
                               List<Integer> outputQueues) {
+    LOG.info("------------------------------------------");
+    LOG.info("Register Task");
+    LOG.info("Task : " + task.getTaskId());
+    LOG.info("InputQueue : " + inputQueues.size());
+    LOG.info("OutputQueue : " + outputQueues.size());
+    LOG.info("------------------------------------------");
     //Register task queues
     //TODO: What happens in the queue already has data when task is registered
     if (inputQueues != null) {
@@ -194,7 +203,11 @@ public class TaskExecutorFixedThread implements TaskExecutor {
    * Submit message to the given queue
    */
   public synchronized <T> boolean submitMessage(int qid, T message) {
-    //TODO; double check if the sync is correct and remove it if the methoed must by sync
+    //TODO; double check if the sync is correct and remove it if the method must by sync
+    LOG.info("------------------------------------------------");
+    LOG.info("QID : " + qid);
+    LOG.info("Message : " + message.toString());
+    LOG.info("------------------------------------------------");
     synchronized (ExecutorContext.FIXED_EXECUTOR_LOCK) {
       queues.get(qid).add(new TaskMessage<T>(message));
     }
@@ -246,6 +259,9 @@ public class TaskExecutorFixedThread implements TaskExecutor {
       throw new RuntimeException(String.format("Unable to locate task with task id : %d, "
           + "Please make sure the task is registered", tid));
     } else {
+      LOG.info("================================================");
+      LOG.info("Submist Task : " + tid);
+      LOG.info("================================================");
       addRunningTask(tid);
       executorPool.submit(new RunnableFixedTask(taskMap.get(tid), this));
     }

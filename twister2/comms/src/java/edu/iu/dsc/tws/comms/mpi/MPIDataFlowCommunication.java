@@ -89,6 +89,15 @@ public class MPIDataFlowCommunication implements TWSCommunication {
   public DataFlowOperation direct(Map<String, Object> properties, MessageType type, int edge,
                                   Set<Integer> sourceTasks, int destTask,
                                   MessageReceiver receiver) {
+
+    LOG.info("==============================================");
+    LOG.info("MessageType : " + type.toString());
+    LOG.info("Edge  : " + edge);
+    LOG.info("SourceTask Size : " + sourceTasks.size());
+    LOG.info("SourceTask : " + sourceTasks.iterator().next());
+    LOG.info("DestTask  ID: " + destTask);
+    LOG.info("MessageReceiver : " + receiver.toString());
+    LOG.info("==============================================");
     // merge with the user specified configuration, user specified will take precedence
     Config mergedCfg = Config.newBuilder().putAll(config).putAll(properties).build();
 
@@ -248,6 +257,20 @@ public class MPIDataFlowCommunication implements TWSCommunication {
 
     // intialize the operation
     dataFlowOperation.init(mergedCfg, type, instancePlan, 0);
+    return dataFlowOperation;
+  }
+
+  @Override
+  public DataFlowOperation partition(Map<String, Object> properties, MessageType type, int edge1,
+                                     Set<Integer> sourceTasks, Set<Integer> destTasks,
+                                     MessageReceiver receiver) {
+    // merge with the user specified configuration, user specified will take precedence
+    Config mergedCfg = Config.newBuilder().putAll(config).putAll(properties).build();
+
+    MPIDataFlowPartition dataFlowOperation = new MPIDataFlowPartition(channel,
+        sourceTasks, destTasks, receiver, MPIDataFlowPartition.PartitionStratergy.DIRECT);
+
+    dataFlowOperation.init(mergedCfg, type, instancePlan, edge1);
     return dataFlowOperation;
   }
 }

@@ -75,9 +75,9 @@ public class MPIDataFlowAllReduce implements DataFlowOperation {
 
   /**
    * Initialize
-   * @param cfg
+   * @param config
    * @param t
-   * @param taskPlan
+   * @param instancePlan
    * @param edge
    */
   public void init(Config config, MessageType t, TaskPlan instancePlan, int edge) {
@@ -90,14 +90,9 @@ public class MPIDataFlowAllReduce implements DataFlowOperation {
     reduce = new MPIDataFlowReduce(channel, sources, middleTask,
         finalRcvr, partialReceiver);
     reduce.init(config, t, instancePlan, reduceEdge);
-//    Map<Integer, List<Integer>> receiveExpects = reduce.receiveExpectedTaskIds();
-//    finalRcvr.init(receiveExpects);
-//    partialReceiver.init(receiveExpects);
 
     broadcast = new MPIDataFlowBroadcast(channel, middleTask, destinations, finalReceiver);
     broadcast.init(config, t, instancePlan, broadCastEdge);
-//    Map<Integer, List<Integer>> broadCastExpects = broadcast.receiveExpectedTaskIds();
-//    finalReceiver.init(broadCastExpects);
   }
 
   @Override

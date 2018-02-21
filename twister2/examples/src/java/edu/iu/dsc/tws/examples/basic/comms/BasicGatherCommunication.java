@@ -142,7 +142,7 @@ public class BasicGatherCommunication implements IContainer {
         LOG.log(Level.INFO, "Starting map worker: " + id);
 //      MPIBuffer data = new MPIBuffer(1024);
         startTime = System.nanoTime();
-        for (int i = 0; i < 1; i++) {
+        for (int i = 0; i < 1000; i++) {
           String data = generateStringData();
           // lets generate a message
           KeyedContent mesage = new KeyedContent(task, data,
@@ -258,11 +258,11 @@ public class BasicGatherCommunication implements IContainer {
             }
             if (o != null) {
               count++;
-              if (count % 1 == 0) {
+              if (count % 100 == 0) {
                 LOG.info(String.format("%d Last %d count: %d %s",
                     id, t, count, counts));
               }
-              if (count >= 1) {
+              if (count >= 100) {
                 LOG.info("Total time: " + (System.nanoTime() - start) / 1000000
                     + " Count: " + count + " total: " + (System.nanoTime() - startTime));
               }

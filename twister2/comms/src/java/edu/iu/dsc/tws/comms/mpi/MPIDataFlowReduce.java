@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -37,7 +38,7 @@ import edu.iu.dsc.tws.comms.routing.InvertedBinaryTreeRouter;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
 public class MPIDataFlowReduce implements DataFlowOperation, MPIMessageReceiver {
-  private static final Logger LOG = Logger.getLogger(MPIDataFlowBroadcast.class.getName());
+  private static final Logger LOG = Logger.getLogger(MPIDataFlowReduce.class.getName());
 
   // the source tasks
   protected Set<Integer> sources;
@@ -61,6 +62,9 @@ public class MPIDataFlowReduce implements DataFlowOperation, MPIMessageReceiver 
   private int executor;
   private MessageType type;
 
+  private AtomicBoolean finalReceiverProgress;
+  private AtomicBoolean partialRecevierProgress;
+
   public MPIDataFlowReduce(TWSChannel channel, Set<Integer> sources, int destination,
                            MessageReceiver finalRcvr,
                            MessageReceiver partialRcvr, int indx, int p) {
@@ -71,6 +75,8 @@ public class MPIDataFlowReduce implements DataFlowOperation, MPIMessageReceiver 
     this.partialReceiver = partialRcvr;
     this.pathToUse = p;
     this.delegete = new MPIDataFlowOperation(channel);
+    this.finalReceiverProgress = new AtomicBoolean(false);
+    this.partialRecevierProgress = new AtomicBoolean(false);
   }
 
   public MPIDataFlowReduce(TWSChannel channel, Set<Integer> sources, int destination,
@@ -231,6 +237,8 @@ public class MPIDataFlowReduce implements DataFlowOperation, MPIMessageReceiver 
         new HashMap<>();
     Map<Integer, Queue<Pair<Object, MPIMessage>>> pendingReceiveMessagesPerSource = new HashMap<>();
     Map<Integer, Queue<MPIMessage>> pendingReceiveDeSerializations = new HashMap<>();
+    Map<Integer, MessageSerializer> serializerMap = new HashMap<>();
+    Map<Integer, MessageDeSerializer> deSerializerMap = new HashMap<>();
 
     Set<Integer> srcs = router.sendQueueIds();
     for (int s : srcs) {
@@ -239,6 +247,7 @@ public class MPIDataFlowReduce implements DataFlowOperation, MPIMessageReceiver 
           new ArrayBlockingQueue<Pair<Object, MPISendMessage>>(
               MPIContext.sendPendingMax(cfg));
       pendingSendMessagesPerSource.put(s, pendingSendMessages);
+      serializerMap.put(s, new MPIMessageSerializer(new KryoSerializer()));
     }
 
     int maxReceiveBuffers = MPIContext.receiveBufferCount(cfg);
@@ -254,18 +263,16 @@ public class MPIDataFlowReduce implements DataFlowOperation, MPIMessageReceiver 
               capacity);
       pendingReceiveMessagesPerSource.put(e, pendingReceiveMessages);
       pendingReceiveDeSerializations.put(e, new ArrayBlockingQueue<MPIMessage>(capacity));
+      deSerializerMap.put(e, new MPIMessageDeSerializer(new KryoSerializer()));
     }
 
     KryoSerializer kryoSerializer = new KryoSerializer();
     kryoSerializer.init(new HashMap<String, Object>());
 
-    MessageDeSerializer messageDeSerializer = new MPIMessageDeSerializer(kryoSerializer);
-    MessageSerializer messageSerializer = new MPIMessageSerializer(kryoSerializer);
-
     delegete.init(cfg, t, taskPlan, edge,
         router.receivingExecutors(), router.isLastReceiver(), this,
         pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
-        pendingReceiveDeSerializations, messageSerializer, messageDeSerializer, false);
+        pendingReceiveDeSerializations, serializerMap, deSerializerMap, false);
   }
 
   @Override
@@ -298,8 +305,15 @@ public class MPIDataFlowReduce implements DataFlowOperation, MPIMessageReceiver 
   public void progress() {
     delegete.progress();
 
-    finalReceiver.progress();
-    partialReceiver.progress();
+    if (finalReceiverProgress.compareAndSet(false, true)) {
+      finalReceiver.progress();
+      finalReceiverProgress.compareAndSet(true, false);
+    }
+
+    if (partialRecevierProgress.compareAndSet(false, true)) {
+      partialReceiver.progress();
+      partialRecevierProgress.compareAndSet(true, false);
+    }
   }
 
   @Override

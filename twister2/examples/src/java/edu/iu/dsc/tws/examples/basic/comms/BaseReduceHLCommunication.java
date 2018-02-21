@@ -134,22 +134,18 @@ public class BaseReduceHLCommunication implements IContainer {
         LOG.log(Level.INFO, "Starting map worker: " + id);
 //      MPIBuffer data = new MPIBuffer(1024);
         IntData data = generateData();
-        for (int i = 0; i < 11000; i++) {
+        for (int i = 0; i < 6000; i++) {
           // lets generate a message
           while (!reduce.send(task, data, 0)) {
             // lets wait a litte and try again
-            try {
-              Thread.sleep(1);
-            } catch (InterruptedException e) {
-              e.printStackTrace();
-            }
+            reduce.progress();
+//            Thread.sleep(1);
           }
 //          LOG.info(String.format("%d sending to %d", id, task)
 //              + " count: " + sendCount++);
-          if (i % 1000 == 0) {
+          if (i % 100 == 0) {
             LOG.info(String.format("%d sent %d", id, i));
           }
-          Thread.yield();
         }
         LOG.info(String.format("%d Done sending", id));
         status = Status.MAP_FINISHED;
@@ -183,7 +179,7 @@ public class BaseReduceHLCommunication implements IContainer {
     @Override
     public boolean receive(int target, Object object) {
       count++;
-      if (count % 100 == 0) {
+      if (count > 5900 || count % 10 == 0) {
         LOG.info(String.format("Received %d", count));
       }
       return true;

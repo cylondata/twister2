@@ -12,27 +12,45 @@
 package edu.iu.dsc.tws.comms.mpi;
 
 import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 
 public class ProgressionTracker {
   private Queue<Integer> progressItems;
 
-  public ProgressionTracker(int[] items) {
-    this.progressItems = new ArrayBlockingQueue<>(items.length);
-    for (int i : items) {
-      progressItems.offer(i);
+  private boolean canProgress;
+
+  public ProgressionTracker(Set<Integer> items) {
+    if (items.size() == 0) {
+      canProgress = false;
+    } else {
+
+      canProgress = true;
+      this.progressItems = new ArrayBlockingQueue<>(items.size());
+      for (int i : items) {
+        progressItems.offer(i);
+      }
     }
   }
 
   public int next() {
     if (progressItems.size() > 0) {
-      return progressItems.poll();
+      Integer next = progressItems.poll();
+      if (next == null) {
+        return Integer.MIN_VALUE;
+      } else {
+        return next;
+      }
     } else {
-      return -1;
+      return Integer.MIN_VALUE;
     }
   }
 
   public void finish(int item) {
     progressItems.offer(item);
+  }
+
+  public boolean canProgress() {
+    return canProgress;
   }
 }

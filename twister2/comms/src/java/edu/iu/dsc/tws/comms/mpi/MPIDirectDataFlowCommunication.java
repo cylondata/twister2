@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -39,6 +40,7 @@ import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
  * A direct data flow operation sends peer to peer messages
  */
 public class MPIDirectDataFlowCommunication implements DataFlowOperation, MPIMessageReceiver {
+  private static final Logger LG = Logger.getLogger(MPIDirectDataFlowCommunication.class.getName());
   private Set<Integer> sources;
   private int destination;
   private DirectRouter router;
@@ -60,6 +62,14 @@ public class MPIDirectDataFlowCommunication implements DataFlowOperation, MPIMes
   @Override
   public boolean receiveMessage(MPIMessage currentMessage, Object object) {
     MessageHeader header = currentMessage.getHeader();
+    LG.info("================================================");
+    LG.info("MessageHeader : " + header.toString());
+    LG.info("MPIMessage : " + currentMessage.toString());
+    LG.info("Message Object : " + object.toString());
+    LG.info("Source ID : " + header.getSourceId());
+    LG.info("Source ID : " + header.getSourceId());
+    LG.info("================================================");
+
     // check weather this message is for a sub task
     return finalReceiver.onMessage(header.getSourceId(), 0, destination, header.getFlags(), object);
   }
@@ -92,7 +102,9 @@ public class MPIDirectDataFlowCommunication implements DataFlowOperation, MPIMes
    * @param edge
    */
   public void init(Config cfg, MessageType t, TaskPlan taskPlan, int edge) {
+
     this.router = new DirectRouter(taskPlan, sources, destination);
+
 
     if (this.finalReceiver != null && isLastReceiver()) {
       this.finalReceiver.init(cfg, this, receiveExpectedTaskIds());
@@ -102,6 +114,8 @@ public class MPIDirectDataFlowCommunication implements DataFlowOperation, MPIMes
         new HashMap<>();
     Map<Integer, Queue<Pair<Object, MPIMessage>>> pendingReceiveMessagesPerSource = new HashMap<>();
     Map<Integer, Queue<MPIMessage>> pendingReceiveDeSerializations = new HashMap<>();
+    Map<Integer, MessageSerializer> serializerMap = new HashMap<>();
+    Map<Integer, MessageDeSerializer> deSerializerMap = new HashMap<>();
 
     Set<Integer> srcs = TaskPlanUtils.getTasksOfThisExecutor(taskPlan, sources);
     for (int s : srcs) {
@@ -112,16 +126,14 @@ public class MPIDirectDataFlowCommunication implements DataFlowOperation, MPIMes
       pendingSendMessagesPerSource.put(s, pendingSendMessages);
       pendingReceiveDeSerializations.put(s, new ArrayBlockingQueue<MPIMessage>(
           MPIContext.sendPendingMax(cfg)));
+      serializerMap.put(s, new MPIMessageSerializer(new KryoSerializer()));
     }
 
-    KryoSerializer kryoSerializer = new KryoSerializer();
-    kryoSerializer.init(new HashMap<String, Object>());
-
-    MessageDeSerializer messageDeSerializer = new MPIMessageDeSerializer(kryoSerializer);
-    MessageSerializer messageSerializer = new MPIMessageSerializer(kryoSerializer);
+    MessageDeSerializer messageDeSerializer = new MPIMessageDeSerializer(new KryoSerializer());
+    deSerializerMap.put(destination, messageDeSerializer);
     delegete.init(cfg, t, taskPlan, edge, router.receivingExecutors(),
         isLastReceiver(), this, pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
-        pendingReceiveDeSerializations, messageSerializer, messageDeSerializer, false);
+        pendingReceiveDeSerializations, serializerMap, deSerializerMap, false);
   }
 
   @Override
@@ -131,6 +143,11 @@ public class MPIDirectDataFlowCommunication implements DataFlowOperation, MPIMes
 
   @Override
   public boolean send(int source, Object message, int flags) {
+    LG.info("================================================");
+    LG.info("Source : " + source);
+    LG.info("Message : " + message.toString());
+    LG.info("Flags : " + flags);
+    LG.info("================================================");
     return delegete.sendMessage(source, message, 0, flags, sendRoutingParameters(source, 0));
   }
 
