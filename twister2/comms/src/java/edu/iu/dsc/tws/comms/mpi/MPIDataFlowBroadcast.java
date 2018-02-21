@@ -52,7 +52,7 @@ public class MPIDataFlowBroadcast implements DataFlowOperation, MPIMessageReceiv
   private Config config;
   private TaskPlan instancePlan;
   private int executor;
-  private int edge;
+//  private int edge;
   private MessageType type;
   private Map<Integer, ArrayBlockingQueue<Pair<Object, MPISendMessage>>>
       pendingSendMessagesPerSource = new HashMap<>();
@@ -217,7 +217,8 @@ public class MPIDataFlowBroadcast implements DataFlowOperation, MPIMessageReceiv
     if (routingParameters.getExternalRoutes().size() > 0) {
       di = routingParameters.getDestinationId();
     }
-    MPISendMessage sendMessage = new MPISendMessage(src, mpiMessage, edge,
+    MPISendMessage sendMessage = new MPISendMessage(src, mpiMessage,
+        currentMessage.getHeader().getEdge(),
         di, MPIContext.DEFAULT_PATH, currentMessage.getHeader().getFlags(),
         routingParameters.getInternalRoutes(),
         routingParameters.getExternalRoutes());

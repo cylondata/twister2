@@ -130,7 +130,7 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
 
     LOG.info(String.format("%d done adding internal/external routing",
         taskPlan.getThisExecutor()));
-
+    //TODO : Does this send the correct receiveExpectedTaskIds for partition communication
     if (this.finalReceiver != null && isLastReceiver()) {
       this.finalReceiver.init(cfg, this, receiveExpectedTaskIds());
     }
