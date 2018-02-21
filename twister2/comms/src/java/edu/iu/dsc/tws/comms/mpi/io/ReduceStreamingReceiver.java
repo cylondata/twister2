@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi.io;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +30,7 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
   protected ReduceFunction reduceFunction;
   // lets keep track of the messages
   // for each task we need to keep track of incoming messages
-  protected Map<Integer, Map<Integer, List<Object>>> messages = new HashMap<>();
+  protected Map<Integer, Map<Integer, Queue<Object>>> messages = new HashMap<>();
   protected Map<Integer, Map<Integer, Integer>> counts = new HashMap<>();
   protected int executor;
   protected int count = 0;
@@ -54,12 +53,12 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
     this.reducedValues = new ArrayBlockingQueue<>(sendPendingMax);
 
     for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
-      Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
+      Map<Integer, Queue<Object>> messagesPerTask = new HashMap<>();
       Map<Integer, Integer> countsPerTask = new HashMap<>();
       Map<Integer, Integer> totalCountsPerTask = new HashMap<>();
 
       for (int i : e.getValue()) {
-        messagesPerTask.put(i, new ArrayList<Object>());
+        messagesPerTask.put(i, new ArrayBlockingQueue<>(sendPendingMax * 4));
         countsPerTask.put(i, 0);
         totalCountsPerTask.put(i, 0);
       }
@@ -77,15 +76,15 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
   public boolean onMessage(int source, int path, int target, int flags, Object object) {
     // add the object to the map
     boolean canAdd = true;
-    List<Object> m = messages.get(target).get(source);
+    Queue<Object> m = messages.get(target).get(source);
     Integer c = counts.get(target).get(source);
-    if (m.size() > sendPendingMax * 4) {
+    if (m.size() >= sendPendingMax * 4) {
       canAdd = false;
 //      LOG.info(String.format("%d ADD FALSE", executor));
       onMessageAttempts++;
     } else {
       onMessageAttempts = 0;
-      m.add(object);
+      m.offer(object);
       counts.get(target).put(source, c + 1);
 
       Integer tc = totalCounts.get(target).get(source);
@@ -102,7 +101,7 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
     for (int t : messages.keySet()) {
       boolean canProgress = true;
       // now check weather we have the messages for this source
-      Map<Integer, List<Object>> messagePerTarget = messages.get(t);
+      Map<Integer, Queue<Object>> messagePerTarget = messages.get(t);
       Map<Integer, Integer> countsPerTarget = counts.get(t);
       Map<Integer, Integer> totalCountMap = totalCounts.get(t);
 //      if (onMessageAttempts > 1000000 || progressAttempts > 1000000) {
@@ -111,7 +110,7 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
 
       while (canProgress) {
         boolean found = true;
-        for (Map.Entry<Integer, List<Object>> e : messagePerTarget.entrySet()) {
+        for (Map.Entry<Integer, Queue<Object>> e : messagePerTarget.entrySet()) {
           if (e.getValue().size() == 0) {
             found = false;
             canProgress = false;
@@ -119,17 +118,18 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
         }
         if (found && reducedValues.size() < sendPendingMax) {
           Object previous = null;
-          for (Map.Entry<Integer, List<Object>> e : messagePerTarget.entrySet()) {
+          for (Map.Entry<Integer, Queue<Object>> e : messagePerTarget.entrySet()) {
             if (previous == null) {
-              previous = e.getValue().remove(0);
+              previous = e.getValue().poll();
             } else {
-              Object current = e.getValue().remove(0);
+              Object current = e.getValue().poll();
               previous = reduceFunction.reduce(previous, current);
             }
           }
           if (previous != null) {
             reducedValues.offer(previous);
           }
+          progressAttempts = 0;
         } else {
           progressAttempts++;
         }
@@ -139,9 +139,6 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
           boolean handle = handleMessage(t, previous, 0, destination);
           if (handle) {
             reducedValues.poll();
-//            for (Map.Entry<Integer, List<Object>> e : messagePerTarget.entrySet()) {
-//              e.getValue().remove(0);
-//            }
             for (Map.Entry<Integer, Integer> e : countsPerTarget.entrySet()) {
               Integer i = e.getValue();
               countsPerTarget.put(e.getKey(), i - 1);

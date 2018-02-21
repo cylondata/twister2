@@ -453,7 +453,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
    * Progress the serializations
    */
   public void progress() {
-    if (partialSendAttempts > 1000000 || sendAttempts > 1000000 || sendCount > 5900) {
+    if (partialSendAttempts > 1000000 || sendAttempts > 1000000) {
       String s = "";
       for (Map.Entry<Integer, Queue<MPIBuffer>> e : receiveBuffers.entrySet()) {
         s += e.getKey() + "-" + e.getValue().size() + " ";

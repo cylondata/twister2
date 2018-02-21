@@ -143,7 +143,7 @@ public class BaseReduceHLCommunication implements IContainer {
           }
 //          LOG.info(String.format("%d sending to %d", id, task)
 //              + " count: " + sendCount++);
-          if (i % 100 == 0) {
+          if (i % 100 == 0 || i > 5990) {
             LOG.info(String.format("%d sent %d", id, i));
           }
         }
