@@ -19,6 +19,8 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -64,7 +66,7 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
   private TaskPlan instancePlan;
   private int executor;
   private MessageType type;
-  private AtomicBoolean finalReceiverProgress;
+  private Lock lock = new ReentrantLock();
 
   /**
    * A place holder for keeping the internal and external destinations
@@ -90,7 +92,6 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
     }
 
     this.finalReceiver = finalRcvr;
-    this.finalReceiverProgress = new AtomicBoolean(false);
   }
 
 
@@ -199,10 +200,12 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
   @Override
   public void progress() {
     delegete.progress();
-    if (finalReceiverProgress.compareAndSet(false, true)) {
-//      LOG.info("Final progreessss");
-      finalReceiver.progress();
-      finalReceiverProgress.compareAndSet(true, false);
+    if (lock.tryLock()) {
+      try {
+        finalReceiver.progress();
+      } finally {
+        lock.unlock();
+      }
     }
   }
 

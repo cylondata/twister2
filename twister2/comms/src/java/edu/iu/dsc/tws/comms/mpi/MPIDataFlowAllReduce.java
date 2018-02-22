@@ -177,7 +177,6 @@ public class MPIDataFlowAllReduce implements DataFlowOperation {
 
     @Override
     public boolean onMessage(int source, int path, int target, int flags, Object object) {
-//      LOG.info(String.format("%d received message %d", executor, target));
       // add the object to the map
       boolean canAdd = true;
       try {

@@ -71,9 +71,9 @@ public class MPIDataFlowAllGather implements DataFlowOperation {
 
   /**
    * Initialize
-   * @param cfg
-   * @param t
-   * @param taskPlan
+   * @param config
+   * @param type
+   * @param instancePlan
    * @param edge
    */
   public void init(Config config, MessageType type, TaskPlan instancePlan, int edge) {
@@ -82,14 +82,9 @@ public class MPIDataFlowAllGather implements DataFlowOperation {
     reduce = new MPIDataFlowGather(channel, sources, middleTask,
         finalRcvr, partialReceiver, 0, 0, config, type, instancePlan, edge);
     reduce.init(config, type, instancePlan, reduceEdge);
-//    Map<Integer, List<Integer>> receiveExpects = reduce.receiveExpectedTaskIds();
-//    finalRcvr.init(receiveExpects);
-//    partialReceiver.init(receiveExpects);
 
     broadcast = new MPIDataFlowBroadcast(channel, middleTask, destinations, finalReceiver);
     broadcast.init(config, type, instancePlan, broadCastEdge);
-//    Map<Integer, List<Integer>> broadCastExpects = broadcast.receiveExpectedTaskIds();
-//    finalReceiver.init(broadCastExpects);
   }
 
   @Override
@@ -151,8 +146,6 @@ public class MPIDataFlowAllGather implements DataFlowOperation {
     private Map<Integer, Map<Integer, List<Object>>> messages = new HashMap<>();
     private Map<Integer, Map<Integer, Integer>> counts = new HashMap<>();
 
-    private int count = 0;
-
     @Override
     public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
       for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
@@ -213,7 +206,6 @@ public class MPIDataFlowAllGather implements DataFlowOperation {
           }
           if (found) {
             if (broadcast.send(t, o, 0)) {
-              count++;
               for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
                 o = e.getValue().remove(0);
               }
@@ -221,10 +213,8 @@ public class MPIDataFlowAllGather implements DataFlowOperation {
                 Integer i = e.getValue();
                 cMap.put(e.getKey(), i - 1);
               }
-//                  LOG.info(String.format("%d reduce send true", id));
             } else {
               canProgress = false;
-//                  LOG.info(String.format("%d reduce send false", id));
             }
           }
         }
