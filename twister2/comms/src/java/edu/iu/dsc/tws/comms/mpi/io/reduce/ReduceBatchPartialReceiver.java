@@ -9,121 +9,22 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi.io.reduce;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.mpi.MPIContext;
-import edu.iu.dsc.tws.comms.mpi.MPIMessage;
 
-public class ReduceBatchPartialReceiver implements MessageReceiver {
+public class ReduceBatchPartialReceiver extends ReduceBatchReceiver {
   private static final Logger LOG = Logger.getLogger(ReduceBatchPartialReceiver.class.getName());
 
-  private ReduceFunction reduceFunction;
-
-  // lets keep track of the messages
-  // for each task we need to keep track of incoming messages
-  private Map<Integer, Map<Integer, List<Object>>> messages = new HashMap<>();
-  private Map<Integer, Map<Integer, Integer>> counts = new HashMap<>();
-  private Map<Integer, Map<Integer, Boolean>> finished = new HashMap<>();
-  private DataFlowOperation dataFlowOperation;
-  private int executor;
-  private int sendPendingMax = 128;
-  private int destination;
-  private Map<Integer, Boolean> batchDone = new HashMap<>();
-  private Map<Integer, Map<Integer, Integer>> totalCounts = new HashMap<>();
-  private Queue<Object> reducedValues;
-
   public ReduceBatchPartialReceiver(int dst, ReduceFunction reduce) {
+    super(dst, reduce);
     this.destination = dst;
     this.reduceFunction = reduce;
-  }
-
-  @Override
-  public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-    executor = op.getTaskPlan().getThisExecutor();
-    sendPendingMax = MPIContext.sendPendingMax(cfg);
-    this.dataFlowOperation = op;
-    this.executor = dataFlowOperation.getTaskPlan().getThisExecutor();
-    this.reducedValues = new ArrayBlockingQueue<>(sendPendingMax);
-
-    LOG.fine(String.format("%d gather partial expected ids %s", executor, expectedIds));
-    for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
-      Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
-      Map<Integer, Boolean> finishedPerTask = new HashMap<>();
-      Map<Integer, Integer> countsPerTask = new HashMap<>();
-      Map<Integer, Integer> totalCountsPerTask = new HashMap<>();
-
-      for (int task : e.getValue()) {
-        messagesPerTask.put(task, new ArrayList<Object>());
-        finishedPerTask.put(task, false);
-        countsPerTask.put(task, 0);
-        totalCountsPerTask.put(task, 0);
-      }
-      messages.put(e.getKey(), messagesPerTask);
-      finished.put(e.getKey(), finishedPerTask);
-      counts.put(e.getKey(), countsPerTask);
-      batchDone.put(e.getKey(), false);
-      totalCounts.put(e.getKey(), totalCountsPerTask);
-    }
-  }
-
-  @Override
-  public boolean onMessage(int source, int path, int target, int flags, Object object) {
-    // add the object to the map
-    boolean canAdd = true;
-
-    if (messages.get(target) == null) {
-      throw new RuntimeException(String.format("%d Partial receive error %d", executor, target));
-    }
-    List<Object> m = messages.get(target).get(source);
-    Map<Integer, Boolean> finishedMessages = finished.get(target);
-
-    if (m.size() > sendPendingMax) {
-      canAdd = false;
-//      LOG.info(String.format("%d Partial add FALSE target %d source %d %s %s",
-//          executor, target, source, finishedMessages, counts.get(target)));
-    } else {
-//      LOG.info(String.format("%d Partial add TRUE target %d source %d %s %s",
-//          executor, target, source, finishedMessages, counts.get(target)));
-      if (object instanceof MPIMessage) {
-        ((MPIMessage) object).incrementRefCount();
-      }
-      Integer c = counts.get(target).get(source);
-      counts.get(target).put(source, c + 1);
-
-      Integer tc = totalCounts.get(target).get(source);
-      totalCounts.get(target).put(source, tc + 1);
-
-      m.add(object);
-      if ((flags & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) {
-        finishedMessages.put(source, true);
-      }
-    }
-    return canAdd;
   }
 
   @Override
@@ -133,7 +34,7 @@ public class ReduceBatchPartialReceiver implements MessageReceiver {
         continue;
       }
       // now check weather we have the messages for this source
-      Map<Integer, List<Object>> messagePerTarget = messages.get(t);
+      Map<Integer, Queue<Object>> messagePerTarget = messages.get(t);
       Map<Integer, Boolean> finishedForTarget = finished.get(t);
       Map<Integer, Integer> countMap = counts.get(t);
       Map<Integer, Integer> totalCountMap = totalCounts.get(t);
@@ -146,7 +47,7 @@ public class ReduceBatchPartialReceiver implements MessageReceiver {
         boolean allFinished = true;
         boolean allZero = true;
 
-        for (Map.Entry<Integer, List<Object>> e : messagePerTarget.entrySet()) {
+        for (Map.Entry<Integer, Queue<Object>> e : messagePerTarget.entrySet()) {
           if (e.getValue().size() == 0 && !finishedForTarget.get(e.getKey())) {
             found = false;
             canProgress = false;
@@ -158,13 +59,13 @@ public class ReduceBatchPartialReceiver implements MessageReceiver {
 
         if (found && reducedValues.size() < sendPendingMax) {
           Object previous = null;
-          for (Map.Entry<Integer, List<Object>> e : messagePerTarget.entrySet()) {
-            List<Object> valueList = e.getValue();
+          for (Map.Entry<Integer, Queue<Object>> e : messagePerTarget.entrySet()) {
+            Queue<Object> valueList = e.getValue();
             if (valueList.size() > 0) {
               if (previous == null) {
-                previous = valueList.remove(0);
+                previous = valueList.poll();
               } else {
-                Object current = valueList.remove(0);
+                Object current = valueList.poll();
                 previous = reduceFunction.reduce(previous, current);
               }
             }
@@ -180,8 +81,8 @@ public class ReduceBatchPartialReceiver implements MessageReceiver {
           boolean last;
           if (allFinished) {
             last = true;
-            for (Map.Entry<Integer, List<Object>> e : messagePerTarget.entrySet()) {
-              List<Object> valueList = e.getValue();
+            for (Map.Entry<Integer, Queue<Object>> e : messagePerTarget.entrySet()) {
+              Queue<Object> valueList = e.getValue();
               if (valueList.size() > 1) {
                 last = false;
               }
@@ -195,8 +96,8 @@ public class ReduceBatchPartialReceiver implements MessageReceiver {
             // lets remove the value
             reducedValues.poll();
 
-            for (Map.Entry<Integer, List<Object>> e : messagePerTarget.entrySet()) {
-              List<Object> value = e.getValue();
+            for (Map.Entry<Integer, Queue<Object>> e : messagePerTarget.entrySet()) {
+              Queue<Object> value = e.getValue();
               if (value.size() != 0) {
                 allZero = false;
               }
