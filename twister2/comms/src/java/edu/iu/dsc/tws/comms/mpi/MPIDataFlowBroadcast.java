@@ -52,7 +52,7 @@ public class MPIDataFlowBroadcast implements DataFlowOperation, MPIMessageReceiv
   private Config config;
   private TaskPlan instancePlan;
   private int executor;
-//  private int edge;
+  private int edge;
   private MessageType type;
   private Map<Integer, ArrayBlockingQueue<Pair<Object, MPISendMessage>>>
       pendingSendMessagesPerSource = new HashMap<>();
@@ -119,6 +119,7 @@ public class MPIDataFlowBroadcast implements DataFlowOperation, MPIMessageReceiv
     this.config = cfg;
     this.instancePlan = tPlan;
     this.type = t;
+    this.edge = ed;
     // we will only have one distinct route
     router = new BinaryTreeRouter(cfg, tPlan, source, destinations);
 
