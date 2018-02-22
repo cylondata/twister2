@@ -36,9 +36,6 @@ public class PartitionRouter {
 
   /**
    * Create a direct router
-   * @param plan
-   * @param srscs
-   * @param dests
    */
   public PartitionRouter(TaskPlan plan, Set<Integer> srscs, Set<Integer> dests) {
     this.taskPlan = plan;
@@ -52,13 +49,23 @@ public class PartitionRouter {
         for (int dest : dests) {
           // okay the destination is in the same executor
           if (myTasks.contains(dest)) {
-            Set<Integer> set = new HashSet<>();
-            set.add(dest);
-            internalSendTasks.put(src, set);
+            if (!internalSendTasks.containsKey(src)) {
+              Set<Integer> set = new HashSet<>();
+              set.add(dest);
+              internalSendTasks.put(src, set);
+            } else {
+              internalSendTasks.get(src).add(dest);
+            }
+
           } else {
-            Set<Integer> set = new HashSet<>();
-            set.add(dest);
-            externalSendTasks.put(src, set);
+            if (!externalSendTasks.containsKey(src)) {
+              Set<Integer> set = new HashSet<>();
+              set.add(dest);
+              externalSendTasks.put(src, set);
+            } else {
+              externalSendTasks.get(src).add(dest);
+            }
+
           }
         }
       }
@@ -115,7 +122,6 @@ public class PartitionRouter {
 
   /**
    * The destination id is the destination itself
-   * @return
    */
   public int destinationIdentifier(int source, int path) {
     return 0;
