@@ -96,10 +96,6 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
 
   /**
    * Initialize
-   * @param cfg
-   * @param t
-   * @param taskPlan
-   * @param edge
    */
   public void init(Config cfg, MessageType t, TaskPlan taskPlan, int edge) {
     this.thisSources = TaskPlanUtils.getTasksOfThisExecutor(taskPlan, sources);
@@ -290,10 +286,8 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
 
   public boolean receiveMessage(MPIMessage currentMessage, Object object) {
     MessageHeader header = currentMessage.getHeader();
-
     return finalReceiver.onMessage(header.getSourceId(), MPIContext.DEFAULT_PATH,
-        router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
-            MPIContext.DEFAULT_PATH), header.getFlags(), object);
+        header.getDestinationIdentifier(), header.getFlags(), object);
   }
 
   protected boolean isLastReceiver() {
