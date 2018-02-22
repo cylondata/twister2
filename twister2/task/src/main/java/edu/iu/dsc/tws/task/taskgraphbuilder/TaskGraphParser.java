@@ -19,14 +19,14 @@ import java.util.stream.Stream;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.task.api.Task;
 
-public class DataflowTaskGraphParser implements IDataflowTaskGraphParser {
+public class TaskGraphParser implements IDataflowTaskGraphParser {
 
   private static final Logger LOGGER = Logger.getLogger(
-      DataflowTaskGraphParser.class.getName());
+      TaskGraphParser.class.getName());
 
   private DataflowTaskGraphGenerator dataflowTaskGraph;
 
-  public DataflowTaskGraphParser(DataflowTaskGraphGenerator taskgraph) {
+  public TaskGraphParser(DataflowTaskGraphGenerator taskgraph) {
     this.dataflowTaskGraph = taskgraph;
   }
 
@@ -35,7 +35,7 @@ public class DataflowTaskGraphParser implements IDataflowTaskGraphParser {
    * This is an entry method to invoke the dataflow task graph
    * prioritizer to prioritize the tasks.
    */
-  public Set<Task> dataflowTaskGraphParseAndSchedule() {
+  public Set<Task> taskGraphParseAndSchedule() {
 
     Set<Task> processedTaskVertices = new HashSet<>();
     if (dataflowTaskGraph != null) {
@@ -47,7 +47,7 @@ public class DataflowTaskGraphParser implements IDataflowTaskGraphParser {
   }
 
   @Override
-  public Set<Task> taskGraphParseAndSchedule() {
+  public Set<Task> dataflowTaskGraphParseAndSchedule() {
     return null;
   }
 
@@ -63,7 +63,7 @@ public class DataflowTaskGraphParser implements IDataflowTaskGraphParser {
    */
   private Set<Task> dataflowTaskGraphPrioritize(DataflowTaskGraphGenerator taskGraph) {
     final IDataflowTaskGraph<Task, DataFlowOperation>
-        dataflowTaskgraph = taskGraph.getDataflowGraph();
+        dataflowTaskgraph = taskGraph.getTaskgraph();
     Set<Task> taskVertices = dataflowTaskgraph.getTaskVertexSet();
     try {
       taskVertices.stream()
