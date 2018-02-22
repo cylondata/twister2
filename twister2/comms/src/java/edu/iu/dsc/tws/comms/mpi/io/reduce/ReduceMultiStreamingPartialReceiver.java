@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.mpi.io;
+package edu.iu.dsc.tws.comms.mpi.io.reduce;
 
 import java.util.HashMap;
 import java.util.List;
@@ -17,38 +17,41 @@ import java.util.Map;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.GatherBatchReceiver;
 import edu.iu.dsc.tws.comms.api.MultiMessageReceiver;
+import edu.iu.dsc.tws.comms.api.ReduceFunction;
+import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 
-public class GatherMultiBatchFinalReceiver implements MultiMessageReceiver {
-  private GatherBatchReceiver gatherBatchReceiver;
+public class ReduceMultiStreamingPartialReceiver implements MultiMessageReceiver {
+  private ReduceFunction reduceFunction;
 
-  private Map<Integer, GatherBatchFinalReceiver> receiverMap = new HashMap<>();
+  private ReduceReceiver reduceReceiver;
 
-  public GatherMultiBatchFinalReceiver(GatherBatchReceiver receiver) {
-    this.gatherBatchReceiver = receiver;
+  private Map<Integer, ReduceStreamingPartialReceiver> receiverMap = new HashMap<>();
+
+  public ReduceMultiStreamingPartialReceiver(ReduceFunction reduceFunction) {
+    this.reduceFunction = reduceFunction;
   }
 
   @Override
   public void init(Config cfg, DataFlowOperation op,
                    Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
     for (Map.Entry<Integer, Map<Integer, List<Integer>>> e : expectedIds.entrySet()) {
-      GatherBatchFinalReceiver finalReceiver = new GatherBatchFinalReceiver(gatherBatchReceiver);
+      ReduceStreamingPartialReceiver finalReceiver =
+          new ReduceStreamingPartialReceiver(e.getKey(), reduceFunction);
       receiverMap.put(e.getKey(), finalReceiver);
-
       finalReceiver.init(cfg, op, e.getValue());
     }
   }
 
   @Override
   public boolean onMessage(int source, int path, int target, int flags, Object object) {
-    GatherBatchFinalReceiver finalReceiver = receiverMap.get(path);
+    ReduceStreamingPartialReceiver finalReceiver = receiverMap.get(path);
     return finalReceiver.onMessage(source, path, target, flags, object);
   }
 
   @Override
   public void progress() {
-    for (Map.Entry<Integer, GatherBatchFinalReceiver> e : receiverMap.entrySet()) {
+    for (Map.Entry<Integer, ReduceStreamingPartialReceiver> e : receiverMap.entrySet()) {
       e.getValue().progress();
     }
   }

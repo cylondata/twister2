@@ -9,18 +9,6 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
 package edu.iu.dsc.tws.examples.basic.comms;
 
 import java.util.ArrayList;
@@ -32,6 +20,9 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.JobConfig;
+import edu.iu.dsc.tws.api.Twister2Submitter;
+import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
@@ -41,7 +32,9 @@ import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.examples.IntData;
 import edu.iu.dsc.tws.examples.Utils;
+import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
+import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
 public class BaseAllReduceCommunication implements IContainer {
@@ -133,7 +126,6 @@ public class BaseAllReduceCommunication implements IContainer {
    */
   private class MapWorker implements Runnable {
     private int task = 0;
-    private int sendCount = 0;
     MapWorker(int task) {
       this.task = task;
     }
@@ -142,7 +134,6 @@ public class BaseAllReduceCommunication implements IContainer {
     public void run() {
       try {
         LOG.log(Level.INFO, "Starting map worker: " + id);
-//      MPIBuffer data = new MPIBuffer(1024);
         IntData data = generateData();
         for (int i = 0; i < 10000; i++) {
           // lets generate a message
@@ -154,8 +145,6 @@ public class BaseAllReduceCommunication implements IContainer {
               e.printStackTrace();
             }
           }
-//          LOG.info(String.format("%d sending to %d", id, task)
-//              + " count: " + sendCount++);
           if (i % 1000 == 0) {
             LOG.info(String.format("%d sent %d", id, i));
           }
@@ -213,16 +202,12 @@ public class BaseAllReduceCommunication implements IContainer {
         List<Object> m = messages.get(target).get(source);
         Integer c = counts.get(target).get(source);
         if (m.size() > 128) {
-//          if (count % 10 == 0) {
-          LOG.info(String.format("%d Partial false %d %d", id, source, m.size()));
-//          }
+//          LOG.info(String.format("%d Partial false %d %d", id, source, m.size()));
           canAdd = false;
         } else {
-//          if (count % 10 == 0) {
-//          }
           m.add(object);
           counts.get(target).put(source, c + 1);
-          LOG.info(String.format("%d Partial true %d %d %s", id, source, m.size(), counts));
+//          LOG.info(String.format("%d Partial true %d %d %s", id, source, m.size(), counts));
         }
 
         return canAdd;
@@ -260,10 +245,8 @@ public class BaseAllReduceCommunication implements IContainer {
                   Integer i = e.getValue();
                   cMap.put(e.getKey(), i - 1);
                 }
-//                  LOG.info(String.format("%d reduce send true", id));
               } else {
                 canProgress = false;
-//                  LOG.info(String.format("%d reduce send false", id));
               }
               if (count % 100 == 0) {
                 LOG.info(String.format("%d Inject partial %d count: %d %s",
@@ -316,5 +299,24 @@ public class BaseAllReduceCommunication implements IContainer {
       d[i] = i;
     }
     return new IntData(d);
+  }
+
+  public static void main(String[] args) {
+    // first load the configurations from command line and config files
+    Config config = ResourceAllocator.loadConfig(new HashMap<>());
+
+    // build JobConfig
+    JobConfig jobConfig = new JobConfig();
+
+    // build the job
+    BasicJob basicJob = BasicJob.newBuilder()
+        .setName("basic-all-reduce")
+        .setContainerClass(BaseAllReduceCommunication.class.getName())
+        .setRequestResource(new ResourceContainer(2, 1024), 4)
+        .setConfig(jobConfig)
+        .build();
+
+    // now submit the job
+    Twister2Submitter.submitContainerJob(basicJob, config);
   }
 }

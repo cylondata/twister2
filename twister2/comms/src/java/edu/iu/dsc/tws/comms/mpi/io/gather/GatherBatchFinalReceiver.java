@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.mpi.io;
+package edu.iu.dsc.tws.comms.mpi.io.gather;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,19 +19,15 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.GatherBatchReceiver;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
-import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 import edu.iu.dsc.tws.comms.mpi.MPIContext;
 import edu.iu.dsc.tws.comms.mpi.MPIMessage;
+import edu.iu.dsc.tws.data.memory.OperationMemoryManager;
 
-public class ReduceBatchFinalReceiver implements MessageReceiver {
-  private static final Logger LOG = Logger.getLogger(ReduceBatchFinalReceiver.class.getName());
-
-  private ReduceFunction reduceFunction;
-
-  private ReduceReceiver reduceReceiver;
+public class GatherBatchFinalReceiver implements MessageReceiver {
+  private static final Logger LOG = Logger.getLogger(GatherBatchFinalReceiver.class.getName());
 
   // lets keep track of the messages
   // for each task we need to keep track of incoming messages
@@ -42,68 +38,69 @@ public class ReduceBatchFinalReceiver implements MessageReceiver {
   private DataFlowOperation dataFlowOperation;
   private int executor;
   private int sendPendingMax = 128;
+  private GatherBatchReceiver gatherBatchReceiver;
   private Map<Integer, Boolean> batchDone = new HashMap<>();
-  private Map<Integer, Map<Integer, Integer>> totalCounts = new HashMap<>();
+  private boolean isStoreBased;
+  private Map<Integer, OperationMemoryManager> memoryManagers;
 
-  public ReduceBatchFinalReceiver(ReduceFunction reduce, ReduceReceiver receiver) {
-    this.reduceFunction = reduce;
-    this.reduceReceiver = receiver;
+  public GatherBatchFinalReceiver(GatherBatchReceiver gatherBatchReceiver) {
+    this.gatherBatchReceiver = gatherBatchReceiver;
   }
 
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     executor = op.getTaskPlan().getThisExecutor();
     sendPendingMax = MPIContext.sendPendingMax(cfg);
-
-//    LOG.fine(String.format("%d expected ids %s", executor, expectedIds));
+    isStoreBased = false;
+    LOG.fine(String.format("%d expected ids %s", executor, expectedIds));
     for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
       Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
       Map<Integer, Boolean> finishedPerTask = new HashMap<>();
       Map<Integer, Integer> countsPerTask = new HashMap<>();
-      Map<Integer, Integer> totalCountsPerTask = new HashMap<>();
 
       for (int i : e.getValue()) {
         messagesPerTask.put(i, new ArrayList<Object>());
         finishedPerTask.put(i, false);
         countsPerTask.put(i, 0);
-        totalCountsPerTask.put(i, 0);
       }
       messages.put(e.getKey(), messagesPerTask);
       finished.put(e.getKey(), finishedPerTask);
       finalMessages.put(e.getKey(), new ArrayList<>());
       counts.put(e.getKey(), countsPerTask);
       batchDone.put(e.getKey(), false);
-      totalCounts.put(e.getKey(), totalCountsPerTask);
     }
+    this.memoryManagers = new HashMap<>();
     this.dataFlowOperation = op;
     this.executor = dataFlowOperation.getTaskPlan().getThisExecutor();
+    this.gatherBatchReceiver.init(cfg, op, expectedIds);
   }
 
   @Override
   public boolean onMessage(int source, int path, int target, int flags, Object object) {
     // add the object to the map
     boolean canAdd = true;
-
     List<Object> m = messages.get(target).get(source);
     Map<Integer, Boolean> finishedMessages = finished.get(target);
     if (m.size() > sendPendingMax) {
       canAdd = false;
-//      LOG.info(String.format("%d Final add FALSE target %d source %d %s %d",
-//          executor, target, source, counts.get(target), finalMessages.size()));
+//      LOG.info(String.format("%d Final add FALSE target %d source %d", executor, target, source));
     } else {
-//      LOG.info(String.format("%d Final add TRUE target %d source %d %d",
-//          executor, target, source, finishedMessages.size()));
+//      LOG.info(String.format("%d Final add TRUE target %d source %d", executor, target, source));
       if (object instanceof MPIMessage) {
         ((MPIMessage) object).incrementRefCount();
+        //TODO: how to handle refcount with store based data, is it needed?
+      } else if (object instanceof OperationMemoryManager) {
+        isStoreBased = true;
+        memoryManagers.put(target, (OperationMemoryManager) object);
       }
 
       Integer c = counts.get(target).get(source);
       counts.get(target).put(source, c + 1);
 
-      Integer tc = totalCounts.get(target).get(source);
-      totalCounts.get(target).put(source, tc + 1);
+      if (!isStoreBased) {
+        m.add(object);
+      }
 
-      m.add(object);
       if ((flags & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) {
 //        LOG.info(String.format("%d Final LAST target %d source %d", executor, target, source));
         finishedMessages.put(source, true);
@@ -126,55 +123,70 @@ public class ReduceBatchFinalReceiver implements MessageReceiver {
       Map<Integer, List<Object>> map = messages.get(t);
       Map<Integer, Boolean> finishedForTarget = finished.get(t);
       Map<Integer, Integer> countMap = counts.get(t);
-      Map<Integer, Integer> totalCountMap = totalCounts.get(t);
-//      LOG.info(String.format("%d reduce final counts %d %s %s %s", executor, t, countMap,
-//          totalCountMap, finishedForTarget));
-      boolean found = true;
-      for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
-        if (e.getValue().size() == 0 && !finishedForTarget.get(e.getKey())) {
-          found = false;
+//      LOG.info(String.format("%d gather final counts %d %s %s", executor, t, countMap,
+//          finishedForTarget));
+      if (!isStoreBased) {
+        boolean found = true;
+        for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
+          if (e.getValue().size() == 0 && !finishedForTarget.get(e.getKey())) {
+            found = false;
+          }
+
+          if (!finishedForTarget.get(e.getKey())) {
+            allFinished = false;
+          } /*else {
+          LOG.info(String.format("%d final finished receiving to %d from %d",
+              executor, t, e.getKey()));
+        }*/
         }
 
-        if (!finishedForTarget.get(e.getKey())) {
+        if (found) {
+          List<Object> out = new ArrayList<>();
+          for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
+            List<Object> valueList = e.getValue();
+            if (valueList.size() > 0) {
+              Object value = valueList.get(0);
+              out.add(value);
+              allFinished = false;
+              valueList.remove(0);
+            }
+          }
+//        for (Map.Entry<Integer, Integer> e : countMap.entrySet()) {
+//          Integer i = e.getValue();
+//          e.setValue(i - 1);
+//        }
+          finalMessages.get(t).addAll(out);
+        } else {
           allFinished = false;
         }
-      }
+      } else {
 
-      if (found) {
-        List<Object> out = new ArrayList<>();
         for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
-          List<Object> valueList = e.getValue();
-          if (valueList.size() > 0) {
-            Object value = valueList.get(0);
-            out.add(value);
+          if (!finishedForTarget.get(e.getKey())) {
             allFinished = false;
-            valueList.remove(0);
           }
         }
-        for (Map.Entry<Integer, Integer> e : countMap.entrySet()) {
-          Integer i = e.getValue();
-          e.setValue(i - 1);
-        }
-        finalMessages.get(t).addAll(out);
-      } else {
-        allFinished = false;
       }
+
 
       if (allFinished) {
 //        LOG.info(String.format("%d final all finished %d", executor, t));
         batchDone.put(t, true);
-        Object previous = null;
-        List<Object> finalMessagePerTask = finalMessages.get(t);
-        for (int i = 0; i < finalMessagePerTask.size(); i++) {
-          if (previous == null) {
-            previous = finalMessagePerTask.get(i);
-          } else {
-            Object current = finalMessagePerTask.get(i);
-            previous = reduceFunction.reduce(previous, current);
-          }
+        if (!isStoreBased) {
+          gatherBatchReceiver.receive(t, finalMessages.get(t).iterator());
+        } else {
+          gatherBatchReceiver.receive(t, memoryManagers.get(t).iterator());
         }
-        reduceReceiver.receive(t, previous);
       }
     }
   }
+
+  public boolean isStoreBased() {
+    return isStoreBased;
+  }
+
+  public void setStoreBased(boolean storeBased) {
+    isStoreBased = storeBased;
+  }
+
 }

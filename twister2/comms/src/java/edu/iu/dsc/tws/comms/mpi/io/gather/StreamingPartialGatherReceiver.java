@@ -9,51 +9,48 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.mpi.io;
+package edu.iu.dsc.tws.comms.mpi.io.gather;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.mpi.MPIContext;
-import edu.iu.dsc.tws.comms.mpi.MPIDataFlowGather;
 import edu.iu.dsc.tws.comms.mpi.MPIMessage;
 
-public class StreamingBoundedPartialGatherReceiver implements MessageReceiver {
+public class StreamingPartialGatherReceiver implements MessageReceiver {
+  private static final Logger LOG = Logger.getLogger(
+      StreamingPartialGatherReceiver.class.getName());
   // lets keep track of the messages
   // for each task we need to keep track of incoming messages
   private Map<Integer, Map<Integer, List<Object>>> messages = new TreeMap<>();
-
-  private Map<Integer, Map<Integer, Boolean>> finished = new HashMap<>();
-
-  private MPIDataFlowGather operation;
-
+  private DataFlowOperation dataFlowOperation;
+  private int executor;
   private int sendPendingMax = 128;
-
-  private Map<Integer, Boolean> done = new HashMap<>();
 
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-    this.operation = (MPIDataFlowGather) op;
-    this.sendPendingMax = MPIContext.sendPendingMax(cfg);
+    executor = op.getTaskPlan().getThisExecutor();
+    sendPendingMax = MPIContext.sendPendingMax(cfg);
 
+    LOG.info(String.format("%d expected ids %s", executor, expectedIds));
     for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
       Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
-      Map<Integer, Boolean> finishedPerTask = new HashMap<>();
+
       for (int i : e.getValue()) {
         messagesPerTask.put(i, new ArrayList<Object>());
-        finishedPerTask.put(i, false);
       }
       messages.put(e.getKey(), messagesPerTask);
-      finished.put(e.getKey(), finishedPerTask);
-      done.put(e.getKey(), false);
     }
+    this.dataFlowOperation = op;
+    this.executor = dataFlowOperation.getTaskPlan().getThisExecutor();
   }
 
   @Override
@@ -62,72 +59,46 @@ public class StreamingBoundedPartialGatherReceiver implements MessageReceiver {
     boolean canAdd = true;
 
     if (messages.get(target) == null) {
-      throw new RuntimeException(String.format("%d Partial receive error %d",
-          operation.getTaskPlan().getThisExecutor(), target));
+      throw new RuntimeException(String.format("%d Partial receive error %d", executor, target));
     }
-    List<Object> messageLists = messages.get(target).get(source);
-    if (messageLists.size() > sendPendingMax) {
+    List<Object> m = messages.get(target).get(source);
+    if (m.size() > sendPendingMax) {
       canAdd = false;
     } else {
       if (object instanceof MPIMessage) {
         ((MPIMessage) object).incrementRefCount();
       }
-      if ((flags & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) {
-        finished.get(target).put(source, true);
-      }
-      messageLists.add(object);
+      m.add(object);
     }
     return canAdd;
   }
 
-  /**
-   * progress
-   */
   public void progress() {
     for (int t : messages.keySet()) {
       boolean canProgress = true;
-
-      if (done.get(t)) {
-        continue;
-      }
-
       while (canProgress) {
         // now check weather we have the messages for this source
         Map<Integer, List<Object>> map = messages.get(t);
-        Map<Integer, Boolean> finishedMap = finished.get(t);
         boolean found = true;
-        int finishedInputs = 0;
         for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
-          Boolean f = finishedMap.get(e.getKey());
           if (e.getValue().size() == 0) {
-            if (!f) {
-              found = false;
-              canProgress = false;
-            }
+            found = false;
+            canProgress = false;
           }
-          if (f) {
-            finishedInputs++;
-          }
-        }
-
-        if (finishedInputs == map.keySet().size()) {
-          done.put(t, true);
         }
 
         if (found) {
           List<Object> out = new ArrayList<>();
           for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
-            List<Object> objectList = e.getValue();
-            if (objectList.size() > 0) {
-              Object object = objectList.get(0);
-              if (!(object instanceof MPIMessage)) {
-                out.add(new KeyedContent(e.getKey(), object));
-              } else {
-                out.add(object);
-              }
-            }
+            Object e1 = e.getValue().get(0);
+            out.add(e1);
           }
-          if (!operation.sendPartial(t, out, MessageFlags.FLAGS_MULTI_MSG, 0)) {
+          if (dataFlowOperation.sendPartial(t, out, 0, MessageFlags.FLAGS_MULTI_MSG)) {
+            for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
+              List<Object> value = e.getValue();
+              value.remove(0);
+            }
+          } else {
             canProgress = false;
           }
         }

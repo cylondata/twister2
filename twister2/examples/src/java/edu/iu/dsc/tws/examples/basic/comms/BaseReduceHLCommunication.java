@@ -30,8 +30,8 @@ import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.mpi.io.ReduceStreamingFinalReceiver;
-import edu.iu.dsc.tws.comms.mpi.io.ReduceStreamingPartialReceiver;
+import edu.iu.dsc.tws.comms.mpi.io.reduce.ReduceStreamingFinalReceiver;
+import edu.iu.dsc.tws.comms.mpi.io.reduce.ReduceStreamingPartialReceiver;
 import edu.iu.dsc.tws.examples.IntData;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -93,7 +93,7 @@ public class BaseReduceHLCommunication implements IContainer {
       // I think this is wrong
       reduce = channel.reduce(newCfg, MessageType.OBJECT, 0, sources,
           dest, new ReduceStreamingFinalReceiver(new IdentityFunction(), new FinalReduceReceiver()),
-          new ReduceStreamingPartialReceiver(new IdentityFunction()));
+          new ReduceStreamingPartialReceiver(dest, new IdentityFunction()));
 
       for (int i = 0; i < noOfTasksPerExecutor; i++) {
         // the map thread where data is produced

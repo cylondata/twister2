@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.mpi.io;
+package edu.iu.dsc.tws.comms.mpi.io.reduce;
 
 import java.util.HashMap;
 import java.util.List;
@@ -18,33 +18,41 @@ import java.util.Map;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MultiMessageReceiver;
+import edu.iu.dsc.tws.comms.api.ReduceFunction;
+import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 
-public class GatherMultiBatchPartialReceiver implements MultiMessageReceiver {
-  private Map<Integer, GatherBatchPartialReceiver> receiverMap = new HashMap<>();
+public class ReduceMultiStreamingFinalReceiver implements MultiMessageReceiver {
+  private ReduceFunction reduceFunction;
 
-  public GatherMultiBatchPartialReceiver() {
+  private ReduceReceiver reduceReceiver;
+
+  private Map<Integer, ReduceStreamingFinalReceiver> receiverMap = new HashMap<>();
+
+  public ReduceMultiStreamingFinalReceiver(ReduceFunction reduceFunction,
+                                           ReduceReceiver reduceReceiver) {
+    this.reduceFunction = reduceFunction;
   }
 
   @Override
   public void init(Config cfg, DataFlowOperation op,
                    Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
     for (Map.Entry<Integer, Map<Integer, List<Integer>>> e : expectedIds.entrySet()) {
-      GatherBatchPartialReceiver partialReceiver = new GatherBatchPartialReceiver(e.getKey());
-      receiverMap.put(e.getKey(), partialReceiver);
-
-      partialReceiver.init(cfg, op, e.getValue());
+      ReduceStreamingFinalReceiver finalReceiver =
+          new ReduceStreamingFinalReceiver(reduceFunction, reduceReceiver);
+      receiverMap.put(e.getKey(), finalReceiver);
+      finalReceiver.init(cfg, op, e.getValue());
     }
   }
 
   @Override
   public boolean onMessage(int source, int path, int target, int flags, Object object) {
-    GatherBatchPartialReceiver partialReceiver = receiverMap.get(path);
-    return partialReceiver.onMessage(source, path, target, flags, object);
+    ReduceStreamingFinalReceiver finalReceiver = receiverMap.get(path);
+    return finalReceiver.onMessage(source, path, target, flags, object);
   }
 
   @Override
   public void progress() {
-    for (Map.Entry<Integer, GatherBatchPartialReceiver> e : receiverMap.entrySet()) {
+    for (Map.Entry<Integer, ReduceStreamingFinalReceiver> e : receiverMap.entrySet()) {
       e.getValue().progress();
     }
   }
