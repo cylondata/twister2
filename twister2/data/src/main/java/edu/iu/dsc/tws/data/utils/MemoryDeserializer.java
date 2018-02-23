@@ -32,6 +32,10 @@ public final class MemoryDeserializer {
         return key.getDouble();
       case SHORT:
         return key.getShort();
+      case BYTE:
+        byte[] bytes = new byte[key.remaining()];
+        key.get(bytes);
+        return bytes;
       case OBJECT:
         byte[] temp = new byte[key.remaining()];
         key.get(temp);
@@ -51,6 +55,10 @@ public final class MemoryDeserializer {
         return deserializeDouble(value);
       case SHORT:
         return deserializeShort(value);
+      case BYTE:
+        byte[] bytes = new byte[value.remaining()];
+        value.get(bytes);
+        return bytes;
       case OBJECT:
         return deserializeObject(value, serializer);
       default:
