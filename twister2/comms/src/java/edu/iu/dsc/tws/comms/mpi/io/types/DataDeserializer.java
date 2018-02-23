@@ -45,6 +45,8 @@ public final class DataDeserializer {
         return deserializeDouble(buffers, length);
       case SHORT:
         return deserializeShort(buffers, length);
+      case BYTE:
+        return deserializeBytes(buffers, length);
       case OBJECT:
         return deserializeObject(buffers, length, serializer);
       default:
@@ -113,6 +115,25 @@ public final class DataDeserializer {
         }
       }
     }
+  }
+
+  private static byte[] deserializeBytes(List<MPIBuffer> buffers, int length) {
+    int noOfBytes = length;
+    byte[] returnBytes = new byte[noOfBytes];
+    int bufferIndex = 0;
+    for (int i = 0; i < noOfBytes; i++) {
+      ByteBuffer byteBuffer = buffers.get(bufferIndex).getByteBuffer();
+      int remaining = byteBuffer.remaining();
+      if (remaining >= 1) {
+        returnBytes[i] = byteBuffer.get();
+      } else {
+        bufferIndex = getReadBuffer(buffers, 1, bufferIndex);
+        if (bufferIndex < 0) {
+          throw new RuntimeException("We should always have the doubles");
+        }
+      }
+    }
+    return returnBytes;
   }
 
   public static double[] deserializeDouble(List<MPIBuffer> buffers, int byteLength) {
