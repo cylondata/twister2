@@ -11,13 +11,16 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi.io.allgather;
 
+import edu.iu.dsc.tws.comms.api.GatherBatchReceiver;
 import edu.iu.dsc.tws.comms.mpi.MPIDataFlowBroadcast;
 import edu.iu.dsc.tws.comms.mpi.io.gather.StreamingFinalGatherReceiver;
 
 public class AllGatherStreamingFinalReceiver extends StreamingFinalGatherReceiver {
   private MPIDataFlowBroadcast broadcast;
 
-  public AllGatherStreamingFinalReceiver(MPIDataFlowBroadcast broadcast) {
+  public AllGatherStreamingFinalReceiver(MPIDataFlowBroadcast broadcast,
+                                         GatherBatchReceiver gatherRecvr) {
+    super(gatherRecvr);
     this.broadcast = broadcast;
   }
 

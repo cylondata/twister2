@@ -11,19 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi.io.gather;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.GatherBatchReceiver;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
-import edu.iu.dsc.tws.comms.mpi.MPIContext;
-import edu.iu.dsc.tws.comms.mpi.MPIDataFlowOperation;
 
 public class StreamingFinalGatherReceiver extends StreamingPartialGatherReceiver {
   private static final Logger LOG = Logger.getLogger(StreamingFinalGatherReceiver.class.getName());
