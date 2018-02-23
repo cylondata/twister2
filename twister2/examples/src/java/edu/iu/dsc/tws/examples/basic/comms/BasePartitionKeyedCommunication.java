@@ -33,10 +33,22 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 package edu.iu.dsc.tws.examples.basic.comms;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -54,6 +66,7 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.mpi.io.KeyedContent;
 import edu.iu.dsc.tws.examples.IntData;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
@@ -62,8 +75,9 @@ import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 /**
  * This will be a map-partition job only using the communication primitives
  */
-public class BasePartitionCommunication implements IContainer {
-  private static final Logger LOG = Logger.getLogger(BasePartitionCommunication.class.getName());
+public class BasePartitionKeyedCommunication implements IContainer {
+  private static final Logger LOG =
+      Logger.getLogger(BasePartitionKeyedCommunication.class.getName());
 
   private DataFlowOperation partition;
 
@@ -125,10 +139,12 @@ public class BasePartitionCommunication implements IContainer {
         }
       }
       FinalPartitionReciver finalPartitionRec = new FinalPartitionReciver();
-      partition = channel.partition(newCfg, MessageType.BYTE, 2, sources,
+      partition = channel.partition(newCfg, MessageType.INTEGER, MessageType.INTEGER, 2, sources,
           dests, finalPartitionRec);
+//      partition = channel.partition(newCfg, MessageType.INTEGER, MessageType.INTEGER, 2, sources,
+//          dests, finalPartitionRec);
       finalPartitionRec.setMap(expectedIds);
-      // partition.setMemoryMapped(true);
+//      partition.setMemoryMapped(true);
 
       for (int i = 0; i < noOfTasksPerExecutor; i++) {
         // the map thread where data is produced
@@ -168,22 +184,26 @@ public class BasePartitionCommunication implements IContainer {
     public void run() {
       try {
         LOG.log(Level.INFO, "Starting map worker: " + id);
-//        int[] data = {task, task * 100};
+        int[] data2 = {task, task * 100};
+        byte[] data = new byte[12];
+        data[0] = 'a';
+        data[1] = 'b';
+        data[2] = 'c';
+        data[3] = 'd';
+        data[4] = 'd';
+        data[5] = 'd';
+        data[6] = 'd';
+        data[7] = 'd';
+        int keyint = task * 111;
+        byte[] key = ByteBuffer.allocate(4).putInt(keyint).array();
         for (int i = 0; i < NO_OF_TASKS; i++) {
           if (i == task) {
             continue;
           }
-          byte[] data = new byte[12];
-          data[0] = 'a';
-          data[1] = 'b';
-          data[2] = 'c';
-          data[3] = 'd';
-          data[4] = 'd';
-          data[5] = 'd';
-          data[6] = 'd';
-          data[7] = 'd';
+          KeyedContent mesage = new KeyedContent(task * 111, data2,
+              MessageType.INTEGER, MessageType.INTEGER);
           int flags = MessageFlags.FLAGS_LAST;
-          while (!partition.send(task, data, flags, i)) {
+          while (!partition.send(task, mesage, flags, i)) {
             // lets wait a litte and try again
             try {
               Thread.sleep(1);
@@ -225,9 +245,9 @@ public class BasePartitionCommunication implements IContainer {
       }
 
       if (((flags & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) && isAllFinished(target)) {
-        System.out.println(Arrays.toString((byte[]) object));
         System.out.printf("All Done for Task %d \n", target);
       }
+
       return true;
     }
 

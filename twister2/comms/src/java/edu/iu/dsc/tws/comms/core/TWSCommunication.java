@@ -90,4 +90,9 @@ public interface TWSCommunication {
   DataFlowOperation partition(Map<String, Object> properties, MessageType type, int edge1,
                               Set<Integer> sourceTasks, Set<Integer> destTasks,
                               MessageReceiver receiver);
+
+  DataFlowOperation partition(Map<String, Object> properties, MessageType type,
+                              MessageType keyType, int edge1,
+                              Set<Integer> sourceTasks, Set<Integer> destTasks,
+                              MessageReceiver receiver);
 }

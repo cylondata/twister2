@@ -54,7 +54,6 @@ public class MPIMessageSerializer implements MessageSerializer {
   @Override
   public Object build(Object message, Object partialBuildObject) {
     MPISendMessage sendMessage = (MPISendMessage) partialBuildObject;
-
     // we got an already serialized message, lets just return it
     if (sendMessage.getMPIMessage().isComplete()) {
       sendMessage.setSendState(MPISendMessage.SendState.SERIALIZED);
@@ -128,13 +127,11 @@ public class MPIMessageSerializer implements MessageSerializer {
 
   /**
    * Serialized the message into the buffer
-   * @param payload
-   * @param sendMessage
-   * @param buffer
+   *
    * @return true if the message is completely written
    */
   private boolean serializeBody(Object payload,
-                             MPISendMessage sendMessage, MPIBuffer buffer) {
+                                MPISendMessage sendMessage, MPIBuffer buffer) {
     MessageType type = sendMessage.getMPIMessage().getType();
     if (type == MessageType.OBJECT || type == MessageType.INTEGER || type == MessageType.LONG
         || type == MessageType.DOUBLE || type == MessageType.BYTE || type == MessageType.STRING) {

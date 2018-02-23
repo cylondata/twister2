@@ -31,17 +31,17 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
 
   // lets keep track of the messages
   // for each task we need to keep track of incoming messages
-  private Map<Integer, Map<Integer, List<Object>>> messages = new HashMap<>();
-  private Map<Integer, Map<Integer, Boolean>> finished = new HashMap<>();
-  private Map<Integer, List<Object>> finalMessages = new HashMap<>();
-  private Map<Integer, Map<Integer, Integer>> counts = new HashMap<>();
-  private DataFlowOperation dataFlowOperation;
-  private int executor;
-  private int sendPendingMax = 128;
-  private GatherBatchReceiver gatherBatchReceiver;
-  private Map<Integer, Boolean> batchDone = new HashMap<>();
-  private boolean isStoreBased;
-  private Map<Integer, OperationMemoryManager> memoryManagers;
+  protected Map<Integer, Map<Integer, List<Object>>> messages = new HashMap<>();
+  protected Map<Integer, Map<Integer, Boolean>> finished = new HashMap<>();
+  protected Map<Integer, List<Object>> finalMessages = new HashMap<>();
+  protected Map<Integer, Map<Integer, Integer>> counts = new HashMap<>();
+  protected DataFlowOperation dataFlowOperation;
+  protected int executor;
+  protected int sendPendingMax = 128;
+  protected GatherBatchReceiver gatherBatchReceiver;
+  protected Map<Integer, Boolean> batchDone = new HashMap<>();
+  protected boolean isStoreBased;
+  protected Map<Integer, OperationMemoryManager> memoryManagers;
 
   public GatherBatchFinalReceiver(GatherBatchReceiver gatherBatchReceiver) {
     this.gatherBatchReceiver = gatherBatchReceiver;

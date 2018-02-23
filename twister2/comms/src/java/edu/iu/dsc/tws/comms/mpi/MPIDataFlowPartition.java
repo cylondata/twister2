@@ -65,6 +65,8 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
   private TaskPlan instancePlan;
   private int executor;
   private MessageType type;
+  private MessageType keyType;
+  private boolean isKeyed;
   private Lock lock = new ReentrantLock();
 
   /**
@@ -74,6 +76,15 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
   private class Destinations {
     List<Integer> internal = new ArrayList<>();
     List<Integer> external = new ArrayList<>();
+  }
+
+  public MPIDataFlowPartition(TWSChannel channel, Set<Integer> sourceTasks, Set<Integer> destTasks,
+                              MessageReceiver receiver, PartitionStratergy partitionStratergy,
+                              MessageType type, MessageType keyType) {
+    this(channel, sourceTasks, destTasks, receiver, partitionStratergy);
+    this.isKeyed = true;
+    this.keyType = keyType;
+    this.type = type;
   }
 
   public MPIDataFlowPartition(TWSChannel channel, Set<Integer> srcs,
@@ -173,7 +184,8 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
     delegete.init(cfg, t, taskPlan, edge,
         router.receivingExecutors(), router.isLastReceiver(), this,
         pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
-        pendingReceiveDeSerializations, serializerMap, deSerializerMap, false);
+        pendingReceiveDeSerializations, serializerMap, deSerializerMap, isKeyed);
+    delegete.setKeyType(keyType);
   }
 
   @Override

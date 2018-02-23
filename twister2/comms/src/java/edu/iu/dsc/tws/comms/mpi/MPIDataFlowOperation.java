@@ -35,6 +35,7 @@ import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.mpi.io.KeyedContent;
 import edu.iu.dsc.tws.comms.mpi.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.MessageSerializer;
+import edu.iu.dsc.tws.comms.mpi.io.SerializeState;
 import edu.iu.dsc.tws.comms.mpi.io.types.DataSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.types.KeySerializer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
@@ -498,6 +499,9 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
    */
   private boolean serializeAndWriteToMemoryManager(MPISendMessage mpiSendMessage,
                                                    Object messageObject) {
+    if (mpiSendMessage.getSerializationState() == null) {
+      mpiSendMessage.setSerializationState(new SerializeState());
+    }
     if (isKeyed) {
       KeyedContent kc = (KeyedContent) messageObject;
       ByteBuffer keyBuffer = KeySerializer.getserializedKey(kc.getSource(),

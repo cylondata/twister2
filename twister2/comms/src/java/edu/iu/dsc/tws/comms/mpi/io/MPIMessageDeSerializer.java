@@ -73,11 +73,21 @@ public class MPIMessageDeSerializer implements MessageDeSerializer {
       return DataDeserializer.getAsByteBuffer(currentMessage.getBuffers(),
           currentMessage.getHeader().getLength(), type);
     } else {
+
       Pair<Integer, ByteBuffer> keyPair = KeyDeserializer.
           getKeyAsByteBuffer(currentMessage.getKeyType(),
-          currentMessage.getBuffers());
-      ByteBuffer data = DataDeserializer.getAsByteBuffer(currentMessage.getBuffers(),
-          currentMessage.getHeader().getLength() - keyPair.getKey(), type);
+              currentMessage.getBuffers());
+      MessageType keyType = currentMessage.getKeyType();
+      ByteBuffer data;
+      if (keyType == MessageType.BUFFER || keyType == MessageType.STRING
+          || keyType == MessageType.BYTE || keyType == MessageType.OBJECT) {
+        data = DataDeserializer.getAsByteBuffer(currentMessage.getBuffers(),
+            currentMessage.getHeader().getLength() - keyPair.getKey() - 4, type);
+      } else {
+        data = DataDeserializer.getAsByteBuffer(currentMessage.getBuffers(),
+            currentMessage.getHeader().getLength() - keyPair.getKey(), type);
+      }
+
       return new ImmutablePair<>(keyPair.getValue(), data);
     }
   }
@@ -91,9 +101,15 @@ public class MPIMessageDeSerializer implements MessageDeSerializer {
     } else {
       Pair<Object, Integer> keyPair = KeyDeserializer.deserializeKey(message.getKeyType(),
           message.getBuffers(), serializer);
-
-      return DataDeserializer.deserializeData(message.getBuffers(),
-          message.getHeader().getLength() - keyPair.getValue(), serializer, type);
+      MessageType keyType = message.getKeyType();
+      if (keyType == MessageType.BUFFER || keyType == MessageType.STRING
+          || keyType == MessageType.BYTE || keyType == MessageType.OBJECT) {
+        return DataDeserializer.deserializeData(message.getBuffers(),
+            message.getHeader().getLength() - keyPair.getValue() - 4, serializer, type);
+      } else {
+        return DataDeserializer.deserializeData(message.getBuffers(),
+            message.getHeader().getLength() - keyPair.getValue(), serializer, type);
+      }
     }
   }
 }
