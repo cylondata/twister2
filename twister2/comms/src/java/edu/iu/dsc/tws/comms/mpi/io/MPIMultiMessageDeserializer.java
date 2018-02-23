@@ -80,7 +80,10 @@ public class MPIMultiMessageDeserializer implements MessageDeSerializer {
 
       Object object = buildMessage(currentMessage, messageBuffers, length);
       readLength += length + 4;
-      if (keyed) {
+      if (keyed && (currentMessage.getKeyType() == MessageType.BUFFER
+          || currentMessage.getKeyType() == MessageType.STRING
+          || currentMessage.getKeyType() == MessageType.BYTE
+          || currentMessage.getKeyType() == MessageType.OBJECT)) {
         //adding 4 to the length since the key length is also kept
         readLength += 4;
       }
@@ -129,7 +132,10 @@ public class MPIMultiMessageDeserializer implements MessageDeSerializer {
 
       Object object = getSingleDataBuffers(currentMessage, messageBuffers, length);
       readLength += length + 4;
-      if (keyed) {
+      if (keyed && (currentMessage.getKeyType() == MessageType.BUFFER
+          || currentMessage.getKeyType() == MessageType.STRING
+          || currentMessage.getKeyType() == MessageType.BYTE
+          || currentMessage.getKeyType() == MessageType.OBJECT)) {
         //adding 4 to the length since the key length is also kept
         readLength += 4;
       }
