@@ -98,4 +98,13 @@ public class TaskPlan {
   public Set<Integer> getTasksOfThisExecutor() {
     return executorToChannels.get(thisExecutor);
   }
+
+  @Override
+  public String toString() {
+    return "TaskPlan{"
+        + "executorToChannels=" + executorToChannels
+        + ", groupsToExecutor=" + groupsToExecutor
+        + ", thisExecutor=" + thisExecutor
+        + '}';
+  }
 }
