@@ -165,7 +165,7 @@ public class BasicMemoryManagerByteKeyedGatherCommunication implements IContaine
       // this method calls the init method
       // I think this is wrong
 
-      aggregate = channel.gather(newCfg, MessageType.INTEGER, MessageType.BYTE, 0, sources,
+      aggregate = channel.gather(newCfg, MessageType.BYTE, MessageType.BYTE, 0, sources,
           dest, new GatherBatchFinalReceiver(new FinalGatherReceive()),
           new GatherBatchPartialReceiver(dest));
       aggregate.setMemoryMapped(true);
@@ -214,7 +214,16 @@ public class BasicMemoryManagerByteKeyedGatherCommunication implements IContaine
 //      MPIBuffer data = new MPIBuffer(1024);
         startTime = System.nanoTime();
         for (int i = 0; i < 1; i++) {
-          int[] data = {task, task * 100};
+//          byte[] data = ByteBuffer.allocate(8).putInt(task).putInt(task * 100).array();
+          byte[] data = new byte[12];
+          data[0] = 'a';
+          data[1] = 'b';
+          data[2] = 'c';
+          data[3] = 'd';
+          data[4] = 'd';
+          data[5] = 'd';
+          data[6] = 'd';
+          data[7] = 'd';
           int keyint = task * 111;
           byte[] key = ByteBuffer.allocate(4).putInt(keyint).array();
 
@@ -224,7 +233,7 @@ public class BasicMemoryManagerByteKeyedGatherCommunication implements IContaine
 //
           int flags = MessageFlags.FLAGS_LAST;
           KeyedContent mesage = new KeyedContent(key, data,
-              MessageType.BYTE, MessageType.INTEGER);
+              MessageType.BYTE, MessageType.BYTE);
           while (!aggregate.send(task, mesage, flags)) {
             // lets wait a litte and try again
             try {
@@ -266,10 +275,16 @@ public class BasicMemoryManagerByteKeyedGatherCommunication implements IContaine
         temp = it.next();
         if (temp instanceof ImmutablePair) {
           ImmutablePair<Object, Object> data = (ImmutablePair<Object, Object>) temp;
-          LOG.info("Ordered results for keyed gather : "
-              + ByteBuffer.wrap((byte[]) data.getKey()).getInt()
-              + " : " + Arrays.toString((int[]) data.getValue()));
-
+          if (data.getValue() instanceof List) {
+            byte[] tempData = (byte[]) ((List) data.getValue()).get(0);
+            LOG.info("Ordered results for keyed gather : "
+                + ByteBuffer.wrap((byte[]) data.getKey()).getInt()
+                + " : " + Arrays.toString(tempData));
+          } else {
+            LOG.info("Ordered results for keyed gather : "
+                + ByteBuffer.wrap((byte[]) data.getKey()).getInt()
+                + " : " + Arrays.toString((byte[]) data.getValue()));
+          }
         }
       }
 

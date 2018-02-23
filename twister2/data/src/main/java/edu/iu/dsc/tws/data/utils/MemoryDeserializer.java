@@ -12,6 +12,8 @@
 package edu.iu.dsc.tws.data.utils;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 import edu.iu.dsc.tws.data.memory.utils.DataMessageType;
 
@@ -56,9 +58,7 @@ public final class MemoryDeserializer {
       case SHORT:
         return deserializeShort(value);
       case BYTE:
-        byte[] bytes = new byte[value.remaining()];
-        value.get(bytes);
-        return bytes;
+        return deserializeBytes(value, serializer);
       case OBJECT:
         return deserializeObject(value, serializer);
       default:
@@ -108,12 +108,32 @@ public final class MemoryDeserializer {
 
   public static Object deserializeObject(ByteBuffer data, KryoMemorySerializer serializer) {
     int length = data.getInt();
-    if (length != data.remaining()) {
-      throw new RuntimeException("The given data buffer does not have the bytes for the object");
+    List<Object> dataList = new ArrayList<>();
+    while (data.remaining() > 4) {
+      if (length > data.remaining()) {
+        throw new RuntimeException("The given data buffer does not have the bytes for the object");
+      }
+      //TODO: check if ByteBuffer.array only returns the remining data bytes
+      byte[] temp = new byte[length];
+      data.get(temp);
+      dataList.add(serializer.deserialize(temp));
     }
-    //TODO: check if ByteBuffer.array only returns the remining data bytes
-    byte[] temp = new byte[data.remaining()];
-    data.get(temp);
-    return serializer.deserialize(temp);
+
+    return dataList;
+  }
+
+  private static Object deserializeBytes(ByteBuffer value, KryoMemorySerializer serializer) {
+    int tempLength;
+    List<byte[]> byteList = new ArrayList<>();
+    while (value.remaining() > 4) {
+      tempLength = value.getInt();
+      if (tempLength > value.remaining()) {
+        throw new RuntimeException("Not enough data in buffer to get given byte array");
+      }
+      byte[] temparray = new byte[tempLength];
+      value.get(temparray);
+      byteList.add(temparray);
+    }
+    return byteList;
   }
 }
