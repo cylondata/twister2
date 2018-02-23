@@ -47,6 +47,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.basic.comms;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -140,8 +141,10 @@ public class BasePartitionKeyedCommunication implements IContainer {
       FinalPartitionReciver finalPartitionRec = new FinalPartitionReciver();
       partition = channel.partition(newCfg, MessageType.INTEGER, MessageType.INTEGER, 2, sources,
           dests, finalPartitionRec);
+//      partition = channel.partition(newCfg, MessageType.INTEGER, MessageType.INTEGER, 2, sources,
+//          dests, finalPartitionRec);
       finalPartitionRec.setMap(expectedIds);
-      // partition.setMemoryMapped(true);
+//      partition.setMemoryMapped(true);
 
       for (int i = 0; i < noOfTasksPerExecutor; i++) {
         // the map thread where data is produced
@@ -181,12 +184,23 @@ public class BasePartitionKeyedCommunication implements IContainer {
     public void run() {
       try {
         LOG.log(Level.INFO, "Starting map worker: " + id);
-        int[] data = {task, task * 100};
+        int[] data2 = {task, task * 100};
+        byte[] data = new byte[12];
+        data[0] = 'a';
+        data[1] = 'b';
+        data[2] = 'c';
+        data[3] = 'd';
+        data[4] = 'd';
+        data[5] = 'd';
+        data[6] = 'd';
+        data[7] = 'd';
+        int keyint = task * 111;
+        byte[] key = ByteBuffer.allocate(4).putInt(keyint).array();
         for (int i = 0; i < NO_OF_TASKS; i++) {
           if (i == task) {
             continue;
           }
-          KeyedContent mesage = new KeyedContent(task * 111, data,
+          KeyedContent mesage = new KeyedContent(task * 111, data2,
               MessageType.INTEGER, MessageType.INTEGER);
           int flags = MessageFlags.FLAGS_LAST;
           while (!partition.send(task, mesage, flags, i)) {

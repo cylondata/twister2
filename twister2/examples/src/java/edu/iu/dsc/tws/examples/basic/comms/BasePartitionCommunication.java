@@ -36,6 +36,7 @@
 package edu.iu.dsc.tws.examples.basic.comms;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -124,7 +125,7 @@ public class BasePartitionCommunication implements IContainer {
         }
       }
       FinalPartitionReciver finalPartitionRec = new FinalPartitionReciver();
-      partition = channel.partition(newCfg, MessageType.INTEGER, 2, sources,
+      partition = channel.partition(newCfg, MessageType.BYTE, 2, sources,
           dests, finalPartitionRec);
       finalPartitionRec.setMap(expectedIds);
       // partition.setMemoryMapped(true);
@@ -167,11 +168,20 @@ public class BasePartitionCommunication implements IContainer {
     public void run() {
       try {
         LOG.log(Level.INFO, "Starting map worker: " + id);
-        int[] data = {task, task * 100};
+//        int[] data = {task, task * 100};
         for (int i = 0; i < NO_OF_TASKS; i++) {
           if (i == task) {
             continue;
           }
+          byte[] data = new byte[12];
+          data[0] = 'a';
+          data[1] = 'b';
+          data[2] = 'c';
+          data[3] = 'd';
+          data[4] = 'd';
+          data[5] = 'd';
+          data[6] = 'd';
+          data[7] = 'd';
           int flags = MessageFlags.FLAGS_LAST;
           while (!partition.send(task, data, flags, i)) {
             // lets wait a litte and try again
@@ -215,6 +225,7 @@ public class BasePartitionCommunication implements IContainer {
       }
 
       if (((flags & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) && isAllFinished(target)) {
+        System.out.println(Arrays.toString((byte[]) object));
         System.out.printf("All Done for Task %d \n", target);
       }
       return true;
