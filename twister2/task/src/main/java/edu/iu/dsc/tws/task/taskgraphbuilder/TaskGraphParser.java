@@ -16,7 +16,6 @@ import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.task.api.Task;
 
 public class TaskGraphParser implements IDataflowTaskGraphParser {
@@ -46,23 +45,12 @@ public class TaskGraphParser implements IDataflowTaskGraphParser {
     return processedTaskVertices;
   }
 
-  @Override
-  public Set<Task> dataflowTaskGraphParseAndSchedule() {
-    return null;
-  }
-
-  //This method will be used in the future.
-  @Override
-  public Set<Task> dataflowTaskGraphParseAndSchedule(int containerId) {
-    return null;
-  }
-
   /**
    * This method calls the dataflow task graph parser method to prioritize
    * the tasks which is ready for the execution.
    */
   private Set<Task> dataflowTaskGraphPrioritize(DataflowTaskGraphGenerator taskGraph) {
-    final IDataflowTaskGraph<Task, DataFlowOperation>
+    final IDataflowTaskGraph<Task, DataflowOperation>
         dataflowTaskgraph = taskGraph.getTaskgraph();
     Set<Task> taskVertices = dataflowTaskgraph.getTaskVertexSet();
     try {
@@ -80,7 +68,7 @@ public class TaskGraphParser implements IDataflowTaskGraphParser {
    * with an optimized scheduling mechanism.
    */
   private int dataflowTaskGraphParse(final IDataflowTaskGraph<Task,
-      DataFlowOperation> dataflowTaskgraph, final Task mapper) {
+      DataflowOperation> dataflowTaskgraph, final Task mapper) {
 
     LOGGER.info("Dataflow Task Graph is:" + dataflowTaskgraph
         + "\t" + "and Task Object is:" + mapper);
@@ -88,7 +76,7 @@ public class TaskGraphParser implements IDataflowTaskGraphParser {
     if (dataflowTaskgraph.outDegreeOf(mapper) == 0) {
       return 1;
     } else {
-      Set<DataFlowOperation> taskEdgesOf = dataflowTaskgraph.
+      Set<DataflowOperation> taskEdgesOf = dataflowTaskgraph.
           outgoingTaskEdgesOf(mapper);
 
       Stream<Task> taskStream = taskEdgesOf.stream().map(
@@ -101,4 +89,16 @@ public class TaskGraphParser implements IDataflowTaskGraphParser {
       return weightOfCurrent;
     }
   }
+
+  //These two methods will be implemented in the future.
+  @Override
+  public Set<Task> dataflowTaskGraphParseAndSchedule() {
+    return null;
+  }
+
+  @Override
+  public Set<Task> dataflowTaskGraphParseAndSchedule(int containerId) {
+    return null;
+  }
 }
+

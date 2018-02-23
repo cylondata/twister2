@@ -35,17 +35,17 @@ public class DataflowTaskGraphGenerator implements IDataflowTaskGraphGenerator {
 
   /**
    * Newly added code for defining the task edges as dataflow operations namely
-   * Map, Reduce, Gather, and others.
+   * Map, Reduce, Shuffle, and others.
    */
-  private IDataflowTaskGraph<Task, DataFlowOperation> taskgraph =
-      new DataflowTaskGraph<>(DataFlowOperation.class);
+  private IDataflowTaskGraph<Task, DataflowOperation> taskgraph =
+      new DataflowTaskGraph<>(DataflowOperation.class);
 
-  public IDataflowTaskGraph<Task, DataFlowOperation> getTaskgraph() {
+  public IDataflowTaskGraph<Task, DataflowOperation> getTaskgraph() {
     return taskgraph;
   }
 
   public void setTaskgraph(IDataflowTaskGraph<Task,
-      DataFlowOperation> taskgraph) {
+      DataflowOperation> taskgraph) {
     this.taskgraph = taskgraph;
   }
 
@@ -125,12 +125,13 @@ public class DataflowTaskGraphGenerator implements IDataflowTaskGraphGenerator {
 
   public DataflowTaskGraphGenerator generateTaskGraph(Task task1,
                                                       Task task2,
-                                                      DataFlowOperation... dataFlowOperation) {
+                                                      DataflowOperation... dataflowOperation) {
+    LOGGER.info("**** Task Graph Generation Initiated ****");
     try {
       this.taskgraph.addTaskVertex(task1);
       this.taskgraph.addTaskVertex(task2);
-      for (DataFlowOperation dataFlowOperation1 : dataFlowOperation) {
-        this.taskgraph.addTaskEdge(task1, task2, dataFlowOperation[0]);
+      for (DataflowOperation dataFlowOperation1 : dataflowOperation) {
+        this.taskgraph.addTaskEdge(task1, task2, dataflowOperation[0]);
       }
     } catch (IllegalArgumentException iae) {
       iae.printStackTrace();

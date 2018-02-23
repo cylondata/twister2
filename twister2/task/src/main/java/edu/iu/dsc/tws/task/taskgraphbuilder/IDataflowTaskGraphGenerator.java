@@ -39,6 +39,6 @@ public interface IDataflowTaskGraphGenerator {
 
   DataflowTaskGraphGenerator generateTaskGraph(Task sourceTask,
                                                Task sinkTask,
-                                               DataFlowOperation... dataFlowOperation);
+                                               DataflowOperation... dataFlowOperation);
 }
 
