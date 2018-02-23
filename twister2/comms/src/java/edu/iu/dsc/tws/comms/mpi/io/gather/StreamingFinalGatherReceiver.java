@@ -15,89 +15,34 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.GatherBatchReceiver;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.mpi.MPIContext;
 import edu.iu.dsc.tws.comms.mpi.MPIDataFlowOperation;
 
-public class StreamingFinalGatherReceiver implements MessageReceiver {
+public class StreamingFinalGatherReceiver extends StreamingPartialGatherReceiver {
   private static final Logger LOG = Logger.getLogger(StreamingFinalGatherReceiver.class.getName());
-  // lets keep track of the messages
-  // for each task we need to keep track of incoming messages
-  private Map<Integer, Map<Integer, List<Object>>> messages = new HashMap<>();
-  private Map<Integer, Map<Integer, Integer>> counts = new HashMap<>();
 
-  private long start = System.nanoTime();
+  private GatherBatchReceiver receiver;
 
-  private int sendPendingMax = 128;
-
-  @Override
-  public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-    MPIDataFlowOperation dataFlowOperation = (MPIDataFlowOperation) op;
-    sendPendingMax = MPIContext.sendPendingMax(cfg);
-
-    for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
-      Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
-      Map<Integer, Integer> countsPerTask = new HashMap<>();
-
-      for (int i : e.getValue()) {
-        messagesPerTask.put(i, new ArrayList<Object>());
-        countsPerTask.put(i, 0);
-      }
-
-      LOG.info(String.format("%d Final Task %d receives from %s",
-          dataFlowOperation.getInstancePlan().getThisExecutor(),
-          e.getKey(), e.getValue().toString()));
-
-      messages.put(e.getKey(), messagesPerTask);
-      counts.put(e.getKey(), countsPerTask);
-    }
+  public StreamingFinalGatherReceiver(GatherBatchReceiver receiver) {
+    this.receiver = receiver;
   }
 
+  @SuppressWarnings({"rawtypes", "unchecked"})
   @Override
-  public boolean onMessage(int source, int path, int target, int flags, Object object) {
-    // add the object to the map
-    boolean canAdd = true;
-    try {
-      List<Object> m = messages.get(target).get(source);
-      Integer c = counts.get(target).get(source);
-      if (m.size() > sendPendingMax) {
-        canAdd = false;
-      } else {
-        m.add(object);
-        counts.get(target).put(source, c + 1);
-      }
-      return canAdd;
-    } catch (Throwable t) {
-      throw new RuntimeException("Error occurred", t);
+  protected boolean handleMessage(int task, Object message, int flags, int dest) {
+    if (message instanceof List) {
+      receiver.receive(task, ((List<Object>) message).iterator());
+    } else {
+      LOG.log(Level.WARNING, "Messages should be in list format");
+      return false;
     }
-  }
-
-  public void progress() {
-    for (int t : messages.keySet()) {
-      boolean canProgress = true;
-      while (canProgress) {
-        // now check weather we have the messages for this source
-        Map<Integer, List<Object>> map = messages.get(t);
-        boolean found = true;
-        Object o = null;
-        for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
-          if (e.getValue().size() == 0) {
-            found = false;
-            canProgress = false;
-          } else {
-            o = e.getValue().get(0);
-          }
-        }
-        if (found) {
-          for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
-            o = e.getValue().remove(0);
-          }
-        }
-      }
-    }
+    return true;
   }
 }
