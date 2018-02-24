@@ -29,6 +29,6 @@ public class AllReduceStreamingFinalReceiver extends ReduceStreamingReceiver {
 
   @Override
   public boolean handleMessage(int source, Object message, int flags, int dest) {
-    return bcast.send(task, message, 0);
+    return bcast.send(source, message, 0);
   }
 }

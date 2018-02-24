@@ -173,6 +173,7 @@ public class MPIDataFlowAllReduce implements DataFlowOperation {
 
     @Override
     public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+      this.reduceReceiver.init(cfg, op, expectedIds);
     }
 
     @Override

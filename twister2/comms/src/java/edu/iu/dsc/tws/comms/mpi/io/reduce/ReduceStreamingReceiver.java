@@ -109,9 +109,10 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
       Map<Integer, Queue<Object>> messagePerTarget = messages.get(t);
       Map<Integer, Integer> countsPerTarget = counts.get(t);
       Map<Integer, Integer> totalCountMap = totalCounts.get(t);
-//      if (onMessageAttempts > 1000000 || progressAttempts > 1000000) {
-//        LOG.info(String.format("%d REDUCE %s %s", executor, counts, totalCountMap));
-//      }
+      if (onMessageAttempts > 1000000 || progressAttempts > 1000000) {
+        LOG.info(String.format("%d REDUCE %s %s", executor, counts, totalCountMap));
+      }
+//      LOG.info(String.format("%d REDUCE %s %s", executor, counts, totalCountMap));
 
       while (canProgress) {
         boolean found = true;
