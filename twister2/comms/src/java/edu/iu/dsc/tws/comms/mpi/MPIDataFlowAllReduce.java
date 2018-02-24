@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -19,6 +21,7 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
+import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.mpi.io.allreduce.AllReduceBatchFinalReceiver;
@@ -42,7 +45,7 @@ public class MPIDataFlowAllReduce implements DataFlowOperation {
   private MessageReceiver partialReceiver;
 
   // the final receiver
-  private MessageReceiver finalReceiver;
+  private ReduceReceiver finalReceiver;
 
   private TWSChannel channel;
 
@@ -65,7 +68,7 @@ public class MPIDataFlowAllReduce implements DataFlowOperation {
   public MPIDataFlowAllReduce(TWSChannel chnl,
                               Set<Integer> sources, Set<Integer> destination, int middleTask,
                               ReduceFunction reduceFn,
-                              MessageReceiver finalRecv,
+                              ReduceReceiver finalRecv,
                               int redEdge, int broadEdge,
                               boolean strm) {
     this.channel = chnl;
@@ -93,7 +96,8 @@ public class MPIDataFlowAllReduce implements DataFlowOperation {
     this.taskPlan = instancePlan;
     this.executor = taskPlan.getThisExecutor();
 
-    broadcast = new MPIDataFlowBroadcast(channel, middleTask, destinations, finalReceiver);
+    broadcast = new MPIDataFlowBroadcast(channel, middleTask, destinations,
+        new BCastReceiver(finalReceiver));
     broadcast.init(config, t, instancePlan, broadCastEdge);
 
     MessageReceiver receiver;
@@ -158,5 +162,26 @@ public class MPIDataFlowAllReduce implements DataFlowOperation {
   public void setMemoryMapped(boolean memoryMapped) {
     reduce.setMemoryMapped(memoryMapped);
     broadcast.setMemoryMapped(memoryMapped);
+  }
+
+  private static class BCastReceiver implements MessageReceiver {
+    private ReduceReceiver reduceReceiver;
+
+    BCastReceiver(ReduceReceiver reduceRcvr) {
+      this.reduceReceiver = reduceRcvr;
+    }
+
+    @Override
+    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+    }
+
+    @Override
+    public boolean onMessage(int source, int path, int target, int flags, Object object) {
+      return reduceReceiver.receive(target, object);
+    }
+
+    @Override
+    public void progress() {
+    }
   }
 }

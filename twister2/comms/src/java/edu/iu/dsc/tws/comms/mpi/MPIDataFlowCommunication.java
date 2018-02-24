@@ -21,6 +21,7 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.MultiMessageReceiver;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
+import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
@@ -148,7 +149,7 @@ public class MPIDataFlowCommunication implements TWSCommunication {
                                      Set<Integer> sourceTasks, Set<Integer> destTasks,
                                      int middleTask,
                                      ReduceFunction reduceFunction,
-                                     MessageReceiver receiver,
+                                     ReduceReceiver receiver,
                                      boolean stream) {
     // merge with the user specified configuration, user specified will take precedence
     Config mergedCfg = Config.newBuilder().putAll(config).putAll(properties).build();

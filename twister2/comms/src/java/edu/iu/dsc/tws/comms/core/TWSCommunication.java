@@ -20,6 +20,7 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.MultiMessageReceiver;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
+import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 
 public interface TWSCommunication {
@@ -52,7 +53,7 @@ public interface TWSCommunication {
                               Set<Integer> sourceTasks, Set<Integer> destTasks,
                               int middleTask,
                               ReduceFunction reduceFunction,
-                              MessageReceiver receiver,
+                              ReduceReceiver recediver,
                               boolean stream);
 
   DataFlowOperation gather(Map<String, Object> properties, MessageType type,
