@@ -85,16 +85,22 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
       path.mkdirs();
     }
 
-    final EnvFlags[] envFlags = envFlags(true, false);
-    this.env = create()
-        .setMapSize(LMDBMemoryManagerContext.MAP_SIZE_LIMIT)
-        .setMaxDbs(LMDBMemoryManagerContext.MAX_DB_INSTANCES)
-        .setMaxReaders(LMDBMemoryManagerContext.MAX_READERS)
-        .open(path, envFlags);
+    try {
+      final EnvFlags[] envFlags = envFlags(true, false);
+      this.env = create()
+          .setMapSize(LMDBMemoryManagerContext.MAP_SIZE_LIMIT)
+          .setMaxDbs(LMDBMemoryManagerContext.MAX_DB_INSTANCES)
+          .setMaxReaders(LMDBMemoryManagerContext.MAX_READERS)
+          .open(path, envFlags);
 
-    // The database supports duplicate values for a single key
-    db = env.openDbi(LMDBMemoryManagerContext.DB_NAME, MDB_CREATE);
-    dbMap = new HashMap<Integer, Dbi<ByteBuffer>>();
+      // The database supports duplicate values for a single key
+      db = env.openDbi(LMDBMemoryManagerContext.DB_NAME, MDB_CREATE);
+      dbMap = new HashMap<Integer, Dbi<ByteBuffer>>();
+    } catch (RuntimeException e) {
+      throw new RuntimeException("Error while creating LMDB database at Path "
+          + lmdbDataPath.toString(), e);
+    }
+
     return true;
   }
 
