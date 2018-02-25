@@ -20,6 +20,7 @@ import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -210,13 +211,18 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
 
   @Override
   public void progress() {
-    delegete.progress();
-    if (lock.tryLock()) {
-      try {
-        finalReceiver.progress();
-      } finally {
-        lock.unlock();
+    try {
+      delegete.progress();
+      if (lock.tryLock()) {
+        try {
+          finalReceiver.progress();
+        } finally {
+          lock.unlock();
+        }
       }
+    } catch (Throwable t) {
+      LOG.log(Level.SEVERE, "un-expected error", t);
+      throw new RuntimeException(t);
     }
   }
 

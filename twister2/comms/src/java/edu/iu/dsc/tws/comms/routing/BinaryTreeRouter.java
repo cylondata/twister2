@@ -88,7 +88,9 @@ public class BinaryTreeRouter {
           receiveExecutors.add(plan.getExecutorForChannel(search.getParent().getTaskId()));
           recv.add(search.getParent().getTaskId());
         }
-        receiveTasks.put(t, new ArrayList<>(recv));
+        if (!recv.isEmpty()) {
+          receiveTasks.put(t, new ArrayList<>(recv));
+        }
 
         // this task is connected to others and they dont send messages to anyone
         List<Integer> directChildren = search.getDirectChildren();

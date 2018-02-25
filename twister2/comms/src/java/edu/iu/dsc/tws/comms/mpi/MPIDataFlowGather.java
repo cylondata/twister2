@@ -19,6 +19,7 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -334,16 +335,21 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
 
   @Override
   public void progress() {
-    delegete.progress();
+    try {
+      delegete.progress();
 
-    if (finalReceiverProgress.compareAndSet(false, true)) {
-      finalReceiver.progress();
-      finalReceiverProgress.compareAndSet(true, false);
-    }
+      if (finalReceiverProgress.compareAndSet(false, true)) {
+        finalReceiver.progress();
+        finalReceiverProgress.compareAndSet(true, false);
+      }
 
-    if (partialRecevierProgress.compareAndSet(false, true)) {
-      partialReceiver.progress();
-      partialRecevierProgress.compareAndSet(true, false);
+      if (partialRecevierProgress.compareAndSet(false, true)) {
+        partialReceiver.progress();
+        partialRecevierProgress.compareAndSet(true, false);
+      }
+    } catch (Throwable t) {
+      LOG.log(Level.SEVERE, "un-expected error", t);
+      throw new RuntimeException(t);
     }
   }
 

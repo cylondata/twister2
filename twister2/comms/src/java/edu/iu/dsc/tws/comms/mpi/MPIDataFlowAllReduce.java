@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.comms.mpi;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -136,8 +137,13 @@ public class MPIDataFlowAllReduce implements DataFlowOperation {
 
   @Override
   public void progress() {
-    broadcast.progress();
-    reduce.progress();
+    try {
+      broadcast.progress();
+      reduce.progress();
+    } catch (Throwable t) {
+      LOG.log(Level.SEVERE, "un-expected error", t);
+      throw new RuntimeException(t);
+    }
   }
 
   @Override
