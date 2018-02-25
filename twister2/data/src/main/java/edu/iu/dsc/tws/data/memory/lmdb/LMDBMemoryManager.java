@@ -16,15 +16,18 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.lmdbjava.CursorIterator;
 import org.lmdbjava.Dbi;
 import org.lmdbjava.Env;
+import org.lmdbjava.EnvFlags;
 import org.lmdbjava.KeyRange;
 import org.lmdbjava.Txn;
 
@@ -38,6 +41,8 @@ import edu.iu.dsc.tws.data.utils.MemoryDeserializer;
 
 import static org.lmdbjava.DbiFlags.MDB_CREATE;
 import static org.lmdbjava.Env.create;
+import static org.lmdbjava.EnvFlags.MDB_NOSYNC;
+import static org.lmdbjava.EnvFlags.MDB_WRITEMAP;
 
 /**
  * Memory Manger implementaion for LMDB Java
@@ -79,11 +84,13 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
     if (!path.exists()) {
       path.mkdirs();
     }
+
+    final EnvFlags[] envFlags = envFlags(true, false);
     this.env = create()
         .setMapSize(LMDBMemoryManagerContext.MAP_SIZE_LIMIT)
         .setMaxDbs(LMDBMemoryManagerContext.MAX_DB_INSTANCES)
         .setMaxReaders(LMDBMemoryManagerContext.MAX_READERS)
-        .open(path);
+        .open(path, envFlags);
 
     // The database supports duplicate values for a single key
     db = env.openDbi(LMDBMemoryManagerContext.DB_NAME, MDB_CREATE);
@@ -624,5 +631,23 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
 
   public void setDb(Dbi<ByteBuffer> db) {
     this.db = db;
+  }
+
+  static final EnvFlags[] envFlags(final boolean writeMap, final boolean sync) {
+    final Set<EnvFlags> envFlagSet = new HashSet<>();
+    if (writeMap) {
+      envFlagSet.add(MDB_WRITEMAP);
+      //TODO: need to test with other flags if no sync is used will need env.sync(true) to sync
+//            envFlagSet.add(EnvFlags.MDB_NOSYNC);
+//            envFlagSet.add(EnvFlags.MDB_NOMETASYNC);
+//            envFlagSet.add(MDB_MAPASYNC);
+
+    }
+    if (!sync) {
+      envFlagSet.add(MDB_NOSYNC);
+    }
+    final EnvFlags[] envFlags = new EnvFlags[envFlagSet.size()];
+    envFlagSet.toArray(envFlags);
+    return envFlags;
   }
 }
