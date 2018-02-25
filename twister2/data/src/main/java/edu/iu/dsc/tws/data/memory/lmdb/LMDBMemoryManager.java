@@ -24,6 +24,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.lmdbjava.Cursor;
 import org.lmdbjava.CursorIterator;
 import org.lmdbjava.Dbi;
 import org.lmdbjava.Env;
@@ -363,6 +364,44 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
       return false;
     }
     currentDB.put(key, value);
+    return true;
+  }
+
+  /**
+   * Insert bulk key value pair into the
+   *
+   * @param keys the keys, must be unver 511 bytes because of limits in LMDB implementaion
+   * @param values the values to be added
+   * @return true if value was added, false otherwise
+   */
+  public boolean put(int opID, List<ByteBuffer> keys, List<ByteBuffer> values) {
+    if (!dbMap.containsKey(opID)) {
+      LOG.info("The given operation does not have a corresponding store specified");
+      return false;
+    }
+    Dbi<ByteBuffer> currentDB = dbMap.get(opID);
+    if (currentDB == null) {
+      throw new RuntimeException("LMDB database has not been configured."
+          + " Please initialize database");
+    }
+    try (Txn<ByteBuffer> tx = env.txnWrite();) {
+      try (Cursor<ByteBuffer> c = currentDB.openCursor(tx);) {
+        for (int i = 0; i < keys.size(); i++) {
+          keys.get(i).rewind();
+          if (keys.get(i).limit() > 511) {
+            LOG.info("Key size lager than 511 bytes which is the limit for LMDB key values");
+            return false;
+          }
+          values.get(i).rewind();
+          c.put(keys.get(i), values.get(i));
+        }
+      } catch (RuntimeException e) {
+        throw new RuntimeException("Error while creating cursor", e);
+      }
+      tx.commit();
+    } catch (RuntimeException e) {
+      throw new RuntimeException("Error while creating txn", e);
+    }
     return true;
   }
 
