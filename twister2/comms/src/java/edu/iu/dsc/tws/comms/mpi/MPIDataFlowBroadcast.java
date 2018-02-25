@@ -177,7 +177,6 @@ public class MPIDataFlowBroadcast implements DataFlowOperation, MPIMessageReceiv
 
   @Override
   public boolean send(int src, Object message, int flags) {
-    LOG.info(String.format("%d Bcast send message", executor));
     return delegete.sendMessage(src, message, 0, flags, sendRoutingParameters(src, 0));
   }
 
