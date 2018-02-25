@@ -391,7 +391,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
 
     //If this is the last receiver we save to memory store
     if (isStoreBased && isLastReceiver) {
-      LOG.info("Store based");
+//      LOG.info("Store based");
       writeToMemoryManager(currentMessage, receiveId);
       currentMessage.setReceivedState(MPIMessage.ReceivedState.RECEIVE);
       if (!receiver.receiveMessage(currentMessage, operationMemoryManager)) {
