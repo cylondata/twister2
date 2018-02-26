@@ -21,6 +21,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -70,6 +71,14 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
   private Dbi<ByteBuffer> db;
 
   private Map<Integer, Dbi<ByteBuffer>> dbMap;
+  /**
+   * Stack of read Txn used for reads on this executor.
+   * TODO: need to allow mutiple readears
+   */
+  private Stack<Txn<ByteBuffer>> readTxns;
+
+  private ThreadLocal<Txn<ByteBuffer>> threadReadTxn;
+  private ThreadLocal<Txn<ByteBuffer>> threadWriteTxn;
 
   public LMDBMemoryManager(Path dataPath) {
     this.lmdbDataPath = dataPath;
@@ -97,6 +106,13 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
       // The database supports duplicate values for a single key
       db = env.openDbi(LMDBMemoryManagerContext.DB_NAME, MDB_CREATE);
       dbMap = new HashMap<Integer, Dbi<ByteBuffer>>();
+
+      //populate readTxnStack
+//      readTxns = new Stack<>();
+//      for (int i = 0; i < 10; i++) {
+//        readTxns.push(env.txnRead());
+//      }
+      threadReadTxn = new ThreadLocal<>();
     } catch (RuntimeException e) {
       throw new RuntimeException("Error while creating LMDB database at Path "
           + lmdbDataPath.toString(), e);
@@ -120,6 +136,10 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
       LOG.info("Key size lager than 511 bytes which is the limit for LMDB key values");
       return null;
     }
+
+    if (threadReadTxn.get() == null) {
+      threadReadTxn.set(env.txnRead());
+    }
     // details in LMDB for clarity
     // To fetch any data from LMDB we need a Txn. A Txn is very important in
     // LmdbJava because it offers ACID characteristics and internally holds a
@@ -129,10 +149,12 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
     // valid only until the Txn is released or the next Dbi or Cursor call. If
     // you need data afterwards, you should copy the bytes to your own buffer.
     //TODO: does the value returned from db.get and tnx.val() have the same data? need to check
-    Txn<ByteBuffer> txn = env.txnRead();
-
+//    Txn<ByteBuffer> txn = requestReadTxn();
+    Txn<ByteBuffer> txn = threadReadTxn.get();
+    txn.reset();
+    txn.renew();
     ByteBuffer result = currentDB.get(txn, key);
-    txn.close();
+//    releaseReadTxn(txn);
     return result;
   }
 
@@ -247,9 +269,14 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
       LOG.info("Key size lager than 511 bytes which is the limit for LMDB key values");
       return false;
     }
-    Txn<ByteBuffer> txn = env.txnRead();
+    if (threadReadTxn.get() == null) {
+      threadReadTxn.set(env.txnRead());
+    }
+    Txn<ByteBuffer> txn = threadReadTxn.get();
+    txn.reset();
+    txn.renew();
     final ByteBuffer found = currentDB.get(txn, key);
-    txn.close();
+//    releaseReadTxn(txn);
     if (found == null) {
       return false;
     }
@@ -363,6 +390,7 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
       LOG.info("Key size lager than 511 bytes which is the limit for LMDB key values");
       return false;
     }
+
     currentDB.put(key, value);
     return true;
   }
@@ -607,9 +635,14 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
       LOG.info("The given operation does not have a corresponding store specified");
       return null;
     }
+    if (threadReadTxn.get() == null) {
+      threadReadTxn.set(env.txnRead());
+    }
     List<Object> results = new ArrayList<>();
     Dbi<ByteBuffer> currentDB = dbMap.get(opID);
-    Txn<ByteBuffer> txn = env.txnRead();
+    Txn<ByteBuffer> txn = threadReadTxn.get();
+    txn.reset();
+    txn.renew();
     try (CursorIterator<ByteBuffer> it = currentDB.iterate(txn, KeyRange.all())) {
       for (final CursorIterator.KeyVal<ByteBuffer> kv : it.iterable()) {
         Object key = MemoryDeserializer.deserializeKey(kv.key().order(order),
@@ -619,7 +652,7 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
         results.add(new ImmutablePair<>(key, value));
       }
     }
-    txn.close();
+//    releaseReadTxn(txn);
     return results.iterator();
   }
 
@@ -634,9 +667,14 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
       LOG.info("The given operation does not have a corresponding store specified");
       return null;
     }
+    if (threadReadTxn.get() == null) {
+      threadReadTxn.set(env.txnRead());
+    }
     List<Object> results = new ArrayList<>();
     Dbi<ByteBuffer> currentDB = dbMap.get(opID);
-    Txn<ByteBuffer> txn = env.txnRead();
+    Txn<ByteBuffer> txn = threadReadTxn.get();
+    txn.reset();
+    txn.renew();
     try (CursorIterator<ByteBuffer> it = currentDB.iterate(txn, KeyRange.all())) {
       for (final CursorIterator.KeyVal<ByteBuffer> kv : it.iterable()) {
         Object value = MemoryDeserializer.deserializeValue(kv.val().order(order),
@@ -644,7 +682,7 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
         results.add(value);
       }
     }
-    txn.close();
+//    releaseReadTxn(txn);
     return results.iterator();
   }
 
@@ -682,6 +720,7 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
     final Set<EnvFlags> envFlagSet = new HashSet<>();
     if (writeMap) {
       envFlagSet.add(MDB_WRITEMAP);
+      envFlagSet.add(EnvFlags.MDB_NOTLS);
       //TODO: need to test with other flags if no sync is used will need env.sync(true) to sync
 //            envFlagSet.add(EnvFlags.MDB_NOSYNC);
 //            envFlagSet.add(EnvFlags.MDB_NOMETASYNC);
@@ -694,5 +733,19 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
     final EnvFlags[] envFlags = new EnvFlags[envFlagSet.size()];
     envFlagSet.toArray(envFlags);
     return envFlags;
+  }
+
+  private synchronized Txn<ByteBuffer> requestReadTxn() {
+    if (readTxns.isEmpty()) {
+      throw new RuntimeException("No read Txn avilable");
+    }
+    return readTxns.pop();
+  }
+
+  private synchronized void releaseReadTxn(Txn<ByteBuffer> txn) {
+    txn.commit(); // Might not need commit can check and remove
+    txn.reset();
+    txn.renew();
+    readTxns.push(txn);
   }
 }
