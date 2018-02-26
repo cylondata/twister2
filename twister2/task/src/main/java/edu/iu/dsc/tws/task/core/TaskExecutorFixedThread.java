@@ -173,12 +173,12 @@ public class TaskExecutorFixedThread implements TaskExecutor {
    */
   public boolean registerTask(Task task, List<Integer> inputQueues,
                               List<Integer> outputQueues) {
-    /*LOG.info("------------------------------------------");
+    LOG.info("------------------------------------------");
     LOG.info("Register Task");
     LOG.info("Task : " + task.getTaskId());
     LOG.info("InputQueue : " + inputQueues.size());
     LOG.info("OutputQueue : " + outputQueues.size());
-    LOG.info("------------------------------------------");*/
+    LOG.info("------------------------------------------");
     //Register task queues
     //TODO: What happens in the queue already has data when task is registered
     if (inputQueues != null) {
@@ -259,9 +259,9 @@ public class TaskExecutorFixedThread implements TaskExecutor {
       throw new RuntimeException(String.format("Unable to locate task with task id : %d, "
           + "Please make sure the task is registered", tid));
     } else {
-      /*LOG.info("================================================");
+      LOG.info("================================================");
       LOG.info("Submist Task : " + tid);
-      LOG.info("================================================");*/
+      LOG.info("================================================");
       addRunningTask(tid);
       executorPool.submit(new RunnableFixedTask(taskMap.get(tid), this));
     }

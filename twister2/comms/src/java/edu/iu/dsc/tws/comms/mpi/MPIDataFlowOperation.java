@@ -203,21 +203,6 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
 
   private void initProgressTrackers() {
     Set<Integer> items = pendingSendMessagesPerSource.keySet();
-<<<<<<< HEAD
-    //LOG.info(String.format("%d pendingSendMessagesPerSource %s", executor, items));
-    sendProgressTracker = new ProgressionTracker(items);
-
-    Set<Integer> items1 = pendingReceiveMessagesPerSource.keySet();
-    //LOG.info(String.format("%d pendingReceiveMessagesPerSource %s", executor, items1));
-    receiveProgressTracker = new ProgressionTracker(items1);
-
-    Set<Integer> items2 = pendingReceiveDeSerializations.keySet();
-    LOG.info("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-    LOG.info(String.format("%d pendingReceiveDeSerializations %s", executor, items1));
-    LOG.info("Size of Pending Receive Serialization : " + pendingReceiveDeSerializations.size());
-    LOG.info("Message Content : " + pendingReceiveDeSerializations.get(0).poll());
-    LOG.info("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-=======
 //    LOG.info(String.format("%d pendingSendMessagesPerSource %s", executor, items));
     sendProgressTracker = new ProgressionTracker(items);
 
@@ -227,7 +212,6 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
 
     Set<Integer> items2 = pendingReceiveDeSerializations.keySet();
 //    LOG.info(String.format("%d pendingReceiveDeSerializations %s", executor, items1));
->>>>>>> 512841c60233c3fe52b637f798e0d788ecbe5e00
     deserializeProgressTracker = new ProgressionTracker(items2);
   }
 
@@ -290,38 +274,6 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
 
   public boolean sendMessage(int source, Object message, int path,
                              int flags, RoutingParameters routingParameters) {
-<<<<<<< HEAD
-//    lock.lock();
-    try {
-      /*LOG.info("sendMessage : source = " + source);
-      LOG.info("sendMessage : message = " + message.toString());
-      LOG.info("sendMessage : RoutParam = " + routingParameters.toString());
-      LOG.info("sendMessage : RoutParam Dest Id = " + routingParameters.getDestinationId());
-      LOG.info("sendMessage : Path = " + path);*/
-//      LOG.info(String.format("%d send message %d", executor, source));
-      ArrayBlockingQueue<Pair<Object, MPISendMessage>> pendingSendMessages =
-          pendingSendMessagesPerSource.get(source);
-
-      MPIMessage mpiMessage = new MPIMessage(source, type, MPIMessageDirection.OUT, this);
-
-      int di = -1;
-      if (routingParameters.getExternalRoutes().size() > 0) {
-        di = routingParameters.getDestinationId();
-      }
-      MPISendMessage sendMessage = new MPISendMessage(source, mpiMessage, edge,
-          di, path, flags, routingParameters.getInternalRoutes(),
-          routingParameters.getExternalRoutes());
-
-      // now try to put this into pending
-      boolean ret = pendingSendMessages.offer(
-          new ImmutablePair<Object, MPISendMessage>(message, sendMessage));
-      //LOG.info("Return Message Status : " + ret);
-
-      return ret;
-    } finally {
-//      lock.unlock();
-      int a;
-=======
     ArrayBlockingQueue<Pair<Object, MPISendMessage>> pendingSendMessages =
         pendingSendMessagesPerSource.get(source);
     MPIMessage mpiMessage = new MPIMessage(source, type, MPIMessageDirection.OUT, this);
@@ -329,7 +281,6 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
     int di = -1;
     if (routingParameters.getExternalRoutes().size() > 0) {
       di = routingParameters.getDestinationId();
->>>>>>> 512841c60233c3fe52b637f798e0d788ecbe5e00
     }
     MPISendMessage sendMessage = new MPISendMessage(source, mpiMessage, edge,
         di, path, flags, routingParameters.getInternalRoutes(),
@@ -432,20 +383,11 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
   }
 
   private void receiveDeserializeProgress(MPIMessage currentMessage, int receiveId) {
-    /*LOG.info("+++++++++++++++++++++++++++++++++++++++");
-    LOG.info("receiveDeserializeProgress receiveId: " + receiveId);
-    LOG.info("+++++++++++++++++++++++++++++++++++++++");*/
     if (currentMessage == null) {
-      /*LOG.info("+++++++++++++++++++++++++++++++++++++++");
-      LOG.info("Null msg : receiveDeserializeProgress receiveId: " + receiveId);
-      LOG.info("+++++++++++++++++++++++++++++++++++++++");*/
       return;
     }
 
     int id = currentMessage.getOriginatingId();
-    LOG.info("+++++++++++++++++++++++++++++++++++++++");
-    LOG.info("receiveDeserializeProgress : " + receiveId);
-    LOG.info("+++++++++++++++++++++++++++++++++++++++");
 
     //If this is the last receiver we save to memory store
     if (isStoreBased && isLastReceiver) {
@@ -458,14 +400,6 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
       currentMessage.incrementRefCount();
       currentMessage.release();
     } else {
-<<<<<<< HEAD
-
-//      lock.lock();
-      LOG.info("+++++++++++++++++++++++++++++++++++++++");
-      LOG.info("else : receiveDeserializeProgress : " + receiveId);
-      LOG.info("+++++++++++++++++++++++++++++++++++++++");
-=======
->>>>>>> 512841c60233c3fe52b637f798e0d788ecbe5e00
       Object object = messageDeSerializer.get(receiveId).build(currentMessage,
           currentMessage.getHeader().getEdge());
       Queue<Pair<Object, MPIMessage>> pendingReceiveMessages =
@@ -487,34 +421,10 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
       MPIMessage currentMessage = pair.getRight();
       Object object = pair.getLeft();
 
-      LOG.info("==========================================");
-      LOG.info("receiveProgress : Message " + state);
-      LOG.info("==========================================");
-
       if (state == MPIMessage.ReceivedState.INIT) {
         currentMessage.incrementRefCount();
       }
 
-<<<<<<< HEAD
-      if (state == MPIMessage.ReceivedState.DOWN || state == MPIMessage.ReceivedState.INIT) {
-        currentMessage.setReceivedState(MPIMessage.ReceivedState.DOWN);
-        if (!receiver.passMessageDownstream(object, currentMessage)) {
-          break;
-        }
-        currentMessage.setReceivedState(MPIMessage.ReceivedState.RECEIVE);
-        if (!receiver.receiveMessage(currentMessage, object)) {
-          break;
-        }
-        currentMessage.release();
-        pendingReceiveMessages.poll();
-      } else if (state == MPIMessage.ReceivedState.RECEIVE) {
-        LOG.info("==========================================");
-        LOG.info("receiveProgress : Message " + state);
-        LOG.info("==========================================");
-        currentMessage.setReceivedState(MPIMessage.ReceivedState.RECEIVE);
-        if (!receiver.receiveMessage(currentMessage, object)) {
-          break;
-=======
       lock.lock();
       try {
         if (state == MPIMessage.ReceivedState.DOWN || state == MPIMessage.ReceivedState.INIT) {
@@ -535,7 +445,6 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
           }
           currentMessage.release();
           pendingReceiveMessages.poll();
->>>>>>> 512841c60233c3fe52b637f798e0d788ecbe5e00
         }
       } finally {
         lock.unlock();
@@ -547,15 +456,6 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
    * Progress the serializations
    */
   public void progress() {
-<<<<<<< HEAD
-
-    if (sendProgressTracker.canProgress()) {
-      int sendId = sendProgressTracker.next();
-      /*LOG.info("++++++++++++++++++++++++++++++++++++++++++++++++++");
-      LOG.info(String.format("%d send id %d", executor, sendId));
-      LOG.info(String.format("Progress canProgress: %d send id %d", executor, sendId));
-      LOG.info("++++++++++++++++++++++++++++++++++++++++++++++++++");*/
-=======
     if (partialSendAttempts > 1000000 || sendAttempts > 1000000) {
       String s = "";
       for (Map.Entry<Integer, Queue<MPIBuffer>> e : receiveBuffers.entrySet()) {
@@ -569,11 +469,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
     }
     if (sendProgressTracker.canProgress()) {
       int sendId = sendProgressTracker.next();
->>>>>>> 512841c60233c3fe52b637f798e0d788ecbe5e00
       if (sendId != Integer.MIN_VALUE) {
-        /*LOG.info("++++++++++++++++++++++++++++++++++++++++++++++++++");
-        LOG.info(String.format("Progress sendId: %d send id %d", executor, sendId));
-        LOG.info("++++++++++++++++++++++++++++++++++++++++++++++++++");*/
         sendProgress(pendingSendMessagesPerSource.get(sendId), sendId);
         sendProgressTracker.finish(sendId);
       }
@@ -581,18 +477,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
 
     if (deserializeProgressTracker.canProgress()) {
       int deserializeId = deserializeProgressTracker.next();
-<<<<<<< HEAD
-      /*LOG.info("++++++++++++++++++++++++++++++++++++++++++++++++++");
-      LOG.info(String.format("Deserialized Prgs canPrg: %d send id %d", executor, deserializeId));
-      LOG.info(String.format("%d deserialize id %d", executor, deserializeId));
-      LOG.info("++++++++++++++++++++++++++++++++++++++++++++++++++");*/
-=======
->>>>>>> 512841c60233c3fe52b637f798e0d788ecbe5e00
       if (deserializeId != Integer.MIN_VALUE) {
-        /*LOG.info("++++++++++++++++++++++++++++++++++++++++++++++++++");
-        LOG.info(String.format("Deserialized Prg desrldI: %d send id %d", executor, deserializeId));
-        LOG.info("Message Content : " + pendingReceiveDeSerializations.get(deserializeId).poll());
-        LOG.info("++++++++++++++++++++++++++++++++++++++++++++++++++");*/
         receiveDeserializeProgress(
             pendingReceiveDeSerializations.get(deserializeId).poll(), deserializeId);
         deserializeProgressTracker.finish(deserializeId);
@@ -601,18 +486,8 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
 
     if (receiveProgressTracker.canProgress()) {
       int receiveId = receiveProgressTracker.next();
-<<<<<<< HEAD
-      /*LOG.info("++++++++++++++++++++++++++++++++++++++++++++++++++");
-      LOG.info(String.format("Received Progress canProgress: %d send id %d", executor, receiveId));
-      LOG.info("++++++++++++++++++++++++++++++++++++++++++++++++++");*/
-//      LOG.log(Level.INFO, String.format("%d receive id %d", executor, receiveId));
-=======
->>>>>>> 512841c60233c3fe52b637f798e0d788ecbe5e00
       if (receiveId != Integer.MIN_VALUE) {
-        /*LOG.info("++++++++++++++++++++++++++++++++++++++++++++++++++");
-        LOG.info(String.format("Received Prg received ID : %d send id %d", executor, receiveId));
-        LOG.info("++++++++++++++++++++++++++++++++++++++++++++++++++");*/
-        receiveProgress(pendingReceiveMessagesPerSource.get(receiveId)); //vb:flag:works here
+        receiveProgress(pendingReceiveMessagesPerSource.get(receiveId));
         receiveProgressTracker.finish(receiveId);
       }
     }

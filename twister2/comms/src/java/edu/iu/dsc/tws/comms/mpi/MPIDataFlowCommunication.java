@@ -92,14 +92,14 @@ public class MPIDataFlowCommunication implements TWSCommunication {
                                   Set<Integer> sourceTasks, int destTask,
                                   MessageReceiver receiver) {
 
-    /*LOG.info("==============================================");
+    LOG.info("==============================================");
     LOG.info("MessageType : " + type.toString());
     LOG.info("Edge  : " + edge);
     LOG.info("SourceTask Size : " + sourceTasks.size());
     LOG.info("SourceTask : " + sourceTasks.iterator().next());
     LOG.info("DestTask  ID: " + destTask);
     LOG.info("MessageReceiver : " + receiver.toString());
-    LOG.info("==============================================");*/
+    LOG.info("==============================================");
     // merge with the user specified configuration, user specified will take precedence
     Config mergedCfg = Config.newBuilder().putAll(config).putAll(properties).build();
 
