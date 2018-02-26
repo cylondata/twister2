@@ -397,6 +397,8 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
       if (!receiver.receiveMessage(currentMessage, operationMemoryManager)) {
         return;
       }
+      currentMessage.incrementRefCount();
+      currentMessage.release();
     } else {
       Object object = messageDeSerializer.get(receiveId).build(currentMessage,
           currentMessage.getHeader().getEdge());
@@ -678,7 +680,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
       //TODO : need to make the memory manager available globally
       opertionID = (int) System.currentTimeMillis();
       this.kryoSerializer = new KryoSerializer();
-      Path dataPath = new Path("/home/pulasthi/work/twister2/lmdbdatabas:");
+      Path dataPath = new Path("/home/pulasthi/work/twister2/lmdbdatabase_" + this.executor);
       this.memoryManager = new LMDBMemoryManager(dataPath);
       if (!isKeyed) {
         this.operationMemoryManager = memoryManager.addOperation(opertionID,
