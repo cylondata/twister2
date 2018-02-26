@@ -11,11 +11,16 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi.io.allreduce;
 
+import java.util.logging.Logger;
+
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.mpi.MPIDataFlowBroadcast;
 import edu.iu.dsc.tws.comms.mpi.io.reduce.ReduceStreamingReceiver;
 
 public class AllReduceStreamingFinalReceiver extends ReduceStreamingReceiver {
+  private static final Logger LOG = Logger.getLogger(
+      AllReduceStreamingFinalReceiver.class.getName());
+
   private MPIDataFlowBroadcast bcast;
   private int task;
   private int count = 0;

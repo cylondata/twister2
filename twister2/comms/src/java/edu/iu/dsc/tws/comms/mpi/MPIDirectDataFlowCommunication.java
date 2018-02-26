@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -40,7 +41,8 @@ import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
  * A direct data flow operation sends peer to peer messages
  */
 public class MPIDirectDataFlowCommunication implements DataFlowOperation, MPIMessageReceiver {
-  private static final Logger LG = Logger.getLogger(MPIDirectDataFlowCommunication.class.getName());
+  private static final Logger LOG = Logger.getLogger(
+      MPIDirectDataFlowCommunication.class.getName());
   private Set<Integer> sources;
   private int destination;
   private DirectRouter router;
@@ -62,16 +64,17 @@ public class MPIDirectDataFlowCommunication implements DataFlowOperation, MPIMes
   @Override
   public boolean receiveMessage(MPIMessage currentMessage, Object object) {
     MessageHeader header = currentMessage.getHeader();
-    LG.info("================================================");
-    LG.info("MessageHeader : " + header.toString());
-    LG.info("MPIMessage : " + currentMessage.toString());
-    LG.info("Message Object : " + object.toString());
-    LG.info("Source ID : " + header.getSourceId());
-    LG.info("Source ID : " + header.getSourceId());
-    LG.info("================================================");
+    LOG.info("================================================");
+    LOG.info("MessageHeader : " + header.toString());
+    LOG.info("MPIMessage : " + currentMessage.toString());
+    LOG.info("Message Object : " + object.toString());
+    LOG.info("Source ID : " + header.getSourceId());
+    LOG.info("Source ID : " + header.getSourceId());
+    LOG.info("================================================");
 
     // check weather this message is for a sub task
-    return finalReceiver.onMessage(header.getSourceId(), 0, destination, header.getFlags(), object);
+    return finalReceiver.onMessage(header.getSourceId(), 0,
+        destination, header.getFlags(), object);
   }
 
   @Override
@@ -132,7 +135,8 @@ public class MPIDirectDataFlowCommunication implements DataFlowOperation, MPIMes
     MessageDeSerializer messageDeSerializer = new MPIMessageDeSerializer(new KryoSerializer());
     deSerializerMap.put(destination, messageDeSerializer);
     delegete.init(cfg, t, taskPlan, edge, router.receivingExecutors(),
-        isLastReceiver(), this, pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
+        isLastReceiver(), this, pendingSendMessagesPerSource,
+        pendingReceiveMessagesPerSource,
         pendingReceiveDeSerializations, serializerMap, deSerializerMap, false);
   }
 
@@ -143,17 +147,18 @@ public class MPIDirectDataFlowCommunication implements DataFlowOperation, MPIMes
 
   @Override
   public boolean send(int source, Object message, int flags) {
-    LG.info("================================================");
-    LG.info("Source : " + source);
-    LG.info("Message : " + message.toString());
-    LG.info("Flags : " + flags);
-    LG.info("================================================");
+    LOG.info("================================================");
+    LOG.info("Source : " + source);
+    LOG.info("Message : " + message.toString());
+    LOG.info("Flags : " + flags);
+    LOG.info("================================================");
     return delegete.sendMessage(source, message, 0, flags, sendRoutingParameters(source, 0));
   }
 
   @Override
   public boolean send(int source, Object message, int flags, int dest) {
-    return delegete.sendMessage(source, message, dest, flags, sendRoutingParameters(source, dest));
+    return delegete.sendMessage(source, message, dest, flags,
+        sendRoutingParameters(source, dest));
   }
 
   @Override
@@ -163,8 +168,13 @@ public class MPIDirectDataFlowCommunication implements DataFlowOperation, MPIMes
 
   @Override
   public void progress() {
-    delegete.progress();
-    finalReceiver.progress();
+    try {
+      delegete.progress();
+      finalReceiver.progress();
+    } catch (Throwable t) {
+      LOG.log(Level.SEVERE, "un-expected error", t);
+      throw new RuntimeException(t);
+    }
   }
 
   @Override

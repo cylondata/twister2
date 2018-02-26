@@ -19,6 +19,7 @@ import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -163,12 +164,6 @@ public class MPIDataFlowBroadcast implements DataFlowOperation, MPIMessageReceiv
       deSerializerMap.put(e, new MPIMessageDeSerializer(new KryoSerializer()));
     }
 
-    KryoSerializer kryoSerializer = new KryoSerializer();
-    kryoSerializer.init(new HashMap<String, Object>());
-
-    MessageDeSerializer messageDeSerializer = new MPIMessageDeSerializer(kryoSerializer);
-    MessageSerializer messageSerializer = new MPIMessageSerializer(kryoSerializer);
-
     delegete.init(cfg, t, tPlan, ed,
         router.receivingExecutors(), router.isLastReceiver(), this,
         pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
@@ -182,7 +177,6 @@ public class MPIDataFlowBroadcast implements DataFlowOperation, MPIMessageReceiv
 
   @Override
   public boolean send(int src, Object message, int flags) {
-    LOG.info(String.format("%d Bcast send message", executor));
     return delegete.sendMessage(src, message, 0, flags, sendRoutingParameters(src, 0));
   }
 
@@ -198,13 +192,18 @@ public class MPIDataFlowBroadcast implements DataFlowOperation, MPIMessageReceiv
 
   @Override
   public void progress() {
-    delegete.progress();
-    if (lock.tryLock()) {
-      try {
-        finalReceiver.progress();
-      } finally {
-        lock.unlock();
+    try {
+      delegete.progress();
+      if (lock.tryLock()) {
+        try {
+          finalReceiver.progress();
+        } finally {
+          lock.unlock();
+        }
       }
+    } catch (Throwable t) {
+      LOG.log(Level.SEVERE, "un-expected error", t);
+      throw new RuntimeException(t);
     }
   }
 

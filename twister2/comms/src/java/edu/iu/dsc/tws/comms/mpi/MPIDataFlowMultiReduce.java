@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -88,11 +89,16 @@ public class MPIDataFlowMultiReduce implements DataFlowOperation {
 
   @Override
   public void progress() {
-    for (MPIDataFlowReduce reduce : reduceMap.values()) {
-      reduce.progress();
+    try {
+      for (MPIDataFlowReduce reduce : reduceMap.values()) {
+        reduce.progress();
+      }
+      finalReceiver.progress();
+      partialReceiver.progress();
+    } catch (Throwable t) {
+      LOG.log(Level.SEVERE, "un-expected error", t);
+      throw new RuntimeException(t);
     }
-    finalReceiver.progress();
-    partialReceiver.progress();
   }
 
   @Override
