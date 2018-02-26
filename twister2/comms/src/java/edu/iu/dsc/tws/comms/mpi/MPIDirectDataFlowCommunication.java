@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -49,6 +50,8 @@ public class MPIDirectDataFlowCommunication implements DataFlowOperation, MPIMes
   private Config config;
   private TaskPlan instancePlan;
   private int executor;
+  private MessageType type;
+  private AtomicBoolean finalReceiverProgress;
 
   public MPIDirectDataFlowCommunication(TWSChannel channel,
                                         Set<Integer> srcs, int dest,
@@ -57,6 +60,7 @@ public class MPIDirectDataFlowCommunication implements DataFlowOperation, MPIMes
     this.destination = dest;
     this.finalReceiver = finalRcvr;
     this.delegete = new MPIDataFlowOperation(channel);
+    this.finalReceiverProgress = new AtomicBoolean(false);
   }
 
   @Override
@@ -71,7 +75,9 @@ public class MPIDirectDataFlowCommunication implements DataFlowOperation, MPIMes
     LG.info("================================================");
 
     // check weather this message is for a sub task
-    return finalReceiver.onMessage(header.getSourceId(), 0, destination, header.getFlags(), object);
+    return finalReceiver.onMessage(
+        header.getSourceId(), MPIContext.DEFAULT_PATH,
+        destination, header.getFlags(), object);
   }
 
   @Override
@@ -103,11 +109,19 @@ public class MPIDirectDataFlowCommunication implements DataFlowOperation, MPIMes
    */
   public void init(Config cfg, MessageType t, TaskPlan taskPlan, int edge) {
 
-    this.router = new DirectRouter(taskPlan, sources, destination);
+    this.config = cfg;
+    this.instancePlan = taskPlan;
+    this.type = t;
+    this.router = new DirectRouter(taskPlan, sources, destination); // assume working:vibhatha
 
-
-    if (this.finalReceiver != null && isLastReceiver()) {
+    if (this.finalReceiver != null) { // isLastReciever ??? : vibhatha
+      LG.info("====================================================");
+      LG.info("Final Recieve Null Check and IsLastReceiverCheck");
+      LG.info("====================================================");
       this.finalReceiver.init(cfg, this, receiveExpectedTaskIds());
+    } else {
+      LG.info("Final Receiver Not Called");
+      //throw new RuntimeException("Final receiver is required");
     }
 
     Map<Integer, ArrayBlockingQueue<Pair<Object, MPISendMessage>>> pendingSendMessagesPerSource =
@@ -116,24 +130,110 @@ public class MPIDirectDataFlowCommunication implements DataFlowOperation, MPIMes
     Map<Integer, Queue<MPIMessage>> pendingReceiveDeSerializations = new HashMap<>();
     Map<Integer, MessageSerializer> serializerMap = new HashMap<>();
     Map<Integer, MessageDeSerializer> deSerializerMap = new HashMap<>();
-
+    /***
+     * Original Code Start
+     * */
     Set<Integer> srcs = TaskPlanUtils.getTasksOfThisExecutor(taskPlan, sources);
-    for (int s : srcs) {
+    /*for (int s : srcs) {
+      // later look at how not to allocate pairs for this each time
+      ArrayBlockingQueue<Pair<Object, MPISendMessage>> pendingSendMessages =
+          new ArrayBlockingQueue<Pair<Object, MPISendMessage>>(
+              MPIContext.sendPendingMax(config));
+      pendingSendMessagesPerSource.put(s, pendingSendMessages);
+      pendingReceiveDeSerializations.put(s, new ArrayBlockingQueue<MPIMessage>(
+          MPIContext.sendPendingMax(config)));
+      serializerMap.put(s, new MPIMessageSerializer(new KryoSerializer()));
+    }*/
+    /*LG.info("++++++++++++++++++++++++++++++++++++++++++++++");
+    LG.info("pendingReceiveDeSerializations size : " + pendingReceiveDeSerializations.size());
+    if (pendingReceiveDeSerializations.size() > 0) {
+      LG.info("Message Content  pendingReceiveDeSerializations : "
+      + pendingReceiveDeSerializations.get(0).poll());
+    }
+    LG.info("++++++++++++++++++++++++++++++++++++++++++++++");*/
+
+    /***
+     * Original Code Ends
+     * */
+
+
+    /**
+     * Section Start : Testing Direct
+     * */
+
+    Set<Integer> myexecutors = router.receivingExecutors();
+    Set<Integer> mysources = router.allSendTasks();
+
+    LG.info("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+    LG.info("Sources : " + mysources.size());
+    LG.info("Executors : " + myexecutors.size());
+    if (mysources.iterator().hasNext()) {
+      LG.info("Source 1 : " + mysources.iterator().next());
+    }
+    if (myexecutors.iterator().hasNext()) {
+      LG.info("Executor 1 : " + myexecutors.iterator().next());
+    }
+
+    for (int s : mysources) {
       // later look at how not to allocate pairs for this each time
       ArrayBlockingQueue<Pair<Object, MPISendMessage>> pendingSendMessages =
           new ArrayBlockingQueue<Pair<Object, MPISendMessage>>(
               MPIContext.sendPendingMax(cfg));
       pendingSendMessagesPerSource.put(s, pendingSendMessages);
-      pendingReceiveDeSerializations.put(s, new ArrayBlockingQueue<MPIMessage>(
-          MPIContext.sendPendingMax(cfg)));
       serializerMap.put(s, new MPIMessageSerializer(new KryoSerializer()));
     }
 
-    MessageDeSerializer messageDeSerializer = new MPIMessageDeSerializer(new KryoSerializer());
+    int maxReceiveBuffers = MPIContext.receiveBufferCount(cfg);
+    int receiveExecutorsSize = myexecutors.size();
+    if (receiveExecutorsSize == 0) {
+      receiveExecutorsSize = 1;
+    }
+
+    Set<Integer> execs = router.receivingExecutors();
+    for (int e : execs) {
+      int capacity = maxReceiveBuffers * 2 * receiveExecutorsSize;
+      LG.info("Capacity : " + capacity);
+      Queue<Pair<Object, MPIMessage>> pendingReceiveMessages =
+          new ArrayBlockingQueue<Pair<Object, MPIMessage>>(
+              capacity);
+      pendingReceiveMessagesPerSource.put(e, pendingReceiveMessages);
+      pendingReceiveDeSerializations.put(e, new ArrayBlockingQueue<MPIMessage>(capacity));
+      deSerializerMap.put(e, new MPIMessageDeSerializer(new KryoSerializer()));
+    }
+
+    MPIMessage mpimsg = pendingReceiveDeSerializations.get(0).poll();
+    LG.info("MPI Message : " + mpimsg);
+
+    KryoSerializer kryoSerializer = new KryoSerializer();
+    kryoSerializer.init(new HashMap<String, Object>());
+
+    MessageDeSerializer messageDeSerializer = new MPIMessageDeSerializer(kryoSerializer);
+    MessageSerializer messageSerializer = new MPIMessageSerializer(kryoSerializer);
+
+    delegete.init(cfg, t, taskPlan, edge,
+        router.receivingExecutors(), router.isLastReceiver(), this,
+        pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
+        pendingReceiveDeSerializations, serializerMap, deSerializerMap, false);
+
+    LG.info("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+
+    /**
+     * Section End : Testing Direct
+     * */
+
+    /***
+     * Original Code Starts
+     * */
+
+   /* MessageDeSerializer messageDeSerializer = new MPIMessageDeSerializer(new KryoSerializer());
     deSerializerMap.put(destination, messageDeSerializer);
     delegete.init(cfg, t, taskPlan, edge, router.receivingExecutors(),
         isLastReceiver(), this, pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
-        pendingReceiveDeSerializations, serializerMap, deSerializerMap, false);
+        pendingReceiveDeSerializations, serializerMap, deSerializerMap, false);*/
+
+    /***
+     * Original Code Ends
+     * */
   }
 
   @Override
@@ -143,11 +243,11 @@ public class MPIDirectDataFlowCommunication implements DataFlowOperation, MPIMes
 
   @Override
   public boolean send(int source, Object message, int flags) {
-    LG.info("================================================");
+    /*LG.info("================================================");
     LG.info("Source : " + source);
     LG.info("Message : " + message.toString());
     LG.info("Flags : " + flags);
-    LG.info("================================================");
+    LG.info("================================================");*/
     return delegete.sendMessage(source, message, 0, flags, sendRoutingParameters(source, 0));
   }
 
@@ -165,6 +265,10 @@ public class MPIDirectDataFlowCommunication implements DataFlowOperation, MPIMes
   public void progress() {
     delegete.progress();
     finalReceiver.progress();
+    /*if (finalReceiverProgress.compareAndSet(false, true)) {
+      finalReceiver.progress();
+      finalReceiverProgress.compareAndSet(true, false);
+    }*/
   }
 
   @Override

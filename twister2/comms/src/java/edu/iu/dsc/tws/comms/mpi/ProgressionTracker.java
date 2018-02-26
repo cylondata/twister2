@@ -14,17 +14,19 @@ package edu.iu.dsc.tws.comms.mpi;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.logging.Logger;
 
 public class ProgressionTracker {
   private Queue<Integer> progressItems;
-
+  private static final Logger LOG = Logger.getLogger(ProgressionTracker.class.getName());
   private boolean canProgress;
 
   public ProgressionTracker(Set<Integer> items) {
     if (items.size() == 0) {
+      LOG.info("ITem Size : " + items.size());
       canProgress = false;
     } else {
-
+      LOG.info("ITem Size : " + items.size());
       canProgress = true;
       this.progressItems = new ArrayBlockingQueue<>(items.size());
       for (int i : items) {
