@@ -79,6 +79,8 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
 
   private ThreadLocal<Txn<ByteBuffer>> threadReadTxn;
   private ThreadLocal<Txn<ByteBuffer>> threadWriteTxn;
+  private ThreadLocal<Cursor<ByteBuffer>> threadWriteCursor;
+  private ThreadLocal<Boolean> threadNeedCommit;
 
   public LMDBMemoryManager(Path dataPath) {
     this.lmdbDataPath = dataPath;
@@ -113,6 +115,9 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
 //        readTxns.push(env.txnRead());
 //      }
       threadReadTxn = new ThreadLocal<>();
+      threadWriteTxn = new ThreadLocal<>();
+      threadWriteCursor = new ThreadLocal<>();
+      threadNeedCommit = new ThreadLocal<>();
     } catch (RuntimeException e) {
       throw new RuntimeException("Error while creating LMDB database at Path "
           + lmdbDataPath.toString(), e);
@@ -139,6 +144,14 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
 
     if (threadReadTxn.get() == null) {
       threadReadTxn.set(env.txnRead());
+    }
+    if (threadNeedCommit.get() != null && threadNeedCommit.get()) {
+      threadWriteTxn.get().commit();
+      threadWriteTxn.get().close();
+
+      threadWriteTxn.set(env.txnWrite());
+      threadWriteCursor.set(currentDB.openCursor(threadWriteTxn.get()));
+      threadNeedCommit.set(false);
     }
     // details in LMDB for clarity
     // To fetch any data from LMDB we need a Txn. A Txn is very important in
@@ -272,6 +285,14 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
     if (threadReadTxn.get() == null) {
       threadReadTxn.set(env.txnRead());
     }
+    if (threadNeedCommit.get() != null && threadNeedCommit.get()) {
+      threadWriteTxn.get().commit();
+      threadWriteTxn.get().close();
+
+      threadWriteTxn.set(env.txnWrite());
+      threadWriteCursor.set(currentDB.openCursor(threadWriteTxn.get()));
+      threadNeedCommit.set(false);
+    }
     Txn<ByteBuffer> txn = threadReadTxn.get();
     txn.reset();
     txn.renew();
@@ -390,8 +411,15 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
       LOG.info("Key size lager than 511 bytes which is the limit for LMDB key values");
       return false;
     }
+    if (threadWriteTxn.get() == null) {
+      threadWriteTxn.set(env.txnWrite());
+      threadWriteCursor.set(currentDB.openCursor(threadWriteTxn.get()));
+      threadNeedCommit.set(false);
+    }
 
-    currentDB.put(key, value);
+    threadWriteCursor.get().put(key, value);
+    threadNeedCommit.set(true);
+//    currentDB.put(key, value);
     return true;
   }
 
@@ -522,7 +550,18 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
       LOG.info("Key size lager than 511 bytes which is the limit for LMDB key values");
       return false;
     }
-    return currentDB.delete(key);
+    if (threadNeedCommit.get() != null) {
+      threadWriteTxn.get().commit();
+      threadWriteTxn.get().close();
+    }
+    currentDB.delete(key);
+
+    if (threadNeedCommit.get() != null) {
+      threadWriteTxn.set(env.txnWrite());
+      threadWriteCursor.set(currentDB.openCursor(threadWriteTxn.get()));
+      threadNeedCommit.set(false);
+    }
+    return true;
   }
 
   /*@Override
@@ -559,14 +598,41 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
    */
   @Override
   public OperationMemoryManager addOperation(int opID, DataMessageType messageType) {
+    Dbi<ByteBuffer> currentDB = dbMap.get(opID);
+
+    if (threadNeedCommit.get() != null) {
+      threadWriteTxn.get().commit();
+      threadWriteTxn.get().close();
+    }
+
     dbMap.put(opID, env.openDbi(String.valueOf(opID), MDB_CREATE));
+
+    if (threadNeedCommit.get() != null) {
+      threadWriteTxn.set(env.txnWrite());
+      threadWriteCursor.set(currentDB.openCursor(threadWriteTxn.get()));
+      threadNeedCommit.set(false);
+    }
+
     return new OperationMemoryManager(opID, messageType, this);
   }
 
   @Override
   public OperationMemoryManager addOperation(int opID, DataMessageType messageType,
                                              DataMessageType keyType) {
+    Dbi<ByteBuffer> currentDB = dbMap.get(opID);
+
+    if (threadNeedCommit.get() != null) {
+      threadWriteTxn.get().commit();
+      threadWriteTxn.get().close();
+    }
+
     dbMap.put(opID, env.openDbi(String.valueOf(opID), MDB_CREATE));
+
+    if (threadNeedCommit.get() != null) {
+      threadWriteTxn.set(env.txnWrite());
+      threadWriteCursor.set(currentDB.openCursor(threadWriteTxn.get()));
+      threadNeedCommit.set(false);
+    }
     return new OperationMemoryManager(opID, messageType, keyType, this);
   }
 
@@ -640,6 +706,16 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
     }
     List<Object> results = new ArrayList<>();
     Dbi<ByteBuffer> currentDB = dbMap.get(opID);
+
+    if (threadNeedCommit.get() != null && threadNeedCommit.get()) {
+      threadWriteTxn.get().commit();
+      threadWriteTxn.get().close();
+
+      threadWriteTxn.set(env.txnWrite());
+      threadWriteCursor.set(currentDB.openCursor(threadWriteTxn.get()));
+      threadNeedCommit.set(false);
+    }
+
     Txn<ByteBuffer> txn = threadReadTxn.get();
     txn.reset();
     txn.renew();
@@ -672,6 +748,14 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
     }
     List<Object> results = new ArrayList<>();
     Dbi<ByteBuffer> currentDB = dbMap.get(opID);
+    if (threadNeedCommit.get() != null && threadNeedCommit.get()) {
+      threadWriteTxn.get().commit();
+      threadWriteTxn.get().close();
+
+      threadWriteTxn.set(env.txnWrite());
+      threadWriteCursor.set(currentDB.openCursor(threadWriteTxn.get()));
+      threadNeedCommit.set(false);
+    }
     Txn<ByteBuffer> txn = threadReadTxn.get();
     txn.reset();
     txn.renew();
