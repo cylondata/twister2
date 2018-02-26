@@ -203,15 +203,15 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
 
   private void initProgressTrackers() {
     Set<Integer> items = pendingSendMessagesPerSource.keySet();
-    LOG.info(String.format("%d pendingSendMessagesPerSource %s", executor, items));
+//    LOG.info(String.format("%d pendingSendMessagesPerSource %s", executor, items));
     sendProgressTracker = new ProgressionTracker(items);
 
     Set<Integer> items1 = pendingReceiveMessagesPerSource.keySet();
-    LOG.info(String.format("%d pendingReceiveMessagesPerSource %s", executor, items1));
+//    LOG.info(String.format("%d pendingReceiveMessagesPerSource %s", executor, items1));
     receiveProgressTracker = new ProgressionTracker(items1);
 
     Set<Integer> items2 = pendingReceiveDeSerializations.keySet();
-    LOG.info(String.format("%d pendingReceiveDeSerializations %s", executor, items1));
+//    LOG.info(String.format("%d pendingReceiveDeSerializations %s", executor, items1));
     deserializeProgressTracker = new ProgressionTracker(items2);
   }
 
@@ -391,12 +391,14 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
 
     //If this is the last receiver we save to memory store
     if (isStoreBased && isLastReceiver) {
-      LOG.info("Store based");
+//      LOG.info("Store based");
       writeToMemoryManager(currentMessage, receiveId);
       currentMessage.setReceivedState(MPIMessage.ReceivedState.RECEIVE);
       if (!receiver.receiveMessage(currentMessage, operationMemoryManager)) {
         return;
       }
+      currentMessage.incrementRefCount();
+      currentMessage.release();
     } else {
       Object object = messageDeSerializer.get(receiveId).build(currentMessage,
           currentMessage.getHeader().getEdge());
@@ -678,7 +680,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
       //TODO : need to make the memory manager available globally
       opertionID = (int) System.currentTimeMillis();
       this.kryoSerializer = new KryoSerializer();
-      Path dataPath = new Path("/home/pulasthi/work/twister2/lmdbdatabas:");
+      Path dataPath = new Path("/home/pulasthi/work/twister2/lmdbdatabase_" + this.executor);
       this.memoryManager = new LMDBMemoryManager(dataPath);
       if (!isKeyed) {
         this.operationMemoryManager = memoryManager.addOperation(opertionID,

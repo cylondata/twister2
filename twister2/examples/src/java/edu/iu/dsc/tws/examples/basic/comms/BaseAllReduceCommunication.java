@@ -24,9 +24,9 @@ import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
+import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
@@ -174,7 +174,7 @@ public class BaseAllReduceCommunication implements IContainer {
     }
   }
 
-  private class FinalReduceReceive implements MessageReceiver {
+  private class FinalReduceReceive implements ReduceReceiver {
     private int count = 0;
     public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
       for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
@@ -184,18 +184,13 @@ public class BaseAllReduceCommunication implements IContainer {
     }
 
     @Override
-    public boolean onMessage(int source, int path, int target, int flags, Object object) {
+    public boolean receive(int target, Object object) {
       count++;
       if (count % 100 == 0) {
-        LOG.info("Message received for last: " + source + " target: "
+        LOG.info("Message received for last target: "
             + target + " count: " + count);
       }
       return true;
-    }
-
-    @Override
-    public void progress() {
-
     }
   }
 

@@ -38,7 +38,7 @@ public final class MessageTypeConverter {
       case DOUBLE:
         return DataMessageType.DOUBLE;
       case OBJECT:
-        return DataMessageType.DOUBLE;
+        return DataMessageType.OBJECT;
       case BUFFER:
         return DataMessageType.BUFFER;
       case EMPTY:

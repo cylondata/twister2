@@ -17,6 +17,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
@@ -27,6 +29,7 @@ import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 
 public class MPIDataFlowMultiGather implements DataFlowOperation {
+  private static final Logger LOG = Logger.getLogger(MPIDataFlowMultiGather.class.getName());
   // the source tasks
   protected Set<Integer> sources;
 
@@ -105,13 +108,18 @@ public class MPIDataFlowMultiGather implements DataFlowOperation {
 
   @Override
   public void progress() {
-    for (MPIDataFlowGather reduce : gatherMap.values()) {
-      reduce.progress();
+    try {
+      for (MPIDataFlowGather reduce : gatherMap.values()) {
+        reduce.progress();
+      }
+      if (partialReceiver != null) {
+        partialReceiver.progress();
+      }
+      finalReceiver.progress();
+    } catch (Throwable t) {
+      LOG.log(Level.SEVERE, "un-expected error", t);
+      throw new RuntimeException(t);
     }
-    if (partialReceiver != null) {
-      partialReceiver.progress();
-    }
-    finalReceiver.progress();
   }
 
   @Override

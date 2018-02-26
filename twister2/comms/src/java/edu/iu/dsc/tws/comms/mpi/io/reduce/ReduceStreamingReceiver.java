@@ -112,6 +112,7 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
 //      if (onMessageAttempts > 1000000 || progressAttempts > 1000000) {
 //        LOG.info(String.format("%d REDUCE %s %s", executor, counts, totalCountMap));
 //      }
+//      LOG.info(String.format("%d REDUCE %s %s", executor, counts, totalCountMap));
 
       while (canProgress) {
         boolean found = true;

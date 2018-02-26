@@ -11,6 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi.io.reduce;
 
+import java.util.List;
+import java.util.Map;
+
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 
@@ -20,6 +25,12 @@ public class ReduceStreamingFinalReceiver extends ReduceStreamingReceiver {
   public ReduceStreamingFinalReceiver(ReduceFunction function, ReduceReceiver receiver) {
     super(function);
     this.reduceReceiver = receiver;
+  }
+
+  @Override
+  public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+    super.init(cfg, op, expectedIds);
+    this.reduceReceiver.init(cfg, op, expectedIds);
   }
 
   @Override

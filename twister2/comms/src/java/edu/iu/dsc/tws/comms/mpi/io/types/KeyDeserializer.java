@@ -42,7 +42,7 @@ public final class KeyDeserializer {
       case INTEGER:
         currentIndex = getReadIndex(buffers, currentIndex, 4);
         ByteBuffer byteBuffer = buffers.get(currentIndex).getByteBuffer();
-        LOG.info(String.format("Key deserialize position %d", byteBuffer.position()));
+//        LOG.info(String.format("Key deserialize position %d", byteBuffer.position()));
         key = byteBuffer.getInt();
         keyLength = 4;
         break;

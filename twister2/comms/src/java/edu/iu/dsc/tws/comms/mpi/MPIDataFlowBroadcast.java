@@ -17,7 +17,9 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -56,7 +58,7 @@ public class MPIDataFlowBroadcast implements DataFlowOperation, MPIMessageReceiv
   private MessageType type;
   private Map<Integer, ArrayBlockingQueue<Pair<Object, MPISendMessage>>>
       pendingSendMessagesPerSource = new HashMap<>();
-  private AtomicBoolean finalReceiverProgress;
+  private Lock lock = new ReentrantLock();
 
   public MPIDataFlowBroadcast(TWSChannel channel, int src, Set<Integer> dests,
                               MessageReceiver finalRcvr) {
@@ -65,7 +67,6 @@ public class MPIDataFlowBroadcast implements DataFlowOperation, MPIMessageReceiv
     this.finalReceiver = finalRcvr;
 
     this.delegete = new MPIDataFlowOperation(channel);
-    this.finalReceiverProgress = new AtomicBoolean(false);
   }
 
   @Override
@@ -163,12 +164,6 @@ public class MPIDataFlowBroadcast implements DataFlowOperation, MPIMessageReceiv
       deSerializerMap.put(e, new MPIMessageDeSerializer(new KryoSerializer()));
     }
 
-    KryoSerializer kryoSerializer = new KryoSerializer();
-    kryoSerializer.init(new HashMap<String, Object>());
-
-    MessageDeSerializer messageDeSerializer = new MPIMessageDeSerializer(kryoSerializer);
-    MessageSerializer messageSerializer = new MPIMessageSerializer(kryoSerializer);
-
     delegete.init(cfg, t, tPlan, ed,
         router.receivingExecutors(), router.isLastReceiver(), this,
         pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
@@ -197,10 +192,18 @@ public class MPIDataFlowBroadcast implements DataFlowOperation, MPIMessageReceiv
 
   @Override
   public void progress() {
-    delegete.progress();
-    if (finalReceiverProgress.compareAndSet(false, true)) {
-      finalReceiver.progress();
-      finalReceiverProgress.compareAndSet(true, false);
+    try {
+      delegete.progress();
+      if (lock.tryLock()) {
+        try {
+          finalReceiver.progress();
+        } finally {
+          lock.unlock();
+        }
+      }
+    } catch (Throwable t) {
+      LOG.log(Level.SEVERE, "un-expected error", t);
+      throw new RuntimeException(t);
     }
   }
 

@@ -21,6 +21,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -308,22 +309,27 @@ public class MPIDataFlowReduce implements DataFlowOperation, MPIMessageReceiver 
 
   @Override
   public void progress() {
-    delegete.progress();
+    try {
+      delegete.progress();
 
-    if (lock.tryLock()) {
-      try {
-        finalReceiver.progress();
-      } finally {
-        lock.unlock();
+      if (lock.tryLock()) {
+        try {
+          finalReceiver.progress();
+        } finally {
+          lock.unlock();
+        }
       }
-    }
 
-    if (partialLock.tryLock()) {
-      try {
-        partialReceiver.progress();
-      } finally {
-        partialLock.unlock();
+      if (partialLock.tryLock()) {
+        try {
+          partialReceiver.progress();
+        } finally {
+          partialLock.unlock();
+        }
       }
+    } catch (Throwable t) {
+      LOG.log(Level.SEVERE, "un-expected error", t);
+      throw new RuntimeException(t);
     }
   }
 
