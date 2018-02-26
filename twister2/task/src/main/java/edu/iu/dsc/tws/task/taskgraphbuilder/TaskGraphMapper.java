@@ -72,10 +72,35 @@ public abstract class TaskGraphMapper implements Runnable {
     return this;
   }
 
-  public TaskGraphMapper addInputData(String inputFileName, Object... taskInputValues) {
+  public TaskGraphMapper addInputData(String inputFileName, Object... taskInputObjects) {
     try {
       if (!this.taskInputFilesMap.containsKey(inputFileName)) {
-        this.taskInputFilesMap.put(inputFileName, new ArrayList<>());
+        this.taskInputFilesMap.put(inputFileName, new ArrayList<>()); //store the taskinput objects
+      }
+    } catch (Exception ie) {
+      ie.printStackTrace();
+    }
+    return this;
+  }
+
+  public TaskGraphMapper addOutputData(Map<String, List<TaskOutputFiles>> taskOutputFiles) {
+    try {
+      taskOutputFiles.entrySet().forEach(stringListEntry -> {
+        if (!this.taskOutputFilesMap.containsKey(stringListEntry.getKey())) {
+          this.taskOutputFilesMap.put(stringListEntry.getKey(), new ArrayList<>());
+        }
+      });
+    } catch (Exception ie) {
+      ie.printStackTrace();
+    }
+    return this;
+  }
+
+  public TaskGraphMapper addOutputData(String outputFileName, Object... taskOutputObjects) {
+    try {
+      if (!this.taskOutputFilesMap.containsKey(outputFileName)) {
+        this.taskOutputFilesMap.put(outputFileName, new ArrayList<>());
+        //store the taskoutput objects
       }
     } catch (Exception ie) {
       ie.printStackTrace();
@@ -83,3 +108,4 @@ public abstract class TaskGraphMapper implements Runnable {
     return this;
   }
 }
+
