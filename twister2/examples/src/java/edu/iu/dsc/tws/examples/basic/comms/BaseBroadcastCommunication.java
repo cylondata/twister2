@@ -31,6 +31,9 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.JobConfig;
+import edu.iu.dsc.tws.api.Twister2Submitter;
+import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
@@ -40,7 +43,9 @@ import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.examples.IntData;
 import edu.iu.dsc.tws.examples.Utils;
+import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
+import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
 public class BaseBroadcastCommunication implements IContainer {
@@ -128,7 +133,7 @@ public class BaseBroadcastCommunication implements IContainer {
     @Override
     public void run() {
       LOG.log(Level.INFO, "Starting map worker");
-      for (int i = 0; i < 5; i++) {
+      for (int i = 0; i < 1000; i++) {
         IntData data = generateData();
         // lets generate a message
 //        LOG.info("Sending message from task:" + NO_OF_TASKS);
@@ -186,4 +191,22 @@ public class BaseBroadcastCommunication implements IContainer {
     return new IntData(d);
   }
 
+  public static void main(String[] args) {
+    // first load the configurations from command line and config files
+    Config config = ResourceAllocator.loadConfig(new HashMap<>());
+
+    // build JobConfig
+    JobConfig jobConfig = new JobConfig();
+
+    // build the job
+    BasicJob basicJob = BasicJob.newBuilder()
+        .setName("basic-broadcast")
+        .setContainerClass(BaseBroadcastCommunication.class.getName())
+        .setRequestResource(new ResourceContainer(2, 1024), 4)
+        .setConfig(jobConfig)
+        .build();
+
+    // now submit the job
+    Twister2Submitter.submitContainerJob(basicJob, config);
+  }
 }

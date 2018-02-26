@@ -49,7 +49,10 @@ public class ProgressionTracker {
   }
 
   public void finish(int item) {
-    progressItems.offer(item);
+    boolean offer = progressItems.offer(item);
+    if (!offer) {
+      throw new RuntimeException("We should always accept");
+    }
   }
 
   public boolean canProgress() {

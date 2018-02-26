@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.mpi.io;
+package edu.iu.dsc.tws.comms.mpi.io.gather;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,9 +20,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
-import edu.iu.dsc.tws.comms.mpi.MPIContext;
 import edu.iu.dsc.tws.comms.mpi.MPIMessage;
 
 public class StreamingPartialGatherReceiver implements MessageReceiver {
@@ -31,23 +29,28 @@ public class StreamingPartialGatherReceiver implements MessageReceiver {
   // lets keep track of the messages
   // for each task we need to keep track of incoming messages
   private Map<Integer, Map<Integer, List<Object>>> messages = new TreeMap<>();
+  private Map<Integer, Map<Integer, Integer>> counts = new HashMap<>();
+  private int currentIndex = 0;
   private DataFlowOperation dataFlowOperation;
   private int executor;
-  private int sendPendingMax = 128;
+  private String threadName;
 
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     executor = op.getTaskPlan().getThisExecutor();
-    sendPendingMax = MPIContext.sendPendingMax(cfg);
 
     LOG.info(String.format("%d expected ids %s", executor, expectedIds));
     for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
       Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
+      Map<Integer, Integer> countsPerTask = new HashMap<>();
 
       for (int i : e.getValue()) {
         messagesPerTask.put(i, new ArrayList<Object>());
+        countsPerTask.put(i, 0);
       }
+
       messages.put(e.getKey(), messagesPerTask);
+      counts.put(e.getKey(), countsPerTask);
     }
     this.dataFlowOperation = op;
     this.executor = dataFlowOperation.getTaskPlan().getThisExecutor();
@@ -58,27 +61,53 @@ public class StreamingPartialGatherReceiver implements MessageReceiver {
     // add the object to the map
     boolean canAdd = true;
 
+    if (this.threadName == null) {
+      this.threadName = Thread.currentThread().getName();
+    }
+    String tn = Thread.currentThread().getName();
+    if (!tn.equals(threadName)) {
+      throw new RuntimeException(String.format("%d Threads are not equal %s %s",
+          executor, threadName, tn));
+    }
     if (messages.get(target) == null) {
       throw new RuntimeException(String.format("%d Partial receive error %d", executor, target));
     }
     List<Object> m = messages.get(target).get(source);
-    if (m.size() > sendPendingMax) {
+    Integer c = counts.get(target).get(source);
+    if (m.size() > 16) {
       canAdd = false;
+//       LOG.info(String.format("%d Partial false: target %d source %d", executor, target, source));
     } else {
+      // we need to increment the reference count to make the buffers available
+      // other wise they will bre reclaimed
+//        LOG.info(String.format("%d Partial true: target %d source %d %s",
+//            executor, target, source, counts.get(target)));
       if (object instanceof MPIMessage) {
         ((MPIMessage) object).incrementRefCount();
       }
       m.add(object);
+      counts.get(target).put(source, c + 1);
     }
     return canAdd;
   }
 
+  @Override
   public void progress() {
+    if (this.threadName == null) {
+      this.threadName = Thread.currentThread().getName();
+    }
+    String tn = Thread.currentThread().getName();
+    if (!tn.equals(threadName)) {
+      throw new RuntimeException(String.format("%d Threads are not equal %s %s",
+          executor, threadName, tn));
+    }
+
     for (int t : messages.keySet()) {
       boolean canProgress = true;
       while (canProgress) {
         // now check weather we have the messages for this source
         Map<Integer, List<Object>> map = messages.get(t);
+        Map<Integer, Integer> cMap = counts.get(t);
         boolean found = true;
         for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
           if (e.getValue().size() == 0) {
@@ -87,16 +116,27 @@ public class StreamingPartialGatherReceiver implements MessageReceiver {
           }
         }
 
+        if (map.entrySet().size() == 0) {
+          LOG.info(String.format("%d entry size is ZERO %d %s", executor, t, counts));
+        }
+
         if (found) {
           List<Object> out = new ArrayList<>();
           for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
             Object e1 = e.getValue().get(0);
             out.add(e1);
           }
-          if (dataFlowOperation.sendPartial(t, out, 0, MessageFlags.FLAGS_MULTI_MSG)) {
+          if (handleMessage(t, out, 0, t)) {
             for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
               List<Object> value = e.getValue();
+              if (value.size() == 0) {
+                LOG.info(String.format("%d list size ZERO task %d %d", executor, t, e.getKey()));
+              }
               value.remove(0);
+            }
+            for (Map.Entry<Integer, Integer> e : cMap.entrySet()) {
+              Integer i = e.getValue();
+              e.setValue(i - 1);
             }
           } else {
             canProgress = false;
@@ -104,5 +144,9 @@ public class StreamingPartialGatherReceiver implements MessageReceiver {
         }
       }
     }
+  }
+
+  protected boolean handleMessage(int task, Object message, int flags, int dest) {
+    return dataFlowOperation.sendPartial(task, message, flags, dest);
   }
 }

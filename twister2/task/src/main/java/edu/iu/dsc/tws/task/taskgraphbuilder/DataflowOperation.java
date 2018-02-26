@@ -9,21 +9,16 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.mpi.io;
+package edu.iu.dsc.tws.task.taskgraphbuilder;
 
-import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.api.ReduceReceiver;
+/**This is an example class to specify the dataflow operations
+ * such as "MAP", "REDUCE", "SHUFFLE", and others.
+ */
+public class DataflowOperation {
 
-public class ReduceStreamingFinalReceiver extends ReduceStreamingReceiver {
-  private ReduceReceiver reduceReceiver;
+  public String dataflowOperation;
 
-  public ReduceStreamingFinalReceiver(ReduceFunction function, ReduceReceiver receiver) {
-    super(function);
-    this.reduceReceiver = receiver;
-  }
-
-  @Override
-  public boolean handleMessage(int source, Object message, int flags, int dest) {
-    return reduceReceiver.receive(source, message);
+  public DataflowOperation(String dataflowoperation) {
+    this.dataflowOperation = dataflowoperation;
   }
 }

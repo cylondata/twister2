@@ -33,6 +33,21 @@ public class DataflowTaskGraphGenerator implements IDataflowTaskGraphGenerator {
   private IDataflowTaskGraph<Task, DataFlowOperation> dataflowGraph =
       new DataflowTaskGraph<>(DataFlowOperation.class);
 
+  /**
+   * Newly added code for defining the task edges as dataflow operations namely
+   * Map, Reduce, Shuffle, and others.
+   */
+  private IDataflowTaskGraph<Task, DataflowOperation> taskgraph =
+      new DataflowTaskGraph<>(DataflowOperation.class);
+
+  public IDataflowTaskGraph<Task, DataflowOperation> getTaskgraph() {
+    return taskgraph;
+  }
+
+  public void setTaskgraph(IDataflowTaskGraph<Task,
+      DataflowOperation> taskgraph) {
+    this.taskgraph = taskgraph;
+  }
 
   public IDataflowTaskGraph<TaskMapper, DataflowTaskEdge> getTaskGraph() {
     return taskGraph;
@@ -108,6 +123,23 @@ public class DataflowTaskGraphGenerator implements IDataflowTaskGraphGenerator {
     return this;
   }
 
+  public DataflowTaskGraphGenerator generateTaskGraph(Task task1,
+                                                      Task task2,
+                                                      DataflowOperation... dataflowOperation) {
+    LOGGER.info("**** Task Graph Generation Initiated ****");
+    try {
+      this.taskgraph.addTaskVertex(task1);
+      this.taskgraph.addTaskVertex(task2);
+      for (DataflowOperation dataFlowOperation1 : dataflowOperation) {
+        this.taskgraph.addTaskEdge(task1, task2, dataflowOperation[0]);
+      }
+    } catch (IllegalArgumentException iae) {
+      iae.printStackTrace();
+    }
+    LOGGER.info("Generated Dataflow Task Graph Is:" + taskGraph);
+    return this;
+  }
+
   public void removeTaskVertex(TaskMapper mapperTask) {
     System.out.println("Mapper task done to be removed:" + mapperTask);
     this.dataflowTaskGraph.removeTaskVertex(mapperTask);
@@ -121,7 +153,7 @@ public class DataflowTaskGraphGenerator implements IDataflowTaskGraphGenerator {
   }
 
   /**
-   * It should be implemented later for the required use cases.
+   * It would be implemented later for the required use cases.
    */
   @Override
   public DataflowTaskGraphGenerator generateTaskGraph(
@@ -131,7 +163,7 @@ public class DataflowTaskGraphGenerator implements IDataflowTaskGraphGenerator {
   }
 
   /**
-   * It should be implemented later for the required use cases.
+   * It would be implemented later for the required use cases.
    */
   @Override
   public DataflowTaskGraphGenerator generateDataflowTaskGraph(
@@ -140,6 +172,3 @@ public class DataflowTaskGraphGenerator implements IDataflowTaskGraphGenerator {
     return this;
   }
 }
-
-
-

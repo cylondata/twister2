@@ -19,6 +19,8 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.MultiMessageReceiver;
+import edu.iu.dsc.tws.comms.api.ReduceFunction;
+import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 
 public interface TWSCommunication {
@@ -50,8 +52,9 @@ public interface TWSCommunication {
                               int edge1, int edge2,
                               Set<Integer> sourceTasks, Set<Integer> destTasks,
                               int middleTask,
-                              MessageReceiver receiver,
-                              MessageReceiver partial);
+                              ReduceFunction reduceFunction,
+                              ReduceReceiver recediver,
+                              boolean stream);
 
   DataFlowOperation gather(Map<String, Object> properties, MessageType type,
                            int edge1,
@@ -85,7 +88,12 @@ public interface TWSCommunication {
                                 Set<Integer> sourceTasks, Set<Integer> destTasks,
                                 MultiMessageReceiver receiver, MultiMessageReceiver partialRecvr);
 
+  DataFlowOperation partition(Map<String, Object> properties, MessageType type, int edge1,
+                              Set<Integer> sourceTasks, Set<Integer> destTasks,
+                              MessageReceiver receiver);
+
   DataFlowOperation partition(Map<String, Object> properties, MessageType type,
+                              MessageType keyType, int edge1,
                               Set<Integer> sourceTasks, Set<Integer> destTasks,
                               MessageReceiver receiver);
 }

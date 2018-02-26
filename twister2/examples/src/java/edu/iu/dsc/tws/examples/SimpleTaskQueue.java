@@ -67,6 +67,12 @@ public class SimpleTaskQueue implements IContainer {
 
   private TaskExecutorFixedThread taskExecutor;
 
+  private int id;
+
+  private Config config;
+
+  private ResourcePlan resourcePlan;
+
   private enum Status {
     INIT,
     MAP_FINISHED,
@@ -79,15 +85,20 @@ public class SimpleTaskQueue implements IContainer {
    * Initialize the container
    */
   public void init(Config cfg, int containerId, ResourcePlan plan) {
+
+    this.config = cfg;
+    this.id = containerId;
+    this.resourcePlan = plan;
+
     LOG.log(Level.INFO, "Starting the example with container id: " + plan.getThisId());
     //Creates task an task executor instance to be used in this container
     taskExecutor = new TaskExecutorFixedThread();
     this.status = Status.INIT;
 
     // lets create the task plan
-    TaskPlan taskPlan = Utils.createTaskPlan(cfg, plan);
+    TaskPlan taskPlan = Utils.createTaskPlan(config, plan);
     //first get the communication config file
-    TWSNetwork network = new TWSNetwork(cfg, taskPlan);
+    TWSNetwork network = new TWSNetwork(config, taskPlan);
 
     TWSCommunication channel = network.getDataFlowTWSCommunication();
 
@@ -97,9 +108,6 @@ public class SimpleTaskQueue implements IContainer {
     int dests = 1;
     Map<String, Object> newCfg = new HashMap<>();
 
-    LOG.info("-------------------------------------------");
-    LOG.info("Setting up reduce dataflow operation");
-    LOG.info("-------------------------------------------");
     // this method calls the init method
     // I think this is wrong
     //TODO: Does the task genereate the communication or is it done by a controller for examples
@@ -149,6 +157,17 @@ public class SimpleTaskQueue implements IContainer {
 
     @Override
     public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+      /*LOG.info("===============================================");
+      LOG.info("PingPongReciever init : ");
+      LOG.info("Size ExpectedIds : " + expectedIds.size());
+      LOG.info("===============================================");*/
+
+      for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
+        LOG.info("****************************************");
+        LOG.info(String.format("%d Final Task %d receives from %s",
+            id, e.getKey(), e.getValue().toString()));
+        LOG.info("****************************************");
+      }
     }
 
     @Override
@@ -158,14 +177,14 @@ public class SimpleTaskQueue implements IContainer {
       LOG.info("Received message: " + count);
       LOG.info("-------------------------------------------");
 
-      if (count % 50000 == 0) {
+      if (count % 10 == 0) {
         LOG.info("-------------------------------------------");
         LOG.info("Special received message: " + count);
         LOG.info("-------------------------------------------");
       }
       taskExecutor.submitMessage(0, "" + count);
 
-      if (count == 100000) {
+      if (count == 50) {
         status = Status.LOAD_RECEIVE_FINISHED;
       }
       return true;
@@ -173,7 +192,7 @@ public class SimpleTaskQueue implements IContainer {
 
     @Override
     public void progress() {
-
+      //LOG.info("Ping PONG RECEIVE");
     }
   }
 
@@ -188,6 +207,9 @@ public class SimpleTaskQueue implements IContainer {
 
     @Override
     public Message execute() {
+
+      LOG.info("Receive Worker ");
+
       return null;
     }
 

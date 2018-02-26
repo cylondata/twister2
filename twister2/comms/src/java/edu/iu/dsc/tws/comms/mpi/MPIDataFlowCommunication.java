@@ -20,6 +20,8 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.MultiMessageReceiver;
+import edu.iu.dsc.tws.comms.api.ReduceFunction;
+import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
@@ -146,15 +148,14 @@ public class MPIDataFlowCommunication implements TWSCommunication {
                                      int edge1, int edge2,
                                      Set<Integer> sourceTasks, Set<Integer> destTasks,
                                      int middleTask,
-                                     MessageReceiver receiver,
-                                     MessageReceiver partial) {
+                                     ReduceFunction reduceFunction,
+                                     ReduceReceiver receiver,
+                                     boolean stream) {
     // merge with the user specified configuration, user specified will take precedence
     Config mergedCfg = Config.newBuilder().putAll(config).putAll(properties).build();
-
     // create the dataflow operation
     MPIDataFlowAllReduce dataFlowOperation = new MPIDataFlowAllReduce(channel,
-        sourceTasks, destTasks, middleTask, receiver, partial, edge1, edge2);
-
+        sourceTasks, destTasks, middleTask, reduceFunction, receiver, edge1, edge2, stream);
     // intialize the operation
     dataFlowOperation.init(mergedCfg, type, instancePlan, 0);
     return dataFlowOperation;
@@ -261,7 +262,7 @@ public class MPIDataFlowCommunication implements TWSCommunication {
   }
 
   @Override
-  public DataFlowOperation partition(Map<String, Object> properties, MessageType type,
+  public DataFlowOperation partition(Map<String, Object> properties, MessageType type, int edge1,
                                      Set<Integer> sourceTasks, Set<Integer> destTasks,
                                      MessageReceiver receiver) {
     // merge with the user specified configuration, user specified will take precedence
@@ -270,7 +271,23 @@ public class MPIDataFlowCommunication implements TWSCommunication {
     MPIDataFlowPartition dataFlowOperation = new MPIDataFlowPartition(channel,
         sourceTasks, destTasks, receiver, MPIDataFlowPartition.PartitionStratergy.DIRECT);
 
-    dataFlowOperation.init(mergedCfg, type, instancePlan, 0);
+    dataFlowOperation.init(mergedCfg, type, instancePlan, edge1);
+    return dataFlowOperation;
+  }
+
+  @Override
+  public DataFlowOperation partition(Map<String, Object> properties, MessageType type,
+                                     MessageType keyType, int edge1,
+                                     Set<Integer> sourceTasks, Set<Integer> destTasks,
+                                     MessageReceiver receiver) {
+    // merge with the user specified configuration, user specified will take precedence
+    Config mergedCfg = Config.newBuilder().putAll(config).putAll(properties).build();
+
+    MPIDataFlowPartition dataFlowOperation = new MPIDataFlowPartition(channel,
+        sourceTasks, destTasks, receiver, MPIDataFlowPartition.PartitionStratergy.DIRECT,
+        type, keyType);
+
+    dataFlowOperation.init(mergedCfg, type, instancePlan, edge1);
     return dataFlowOperation;
   }
 }

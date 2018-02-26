@@ -42,7 +42,7 @@ public final class KeyDeserializer {
       case INTEGER:
         currentIndex = getReadIndex(buffers, currentIndex, 4);
         ByteBuffer byteBuffer = buffers.get(currentIndex).getByteBuffer();
-        LOG.info(String.format("Key deserialize position %d", byteBuffer.position()));
+//        LOG.info(String.format("Key deserialize position %d", byteBuffer.position()));
         key = byteBuffer.getInt();
         keyLength = 4;
         break;
@@ -147,6 +147,7 @@ public final class KeyDeserializer {
   }
 
   private static byte[] readBytes(List<MPIBuffer> buffers, int length) {
+
     byte[] bytes = new byte[length];
     int currentRead = 0;
     int index = 0;
@@ -158,7 +159,7 @@ public final class KeyDeserializer {
       byteBuffer.get(bytes, currentRead, canRead);
       currentRead += canRead;
       index++;
-      if (index >= buffers.size()) {
+      if (currentRead < length && index >= buffers.size()) {
         throw new RuntimeException("Error in buffer management");
       }
     }

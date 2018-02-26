@@ -30,8 +30,8 @@ import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.mpi.io.ReduceStreamingFinalReceiver;
-import edu.iu.dsc.tws.comms.mpi.io.ReduceStreamingPartialReceiver;
+import edu.iu.dsc.tws.comms.mpi.io.reduce.ReduceStreamingFinalReceiver;
+import edu.iu.dsc.tws.comms.mpi.io.reduce.ReduceStreamingPartialReceiver;
 import edu.iu.dsc.tws.examples.IntData;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -93,7 +93,7 @@ public class BaseReduceHLCommunication implements IContainer {
       // I think this is wrong
       reduce = channel.reduce(newCfg, MessageType.OBJECT, 0, sources,
           dest, new ReduceStreamingFinalReceiver(new IdentityFunction(), new FinalReduceReceiver()),
-          new ReduceStreamingPartialReceiver(new IdentityFunction()));
+          new ReduceStreamingPartialReceiver(dest, new IdentityFunction()));
 
       for (int i = 0; i < noOfTasksPerExecutor; i++) {
         // the map thread where data is produced
@@ -132,25 +132,22 @@ public class BaseReduceHLCommunication implements IContainer {
     public void run() {
       try {
         LOG.log(Level.INFO, "Starting map worker: " + id);
-//      MPIBuffer data = new MPIBuffer(1024);
         IntData data = generateData();
-        for (int i = 0; i < 11000; i++) {
+        for (int i = 0; i < 6000; i++) {
           // lets generate a message
           while (!reduce.send(task, data, 0)) {
             // lets wait a litte and try again
-            try {
-              Thread.sleep(1);
-            } catch (InterruptedException e) {
-              e.printStackTrace();
-            }
+            reduce.progress();
+            Thread.yield();
+//            Thread.sleep(1);
           }
 //          LOG.info(String.format("%d sending to %d", id, task)
 //              + " count: " + sendCount++);
-          if (i % 1000 == 0) {
+          if (i % 100 == 0 || i > 5990) {
             LOG.info(String.format("%d sent %d", id, i));
           }
-          Thread.yield();
         }
+
         LOG.info(String.format("%d Done sending", id));
         status = Status.MAP_FINISHED;
       } catch (Throwable t) {
@@ -183,7 +180,7 @@ public class BaseReduceHLCommunication implements IContainer {
     @Override
     public boolean receive(int target, Object object) {
       count++;
-      if (count % 100 == 0) {
+      if (count > 5900 || count % 10 == 0) {
         LOG.info(String.format("Received %d", count));
       }
       return true;

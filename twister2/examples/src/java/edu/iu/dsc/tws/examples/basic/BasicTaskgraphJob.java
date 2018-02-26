@@ -17,12 +17,12 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.examples.basic.comms.BaseBroadcastCommunication;
+import edu.iu.dsc.tws.examples.SimpleTaskgraph;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 
-public final class BasicBroadcastJob {
-  private BasicBroadcastJob() {
+public final class BasicTaskgraphJob {
+  private BasicTaskgraphJob() {
   }
 
   public static void main(String[] args) {
@@ -34,9 +34,9 @@ public final class BasicBroadcastJob {
 
     // build the job
     BasicJob basicJob = BasicJob.newBuilder()
-        .setName("basic-broadcast")
-        .setContainerClass(BaseBroadcastCommunication.class.getName())
-        .setRequestResource(new ResourceContainer(2, 1024), 4)
+        .setName("basic-taskgraphJob")
+        .setContainerClass(SimpleTaskgraph.class.getName())
+        .setRequestResource(new ResourceContainer(2, 1024), 2)
         .setConfig(jobConfig)
         .build();
 
@@ -44,3 +44,4 @@ public final class BasicBroadcastJob {
     Twister2Submitter.submitContainerJob(basicJob, config);
   }
 }
+

@@ -18,7 +18,9 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -64,7 +66,9 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
   private TaskPlan instancePlan;
   private int executor;
   private MessageType type;
-  private AtomicBoolean finalReceiverProgress;
+  private MessageType keyType;
+  private boolean isKeyed;
+  private Lock lock = new ReentrantLock();
 
   /**
    * A place holder for keeping the internal and external destinations
@@ -73,6 +77,15 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
   private class Destinations {
     List<Integer> internal = new ArrayList<>();
     List<Integer> external = new ArrayList<>();
+  }
+
+  public MPIDataFlowPartition(TWSChannel channel, Set<Integer> sourceTasks, Set<Integer> destTasks,
+                              MessageReceiver receiver, PartitionStratergy partitionStratergy,
+                              MessageType type, MessageType keyType) {
+    this(channel, sourceTasks, destTasks, receiver, partitionStratergy);
+    this.isKeyed = true;
+    this.keyType = keyType;
+    this.type = type;
   }
 
   public MPIDataFlowPartition(TWSChannel channel, Set<Integer> srcs,
@@ -90,16 +103,11 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
     }
 
     this.finalReceiver = finalRcvr;
-    this.finalReceiverProgress = new AtomicBoolean(false);
   }
 
 
   /**
    * Initialize
-   * @param cfg
-   * @param t
-   * @param taskPlan
-   * @param edge
    */
   public void init(Config cfg, MessageType t, TaskPlan taskPlan, int edge) {
     this.thisSources = TaskPlanUtils.getTasksOfThisExecutor(taskPlan, sources);
@@ -130,7 +138,7 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
 
     LOG.info(String.format("%d done adding internal/external routing",
         taskPlan.getThisExecutor()));
-
+    //TODO : Does this send the correct receiveExpectedTaskIds for partition communication
     if (this.finalReceiver != null && isLastReceiver()) {
       this.finalReceiver.init(cfg, this, receiveExpectedTaskIds());
     }
@@ -177,7 +185,8 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
     delegete.init(cfg, t, taskPlan, edge,
         router.receivingExecutors(), router.isLastReceiver(), this,
         pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
-        pendingReceiveDeSerializations, serializerMap, deSerializerMap, false);
+        pendingReceiveDeSerializations, serializerMap, deSerializerMap, isKeyed);
+    delegete.setKeyType(keyType);
   }
 
   @Override
@@ -202,11 +211,18 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
 
   @Override
   public void progress() {
-    delegete.progress();
-    if (finalReceiverProgress.compareAndSet(false, true)) {
-//      LOG.info("Final progreessss");
-      finalReceiver.progress();
-      finalReceiverProgress.compareAndSet(true, false);
+    try {
+      delegete.progress();
+      if (lock.tryLock()) {
+        try {
+          finalReceiver.progress();
+        } finally {
+          lock.unlock();
+        }
+      }
+    } catch (Throwable t) {
+      LOG.log(Level.SEVERE, "un-expected error", t);
+      throw new RuntimeException(t);
     }
   }
 
@@ -290,10 +306,8 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
 
   public boolean receiveMessage(MPIMessage currentMessage, Object object) {
     MessageHeader header = currentMessage.getHeader();
-
     return finalReceiver.onMessage(header.getSourceId(), MPIContext.DEFAULT_PATH,
-        router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
-            MPIContext.DEFAULT_PATH), header.getFlags(), object);
+        header.getDestinationIdentifier(), header.getFlags(), object);
   }
 
   protected boolean isLastReceiver() {

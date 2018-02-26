@@ -46,6 +46,11 @@ public class DataflowTaskGraphParser implements IDataflowTaskGraphParser {
     return processedTaskVertices;
   }
 
+  @Override
+  public Set<Task> taskGraphParseAndSchedule() {
+    return null;
+  }
+
   //This method will be used in the future.
   @Override
   public Set<Task> dataflowTaskGraphParseAndSchedule(int containerId) {

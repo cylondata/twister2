@@ -31,8 +31,8 @@ import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.mpi.io.ReduceBatchFinalReceiver;
-import edu.iu.dsc.tws.comms.mpi.io.ReduceBatchPartialReceiver;
+import edu.iu.dsc.tws.comms.mpi.io.reduce.ReduceBatchFinalReceiver;
+import edu.iu.dsc.tws.comms.mpi.io.reduce.ReduceBatchPartialReceiver;
 import edu.iu.dsc.tws.examples.IntData;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -126,8 +126,9 @@ public class BaseReduceBatchCommunication implements IContainer {
           while (!reduce.send(task, data, flag)) {
             // lets wait a litte and try again
             reduce.progress();
+            Thread.yield();
 //            try {
-//              Thread.sleep(1);
+//            Thread.sleep(1);
 //            } catch (InterruptedException e) {
 //              e.printStackTrace();
 //            }

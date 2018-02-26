@@ -9,23 +9,32 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.mpi.io;
+package edu.iu.dsc.tws.comms.mpi.io.reduce;
 
-import java.util.logging.Logger;
+import java.util.List;
+import java.util.Map;
 
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
+import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 
-public class ReduceStreamingPartialReceiver extends ReduceStreamingReceiver {
-  private static final Logger LOG = Logger.getLogger(
-      ReduceStreamingPartialReceiver.class.getName());
+public class ReduceStreamingFinalReceiver extends ReduceStreamingReceiver {
+  private ReduceReceiver reduceReceiver;
 
-  public ReduceStreamingPartialReceiver(ReduceFunction function) {
+  public ReduceStreamingFinalReceiver(ReduceFunction function, ReduceReceiver receiver) {
     super(function);
-    this.reduceFunction = function;
+    this.reduceReceiver = receiver;
+  }
+
+  @Override
+  public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+    super.init(cfg, op, expectedIds);
+    this.reduceReceiver.init(cfg, op, expectedIds);
   }
 
   @Override
   public boolean handleMessage(int source, Object message, int flags, int dest) {
-    return this.operation.sendPartial(source, message, flags, dest);
+    return reduceReceiver.receive(source, message);
   }
 }
