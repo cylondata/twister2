@@ -203,15 +203,15 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
 
   private void initProgressTrackers() {
     Set<Integer> items = pendingSendMessagesPerSource.keySet();
-    LOG.info(String.format("%d pendingSendMessagesPerSource %s", executor, items));
+//    LOG.info(String.format("%d pendingSendMessagesPerSource %s", executor, items));
     sendProgressTracker = new ProgressionTracker(items);
 
     Set<Integer> items1 = pendingReceiveMessagesPerSource.keySet();
-    LOG.info(String.format("%d pendingReceiveMessagesPerSource %s", executor, items1));
+//    LOG.info(String.format("%d pendingReceiveMessagesPerSource %s", executor, items1));
     receiveProgressTracker = new ProgressionTracker(items1);
 
     Set<Integer> items2 = pendingReceiveDeSerializations.keySet();
-    LOG.info(String.format("%d pendingReceiveDeSerializations %s", executor, items1));
+//    LOG.info(String.format("%d pendingReceiveDeSerializations %s", executor, items1));
     deserializeProgressTracker = new ProgressionTracker(items2);
   }
 
