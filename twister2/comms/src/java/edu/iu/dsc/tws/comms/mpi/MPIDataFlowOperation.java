@@ -174,7 +174,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
     int noOfSendBuffers = MPIContext.broadcastBufferCount(config);
     int sendBufferSize = MPIContext.bufferSize(config);
 
-    LOG.info(String.format("%d Send buffer size: %d", executor, sendBufferSize));
+//    LOG.info(String.format("%d Send buffer size: %d", executor, sendBufferSize));
     this.sendBuffers = new ArrayBlockingQueue<MPIBuffer>(noOfSendBuffers);
     for (int i = 0; i < noOfSendBuffers; i++) {
       sendBuffers.offer(new MPIBuffer(sendBufferSize));
@@ -223,7 +223,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
     // we will receive from these
     int maxReceiveBuffers = MPIContext.receiveBufferCount(config);
     int receiveBufferSize = MPIContext.bufferSize(config);
-    LOG.info(String.format("%d Receive buffer size: %d", executor, receiveBufferSize));
+//    LOG.info(String.format("%d Receive buffer size: %d", executor, receiveBufferSize));
     for (Integer recv : receivingExecutors) {
       Queue<MPIBuffer> recvList = new LinkedBlockingQueue<>();
       for (int i = 0; i < maxReceiveBuffers; i++) {
