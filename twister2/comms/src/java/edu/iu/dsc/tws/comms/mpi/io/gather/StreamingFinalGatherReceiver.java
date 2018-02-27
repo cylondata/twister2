@@ -12,9 +12,12 @@
 package edu.iu.dsc.tws.comms.mpi.io.gather;
 
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.GatherBatchReceiver;
 
 public class StreamingFinalGatherReceiver extends StreamingPartialGatherReceiver {
@@ -24,6 +27,12 @@ public class StreamingFinalGatherReceiver extends StreamingPartialGatherReceiver
 
   public StreamingFinalGatherReceiver(GatherBatchReceiver receiver) {
     this.receiver = receiver;
+  }
+
+  @Override
+  public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+    super.init(cfg, op, expectedIds);
+    receiver.init(cfg, op, expectedIds);
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})

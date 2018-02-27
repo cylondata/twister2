@@ -33,7 +33,6 @@ public class StreamingPartialGatherReceiver implements MessageReceiver {
   private int currentIndex = 0;
   private DataFlowOperation dataFlowOperation;
   private int executor;
-  private String threadName;
 
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
@@ -61,14 +60,6 @@ public class StreamingPartialGatherReceiver implements MessageReceiver {
     // add the object to the map
     boolean canAdd = true;
 
-    if (this.threadName == null) {
-      this.threadName = Thread.currentThread().getName();
-    }
-    String tn = Thread.currentThread().getName();
-    if (!tn.equals(threadName)) {
-      throw new RuntimeException(String.format("%d Threads are not equal %s %s",
-          executor, threadName, tn));
-    }
     if (messages.get(target) == null) {
       throw new RuntimeException(String.format("%d Partial receive error %d", executor, target));
     }
@@ -93,15 +84,6 @@ public class StreamingPartialGatherReceiver implements MessageReceiver {
 
   @Override
   public void progress() {
-    if (this.threadName == null) {
-      this.threadName = Thread.currentThread().getName();
-    }
-    String tn = Thread.currentThread().getName();
-    if (!tn.equals(threadName)) {
-      throw new RuntimeException(String.format("%d Threads are not equal %s %s",
-          executor, threadName, tn));
-    }
-
     for (int t : messages.keySet()) {
       boolean canProgress = true;
       while (canProgress) {
