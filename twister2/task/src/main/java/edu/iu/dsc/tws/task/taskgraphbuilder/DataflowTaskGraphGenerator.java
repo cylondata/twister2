@@ -39,6 +39,7 @@ public class DataflowTaskGraphGenerator implements IDataflowTaskGraphGenerator {
    */
   private IDataflowTaskGraph<Task, DataflowOperation> taskgraph =
       new DataflowTaskGraph<>(DataflowOperation.class);
+
   private IDataflowTaskGraph<TaskGraphMapper, DataflowOperation> tGraph =
       new DataflowTaskGraph<>(DataflowOperation.class);
 
@@ -91,15 +92,15 @@ public class DataflowTaskGraphGenerator implements IDataflowTaskGraphGenerator {
     try {
       this.tGraph.addTaskVertex(sourceTask);
       this.tGraph.addTaskVertex(sinkTask);
-      System.out.println("Input Files Are:" + sourceTask.getInputData() + "\t"
-          + "Output Files Are:" + sourceTask.getInputData());
-      for (DataflowOperation dataflowOperation1 : dataflowOperation) {
-        this.tGraph.addTaskEdge(sourceTask, sinkTask, dataflowOperation[0]);
-      }
+      this.tGraph.addTaskEdge(sourceTask, sinkTask, dataflowOperation[0]);
     } catch (IllegalArgumentException iae) {
       iae.printStackTrace();
     }
     LOGGER.info("Generated Dataflow Task Graph Is:" + taskGraph);
+    LOGGER.info("Input Files Are:" + sourceTask.getInputData() + "\t"
+        + "Input Files Are:" + sinkTask.getInputData());
+    LOGGER.info("Generated Dataflow Task Edges:"
+        + this.tGraph.getAllTaskEdges(sourceTask, sinkTask));
     return this;
   }
 
@@ -169,15 +170,15 @@ public class DataflowTaskGraphGenerator implements IDataflowTaskGraphGenerator {
   }
 
   public void removeTaskVertex(TaskMapper mapperTask) {
-    System.out.println("Mapper task done to be removed:" + mapperTask);
+    LOGGER.info("Mapper task done to be removed:" + mapperTask);
     this.dataflowTaskGraph.removeTaskVertex(mapperTask);
-    System.out.println("Now the task graph is:" + this.dataflowTaskGraph);
+    LOGGER.info("Now the task graph is:" + this.dataflowTaskGraph);
   }
 
   public void removeTaskVertex(Task mapperTask) {
-    System.out.println("Mapper task done to be removed:" + mapperTask);
+    LOGGER.info("Mapper task done to be removed:" + mapperTask);
     this.dataflowGraph.removeTaskVertex(mapperTask);
-    System.out.println("Now the task graph is:" + this.dataflowTaskGraph);
+    LOGGER.info("Now the task graph is:" + this.dataflowTaskGraph);
   }
 
   /**
@@ -186,7 +187,6 @@ public class DataflowTaskGraphGenerator implements IDataflowTaskGraphGenerator {
   @Override
   public DataflowTaskGraphGenerator generateTaskGraph(
       Task sourceTask, Task... sinkTask) {
-
     return this;
   }
 
@@ -196,7 +196,6 @@ public class DataflowTaskGraphGenerator implements IDataflowTaskGraphGenerator {
   @Override
   public DataflowTaskGraphGenerator generateDataflowTaskGraph(
       Task sourceTask, Task sinkTask, CManager... cManagerTask) {
-
     return this;
   }
 }

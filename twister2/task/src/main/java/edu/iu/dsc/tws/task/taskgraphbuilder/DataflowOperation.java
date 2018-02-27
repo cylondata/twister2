@@ -11,7 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.taskgraphbuilder;
 
-/**This is an example class to specify the dataflow operations
+/**
+ * This is an example class to specify the dataflow operations
  * such as "MAP", "REDUCE", "SHUFFLE", and others.
  */
 public class DataflowOperation {
