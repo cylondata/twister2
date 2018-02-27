@@ -22,7 +22,7 @@ public class MPIContext extends CommunicationContext {
 
   private static final String SEND_BUFFERS_COUNT = "network.mpi.sendBuffer.count";
   private static final String BCAST_BUFFERS_COUNT = "network.mpi.bcast.sendBuffer.count";
-  private static final String RECEIVE_BUFFERS_COUNT = "network.mpi.receiveBuffer.size";
+  private static final String RECEIVE_BUFFERS_COUNT = "network.mpi.receiveBuffer.count";
   private static final String DISTINCT_ROUTS = "network.mpi.routing.distinct.routes";
   private static final String SEND_PENDING_MAX = "network.mpi.send.pending.max";
 

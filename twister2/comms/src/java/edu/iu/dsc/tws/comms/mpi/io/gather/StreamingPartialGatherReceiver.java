@@ -15,12 +15,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.TreeMap;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.mpi.MPIContext;
 import edu.iu.dsc.tws.comms.mpi.MPIMessage;
 
 public class StreamingPartialGatherReceiver implements MessageReceiver {
@@ -28,24 +31,25 @@ public class StreamingPartialGatherReceiver implements MessageReceiver {
       StreamingPartialGatherReceiver.class.getName());
   // lets keep track of the messages
   // for each task we need to keep track of incoming messages
-  private Map<Integer, Map<Integer, List<Object>>> messages = new TreeMap<>();
+  private Map<Integer, Map<Integer, Queue<Object>>> messages = new TreeMap<>();
   private Map<Integer, Map<Integer, Integer>> counts = new HashMap<>();
   private int currentIndex = 0;
   private DataFlowOperation dataFlowOperation;
   private int executor;
-  private String threadName;
+  private int sendPendingMax;
 
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     executor = op.getTaskPlan().getThisExecutor();
+    this.sendPendingMax = MPIContext.sendPendingMax(cfg);
 
     LOG.info(String.format("%d expected ids %s", executor, expectedIds));
     for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
-      Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
+      Map<Integer, Queue<Object>> messagesPerTask = new HashMap<>();
       Map<Integer, Integer> countsPerTask = new HashMap<>();
 
       for (int i : e.getValue()) {
-        messagesPerTask.put(i, new ArrayList<Object>());
+        messagesPerTask.put(i, new ArrayBlockingQueue<>(sendPendingMax));
         countsPerTask.put(i, 0);
       }
 
@@ -61,20 +65,12 @@ public class StreamingPartialGatherReceiver implements MessageReceiver {
     // add the object to the map
     boolean canAdd = true;
 
-    if (this.threadName == null) {
-      this.threadName = Thread.currentThread().getName();
-    }
-    String tn = Thread.currentThread().getName();
-    if (!tn.equals(threadName)) {
-      throw new RuntimeException(String.format("%d Threads are not equal %s %s",
-          executor, threadName, tn));
-    }
     if (messages.get(target) == null) {
       throw new RuntimeException(String.format("%d Partial receive error %d", executor, target));
     }
-    List<Object> m = messages.get(target).get(source);
+    Queue<Object> m = messages.get(target).get(source);
     Integer c = counts.get(target).get(source);
-    if (m.size() > 16) {
+    if (m.size() >= sendPendingMax) {
       canAdd = false;
 //       LOG.info(String.format("%d Partial false: target %d source %d", executor, target, source));
     } else {
@@ -93,23 +89,14 @@ public class StreamingPartialGatherReceiver implements MessageReceiver {
 
   @Override
   public void progress() {
-    if (this.threadName == null) {
-      this.threadName = Thread.currentThread().getName();
-    }
-    String tn = Thread.currentThread().getName();
-    if (!tn.equals(threadName)) {
-      throw new RuntimeException(String.format("%d Threads are not equal %s %s",
-          executor, threadName, tn));
-    }
-
     for (int t : messages.keySet()) {
       boolean canProgress = true;
       while (canProgress) {
         // now check weather we have the messages for this source
-        Map<Integer, List<Object>> map = messages.get(t);
+        Map<Integer, Queue<Object>> map = messages.get(t);
         Map<Integer, Integer> cMap = counts.get(t);
         boolean found = true;
-        for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
+        for (Map.Entry<Integer, Queue<Object>> e : map.entrySet()) {
           if (e.getValue().size() == 0) {
             found = false;
             canProgress = false;
@@ -122,17 +109,17 @@ public class StreamingPartialGatherReceiver implements MessageReceiver {
 
         if (found) {
           List<Object> out = new ArrayList<>();
-          for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
-            Object e1 = e.getValue().get(0);
+          for (Map.Entry<Integer, Queue<Object>> e : map.entrySet()) {
+            Object e1 = e.getValue().peek();
             out.add(e1);
           }
           if (handleMessage(t, out, 0, t)) {
-            for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
-              List<Object> value = e.getValue();
+            for (Map.Entry<Integer, Queue<Object>> e : map.entrySet()) {
+              Queue<Object> value = e.getValue();
               if (value.size() == 0) {
                 LOG.info(String.format("%d list size ZERO task %d %d", executor, t, e.getKey()));
               }
-              value.remove(0);
+              value.poll();
             }
             for (Map.Entry<Integer, Integer> e : cMap.entrySet()) {
               Integer i = e.getValue();
