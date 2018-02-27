@@ -16,16 +16,13 @@ import java.util.Map;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.GatherBatchReceiver;
 import edu.iu.dsc.tws.comms.mpi.MPIDataFlowBroadcast;
-import edu.iu.dsc.tws.comms.mpi.io.gather.StreamingFinalGatherReceiver;
+import edu.iu.dsc.tws.comms.mpi.io.gather.StreamingPartialGatherReceiver;
 
-public class AllGatherStreamingFinalReceiver extends StreamingFinalGatherReceiver {
+public class AllGatherStreamingFinalReceiver extends StreamingPartialGatherReceiver {
   private MPIDataFlowBroadcast broadcast;
 
-  public AllGatherStreamingFinalReceiver(MPIDataFlowBroadcast broadcast,
-                                         GatherBatchReceiver gatherRecvr) {
-    super(gatherRecvr);
+  public AllGatherStreamingFinalReceiver(MPIDataFlowBroadcast broadcast) {
     this.broadcast = broadcast;
   }
 
