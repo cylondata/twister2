@@ -49,7 +49,7 @@ public class StreamingPartialGatherReceiver implements MessageReceiver {
       Map<Integer, Integer> countsPerTask = new HashMap<>();
 
       for (int i : e.getValue()) {
-        messagesPerTask.put(i, new ArrayBlockingQueue<>(sendPendingMax * 4));
+        messagesPerTask.put(i, new ArrayBlockingQueue<>(sendPendingMax));
         countsPerTask.put(i, 0);
       }
 
@@ -70,7 +70,7 @@ public class StreamingPartialGatherReceiver implements MessageReceiver {
     }
     Queue<Object> m = messages.get(target).get(source);
     Integer c = counts.get(target).get(source);
-    if (m.size() >= sendPendingMax * 4) {
+    if (m.size() >= sendPendingMax) {
       canAdd = false;
 //       LOG.info(String.format("%d Partial false: target %d source %d", executor, target, source));
     } else {
