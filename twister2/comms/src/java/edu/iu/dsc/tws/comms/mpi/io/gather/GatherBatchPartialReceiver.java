@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -29,7 +31,7 @@ public class GatherBatchPartialReceiver implements MessageReceiver {
 
   // lets keep track of the messages
   // for each task we need to keep track of incoming messages
-  private Map<Integer, Map<Integer, List<Object>>> messages = new HashMap<>();
+  private Map<Integer, Map<Integer, Queue<Object>>> messages = new HashMap<>();
   private Map<Integer, Map<Integer, Integer>> counts = new HashMap<>();
   private Map<Integer, Map<Integer, Boolean>> finished = new HashMap<>();
   private DataFlowOperation dataFlowOperation;
@@ -49,12 +51,12 @@ public class GatherBatchPartialReceiver implements MessageReceiver {
 
     LOG.fine(String.format("%d gather partial expected ids %s", executor, expectedIds));
     for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
-      Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
+      Map<Integer, Queue<Object>> messagesPerTask = new HashMap<>();
       Map<Integer, Boolean> finishedPerTask = new HashMap<>();
       Map<Integer, Integer> countsPerTask = new HashMap<>();
 
       for (int i : e.getValue()) {
-        messagesPerTask.put(i, new ArrayList<Object>());
+        messagesPerTask.put(i, new ArrayBlockingQueue<>(sendPendingMax));
         finishedPerTask.put(i, false);
         countsPerTask.put(i, 0);
       }
@@ -75,10 +77,10 @@ public class GatherBatchPartialReceiver implements MessageReceiver {
     if (messages.get(target) == null) {
       throw new RuntimeException(String.format("%d Partial receive error %d", executor, target));
     }
-    List<Object> m = messages.get(target).get(source);
+    Queue<Object> m = messages.get(target).get(source);
     Map<Integer, Boolean> finishedMessages = finished.get(target);
 
-    if (m.size() > sendPendingMax) {
+    if (m.size() >= sendPendingMax) {
       canAdd = false;
     } else {
       if (object instanceof MPIMessage) {
@@ -104,12 +106,12 @@ public class GatherBatchPartialReceiver implements MessageReceiver {
       boolean canProgress = true;
       while (canProgress) {
         // now check weather we have the messages for this source
-        Map<Integer, List<Object>> map = messages.get(t);
+        Map<Integer, Queue<Object>> map = messages.get(t);
         Map<Integer, Boolean> finishedForTarget = finished.get(t);
         Map<Integer, Integer> countMap = counts.get(t);
         boolean found = true;
         boolean allFinished = true;
-        for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
+        for (Map.Entry<Integer, Queue<Object>> e : map.entrySet()) {
           if (e.getValue().size() == 0 && !finishedForTarget.get(e.getKey())) {
             found = false;
             canProgress = false;
@@ -122,18 +124,18 @@ public class GatherBatchPartialReceiver implements MessageReceiver {
 
         if (found) {
           List<Object> out = new ArrayList<>();
-          for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
-            List<Object> valueList = e.getValue();
+          for (Map.Entry<Integer, Queue<Object>> e : map.entrySet()) {
+            Queue<Object> valueList = e.getValue();
             if (valueList.size() > 0) {
-              Object value = valueList.get(0);
+              Object value = valueList.peek();
               out.add(value);
             }
           }
           int flags = 0;
           if (allFinished) {
             boolean last = true;
-            for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
-              List<Object> valueList = e.getValue();
+            for (Map.Entry<Integer, Queue<Object>> e : map.entrySet()) {
+              Queue<Object> valueList = e.getValue();
               if (valueList.size() > 1) {
                 last = false;
               }
@@ -144,10 +146,10 @@ public class GatherBatchPartialReceiver implements MessageReceiver {
           }
           if (dataFlowOperation.sendPartial(t, out, flags, destination)) {
             boolean allZero = true;
-            for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
-              List<Object> value = e.getValue();
+            for (Map.Entry<Integer, Queue<Object>> e : map.entrySet()) {
+              Queue<Object> value = e.getValue();
               if (value.size() > 0) {
-                value.remove(0);
+                value.poll();
               }
               if (value.size() != 0) {
                 allZero = false;
