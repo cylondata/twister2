@@ -32,6 +32,7 @@ public abstract class TaskGraphMapper implements Runnable {
       TaskGraphMapper.class.getName());
 
   private final String taskId;
+
   private Map<String, List<TaskInputFiles>> taskInputFilesMap =
       new HashMap<>();
   private Map<String, List<TaskOutputFiles>> taskOutputFilesMap =
@@ -72,10 +73,15 @@ public abstract class TaskGraphMapper implements Runnable {
     return this;
   }
 
+  public Map<String, List<TaskInputFiles>> getInputData() {
+    return this.taskInputFilesMap;
+  }
+
   public TaskGraphMapper addInputData(String inputFileName, Object... taskInputObjects) {
     try {
       if (!this.taskInputFilesMap.containsKey(inputFileName)) {
-        this.taskInputFilesMap.put(inputFileName, new ArrayList<>()); //store the taskinput objects
+        this.taskInputFilesMap.put(inputFileName, new ArrayList<>());
+        //store the taskinput objects
       }
     } catch (Exception ie) {
       ie.printStackTrace();
@@ -106,6 +112,10 @@ public abstract class TaskGraphMapper implements Runnable {
       ie.printStackTrace();
     }
     return this;
+  }
+
+  public Map<String, List<TaskOutputFiles>> getOutputData() {
+    return this.taskOutputFilesMap;
   }
 }
 

@@ -39,6 +39,8 @@ public class DataflowTaskGraphGenerator implements IDataflowTaskGraphGenerator {
    */
   private IDataflowTaskGraph<Task, DataflowOperation> taskgraph =
       new DataflowTaskGraph<>(DataflowOperation.class);
+  private IDataflowTaskGraph<TaskGraphMapper, DataflowOperation> tGraph =
+      new DataflowTaskGraph<>(DataflowOperation.class);
 
   public IDataflowTaskGraph<Task, DataflowOperation> getTaskgraph() {
     return taskgraph;
@@ -47,6 +49,14 @@ public class DataflowTaskGraphGenerator implements IDataflowTaskGraphGenerator {
   public void setTaskgraph(IDataflowTaskGraph<Task,
       DataflowOperation> taskgraph) {
     this.taskgraph = taskgraph;
+  }
+
+  public IDataflowTaskGraph<TaskGraphMapper, DataflowOperation> getTGraph() {
+    return tGraph;
+  }
+
+  public void setTGraph(IDataflowTaskGraph<TaskGraphMapper, DataflowOperation> tgraph) {
+    this.tGraph = tgraph;
   }
 
   public IDataflowTaskGraph<TaskMapper, DataflowTaskEdge> getTaskGraph() {
@@ -73,6 +83,24 @@ public class DataflowTaskGraphGenerator implements IDataflowTaskGraphGenerator {
 
   public void setDataflowGraph(IDataflowTaskGraph<Task, DataFlowOperation> dataflowGraph) {
     this.dataflowGraph = dataflowGraph;
+  }
+
+  public DataflowTaskGraphGenerator generateTGraph(TaskGraphMapper sourceTask,
+                                                   TaskGraphMapper sinkTask,
+                                                   DataflowOperation... dataflowOperation) {
+    try {
+      this.tGraph.addTaskVertex(sourceTask);
+      this.tGraph.addTaskVertex(sinkTask);
+      System.out.println("Input Files Are:" + sourceTask.getInputData() + "\t"
+          + "Output Files Are:" + sourceTask.getInputData());
+      for (DataflowOperation dataflowOperation1 : dataflowOperation) {
+        this.tGraph.addTaskEdge(sourceTask, sinkTask, dataflowOperation[0]);
+      }
+    } catch (IllegalArgumentException iae) {
+      iae.printStackTrace();
+    }
+    LOGGER.info("Generated Dataflow Task Graph Is:" + taskGraph);
+    return this;
   }
 
   public DataflowTaskGraphGenerator generateDataflowGraph(Task sourceTask,

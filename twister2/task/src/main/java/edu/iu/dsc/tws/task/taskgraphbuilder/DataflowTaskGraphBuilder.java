@@ -20,7 +20,6 @@ public class DataflowTaskGraphBuilder extends DataflowTaskGraphGenerator {
     DataflowTaskGraphGenerator dataflowTaskGraphGenerator = new DataflowTaskGraphGenerator();
 
     TaskGraphMapper task1 = new TaskGraphMapper("1") {
-
       @Override
       public void execute() {
         System.out.println("Task Graph Construction with Input and Output Files");
@@ -39,6 +38,8 @@ public class DataflowTaskGraphBuilder extends DataflowTaskGraphGenerator {
     task2.addOutputData("outputFile2", new ArrayList<>()); //Add the output file list
 
     //this.generateDataflowGraph()  //Construct the task vertices and edges here...!
+    this.generateTGraph(task1, task2, new DataflowOperation("Map"));
+
   }
 }
 
