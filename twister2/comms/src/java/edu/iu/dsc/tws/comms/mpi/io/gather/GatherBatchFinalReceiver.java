@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -31,7 +33,7 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
 
   // lets keep track of the messages
   // for each task we need to keep track of incoming messages
-  protected Map<Integer, Map<Integer, List<Object>>> messages = new HashMap<>();
+  protected Map<Integer, Map<Integer, Queue<Object>>> messages = new HashMap<>();
   protected Map<Integer, Map<Integer, Boolean>> finished = new HashMap<>();
   protected Map<Integer, List<Object>> finalMessages = new HashMap<>();
   protected Map<Integer, Map<Integer, Integer>> counts = new HashMap<>();
@@ -54,12 +56,12 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
     isStoreBased = false;
     LOG.fine(String.format("%d expected ids %s", executor, expectedIds));
     for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
-      Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
+      Map<Integer, Queue<Object>> messagesPerTask = new HashMap<>();
       Map<Integer, Boolean> finishedPerTask = new HashMap<>();
       Map<Integer, Integer> countsPerTask = new HashMap<>();
 
       for (int i : e.getValue()) {
-        messagesPerTask.put(i, new ArrayList<Object>());
+        messagesPerTask.put(i, new ArrayBlockingQueue<>(sendPendingMax));
         finishedPerTask.put(i, false);
         countsPerTask.put(i, 0);
       }
@@ -79,9 +81,9 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
   public boolean onMessage(int source, int path, int target, int flags, Object object) {
     // add the object to the map
     boolean canAdd = true;
-    List<Object> m = messages.get(target).get(source);
+    Queue<Object> m = messages.get(target).get(source);
     Map<Integer, Boolean> finishedMessages = finished.get(target);
-    if (m.size() > sendPendingMax) {
+    if (m.size() >= sendPendingMax) {
       canAdd = false;
 //      LOG.info(String.format("%d Final add FALSE target %d source %d", executor, target, source));
     } else {
@@ -120,14 +122,14 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
 
       boolean allFinished = true;
       // now check weather we have the messages for this source
-      Map<Integer, List<Object>> map = messages.get(t);
+      Map<Integer, Queue<Object>> map = messages.get(t);
       Map<Integer, Boolean> finishedForTarget = finished.get(t);
       Map<Integer, Integer> countMap = counts.get(t);
 //      LOG.info(String.format("%d gather final counts %d %s %s", executor, t, countMap,
 //          finishedForTarget));
       if (!isStoreBased) {
         boolean found = true;
-        for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
+        for (Map.Entry<Integer, Queue<Object>> e : map.entrySet()) {
           if (e.getValue().size() == 0 && !finishedForTarget.get(e.getKey())) {
             found = false;
           }
@@ -142,13 +144,12 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
 
         if (found) {
           List<Object> out = new ArrayList<>();
-          for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
-            List<Object> valueList = e.getValue();
+          for (Map.Entry<Integer, Queue<Object>> e : map.entrySet()) {
+            Queue<Object> valueList = e.getValue();
             if (valueList.size() > 0) {
-              Object value = valueList.get(0);
+              Object value = valueList.poll();
               out.add(value);
               allFinished = false;
-              valueList.remove(0);
             }
           }
 //        for (Map.Entry<Integer, Integer> e : countMap.entrySet()) {
@@ -161,7 +162,7 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
         }
       } else {
 
-        for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
+        for (Map.Entry<Integer, Queue<Object>> e : map.entrySet()) {
           if (!finishedForTarget.get(e.getKey())) {
             allFinished = false;
           }
