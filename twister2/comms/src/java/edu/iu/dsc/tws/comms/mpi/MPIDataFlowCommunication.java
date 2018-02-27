@@ -227,6 +227,25 @@ public class MPIDataFlowCommunication implements TWSCommunication {
   }
 
   @Override
+  public DataFlowOperation allGather(Map<String, Object> properties, MessageType type,
+                                     int edge1, int edge2,
+                                     Set<Integer> sourceTasks, Set<Integer> destTasks,
+                                     int middleTask,
+                                     MessageReceiver partialRecvr,
+                                     MessageReceiver finalRecvr) {
+  // merge with the user specified configuration, user specified will take precedence
+    Config mergedCfg = Config.newBuilder().putAll(config).putAll(properties).build();
+
+    // create the dataflow operation
+    MPIDataFlowAllGather dataFlowOperation = new MPIDataFlowAllGather(channel,
+        sourceTasks, destTasks, middleTask, finalRecvr, partialRecvr, edge1, edge2);
+
+    // intialize the operation
+    dataFlowOperation.init(mergedCfg, type, instancePlan, edge1);
+    return dataFlowOperation;
+  }
+
+  @Override
   public DataFlowOperation keyedGather(Map<String, Object> properties, MessageType type,
                                        Set<Integer> edge,
                                        Set<Integer> sourceTasks, Set<Integer> destTasks,

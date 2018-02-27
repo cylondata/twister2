@@ -293,8 +293,7 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
     for (int e : execs) {
       int capacity = maxReceiveBuffers * 2 * receiveExecutorsSize;
       Queue<Pair<Object, MPIMessage>> pendingReceiveMessages =
-          new ArrayBlockingQueue<Pair<Object, MPIMessage>>(
-              capacity);
+          new ArrayBlockingQueue<Pair<Object, MPIMessage>>(capacity);
       pendingReceiveMessagesPerSource.put(e, pendingReceiveMessages);
       pendingReceiveDeSerializations.put(e, new ArrayBlockingQueue<MPIMessage>(capacity));
       deSerializerMap.put(e, new MPIMultiMessageDeserializer(new KryoSerializer(), executor));
