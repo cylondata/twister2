@@ -198,7 +198,13 @@ public class Config {
   public Integer getIntegerValue(String key, int defaultValue) {
     Object value = get(key);
     if (value != null) {
-      return Integer.valueOf((String) value);
+      if (value instanceof Integer) {
+        return (Integer) value;
+      } else if (value instanceof String) {
+        return Integer.valueOf((String) value);
+      } else {
+        return defaultValue;
+      }
     }
     return defaultValue;
   }
