@@ -48,7 +48,7 @@ public class SimpleTask implements IContainer {
 
   private Config config;
 
-  private static final int NO_OF_TASKS = 2;
+  private static final int NO_OF_TASKS = 1;
 
   private int noOfTasksPerExecutor = 1;
 
@@ -213,7 +213,8 @@ public class SimpleTask implements IContainer {
     public boolean onMessage(int source, int path, int target, int flags, Object object) {
       count++;
       LOG.info("-------------------------------------------");
-      LOG.info("Received message: " + count);
+      LOG.info("Message From : " + source + ", via path " + path + " to " + target
+          + " ,Received message: " + count);
       LOG.info("-------------------------------------------");
 
       if (count % 7 == 0) {
@@ -246,7 +247,7 @@ public class SimpleTask implements IContainer {
     BasicJob basicJob = BasicJob.newBuilder()
         .setName("basic-simple-task")
         .setContainerClass(SimpleTask.class.getName())
-        .setRequestResource(new ResourceContainer(2, 1024), 2)
+        .setRequestResource(new ResourceContainer(2, 1024), 1)
         .setConfig(jobConfig)
         .build();
 
