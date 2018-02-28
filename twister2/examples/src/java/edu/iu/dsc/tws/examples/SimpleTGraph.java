@@ -38,6 +38,11 @@ import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraphGenerator;
 import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraphParser;
 import edu.iu.dsc.tws.task.taskgraphbuilder.TaskGraphMapper;
 
+/**
+ * This is the task graph generation class with input and output files.
+ * It will be extended further to submit the job to the executor...
+ */
+
 public class SimpleTGraph implements IContainer {
 
   private static final Logger LOG = Logger.getLogger(SimpleTGraph.class.getName());
@@ -85,15 +90,26 @@ public class SimpleTGraph implements IContainer {
     TReducer tReducer = new TReducer("2");
     TShuffler tShuffler = new TShuffler("3");
 
+    //Add the real input data files in the array list...
     tMapper.addInputData("mapper1", new ArrayList<>());
     tMapper.addInputData("reducer1", new ArrayList<>());
 
+    //Mention the output data files to be generated in the array list...
     tMapper.addOutputData("mapperOut1", new ArrayList<>());
-    tMapper.addInputData("mapperOut2", new ArrayList<>());
+    tMapper.addOutputData("mapperOut2", new ArrayList<>());
 
     dataflowTaskGraphGenerator = new DataflowTaskGraphGenerator()
         .generateTGraph(tMapper, tShuffler, new DataflowOperation("Map"))
         .generateTGraph(tShuffler, tReducer, new DataflowOperation("Shuffle"));
+
+    LOG.info("Generated Dataflow Task Graph Vertices:"
+        + dataflowTaskGraphGenerator.getTGraph().getTaskVertexSet());
+
+    LOG.info("Generated Dataflow Task Edges:"
+        + dataflowTaskGraphGenerator.getTGraph().getAllTaskEdges(tMapper, tShuffler).toString());
+
+    LOG.info("Generated Dataflow Task Edges:"
+        + dataflowTaskGraphGenerator.getTGraph().getAllTaskEdges(tShuffler, tReducer).toString());
 
     if (containerId == 0) {
 
@@ -152,6 +168,25 @@ public class SimpleTGraph implements IContainer {
     }*/
   }
 
+  /**
+   * Generate data with an integer array
+   *
+   * @return IntData
+   */
+  private IntData generateData() {
+    int[] d = new int[10];
+    for (int i = 0; i < 10; i++) {
+      d[i] = i;
+    }
+    return new IntData(d);
+  }
+
+  private enum Status {
+    INIT,
+    MAP_FINISHED,
+    LOAD_RECEIVE_FINISHED,
+  }
+
   private class TMapper extends TaskGraphMapper implements Runnable {
 
     protected TMapper(String taskId) {
@@ -161,7 +196,7 @@ public class SimpleTGraph implements IContainer {
     @Override
     public void execute() {
       System.out.println("&&&& Task Graph Map Function with Input and Output Files &&&&");
-      for (int i = 0; i < 100000; i++) { //100000
+      for (int i = 0; i < 10; i++) { //100000
         IntData data = generateData();
         try {
           Thread.sleep(1);
@@ -203,7 +238,7 @@ public class SimpleTGraph implements IContainer {
     @Override
     public void execute() {
       System.out.println("&&& Task Graph Reduce Function with Input and Output Files &&&");
-      for (int i = 0; i < 100000; i++) { //100000
+      for (int i = 0; i < 10; i++) { //100000
         IntData data = generateData();
         try {
           Thread.sleep(1);
@@ -213,19 +248,6 @@ public class SimpleTGraph implements IContainer {
       }
       Thread.yield();
     }
-  }
-
-  /**
-   * Generate data with an integer array
-   *
-   * @return IntData
-   */
-  private IntData generateData() {
-    int[] d = new int[10];
-    for (int i = 0; i < 10; i++) {
-      d[i] = i;
-    }
-    return new IntData(d);
   }
 
   private class PingPongReceive implements MessageReceiver {
@@ -251,12 +273,6 @@ public class SimpleTGraph implements IContainer {
     public void progress() {
 
     }
-  }
-
-  private enum Status {
-    INIT,
-    MAP_FINISHED,
-    LOAD_RECEIVE_FINISHED,
   }
 }
 
