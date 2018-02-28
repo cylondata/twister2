@@ -195,8 +195,12 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
     if (sourceInternalRouting != null) {
       routingParameters.addInternalRoutes(sourceInternalRouting);
     }
-
-    routingParameters.setDestinationId(router.destinationIdentifier(source, path));
+    try {
+      routingParameters.setDestinationId(router.destinationIdentifier(source, path));
+    } catch (RuntimeException e) {
+      LOG.info(String.format("%d exception %d %d %d %s",
+          executor, index, pathToUse, destination, router.getDestinationIdentifiers()));
+    }
     return routingParameters;
   }
 
