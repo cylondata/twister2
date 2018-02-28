@@ -263,7 +263,7 @@ public class TWSMPIChannel implements TWSChannel {
       }
     }
 
-    if (debug) {
+    if (false) {
       LOG.info(String.format(
           "%d sending - sent %d comp send %d receive %d pend recv %d pending sends %d waiting %d",
           executor, sendCount, completedSendCount, receiveCount,
