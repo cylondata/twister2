@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.core;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -39,7 +40,7 @@ public final class TWSNetwork {
     String communicationClass = CommunicationContext.communicationClass(config);
     try {
       dataFlowTWSCommunication = ReflectionUtils.newInstance(communicationClass);
-      LOG.info("Created communication with class: " + communicationClass);
+      LOG.log(Level.FINE,"Created communication with class: " + communicationClass);
       dataFlowTWSCommunication.init(config, taskPlan,
           new TWSMPIChannel(config, MPI.COMM_WORLD, taskPlan.getThisExecutor()));
     } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
