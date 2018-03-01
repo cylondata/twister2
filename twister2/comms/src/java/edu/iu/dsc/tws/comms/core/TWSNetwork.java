@@ -40,7 +40,7 @@ public final class TWSNetwork {
     String communicationClass = CommunicationContext.communicationClass(config);
     try {
       dataFlowTWSCommunication = ReflectionUtils.newInstance(communicationClass);
-      LOG.log(Level.FINE,"Created communication with class: " + communicationClass);
+      LOG.log(Level.FINE, "Created communication with class: " + communicationClass);
       dataFlowTWSCommunication.init(config, taskPlan,
           new TWSMPIChannel(config, MPI.COMM_WORLD, taskPlan.getThisExecutor()));
     } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
