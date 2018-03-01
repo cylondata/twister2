@@ -120,7 +120,8 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
     this.instancePlan = taskPlan;
     this.type = t;
 
-    LOG.log(Level.FINE, String.format("%d adding internal/external routing", taskPlan.getThisExecutor()));
+    LOG.log(Level.FINE, String.format("%d adding internal/external routing",
+        taskPlan.getThisExecutor()));
     for (int s : thisSources) {
       Set<Integer> integerSetMap = internal.get(s);
       if (integerSetMap != null) {
