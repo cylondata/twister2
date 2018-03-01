@@ -120,7 +120,7 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
     this.instancePlan = taskPlan;
     this.type = t;
 
-    LOG.info(String.format("%d adding internal/external routing", taskPlan.getThisExecutor()));
+    LOG.log(Level.FINE, String.format("%d adding internal/external routing", taskPlan.getThisExecutor()));
     for (int s : thisSources) {
       Set<Integer> integerSetMap = internal.get(s);
       if (integerSetMap != null) {
@@ -136,7 +136,7 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
       break;
     }
 
-    LOG.info(String.format("%d done adding internal/external routing",
+    LOG.log(Level.FINE, String.format("%d done adding internal/external routing",
         taskPlan.getThisExecutor()));
     //TODO : Does this send the correct receiveExpectedTaskIds for partition communication
     if (this.finalReceiver != null && isLastReceiver()) {
