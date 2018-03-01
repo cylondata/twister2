@@ -458,17 +458,17 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
    * Progress the serializations
    */
   public void progress() {
-//    if (partialSendAttempts > 1000000 || sendAttempts > 1000000) {
-//      String s = "";
-//      for (Map.Entry<Integer, Queue<MPIBuffer>> e : receiveBuffers.entrySet()) {
-//        s += e.getKey() + "-" + e.getValue().size() + " ";
-//      }
-//      LOG.info(String.format(
-//          "%d send count %d receive %d send release %d receive release %d %s %d %d",
-//          executor, sendCount, receiveCount, sendBufferReleaseCount,
-//          receiveBufferReleaseCount, s, sendsOfferred, sendsPartialOfferred));
-//      ((TWSMPIChannel) channel).setDebug(true);
-//    }
+    if (partialSendAttempts > 1000000 || sendAttempts > 1000000) {
+      String s = "";
+      for (Map.Entry<Integer, Queue<MPIBuffer>> e : receiveBuffers.entrySet()) {
+        s += e.getKey() + "-" + e.getValue().size() + " ";
+      }
+      LOG.info(String.format(
+          "%d send count %d receive %d send release %d receive release %d %s %d %d",
+          executor, sendCount, receiveCount, sendBufferReleaseCount,
+          receiveBufferReleaseCount, s, sendsOfferred, sendsPartialOfferred));
+      ((TWSMPIChannel) channel).setDebug(true);
+    }
     if (sendProgressTracker.canProgress()) {
       int sendId = sendProgressTracker.next();
       if (sendId != Integer.MIN_VALUE) {
