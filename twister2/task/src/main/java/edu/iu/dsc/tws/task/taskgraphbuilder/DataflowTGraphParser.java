@@ -16,17 +16,16 @@ import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.task.api.Task;
 
-public class DataflowTaskGraphParser implements IDataflowTaskGraphParser {
+public class DataflowTGraphParser implements IDataflowTaskGraphParser {
 
   private static final Logger LOGGER = Logger.getLogger(
-      DataflowTaskGraphParser.class.getName());
+      DataflowTGraphParser.class.getName());
 
   private DataflowTaskGraphGenerator dataflowTaskGraph;
 
-  public DataflowTaskGraphParser(DataflowTaskGraphGenerator taskgraph) {
+  public DataflowTGraphParser(DataflowTaskGraphGenerator taskgraph) {
     this.dataflowTaskGraph = taskgraph;
   }
 
@@ -35,9 +34,9 @@ public class DataflowTaskGraphParser implements IDataflowTaskGraphParser {
    * This is an entry method to invoke the dataflow task graph
    * prioritizer to prioritize the tasks.
    */
-  public Set<Task> dataflowTaskGraphParseAndSchedule() {
+  public Set<TaskGraphMapper> dataflowTGraphParseAndSchedule() {
 
-    Set<Task> processedTaskVertices = new HashSet<>();
+    Set<TaskGraphMapper> processedTaskVertices = new HashSet<>();
     if (dataflowTaskGraph != null) {
       processedTaskVertices = dataflowTaskGraphPrioritize(this.dataflowTaskGraph);
       LOGGER.info("Processed Task Vertices Size Is:"
@@ -46,30 +45,14 @@ public class DataflowTaskGraphParser implements IDataflowTaskGraphParser {
     return processedTaskVertices;
   }
 
-  @Override
-  public Set<Task> taskGraphParseAndSchedule() {
-    return null;
-  }
-
-  //This method will be used in the future.
-  @Override
-  public Set<Task> dataflowTaskGraphParseAndSchedule(int containerId) {
-    return null;
-  }
-
-  @Override
-  public Set<TaskGraphMapper> dataflowTGraphParseAndSchedule() {
-    return null;
-  }
-
   /**
    * This method calls the dataflow task graph parser method to prioritize
    * the tasks which is ready for the execution.
    */
-  private Set<Task> dataflowTaskGraphPrioritize(DataflowTaskGraphGenerator taskGraph) {
-    final IDataflowTaskGraph<Task, DataFlowOperation>
-        dataflowTaskgraph = taskGraph.getDataflowGraph();
-    Set<Task> taskVertices = dataflowTaskgraph.getTaskVertexSet();
+  private Set<TaskGraphMapper> dataflowTaskGraphPrioritize(DataflowTaskGraphGenerator taskGraph) {
+    final IDataflowTaskGraph<TaskGraphMapper, DataflowOperation>
+        dataflowTaskgraph = taskGraph.getTGraph();
+    Set<TaskGraphMapper> taskVertices = dataflowTaskgraph.getTaskVertexSet();
     try {
       taskVertices.stream()
           .filter(task -> dataflowTaskgraph.inDegreeOf(task) == 0)
@@ -84,8 +67,8 @@ public class DataflowTaskGraphParser implements IDataflowTaskGraphParser {
    * This is the simple dataflow task graph parser method and it should be replaced
    * with an optimized scheduling mechanism.
    */
-  private int dataflowTaskGraphParse(final IDataflowTaskGraph<Task,
-      DataFlowOperation> dataflowTaskgraph, final Task mapper) {
+  private int dataflowTaskGraphParse(final IDataflowTaskGraph<TaskGraphMapper,
+      DataflowOperation> dataflowTaskgraph, final TaskGraphMapper mapper) {
 
     LOGGER.info("Dataflow Task Graph is:" + dataflowTaskgraph
         + "\t" + "and Task Object is:" + mapper);
@@ -93,10 +76,10 @@ public class DataflowTaskGraphParser implements IDataflowTaskGraphParser {
     if (dataflowTaskgraph.outDegreeOf(mapper) == 0) {
       return 1;
     } else {
-      Set<DataFlowOperation> taskEdgesOf = dataflowTaskgraph.
+      Set<DataflowOperation> taskEdgesOf = dataflowTaskgraph.
           outgoingTaskEdgesOf(mapper);
 
-      Stream<Task> taskStream = taskEdgesOf.stream().map(
+      Stream<TaskGraphMapper> taskStream = taskEdgesOf.stream().map(
           dataflowTaskgraph::getTaskEdgeTarget);
 
       int adjacentTaskWeights = taskStream.map(
@@ -105,6 +88,22 @@ public class DataflowTaskGraphParser implements IDataflowTaskGraphParser {
       int weightOfCurrent = 1 + adjacentTaskWeights;
       return weightOfCurrent;
     }
+  }
+
+  @Override
+  public Set<Task> dataflowTaskGraphParseAndSchedule() {
+    return null;
+  }
+
+  @Override
+  public Set<Task> taskGraphParseAndSchedule() {
+    return null;
+  }
+
+  //This method will be used in the future.
+  @Override
+  public Set<Task> dataflowTaskGraphParseAndSchedule(int containerId) {
+    return null;
   }
 }
 
