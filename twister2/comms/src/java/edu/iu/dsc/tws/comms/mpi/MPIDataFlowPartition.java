@@ -132,7 +132,7 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
       if (integerSetMap1 != null) {
         this.dests.external.addAll(integerSetMap1);
       }
-      LOG.info(String.format("%d adding internal/external routing %d",
+      LOG.fine(String.format("%d adding internal/external routing %d",
           taskPlan.getThisExecutor(), s));
       break;
     }
@@ -176,12 +176,6 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
       pendingReceiveDeSerializations.put(e, new ArrayBlockingQueue<MPIMessage>(capacity));
       deSerializerMap.put(e, new MPIMessageDeSerializer(new KryoSerializer()));
     }
-
-    KryoSerializer kryoSerializer = new KryoSerializer();
-    kryoSerializer.init(new HashMap<String, Object>());
-
-    MessageDeSerializer messageDeSerializer = new MPIMessageDeSerializer(kryoSerializer);
-    MessageSerializer messageSerializer = new MPIMessageSerializer(kryoSerializer);
 
     delegete.init(cfg, t, taskPlan, edge,
         router.receivingExecutors(), router.isLastReceiver(), this,
