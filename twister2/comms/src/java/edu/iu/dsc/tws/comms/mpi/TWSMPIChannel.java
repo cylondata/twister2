@@ -120,7 +120,8 @@ public class TWSMPIChannel implements TWSChannel {
 
   public TWSMPIChannel(Config config, Intracomm comm, int exec) {
     this.comm = comm;
-    this.pendingSends = new ArrayBlockingQueue<MPISendRequests>(1024);
+    int pendingSize = MPIContext.networkChannelPendingSize(config);
+    this.pendingSends = new ArrayBlockingQueue<MPISendRequests>(pendingSize);
     this.registeredReceives = Collections.synchronizedList(new ArrayList<>(1024));
     this.waitForCompletionSends = Collections.synchronizedList(new ArrayList<>(1024));
     this.executor = exec;

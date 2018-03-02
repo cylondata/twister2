@@ -4,3 +4,4 @@ twister2.network.channel.class: "edu.iu.dsc.tws.comms.mpi.MPIDataFlowCommunicati
 network.mpi.buffer.size: 32768000
 network.mpi.sendBuffer.count: 16
 network.mpi.receiveBuffer.count: 16
+network.channel.mpi.pending.size: 1024

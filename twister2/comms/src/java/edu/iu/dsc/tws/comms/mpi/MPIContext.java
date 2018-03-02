@@ -25,6 +25,7 @@ public class MPIContext extends CommunicationContext {
   private static final String RECEIVE_BUFFERS_COUNT = "network.mpi.receiveBuffer.count";
   private static final String DISTINCT_ROUTS = "network.mpi.routing.distinct.routes";
   private static final String SEND_PENDING_MAX = "network.mpi.send.pending.max";
+  private static final String NETWORK_CHANNEL_PENDING_SIZE = "network.channel.mpi.pending.size";
 
   public static final int DEFAULT_PATH = 0;
 
@@ -47,6 +48,10 @@ public class MPIContext extends CommunicationContext {
 
   public static int sendPendingMax(Config cfg) {
     return cfg.getIntegerValue(SEND_PENDING_MAX, 16);
+  }
+
+  public static int networkChannelPendingSize(Config cfg) {
+    return cfg.getIntegerValue(NETWORK_CHANNEL_PENDING_SIZE, 1024);
   }
 }
 
