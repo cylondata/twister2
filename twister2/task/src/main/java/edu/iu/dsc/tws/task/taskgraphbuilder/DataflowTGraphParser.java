@@ -70,8 +70,8 @@ public class DataflowTGraphParser implements IDataflowTaskGraphParser {
   private int dataflowTaskGraphParse(final IDataflowTaskGraph<TaskGraphMapper,
       DataflowOperation> dataflowTaskgraph, final TaskGraphMapper mapper) {
 
-    LOGGER.info("Dataflow Task Graph is:" + dataflowTaskgraph
-        + "\t" + "and Task Object is:" + mapper);
+    /*LOGGER.info("Dataflow Task Graph is:" + dataflowTaskgraph
+        + "\t" + "and Task Object is:" + mapper);*/
 
     if (dataflowTaskgraph.outDegreeOf(mapper) == 0) {
       return 1;
@@ -100,10 +100,10 @@ public class DataflowTGraphParser implements IDataflowTaskGraphParser {
     return null;
   }
 
-  //This method will be used in the future.
   @Override
   public Set<Task> dataflowTaskGraphParseAndSchedule(int containerId) {
     return null;
   }
 }
+
 

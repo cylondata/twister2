@@ -96,11 +96,20 @@ public class DataflowTaskGraphGenerator implements IDataflowTaskGraphGenerator {
     } catch (IllegalArgumentException iae) {
       iae.printStackTrace();
     }
-    LOGGER.info("Generated Dataflow Task Graph Is:" + taskGraph);
-    LOGGER.info("Input Files Are:" + sourceTask.getInputData() + "\t"
-        + "Input Files Are:" + sinkTask.getInputData());
-    LOGGER.info("Generated Dataflow Task Edges:"
-        + this.tGraph.getAllTaskEdges(sourceTask, sinkTask));
+    //LOGGER.info("Generated Dataflow Task Graph Is:" + taskGraph); //enabled latter
+    return this;
+  }
+
+  public DataflowTaskGraphGenerator generateTGraph(TaskGraphMapper taskGraphMapper1,
+                                                   TaskGraphMapper... taskGraphMappers) {
+    try {
+      this.tGraph.addTaskVertex(taskGraphMapper1);
+      for (TaskGraphMapper mapperTask : taskGraphMappers) {
+        this.tGraph.addTaskEdge(mapperTask, taskGraphMapper1);
+      }
+    } catch (IllegalArgumentException iae) {
+      iae.printStackTrace();
+    }
     return this;
   }
 
@@ -167,6 +176,12 @@ public class DataflowTaskGraphGenerator implements IDataflowTaskGraphGenerator {
     }
     LOGGER.info("Generated Dataflow Task Graph Is:" + taskGraph);
     return this;
+  }
+
+  public void removeTaskVertex(TaskGraphMapper mapperTask) {
+    LOGGER.info("Mapper task done to be removed:" + mapperTask);
+    this.tGraph.removeTaskVertex(mapperTask);
+    LOGGER.info("Now the task graph is:" + this.dataflowTaskGraph);
   }
 
   public void removeTaskVertex(TaskMapper mapperTask) {
