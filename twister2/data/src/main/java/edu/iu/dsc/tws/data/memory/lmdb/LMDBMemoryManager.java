@@ -81,6 +81,7 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
   private ThreadLocal<Txn<ByteBuffer>> threadWriteTxn;
   private ThreadLocal<Cursor<ByteBuffer>> threadWriteCursor;
   private ThreadLocal<Boolean> threadNeedCommit;
+  private ThreadLocal<ByteBuffer> threadappendBuffer;
 
   public LMDBMemoryManager(Path dataPath) {
     this.lmdbDataPath = dataPath;
@@ -89,15 +90,16 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean init() {
-    if (lmdbDataPath == null || lmdbDataPath.isNullOrEmpty()) {
-      lmdbDataPath = new Path(LMDBMemoryManagerContext.DEFAULT_FOLDER_PATH);
-    }
-    final File path = new File(lmdbDataPath.getPath());
-    if (!path.exists()) {
-      path.mkdirs();
-    }
-
     try {
+
+      if (lmdbDataPath == null || lmdbDataPath.isNullOrEmpty()) {
+        lmdbDataPath = new Path(LMDBMemoryManagerContext.DEFAULT_FOLDER_PATH);
+      }
+      final File path = new File(lmdbDataPath.getPath());
+      if (!path.exists()) {
+        path.mkdirs();
+      }
+
       final EnvFlags[] envFlags = envFlags(true, false);
       this.env = create()
           .setMapSize(LMDBMemoryManagerContext.MAP_SIZE_LIMIT)
@@ -118,6 +120,7 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
       threadWriteTxn = new ThreadLocal<>();
       threadWriteCursor = new ThreadLocal<>();
       threadNeedCommit = new ThreadLocal<>();
+      threadappendBuffer = new ThreadLocal<>();
     } catch (RuntimeException e) {
       throw new RuntimeException("Error while creating LMDB database at Path "
           + lmdbDataPath.toString(), e);
@@ -349,11 +352,18 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
     }
 
     int capacity = results.limit() + value.limit();
-    ByteBuffer appended = ByteBuffer.allocateDirect(capacity)
+    if (threadappendBuffer.get() == null) {
+      threadappendBuffer.set(ByteBuffer.allocateDirect(
+          LMDBMemoryManagerContext.DEFAULT_APPEND_BUFFER_SIZE));
+    }
+    if (capacity > threadappendBuffer.get().capacity()) {
+      threadappendBuffer.set(ByteBuffer.allocateDirect(capacity * 2));
+    }
+    threadappendBuffer.get().clear();
+    threadappendBuffer.get()
         .put(results)
         .put(value);
-
-    return put(opID, key, appended);
+    return put(opID, key, threadappendBuffer.get());
   }
 
   /*@Override

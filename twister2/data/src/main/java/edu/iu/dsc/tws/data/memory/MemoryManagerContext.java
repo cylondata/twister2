@@ -23,7 +23,7 @@ public class MemoryManagerContext extends Context {
   /**
    * Default step size of the Bulk Memory Manager.
    */
-  public static final int BULK_MM_STEP_SIZE = 4;
+  public static final int BULK_MM_STEP_SIZE = 10;
 
   /**
    * Charset used in the memory manager
