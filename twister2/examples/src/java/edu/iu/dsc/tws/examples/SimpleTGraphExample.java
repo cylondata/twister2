@@ -46,6 +46,7 @@ import edu.iu.dsc.tws.task.api.LinkedQueue;
 import edu.iu.dsc.tws.task.api.Message;
 import edu.iu.dsc.tws.task.core.TaskExecutorFixedThread;
 
+import edu.iu.dsc.tws.task.executiongraph.ExecutionGraph;
 import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowOperation;
 import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTGraphParser;
 import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraphGenerator;
@@ -82,6 +83,8 @@ public class SimpleTGraphExample implements IContainer {
     TaskPlan taskPlan = Utils.createTaskPlan(cfg, plan);
     TWSNetwork network = new TWSNetwork(cfg, taskPlan);
     TWSCommunication channel = network.getDataFlowTWSCommunication();
+    //newly added for testing
+    ExecutionGraph executionGraph = new ExecutionGraph();
 
     Set<Integer> sources = new HashSet<>();
     sources.add(0);
@@ -94,7 +97,6 @@ public class SimpleTGraphExample implements IContainer {
     direct = channel.direct(newCfg, MessageType.OBJECT, 0, sources,
         destination, new SimpleTGraphExample.PingPongReceive());
     taskExecutor.initCommunication(channel, direct);
-
 
     TMapper tMapper = new TMapper("1");
     TReducer tReducer = new TReducer("2");
@@ -121,9 +123,7 @@ public class SimpleTGraphExample implements IContainer {
     tMapper.addOutputData("mapperOut1", new ArrayList<>());
     tMapper.addOutputData("mapperOut2", new ArrayList<>());
 
-    LOG.info("#### Task Flag ID Value:####" + taskGraphFlag);
-
-    if (taskGraphFlag == 1) {
+    if (taskGraphFlag >= 0) { //just for verification (replace with proper value)
       /*dataflowTaskGraphGenerator = new DataflowTaskGraphGenerator()
           .generateTGraph(tMapper, tShuffler, new DataflowOperation("Map"))
           .generateTGraph(tMapper, tReducer, new DataflowOperation("Shuffle"))
@@ -140,22 +140,20 @@ public class SimpleTGraphExample implements IContainer {
       LOG.info("Generated Dataflow Task Graph Vertices:"
           + dataflowTaskGraphGenerator.getTGraph().getTaskVertexSet());
 
-      /*LOG.info("Generated Dataflow Task Graph Edges:"
-          + dataflowTaskGraphGenerator.getTGraph().
-          getAllTaskEdges(tMapper, tReducer).toString());
 
-      LOG.info("Generated Dataflow Task Graph Edges:"
-          + dataflowTaskGraphGenerator.getTGraph().
-          getAllTaskEdges(tShuffler, tMergeFinal).toString());*/
-
-      if (dataflowTaskGraphGenerator != null) {
+      /*if (dataflowTaskGraphGenerator != null) {
         dataflowTGraphParser = new DataflowTGraphParser(dataflowTaskGraphGenerator);
         parsedTaskSet = dataflowTGraphParser.dataflowTGraphParseAndSchedule();
+        LOG.info("parsed task set:" + parsedTaskSet);
+      }*/
+      parsedTaskSet = executionGraph.parseTaskGraph(dataflowTaskGraphGenerator);
+      if (!parsedTaskSet.isEmpty()) {
+        String message = executionGraph.generateExecutionGraph(containerId, parsedTaskSet);
+        LOG.info(message);
       }
-      ++taskGraphFlag;
     }
 
-    if (!parsedTaskSet.isEmpty()) {
+    /*if (!parsedTaskSet.isEmpty()) {
       if (containerId == 0) {
         //taskExecutor.registerTask(parsedTaskSet.iterator().next());
         //taskExecutor.submitTask(0);
@@ -199,7 +197,7 @@ public class SimpleTGraphExample implements IContainer {
           }
         }
       }
-    }
+    }*/
   }
 
   /**
@@ -233,6 +231,7 @@ public class SimpleTGraphExample implements IContainer {
       for (int i = 0; i < 10; i++) { //100000
         IntData data = generateData();
         try {
+          System.out.println(i);
           Thread.sleep(1);
         } catch (InterruptedException e) {
           e.printStackTrace();
@@ -251,9 +250,10 @@ public class SimpleTGraphExample implements IContainer {
     @Override
     public void execute() {
       System.out.println("&&&& Task Graph Shuffle Function with Input and Output Files &&&&");
-      for (int i = 0; i < 100000; i++) { //100000
+      for (int i = 0; i < 10; i++) { //100000
         IntData data = generateData();
         try {
+          System.out.println(i);
           Thread.sleep(1);
         } catch (InterruptedException e) {
           e.printStackTrace();
@@ -275,6 +275,7 @@ public class SimpleTGraphExample implements IContainer {
       for (int i = 0; i < 10; i++) { //100000
         IntData data = generateData();
         try {
+          System.out.println(i);
           Thread.sleep(1);
         } catch (InterruptedException e) {
           e.printStackTrace();
