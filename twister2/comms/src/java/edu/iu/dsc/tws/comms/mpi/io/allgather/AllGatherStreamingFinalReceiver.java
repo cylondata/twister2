@@ -11,26 +11,28 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi.io.allgather;
 
-import edu.iu.dsc.tws.comms.api.GatherBatchReceiver;
-import edu.iu.dsc.tws.comms.mpi.MPIDataFlowBroadcast;
-import edu.iu.dsc.tws.comms.mpi.io.gather.StreamingFinalGatherReceiver;
+import java.util.List;
+import java.util.Map;
 
-public class AllGatherStreamingFinalReceiver extends StreamingFinalGatherReceiver {
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.mpi.MPIDataFlowBroadcast;
+import edu.iu.dsc.tws.comms.mpi.io.gather.StreamingPartialGatherReceiver;
+
+public class AllGatherStreamingFinalReceiver extends StreamingPartialGatherReceiver {
   private MPIDataFlowBroadcast broadcast;
 
-  public AllGatherStreamingFinalReceiver(MPIDataFlowBroadcast broadcast,
-                                         GatherBatchReceiver gatherRecvr) {
-    super(gatherRecvr);
+  public AllGatherStreamingFinalReceiver(MPIDataFlowBroadcast broadcast) {
     this.broadcast = broadcast;
   }
 
   @Override
-  public boolean onMessage(int source, int path, int target, int flags, Object object) {
-    return broadcast.send(target, object, flags);
+  public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+    super.init(cfg, op, expectedIds);
   }
 
   @Override
-  public void progress() {
-
+  protected boolean handleMessage(int task, Object message, int flags, int dest) {
+    return broadcast.send(task, message, flags, dest);
   }
 }

@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 
-import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.mpi.MPIBuffer;
@@ -132,7 +131,7 @@ public final class Test {
 
     int di = -1;
     MPISendMessage sendMessage = new MPISendMessage(source, mpiMessage, 0,
-        di, 0, MessageFlags.FLAGS_MULTI_MSG, null, null);
+        di, 0, 0, null, null);
     multiMessageSerializer.build(object, sendMessage);
 
     return mpiMessage;

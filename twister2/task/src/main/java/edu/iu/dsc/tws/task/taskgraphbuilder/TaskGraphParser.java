@@ -100,5 +100,10 @@ public class TaskGraphParser implements IDataflowTaskGraphParser {
   public Set<Task> dataflowTaskGraphParseAndSchedule(int containerId) {
     return null;
   }
+
+  @Override
+  public Set<TaskGraphMapper> dataflowTGraphParseAndSchedule() {
+    return null;
+  }
 }
 

@@ -195,4 +195,8 @@ public class InvertedBinaryTreeRouter {
     allSends.add(mainTask * -1 - 1);
     return allSends;
   }
+
+  public Map<Integer, Integer> getDestinationIdentifiers() {
+    return destinationIdentifiers;
+  }
 }

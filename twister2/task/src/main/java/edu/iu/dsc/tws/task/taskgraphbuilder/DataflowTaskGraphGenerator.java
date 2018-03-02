@@ -40,6 +40,9 @@ public class DataflowTaskGraphGenerator implements IDataflowTaskGraphGenerator {
   private IDataflowTaskGraph<Task, DataflowOperation> taskgraph =
       new DataflowTaskGraph<>(DataflowOperation.class);
 
+  private IDataflowTaskGraph<TaskGraphMapper, DataflowOperation> tGraph =
+      new DataflowTaskGraph<>(DataflowOperation.class);
+
   public IDataflowTaskGraph<Task, DataflowOperation> getTaskgraph() {
     return taskgraph;
   }
@@ -47,6 +50,14 @@ public class DataflowTaskGraphGenerator implements IDataflowTaskGraphGenerator {
   public void setTaskgraph(IDataflowTaskGraph<Task,
       DataflowOperation> taskgraph) {
     this.taskgraph = taskgraph;
+  }
+
+  public IDataflowTaskGraph<TaskGraphMapper, DataflowOperation> getTGraph() {
+    return tGraph;
+  }
+
+  public void setTGraph(IDataflowTaskGraph<TaskGraphMapper, DataflowOperation> tgraph) {
+    this.tGraph = tgraph;
   }
 
   public IDataflowTaskGraph<TaskMapper, DataflowTaskEdge> getTaskGraph() {
@@ -73,6 +84,33 @@ public class DataflowTaskGraphGenerator implements IDataflowTaskGraphGenerator {
 
   public void setDataflowGraph(IDataflowTaskGraph<Task, DataFlowOperation> dataflowGraph) {
     this.dataflowGraph = dataflowGraph;
+  }
+
+  public DataflowTaskGraphGenerator generateTGraph(TaskGraphMapper sourceTask,
+                                                   TaskGraphMapper sinkTask,
+                                                   DataflowOperation... dataflowOperation) {
+    try {
+      this.tGraph.addTaskVertex(sourceTask);
+      this.tGraph.addTaskVertex(sinkTask);
+      this.tGraph.addTaskEdge(sourceTask, sinkTask, dataflowOperation[0]);
+    } catch (IllegalArgumentException iae) {
+      iae.printStackTrace();
+    }
+    //LOGGER.info("Generated Dataflow Task Graph Is:" + taskGraph); //enabled latter
+    return this;
+  }
+
+  public DataflowTaskGraphGenerator generateTGraph(TaskGraphMapper taskGraphMapper1,
+                                                   TaskGraphMapper... taskGraphMappers) {
+    try {
+      this.tGraph.addTaskVertex(taskGraphMapper1);
+      for (TaskGraphMapper mapperTask : taskGraphMappers) {
+        this.tGraph.addTaskEdge(mapperTask, taskGraphMapper1);
+      }
+    } catch (IllegalArgumentException iae) {
+      iae.printStackTrace();
+    }
+    return this;
   }
 
   public DataflowTaskGraphGenerator generateDataflowGraph(Task sourceTask,
@@ -140,16 +178,22 @@ public class DataflowTaskGraphGenerator implements IDataflowTaskGraphGenerator {
     return this;
   }
 
+  public void removeTaskVertex(TaskGraphMapper mapperTask) {
+    LOGGER.info("Mapper task done to be removed:" + mapperTask);
+    this.tGraph.removeTaskVertex(mapperTask);
+    LOGGER.info("Now the task graph is:" + this.dataflowTaskGraph);
+  }
+
   public void removeTaskVertex(TaskMapper mapperTask) {
-    System.out.println("Mapper task done to be removed:" + mapperTask);
+    LOGGER.info("Mapper task done to be removed:" + mapperTask);
     this.dataflowTaskGraph.removeTaskVertex(mapperTask);
-    System.out.println("Now the task graph is:" + this.dataflowTaskGraph);
+    LOGGER.info("Now the task graph is:" + this.dataflowTaskGraph);
   }
 
   public void removeTaskVertex(Task mapperTask) {
-    System.out.println("Mapper task done to be removed:" + mapperTask);
+    LOGGER.info("Mapper task done to be removed:" + mapperTask);
     this.dataflowGraph.removeTaskVertex(mapperTask);
-    System.out.println("Now the task graph is:" + this.dataflowTaskGraph);
+    LOGGER.info("Now the task graph is:" + this.dataflowTaskGraph);
   }
 
   /**
@@ -158,7 +202,6 @@ public class DataflowTaskGraphGenerator implements IDataflowTaskGraphGenerator {
   @Override
   public DataflowTaskGraphGenerator generateTaskGraph(
       Task sourceTask, Task... sinkTask) {
-
     return this;
   }
 
@@ -168,7 +211,6 @@ public class DataflowTaskGraphGenerator implements IDataflowTaskGraphGenerator {
   @Override
   public DataflowTaskGraphGenerator generateDataflowTaskGraph(
       Task sourceTask, Task sinkTask, CManager... cManagerTask) {
-
     return this;
   }
 }

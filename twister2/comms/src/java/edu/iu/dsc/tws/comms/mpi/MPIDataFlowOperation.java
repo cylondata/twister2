@@ -174,6 +174,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
     int noOfSendBuffers = MPIContext.broadcastBufferCount(config);
     int sendBufferSize = MPIContext.bufferSize(config);
 
+//    LOG.info(String.format("%d Send buffer size: %d", executor, sendBufferSize));
     this.sendBuffers = new ArrayBlockingQueue<MPIBuffer>(noOfSendBuffers);
     for (int i = 0; i < noOfSendBuffers; i++) {
       sendBuffers.offer(new MPIBuffer(sendBufferSize));
@@ -222,6 +223,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
     // we will receive from these
     int maxReceiveBuffers = MPIContext.receiveBufferCount(config);
     int receiveBufferSize = MPIContext.bufferSize(config);
+//    LOG.info(String.format("%d Receive buffer size: %d", executor, receiveBufferSize));
     for (Integer recv : receivingExecutors) {
       Queue<MPIBuffer> recvList = new LinkedBlockingQueue<>();
       for (int i = 0; i < maxReceiveBuffers; i++) {
@@ -456,17 +458,17 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
    * Progress the serializations
    */
   public void progress() {
-    if (partialSendAttempts > 1000000 || sendAttempts > 1000000) {
-      String s = "";
-      for (Map.Entry<Integer, Queue<MPIBuffer>> e : receiveBuffers.entrySet()) {
-        s += e.getKey() + "-" + e.getValue().size() + " ";
-      }
-      LOG.info(String.format(
-          "%d send count %d receive %d send release %d receive release %d %s %d %d",
-          executor, sendCount, receiveCount, sendBufferReleaseCount,
-          receiveBufferReleaseCount, s, sendsOfferred, sendsPartialOfferred));
-      ((TWSMPIChannel) channel).setDebug(true);
-    }
+//    if (partialSendAttempts > 1000000 || sendAttempts > 1000000) {
+//      String s = "";
+//      for (Map.Entry<Integer, Queue<MPIBuffer>> e : receiveBuffers.entrySet()) {
+//        s += e.getKey() + "-" + e.getValue().size() + " ";
+//      }
+//      LOG.info(String.format(
+//          "%d send count %d receive %d send release %d receive release %d %s %d %d",
+//          executor, sendCount, receiveCount, sendBufferReleaseCount,
+//          receiveBufferReleaseCount, s, sendsOfferred, sendsPartialOfferred));
+//      ((TWSMPIChannel) channel).setDebug(true);
+//    }
     if (sendProgressTracker.canProgress()) {
       int sendId = sendProgressTracker.next();
       if (sendId != Integer.MIN_VALUE) {

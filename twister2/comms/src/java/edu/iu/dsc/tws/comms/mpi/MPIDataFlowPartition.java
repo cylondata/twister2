@@ -18,11 +18,13 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -120,7 +122,8 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
     this.instancePlan = taskPlan;
     this.type = t;
 
-    LOG.info(String.format("%d adding internal/external routing", taskPlan.getThisExecutor()));
+    LOG.log(Level.FINE, String.format("%d adding internal/external routing",
+        taskPlan.getThisExecutor()));
     for (int s : thisSources) {
       Set<Integer> integerSetMap = internal.get(s);
       if (integerSetMap != null) {
@@ -131,12 +134,12 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
       if (integerSetMap1 != null) {
         this.dests.external.addAll(integerSetMap1);
       }
-      LOG.info(String.format("%d adding internal/external routing %d",
+      LOG.fine(String.format("%d adding internal/external routing %d",
           taskPlan.getThisExecutor(), s));
       break;
     }
 
-    LOG.info(String.format("%d done adding internal/external routing",
+    LOG.log(Level.FINE, String.format("%d done adding internal/external routing",
         taskPlan.getThisExecutor()));
     //TODO : Does this send the correct receiveExpectedTaskIds for partition communication
     if (this.finalReceiver != null && isLastReceiver()) {
@@ -175,12 +178,6 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
       pendingReceiveDeSerializations.put(e, new ArrayBlockingQueue<MPIMessage>(capacity));
       deSerializerMap.put(e, new MPIMessageDeSerializer(new KryoSerializer()));
     }
-
-    KryoSerializer kryoSerializer = new KryoSerializer();
-    kryoSerializer.init(new HashMap<String, Object>());
-
-    MessageDeSerializer messageDeSerializer = new MPIMessageDeSerializer(kryoSerializer);
-    MessageSerializer messageSerializer = new MPIMessageSerializer(kryoSerializer);
 
     delegete.init(cfg, t, taskPlan, edge,
         router.receivingExecutors(), router.isLastReceiver(), this,
@@ -249,37 +246,46 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
     delegete.setStoreBased(memoryMapped);
   }
 
+  private Map<ImmutablePair<Integer, Integer>, RoutingParameters> routingParamCache
+      = new ConcurrentHashMap<>();
+
   private RoutingParameters sendRoutingParameters(int source, int path) {
-    RoutingParameters routingParameters = new RoutingParameters();
-    if (partitionStratergy == PartitionStratergy.RANDOM) {
-      routingParameters.setDestinationId(0);
-      if (!destinationIndex.containsKey(source)) {
-        throw new RuntimeException(String.format(
-            "Un-expected source %d in loadbalance executor %d %s", source,
-            executor, destinationIndex));
-      }
+    ImmutablePair<Integer, Integer> key = new ImmutablePair<>(source, path);
+    if (routingParamCache.containsKey(key)) {
+      return routingParamCache.get(key);
+    } else {
+      RoutingParameters routingParameters = new RoutingParameters();
+      if (partitionStratergy == PartitionStratergy.RANDOM) {
+        routingParameters.setDestinationId(0);
+        if (!destinationIndex.containsKey(source)) {
+          throw new RuntimeException(String.format(
+              "Un-expected source %d in loadbalance executor %d %s", source,
+              executor, destinationIndex));
+        }
 
-      int index = destinationIndex.get(source);
-      int route = destinationsList.get(index);
+        int index = destinationIndex.get(source);
+        int route = destinationsList.get(index);
 
-      if (thisTasks.contains(route)) {
-        routingParameters.addInteranlRoute(route);
-      } else {
-        routingParameters.addExternalRoute(route);
-      }
-      routingParameters.setDestinationId(route);
+        if (thisTasks.contains(route)) {
+          routingParameters.addInteranlRoute(route);
+        } else {
+          routingParameters.addExternalRoute(route);
+        }
+        routingParameters.setDestinationId(route);
 
-      index = (index + 1) % destinations.size();
-      destinationIndex.put(source, index);
-    } else if (partitionStratergy == PartitionStratergy.DIRECT) {
-      routingParameters.setDestinationId(path);
-      if (dests.external.contains(path)) {
-        routingParameters.addExternalRoute(path);
-      } else {
-        routingParameters.addInteranlRoute(path);
+        index = (index + 1) % destinations.size();
+        destinationIndex.put(source, index);
+      } else if (partitionStratergy == PartitionStratergy.DIRECT) {
+        routingParameters.setDestinationId(path);
+        if (dests.external.contains(path)) {
+          routingParameters.addExternalRoute(path);
+        } else {
+          routingParameters.addInteranlRoute(path);
+        }
       }
+      routingParamCache.put(key, routingParameters);
+      return routingParameters;
     }
-    return routingParameters;
   }
 
   public boolean receiveSendInternally(int source, int t, int path, int flags, Object message) {

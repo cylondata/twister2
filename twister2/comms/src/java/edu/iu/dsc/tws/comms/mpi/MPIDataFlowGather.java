@@ -195,8 +195,12 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
     if (sourceInternalRouting != null) {
       routingParameters.addInternalRoutes(sourceInternalRouting);
     }
-
-    routingParameters.setDestinationId(router.destinationIdentifier(source, path));
+    try {
+      routingParameters.setDestinationId(router.destinationIdentifier(source, path));
+    } catch (RuntimeException e) {
+      LOG.info(String.format("%d exception %d %d %d %s",
+          executor, index, pathToUse, destination, router.getDestinationIdentifiers()));
+    }
     return routingParameters;
   }
 
@@ -293,8 +297,7 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
     for (int e : execs) {
       int capacity = maxReceiveBuffers * 2 * receiveExecutorsSize;
       Queue<Pair<Object, MPIMessage>> pendingReceiveMessages =
-          new ArrayBlockingQueue<Pair<Object, MPIMessage>>(
-              capacity);
+          new ArrayBlockingQueue<Pair<Object, MPIMessage>>(capacity);
       pendingReceiveMessagesPerSource.put(e, pendingReceiveMessages);
       pendingReceiveDeSerializations.put(e, new ArrayBlockingQueue<MPIMessage>(capacity));
       deSerializerMap.put(e, new MPIMultiMessageDeserializer(new KryoSerializer(), executor));

@@ -68,6 +68,10 @@ public class MPIMessageSerializer implements MessageSerializer {
         != MPISendMessage.SendState.SERIALIZED) {
       MPIBuffer buffer = sendBuffers.poll();
 
+      if (buffer == null) {
+        break;
+      }
+
       if (sendMessage.serializedState() == MPISendMessage.SendState.INIT
           || sendMessage.serializedState() == MPISendMessage.SendState.SENT_INTERNALLY) {
         // build the header
