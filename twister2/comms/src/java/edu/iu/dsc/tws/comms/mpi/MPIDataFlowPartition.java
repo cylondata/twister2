@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
@@ -246,7 +247,7 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
   }
 
   private Map<ImmutablePair<Integer, Integer>, RoutingParameters> routingParamCache
-      = new HashMap<>();
+      = new ConcurrentHashMap<>();
 
   private RoutingParameters sendRoutingParameters(int source, int path) {
     ImmutablePair<Integer, Integer> key = new ImmutablePair<>(source, path);
