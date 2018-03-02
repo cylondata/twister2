@@ -23,6 +23,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -244,37 +245,46 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
     delegete.setStoreBased(memoryMapped);
   }
 
+  private Map<ImmutablePair<Integer, Integer>, RoutingParameters> routingParamCache
+      = new HashMap<>();
+
   private RoutingParameters sendRoutingParameters(int source, int path) {
-    RoutingParameters routingParameters = new RoutingParameters();
-    if (partitionStratergy == PartitionStratergy.RANDOM) {
-      routingParameters.setDestinationId(0);
-      if (!destinationIndex.containsKey(source)) {
-        throw new RuntimeException(String.format(
-            "Un-expected source %d in loadbalance executor %d %s", source,
-            executor, destinationIndex));
-      }
+    ImmutablePair<Integer, Integer> key = new ImmutablePair<>(source, path);
+    if (routingParamCache.containsKey(key)) {
+      return routingParamCache.get(key);
+    } else {
+      RoutingParameters routingParameters = new RoutingParameters();
+      if (partitionStratergy == PartitionStratergy.RANDOM) {
+        routingParameters.setDestinationId(0);
+        if (!destinationIndex.containsKey(source)) {
+          throw new RuntimeException(String.format(
+              "Un-expected source %d in loadbalance executor %d %s", source,
+              executor, destinationIndex));
+        }
 
-      int index = destinationIndex.get(source);
-      int route = destinationsList.get(index);
+        int index = destinationIndex.get(source);
+        int route = destinationsList.get(index);
 
-      if (thisTasks.contains(route)) {
-        routingParameters.addInteranlRoute(route);
-      } else {
-        routingParameters.addExternalRoute(route);
-      }
-      routingParameters.setDestinationId(route);
+        if (thisTasks.contains(route)) {
+          routingParameters.addInteranlRoute(route);
+        } else {
+          routingParameters.addExternalRoute(route);
+        }
+        routingParameters.setDestinationId(route);
 
-      index = (index + 1) % destinations.size();
-      destinationIndex.put(source, index);
-    } else if (partitionStratergy == PartitionStratergy.DIRECT) {
-      routingParameters.setDestinationId(path);
-      if (dests.external.contains(path)) {
-        routingParameters.addExternalRoute(path);
-      } else {
-        routingParameters.addInteranlRoute(path);
+        index = (index + 1) % destinations.size();
+        destinationIndex.put(source, index);
+      } else if (partitionStratergy == PartitionStratergy.DIRECT) {
+        routingParameters.setDestinationId(path);
+        if (dests.external.contains(path)) {
+          routingParameters.addExternalRoute(path);
+        } else {
+          routingParameters.addInteranlRoute(path);
+        }
       }
+      routingParamCache.put(key, routingParameters);
+      return routingParameters;
     }
-    return routingParameters;
   }
 
   public boolean receiveSendInternally(int source, int t, int path, int flags, Object message) {
