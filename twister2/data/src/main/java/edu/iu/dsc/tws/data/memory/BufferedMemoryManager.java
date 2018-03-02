@@ -452,7 +452,10 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
       temp.put(buffers.poll());
     }
     //Since we got all the buffer values reset the size
-    keyBufferSizes.get(opID).put(key, 0);
+    keyMap.get(opID).remove(key);
+    keyMapCurrent.get(opID).remove(key);
+    keyMapBuffers.get(opID).remove(key);
+    keyBufferSizes.get(opID).remove(key);
     if (memoryManager.containsKey(opID, key)) {
       return memoryManager.append(opID, key,
           temp);
@@ -478,7 +481,10 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
     }
     temp.put(last);
     //Since we got all the buffer values reset the size
-    keyBufferSizes.get(opID).put(key, 0);
+    keyMap.get(opID).remove(key);
+    keyMapCurrent.get(opID).remove(key);
+    keyMapBuffers.get(opID).remove(key);
+    keyBufferSizes.get(opID).remove(key);
     if (memoryManager.containsKey(opID, key)) {
       return memoryManager.append(opID, key,
           temp);
