@@ -17,6 +17,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.core.TaskPlan;
@@ -89,7 +90,7 @@ public class PartitionRouter {
   }
 
   public Set<Integer> receivingExecutors() {
-    LOG.info(taskPlan.getThisExecutor() + " Receiving executors: " + receiveExecutors);
+    LOG.log(Level.FINE, taskPlan.getThisExecutor() + " Receiving executors: " + receiveExecutors);
     return receiveExecutors;
   }
 
@@ -135,10 +136,10 @@ public class PartitionRouter {
     Set<Integer> executors = new HashSet<>();
 
     Set<Integer> allExecutors = plan.getAllExecutors();
-    LOG.info(String.format("%d All executors: %s", plan.getThisExecutor(), allExecutors));
+    LOG.fine(String.format("%d All executors: %s", plan.getThisExecutor(), allExecutors));
     for (int e : allExecutors) {
       Set<Integer> tasksOfExecutor = plan.getChannelsOfExecutor(e);
-      LOG.info(String.format("%d Tasks of executors: %s", plan.getThisExecutor(), tasksOfExecutor));
+      LOG.fine(String.format("%d Tasks of executors: %s", plan.getThisExecutor(), tasksOfExecutor));
       for (int t : tasks) {
         if (tasksOfExecutor.contains(t)) {
           executors.add(e);

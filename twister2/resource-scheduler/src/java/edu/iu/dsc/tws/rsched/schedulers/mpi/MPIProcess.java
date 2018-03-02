@@ -66,7 +66,7 @@ public final class MPIProcess {
       // we are loading the configuration for all the components
       Config config = loadConfigurations(cmd, rank);
       // normal worker
-      LOG.log(Level.INFO, "A worker process is starting...");
+      LOG.log(Level.FINE, "A worker process is starting...");
       worker(config, rank);
     } catch (MPIException e) {
       LOG.log(Level.SEVERE, "Failed the MPI process", e);
@@ -145,7 +145,7 @@ public final class MPIProcess {
     String clusterType = cmd.getOptionValue("cluster_type");
     String jobName = cmd.getOptionValue("job_name");
 
-    LOG.log(Level.INFO, String.format("Initializing process with "
+    LOG.log(Level.FINE, String.format("Initializing process with "
         + "twister_home: %s container_class: %s config_dir: %s cluster_type: %s",
         twister2Home, container, configDir, clusterType));
 
@@ -185,7 +185,7 @@ public final class MPIProcess {
     try {
       Object object = ReflectionUtils.newInstance(containerClass);
       container = (IContainer) object;
-      LOG.info("loaded container class: " + containerClass);
+      LOG.log(Level.FINE, "loaded container class: " + containerClass);
     } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
       LOG.log(Level.SEVERE, String.format("failed to load the container class %s",
           containerClass), e);
@@ -195,9 +195,8 @@ public final class MPIProcess {
 
     // lets do a barrier here so everyone is synchronized at the start
     try {
-      LOG.log(Level.INFO, String.format("Process %d: barrier", rank));
       MPI.COMM_WORLD.barrier();
-      LOG.log(Level.INFO, String.format("Worker %d: the cluster is ready...", rank));
+      LOG.log(Level.FINE, String.format("Worker %d: the cluster is ready...", rank));
     } catch (MPIException e) {
       LOG.log(Level.SEVERE, "Failed to synchronize the workers at the start");
       throw new RuntimeException(e);

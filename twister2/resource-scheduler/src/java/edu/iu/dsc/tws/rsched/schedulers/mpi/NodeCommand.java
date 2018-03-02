@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
@@ -23,6 +24,7 @@ import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
 
 public class NodeCommand extends MPICommand {
+  private static final Logger LOG = Logger.getLogger(NodeCommand.class.getName());
   public NodeCommand(Config cfg, String workingDirectory) {
     super(cfg, workingDirectory);
   }
@@ -52,7 +54,7 @@ public class NodeCommand extends MPICommand {
     mpiCommand.add(twister2Home);
     mpiCommand.add(twister2Home);
     mpiCommand.add(Paths.get(configDirectoryName, nodesFileName).toString());
-
+    LOG.info(String.format("Command %s", mpiCommand));
     return mpiCommand;
   }
 

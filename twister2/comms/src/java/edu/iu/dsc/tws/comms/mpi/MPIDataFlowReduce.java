@@ -237,7 +237,7 @@ public class MPIDataFlowReduce implements DataFlowOperation, MPIMessageReceiver 
       this.finalReceiver.init(cfg, this, receiveExpectedTaskIds());
     }
 
-    LOG.info(String.format("%d all send tasks: %s", executor, router.sendQueueIds()));
+    LOG.log(Level.FINE, String.format("%d all send tasks: %s", executor, router.sendQueueIds()));
 
     Map<Integer, ArrayBlockingQueue<Pair<Object, MPISendMessage>>> pendingSendMessagesPerSource =
         new HashMap<>();
