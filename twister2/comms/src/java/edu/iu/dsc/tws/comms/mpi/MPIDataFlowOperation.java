@@ -249,56 +249,61 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
     // for partial sends we use minus value to find the correct queue
     ArrayBlockingQueue<Pair<Object, MPISendMessage>> pendingSendMessages =
         pendingSendMessagesPerSource.get(source * -1 - 1);
+    if (pendingSendMessages.remainingCapacity() > 0) {
+      MPIMessage mpiMessage = new MPIMessage(source, type, MPIMessageDirection.OUT, this);
+      int di = -1;
+      if (routingParameters.getExternalRoutes().size() > 0) {
+        di = routingParameters.getDestinationId();
+      }
+      // create a send message to keep track of the serialization
+      // at the intial stage the sub-edge is 0
+      MPISendMessage sendMessage = new MPISendMessage(source, mpiMessage, edge,
+          di, path, flags, routingParameters.getInternalRoutes(),
+          routingParameters.getExternalRoutes());
 
-    MPIMessage mpiMessage = new MPIMessage(source, type, MPIMessageDirection.OUT, this);
-    int di = -1;
-    if (routingParameters.getExternalRoutes().size() > 0) {
-      di = routingParameters.getDestinationId();
+      // now try to put this into pending
+      boolean ret = pendingSendMessages.offer(
+          new ImmutablePair<Object, MPISendMessage>(object, sendMessage));
+      if (!ret) {
+        partialSendAttempts++;
+      } else {
+        ((TWSMPIChannel) channel).setDebug(false);
+        partialSendAttempts = 0;
+        sendsPartialOfferred++;
+      }
+      return ret;
     }
-    // create a send message to keep track of the serialization
-    // at the intial stage the sub-edge is 0
-    MPISendMessage sendMessage = new MPISendMessage(source, mpiMessage, edge,
-        di, path, flags, routingParameters.getInternalRoutes(),
-        routingParameters.getExternalRoutes());
-
-    // now try to put this into pending
-    boolean ret = pendingSendMessages.offer(
-        new ImmutablePair<Object, MPISendMessage>(object, sendMessage));
-    if (!ret) {
-      partialSendAttempts++;
-    } else {
-      ((TWSMPIChannel) channel).setDebug(false);
-      partialSendAttempts = 0;
-      sendsPartialOfferred++;
-    }
-    return ret;
+    return false;
   }
 
   public boolean sendMessage(int source, Object message, int path,
                              int flags, RoutingParameters routingParameters) {
     ArrayBlockingQueue<Pair<Object, MPISendMessage>> pendingSendMessages =
         pendingSendMessagesPerSource.get(source);
-    MPIMessage mpiMessage = new MPIMessage(source, type, MPIMessageDirection.OUT, this);
+    if (pendingSendMessages.remainingCapacity() > 0) {
+      MPIMessage mpiMessage = new MPIMessage(source, type, MPIMessageDirection.OUT, this);
 
-    int di = -1;
-    if (routingParameters.getExternalRoutes().size() > 0) {
-      di = routingParameters.getDestinationId();
-    }
-    MPISendMessage sendMessage = new MPISendMessage(source, mpiMessage, edge,
-        di, path, flags, routingParameters.getInternalRoutes(),
-        routingParameters.getExternalRoutes());
+      int di = -1;
+      if (routingParameters.getExternalRoutes().size() > 0) {
+        di = routingParameters.getDestinationId();
+      }
+      MPISendMessage sendMessage = new MPISendMessage(source, mpiMessage, edge,
+          di, path, flags, routingParameters.getInternalRoutes(),
+          routingParameters.getExternalRoutes());
 
-    // now try to put this into pending
-    boolean offer = pendingSendMessages.offer(
-        new ImmutablePair<Object, MPISendMessage>(message, sendMessage));
-    if (!offer) {
-      sendAttempts++;
-    } else {
-      ((TWSMPIChannel) channel).setDebug(false);
-      sendAttempts = 0;
-      sendsOfferred++;
+      // now try to put this into pending
+      boolean offer = pendingSendMessages.offer(
+          new ImmutablePair<Object, MPISendMessage>(message, sendMessage));
+      if (!offer) {
+        sendAttempts++;
+      } else {
+        ((TWSMPIChannel) channel).setDebug(false);
+        sendAttempts = 0;
+        sendsOfferred++;
+      }
+      return offer;
     }
-    return offer;
+    return false;
   }
 
   private void sendProgress(Queue<Pair<Object, MPISendMessage>> pendingSendMessages, int sendId) {

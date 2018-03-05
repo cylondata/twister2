@@ -18,13 +18,14 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.Table;
+
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -179,6 +180,12 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
       deSerializerMap.put(e, new MPIMessageDeSerializer(new KryoSerializer()));
     }
 
+    for (int src : srcs) {
+      for (int dest : destinations) {
+        sendRoutingParameters(src, dest);
+      }
+    }
+
     delegete.init(cfg, t, taskPlan, edge,
         router.receivingExecutors(), router.isLastReceiver(), this,
         pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
@@ -246,13 +253,11 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
     delegete.setStoreBased(memoryMapped);
   }
 
-  private Map<ImmutablePair<Integer, Integer>, RoutingParameters> routingParamCache
-      = new ConcurrentHashMap<>();
+  private Table<Integer, Integer, RoutingParameters> routingParamCache = HashBasedTable.create();
 
   private RoutingParameters sendRoutingParameters(int source, int path) {
-    ImmutablePair<Integer, Integer> key = new ImmutablePair<>(source, path);
-    if (routingParamCache.containsKey(key)) {
-      return routingParamCache.get(key);
+    if (routingParamCache.contains(source, path)) {
+      return routingParamCache.get(source, path);
     } else {
       RoutingParameters routingParameters = new RoutingParameters();
       if (partitionStratergy == PartitionStratergy.RANDOM) {
@@ -283,7 +288,7 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
           routingParameters.addInteranlRoute(path);
         }
       }
-      routingParamCache.put(key, routingParameters);
+      routingParamCache.put(source, path, routingParameters);
       return routingParameters;
     }
   }
