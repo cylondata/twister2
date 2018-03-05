@@ -254,6 +254,20 @@ public class TaskExecutorFixedThread implements TaskExecutor {
     return true;
   }
 
+  public boolean submitTask(Task task, List<Integer> outputQueues) {
+    boolean status = false;
+    if (!taskMap.containsKey(task.getTaskId())) {
+      throw new RuntimeException(String.format("Unable to locate task with task id : %d, "
+          + "Please make sure the task is registered", task.getTaskId()));
+    } else {
+      addRunningTask(task.getTaskId());
+      executorPool.submit(new RunnableFixedTask(taskMap.get(task.getTaskId()), this, outputQueues));
+      status = true;
+    }
+
+    return status;
+  }
+
   public boolean submitTask(int tid) {
     if (!taskMap.containsKey(tid)) {
       throw new RuntimeException(String.format("Unable to locate task with task id : %d, "

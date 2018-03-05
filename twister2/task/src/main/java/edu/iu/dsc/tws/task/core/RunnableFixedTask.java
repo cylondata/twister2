@@ -138,6 +138,7 @@ public class RunnableFixedTask implements Runnable {
 
   @Override
   public void run() {
+    LOG.info("RunnableFixedTask : run()");
     if (executableTask == null) {
       throw new RuntimeException("Task needs to be set to execute");
     }
@@ -146,6 +147,7 @@ public class RunnableFixedTask implements Runnable {
 
     Message result;
     if (isMessageBased) {
+      LOG.info("Message Based ");
       //TODO: check if this part needs to be synced
       while (!queueRef.isEmpty()) {
         if (messageProcessCount < messageProcessLimit) {
@@ -174,8 +176,11 @@ public class RunnableFixedTask implements Runnable {
         }
       }
     } else {
+      LOG.info(" Non Message Based ");
       result = executableTask.execute();
+      LOG.info("Executed Message : " + result.getContent().toString());
       if (result != null && outQueues != null && !outQueues.isEmpty()) {
+        LOG.info("SubmitToOutputQueue");
         submitToOutputQueue(result);
       }
       TaskExecutorFixedThread.removeSubmittedTask(executableTask.getTaskId());

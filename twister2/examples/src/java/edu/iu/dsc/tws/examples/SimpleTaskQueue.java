@@ -98,7 +98,7 @@ public class SimpleTaskQueue implements IContainer {
     Map<String, Object> newCfg = new HashMap<>();
 
     LOG.info("-------------------------------------------");
-    LOG.info("Setting up reduce dataflow operation");
+    LOG.info("Setting up Task Queue dataflow operation");
     LOG.info("-------------------------------------------");
     // this method calls the init method
     // I think this is wrong
@@ -149,6 +149,9 @@ public class SimpleTaskQueue implements IContainer {
 
     @Override
     public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+      LOG.info("Dataflow Operation : " + op.toString());
+      LOG.info("Expected Ids Size : " + expectedIds.size());
+      LOG.info("Expected Ids : " + expectedIds);
     }
 
     @Override
