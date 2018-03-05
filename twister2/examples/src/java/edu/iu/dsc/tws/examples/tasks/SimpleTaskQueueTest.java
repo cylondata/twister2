@@ -106,11 +106,10 @@ public class SimpleTaskQueueTest implements IContainer {
       direct = channel.direct(newCfg, MessageType.OBJECT, 0, sources,
           dest, new PingPongReceive());
 
-      taskExecutor.initCommunication(channel, direct); 
+      taskExecutor.initCommunication(channel, direct);
       taskExecutor.registerTask(new MapWorker1(0, direct));
       taskExecutor.submitTask(0);
       taskExecutor.progres();
-
 
     } catch (Throwable t) {
       t.printStackTrace();
