@@ -18,9 +18,9 @@ import edu.iu.dsc.tws.data.memory.utils.DataMessageType;
  * Convert between edu.iu.dsc.tws.comms.api.DataMessageType and
  * edu.iu.dsc.tws.data.memory.utils.DataMessageType
  */
-public final class MessageTypeConverter {
+public final class MessageTypeUtils {
 
-  private MessageTypeConverter() {
+  private MessageTypeUtils() {
   }
 
   public static DataMessageType toDataMessageType(MessageType a) {
@@ -49,6 +49,18 @@ public final class MessageTypeConverter {
         throw new RuntimeException("The given Message type does not have a corresponding"
             + " DataMessageType");
     }
+  }
+
+  /**
+   * Checks if the given message type is of a primitive type
+   * if the type is primitive then we do not need to add data length to the data buffers
+   */
+  public static boolean isPrimitiveType(MessageType type) {
+    if (type == MessageType.INTEGER || type == MessageType.SHORT || type == MessageType.DOUBLE
+        || type == MessageType.LONG || type == MessageType.CHAR) {
+      return true;
+    }
+    return false;
   }
 
 }

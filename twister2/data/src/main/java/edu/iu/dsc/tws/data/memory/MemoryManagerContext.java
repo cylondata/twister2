@@ -29,4 +29,7 @@ public class MemoryManagerContext extends Context {
    * Charset used in the memory manager
    */
   public static final Charset DEFAULT_CHARSET = Charset.forName("UTF-8");
+
+  public static final int TL_DATA_BUFF_INIT_CAP = 1024;
+  public static final int TL_KEY_BUFF_INIT_CAP = 256;
 }

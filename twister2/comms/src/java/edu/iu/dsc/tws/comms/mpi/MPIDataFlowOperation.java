@@ -39,9 +39,10 @@ import edu.iu.dsc.tws.comms.mpi.io.SerializeState;
 import edu.iu.dsc.tws.comms.mpi.io.types.DataSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.types.KeySerializer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
-import edu.iu.dsc.tws.comms.utils.MessageTypeConverter;
+import edu.iu.dsc.tws.comms.utils.MessageTypeUtils;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.memory.MemoryManager;
+import edu.iu.dsc.tws.data.memory.MemoryManagerContext;
 import edu.iu.dsc.tws.data.memory.OperationMemoryManager;
 import edu.iu.dsc.tws.data.memory.lmdb.LMDBMemoryManager;
 
@@ -61,7 +62,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
   // we may have multiple routes throughus
 
   protected MessageType type;
-  protected MessageType keyType = MessageType.SHORT;
+  protected MessageType keyType = MessageType.BYTE;
   protected boolean isKeyed = false;
   protected Lock lock = new ReentrantLock();
 
@@ -136,6 +137,13 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
 
   private int partialSendAttempts = 0;
   private int sendAttempts = 0;
+
+  private long time1 = 0;
+  private long time2 = 0;
+  private int count = 0;
+
+  private ThreadLocal<ByteBuffer> threadLocalDataBuffer = new ThreadLocal<ByteBuffer>();
+  private ThreadLocal<ByteBuffer> threadLocalKeyBuffer = new ThreadLocal<ByteBuffer>();
 
   public MPIDataFlowOperation(TWSChannel channel) {
     this.channel = channel;
@@ -513,22 +521,69 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
     }
     if (isKeyed) {
       KeyedContent kc = (KeyedContent) messageObject;
-      ByteBuffer keyBuffer = KeySerializer.getserializedKey(kc.getSource(),
+      byte[] keyBytes = KeySerializer.getserializedKey(kc.getSource(),
           mpiSendMessage.getSerializationState(), keyType, kryoSerializer);
-      ByteBuffer dataBuffer = DataSerializer.getserializedData(kc.getObject(),
-          type, kryoSerializer);
-      //TODO : need to generate operation key and use it
-      return operationMemoryManager.put(keyBuffer, dataBuffer);
+
+      int dataLength = DataSerializer.serializeData(kc.getObject(), type,
+          mpiSendMessage.getSerializationState(), kryoSerializer);
+      setupThreadLocalBuffers(keyBytes.length, dataLength, type);
+
+      threadLocalKeyBuffer.get().put(keyBytes);
+      threadLocalKeyBuffer.get().flip();
+      DataSerializer.getserializedData(kc.getObject(), type,
+          mpiSendMessage.getSerializationState(), kryoSerializer, threadLocalDataBuffer.get());
+      operationMemoryManager.put(threadLocalKeyBuffer.get(), threadLocalDataBuffer.get());
+      return true;
     } else {
       //if this is not a keyed operation we will use the source task id as the key
       //Will be implmented after further looking into the use case
       int key = mpiSendMessage.getSource();
       ByteBuffer keyBuffer = ByteBuffer.allocateDirect(Integer.BYTES);
       keyBuffer.putInt(key);
-      ByteBuffer dataBuffer = DataSerializer.getserializedData(messageObject, type, kryoSerializer);
+      DataSerializer.getserializedData(messageObject, type,
+          mpiSendMessage.getSerializationState(), kryoSerializer, threadLocalDataBuffer.get());
       //TODO : need to generate operation key and use it
-      return operationMemoryManager.put(keyBuffer, dataBuffer);
+      return operationMemoryManager.put(keyBuffer, threadLocalDataBuffer.get());
     }
+  }
+
+  /**
+   * Set's up all the thread local bytebuffers that are needed to copy the data into MM
+   */
+  private void setupThreadLocalBuffers(int keyLength, int dataLength, MessageType messageType) {
+    //We are using a larger buffer anyway so no need to check for primitive just add 4 bytes
+
+    int dataLengthTemp = dataLength + 4;
+    /*if (!MessageTypeUtils.isPrimitiveType(messageType)) {
+      dataLengthTemp = dataLength + 4;
+    }*/
+    if (threadLocalDataBuffer.get() == null) {
+      initThreadLocalVariables();
+    } else {
+      if (keyLength < MemoryManagerContext.TL_KEY_BUFF_INIT_CAP
+          && dataLengthTemp < MemoryManagerContext.TL_DATA_BUFF_INIT_CAP) {
+        threadLocalDataBuffer.get().clear();
+        threadLocalKeyBuffer.get().clear();
+        return;
+      }
+      if (threadLocalDataBuffer.get().capacity() < dataLengthTemp) {
+        ByteBuffer valBuffer = ByteBuffer.allocateDirect(dataLengthTemp);
+        threadLocalDataBuffer.set(valBuffer);
+      }
+      if (threadLocalKeyBuffer.get().capacity() < keyLength) {
+        ByteBuffer keyBuffer = ByteBuffer.allocateDirect(keyLength);
+        threadLocalKeyBuffer.set(keyBuffer);
+      }
+    }
+    threadLocalDataBuffer.get().clear();
+    threadLocalKeyBuffer.get().clear();
+  }
+
+  private void initThreadLocalVariables() {
+    ByteBuffer valBuffer = ByteBuffer.allocateDirect(MemoryManagerContext.TL_DATA_BUFF_INIT_CAP);
+    ByteBuffer keyBuffer = ByteBuffer.allocateDirect(MemoryManagerContext.TL_KEY_BUFF_INIT_CAP);
+    threadLocalDataBuffer.set(valBuffer);
+    threadLocalKeyBuffer.set(keyBuffer);
   }
 
   /**
@@ -539,6 +594,10 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
   @SuppressWarnings({"rawtypes", "unchecked"})
   private void writeToMemoryManager(MPIMessage currentMessage, int id) {
     Object data = messageDeSerializer.get(id).getDataBuffers(currentMessage, edge);
+    //TODO: make sure to add the data length for non primitive types when adding to byte buffer
+//    Object data = messageDeSerializer.get(id).build(currentMessage,
+//        currentMessage.getHeader().getEdge());
+
     int sourceID = currentMessage.getHeader().getSourceId();
     int noOfMessages = 1;
     boolean isList = false;
@@ -547,28 +606,42 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
       isList = true;
     }
 
+
     if (isList) {
       List objectList = (List) data;
       for (Object message : objectList) {
         if (isKeyed) {
-          Pair<ByteBuffer, ByteBuffer> tempPair = (Pair<ByteBuffer, ByteBuffer>) message;
-          operationMemoryManager.append(tempPair.getKey(), tempPair.getValue());
+          Pair<byte[], byte[]> tempPair = (Pair<byte[], byte[]>) message;
+          setupThreadLocalBuffers(tempPair.getKey().length, tempPair.getValue().length,
+              currentMessage.getType());
+
+          threadLocalKeyBuffer.get().put(tempPair.getKey());
+          threadLocalDataBuffer.get().putInt(tempPair.getValue().length);
+          threadLocalDataBuffer.get().put(tempPair.getValue());
+          operationMemoryManager.put(threadLocalKeyBuffer.get(), threadLocalDataBuffer.get());
+//          operationMemoryManager.put(tempPair.getKey(), tempPair.getValue());
         } else {
-          ByteBuffer dataBuffer = (ByteBuffer) message;
-          ByteBuffer keyBuffer = ByteBuffer.allocateDirect(Integer.BYTES);
-          keyBuffer.putInt(sourceID);
-          operationMemoryManager.append(keyBuffer, dataBuffer);
+          byte[] dataBytes = (byte[]) message;
+          setupThreadLocalBuffers(4, dataBytes.length, currentMessage.getType());
+          threadLocalKeyBuffer.get().putInt(sourceID);
+          operationMemoryManager.put(threadLocalKeyBuffer.get(), threadLocalDataBuffer.get());
         }
       }
     } else {
       if (isKeyed) {
-        Pair<ByteBuffer, ByteBuffer> tempPair = (Pair<ByteBuffer, ByteBuffer>) data;
-        operationMemoryManager.append(tempPair.getKey(), tempPair.getValue());
+        Pair<byte[], byte[]> tempPair = (Pair<byte[], byte[]>) data;
+        setupThreadLocalBuffers(tempPair.getKey().length, tempPair.getValue().length,
+            currentMessage.getType());
+
+        threadLocalKeyBuffer.get().put(tempPair.getKey());
+        threadLocalDataBuffer.get().putInt(tempPair.getValue().length);
+        threadLocalDataBuffer.get().put(tempPair.getValue());
+        operationMemoryManager.put(threadLocalKeyBuffer.get(), threadLocalDataBuffer.get());
       } else {
-        ByteBuffer dataBuffer = (ByteBuffer) data;
-        ByteBuffer keyBuffer = ByteBuffer.allocateDirect(Integer.BYTES);
-        keyBuffer.putInt(sourceID);
-        operationMemoryManager.append(keyBuffer, dataBuffer);
+        byte[] dataBytes = (byte[]) data;
+        setupThreadLocalBuffers(4, dataBytes.length, currentMessage.getType());
+        threadLocalKeyBuffer.get().putInt(sourceID);
+        operationMemoryManager.put(threadLocalKeyBuffer.get(), threadLocalDataBuffer.get());
       }
     }
   }
@@ -664,7 +737,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
   public void setKeyType(MessageType keyType) {
     this.keyType = keyType;
     if (isStoreBased) {
-      operationMemoryManager.setKeyType(MessageTypeConverter.toDataMessageType(keyType));
+      operationMemoryManager.setKeyType(MessageTypeUtils.toDataMessageType(keyType));
     }
   }
 
@@ -687,15 +760,16 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
       //TODO : need to make the memory manager available globally
       opertionID = (int) System.currentTimeMillis();
       this.kryoSerializer = new KryoSerializer();
+//      Path dataPath = new Path("/scratch/pulasthi/terasort/lmdbdatabase_" + this.executor);
       Path dataPath = new Path("/home/pulasthi/work/twister2/lmdbdatabase_" + this.executor);
       this.memoryManager = new LMDBMemoryManager(dataPath);
       if (!isKeyed) {
         this.operationMemoryManager = memoryManager.addOperation(opertionID,
-            MessageTypeConverter.toDataMessageType(type));
+            MessageTypeUtils.toDataMessageType(type));
       } else {
         this.operationMemoryManager = memoryManager.addOperation(opertionID,
-            MessageTypeConverter.toDataMessageType(type),
-            MessageTypeConverter.toDataMessageType(keyType));
+            MessageTypeUtils.toDataMessageType(type),
+            MessageTypeUtils.toDataMessageType(keyType));
       }
     }
   }
