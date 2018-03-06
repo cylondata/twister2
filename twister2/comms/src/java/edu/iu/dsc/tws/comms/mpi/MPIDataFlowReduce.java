@@ -27,6 +27,7 @@ import java.util.logging.Logger;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.CompletionListener;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
@@ -68,6 +69,8 @@ public class MPIDataFlowReduce implements DataFlowOperation, MPIMessageReceiver 
   private AtomicBoolean finalReceiverProgress;
   private AtomicBoolean partialRecevierProgress;
 
+  private CompletionListener completionListener;
+
   private Lock lock = new ReentrantLock();
   private Lock partialLock = new ReentrantLock();
 
@@ -88,6 +91,13 @@ public class MPIDataFlowReduce implements DataFlowOperation, MPIMessageReceiver 
   public MPIDataFlowReduce(TWSChannel channel, Set<Integer> sources, int destination,
                            MessageReceiver finalRcvr, MessageReceiver partialRcvr) {
     this(channel, sources, destination, finalRcvr, partialRcvr, 0, 0);
+  }
+
+  public MPIDataFlowReduce(TWSChannel channel, Set<Integer> sources, int destination,
+                           MessageReceiver finalRcvr, MessageReceiver partialRcvr,
+                           CompletionListener compListener) {
+    this(channel, sources, destination, finalRcvr, partialRcvr, 0, 0);
+    this.completionListener = compListener;
   }
 
   private boolean isLast(int source, int path, int taskIdentifier) {
@@ -272,9 +282,7 @@ public class MPIDataFlowReduce implements DataFlowOperation, MPIMessageReceiver 
       deSerializerMap.put(e, new MPIMessageDeSerializer(new KryoSerializer()));
     }
 
-    KryoSerializer kryoSerializer = new KryoSerializer();
-    kryoSerializer.init(new HashMap<String, Object>());
-
+    this.delegete.setCompletionListener(completionListener);
     delegete.init(cfg, t, taskPlan, edge,
         router.receivingExecutors(), router.isLastReceiver(), this,
         pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
