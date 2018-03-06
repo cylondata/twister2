@@ -28,6 +28,7 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.CompletionListener;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
@@ -127,6 +128,8 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
 
   private ProgressionTracker deserializeProgressTracker;
 
+  private CompletionListener completionListener;
+
   private int sendBufferReleaseCount = 0;
   private int receiveBufferReleaseCount = 0;
   private int sendCount = 0;
@@ -190,6 +193,10 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
     initSerializers();
 
     initProgressTrackers();
+  }
+
+  public void setCompletionListener(CompletionListener cmpListener) {
+    this.completionListener = cmpListener;
   }
 
   protected void initSerializers() {
@@ -603,6 +610,9 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
           throw new RuntimeException("We should be able to offer the buffer");
         }
         receiveBufferReleaseCount++;
+      }
+      if (completionListener != null) {
+        completionListener.completed(message.getOriginatingId());
       }
     } else if (MPIMessageDirection.OUT == message.getMessageDirection()) {
       Queue<MPIBuffer> queue = sendBuffers;
