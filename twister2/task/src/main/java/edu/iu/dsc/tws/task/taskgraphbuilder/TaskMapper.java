@@ -31,10 +31,6 @@ public abstract class TaskMapper implements Runnable {
     this.taskExecutionWeight = executionWeight;
   }
 
-  public boolean hasExecutionWeight() {
-    return this.taskExecutionWeight != -1;
-  }
-
   public abstract void execute();
 
   public abstract void execute(TaskMapper taskMapper);
