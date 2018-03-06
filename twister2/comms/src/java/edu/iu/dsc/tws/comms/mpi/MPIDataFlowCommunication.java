@@ -83,7 +83,7 @@ public class MPIDataFlowCommunication implements TWSCommunication {
 
     // create the dataflow operation
     MPIDataFlowReduce dataFlowOperation = new MPIDataFlowReduce(channel, sourceTasks,
-        destTask, reduceReceiver, partialReceiver);
+        destTask, reduceReceiver, partialReceiver, compListener);
 
     // intialize the operation
     dataFlowOperation.init(mergedCfg, type, instancePlan, edge);
