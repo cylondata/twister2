@@ -70,6 +70,7 @@ public class SimpleTGraphExample implements IContainer {
   private DataflowTGraphParser dataflowTGraphParser = null;
   private Status status;
 
+  private ExecutionGraph executionGraph = null;
   /**
    * Init method to submit the task to the executor
    */
@@ -83,8 +84,7 @@ public class SimpleTGraphExample implements IContainer {
     TaskPlan taskPlan = Utils.createTaskPlan(cfg, plan);
     TWSNetwork network = new TWSNetwork(cfg, taskPlan);
     TWSCommunication channel = network.getDataFlowTWSCommunication();
-    //newly added for testing
-    ExecutionGraph executionGraph = new ExecutionGraph();
+
 
     Set<Integer> sources = new HashSet<>();
     sources.add(0);
@@ -141,62 +141,28 @@ public class SimpleTGraphExample implements IContainer {
           + dataflowTaskGraphGenerator.getTGraph().getTaskVertexSet());
 
 
-      /*if (dataflowTaskGraphGenerator != null) {
+      if (dataflowTaskGraphGenerator != null) {
         dataflowTGraphParser = new DataflowTGraphParser(dataflowTaskGraphGenerator);
         parsedTaskSet = dataflowTGraphParser.dataflowTGraphParseAndSchedule();
         LOG.info("parsed task set:" + parsedTaskSet);
-      }*/
-      parsedTaskSet = executionGraph.parseTaskGraph(dataflowTaskGraphGenerator);
+      }
+      //parsedTaskSet = executionGraph.parseTaskGraph(dataflowTaskGraphGenerator);
       if (!parsedTaskSet.isEmpty()) {
-        String message = executionGraph.generateExecutionGraph(containerId, parsedTaskSet);
+        //newly added for testing
+        executionGraph = new ExecutionGraph(parsedTaskSet);
+        String message = executionGraph.generateExecutionGraph(containerId);
+        //String message = executionGraph.generateExecutionGraph(containerId, parsedTaskSet);
+        /*TaskExecutorFixedThread taskExecutionGraph =
+            executionGraph.generateExecutionGraph(containerId, parsedTaskSet);*/
         LOG.info(message);
       }
     }
 
-    /*if (!parsedTaskSet.isEmpty()) {
-      if (containerId == 0) {
-        //taskExecutor.registerTask(parsedTaskSet.iterator().next());
-        //taskExecutor.submitTask(0);
-        //taskExecutor.progres();
-        LOG.info("Container 0 task is:" + parsedTaskSet.iterator().next().getInputData());
-      } else if (containerId >= 1) { //This loop should be modified for the complex task graphs
-        int index = 0;
-        LOG.info("%%%%%%% Parsed Task Set Size Is: %%%%%" + parsedTaskSet.size());
-        for (TaskGraphMapper processedTask : parsedTaskSet) {
-          if (index == 0) {
-            ++index;
-          } else if (index == 1) {
-            ArrayList<Integer> inq = new ArrayList<>();
-            inq.add(0);
-            //taskExecutor.setTaskMessageProcessLimit(10000);
-            //taskExecutor.registerSinkTask(processedTask, inq);//enabled latter
-            //taskExecutor.progres();
-            LOG.info("Container 1 task is:" + processedTask.getInputData());
-            ++index;
-          } else if (index == 2) {
-            ArrayList<Integer> inq1 = new ArrayList<>();
-            inq1.add(0);
-            //taskExecutor.setTaskMessageProcessLimit(10000);
-            //taskExecutor.registerSinkTask(processedTask, inq1);//enabled latter
-            //taskExecutor.progres();
-            LOG.info("Container 2 task is:" + processedTask.getInputData());
-            ++index;
-          } else if (index == 3) {
-            ArrayList<Integer> inq1 = new ArrayList<>();
-            inq1.add(1);
-            inq1.add(2);
-            //taskExecutor.setTaskMessageProcessLimit(10000);
-            //taskExecutor.registerSinkTask(processedTask, inq1);//enabled latter
-            //taskExecutor.progres();
-            LOG.info("Container 3 task is:" + processedTask.getInputData());
-            ++index;
-          } else if (index > 3) {
-            //it would be constructed based on the container value and no.of tasks
-            LOG.info("Task Index is greater than 3");
-            //break;
-          }
-        }
-      }
+    //It removes only the first tax vertex in the parsedTaskSet.
+    //dataflowTaskGraphGenerator.removeTaskVertex(parsedTaskSet.iterator().next());
+    //It is getting concurrent modification exception...!
+    /*for (TaskGraphMapper processedTask : parsedTaskSet) {
+      dataflowTaskGraphGenerator.removeTaskVertex(processedTask);
     }*/
   }
 

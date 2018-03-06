@@ -11,6 +11,24 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.taskgraphbuilder;
 
-public class TaskSet {
+/**
+ * This taskexecutor is generated for testing purpose, later
+ * it will be replaced with actual task executors.
+ */
+public class TaskExecutor implements Runnable {
 
+  public void execute(TaskGraphMapper task) {
+    System.out.println("Runnable task for the executor:" + task);
+    task.execute();
+    //task.run();
+  }
+
+  @Override
+  public void run() {
+    System.out.println("hello execution finished");
+  }
+
+  public void print() {
+    System.out.println("Just for testing");
+  }
 }
