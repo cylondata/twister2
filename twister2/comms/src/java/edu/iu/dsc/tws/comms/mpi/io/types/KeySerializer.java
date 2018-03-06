@@ -13,6 +13,10 @@ package edu.iu.dsc.tws.comms.mpi.io.types;
 
 import java.nio.ByteBuffer;
 
+import com.google.common.primitives.Ints;
+import com.google.common.primitives.Longs;
+import com.google.common.primitives.Shorts;
+
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.mpi.io.SerializeState;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
@@ -64,48 +68,37 @@ public final class KeySerializer {
    * @param serializer the serializer used to create the byte stream from the object
    * @return ByteBuffer with the key
    */
-  public static ByteBuffer getserializedKey(Object key, SerializeState state,
-                                            MessageType keyType, KryoSerializer serializer) {
+  public static byte[] getserializedKey(Object key, SerializeState state,
+                                        MessageType keyType, KryoSerializer serializer) {
     ByteBuffer keyBuffer;
     switch (keyType) {
       case INTEGER:
-        keyBuffer = ByteBuffer.allocateDirect(4);
-        keyBuffer.putInt((Integer) key);
-        return keyBuffer;
+        return Ints.toByteArray((Integer) key);
       case SHORT:
-        keyBuffer = ByteBuffer.allocateDirect(2);
-        keyBuffer.putShort((Short) key);
-        return keyBuffer;
+        return Shorts.toByteArray((Short) key);
       case LONG:
-        keyBuffer = ByteBuffer.allocateDirect(8);
-        keyBuffer.putLong((Long) key);
-        return keyBuffer;
+        return Longs.toByteArray((Long) key);
       case DOUBLE:
-        keyBuffer = ByteBuffer.allocateDirect(8);
-        keyBuffer.putDouble((Double) key);
-        return keyBuffer;
+        //TODO: check if there is faster way to perform this
+        byte[] temp = new byte[8];
+        ByteBuffer.wrap(temp).putDouble((Double) key);
+        return temp;
       case OBJECT:
         if (state.getKey() == null) {
           byte[] serialize = serializer.serialize(key);
           state.setKey(serialize);
         }
-        keyBuffer = ByteBuffer.allocateDirect(state.getKey().length);
-        keyBuffer.put(state.getKey());
-        return keyBuffer;
+        return state.getKey();
       case BYTE:
         if (state.getKey() == null) {
           state.setKey((byte[]) key);
         }
-        keyBuffer = ByteBuffer.allocateDirect(state.getKey().length);
-        keyBuffer.put(state.getKey());
-        return keyBuffer;
+        return state.getKey();
       case STRING:
         if (state.getKey() == null) {
           state.setKey(((String) key).getBytes());
         }
-        keyBuffer = ByteBuffer.allocateDirect(state.getKey().length);
-        keyBuffer.put(state.getKey());
-        return keyBuffer;
+        return state.getKey();
       default:
         return null;
     }

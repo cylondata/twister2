@@ -53,13 +53,13 @@ public final class KeyDeserializer {
         break;
       case LONG:
         currentIndex = getReadIndex(buffers, currentIndex, 8);
-        key = buffers.get(currentIndex).getByteBuffer().getInt();
+        key = buffers.get(currentIndex).getByteBuffer().getLong();
         keyLength = 8;
         break;
       case DOUBLE:
         currentIndex = getReadIndex(buffers, currentIndex, 8);
         //TODO: should this be getInt or getDouble
-        key = buffers.get(currentIndex).getByteBuffer().getInt();
+        key = buffers.get(currentIndex).getByteBuffer().getDouble();
         keyLength = 8;
         break;
       case OBJECT:
@@ -90,60 +90,56 @@ public final class KeyDeserializer {
    * @param buffers buffers that contain the data
    * @return key as ByteBuffer
    */
-  public static Pair<Integer, ByteBuffer> getKeyAsByteBuffer(MessageType keyType,
-                                                             List<MPIBuffer> buffers) {
+  public static Pair<Integer, byte[]> getKeyAsByteBuffer(MessageType keyType,
+                                                         List<MPIBuffer> buffers) {
     int currentIndex = 0;
-    byte[] tempArray = new byte[8];
+    byte[] tempArray;
     int keyLength = 0;
-    ByteBuffer keyBuffer = null;
     switch (keyType) {
       case INTEGER:
         tempArray = new byte[4];
         keyLength = 4;
         currentIndex = getReadIndex(buffers, currentIndex, 4);
         buffers.get(currentIndex).getByteBuffer().get(tempArray);
-        keyBuffer = ByteBuffer.allocateDirect(4).put(tempArray);
         break;
       case SHORT:
         tempArray = new byte[2];
         keyLength = 2;
         currentIndex = getReadIndex(buffers, currentIndex, 2);
         buffers.get(currentIndex).getByteBuffer().get(tempArray);
-        keyBuffer = ByteBuffer.allocateDirect(2).put(tempArray);
         break;
       case LONG:
         tempArray = new byte[8];
         keyLength = 8;
         currentIndex = getReadIndex(buffers, currentIndex, 8);
         buffers.get(currentIndex).getByteBuffer().get(tempArray);
-        keyBuffer = ByteBuffer.allocateDirect(8).put(tempArray);
         break;
       case DOUBLE:
         tempArray = new byte[8];
         keyLength = 8;
         currentIndex = getReadIndex(buffers, currentIndex, 8);
         buffers.get(currentIndex).getByteBuffer().get(tempArray);
-        keyBuffer = ByteBuffer.allocateDirect(8).put(tempArray);
         break;
       case OBJECT:
         currentIndex = getReadIndex(buffers, currentIndex, 4);
         keyLength = buffers.get(currentIndex).getByteBuffer().getInt();
-        keyBuffer = ByteBuffer.allocateDirect(keyLength).put(readBytes(buffers, keyLength));
+        tempArray = readBytes(buffers, keyLength);
         break;
       case BYTE:
         currentIndex = getReadIndex(buffers, currentIndex, 4);
         keyLength = buffers.get(currentIndex).getByteBuffer().getInt();
-        keyBuffer = ByteBuffer.allocateDirect(keyLength).put(readBytes(buffers, keyLength));
+        tempArray = readBytes(buffers, keyLength);
         break;
       case STRING:
         currentIndex = getReadIndex(buffers, currentIndex, 4);
         keyLength = buffers.get(currentIndex).getByteBuffer().getInt();
-        keyBuffer = ByteBuffer.allocateDirect(keyLength).put(readBytes(buffers, keyLength));
+        tempArray = readBytes(buffers, keyLength);
         break;
       default:
+        tempArray = new byte[0];
         break;
     }
-    return new ImmutablePair<>(keyLength, keyBuffer);
+    return new ImmutablePair<>(keyLength, tempArray);
   }
 
   private static byte[] readBytes(List<MPIBuffer> buffers, int length) {

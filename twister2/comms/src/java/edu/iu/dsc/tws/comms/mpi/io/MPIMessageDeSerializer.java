@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi.io;
 
-import java.nio.ByteBuffer;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -74,11 +73,11 @@ public class MPIMessageDeSerializer implements MessageDeSerializer {
           currentMessage.getHeader().getLength(), type);
     } else {
 
-      Pair<Integer, ByteBuffer> keyPair = KeyDeserializer.
+      Pair<Integer, byte[]> keyPair = KeyDeserializer.
           getKeyAsByteBuffer(currentMessage.getKeyType(),
               currentMessage.getBuffers());
       MessageType keyType = currentMessage.getKeyType();
-      ByteBuffer data;
+      byte[] data;
       if (keyType == MessageType.BUFFER || keyType == MessageType.STRING
           || keyType == MessageType.BYTE || keyType == MessageType.OBJECT) {
         data = DataDeserializer.getAsByteBuffer(currentMessage.getBuffers(),
@@ -104,11 +103,13 @@ public class MPIMessageDeSerializer implements MessageDeSerializer {
       MessageType keyType = message.getKeyType();
       if (keyType == MessageType.BUFFER || keyType == MessageType.STRING
           || keyType == MessageType.BYTE || keyType == MessageType.OBJECT) {
-        return DataDeserializer.deserializeData(message.getBuffers(),
-            message.getHeader().getLength() - keyPair.getValue() - 4, serializer, type);
+        return new ImmutablePair<>(keyPair.getKey(),
+            DataDeserializer.deserializeData(message.getBuffers(),
+                message.getHeader().getLength() - keyPair.getValue() - 4, serializer, type));
       } else {
-        return DataDeserializer.deserializeData(message.getBuffers(),
-            message.getHeader().getLength() - keyPair.getValue(), serializer, type);
+        return new ImmutablePair<>(keyPair.getKey(),
+            DataDeserializer.deserializeData(message.getBuffers(),
+                message.getHeader().getLength() - keyPair.getValue(), serializer, type));
       }
     }
   }

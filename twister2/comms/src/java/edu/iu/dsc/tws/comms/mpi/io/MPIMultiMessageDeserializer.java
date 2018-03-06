@@ -158,10 +158,10 @@ public class MPIMultiMessageDeserializer implements MessageDeSerializer {
       return DataDeserializer.getAsByteBuffer(message,
           length, type);
     } else {
-      Pair<Integer, ByteBuffer> keyPair = KeyDeserializer.
+      Pair<Integer, byte[]> keyPair = KeyDeserializer.
           getKeyAsByteBuffer(mpiMessage.getKeyType(),
               message);
-      ByteBuffer data = DataDeserializer.getAsByteBuffer(message,
+      byte[] data = DataDeserializer.getAsByteBuffer(message,
           length - keyPair.getKey(), type);
       return new ImmutablePair<>(keyPair.getValue(), data);
     }
