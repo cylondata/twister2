@@ -99,10 +99,13 @@ public final class KeyDeserializer {
    * @param buffers buffers that contain the data
    * @return key as ByteBuffer
    */
-  public static Pair<Integer, byte[]> getKeyAsByteBuffer(MessageType keyType,
+  public static Pair<Integer, Object> getKeyAsByteBuffer(MessageType keyType,
                                                          List<MPIBuffer> buffers) {
     int currentIndex = 0;
-    byte[] tempArray;
+    //Used when there are multiple keys
+    int keyCount;
+    byte[] tempArray = null;
+    Object key = null;
     int keyLength = 0;
     switch (keyType) {
       case INTEGER:
@@ -144,6 +147,12 @@ public final class KeyDeserializer {
         keyLength = buffers.get(currentIndex).getByteBuffer().getInt();
         tempArray = readBytes(buffers, keyLength);
         break;
+      case MULTI_FIXED_BYTE:
+        currentIndex = getReadIndex(buffers, currentIndex, 8);
+        keyCount = buffers.get(currentIndex).getByteBuffer().getInt();
+        keyLength = buffers.get(currentIndex).getByteBuffer().getInt();
+        key = readMultiBytes(buffers, keyLength, keyCount);
+        return new ImmutablePair<>(keyLength, key);
       default:
         tempArray = new byte[0];
         break;

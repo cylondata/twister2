@@ -72,6 +72,7 @@ public final class DataSerializer {
     int offset = 0;
     for (byte[] bytes : dataValues) {
       System.arraycopy(bytes, 0, dataBytes, offset, bytes.length);
+      offset += bytes.length;
     }
     return dataBytes;
     //TODO check if the commented getMessageBytes is faster
@@ -211,6 +212,11 @@ public final class DataSerializer {
       case STRING:
         if (state.getData() == null) {
           state.setData(((String) data).getBytes(MemoryManagerContext.DEFAULT_CHARSET));
+        }
+        return copyDataBytes(targetBuffer, state);
+      case MULTI_FIXED_BYTE:
+        if (state.getData() == null) {
+          state.setData(getBytes(data));
         }
         return copyDataBytes(targetBuffer, state);
       default:

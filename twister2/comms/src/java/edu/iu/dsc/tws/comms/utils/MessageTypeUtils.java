@@ -45,6 +45,8 @@ public final class MessageTypeUtils {
         return DataMessageType.EMPTY;
       case SHORT:
         return DataMessageType.SHORT;
+      case MULTI_FIXED_BYTE:
+        return DataMessageType.MULTI_FIXED_BYTE;
       default:
         throw new RuntimeException("The given Message type does not have a corresponding"
             + " DataMessageType");
@@ -74,4 +76,6 @@ public final class MessageTypeUtils {
     }
     return false;
   }
+
+
 }

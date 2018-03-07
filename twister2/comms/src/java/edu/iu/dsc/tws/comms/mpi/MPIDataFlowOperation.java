@@ -374,7 +374,6 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
         // at this point lets build the message
         MPISendMessage message = (MPISendMessage)
             messageSerializer.get(sendId).build(pair.getKey(), mpiSendMessage);
-
         // okay we build the message, send it
         if (message.serializedState() == MPISendMessage.SendState.SERIALIZED) {
           List<Integer> exRoutes = new ArrayList<>(mpiSendMessage.getExternalSends());
@@ -385,6 +384,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
             // if no longer accepts stop
             if (!sendAccepted) {
               canProgress = false;
+
               break;
             } else {
               sendCount++;
@@ -638,7 +638,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
       List objectList = (List) data;
       for (Object message : objectList) {
         if (isKeyed) {
-          Pair<byte[], byte[]> tempPair = (Pair<byte[], byte[]>) message;
+          ImmutablePair<byte[], byte[]> tempPair = (ImmutablePair<byte[], byte[]>) message;
           setupThreadLocalBuffers(tempPair.getKey().length, tempPair.getValue().length,
               currentMessage.getType());
 
@@ -646,7 +646,6 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
           threadLocalDataBuffer.get().putInt(tempPair.getValue().length);
           threadLocalDataBuffer.get().put(tempPair.getValue());
           operationMemoryManager.put(threadLocalKeyBuffer.get(), threadLocalDataBuffer.get());
-//          operationMemoryManager.put(tempPair.getKey(), tempPair.getValue());
         } else {
           byte[] dataBytes = (byte[]) message;
           setupThreadLocalBuffers(4, dataBytes.length, currentMessage.getType());

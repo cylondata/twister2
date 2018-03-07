@@ -116,6 +116,16 @@ public final class DataDeserializer {
     return tempByteArray;
   }
 
+  public static List<byte[]> getAsByteBuffer(List<MPIBuffer> buffers, int length,
+                                             MessageType type, int count) {
+    List<byte[]> data = new ArrayList<>();
+    int singleDataLength = length / count;
+    for (int i = 0; i < count; i++) {
+      data.add(getAsByteBuffer(buffers, singleDataLength, type));
+    }
+    return data;
+  }
+
   public static Object deserializeObject(List<MPIBuffer> buffers, int length,
                                          KryoSerializer serializer) {
     MPIByteArrayInputStream input = null;

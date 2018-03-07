@@ -234,7 +234,7 @@ public final class KeySerializer {
       //the number of key in the multi key
       targetBuffer.putInt(size);
       targetBuffer.putInt(key.length);
-      totalBytes += 4;
+      totalBytes += 8;
     } else {
       return false;
     }
@@ -266,6 +266,7 @@ public final class KeySerializer {
     int offset = 0;
     for (byte[] bytes : keys) {
       System.arraycopy(bytes, 0, keyBytes, offset, bytes.length);
+      offset += bytes.length;
     }
     return keyBytes;
     //TODO check if the commented getMessageBytes is faster
