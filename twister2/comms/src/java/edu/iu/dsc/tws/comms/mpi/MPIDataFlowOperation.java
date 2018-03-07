@@ -145,7 +145,8 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
   private long time2 = 0;
   private int count = 0;
 
-  private ThreadLocal<ByteBuffer> threadLocalDataBuffer = new ThreadLocal<ByteBuffer>();
+  private ThreadLocal<ByteBuffer> threadLocalDataBuffer = new ThreadLocal<ByteBuffer>() {
+  };
   private ThreadLocal<ByteBuffer> threadLocalKeyBuffer = new ThreadLocal<ByteBuffer>();
 
   public MPIDataFlowOperation(TWSChannel channel) {
@@ -528,18 +529,37 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
     }
     if (isKeyed) {
       KeyedContent kc = (KeyedContent) messageObject;
-      byte[] keyBytes = KeySerializer.getserializedKey(kc.getSource(),
-          mpiSendMessage.getSerializationState(), keyType, kryoSerializer);
+      if (MessageTypeUtils.isMultiMessageType(kc.getKeyType())) {
+        List<byte[]> keys = KeySerializer.getserializedMultiKey(kc.getSource(),
+            mpiSendMessage.getSerializationState(), keyType, kryoSerializer);
+        List<byte[]> data = DataSerializer.getserializedMultiData(kc.getObject(), type,
+            mpiSendMessage.getSerializationState(), kryoSerializer);
+        setupThreadLocalBuffers(keys.get(0).length, data.get(0).length, type);
 
-      int dataLength = DataSerializer.serializeData(kc.getObject(), type,
-          mpiSendMessage.getSerializationState(), kryoSerializer);
-      setupThreadLocalBuffers(keyBytes.length, dataLength, type);
+        ByteBuffer tempDataPointer = threadLocalDataBuffer.get();
+        ByteBuffer tempKeyPointer = threadLocalKeyBuffer.get();
+        for (int i = 0; i < keys.size(); i++) {
+          tempKeyPointer.put(keys.get(i));
+          tempDataPointer.put(data.get(i));
+          operationMemoryManager.put(tempKeyPointer, tempDataPointer);
+          tempKeyPointer.clear();
+          tempDataPointer.clear();
+        }
 
-      threadLocalKeyBuffer.get().put(keyBytes);
-      threadLocalKeyBuffer.get().flip();
-      DataSerializer.getserializedData(kc.getObject(), type,
-          mpiSendMessage.getSerializationState(), kryoSerializer, threadLocalDataBuffer.get());
-      operationMemoryManager.put(threadLocalKeyBuffer.get(), threadLocalDataBuffer.get());
+      } else {
+        byte[] keyBytes = KeySerializer.getserializedKey(kc.getSource(),
+            mpiSendMessage.getSerializationState(), keyType, kryoSerializer);
+
+        int dataLength = DataSerializer.serializeData(kc.getObject(), type,
+            mpiSendMessage.getSerializationState(), kryoSerializer);
+        setupThreadLocalBuffers(keyBytes.length, dataLength, type);
+
+        threadLocalKeyBuffer.get().put(keyBytes);
+        threadLocalKeyBuffer.get().flip();
+        DataSerializer.getserializedData(kc.getObject(), type,
+            mpiSendMessage.getSerializationState(), kryoSerializer, threadLocalDataBuffer.get());
+        operationMemoryManager.put(threadLocalKeyBuffer.get(), threadLocalDataBuffer.get());
+      }
       return true;
     } else {
       //if this is not a keyed operation we will use the source task id as the key

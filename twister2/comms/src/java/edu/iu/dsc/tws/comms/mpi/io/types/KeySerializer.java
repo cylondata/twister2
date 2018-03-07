@@ -72,7 +72,7 @@ public final class KeySerializer {
    *
    * @param key the key to be serialized
    * @param serializer the serializer used to create the byte stream from the object
-   * @return ByteBuffer with the key
+   * @return Object with the key
    */
   public static byte[] getserializedKey(Object key, SerializeState state,
                                         MessageType keyType, KryoSerializer serializer) {
@@ -105,6 +105,17 @@ public final class KeySerializer {
           state.setKey(((String) key).getBytes());
         }
         return state.getKey();
+      default:
+        return null;
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  public static List<byte[]> getserializedMultiKey(Object key, SerializeState state,
+                                                   MessageType keyType, KryoSerializer serializer) {
+    switch (keyType) {
+      case MULTI_FIXED_BYTE:
+        return (List<byte[]>) key;
       default:
         return null;
     }

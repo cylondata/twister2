@@ -144,6 +144,18 @@ public final class DataSerializer {
     }
   }
 
+  @SuppressWarnings("unchecked")
+  public static List<byte[]> getserializedMultiData(Object object, MessageType messageType,
+                                                    SerializeState serializationState,
+                                                    KryoSerializer kryoSerializer) {
+    switch (messageType) {
+      case MULTI_FIXED_BYTE:
+        return (List<byte[]>) object;
+      default:
+        return null;
+    }
+  }
+
   private static void copyIntegers(int[] data, ByteBuffer dataBuffer) {
     for (int i : data) {
       dataBuffer.putInt(i);
