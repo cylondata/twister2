@@ -24,6 +24,7 @@ import edu.iu.dsc.tws.comms.mpi.MPIMessage;
 import edu.iu.dsc.tws.comms.mpi.io.types.DataDeserializer;
 import edu.iu.dsc.tws.comms.mpi.io.types.KeyDeserializer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
+import edu.iu.dsc.tws.comms.utils.MessageTypeUtils;
 
 public class MPIMessageDeSerializer implements MessageDeSerializer {
   private static final Logger LOG = Logger.getLogger(MPIMessageDeSerializer.class.getName());
@@ -78,8 +79,7 @@ public class MPIMessageDeSerializer implements MessageDeSerializer {
               currentMessage.getBuffers());
       MessageType keyType = currentMessage.getKeyType();
       byte[] data;
-      if (keyType == MessageType.BUFFER || keyType == MessageType.STRING
-          || keyType == MessageType.BYTE || keyType == MessageType.OBJECT) {
+      if (!MessageTypeUtils.isPrimitiveType(keyType)) {
         data = DataDeserializer.getAsByteBuffer(currentMessage.getBuffers(),
             currentMessage.getHeader().getLength() - keyPair.getKey() - 4, type);
       } else {
@@ -101,15 +101,12 @@ public class MPIMessageDeSerializer implements MessageDeSerializer {
       Pair<Object, Integer> keyPair = KeyDeserializer.deserializeKey(message.getKeyType(),
           message.getBuffers(), serializer);
       MessageType keyType = message.getKeyType();
-      if (keyType == MessageType.BUFFER || keyType == MessageType.STRING
-          || keyType == MessageType.BYTE || keyType == MessageType.OBJECT) {
-        return new ImmutablePair<>(keyPair.getKey(),
-            DataDeserializer.deserializeData(message.getBuffers(),
-                message.getHeader().getLength() - keyPair.getValue() - 4, serializer, type));
+      if (!MessageTypeUtils.isPrimitiveType(keyType)) {
+        return DataDeserializer.deserializeData(message.getBuffers(),
+            message.getHeader().getLength() - keyPair.getValue() - 4, serializer, type);
       } else {
-        return new ImmutablePair<>(keyPair.getKey(),
-            DataDeserializer.deserializeData(message.getBuffers(),
-                message.getHeader().getLength() - keyPair.getValue(), serializer, type));
+        return DataDeserializer.deserializeData(message.getBuffers(),
+            message.getHeader().getLength() - keyPair.getValue(), serializer, type);
       }
     }
   }
