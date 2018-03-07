@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.comms.mpi.io.types;
 
 import java.nio.ByteBuffer;
+import java.util.List;
 
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.mpi.io.SerializeState;
@@ -53,11 +54,37 @@ public final class DataSerializer {
           state.setData(serialize);
         }
         return state.getData().length;
+      case MULTI_FIXED_BYTE:
+        if (state.getData() == null) {
+          state.setData(getBytes(content));
+        }
+        return state.getData().length;
       default:
         break;
     }
     return 0;
   }
+
+  @SuppressWarnings("unchecked")
+  private static byte[] getBytes(Object data) {
+    List<byte[]> dataValues = (List<byte[]>) data;
+    byte[] dataBytes = new byte[dataValues.size() * dataValues.get(0).length];
+    int offset = 0;
+    for (byte[] bytes : dataValues) {
+      System.arraycopy(bytes, 0, dataBytes, offset, bytes.length);
+    }
+    return dataBytes;
+    //TODO check if the commented getMessageBytes is faster
+  }
+
+  /*public byte[] getMessageBytes() throws IOException {
+    final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    for (final Map.Entry<Short,byte[]> entry : myMap.entrySet()) {
+      baos.write(entry.getValue());
+    }
+    baos.flush();
+    return baos.toByteArray();
+  }*/
 
   /**
    * get serialized data

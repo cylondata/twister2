@@ -27,6 +27,7 @@ import edu.iu.dsc.tws.comms.mpi.MPIMessage;
 import edu.iu.dsc.tws.comms.mpi.io.types.DataDeserializer;
 import edu.iu.dsc.tws.comms.mpi.io.types.KeyDeserializer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
+import edu.iu.dsc.tws.comms.utils.MessageTypeUtils;
 
 public class MPIMultiMessageDeserializer implements MessageDeSerializer {
   private static final Logger LOG = Logger.getLogger(MPIMultiMessageDeserializer.class.getName());
@@ -80,12 +81,12 @@ public class MPIMultiMessageDeserializer implements MessageDeSerializer {
 
       Object object = buildMessage(currentMessage, messageBuffers, length);
       readLength += length + 4;
-      if (keyed && (currentMessage.getKeyType() == MessageType.BUFFER
-          || currentMessage.getKeyType() == MessageType.STRING
-          || currentMessage.getKeyType() == MessageType.BYTE
-          || currentMessage.getKeyType() == MessageType.OBJECT)) {
+      if (keyed && !MessageTypeUtils.isPrimitiveType(currentMessage.getKeyType())) {
         //adding 4 to the length since the key length is also kept
         readLength += 4;
+        if (MessageTypeUtils.isMultiMessageType(currentMessage.getKeyType())) {
+          readLength += 4;
+        }
       }
       byteBuffer = mpiBuffer.getByteBuffer();
       if (byteBuffer.remaining() > 0) {
@@ -132,10 +133,7 @@ public class MPIMultiMessageDeserializer implements MessageDeSerializer {
 
       Object object = getSingleDataBuffers(currentMessage, messageBuffers, length);
       readLength += length + 4;
-      if (keyed && (currentMessage.getKeyType() == MessageType.BUFFER
-          || currentMessage.getKeyType() == MessageType.STRING
-          || currentMessage.getKeyType() == MessageType.BYTE
-          || currentMessage.getKeyType() == MessageType.OBJECT)) {
+      if (keyed && !MessageTypeUtils.isPrimitiveType(currentMessage.getKeyType())) {
         //adding 4 to the length since the key length is also kept
         readLength += 4;
       }
@@ -189,11 +187,17 @@ public class MPIMultiMessageDeserializer implements MessageDeSerializer {
   private Object buildMessage(MPIMessage mpiMessage, List<MPIBuffer> message, int length) {
     MessageType type = mpiMessage.getType();
     if (keyed) {
-      Pair<Object, Integer> keyPair = KeyDeserializer.deserializeKey(mpiMessage.getKeyType(),
+      Pair<Integer, Object> keyPair = KeyDeserializer.deserializeKey(mpiMessage.getKeyType(),
           message, serializer);
-
-      return DataDeserializer.deserializeData(message, length - keyPair.getValue(),
-          serializer, type);
+      if (MessageTypeUtils.isMultiMessageType(mpiMessage.getKeyType())) {
+        //TODO :need to check correctness for multi-message
+        return DataDeserializer.deserializeData(message,
+            length - keyPair.getKey(), serializer, type,
+            ((List) keyPair.getValue()).size());
+      } else {
+        return DataDeserializer.deserializeData(message, length - keyPair.getKey(),
+            serializer, type);
+      }
     } else {
       return DataDeserializer.deserializeData(message, length, serializer, type);
     }

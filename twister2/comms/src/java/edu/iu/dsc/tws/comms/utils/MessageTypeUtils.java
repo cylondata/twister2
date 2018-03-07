@@ -63,4 +63,15 @@ public final class MessageTypeUtils {
     return false;
   }
 
+  /**
+   * checks if the type is a multi message, not to be confused with the aggeragated multi-messages
+   * that are passed through the network when optimized communications such as reduce are performed
+   * this refers to the original type of the message
+   */
+  public static boolean isMultiMessageType(MessageType type) {
+    if (type == MessageType.MULTI_FIXED_BYTE) {
+      return true;
+    }
+    return false;
+  }
 }

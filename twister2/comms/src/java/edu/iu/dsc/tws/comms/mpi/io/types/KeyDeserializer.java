@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.comms.mpi.io.types;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -31,12 +32,14 @@ public final class KeyDeserializer {
   /**
    * Desetrialize
    */
-  public static Pair<Object, Integer> deserializeKey(MessageType keyType,
+  public static Pair<Integer, Object> deserializeKey(MessageType keyType,
                                                      List<MPIBuffer> buffers,
                                                      KryoSerializer serializer) {
     int currentIndex = 0;
     int keyLength = 0;
     Object key = null;
+    //Used when there are multiple keys
+    int keyCount;
     // first we need to read the key type
     switch (keyType) {
       case INTEGER:
@@ -77,10 +80,16 @@ public final class KeyDeserializer {
         keyLength = buffers.get(currentIndex).getByteBuffer().getInt();
         key = new String(readBytes(buffers, keyLength));
         break;
+      case MULTI_FIXED_BYTE:
+        currentIndex = getReadIndex(buffers, currentIndex, 8);
+        keyCount = buffers.get(currentIndex).getByteBuffer().getInt();
+        keyLength = buffers.get(currentIndex).getByteBuffer().getInt();
+        key = readMultiBytes(buffers, keyLength, keyCount);
+        break;
       default:
         break;
     }
-    return new ImmutablePair<>(key, keyLength);
+    return new ImmutablePair<>(keyLength, key);
   }
 
   /**
@@ -171,5 +180,14 @@ public final class KeyDeserializer {
       }
     }
     throw new RuntimeException("Something is wrong in the buffer management");
+  }
+
+  private static Object readMultiBytes(List<MPIBuffer> buffers, int keyLength, int keyCount) {
+    List<byte[]> keys = new ArrayList<>();
+    int singleKeyLength = keyLength / keyCount;
+    for (int i = 0; i < keyCount; i++) {
+      keys.add(readBytes(buffers, singleKeyLength));
+    }
+    return keys;
   }
 }

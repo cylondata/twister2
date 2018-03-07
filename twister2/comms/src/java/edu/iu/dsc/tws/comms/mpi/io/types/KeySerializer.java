@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.comms.mpi.io.types;
 
 import java.nio.ByteBuffer;
+import java.util.List;
 
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
@@ -53,6 +54,11 @@ public final class KeySerializer {
       case STRING:
         if (state.getKey() == null) {
           state.setKey(((String) key).getBytes());
+        }
+        return state.getKey().length;
+      case MULTI_FIXED_BYTE:
+        if (state.getKey() == null) {
+          state.setKey(getMultiBytes(key));
         }
         return state.getKey().length;
       default:
@@ -107,6 +113,7 @@ public final class KeySerializer {
   /**
    * Copy the key to the buffer
    */
+  @SuppressWarnings("unchecked")
   public static boolean copyKeyToBuffer(Object key, MessageType keyType,
                                         ByteBuffer targetBuffer, SerializeState state,
                                         KryoSerializer serializer) {
@@ -160,12 +167,18 @@ public final class KeySerializer {
           state.setKey(((String) key).getBytes());
         }
         return copyKeyBytes(targetBuffer, state);
+      case MULTI_FIXED_BYTE:
+        if (state.getKey() == null) {
+          state.setKey(getMultiBytes(key));
+        }
+        return copyMultiKeyBytes(targetBuffer, state, ((List<byte[]>) key).size());
       default:
         break;
     }
     return false;
   }
 
+  @SuppressWarnings("unchecked")
   private static boolean copyKeyBytes(ByteBuffer targetBuffer, SerializeState state) {
     int totalBytes = state.getTotalBytes();
     int remainingCapacity = targetBuffer.remaining();
@@ -198,4 +211,61 @@ public final class KeySerializer {
       return false;
     }
   }
+
+  private static boolean copyMultiKeyBytes(ByteBuffer targetBuffer, SerializeState state,
+                                           int size) {
+    int totalBytes = state.getTotalBytes();
+    int remainingCapacity = targetBuffer.remaining();
+    int bytesCopied = state.getBytesCopied();
+
+    byte[] key = state.getKey();
+    if (bytesCopied == 0 && remainingCapacity > 8) {
+      //the number of key in the multi key
+      targetBuffer.putInt(size);
+      targetBuffer.putInt(key.length);
+      totalBytes += 4;
+    } else {
+      return false;
+    }
+
+    int remainingToCopy = key.length - bytesCopied;
+    int canCopy = remainingCapacity > remainingToCopy ? remainingToCopy : remainingCapacity;
+    // copy
+    targetBuffer.put(key, bytesCopied, canCopy);
+    totalBytes += canCopy;
+    // we set the tolal bytes copied so far
+    state.setTotalBytes(totalBytes);
+    // we will use this size later
+    state.setKeySize(key.length + 4);
+    // we copied everything
+    if (canCopy == remainingToCopy) {
+      state.setKey(null);
+      state.setBytesCopied(0);
+      return true;
+    } else {
+      state.setBytesCopied(canCopy + bytesCopied);
+      return false;
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  private static byte[] getMultiBytes(Object key) {
+    List<byte[]> keys = (List<byte[]>) key;
+    byte[] keyBytes = new byte[keys.size() * keys.get(0).length];
+    int offset = 0;
+    for (byte[] bytes : keys) {
+      System.arraycopy(bytes, 0, keyBytes, offset, bytes.length);
+    }
+    return keyBytes;
+    //TODO check if the commented getMessageBytes is faster
+  }
+
+  /*public byte[] getMessageBytes() throws IOException {
+    final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    for (final Map.Entry<Short,byte[]> entry : myMap.entrySet()) {
+      baos.write(entry.getValue());
+    }
+    baos.flush();
+    return baos.toByteArray();
+  }*/
 }

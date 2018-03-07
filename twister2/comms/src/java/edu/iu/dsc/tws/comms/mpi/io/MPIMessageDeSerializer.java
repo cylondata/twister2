@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi.io;
 
+import java.util.List;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -98,15 +99,20 @@ public class MPIMessageDeSerializer implements MessageDeSerializer {
       return DataDeserializer.deserializeData(message.getBuffers(),
           message.getHeader().getLength(), serializer, type);
     } else {
-      Pair<Object, Integer> keyPair = KeyDeserializer.deserializeKey(message.getKeyType(),
+      Pair<Integer, Object> keyPair = KeyDeserializer.deserializeKey(message.getKeyType(),
           message.getBuffers(), serializer);
       MessageType keyType = message.getKeyType();
-      if (!MessageTypeUtils.isPrimitiveType(keyType)) {
+
+      if (MessageTypeUtils.isMultiMessageType(message.getKeyType())) {
         return DataDeserializer.deserializeData(message.getBuffers(),
-            message.getHeader().getLength() - keyPair.getValue() - 4, serializer, type);
+            message.getHeader().getLength() - keyPair.getKey() - 4 - 4, serializer, type,
+            ((List) keyPair.getValue()).size());
+      } else if (!MessageTypeUtils.isPrimitiveType(keyType)) {
+        return DataDeserializer.deserializeData(message.getBuffers(),
+            message.getHeader().getLength() - keyPair.getKey() - 4, serializer, type);
       } else {
         return DataDeserializer.deserializeData(message.getBuffers(),
-            message.getHeader().getLength() - keyPair.getValue(), serializer, type);
+            message.getHeader().getLength() - keyPair.getKey(), serializer, type);
       }
     }
   }

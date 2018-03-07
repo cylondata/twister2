@@ -25,6 +25,7 @@ package edu.iu.dsc.tws.comms.mpi.io.types;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.List;
 
 import edu.iu.dsc.tws.comms.api.MessageType;
@@ -34,6 +35,31 @@ import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
 public final class DataDeserializer {
   private DataDeserializer() {
+  }
+
+  /**
+   * used when there are more than 1 data object
+   * types other than multi types return as normal
+   */
+  public static Object deserializeData(List<MPIBuffer> buffers, int length,
+                                       KryoSerializer serializer, MessageType type, int count) {
+    switch (type) {
+      case INTEGER:
+        return deserializeInteger(buffers, length);
+      case DOUBLE:
+        return deserializeDouble(buffers, length);
+      case SHORT:
+        return deserializeShort(buffers, length);
+      case BYTE:
+        return deserializeBytes(buffers, length);
+      case OBJECT:
+        return deserializeObject(buffers, length, serializer);
+      case MULTI_FIXED_BYTE:
+        return deserializeMultiBytes(buffers, length, count);
+      default:
+        break;
+    }
+    return null;
   }
 
   public static Object deserializeData(List<MPIBuffer> buffers, int length,
@@ -124,6 +150,16 @@ public final class DataDeserializer {
     }
     return returnBytes;
   }
+
+  private static Object deserializeMultiBytes(List<MPIBuffer> buffers, int length, int count) {
+    List<byte[]> data = new ArrayList<>();
+    int singleDataLength = length / count;
+    for (int i = 0; i < count; i++) {
+      data.add(deserializeBytes(buffers, singleDataLength));
+    }
+    return data;
+  }
+
 
   public static double[] deserializeDouble(List<MPIBuffer> buffers, int byteLength) {
     int noOfDoubles = byteLength / 8;
