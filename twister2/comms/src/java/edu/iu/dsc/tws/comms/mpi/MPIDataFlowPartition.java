@@ -73,6 +73,7 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
   private MessageType keyType;
   private boolean isKeyed;
   private CompletionListener completionListener;
+  private Table<Integer, Integer, RoutingParameters> routingParamCache = HashBasedTable.create();
   private Lock lock = new ReentrantLock();
 
   /**
@@ -274,8 +275,6 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
   public void setMemoryMapped(boolean memoryMapped) {
     delegete.setStoreBased(memoryMapped);
   }
-
-  private Table<Integer, Integer, RoutingParameters> routingParamCache = HashBasedTable.create();
 
   private RoutingParameters sendRoutingParameters(int source, int path) {
     if (routingParamCache.contains(source, path)) {

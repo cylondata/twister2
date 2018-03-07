@@ -24,6 +24,9 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.Table;
+
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -71,6 +74,9 @@ public class MPIDataFlowReduce implements DataFlowOperation, MPIMessageReceiver 
 
   private CompletionListener completionListener;
 
+  private Table<Integer, Integer, RoutingParameters> routingParamCache = HashBasedTable.create();
+  private Table<Integer, Integer, RoutingParameters> partialRoutingParamCache
+      = HashBasedTable.create();
   private Lock lock = new ReentrantLock();
   private Lock partialLock = new ReentrantLock();
 
@@ -130,57 +136,67 @@ public class MPIDataFlowReduce implements DataFlowOperation, MPIMessageReceiver 
   }
 
   private RoutingParameters partialSendRoutingParameters(int source, int path) {
-    RoutingParameters routingParameters = new RoutingParameters();
-    // get the expected routes
-    Map<Integer, Set<Integer>> internalRoutes = router.getInternalSendTasks(source);
-    if (internalRoutes == null) {
-      throw new RuntimeException("Un-expected message from source: " + source);
-    }
+    if (partialRoutingParamCache.contains(source, path)) {
+      return partialRoutingParamCache.get(source, path);
+    } else {
+      RoutingParameters routingParameters = new RoutingParameters();
+      // get the expected routes
+      Map<Integer, Set<Integer>> internalRoutes = router.getInternalSendTasks(source);
+      if (internalRoutes == null) {
+        throw new RuntimeException("Un-expected message from source: " + source);
+      }
 
-    Set<Integer> sourceInternalRouting = internalRoutes.get(source);
-    if (sourceInternalRouting != null) {
-      routingParameters.addInternalRoutes(sourceInternalRouting);
-    }
+      Set<Integer> sourceInternalRouting = internalRoutes.get(source);
+      if (sourceInternalRouting != null) {
+        routingParameters.addInternalRoutes(sourceInternalRouting);
+      }
 
-    // get the expected routes
-    Map<Integer, Set<Integer>> externalRoutes =
-        router.getExternalSendTasksForPartial(source);
-    if (externalRoutes == null) {
-      throw new RuntimeException("Un-expected message from source: " + source);
-    }
+      // get the expected routes
+      Map<Integer, Set<Integer>> externalRoutes =
+          router.getExternalSendTasksForPartial(source);
+      if (externalRoutes == null) {
+        throw new RuntimeException("Un-expected message from source: " + source);
+      }
 
-    Set<Integer> sourceRouting = externalRoutes.get(source);
-    if (sourceRouting != null) {
-      routingParameters.addExternalRoutes(sourceRouting);
-    }
+      Set<Integer> sourceRouting = externalRoutes.get(source);
+      if (sourceRouting != null) {
+        routingParameters.addExternalRoutes(sourceRouting);
+      }
 
-    routingParameters.setDestinationId(router.destinationIdentifier(source, path));
-    return routingParameters;
+      routingParameters.setDestinationId(router.destinationIdentifier(source, path));
+      partialRoutingParamCache.put(source, path, routingParameters);
+      return routingParameters;
+    }
   }
 
   private RoutingParameters sendRoutingParameters(int source, int path) {
-    RoutingParameters routingParameters = new RoutingParameters();
+    if (routingParamCache.contains(source, path)) {
+      return routingParamCache.get(source, path);
+    } else {
+      RoutingParameters routingParameters = new RoutingParameters();
 
-    // get the expected routes
-    Map<Integer, Set<Integer>> internalRouting = router.getInternalSendTasks(source);
-    if (internalRouting == null) {
-      throw new RuntimeException("Un-expected message from source: " + source);
+      // get the expected routes
+      Map<Integer, Set<Integer>> internalRouting = router.getInternalSendTasks(source);
+      if (internalRouting == null) {
+        throw new RuntimeException("Un-expected message from source: " + source);
+      }
+
+      // we are going to add source if we are the main executor
+      if (router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
+          MPIContext.DEFAULT_PATH) == source) {
+        routingParameters.addInteranlRoute(source);
+      }
+
+      // we should not have the route for main task to outside at this point
+      Set<Integer> sourceInternalRouting = internalRouting.get(source);
+      if (sourceInternalRouting != null) {
+        routingParameters.addInternalRoutes(sourceInternalRouting);
+      }
+
+      routingParameters.setDestinationId(router.destinationIdentifier(source, path));
+      routingParamCache.put(source, path, routingParameters);
+      return routingParameters;
     }
-
-    // we are going to add source if we are the main executor
-    if (router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
-        MPIContext.DEFAULT_PATH) == source) {
-      routingParameters.addInteranlRoute(source);
-    }
-
-    // we should not have the route for main task to outside at this point
-    Set<Integer> sourceInternalRouting = internalRouting.get(source);
-    if (sourceInternalRouting != null) {
-      routingParameters.addInternalRoutes(sourceInternalRouting);
-    }
-
-    routingParameters.setDestinationId(router.destinationIdentifier(source, path));
-    return routingParameters;
   }
 
   protected boolean isLastReceiver() {
