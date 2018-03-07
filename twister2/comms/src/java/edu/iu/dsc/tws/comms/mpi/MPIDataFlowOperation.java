@@ -540,6 +540,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
         ByteBuffer tempKeyPointer = threadLocalKeyBuffer.get();
         for (int i = 0; i < keys.size(); i++) {
           tempKeyPointer.put(keys.get(i));
+          tempDataPointer.putInt(data.get(i).length);
           tempDataPointer.put(data.get(i));
           operationMemoryManager.put(tempKeyPointer, tempDataPointer);
           tempKeyPointer.clear();
