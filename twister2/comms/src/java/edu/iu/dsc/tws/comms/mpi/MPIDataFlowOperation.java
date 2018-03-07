@@ -146,8 +146,18 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
   private int count = 0;
 
   private ThreadLocal<ByteBuffer> threadLocalDataBuffer = new ThreadLocal<ByteBuffer>() {
+    @Override
+    protected ByteBuffer initialValue() {
+      return ByteBuffer.allocateDirect(MemoryManagerContext.TL_DATA_BUFF_INIT_CAP);
+    }
   };
-  private ThreadLocal<ByteBuffer> threadLocalKeyBuffer = new ThreadLocal<ByteBuffer>();
+
+  private ThreadLocal<ByteBuffer> threadLocalKeyBuffer = new ThreadLocal<ByteBuffer>() {
+    @Override
+    protected ByteBuffer initialValue() {
+      return ByteBuffer.allocateDirect(MemoryManagerContext.TL_KEY_BUFF_INIT_CAP);
+    }
+  };
 
   public MPIDataFlowOperation(TWSChannel channel) {
     this.channel = channel;
@@ -527,6 +537,9 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
     if (mpiSendMessage.getSerializationState() == null) {
       mpiSendMessage.setSerializationState(new SerializeState());
     }
+    ByteBuffer tempData;
+    ByteBuffer tempKey;
+
     if (isKeyed) {
       KeyedContent kc = (KeyedContent) messageObject;
       if (MessageTypeUtils.isMultiMessageType(kc.getKeyType())) {
@@ -536,15 +549,15 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
             mpiSendMessage.getSerializationState(), kryoSerializer);
         setupThreadLocalBuffers(keys.get(0).length, data.get(0).length, type);
 
-        ByteBuffer tempDataPointer = threadLocalDataBuffer.get();
-        ByteBuffer tempKeyPointer = threadLocalKeyBuffer.get();
+        tempData = threadLocalDataBuffer.get();
+        tempKey = threadLocalKeyBuffer.get();
         for (int i = 0; i < keys.size(); i++) {
-          tempKeyPointer.put(keys.get(i));
-          tempDataPointer.putInt(data.get(i).length);
-          tempDataPointer.put(data.get(i));
-          operationMemoryManager.put(tempKeyPointer, tempDataPointer);
-          tempKeyPointer.clear();
-          tempDataPointer.clear();
+          tempKey.put(keys.get(i));
+          tempData.putInt(data.get(i).length);
+          tempData.put(data.get(i));
+          operationMemoryManager.put(tempKey, tempData);
+          tempKey.clear();
+          tempData.clear();
         }
 
       } else {
@@ -555,23 +568,32 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
             mpiSendMessage.getSerializationState(), kryoSerializer);
         setupThreadLocalBuffers(keyBytes.length, dataLength, type);
 
-        threadLocalKeyBuffer.get().put(keyBytes);
-        threadLocalKeyBuffer.get().flip();
+        tempData = threadLocalDataBuffer.get();
+        tempKey = threadLocalKeyBuffer.get();
+
+        tempKey.put(keyBytes);
+        tempKey.flip();
         DataSerializer.getserializedData(kc.getObject(), type,
-            mpiSendMessage.getSerializationState(), kryoSerializer, threadLocalDataBuffer.get());
-        operationMemoryManager.put(threadLocalKeyBuffer.get(), threadLocalDataBuffer.get());
+            mpiSendMessage.getSerializationState(), kryoSerializer, tempData);
+        operationMemoryManager.put(tempKey, tempData);
       }
       return true;
     } else {
       //if this is not a keyed operation we will use the source task id as the key
       //Will be implmented after further looking into the use case
       int key = mpiSendMessage.getSource();
-      ByteBuffer keyBuffer = ByteBuffer.allocateDirect(Integer.BYTES);
-      keyBuffer.putInt(key);
+      int dataLength = DataSerializer.serializeData(messageObject, type,
+          mpiSendMessage.getSerializationState(), kryoSerializer);
+
+      setupThreadLocalBuffers(Integer.BYTES, dataLength, type);
+
+      tempData = threadLocalDataBuffer.get();
+      tempKey = threadLocalKeyBuffer.get();
+      tempKey.putInt(key);
       DataSerializer.getserializedData(messageObject, type,
-          mpiSendMessage.getSerializationState(), kryoSerializer, threadLocalDataBuffer.get());
+          mpiSendMessage.getSerializationState(), kryoSerializer, tempData);
       //TODO : need to generate operation key and use it
-      return operationMemoryManager.put(keyBuffer, threadLocalDataBuffer.get());
+      return operationMemoryManager.put(tempKey, tempData);
     }
   }
 
@@ -585,33 +607,26 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
     /*if (!MessageTypeUtils.isPrimitiveType(messageType)) {
       dataLengthTemp = dataLength + 4;
     }*/
-    if (threadLocalDataBuffer.get() == null) {
-      initThreadLocalVariables();
-    } else {
-      if (keyLength < MemoryManagerContext.TL_KEY_BUFF_INIT_CAP
-          && dataLengthTemp < MemoryManagerContext.TL_DATA_BUFF_INIT_CAP) {
-        threadLocalDataBuffer.get().clear();
-        threadLocalKeyBuffer.get().clear();
-        return;
-      }
-      if (threadLocalDataBuffer.get().capacity() < dataLengthTemp) {
-        ByteBuffer valBuffer = ByteBuffer.allocateDirect(dataLengthTemp);
-        threadLocalDataBuffer.set(valBuffer);
-      }
-      if (threadLocalKeyBuffer.get().capacity() < keyLength) {
-        ByteBuffer keyBuffer = ByteBuffer.allocateDirect(keyLength);
-        threadLocalKeyBuffer.set(keyBuffer);
-      }
+    //Using temp vars to reduce galls to threadlocal.get()
+    ByteBuffer tempData = threadLocalDataBuffer.get();
+    ByteBuffer tempKey = threadLocalKeyBuffer.get();
+    if (keyLength < MemoryManagerContext.TL_KEY_BUFF_INIT_CAP
+        && dataLengthTemp < MemoryManagerContext.TL_DATA_BUFF_INIT_CAP) {
+      tempData.clear();
+      tempKey.clear();
+      return;
     }
-    threadLocalDataBuffer.get().clear();
-    threadLocalKeyBuffer.get().clear();
-  }
+    if (tempData.capacity() < dataLengthTemp) {
+      tempData = ByteBuffer.allocateDirect(dataLengthTemp);
+      threadLocalDataBuffer.set(tempData);
+    }
+    if (tempKey.capacity() < keyLength) {
+      tempKey = ByteBuffer.allocateDirect(keyLength);
+      threadLocalKeyBuffer.set(tempKey);
+    }
 
-  private void initThreadLocalVariables() {
-    ByteBuffer valBuffer = ByteBuffer.allocateDirect(MemoryManagerContext.TL_DATA_BUFF_INIT_CAP);
-    ByteBuffer keyBuffer = ByteBuffer.allocateDirect(MemoryManagerContext.TL_KEY_BUFF_INIT_CAP);
-    threadLocalDataBuffer.set(valBuffer);
-    threadLocalKeyBuffer.set(keyBuffer);
+    tempData.clear();
+    tempKey.clear();
   }
 
   /**
@@ -634,6 +649,8 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
       isList = true;
     }
 
+    ByteBuffer tempData;
+    ByteBuffer tempKey;
 
     if (isList) {
       List objectList = (List) data;
@@ -643,15 +660,22 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
           setupThreadLocalBuffers(tempPair.getKey().length, tempPair.getValue().length,
               currentMessage.getType());
 
-          threadLocalKeyBuffer.get().put(tempPair.getKey());
-          threadLocalDataBuffer.get().putInt(tempPair.getValue().length);
-          threadLocalDataBuffer.get().put(tempPair.getValue());
-          operationMemoryManager.put(threadLocalKeyBuffer.get(), threadLocalDataBuffer.get());
+          tempData = threadLocalDataBuffer.get();
+          tempKey = threadLocalKeyBuffer.get();
+
+          tempKey.put(tempPair.getKey());
+          tempData.putInt(tempPair.getValue().length);
+          tempData.put(tempPair.getValue());
+          operationMemoryManager.put(tempKey, tempData);
         } else {
           byte[] dataBytes = (byte[]) message;
           setupThreadLocalBuffers(4, dataBytes.length, currentMessage.getType());
-          threadLocalKeyBuffer.get().putInt(sourceID);
-          operationMemoryManager.put(threadLocalKeyBuffer.get(), threadLocalDataBuffer.get());
+          tempData = threadLocalDataBuffer.get();
+          tempKey = threadLocalKeyBuffer.get();
+
+          tempKey.putInt(sourceID);
+          tempData.put(dataBytes);
+          operationMemoryManager.put(tempKey, tempData);
         }
       }
     } else {
@@ -660,15 +684,22 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
         setupThreadLocalBuffers(tempPair.getKey().length, tempPair.getValue().length,
             currentMessage.getType());
 
-        threadLocalKeyBuffer.get().put(tempPair.getKey());
-        threadLocalDataBuffer.get().putInt(tempPair.getValue().length);
-        threadLocalDataBuffer.get().put(tempPair.getValue());
-        operationMemoryManager.put(threadLocalKeyBuffer.get(), threadLocalDataBuffer.get());
+        tempData = threadLocalDataBuffer.get();
+        tempKey = threadLocalKeyBuffer.get();
+
+        tempKey.put(tempPair.getKey());
+        tempData.putInt(tempPair.getValue().length);
+        tempData.put(tempPair.getValue());
+        operationMemoryManager.put(tempKey, tempData);
       } else {
         byte[] dataBytes = (byte[]) data;
         setupThreadLocalBuffers(4, dataBytes.length, currentMessage.getType());
-        threadLocalKeyBuffer.get().putInt(sourceID);
-        operationMemoryManager.put(threadLocalKeyBuffer.get(), threadLocalDataBuffer.get());
+        tempData = threadLocalDataBuffer.get();
+        tempKey = threadLocalKeyBuffer.get();
+
+        tempKey.putInt(sourceID);
+        tempData.put(dataBytes);
+        operationMemoryManager.put(tempKey, tempData);
       }
     }
   }
