@@ -13,13 +13,12 @@ package edu.iu.dsc.tws.task.taskgraphfluentapi;
 
 public class TaskGraph implements ITaskGraph {
 
-  private String taskgraphName;
+  private String taskGraphName;
   private String iGenerate;
 
   @Override
   public ITaskGraph taskgraphName(String taskgraphName) {
-    this.taskgraphName = taskgraphName;
-    System.out.println("Task Graph Name:" + taskgraphName);
+    this.taskGraphName = taskgraphName;
     return this;
   }
 

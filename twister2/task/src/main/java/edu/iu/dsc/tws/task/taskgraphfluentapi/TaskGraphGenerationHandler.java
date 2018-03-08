@@ -13,6 +13,12 @@ package edu.iu.dsc.tws.task.taskgraphfluentapi;
 
 import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowOperation;
 
+/**
+ * This class is mainly responsible for handling the user requests
+ * to connect the task objects, generate the task graph, and submit
+ * the task graph for the execution.
+ */
+
 public class TaskGraphGenerationHandler implements ITaskGraphGenerate {
 
   @Override
