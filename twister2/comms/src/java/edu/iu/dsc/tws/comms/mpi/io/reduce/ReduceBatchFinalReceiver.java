@@ -41,6 +41,7 @@ public class ReduceBatchFinalReceiver extends ReduceBatchReceiver {
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     super.init(cfg, op, expectedIds);
+    reduceReceiver.init(cfg, op, expectedIds);
     for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
       finalMessages.put(e.getKey(), new ArrayList<>());
     }
