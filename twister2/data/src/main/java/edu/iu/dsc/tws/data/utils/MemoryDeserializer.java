@@ -38,6 +38,10 @@ public final class MemoryDeserializer {
         byte[] bytes = new byte[key.remaining()];
         key.get(bytes);
         return bytes;
+      case MULTI_FIXED_BYTE:
+        bytes = new byte[key.remaining()];
+        key.get(bytes);
+        return bytes;
       case OBJECT:
         byte[] temp = new byte[key.remaining()];
         key.get(temp);
@@ -58,6 +62,8 @@ public final class MemoryDeserializer {
       case SHORT:
         return deserializeShort(value);
       case BYTE:
+        return deserializeBytes(value, serializer);
+      case MULTI_FIXED_BYTE:
         return deserializeBytes(value, serializer);
       case OBJECT:
         return deserializeObject(value, serializer);

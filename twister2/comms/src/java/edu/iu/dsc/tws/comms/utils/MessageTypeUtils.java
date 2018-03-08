@@ -18,9 +18,9 @@ import edu.iu.dsc.tws.data.memory.utils.DataMessageType;
  * Convert between edu.iu.dsc.tws.comms.api.DataMessageType and
  * edu.iu.dsc.tws.data.memory.utils.DataMessageType
  */
-public final class MessageTypeConverter {
+public final class MessageTypeUtils {
 
-  private MessageTypeConverter() {
+  private MessageTypeUtils() {
   }
 
   public static DataMessageType toDataMessageType(MessageType a) {
@@ -45,10 +45,37 @@ public final class MessageTypeConverter {
         return DataMessageType.EMPTY;
       case SHORT:
         return DataMessageType.SHORT;
+      case MULTI_FIXED_BYTE:
+        return DataMessageType.MULTI_FIXED_BYTE;
       default:
         throw new RuntimeException("The given Message type does not have a corresponding"
             + " DataMessageType");
     }
   }
+
+  /**
+   * Checks if the given message type is of a primitive type
+   * if the type is primitive then we do not need to add data length to the data buffers
+   */
+  public static boolean isPrimitiveType(MessageType type) {
+    if (type == MessageType.INTEGER || type == MessageType.SHORT || type == MessageType.DOUBLE
+        || type == MessageType.LONG || type == MessageType.CHAR) {
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * checks if the type is a multi message, not to be confused with the aggeragated multi-messages
+   * that are passed through the network when optimized communications such as reduce are performed
+   * this refers to the original type of the message
+   */
+  public static boolean isMultiMessageType(MessageType type) {
+    if (type == MessageType.MULTI_FIXED_BYTE) {
+      return true;
+    }
+    return false;
+  }
+
 
 }

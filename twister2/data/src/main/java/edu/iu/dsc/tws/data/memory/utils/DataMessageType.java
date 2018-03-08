@@ -29,6 +29,7 @@ public enum DataMessageType {
   INTEGER,
   CHAR,
   BYTE,
+  MULTI_FIXED_BYTE,
   STRING,
   LONG,
   DOUBLE,

@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.comms.mpi.io.types;
 
 import java.nio.ByteBuffer;
+import java.util.List;
 
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.mpi.io.SerializeState;
@@ -53,57 +54,104 @@ public final class DataSerializer {
           state.setData(serialize);
         }
         return state.getData().length;
+      case MULTI_FIXED_BYTE:
+        if (state.getData() == null) {
+          state.setData(getBytes(content));
+        }
+        return state.getData().length;
       default:
         break;
     }
     return 0;
   }
 
+  @SuppressWarnings("unchecked")
+  private static byte[] getBytes(Object data) {
+    List<byte[]> dataValues = (List<byte[]>) data;
+    byte[] dataBytes = new byte[dataValues.size() * dataValues.get(0).length];
+    int offset = 0;
+    for (byte[] bytes : dataValues) {
+      System.arraycopy(bytes, 0, dataBytes, offset, bytes.length);
+      offset += bytes.length;
+    }
+    return dataBytes;
+    //TODO check if the commented getMessageBytes is faster
+  }
+
+  /*public byte[] getMessageBytes() throws IOException {
+    final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    for (final Map.Entry<Short,byte[]> entry : myMap.entrySet()) {
+      baos.write(entry.getValue());
+    }
+    baos.flush();
+    return baos.toByteArray();
+  }*/
+
   /**
    * get serialized data
    */
-  public static ByteBuffer getserializedData(Object content, MessageType messageType,
-                                             KryoSerializer serializer) {
+  public static void getserializedData(Object content, MessageType messageType,
+                                       SerializeState state,
+                                       KryoSerializer serializer, ByteBuffer targetBuffer) {
     ByteBuffer dataBuffer;
     switch (messageType) {
       case INTEGER:
         int[] intdata = (int[]) content;
-        dataBuffer = ByteBuffer.allocateDirect(intdata.length * 4);
-        copyIntegers(intdata, dataBuffer);
-        return dataBuffer;
+        copyIntegers(intdata, targetBuffer);
+        targetBuffer.flip();
+        break;
       case SHORT:
         short[] shortdata = (short[]) content;
-        dataBuffer = ByteBuffer.allocateDirect(shortdata.length * 2);
-        copyShorts(shortdata, dataBuffer);
-        return dataBuffer;
+        copyShorts(shortdata, targetBuffer);
+        targetBuffer.flip();
+        break;
       case LONG:
         long[] longdata = (long[]) content;
-        dataBuffer = ByteBuffer.allocateDirect(longdata.length * 8);
-        copyLongs(longdata, dataBuffer);
-        return dataBuffer;
+        copyLongs(longdata, targetBuffer);
+        targetBuffer.flip();
+        break;
       case DOUBLE:
         double[] doubledata = (double[]) content;
-        dataBuffer = ByteBuffer.allocateDirect(doubledata.length * 8);
-        copyDoubles(doubledata, dataBuffer);
-        return dataBuffer;
+        copyDoubles(doubledata, targetBuffer);
+        targetBuffer.flip();
+        break;
       case OBJECT:
-        byte[] serialize = serializer.serialize(content);
-        dataBuffer = ByteBuffer.allocateDirect(serialize.length + 4);
-        dataBuffer.putInt(serialize.length);
-        dataBuffer.put(serialize);
-        return dataBuffer;
+        if (state.getData() == null) {
+          byte[] serialize = serializer.serialize(content);
+          state.setData(serialize);
+        }
+        targetBuffer.putInt(state.getData().length);
+        targetBuffer.put(state.getData());
+        targetBuffer.flip();
+        break;
       case BYTE:
-        byte[] bytedata = (byte[]) content;
-        dataBuffer = ByteBuffer.allocateDirect(bytedata.length + 4);
-        dataBuffer.putInt(bytedata.length);
-        dataBuffer.put(bytedata);
-        return dataBuffer;
+        if (state.getData() == null) {
+          state.setData((byte[]) content);
+        }
+        targetBuffer.putInt(state.getData().length);
+        targetBuffer.put(state.getData());
+        targetBuffer.flip();
+        break;
       case STRING:
-        byte[] stringdata = ((String) content).getBytes(MemoryManagerContext.DEFAULT_CHARSET);
-        dataBuffer = ByteBuffer.allocateDirect(stringdata.length + 4);
-        dataBuffer.putInt(stringdata.length);
-        dataBuffer.put(stringdata);
-        return dataBuffer;
+        if (state.getData() == null) {
+          byte[] serialize = ((String) content).getBytes(MemoryManagerContext.DEFAULT_CHARSET);
+          state.setData(serialize);
+        }
+        targetBuffer.putInt(state.getData().length);
+        targetBuffer.put(state.getData());
+        targetBuffer.flip();
+        break;
+      default:
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  public static List<byte[]> getserializedMultiData(Object object, MessageType messageType,
+                                                    SerializeState serializationState,
+                                                    KryoSerializer kryoSerializer) {
+    switch (messageType) {
+      case MULTI_FIXED_BYTE:
+        return (List<byte[]>) object;
       default:
         return null;
     }
@@ -164,6 +212,11 @@ public final class DataSerializer {
       case STRING:
         if (state.getData() == null) {
           state.setData(((String) data).getBytes(MemoryManagerContext.DEFAULT_CHARSET));
+        }
+        return copyDataBytes(targetBuffer, state);
+      case MULTI_FIXED_BYTE:
+        if (state.getData() == null) {
+          state.setData(getBytes(data));
         }
         return copyDataBytes(targetBuffer, state);
       default:

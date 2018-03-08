@@ -11,7 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi.io;
 
-import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -25,6 +26,7 @@ import edu.iu.dsc.tws.comms.mpi.MPIMessage;
 import edu.iu.dsc.tws.comms.mpi.io.types.DataDeserializer;
 import edu.iu.dsc.tws.comms.mpi.io.types.KeyDeserializer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
+import edu.iu.dsc.tws.comms.utils.MessageTypeUtils;
 
 public class MPIMessageDeSerializer implements MessageDeSerializer {
   private static final Logger LOG = Logger.getLogger(MPIMessageDeSerializer.class.getName());
@@ -65,27 +67,40 @@ public class MPIMessageDeSerializer implements MessageDeSerializer {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public Object getDataBuffers(Object partialObject, int edge) {
-    MPIMessage currentMessage = (MPIMessage) partialObject;
-    MessageType type = currentMessage.getType();
-
+    MPIMessage message = (MPIMessage) partialObject;
+    MessageType type = message.getType();
+    //Used when handling multi messages
+    List<ImmutablePair<byte[], byte[]>> results;
     if (!keyed) {
-      return DataDeserializer.getAsByteBuffer(currentMessage.getBuffers(),
-          currentMessage.getHeader().getLength(), type);
+      return DataDeserializer.getAsByteBuffer(message.getBuffers(),
+          message.getHeader().getLength(), type);
     } else {
 
-      Pair<Integer, ByteBuffer> keyPair = KeyDeserializer.
-          getKeyAsByteBuffer(currentMessage.getKeyType(),
-              currentMessage.getBuffers());
-      MessageType keyType = currentMessage.getKeyType();
-      ByteBuffer data;
-      if (keyType == MessageType.BUFFER || keyType == MessageType.STRING
-          || keyType == MessageType.BYTE || keyType == MessageType.OBJECT) {
-        data = DataDeserializer.getAsByteBuffer(currentMessage.getBuffers(),
-            currentMessage.getHeader().getLength() - keyPair.getKey() - 4, type);
+      Pair<Integer, Object> keyPair = KeyDeserializer.
+          getKeyAsByteBuffer(message.getKeyType(),
+              message.getBuffers());
+      MessageType keyType = message.getKeyType();
+      Object data;
+
+      if (MessageTypeUtils.isMultiMessageType(keyType)) {
+        data = DataDeserializer.getAsByteBuffer(message.getBuffers(),
+            message.getHeader().getLength() - keyPair.getKey() - 4 - 4, type,
+            ((List) keyPair.getValue()).size());
+        results = new ArrayList<>();
+        List<byte[]> keyList = (List<byte[]>) keyPair.getValue();
+        List<byte[]> dataList = (List<byte[]>) data;
+        for (int i = 0; i < keyList.size(); i++) {
+          results.add(new ImmutablePair<>(keyList.get(i), dataList.get(i)));
+        }
+        return results;
+      } else if (!MessageTypeUtils.isPrimitiveType(keyType)) {
+        data = DataDeserializer.getAsByteBuffer(message.getBuffers(),
+            message.getHeader().getLength() - keyPair.getKey() - 4, type);
       } else {
-        data = DataDeserializer.getAsByteBuffer(currentMessage.getBuffers(),
-            currentMessage.getHeader().getLength() - keyPair.getKey(), type);
+        data = DataDeserializer.getAsByteBuffer(message.getBuffers(),
+            message.getHeader().getLength() - keyPair.getKey(), type);
       }
 
       return new ImmutablePair<>(keyPair.getValue(), data);
@@ -99,16 +114,20 @@ public class MPIMessageDeSerializer implements MessageDeSerializer {
       return DataDeserializer.deserializeData(message.getBuffers(),
           message.getHeader().getLength(), serializer, type);
     } else {
-      Pair<Object, Integer> keyPair = KeyDeserializer.deserializeKey(message.getKeyType(),
+      Pair<Integer, Object> keyPair = KeyDeserializer.deserializeKey(message.getKeyType(),
           message.getBuffers(), serializer);
       MessageType keyType = message.getKeyType();
-      if (keyType == MessageType.BUFFER || keyType == MessageType.STRING
-          || keyType == MessageType.BYTE || keyType == MessageType.OBJECT) {
+
+      if (MessageTypeUtils.isMultiMessageType(keyType)) {
         return DataDeserializer.deserializeData(message.getBuffers(),
-            message.getHeader().getLength() - keyPair.getValue() - 4, serializer, type);
+            message.getHeader().getLength() - keyPair.getKey() - 4 - 4, serializer, type,
+            ((List) keyPair.getValue()).size());
+      } else if (!MessageTypeUtils.isPrimitiveType(keyType)) {
+        return DataDeserializer.deserializeData(message.getBuffers(),
+            message.getHeader().getLength() - keyPair.getKey() - 4, serializer, type);
       } else {
         return DataDeserializer.deserializeData(message.getBuffers(),
-            message.getHeader().getLength() - keyPair.getValue(), serializer, type);
+            message.getHeader().getLength() - keyPair.getKey(), serializer, type);
       }
     }
   }

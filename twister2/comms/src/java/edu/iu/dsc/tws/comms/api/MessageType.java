@@ -11,12 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.api;
 
-//Note: is a new type is added make sure to update the MessageTypeConverter and
+//Note: is a new type is added make sure to update the MessageTypeUtils and
 // to update edu.iu.dsc.tws.data.memory.utils.DataMessageType
 public enum MessageType {
   INTEGER,
   CHAR,
   BYTE,
+  MULTI_FIXED_BYTE,
   STRING,
   LONG,
   DOUBLE,
