@@ -11,9 +11,15 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.taskgraphfluentapi;
 
+/**
+ * This is the main interface for defining the task name and task id
+ * of each task objects in the task graph.
+ */
+
 public interface ITaskInfo {
 
-    ITaskInfo taskName();
-    int taskId();
+  ITaskInfo taskName();
+
+  int taskId();
 }
 

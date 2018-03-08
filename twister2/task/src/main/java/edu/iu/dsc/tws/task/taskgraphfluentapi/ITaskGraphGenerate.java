@@ -11,32 +11,40 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.taskgraphfluentapi;
 
+/**
+ * This interface will be used by the user to connect the
+ * generated task objects (vertexes) with task edges. And, submit the
+ * task objects to generate the task graph.
+ */
+
 import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowOperation;
 
 public interface ITaskGraphGenerate {
 
-    ITaskGraphGenerate generateTaskVertex(int index);
+  ITaskGraphGenerate generateTaskVertex(int index);
 
-    ITaskGraphGenerate generateTaskEdge();
+  ITaskGraphGenerate generateTaskEdge();
 
-    ITaskGraphGenerate connectTaskVertex_Edge(int taskVertexId, int... taskEdgeId);
+  ITaskGraphGenerate connectTaskVertex_Edge(int taskVertexId, int... taskEdgeId);
 
-    ITaskGraphGenerate connectTaskVertex_Edge(ITaskInfo taskVertex, ITaskInfo... taskEdge);
+  ITaskGraphGenerate connectTaskVertex_Edge(ITaskInfo taskVertex, ITaskInfo... taskEdge);
 
-    ITaskGraphGenerate connectTaskVertex_Edge(DataflowOperation dataflowOperation, ITaskInfo taskVertex, ITaskInfo... taskEdge);
+  ITaskGraphGenerate connectTaskVertex_Edge(DataflowOperation dataflowOperation,
+                                            ITaskInfo taskVertex, ITaskInfo... taskEdge);
 
-    ITaskGraphGenerate generateITaskGraph(DataflowOperation dataflowOperation, ITaskInfo taskVertex, ITaskInfo... taskEdge);
+  ITaskGraphGenerate generateITaskGraph(DataflowOperation dataflowOperation,
+                                        ITaskInfo taskVertex, ITaskInfo... taskEdge);
 
-    ITaskGraphGenerate submitToTaskGraphGenerator();
+  ITaskGraphGenerate submitToTaskGraphGenerator();
 
-    ITaskGraphGenerate parseTaskGraph();
+  ITaskGraphGenerate parseTaskGraph();
 
-    ITaskGraphGenerate generateExecutionGraph(ITaskGraphGenerate taskGraph);
+  ITaskGraphGenerate generateExecutionGraph(ITaskGraphGenerate taskGraph);
 
-    ITaskGraphGenerate submitToTaskExecutor();
+  ITaskGraphGenerate submitToTaskExecutor();
 
-    ITaskGraphGenerate build();
+  ITaskGraphGenerate build();
 
-    void displayTaskGraph();
+  void displayTaskGraph();
 }
 

@@ -11,9 +11,14 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.taskgraphfluentapi;
 
+/**
+ * This interface is responsible for defining the task graph name.
+ */
+
 public interface ITaskGraph {
 
-    ITaskGraph taskgraphName(String taskgraphName);
-    ITaskGraphGenerate show();
+  ITaskGraph taskgraphName(String taskgraphName);
+
+  ITaskGraphGenerate show();
 }
 
