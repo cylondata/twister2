@@ -211,8 +211,7 @@ public class TaskGraphGenerationHandler implements ITaskGraphGenerate {
 
   @Override
   public ITaskGraphGenerate submit() {
-    return this
-        ;
+    return this;
   }
 
   public ITaskGraphGenerate generateTaskEdge() {
