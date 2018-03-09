@@ -344,14 +344,16 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
       Object messageObject = pair.getKey();
       if (mpiSendMessage.serializedState() == MPISendMessage.SendState.INIT) {
         // send it internally
-        for (Integer i : mpiSendMessage.getInternalSends()) {
+        int startOfInternalRouts = mpiSendMessage.getAcceptedInternalSends();
+        List<Integer> inRoutes = new ArrayList<>(mpiSendMessage.getInternalSends());
+        for (int i = startOfInternalRouts; i < mpiSendMessage.getInternalSends().size(); i++) {
           //TODO: if this is the last task do we serialize internal messages and add it to
           //TODO: Memory Manager. it can be done here
           boolean receiveAccepted;
           if (isStoreBased && isLastReceiver) {
             serializeAndWriteToMemoryManager(mpiSendMessage, messageObject);
             receiveAccepted = receiver.receiveSendInternally(
-                mpiSendMessage.getSource(), i, mpiSendMessage.getPath(),
+                mpiSendMessage.getSource(), inRoutes.get(i), mpiSendMessage.getPath(),
                 mpiSendMessage.getFlags(), operationMemoryManager);
             //send memory manager as reply
             //mpiSendMessage.setSerializationState();
@@ -359,7 +361,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
             lock.lock();
             try {
               receiveAccepted = receiver.receiveSendInternally(
-                  mpiSendMessage.getSource(), i, mpiSendMessage.getPath(),
+                  mpiSendMessage.getSource(), inRoutes.get(i), mpiSendMessage.getPath(),
                   mpiSendMessage.getFlags(), messageObject);
             } finally {
               lock.unlock();
@@ -370,6 +372,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
             canProgress = false;
             break;
           }
+          mpiSendMessage.incrementAcceptedInternalSends();
         }
         if (canProgress) {
           mpiSendMessage.setSendState(MPISendMessage.SendState.SENT_INTERNALLY);

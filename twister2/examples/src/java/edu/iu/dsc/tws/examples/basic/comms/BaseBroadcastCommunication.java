@@ -23,6 +23,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.basic.comms;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -59,7 +60,7 @@ public class BaseBroadcastCommunication implements IContainer {
 
   private Config config;
 
-  private static final int NO_OF_TASKS = 8;
+  private static final int NO_OF_TASKS = 32;
 
   private int noOfTasksPerExecutor = 2;
 
@@ -83,6 +84,7 @@ public class BaseBroadcastCommunication implements IContainer {
 
       // lets create the task plan
       TaskPlan taskPlan = Utils.createReduceTaskPlan(cfg, plan, NO_OF_TASKS);
+      LOG.log(Level.INFO, "Task plan: " + taskPlan);
       //first get the communication config file
       TWSNetwork network = new TWSNetwork(cfg, taskPlan);
 
@@ -96,7 +98,7 @@ public class BaseBroadcastCommunication implements IContainer {
 
       Map<String, Object> newCfg = new HashMap<>();
 
-      LOG.info("Setting up reduce dataflow operation");
+      LOG.info(String.format("Setting up reduce dataflow operation %d %s", dest, sources));
       // this method calls the init method
       // I think this is wrong
       broadcast = channel.broadCast(newCfg, MessageType.OBJECT, 0, dest,
@@ -135,15 +137,17 @@ public class BaseBroadcastCommunication implements IContainer {
       LOG.log(Level.INFO, "Starting map worker");
       for (int i = 0; i < 1000; i++) {
         IntData data = generateData();
+        data.setId(i);
         // lets generate a message
 //        LOG.info("Sending message from task:" + NO_OF_TASKS);
         while (!broadcast.send(NO_OF_TASKS, data, 0)) {
           // lets wait a litte and try again
-          try {
-            Thread.sleep(1);
-          } catch (InterruptedException e) {
-            e.printStackTrace();
-          }
+          broadcast.progress();
+//          try {
+//            Thread.sleep(1);
+//          } catch (InterruptedException e) {
+//            e.printStackTrace();
+//          }
         }
 //        LOG.info(String.format("%d sending from %d", id, NO_OF_TASKS)
 //            + " count: " + sendCount++);
@@ -156,20 +160,38 @@ public class BaseBroadcastCommunication implements IContainer {
 
   private class BCastReceive implements MessageReceiver {
     private int count = 0;
+    private Map<Integer, List<Integer>> receiveIds = new HashMap<>();
     public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
       for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
         LOG.info(String.format("%d Final Task %d receives from %s",
             id, e.getKey(), e.getValue().toString()));
+        receiveIds.put(e.getKey(), new ArrayList<>());
       }
     }
 
     @Override
     public boolean onMessage(int source, int path, int target, int flags, Object object) {
-      count++;
-      if (count % 1 == 0) {
-        LOG.info("Message received for last: " + source + " target: "
-            + target + " count: " + count);
+      try {
+        count++;
+        if (count % 1 == 0) {
+          LOG.info("Message received for last: " + source + " target: "
+              + target + " count: " + count);
+        }
+        IntData data = (IntData) object;
+        int sequence = data.getId();
+
+        List<Integer> list = receiveIds.get(target);
+        list.add(sequence);
+
+        Set<Integer> r = new HashSet<>(list);
+        if (list.size() != r.size()) {
+          LOG.log(Level.INFO, "Duplicates", new RuntimeException("Dups"));
+        }
+      } catch (NullPointerException e) {
+        LOG.log(Level.INFO, "Message received for last: " + source + " target: "
+            + target + " count: " + count + " rids: " + receiveIds, e);
       }
+
       return true;
     }
 

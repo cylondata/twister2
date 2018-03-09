@@ -121,6 +121,7 @@ public class MPIDataFlowBroadcast implements DataFlowOperation, MPIMessageReceiv
     this.instancePlan = tPlan;
     this.type = t;
     this.edge = ed;
+    this.executor = tPlan.getThisExecutor();
     // we will only have one distinct route
     router = new BinaryTreeRouter(cfg, tPlan, source, destinations);
 
