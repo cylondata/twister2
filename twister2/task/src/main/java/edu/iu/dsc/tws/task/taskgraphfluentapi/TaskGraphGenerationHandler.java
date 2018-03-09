@@ -24,6 +24,7 @@ import com.google.common.collect.Multimap;
 
 import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowOperation;
 import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraph;
+import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraphGenerator;
 
 import edu.iu.dsc.tws.task.taskgraphbuilder.IDataflowTaskGraph;
 
@@ -38,14 +39,12 @@ public class TaskGraphGenerationHandler implements ITaskGraphGenerate {
       TaskGraphGenerationHandler.class.getName());
 
   protected TaskInfo taskInfo = null; // new TaskInfo ();
-
+  private DataflowTaskGraphGenerator dataflowTaskGraphGenerator = new DataflowTaskGraphGenerator();
   private List<ITaskInfo> taskInfoList = new ArrayList<>();
   private List<ITaskInfo> taskSelectedList = new ArrayList<>();
-
   private Multimap<Integer, Integer> taskConnectedList = ArrayListMultimap.create();
   private Multimap<ITaskInfo, ITaskInfo> taskInfoConnectedList = ArrayListMultimap.create();
   private Multimap<ITaskInfo, TaskInfo> taskgraphMap = ArrayListMultimap.create();
-
   private IDataflowTaskGraph<ITaskInfo, DataflowOperation> iTaskGraph =
       new DataflowTaskGraph<>(DataflowOperation.class);
 
@@ -143,6 +142,10 @@ public class TaskGraphGenerationHandler implements ITaskGraphGenerate {
     return this;
   }
 
+  /**
+   * This method is responsible for connecting the task vertices and the task
+   * edge using the dataflow operation.
+   */
   @Override
   public ITaskGraphGenerate connectTaskVertex_Edge(DataflowOperation dataflowOperation,
                                                    ITaskInfo sourceTask,
@@ -155,6 +158,10 @@ public class TaskGraphGenerationHandler implements ITaskGraphGenerate {
     return this;
   }
 
+  /**
+   * It call the dataflow task graph generation method in Dataflow Task Graph
+   * Generator class.
+   */
   @Override
   public ITaskGraphGenerate build() {
 
@@ -172,8 +179,10 @@ public class TaskGraphGenerationHandler implements ITaskGraphGenerate {
         LOGGER.info("Key:" + iTaskInfo.taskName() + "\t" + "Value:" + value + "\n");
         for (int i = 0; i < value.size(); i++) {
           TaskInfo taskInfoVal = (TaskInfo) value.get(i);
-          this.generateITaskGraph(taskInfoVal.dataflowOperation,
-              taskInfoVal.sourceTask, taskInfoVal.targetTask);
+          //this.generateITaskGraph(taskInfoVal.dataflowOperation,
+          //    taskInfoVal.sourceTask, taskInfoVal.targetTask);
+          dataflowTaskGraphGenerator.generateITaskGraph(
+              taskInfoVal.dataflowOperation, taskInfoVal.sourceTask, taskInfoVal.targetTask);
         }
       }
     } catch (ClassCastException cce) {
@@ -185,6 +194,12 @@ public class TaskGraphGenerationHandler implements ITaskGraphGenerate {
   }
 
   @Override
+  public ITaskGraphGenerate generateITaskGraph(DataflowOperation dataflowOperation,
+                                               ITaskInfo taskVertex, ITaskInfo... taskEdge) {
+    return this;
+  }
+
+  /*@Override
   public ITaskGraphGenerate generateITaskGraph(DataflowOperation dataflowOperation,
                                                ITaskInfo taskVertex,
                                                ITaskInfo... taskEdge) {
@@ -200,8 +215,12 @@ public class TaskGraphGenerationHandler implements ITaskGraphGenerate {
       iae.printStackTrace();
     }
     return this;
-  }
+  }*/
 
+  /**
+   * It is for displaying the connected task graph objects and task vertexes
+   * in the taskgraph.
+   */
   @Override
   public void displayTaskGraph() {
     LOGGER.info("\n Task Connected List:" + taskConnectedList + "\n\n");
@@ -209,6 +228,10 @@ public class TaskGraphGenerationHandler implements ITaskGraphGenerate {
     LOGGER.info("Generated Task Graph Value Is:" + this.iTaskGraph.getTaskVertexSet());
   }
 
+  /**
+   * This method will submit the taskgraph to the task graph parser for parsing
+   * the task graph and preparing the task for execution.
+   */
   @Override
   public ITaskGraphGenerate submit() {
     return this;

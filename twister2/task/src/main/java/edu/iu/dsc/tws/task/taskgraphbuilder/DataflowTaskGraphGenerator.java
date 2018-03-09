@@ -16,6 +16,8 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.task.api.Task;
 
+import edu.iu.dsc.tws.task.taskgraphfluentapi.ITaskInfo;
+
 /**
  * This is the main class for creating the dataflow task graph.
  */
@@ -40,8 +42,42 @@ public class DataflowTaskGraphGenerator implements IDataflowTaskGraphGenerator {
   private IDataflowTaskGraph<Task, DataflowOperation> taskgraph =
       new DataflowTaskGraph<>(DataflowOperation.class);
 
+  private IDataflowTaskGraph<ITaskInfo, DataflowOperation> iTaskGraph =
+      new DataflowTaskGraph<>(DataflowOperation.class);
   private IDataflowTaskGraph<TaskGraphMapper, DataflowOperation> tGraph =
       new DataflowTaskGraph<>(DataflowOperation.class);
+
+  public IDataflowTaskGraph<ITaskInfo, DataflowOperation> getITaskGraph() {
+    return iTaskGraph;
+  }
+
+  public void setITaskGraph(IDataflowTaskGraph<ITaskInfo, DataflowOperation> iTaskgraph) {
+    this.iTaskGraph = iTaskgraph;
+  }
+
+  public DataflowTaskGraphGenerator generateITaskGraph(
+      DataflowOperation dataflowOperation,
+      ITaskInfo taskVertex, ITaskInfo... taskEdge) {
+    try {
+      this.iTaskGraph.addTaskVertex(taskVertex);
+      if (taskEdge.length >= 1) {
+        this.iTaskGraph.addTaskVertex(taskEdge[0]);
+        this.iTaskGraph.addTaskEdge(taskVertex, taskEdge[0], dataflowOperation);
+      }
+
+            /*for (ITaskInfo mapperTask : taskEdge) {
+                this.iTaskGraph.addTaskEdge (mapperTask, taskVertex);
+            }*/
+    } catch (IllegalArgumentException iae) {
+      iae.printStackTrace();
+    } /*catch (IllegalAccessException e) {
+            e.printStackTrace ();
+        } catch (InstantiationException e) {
+            e.printStackTrace ();
+        }*/
+    System.out.println("Constructed Task Graph is:" + iTaskGraph.getTaskVertexSet().size());
+    return this;
+  }
 
   public IDataflowTaskGraph<Task, DataflowOperation> getTaskgraph() {
     return taskgraph;
