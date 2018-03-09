@@ -43,6 +43,8 @@ public final class MessageHeader {
    */
   private int flags;
 
+  private int sequenceNumber;
+
   private MessageHeader(int srcId, int e, int l) {
     this.sourceId = srcId;
     this.edge = e;
@@ -64,6 +66,10 @@ public final class MessageHeader {
 
   public int getLength() {
     return length;
+  }
+
+  public int getSequenceNumber() {
+    return sequenceNumber;
   }
 
   public int getFlags() {
@@ -110,6 +116,11 @@ public final class MessageHeader {
 
     public Builder length(int l) {
       header.length = l;
+      return this;
+    }
+
+    public Builder sequence(int i) {
+      header.sequenceNumber = i;
       return this;
     }
 
