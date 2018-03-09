@@ -238,7 +238,8 @@ public class TWSMPIChannel implements TWSChannel {
     }
 
     Iterator<MPISendRequests> sendRequestsIterator = waitForCompletionSends.iterator();
-    while (sendRequestsIterator.hasNext()) {
+    boolean canProgress = true;
+    while (sendRequestsIterator.hasNext() && canProgress) {
       MPISendRequests sendRequests = sendRequestsIterator.next();
       Iterator<MPIRequest> requestIterator = sendRequests.pendingSends.iterator();
       while (requestIterator.hasNext()) {
@@ -249,6 +250,9 @@ public class TWSMPIChannel implements TWSChannel {
           if (status != null) {
             completedSendCount++;
             requestIterator.remove();
+          } else {
+            canProgress = false;
+            break;
           }
         } catch (MPIException e) {
           throw new RuntimeException("Failed to complete the send to: " + sendRequests.rank, e);
@@ -292,6 +296,8 @@ public class TWSMPIChannel implements TWSChannel {
             } else {
               throw new RuntimeException("MPI receive request cancelled");
             }
+          } else {
+            break;
           }
         }
         // this request has completed

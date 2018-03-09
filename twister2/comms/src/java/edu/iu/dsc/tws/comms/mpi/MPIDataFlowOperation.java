@@ -145,6 +145,9 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
   private long time2 = 0;
   private int count = 0;
 
+  private Map<Integer, Integer> sendSequence = new HashMap<>();
+  private Map<Integer, Integer> sendPartialSequence = new HashMap<>();
+
   private ThreadLocal<ByteBuffer> threadLocalDataBuffer = new ThreadLocal<ByteBuffer>() {
     @Override
     protected ByteBuffer initialValue() {
@@ -731,7 +734,8 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
         // we need to reset the buffer so it can be used again
         buffer.getByteBuffer().clear();
         if (!list.offer(buffer)) {
-          throw new RuntimeException("We should be able to offer the buffer");
+          throw new RuntimeException(String.format("%d Buffer release failed for target %d",
+              executor, message.getHeader().getDestinationIdentifier()));
         }
         receiveBufferReleaseCount++;
       }
@@ -739,12 +743,22 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
         completionListener.completed(message.getOriginatingId());
       }
     } else if (MPIMessageDirection.OUT == message.getMessageDirection()) {
-      Queue<MPIBuffer> queue = sendBuffers;
+      ArrayBlockingQueue<MPIBuffer> queue = (ArrayBlockingQueue<MPIBuffer>) sendBuffers;
       for (MPIBuffer buffer : message.getBuffers()) {
         // we need to reset the buffer so it can be used again
         buffer.getByteBuffer().clear();
         if (!queue.offer(buffer)) {
-          throw new RuntimeException("We should be able to offer the buffer");
+          String s = "";
+          for (Map.Entry<Integer, Queue<MPIBuffer>> e : receiveBuffers.entrySet()) {
+            s += e.getKey() + "-" + e.getValue().size() + " ";
+          }
+          LOG.info(String.format(
+              "%d send count %d receive %d send release %d receive release %d %s %d %d",
+              executor, sendCount, receiveCount, sendBufferReleaseCount,
+              receiveBufferReleaseCount, s, sendsOfferred, sendsPartialOfferred));
+          ((TWSMPIChannel) channel).setDebug(true);
+          throw new RuntimeException(String.format("%d Buffer release failed for source %d %d %d",
+              executor, message.getOriginatingId(), queue.size(), queue.remainingCapacity()));
         }
         sendBufferReleaseCount++;
       }

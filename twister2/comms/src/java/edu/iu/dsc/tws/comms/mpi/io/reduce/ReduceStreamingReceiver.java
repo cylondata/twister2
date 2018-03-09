@@ -37,7 +37,7 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
   protected DataFlowOperation operation;
   protected int sendPendingMax = 128;
   protected int destination;
-  private Queue<Object> reducedValues;
+  private Map<Integer, Queue<Object>> reducedValuesMap = new HashMap<>();
   private int onMessageAttempts = 0;
   private Map<Integer, Map<Integer, Integer>> totalCounts = new HashMap<>();
 
@@ -55,7 +55,6 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
     this.executor = op.getTaskPlan().getThisExecutor();
     this.operation = op;
     this.sendPendingMax = MPIContext.sendPendingMax(cfg);
-    this.reducedValues = new ArrayBlockingQueue<>(sendPendingMax);
 
     for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
       Map<Integer, Queue<Object>> messagesPerTask = new HashMap<>();
@@ -63,7 +62,7 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
       Map<Integer, Integer> totalCountsPerTask = new HashMap<>();
 
       for (int i : e.getValue()) {
-        messagesPerTask.put(i, new ArrayBlockingQueue<>(sendPendingMax * 4));
+        messagesPerTask.put(i, new ArrayBlockingQueue<>(sendPendingMax));
         countsPerTask.put(i, 0);
         totalCountsPerTask.put(i, 0);
       }
@@ -71,6 +70,7 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
       LOG.fine(String.format("%d Final Task %d receives from %s",
           executor, e.getKey(), e.getValue().toString()));
 
+      reducedValuesMap.put(e.getKey(), new ArrayBlockingQueue<>(sendPendingMax));
       messages.put(e.getKey(), messagesPerTask);
       counts.put(e.getKey(), countsPerTask);
       totalCounts.put(e.getKey(), totalCountsPerTask);
@@ -83,7 +83,7 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
     boolean canAdd = true;
     Queue<Object> m = messages.get(target).get(source);
     Integer c = counts.get(target).get(source);
-    if (m.size() >= sendPendingMax * 4) {
+    if (m.size() >= sendPendingMax) {
       canAdd = false;
 //      LOG.info(String.format("%d ADD FALSE", executor));
       onMessageAttempts++;
@@ -109,6 +109,7 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
       Map<Integer, Queue<Object>> messagePerTarget = messages.get(t);
       Map<Integer, Integer> countsPerTarget = counts.get(t);
       Map<Integer, Integer> totalCountMap = totalCounts.get(t);
+      Queue<Object> reducedValues = this.reducedValuesMap.get(t);
 //      if (onMessageAttempts > 1000000 || progressAttempts > 1000000) {
 //        LOG.info(String.format("%d REDUCE %s %s", executor, counts, totalCountMap));
 //      }
