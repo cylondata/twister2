@@ -11,7 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.taskgraphfluentapi;
 
+import java.util.logging.Logger;
+
 public class TaskGraph implements ITaskGraph {
+
+  private static final Logger LOGGER = Logger.getLogger(
+      TaskGraph.class.getName());
 
   private String taskGraphName;
   private String iGenerate;

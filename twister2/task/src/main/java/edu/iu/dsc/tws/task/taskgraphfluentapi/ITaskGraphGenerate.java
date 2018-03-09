@@ -38,7 +38,7 @@ public interface ITaskGraphGenerate {
 
   void displayTaskGraph();
 
-  //ITaskGraphGenerate submit();
+  ITaskGraphGenerate submit();
 
   ITaskGraphGenerate submitToTaskGraphGenerator();
 

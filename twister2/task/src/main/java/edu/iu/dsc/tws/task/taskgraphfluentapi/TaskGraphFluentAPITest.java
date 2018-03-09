@@ -16,7 +16,6 @@ import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowOperation;
 /**
  * The user has to define their task and taskgraph generation similar to this class.
  */
-
 public class TaskGraphFluentAPITest {
 
   /**
@@ -105,8 +104,4 @@ public class TaskGraphFluentAPITest {
         .build()
         .displayTaskGraph();
   }
-
-  /*public static void main(String[] args) {
-    TaskGraphFluentAPITest taskGraphFluentAPITest = new TaskGraphFluentAPITest();
-  }*/
 }
