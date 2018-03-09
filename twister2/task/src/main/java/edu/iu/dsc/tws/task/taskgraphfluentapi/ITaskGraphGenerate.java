@@ -11,14 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.taskgraphfluentapi;
 
+import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowOperation;
+
 /**
  * This interface will be used by the user to connect the
  * generated task objects (vertexes) with task edges. And, submit the
  * task objects to generate the task graph.
  */
-
-import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowOperation;
-
 public interface ITaskGraphGenerate {
 
   ITaskGraphGenerate generateTaskVertex(int index);
@@ -34,6 +33,8 @@ public interface ITaskGraphGenerate {
 
   ITaskGraphGenerate generateITaskGraph(DataflowOperation dataflowOperation,
                                         ITaskInfo taskVertex, ITaskInfo... taskEdge);
+
+  ITaskGraphGenerate submit();
 
   ITaskGraphGenerate submitToTaskGraphGenerator();
 
