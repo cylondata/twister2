@@ -34,7 +34,11 @@ public interface ITaskGraphGenerate {
   ITaskGraphGenerate generateITaskGraph(DataflowOperation dataflowOperation,
                                         ITaskInfo taskVertex, ITaskInfo... taskEdge);
 
-  ITaskGraphGenerate submit();
+  ITaskGraphGenerate build();
+
+  void displayTaskGraph();
+
+  //ITaskGraphGenerate submit();
 
   ITaskGraphGenerate submitToTaskGraphGenerator();
 
@@ -43,9 +47,5 @@ public interface ITaskGraphGenerate {
   ITaskGraphGenerate generateExecutionGraph(ITaskGraphGenerate taskGraph);
 
   ITaskGraphGenerate submitToTaskExecutor();
-
-  ITaskGraphGenerate build();
-
-  void displayTaskGraph();
 }
 
