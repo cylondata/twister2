@@ -22,7 +22,7 @@ public interface ITaskGraphGenerate {
 
   ITaskGraphGenerate generateTaskVertex(int index);
 
-  ITaskGraphGenerate generateTaskEdge();
+  //ITaskGraphGenerate generateTaskEdge();
 
   ITaskGraphGenerate connectTaskVertex_Edge(int taskVertexId, int... taskEdgeId);
 

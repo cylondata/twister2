@@ -42,9 +42,10 @@ public class DataflowTaskGraphGenerator implements IDataflowTaskGraphGenerator {
   private IDataflowTaskGraph<Task, DataflowOperation> taskgraph =
       new DataflowTaskGraph<>(DataflowOperation.class);
 
-  private IDataflowTaskGraph<ITaskInfo, DataflowOperation> iTaskGraph =
-      new DataflowTaskGraph<>(DataflowOperation.class);
   private IDataflowTaskGraph<TaskGraphMapper, DataflowOperation> tGraph =
+      new DataflowTaskGraph<>(DataflowOperation.class);
+
+  private IDataflowTaskGraph<ITaskInfo, DataflowOperation> iTaskGraph =
       new DataflowTaskGraph<>(DataflowOperation.class);
 
   public IDataflowTaskGraph<ITaskInfo, DataflowOperation> getITaskGraph() {
@@ -55,6 +56,10 @@ public class DataflowTaskGraphGenerator implements IDataflowTaskGraphGenerator {
     this.iTaskGraph = iTaskgraph;
   }
 
+  /**
+   * This method is responsible for creating the dataflow task graph from the receiving
+   * task vertices and task eges.
+   */
   public DataflowTaskGraphGenerator generateITaskGraph(
       DataflowOperation dataflowOperation,
       ITaskInfo taskVertex, ITaskInfo... taskEdge) {

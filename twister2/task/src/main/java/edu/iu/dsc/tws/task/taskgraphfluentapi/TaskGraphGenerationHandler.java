@@ -237,9 +237,9 @@ public class TaskGraphGenerationHandler implements ITaskGraphGenerate {
     return this;
   }
 
-  public ITaskGraphGenerate generateTaskEdge() {
+  /*public ITaskGraphGenerate generateTaskEdge() {
     return this;
-  }
+  }*/
 
   public ITaskGraphGenerate submitToTaskGraphGenerator() {
     return this;
