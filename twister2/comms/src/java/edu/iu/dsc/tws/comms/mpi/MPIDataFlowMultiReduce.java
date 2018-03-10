@@ -79,7 +79,7 @@ public class MPIDataFlowMultiReduce implements DataFlowOperation {
     if (reduce == null) {
       throw new RuntimeException("Un-expected destination: " + dest);
     }
-    return reduce.send(source, message, 0,dest);
+    return reduce.send(source, message, 0, dest);
   }
 
   @Override
