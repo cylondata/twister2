@@ -152,9 +152,9 @@ public class MPIDataFlowMultiGather implements DataFlowOperation {
 
   /**
    * Initialize
-   * @param cfg
+   * @param config
    * @param t
-   * @param taskPlan
+   * @param instancePlan
    * @param edge
    */
   public void init(Config config, MessageType t, TaskPlan instancePlan, int edge) {

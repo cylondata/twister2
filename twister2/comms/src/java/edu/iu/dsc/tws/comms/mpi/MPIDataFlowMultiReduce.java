@@ -51,6 +51,10 @@ public class MPIDataFlowMultiReduce implements DataFlowOperation {
 
   private int executor;
 
+  private TaskPlan taskPlan;
+
+  private MessageType dataType;
+
   public MPIDataFlowMultiReduce(TWSChannel chnl,
                                 Set<Integer> sources, Set<Integer> destination,
                                 MultiMessageReceiver finalRecv,
@@ -116,7 +120,7 @@ public class MPIDataFlowMultiReduce implements DataFlowOperation {
 
   @Override
   public TaskPlan getTaskPlan() {
-    return null;
+    return taskPlan;
   }
 
   @Override
@@ -137,6 +141,9 @@ public class MPIDataFlowMultiReduce implements DataFlowOperation {
    */
   public void init(Config config, MessageType type, TaskPlan instancePlan, int edge) {
     executor = instancePlan.getThisExecutor();
+    this.taskPlan = instancePlan;
+    this.dataType = type;
+
     Map<Integer, Map<Integer, List<Integer>>> partialReceives = new HashMap<>();
     Map<Integer, Map<Integer, List<Integer>>> finalReceives = new HashMap<>();
     List<Integer> edgeList = new ArrayList<>(edges);
