@@ -92,7 +92,7 @@ public class MPIDataFlowMultiReduce implements DataFlowOperation {
   }
 
   @Override
-  public void progress() {
+  public synchronized void progress() {
     try {
       for (MPIDataFlowReduce reduce : reduceMap.values()) {
         reduce.progress();
