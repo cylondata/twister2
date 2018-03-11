@@ -105,7 +105,7 @@ public class MPIDataFlowAllGather implements DataFlowOperation {
   }
 
   @Override
-  public void progress() {
+  public synchronized void progress() {
     try {
       broadcast.progress();
       reduce.progress();
