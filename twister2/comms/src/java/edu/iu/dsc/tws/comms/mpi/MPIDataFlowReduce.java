@@ -43,6 +43,7 @@ import edu.iu.dsc.tws.comms.mpi.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.MessageSerializer;
 import edu.iu.dsc.tws.comms.routing.InvertedBinaryTreeRouter;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
+import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
 public class MPIDataFlowReduce implements DataFlowOperation, MPIMessageReceiver {
   private static final Logger LOG = Logger.getLogger(MPIDataFlowReduce.class.getName());
@@ -296,6 +297,12 @@ public class MPIDataFlowReduce implements DataFlowOperation, MPIMessageReceiver 
       pendingReceiveMessagesPerSource.put(e, pendingReceiveMessages);
       pendingReceiveDeSerializations.put(e, new ArrayBlockingQueue<MPIMessage>(capacity));
       deSerializerMap.put(e, new MPIMessageDeSerializer(new KryoSerializer()));
+    }
+
+    Set<Integer> sourcesOfThisExec = TaskPlanUtils.getTasksOfThisExecutor(taskPlan, sources);
+    for (int s : sourcesOfThisExec) {
+      sendRoutingParameters(s, pathToUse);
+      partialSendRoutingParameters(s, pathToUse);
     }
 
     this.delegete.setCompletionListener(completionListener);
