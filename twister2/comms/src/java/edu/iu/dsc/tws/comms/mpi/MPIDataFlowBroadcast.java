@@ -158,7 +158,7 @@ public class MPIDataFlowBroadcast implements DataFlowOperation, MPIMessageReceiv
     }
     Set<Integer> execs = router.receivingExecutors();
     for (int e : execs) {
-      int capacity = maxReceiveBuffers * 2 * receiveExecutorsSize;
+      int capacity = maxReceiveBuffers * receiveExecutorsSize;
       Queue<Pair<Object, MPIMessage>> pendingReceiveMessages =
           new ArrayBlockingQueue<Pair<Object, MPIMessage>>(
               capacity);
