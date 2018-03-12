@@ -192,7 +192,7 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
     }
     Set<Integer> execs = router.receivingExecutors();
     for (int e : execs) {
-      int capacity = maxReceiveBuffers * receiveExecutorsSize;
+      int capacity = maxReceiveBuffers * 2 * receiveExecutorsSize;
       Queue<Pair<Object, MPIMessage>> pendingReceiveMessages =
           new ArrayBlockingQueue<Pair<Object, MPIMessage>>(
               capacity);
