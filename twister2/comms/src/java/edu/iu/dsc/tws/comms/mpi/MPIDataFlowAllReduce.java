@@ -138,8 +138,8 @@ public class MPIDataFlowAllReduce implements DataFlowOperation {
   @Override
   public synchronized void progress() {
     try {
-      broadcast.progress();
       reduce.progress();
+      broadcast.progress();
     } catch (Throwable t) {
       LOG.log(Level.SEVERE, "un-expected error", t);
       throw new RuntimeException(t);
