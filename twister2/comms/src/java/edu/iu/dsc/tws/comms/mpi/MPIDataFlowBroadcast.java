@@ -60,6 +60,8 @@ public class MPIDataFlowBroadcast implements DataFlowOperation, MPIMessageReceiv
       pendingSendMessagesPerSource = new HashMap<>();
   private Lock lock = new ReentrantLock();
 
+  private Map<Integer, RoutingParameters> routingParametersCache = new HashMap<>();
+
   public MPIDataFlowBroadcast(TWSChannel channel, int src, Set<Integer> dests,
                               MessageReceiver finalRcvr) {
     this.source = src;
@@ -165,6 +167,10 @@ public class MPIDataFlowBroadcast implements DataFlowOperation, MPIMessageReceiv
       deSerializerMap.put(e, new MPIMessageDeSerializer(new KryoSerializer()));
     }
 
+    for (Integer s : srcs) {
+      routingParametersCache.put(s, sendRoutingParameters(s, 0));
+    }
+
     delegete.init(cfg, t, tPlan, ed,
         router.receivingExecutors(), router.isLastReceiver(), this,
         pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
@@ -210,7 +216,13 @@ public class MPIDataFlowBroadcast implements DataFlowOperation, MPIMessageReceiv
 
   public boolean passMessageDownstream(Object object, MPIMessage currentMessage) {
     int src = router.mainTaskOfExecutor(instancePlan.getThisExecutor(), MPIContext.DEFAULT_PATH);
-    RoutingParameters routingParameters = sendRoutingParameters(src, MPIContext.DEFAULT_PATH);
+    RoutingParameters routingParameters;
+    if (routingParametersCache.containsKey(src)) {
+      routingParameters = routingParametersCache.get(src);
+    } else {
+      routingParameters = sendRoutingParameters(src, MPIContext.DEFAULT_PATH);
+    }
+
     ArrayBlockingQueue<Pair<Object, MPISendMessage>> pendingSendMessages =
         pendingSendMessagesPerSource.get(src);
 
@@ -234,36 +246,40 @@ public class MPIDataFlowBroadcast implements DataFlowOperation, MPIMessageReceiv
   }
 
   public RoutingParameters sendRoutingParameters(int s, int path) {
-    RoutingParameters routingParameters = new RoutingParameters();
-    // get the expected routes
-    Map<Integer, Set<Integer>> internalRouting = router.getInternalSendTasks(source);
-    if (internalRouting == null) {
-      throw new RuntimeException("Un-expected message from source: " + s);
-    }
-
-    Set<Integer> internalSourceRouting = internalRouting.get(s);
-    if (internalSourceRouting != null) {
-      // we always use path 0 because only one path
-//      LOG.info(String.format("%d internal routing %s", executor, internalSourceRouting));
-      routingParameters.addInternalRoutes(internalSourceRouting);
+    if (routingParametersCache.containsKey(s)) {
+      return routingParametersCache.get(s);
     } else {
-      LOG.info(String.format("%d No internal routes for source %d", executor, s));
-    }
+      RoutingParameters routingParameters = new RoutingParameters();
+      // get the expected routes
+      Map<Integer, Set<Integer>> internalRouting = router.getInternalSendTasks(source);
+      if (internalRouting == null) {
+        throw new RuntimeException("Un-expected message from source: " + s);
+      }
 
-    // get the expected routes
-    Map<Integer, Set<Integer>> externalRouting = router.getExternalSendTasks(s);
-    if (externalRouting == null) {
-      throw new RuntimeException("Un-expected message from source: " + s);
-    } /*else {
+      Set<Integer> internalSourceRouting = internalRouting.get(s);
+      if (internalSourceRouting != null) {
+        // we always use path 0 because only one path
+//      LOG.info(String.format("%d internal routing %s", executor, internalSourceRouting));
+        routingParameters.addInternalRoutes(internalSourceRouting);
+      } else {
+        LOG.info(String.format("%d No internal routes for source %d", executor, s));
+      }
+
+      // get the expected routes
+      Map<Integer, Set<Integer>> externalRouting = router.getExternalSendTasks(s);
+      if (externalRouting == null) {
+        throw new RuntimeException("Un-expected message from source: " + s);
+      } /*else {
       LOG.info(String.format("%d No external routes for source %d", executor, s));
     }*/
-    Set<Integer> externalSourceRouting = externalRouting.get(s);
-    if (externalSourceRouting != null) {
+      Set<Integer> externalSourceRouting = externalRouting.get(s);
+      if (externalSourceRouting != null) {
 //      LOG.info(String.format("%d external routing %s", executor, externalSourceRouting));
-      // we always use path 0 because only one path
-      routingParameters.addExternalRoutes(externalSourceRouting);
+        // we always use path 0 because only one path
+        routingParameters.addExternalRoutes(externalSourceRouting);
+      }
+      return routingParameters;
     }
-    return routingParameters;
   }
 
   @Override
