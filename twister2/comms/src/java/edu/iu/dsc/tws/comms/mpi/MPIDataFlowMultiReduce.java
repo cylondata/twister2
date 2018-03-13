@@ -51,6 +51,10 @@ public class MPIDataFlowMultiReduce implements DataFlowOperation {
 
   private int executor;
 
+  private TaskPlan taskPlan;
+
+  private MessageType dataType;
+
   public MPIDataFlowMultiReduce(TWSChannel chnl,
                                 Set<Integer> sources, Set<Integer> destination,
                                 MultiMessageReceiver finalRecv,
@@ -75,7 +79,7 @@ public class MPIDataFlowMultiReduce implements DataFlowOperation {
     if (reduce == null) {
       throw new RuntimeException("Un-expected destination: " + dest);
     }
-    return reduce.send(source, message, dest);
+    return reduce.send(source, message, flags, dest);
   }
 
   @Override
@@ -84,11 +88,11 @@ public class MPIDataFlowMultiReduce implements DataFlowOperation {
     if (reduce == null) {
       throw new RuntimeException("Un-expected destination: " + dest);
     }
-    return reduce.sendPartial(source, message, dest);
+    return reduce.sendPartial(source, message, flags, dest);
   }
 
   @Override
-  public void progress() {
+  public synchronized void progress() {
     try {
       for (MPIDataFlowReduce reduce : reduceMap.values()) {
         reduce.progress();
@@ -111,12 +115,12 @@ public class MPIDataFlowMultiReduce implements DataFlowOperation {
 
   @Override
   public MessageType getType() {
-    return null;
+    return dataType;
   }
 
   @Override
   public TaskPlan getTaskPlan() {
-    return null;
+    return taskPlan;
   }
 
   @Override
@@ -137,6 +141,9 @@ public class MPIDataFlowMultiReduce implements DataFlowOperation {
    */
   public void init(Config config, MessageType type, TaskPlan instancePlan, int edge) {
     executor = instancePlan.getThisExecutor();
+    this.taskPlan = instancePlan;
+    this.dataType = type;
+
     Map<Integer, Map<Integer, List<Integer>>> partialReceives = new HashMap<>();
     Map<Integer, Map<Integer, List<Integer>>> finalReceives = new HashMap<>();
     List<Integer> edgeList = new ArrayList<>(edges);
@@ -179,7 +186,8 @@ public class MPIDataFlowMultiReduce implements DataFlowOperation {
 
     @Override
     public boolean onMessage(int source, int path, int target, int flags, Object object) {
-//      LOG.info(String.format("%d received message %d %d %d", executor, path, target, source));
+//      LOG.info(String.format("%d received message %d %d %d %d",
+//          executor, path, target, source, flags));
       return partialReceiver.onMessage(source, destination, target, flags, object);
     }
 
@@ -200,7 +208,8 @@ public class MPIDataFlowMultiReduce implements DataFlowOperation {
 
     @Override
     public boolean onMessage(int source, int path, int target, int flags, Object object) {
-//      LOG.info(String.format("%d received message %d %d %d", executor, path, target, source));
+//      LOG.info(String.format("%d received message %d %d %d %d",
+//          executor, path, target, source, flags));
       return finalReceiver.onMessage(source, destination, target, flags, object);
     }
 

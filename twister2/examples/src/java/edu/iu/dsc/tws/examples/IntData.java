@@ -14,11 +14,21 @@ package edu.iu.dsc.tws.examples;
 public class IntData {
   private int[] data;
 
+  private int id;
+
   public IntData(int[] data) {
     this.data = data;
   }
 
   public IntData() {
+  }
+
+  public int getId() {
+    return id;
+  }
+
+  public void setId(int id) {
+    this.id = id;
   }
 
   public int[] getData() {

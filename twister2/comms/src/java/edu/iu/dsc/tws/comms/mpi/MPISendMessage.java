@@ -45,6 +45,7 @@ public class MPISendMessage {
   private Set<Integer> externalSends;
 
   private int acceptedExternalSends = 0;
+  private int acceptedInternalSends = 0;
 
   private int flags;
 
@@ -146,6 +147,14 @@ public class MPISendMessage {
 
   public int incrementAcceptedExternalSends() {
     return ++acceptedExternalSends;
+  }
+
+  public int getAcceptedInternalSends() {
+    return acceptedInternalSends;
+  }
+
+  public int incrementAcceptedInternalSends() {
+    return ++acceptedInternalSends;
   }
 
   public int getFlags() {
