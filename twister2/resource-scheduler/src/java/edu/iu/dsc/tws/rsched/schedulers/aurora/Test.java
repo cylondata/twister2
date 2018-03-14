@@ -21,6 +21,10 @@ import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
 
+/**
+ * a test class used during development
+ * not used in official release
+ */
 public final class Test {
   public static void main(String[] args) {
     System.out.println("Helloooo test from twister2");
