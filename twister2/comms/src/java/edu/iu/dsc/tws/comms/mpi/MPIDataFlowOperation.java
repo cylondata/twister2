@@ -335,7 +335,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
     return false;
   }
 
-  private void sendProgress2(Queue<Pair<Object, MPISendMessage>> pendingSendMessages, int sendId) {
+  private void sendProgress(Queue<Pair<Object, MPISendMessage>> pendingSendMessages, int sendId) {
     boolean canProgress = true;
     while (pendingSendMessages.size() > 0 && canProgress) {
       // take out pending messages
@@ -421,7 +421,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
     }
   }
 
-  private void sendProgress(Queue<Pair<Object, MPISendMessage>> pendingSendMessages, int sendId) {
+  private void sendProgress2(Queue<Pair<Object, MPISendMessage>> pendingSendMessages, int sendId) {
     boolean canProgress = true;
     while (pendingSendMessages.size() > 0 && canProgress) {
       // take out pending messages
