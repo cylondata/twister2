@@ -36,6 +36,12 @@ public class LMDBMemoryManagerContext extends Context {
 
   public static final int DEFAULT_APPEND_BUFFER_SIZE = 1024 * 2;
 
+  public static final int DEFAULT_WRITE_BUFFER_MAP_SIZE = 10000;
+
+  public static final int DATA_BUFF_INIT_CAP = 1024;
+
+  public static final int KEY_BUFF_INIT_CAP = 256;
+
   /**
    * Name of the databse
    */
@@ -45,4 +51,6 @@ public class LMDBMemoryManagerContext extends Context {
    * File path to store the LMDB database
    */
   public static final String DEFAULT_FOLDER_PATH = "\tmp\twister2lmdb";
+
+
 }
