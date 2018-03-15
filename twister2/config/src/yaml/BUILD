@@ -25,3 +25,8 @@ filegroup(
     name = "conf-aurora-yaml",
     srcs = glob(["conf/aurora/*"]),
 )
+
+filegroup(
+    name = "conf-kubernetes-yaml",
+    srcs = glob(["conf/kubernetes/*"]),
+)

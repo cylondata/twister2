@@ -143,7 +143,7 @@ public class AuroraLauncher implements ILauncher {
   }
 
   /**
-   * print all environment variables for debuging purposes
+   * print all environment variables for debugging purposes
    * @param envs
    */
   public static void printEnvs(Map<AuroraField, String> envs) {

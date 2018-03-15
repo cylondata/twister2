@@ -107,7 +107,7 @@ public class MPIDataFlowMultiGather implements DataFlowOperation {
   }
 
   @Override
-  public void progress() {
+  public synchronized void progress() {
     try {
       for (MPIDataFlowGather reduce : gatherMap.values()) {
         reduce.progress();

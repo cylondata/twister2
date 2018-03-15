@@ -18,9 +18,13 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.Table;
 
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -38,6 +42,7 @@ import edu.iu.dsc.tws.comms.mpi.io.MessageSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.gather.StreamingPartialGatherReceiver;
 import edu.iu.dsc.tws.comms.routing.InvertedBinaryTreeRouter;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
+import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
 public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver {
   private static final Logger LOG = Logger.getLogger(MPIDataFlowGather.class.getName());
@@ -64,8 +69,11 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
   private MessageType type;
   private MessageType keyType;
   private boolean isKeyed;
-  private AtomicBoolean finalReceiverProgress;
-  private AtomicBoolean partialRecevierProgress;
+  private Table<Integer, Integer, RoutingParameters> routingParamCache = HashBasedTable.create();
+  private Table<Integer, Integer, RoutingParameters> partialRoutingParamCache
+      = HashBasedTable.create();
+  private Lock lock = new ReentrantLock();
+  private Lock partialLock = new ReentrantLock();
 
   public MPIDataFlowGather(TWSChannel channel, Set<Integer> sources, int destination,
                            MessageReceiver finalRcvr,
@@ -109,8 +117,6 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
     this.isKeyed = true;
 
     this.delegete = new MPIDataFlowOperation(channel);
-    this.finalReceiverProgress = new AtomicBoolean(false);
-    this.partialRecevierProgress = new AtomicBoolean(false);
   }
 
   protected boolean isLast() {
@@ -303,6 +309,12 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
       deSerializerMap.put(e, new MPIMultiMessageDeserializer(new KryoSerializer(), executor));
     }
 
+    Set<Integer> sourcesOfThisExec = TaskPlanUtils.getTasksOfThisExecutor(taskPlan, sources);
+    for (int s : sourcesOfThisExec) {
+      sendRoutingParameters(s, pathToUse);
+      partialSendRoutingParameters(s, pathToUse);
+    }
+
     delegete.init(cfg, t, taskPlan, edge,
         router.receivingExecutors(), router.isLastReceiver(), this,
         pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
@@ -341,14 +353,20 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
     try {
       delegete.progress();
 
-      if (finalReceiverProgress.compareAndSet(false, true)) {
-        finalReceiver.progress();
-        finalReceiverProgress.compareAndSet(true, false);
+      if (lock.tryLock()) {
+        try {
+          finalReceiver.progress();
+        } finally {
+          lock.unlock();
+        }
       }
 
-      if (partialRecevierProgress.compareAndSet(false, true)) {
-        partialReceiver.progress();
-        partialRecevierProgress.compareAndSet(true, false);
+      if (partialLock.tryLock()) {
+        try {
+          partialReceiver.progress();
+        } finally {
+          partialLock.unlock();
+        }
       }
     } catch (Throwable t) {
       LOG.log(Level.SEVERE, "un-expected error", t);

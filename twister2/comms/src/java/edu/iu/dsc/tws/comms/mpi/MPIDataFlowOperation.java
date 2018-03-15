@@ -424,6 +424,92 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
     }
   }
 
+  private void sendProgress2(Queue<Pair<Object, MPISendMessage>> pendingSendMessages, int sendId) {
+    boolean canProgress = true;
+    while (pendingSendMessages.size() > 0 && canProgress) {
+      // take out pending messages
+      Pair<Object, MPISendMessage> pair = pendingSendMessages.peek();
+      MPISendMessage mpiSendMessage = pair.getValue();
+      Object messageObject = pair.getKey();
+
+      // send it internally
+      int startOfInternalRouts = mpiSendMessage.getAcceptedInternalSends();
+      List<Integer> inRoutes = new ArrayList<>(mpiSendMessage.getInternalSends());
+      for (int i = startOfInternalRouts; i < mpiSendMessage.getInternalSends().size(); i++) {
+        //TODO: if this is the last task do we serialize internal messages and add it to
+        //TODO: Memory Manager. it can be done here
+        boolean receiveAccepted;
+        if (isStoreBased && isLastReceiver) {
+          serializeAndWriteToMemoryManager(mpiSendMessage, messageObject);
+          receiveAccepted = receiver.receiveSendInternally(
+              mpiSendMessage.getSource(), inRoutes.get(i), mpiSendMessage.getPath(),
+              mpiSendMessage.getFlags(), operationMemoryManager);
+          //send memory manager as reply
+          //mpiSendMessage.setSerializationState();
+        } else {
+          lock.lock();
+          try {
+            receiveAccepted = receiver.receiveSendInternally(
+                mpiSendMessage.getSource(), inRoutes.get(i), mpiSendMessage.getPath(),
+                mpiSendMessage.getFlags(), messageObject);
+          } finally {
+            lock.unlock();
+          }
+        }
+
+        if (!receiveAccepted) {
+          canProgress = false;
+          break;
+        } else {
+          mpiSendMessage.incrementAcceptedInternalSends();
+        }
+      }
+
+      // we don't have an external executor to send this message
+      if (mpiSendMessage.getExternalSends().size() == 0
+          && inRoutes.size() == mpiSendMessage.getAcceptedInternalSends()) {
+        mpiSendMessage.setSendState(MPISendMessage.SendState.FINISHED);
+        pendingSendMessages.poll();
+        continue;
+      }
+      //TODO: why build message after sent internally? is it for messages with multiple
+      //TODO: destinations?
+      if (mpiSendMessage.serializedState() == MPISendMessage.SendState.INIT) {
+        // at this point lets build the message
+        messageSerializer.get(sendId).build(pair.getKey(), mpiSendMessage);
+      }
+      // okay we build the message, send it
+      if (mpiSendMessage.serializedState() == MPISendMessage.SendState.SERIALIZED) {
+        List<Integer> exRoutes = new ArrayList<>(mpiSendMessage.getExternalSends());
+        int startOfExternalRouts = mpiSendMessage.getAcceptedExternalSends();
+        int noOfExternalSends = startOfExternalRouts;
+        for (int i = startOfExternalRouts; i < exRoutes.size(); i++) {
+          boolean sendAccepted = sendMessageToTarget(
+              mpiSendMessage.getMPIMessage(), exRoutes.get(i));
+          // if no longer accepts stop
+          if (!sendAccepted) {
+            canProgress = false;
+
+            break;
+          } else {
+            sendCount++;
+            mpiSendMessage.incrementAcceptedExternalSends();
+            noOfExternalSends++;
+          }
+        }
+
+        if (noOfExternalSends == exRoutes.size()
+            && inRoutes.size() == mpiSendMessage.getAcceptedInternalSends()) {
+          // we are done
+          mpiSendMessage.setSendState(MPISendMessage.SendState.FINISHED);
+          pendingSendMessages.poll();
+        }
+      } else {
+        break;
+      }
+    }
+  }
+
   private void receiveDeserializeProgress(MPIMessage currentMessage, int receiveId) {
     if (currentMessage == null) {
       return;

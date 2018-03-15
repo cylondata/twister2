@@ -25,8 +25,8 @@ import com.google.common.collect.Multimap;
 import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowOperation;
 import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraph;
 import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraphGenerator;
-
 import edu.iu.dsc.tws.task.taskgraphbuilder.IDataflowTaskGraph;
+import edu.iu.dsc.tws.task.taskgraphbuilder.TGraphParser;
 
 /**
  * This class is mainly responsible for handling the user requests
@@ -181,7 +181,7 @@ public class TaskGraphGenerationHandler implements ITaskGraphGenerate {
           TaskInfo taskInfoVal = (TaskInfo) value.get(i);
           //this.generateITaskGraph(taskInfoVal.dataflowOperation,
           //    taskInfoVal.sourceTask, taskInfoVal.targetTask);
-          dataflowTaskGraphGenerator.generateITaskGraph(
+          dataflowTaskGraphGenerator = dataflowTaskGraphGenerator.generateITaskGraph(
               taskInfoVal.dataflowOperation, taskInfoVal.sourceTask, taskInfoVal.targetTask);
         }
       }
@@ -190,7 +190,15 @@ public class TaskGraphGenerationHandler implements ITaskGraphGenerate {
     } catch (NoSuchElementException nsee) {
       nsee.printStackTrace();
     }
+    parseTaskGraph(this.dataflowTaskGraphGenerator);
     return this;
+  }
+
+  public TGraphParser parseTaskGraph(DataflowTaskGraphGenerator dataflowTaskGraphgenerator) {
+    TGraphParser taskGraphParser = new TGraphParser(dataflowTaskGraphgenerator);
+    taskGraphParser.dataflowTaskGraphParseAndSchedule();
+    LOGGER.info("Parsed Task Graph Values:" + taskGraphParser);
+    return taskGraphParser;
   }
 
   @Override

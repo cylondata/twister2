@@ -111,6 +111,7 @@ public abstract class ReduceBatchReceiver implements MessageReceiver {
 
       m.add(object);
       if ((flags & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) {
+//        LOG.info(String.format("%d Received LAST FLAG", executor));
         finishedMessages.put(source, true);
       }
     }

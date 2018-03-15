@@ -79,7 +79,7 @@ public class MPIDataFlowMultiReduce implements DataFlowOperation {
     if (reduce == null) {
       throw new RuntimeException("Un-expected destination: " + dest);
     }
-    return reduce.send(source, message, dest);
+    return reduce.send(source, message, flags, dest);
   }
 
   @Override
@@ -88,11 +88,11 @@ public class MPIDataFlowMultiReduce implements DataFlowOperation {
     if (reduce == null) {
       throw new RuntimeException("Un-expected destination: " + dest);
     }
-    return reduce.sendPartial(source, message, dest);
+    return reduce.sendPartial(source, message, flags, dest);
   }
 
   @Override
-  public void progress() {
+  public synchronized void progress() {
     try {
       for (MPIDataFlowReduce reduce : reduceMap.values()) {
         reduce.progress();
@@ -115,7 +115,7 @@ public class MPIDataFlowMultiReduce implements DataFlowOperation {
 
   @Override
   public MessageType getType() {
-    return null;
+    return dataType;
   }
 
   @Override
@@ -186,7 +186,8 @@ public class MPIDataFlowMultiReduce implements DataFlowOperation {
 
     @Override
     public boolean onMessage(int source, int path, int target, int flags, Object object) {
-//      LOG.info(String.format("%d received message %d %d %d", executor, path, target, source));
+//      LOG.info(String.format("%d received message %d %d %d %d",
+//          executor, path, target, source, flags));
       return partialReceiver.onMessage(source, destination, target, flags, object);
     }
 
@@ -207,7 +208,8 @@ public class MPIDataFlowMultiReduce implements DataFlowOperation {
 
     @Override
     public boolean onMessage(int source, int path, int target, int flags, Object object) {
-//      LOG.info(String.format("%d received message %d %d %d", executor, path, target, source));
+//      LOG.info(String.format("%d received message %d %d %d %d",
+//          executor, path, target, source, flags));
       return finalReceiver.onMessage(source, destination, target, flags, object);
     }
 
