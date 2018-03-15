@@ -11,6 +11,7 @@
     <content url="file://$MODULE_DIR$/docs" />
     <content url="file://$MODULE_DIR$/scripts" />
     <content url="file://$MODULE_DIR$/third_party" />
+    <content url="file://$MODULE_DIR$/tmp" />
     <content url="file://$MODULE_DIR$/tools" />
     <content url="file://$MODULE_DIR$/twister2">
       <sourceFolder url="file://$MODULE_DIR$/twister2/config/src" type="java-resource" />
@@ -212,6 +213,15 @@
       </library>
     </orderEntry>
     <orderEntry type="module-library">
+      <library name="gson-2.6.2-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_google_code_gson_gson/jar/_ijar/jar/external/com_google_code_gson_gson/jar/gson-2.6.2-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
       <library name="guava-18.0-ijar.jar">
         <CLASSES>
           <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_google_guava_guava/jar/_ijar/jar/external/com_google_guava_guava/jar/guava-18.0-ijar.jar!/" />
@@ -257,6 +267,42 @@
       </library>
     </orderEntry>
     <orderEntry type="module-library">
+      <library name="okhttp-2.7.5-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_squareup_okhttp_okhttp/jar/_ijar/jar/external/com_squareup_okhttp_okhttp/jar/okhttp-2.7.5-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="client-java-api-1.0.0-beta2-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/io_kubernetes_client_java_api/jar/_ijar/jar/external/io_kubernetes_client_java_api/jar/client-java-api-1.0.0-beta2-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="client-java-1.0.0-beta2-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/io_kubernetes_client_java/jar/_ijar/jar/external/io_kubernetes_client_java/jar/client-java-1.0.0-beta2-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="swagger-annotations-1.5.12-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/io_swagger_swagger_annotations/jar/_ijar/jar/external/io_swagger_swagger_annotations/jar/swagger-annotations-1.5.12-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
       <library name="lmdbjava-0.6.0-ijar.jar">
         <CLASSES>
           <root url="jar://$MODULE_DIR$/bazel-genfiles/external/lmdb_java/jar/_ijar/jar/external/lmdb_java/jar/lmdbjava-0.6.0-ijar.jar!/" />
@@ -287,6 +333,15 @@
       <library name="lmdbjava-native-windows-x86_64-0.9.21-1-ijar.jar">
         <CLASSES>
           <root url="jar://$MODULE_DIR$/bazel-genfiles/external/lmdbjava_native_windows/jar/_ijar/jar/external/lmdbjava_native_windows/jar/lmdbjava-native-windows-x86_64-0.9.21-1-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="log4j-1.2.17-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/log4j_log4j/jar/_ijar/jar/external/log4j_log4j/jar/log4j-1.2.17-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
