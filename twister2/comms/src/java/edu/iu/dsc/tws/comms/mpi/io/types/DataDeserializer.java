@@ -176,16 +176,15 @@ public final class DataDeserializer {
     int noOfDoubles = byteLength / 8;
     double[] returnDoubles = new double[noOfDoubles];
     int bufferIndex = 0;
-    for (int i = 0; i < noOfDoubles; i++) {
+    int copiedDoubles = 0;
+    while (copiedDoubles < noOfDoubles) {
       ByteBuffer byteBuffer = buffers.get(bufferIndex).getByteBuffer();
       int remaining = byteBuffer.remaining();
       if (remaining >= 8) {
-        returnDoubles[i] = byteBuffer.getDouble();
+        returnDoubles[copiedDoubles] = byteBuffer.getDouble();
+        copiedDoubles++;
       } else {
-        bufferIndex = getReadBuffer(buffers, 8, bufferIndex);
-        if (bufferIndex < 0) {
-          throw new RuntimeException("We should always have the doubles");
-        }
+        bufferIndex++;
       }
     }
     return returnDoubles;
