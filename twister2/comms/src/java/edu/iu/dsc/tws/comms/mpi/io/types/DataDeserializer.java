@@ -143,19 +143,20 @@ public final class DataDeserializer {
   }
 
   private static byte[] deserializeBytes(List<MPIBuffer> buffers, int length) {
-    int noOfBytes = length;
-    byte[] returnBytes = new byte[noOfBytes];
+    byte[] returnBytes = new byte[length];
     int bufferIndex = 0;
-    for (int i = 0; i < noOfBytes; i++) {
+    int copiedBytes = 0;
+    while (copiedBytes < length) {
       ByteBuffer byteBuffer = buffers.get(bufferIndex).getByteBuffer();
       int remaining = byteBuffer.remaining();
-      if (remaining >= 1) {
-        returnBytes[i] = byteBuffer.get();
+      int remainingToCopy = length - copiedBytes;
+      if (remaining > remainingToCopy) {
+        byteBuffer.get(returnBytes, copiedBytes, remainingToCopy);
+        copiedBytes += remainingToCopy;
       } else {
-        bufferIndex = getReadBuffer(buffers, 1, bufferIndex);
-        if (bufferIndex < 0) {
-          throw new RuntimeException("We should always have the doubles");
-        }
+        byteBuffer.get(returnBytes, copiedBytes, remaining);
+        copiedBytes += remaining;
+        bufferIndex++;
       }
     }
     return returnBytes;
@@ -175,16 +176,15 @@ public final class DataDeserializer {
     int noOfDoubles = byteLength / 8;
     double[] returnDoubles = new double[noOfDoubles];
     int bufferIndex = 0;
-    for (int i = 0; i < noOfDoubles; i++) {
+    int copiedDoubles = 0;
+    while (copiedDoubles < noOfDoubles) {
       ByteBuffer byteBuffer = buffers.get(bufferIndex).getByteBuffer();
       int remaining = byteBuffer.remaining();
       if (remaining >= 8) {
-        returnDoubles[i] = byteBuffer.getDouble();
+        returnDoubles[copiedDoubles] = byteBuffer.getDouble();
+        copiedDoubles++;
       } else {
-        bufferIndex = getReadBuffer(buffers, 8, bufferIndex);
-        if (bufferIndex < 0) {
-          throw new RuntimeException("We should always have the doubles");
-        }
+        bufferIndex++;
       }
     }
     return returnDoubles;
