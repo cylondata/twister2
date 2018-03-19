@@ -16,6 +16,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
 import edu.iu.dsc.tws.rsched.spi.scheduler.ILauncher;
 
@@ -88,7 +89,36 @@ public class KubernetesLauncher implements ILauncher {
     V1beta2StatefulSet statefulSet =
         KubernetesUtils.createStatefulSetObjectForJob(jobName, resourceRequest, containersPerPod);
 
-    return controller.createStatefulSetJob(namespace, statefulSet);
+    boolean statefulSetCreated = controller.createStatefulSetJob(namespace, statefulSet);
+    if (!statefulSetCreated) {
+      return false;
+    }
+
+    String jobPackageFile = SchedulerContext.temporaryPackagesPath(config) + "/"
+        + SchedulerContext.jobPackageFileName(config);
+
+    int numberOfPods = statefulSet.getSpec().getReplicas();
+
+    long start = System.currentTimeMillis();
+
+//    boolean transferred =
+//      controller.transferJobPackageSequentially(namespace, jobName, numberOfPods, jobPackageFile);
+
+    boolean transferred =
+        controller.transferJobPackageInParallel(namespace, jobName, numberOfPods, jobPackageFile);
+
+    long duration = System.currentTimeMillis() - start;
+    System.out.println("Transferring all files took: " + duration + " ms.");
+
+    if (!transferred) {
+      LOG.log(Level.SEVERE, "Transferring the job package to some pods failed. "
+          + "Terminating the job");
+
+      terminateJob(jobName);
+      return false;
+    }
+
+    return true;
   }
 
 
@@ -100,7 +130,7 @@ public class KubernetesLauncher implements ILauncher {
   }
 
   /**
-   * Terminate the Aurora Job
+   * Terminate the Kubernetes Job
    */
   @Override
   public boolean terminateJob(String jobName) {

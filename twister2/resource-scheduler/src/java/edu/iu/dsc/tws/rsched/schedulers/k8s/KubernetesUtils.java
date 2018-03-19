@@ -49,6 +49,29 @@ final class KubernetesUtils {
   }
 
   /**
+   * create file copy command to a pod
+   * @return
+   */
+  public static String[] createCopyCommand(String filename, String namespace, String podName) {
+    String targetDir = String.format("%s/%s:%s", namespace, podName, POD_INTERNAL_VOLUME_MOUNT);
+    return new String[]{"kubectl", "cp", filename, targetDir};
+  }
+
+//  public static String createCopyCommand(String filename, String namespace, String podName) {
+//    return String.format("kubectl cp %s %s/%s:%s",
+//        filename, namespace, podName, POD_INTERNAL_VOLUME_MOUNT);
+//  }
+
+  /**
+   * create podName from jobName with pod index
+   * @param jobName
+   * @return
+   */
+  public static String podNameFromJobName(String jobName, int podIndex) {
+    return jobName + "-" + podIndex;
+  }
+
+  /**
    * create service name from job name
    * @param jobName
    * @return
