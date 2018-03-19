@@ -162,7 +162,7 @@ public abstract class DataflowTaskGraphAbstraction<TV, TE>
     return directedDataflowTaskGraph.incomingTaskEdgesOf(taskVertex);
   }
 
-  public int outDegreeOf(TV taskVertex) {
+  public int outDegreeOfTask(TV taskVertex) {
     return directedDataflowTaskGraph.outDegreeOf(taskVertex);
   }
 
@@ -223,7 +223,7 @@ public abstract class DataflowTaskGraphAbstraction<TV, TE>
     return directedDataflowTaskGraph.outgoingTaskEdgesOf(taskVertex);
   }
 
-  public int inDegreeOf(TV taskVertex) {
+  public int inDegreeOfTask(TV taskVertex) {
     this.validateTaskVertex(taskVertex);
     return directedDataflowTaskGraph.inDegreeOf(taskVertex);
   }

@@ -47,7 +47,7 @@ public class TGraphParser {
     Set<ITaskInfo> taskVertices = dataflowTaskgraph.getTaskVertexSet();
     try {
       taskVertices.stream()
-          .filter(task -> dataflowTaskgraph.inDegreeOf(task) == 0)
+          .filter(task -> dataflowTaskgraph.inDegreeOfTask(task) == 0)
           .forEach(task -> dataflowTaskGraphParse(dataflowTaskgraph, task));
     } catch (NullPointerException npe) {
       npe.printStackTrace();
@@ -61,7 +61,7 @@ public class TGraphParser {
     System.out.println("Dataflow Task Graph is:" + dataflowTGraph
         + "\t" + "and Task Object is:" + mapper);
 
-    if (dataflowTGraph.outDegreeOf(mapper) == 0) {
+    if (dataflowTGraph.outDegreeOfTask(mapper) == 0) {
       return 1;
     } else {
       Set<DataflowOperation> edges = dataflowTGraph.outgoingTaskEdgesOf(mapper);
