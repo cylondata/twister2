@@ -55,8 +55,8 @@ public class ResourceAllocator {
 
   /**
    * loadConfig from config files and also from envirobnment variables
+   *
    * @param cfg the config values in this map will be put into returned Config
-   * @return
    */
   public static Config loadConfig(Map<String, Object> cfg) {
 
@@ -201,11 +201,18 @@ public class ResourceAllocator {
     String tempDirPathString = tempDirPath.toString();
 
     // copy the core dist package to temp directory
-    String twister2CorePackage = SchedulerContext.systemPackageUrl(config);
-    LOG.log(Level.INFO, String.format("Copy core package: %s to %s",
-        twister2CorePackage, tempDirPathString));
-    if (!FileUtils.copyFileToDirectory(twister2CorePackage, tempDirPathString)) {
-      throw new RuntimeException("Failed to copy the core package");
+    // do not copy if its a kubernetes cluster
+    String clusterType = SchedulerContext.clusterType(config);
+    if ("kubernetes".equalsIgnoreCase(clusterType)) {
+      LOG.log(Level.INFO, "This is a kubernetes cluster, not moving twister2 core package to temp");
+
+    } else {
+      String twister2CorePackage = SchedulerContext.systemPackageUrl(config);
+      LOG.log(Level.INFO, String.format("Copy core package: %s to %s",
+          twister2CorePackage, tempDirPathString));
+      if (!FileUtils.copyFileToDirectory(twister2CorePackage, tempDirPathString)) {
+        throw new RuntimeException("Failed to copy the core package");
+      }
     }
 
     // construct an archive file with: job description file, job jar and conf dir
@@ -252,6 +259,7 @@ public class ResourceAllocator {
         .putAll(config)
         .put(SchedulerContext.USER_JOB_JAR_FILE, jobJarFileName)
         .put(SchedulerContext.JOB_DESCRIPTION_FILE, jobDescFileName)
+        .put(SchedulerContext.TEMPORARY_PACKAGES_PATH, tempDirPathString)
         .build();
 
     return tempDirPathString;
