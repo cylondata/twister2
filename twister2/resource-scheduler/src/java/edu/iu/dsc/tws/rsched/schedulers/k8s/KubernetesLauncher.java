@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.k8s;
 
+import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -51,6 +52,18 @@ public class KubernetesLauncher implements ILauncher {
 
     String jobName = job.getJobName();
 
+    String jobPackageFile = SchedulerContext.temporaryPackagesPath(config) + "/"
+        + SchedulerContext.jobPackageFileName(config);
+
+    File jobFile = new File(jobPackageFile);
+    if (!jobFile.exists()) {
+      LOG.log(Level.SEVERE, "Can not access job package file: " + jobPackageFile
+          + "\nAborting submission.");
+      return false;
+    }
+
+    long jobFileSize = jobFile.length();
+
     // first check whether there is a running service
     String serviceName = KubernetesUtils.createServiceName(jobName);
     String serviceLabel = KubernetesUtils.createServiceLabel(jobName);
@@ -85,17 +98,19 @@ public class KubernetesLauncher implements ILauncher {
     }
 
     // create the StatefulSet for this job
-    int containersPerPod = KubernetesContext.containersPerPod(config);
-    V1beta2StatefulSet statefulSet =
-        KubernetesUtils.createStatefulSetObjectForJob(jobName, resourceRequest, containersPerPod);
+    V1beta2StatefulSet statefulSet = KubernetesUtils.createStatefulSetObjectForJob(
+        jobName, resourceRequest, jobFileSize, config);
 
-    boolean statefulSetCreated = controller.createStatefulSetJob(namespace, statefulSet);
-    if (!statefulSetCreated) {
+    if (statefulSet == null) {
+      controller.deleteService(namespace, serviceName);
       return false;
     }
 
-    String jobPackageFile = SchedulerContext.temporaryPackagesPath(config) + "/"
-        + SchedulerContext.jobPackageFileName(config);
+    boolean statefulSetCreated = controller.createStatefulSetJob(namespace, statefulSet);
+    if (!statefulSetCreated) {
+      controller.deleteService(namespace, serviceName);
+      return false;
+    }
 
     int numberOfPods = statefulSet.getSpec().getReplicas();
 
@@ -114,7 +129,7 @@ public class KubernetesLauncher implements ILauncher {
       LOG.log(Level.SEVERE, "Transferring the job package to some pods failed. "
           + "Terminating the job");
 
-      terminateJob(jobName);
+//      terminateJob(jobName);
       return false;
     }
 

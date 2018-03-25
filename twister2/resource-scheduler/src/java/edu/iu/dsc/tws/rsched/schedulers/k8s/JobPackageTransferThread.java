@@ -15,6 +15,13 @@ import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * a thread to transfer the job package to the assigned pod
+ * it first waits for the pod to become ready.
+ * when the first container in the pod becomes started, we assume the pod is ready
+ * the events of the pods are watched by PodWatcher class
+ * we only  check the status of the PodWatcher list from this thread
+ */
 public class JobPackageTransferThread extends Thread {
   private static final Logger LOG = Logger.getLogger(PodWatcher.class.getName());
 

@@ -14,7 +14,11 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 
@@ -36,14 +40,15 @@ import io.kubernetes.client.models.V1beta2StatefulSet;
 import io.kubernetes.client.models.V1beta2StatefulSetSpec;
 
 import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.CONTAINER_NAME_PREFIX;
-import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.POD_INTERNAL_VOLUME_MOUNT;
-import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.POD_INTERNAL_VOLUME_NAME;
+import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.POD_SHARED_VOLUME;
+import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.POD_SHARED_VOLUME_NAME;
 import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.SERVICE_LABEL_PREFIX;
 import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.TWISTER2_DOCKER_IMAGE;
 import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.TWISTER2_SERVICE_PREFIX;
-import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.TWISTER2_WORKER_CLASS;
+//import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.TWISTER2_WORKER_CLASS;
 
 final class KubernetesUtils {
+  private static final Logger LOG = Logger.getLogger(KubernetesUtils.class.getName());
 
   private KubernetesUtils() {
   }
@@ -52,15 +57,27 @@ final class KubernetesUtils {
    * create file copy command to a pod
    * @return
    */
+//  public static String[] createCopyCommand(String filename, String namespace, String podName) {
+//    String targetDir = String.format("%s/%s:%s", namespace, podName, POD_SHARED_VOLUME);
+//    String cpCommand = "kubectl cp " + filename + " " + targetDir;
+//
+//    String jobFile = "twister2-job.tar.gz";
+//    String unpackCommand =
+//     String.format("kubectl exec -it %s -- tar xf /twister2/%s -C /twister2/", podName, jobFile);
+//
+//    String twoCommands = cpCommand + " ; sleep 1s ; " + unpackCommand;
+//
+//    return new String[]{"sh", "-c", twoCommands};
+//  }
+
+  /**
+   * create file copy command to a pod
+   * @return
+   */
   public static String[] createCopyCommand(String filename, String namespace, String podName) {
-    String targetDir = String.format("%s/%s:%s", namespace, podName, POD_INTERNAL_VOLUME_MOUNT);
+    String targetDir = String.format("%s/%s:%s", namespace, podName, POD_SHARED_VOLUME);
     return new String[]{"kubectl", "cp", filename, targetDir};
   }
-
-//  public static String createCopyCommand(String filename, String namespace, String podName) {
-//    return String.format("kubectl cp %s %s/%s:%s",
-//        filename, namespace, podName, POD_INTERNAL_VOLUME_MOUNT);
-//  }
 
   /**
    * create podName from jobName with pod index
@@ -104,12 +121,12 @@ final class KubernetesUtils {
    * when the numberOfContainers can not be divisible by the number of containersPerPod
    * @param jobName
    * @param resourceRequest
-   * @param containersPerPod
    * @return
    */
   public static V1beta2StatefulSet createStatefulSetObjectForJob(String jobName,
                                                                  RequestedResources resourceRequest,
-                                                                 int containersPerPod) {
+                                                                 long jobFileSize,
+                                                                 Config config) {
 
     V1beta2StatefulSet statefulSet = new V1beta2StatefulSet();
     statefulSet.setApiVersion("apps/v1beta2");
@@ -130,7 +147,15 @@ final class KubernetesUtils {
     // number of containers has to be divisible by the containersPerPod
     // all pods will have equal number of containers
     // all pods will be identical
-    // maybe we can calculate numberOfPods as a number that divides numberOfContainers
+    int containersPerPod = KubernetesContext.containersPerPod(config);
+    if (resourceRequest.getNoOfContainers() % containersPerPod != 0) {
+      LOG.log(Level.SEVERE, "Number of containers has to be divisible by containersPerPod.\n"
+          + "Number of containers: " + resourceRequest.getNoOfContainers() + "\n"
+          + "containersPerPod: " + containersPerPod + "\n"
+          + "Aborting submission.");
+      return null;
+    }
+
     int numberOfPods = resourceRequest.getNoOfContainers() / containersPerPod;
     setSpec.setReplicas(numberOfPods);
 
@@ -141,8 +166,8 @@ final class KubernetesUtils {
     setSpec.setSelector(selector);
 
     // construct the pod template
-    V1PodTemplateSpec template =
-        constructPodTemplate(resourceRequest.getContainer(), containersPerPod, serviceLabel);
+    V1PodTemplateSpec template = constructPodTemplate(
+        resourceRequest.getContainer(), serviceLabel, jobFileSize, config);
     setSpec.setTemplate(template);
 
     statefulSet.setSpec(setSpec);
@@ -151,8 +176,9 @@ final class KubernetesUtils {
   }
 
   public static V1PodTemplateSpec constructPodTemplate(ResourceContainer reqContainer,
-                                                       int containersPerPod,
-                                                       String serviceLabel) {
+                                                       String serviceLabel,
+                                                       long jobFileSize,
+                                                       Config config) {
 
     V1PodTemplateSpec template = new V1PodTemplateSpec();
     V1ObjectMeta templateMetaData = new V1ObjectMeta();
@@ -165,15 +191,16 @@ final class KubernetesUtils {
     podSpec.setTerminationGracePeriodSeconds(0L);
 
     V1Volume volume = new V1Volume();
-    volume.setName(POD_INTERNAL_VOLUME_NAME);
+    volume.setName(POD_SHARED_VOLUME_NAME);
     V1EmptyDirVolumeSource volumeSource = new V1EmptyDirVolumeSource();
     volumeSource.setMedium("Memory");
     volume.setEmptyDir(volumeSource);
     podSpec.setVolumes(Arrays.asList(volume));
 
+    int containersPerPod = KubernetesContext.containersPerPod(config);
     ArrayList<V1Container> containers = new ArrayList<V1Container>();
     for (int i = 0; i < containersPerPod; i++) {
-      containers.add(constructContainer(i, reqContainer));
+      containers.add(constructContainer(i, reqContainer, jobFileSize, config));
     }
     podSpec.setContainers(containers);
 
@@ -182,19 +209,34 @@ final class KubernetesUtils {
   }
 
   public static V1Container constructContainer(int containerIndex,
-                                               ResourceContainer reqContainer) {
+                                               ResourceContainer reqContainer,
+                                               long jobFileSize,
+                                               Config config) {
     // construct container and add it to podSpec
     V1Container container = new V1Container();
     String containerName = createContainerName(containerIndex);
     container.setName(containerName);
     container.setImage(TWISTER2_DOCKER_IMAGE);
+    // by default: IfNotPresent
+    // Always
+    container.setImagePullPolicy("Always");
 
 //        container.setArgs(Arrays.asList("1000000")); parameter to the main method
-    container.setCommand(Arrays.asList("java", TWISTER2_WORKER_CLASS));
-    V1EnvVar var1 = new V1EnvVar().name("ITERATIONS").value(1000 + "");
-    V1EnvVar var2 = new V1EnvVar().name("JOB_SUBMIT_TIME_STR")
-        .value(System.currentTimeMillis() + "");
-    container.setEnv(Arrays.asList(var1, var2));
+//    container.setCommand(Arrays.asList("java", TWISTER2_WORKER_CLASS));
+    V1EnvVar var1 = new V1EnvVar()
+        .name(KubernetesField.JOB_PACKAGE_FILENAME + "")
+        .value(SchedulerContext.jobPackageFileName(config));
+    V1EnvVar var2 = new V1EnvVar()
+        .name(KubernetesField.JOB_PACKAGE_FILE_SIZE + "").value(jobFileSize + "");
+    V1EnvVar var3 = new V1EnvVar()
+        .name(KubernetesField.CONTAINER_NAME + "").value(containerName);
+    V1EnvVar var4 = new V1EnvVar()
+        .name(KubernetesField.USER_JOB_JAR_FILE + "")
+        .value(SchedulerContext.userJobJarFile(config));
+    V1EnvVar var5 = new V1EnvVar()
+        .name(KubernetesField.JOB_DESCRIPTION_FILE + "")
+        .value(SchedulerContext.jobDescriptionFile(config));
+    container.setEnv(Arrays.asList(var1, var2, var3, var4, var5));
 
     V1ResourceRequirements resReq = new V1ResourceRequirements();
     resReq.putRequestsItem("cpu", reqContainer.getNoOfCpus() + "");
@@ -202,8 +244,8 @@ final class KubernetesUtils {
     container.setResources(resReq);
 
     V1VolumeMount volumeMount = new V1VolumeMount();
-    volumeMount.setName(POD_INTERNAL_VOLUME_NAME);
-    volumeMount.setMountPath(POD_INTERNAL_VOLUME_MOUNT);
+    volumeMount.setName(POD_SHARED_VOLUME_NAME);
+    volumeMount.setMountPath(POD_SHARED_VOLUME);
     container.setVolumeMounts(Arrays.asList(volumeMount));
 
 //    V1ContainerPort port = new V1ContainerPort().name("port1").containerPort(TARGET_PORT);

@@ -24,6 +24,13 @@ import io.kubernetes.client.apis.CoreV1Api;
 import io.kubernetes.client.models.V1Event;
 import io.kubernetes.client.util.Watch;
 
+/**
+ * a class to watch events related to pods starting containers in them
+ * this threads starts watching events for all pods in a job
+ * when a container in a pod becomes Started, it marks that pod as ready
+ * when all pods become ready, this thread stops watching events and finishes execution
+ */
+
 public class PodWatcher extends Thread {
   private static final Logger LOG = Logger.getLogger(PodWatcher.class.getName());
 

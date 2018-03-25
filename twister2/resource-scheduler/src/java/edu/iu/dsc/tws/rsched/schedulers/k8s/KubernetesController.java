@@ -35,6 +35,10 @@ import io.kubernetes.client.models.V1beta2StatefulSet;
 import io.kubernetes.client.models.V1beta2StatefulSetList;
 import io.kubernetes.client.util.Watch;
 
+/**
+ * a controller class to talk to the Kubernetes Master to manage jobs
+ */
+
 public class KubernetesController {
   private static final Logger LOG = Logger.getLogger(KubernetesController.class.getName());
 
@@ -341,6 +345,7 @@ public class KubernetesController {
 
   /**
    * watch events until getting the Running event for the given pod
+   * not currently used
    */
   public boolean waitUntilPodRunning(String namespace, String podName) {
 
@@ -384,6 +389,7 @@ public class KubernetesController {
 
   /**
    * transfer the job package to all pods in a job sequentially
+   * initially implemented, later we moved to parallel transfer of the job package
    */
   public boolean transferJobPackageSequentially(String namespace, String jobName, int numberOfPods,
                                                 String jobPackageFile) {
@@ -411,6 +417,7 @@ public class KubernetesController {
   /**
    * transfer the job package to a pod with the given command
    * it uses "kubectl cp" command to transfer the file to the file
+   * this is used by sequential transfer method
    */
   public boolean transferJobPackageToAPod(String[] copyCommand, String podName,
                                           String jobPackageFile) {

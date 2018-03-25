@@ -17,7 +17,7 @@ import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 public class KubernetesContext extends SchedulerContext {
 
   public static final int CONTAINERS_PER_POD_DEFAULT = 1;
-  public static final String CONTAINERS_PER_POD = "kubernetes.containers.per.pod";
+  public static final String CONTAINERS_PER_POD = "kubernetes.containers_per_pod";
 
   public static final String KUBERNETES_DEFAULT_NAMESPACE = "default";
   public static final String KUBERNETES_NAMESPACE = "kubernetes.namespace";
