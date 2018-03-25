@@ -21,7 +21,7 @@ public interface IDataflowTaskGraph<TV, TE> extends ITaskGraph<TV, TE> {
   /**
    * This method is responsible for returning the number of inward directed edges for the task vertex 'TV'
    */
-  int inDegreeOf(TV taskVertex);
+  int inDegreeOfTask(TV taskVertex);
 
   /**
    * This method returns the set of incoming task edges for the task vertex 'TV'
@@ -31,7 +31,7 @@ public interface IDataflowTaskGraph<TV, TE> extends ITaskGraph<TV, TE> {
   /**
    * This method returns the set of outward task edges for the task vertex 'TV'
    */
-  int outDegreeOf(TV taskVertex);
+  int outDegreeOfTask(TV taskVertex);
 
   /**
    * This method returns the set of outgoing task edges for the task vertex 'TV'

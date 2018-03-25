@@ -27,11 +27,19 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.tsched.utils.Job;
 import edu.iu.dsc.tws.tsched.utils.JobAttributes;
 
+/**
+ * This class constructs the instance map based on the requested ram, disk, and cpu values
+ * of the job.
+ */
+
 public class InstanceMapCalculation {
+
+  private static final Logger LOG = Logger.getLogger(InstanceMapCalculation.class.getName());
 
   private static final double DEFAULT_DISK_PADDING_PER_CONTAINER = 12;
   private static final double DEFAULT_CPU_PADDING_PER_CONTAINER = 1;
@@ -50,7 +58,7 @@ public class InstanceMapCalculation {
   }
 
   private static double getContainerCpuValue(Map<Integer,
-      List<TaskInstanceId>> instancesAllocation) {
+      List<InstanceId>> instancesAllocation) {
 
         /*List<JobAPI.Config.KeyValue> jobConfig= job.getJobConfig().getKvsList();
         double defaultContainerCpu =
@@ -66,7 +74,7 @@ public class InstanceMapCalculation {
   }
 
   private static Double getContainerDiskValue(Map<Integer,
-      List<TaskInstanceId>> instancesAllocation) {
+      List<InstanceId>> instancesAllocation) {
 
         /*ByteAmount defaultContainerDisk = instanceDiskDefault
                 .multiply(getLargestContainerSize(instancesAllocation))
@@ -83,7 +91,7 @@ public class InstanceMapCalculation {
   }
 
   private static Double getContainerRamValue(Map<Integer,
-      List<TaskInstanceId>> instancesAllocation) {
+      List<InstanceId>> instancesAllocation) {
 
         /*List<JobAPI.Config.KeyValue> jobConfig = job.getJobConfig().getKvsList();
         return JobUtils.getConfigWithDefault(
@@ -97,34 +105,38 @@ public class InstanceMapCalculation {
   }
 
   private static int getLargestContainerSize(Map<Integer,
-      List<TaskInstanceId>> instancesAllocation) {
+      List<InstanceId>> instancesAllocation) {
     int max = 0;
-    for (List<TaskInstanceId> instances : instancesAllocation.values()) {
+    for (List<InstanceId> instances : instancesAllocation.values()) {
       if (instances.size() > max) {
         max = instances.size();
       }
     }
-    System.out.println("Maximum container value is:\t" + max);
+    LOG.info("Maximum container value is:\t" + max);
     return max;
   }
 
-  Map<Integer, Map<TaskInstanceId, Double>> getInstancesRamMapInContainer(
-      Map<Integer, List<TaskInstanceId>> containerInstanceAllocationMap) {
+  /**
+   * It receives the container instance allocation map and calculate
+   * the required number of instances with ram values.
+   */
+  public Map<Integer, Map<InstanceId, Double>> getInstancesRamMapInContainer(
+      Map<Integer, List<InstanceId>> containerInstanceAllocationMap) {
 
     Job job = new Job();
     job.setJob(job);
 
     Map<String, Double> ramMap = JobAttributes.getTaskRamMap(job);
-    Map<Integer, Map<TaskInstanceId, Double>> instancesRamContainerMap = new HashMap<>();
+    Map<Integer, Map<InstanceId, Double>> instancesRamContainerMap = new HashMap<>();
 
     for (int containerId : containerInstanceAllocationMap.keySet()) {
       Double usedRamValue = 0.0;
-      List<TaskInstanceId> instanceIds = containerInstanceAllocationMap.get(containerId);
-      Map<TaskInstanceId, Double> containerRam = new HashMap<>();
+      List<InstanceId> instanceIds = containerInstanceAllocationMap.get(containerId);
+      Map<InstanceId, Double> containerRam = new HashMap<>();
       instancesRamContainerMap.put(containerId, containerRam);
-      List<TaskInstanceId> instancesToBeCalculated = new ArrayList<>();
+      List<InstanceId> instancesToBeCalculated = new ArrayList<>();
 
-      for (TaskInstanceId instanceId : instanceIds) {
+      for (InstanceId instanceId : instanceIds) {
         String taskName = instanceId.getTaskName();
         if (ramMap.containsKey(taskName)) {
           Double ramValue = ramMap.get(taskName);
@@ -143,32 +155,36 @@ public class InstanceMapCalculation {
               - DEFAULT_RAM_PADDING_PER_CONTAINER - usedRamValue;
           instanceRequiredRam = remainingRam / instancesAllocationSize;
         }
-        for (TaskInstanceId instanceId : instancesToBeCalculated) {
+        for (InstanceId instanceId : instancesToBeCalculated) {
           containerRam.put(instanceId, instanceRequiredRam);
         }
-        System.out.println("Instances Required Ram:\t" + instanceRequiredRam);
+        LOG.info("Instances Required Ram:\t" + instanceRequiredRam);
       }
     }
     return instancesRamContainerMap;
   }
 
-  Map<Integer, Map<TaskInstanceId, Double>> getInstancesDiskMapInContainer(
-      Map<Integer, List<TaskInstanceId>> containerInstanceAllocationMap) {
+  /**
+   * It receives the container instance allocation map and calculate
+   * the required number of instances with disk values.
+   */
+  public Map<Integer, Map<InstanceId, Double>> getInstancesDiskMapInContainer(
+      Map<Integer, List<InstanceId>> containerInstanceAllocationMap) {
 
     Job job = new Job();
     job.setJob(job);
 
     Map<String, Double> diskMap = JobAttributes.getTaskDiskMap(job);
-    Map<Integer, Map<TaskInstanceId, Double>> instancesDiskContainerMap = new HashMap<>();
+    Map<Integer, Map<InstanceId, Double>> instancesDiskContainerMap = new HashMap<>();
 
     for (int containerId : containerInstanceAllocationMap.keySet()) {
       Double usedDiskValue = 0.0;
-      List<TaskInstanceId> instanceIds = containerInstanceAllocationMap.get(containerId);
-      Map<TaskInstanceId, Double> containerDisk = new HashMap<>();
+      List<InstanceId> instanceIds = containerInstanceAllocationMap.get(containerId);
+      Map<InstanceId, Double> containerDisk = new HashMap<>();
       instancesDiskContainerMap.put(containerId, containerDisk);
-      List<TaskInstanceId> instancesToBeCalculated = new ArrayList<>();
+      List<InstanceId> instancesToBeCalculated = new ArrayList<>();
 
-      for (TaskInstanceId instanceId : instanceIds) {
+      for (InstanceId instanceId : instanceIds) {
         String taskName = instanceId.getTaskName();
 
         if (diskMap.containsKey(taskName)) {
@@ -188,33 +204,37 @@ public class InstanceMapCalculation {
               - DEFAULT_DISK_PADDING_PER_CONTAINER - usedDiskValue;
           instanceRequiredDisk = remainingDisk / instancesAllocationSize;
         }
-        for (TaskInstanceId instanceId : instancesToBeCalculated) {
+        for (InstanceId instanceId : instancesToBeCalculated) {
           containerDisk.put(instanceId, instanceRequiredDisk);
         }
-        System.out.println("Instances Required Disk:\t" + instanceRequiredDisk);
+        LOG.info("Instances Required Disk:\t" + instanceRequiredDisk);
       }
     }
     return instancesDiskContainerMap;
   }
 
-  Map<Integer, Map<TaskInstanceId, Double>> getInstancesCPUMapInContainer(
-      Map<Integer, List<TaskInstanceId>> containerInstanceAllocationMap) {
+  /**
+   * It receives the container instance allocation map and calculate
+   * the required number of instances with cpu values.
+   */
+  public Map<Integer, Map<InstanceId, Double>> getInstancesCPUMapInContainer(
+      Map<Integer, List<InstanceId>> containerInstanceAllocationMap) {
 
     Job job = new Job();
     job.setJob(job);
 
     Map<String, Double> diskMap = JobAttributes.getTaskCPUMap(job);
-    Map<Integer, Map<TaskInstanceId, Double>> instancesCpuContainerMap = new HashMap<>();
+    Map<Integer, Map<InstanceId, Double>> instancesCpuContainerMap = new HashMap<>();
 
     //This for loop should be edited with appropriate values....!
     for (int containerId : containerInstanceAllocationMap.keySet()) {
       Double usedDiskValue = 0.0;
-      List<TaskInstanceId> instanceIds = containerInstanceAllocationMap.get(containerId);
-      Map<TaskInstanceId, Double> containerDisk = new HashMap<>();
+      List<InstanceId> instanceIds = containerInstanceAllocationMap.get(containerId);
+      Map<InstanceId, Double> containerDisk = new HashMap<>();
       instancesCpuContainerMap.put(containerId, containerDisk);
-      List<TaskInstanceId> instancesToBeCalculated = new ArrayList<>();
+      List<InstanceId> instancesToBeCalculated = new ArrayList<>();
 
-      for (TaskInstanceId instanceId : instanceIds) {
+      for (InstanceId instanceId : instanceIds) {
         String taskName = instanceId.getTaskName();
 
         if (diskMap.containsKey(taskName)) {
@@ -234,10 +254,10 @@ public class InstanceMapCalculation {
               - DEFAULT_DISK_PADDING_PER_CONTAINER - usedDiskValue;
           instanceRequiredDisk = remainingRam / instancesAllocationSize;
         }
-        for (TaskInstanceId instanceId : instancesToBeCalculated) {
+        for (InstanceId instanceId : instancesToBeCalculated) {
           containerDisk.put(instanceId, instanceRequiredDisk);
         }
-        System.out.println("Instances Required CPU:\t" + instanceRequiredDisk);
+        LOG.info("Instances Required CPU:\t" + instanceRequiredDisk);
       }
     }
     return instancesCpuContainerMap;

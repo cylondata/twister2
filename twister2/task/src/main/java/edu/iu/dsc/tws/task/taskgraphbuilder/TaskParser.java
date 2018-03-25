@@ -90,7 +90,7 @@ public class TaskParser {
     Set<TaskMapper> taskVertices = dataflowGraph.getTaskVertexSet();
     try {
       taskVertices.stream()
-          .filter(task -> dataflowGraph.inDegreeOf(task) == 0)
+          .filter(task -> dataflowGraph.inDegreeOfTask(task) == 0)
           .forEach(task -> dataflowTaskGraphParse(dataflowGraph, task));
     } catch (NullPointerException npe) {
       npe.printStackTrace();
@@ -108,7 +108,7 @@ public class TaskParser {
     LOGGER.info("Dataflow Task Graph is:" + dataflowTaskgraph
         + "\t" + "and Task Object is:" + mapper);
 
-    if (dataflowTaskgraph.outDegreeOf(mapper) == 0) {
+    if (dataflowTaskgraph.outDegreeOfTask(mapper) == 0) {
       return 1;
     } else {
       Set<CManager> taskEdgesOf = dataflowTaskgraph.

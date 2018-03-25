@@ -72,7 +72,7 @@ public class DataflowTaskGraphParser implements IDataflowTaskGraphParser {
     Set<Task> taskVertices = dataflowTaskgraph.getTaskVertexSet();
     try {
       taskVertices.stream()
-          .filter(task -> dataflowTaskgraph.inDegreeOf(task) == 0)
+          .filter(task -> dataflowTaskgraph.inDegreeOfTask(task) == 0)
           .forEach(task -> dataflowTaskGraphParse(dataflowTaskgraph, task));
     } catch (NullPointerException npe) {
       npe.printStackTrace();
@@ -89,8 +89,7 @@ public class DataflowTaskGraphParser implements IDataflowTaskGraphParser {
 
     LOGGER.info("Dataflow Task Graph is:" + dataflowTaskgraph
         + "\t" + "and Task Object is:" + mapper);
-
-    if (dataflowTaskgraph.outDegreeOf(mapper) == 0) {
+    if (dataflowTaskgraph.outDegreeOfTask(mapper) == 0) {
       return 1;
     } else {
       Set<DataFlowOperation> taskEdgesOf = dataflowTaskgraph.

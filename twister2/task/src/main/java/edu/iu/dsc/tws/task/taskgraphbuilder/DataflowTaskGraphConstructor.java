@@ -13,9 +13,9 @@ package edu.iu.dsc.tws.task.taskgraphbuilder;
 
 import java.util.ArrayList;
 
-public class DataflowTaskGraphBuilder extends DataflowTaskGraphGenerator {
+public class DataflowTaskGraphConstructor extends DataflowTaskGraphGenerator {
 
-  public DataflowTaskGraphBuilder() {
+  public DataflowTaskGraphConstructor() {
 
     DataflowTaskGraphGenerator dataflowTaskGraphGenerator = new DataflowTaskGraphGenerator();
 
