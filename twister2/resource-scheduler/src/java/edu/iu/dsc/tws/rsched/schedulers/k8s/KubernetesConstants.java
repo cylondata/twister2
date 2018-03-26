@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.k8s;
 
-final class KubernetesConstants {
+public final class KubernetesConstants {
 
   public static final String TWISTER2_DOCKER_IMAGE = "auyar/twister2:v0.01";
   public static final String KUBERNETES_CLUSTER_TYPE = "kubernetes";

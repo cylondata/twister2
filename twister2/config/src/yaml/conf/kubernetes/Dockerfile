@@ -15,4 +15,4 @@ ENV CLASSPATH="lib/libresource-scheduler-java.jar:lib/commons-compress-1.15.jar:
 
 WORKDIR /twister2/
 
-CMD ["java", "edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesWorker"]
+CMD ["java", "edu.iu.dsc.tws.rsched.schedulers.k8s.worker.KubernetesWorker"]

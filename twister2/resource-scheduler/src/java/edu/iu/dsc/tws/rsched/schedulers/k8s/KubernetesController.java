@@ -67,12 +67,13 @@ public class KubernetesController {
    * return the StatefulSet object if it exists in the Kubernetes master,
    * otherwise return null
    */
-  public V1beta2StatefulSet getStatefulSet(String namespace, String statefulSetName) {
-
+  public V1beta2StatefulSet getStatefulSet(String namespace, String statefulSetName,
+                                           String serviceLabel) {
+    String label = "app=" + serviceLabel;
     V1beta2StatefulSetList setList = null;
     try {
       setList = beta2Api.listNamespacedStatefulSet(
-          namespace, null, null, null, null, null, null, null, null, null);
+          namespace, null, null, null, null, label, null, null, null, null);
     } catch (ApiException e) {
       LOG.log(Level.SEVERE, "Exception when getting StatefulSet list.", e);
       throw new RuntimeException(e);
@@ -189,8 +190,9 @@ public class KubernetesController {
    * return the service object if it exists in the Kubernetes master,
    * otherwise return null
    */
-  public V1Service getService(String namespace, String serviceName) {
-
+  public V1Service getService(String namespace, String serviceName, String serviceLabel) {
+// sending the request with label does not work for list services call
+//    String label = "app=" + serviceLabel;
     V1ServiceList serviceList = null;
     try {
       serviceList = coreApi.listNamespacedService(namespace,
