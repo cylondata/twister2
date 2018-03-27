@@ -74,6 +74,10 @@ public class RRTaskScheduling implements TaskSchedule {
     this.instanceDisk = Config.containerMaxDiskValue;
   }
 
+  @Override
+  public void initialize(Job job) {
+  }
+
   /**
    * This method invokes the Round Robin Scheduling Method and fetch the container instance allocation map.
    * Using the map value it calculates the required ram, disk, and cpu percentage for

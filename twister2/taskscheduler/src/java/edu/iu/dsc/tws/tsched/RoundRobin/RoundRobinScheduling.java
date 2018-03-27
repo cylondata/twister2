@@ -37,12 +37,13 @@ public class RoundRobinScheduling {
     System.out.println("Will be implemented later");
   }
 
-  public static Map<Integer, List<InstanceId>> RoundRobinSchedulingAlgorithm() {
+  //public static Map<Integer, List<InstanceId>> RoundRobinSchedulingAlgorithm() {
+  public static Map<Integer, List<InstanceId>> RoundRobinSchedulingAlgorithm(Job job) {
     int taskIndex = 1;
     int globalTaskIndex = 1;
 
-    Job job = new Job();
-    job = job.getJob();
+    //Job job = new Job();
+    //job = job.getJob();
     Map<Integer, List<InstanceId>> roundrobinAllocation = new HashMap<>();
     try {
       int numberOfContainers = JobAttributes.getNumberOfContainers(job);
