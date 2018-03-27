@@ -1,1 +1,8 @@
 twister2.network.dataflow.class: "edu.iu.dsc.tws.comms.mpi.MPIDataFlowCommunication"
+
+# the base port number workers will use internally to communicate with each other
+# when there are multiple workers in a pod, first worker will get this port number, 
+# second worker will get the next port, and so on.
+# default value is 9999, 
+# kubernetes.worker.base.port: "9999"
+

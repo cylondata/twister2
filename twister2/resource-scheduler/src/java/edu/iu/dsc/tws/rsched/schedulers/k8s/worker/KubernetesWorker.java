@@ -9,18 +9,24 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.rsched.schedulers.k8s;
+package edu.iu.dsc.tws.rsched.schedulers.k8s.worker;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -35,6 +41,8 @@ import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesField;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
@@ -46,7 +54,11 @@ public final class KubernetesWorker {
   private static final Logger LOG = Logger.getLogger(KubernetesWorker.class.getName());
 
   public static final String UNPACK_COMPLETE_FILE_NAME = "unpack-complete.txt";
+  public static final String COMPLETIONS_FILE_NAME = "completions.txt";
   public static final long FILE_WAIT_SLEEP_INTERVAL = 30;
+
+  public static Config config = null;
+  public static int containerID = -1; // initially set to an invalid value
 
   private KubernetesWorker() { }
 
@@ -77,7 +89,7 @@ public final class KubernetesWorker {
     jobPackageFileName = POD_SHARED_VOLUME + "/" + jobPackageFileName;
     userJobJarFile = POD_SHARED_VOLUME + "/" + DIR_PREFIX_FOR_JOB_ARCHIVE + userJobJarFile;
     jobDescFileName = POD_SHARED_VOLUME + "/" + DIR_PREFIX_FOR_JOB_ARCHIVE + jobDescFileName;
-    int containerID = Integer.parseInt(containerName.substring(containerName.lastIndexOf("-") + 1));
+    containerID = Integer.parseInt(containerName.substring(containerName.lastIndexOf("-") + 1));
     String configDir = POD_SHARED_VOLUME + "/" + DIR_PREFIX_FOR_JOB_ARCHIVE
         + KUBERNETES_CLUSTER_TYPE;
 
@@ -95,22 +107,99 @@ public final class KubernetesWorker {
     LOG.info("Job description file is read: " + jobDescFileName);
 
     // load config from config dir
-    Config config = loadConfig(configDir);
+    config = loadConfig(configDir);
     // override some config from job object if any
     config = overrideConfigsFromJob(job, config);
 
     System.out.println("Loaded config values: ");
     System.out.println(config.toString());
 
-    startContainerClass(config, containerID);
+    startContainerClass();
+
+    closeWorker(podName);
+  }
+
+  /**
+   * last method to call to close the worker
+   * @param podName
+   */
+  public static void closeWorker(String podName) {
+    int containersPerPod = KubernetesContext.containersPerPod(config);
+
+    // if this is the only container in a pod, delete the pod and exit
+    if (containersPerPod == 1) {
+      deletePod(podName);
+      return;
+    }
+
+    int finishedWorkers = updateCompletions();
+    // if there is a problem updating the counter in the file, exit
+    if (finishedWorkers == -1) {
+      return;
+      // if this is not the last worker, just exit
+    } else if (containersPerPod > (finishedWorkers + 1)) {
+      return;
+      // if this is the last worker, delete the pod
+    } else if (containersPerPod == (finishedWorkers + 1)) {
+      deletePod(podName);
+      return;
+    }
+  }
+
+  public static void deletePod(String podName) {
+    String namespace = KubernetesContext.namespace(config);
+  }
+
+
+  /**
+   * update the count in the shared file with a lock
+   * to let other workers in this pod to know that a worker has finished
+   * @return
+   */
+  public static int updateCompletions() {
+
+    String completionsFile = POD_SHARED_VOLUME + "/" + COMPLETIONS_FILE_NAME;
+
+    try {
+      Path path = Paths.get(completionsFile);
+      FileChannel fileChannel = FileChannel.open(path,
+          StandardOpenOption.WRITE, StandardOpenOption.READ);
+      LOG.info("Opened File channel. Acquiring lock ...");
+
+      FileLock lock = fileChannel.lock(); // exclusive lock
+      LOG.info("Acquired the file lock. Validity of the lock: " + lock.isValid());
+
+      // read the counter from the file
+      ByteBuffer buffer = ByteBuffer.allocate(20);
+      int noOfBytesRead = fileChannel.read(buffer);
+      byte[] readByteArray = buffer.array();
+      String inStr = new String(readByteArray, 0, noOfBytesRead, StandardCharsets.UTF_8);
+      int count = Integer.parseInt(inStr);
+
+      // update the counter and write back to the file
+      count++;
+      String outStr = Integer.toString(count);
+      byte[] outByteArray = outStr.getBytes(StandardCharsets.UTF_8);
+      ByteBuffer outBuffer = ByteBuffer.wrap(outByteArray);
+      fileChannel.write(outBuffer, 0);
+      LOG.info("Counter in file [" + completionsFile + "] updated to: " + count);
+
+      // close the file channel and release the lock
+      fileChannel.close(); // also releases the lock
+//      System.out.print("Closing the channel and releasing lock.");
+
+      return count;
+
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Exception when updating the counter in file: " + completionsFile, e);
+      return -1;
+    }
   }
 
   /**
    * start the container class specified in conf files
-   * @param config
-   * @param containerID
    */
-  public static void startContainerClass(Config config, int containerID) {
+  public static void startContainerClass() {
     String containerClass = SchedulerContext.containerClass(config);
 //    String containerClass = "edu.iu.dsc.tws.examples.basic.BasicK8sContainer";
     IContainer container;
@@ -124,7 +213,7 @@ public final class KubernetesWorker {
       throw new RuntimeException(e);
     }
 
-    container.init(null, containerID, null);
+    container.init(config, containerID, null);
   }
 
 
@@ -132,9 +221,9 @@ public final class KubernetesWorker {
    * configs from job object will override the ones in config from files if any
    * @return
    */
-  public static Config overrideConfigsFromJob(JobAPI.Job job, Config config) {
+  public static Config overrideConfigsFromJob(JobAPI.Job job, Config cnfg) {
 
-    Config.Builder builder = Config.newBuilder().putAll(config);
+    Config.Builder builder = Config.newBuilder().putAll(cnfg);
 
     JobAPI.Config conf = job.getConfig();
     LOG.log(Level.INFO, "Number of configs to override from job conf: " + conf.getKvsCount());
@@ -158,16 +247,16 @@ public final class KubernetesWorker {
 
     LOG.log(Level.INFO, String.format("Loading configuration with twister2_home: %s and "
         + "configuration: %s", twister2Home, configDir));
-    Config conf = ConfigLoader.loadConfig(twister2Home, configDir);
-    Config config = Config.newBuilder().
-        putAll(conf).
+    Config conf1 = ConfigLoader.loadConfig(twister2Home, configDir);
+    Config conf2 = Config.newBuilder().
+        putAll(conf1).
         put(Context.TWISTER2_HOME.getKey(), twister2Home).
         put(Context.TWISTER2_CONF.getKey(), configDir).
         put(Context.TWISTER2_CLUSTER_TYPE, KUBERNETES_CLUSTER_TYPE).
         build();
 
     LOG.log(Level.INFO, "Config files are read from directory: " + configDir);
-    return config;
+    return conf2;
   }
 
 
@@ -213,6 +302,7 @@ public final class KubernetesWorker {
   public static boolean waitUnpack(String containerName, String jobPackageFileName, long fileSize) {
 
     String flagFileName = POD_SHARED_VOLUME + "/" + UNPACK_COMPLETE_FILE_NAME;
+    String completionsFileName = POD_SHARED_VOLUME + "/" + COMPLETIONS_FILE_NAME;
 
     // if it is the first container in a pod, unpack the tar.gz file
     if (containerName.endsWith("-0")) {
@@ -222,7 +312,9 @@ public final class KubernetesWorker {
         boolean jobFileUnpacked = unpackJobPackage(jobPackageFileName);
         if (jobFileUnpacked) {
           System.out.printf("Job file [%s] unpacked successfully.\n", jobPackageFileName);
-          return writeFlagFile(flagFileName);
+          boolean written1 = writeFile(flagFileName, 0);
+          boolean written2 = writeFile(completionsFileName, 0);
+          return written1 && written2;
         } else {
           System.out.println("Job file can not be unpacked.");
           return false;
@@ -291,30 +383,26 @@ public final class KubernetesWorker {
     }
   }
 
-
   /**
-   * write a file to let other workers in this pod to know that the job file is ready
-   * this file is written by the first worker in a pod
+   * write a file with an int in it.
    * @return
    */
-  public static boolean writeFlagFile(String flagFileName) {
+  public static boolean writeFile(String fileName, int number) {
     try {
-      //create a temporary file
-      File flagFile = new File(flagFileName);
-
-      BufferedWriter writer = new BufferedWriter(new FileWriter(flagFile));
-      writer.write("1");
+      BufferedWriter writer = new BufferedWriter(
+          new OutputStreamWriter(new FileOutputStream(fileName), StandardCharsets.UTF_8));
+      writer.write(Integer.toString(number));
       writer.flush();
 
       //Close writer
       writer.close();
 
-      LOG.info("Flag file: " + flagFile.getCanonicalPath() + " is written.");
+      LOG.info("File: " + fileName + " is written.");
       return true;
 
     } catch (Exception e) {
       e.printStackTrace();
-      LOG.severe("Exception when writing the flag file: " + flagFileName);
+      LOG.severe("Exception when writing the file: " + fileName);
       return false;
     }
   }

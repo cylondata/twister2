@@ -26,6 +26,7 @@ public class MPIContext extends CommunicationContext {
   private static final String DISTINCT_ROUTS = "network.mpi.routing.distinct.routes";
   private static final String SEND_PENDING_MAX = "network.mpi.send.pending.max";
   private static final String NETWORK_CHANNEL_PENDING_SIZE = "network.channel.mpi.pending.size";
+  private static final String NETWORK_STORAGE_PATH = "network.storage.path";
 
   public static final int DEFAULT_PATH = 0;
 
@@ -52,6 +53,10 @@ public class MPIContext extends CommunicationContext {
 
   public static int networkChannelPendingSize(Config cfg) {
     return cfg.getIntegerValue(NETWORK_CHANNEL_PENDING_SIZE, 1024);
+  }
+
+  public static String networkStoragePath(Config cfg) {
+    return cfg.getStringValue(NETWORK_STORAGE_PATH);
   }
 }
 

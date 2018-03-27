@@ -24,6 +24,7 @@ import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 
 import io.kubernetes.client.custom.IntOrString;
 import io.kubernetes.client.models.V1Container;
+import io.kubernetes.client.models.V1ContainerPort;
 import io.kubernetes.client.models.V1EmptyDirVolumeSource;
 import io.kubernetes.client.models.V1EnvVar;
 import io.kubernetes.client.models.V1LabelSelector;
@@ -198,9 +199,10 @@ final class KubernetesUtils {
     podSpec.setVolumes(Arrays.asList(volume));
 
     int containersPerPod = KubernetesContext.containersPerPod(config);
+    int basePort = KubernetesContext.workerBasePort(config);
     ArrayList<V1Container> containers = new ArrayList<V1Container>();
     for (int i = 0; i < containersPerPod; i++) {
-      containers.add(constructContainer(i, reqContainer, jobFileSize, config));
+      containers.add(constructContainer(i, reqContainer, jobFileSize, basePort + 1, config));
     }
     podSpec.setContainers(containers);
 
@@ -211,6 +213,7 @@ final class KubernetesUtils {
   public static V1Container constructContainer(int containerIndex,
                                                ResourceContainer reqContainer,
                                                long jobFileSize,
+                                               int containerPort,
                                                Config config) {
     // construct container and add it to podSpec
     V1Container container = new V1Container();
@@ -248,9 +251,9 @@ final class KubernetesUtils {
     volumeMount.setMountPath(POD_SHARED_VOLUME);
     container.setVolumeMounts(Arrays.asList(volumeMount));
 
-//    V1ContainerPort port = new V1ContainerPort().name("port1").containerPort(TARGET_PORT);
-//    port.setProtocol("TCP");
-//    container.setPorts(Arrays.asList(port));
+    V1ContainerPort port = new V1ContainerPort().name("port1").containerPort(containerPort);
+    port.setProtocol("TCP");
+    container.setPorts(Arrays.asList(port));
 
     return container;
   }
