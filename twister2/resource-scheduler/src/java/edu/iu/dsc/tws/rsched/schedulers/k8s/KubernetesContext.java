@@ -28,6 +28,9 @@ public class KubernetesContext extends SchedulerContext {
   public static final int SERVICE_TARGET_PORT_DEFAULT = 33333;
   public static final String SERVICE_TARGET_PORT = "kubernetes.service.target.port";
 
+  public static final int KUBERNETES_WORKER_BASE_PORT_DEFAULT = 9999;
+  public static final String KUBERNETES_WORKER_BASE_PORT = "kubernetes.worker.base.port";
+
   public static int containersPerPod(Config cfg) {
     return cfg.getIntegerValue(CONTAINERS_PER_POD, CONTAINERS_PER_POD_DEFAULT);
   }
@@ -42,6 +45,10 @@ public class KubernetesContext extends SchedulerContext {
 
   public static int serviceTargetPort(Config cfg) {
     return cfg.getIntegerValue(SERVICE_TARGET_PORT, SERVICE_TARGET_PORT_DEFAULT);
+  }
+
+  public static int workerBasePort(Config cfg) {
+    return cfg.getIntegerValue(KUBERNETES_WORKER_BASE_PORT, KUBERNETES_WORKER_BASE_PORT_DEFAULT);
   }
 
 }
