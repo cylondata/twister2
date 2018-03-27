@@ -121,10 +121,11 @@ public class InstanceMapCalculation {
    * the required number of instances with ram values.
    */
   public Map<Integer, Map<InstanceId, Double>> getInstancesRamMapInContainer(
+      Map<Integer, List<InstanceId>> containerInstanceAllocationMap, Job job) {
+  /*public Map<Integer, Map<InstanceId, Double>> getInstancesRamMapInContainer(
       Map<Integer, List<InstanceId>> containerInstanceAllocationMap) {
-
-    Job job = new Job();
-    job.setJob(job);
+    //Job job = new Job();
+    //job.setJob(job);*/
 
     Map<String, Double> ramMap = JobAttributes.getTaskRamMap(job);
     Map<Integer, Map<InstanceId, Double>> instancesRamContainerMap = new HashMap<>();
@@ -158,7 +159,7 @@ public class InstanceMapCalculation {
         for (InstanceId instanceId : instancesToBeCalculated) {
           containerRam.put(instanceId, instanceRequiredRam);
         }
-        LOG.info("Instances Required Ram:\t" + instanceRequiredRam);
+        LOG.info("Instances Required Ram:\t" + instanceRequiredRam + "\n");
       }
     }
     return instancesRamContainerMap;
@@ -169,10 +170,12 @@ public class InstanceMapCalculation {
    * the required number of instances with disk values.
    */
   public Map<Integer, Map<InstanceId, Double>> getInstancesDiskMapInContainer(
-      Map<Integer, List<InstanceId>> containerInstanceAllocationMap) {
+      Map<Integer, List<InstanceId>> containerInstanceAllocationMap, Job job) {
 
+  /*public Map<Integer, Map<InstanceId, Double>> getInstancesDiskMapInContainer(
+      Map<Integer, List<InstanceId>> containerInstanceAllocationMap) {
     Job job = new Job();
-    job.setJob(job);
+    job.setJob(job);*/
 
     Map<String, Double> diskMap = JobAttributes.getTaskDiskMap(job);
     Map<Integer, Map<InstanceId, Double>> instancesDiskContainerMap = new HashMap<>();
@@ -218,10 +221,15 @@ public class InstanceMapCalculation {
    * the required number of instances with cpu values.
    */
   public Map<Integer, Map<InstanceId, Double>> getInstancesCPUMapInContainer(
+      Map<Integer, List<InstanceId>> containerInstanceAllocationMap, Job job) {
+
+  /*public Map<Integer, Map<InstanceId, Double>> getInstancesCPUMapInContainer(
       Map<Integer, List<InstanceId>> containerInstanceAllocationMap) {
 
     Job job = new Job();
-    job.setJob(job);
+    job.setJob(job);*/
+
+    LOG.info("container allocation map" + containerInstanceAllocationMap);
 
     Map<String, Double> diskMap = JobAttributes.getTaskCPUMap(job);
     Map<Integer, Map<InstanceId, Double>> instancesCpuContainerMap = new HashMap<>();

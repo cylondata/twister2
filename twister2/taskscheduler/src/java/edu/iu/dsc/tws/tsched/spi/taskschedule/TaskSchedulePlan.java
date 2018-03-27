@@ -224,9 +224,9 @@ public class TaskSchedulePlan {
     @Override
     public int hashCode() {
       int result = containerId;
-      result = 31 * result + taskInstances.hashCode();
-      result = 31 * result + requiredResource.hashCode();
-      result = 31 * result + scheduledResource.hashCode();
+      //result = 31 * result + taskInstances.hashCode();
+      //result = 31 * result + requiredResource.hashCode();
+      //result = 31 * result + scheduledResource.hashCode();
       return result;
     }
   }

@@ -18,6 +18,8 @@ public interface TaskSchedule {
 
   void initialize(Config config, Job job);
 
+  void initialize(Job job);
+
   TaskSchedulePlan tschedule() throws ScheduleException;
 
   void close();
