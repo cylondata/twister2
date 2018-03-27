@@ -925,7 +925,8 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
       opertionID = (int) System.currentTimeMillis();
       this.kryoSerializer = new KryoSerializer();
 //      Path dataPath = new Path("/scratch/pulasthi/terasort/lmdbdatabase_" + this.executor);
-      Path dataPath = new Path("/home/pulasthi/work/twister2/lmdbdatabase_" + this.executor);
+      Path dataPath = new Path(MPIContext.networkStoragePath(config)
+          + " /lmdbdatabase_" + this.executor);
       this.memoryManager = new LMDBMemoryManager(dataPath);
       if (!isKeyed) {
         this.operationMemoryManager = memoryManager.addOperation(opertionID,
