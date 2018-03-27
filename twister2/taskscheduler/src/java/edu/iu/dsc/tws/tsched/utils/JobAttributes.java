@@ -33,12 +33,11 @@ import java.util.logging.Logger;
 
 public final class JobAttributes {
 
-  private static final Logger LOG = Logger.getLogger(JobAttributes.class.getName());
-
   public static final int JOB_CONTAINER_PADDING_PERCENTAGE = 10;
   public static final Double JOB_CONTAINER_MAX_RAM_VALUE = 20.00;
   public static final Double JOB_CONTAINER_MAX_DISK_VALUE = 200.00;
   public static final Double JOB_CONTAINER_MAX_CPU_VALUE = 5.0;
+  private static final Logger LOG = Logger.getLogger(JobAttributes.class.getName());
   public static int numberOfContainers;
   public static int numberOfInstances;
 
@@ -135,6 +134,7 @@ public final class JobAttributes {
   }
 
   public static int getTotalNumberOfInstances(Job job) {
+    System.out.println("(((((((Task list length:))))))" + job.getTasklist().length);
     HashMap<String, Integer> parallelTaskMap = getParallelTaskMap(job);
     int totalNumberOfInstances = 0;
     for (int instances : parallelTaskMap.values()) {
@@ -146,12 +146,15 @@ public final class JobAttributes {
   public static HashMap<String, Integer> getParallelTaskMap(Job job) {
     HashMap<String, Integer> parallelTaskMap = new HashMap<>();
     int count = job.getTasklist().length;
-    for (int i = 0; i < job.getTasklist().length; i++) {
-      String taskName = job.getTasklist()[i].getTaskName();
-      Integer parallelTaskCount = job.getTasklist()[i].getParallelTaskCount();
-      parallelTaskMap.put(taskName, parallelTaskCount);
+    try {
+      for (int i = 0; i < job.getTasklist().length; i++) {
+        String taskName = job.getTasklist()[i].getTaskName();
+        Integer parallelTaskCount = job.getTasklist()[0].getParallelTaskCount();
+        parallelTaskMap.put(taskName, parallelTaskCount);
+      }
+    } catch (Exception ee) {
+      ee.printStackTrace();
     }
     return parallelTaskMap;
   }
-
 }
