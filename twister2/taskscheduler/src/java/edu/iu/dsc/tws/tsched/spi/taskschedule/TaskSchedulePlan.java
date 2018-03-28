@@ -50,6 +50,45 @@ public class TaskSchedulePlan {
     }
   }
 
+  public Resource getMaxContainerResources() {
+
+    Double maxCpu = 0.0;
+    Double maxRam = 0.0;
+    Double maxDisk = 0.0;
+
+    Double resourceRam = 0.0;
+    Double resourceDisk = 0.0;
+
+    for (ContainerPlan containerPlan : getContainers()) {
+      Resource containerResource =
+          containerPlan.getScheduledResource().or(containerPlan.getRequiredResource());
+      maxCpu = Math.max(maxCpu, containerResource.getCpu());
+      maxRam = Math.max(maxRam, containerResource.getRam());
+      maxDisk = Math.max(maxDisk, containerResource.getDisk());
+
+      System.out.println("maximum ram value:" + containerResource.getRam() + "\t"
+          + containerResource.getDisk() + "\t"
+          + containerResource.getCpu());
+
+      if (maxRam > containerResource.getRam()) {
+        resourceRam = maxRam;
+      } else {
+        resourceRam = containerResource.getRam();
+      }
+
+      if (maxDisk > containerResource.getDisk()) {
+        resourceDisk = maxDisk;
+      } else {
+        resourceDisk = containerResource.getDisk();
+      }
+      //maxRam = maxRam.max(containerResource.getRam());
+      //maxDisk = maxDisk.max(containerResource.getDisk());
+      //return new Resource(maxCpu, maxRam, maxDisk);
+    }
+    return new Resource(maxCpu, resourceRam, resourceDisk);
+    //return new Resource(200.0, 20.0,5.0);
+  }
+
   public int getJobId() {
     return jobId;
   }
@@ -200,35 +239,47 @@ public class TaskSchedulePlan {
 
     @Override
     public boolean equals(Object o) {
+
       if (this == o) {
         return true;
       }
       if (!(o instanceof ContainerPlan)) {
         return false;
       }
-
       ContainerPlan that = (ContainerPlan) o;
 
-      if (containerId != that.containerId) {
-        return false;
-      }
-      if (!taskInstances.equals(that.taskInstances)) {
-        return false;
-      }
-      if (!requiredResource.equals(that.requiredResource)) {
-        return false;
-      }
-      return scheduledResource.equals(that.scheduledResource);
+      /*if (containerId != that.containerId) return false;
+      if (!taskInstances.equals(that.taskInstances)) return false;
+      if (!requiredResource.equals(that.requiredResource)) return false;
+      return scheduledResource.equals(that.scheduledResource);*/
+
+      return containerId == that.containerId
+          && getTaskInstances().equals(that.getTaskInstances())
+          && getRequiredResource().equals(that.getRequiredResource())
+          && getScheduledResource().equals(that.getScheduledResource());
     }
 
     @Override
     public int hashCode() {
-      int result = containerId;
-      //result = 31 * result + taskInstances.hashCode();
-      //result = 31 * result + requiredResource.hashCode();
-      //result = 31 * result + scheduledResource.hashCode();
-      return result;
+      return 1;
     }
+
+    /*@Override
+    public int hashCode() {
+      int result = containerId;
+      result = 31 * result + taskInstances.hashCode();
+      result = 31 * result + requiredResource.hashCode();
+      result = 31 * result + scheduledResource.hashCode();
+      return result;*/
+
+      /*int result = containerId;
+      result = 31 * result + getTaskInstances ().hashCode ();
+      result = 31 * result + getRequiredResource ().hashCode ();
+      if (scheduledResource.isPresent ()) {
+        result = 31 * result + getScheduledResource ().get ().hashCode ();
+      }
+      return result;*/
+    //}
   }
 }
 

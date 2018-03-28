@@ -34,9 +34,9 @@ import java.util.logging.Logger;
 public final class JobAttributes {
 
   public static final int JOB_CONTAINER_PADDING_PERCENTAGE = 10;
-  public static final Double JOB_CONTAINER_MAX_RAM_VALUE = 20.00;
-  public static final Double JOB_CONTAINER_MAX_DISK_VALUE = 200.00;
-  public static final Double JOB_CONTAINER_MAX_CPU_VALUE = 5.0;
+  public static final Double JOB_CONTAINER_MAX_RAM_VALUE = 2096.00;
+  public static final Double JOB_CONTAINER_MAX_DISK_VALUE = 400.00;
+  public static final Double JOB_CONTAINER_MAX_CPU_VALUE = 20.0;
   private static final Logger LOG = Logger.getLogger(JobAttributes.class.getName());
   public static int numberOfContainers;
   public static int numberOfInstances;
@@ -64,12 +64,13 @@ public final class JobAttributes {
   public static Map<String, Double> getTaskRamMap(Job job) {
 
     Set<String> taskNameSet = new HashSet<String>();
-    taskNameSet.add("mpitask1");
-    taskNameSet.add("mpitask2");
-    taskNameSet.add("mpitask3");
+    taskNameSet.add("task0");
+    taskNameSet.add("task1");
+    taskNameSet.add("task2");
+    taskNameSet.add("task3");
 
     Map<String, Double> ramMap = new HashMap<>();
-    String ramMapStr = "mpitask1:5,mpitask2:6,mpitask3:7";
+    String ramMapStr = "task0:512.0,task1:512.0,task2:512.0,task3:512.0";
 
     if (ramMapStr != null) {
       String[] ramMapTokens = ramMapStr.split(",");
@@ -88,12 +89,13 @@ public final class JobAttributes {
   public static Map<String, Double> getTaskDiskMap(Job job) {
 
     Set<String> taskNameSet = new HashSet<String>();
-    taskNameSet.add("mpitask1");
-    taskNameSet.add("mpitask2");
-    taskNameSet.add("mpitask3");
+    taskNameSet.add("task0");
+    taskNameSet.add("task1");
+    taskNameSet.add("task2");
+    taskNameSet.add("task3");
 
     Map<String, Double> diskMap = new HashMap<>();
-    String diskMapStr = "mpitask1:5,mpitask2:6,mpitask3:7";
+    String diskMapStr = "task0:20,task1:20,task2:20,task3:20";
 
     if (diskMapStr != null) {
       String[] diskMapTokens = diskMapStr.split(",");
@@ -112,12 +114,13 @@ public final class JobAttributes {
   public static Map<String, Double> getTaskCPUMap(Job job) {
 
     Set<String> taskNameSet = new HashSet<String>();
-    taskNameSet.add("mpitask1");
-    taskNameSet.add("mpitask2");
-    taskNameSet.add("mpitask3");
+    taskNameSet.add("task0");
+    taskNameSet.add("task1");
+    taskNameSet.add("task2");
+    taskNameSet.add("task3");
 
     Map<String, Double> cpuMap = new HashMap<>();
-    String cpuMapStr = "mpitask1:5,mpitask2:6,mpitask3:7";
+    String cpuMapStr = "task0:4,task1:4,task2:4,task3:4";
 
     if (cpuMapStr != null) {
       String[] diskMapTokens = cpuMapStr.split(",");
@@ -134,7 +137,6 @@ public final class JobAttributes {
   }
 
   public static int getTotalNumberOfInstances(Job job) {
-    System.out.println("(((((((Task list length:))))))" + job.getTasklist().length);
     HashMap<String, Integer> parallelTaskMap = getParallelTaskMap(job);
     int totalNumberOfInstances = 0;
     for (int instances : parallelTaskMap.values()) {

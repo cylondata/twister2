@@ -28,9 +28,8 @@ package edu.iu.dsc.tws.tsched.utils;
 public class Job {
 
   public static int jobId = 0;
-  public int taskLength = 0;
-
   public static Task[] taskList = null;
+  public int taskLength = 0;
   public Job job = null;
 
   public Job getJob() {
@@ -94,7 +93,7 @@ public class Job {
     job.setTasklist(taskList);*/
 
     this.job = job;
-    jobId++;
+    //jobId++;
   }
 
   public int getTaskLength() {

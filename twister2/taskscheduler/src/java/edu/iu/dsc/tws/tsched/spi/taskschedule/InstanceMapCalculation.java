@@ -60,13 +60,13 @@ public class InstanceMapCalculation {
   private static double getContainerCpuValue(Map<Integer,
       List<InstanceId>> instancesAllocation) {
 
-        /*List<JobAPI.Config.KeyValue> jobConfig= job.getJobConfig().getKvsList();
-        double defaultContainerCpu =
-                DEFAULT_CPU_PADDING_PER_CONTAINER + getLargestContainerSize(instancesAllocation);
+      /*List<JobAPI.Config.KeyValue> jobConfig= job.getJobConfig().getKvsList();
+      double defaultContainerCpu =
+             DEFAULT_CPU_PADDING_PER_CONTAINER + getLargestContainerSize(instancesAllocation);
 
-        String cpuHint = JobUtils.getConfigWithDefault(
-                jobConfig, com.tws.api.Config.TOPOLOGY_CONTAINER_CPU_REQUESTED,
-                Double.toString(defaultContainerCpu)); */
+      String cpuHint = JobUtils.getConfigWithDefault(
+              jobConfig, com.tws.api.Config.TOPOLOGY_CONTAINER_CPU_REQUESTED,
+              Double.toString(defaultContainerCpu)); */
 
     //These two lines will be once the actual job description file is created.
     String cpuHint = "0.6";
@@ -76,12 +76,12 @@ public class InstanceMapCalculation {
   private static Double getContainerDiskValue(Map<Integer,
       List<InstanceId>> instancesAllocation) {
 
-        /*ByteAmount defaultContainerDisk = instanceDiskDefault
+      /*ByteAmount defaultContainerDisk = instanceDiskDefault
                 .multiply(getLargestContainerSize(instancesAllocation))
                 .plus(DEFAULT_DISK_PADDING_PER_CONTAINER);
 
-        List<JobAPI.Config.KeyValue> jobConfig = job.getJobConfig().getKvsList();
-        return JobUtils.getConfigWithDefault(jobConfig,
+      List<JobAPI.Config.KeyValue> jobConfig = job.getJobConfig().getKvsList();
+       return JobUtils.getConfigWithDefault(jobConfig,
                 com.tws.api.Config.JOB_CONTAINER_DISK_REQUESTED,
                 defaultContainerDisk); */
 
@@ -225,11 +225,8 @@ public class InstanceMapCalculation {
 
   /*public Map<Integer, Map<InstanceId, Double>> getInstancesCPUMapInContainer(
       Map<Integer, List<InstanceId>> containerInstanceAllocationMap) {
-
     Job job = new Job();
     job.setJob(job);*/
-
-    LOG.info("container allocation map" + containerInstanceAllocationMap);
 
     Map<String, Double> diskMap = JobAttributes.getTaskCPUMap(job);
     Map<Integer, Map<InstanceId, Double>> instancesCpuContainerMap = new HashMap<>();
