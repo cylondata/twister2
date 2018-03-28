@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.tsched.utils;
 
 public class Task {
 
-  private int taskParallelism = 2;
+  /*private int taskParallelism = 2;
   private String taskName;
   private int taskCount;
 
@@ -31,5 +31,51 @@ public class Task {
 
   public void setTaskName(String taskName) {
     this.taskName = taskName;
+  }*/
+
+  public String taskName = "mpitask";
+  public Integer taskCount = 0;
+  public Double requiredRam = 0.0;
+  public Double requiredDisk = 0.0;
+  public Double requiredCpu = 0.0;
+
+  public Double getRequiredRam() {
+    return requiredRam;
+  }
+
+  public void setRequiredRam(Double requiredRam) {
+    this.requiredRam = requiredRam;
+  }
+
+  public Double getRequiredDisk() {
+    return requiredDisk;
+  }
+
+  public void setRequiredDisk(Double requiredDisk) {
+    this.requiredDisk = requiredDisk;
+  }
+
+  public Double getRequiredCpu() {
+    return requiredCpu;
+  }
+
+  public void setRequiredCpu(Double requiredCPU) {
+    this.requiredCpu = requiredCPU;
+  }
+
+  public String getTaskName() {
+    return taskName;
+  }
+
+  public void setTaskName(String taskName) {
+    this.taskName = taskName;
+  }
+
+  public void setTaskCount(Integer taskCount) {
+    this.taskCount = taskCount;
+  }
+
+  public Integer getParallelTaskCount() {
+    return taskCount;
   }
 }

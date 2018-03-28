@@ -23,7 +23,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tsched.utils;
 
-public class RequiredRam {
+public class RequiredRam implements Comparable<RequiredRam> {
 
   private String taskName;
   private Double requiredRam;
@@ -35,11 +35,9 @@ public class RequiredRam {
 
   @Override
   public boolean equals(Object o) {
-
     if (this == o) {
       return true;
     }
-
     if (!(o instanceof RequiredRam)) {
       return false;
     }
@@ -74,5 +72,9 @@ public class RequiredRam {
     this.requiredRam = requiredRam;
   }
 
+  @Override
+  public int compareTo(RequiredRam o) {
+    return this.requiredRam.compareTo(o.requiredRam);
+  }
 }
 
