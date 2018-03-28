@@ -15,17 +15,18 @@ import java.util.HashSet;
 import java.util.Set;
 
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.core.TWSCommunication;
+/*import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
-import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.core.TaskPlan;*/
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
-//import edu.iu.dsc.tws.tsched.spi.common.Config;
 import edu.iu.dsc.tws.task.core.TaskExecutorFixedThread;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.utils.Job;
 import edu.iu.dsc.tws.tsched.utils.Task;
-import edu.iu.dsc.tws.tsched.utils.Utils;
+//import edu.iu.dsc.tws.tsched.utils.Utils;
+
+//import edu.iu.dsc.tws.tsched.spi.common.Config;
 
 public class TaskScheduling implements IContainer {
 
@@ -52,9 +53,9 @@ public class TaskScheduling implements IContainer {
     taskExecutor = new TaskExecutorFixedThread();
     this.status = Status.INIT;
 
-    TaskPlan taskPlan = Utils.createTaskPlan(config, resourcePlan);
-    TWSNetwork network = new TWSNetwork(config, taskPlan);
-    TWSCommunication channel = network.getDataFlowTWSCommunication();
+    //TaskPlan taskPlan = Utils.createTaskPlan(config, resourcePlan);
+    //TWSNetwork network = new TWSNetwork(config, taskPlan);
+    //TWSCommunication channel = network.getDataFlowTWSCommunication();
 
     Set<Integer> sources = new HashSet<>();
     sources.add(0);
