@@ -19,15 +19,15 @@ import java.util.List;
 public interface IWorkerController {
 
   /**
-   * return the WorkerInfo object for this worker
+   * return the WorkerNetworkInfo object for this worker
    * @return
    */
-  WorkerInfo getWorkerInfo();
+  WorkerNetworkInfo getWorkerNetworkInfo();
 
   /**
-   * return the WorkerInfo object for the given ID
+   * return the WorkerNetworkInfo object for the given ID
    */
-  WorkerInfo getWorkerInfoForID(int id);
+  WorkerNetworkInfo getWorkerNetworkInfoForID(int id);
 
   /**
    * return the number of all workers in this job,
@@ -43,12 +43,12 @@ public interface IWorkerController {
    * understand whether there are non-joined workers
    * @return
    */
-  List<WorkerInfo> getWorkerList();
+  List<WorkerNetworkInfo> getWorkerList();
 
   /**
    * wait for all workers to join the job
    * @param timeLimit
    * @return
    */
-  List<WorkerInfo> waitForAllWorkersToJoin(long timeLimit);
+  List<WorkerNetworkInfo> waitForAllWorkersToJoin(long timeLimit);
 }

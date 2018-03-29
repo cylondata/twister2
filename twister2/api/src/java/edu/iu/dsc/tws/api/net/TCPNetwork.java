@@ -23,7 +23,7 @@ import edu.iu.dsc.tws.comms.tcp.TWSTCPChannel;
 import edu.iu.dsc.tws.comms.tcp.net.TCPChannel;
 import edu.iu.dsc.tws.comms.tcp.net.TCPContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.bootstrap.WorkerInfo;
+import edu.iu.dsc.tws.rsched.bootstrap.WorkerNetworkInfo;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKController;
 
@@ -67,15 +67,15 @@ public class TCPNetwork {
     // the amount of time to wait for all workers to join a job
     int timeLimit =  ZKContext.maxWaitTimeForAllWorkersToJoin(config);
 
-    List<WorkerInfo> workerInfoList = zkController.waitForAllWorkersToJoin(timeLimit);
+    List<WorkerNetworkInfo> workerNetworkInfoList = zkController.waitForAllWorkersToJoin(timeLimit);
 
-    if (workerInfoList == null) {
+    if (workerNetworkInfoList == null) {
       throw new RuntimeException("Error getting the worker list from ZooKeeper");
     }
 
     List<NetworkInfo> networkInfos = new ArrayList<>();
     NetworkInfo thisNet = null;
-    for (WorkerInfo info : workerInfoList) {
+    for (WorkerNetworkInfo info : workerNetworkInfoList) {
       NetworkInfo netInfo = new NetworkInfo(info.getWorkerID());
       netInfo.addProperty(TCPContext.NETWORK_HOSTNAME, info.getWorkerIP());
       netInfo.addProperty(TCPContext.NETWORK_PORT, info.getWorkerPort());

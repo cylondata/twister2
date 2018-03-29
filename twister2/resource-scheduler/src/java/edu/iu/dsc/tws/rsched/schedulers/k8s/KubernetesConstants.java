@@ -15,7 +15,6 @@ public final class KubernetesConstants {
 
   public static final String TWISTER2_DOCKER_IMAGE = "auyar/twister2:v0.01";
   public static final String KUBERNETES_CLUSTER_TYPE = "kubernetes";
-  public static final String TWISTER2_WORKER_CLASS = "K8sWorker";
   public static final String POD_SHARED_VOLUME_NAME = "twister2-shared-dir";
   public static final String POD_SHARED_VOLUME = "/twister2-shared";
   public static final String CONTAINER_NAME_PREFIX = "twister2-container-";

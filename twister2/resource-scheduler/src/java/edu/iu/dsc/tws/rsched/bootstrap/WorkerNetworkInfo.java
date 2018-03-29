@@ -17,20 +17,20 @@ import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class WorkerInfo {
-  public static final Logger LOG = Logger.getLogger(WorkerInfo.class.getName());
+public class WorkerNetworkInfo {
+  public static final Logger LOG = Logger.getLogger(WorkerNetworkInfo.class.getName());
 
   private InetAddress ip;
   private int port;
   private int workerID;
 
-  public WorkerInfo(InetAddress ip, int port, int workerID) {
+  public WorkerNetworkInfo(InetAddress ip, int port, int workerID) {
     this.ip = ip;
     this.port = port;
     this.workerID = workerID;
   }
 
-  public WorkerInfo(String workerName, int workerID) {
+  public WorkerNetworkInfo(String workerName, int workerID) {
     this.ip = constructWorkerIP(workerName);
     this.port = Integer.parseInt(workerName.substring(workerName.indexOf(":") + 1));
     this.workerID = workerID;
@@ -79,14 +79,14 @@ public class WorkerInfo {
    * this is the inverse of getWorkerInfoAsString method
    * @return
    */
-  public static WorkerInfo getWorkerInfoFromString(String str) {
+  public static WorkerNetworkInfo getWorkerInfoFromString(String str) {
     if (str == null || str.length() < 4) {
       return null;
     }
 
     String workerName = str.substring(0, str.indexOf("="));
     String idStr = str.substring(str.indexOf("=") + 1, str.indexOf(";"));
-    return new WorkerInfo(workerName, Integer.parseInt(idStr));
+    return new WorkerNetworkInfo(workerName, Integer.parseInt(idStr));
   }
 
   public String getWorkerInfoAsString() {
@@ -116,8 +116,8 @@ public class WorkerInfo {
 
   @Override
   public boolean equals(Object o) {
-    if (o instanceof WorkerInfo) {
-      WorkerInfo theOther = (WorkerInfo) o;
+    if (o instanceof WorkerNetworkInfo) {
+      WorkerNetworkInfo theOther = (WorkerNetworkInfo) o;
       if (this.workerID == theOther.workerID
           && this.getWorkerName().equals(theOther.getWorkerName())) {
         return true;

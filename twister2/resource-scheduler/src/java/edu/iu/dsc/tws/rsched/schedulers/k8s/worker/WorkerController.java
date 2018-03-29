@@ -23,7 +23,7 @@ import com.google.gson.reflect.TypeToken;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.rsched.bootstrap.IWorkerController;
-import edu.iu.dsc.tws.rsched.bootstrap.WorkerInfo;
+import edu.iu.dsc.tws.rsched.bootstrap.WorkerNetworkInfo;
 import edu.iu.dsc.tws.rsched.schedulers.aurora.AuroraContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
@@ -46,8 +46,8 @@ public class WorkerController implements IWorkerController {
   private int workersPerPod;
   private CoreV1Api coreApi;
   private ApiClient apiClient;
-  private ArrayList<WorkerInfo> workerList;
-  private WorkerInfo thisWorker;
+  private ArrayList<WorkerNetworkInfo> workerList;
+  private WorkerNetworkInfo thisWorker;
 
   public WorkerController(Config config, String podName, String podIpStr, String containerName,
                           String jobName) {
@@ -55,14 +55,14 @@ public class WorkerController implements IWorkerController {
     numberOfWorkers = Integer.parseInt(AuroraContext.numberOfContainers(config));
     workersPerPod = KubernetesContext.containersPerPod(config);
     numberOfPods = numberOfWorkers / workersPerPod;
-    workerList = new ArrayList<WorkerInfo>();
+    workerList = new ArrayList<WorkerNetworkInfo>();
     this.jobName = jobName;
 
     int containerIndex = KubernetesUtils.idFromName(containerName);
     int workerID = calculateWorkerID(podName, containerIndex);
     int basePort = KubernetesContext.workerBasePort(config);
     InetAddress podIP = convertStringToIP(podIpStr);
-    thisWorker = new WorkerInfo(podIP, basePort + containerIndex, workerID);
+    thisWorker = new WorkerNetworkInfo(podIP, basePort + containerIndex, workerID);
 
     createApiInstances();
   }
@@ -81,19 +81,19 @@ public class WorkerController implements IWorkerController {
   }
 
   /**
-   * return WorkerInfo object for this worker
+   * return WorkerNetworkInfo object for this worker
    */
   @Override
-  public WorkerInfo getWorkerInfo() {
+  public WorkerNetworkInfo getWorkerNetworkInfo() {
     return thisWorker;
   }
 
   /**
-   * return the WorkerInfo object for the given id
+   * return the WorkerNetworkInfo object for the given id
    * @return
    */
-  public WorkerInfo getWorkerInfoForID(int id) {
-    for (WorkerInfo info: workerList) {
+  public WorkerNetworkInfo getWorkerNetworkInfoForID(int id) {
+    for (WorkerNetworkInfo info: workerList) {
       if (info.getWorkerID() == id) {
         return info;
       }
@@ -117,7 +117,7 @@ public class WorkerController implements IWorkerController {
    * @return
    */
   @Override
-  public ArrayList<WorkerInfo> getWorkerList() {
+  public ArrayList<WorkerNetworkInfo> getWorkerList() {
     return workerList;
   }
 
@@ -211,8 +211,9 @@ public class WorkerController implements IWorkerController {
       for (int i = 0; i < workersPerPod; i++) {
         int containerIndex = i;
         int workerID = calculateWorkerID(podName, containerIndex);
-        WorkerInfo workerInfo = new WorkerInfo(podIP, basePort + containerIndex, workerID);
-        workerList.add(workerInfo);
+        WorkerNetworkInfo workerNetworkInfo =
+            new WorkerNetworkInfo(podIP, basePort + containerIndex, workerID);
+        workerList.add(workerNetworkInfo);
       }
     }
   }
@@ -230,12 +231,12 @@ public class WorkerController implements IWorkerController {
     return podNo * workersPerPod + containerIndex;
   }
 
-  public static void printWorkers(ArrayList<WorkerInfo> workers) {
+  public static void printWorkers(ArrayList<WorkerNetworkInfo> workers) {
 
     StringBuffer buffer = new StringBuffer();
     buffer.append("Number of workers: " + workers.size() + "\n");
     int i = 0;
-    for (WorkerInfo worker: workers) {
+    for (WorkerNetworkInfo worker: workers) {
       buffer.append(String.format("%d: workerID[%d] %s\n",
           i++, worker.getWorkerID(), worker.getWorkerName()));
     }
@@ -252,7 +253,7 @@ public class WorkerController implements IWorkerController {
    * @return
    */
   @Override
-  public List<WorkerInfo> waitForAllWorkersToJoin(long timeLimit) {
+  public List<WorkerNetworkInfo> waitForAllWorkersToJoin(long timeLimit) {
     // first make sure all workers are in the list
     long startTime = System.currentTimeMillis();
     if (workerList.size() < numberOfWorkers) {

@@ -23,7 +23,7 @@ import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.bootstrap.WorkerInfo;
+import edu.iu.dsc.tws.rsched.bootstrap.WorkerNetworkInfo;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKController;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
@@ -144,7 +144,7 @@ public final class AuroraWorker {
     zkController = new ZKController(config, job.getJobName(), workerHostPort, numberOfWorkers);
     zkController.initialize();
     long duration = System.currentTimeMillis() - startTime;
-    System.out.println("Initialization for the worker: " + zkController.getWorkerInfo()
+    System.out.println("Initialization for the worker: " + zkController.getWorkerNetworkInfo()
         + " took: " + duration + "ms");
   }
 
@@ -158,7 +158,7 @@ public final class AuroraWorker {
     // the amount of time to wait for all workers to join a job
     int timeLimit =  ZKContext.maxWaitTimeForAllWorkersToJoin(config);
     long startTime = System.currentTimeMillis();
-    List<WorkerInfo> workers = zkController.waitForAllWorkersToJoin(timeLimit);
+    List<WorkerNetworkInfo> workers = zkController.waitForAllWorkersToJoin(timeLimit);
     long duration = System.currentTimeMillis() - startTime;
 
     if (workers == null) {
@@ -205,7 +205,7 @@ public final class AuroraWorker {
       throw new RuntimeException(e);
     }
 
-    container.init(worker.config, worker.zkController.getWorkerInfo().getWorkerID(), null);
+    container.init(worker.config, worker.zkController.getWorkerNetworkInfo().getWorkerID(), null);
 
     // close the things, let others know that it is done
     worker.close();

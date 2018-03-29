@@ -40,8 +40,9 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
+import edu.iu.dsc.tws.proto.system.ResourceAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.bootstrap.WorkerInfo;
+import edu.iu.dsc.tws.rsched.bootstrap.WorkerNetworkInfo;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesField;
@@ -126,10 +127,12 @@ public final class KubernetesWorker {
         new WorkerController(config, podName, podIP, containerName, job.getJobName());
     workerController.buildWorkerListWaitForAll(WAIT_TIME_FOR_WORKER_LIST_BUILD);
 
-    List<WorkerInfo> workerList = workerController.waitForAllWorkersToJoin(10000);
+    List<WorkerNetworkInfo> workerList = workerController.waitForAllWorkersToJoin(10000);
     if (workerList == null) {
       LOG.severe("Can not get all workers to join. Something wrong. .......................");
     }
+
+    ResourceAPI.ComputeResource cr = job.getJobResources().getContainer();
 
     startContainerClass();
 
