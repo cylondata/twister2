@@ -26,7 +26,7 @@ import io.kubernetes.client.util.Watch;
 
 /**
  * a class to watch events related to pods starting containers in them
- * this threads starts watching events for all pods in a job
+ * this thread starts watching events for all pods in a job
  * when a container in a pod becomes Started, it marks that pod as ready
  * when all pods become ready, this thread stops watching events and finishes execution
  */
@@ -75,7 +75,7 @@ public class PodWatcher extends Thread {
       watch = Watch.createWatch(
           client,
           coreApi.listNamespacedEventCall(
-              namespace, null, null, null, null, null, 10, null, null, Boolean.TRUE, null, null),
+              namespace, null, null, null, null, null, null, null, null, Boolean.TRUE, null, null),
           new TypeToken<Watch.Response<V1Event>>() { }.getType());
 
     } catch (ApiException e) {

@@ -14,21 +14,34 @@ package edu.iu.dsc.tws.rsched.bootstrap;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Objects;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class WorkerInfo {
   public static final Logger LOG = Logger.getLogger(WorkerInfo.class.getName());
 
-  private String workerName;
+  private InetAddress ip;
+  private int port;
   private int workerID;
 
-  public WorkerInfo(String workerName, int workerID) {
-    this.workerName = workerName;
+  public WorkerInfo(InetAddress ip, int port, int workerID) {
+    this.ip = ip;
+    this.port = port;
     this.workerID = workerID;
   }
 
+  public WorkerInfo(String workerName, int workerID) {
+    this.ip = constructWorkerIP(workerName);
+    this.port = Integer.parseInt(workerName.substring(workerName.indexOf(":") + 1));
+    this.workerID = workerID;
+  }
+
+  /**
+   * return ip:port as a string
+   * @return
+   */
   public String getWorkerName() {
-    return workerName;
+    return ip.getHostAddress() + ":" + port;
   }
 
   public int getWorkerID() {
@@ -36,20 +49,22 @@ public class WorkerInfo {
   }
 
   public InetAddress getWorkerIP() {
+    return ip;
+  }
+
+  private InetAddress constructWorkerIP(String workerName) {
 
     String ipStr = workerName.substring(0, workerName.indexOf(":"));
     try {
-      InetAddress ip = InetAddress.getByName(ipStr);
-      return ip;
+      return InetAddress.getByName(ipStr);
     } catch (UnknownHostException e) {
-      e.printStackTrace();
-      return null;
+      LOG.log(Level.SEVERE, "Can not convert the given address to IP: " + workerName, e);
+      throw new RuntimeException(e);
     }
   }
 
   public int getWorkerPort() {
-    String portStr = workerName.substring(workerName.indexOf(":") + 1);
-    return Integer.parseInt(portStr);
+    return port;
   }
 
   public byte[] getWorkerIDAsBytes() {
@@ -75,7 +90,7 @@ public class WorkerInfo {
   }
 
   public String getWorkerInfoAsString() {
-    return workerName + "=" + workerID + ";";
+    return getWorkerName() + "=" + workerID + ";";
   }
 
   /**
@@ -94,18 +109,17 @@ public class WorkerInfo {
     this.workerID = workerID;
   }
 
-
-
   @Override
   public String toString() {
-    return "workerName: " + workerName + " workerID: " + workerID;
+    return "workerName: " + getWorkerName() + " workerID: " + workerID;
   }
 
   @Override
   public boolean equals(Object o) {
     if (o instanceof WorkerInfo) {
       WorkerInfo theOther = (WorkerInfo) o;
-      if (this.workerID == theOther.workerID && this.workerName.equals(theOther.workerName)) {
+      if (this.workerID == theOther.workerID
+          && this.getWorkerName().equals(theOther.getWorkerName())) {
         return true;
       }
     }
@@ -114,8 +128,7 @@ public class WorkerInfo {
 
   @Override
   public int hashCode() {
-
-    return Objects.hash(workerName, workerID);
+    return Objects.hash(getWorkerName(), workerID);
   }
 }
 

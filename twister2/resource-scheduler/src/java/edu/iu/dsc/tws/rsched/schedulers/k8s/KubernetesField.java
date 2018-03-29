@@ -19,5 +19,6 @@ public enum KubernetesField {
   USER_JOB_JAR_FILE,    // java jar file for running user job
   JOB_PACKAGE_FILE_SIZE, // file size of tar.gz file
   CONTAINER_NAME,
-  JOB_DESCRIPTION_FILE
+  JOB_DESCRIPTION_FILE,
+  POD_IP
 }

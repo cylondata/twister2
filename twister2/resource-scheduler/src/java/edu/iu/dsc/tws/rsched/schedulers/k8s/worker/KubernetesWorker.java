@@ -27,6 +27,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -40,6 +41,7 @@ import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.bootstrap.WorkerInfo;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesField;
@@ -56,6 +58,7 @@ public final class KubernetesWorker {
   public static final String UNPACK_COMPLETE_FILE_NAME = "unpack-complete.txt";
   public static final String COMPLETIONS_FILE_NAME = "completions.txt";
   public static final long FILE_WAIT_SLEEP_INTERVAL = 30;
+  public static final long WAIT_TIME_FOR_WORKER_LIST_BUILD = 3000; // ms
 
   public static Config config = null;
   public static int containerID = -1; // initially set to an invalid value
@@ -79,6 +82,9 @@ public final class KubernetesWorker {
 
     String containerName = System.getenv(KubernetesField.CONTAINER_NAME + "");
     LOG.info(KubernetesField.CONTAINER_NAME + ": " + containerName);
+
+    String podIP = System.getenv(KubernetesField.POD_IP + "");
+    LOG.info(KubernetesField.POD_IP + ": " + podIP);
 
     // this environment variable is not sent by submitting client, it is set by Kubernetes master
     String podName = System.getenv("HOSTNAME");
@@ -113,6 +119,17 @@ public final class KubernetesWorker {
 
     System.out.println("Loaded config values: ");
     System.out.println(config.toString());
+    System.out.println();
+
+    // start worker controller
+    WorkerController workerController =
+        new WorkerController(config, podName, podIP, containerName, job.getJobName());
+    workerController.buildWorkerListWaitForAll(WAIT_TIME_FOR_WORKER_LIST_BUILD);
+
+    List<WorkerInfo> workerList = workerController.waitForAllWorkersToJoin(10000);
+    if (workerList == null) {
+      LOG.severe("Can not get all workers to join. Something wrong. .......................");
+    }
 
     startContainerClass();
 
@@ -124,6 +141,9 @@ public final class KubernetesWorker {
    * @param podName
    */
   public static void closeWorker(String podName) {
+
+    waitIndefinitely();
+
     int containersPerPod = KubernetesContext.containersPerPod(config);
 
     // if this is the only container in a pod, delete the pod and exit
@@ -150,6 +170,21 @@ public final class KubernetesWorker {
     String namespace = KubernetesContext.namespace(config);
   }
 
+  /**
+   * a test method to make the worker wait indefinitely
+   */
+  public static void waitIndefinitely() {
+
+    System.out.println();
+    while (true) {
+      try {
+        System.out.println("Waiting indefinetely idle ... Sleeping 100sec ...");
+        Thread.sleep(100000);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+    }
+  }
 
   /**
    * update the count in the shared file with a lock
