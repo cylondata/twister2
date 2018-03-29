@@ -250,6 +250,7 @@ public class MPIDataFlowReduce implements DataFlowOperation, MPIMessageReceiver 
     this.instancePlan = taskPlan;
     this.config = cfg;
     this.type = t;
+    this.executor = instancePlan.getThisExecutor();
 
     // we only have one path
     this.router = new InvertedBinaryTreeRouter(cfg, taskPlan,
@@ -264,7 +265,8 @@ public class MPIDataFlowReduce implements DataFlowOperation, MPIMessageReceiver 
       this.finalReceiver.init(cfg, this, receiveExpectedTaskIds());
     }
 
-    LOG.log(Level.FINE, String.format("%d all send tasks: %s", executor, router.sendQueueIds()));
+    LOG.log(Level.FINE, String.format("%d reduce sources %s dest %d send tasks: %s",
+        executor, sources, destination, router.sendQueueIds()));
 
     Map<Integer, ArrayBlockingQueue<Pair<Object, MPISendMessage>>> pendingSendMessagesPerSource =
         new HashMap<>();
