@@ -60,14 +60,14 @@ public class TCPNetwork {
     channel.startFirstPhase();
 
     // first lets intialize the zk
-    zkController = new ZKController(config, job.getJobName(), workerUniqueId);
+    int numberOfWorkers = job.getJobResources().getNoOfContainers();
+    zkController = new ZKController(config, job.getJobName(), workerUniqueId, numberOfWorkers);
     zkController.initialize();
 
     // the amount of time to wait for all workers to join a job
     int timeLimit =  ZKContext.maxWaitTimeForAllWorkersToJoin(config);
 
-    List<WorkerInfo> workerInfoList = zkController.waitForAllWorkersToJoin(
-        job.getJobResources().getNoOfContainers(), timeLimit);
+    List<WorkerInfo> workerInfoList = zkController.waitForAllWorkersToJoin(timeLimit);
 
     if (workerInfoList == null) {
       throw new RuntimeException("Error getting the worker list from ZooKeeper");

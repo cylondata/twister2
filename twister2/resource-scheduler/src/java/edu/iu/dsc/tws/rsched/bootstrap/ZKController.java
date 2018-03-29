@@ -46,12 +46,13 @@ import edu.iu.dsc.tws.common.config.Config;
  * <p>
  */
 
-public class ZKController {
+public class ZKController implements IWorkerController {
   public static final Logger LOG = Logger.getLogger(ZKController.class.getName());
 
   private String zkAddress; // hostname and port number of ZooKeeper
   private String hostAndPort; // hostname and port number of this worker
   private WorkerInfo workerInfo;
+  private int numberOfWorkers;
   private CuratorFramework client;
   private String jobName;
   private String znodePath;
@@ -63,10 +64,11 @@ public class ZKController {
   private DistributedAtomicInteger dai;
   private Config config;
 
-  public ZKController(Config config, String jobName, String hostAndPort) {
+  public ZKController(Config config, String jobName, String hostAndPort, int numberOfWorkers) {
     this.config = config;
     this.hostAndPort = hostAndPort;
     this.jobName = jobName;
+    this.numberOfWorkers = numberOfWorkers;
     this.jobPath = ZKUtil.constructJobPath(config, jobName);
     this.daiPath = ZKUtil.constructJobDaiPath(config, jobName);
     this.lockPath = ZKUtil.constructJobLockPath(config, jobName);
@@ -133,6 +135,22 @@ public class ZKController {
 
   public WorkerInfo getWorkerInfo() {
     return workerInfo;
+  }
+
+  @Override
+  public WorkerInfo getWorkerInfoForID(int id) {
+    List<WorkerInfo> workerList = getWorkerList();
+    for (WorkerInfo info: workerList) {
+      if (info.getWorkerID() == id) {
+        return info;
+      }
+    }
+
+    return null;
+  }
+
+  public int getNumberOfWorkers() {
+    return numberOfWorkers;
   }
 
   /**
@@ -282,7 +300,7 @@ public class ZKController {
   /**
    * Get all joined workers including the ones finished
    */
-  public List<WorkerInfo> getAllJoinedWorkers() {
+  public List<WorkerInfo> getWorkerList() {
 
     byte[] parentData = null;
     try {
@@ -348,7 +366,7 @@ public class ZKController {
    * some workers may have already left, so current worker list may be less than the total
    * return null if timeLimit is reached or en exception thrown while waiting
    */
-  public List<WorkerInfo> waitForAllWorkersToJoin(int numberOfWorkers, long timeLimit) {
+  public List<WorkerInfo> waitForAllWorkersToJoin(long timeLimit) {
 
     long duration = 0;
     while (duration < timeLimit) {

@@ -140,7 +140,8 @@ public final class AuroraWorker {
 
     long startTime = System.currentTimeMillis();
     String workerHostPort = workerAddress.getHostAddress() + ":" + workerPort;
-    zkController = new ZKController(config, job.getJobName(), workerHostPort);
+    int numberOfWorkers = job.getJobResources().getNoOfContainers();
+    zkController = new ZKController(config, job.getJobName(), workerHostPort, numberOfWorkers);
     zkController.initialize();
     long duration = System.currentTimeMillis() - startTime;
     System.out.println("Initialization for the worker: " + zkController.getWorkerInfo()
@@ -157,7 +158,7 @@ public final class AuroraWorker {
     // the amount of time to wait for all workers to join a job
     int timeLimit =  ZKContext.maxWaitTimeForAllWorkersToJoin(config);
     long startTime = System.currentTimeMillis();
-    List<WorkerInfo> workers = zkController.waitForAllWorkersToJoin(numberOfWorkers, timeLimit);
+    List<WorkerInfo> workers = zkController.waitForAllWorkersToJoin(timeLimit);
     long duration = System.currentTimeMillis() - startTime;
 
     if (workers == null) {
@@ -171,7 +172,7 @@ public final class AuroraWorker {
 
       System.out.println();
       System.out.println("list of all joined workers to the job: ");
-      zkController.printWorkers(zkController.getAllJoinedWorkers());
+      zkController.printWorkers(zkController.getWorkerList());
     }
   }
 
