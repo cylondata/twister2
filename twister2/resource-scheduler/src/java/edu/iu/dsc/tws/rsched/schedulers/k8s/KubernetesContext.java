@@ -31,6 +31,9 @@ public class KubernetesContext extends SchedulerContext {
   public static final int KUBERNETES_WORKER_BASE_PORT_DEFAULT = 9999;
   public static final String KUBERNETES_WORKER_BASE_PORT = "kubernetes.worker.base.port";
 
+  public static final String KUBERNETES_IMAGE_PULL_POLICY_NAMESPACE = "IfNotPresent";
+  public static final String KUBERNETES_IMAGE_PULL_POLICY = "kubernetes.image.pull.policy";
+
   public static int containersPerPod(Config cfg) {
     return cfg.getIntegerValue(CONTAINERS_PER_POD, CONTAINERS_PER_POD_DEFAULT);
   }
@@ -49,6 +52,10 @@ public class KubernetesContext extends SchedulerContext {
 
   public static int workerBasePort(Config cfg) {
     return cfg.getIntegerValue(KUBERNETES_WORKER_BASE_PORT, KUBERNETES_WORKER_BASE_PORT_DEFAULT);
+  }
+
+  public static String imagePullPolicy(Config cfg) {
+    return cfg.getStringValue(KUBERNETES_IMAGE_PULL_POLICY, KUBERNETES_IMAGE_PULL_POLICY_NAMESPACE);
   }
 
 }

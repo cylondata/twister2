@@ -27,7 +27,9 @@ import io.kubernetes.client.models.V1Container;
 import io.kubernetes.client.models.V1ContainerPort;
 import io.kubernetes.client.models.V1EmptyDirVolumeSource;
 import io.kubernetes.client.models.V1EnvVar;
+import io.kubernetes.client.models.V1EnvVarSource;
 import io.kubernetes.client.models.V1LabelSelector;
+import io.kubernetes.client.models.V1ObjectFieldSelector;
 import io.kubernetes.client.models.V1ObjectMeta;
 import io.kubernetes.client.models.V1PodSpec;
 import io.kubernetes.client.models.V1PodTemplateSpec;
@@ -48,10 +50,20 @@ import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.TWISTER2_
 import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.TWISTER2_SERVICE_PREFIX;
 //import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.TWISTER2_WORKER_CLASS;
 
-final class KubernetesUtils {
+public final class KubernetesUtils {
   private static final Logger LOG = Logger.getLogger(KubernetesUtils.class.getName());
 
   private KubernetesUtils() {
+  }
+
+  /**
+   * when the given name is in the form of "name-id"
+   * it returns the id as int
+   * @param name
+   * @return
+   */
+  public static int idFromName(String name) {
+    return Integer.parseInt(name.substring(name.lastIndexOf("-") + 1));
   }
 
   /**
@@ -100,11 +112,21 @@ final class KubernetesUtils {
 
   /**
    * create service label from job name
+   * this label is used when constructing statefulset
    * @param jobName
    * @return
    */
   public static String createServiceLabel(String jobName) {
     return SERVICE_LABEL_PREFIX + jobName;
+  }
+
+  /**
+   * this label is used when submitting queries to kubernetes master
+   * @param jobName
+   * @return
+   */
+  public static String createServiceLabelWithApp(String jobName) {
+    return "app=" + createServiceLabel(jobName);
   }
 
   /**
@@ -210,6 +232,15 @@ final class KubernetesUtils {
     return template;
   }
 
+  /**
+   * construct a container
+   * @param containerIndex
+   * @param reqContainer
+   * @param jobFileSize
+   * @param containerPort
+   * @param config
+   * @return
+   */
   public static V1Container constructContainer(int containerIndex,
                                                ResourceContainer reqContainer,
                                                long jobFileSize,
@@ -221,8 +252,8 @@ final class KubernetesUtils {
     container.setName(containerName);
     container.setImage(TWISTER2_DOCKER_IMAGE);
     // by default: IfNotPresent
-    // Always
-    container.setImagePullPolicy("Always");
+    // can be set to Always from client.yaml
+    container.setImagePullPolicy(KubernetesContext.imagePullPolicy(config));
 
 //        container.setArgs(Arrays.asList("1000000")); parameter to the main method
 //    container.setCommand(Arrays.asList("java", TWISTER2_WORKER_CLASS));
@@ -239,7 +270,18 @@ final class KubernetesUtils {
     V1EnvVar var5 = new V1EnvVar()
         .name(KubernetesField.JOB_DESCRIPTION_FILE + "")
         .value(SchedulerContext.jobDescriptionFile(config));
-    container.setEnv(Arrays.asList(var1, var2, var3, var4, var5));
+
+    // POD_IP with downward API
+    V1ObjectFieldSelector fieldSelector = new V1ObjectFieldSelector();
+    fieldSelector.setFieldPath("status.podIP");
+    V1EnvVarSource varSource = new V1EnvVarSource();
+    varSource.setFieldRef(fieldSelector);
+
+    V1EnvVar var6 = new V1EnvVar()
+        .name(KubernetesField.POD_IP + "")
+        .valueFrom(varSource);
+
+    container.setEnv(Arrays.asList(var1, var2, var3, var4, var5, var6));
 
     V1ResourceRequirements resReq = new V1ResourceRequirements();
     resReq.putRequestsItem("cpu", reqContainer.getNoOfCpus() + "");

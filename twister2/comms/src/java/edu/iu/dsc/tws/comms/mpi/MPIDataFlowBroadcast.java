@@ -133,7 +133,8 @@ public class MPIDataFlowBroadcast implements DataFlowOperation, MPIMessageReceiv
       throw new RuntimeException("Final receiver is required");
     }
 
-    LOG.info(String.format("%d all send tasks: %s", executor, router.sendQueueIds()));
+    LOG.log(Level.FINE, String.format("%d bast sources %d dest %s send tasks: %s", executor,
+        source, destinations, router.sendQueueIds()));
 
 
     Map<Integer, Queue<Pair<Object, MPIMessage>>> pendingReceiveMessagesPerSource = new HashMap<>();

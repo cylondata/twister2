@@ -24,23 +24,8 @@ public class BasicK8sContainer implements IContainer {
   @Override
   public void init(Config config, int id, ResourcePlan resourcePlan) {
     LOG.info("BasicK8sContainer started. My ID: " + id + " :))))))))))))))))))))) ");
-    waitIndefinitely();
   }
 
-  /**
-   * a test method to make the worker wait indefinitely
-   */
-  public static void waitIndefinitely() {
 
-    System.out.println();
-    while (true) {
-      try {
-        System.out.println("Waiting indefinetely idle ... Sleeping 100sec ...");
-        Thread.sleep(100000);
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
-    }
-  }
 
 }
