@@ -11,8 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tsched.spi.taskschedule;
 
-import java.util.Objects;
-
 public class Resource {
 
   private Double ram;
@@ -29,7 +27,7 @@ public class Resource {
   public boolean equals(Object o) {
     if (o instanceof Resource) {
       Resource r = (Resource) o;
-      return (Objects.equals(this.getCpu(), r.getCpu()))
+      return (this.getCpu() == r.getCpu())
           && (this.getRam().equals(r.getRam()))
           && (this.getDisk().equals(r.getDisk()));
     } else {
