@@ -86,7 +86,6 @@ public class TaskSchedulePlan {
       //return new Resource(maxCpu, maxRam, maxDisk);
     }
     return new Resource(maxCpu, resourceRam, resourceDisk);
-    //return new Resource(200.0, 20.0,5.0);
   }
 
   public int getJobId() {
@@ -119,16 +118,16 @@ public class TaskSchedulePlan {
     if (jobId != that.jobId) {
       return false;
     }
-    return containers.equals(that.containers) && containersMap.equals(that.containersMap);
+    return containers.equals(that.containers);
   }
 
   @Override
   public int hashCode() {
-    int result = jobId;
-    result = 31 * result + containers.hashCode();
-    result = 31 * result + containersMap.hashCode();
+    int result = containers.hashCode();
+    result = 31 * result + jobId;
     return result;
   }
+
 
   public static class TaskInstancePlan {
 
@@ -172,30 +171,24 @@ public class TaskSchedulePlan {
       if (this == o) {
         return true;
       }
-      if (!(o instanceof TaskInstancePlan)) {
+      if (o == null || getClass() != o.getClass()) {
         return false;
       }
 
       TaskInstancePlan that = (TaskInstancePlan) o;
 
-      if (taskId != that.taskId) {
-        return false;
-      }
-      if (taskIndex != that.taskIndex) {
-        return false;
-      }
-      if (taskName != null ? !taskName.equals(that.taskName) : that.taskName != null) {
-        return false;
-      }
-      return resource != null ? resource.equals(that.resource) : that.resource == null;
+      return getTaskName().equals(that.getTaskName())
+          && getTaskId() == that.getTaskId()
+          && getTaskId() == that.getTaskIndex()
+          && getResource().equals(that.getResource());
     }
 
     @Override
     public int hashCode() {
-      int result = taskName != null ? taskName.hashCode() : 0;
-      result = 31 * result + taskId;
-      result = 31 * result + taskIndex;
-      result = 31 * result + (resource != null ? resource.hashCode() : 0);
+      int result = getTaskName().hashCode();
+      result = 31 * result + ((Integer) getTaskId()).hashCode();
+      result = 31 * result + ((Integer) getTaskIndex()).hashCode();
+      result = 31 * result + getResource().hashCode();
       return result;
     }
   }
@@ -239,19 +232,14 @@ public class TaskSchedulePlan {
 
     @Override
     public boolean equals(Object o) {
-
       if (this == o) {
         return true;
       }
-      if (!(o instanceof ContainerPlan)) {
+      if (o == null || getClass() != o.getClass()) {
         return false;
       }
-      ContainerPlan that = (ContainerPlan) o;
 
-      /*if (containerId != that.containerId) return false;
-      if (!taskInstances.equals(that.taskInstances)) return false;
-      if (!requiredResource.equals(that.requiredResource)) return false;
-      return scheduledResource.equals(that.scheduledResource);*/
+      ContainerPlan that = (ContainerPlan) o;
 
       return containerId == that.containerId
           && getTaskInstances().equals(that.getTaskInstances())
@@ -259,27 +247,18 @@ public class TaskSchedulePlan {
           && getScheduledResource().equals(that.getScheduledResource());
     }
 
+
     @Override
     public int hashCode() {
-      return 1;
-    }
-
-    /*@Override
-    public int hashCode() {
       int result = containerId;
-      result = 31 * result + taskInstances.hashCode();
-      result = 31 * result + requiredResource.hashCode();
-      result = 31 * result + scheduledResource.hashCode();
-      return result;*/
-
-      /*int result = containerId;
-      result = 31 * result + getTaskInstances ().hashCode ();
-      result = 31 * result + getRequiredResource ().hashCode ();
-      if (scheduledResource.isPresent ()) {
-        result = 31 * result + getScheduledResource ().get ().hashCode ();
+      result = 31 * result + getTaskInstances().hashCode();
+      //result = 31 * result + getRequiredResource().hashCode(); //Check this later
+      if (scheduledResource.isPresent()) {
+        result = 31 * result + getScheduledResource().get().hashCode();
       }
-      return result;*/
-    //}
+      return result;
+    }
   }
 }
+
 
