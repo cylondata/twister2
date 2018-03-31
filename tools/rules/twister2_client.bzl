@@ -3,6 +3,7 @@
 def twister2_client_bin_files():
     return [
         "//twister2/tools/cli/src/python:twister2",
+        "//third_party/nomad:nomad",
     ]
 
 def twister2_client_conf_files():
