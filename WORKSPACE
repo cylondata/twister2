@@ -1,3 +1,5 @@
+jackson_version = "2.8.8"
+
 maven_server(
   name = "default",
   url = "http://central.maven.org/maven2/",
@@ -264,4 +266,90 @@ http_file(
 http_file(
     name = "wheel_src",
     url = WHEEL_SRC,
+)
+
+maven_jar(
+  name = "org_apache_httpcomponents_httpmime",
+  artifact = "org.apache.httpcomponents:httpmime:4.4",
+)
+
+maven_jar(
+  name = "org_apache_httpcomponents_http_client",
+  artifact = "org.apache.httpcomponents:httpclient:4.5.2",
+)
+
+http_jar(
+  name = "org_apache_httpcomponents_http_client_test",
+  url = "http://central.maven.org/maven2/org/apache/httpcomponents/httpclient/" +
+  "4.5.2" + "/httpclient-" + "4.5.2" + "-tests.jar"
+)
+
+maven_jar(
+  name = "org_apache_httpcomponents_http_core",
+  artifact = "org.apache.httpcomponents:httpcore:4.4.5",
+)
+
+maven_jar(
+  name = "com_fasterxml_jackson_core_jackson_annotations",
+  artifact = "com.fasterxml.jackson.core:jackson-annotations:" + jackson_version,
+)
+
+maven_jar(
+  name = "com_fasterxml_jackson_core_jackson_core",
+  artifact = "com.fasterxml.jackson.core:jackson-core:" + jackson_version,
+)
+
+maven_jar(
+  name = "com_fasterxml_jackson_core_jackson_databind",
+  artifact = "com.fasterxml.jackson.core:jackson-databind:" + jackson_version,
+)
+
+maven_jar(
+  name = "com_hashicorp_nomad",
+  artifact = "com.hashicorp.nomad:nomad-sdk:0.7.0"
+)
+
+maven_jar(
+  name = "com_google_code_findbugs_jsr305",
+  artifact = "com.google.code.findbugs:jsr305:3.0.2",
+)
+
+maven_jar(
+  name = "org_bouncycastle_bcprov_jdk15on",
+  artifact = "org.bouncycastle:bcprov-jdk15on:1.56",
+)
+
+maven_jar(
+  name = "org_bouncycastle_bcpkix_jdk15on",
+  artifact = "org.bouncycastle:bcpkix-jdk15on:1.56",
+)
+
+maven_jar(
+  name = "commons_codec_commons_codec",
+  artifact = "commons-codec:commons-codec:1.9",
+  repository = "http://central.maven.org/maven2/",
+  sha1 = "9ce04e34240f674bc72680f8b843b1457383161a",
+)
+
+maven_jar(
+  name = "org_bouncycastle_bcprov_jdk15on",
+  artifact = "org.bouncycastle:bcprov-jdk15on:1.56",
+)
+
+maven_jar(
+  name = "org_bouncycastle_bcpkix_jdk15on",
+  artifact = "org.bouncycastle:bcpkix-jdk15on:1.56",
+)
+
+# for nomad repo
+new_http_archive(
+    name = "nomad_mac",
+    urls = ["https://releases.hashicorp.com/nomad/0.7.0/nomad_0.7.0_darwin_amd64.zip"],
+    build_file = "third_party/nomad/nomad.BUILD",
+)
+
+new_http_archive(
+    name = "nomad_linux",
+    urls = ["https://releases.hashicorp.com/nomad/0.7.0/nomad_0.7.0_linux_amd64.zip"],
+    build_file = "third_party/nomad/nomad.BUILD",
 )
