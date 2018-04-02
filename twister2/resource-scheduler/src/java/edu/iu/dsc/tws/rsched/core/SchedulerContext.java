@@ -124,9 +124,4 @@ public class SchedulerContext extends Context {
     return cfg.getStringValue(USER_JOB_JAR_FILE);
   }
 
-  public static String clusterType(Config cfg) {
-    return cfg.getStringValue(TWISTER2_CLUSTER_TYPE);
-  }
-
-
 }
