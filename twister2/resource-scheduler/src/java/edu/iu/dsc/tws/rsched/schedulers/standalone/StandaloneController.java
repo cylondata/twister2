@@ -91,6 +91,7 @@ public class StandaloneController implements IController {
     Job nomadJob = new Job();
     nomadJob.setId(jobName);
     nomadJob.setName(jobName);
+    nomadJob.setType("batch");
     nomadJob.addTaskGroups(getTaskGroup(job, resources));
     nomadJob.setDatacenters(Arrays.asList(StandaloneContext.NOMAD_DEFAULT_DATACENTER));
     nomadJob.setMeta(getMetaData(job));
