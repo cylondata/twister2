@@ -15,6 +15,7 @@ import java.net.URI;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.common.config.TokenSub;
 
 public class SchedulerContext extends Context {
   public static final String STATE_MANAGER_CLASS = "twister2.class.state.manager";
@@ -101,7 +102,8 @@ public class SchedulerContext extends Context {
   }
 
   public static String systemPackageUrl(Config cfg) {
-    return cfg.getStringValue(SYSTEM_PACKAGE_URI);
+    return TokenSub.substitute(cfg, cfg.getStringValue(SYSTEM_PACKAGE_URI,
+        "${TWISTER2_DIST}/twister2-core.tar.gz"), Context.substitutions);
   }
 
   public static URI jobPackageUri(Config cfg) {
@@ -123,10 +125,5 @@ public class SchedulerContext extends Context {
   public static String userJobJarFile(Config cfg) {
     return cfg.getStringValue(USER_JOB_JAR_FILE);
   }
-
-  public static String clusterType(Config cfg) {
-    return cfg.getStringValue(TWISTER2_CLUSTER_TYPE);
-  }
-
 
 }

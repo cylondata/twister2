@@ -11,30 +11,21 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.k8s.worker;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
-import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
-import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
-import org.apache.commons.compress.utils.IOUtils;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
@@ -48,6 +39,7 @@ import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesField;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
+import edu.iu.dsc.tws.rsched.utils.TarGzipPacker;
 
 import static edu.iu.dsc.tws.common.config.Context.DIR_PREFIX_FOR_JOB_ARCHIVE;
 import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.KUBERNETES_CLUSTER_TYPE;
@@ -347,7 +339,7 @@ public final class KubernetesWorker {
 
       boolean transferred = waitForFileTransfer(jobPackageFileName, fileSize);
       if (transferred) {
-        boolean jobFileUnpacked = unpackJobPackage(jobPackageFileName);
+        boolean jobFileUnpacked = TarGzipPacker.unpack(jobPackageFileName);
         if (jobFileUnpacked) {
           System.out.printf("Job file [%s] unpacked successfully.\n", jobPackageFileName);
           boolean written1 = writeFile(flagFileName, 0);
@@ -364,60 +356,6 @@ public final class KubernetesWorker {
 
     } else {
       return waitForFlagFile(flagFileName);
-    }
-  }
-
-  /**
-   * unpack the received job package
-   * job package needs to be a tar.gz package
-   * it unpacks to the directory where the job package resides
-   * @param sourceGzip
-   * @return
-   */
-  private static boolean unpackJobPackage(final String sourceGzip) {
-
-    File sourceGzipFile = new File(sourceGzip);
-    File outputDir = sourceGzipFile.getParentFile();
-
-    GzipCompressorInputStream gzIn = null;
-    TarArchiveInputStream tarInputStream = null;
-
-    try {
-      // construct input stream
-      InputStream fin = Files.newInputStream(Paths.get(sourceGzip));
-      BufferedInputStream in = new BufferedInputStream(fin);
-      gzIn = new GzipCompressorInputStream(in);
-      tarInputStream = new TarArchiveInputStream(gzIn);
-
-      TarArchiveEntry entry = null;
-
-      while ((entry = (TarArchiveEntry) tarInputStream.getNextEntry()) != null) {
-
-        File outputFile = new File(outputDir, entry.getName());
-        if (!outputFile.getParentFile().exists()) {
-          boolean dirCreated = outputFile.getParentFile().mkdirs();
-          if (!dirCreated) {
-            LOG.severe("Can not create the output directory: " + outputFile.getParentFile()
-                + "\nFile unpack is unsuccessful.");
-            return false;
-          }
-        }
-
-        if (!outputFile.isDirectory()) {
-          final OutputStream outputFileStream = new FileOutputStream(outputFile);
-          IOUtils.copy(tarInputStream, outputFileStream);
-          outputFileStream.close();
-//          LOG.info("Unpacked the file: " + outputFile.getAbsolutePath());
-        }
-      }
-
-      tarInputStream.close();
-      gzIn.close();
-      return true;
-
-    } catch (IOException e) {
-      LOG.log(Level.SEVERE, "Exception when unpacking job package. ", e);
-      return false;
     }
   }
 

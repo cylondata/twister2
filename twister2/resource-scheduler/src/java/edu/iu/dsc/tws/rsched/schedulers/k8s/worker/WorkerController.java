@@ -349,6 +349,4 @@ public class WorkerController implements IWorkerController {
 
     return result;
   }
-
-
 }
