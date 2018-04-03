@@ -30,3 +30,8 @@ filegroup(
     name = "conf-kubernetes-yaml",
     srcs = glob(["conf/kubernetes/*"]),
 )
+
+filegroup(
+    name = "conf-standalone-yaml",
+    srcs = glob(["conf/standalone/*"]),
+)
