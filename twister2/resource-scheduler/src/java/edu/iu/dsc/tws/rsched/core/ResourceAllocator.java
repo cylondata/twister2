@@ -24,7 +24,6 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.schedulers.mpi.MPIContext;
 import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.scheduler.ILauncher;
@@ -95,9 +94,9 @@ public class ResourceAllocator {
     Config config = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterType);
     return Config.newBuilder().
         putAll(config).
-        put(MPIContext.TWISTER2_HOME.getKey(), twister2Home).
-        put(MPIContext.TWISTER2_CLUSTER_TYPE, clusterType).
-        put(MPIContext.USER_JOB_JAR_FILE, jobJar).
+        put(SchedulerContext.TWISTER2_HOME.getKey(), twister2Home).
+        put(SchedulerContext.TWISTER2_CLUSTER_TYPE, clusterType).
+        put(SchedulerContext.USER_JOB_JAR_FILE, jobJar).
         putAll(environmentProperties).
         putAll(cfg).
         build();
@@ -208,6 +207,9 @@ public class ResourceAllocator {
 
     } else {
       String twister2CorePackage = SchedulerContext.systemPackageUrl(config);
+      if (twister2CorePackage == null) {
+        throw new RuntimeException("Core package is not specified in the confiuration");
+      }
       LOG.log(Level.INFO, String.format("Copy core package: %s to %s",
           twister2CorePackage, tempDirPathString));
       if (!FileUtils.copyFileToDirectory(twister2CorePackage, tempDirPathString)) {

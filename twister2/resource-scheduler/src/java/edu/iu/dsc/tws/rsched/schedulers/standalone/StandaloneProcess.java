@@ -24,11 +24,9 @@ import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.schedulers.mpi.MPIContext;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.mpi.MPIProcess;
-import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
@@ -131,10 +129,10 @@ public final class StandaloneProcess {
     Config config = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterType);
 
     Config workerConfig = Config.newBuilder().putAll(config).
-        put(MPIContext.TWISTER2_HOME.getKey(), twister2Home).
-        put(MPIContext.CONTAINER_CLASS, container).
-        put(MPIContext.TWISTER2_CONTAINER_ID, id).
-        put(MPIContext.TWISTER2_CLUSTER_TYPE, clusterType).build();
+        put(SchedulerContext.TWISTER2_HOME.getKey(), twister2Home).
+        put(SchedulerContext.CONTAINER_CLASS, container).
+        put(SchedulerContext.TWISTER2_CONTAINER_ID, id).
+        put(SchedulerContext.TWISTER2_CLUSTER_TYPE, clusterType).build();
 
     String jobDescFile = JobUtils.getJobDescriptionFilePath(jobName, workerConfig);
     JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
@@ -142,37 +140,32 @@ public final class StandaloneProcess {
     Config updatedConfig = JobUtils.overrideConfigs(job, config);
 
     updatedConfig = Config.newBuilder().putAll(updatedConfig).
-        put(MPIContext.TWISTER2_HOME.getKey(), twister2Home).
-        put(MPIContext.CONTAINER_CLASS, container).
-        put(MPIContext.TWISTER2_CONTAINER_ID, id).
-        put(MPIContext.TWISTER2_CLUSTER_TYPE, clusterType).build();
+        put(SchedulerContext.TWISTER2_HOME.getKey(), twister2Home).
+        put(SchedulerContext.CONTAINER_CLASS, container).
+        put(SchedulerContext.TWISTER2_CONTAINER_ID, id).
+        put(SchedulerContext.TWISTER2_CLUSTER_TYPE, clusterType).build();
     return updatedConfig;
-  }
-
-  private static void master(Config config, int rank) {
-    // lets do a barrier here so everyone is synchronized at the start
-    // lets create the resource plan
-    createResourcePlan(config);
   }
 
   private static void worker(Config config, int rank) {
     // lets create the resource plan
     ResourcePlan resourcePlan = createResourcePlan(config);
-
-    String containerClass = MPIContext.containerClass(config);
-    IContainer container;
-    try {
-      Object object = ReflectionUtils.newInstance(containerClass);
-      container = (IContainer) object;
-      LOG.log(Level.FINE, "loaded container class: " + containerClass);
-    } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-      LOG.log(Level.SEVERE, String.format("failed to load the container class %s",
-          containerClass), e);
-      throw new RuntimeException(e);
-    }
-
-    // now initialize the container
-    container.init(config, rank, resourcePlan);
+    LOG.info("Starting worker");
+    System.out.println("Starting worker");
+//    String containerClass = SchedulerContext.containerClass(config);
+//    IContainer container;
+//    try {
+//      Object object = ReflectionUtils.newInstance(containerClass);
+//      container = (IContainer) object;
+//      LOG.log(Level.FINE, "loaded container class: " + containerClass);
+//    } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+//      LOG.log(Level.SEVERE, String.format("failed to load the container class %s",
+//          containerClass), e);
+//      throw new RuntimeException(e);
+//    }
+//
+//    // now initialize the container
+//    container.init(config, rank, resourcePlan);
   }
 
   private static ResourcePlan createResourcePlan(Config config) {

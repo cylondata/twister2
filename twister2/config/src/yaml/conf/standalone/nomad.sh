@@ -1,18 +1,13 @@
 #!/usr/bin/env bash
 
 em="\"\""
-cp=""
-if [ $em != $2 ]; then
-    cp = $2
-fi
-
-if [ $OMPI_COMM_WORLD_RANK = "0" ]; then
-    profile=-agentpath:/home/supun/tools/jprofiler7/bin/linux-x64/libjprofilerti.so=port=8849,nowait
-    debug=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5006
-    echo "Rank 0"
-fi
+c=$2
 
 profile=
 debug=
 
-java $debug $profile -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.util.logging.config.file=nodesmpi/logger.properties $cp -cp $3 edu.iu.dsc.tws.rsched.schedulers.mpi.MPIProcess --container_class $4 --job_name $5 --twister2_home $6 --cluster_type nodesmpi --config_dir $7 &
+echo $c
+
+echo "java $debug $profile -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.util.logging.config.file=nodesmpi/logger.properties -cp $2 edu.iu.dsc.tws.rsched.schedulers.standalone.StandaloneProcess --container_class $3 --job_name $4 --twister2_home $5 --cluster_type nodesmpi --config_dir $6"
+java $debug $profile -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.util.logging.config.file=nodesmpi/logger.properties -cp $2 edu.iu.dsc.tws.rsched.schedulers.standalone.StandaloneProcess --container_class $3 --job_name $4 --twister2_home $5 --cluster_type nodesmpi --config_dir $6
+
