@@ -9,13 +9,12 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.tcp.net;
+package edu.iu.dsc.tws.common.net.tcp;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.core.CommunicationContext;
-import edu.iu.dsc.tws.comms.core.NetworkInfo;
+import edu.iu.dsc.tws.common.config.Context;
 
-public class TCPContext extends CommunicationContext {
+public class TCPContext extends Context {
   public static final String TWISTER2_WRITE_SIZE = "twister2.tcp.write.size";
 
   public static final String TWISTER2_WRITE_TIME = "twister2.tcp.write.time";

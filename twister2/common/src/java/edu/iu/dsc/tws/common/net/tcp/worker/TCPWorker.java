@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.tcp.worker;
+package edu.iu.dsc.tws.common.net.tcp.worker;
 
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
@@ -17,13 +17,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.core.NetworkInfo;
-import edu.iu.dsc.tws.comms.tcp.net.Client;
-import edu.iu.dsc.tws.comms.tcp.net.MessageHandler;
-import edu.iu.dsc.tws.comms.tcp.net.Progress;
-import edu.iu.dsc.tws.comms.tcp.net.StatusCode;
-import edu.iu.dsc.tws.comms.tcp.net.TCPContext;
-import edu.iu.dsc.tws.comms.tcp.net.TCPRequest;
+import edu.iu.dsc.tws.common.net.tcp.Client;
+import edu.iu.dsc.tws.common.net.tcp.MessageHandler;
+import edu.iu.dsc.tws.common.net.tcp.NetworkInfo;
+import edu.iu.dsc.tws.common.net.tcp.Progress;
+import edu.iu.dsc.tws.common.net.tcp.StatusCode;
+import edu.iu.dsc.tws.common.net.tcp.TCPContext;
+import edu.iu.dsc.tws.common.net.tcp.TCPRequest;
 
 public class TCPWorker {
   private static final Logger LOG = Logger.getLogger(TCPWorker.class.getName());
