@@ -37,8 +37,7 @@ public class MPIController implements IController {
   private Config config;
   private String workingDirectory;
   private boolean node = true;
-  private MPICommand
-      command;
+  private MPICommand command;
 
   @Override
   public void initialize(Config mConfig) {
@@ -109,13 +108,13 @@ public class MPIController implements IController {
   public boolean createJob(String jobWorkingDirectory, String twister2Home,
                            RequestedResources resources, JobAPI.Job job) {
     // get the command to run the job on Slurm cluster
-    List<String> slurmCmd = command.mpiCommand(jobWorkingDirectory, resources, job);
+    List<String> cmds = command.mpiCommand(jobWorkingDirectory, resources, job);
 
     // change the empty strings of command args to "", because batch
     // doesn't recognize space as an arguments
     List<String> transformedArgs = new ArrayList<>();
-    for (int i = 0; i < slurmCmd.size(); i++) {
-      String arg = slurmCmd.get(i);
+    for (int i = 0; i < cmds.size(); i++) {
+      String arg = cmds.get(i);
       if (arg == null || arg.trim().equals("")) {
         transformedArgs.add("\"\"");
       } else {

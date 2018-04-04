@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.tcp.net;
+package edu.iu.dsc.tws.common.net.tcp;
 
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
@@ -22,8 +22,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.core.NetworkInfo;
-import edu.iu.dsc.tws.comms.tcp.worker.TCPWorker;
+import edu.iu.dsc.tws.common.net.tcp.worker.TCPWorker;
 
 public class TCPChannel {
   private static final Logger LOG = Logger.getLogger(TCPChannel.class.getName());

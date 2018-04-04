@@ -9,18 +9,13 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.tcp.net;
+package edu.iu.dsc.tws.common.net.tcp;
 
-import java.nio.channels.SelectableChannel;
-
-public interface SelectHandler {
-  void handleRead(SelectableChannel channel);
-
-  void handleWrite(SelectableChannel channel);
-
-  void handleAccept(SelectableChannel channel);
-
-  void handleConnect(SelectableChannel channel);
-
-  void handleError(SelectableChannel channel);
+public enum StatusCode {
+  SUCCESS,
+  ERROR_WRITE,
+  ERROR_READ,
+  ERROR_CONN,
+  ERROR_CLOSE,
+  TIMEOUT_ERROR
 }

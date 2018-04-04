@@ -22,13 +22,13 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.net.tcp.TCPChannel;
+import edu.iu.dsc.tws.common.net.tcp.TCPRequest;
+import edu.iu.dsc.tws.common.net.tcp.TCPStatus;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.mpi.MPIBuffer;
 import edu.iu.dsc.tws.comms.mpi.MPIMessage;
 import edu.iu.dsc.tws.comms.mpi.MPIMessageListener;
-import edu.iu.dsc.tws.comms.tcp.net.TCPChannel;
-import edu.iu.dsc.tws.comms.tcp.net.TCPRequest;
-import edu.iu.dsc.tws.comms.tcp.net.TCPStatus;
 
 public class TWSTCPChannel implements TWSChannel {
   private static final Logger LOG = Logger.getLogger(TWSTCPChannel.class.getName());

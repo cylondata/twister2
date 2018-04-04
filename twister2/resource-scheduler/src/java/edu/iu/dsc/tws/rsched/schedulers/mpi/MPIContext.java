@@ -16,7 +16,7 @@ import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.config.TokenSub;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
-public class MPIContext extends SchedulerContext {
+class MPIContext extends SchedulerContext {
   public static final String WORKING_DIRECTORY =
       "twister2.resource.scheduler.mpi.working.directory";
 
