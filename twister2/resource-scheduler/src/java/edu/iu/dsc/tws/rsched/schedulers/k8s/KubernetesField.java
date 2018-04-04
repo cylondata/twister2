@@ -20,5 +20,6 @@ public enum KubernetesField {
   JOB_PACKAGE_FILE_SIZE, // file size of tar.gz file
   CONTAINER_NAME,
   JOB_DESCRIPTION_FILE,
-  POD_IP
+  POD_IP,
+  PERSISTENT_JOB_DIR
 }

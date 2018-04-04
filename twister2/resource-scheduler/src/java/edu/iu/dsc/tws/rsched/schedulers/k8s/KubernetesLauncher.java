@@ -21,6 +21,8 @@ import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
 import edu.iu.dsc.tws.rsched.spi.scheduler.ILauncher;
 
+import io.kubernetes.client.models.V1PersistentVolume;
+import io.kubernetes.client.models.V1PersistentVolumeClaim;
 import io.kubernetes.client.models.V1Service;
 import io.kubernetes.client.models.V1beta2StatefulSet;
 
@@ -30,6 +32,7 @@ public class KubernetesLauncher implements ILauncher {
 
   private Config config;
   private KubernetesController controller;
+  private String namespace;
 
   public KubernetesLauncher() {
     controller = new KubernetesController();
@@ -38,6 +41,7 @@ public class KubernetesLauncher implements ILauncher {
   @Override
   public void initialize(Config conf) {
     this.config = conf;
+    namespace = KubernetesContext.namespace(config);
     controller.init();
   }
 
@@ -64,10 +68,53 @@ public class KubernetesLauncher implements ILauncher {
 
     long jobFileSize = jobFile.length();
 
+    // initialize the service in Kubernetes master
+    initService(jobName);
+
+    // if persistent volume is requested, create a persistent volume and a persistent volume claim
+    if (SchedulerContext.persistentVolumeRequested(config)) {
+      boolean volumesSetup = initPersistentVolumes(jobName);
+      if (!volumesSetup) {
+        LOG.log(Level.SEVERE, "Aborting submission."
+            + "\nPlease run terminate job to clear up any artifacts from this job, "
+            + "before submitting a new job.");
+        return false;
+      }
+    }
+
+    // initialize a stateful set for this job
+    boolean statefulSetInitialized = initStatefulSet(jobName, resourceRequest, jobFileSize);
+    if (!statefulSetInitialized) {
+      return false;
+    }
+
+    // transfer the job package to pods, measure the transfer time
+    long start = System.currentTimeMillis();
+
+    int containersPerPod = KubernetesContext.containersPerPod(config);
+    int numberOfPods = resourceRequest.getNoOfContainers() / containersPerPod;
+
+    boolean transferred =
+        controller.transferJobPackageInParallel(namespace, jobName, numberOfPods, jobPackageFile);
+
+    if (transferred) {
+      long duration = System.currentTimeMillis() - start;
+      LOG.info("Transferring all files took: " + duration + " ms.");
+    } else {
+      LOG.log(Level.SEVERE, "Transferring the job package to some pods failed. Aborting submission."
+          + "\nPlease run terminate job to clear up any artifacts from this job, "
+          + "before submitting a new job.");
+//      terminateJob(jobName);
+      return false;
+    }
+
+    return true;
+  }
+
+  private void initService(String jobName) {
     // first check whether there is a running service
     String serviceName = KubernetesUtils.createServiceName(jobName);
     String serviceLabel = KubernetesUtils.createServiceLabel(jobName);
-    String namespace = KubernetesContext.namespace(config);
     V1Service service = controller.getService(namespace, serviceName);
 
     // if there is no service, start one
@@ -83,9 +130,57 @@ public class KubernetesLauncher implements ILauncher {
 
       // if there is already a service with the same name
     } else {
-      LOG.log(Level.INFO, "There is already a service with the name: " + serviceName
+      LOG.log(Level.WARNING, "There is already a service with the name: " + serviceName
           + "\nNo need to create a new service. Will use the existing one.");
     }
+  }
+
+
+  private boolean initPersistentVolumes(String jobName) {
+
+    // first check whether there is already a persistent volume with the same name
+    // if not, create a new one
+    String pvName = KubernetesUtils.createPersistentVolumeName(jobName);
+    V1PersistentVolume pv = controller.getPersistentVolume(pvName);
+    if (pv == null) {
+      pv = KubernetesUtils.createPersistentVolumeObject(config, pvName);
+      boolean pvCreated = controller.createPersistentVolume(pv);
+      if (!pvCreated) {
+        LOG.log(Level.SEVERE, "PersistentVolume could not be created. Aborting submission.");
+        System.out.println("submitted pv: \n" + pv);
+        throw new RuntimeException();
+      }
+    } else {
+      LOG.log(Level.SEVERE, "There is already a PersistentVolume with the name: " + pvName
+          + "\nPlease terminate any artifacts from previous jobs or change your job name. "
+          + "Aborting submission.");
+      return false;
+    }
+
+    String pvcName = KubernetesUtils.createStorageClaimName(jobName);
+    // check whether there is a PersistentVolumeClaim object, if so, no need to create a new one
+    // otherwise create a PersistentVolumeClaim
+    V1PersistentVolumeClaim pvc = controller.getPersistentVolumeClaim(namespace, pvcName);
+    if (pvc == null) {
+      pvc = KubernetesUtils.createPersistentVolumeClaimObject(config, pvcName);
+      boolean claimCreated = controller.createPersistentVolumeClaim(namespace, pvc);
+      if (!claimCreated) {
+        LOG.log(Level.SEVERE, "PersistentVolumeClaim could not be created. Aborting submission");
+        throw new RuntimeException();
+      }
+    } else {
+      LOG.log(Level.WARNING, "There is already a PersistentVolumeClaim with the name: " + pvcName
+          + "\nPlease terminate any artifacts from previous jobs or change your job name. "
+          + "Aborting submission.");
+      return false;
+    }
+
+    return true;
+  }
+
+
+  private boolean initStatefulSet(String jobName, RequestedResources resourceRequest,
+                                  long jobFileSize) {
 
     // first check whether there is a StatefulSet with the same name,
     // if so, do not submit new job. Give a message and terminate
@@ -104,41 +199,23 @@ public class KubernetesLauncher implements ILauncher {
         jobName, resourceRequest, jobFileSize, config);
 
     if (statefulSet == null) {
-      controller.deleteService(namespace, serviceName);
+      LOG.log(Level.SEVERE, "Aborting submission."
+          + "\nPlease run terminate job to clear up any artifacts from this job, "
+          + "before submitting a new job.");
+
       return false;
     }
 
     boolean statefulSetCreated = controller.createStatefulSetJob(namespace, statefulSet);
     if (!statefulSetCreated) {
-      controller.deleteService(namespace, serviceName);
-      return false;
-    }
-
-    int numberOfPods = statefulSet.getSpec().getReplicas();
-
-    long start = System.currentTimeMillis();
-
-//    boolean transferred =
-//      controller.transferJobPackageSequentially(namespace, jobName, numberOfPods, jobPackageFile);
-
-    boolean transferred =
-        controller.transferJobPackageInParallel(namespace, jobName, numberOfPods, jobPackageFile);
-
-    long duration = System.currentTimeMillis() - start;
-    System.out.println("Transferring all files took: " + duration + " ms.");
-
-    if (!transferred) {
-      LOG.log(Level.SEVERE, "Transferring the job package to some pods failed. "
-          + "Terminating the job");
-
-//      terminateJob(jobName);
+      LOG.log(Level.SEVERE, "Aborting submission."
+          + "\nPlease run terminate job to clear up any artifacts from this job, "
+          + "before submitting a new job.");
       return false;
     }
 
     return true;
   }
-
-
   /**
    * Close up any resources
    */
@@ -152,14 +229,20 @@ public class KubernetesLauncher implements ILauncher {
   @Override
   public boolean terminateJob(String jobName) {
 
-    String namespace = KubernetesContext.namespace(config);
-
     // first delete the StatefulSet
     boolean statefulSetDeleted = controller.deleteStatefulSetJob(namespace, jobName);
 
-    // last delete the service
+    // delete the service
     String serviceName = KubernetesUtils.createServiceName(jobName);
     boolean deleted = controller.deleteService(namespace, serviceName);
+
+    // delete the persistent volume claim
+    String pvcName = KubernetesUtils.createStorageClaimName(jobName);
+    boolean claimDeleted = controller.deletePersistentVolumeClaim(namespace, pvcName);
+
+    // delete the persistent volume
+    String pvName = KubernetesUtils.createPersistentVolumeName(jobName);
+    boolean pvDeleted = controller.deletePersistentVolume(pvName);
 
     return true;
   }

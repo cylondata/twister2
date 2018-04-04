@@ -225,7 +225,7 @@ public class WorkerController implements IWorkerController {
    * @param containerIndex
    * @return
    */
-  private int calculateWorkerID(String podName, int containerIndex) {
+  public int calculateWorkerID(String podName, int containerIndex) {
     int podNo = KubernetesUtils.idFromName(podName);
 
     return podNo * workersPerPod + containerIndex;

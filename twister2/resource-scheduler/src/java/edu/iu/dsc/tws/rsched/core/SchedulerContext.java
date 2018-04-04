@@ -61,6 +61,20 @@ public class SchedulerContext extends Context {
   // local temporary packages path on the submitting client
   public static final String TEMPORARY_PACKAGES_PATH = "temporary.packages.path";
 
+  public static final String NFS_SERVER_ADDRESS = "nfs.server.address";
+  public static final String NFS_SERVER_PATH = "nfs.server.path";
+
+  // persistent volume per worker
+  public static final String PERSISTENT_VOLUME_PER_WORKER_DEFAULT = "1Gi";
+  public static final String PERSISTENT_VOLUME_PER_WORKER = "persistent.volume.per.worker";
+
+  // persistent volume for all workers in this job
+  public static final String PERSISTENT_VOLUME_TOTAL_DEFAULT = "100Gi";
+  public static final String PERSISTENT_VOLUME_TOTAL = "persistent.volume.total";
+
+  public static final String PERSISTENT_VOLUME_REQUESTED_DEFAULT = "false";
+  public static final String PERSISTENT_VOLUME_REQUESTED = "persistent.volume.requested";
+
   public static String stateManagerClass(Config cfg) {
     return cfg.getStringValue(STATE_MANAGER_CLASS);
   }
@@ -124,6 +138,28 @@ public class SchedulerContext extends Context {
 
   public static String userJobJarFile(Config cfg) {
     return cfg.getStringValue(USER_JOB_JAR_FILE);
+  }
+
+  public static String nfsServerAddress(Config cfg) {
+    return cfg.getStringValue(NFS_SERVER_ADDRESS);
+  }
+
+  public static String nfsServerPath(Config cfg) {
+    return cfg.getStringValue(NFS_SERVER_PATH);
+  }
+
+  public static String persistentVolumePerWorker(Config cfg) {
+    return cfg.getStringValue(PERSISTENT_VOLUME_PER_WORKER, PERSISTENT_VOLUME_PER_WORKER_DEFAULT);
+  }
+
+  public static String persistentVolumeTotal(Config cfg) {
+    return cfg.getStringValue(PERSISTENT_VOLUME_TOTAL, PERSISTENT_VOLUME_TOTAL_DEFAULT);
+  }
+
+  public static boolean persistentVolumeRequested(Config cfg) {
+    String request =
+        cfg.getStringValue(PERSISTENT_VOLUME_REQUESTED, PERSISTENT_VOLUME_REQUESTED_DEFAULT);
+    return "true".equalsIgnoreCase(request);
   }
 
 }

@@ -12,4 +12,8 @@ twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.NullUploader"
 # container class to run in workers
 twister2.job.basic.container.class: "edu.iu.dsc.tws.examples.basic.BasicK8sContainer"
 
+# image pull policy, by default it is IfNotPresent
+kubernetes.image.pull.policy: "Always"
+# kubernetes.image.pull.policy: "IfNotPresent"
+
 
