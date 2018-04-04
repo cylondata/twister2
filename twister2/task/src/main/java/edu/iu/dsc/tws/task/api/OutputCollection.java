@@ -9,13 +9,10 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.executor.api.blockqueue;
+package edu.iu.dsc.tws.task.api;
 
-/**
- * Created by vibhatha on 9/5/17.
- */
-public class TaskHandler {
+public class OutputCollection {
+  public void collect(int edge, Message m) {
 
-
-
+  }
 }

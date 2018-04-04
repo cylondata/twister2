@@ -11,13 +11,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.api;
 
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.memory.MemoryManager;
 
-/**
- * Created by pulasthi on 11/6/17.
- */
 public abstract class Task implements ITask {
-
   /**
    * The unique id assigned to this task. This id will be used for communications
    */
@@ -36,12 +33,8 @@ public abstract class Task implements ITask {
     this.taskId = tid;
   }
 
-  public int getTaskId() {
+  public int taskId() {
     return taskId;
-  }
-
-  public void setTaskId(int taskId) {
-    this.taskId = taskId;
   }
 
   public MemoryManager getMemoryManager() {
@@ -50,5 +43,30 @@ public abstract class Task implements ITask {
 
   public void setMemoryManager(MemoryManager memoryManager) {
     this.memoryManager = memoryManager;
+  }
+
+  @Override
+  public void prepare(Config cfg, OutputCollection collection) {
+
+  }
+
+  @Override
+  public Message execute() {
+    return null;
+  }
+
+  @Override
+  public Message execute(Message content) {
+    return null;
+  }
+
+  @Override
+  public void run(Message content) {
+
+  }
+
+  @Override
+  public void run() {
+
   }
 }

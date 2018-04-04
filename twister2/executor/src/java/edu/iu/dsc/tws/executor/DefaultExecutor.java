@@ -9,23 +9,13 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.executor.programs;
+package edu.iu.dsc.tws.executor;
 
-import java.util.Random;
+public class DefaultExecutor implements Executor {
+  /**
+   * no of threads used for this executor
+   */
+  private int noOfThreads;
 
-/**
- * Created by vibhatha on 9/5/17.
- */
-public class RandGen {
-  public static void main(String[] args) {
-    Random r = new Random();
-    System.out.println("Starting RandGen");
-    System.out.println("===========================");
-    for (int i = 0; i < 10; i++) {
-      System.out.println(r.nextInt(1000));
-    }
-    System.out.println("End RandGen");
-    System.out.println("===========================");
-  }
 
 }
