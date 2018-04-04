@@ -17,6 +17,14 @@ package edu.iu.dsc.tws.task.taskgraphbuilder;
  */
 public class DataflowOperation {
 
+  public String getDataflowOperation() {
+    return dataflowOperation;
+  }
+
+  public void setDataflowOperation(String dataflowOperation) {
+    this.dataflowOperation = dataflowOperation;
+  }
+
   public String dataflowOperation;
 
   public DataflowOperation(String dataflowoperation) {
