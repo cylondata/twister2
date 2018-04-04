@@ -13,10 +13,8 @@ package edu.iu.dsc.tws.task.taskgraphbuilder;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-
 import java.util.List;
 import java.util.Map;
-
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.task.tsystem.TaskInputFiles;
@@ -32,14 +30,24 @@ public abstract class TaskGraphMapper implements Runnable {
       TaskGraphMapper.class.getName());
 
   private final String taskId;
+  private final String taskName;
 
   private Map<String, List<TaskInputFiles>> taskInputFilesMap =
       new HashMap<>();
   private Map<String, List<TaskOutputFiles>> taskOutputFilesMap =
       new HashMap<>();
 
-  protected TaskGraphMapper(String taskId) {
+  protected TaskGraphMapper(String taskId, String taskName) {
     this.taskId = taskId;
+    this.taskName = taskName;
+  }
+
+  public String getTaskName() {
+    return taskName;
+  }
+
+  public String getTaskId() {
+    return taskId;
   }
 
   public abstract void execute();
