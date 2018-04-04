@@ -29,8 +29,14 @@ import io.kubernetes.client.models.V1EmptyDirVolumeSource;
 import io.kubernetes.client.models.V1EnvVar;
 import io.kubernetes.client.models.V1EnvVarSource;
 import io.kubernetes.client.models.V1LabelSelector;
+import io.kubernetes.client.models.V1NFSVolumeSource;
 import io.kubernetes.client.models.V1ObjectFieldSelector;
 import io.kubernetes.client.models.V1ObjectMeta;
+import io.kubernetes.client.models.V1PersistentVolume;
+import io.kubernetes.client.models.V1PersistentVolumeClaim;
+import io.kubernetes.client.models.V1PersistentVolumeClaimSpec;
+import io.kubernetes.client.models.V1PersistentVolumeClaimVolumeSource;
+import io.kubernetes.client.models.V1PersistentVolumeSpec;
 import io.kubernetes.client.models.V1PodSpec;
 import io.kubernetes.client.models.V1PodTemplateSpec;
 import io.kubernetes.client.models.V1ResourceRequirements;
@@ -41,14 +47,7 @@ import io.kubernetes.client.models.V1Volume;
 import io.kubernetes.client.models.V1VolumeMount;
 import io.kubernetes.client.models.V1beta2StatefulSet;
 import io.kubernetes.client.models.V1beta2StatefulSetSpec;
-
-import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.CONTAINER_NAME_PREFIX;
 import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.POD_SHARED_VOLUME;
-import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.POD_SHARED_VOLUME_NAME;
-import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.SERVICE_LABEL_PREFIX;
-import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.TWISTER2_DOCKER_IMAGE;
-import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.TWISTER2_SERVICE_PREFIX;
-//import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.TWISTER2_WORKER_CLASS;
 
 public final class KubernetesUtils {
   private static final Logger LOG = Logger.getLogger(KubernetesUtils.class.getName());
@@ -65,23 +64,6 @@ public final class KubernetesUtils {
   public static int idFromName(String name) {
     return Integer.parseInt(name.substring(name.lastIndexOf("-") + 1));
   }
-
-  /**
-   * create file copy command to a pod
-   * @return
-   */
-//  public static String[] createCopyCommand(String filename, String namespace, String podName) {
-//    String targetDir = String.format("%s/%s:%s", namespace, podName, POD_SHARED_VOLUME);
-//    String cpCommand = "kubectl cp " + filename + " " + targetDir;
-//
-//    String jobFile = "twister2-job.tar.gz";
-//    String unpackCommand =
-//     String.format("kubectl exec -it %s -- tar xf /twister2/%s -C /twister2/", podName, jobFile);
-//
-//    String twoCommands = cpCommand + " ; sleep 1s ; " + unpackCommand;
-//
-//    return new String[]{"sh", "-c", twoCommands};
-//  }
 
   /**
    * create file copy command to a pod
@@ -107,7 +89,35 @@ public final class KubernetesUtils {
    * @return
    */
   public static String createServiceName(String jobName) {
-    return TWISTER2_SERVICE_PREFIX + jobName;
+    return KubernetesConstants.TWISTER2_SERVICE_PREFIX + jobName;
+  }
+
+  /**
+   * create persistent directory name for a job
+   * @param jobName
+   * @return
+   */
+  public static String createPersistentJobDirName(String jobName) {
+    return KubernetesConstants.PERSISTENT_VOLUME_MOUNT + "/" + jobName
+        + "-" + System.currentTimeMillis();
+  }
+
+  /**
+   * create storage claim name name from job name
+   * @param jobName
+   * @return
+   */
+  public static String createStorageClaimName(String jobName) {
+    return KubernetesConstants.TWISTER2_STORAGE_CLAIM_PREFIX + jobName;
+  }
+
+  /**
+   * create storage claim name name from job name
+   * @param jobName
+   * @return
+   */
+  public static String createPersistentVolumeName(String jobName) {
+    return "persistent-volume-" + jobName;
   }
 
   /**
@@ -117,7 +127,7 @@ public final class KubernetesUtils {
    * @return
    */
   public static String createServiceLabel(String jobName) {
-    return SERVICE_LABEL_PREFIX + jobName;
+    return KubernetesConstants.SERVICE_LABEL_PREFIX + jobName;
   }
 
   /**
@@ -136,7 +146,7 @@ public final class KubernetesUtils {
    * @return
    */
   public static String createContainerName(int containerIndex) {
-    return CONTAINER_NAME_PREFIX + containerIndex;
+    return KubernetesConstants.CONTAINER_NAME_PREFIX + containerIndex;
   }
 
   /**
@@ -198,6 +208,14 @@ public final class KubernetesUtils {
     return statefulSet;
   }
 
+  /**
+   * construct pod template
+   * @param reqContainer
+   * @param serviceLabel
+   * @param jobFileSize
+   * @param config
+   * @return
+   */
   public static V1PodTemplateSpec constructPodTemplate(ResourceContainer reqContainer,
                                                        String serviceLabel,
                                                        long jobFileSize,
@@ -214,17 +232,36 @@ public final class KubernetesUtils {
     podSpec.setTerminationGracePeriodSeconds(0L);
 
     V1Volume volume = new V1Volume();
-    volume.setName(POD_SHARED_VOLUME_NAME);
+    volume.setName(KubernetesConstants.POD_SHARED_VOLUME_NAME);
     V1EmptyDirVolumeSource volumeSource = new V1EmptyDirVolumeSource();
     volumeSource.setMedium("Memory");
     volume.setEmptyDir(volumeSource);
-    podSpec.setVolumes(Arrays.asList(volume));
+    ArrayList<V1Volume> volumes = new ArrayList<>();
+    volumes.add(volume);
+
+    String persistentJobDir = null;
+
+    if (SchedulerContext.persistentVolumeRequested(config)) {
+      V1Volume persistentVolume = new V1Volume();
+      persistentVolume.setName(KubernetesConstants.PERSISTENT_VOLUME_NAME);
+      V1PersistentVolumeClaimVolumeSource perVolSource = new V1PersistentVolumeClaimVolumeSource();
+      String claimName = createStorageClaimName(SchedulerContext.jobName(config));
+      perVolSource.setClaimName(claimName);
+      persistentVolume.setPersistentVolumeClaim(perVolSource);
+
+      volumes.add(persistentVolume);
+
+      persistentJobDir = createPersistentJobDirName(SchedulerContext.jobName(config));
+    }
+
+    podSpec.setVolumes(volumes);
 
     int containersPerPod = KubernetesContext.containersPerPod(config);
     int basePort = KubernetesContext.workerBasePort(config);
     ArrayList<V1Container> containers = new ArrayList<V1Container>();
     for (int i = 0; i < containersPerPod; i++) {
-      containers.add(constructContainer(i, reqContainer, jobFileSize, basePort + 1, config));
+      containers.add(constructContainer(
+          i, reqContainer, jobFileSize, basePort + 1, persistentJobDir, config));
     }
     podSpec.setContainers(containers);
 
@@ -245,12 +282,13 @@ public final class KubernetesUtils {
                                                ResourceContainer reqContainer,
                                                long jobFileSize,
                                                int containerPort,
+                                               String persistentJobDir,
                                                Config config) {
     // construct container and add it to podSpec
     V1Container container = new V1Container();
     String containerName = createContainerName(containerIndex);
     container.setName(containerName);
-    container.setImage(TWISTER2_DOCKER_IMAGE);
+    container.setImage(KubernetesConstants.TWISTER2_DOCKER_IMAGE);
     // by default: IfNotPresent
     // can be set to Always from client.yaml
     container.setImagePullPolicy(KubernetesContext.imagePullPolicy(config));
@@ -281,17 +319,30 @@ public final class KubernetesUtils {
         .name(KubernetesField.POD_IP + "")
         .valueFrom(varSource);
 
-    container.setEnv(Arrays.asList(var1, var2, var3, var4, var5, var6));
+    V1EnvVar var7 = new V1EnvVar()
+        .name(KubernetesField.PERSISTENT_JOB_DIR + "").value(persistentJobDir);
+
+    container.setEnv(Arrays.asList(var1, var2, var3, var4, var5, var6, var7));
 
     V1ResourceRequirements resReq = new V1ResourceRequirements();
     resReq.putRequestsItem("cpu", reqContainer.getNoOfCpus() + "");
     resReq.putRequestsItem("memory", reqContainer.getMemoryMegaBytes() + "Mi");
     container.setResources(resReq);
 
+    ArrayList<V1VolumeMount> volumeMounts = new ArrayList<>();
     V1VolumeMount volumeMount = new V1VolumeMount();
-    volumeMount.setName(POD_SHARED_VOLUME_NAME);
-    volumeMount.setMountPath(POD_SHARED_VOLUME);
-    container.setVolumeMounts(Arrays.asList(volumeMount));
+    volumeMount.setName(KubernetesConstants.POD_SHARED_VOLUME_NAME);
+    volumeMount.setMountPath(KubernetesConstants.POD_SHARED_VOLUME);
+    volumeMounts.add(volumeMount);
+
+    if (SchedulerContext.persistentVolumeRequested(config)) {
+      V1VolumeMount persVolumeMount = new V1VolumeMount();
+      persVolumeMount.setName(KubernetesConstants.PERSISTENT_VOLUME_NAME);
+      persVolumeMount.setMountPath(KubernetesConstants.PERSISTENT_VOLUME_MOUNT);
+      volumeMounts.add(persVolumeMount);
+    }
+
+    container.setVolumeMounts(volumeMounts);
 
     V1ContainerPort port = new V1ContainerPort().name("port1").containerPort(containerPort);
     port.setProtocol("TCP");
@@ -334,5 +385,69 @@ public final class KubernetesUtils {
 
     return service;
   }
+
+  public static V1PersistentVolume createPersistentVolumeObject(Config config, String pvName) {
+    V1PersistentVolume pv = new V1PersistentVolume();
+    pv.setApiVersion("v1");
+
+    // set pv name
+    V1ObjectMeta meta = new V1ObjectMeta();
+    meta.setName(pvName);
+    pv.setMetadata(meta);
+
+    String volumeSize = SchedulerContext.persistentVolumeTotal(config);
+    V1PersistentVolumeSpec pvSpec = new V1PersistentVolumeSpec();
+    HashMap<String, String> capacity = new HashMap<>();
+    capacity.put("storage", volumeSize);
+    pvSpec.setCapacity(capacity);
+
+    String storageClass = KubernetesContext.persistentStorageClass(config);
+    String accessMode = KubernetesContext.storageAccessMode(config);
+    String reclaimPolicy = KubernetesContext.storageReclaimPolicy(config);
+    pvSpec.setStorageClassName(storageClass);
+    pvSpec.setAccessModes(Arrays.asList(accessMode));
+    pvSpec.setPersistentVolumeReclaimPolicy(reclaimPolicy);
+//    pvSpec.setMountOptions(Arrays.asList("hard", "nfsvers=4.1"));
+
+    V1NFSVolumeSource nfsVolumeSource = new V1NFSVolumeSource();
+    nfsVolumeSource.setServer(SchedulerContext.nfsServerAddress(config));
+    nfsVolumeSource.setPath(SchedulerContext.nfsServerPath(config));
+    pvSpec.setNfs(nfsVolumeSource);
+
+    pv.setSpec(pvSpec);
+
+    return pv;
+  }
+
+
+
+  public static V1PersistentVolumeClaim createPersistentVolumeClaimObject(
+      Config config, String pvcName) {
+
+    V1PersistentVolumeClaim pvc = new V1PersistentVolumeClaim();
+    pvc.setApiVersion("v1");
+
+    // set pvc name
+    V1ObjectMeta meta = new V1ObjectMeta();
+    meta.setName(pvcName);
+    pvc.setMetadata(meta);
+
+    String storageClass = KubernetesContext.persistentStorageClass(config);
+    String accessMode = KubernetesContext.storageAccessMode(config);
+    V1PersistentVolumeClaimSpec pvcSpec = new V1PersistentVolumeClaimSpec();
+    pvcSpec.setStorageClassName(storageClass);
+    pvcSpec.setAccessModes(Arrays.asList(accessMode));
+
+    V1ResourceRequirements resources = new V1ResourceRequirements();
+    String storageSize = SchedulerContext.persistentVolumePerWorker(config);
+    resources.putRequestsItem("storage", storageSize);
+//    resources.putRequestsItem("storage", Quantity.fromString("1Gi"));
+    pvcSpec.setResources(resources);
+
+    pvc.setSpec(pvcSpec);
+    return pvc;
+  }
+
+
 
 }

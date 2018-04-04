@@ -19,7 +19,7 @@ public class KubernetesContext extends SchedulerContext {
   public static final int CONTAINERS_PER_POD_DEFAULT = 1;
   public static final String CONTAINERS_PER_POD = "kubernetes.containers_per_pod";
 
-  public static final String KUBERNETES_DEFAULT_NAMESPACE = "default";
+  public static final String KUBERNETES_NAMESPACE_DEFAULT = "default";
   public static final String KUBERNETES_NAMESPACE = "kubernetes.namespace";
 
   public static final int SERVICE_PORT_DEFAULT = 11111;
@@ -28,18 +28,27 @@ public class KubernetesContext extends SchedulerContext {
   public static final int SERVICE_TARGET_PORT_DEFAULT = 33333;
   public static final String SERVICE_TARGET_PORT = "kubernetes.service.target.port";
 
-  public static final int KUBERNETES_WORKER_BASE_PORT_DEFAULT = 9999;
-  public static final String KUBERNETES_WORKER_BASE_PORT = "kubernetes.worker.base.port";
+  public static final int K8S_WORKER_BASE_PORT_DEFAULT = 9999;
+  public static final String K8S_WORKER_BASE_PORT = "kubernetes.worker.base.port";
 
-  public static final String KUBERNETES_IMAGE_PULL_POLICY_NAMESPACE = "IfNotPresent";
-  public static final String KUBERNETES_IMAGE_PULL_POLICY = "kubernetes.image.pull.policy";
+  public static final String K8S_IMAGE_PULL_POLICY_NAMESPACE = "IfNotPresent";
+  public static final String K8S_IMAGE_PULL_POLICY = "kubernetes.image.pull.policy";
+
+  public static final String K8S_PERSISTENT_STORAGE_CLASS_DEFAULT = "twister2";
+  public static final String K8S_PERSISTENT_STORAGE_CLASS = "kubernetes.persistent.storage.class";
+
+  public static final String K8S_STORAGE_ACCESS_MODE_DEFAULT = "ReadWriteMany";
+  public static final String K8S_STORAGE_ACCESS_MODE = "kubernetes.storage.access.mode";
+
+  public static final String K8S_STORAGE_RECLAIM_POLICY_DEFAULT = "Retain";
+  public static final String K8S_STORAGE_RECLAIM_POLICY = "kubernetes.storage.reclaim.policy";
 
   public static int containersPerPod(Config cfg) {
     return cfg.getIntegerValue(CONTAINERS_PER_POD, CONTAINERS_PER_POD_DEFAULT);
   }
 
   public static String namespace(Config cfg) {
-    return cfg.getStringValue(KUBERNETES_NAMESPACE, KUBERNETES_DEFAULT_NAMESPACE);
+    return cfg.getStringValue(KUBERNETES_NAMESPACE, KUBERNETES_NAMESPACE_DEFAULT);
   }
 
   public static int servicePort(Config cfg) {
@@ -51,11 +60,23 @@ public class KubernetesContext extends SchedulerContext {
   }
 
   public static int workerBasePort(Config cfg) {
-    return cfg.getIntegerValue(KUBERNETES_WORKER_BASE_PORT, KUBERNETES_WORKER_BASE_PORT_DEFAULT);
+    return cfg.getIntegerValue(K8S_WORKER_BASE_PORT, K8S_WORKER_BASE_PORT_DEFAULT);
   }
 
   public static String imagePullPolicy(Config cfg) {
-    return cfg.getStringValue(KUBERNETES_IMAGE_PULL_POLICY, KUBERNETES_IMAGE_PULL_POLICY_NAMESPACE);
+    return cfg.getStringValue(K8S_IMAGE_PULL_POLICY, K8S_IMAGE_PULL_POLICY_NAMESPACE);
+  }
+
+  public static String persistentStorageClass(Config cfg) {
+    return cfg.getStringValue(K8S_PERSISTENT_STORAGE_CLASS, K8S_PERSISTENT_STORAGE_CLASS_DEFAULT);
+  }
+
+  public static String storageAccessMode(Config cfg) {
+    return cfg.getStringValue(K8S_STORAGE_ACCESS_MODE, K8S_STORAGE_ACCESS_MODE_DEFAULT);
+  }
+
+  public static String storageReclaimPolicy(Config cfg) {
+    return cfg.getStringValue(K8S_STORAGE_RECLAIM_POLICY, K8S_STORAGE_RECLAIM_POLICY_DEFAULT);
   }
 
 }
