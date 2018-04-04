@@ -63,7 +63,7 @@ public class TaskSchedulePlanBuilder {
   private int jobId;
 
   public TaskSchedulePlanBuilder(int jobId) {
-    //this(jobId, previousTaskSchedulePlan:null);
+    this(jobId, null);
   }
 
   public TaskSchedulePlanBuilder(int jobId, TaskSchedulePlan previousTaskSchedulePlan) {
@@ -241,7 +241,6 @@ public class TaskSchedulePlanBuilder {
               taskInstancePlan.getTaskId(), taskInstancePlan.getTaskIndex());
 
           Double instanceRAMValue;
-
           if (taskramMap.containsKey(instanceId.getTaskName())) {
             instanceRAMValue = taskramMap.get(instanceId.getTaskName());
           } else {
@@ -249,10 +248,26 @@ public class TaskSchedulePlanBuilder {
           }
           containerRAMValue += instanceRAMValue;
 
-          Double instanceDiskValue = instdefaultresourceValue.getDisk();
+          /*instanceDiskValue = instdefaultresourceValue.getDisk();
           containerDiskValue += instanceDiskValue;
 
-          Double instanceCPUValue = instdefaultresourceValue.getCpu();
+          instanceCPUValue = instdefaultresourceValue.getCpu();
+          containerCPUValue += instanceCPUValue;*/
+
+          Double instanceDiskValue;
+          if (taskDiskMap.containsKey(instanceId.getTaskName())) {
+            instanceDiskValue = taskDiskMap.get(instanceId.getTaskName());
+          } else {
+            instanceDiskValue = instdefaultresourceValue.getDisk();
+          }
+          containerDiskValue += instanceDiskValue;
+
+          Double instanceCPUValue;
+          if (taskCpuMap.containsKey(instanceId.getTaskName())) {
+            instanceCPUValue = taskCpuMap.get(instanceId.getTaskName());
+          } else {
+            instanceCPUValue = instdefaultresourceValue.getCpu();
+          }
           containerCPUValue += instanceCPUValue;
 
           Resource resource = new Resource(instanceRAMValue, instanceDiskValue, instanceCPUValue);
@@ -261,10 +276,14 @@ public class TaskSchedulePlanBuilder {
               instanceId.getTaskId(), instanceId.getTaskIndex(), resource));
         }
 
-        //LOG.info("ResourceContainer CPU Value:" + containerCPUValue);
-        /*containerCpu += (paddingPercentage * containerCpu) / 100;
-          containerRam = containerRam.increaseBy(paddingPercentage);
-          containerDiskInBytes = containerDiskInBytes.increaseBy(paddingPercentage); */
+        containerCPUValue += (requestedContainerPadding * containerCPUValue) / 100;
+        containerRAMValue += containerRAMValue + requestedContainerPadding;
+        containerDiskValue += containerDiskValue + requestedContainerPadding;
+
+        //containerRAMValue = containerRAMValue.increaseBy(requestedContainerPadding);
+        //containerDiskValue = containerDiskValue.increaseBy(requestedContainerPadding);
+
+        LOG.info("ResourceContainer CPU Value:" + containerCPUValue);
 
         Resource resource = new Resource(containerRAMValue, containerDiskValue, containerCPUValue);
         TaskSchedulePlan.ContainerPlan containerPlan =
@@ -295,6 +314,8 @@ public class TaskSchedulePlanBuilder {
 
   public TaskSchedulePlanBuilder addInstance(Integer containerId, String taskName)
       throws NullPointerException {
+
+    initContainer(containerId.intValue());
 
     Integer taskId = taskIds.isEmpty() ? 1 : taskIds.last() + 1;
     Integer taskIndex = taskIndexes.get(taskName) != null
@@ -358,7 +379,6 @@ public class TaskSchedulePlanBuilder {
       } catch (NullPointerException e) {
         e.printStackTrace();
       }
-
     }
     this.taskIds = taskids;
     this.taskIndexes = taskindexes;
@@ -367,16 +387,22 @@ public class TaskSchedulePlanBuilder {
         + "\t" + this.taskIds + "\t" + this.taskIndexes);
   }
 
+  private void initContainer(int containerId) {
+    initContainers();
+    if (this.containers.get(containerId) == null) {
+      this.containers.put(containerId, new Container(
+          containerId, this.containerMaximumResourceValue, this.requestedContainerPadding));
+    }
+  }
+
   private Map<Integer, Container> getContainers(TaskSchedulePlan previoustaskscheduleplan,
                                                 int requestedcontainerpadding, HashMap<String,
       TreeSet<Integer>> taskindexes,
                                                 TreeSet<Integer> taskids) {
-
     if (previoustaskscheduleplan != null) {
       LOG.info("Previous Task Schedule Plan is:" + previoustaskscheduleplan);
     }
     Map<Integer, Container> containerMap = new HashMap<>();
-
     Resource resource = null;
     try {
       resource = previoustaskscheduleplan.getMaxContainerResources();
@@ -417,7 +443,6 @@ public class TaskSchedulePlanBuilder {
   }
 
   private int addInstance(List<Scorer<Container>> scorers, String taskName) {
-
     initContainers();
     int containerId = 0;
     for (Container container : sortContainers(scorers, this.containers.values())) {
@@ -484,5 +509,4 @@ public class TaskSchedulePlanBuilder {
       return (int) (1000 * scorer.getScore(container));
     }
   }
-  /****************************************************************************************/
 }

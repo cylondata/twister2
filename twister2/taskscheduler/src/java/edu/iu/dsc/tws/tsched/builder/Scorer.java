@@ -11,27 +11,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tsched.builder;
 
-/**
- * Scores an  object based on some heuristic. The ordering of the object by score could be used to
- * drive algorithms that rely on preference of objects (e.g. containers) to be used for packing
- * operations.
- */
-
 public interface Scorer<T> {
 
-  /**
-   * Whether or not scores produced by this scorer should sort ascending or descending
-   *
-   * @return true if the low scores should sort before higher scores
-   */
   boolean sortAscending();
 
-  /**
-   * Return the score for a given component on a container
-   *
-   * @param object the object to be scored
-   * @return score for container
-   */
   double getScore(T object);
 
 }

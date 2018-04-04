@@ -70,7 +70,7 @@ public final class JobAttributes {
     taskNameSet.add("task3");
 
     Map<String, Double> ramMap = new HashMap<>();
-    String ramMapStr = "task0:512.0,task1:512.0,task2:512.0,task3:512.0";
+    String ramMapStr = "task0:512.0,task1:1024.0,task2:2048.0,task3:3096";
 
     if (ramMapStr != null) {
       String[] ramMapTokens = ramMapStr.split(",");
@@ -95,7 +95,7 @@ public final class JobAttributes {
     taskNameSet.add("task3");
 
     Map<String, Double> diskMap = new HashMap<>();
-    String diskMapStr = "task0:20,task1:20,task2:20,task3:20";
+    String diskMapStr = "task0:10,task1:20,task2:30,task3:40";
 
     if (diskMapStr != null) {
       String[] diskMapTokens = diskMapStr.split(",");
@@ -120,7 +120,7 @@ public final class JobAttributes {
     taskNameSet.add("task3");
 
     Map<String, Double> cpuMap = new HashMap<>();
-    String cpuMapStr = "task0:4,task1:4,task2:4,task3:4";
+    String cpuMapStr = "task0:5,task1:10,task2:15,task3:20";
 
     if (cpuMapStr != null) {
       String[] diskMapTokens = cpuMapStr.split(",");

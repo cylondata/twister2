@@ -25,15 +25,15 @@ package edu.iu.dsc.tws.tsched.spi.common;
 
 public final class Config {
 
-  public static double containerMaxRAMValue = 10.00;
-  public static double containerMaxCpuValue = 3.00;
-  public static double containerMaxDiskValue = 10.00;
+  public static double containerMaxRAMValue = 2096.00;
+  public static double containerMaxCpuValue = 100.00;
+  public static double containerMaxDiskValue = 1000.00;
   public static int taskParallel = 2;
 
-  //public static String schedulingMode = "RoundRobin";
-  public static String schedulingMode = "FirstFit";
+  //public static String schedulingMode = "Round Robin";
+  public static String schedulingMode = "First Fit";
 
-  private Config() {
+  public Config() {
   }
 
   public Double getDoubleValue(Key key) {

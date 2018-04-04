@@ -24,12 +24,16 @@
 package edu.iu.dsc.tws.tsched.builder;
 
 import java.util.HashSet;
+import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.tsched.spi.scheduler.TaskSchedulerException;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.Resource;
+import edu.iu.dsc.tws.tsched.spi.taskschedule.ScheduleException;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 public class Container {
 
+  private static final Logger LOG = Logger.getLogger(Container.class.getName());
   private int containerId;
   private HashSet<TaskSchedulePlan.TaskInstancePlan> taskInstances;
   private Resource resource;
@@ -39,6 +43,7 @@ public class Container {
                    Resource containerMaximumResourceValue, int requestedContainerPadding) {
     this.containerId = containerId;
     this.resource = containerMaximumResourceValue;
+    this.taskInstances = new HashSet<TaskSchedulePlan.TaskInstancePlan>();
     this.paddingPercentage = requestedContainerPadding;
   }
 
@@ -75,8 +80,78 @@ public class Container {
   }
 
   void add(TaskSchedulePlan.TaskInstancePlan taskInstancePlan) {
-    //assertHasSpace(instancePlan.getResource());
+    if (this.taskInstances.contains(taskInstancePlan)) {
+      throw new ScheduleException(String.format(
+          "Instance %s already exists in container %s", taskInstancePlan, toString()));
+    }
+    assertHasSpace(taskInstancePlan.getResource());
     this.taskInstances.add(taskInstancePlan);
+  }
+
+  private void assertHasSpace(Resource resourceValue) throws TaskSchedulerException {
+
+    Resource usedResources = this.getTotalUsedResources();
+
+    double newRam = usedResources.getRam() + resourceValue.getRam() + paddingPercentage;
+    double newCpu = usedResources.getCpu() + resourceValue.getCpu() + paddingPercentage;
+    double newDisk = usedResources.getDisk() + resourceValue.getDisk() + paddingPercentage;
+
+    LOG.info("New Ram Value:" + newRam + "\t Resource Value Ram:" + this.resource.getRam() + "\n");
+    if (newRam > this.resource.getRam()) {
+      try {
+        throw new TaskSchedulerException(String.format("Adding %s bytes of ram to existing %s "
+                + "bytes with %d percent padding would exceed capacity %s",
+            resourceValue.getRam(), usedResources.getRam(),
+            paddingPercentage, this.resource.getRam()));
+      } catch (TaskSchedulerException e) {
+        e.printStackTrace();
+      }
+    }
+    if (newCpu > this.resource.getCpu()) {
+      try {
+        throw new TaskSchedulerException(String.format("Adding %s cores to existing %s "
+                + "cores with %d percent padding would exceed capacity %s",
+            resourceValue.getCpu(), usedResources.getCpu(),
+            paddingPercentage, this.resource.getCpu()));
+      } catch (TaskSchedulerException e) {
+        e.printStackTrace();
+      }
+    }
+    if (newDisk > this.resource.getDisk()) {
+      try {
+        throw new TaskSchedulerException(String.format("Adding %s bytes of disk to existing %s "
+                + "bytes with %s percent padding would exceed capacity %s",
+            resourceValue.getDisk(), usedResources.getDisk(),
+            paddingPercentage, this.resource.getDisk()));
+      } catch (TaskSchedulerException e) {
+        e.printStackTrace();
+      }
+    }
+    LOG.info("Used Resources:" + resourceValue + "\n");
+  }
+
+  private Resource getTotalUsedResources() {
+    double usedRam = 0.0;
+    double usedCpuCores = 0.0;
+    double usedDisk = 0.0;
+    for (TaskSchedulePlan.TaskInstancePlan instancePlan : this.taskInstances) {
+      Resource resourceval = instancePlan.getResource();
+      usedRam += resourceval.getRam();
+      usedCpuCores += resourceval.getCpu();
+      usedDisk += resourceval.getDisk();
+    }
+    return new Resource(usedRam, usedDisk, usedCpuCores);
+  }
+
+  public double increaseBy(int percentage) {
+
+    double factor = 1.0 + ((double) percentage / 100);
+    long max = Math.round(Long.MAX_VALUE / factor);
+        /*checkArgument(asBytes() <= max, String.format(
+                "Increasing %s by %d percent would exceed Long.MAX_LONG", this, percentage));*/
+    //return ByteAmount.fromBytes(Math.round((double) asBytes() * factor));
+    double maxValue = Math.round(max) * factor;
+    return maxValue;
   }
 
 }
