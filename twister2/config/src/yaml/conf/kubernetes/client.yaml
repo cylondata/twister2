@@ -14,7 +14,7 @@ twister2.ram_per_container: "1024"
 # amount of hard disk space on each CPU in bytes, 1GB=1024*1024*1024
 twister2.disk_per_container: "1024"
 
-# number of instances for the task
+# number of worker instances
 twister2.number_of_containers: "12"
 
 # number of containers per pod
@@ -22,8 +22,38 @@ twister2.number_of_containers: "12"
 # number_of_containers must be divisible by containers_per_pod
 kubernetes.containers_per_pod: "3"
 
-# image pull policy, by default it is IfNotPresent
-kubernetes.image.pull.policy: "Always"
-# kubernetes.image.pull.policy: "IfNotPresent"
+########################################################################
+# persistent volume related settings
+########################################################################
+# Do workers request persistent volume? it could be true or false
+persistent.volume.requested: "true"
 
+# nfs server address
+nfs.server.address: "149.165.150.81"
+
+# nfs server path
+nfs.server.path: "/nfs/shared"
+
+# worker persistent volume size
+persistent.volume.per.worker: "1Gi"
+
+# total persistent volume size for all workers in this job
+# must be equal or higher than the total of all worker persistent volume sizes
+persistent.volume.total: "100Gi"
+
+# the admin should provide a PersistentVolume object with the following storage class. 
+# Default storage class name is "twister2".
+kubernetes.persistent.storage.class: "twister2"
+
+# persistent storage access mode. 
+# It shows the access mode for workers to access the shared persistent storage.
+# if it is "ReadWriteMany", many workers can read and write
+# other alternatives: "ReadWriteOnce", "ReadOnlyMany"
+# https://kubernetes.io/docs/concepts/storage/persistent-volumes
+kubernetes.storage.access.mode: "ReadWriteMany"
+
+# what happens to the storage after the job has finished
+# the storage can be retained (Retain), or deleted (Delete)
+# default value is "Retain"
+kubernetes.storage.reclaim.policy: "Retain"
 

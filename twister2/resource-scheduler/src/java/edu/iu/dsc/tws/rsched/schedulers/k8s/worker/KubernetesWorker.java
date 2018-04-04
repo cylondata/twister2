@@ -37,6 +37,7 @@ import edu.iu.dsc.tws.rsched.bootstrap.WorkerNetworkInfo;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesField;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import edu.iu.dsc.tws.rsched.utils.TarGzipPacker;
@@ -54,7 +55,7 @@ public final class KubernetesWorker {
   public static final long WAIT_TIME_FOR_WORKER_LIST_BUILD = 3000; // ms
 
   public static Config config = null;
-  public static int containerID = -1; // initially set to an invalid value
+  public static WorkerNetworkInfo thisWorker;
 
   private KubernetesWorker() { }
 
@@ -79,6 +80,9 @@ public final class KubernetesWorker {
     String podIP = System.getenv(KubernetesField.POD_IP + "");
     LOG.info(KubernetesField.POD_IP + ": " + podIP);
 
+    String persistentJobDir = System.getenv(KubernetesField.PERSISTENT_JOB_DIR + "");
+    LOG.info(KubernetesField.PERSISTENT_JOB_DIR + ": " + persistentJobDir);
+
     // this environment variable is not sent by submitting client, it is set by Kubernetes master
     String podName = System.getenv("HOSTNAME");
     LOG.info("POD_NAME(HOSTNAME): " + podName);
@@ -88,9 +92,15 @@ public final class KubernetesWorker {
     jobPackageFileName = POD_SHARED_VOLUME + "/" + jobPackageFileName;
     userJobJarFile = POD_SHARED_VOLUME + "/" + DIR_PREFIX_FOR_JOB_ARCHIVE + userJobJarFile;
     jobDescFileName = POD_SHARED_VOLUME + "/" + DIR_PREFIX_FOR_JOB_ARCHIVE + jobDescFileName;
-    containerID = Integer.parseInt(containerName.substring(containerName.lastIndexOf("-") + 1));
     String configDir = POD_SHARED_VOLUME + "/" + DIR_PREFIX_FOR_JOB_ARCHIVE
         + KUBERNETES_CLUSTER_TYPE;
+
+    // create persistent job dir if there is a persistent volume and if this is the first worker
+    if (persistentJobDir == null || persistentJobDir.trim().length() == 0) {
+      LOG.info("No persistent volume is requested. ");
+    } else {
+      createPersistentJobDirIfFirstWorker(podName, containerName, persistentJobDir);
+    }
 
     boolean ready = waitUnpack(containerName, jobPackageFileName, fileSize);
     if (!ready) {
@@ -117,6 +127,8 @@ public final class KubernetesWorker {
     // start worker controller
     WorkerController workerController =
         new WorkerController(config, podName, podIP, containerName, job.getJobName());
+    thisWorker = workerController.getWorkerNetworkInfo();
+
     workerController.buildWorkerListWaitForAll(WAIT_TIME_FOR_WORKER_LIST_BUILD);
 
     List<WorkerNetworkInfo> workerList = workerController.waitForAllWorkersToJoin(10000);
@@ -124,8 +136,20 @@ public final class KubernetesWorker {
       LOG.severe("Can not get all workers to join. Something wrong. .......................");
     }
 
-    ResourceAPI.ComputeResource cr = job.getJobResources().getContainer();
+    K8sPersistentVolume pv = null;
+    if (KubernetesContext.persistentVolumeRequested(config)) {
+      pv = new K8sPersistentVolume(persistentJobDir, thisWorker.getWorkerID());
+//      pv.getWorkerDir();
+      StringBuffer pvInfo = new StringBuffer();
+      pvInfo.append("Persistent storage information: \n");
+      pvInfo.append("Job Dir Path: " + pv.getJobDirPath() + "\n");
+      pvInfo.append("Job Dir exists: " + pv.jobDirExists() + "\n");
+      pvInfo.append("Worker Dir Path: " + pv.getWorkerDirPath() + "\n");
+      pvInfo.append("Worker Dir Exists: " + pv.workerDirExists() + "\n");
+      LOG.info(pvInfo.toString());
+    }
 
+    ResourceAPI.ComputeResource cr = job.getJobResources().getContainer();
     startContainerClass();
 
     closeWorker(podName);
@@ -139,30 +163,25 @@ public final class KubernetesWorker {
 
     waitIndefinitely();
 
-    int containersPerPod = KubernetesContext.containersPerPod(config);
-
-    // if this is the only container in a pod, delete the pod and exit
-    if (containersPerPod == 1) {
-      deletePod(podName);
-      return;
-    }
-
-    int finishedWorkers = updateCompletions();
-    // if there is a problem updating the counter in the file, exit
-    if (finishedWorkers == -1) {
-      return;
-      // if this is not the last worker, just exit
-    } else if (containersPerPod > (finishedWorkers + 1)) {
-      return;
-      // if this is the last worker, delete the pod
-    } else if (containersPerPod == (finishedWorkers + 1)) {
-      deletePod(podName);
-      return;
-    }
-  }
-
-  public static void deletePod(String podName) {
-    String namespace = KubernetesContext.namespace(config);
+//    int containersPerPod = KubernetesContext.containersPerPod(config);
+//    // if this is the only container in a pod, delete the pod and exit
+//    if (containersPerPod == 1) {
+//      deletePod(podName);
+//      return;
+//    }
+//
+//    int finishedWorkers = updateCompletions();
+//    // if there is a problem updating the counter in the file, exit
+//    if (finishedWorkers == -1) {
+//      return;
+//      // if this is not the last worker, just exit
+//    } else if (containersPerPod > (finishedWorkers + 1)) {
+//      return;
+//      // if this is the last worker, delete the pod
+//    } else if (containersPerPod == (finishedWorkers + 1)) {
+//      deletePod(podName);
+//      return;
+//    }
   }
 
   /**
@@ -231,7 +250,6 @@ public final class KubernetesWorker {
    */
   public static void startContainerClass() {
     String containerClass = SchedulerContext.containerClass(config);
-//    String containerClass = "edu.iu.dsc.tws.examples.basic.BasicK8sContainer";
     IContainer container;
     try {
       Object object = ReflectionUtils.newInstance(containerClass);
@@ -243,7 +261,7 @@ public final class KubernetesWorker {
       throw new RuntimeException(e);
     }
 
-    container.init(config, containerID, null);
+    container.init(config, thisWorker.getWorkerID(), null);
   }
 
 
@@ -472,5 +490,33 @@ public final class KubernetesWorker {
     }
 
     return false;
+  }
+
+  public static boolean createPersistentJobDirIfFirstWorker(
+      String podName, String containerName, String persistentJobDir) {
+
+    // check whether this is the worker 0
+    int podIndex = KubernetesUtils.idFromName(podName);
+    int containerIndex = KubernetesUtils.idFromName(containerName);
+    if (podIndex == 0 && containerIndex == 0) {
+      File persistentDir = new File(persistentJobDir);
+      if (persistentDir.exists()) {
+        LOG.severe("Persistent job dir [" + persistentJobDir
+            + "] already exist. Something must be wrong. ");
+        return false;
+      } else {
+        boolean dirCreated = persistentDir.mkdir();
+        if (dirCreated) {
+          LOG.info("Persistent job dir [" + persistentJobDir + "] created.");
+          return true;
+        } else {
+          LOG.severe("Persistent job dir [" + persistentJobDir + "] can not be created.");
+          return false;
+        }
+      }
+    }
+
+    // if it is not the first worker, do nothing
+    return true;
   }
 }

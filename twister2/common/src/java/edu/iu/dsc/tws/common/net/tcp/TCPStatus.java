@@ -9,17 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.rsched.schedulers.k8s;
+package edu.iu.dsc.tws.common.net.tcp;
 
-/**
- * Field names passed to KubernetesWorker when starting a worker in a container
- */
-public enum KubernetesField {
-  JOB_PACKAGE_FILENAME, // tar.gz filename for all job related files
-  USER_JOB_JAR_FILE,    // java jar file for running user job
-  JOB_PACKAGE_FILE_SIZE, // file size of tar.gz file
-  CONTAINER_NAME,
-  JOB_DESCRIPTION_FILE,
-  POD_IP,
-  PERSISTENT_JOB_DIR
+public class TCPStatus {
 }

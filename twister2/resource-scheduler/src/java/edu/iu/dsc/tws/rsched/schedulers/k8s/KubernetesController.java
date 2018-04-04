@@ -26,6 +26,10 @@ import io.kubernetes.client.Configuration;
 import io.kubernetes.client.apis.AppsV1beta2Api;
 import io.kubernetes.client.apis.CoreV1Api;
 import io.kubernetes.client.models.V1DeleteOptions;
+import io.kubernetes.client.models.V1PersistentVolume;
+import io.kubernetes.client.models.V1PersistentVolumeClaim;
+import io.kubernetes.client.models.V1PersistentVolumeClaimList;
+import io.kubernetes.client.models.V1PersistentVolumeList;
 import io.kubernetes.client.models.V1Service;
 import io.kubernetes.client.models.V1ServiceList;
 import io.kubernetes.client.models.V1beta2StatefulSet;
@@ -253,12 +257,6 @@ public class KubernetesController {
     PodWatcher podWatcher = new PodWatcher(namespace, jobName, numberOfPods, client, coreApi);
     podWatcher.start();
 
-//    try {
-//      watcher.join();
-//    } catch (InterruptedException e) {
-//      e.printStackTrace();
-//    }
-
     JobPackageTransferThread[] transferThreads = new JobPackageTransferThread[numberOfPods];
     for (int i = 0; i < numberOfPods; i++) {
       transferThreads[i] =
@@ -308,5 +306,168 @@ public class KubernetesController {
     }
     return status == 0;
   }
+
+  /**
+   * get the PersistentVolumeClaim with the given name
+   * @param namespace
+   * @param pvcName
+   * @return
+   */
+  public V1PersistentVolumeClaim getPersistentVolumeClaim(String namespace, String pvcName) {
+    V1PersistentVolumeClaimList pvcList = null;
+    try {
+      pvcList = coreApi.listNamespacedPersistentVolumeClaim(
+          namespace, null, null, null, null, null, null, null, null, null);
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when getting PersistentVolumeClaim list.", e);
+      throw new RuntimeException(e);
+    }
+
+    for (V1PersistentVolumeClaim pvc : pvcList.getItems()) {
+      if (pvcName.equals(pvc.getMetadata().getName())) {
+        return pvc;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * create the given PersistentVolumeClaim on Kubernetes master
+   */
+  public boolean createPersistentVolumeClaim(String namespace, V1PersistentVolumeClaim pvc) {
+
+    String pvcName = pvc.getMetadata().getName();
+    try {
+      Response response = coreApi.createNamespacedPersistentVolumeClaimCall(
+          namespace, pvc, null, null, null).execute();
+
+      if (response.isSuccessful()) {
+        LOG.log(Level.INFO, "PersistentVolumeClaim [" + pvcName + "] is created.");
+        return true;
+
+      } else {
+        LOG.log(Level.SEVERE, "Error when creating the PersistentVolumeClaim [" + pvcName
+            + "] Response: " + response);
+        return false;
+      }
+
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Exception when creating the PersistentVolumeClaim: " + pvcName, e);
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when creating the PersistentVolumeClaim: " + pvcName, e);
+    }
+    return false;
+  }
+
+  public boolean deletePersistentVolumeClaim(String namespace, String pvcName) {
+
+    try {
+      Response response = coreApi.deleteNamespacedPersistentVolumeClaimCall(
+          pvcName, namespace, null, null, null, null, null, null, null).execute();
+
+      if (response.isSuccessful()) {
+        LOG.log(Level.INFO, "PersistentVolumeClaim [" + pvcName + "] is deleted.");
+        return true;
+
+      } else {
+
+        if (response.code() == 404 && response.message().equals("Not Found")) {
+          LOG.log(Level.WARNING, "There is no PersistentVolumeClaim [" + pvcName
+              + "] to delete on Kubernetes master. It may have already been deleted.");
+          return true;
+        }
+
+        LOG.log(Level.SEVERE, "Error when deleting the PersistentVolumeClaim [" + pvcName
+            + "] Response: " + response);
+        return false;
+      }
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when deleting the PersistentVolumeClaim: " + pvcName, e);
+      return false;
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Exception when deleting the PersistentVolumeClaim: " + pvcName, e);
+      return false;
+    }
+  }
+
+  public V1PersistentVolume getPersistentVolume(String pvName) {
+    V1PersistentVolumeList pvList = null;
+    try {
+      pvList = coreApi.listPersistentVolume(null, null, null, null, null, null, null, null, null);
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when getting PersistentVolume list.", e);
+      throw new RuntimeException(e);
+    }
+
+    for (V1PersistentVolume pv : pvList.getItems()) {
+      if (pvName.equals(pv.getMetadata().getName())) {
+        return pv;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * create the given service on Kubernetes master
+   */
+  public boolean createPersistentVolume(V1PersistentVolume pv) {
+
+    String pvName = pv.getMetadata().getName();
+    try {
+      Response response = coreApi.createPersistentVolumeCall(pv, null, null, null).execute();
+
+      if (response.isSuccessful()) {
+        LOG.log(Level.INFO, "PersistentVolume [" + pvName + "] is created.");
+        return true;
+
+      } else {
+        LOG.log(Level.SEVERE, "Error when creating the PersistentVolume [" + pvName + "]: "
+            + response);
+//        LOG.log(Level.SEVERE, "Submitted PersistentVolume Object: " + pv);
+        return false;
+      }
+
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Exception when creating the PersistentVolume: " + pvName, e);
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when creating the PersistentVolume: " + pvName, e);
+    }
+    return false;
+  }
+
+
+  public boolean deletePersistentVolume(String pvName) {
+
+    try {
+      Response response = coreApi.deletePersistentVolumeCall(
+          pvName, null, null, null, null, null, null, null).execute();
+
+      if (response.isSuccessful()) {
+        LOG.log(Level.INFO, "PersistentVolume [" + pvName + "] is deleted.");
+        return true;
+
+      } else {
+
+        if (response.code() == 404 && response.message().equals("Not Found")) {
+          LOG.log(Level.WARNING, "There is no PersistentVolume [" + pvName
+              + "] to delete on Kubernetes master. It may have already been deleted.");
+          return true;
+        }
+
+        LOG.log(Level.SEVERE, "Error when deleting the PersistentVolume [" + pvName + "]: "
+            + response);
+        return false;
+      }
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when deleting the PersistentVolume: " + pvName, e);
+      return false;
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Exception when deleting the PersistentVolume: " + pvName, e);
+      return false;
+    }
+  }
+
 
 }

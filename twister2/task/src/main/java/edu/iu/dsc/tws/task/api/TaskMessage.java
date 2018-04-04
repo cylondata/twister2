@@ -33,4 +33,8 @@ public class TaskMessage<T> implements Message {
     this.content = content;
   }
 
+  @Override
+  public int edge() {
+    return 0;
+  }
 }
