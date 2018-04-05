@@ -56,4 +56,10 @@ public interface ITask {
    * Execute without an incoming message
    */
   void run();
+
+  /**
+   * Assign the task name
+   */
+
+  String taskName();
 }
