@@ -30,14 +30,19 @@ public abstract class TaskGraphMapper implements Runnable {
       TaskGraphMapper.class.getName());
 
   private final String taskId;
-
+  private final String taskName;
   private Map<String, List<TaskInputFiles>> taskInputFilesMap =
       new HashMap<>();
   private Map<String, List<TaskOutputFiles>> taskOutputFilesMap =
       new HashMap<>();
 
-  protected TaskGraphMapper(String taskId) {
+  protected TaskGraphMapper(String taskId, String taskName) {
     this.taskId = taskId;
+    this.taskName = taskName;
+  }
+
+  public String getTaskName() {
+    return taskName;
   }
 
   public String getTaskId() {

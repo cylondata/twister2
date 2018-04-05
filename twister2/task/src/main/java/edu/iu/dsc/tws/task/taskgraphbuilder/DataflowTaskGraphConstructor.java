@@ -19,7 +19,7 @@ public class DataflowTaskGraphConstructor extends DataflowTaskGraphGenerator {
 
     DataflowTaskGraphGenerator dataflowTaskGraphGenerator = new DataflowTaskGraphGenerator();
 
-    TaskGraphMapper task1 = new TaskGraphMapper("1") {
+    TaskGraphMapper task1 = new TaskGraphMapper("1", "task1") {
       @Override
       public void execute() {
         System.out.println("Task Graph Construction with Input and Output Files");
@@ -28,7 +28,7 @@ public class DataflowTaskGraphConstructor extends DataflowTaskGraphGenerator {
     task1.addInputData("inputFile1", new ArrayList<>()); //Add the input file list
     task1.addOutputData("outputFile1", new ArrayList<>()); //Add the output file list
 
-    TaskGraphMapper task2 = new TaskGraphMapper("2") {
+    TaskGraphMapper task2 = new TaskGraphMapper("2", "task2") {
       @Override
       public void execute() {
         System.out.println("Task Graph Construction with Input and Output Files");

@@ -11,39 +11,44 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.taskgraphbuilder;
 
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.task.api.Task;
+import edu.iu.dsc.tws.task.api.ITask;
 
 /**
  * This is the main interface for generating the dataflow task graph.
  */
 public interface IDataflowTaskGraphGenerator {
 
-  DataflowTaskGraphGenerator generateDataflowGraph(Task sourceTask,
+  /*DataflowTaskGraphGenerator generateDataflowGraph(Task sourceTask,
                                                    Task sinkTask,
-                                                   DataFlowOperation... dataFlowOperation);
+                                                   DataFlowOperation... dataFlowOperation);*/
 
-  DataflowTaskGraphGenerator generateTaskGraph(Task sourceTask,
-                                               Task... sinkTask);
+  DataflowTaskGraphGenerator generateTaskGraph(ITask sourceTask,
+                                               ITask... sinkTask);
 
-  DataflowTaskGraphGenerator generateDataflowTaskGraph(Task taskMapperTask1,
-                                                       Task taskMapperTask2,
-                                                       CManager... cManagerTask);
 
-  DataflowTaskGraphGenerator generateTaskGraph(TaskMapper sourceTask,
-                                               TaskMapper... sinkTask);
+  DataflowTaskGraphGenerator generateTaskGraph(ITask sourceTask,
+                                               ITask sinkTask,
+                                               DataflowOperation... dataflowOperations);
 
   DataflowTaskGraphGenerator generateDataflowTaskGraph(TaskMapper taskMapperTask1,
                                                        TaskMapper taskMapperTask2,
                                                        CManager... cManagerTask);
 
-  DataflowTaskGraphGenerator generateTaskGraph(Task sourceTask,
-                                               Task sinkTask,
-                                               DataflowOperation... dataFlowOperation);
-
   DataflowTaskGraphGenerator generateTGraph(TaskGraphMapper sourceTask,
                                             TaskGraphMapper sinkTask,
                                             DataflowOperation... dataflowOperation);
 
+  /*DataflowTaskGraphGenerator generateDataflowTaskGraph(Task taskMapperTask1,
+                                                       Task taskMapperTask2,
+                                                       CManager... cManagerTask);*/
+
+  /*DataflowTaskGraphGenerator generateTaskGraph(TaskMapper sourceTask,
+                                               TaskMapper... sinkTask);*/
+
+
+
+  /*DataflowTaskGraphGenerator generateTaskGraph(Task sourceTask,
+                                               Task sinkTask,
+                                               DataflowOperation... dataFlowOperation);*/
 }
 

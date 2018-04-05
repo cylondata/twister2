@@ -101,8 +101,6 @@ public interface ITaskGraph<TV, TE> {
 
   /**
    * This method removes all the task vertices between the task edges.
-   * @param taskVertices
-   * @return
    */
   boolean removeAllTaskVertices(Collection<? extends TV> taskVertices);
 

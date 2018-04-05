@@ -13,19 +13,23 @@ package edu.iu.dsc.tws.task.taskgraphbuilder;
 
 import java.util.Set;
 
+import edu.iu.dsc.tws.task.api.ITask;
 import edu.iu.dsc.tws.task.api.Task;
+
 
 /**
  * This is the main interface for the dataflow task graph parser.
  */
 public interface IDataflowTaskGraphParser {
 
-  Set<Task> dataflowTaskGraphParseAndSchedule();
-
-  Set<Task> taskGraphParseAndSchedule();
-
   Set<Task> dataflowTaskGraphParseAndSchedule(int containerId);
 
+  Set<Task> dataflowTaskGraphParseAndSchedule(String message);
+
   Set<TaskGraphMapper> dataflowTGraphParseAndSchedule();
+
+  Set<ITask> taskGraphParseAndSchedule();
+
+  Set<ITask> taskGraphParseAndSchedule(int containerId);
 }
 

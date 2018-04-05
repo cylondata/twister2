@@ -107,6 +107,7 @@ public class DataflowTaskGraphMain extends DataflowTaskGraphGenerator {
     this.generateDataflowTaskGraph(task1, task2, new CManager("he"))
         .generateDataflowTaskGraph(task2, task3, new CManager("te"))
         .generateDataflowTaskGraph(task3, task1, new CManager("test"));
+
   }
 
   public static void main(String[] args) {
@@ -116,14 +117,14 @@ public class DataflowTaskGraphMain extends DataflowTaskGraphGenerator {
 
     DataflowTaskGraphParser dataflowTaskGraphParser =
         new DataflowTaskGraphParser(dataflowTaskGraphGenerator);
-    dataflowTaskGraphParser.dataflowTaskGraphParseAndSchedule();
+    dataflowTaskGraphParser.dataflowTaskGraphParseAndSchedule("Schedule");
 
     /*TaskParser TaskGraphParser = new TaskParser(dataflowTaskGraphGenerator);
     TaskGraphParser.taskGraphParseAndSchedule(0);
     TaskGraphParser.taskGraphParseAndSchedule(1);*/
 
-    TaskGraphParser taskGraphParser = new TaskGraphParser(dataflowTaskGraphGenerator);
-    taskGraphParser.taskGraphParseAndSchedule();
+    /*TaskGraphParser taskGraphParser = new TaskGraphParser(dataflowTaskGraphGenerator);
+    taskGraphParser.taskGraphParseAndSchedule();*/
   }
 }
 

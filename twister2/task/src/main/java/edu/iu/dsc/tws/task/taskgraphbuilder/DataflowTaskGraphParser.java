@@ -16,12 +16,12 @@ import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.task.api.ITask;
 import edu.iu.dsc.tws.task.api.Task;
 
 public class DataflowTaskGraphParser implements IDataflowTaskGraphParser {
 
-  private static final Logger LOGGER = Logger.getLogger(
+  private static final Logger LOG = Logger.getLogger(
       DataflowTaskGraphParser.class.getName());
 
   private DataflowTaskGraphGenerator dataflowTaskGraph;
@@ -31,34 +31,18 @@ public class DataflowTaskGraphParser implements IDataflowTaskGraphParser {
   }
 
   @SuppressWarnings("unchecked")
-  /**
-   * This is an entry method to invoke the dataflow task graph
-   * prioritizer to prioritize the tasks.
-   */
-  public Set<Task> dataflowTaskGraphParseAndSchedule() {
-
-    Set<Task> processedTaskVertices = new HashSet<>();
+  public Set<ITask> taskGraphParseAndSchedule() {
+    Set<ITask> processedTaskVertices = new HashSet<>();
     if (dataflowTaskGraph != null) {
       processedTaskVertices = dataflowTaskGraphPrioritize(this.dataflowTaskGraph);
-      LOGGER.info("Processed Task Vertices Size Is:"
+      LOG.info("Processed Task Vertices Size Is:"
           + processedTaskVertices.size() + "\t" + processedTaskVertices);
     }
     return processedTaskVertices;
   }
 
   @Override
-  public Set<Task> taskGraphParseAndSchedule() {
-    return null;
-  }
-
-  //This method will be used in the future.
-  @Override
-  public Set<Task> dataflowTaskGraphParseAndSchedule(int containerId) {
-    return null;
-  }
-
-  @Override
-  public Set<TaskGraphMapper> dataflowTGraphParseAndSchedule() {
+  public Set<ITask> taskGraphParseAndSchedule(int containerId) {
     return null;
   }
 
@@ -66,10 +50,29 @@ public class DataflowTaskGraphParser implements IDataflowTaskGraphParser {
    * This method calls the dataflow task graph parser method to prioritize
    * the tasks which is ready for the execution.
    */
-  private Set<Task> dataflowTaskGraphPrioritize(DataflowTaskGraphGenerator taskGraph) {
-    final IDataflowTaskGraph<Task, DataFlowOperation>
-        dataflowTaskgraph = taskGraph.getDataflowGraph();
-    Set<Task> taskVertices = dataflowTaskgraph.getTaskVertexSet();
+  private Set<ITask> dataflowTaskGraphPrioritize(DataflowTaskGraphGenerator taskGraph) {
+
+    final IDataflowTaskGraph<ITask, DataflowOperation> dataflowTaskgraph = taskGraph.getTaskgraph();
+    Set<ITask> taskVertices = dataflowTaskgraph.getTaskVertexSet();
+
+    //Newly Added on April 5th, 2018
+    /*Set<SourceTargetTaskDetails> sourceTargetTaskDetailsSet = new HashSet<>();
+    for (ITask child : taskVertices) {
+      sourceTargetTaskDetailsSet = dataflowTaskSourceTargetVertices(dataflowTaskgraph, child);
+      if (!sourceTargetTaskDetailsSet.isEmpty()) {
+        for (SourceTargetTaskDetails sourceTargetTaskDetails : sourceTargetTaskDetailsSet) {
+          LOG.info("Source and Target Task Details:"
+              + sourceTargetTaskDetails.getSourceTask() + "--->"
+              + sourceTargetTaskDetails.getTargetTask() + "---"
+              + "Source Task Id and Name" + "---"
+              + sourceTargetTaskDetails.getSourceTask().taskName() + "----"
+              + "Target Task Id and Name" + "---"
+              + sourceTargetTaskDetails.getTargetTask().taskName() + "---"
+              + sourceTargetTaskDetails.getDataflowOperationName() + "\n");
+        }
+      }
+    }*/
+
     try {
       taskVertices.stream()
           .filter(task -> dataflowTaskgraph.inDegreeOfTask(task) == 0)
@@ -81,29 +84,92 @@ public class DataflowTaskGraphParser implements IDataflowTaskGraphParser {
   }
 
   /**
+   * This method displays the task edges, its child, source and target task vertices of a particular
+   * task
+   */
+  private Set<SourceTargetTaskDetails> dataflowTaskSourceTargetVertices(
+      final IDataflowTaskGraph<ITask,
+          DataflowOperation> dataflowtaskgraph,
+      final ITask mapper) {
+
+    LOG.info("Task Object is:" + mapper + "\t"
+        // + "Task Id:" + mapper.getTaskId() + "\t"
+        + "Task Name:" + mapper.taskName());
+
+    Set<SourceTargetTaskDetails> childTask = new HashSet<>();
+    if (dataflowtaskgraph.outDegreeOfTask(mapper) == 0) {
+      return childTask;
+    } else {
+      Set<DataflowOperation> taskEdgesOf = dataflowtaskgraph.outgoingTaskEdgesOf(mapper);
+      LOG.info("Task Child Size:" + dataflowtaskgraph.outgoingTaskEdgesOf(mapper) + "\n");
+      for (DataflowOperation edge : taskEdgesOf) {
+        SourceTargetTaskDetails sourceTargetTaskDetails = new SourceTargetTaskDetails();
+        sourceTargetTaskDetails.setSourceTask(dataflowtaskgraph.getTaskEdgeSource(edge));
+        sourceTargetTaskDetails.setTargetTask(dataflowtaskgraph.getTaskEdgeTarget(edge));
+        sourceTargetTaskDetails.setDataflowOperation(edge);
+        sourceTargetTaskDetails.setDataflowOperationName(edge.getDataflowOperation());
+        childTask.add(sourceTargetTaskDetails);
+
+        /*LOG.info("%%%% Dataflow Operation:" + edge.getDataflowOperation());
+        LOG.info("%%%% Source and Target Vertex:" + dataflowTGraph.getTaskEdgeSource(edge)
+           + "\t" + dataflowTGraph.getTaskEdgeTarget(edge));*/
+      }
+      /*for (SourceTargetTaskDetails sourceTargetTaskDetails : childTask) {
+        LOG.info("Source and Target Task Details:"
+            + sourceTargetTaskDetails.getSourceTask() + "--->"
+            + sourceTargetTaskDetails.getTargetTask() + "---"
+            + sourceTargetTaskDetails.getSourceTask().getTaskId() + "---"
+            + sourceTargetTaskDetails.getSourceTask().getTaskName() + "---->"
+            + sourceTargetTaskDetails.getTargetTask().getTaskId() + "---"
+            + sourceTargetTaskDetails.getTargetTask().getTaskName() + "---"
+            + sourceTargetTaskDetails.getDataflowOperationName());
+      }*/
+      return childTask;
+    }
+  }
+
+  /**
    * This is the simple dataflow task graph parser method and it should be replaced
    * with an optimized scheduling mechanism.
    */
-  private int dataflowTaskGraphParse(final IDataflowTaskGraph<Task,
-      DataFlowOperation> dataflowTaskgraph, final Task mapper) {
-
-    LOGGER.info("Dataflow Task Graph is:" + dataflowTaskgraph
-        + "\t" + "and Task Object is:" + mapper);
+  private int dataflowTaskGraphParse(final IDataflowTaskGraph<ITask,
+      DataflowOperation> dataflowTaskgraph,
+                                     final ITask mapper) {
     if (dataflowTaskgraph.outDegreeOfTask(mapper) == 0) {
       return 1;
     } else {
-      Set<DataFlowOperation> taskEdgesOf = dataflowTaskgraph.
+      Set<DataflowOperation> taskEdgesOf = dataflowTaskgraph.
           outgoingTaskEdgesOf(mapper);
 
-      Stream<Task> taskStream = taskEdgesOf.stream().map(
-          dataflowTaskgraph::getTaskEdgeTarget);
+      Stream<ITask> taskStream = taskEdgesOf.stream().
+          map(dataflowTaskgraph::getTaskEdgeTarget);
 
       int adjacentTaskWeights = taskStream.map(
           next -> dataflowTaskGraphParse(dataflowTaskgraph, next)).
           max(Integer::compare).get();
       int weightOfCurrent = 1 + adjacentTaskWeights;
+
+      /*LOG.info("Task Edges are:" + taskEdgesOf.iterator().next().getDataflowOperation() + "\t"
+          + "neighbours:" + taskStream.getClass().getName() + "\t"
+          + "Weight of the current task:" + weightOfCurrent);*/
+
       return weightOfCurrent;
     }
+  }
+
+  @Override
+  public Set<Task> dataflowTaskGraphParseAndSchedule(int containerId) {
+    return null;
+  }
+
+  @Override
+  public Set<Task> dataflowTaskGraphParseAndSchedule(String message) {
+    return null;
+  }
+
+  @Override
+  public Set<TaskGraphMapper> dataflowTGraphParseAndSchedule() {
+    return null;
   }
 }
 
