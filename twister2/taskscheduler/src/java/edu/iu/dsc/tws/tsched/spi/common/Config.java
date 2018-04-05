@@ -30,8 +30,8 @@ public final class Config {
   public static double containerMaxDiskValue = 1000.00;
   public static int taskParallel = 2;
 
-  //public static String schedulingMode = "Round Robin";
-  public static String schedulingMode = "First Fit";
+  public static String schedulingMode = "Round Robin";
+  //public static String schedulingMode = "First Fit";
 
   public Config() {
   }
