@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.taskgraphbuilder;
 
+import java.util.Set;
+
 import edu.iu.dsc.tws.task.api.ITask;
 
 /**
@@ -50,5 +52,8 @@ public interface IDataflowTaskGraphGenerator {
   /*DataflowTaskGraphGenerator generateTaskGraph(Task sourceTask,
                                                Task sinkTask,
                                                DataflowOperation... dataFlowOperation);*/
+
+  Set<SourceTargetTaskDetails> getDataflowTaskChildTasks(
+      DataflowTaskGraphGenerator taskGraph);
 }
 

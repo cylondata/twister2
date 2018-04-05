@@ -108,7 +108,8 @@ public class DataflowTaskGraphGenerator implements IDataflowTaskGraphGenerator {
   }
 
   //Newly Added on April 5th, 2018
-  public Set<SourceTargetTaskDetails> getDataflowTaskSourceTargetVertices(
+  @Override
+  public Set<SourceTargetTaskDetails> getDataflowTaskChildTasks(
       DataflowTaskGraphGenerator taskGraph1) {
 
     final IDataflowTaskGraph<ITask, DataflowOperation> dataflowTaskgraph =

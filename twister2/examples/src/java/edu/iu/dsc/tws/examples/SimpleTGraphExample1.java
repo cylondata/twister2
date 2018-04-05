@@ -107,8 +107,7 @@ public class SimpleTGraphExample1 implements IContainer {
         if (dataflowTaskGraphGenerator != null) {
 
           //For testing to process the child task source & target vertices
-          dataflowTaskGraphGenerator.getDataflowTaskSourceTargetVertices(
-              dataflowTaskGraphGenerator);
+          dataflowTaskGraphGenerator.getDataflowTaskChildTasks(dataflowTaskGraphGenerator);
           /////////////////////////////
 
           dataflowTaskGraphParser = new DataflowTaskGraphParser(dataflowTaskGraphGenerator);
