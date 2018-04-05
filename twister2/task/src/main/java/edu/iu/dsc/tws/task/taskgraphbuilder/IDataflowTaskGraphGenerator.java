@@ -20,13 +20,8 @@ import edu.iu.dsc.tws.task.api.ITask;
  */
 public interface IDataflowTaskGraphGenerator {
 
-  /*DataflowTaskGraphGenerator generateDataflowGraph(Task sourceTask,
-                                                   Task sinkTask,
-                                                   DataFlowOperation... dataFlowOperation);*/
-
-  DataflowTaskGraphGenerator generateTaskGraph(ITask sourceTask,
-                                               ITask... sinkTask);
-
+  Set<SourceTargetTaskDetails> getDataflowTaskChildTasks(DataflowTaskGraphGenerator
+                                                             taskGraph);
 
   DataflowTaskGraphGenerator generateTaskGraph(ITask sourceTask,
                                                ITask sinkTask,
@@ -36,9 +31,16 @@ public interface IDataflowTaskGraphGenerator {
                                                        TaskMapper taskMapperTask2,
                                                        CManager... cManagerTask);
 
+  DataflowTaskGraphGenerator generateTaskGraph(ITask sourceTask,
+                                               ITask... sinkTask);
+
   DataflowTaskGraphGenerator generateTGraph(TaskGraphMapper sourceTask,
                                             TaskGraphMapper sinkTask,
                                             DataflowOperation... dataflowOperation);
+
+  /*DataflowTaskGraphGenerator generateDataflowGraph(Task sourceTask,
+                                                   Task sinkTask,
+                                                   DataFlowOperation... dataFlowOperation);*/
 
   /*DataflowTaskGraphGenerator generateDataflowTaskGraph(Task taskMapperTask1,
                                                        Task taskMapperTask2,
@@ -52,8 +54,5 @@ public interface IDataflowTaskGraphGenerator {
   /*DataflowTaskGraphGenerator generateTaskGraph(Task sourceTask,
                                                Task sinkTask,
                                                DataflowOperation... dataFlowOperation);*/
-
-  Set<SourceTargetTaskDetails> getDataflowTaskChildTasks(
-      DataflowTaskGraphGenerator taskGraph);
 }
 
