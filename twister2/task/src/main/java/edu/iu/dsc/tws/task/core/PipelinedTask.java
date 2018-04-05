@@ -78,4 +78,9 @@ public class PipelinedTask extends Task {
   public void setPiplinedTaskList(List<Task> piplinedTaskList) {
     this.piplinedTaskList = piplinedTaskList;
   }
+
+  @Override
+  public String taskName() {
+    return null;
+  }
 }
