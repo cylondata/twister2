@@ -13,10 +13,10 @@ package edu.iu.dsc.tws.task.executiongraph;
 
 import java.util.Set;
 
-//import edu.iu.dsc.tws.task.api.Task;
+import edu.iu.dsc.tws.task.api.ITask;
 
+//import edu.iu.dsc.tws.task.taskgraphbuilder.TaskGraphMapper;
 //import edu.iu.dsc.tws.task.core.TaskExecutorFixedThread;
-import edu.iu.dsc.tws.task.taskgraphbuilder.TaskGraphMapper;
 //import edu.iu.dsc.tws.task.taskgraphbuilder.TaskExecutor;
 
 /**
@@ -35,6 +35,8 @@ public interface IExecutionGraph {
 
   String generateExecutionGraph(int containerId);
 
-  String generateExecutionGraph(int containerId, Set<TaskGraphMapper> processedTaskSet);
+  String generateExecutionGraph(int containerId, Set<ITask> processedTaskSet);
+
+  //String generateExecutionGraph(int containerId, Set<TaskGraphMapper> processedTaskSet);
 
 }

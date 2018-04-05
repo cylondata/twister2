@@ -15,10 +15,11 @@ import java.util.ArrayList;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.task.api.ITask;
 import edu.iu.dsc.tws.task.core.TaskExecutorFixedThread;
-import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTGraphParser;
 import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraphGenerator;
-import edu.iu.dsc.tws.task.taskgraphbuilder.TaskGraphMapper;
+import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraphParser;
+import edu.iu.dsc.tws.task.taskgraphbuilder.TaskExecutor;
 
 /**
  * This is the simple execution graph generator and it will be extended
@@ -30,28 +31,30 @@ public class ExecutionGraph implements IExecutionGraph {
 
   private static final Logger LOG = Logger.getLogger(ExecutionGraph.class.getName());
 
-  private Set<TaskGraphMapper> parsedTaskSet;
-  private DataflowTGraphParser dataflowTGraphParser = null;
+  private Set<ITask> parsedTaskSet;
+  private DataflowTaskGraphParser dataflowTaskGraphParser = null;
+  //private DataflowTGraphParser dataflowTGraphParser = null;
   private TaskExecutorFixedThread taskExecutor;
 
   /**
    * Constructor to initialize the parsed task graph set which has all
    * the task vertices and edges.
    */
-  public ExecutionGraph(Set<TaskGraphMapper> parsedTaskSet) {
+  public ExecutionGraph(Set<ITask> parsedTaskSet) {
     this.parsedTaskSet = parsedTaskSet;
   }
-
 
   /**
    * This method will not be used in future, it will be replaced with an
    * execution graph parser if it requires.
    */
-  public Set<TaskGraphMapper> parseTaskGraph(DataflowTaskGraphGenerator
-                                                 dataflowTaskGraphGenerator) {
+  public Set<ITask> parseTaskGraph(DataflowTaskGraphGenerator
+                                       dataflowTaskGraphGenerator) {
     if (dataflowTaskGraphGenerator != null) {
-      dataflowTGraphParser = new DataflowTGraphParser(dataflowTaskGraphGenerator);
-      parsedTaskSet = dataflowTGraphParser.dataflowTGraphParseAndSchedule();
+      //dataflowTGraphParser = new DataflowTGraphParser(dataflowTaskGraphGenerator);
+      //parsedTaskSet = dataflowTGraphParser.dataflowTGraphParseAndSchedule();
+      dataflowTaskGraphParser = new DataflowTaskGraphParser(dataflowTaskGraphGenerator);
+      parsedTaskSet = dataflowTaskGraphParser.taskGraphParseAndSchedule();
     }
     return parsedTaskSet;
   }
@@ -64,7 +67,7 @@ public class ExecutionGraph implements IExecutionGraph {
     //public TaskExecutor generateExecutionGraph(int containerId){
 
     //For testing purpose and it will replaced with actual task executor...!
-    //TaskExecutor taskExecutionGraph = new TaskExecutor();
+    TaskExecutor taskExecutionGraph = new TaskExecutor();
 
     if (!parsedTaskSet.isEmpty() && !(containerId < 0)) {
       if (containerId == 0) {
@@ -73,13 +76,10 @@ public class ExecutionGraph implements IExecutionGraph {
         //taskExecutor.progres();
 
         //For testing purpose...!
-        //taskExecute.execute(parsedTaskSet.iterator().next());
-
-        LOG.info("Container 0 task is:" + parsedTaskSet.iterator().next().getInputData());
+        //taskExecutionGraph.execute(parsedTaskSet.iterator().next());
       } else if (containerId >= 1) { //This loop should be modified for the complex task graphs
         int index = 0;
-        LOG.info("%%%%%%% Parsed Task Set Size Is: %%%%%" + parsedTaskSet.size());
-        for (TaskGraphMapper processedTask : parsedTaskSet) {
+        for (ITask processedTask : parsedTaskSet) {
           if (index == 0) {
             ++index;
           } else if (index == 1) {
@@ -90,8 +90,7 @@ public class ExecutionGraph implements IExecutionGraph {
             //taskExecutor.progres();
 
             //For testing purpose...! It is working...but not properly.
-            //taskExecute.execute(processedTask);
-            LOG.info("Container 1 task is:" + processedTask.getInputData());
+            //taskExecutionGraph.execute(processedTask);
             ++index;
           } else if (index == 2) {
             ArrayList<Integer> inq1 = new ArrayList<>();
@@ -101,8 +100,7 @@ public class ExecutionGraph implements IExecutionGraph {
             //taskExecutor.progres();
 
             //For testing purpose...!
-            //taskExecute.execute(processedTask);
-            LOG.info("Container 2 task is:" + processedTask.getInputData());
+            //taskExecutionGraph.execute(processedTask);
             ++index;
           } else if (index == 3) {
             ArrayList<Integer> inq1 = new ArrayList<>();
@@ -113,8 +111,8 @@ public class ExecutionGraph implements IExecutionGraph {
             //taskExecutor.progres();
 
             //For testing purpose...!
-            //taskExecute.execute(processedTask);
-            LOG.info("Container 3 task is:" + processedTask.getInputData());
+            //taskExecutionGraph.execute(processedTask);
+            //LOG.info("Container 3 task is:" + processedTask.getInputData());
             ++index;
           } else if (index > 3) {
             //it would be constructed based on the container value and no.of tasks
@@ -132,7 +130,7 @@ public class ExecutionGraph implements IExecutionGraph {
    * This method is responsible for generating the execution graph to be executed by
    * the executors...!
    */
-  public String generateExecutionGraph(int containerId, Set<TaskGraphMapper> processedTaskSet) {
+  public String generateExecutionGraph(int containerId, Set<ITask> processedTaskSet) {
     //public TaskExecutor generateExecutionGraph(int containerId,
     //                                           Set<TaskGraphMapper> processedTaskSet) {
 
@@ -147,12 +145,10 @@ public class ExecutionGraph implements IExecutionGraph {
 
         //For testing purpose...!
         //taskExecute.execute(parsedTaskSet.iterator().next());
-
-        LOG.info("Container 0 task is:" + parsedTaskSet.iterator().next().getInputData());
       } else if (containerId >= 1) { //This loop should be modified for the complex task graphs
         int index = 0;
         LOG.info("%%%%%%% Parsed Task Set Size Is: %%%%%" + parsedTaskSet.size());
-        for (TaskGraphMapper processedTask : parsedTaskSet) {
+        for (ITask processedTask : parsedTaskSet) {
           if (index == 0) {
             ++index;
           } else if (index == 1) {
@@ -164,7 +160,6 @@ public class ExecutionGraph implements IExecutionGraph {
 
             //For testing purpose...! It is working...but not properly.
             //taskExecute.execute(processedTask);
-            LOG.info("Container 1 task is:" + processedTask.getInputData());
             ++index;
           } else if (index == 2) {
             ArrayList<Integer> inq1 = new ArrayList<>();
@@ -175,7 +170,6 @@ public class ExecutionGraph implements IExecutionGraph {
 
             //For testing purpose...!
             //taskExecute.execute(processedTask);
-            LOG.info("Container 2 task is:" + processedTask.getInputData());
             ++index;
           } else if (index == 3) {
             ArrayList<Integer> inq1 = new ArrayList<>();
@@ -187,7 +181,6 @@ public class ExecutionGraph implements IExecutionGraph {
 
             //For testing purpose...!
             //taskExecute.execute(processedTask);
-            LOG.info("Container 3 task is:" + processedTask.getInputData());
             ++index;
           } else if (index > 3) {
             //it would be constructed based on the container value and no.of tasks
