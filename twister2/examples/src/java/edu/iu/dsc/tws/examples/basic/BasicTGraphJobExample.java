@@ -21,6 +21,8 @@ import edu.iu.dsc.tws.examples.SimpleTGraphExample;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 
+//import edu.iu.dsc.tws.examples.SimpleTGraphExample;
+
 public final class BasicTGraphJobExample {
   private BasicTGraphJobExample() {
   }
@@ -36,7 +38,8 @@ public final class BasicTGraphJobExample {
     BasicJob basicJob = BasicJob.newBuilder()
         .setName("basic-tgraphExampleJob")
         .setContainerClass(SimpleTGraphExample.class.getName())
-        .setRequestResource(new ResourceContainer(4, 1024), 4)
+        //.setContainerClass(SimpleTGraphExample1.class.getName())
+        .setRequestResource(new ResourceContainer(4, 1024), 2)
         .setConfig(jobConfig)
         .build();
 
