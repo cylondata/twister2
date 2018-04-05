@@ -130,7 +130,7 @@ public class MultiTaskGraphExample implements IContainer {
 
     if (dataflowTaskGraph != null) {
       dataflowTaskGraphParser = new DataflowTaskGraphParser(dataflowTaskGraph);
-      parsedTaskSet = dataflowTaskGraphParser.dataflowTaskGraphParseAndSchedule();
+      //parsedTaskSet = dataflowTaskGraphParser.dataflowTaskGraphParseAndSchedule();
     }
 
     //This code is for moving the explicit scheduling outside of the example program

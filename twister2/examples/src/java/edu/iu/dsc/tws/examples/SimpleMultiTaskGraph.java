@@ -92,7 +92,7 @@ public class SimpleMultiTaskGraph implements IContainer {
 
     if (dataflowTaskGraph != null) {
       dataflowTaskGraphParser = new DataflowTaskGraphParser(dataflowTaskGraph);
-      parsedTaskSet = dataflowTaskGraphParser.dataflowTaskGraphParseAndSchedule();
+      //parsedTaskSet = dataflowTaskGraphParser.dataflowTaskGraphParseAndSchedule();
     }
 
     //This loop should be properly written...! We will add the complex logic once

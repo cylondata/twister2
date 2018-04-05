@@ -97,7 +97,7 @@ public class SimpleTaskGraph implements IContainer {
         sourceTask, sinkTask, direct);
     if (dataflowTaskGraphGenerator != null) {
       dataflowTaskGraphParser = new DataflowTaskGraphParser(dataflowTaskGraphGenerator);
-      parsedTaskSet = dataflowTaskGraphParser.dataflowTaskGraphParseAndSchedule();
+      //parsedTaskSet = dataflowTaskGraphParser.dataflowTaskGraphParseAndSchedule();
     }
 
     if (!parsedTaskSet.isEmpty()) {

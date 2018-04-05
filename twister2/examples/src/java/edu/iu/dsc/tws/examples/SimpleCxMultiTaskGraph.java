@@ -95,7 +95,7 @@ public class SimpleCxMultiTaskGraph implements IContainer {
 
     if (dataflowTaskGraph != null) {
       dataflowTaskGraphParser = new DataflowTaskGraphParser(dataflowTaskGraph);
-      parsedTaskSet = dataflowTaskGraphParser.dataflowTaskGraphParseAndSchedule();
+      //parsedTaskSet = dataflowTaskGraphParser.dataflowTaskGraphParseAndSchedule();
     }
 
     if (!parsedTaskSet.isEmpty()) {

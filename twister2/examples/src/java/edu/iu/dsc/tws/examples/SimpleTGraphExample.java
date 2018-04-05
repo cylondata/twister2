@@ -23,8 +23,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples;
 
+//import java.util.ArrayList;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -45,12 +45,15 @@ import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import edu.iu.dsc.tws.task.api.LinkedQueue;
 import edu.iu.dsc.tws.task.api.Message;
 import edu.iu.dsc.tws.task.core.TaskExecutorFixedThread;
-
 import edu.iu.dsc.tws.task.executiongraph.ExecutionGraph;
 import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowOperation;
 import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTGraphParser;
 import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraphGenerator;
 import edu.iu.dsc.tws.task.taskgraphbuilder.TaskGraphMapper;
+import edu.iu.dsc.tws.tsched.FirstFit.FirstFitTaskScheduling;
+import edu.iu.dsc.tws.tsched.RoundRobin.RoundRobinTaskScheduling;
+import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
+import edu.iu.dsc.tws.tsched.utils.Job;
 
 /**
  * This is the task graph generation class with input and output files.
@@ -71,6 +74,7 @@ public class SimpleTGraphExample implements IContainer {
   private Status status;
 
   private ExecutionGraph executionGraph = null;
+
   /**
    * Init method to submit the task to the executor
    */
@@ -85,7 +89,6 @@ public class SimpleTGraphExample implements IContainer {
     TWSNetwork network = new TWSNetwork(cfg, taskPlan);
     TWSCommunication channel = network.getDataFlowTWSCommunication();
 
-
     Set<Integer> sources = new HashSet<>();
     sources.add(0);
     int destination = 1;
@@ -98,72 +101,78 @@ public class SimpleTGraphExample implements IContainer {
         destination, new SimpleTGraphExample.PingPongReceive());
     taskExecutor.initCommunication(channel, direct);
 
-    TMapper tMapper = new TMapper("1");
-    TReducer tReducer = new TReducer("2");
-    TShuffler tShuffler = new TShuffler("3");
-    TReducer tMergeFinal = new TReducer("4");
+    TMapper tMapper = new TMapper("1", "task1");
+    TReducer tReducer = new TReducer("2", "task2");
+    TShuffler tShuffler = new TShuffler("3", "task3");
+    TMerger tMerger = new TMerger("4", "task4");
 
-    //Add the real input data files in the array list...
-    tMapper.addInputData("mapper1", new ArrayList<>());
-    tMapper.addInputData("mapper2", new ArrayList<>());
+    if (containerId == 0) {
+      if (taskGraphFlag >= 0) {
+        dataflowTaskGraphGenerator = new DataflowTaskGraphGenerator()
+            .generateTGraph(tMapper)
+            .generateTGraph(tMapper, tReducer, new DataflowOperation("Reduce"))
+            .generateTGraph(tMapper, tShuffler, new DataflowOperation("Shuffle"))
+            .generateTGraph(tReducer, tMerger, new DataflowOperation("Merge1"))
+            .generateTGraph(tShuffler, tMerger, new DataflowOperation("Merge2"));
 
-    //Add the real input data files in the array list...
-    tReducer.addInputData("reducer1", new ArrayList<>());
-    tReducer.addInputData("reducer2", new ArrayList<>());
+        LOG.info("Generated Dataflow Task Graph Vertices:"
+            + dataflowTaskGraphGenerator.getTGraph().getTaskVertexSet());
 
-    //Add the real input data files in the array list...
-    tShuffler.addInputData("shuffler1", new ArrayList<>());
-    tShuffler.addInputData("shuffler2", new ArrayList<>());
+        if (dataflowTaskGraphGenerator != null) {
+          dataflowTGraphParser = new DataflowTGraphParser(dataflowTaskGraphGenerator);
+          parsedTaskSet = dataflowTGraphParser.dataflowTGraphParseAndSchedule();
+          LOG.info("parsed task set:" + parsedTaskSet);
+        }
 
-    //Add the real input data files in the array list...
-    tMergeFinal.addInputData("merge1", new ArrayList<>());
-    tMergeFinal.addInputData("merge2", new ArrayList<>());
+        String taskSchedulingMode = "RoundRobin"; //Should come from Config file
+        Job job = new Job();
+        Job.Task[] tasklist = new Job.Task[parsedTaskSet.size()];
+        Job.Task task = null;
+        job.setJobId(containerId);
+        for (int i = 0; i < parsedTaskSet.size(); i++) {
+          task = new Job.Task();
+          task.setTaskName("task" + i);
+          //task.setTaskName(parsedTaskSet.getClass().getName());
+          // get the taskname from parsedtaskset
+          task.setTaskCount(2);
+          task.setRequiredCpu(5.0);
+          task.setRequiredDisk(100.0);
+          task.setRequiredRam(512.0);
+          tasklist[i] = task;
+          job.setTasklist(tasklist);
+        }
 
-    //Mention the output data files to be generated in the array list...
-    tMapper.addOutputData("mapperOut1", new ArrayList<>());
-    tMapper.addOutputData("mapperOut2", new ArrayList<>());
-
-    if (taskGraphFlag >= 0) { //just for verification (replace with proper value)
-      /*dataflowTaskGraphGenerator = new DataflowTaskGraphGenerator()
-          .generateTGraph(tMapper, tShuffler, new DataflowOperation("Map"))
-          .generateTGraph(tMapper, tReducer, new DataflowOperation("Shuffle"))
-          .generateTGraph(tShuffler, tReducerFinal, new DataflowOperation("finalReduce"))
-          .generateTGraph(tReducer, tReducerFinal, new DataflowOperation("finalReduce"));*/
-
-      dataflowTaskGraphGenerator = new DataflowTaskGraphGenerator()
-          .generateTGraph(tMapper)
-          .generateTGraph(tMapper, tReducer, new DataflowOperation("Reduce"))
-          .generateTGraph(tMapper, tShuffler, new DataflowOperation("Shuffle"))
-          .generateTGraph(tReducer, tMergeFinal, new DataflowOperation("Merge1"))
-          .generateTGraph(tShuffler, tMergeFinal, new DataflowOperation("Merge2"));
-
-      LOG.info("Generated Dataflow Task Graph Vertices:"
-          + dataflowTaskGraphGenerator.getTGraph().getTaskVertexSet());
-
-
-      if (dataflowTaskGraphGenerator != null) {
-        dataflowTGraphParser = new DataflowTGraphParser(dataflowTaskGraphGenerator);
-        parsedTaskSet = dataflowTGraphParser.dataflowTGraphParseAndSchedule();
-        LOG.info("parsed task set:" + parsedTaskSet);
+        TaskSchedulePlan taskSchedulePlan = null;
+        try {
+          if ("RoundRobin".equals(taskSchedulingMode)) {
+            edu.iu.dsc.tws.tsched.spi.common.Config config =
+                new edu.iu.dsc.tws.tsched.spi.common.Config();
+            RoundRobinTaskScheduling roundRobinTaskScheduling = new RoundRobinTaskScheduling();
+            roundRobinTaskScheduling.initialize(config, job);
+            taskSchedulePlan = roundRobinTaskScheduling.tschedule();
+          } else if ("FirstFit".equals(taskSchedulingMode)) {
+            edu.iu.dsc.tws.tsched.spi.common.Config config =
+                new edu.iu.dsc.tws.tsched.spi.common.Config();
+            FirstFitTaskScheduling firstFitTaskScheduling = new FirstFitTaskScheduling();
+            firstFitTaskScheduling.initialize(config, job);
+            taskSchedulePlan = firstFitTaskScheduling.tschedule();
+          }
+        } catch (Exception ee) {
+          ee.printStackTrace();
+        }
       }
+
       //parsedTaskSet = executionGraph.parseTaskGraph(dataflowTaskGraphGenerator);
-      if (!parsedTaskSet.isEmpty()) {
-        //newly added for testing
+      /*if (!parsedTaskSet.isEmpty()) {
         executionGraph = new ExecutionGraph(parsedTaskSet);
         String message = executionGraph.generateExecutionGraph(containerId);
         //String message = executionGraph.generateExecutionGraph(containerId, parsedTaskSet);
-        /*TaskExecutorFixedThread taskExecutionGraph =
-            executionGraph.generateExecutionGraph(containerId, parsedTaskSet);*/
-        LOG.info(message);
-      }
+        TaskExecutorFixedThread taskExecutionGraph =
+            executionGraph.generateExecutionGraph(containerId, parsedTaskSet);
+        //LOG.info(message);
+      } */
     }
 
-    //It removes only the first tax vertex in the parsedTaskSet.
-    //dataflowTaskGraphGenerator.removeTaskVertex(parsedTaskSet.iterator().next());
-    //It is getting concurrent modification exception...!
-    /*for (TaskGraphMapper processedTask : parsedTaskSet) {
-      dataflowTaskGraphGenerator.removeTaskVertex(processedTask);
-    }*/
   }
 
   /**
@@ -185,10 +194,11 @@ public class SimpleTGraphExample implements IContainer {
     LOAD_RECEIVE_FINISHED,
   }
 
+
   private class TMapper extends TaskGraphMapper implements Runnable {
 
-    protected TMapper(String taskId) {
-      super(taskId);
+    protected TMapper(String taskId, String taskName) {
+      super(taskId, taskName);
     }
 
     @Override
@@ -209,9 +219,10 @@ public class SimpleTGraphExample implements IContainer {
 
   private class TShuffler extends TaskGraphMapper implements Runnable {
 
-    protected TShuffler(String taskId) {
-      super(taskId);
+    protected TShuffler(String taskId, String taskName) {
+      super(taskId, taskName);
     }
+
 
     @Override
     public void execute() {
@@ -231,9 +242,33 @@ public class SimpleTGraphExample implements IContainer {
 
   private class TReducer extends TaskGraphMapper implements Runnable {
 
-    protected TReducer(String taskId) {
-      super(taskId);
+    protected TReducer(String taskId, String taskName) {
+      super(taskId, taskName);
     }
+
+
+    @Override
+    public void execute() {
+      System.out.println("&&& Task Graph Reduce Function with Input and Output Files &&&");
+      for (int i = 0; i < 10; i++) { //100000
+        IntData data = generateData();
+        try {
+          System.out.println(i);
+          Thread.sleep(1);
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
+      }
+      Thread.yield();
+    }
+  }
+
+  private class TMerger extends TaskGraphMapper implements Runnable {
+
+    protected TMerger(String taskId, String taskName) {
+      super(taskId, taskName);
+    }
+
 
     @Override
     public void execute() {

@@ -86,9 +86,9 @@ public class SimpleTGraph implements IContainer {
     //MapWorker sourceTask = new MapWorker(0, direct);
     //ReceiveWorker sinkTask = new ReceiveWorker();
 
-    TMapper tMapper = new TMapper("1");
-    TReducer tReducer = new TReducer("2");
-    TShuffler tShuffler = new TShuffler("3");
+    TMapper tMapper = new TMapper("1", "task1");
+    TReducer tReducer = new TReducer("2", "task2");
+    TShuffler tShuffler = new TShuffler("3", "task3");
 
     //Add the real input data files in the array list...
     tMapper.addInputData("mapper1", new ArrayList<>());
@@ -113,7 +113,7 @@ public class SimpleTGraph implements IContainer {
 
     if (containerId == 0) {
 
-      Thread mapThread = new Thread(new TMapper("1"));
+      Thread mapThread = new Thread(new TMapper("1", "task1"));
       LOG.log(Level.INFO, "Starting map thread");
       mapThread.start();
 
@@ -189,8 +189,8 @@ public class SimpleTGraph implements IContainer {
 
   private class TMapper extends TaskGraphMapper implements Runnable {
 
-    protected TMapper(String taskId) {
-      super(taskId);
+    protected TMapper(String taskId, String taskName) {
+      super(taskId, taskName);
     }
 
     @Override
@@ -210,8 +210,8 @@ public class SimpleTGraph implements IContainer {
 
   private class TShuffler extends TaskGraphMapper implements Runnable {
 
-    protected TShuffler(String taskId) {
-      super(taskId);
+    protected TShuffler(String taskId, String taskName) {
+      super(taskId, taskName);
     }
 
     @Override
@@ -231,8 +231,8 @@ public class SimpleTGraph implements IContainer {
 
   private class TReducer extends TaskGraphMapper implements Runnable {
 
-    protected TReducer(String taskId) {
-      super(taskId);
+    protected TReducer(String taskId, String taskName) {
+      super(taskId, taskName);
     }
 
     @Override
