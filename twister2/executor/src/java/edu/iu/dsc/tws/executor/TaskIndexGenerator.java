@@ -9,8 +9,13 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.api;
+package edu.iu.dsc.tws.executor;
 
-public interface OutputCollection {
-  boolean collect(int edge, Message m);
+import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraphGenerator;
+
+public class TaskIndexGenerator {
+  public TaskPlan build(DataflowTaskGraphGenerator graph) {
+    return null;
+  }
 }

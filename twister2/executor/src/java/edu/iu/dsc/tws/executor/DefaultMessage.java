@@ -9,8 +9,27 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.api;
+package edu.iu.dsc.tws.executor;
 
-public interface OutputCollection {
-  boolean collect(int edge, Message m);
+import edu.iu.dsc.tws.task.api.Message;
+
+public class DefaultMessage implements Message {
+  private Object data;
+
+  private int edge;
+
+  public DefaultMessage(Object data, int edge) {
+    this.data = data;
+    this.edge = edge;
+  }
+
+  @Override
+  public Object getContent() {
+    return data;
+  }
+
+  @Override
+  public int edge() {
+    return edge;
+  }
 }

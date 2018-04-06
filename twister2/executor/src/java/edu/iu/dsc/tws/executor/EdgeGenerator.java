@@ -9,8 +9,12 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.api;
+package edu.iu.dsc.tws.executor;
 
-public interface OutputCollection {
-  boolean collect(int edge, Message m);
+/**
+ * Unique edge ids needs to be generated in order to have communication operations.
+ * We will keep track of the edges used in the framework and
+ */
+public class EdgeGenerator {
+
 }

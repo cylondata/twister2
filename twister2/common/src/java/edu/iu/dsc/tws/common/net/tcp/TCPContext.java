@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.common.net.tcp;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.common.net.NetworkInfo;
 
 public class TCPContext extends Context {
   public static final String TWISTER2_WRITE_SIZE = "twister2.tcp.write.size";

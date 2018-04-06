@@ -9,7 +9,18 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.executor;
+package edu.iu.dsc.tws.executor.comm;
 
-public interface Executor {
+import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.core.TWSCommunication;
+import edu.iu.dsc.tws.comms.core.TWSNetwork;
+
+public class CommunicationFactory {
+  private TWSNetwork network;
+
+  private TWSCommunication comm;
+
+  public DataFlowOperation build(String operation) {
+    return null;
+  }
 }
