@@ -25,7 +25,31 @@ public interface IDataflowTaskGraphGenerator {
 
   DataflowTaskGraphGenerator generateTaskGraph(ITask sourceTask,
                                                ITask sinkTask,
-                                               DataflowOperation... dataflowOperations);
+                                               TaskEdge... dataflowOperations);
+
+
+  /* To be implemented in DataflowTaskGraphGenerator
+  public Set<DataFlowOperation> getOutEdges(String taskName) {
+
+ }
+
+ public Set<DataFlowOperation> getInEdges(String taskName) {
+
+ }
+
+ public Set<SourceTargetTaskDetails> getParentsForEdge(String taskName,
+                                                       DataFlowOperation operation) {
+
+ }
+
+ public Set<SourceTargetTaskDetails> getAllParentTasks(String name) {
+
+ }
+
+ public Set<SourceTargetTaskDetails> getDAllChildTasks(String taskName) {
+
+ }
+   */
 
   DataflowTaskGraphGenerator generateDataflowTaskGraph(TaskMapper taskMapperTask1,
                                                        TaskMapper taskMapperTask2,
@@ -36,7 +60,7 @@ public interface IDataflowTaskGraphGenerator {
 
   DataflowTaskGraphGenerator generateTGraph(TaskGraphMapper sourceTask,
                                             TaskGraphMapper sinkTask,
-                                            DataflowOperation... dataflowOperation);
+                                            TaskEdge... dataflowOperation);
 
   /*DataflowTaskGraphGenerator generateDataflowGraph(Task sourceTask,
                                                    Task sinkTask,
@@ -54,5 +78,6 @@ public interface IDataflowTaskGraphGenerator {
   /*DataflowTaskGraphGenerator generateTaskGraph(Task sourceTask,
                                                Task sinkTask,
                                                DataflowOperation... dataFlowOperation);*/
+
 }
 

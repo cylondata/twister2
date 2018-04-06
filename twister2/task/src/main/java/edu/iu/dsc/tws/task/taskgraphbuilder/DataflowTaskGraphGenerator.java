@@ -28,75 +28,49 @@ public class DataflowTaskGraphGenerator implements IDataflowTaskGraphGenerator {
   private static final Logger LOG = Logger.getLogger(
       DataflowTaskGraphGenerator.class.getName());
 
-  private IDataflowTaskGraph<TaskMapper, CManager> dataflowTaskGraph =
-      new DataflowTaskGraph<>(CManager.class);
-
-  private IDataflowTaskGraph<TaskMapper, DataflowTaskEdge> taskGraph =
-      new DataflowTaskGraph<>(DataflowTaskEdge.class);
-
-  private IDataflowTaskGraph<Task, DataFlowOperation> dataflowGraph =
-      new DataflowTaskGraph<>(DataFlowOperation.class);
-
   /**
    * Newly added code for defining the task edges as dataflow operations namely
    * Map, Reduce, Shuffle, and others.
    */
-  private IDataflowTaskGraph<ITask, DataflowOperation> taskgraph =
-      new DataflowTaskGraph<>(DataflowOperation.class);
+  private IDataflowTaskGraph<ITask, TaskEdge> taskgraph =
+      new DataflowTaskGraph<>(TaskEdge.class);
+  private IDataflowTaskGraph<TaskGraphMapper, TaskEdge> tGraph =
+      new DataflowTaskGraph<>(TaskEdge.class);
+  private IDataflowTaskGraph<ITaskInfo, TaskEdge> iTaskGraph =
+      new DataflowTaskGraph<>(TaskEdge.class);
+  private IDataflowTaskGraph<TaskMapper, CManager> dataflowTaskGraph =
+      new DataflowTaskGraph<>(CManager.class);
 
-  private IDataflowTaskGraph<TaskGraphMapper, DataflowOperation> tGraph =
-      new DataflowTaskGraph<>(DataflowOperation.class);
-
-  private IDataflowTaskGraph<ITaskInfo, DataflowOperation> iTaskGraph =
-      new DataflowTaskGraph<>(DataflowOperation.class);
-
-  public IDataflowTaskGraph<ITaskInfo, DataflowOperation> getITaskGraph() {
-    return iTaskGraph;
+  /*public Set<DataFlowOperation> getOutEdges(String taskName) {
   }
 
-  public void setITaskGraph(IDataflowTaskGraph<ITaskInfo, DataflowOperation> iTaskgraph) {
-    this.iTaskGraph = iTaskgraph;
+  public Set<DataFlowOperation> getInEdges(String taskName) {
   }
 
-  public IDataflowTaskGraph<ITask, DataflowOperation> getTaskgraph() {
+  public Set<SourceTargetTaskDetails> getParentsForEdge(String taskName,
+                                                        DataFlowOperation operation) {
+  }
+
+  public Set<SourceTargetTaskDetails> getAllParentTasks(String name) {
+  }*/
+
+  //Newly Added on April 5th, 2018
+  private IDataflowTaskGraph<Task, DataFlowOperation> dataflowGraph =
+      new DataflowTaskGraph<>(DataFlowOperation.class);
+
+  public IDataflowTaskGraph<ITask, TaskEdge> getTaskgraph() {
     return taskgraph;
   }
 
   public void setTaskgraph(IDataflowTaskGraph<ITask,
-      DataflowOperation> taskgraph) {
+      TaskEdge> taskgraph) {
     this.taskgraph = taskgraph;
-  }
-
-  public IDataflowTaskGraph<TaskGraphMapper, DataflowOperation> getTGraph() {
-    return tGraph;
-  }
-
-  public void setTGraph(IDataflowTaskGraph<TaskGraphMapper, DataflowOperation> tgraph) {
-    this.tGraph = tgraph;
-  }
-
-  public IDataflowTaskGraph<TaskMapper, DataflowTaskEdge> getTaskGraph() {
-    return taskGraph;
-  }
-
-  public void setTaskGraph(IDataflowTaskGraph<TaskMapper,
-      DataflowTaskEdge> taskGraph) {
-    this.taskGraph = taskGraph;
-  }
-
-  public IDataflowTaskGraph<TaskMapper, CManager> getDataflowTaskGraph() {
-    return dataflowTaskGraph;
-  }
-
-  public void setDataflowTaskGraph(IDataflowTaskGraph<TaskMapper,
-      CManager> dataflowTaskGraph) {
-    this.dataflowTaskGraph = dataflowTaskGraph;
   }
 
   @Override
   public DataflowTaskGraphGenerator generateTaskGraph(ITask task1,
                                                       ITask task2,
-                                                      DataflowOperation... dataflowOperation) {
+                                                      TaskEdge... dataflowOperation) {
     try {
       this.taskgraph.addTaskVertex(task1);
       this.taskgraph.addTaskVertex(task2);
@@ -112,7 +86,7 @@ public class DataflowTaskGraphGenerator implements IDataflowTaskGraphGenerator {
   public Set<SourceTargetTaskDetails> getDataflowTaskChildTasks(
       DataflowTaskGraphGenerator taskGraph1) {
 
-    final IDataflowTaskGraph<ITask, DataflowOperation> dataflowTaskgraph =
+    final IDataflowTaskGraph<ITask, TaskEdge> dataflowTaskgraph =
         taskGraph1.getTaskgraph();
     Set<ITask> taskVertices = dataflowTaskgraph.getTaskVertexSet();
 
@@ -137,15 +111,13 @@ public class DataflowTaskGraphGenerator implements IDataflowTaskGraphGenerator {
     return sourceTargetTaskDetailsSet;
   }
 
-  //Newly Added on April 5th, 2018
-
   /**
    * This method displays the task edges, its child, source and target task vertices of a particular
    * task
    */
   private Set<SourceTargetTaskDetails> dataflowTaskSourceTargetVertices(
       final IDataflowTaskGraph<ITask,
-          DataflowOperation> dataflowtaskgraph,
+          TaskEdge> dataflowtaskgraph,
       final ITask mapper) {
 
     LOG.info("Task Object is:" + mapper + "\t"
@@ -156,9 +128,9 @@ public class DataflowTaskGraphGenerator implements IDataflowTaskGraphGenerator {
     if (dataflowtaskgraph.outDegreeOfTask(mapper) == 0) {
       return childTask;
     } else {
-      Set<DataflowOperation> taskEdgesOf = dataflowtaskgraph.outgoingTaskEdgesOf(mapper);
+      Set<TaskEdge> taskEdgesOf = dataflowtaskgraph.outgoingTaskEdgesOf(mapper);
       LOG.info("Task Child Size:" + dataflowtaskgraph.outgoingTaskEdgesOf(mapper) + "\n");
-      for (DataflowOperation edge : taskEdgesOf) {
+      for (TaskEdge edge : taskEdgesOf) {
         SourceTargetTaskDetails sourceTargetTaskDetails = new SourceTargetTaskDetails();
         sourceTargetTaskDetails.setSourceTask(dataflowtaskgraph.getTaskEdgeSource(edge));
         sourceTargetTaskDetails.setTargetTask(dataflowtaskgraph.getTaskEdgeTarget(edge));
@@ -170,27 +142,53 @@ public class DataflowTaskGraphGenerator implements IDataflowTaskGraphGenerator {
         LOG.info("%%%% Source and Target Vertex:" + dataflowTGraph.getTaskEdgeSource(edge)
            + "\t" + dataflowTGraph.getTaskEdgeTarget(edge));*/
       }
-      /*for (SourceTargetTaskDetails sourceTargetTaskDetails : childTask) {
-        LOG.info("Source and Target Task Details:"
-            + sourceTargetTaskDetails.getSourceTask() + "--->"
-            + sourceTargetTaskDetails.getTargetTask() + "---"
-            + sourceTargetTaskDetails.getSourceTask().getTaskId() + "---"
-            + sourceTargetTaskDetails.getSourceTask().getTaskName() + "---->"
-            + sourceTargetTaskDetails.getTargetTask().getTaskId() + "---"
-            + sourceTargetTaskDetails.getTargetTask().getTaskName() + "---"
-            + sourceTargetTaskDetails.getDataflowOperationName());
-      }*/
       return childTask;
     }
   }
 
+  private IDataflowTaskGraph<TaskMapper, DataflowTaskEdge> taskGraph =
+      new DataflowTaskGraph<>(DataflowTaskEdge.class);
+
+  public IDataflowTaskGraph<TaskMapper, DataflowTaskEdge> getTaskGraph() {
+    return taskGraph;
+  }
+
+  public void setTaskGraph(IDataflowTaskGraph<TaskMapper,
+      DataflowTaskEdge> taskGraph) {
+    this.taskGraph = taskGraph;
+  }
+
+  public IDataflowTaskGraph<TaskMapper, CManager> getDataflowTaskGraph() {
+    return dataflowTaskGraph;
+  }
+
+  public void setDataflowTaskGraph(IDataflowTaskGraph<TaskMapper,
+      CManager> dataflowTaskGraph) {
+    this.dataflowTaskGraph = dataflowTaskGraph;
+  }
+
+  public IDataflowTaskGraph<ITaskInfo, TaskEdge> getITaskGraph() {
+    return iTaskGraph;
+  }
+
+  public void setITaskGraph(IDataflowTaskGraph<ITaskInfo, TaskEdge> iTaskgraph) {
+    this.iTaskGraph = iTaskgraph;
+  }
+
+  public IDataflowTaskGraph<TaskGraphMapper, TaskEdge> getTGraph() {
+    return tGraph;
+  }
+
+  public void setTGraph(IDataflowTaskGraph<TaskGraphMapper, TaskEdge> tgraph) {
+    this.tGraph = tgraph;
+  }
 
   /**
    * This method is responsible for creating the dataflow task graph from the receiving
    * task vertices and task eges.
    */
   public DataflowTaskGraphGenerator generateITaskGraph(
-      DataflowOperation dataflowOperation,
+      TaskEdge dataflowOperation,
       ITaskInfo taskVertex, ITaskInfo... taskEdge) {
     try {
       this.iTaskGraph.addTaskVertex(taskVertex);
@@ -208,7 +206,7 @@ public class DataflowTaskGraphGenerator implements IDataflowTaskGraphGenerator {
 
   public DataflowTaskGraphGenerator generateTGraph(TaskGraphMapper sourceTask,
                                                    TaskGraphMapper sinkTask,
-                                                   DataflowOperation... dataflowOperation) {
+                                                   TaskEdge... dataflowOperation) {
     try {
       this.tGraph.addTaskVertex(sourceTask);
       this.tGraph.addTaskVertex(sinkTask);
@@ -295,34 +293,5 @@ public class DataflowTaskGraphGenerator implements IDataflowTaskGraphGenerator {
     LOG.info("Generated Dataflow Task Graph Is:" + taskGraph);
     return this;
   }
-
-  /*public IDataflowTaskGraph<Task, DataFlowOperation> getDataflowGraph() {
-    return dataflowGraph;
-  }
-
-  public void setDataflowGraph(IDataflowTaskGraph<Task, DataFlowOperation> dataflowGraph) {
-    this.dataflowGraph = dataflowGraph;
-  }*/
-
-  /*public IDataflowTaskGraph<Task, DataflowTaskEdge> getDataflowtaskgraph() {
-    return dataflowtaskgraph;
-  }
-
-  public void setDataflowtaskgraph(IDataflowTaskGraph<Task, DataflowTaskEdge> dataflowtaskgraph1) {
-    this.dataflowtaskgraph = dataflowtaskgraph1;
-  }
-
-  //This method throws java.lang.IllegalArgumentException
-  public DataflowTaskGraphGenerator generateDflowTaskGraph(Task sourceTask, Task... targetTask) {
-    try {
-      this.dataflowtaskgraph.addTaskVertex(sourceTask);
-      for (Task mapperTask : targetTask) {
-        this.dataflowtaskgraph.addTaskEdge(mapperTask, sourceTask);
-      }
-    } catch (IllegalArgumentException iae) {
-      iae.printStackTrace();
-    }
-    return this;
-  }*/
-
 }
+

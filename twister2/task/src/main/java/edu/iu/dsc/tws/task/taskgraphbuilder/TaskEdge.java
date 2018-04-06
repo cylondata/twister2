@@ -15,20 +15,20 @@ package edu.iu.dsc.tws.task.taskgraphbuilder;
  * This is an example class to specify the dataflow operations
  * such as "MAP", "REDUCE", "SHUFFLE", and others.
  */
-public class DataflowOperation {
+public class TaskEdge {
 
-  public String dataflowOperation;
+  public String taskEdge;
 
-  public DataflowOperation(String dataflowoperation) {
-    //this.dataflowOperation = dataflowoperation;
-    this.setDataflowOperation(dataflowoperation);
+  public TaskEdge(String taskedge) {
+    //this.taskEdge = taskedge;
+    this.setDataflowOperation(taskedge);
   }
 
   public String getDataflowOperation() {
-    return dataflowOperation;
+    return taskEdge;
   }
 
   public void setDataflowOperation(String dataflowOperation) {
-    this.dataflowOperation = dataflowOperation;
+    this.taskEdge = dataflowOperation;
   }
 }

@@ -38,7 +38,7 @@ public class DataflowTaskGraphConstructor extends DataflowTaskGraphGenerator {
     task2.addOutputData("outputFile2", new ArrayList<>()); //Add the output file list
 
     //this.generateDataflowGraph()  //Construct the task vertices and edges here...!
-    this.generateTGraph(task1, task2, new DataflowOperation("Map"));
+    this.generateTGraph(task1, task2, new TaskEdge("Map"));
 
   }
 }

@@ -52,7 +52,7 @@ public class DataflowTaskGraphParser implements IDataflowTaskGraphParser {
    */
   private Set<ITask> dataflowTaskGraphPrioritize(DataflowTaskGraphGenerator taskGraph) {
 
-    final IDataflowTaskGraph<ITask, DataflowOperation> dataflowTaskgraph = taskGraph.getTaskgraph();
+    final IDataflowTaskGraph<ITask, TaskEdge> dataflowTaskgraph = taskGraph.getTaskgraph();
     Set<ITask> taskVertices = dataflowTaskgraph.getTaskVertexSet();
 
     //Newly Added on April 5th, 2018
@@ -89,7 +89,7 @@ public class DataflowTaskGraphParser implements IDataflowTaskGraphParser {
    */
   private Set<SourceTargetTaskDetails> dataflowTaskSourceTargetVertices(
       final IDataflowTaskGraph<ITask,
-          DataflowOperation> dataflowtaskgraph,
+          TaskEdge> dataflowtaskgraph,
       final ITask mapper) {
 
     LOG.info("Task Object is:" + mapper + "\t"
@@ -100,9 +100,9 @@ public class DataflowTaskGraphParser implements IDataflowTaskGraphParser {
     if (dataflowtaskgraph.outDegreeOfTask(mapper) == 0) {
       return childTask;
     } else {
-      Set<DataflowOperation> taskEdgesOf = dataflowtaskgraph.outgoingTaskEdgesOf(mapper);
+      Set<TaskEdge> taskEdgesOf = dataflowtaskgraph.outgoingTaskEdgesOf(mapper);
       LOG.info("Task Child Size:" + dataflowtaskgraph.outgoingTaskEdgesOf(mapper) + "\n");
-      for (DataflowOperation edge : taskEdgesOf) {
+      for (TaskEdge edge : taskEdgesOf) {
         SourceTargetTaskDetails sourceTargetTaskDetails = new SourceTargetTaskDetails();
         sourceTargetTaskDetails.setSourceTask(dataflowtaskgraph.getTaskEdgeSource(edge));
         sourceTargetTaskDetails.setTargetTask(dataflowtaskgraph.getTaskEdgeTarget(edge));
@@ -133,12 +133,12 @@ public class DataflowTaskGraphParser implements IDataflowTaskGraphParser {
    * with an optimized scheduling mechanism.
    */
   private int dataflowTaskGraphParse(final IDataflowTaskGraph<ITask,
-      DataflowOperation> dataflowTaskgraph,
+      TaskEdge> dataflowTaskgraph,
                                      final ITask mapper) {
     if (dataflowTaskgraph.outDegreeOfTask(mapper) == 0) {
       return 1;
     } else {
-      Set<DataflowOperation> taskEdgesOf = dataflowTaskgraph.
+      Set<TaskEdge> taskEdgesOf = dataflowTaskgraph.
           outgoingTaskEdgesOf(mapper);
 
       Stream<ITask> taskStream = taskEdgesOf.stream().
