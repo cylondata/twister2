@@ -98,6 +98,13 @@ public class WordCountExample implements IContainer {
     public Message execute(Message content) {
       return null;
     }
+
+    private String taskName;
+
+    @Override
+    public String taskName() {
+      return taskName;
+    }
   }
 
   private class MapperSource {
@@ -125,8 +132,6 @@ public class WordCountExample implements IContainer {
     public void setInputSplit(InputSplit inputSplit) {
       this.inputSplit = inputSplit;
     }
-
   }
-
-
 }
+
