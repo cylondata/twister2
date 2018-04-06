@@ -207,7 +207,7 @@ public class SimpleTaskGraph implements IContainer {
   }
 
   private class ReceiveWorker extends SinkTask<Object> {
-
+    private String taskName = null;
     @Override
     public Message execute() {
       return null;
@@ -217,6 +217,11 @@ public class SimpleTaskGraph implements IContainer {
     public Message execute(Message content) {
       return null;
     }
+
+    @Override
+    public String taskName() {
+      return taskName;
+    }
   }
 
   /**
@@ -224,6 +229,7 @@ public class SimpleTaskGraph implements IContainer {
    */
   private class MapWorker extends SourceTask<Object> {
     private int sendCount = 0;
+    private String taskName = null;
 
     MapWorker(int tid, DataFlowOperation dataFlowOperation) {
       super(tid, dataFlowOperation);
@@ -251,6 +257,11 @@ public class SimpleTaskGraph implements IContainer {
     @Override
     public Message execute(Message content) {
       return execute();
+    }
+
+    @Override
+    public String taskName() {
+      return taskName;
     }
   }
 

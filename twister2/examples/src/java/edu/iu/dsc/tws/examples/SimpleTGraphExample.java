@@ -52,9 +52,10 @@ import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraphGenerator;
 import edu.iu.dsc.tws.task.taskgraphbuilder.TaskGraphMapper;
 import edu.iu.dsc.tws.tsched.FirstFit.FirstFitTaskScheduling;
 import edu.iu.dsc.tws.tsched.RoundRobin.RoundRobinTaskScheduling;
+import edu.iu.dsc.tws.tsched.spi.common.TaskConfig;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.utils.Job;
-
+import edu.iu.dsc.tws.tsched.utils.Task;
 /**
  * This is the task graph generation class with input and output files.
  * It will be extended further to submit the job to the executor...
@@ -126,11 +127,11 @@ public class SimpleTGraphExample implements IContainer {
 
         String taskSchedulingMode = "RoundRobin"; //Should come from Config file
         Job job = new Job();
-        Job.Task[] tasklist = new Job.Task[parsedTaskSet.size()];
-        Job.Task task = null;
+        Task[] tasklist = new Task[parsedTaskSet.size()];
+        Task task = null;
         job.setJobId(containerId);
         for (int i = 0; i < parsedTaskSet.size(); i++) {
-          task = new Job.Task();
+          task = new Task();
           task.setTaskName("task" + i);
           //task.setTaskName(parsedTaskSet.getClass().getName());
           // get the taskname from parsedtaskset
@@ -145,14 +146,14 @@ public class SimpleTGraphExample implements IContainer {
         TaskSchedulePlan taskSchedulePlan = null;
         try {
           if ("RoundRobin".equals(taskSchedulingMode)) {
-            edu.iu.dsc.tws.tsched.spi.common.Config config =
-                new edu.iu.dsc.tws.tsched.spi.common.Config();
+            TaskConfig config =
+                new TaskConfig();
             RoundRobinTaskScheduling roundRobinTaskScheduling = new RoundRobinTaskScheduling();
             roundRobinTaskScheduling.initialize(config, job);
             taskSchedulePlan = roundRobinTaskScheduling.tschedule();
           } else if ("FirstFit".equals(taskSchedulingMode)) {
-            edu.iu.dsc.tws.tsched.spi.common.Config config =
-                new edu.iu.dsc.tws.tsched.spi.common.Config();
+            TaskConfig config =
+                new TaskConfig();
             FirstFitTaskScheduling firstFitTaskScheduling = new FirstFitTaskScheduling();
             firstFitTaskScheduling.initialize(config, job);
             taskSchedulePlan = firstFitTaskScheduling.tschedule();

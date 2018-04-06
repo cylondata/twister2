@@ -80,6 +80,11 @@ public class WordCountExample implements IContainer {
     public Message execute(Message content) {
       return null;
     }
+
+    @Override
+    public String taskName() {
+      return null;
+    }
   }
 
   private class Reducer extends SinkTask<FileWriter> {
@@ -122,4 +127,6 @@ public class WordCountExample implements IContainer {
     }
 
   }
+
+
 }

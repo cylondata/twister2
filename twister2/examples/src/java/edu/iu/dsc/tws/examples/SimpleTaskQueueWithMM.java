@@ -83,13 +83,6 @@ public class SimpleTaskQueueWithMM implements IContainer {
   private DataFlowOperation direct;
 
   private TaskExecutorFixedThread taskExecutor;
-
-  private enum Status {
-    INIT,
-    MAP_FINISHED,
-    LOAD_RECEIVE_FINISHED,
-  }
-
   private Status status;
 
   /**
@@ -199,6 +192,25 @@ public class SimpleTaskQueueWithMM implements IContainer {
     }
   }
 
+  /**
+   * Generate data with an integer array
+   *
+   * @return IntData
+   */
+  private IntData generateData() {
+    int[] d = new int[10];
+    for (int i = 0; i < 10; i++) {
+      d[i] = i;
+    }
+    return new IntData(d);
+  }
+
+  private enum Status {
+    INIT,
+    MAP_FINISHED,
+    LOAD_RECEIVE_FINISHED,
+  }
+
   private class PingPongReceive implements MessageReceiver {
     private int count = 0;
 
@@ -267,6 +279,11 @@ public class SimpleTaskQueueWithMM implements IContainer {
       }
       return null;
     }
+
+    @Override
+    public String taskName() {
+      return null;
+    }
   }
 
   /**
@@ -306,18 +323,10 @@ public class SimpleTaskQueueWithMM implements IContainer {
     public Message execute(Message content) {
       return execute();
     }
-  }
 
-  /**
-   * Generate data with an integer array
-   *
-   * @return IntData
-   */
-  private IntData generateData() {
-    int[] d = new int[10];
-    for (int i = 0; i < 10; i++) {
-      d[i] = i;
+    @Override
+    public String taskName() {
+      return null;
     }
-    return new IntData(d);
   }
 }
