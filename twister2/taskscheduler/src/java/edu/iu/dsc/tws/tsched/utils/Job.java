@@ -121,7 +121,7 @@ public class Job {
     Job.jobId = jobId;
   }
 
-  public static class Task {
+  /*public static class Task {
 
     public String taskName = "mpitask";
     public Integer taskCount = 0;
@@ -168,7 +168,7 @@ public class Job {
     public Integer getParallelTaskCount() {
       return taskCount;
     }
-  }
+  }*/
 }
 
 

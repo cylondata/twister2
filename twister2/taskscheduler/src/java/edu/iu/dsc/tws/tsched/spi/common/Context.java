@@ -28,17 +28,17 @@ public final class Context {
   private Context() {
   }
 
-  public static Double instanceRam(Config config) {
+  public static Double instanceRam(TaskConfig config) {
     //return config.getDoubleValue(Key.INSTANCE_RAM);
     return Double.valueOf(1024.0);
   }
 
-  public static Double instanceDisk(Config config) {
+  public static Double instanceDisk(TaskConfig config) {
     //return config.getDoubleValue(Key.INSTANCE_DISK);
     return Double.valueOf(100.0);
   }
 
-  public static Double instanceCPU(Config config) {
+  public static Double instanceCPU(TaskConfig config) {
     //return config.getDoubleValue(Key.INSTANCE_CPU);
     return Double.valueOf(10.0);
   }

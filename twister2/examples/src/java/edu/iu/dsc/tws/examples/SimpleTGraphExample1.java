@@ -39,8 +39,10 @@ import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraphGenerator;
 import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraphParser;
 import edu.iu.dsc.tws.tsched.FirstFit.FirstFitTaskScheduling;
 import edu.iu.dsc.tws.tsched.RoundRobin.RoundRobinTaskScheduling;
+import edu.iu.dsc.tws.tsched.spi.common.TaskConfig;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.utils.Job;
+import edu.iu.dsc.tws.tsched.utils.Task;
 
 /**
  * This is the task graph generation class with input and output files.
@@ -117,11 +119,11 @@ public class SimpleTGraphExample1 implements IContainer {
           job.setJobId(1);
           job.setTaskLength(parsedTaskSet.size());
           job.setJob(job);
-          Job.Task[] taskList = new Job.Task[job.getTaskLength()];
+          Task[] taskList = new Task[job.getTaskLength()];
           //Task[] taskList = new Task[parsedTaskSet.size()];
           int i = 0;
           for (ITask processedTask : parsedTaskSet) {
-            Job.Task task = new Job.Task();
+            Task task = new Task();
             task.setTaskName(String.format("task%d", i));
             task.setTaskCount(2);
             task.setRequiredRam(1024.0);
@@ -133,11 +135,11 @@ public class SimpleTGraphExample1 implements IContainer {
           job.setTasklist(taskList);
 
           TaskSchedulePlan taskSchedulePlan = null;
-          if (edu.iu.dsc.tws.tsched.spi.common.Config.schedulingMode.equals("Round Robin")) {
+          if (TaskConfig.schedulingMode.equals("Round Robin")) {
             RoundRobinTaskScheduling roundRobinTaskScheduling = new RoundRobinTaskScheduling();
             roundRobinTaskScheduling.initialize(job);
             taskSchedulePlan = roundRobinTaskScheduling.tschedule();
-          } else if (edu.iu.dsc.tws.tsched.spi.common.Config.schedulingMode.equals("First Fit")) {
+          } else if (TaskConfig.schedulingMode.equals("First Fit")) {
             FirstFitTaskScheduling firstFitTaskScheduling = new FirstFitTaskScheduling();
             firstFitTaskScheduling.initialize(job);
             taskSchedulePlan = firstFitTaskScheduling.tschedule();

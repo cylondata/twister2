@@ -11,12 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tsched.spi.taskschedule;
 
-import edu.iu.dsc.tws.tsched.spi.common.Config;
+import edu.iu.dsc.tws.tsched.spi.common.TaskConfig;
 import edu.iu.dsc.tws.tsched.utils.Job;
 
 public interface TaskSchedule {
 
-  void initialize(Config config, Job job);
+  void initialize(TaskConfig config, Job job);
 
   void initialize(Job job);
 

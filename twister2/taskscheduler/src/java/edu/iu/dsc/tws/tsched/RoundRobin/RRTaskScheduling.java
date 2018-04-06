@@ -31,7 +31,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.tsched.spi.common.Config;
+import edu.iu.dsc.tws.tsched.spi.common.TaskConfig;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.InstanceId;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.Resource;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedule;
@@ -61,7 +61,7 @@ public class RRTaskScheduling implements TaskSchedule {
   private double instanceCPU;
 
   @Override
-  public void initialize(Config config, Job job) {
+  public void initialize(TaskConfig config, Job job) {
     this.jobObject = job;
 
     //The commented value should be enabled once the context class is created.
@@ -69,9 +69,9 @@ public class RRTaskScheduling implements TaskSchedule {
     //this.instanceDisk = Context.instanceDisk(config);
     //this.instanceCPU = Context.instanceCPU(config);
 
-    this.instanceRAM = Config.containerMaxRAMValue;
-    this.instanceCPU = Config.containerMaxCpuValue;
-    this.instanceDisk = Config.containerMaxDiskValue;
+    this.instanceRAM = TaskConfig.containerMaxRAMValue;
+    this.instanceCPU = TaskConfig.containerMaxCpuValue;
+    this.instanceDisk = TaskConfig.containerMaxDiskValue;
   }
 
   @Override

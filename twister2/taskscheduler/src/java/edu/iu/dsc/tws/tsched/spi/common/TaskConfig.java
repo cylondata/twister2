@@ -23,7 +23,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tsched.spi.common;
 
-public final class Config {
+public final class TaskConfig {
 
   public static double containerMaxRAMValue = 2096.00;
   public static double containerMaxCpuValue = 100.00;
@@ -33,7 +33,7 @@ public final class Config {
   public static String schedulingMode = "Round Robin";
   //public static String schedulingMode = "First Fit";
 
-  public Config() {
+  public TaskConfig() {
   }
 
   public Double getDoubleValue(Key key) {

@@ -31,8 +31,8 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.tsched.builder.ContainerIdScorer;
 import edu.iu.dsc.tws.tsched.builder.TaskSchedulePlanBuilder;
-import edu.iu.dsc.tws.tsched.spi.common.Config;
 import edu.iu.dsc.tws.tsched.spi.common.Context;
+import edu.iu.dsc.tws.tsched.spi.common.TaskConfig;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.Resource;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.ScheduleException;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
@@ -55,7 +55,7 @@ public class FirstFitTaskScheduling {
   /////////////////////////////////////////////////////////////////
 
   private Job job;
-  private Config config;
+  private TaskConfig config;
   private Resource defaultResourceValue;
   private Resource maximumContainerResourceValue;
   private int paddingPercentage;
@@ -65,7 +65,7 @@ public class FirstFitTaskScheduling {
   private Double instanceDisk;
   private Double instanceCPU;
 
-  public void initialize(Config configValue, Job jobObject) {
+  public void initialize(TaskConfig configValue, Job jobObject) {
     this.config = configValue;
     this.job = jobObject;
 
@@ -91,8 +91,7 @@ public class FirstFitTaskScheduling {
 
   public void initialize(Job jobObject) {
     //check this place...
-    edu.iu.dsc.tws.tsched.spi.common.Config configVal =
-        new edu.iu.dsc.tws.tsched.spi.common.Config();
+    TaskConfig configVal = new TaskConfig();
 
     this.config = configVal;
     this.job = jobObject;
