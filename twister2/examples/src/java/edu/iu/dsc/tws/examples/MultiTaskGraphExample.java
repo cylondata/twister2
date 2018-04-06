@@ -263,6 +263,7 @@ public class MultiTaskGraphExample implements IContainer {
     @Override
     public void progress() {
     }
+
   }
 
   private class ReceiveWorker extends SinkTask<Object> {
@@ -276,6 +277,12 @@ public class MultiTaskGraphExample implements IContainer {
     public Message execute(Message content) {
       return null;
     }
+
+    private String taskName;
+    @Override
+    public String taskName() {
+      return taskName;
+    }
   }
 
   /**
@@ -283,6 +290,7 @@ public class MultiTaskGraphExample implements IContainer {
    */
   private class MapWorker extends SourceTask<Object> {
     private int sendCount = 0;
+
 
     MapWorker(int tid, DataFlowOperation dataFlowOperation) {
       super(tid, dataFlowOperation);
@@ -310,6 +318,12 @@ public class MultiTaskGraphExample implements IContainer {
     @Override
     public Message execute(Message content) {
       return execute();
+    }
+
+    private String taskName;
+    @Override
+    public String taskName() {
+      return taskName;
     }
   }
 }

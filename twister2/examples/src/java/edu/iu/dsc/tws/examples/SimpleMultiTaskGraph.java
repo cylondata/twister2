@@ -189,6 +189,12 @@ public class SimpleMultiTaskGraph implements IContainer {
     public Message execute(Message content) {
       return execute();
     }
+
+    private String taskName;
+    @Override
+    public String taskName() {
+      return taskName;
+    }
   }
 
   private class PingPongReceive implements MessageReceiver {
@@ -217,5 +223,6 @@ public class SimpleMultiTaskGraph implements IContainer {
     }
   }
 }
+
 
 

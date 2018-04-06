@@ -130,35 +130,6 @@ public class SimpleTaskGraph implements IContainer {
         }
       }
     }
-
-    //This scheduling loop will be used in the future, leave it for reference.
-    /*int index = 0;
-    if (!parsedTaskSet.isEmpty()) {
-      for (Task processedTask : parsedTaskSet) {
-        if (containerId == index) {
-          taskExecutor.registerTask(processedTask);
-          taskExecutor.submitTask(0);
-          taskExecutor.progres();
-          index++;
-        } else if (index == 1) {
-          ArrayList<Integer> inq = new ArrayList<>();
-          inq.add(0);
-          taskExecutor.setTaskMessageProcessLimit(10000);
-          taskExecutor.registerSinkTask(processedTask, inq);
-          taskExecutor.progres();
-          index++;
-        } else if(index > 1){
-          List<Task> taskList = new ArrayList<>();
-          for (Task processedTasks : parsedTaskSet) {
-            taskList.add(processedTasks);
-          }
-          //This loop should be properly written...!
-          taskExecutionOptimizer = new TaskExecutionOptimizer(taskExecutor);
-          Map<Integer, List<Task>> taskMap = new HashMap<>();
-          taskMap.put(1, taskList);
-        }
-      }
-    }*/
   }
 
   /**
