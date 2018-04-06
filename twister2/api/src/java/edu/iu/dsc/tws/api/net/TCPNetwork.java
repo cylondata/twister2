@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.net.tcp.NetworkInfo;
+import edu.iu.dsc.tws.common.net.NetworkInfo;
 import edu.iu.dsc.tws.common.net.tcp.TCPChannel;
 import edu.iu.dsc.tws.common.net.tcp.TCPContext;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
@@ -57,7 +57,7 @@ public class TCPNetwork {
     // we need to first start the server part of tcp
     // lets first start the channel
     channel = new TCPChannel(config, networkInfo);
-    channel.startFirstPhase();
+    channel.startListening();
 
     // first lets intialize the zk
     int numberOfWorkers = job.getJobResources().getNoOfContainers();
@@ -86,7 +86,7 @@ public class TCPNetwork {
       networkInfos.add(netInfo);
     }
     // now intialize with zookeeper
-    channel.startSecondPhase(networkInfos, thisNet);
+    channel.startConnections(networkInfos, thisNet);
 
     TWSTCPChannel twstcpChannel = new TWSTCPChannel(config, taskPlan.getThisExecutor(), channel);
     // now lets create the dataflow communication

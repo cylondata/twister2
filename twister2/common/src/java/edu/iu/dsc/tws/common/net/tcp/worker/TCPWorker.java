@@ -17,9 +17,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.net.NetworkInfo;
 import edu.iu.dsc.tws.common.net.tcp.Client;
 import edu.iu.dsc.tws.common.net.tcp.MessageHandler;
-import edu.iu.dsc.tws.common.net.tcp.NetworkInfo;
 import edu.iu.dsc.tws.common.net.tcp.Progress;
 import edu.iu.dsc.tws.common.net.tcp.StatusCode;
 import edu.iu.dsc.tws.common.net.tcp.TCPContext;

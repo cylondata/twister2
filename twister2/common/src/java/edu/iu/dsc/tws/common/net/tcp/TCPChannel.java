@@ -22,6 +22,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.net.NetworkInfo;
 import edu.iu.dsc.tws.common.net.tcp.worker.TCPWorker;
 
 public class TCPChannel {
@@ -60,6 +61,11 @@ public class TCPChannel {
   private int clientsCompleted = 0;
   private int clientsConnected = 0;
 
+  /**
+   * Start the channel with the given network information
+   * @param cfg configuration
+   * @param info network information
+   */
   public TCPChannel(Config cfg, NetworkInfo info) {
     config = cfg;
     thisInfo = info;
@@ -80,9 +86,9 @@ public class TCPChannel {
   }
 
   /**
-   * Start
+   * Start listening
    */
-  public void startFirstPhase() {
+  public void startListening() {
     String hostName = TCPContext.getHostName(thisInfo);
     int port = TCPContext.getPort(thisInfo);
 
@@ -93,7 +99,12 @@ public class TCPChannel {
     server.start();
   }
 
-  public void startSecondPhase(List<NetworkInfo> workerInfo, NetworkInfo updatedThisInfo) {
+  /**
+   * Start the connections to the servers
+   * @param workerInfo
+   * @param updatedThisInfo
+   */
+  public void startConnections(List<NetworkInfo> workerInfo, NetworkInfo updatedThisInfo) {
     this.networkInfos = workerInfo;
 
     for (NetworkInfo ni : workerInfo) {
@@ -276,14 +287,14 @@ public class TCPChannel {
     }
 
     TCPChannel master = new TCPChannel(Config.newBuilder().build(), list.get(procId));
-    master.startFirstPhase();
+    master.startListening();
 
     TCPWorker worker = new TCPWorker(Config.newBuilder().build(), networkInfo);
     worker.start();
     worker.waitForSync();
     LOG.log(Level.INFO, "Workers are synced..");
 
-    master.startSecondPhase(list, networkInfo);
+    master.startConnections(list, networkInfo);
 
     int destProcId = 0;
     if (procId == 0) {

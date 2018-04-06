@@ -11,11 +11,59 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor;
 
-public class DefaultExecutor implements Executor {
+import java.util.Map;
+import java.util.Set;
+import java.util.logging.Logger;
+
+import edu.iu.dsc.tws.task.api.ITask;
+import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraph;
+import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
+
+public class DefaultExecutor implements IExecutor {
+  private static final Logger LOG = Logger.getLogger(DefaultExecutor.class.getName());
+
   /**
    * no of threads used for this executor
    */
   private int noOfThreads;
 
+  /**
+   * Worker id
+   */
+  private int workerId;
 
+  public DefaultExecutor(int workerId) {
+    this.workerId = workerId;
+  }
+
+  @Override
+  public Execution schedule(DataflowTaskGraph taskGraph, TaskSchedulePlan taskSchedule) {
+    Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap = taskSchedule.getContainersMap();
+
+    TaskSchedulePlan.ContainerPlan p = containersMap.get(workerId);
+
+    if (p == null) {
+      return null;
+    }
+
+    // lets get the task
+    ITask task = null;
+
+    // now lets get the outgoing edges of this task
+    Set<String> outOperations = null;
+    Set<String> inOperations = null;
+
+    // now lets create the communications for these tasks
+    return null;
+  }
+
+  @Override
+  public void wait(Execution execution) {
+
+  }
+
+  @Override
+  public void stop(Execution execution) {
+
+  }
 }
