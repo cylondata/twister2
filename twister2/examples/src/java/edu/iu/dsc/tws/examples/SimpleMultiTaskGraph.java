@@ -153,6 +153,13 @@ public class SimpleMultiTaskGraph implements IContainer {
       }
       return null;
     }
+
+    private String taskName;
+
+    @Override
+    public String taskName() {
+      return taskName;
+    }
   }
 
   /**

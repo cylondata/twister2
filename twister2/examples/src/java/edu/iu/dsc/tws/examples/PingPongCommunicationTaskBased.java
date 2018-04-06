@@ -163,6 +163,12 @@ public class PingPongCommunicationTaskBased implements IContainer {
     public Message execute(Message content) {
       return null;
     }
+
+    private String taskName;
+    @Override
+    public String taskName() {
+      return taskName;
+    }
   }
 
   /**
@@ -173,7 +179,6 @@ public class PingPongCommunicationTaskBased implements IContainer {
 
     MapWorker(int tid, DataFlowOperation dataFlowOperation) {
       super(tid, dataFlowOperation);
-
     }
 
     @Override
