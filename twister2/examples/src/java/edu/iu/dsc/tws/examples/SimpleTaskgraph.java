@@ -21,9 +21,22 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 package edu.iu.dsc.tws.examples;
 
-import java.util.ArrayList;
+//import java.util.ArrayList;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -47,9 +60,8 @@ import edu.iu.dsc.tws.task.api.SinkTask;
 import edu.iu.dsc.tws.task.api.SourceTask;
 import edu.iu.dsc.tws.task.api.Task;
 import edu.iu.dsc.tws.task.core.TaskExecutorFixedThread;
-import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowOperation;
 import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraphGenerator;
-import edu.iu.dsc.tws.task.taskgraphbuilder.TaskGraphParser;
+import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraphParser;
 
 public class SimpleTaskgraph implements IContainer {
 
@@ -61,7 +73,7 @@ public class SimpleTaskgraph implements IContainer {
 
   //To call the dataflow task graph generator
   private DataflowTaskGraphGenerator dataflowTaskGraphGenerator = null;
-  private TaskGraphParser taskGraphParser = null;
+  private DataflowTaskGraphParser taskGraphParser = null;
   private Status status;
 
   /**
@@ -87,7 +99,7 @@ public class SimpleTaskgraph implements IContainer {
     taskExecutor.registerQueue(0, pongQueue);
 
     direct = channel.direct(newCfg, MessageType.OBJECT, 0, sources,
-        destination, new SimpleTaskgraph.PingPongReceive());
+        destination, new PingPongReceive());
     taskExecutor.initCommunication(channel, direct);
 
     //For Dataflow Task Graph Generation call the dataflow task graph generator
@@ -97,45 +109,6 @@ public class SimpleTaskgraph implements IContainer {
     //commented this line for separating the communication component
     //dataflowTaskGraphGenerator = new DataflowTaskGraphGenerator().generateDataflowGraph(
     //    sourceTask, sinkTask, direct);
-
-    dataflowTaskGraphGenerator = new DataflowTaskGraphGenerator().generateTaskGraph(
-        sourceTask, sinkTask, new DataflowOperation("Map"));
-
-    if (dataflowTaskGraphGenerator != null) {
-      taskGraphParser = new TaskGraphParser(dataflowTaskGraphGenerator);
-      parsedTaskSet = taskGraphParser.taskGraphParseAndSchedule();
-    }
-
-    if (!parsedTaskSet.isEmpty()) {
-      if (containerId == 0) {
-        LOG.info("Job in if loop is::::::::::::" + parsedTaskSet.iterator().next());
-        taskExecutor.registerTask(parsedTaskSet.iterator().next());
-        //taskExecutor.registerTask(new MapWorker(0, direct));
-        taskExecutor.submitTask(0);
-        taskExecutor.progres();
-        ///dataflowTaskGraphGenerator.removeTaskVertex(parsedTaskSet.iterator().next());
-      } else if (containerId == 1) {
-        int index = 0;
-        for (Task processedTask : parsedTaskSet) {
-          if (index == 0) {
-            ++index;
-          } else if (index == 1) {
-            LOG.info("Job in else loop is::::::::::::" + processedTask);
-            ArrayList<Integer> inq = new ArrayList<>();
-            inq.add(0);
-            taskExecutor.setTaskMessageProcessLimit(100); //10000
-            taskExecutor.registerSinkTask(processedTask, inq);
-            taskExecutor.progres();
-            ///dataflowTaskGraphGenerator.removeTaskVertex(parsedTaskSet.iterator().next());
-            ++index;
-          } else if (index > 1) { //Just for verification
-            LOG.info("Task Index is greater than 1");
-            LOG.info("Submit the job to pipeline task");
-            break;
-          }
-        }
-      }
-    }
   }
 
   /**
@@ -194,6 +167,13 @@ public class SimpleTaskgraph implements IContainer {
     public Message execute(Message content) {
       return null;
     }
+
+    private String taskName;
+
+    @Override
+    public String taskName() {
+      return taskName;
+    }
   }
 
   /**
@@ -228,6 +208,13 @@ public class SimpleTaskgraph implements IContainer {
     @Override
     public Message execute(Message content) {
       return execute();
+    }
+
+    private String taskName;
+
+    @Override
+    public String taskName() {
+      return taskName;
     }
   }
 }
