@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.task.taskgraphbuilder;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
@@ -41,18 +42,16 @@ public class DataflowTaskGraphGenerator implements IDataflowTaskGraphGenerator {
   private IDataflowTaskGraph<TaskMapper, CManager> dataflowTaskGraph =
       new DataflowTaskGraph<>(CManager.class);
 
-  /*public Set<DataFlowOperation> getOutEdges(String taskName) {
+  private Set<SourceTargetTaskDetails> sourceTargetTaskDetailsSet = new TreeSet<>();
+
+  public Set<SourceTargetTaskDetails> getSourceTargetTaskDetailsSet() {
+    return sourceTargetTaskDetailsSet;
   }
 
-  public Set<DataFlowOperation> getInEdges(String taskName) {
+  public void setSourceTargetTaskDetailsSet(Set<SourceTargetTaskDetails>
+                                                sourceTargetTaskDetailsSet) {
+    this.sourceTargetTaskDetailsSet = sourceTargetTaskDetailsSet;
   }
-
-  public Set<SourceTargetTaskDetails> getParentsForEdge(String taskName,
-                                                        DataFlowOperation operation) {
-  }
-
-  public Set<SourceTargetTaskDetails> getAllParentTasks(String name) {
-  }*/
 
   //Newly Added on April 5th, 2018
   private IDataflowTaskGraph<Task, DataFlowOperation> dataflowGraph =
@@ -81,17 +80,41 @@ public class DataflowTaskGraphGenerator implements IDataflowTaskGraphGenerator {
     return this;
   }
 
-  //Newly Added on April 5th, 2018
+  /*public Set<DataFlowOperation> getOutEdges(String taskName) {
+  }
+
+  public Set<DataFlowOperation> getInEdges(String taskName) {
+  }
+
+  public Set<SourceTargetTaskDetails> getParentsForEdge(String taskName,
+                                                        DataFlowOperation operation) {
+  }*/
+
+  public Set<SourceTargetTaskDetails> getAllParentTasks(String taskName) {
+
+    Set<SourceTargetTaskDetails> allParentTaskDetailsSet = new TreeSet<>();
+    if (!getSourceTargetTaskDetailsSet().isEmpty()) {
+      for (SourceTargetTaskDetails taskDetails : this.getSourceTargetTaskDetailsSet()) {
+        allParentTaskDetailsSet.add(taskDetails);
+      }
+    }
+    /*Set<SourceTargetTaskDetails> filtered = sourceTargetTaskDetailsSet.stream()
+        .filter(mc -> mc.getTargetTask().taskName().equalsIgnoreCase("task1"))
+        .collect(Collectors.toSet());
+    filtered.forEach(mc -> System.out.println("Object: " + mc.getTargetTask().taskName()));*/
+
+    if (!allParentTaskDetailsSet.isEmpty()) {
+      System.out.println("Parent Task Details Size:0" + allParentTaskDetailsSet.size());
+    }
+    return allParentTaskDetailsSet;
+  }
+
   @Override
-  public Set<SourceTargetTaskDetails> getDataflowTaskChildTasks(
-      DataflowTaskGraphGenerator taskGraph1) {
-
-    final IDataflowTaskGraph<ITask, TaskEdge> dataflowTaskgraph =
-        taskGraph1.getTaskgraph();
+  public Set<SourceTargetTaskDetails> getDataflowTaskChildTasks() {
+    final IDataflowTaskGraph<ITask, TaskEdge> dataflowTaskgraph = this.getTaskgraph();
     Set<ITask> taskVertices = dataflowTaskgraph.getTaskVertexSet();
-
     //Newly Added on April 5th, 2018
-    Set<SourceTargetTaskDetails> sourceTargetTaskDetailsSet = new HashSet<>();
+    //Set<SourceTargetTaskDetails> sourceTargetTaskDetailsSet = new HashSet<>();
     for (ITask child : taskVertices) {
       sourceTargetTaskDetailsSet = dataflowTaskSourceTargetVertices(dataflowTaskgraph, child);
       if (!sourceTargetTaskDetailsSet.isEmpty()) {
@@ -107,7 +130,37 @@ public class DataflowTaskGraphGenerator implements IDataflowTaskGraphGenerator {
         }
       }
     }
+    setSourceTargetTaskDetailsSet(sourceTargetTaskDetailsSet);
+    return sourceTargetTaskDetailsSet;
+  }
 
+  //Newly Added on April 5th, 2018
+  @Override
+  public Set<SourceTargetTaskDetails> getDataflowTaskChildTasks(
+      DataflowTaskGraphGenerator taskGraph1) {
+
+    final IDataflowTaskGraph<ITask, TaskEdge> dataflowTaskgraph = taskGraph1.
+        getTaskgraph();
+    Set<ITask> taskVertices = dataflowTaskgraph.getTaskVertexSet();
+
+    //Newly Added on April 5th, 2018
+    //Set<SourceTargetTaskDetails> sourceTargetTaskDetailsSet = new HashSet<>();
+    for (ITask child : taskVertices) {
+      sourceTargetTaskDetailsSet = dataflowTaskSourceTargetVertices(dataflowTaskgraph, child);
+      if (!sourceTargetTaskDetailsSet.isEmpty()) {
+        for (SourceTargetTaskDetails sourceTargetTaskDetails : sourceTargetTaskDetailsSet) {
+          LOG.info("Source and Target Task Details:"
+              + sourceTargetTaskDetails.getSourceTask() + "--->"
+              + sourceTargetTaskDetails.getTargetTask() + "---"
+              + "Source Task Id and Name" + "---"
+              + sourceTargetTaskDetails.getSourceTask().taskName() + "----"
+              + "Target Task Id and Name" + "---"
+              + sourceTargetTaskDetails.getTargetTask().taskName() + "---"
+              + sourceTargetTaskDetails.getDataflowOperationName() + "\n");
+        }
+      }
+    }
+    setSourceTargetTaskDetailsSet(sourceTargetTaskDetailsSet);
     return sourceTargetTaskDetailsSet;
   }
 
@@ -120,16 +173,15 @@ public class DataflowTaskGraphGenerator implements IDataflowTaskGraphGenerator {
           TaskEdge> dataflowtaskgraph,
       final ITask mapper) {
 
-    LOG.info("Task Object is:" + mapper + "\t"
-        // + "Task Id:" + mapper.getTaskId() + "\t"
-        + "Task Name:" + mapper.taskName());
+    /*LOG.info("Task Object is:" + mapper + "\t"
+         + "Task Id:" + mapper.getTaskId() + "\t"
+        + "Task Name:" + mapper.taskName());*/
 
     Set<SourceTargetTaskDetails> childTask = new HashSet<>();
-    if (dataflowtaskgraph.outDegreeOfTask(mapper) == 0) {
+     /*if (dataflowtaskgraph.outDegreeOfTask(mapper) == 0) {
       return childTask;
     } else {
       Set<TaskEdge> taskEdgesOf = dataflowtaskgraph.outgoingTaskEdgesOf(mapper);
-      LOG.info("Task Child Size:" + dataflowtaskgraph.outgoingTaskEdgesOf(mapper) + "\n");
       for (TaskEdge edge : taskEdgesOf) {
         SourceTargetTaskDetails sourceTargetTaskDetails = new SourceTargetTaskDetails();
         sourceTargetTaskDetails.setSourceTask(dataflowtaskgraph.getTaskEdgeSource(edge));
@@ -138,12 +190,23 @@ public class DataflowTaskGraphGenerator implements IDataflowTaskGraphGenerator {
         sourceTargetTaskDetails.setDataflowOperationName(edge.getDataflowOperation());
         childTask.add(sourceTargetTaskDetails);
 
-        /*LOG.info("%%%% Dataflow Operation:" + edge.getDataflowOperation());
-        LOG.info("%%%% Source and Target Vertex:" + dataflowTGraph.getTaskEdgeSource(edge)
-           + "\t" + dataflowTGraph.getTaskEdgeTarget(edge));*/
+        LOG.info("%%%% Dataflow Operation:" + edge.getDataflowOperation());
+        LOG.info("%%%% Source and Target Vertex:" + dataflowtaskgraph.getTaskEdgeSource(edge)
+            + "\t" + dataflowtaskgraph.getTaskEdgeTarget(edge));
       }
       return childTask;
+    }*/
+
+    Set<TaskEdge> taskEdgesOf = dataflowtaskgraph.outgoingTaskEdgesOf(mapper);
+    for (TaskEdge edge : taskEdgesOf) {
+      SourceTargetTaskDetails sourceTargetTaskDetails = new SourceTargetTaskDetails();
+      sourceTargetTaskDetails.setSourceTask(dataflowtaskgraph.getTaskEdgeSource(edge));
+      sourceTargetTaskDetails.setTargetTask(dataflowtaskgraph.getTaskEdgeTarget(edge));
+      sourceTargetTaskDetails.setDataflowOperation(edge);
+      sourceTargetTaskDetails.setDataflowOperationName(edge.getDataflowOperation());
+      childTask.add(sourceTargetTaskDetails);
     }
+    return childTask;
   }
 
   private IDataflowTaskGraph<TaskMapper, DataflowTaskEdge> taskGraph =
