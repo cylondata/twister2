@@ -11,13 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.taskgraphfluentapi;
 
-import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowOperation;
+import edu.iu.dsc.tws.task.taskgraphbuilder.TaskEdge;
 
 public class TaskInfo {
 
   public ITaskInfo sourceTask;
   public ITaskInfo[] targetTask;
-  public DataflowOperation dataflowOperation;
+  public TaskEdge dataflowOperation;
 
   public ITaskInfo getSourceTask() {
     return sourceTask;
@@ -35,11 +35,11 @@ public class TaskInfo {
     this.targetTask = targetTask;
   }
 
-  public DataflowOperation getDataflowOperation() {
+  public TaskEdge getDataflowOperation() {
     return dataflowOperation;
   }
 
-  public void setDataflowOperation(DataflowOperation dataflowOperation) {
+  public void setDataflowOperation(TaskEdge dataflowOperation) {
     this.dataflowOperation = dataflowOperation;
   }
 }

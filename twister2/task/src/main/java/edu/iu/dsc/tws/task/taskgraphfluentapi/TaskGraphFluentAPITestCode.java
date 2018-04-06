@@ -23,7 +23,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.taskgraphfluentapi;
 
-import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowOperation;
+import edu.iu.dsc.tws.task.taskgraphbuilder.TaskEdge;
 
 /**
  * The user has to define their task and taskgraph generation similar to this class.
@@ -102,11 +102,11 @@ public class TaskGraphFluentAPITestCode {
         .connectTaskVertex_Edge(task3, task4)
 
         //For testing
-        .connectTaskVertex_Edge(new DataflowOperation("Source"), task1)
-        .connectTaskVertex_Edge(new DataflowOperation("Map"), task1, task2)
-        .connectTaskVertex_Edge(new DataflowOperation("Reduce"), task1, task3)
-        .connectTaskVertex_Edge(new DataflowOperation("Aggregate1"), task2, task4)
-        .connectTaskVertex_Edge(new DataflowOperation("Aggregate2"), task3, task4)
+        .connectTaskVertex_Edge(new TaskEdge("Source"), task1)
+        .connectTaskVertex_Edge(new TaskEdge("Map"), task1, task2)
+        .connectTaskVertex_Edge(new TaskEdge("Reduce"), task1, task3)
+        .connectTaskVertex_Edge(new TaskEdge("Aggregate1"), task2, task4)
+        .connectTaskVertex_Edge(new TaskEdge("Aggregate2"), task3, task4)
 
         .build()
         .displayTaskGraph();

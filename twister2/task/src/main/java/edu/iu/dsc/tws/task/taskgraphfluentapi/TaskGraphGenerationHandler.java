@@ -16,17 +16,16 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
-
 import java.util.logging.Logger;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
-import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowOperation;
 import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraph;
 import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraphGenerator;
 import edu.iu.dsc.tws.task.taskgraphbuilder.IDataflowTaskGraph;
 import edu.iu.dsc.tws.task.taskgraphbuilder.TGraphParser;
+import edu.iu.dsc.tws.task.taskgraphbuilder.TaskEdge;
 
 /**
  * This class is mainly responsible for handling the user requests
@@ -45,8 +44,8 @@ public class TaskGraphGenerationHandler implements ITaskGraphGenerate {
   private Multimap<Integer, Integer> taskConnectedList = ArrayListMultimap.create();
   private Multimap<ITaskInfo, ITaskInfo> taskInfoConnectedList = ArrayListMultimap.create();
   private Multimap<ITaskInfo, TaskInfo> taskgraphMap = ArrayListMultimap.create();
-  private IDataflowTaskGraph<ITaskInfo, DataflowOperation> iTaskGraph =
-      new DataflowTaskGraph<>(DataflowOperation.class);
+  private IDataflowTaskGraph<ITaskInfo, TaskEdge> iTaskGraph =
+      new DataflowTaskGraph<>(TaskEdge.class);
 
   /**
    * This is the main constructor to construct the task objects
@@ -147,7 +146,7 @@ public class TaskGraphGenerationHandler implements ITaskGraphGenerate {
    * edge using the dataflow operation.
    */
   @Override
-  public ITaskGraphGenerate connectTaskVertex_Edge(DataflowOperation dataflowOperation,
+  public ITaskGraphGenerate connectTaskVertex_Edge(TaskEdge dataflowOperation,
                                                    ITaskInfo sourceTask,
                                                    ITaskInfo... targetTask) {
     taskInfo = new TaskInfo();
@@ -202,7 +201,7 @@ public class TaskGraphGenerationHandler implements ITaskGraphGenerate {
   }
 
   @Override
-  public ITaskGraphGenerate generateITaskGraph(DataflowOperation dataflowOperation,
+  public ITaskGraphGenerate generateITaskGraph(TaskEdge dataflowOperation,
                                                ITaskInfo taskVertex, ITaskInfo... taskEdge) {
     return this;
   }
