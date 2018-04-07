@@ -13,10 +13,10 @@ package edu.iu.dsc.tws.executor;
 
 import java.util.concurrent.BlockingQueue;
 
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.api.ITask;
 import edu.iu.dsc.tws.task.api.Message;
 import edu.iu.dsc.tws.task.api.OutputCollection;
-import edu.iu.dsc.tws.common.config.Config;
 
 /**
  * The class represents the instance of the executing task
