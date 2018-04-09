@@ -40,6 +40,7 @@ import edu.iu.dsc.tws.task.taskgraphbuilder.TaskEdge;
 import edu.iu.dsc.tws.tsched.FirstFit.FirstFitTaskScheduling;
 import edu.iu.dsc.tws.tsched.RoundRobin.RoundRobinTaskScheduling;
 import edu.iu.dsc.tws.tsched.spi.common.TaskConfig;
+import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedule;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.utils.Job;
 import edu.iu.dsc.tws.tsched.utils.Task;

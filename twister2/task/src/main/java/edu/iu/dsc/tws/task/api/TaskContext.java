@@ -9,23 +9,18 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.taskgraphbuilder;
+package edu.iu.dsc.tws.task.api;
 
-public class DataflowTaskVertexFactory<TV> implements IDataflowTaskVertexFactory<TV> {
-
-  private Class<? extends TV> taskVertexClass;
-
-  public DataflowTaskVertexFactory(Class<? extends TV> taskVertexClass) {
-    this.taskVertexClass = taskVertexClass;
+public class TaskContext {
+  public int taskId() {
+    return 0;
   }
 
-  @Override
-  public TV createTaskVertex() throws IllegalAccessException {
-    try {
-      return taskVertexClass.newInstance();
-    } catch (InstantiationException e) {
-      throw new RuntimeException("instance creation failed", e);
-    }
+  public int taskIndex() {
+    return 0;
+  }
+
+  public int parallelTasks() {
+    return 0;
   }
 }
-

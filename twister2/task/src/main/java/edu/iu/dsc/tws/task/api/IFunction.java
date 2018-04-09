@@ -9,20 +9,21 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.taskgraphbuilder;
+package edu.iu.dsc.tws.task.api;
 
-public class DataflowTaskGraph<TV, TE>
-    extends DataflowTaskGraphAbstraction<TV, TE>
-    implements IDataflowTaskGraph<TV, TE> {
+import java.util.List;
+import java.util.Map;
 
-  public DataflowTaskGraph(Class<? extends TE> taskEdgeClass) {
-    this(new DataflowTaskEdgeFactory<TV, TE>(taskEdgeClass));
-  }
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 
-  public DataflowTaskGraph(IDataflowTaskEdgeFactory<TV, TE> taskEdgeFactory) {
-    super(taskEdgeFactory);
-  }
+public interface IFunction {
+  void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds);
+
+  /**
+   * The actual message callback
+   *
+   * @param object the actual message
+   */
+  boolean onMessage(int source, int path, int target, int flags, Object object);
 }
-
-
-

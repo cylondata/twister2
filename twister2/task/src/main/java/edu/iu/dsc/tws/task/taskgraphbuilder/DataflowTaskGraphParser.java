@@ -17,9 +17,8 @@ import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 import edu.iu.dsc.tws.task.api.ITask;
-import edu.iu.dsc.tws.task.api.Task;
 
-public class DataflowTaskGraphParser implements IDataflowTaskGraphParser {
+public class DataflowTaskGraphParser {
 
   private static final Logger LOG = Logger.getLogger(
       DataflowTaskGraphParser.class.getName());
@@ -41,18 +40,13 @@ public class DataflowTaskGraphParser implements IDataflowTaskGraphParser {
     return processedTaskVertices;
   }
 
-  @Override
-  public Set<ITask> taskGraphParseAndSchedule(int containerId) {
-    return null;
-  }
-
   /**
    * This method calls the dataflow task graph parser method to prioritize
    * the tasks which is ready for the execution.
    */
   private Set<ITask> dataflowTaskGraphPrioritize(DataflowTaskGraphGenerator taskGraph) {
 
-    final IDataflowTaskGraph<ITask, TaskEdge> dataflowTaskgraph = taskGraph.getTaskgraph();
+    final ITaskGraph<ITask, TaskEdge> dataflowTaskgraph = taskGraph.getTaskgraph();
     Set<ITask> taskVertices = dataflowTaskgraph.getTaskVertexSet();
 
     //Newly Added on April 5th, 2018
@@ -88,7 +82,7 @@ public class DataflowTaskGraphParser implements IDataflowTaskGraphParser {
    * task
    */
   private Set<SourceTargetTaskDetails> dataflowTaskSourceTargetVertices(
-      final IDataflowTaskGraph<ITask,
+      final ITaskGraph<ITask,
           TaskEdge> dataflowtaskgraph,
       final ITask mapper) {
 
@@ -104,8 +98,6 @@ public class DataflowTaskGraphParser implements IDataflowTaskGraphParser {
       LOG.info("Task Child Size:" + dataflowtaskgraph.outgoingTaskEdgesOf(mapper) + "\n");
       for (TaskEdge edge : taskEdgesOf) {
         SourceTargetTaskDetails sourceTargetTaskDetails = new SourceTargetTaskDetails();
-        sourceTargetTaskDetails.setSourceTask(dataflowtaskgraph.getTaskEdgeSource(edge));
-        sourceTargetTaskDetails.setTargetTask(dataflowtaskgraph.getTaskEdgeTarget(edge));
         sourceTargetTaskDetails.setDataflowOperation(edge);
         sourceTargetTaskDetails.setDataflowOperationName(edge.getDataflowOperation());
         childTask.add(sourceTargetTaskDetails);
@@ -132,7 +124,7 @@ public class DataflowTaskGraphParser implements IDataflowTaskGraphParser {
    * This is the simple dataflow task graph parser method and it should be replaced
    * with an optimized scheduling mechanism.
    */
-  private int dataflowTaskGraphParse(final IDataflowTaskGraph<ITask,
+  private int dataflowTaskGraphParse(final ITaskGraph<ITask,
       TaskEdge> dataflowTaskgraph,
                                      final ITask mapper) {
     if (dataflowTaskgraph.outDegreeOfTask(mapper) == 0) {
@@ -141,8 +133,7 @@ public class DataflowTaskGraphParser implements IDataflowTaskGraphParser {
       Set<TaskEdge> taskEdgesOf = dataflowTaskgraph.
           outgoingTaskEdgesOf(mapper);
 
-      Stream<ITask> taskStream = taskEdgesOf.stream().
-          map(dataflowTaskgraph::getTaskEdgeTarget);
+      Stream<ITask> taskStream = null;
 
       int adjacentTaskWeights = taskStream.map(
           next -> dataflowTaskGraphParse(dataflowTaskgraph, next)).
@@ -155,21 +146,6 @@ public class DataflowTaskGraphParser implements IDataflowTaskGraphParser {
 
       return weightOfCurrent;
     }
-  }
-
-  @Override
-  public Set<Task> dataflowTaskGraphParseAndSchedule(int containerId) {
-    return null;
-  }
-
-  @Override
-  public Set<Task> dataflowTaskGraphParseAndSchedule(String message) {
-    return null;
-  }
-
-  @Override
-  public Set<TaskGraphMapper> dataflowTGraphParseAndSchedule() {
-    return null;
   }
 }
 

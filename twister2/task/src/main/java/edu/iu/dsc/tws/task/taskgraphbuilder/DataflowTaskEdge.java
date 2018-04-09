@@ -11,9 +11,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.taskgraphbuilder;
 
-public class DataflowTaskEdge extends DirectedDataflowTaskEdge {
+import edu.iu.dsc.tws.task.api.ITask;
 
-  public Object getSourceTaskVertex() {
+public class DataflowTaskEdge extends DirectedDataflowTaskEdge<ITask, TaskEdge> {
+  public ITask getSourceTaskVertex() {
     return sourceTaskVertex;
   }
 

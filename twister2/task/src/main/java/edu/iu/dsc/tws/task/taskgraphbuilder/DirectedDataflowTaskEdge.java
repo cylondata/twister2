@@ -11,28 +11,54 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.taskgraphbuilder;
 
-public class DirectedDataflowTaskEdge {
+import java.util.Comparator;
 
-  protected Object sourceTaskVertex;
-  protected Object targetTaskVertex;
+public class DirectedDataflowTaskEdge<TV, TE> {
+  protected TV sourceTaskVertex;
+  protected TV targetTaskVertex;
+  protected TE taskEdge;
+
+  protected Comparator<TV> vertexComparator;
 
   public DirectedDataflowTaskEdge() {
   }
 
-  public Object getSourceTaskVertex() {
+  public DirectedDataflowTaskEdge(Comparator<TV> vertexComparator) {
+    this.vertexComparator = vertexComparator;
+  }
+
+  public DirectedDataflowTaskEdge(TV sourceTaskVertex, TV targetTaskVertex,
+                                  TE taskEdge, Comparator<TV> vertexComparator) {
+    this.sourceTaskVertex = sourceTaskVertex;
+    this.targetTaskVertex = targetTaskVertex;
+    this.taskEdge = taskEdge;
+    this.vertexComparator = vertexComparator;
+  }
+
+  public TE getTaskEdge() {
+    return taskEdge;
+  }
+
+  public void setTaskEdge(TE taskEdge) {
+    this.taskEdge = taskEdge;
+  }
+
+  public TV getSourceTaskVertex() {
     return sourceTaskVertex;
   }
 
-  public void setSourceTaskVertex(Object sourceTaskVertex) {
+  public void setSourceTaskVertex(TV sourceTaskVertex) {
     this.sourceTaskVertex = sourceTaskVertex;
   }
 
-  public Object getTargetTaskVertex() {
+  public TV getTargetTaskVertex() {
     return targetTaskVertex;
   }
 
-  public void setTargetTaskVertex(Object targetTaskVertex) {
+  public void setTargetTaskVertex(TV targetTaskVertex) {
     this.targetTaskVertex = targetTaskVertex;
   }
+
+
 }
 

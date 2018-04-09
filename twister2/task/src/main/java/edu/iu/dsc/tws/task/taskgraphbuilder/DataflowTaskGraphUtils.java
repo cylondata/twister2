@@ -11,11 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.taskgraphbuilder;
 
-public class DataflowTaskGraphUtils<T> {
+public final class DataflowTaskGraphUtils<T> {
+
+  private DataflowTaskGraphUtils() {
+  }
 
   @SuppressWarnings("unchecked")
-  public <T> T DataflowTaskGraphCast(Object object,
-                                     DataflowTaskGraphUtils<T> dataflowTaskGraphUtils) {
+  public static  <T> T DataflowTaskGraphCast(Object object) {
     return (T) object;
   }
 }

@@ -21,9 +21,9 @@ import java.util.logging.Logger;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
-import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraph;
+import edu.iu.dsc.tws.task.taskgraphbuilder.BaseDataflowTaskGraph;
 import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraphGenerator;
-import edu.iu.dsc.tws.task.taskgraphbuilder.IDataflowTaskGraph;
+import edu.iu.dsc.tws.task.taskgraphbuilder.ITaskGraph;
 import edu.iu.dsc.tws.task.taskgraphbuilder.TGraphParser;
 import edu.iu.dsc.tws.task.taskgraphbuilder.TaskEdge;
 
@@ -44,8 +44,8 @@ public class TaskGraphGenerationHandler implements ITaskGraphGenerate {
   private Multimap<Integer, Integer> taskConnectedList = ArrayListMultimap.create();
   private Multimap<ITaskInfo, ITaskInfo> taskInfoConnectedList = ArrayListMultimap.create();
   private Multimap<ITaskInfo, TaskInfo> taskgraphMap = ArrayListMultimap.create();
-  private IDataflowTaskGraph<ITaskInfo, TaskEdge> iTaskGraph =
-      new DataflowTaskGraph<>(TaskEdge.class);
+  private ITaskGraph<ITaskInfo, TaskEdge> iTaskGraph =
+      new BaseDataflowTaskGraph<>();
 
   /**
    * This is the main constructor to construct the task objects

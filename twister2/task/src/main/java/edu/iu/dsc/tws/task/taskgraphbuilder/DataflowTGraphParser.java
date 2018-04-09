@@ -67,7 +67,7 @@ public class DataflowTGraphParser implements IDataflowTaskGraphParser {
    */
   private Set<TaskGraphMapper> dataflowTaskGraphPrioritize(DataflowTaskGraphGenerator taskGraph) {
 
-    final IDataflowTaskGraph<TaskGraphMapper, TaskEdge>
+    final ITaskGraph<TaskGraphMapper, TaskEdge>
         dataflowTaskgraph = taskGraph.getTGraph();
     Set<TaskGraphMapper> taskVertices = dataflowTaskgraph.getTaskVertexSet();
 
@@ -105,7 +105,7 @@ public class DataflowTGraphParser implements IDataflowTaskGraphParser {
    * task
    */
   private Set<SourceTargetTaskDetails> dataflowTaskSourceTargetVertices(
-      final IDataflowTaskGraph<TaskGraphMapper,
+      final ITaskGraph<TaskGraphMapper,
           TaskEdge> dataflowTGraph,
       final TaskGraphMapper mapper) {
 
@@ -149,7 +149,7 @@ public class DataflowTGraphParser implements IDataflowTaskGraphParser {
    * This is the simple dataflow task graph parser method and it should be replaced
    * with an optimized scheduling mechanism.
    */
-  private int dataflowTaskGraphParse(final IDataflowTaskGraph<TaskGraphMapper,
+  private int dataflowTaskGraphParse(final ITaskGraph<TaskGraphMapper,
       TaskEdge> dataflowTaskgraph,
                                      final TaskGraphMapper mapper) {
     if (dataflowTaskgraph.outDegreeOfTask(mapper) == 0) {
@@ -167,8 +167,7 @@ public class DataflowTGraphParser implements IDataflowTaskGraphParser {
             + "\t" + dataflowTaskgraph.getTaskEdgeTarget(edge));
       }*/
 
-      Stream<TaskGraphMapper> taskStream = taskEdgesOf.stream().
-          map(dataflowTaskgraph::getTaskEdgeTarget);
+      Stream<TaskGraphMapper> taskStream = null;
 
       int adjacentTaskWeights = taskStream.map(
           next -> dataflowTaskGraphParse(dataflowTaskgraph, next)).

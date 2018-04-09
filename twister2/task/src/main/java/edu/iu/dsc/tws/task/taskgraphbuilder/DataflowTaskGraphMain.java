@@ -111,13 +111,13 @@ public class DataflowTaskGraphMain extends DataflowTaskGraphGenerator {
   }
 
   public static void main(String[] args) {
-    DataflowTaskGraphGenerator dataflowTaskGraphGenerator =
-        new DataflowTaskGraphMain();
-    System.out.println("Generated Task Graph Is:" + dataflowTaskGraphGenerator);
-
-    DataflowTaskGraphParser dataflowTaskGraphParser =
-        new DataflowTaskGraphParser(dataflowTaskGraphGenerator);
-    dataflowTaskGraphParser.dataflowTaskGraphParseAndSchedule("Schedule");
+//    DataflowTaskGraphGenerator dataflowTaskGraphGenerator =
+//        new DataflowTaskGraphMain();
+//    System.out.println("Generated Task Graph Is:" + dataflowTaskGraphGenerator);
+//
+//    DataflowTaskGraphParser dataflowTaskGraphParser =
+//        new DataflowTaskGraphParser(dataflowTaskGraphGenerator);
+//    dataflowTaskGraphParser.dataflowTaskGraphParseAndSchedule("Schedule");
 
     /*TaskParser TaskGraphParser = new TaskParser(dataflowTaskGraphGenerator);
     TaskGraphParser.taskGraphParseAndSchedule(0);

@@ -45,12 +45,6 @@ public interface ITaskGraph<TV, TE> {
   TE addTaskEdge(TV sourceTaskVertex, TV targetTaskVertex);
 
   /**
-   * This method receives the source and target task vertex and return the particular task edge
-   * persists in the graph.
-   */
-  TE getTaskEdge(TV sourceTaskVertex, TV targetTaskVertex);
-
-  /**
    * This method remove the particular task edge between the source task vertex and target task vertex.
    */
 
@@ -104,16 +98,28 @@ public interface ITaskGraph<TV, TE> {
    */
   boolean removeAllTaskVertices(Collection<? extends TV> taskVertices);
 
-  TV getTaskEdgeSource(TE taskEdge);
-
-  TV getTaskEdgeTarget(TE taskEdge);
-
   Set<TE> taskEdgesOf(TV taskVertex);
 
+
   /**
-   * This method returns the factory instance for the task edge.
+   * This method is responsible for returning the number of inward directed edges for the task vertex 'TV'
    */
-  IDataflowTaskEdgeFactory<TV, TE> getDataflowTaskEdgeFactory();
+  int inDegreeOfTask(TV taskVertex);
+
+  /**
+   * This method returns the set of incoming task edges for the task vertex 'TV'
+   */
+  Set<TE> incomingTaskEdgesOf(TV taskVertex);
+
+  /**
+   * This method returns the set of outward task edges for the task vertex 'TV'
+   */
+  int outDegreeOfTask(TV taskVertex);
+
+  /**
+   * This method returns the set of outgoing task edges for the task vertex 'TV'
+   */
+  Set<TE> outgoingTaskEdgesOf(TV taskVertex);
 }
 
 
