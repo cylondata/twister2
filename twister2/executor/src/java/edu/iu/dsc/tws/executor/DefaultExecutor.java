@@ -16,8 +16,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.task.api.ITask;
-import edu.iu.dsc.tws.task.graph.BaseDataflowTaskGraph;
-import edu.iu.dsc.tws.task.graph.Edge;
+import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 public class DefaultExecutor implements IExecutor {
@@ -38,7 +37,7 @@ public class DefaultExecutor implements IExecutor {
   }
 
   @Override
-  public Execution schedule(BaseDataflowTaskGraph<ITask, Edge> taskGraph,
+  public Execution schedule(DataFlowTaskGraph taskGraph,
                             TaskSchedulePlan taskSchedule) {
     Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap = taskSchedule.getContainersMap();
 
