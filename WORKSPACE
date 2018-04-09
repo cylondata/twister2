@@ -1,5 +1,30 @@
 jackson_version = "2.8.8"
 
+maven_jar(
+      name = "org_lz4_lz4_java",
+      artifact = "org.lz4:lz4-java:1.4",
+)
+
+
+  # org.apache.kafka:kafka-clients:jar:1.0.0
+maven_jar(
+      name = "org_slf4j_slf4j_api",
+      artifact = "org.slf4j:slf4j-api:1.7.25",
+)
+
+
+# org.apache.kafka:kafka-clients:jar:1.0.0
+maven_jar(
+      name = "org_xerial_snappy_snappy_java",
+      artifact = "org.xerial.snappy:snappy-java:1.1.4",
+)
+
+maven_jar(
+      name = "org_apache_kafka_kafka_clients",
+      artifact = "org.apache.kafka:kafka-clients:1.0.0",
+)
+
+
 maven_server(
   name = "default",
   url = "http://central.maven.org/maven2/",

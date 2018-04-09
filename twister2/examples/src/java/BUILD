@@ -18,6 +18,10 @@ common_deps_files = [
     "@commons_cli_commons_cli//jar",
     "@com_google_protobuf_protobuf_java//jar",
     "@commons_io_commons_io//jar",
+    "@org_apache_kafka_kafka_clients//jar",
+    "@org_slf4j_slf4j_api//jar",
+    "@org_lz4_lz4_java//jar",
+    "@org_xerial_snappy_snappy_java//jar",
 ]
 
 java_library(
