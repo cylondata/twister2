@@ -32,7 +32,7 @@ public final class GraphBuilder {
   public GraphBuilder setParallelism(String taskName, int parallel) {
     Vertex v = graph.vertex(taskName);
     if (v == null) {
-      throw new RuntimeException("Failed to aadd configuration to non-existing task: " + taskName);
+      throw new RuntimeException("Failed to add configuration to non-existing task: " + taskName);
     }
     v.setParallelism(parallel);
     return this;
@@ -41,7 +41,7 @@ public final class GraphBuilder {
   public GraphBuilder addConfiguration(String taskName, String property, Object value) {
     Vertex v = graph.vertex(taskName);
     if (v == null) {
-      throw new RuntimeException("Failed to aadd configuration to non-existing task: " + taskName);
+      throw new RuntimeException("Failed to add configuration to non-existing task: " + taskName);
     }
     v.addConfiguration(property, value);
     return this;
@@ -50,12 +50,12 @@ public final class GraphBuilder {
   public GraphBuilder connect(String t1, String t2, String name) {
     Vertex v1 = graph.vertex(t1);
     if (v1 == null) {
-      throw new RuntimeException("Failed to aadd configuration to non-existing task: " + t1);
+      throw new RuntimeException("Failed to connect non-existing task: " + t1);
     }
 
     Vertex v2 = graph.vertex(t1);
     if (v2 == null) {
-      throw new RuntimeException("Failed to aadd configuration to non-existing task: " + t2);
+      throw new RuntimeException("Failed to connect non-existing task: " + t2);
     }
     graph.addTaskEdge(v1, v2, new Edge(name));
     return this;
@@ -64,12 +64,12 @@ public final class GraphBuilder {
   public GraphBuilder connect(String t1, String t2, String name, ITask task) {
     Vertex v1 = graph.vertex(t1);
     if (v1 == null) {
-      throw new RuntimeException("Failed to aadd configuration to non-existing task: " + t1);
+      throw new RuntimeException("Failed to connect non-existing task: " + t1);
     }
 
     Vertex v2 = graph.vertex(t1);
     if (v2 == null) {
-      throw new RuntimeException("Failed to aadd configuration to non-existing task: " + t2);
+      throw new RuntimeException("Failed to connect non-existing task: " + t2);
     }
     graph.addTaskEdge(v1, v2, new Edge(name, task));
     return this;
