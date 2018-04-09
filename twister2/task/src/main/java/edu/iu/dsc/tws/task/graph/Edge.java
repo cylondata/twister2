@@ -11,24 +11,26 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.graph;
 
-/**
- * This is an example class to specify the dataflow operations
- * such as "MAP", "REDUCE", "SHUFFLE", and others.
- */
-public class TaskEdge {
+import edu.iu.dsc.tws.task.api.ITask;
 
+public class Edge {
   public String taskEdge;
+  public ITask function;
 
-  public TaskEdge(String taskedge) {
-    //this.taskEdge = taskedge;
-    this.setDataflowOperation(taskedge);
+  public Edge(String te) {
+    this.taskEdge = te;
   }
 
-  public String getDataflowOperation() {
+  public Edge(String taskEdge, ITask function) {
+    this.taskEdge = taskEdge;
+    this.function = function;
+  }
+
+  public String name() {
     return taskEdge;
   }
 
-  public void setDataflowOperation(String dataflowOperation) {
-    this.taskEdge = dataflowOperation;
+  public ITask function() {
+    return function;
   }
 }

@@ -48,7 +48,7 @@ import edu.iu.dsc.tws.task.core.TaskExecutorFixedThread;
 import edu.iu.dsc.tws.task.executiongraph.ExecutionGraph;
 import edu.iu.dsc.tws.task.graph.DataflowTGraphParser;
 import edu.iu.dsc.tws.task.graph.DataflowTaskGraphGenerator;
-import edu.iu.dsc.tws.task.graph.TaskEdge;
+import edu.iu.dsc.tws.task.graph.Edge;
 import edu.iu.dsc.tws.task.graph.TaskGraphMapper;
 import edu.iu.dsc.tws.tsched.FirstFit.FirstFitTaskScheduling;
 import edu.iu.dsc.tws.tsched.RoundRobin.RoundRobinTaskScheduling;
@@ -111,10 +111,10 @@ public class SimpleTGraphExample implements IContainer {
       if (taskGraphFlag >= 0) {
         dataflowTaskGraphGenerator = new DataflowTaskGraphGenerator()
             .generateTGraph(tMapper)
-            .generateTGraph(tMapper, tReducer, new TaskEdge("Reduce"))
-            .generateTGraph(tMapper, tShuffler, new TaskEdge("Shuffle"))
-            .generateTGraph(tReducer, tMerger, new TaskEdge("Merge1"))
-            .generateTGraph(tShuffler, tMerger, new TaskEdge("Merge2"));
+            .generateTGraph(tMapper, tReducer, new Edge("Reduce"))
+            .generateTGraph(tMapper, tShuffler, new Edge("Shuffle"))
+            .generateTGraph(tReducer, tMerger, new Edge("Merge1"))
+            .generateTGraph(tShuffler, tMerger, new Edge("Merge2"));
 
         LOG.info("Generated Dataflow Task Graph Vertices:"
             + dataflowTaskGraphGenerator.getTGraph().getTaskVertexSet());

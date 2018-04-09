@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.executor;
 
 import edu.iu.dsc.tws.task.api.ITask;
 import edu.iu.dsc.tws.task.graph.BaseDataflowTaskGraph;
-import edu.iu.dsc.tws.task.graph.TaskEdge;
+import edu.iu.dsc.tws.task.graph.Edge;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 public interface IExecutor {
@@ -23,7 +23,7 @@ public interface IExecutor {
    * @param taskSchedule the task schedule
    * @return the execution created and null if nothing to execute
    */
-  Execution schedule(BaseDataflowTaskGraph<ITask, TaskEdge> taskGraph,
+  Execution schedule(BaseDataflowTaskGraph<ITask, Edge> taskGraph,
                      TaskSchedulePlan taskSchedule);
 
   /**

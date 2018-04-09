@@ -36,7 +36,7 @@ import edu.iu.dsc.tws.task.core.TaskExecutorFixedThread;
 import edu.iu.dsc.tws.task.executiongraph.ExecutionGraph;
 import edu.iu.dsc.tws.task.graph.DataflowTaskGraphGenerator;
 import edu.iu.dsc.tws.task.graph.DataflowTaskGraphParser;
-import edu.iu.dsc.tws.task.graph.TaskEdge;
+import edu.iu.dsc.tws.task.graph.Edge;
 import edu.iu.dsc.tws.tsched.FirstFit.FirstFitTaskScheduling;
 import edu.iu.dsc.tws.tsched.RoundRobin.RoundRobinTaskScheduling;
 import edu.iu.dsc.tws.tsched.spi.common.TaskConfig;
@@ -98,10 +98,10 @@ public class SimpleTGraphExample1 implements IContainer {
       if (taskGraphFlag >= 0) { //just for verification (replace with proper value)
         dataflowTaskGraphGenerator = new DataflowTaskGraphGenerator()
             .generateTaskGraph(taskMapper)
-            .generateTaskGraph(taskMapper, taskReducer, new TaskEdge("Reduce"))
-            .generateTaskGraph(taskMapper, taskShuffler, new TaskEdge("Shuffle"))
-            .generateTaskGraph(taskReducer, taskMerger, new TaskEdge("Merge1"))
-            .generateTaskGraph(taskShuffler, taskMerger, new TaskEdge("Merge2"));
+            .generateTaskGraph(taskMapper, taskReducer, new Edge("Reduce"))
+            .generateTaskGraph(taskMapper, taskShuffler, new Edge("Shuffle"))
+            .generateTaskGraph(taskReducer, taskMerger, new Edge("Merge1"))
+            .generateTaskGraph(taskShuffler, taskMerger, new Edge("Merge2"));
 
         LOG.info("Generated Dataflow Task Graph Vertices:"
             + dataflowTaskGraphGenerator.getTaskgraph().getTaskVertexSet());

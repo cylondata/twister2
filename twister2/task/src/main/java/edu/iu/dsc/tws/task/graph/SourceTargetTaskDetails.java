@@ -18,7 +18,7 @@ public class SourceTargetTaskDetails {
   private ITask sourceTask;
   private ITask targetTask;
   private String dataflowOperationName;
-  private TaskEdge dataflowOperation;
+  private Edge dataflowOperation;
 
   public ITask getSourceTask() {
     return sourceTask;
@@ -44,11 +44,11 @@ public class SourceTargetTaskDetails {
     this.dataflowOperationName = dataflowOperationName1;
   }
 
-  public TaskEdge getDataflowOperation() {
+  public Edge getDataflowOperation() {
     return dataflowOperation;
   }
 
-  public void setDataflowOperation(TaskEdge dataflowOperation) {
+  public void setDataflowOperation(Edge dataflowOperation) {
     this.dataflowOperation = dataflowOperation;
   }
 }

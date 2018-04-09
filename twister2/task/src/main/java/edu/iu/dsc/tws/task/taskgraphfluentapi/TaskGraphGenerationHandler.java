@@ -23,9 +23,9 @@ import com.google.common.collect.Multimap;
 
 import edu.iu.dsc.tws.task.graph.BaseDataflowTaskGraph;
 import edu.iu.dsc.tws.task.graph.DataflowTaskGraphGenerator;
+import edu.iu.dsc.tws.task.graph.Edge;
 import edu.iu.dsc.tws.task.graph.ITaskGraph;
 import edu.iu.dsc.tws.task.graph.TGraphParser;
-import edu.iu.dsc.tws.task.graph.TaskEdge;
 
 /**
  * This class is mainly responsible for handling the user requests
@@ -44,7 +44,7 @@ public class TaskGraphGenerationHandler implements ITaskGraphGenerate {
   private Multimap<Integer, Integer> taskConnectedList = ArrayListMultimap.create();
   private Multimap<ITaskInfo, ITaskInfo> taskInfoConnectedList = ArrayListMultimap.create();
   private Multimap<ITaskInfo, TaskInfo> taskgraphMap = ArrayListMultimap.create();
-  private ITaskGraph<ITaskInfo, TaskEdge> iTaskGraph =
+  private ITaskGraph<ITaskInfo, Edge> iTaskGraph =
       new BaseDataflowTaskGraph<>();
 
   /**
@@ -146,7 +146,7 @@ public class TaskGraphGenerationHandler implements ITaskGraphGenerate {
    * edge using the dataflow operation.
    */
   @Override
-  public ITaskGraphGenerate connectTaskVertex_Edge(TaskEdge dataflowOperation,
+  public ITaskGraphGenerate connectTaskVertex_Edge(Edge dataflowOperation,
                                                    ITaskInfo sourceTask,
                                                    ITaskInfo... targetTask) {
     taskInfo = new TaskInfo();
@@ -201,7 +201,7 @@ public class TaskGraphGenerationHandler implements ITaskGraphGenerate {
   }
 
   @Override
-  public ITaskGraphGenerate generateITaskGraph(TaskEdge dataflowOperation,
+  public ITaskGraphGenerate generateITaskGraph(Edge dataflowOperation,
                                                ITaskInfo taskVertex, ITaskInfo... taskEdge) {
     return this;
   }

@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.taskgraphfluentapi;
 
-import edu.iu.dsc.tws.task.graph.TaskEdge;
+import edu.iu.dsc.tws.task.graph.Edge;
 
 /**
  * This interface will be used by the user to connect the
@@ -28,10 +28,10 @@ public interface ITaskGraphGenerate {
 
   ITaskGraphGenerate connectTaskVertex_Edge(ITaskInfo taskVertex, ITaskInfo... taskEdge);
 
-  ITaskGraphGenerate connectTaskVertex_Edge(TaskEdge dataflowOperation,
+  ITaskGraphGenerate connectTaskVertex_Edge(Edge dataflowOperation,
                                             ITaskInfo taskVertex, ITaskInfo... taskEdge);
 
-  ITaskGraphGenerate generateITaskGraph(TaskEdge dataflowOperation,
+  ITaskGraphGenerate generateITaskGraph(Edge dataflowOperation,
                                         ITaskInfo taskVertex, ITaskInfo... taskEdge);
 
   ITaskGraphGenerate build();

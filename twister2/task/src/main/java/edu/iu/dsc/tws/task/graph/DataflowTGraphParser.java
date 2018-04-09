@@ -67,7 +67,7 @@ public class DataflowTGraphParser implements IDataflowTaskGraphParser {
    */
   private Set<TaskGraphMapper> dataflowTaskGraphPrioritize(DataflowTaskGraphGenerator taskGraph) {
 
-    final ITaskGraph<TaskGraphMapper, TaskEdge>
+    final ITaskGraph<TaskGraphMapper, Edge>
         dataflowTaskgraph = taskGraph.getTGraph();
     Set<TaskGraphMapper> taskVertices = dataflowTaskgraph.getTaskVertexSet();
 
@@ -106,7 +106,7 @@ public class DataflowTGraphParser implements IDataflowTaskGraphParser {
    */
   private Set<SourceTargetTaskDetails> dataflowTaskSourceTargetVertices(
       final ITaskGraph<TaskGraphMapper,
-          TaskEdge> dataflowTGraph,
+          Edge> dataflowTGraph,
       final TaskGraphMapper mapper) {
 
     LOG.info("Task Object is:" + mapper + "\t"
@@ -117,14 +117,14 @@ public class DataflowTGraphParser implements IDataflowTaskGraphParser {
     if (dataflowTGraph.outDegreeOfTask(mapper) == 0) {
       return childTask;
     } else {
-      Set<TaskEdge> taskEdgesOf = dataflowTGraph.outgoingTaskEdgesOf(mapper);
+      Set<Edge> edgesOf = dataflowTGraph.outgoingTaskEdgesOf(mapper);
       LOG.info("Task Child Size:" + dataflowTGraph.outgoingTaskEdgesOf(mapper) + "\n");
-      for (TaskEdge edge : taskEdgesOf) {
+      for (Edge edge : edgesOf) {
         SourceTargetTaskDetails sourceTargetTaskDetails = new SourceTargetTaskDetails();
         //sourceTargetTaskDetails.setSourceTask(dataflowTGraph.getTaskEdgeSource(edge));
         //sourceTargetTaskDetails.setTargetTask(dataflowTGraph.getTaskEdgeTarget(edge));
         sourceTargetTaskDetails.setDataflowOperation(edge);
-        sourceTargetTaskDetails.setDataflowOperationName(edge.getDataflowOperation());
+        sourceTargetTaskDetails.setDataflowOperationName(edge.name());
         childTask.add(sourceTargetTaskDetails);
 
         /*LOG.info("%%%% Dataflow Operation:" + edge.getDataflowOperation());
@@ -150,12 +150,12 @@ public class DataflowTGraphParser implements IDataflowTaskGraphParser {
    * with an optimized scheduling mechanism.
    */
   private int dataflowTaskGraphParse(final ITaskGraph<TaskGraphMapper,
-      TaskEdge> dataflowTaskgraph,
+      Edge> dataflowTaskgraph,
                                      final TaskGraphMapper mapper) {
     if (dataflowTaskgraph.outDegreeOfTask(mapper) == 0) {
       return 1;
     } else {
-      Set<TaskEdge> taskEdgesOf = dataflowTaskgraph.
+      Set<Edge> edgesOf = dataflowTaskgraph.
           outgoingTaskEdgesOf(mapper);
 
       //This is perfectly working code to find out the child using the task edge.

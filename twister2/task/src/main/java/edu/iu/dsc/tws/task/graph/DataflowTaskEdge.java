@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.task.graph;
 
 import edu.iu.dsc.tws.task.api.ITask;
 
-public class DataflowTaskEdge extends DirectedDataflowTaskEdge<ITask, TaskEdge> {
+public class DataflowTaskEdge extends DirectedDataflowTaskEdge<ITask, Edge> {
   public ITask getSourceTaskVertex() {
     return sourceTaskVertex;
   }

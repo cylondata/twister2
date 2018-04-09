@@ -21,9 +21,9 @@ public class TGraphParser {
   private DataflowTaskGraphGenerator dataflowTaskGraph;
   private TaskExecutor executor = new TaskExecutor();
 
-  private ITaskGraph<ITaskInfo, TaskEdge> taskGraph;
+  private ITaskGraph<ITaskInfo, Edge> taskGraph;
 
-  public TGraphParser(ITaskGraph<ITaskInfo, TaskEdge> iTaskGraph) {
+  public TGraphParser(ITaskGraph<ITaskInfo, Edge> iTaskGraph) {
     this.taskGraph = iTaskGraph;
   }
 
@@ -42,7 +42,7 @@ public class TGraphParser {
   }
 
   public Set<ITaskInfo> dataflowTaskGraphPrioritize(DataflowTaskGraphGenerator taskgraph) {
-    final ITaskGraph<ITaskInfo, TaskEdge> dataflowTaskgraph =
+    final ITaskGraph<ITaskInfo, Edge> dataflowTaskgraph =
         taskgraph.getITaskGraph();
     Set<ITaskInfo> taskVertices = dataflowTaskgraph.getTaskVertexSet();
     try {
@@ -56,7 +56,7 @@ public class TGraphParser {
   }
 
   private int dataflowTaskGraphParse(final ITaskGraph<ITaskInfo,
-      TaskEdge> dataflowTGraph, final ITaskInfo mapper) {
+      Edge> dataflowTGraph, final ITaskInfo mapper) {
 
     System.out.println("Dataflow Task Graph is:" + dataflowTGraph
         + "\t" + "and Task Object is:" + mapper);
@@ -64,7 +64,7 @@ public class TGraphParser {
     if (dataflowTGraph.outDegreeOfTask(mapper) == 0) {
       return 1;
     } else {
-      Set<TaskEdge> edges = dataflowTGraph.outgoingTaskEdgesOf(mapper);
+      Set<Edge> edges = dataflowTGraph.outgoingTaskEdgesOf(mapper);
       Stream<ITaskInfo> neighbours = null;
       int maxWeightOfNeighbours = neighbours.map(
           next -> dataflowTaskGraphParse(dataflowTGraph, next)).

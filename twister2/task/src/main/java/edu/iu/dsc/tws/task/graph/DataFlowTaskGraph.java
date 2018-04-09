@@ -19,8 +19,8 @@ import java.util.Set;
 
 import edu.iu.dsc.tws.task.api.ITask;
 
-public class DataFlowTaskGraph extends BaseDataflowTaskGraph<ITask, TaskEdge> {
-  private Map<String, ITask> taskMap = new HashMap<>();
+public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
+  private Map<String, Vertex> taskMap = new HashMap<>();
 
   public DataFlowTaskGraph() {
     super(new VertexComparator(), new EdgeComparator());
@@ -37,62 +37,66 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<ITask, TaskEdge> {
     validate();
 
     Set<ITask> ret = new HashSet<>();
-    for (DirectedDataflowTaskEdge<ITask, TaskEdge> de : directedEdges) {
-      taskMap.put(de.sourceTaskVertex.taskName(), de.sourceTaskVertex);
-      taskMap.put(de.targetTaskVertex.taskName(), de.targetTaskVertex);
+    for (DirectedDataflowTaskEdge<Vertex, Edge> de : directedEdges) {
+      taskMap.put(de.sourceTaskVertex.getName(), de.sourceTaskVertex);
+      taskMap.put(de.targetTaskVertex.getName(), de.targetTaskVertex);
     }
   }
 
   @Override
-  public TaskEdge createEdge(ITask sourceTaskVertex, ITask targetTaskVertex) {
+  public Edge createEdge(Vertex sourceTaskVertex, Vertex targetTaskVertex) {
     return super.createEdge(sourceTaskVertex, targetTaskVertex);
+  }
+
+  public Vertex vertex(String name) {
+    return taskMap.get(name);
   }
 
   public boolean tasksEqual(ITask t1, ITask t2) {
     return t1.taskName().equals(t2.taskName());
   }
 
-  public Set<TaskEdge> outEdges(ITask task) {
+  public Set<Edge> outEdges(Vertex task) {
     return outgoingTaskEdgesOf(task);
   }
 
-  public Set<TaskEdge> outEdges(String taskName) {
-    ITask t = taskMap.get(taskName);
+  public Set<Edge> outEdges(String taskName) {
+    Vertex t = taskMap.get(taskName);
     if (t == null) {
       return new HashSet<>();
     }
     return outEdges(t);
   }
 
-  public Set<TaskEdge> inEdges(ITask task) {
+  public Set<Edge> inEdges(Vertex task) {
     return incomingTaskEdgesOf(task);
   }
 
-  public Set<TaskEdge> inEdges(String taskName) {
-    ITask t = taskMap.get(taskName);
+  public Set<Edge> inEdges(String taskName) {
+    Vertex t = taskMap.get(taskName);
     if (t == null) {
       return new HashSet<>();
     }
     return inEdges(t);
   }
 
-  public Set<ITask> childrenOfTask(String taskName) {
-    ITask t = taskMap.get(taskName);
+  public Set<Vertex> childrenOfTask(String taskName) {
+    Vertex t = taskMap.get(taskName);
     if (t == null) {
       return new HashSet<>();
     }
     return childrenOfTask(t);
   }
 
-  public Set<ITask> childrenOfTask(ITask t) {
-    return childrenOfTask(t.taskName());
+  public Set<Vertex> childrenOfTask(Vertex t) {
+    return childrenOfTask(t.getName());
   }
 
-  public ITask childOfTask(ITask task, String edge) {
-    Set<TaskEdge> edges = outEdges(task);
+  public Vertex childOfTask(Vertex task, String edge) {
+    Set<Edge> edges = outEdges(task);
 
-    TaskEdge taskEdge = null;
-    for (TaskEdge e : edges) {
+    Edge taskEdge = null;
+    for (Edge e : edges) {
       if (e.taskEdge.equals(edge)) {
         taskEdge = e;
       }
@@ -105,11 +109,11 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<ITask, TaskEdge> {
     }
   }
 
-  public ITask getParentOfTask(ITask task, String edge) {
-    Set<TaskEdge> edges = inEdges(task);
+  public Vertex getParentOfTask(Vertex task, String edge) {
+    Set<Edge> edges = inEdges(task);
 
-    TaskEdge taskEdge = null;
-    for (TaskEdge e : edges) {
+    Edge taskEdge = null;
+    for (Edge e : edges) {
       if (e.taskEdge.equals(edge)) {
         taskEdge = e;
       }
@@ -122,17 +126,17 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<ITask, TaskEdge> {
     }
   }
 
-  private static class VertexComparator implements Comparator<ITask> {
+  private static class VertexComparator implements Comparator<Vertex> {
     @Override
-    public int compare(ITask o1, ITask o2) {
-      return new StringComparator().compare(o1.taskName(), o2.taskName());
+    public int compare(Vertex o1, Vertex o2) {
+      return new StringComparator().compare(o1.getName(), o2.getName());
 
     }
   }
 
-  private static class EdgeComparator implements Comparator<TaskEdge> {
+  private static class EdgeComparator implements Comparator<Edge> {
     @Override
-    public int compare(TaskEdge o1, TaskEdge o2) {
+    public int compare(Edge o1, Edge o2) {
       return new StringComparator().compare(o1.taskEdge, o2.taskEdge);
     }
   }

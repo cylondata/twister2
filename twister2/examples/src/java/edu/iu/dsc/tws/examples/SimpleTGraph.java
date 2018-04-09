@@ -35,7 +35,7 @@ import edu.iu.dsc.tws.task.api.Task;
 import edu.iu.dsc.tws.task.core.TaskExecutorFixedThread;
 import edu.iu.dsc.tws.task.graph.DataflowTaskGraphGenerator;
 import edu.iu.dsc.tws.task.graph.DataflowTaskGraphParser;
-import edu.iu.dsc.tws.task.graph.TaskEdge;
+import edu.iu.dsc.tws.task.graph.Edge;
 import edu.iu.dsc.tws.task.graph.TaskGraphMapper;
 
 /**
@@ -99,8 +99,8 @@ public class SimpleTGraph implements IContainer {
     tMapper.addOutputData("mapperOut2", new ArrayList<>());
 
     dataflowTaskGraphGenerator = new DataflowTaskGraphGenerator()
-        .generateTGraph(tMapper, tShuffler, new TaskEdge("Map"))
-        .generateTGraph(tShuffler, tReducer, new TaskEdge("Shuffle"));
+        .generateTGraph(tMapper, tShuffler, new Edge("Map"))
+        .generateTGraph(tShuffler, tReducer, new Edge("Shuffle"));
 
     LOG.info("Generated Dataflow Task Graph Vertices:"
         + dataflowTaskGraphGenerator.getTGraph().getTaskVertexSet());
