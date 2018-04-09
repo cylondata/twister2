@@ -178,7 +178,7 @@ public class SimpleCxMultiTaskGraph implements IContainer {
   }
 
   private class ReceiveWorker extends SinkTask<Object> {
-
+    private static final long serialVersionUID = 3233011943332591934L;
     @Override
     public Message execute() {
       return null;
@@ -202,6 +202,7 @@ public class SimpleCxMultiTaskGraph implements IContainer {
    */
   private class MapWorker extends SourceTask<Object> {
     private int sendCount = 0;
+    private static final long serialVersionUID = 3233011943332591934L;
 
     MapWorker(int tid, DataFlowOperation dataFlowOperation) {
       super(tid, dataFlowOperation);

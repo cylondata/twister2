@@ -61,7 +61,7 @@ public class WordCountExample implements IContainer {
   }
 
   private class Mapper extends SourceTask<MapperSource> {
-
+    private static final long serialVersionUID = 3233011943332591934L;
     @Override
     public Message execute() {
       try {
@@ -88,7 +88,7 @@ public class WordCountExample implements IContainer {
   }
 
   private class Reducer extends SinkTask<FileWriter> {
-
+    private static final long serialVersionUID = 3233011943332591934L;
     @Override
     public Message execute() {
       return null;

@@ -267,6 +267,7 @@ public class MultiTaskGraphExample implements IContainer {
   }
 
   private class ReceiveWorker extends SinkTask<Object> {
+    private static final long serialVersionUID = 3233011943332591934L;
 
     @Override
     public Message execute() {
@@ -289,6 +290,7 @@ public class MultiTaskGraphExample implements IContainer {
    * We are running the map in a separate thread
    */
   private class MapWorker extends SourceTask<Object> {
+    private static final long serialVersionUID = 3233011943332591934L;
     private int sendCount = 0;
 
 

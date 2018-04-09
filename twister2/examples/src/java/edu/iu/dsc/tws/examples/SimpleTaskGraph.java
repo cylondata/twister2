@@ -178,6 +178,7 @@ public class SimpleTaskGraph implements IContainer {
   }
 
   private class ReceiveWorker extends SinkTask<Object> {
+    private static final long serialVersionUID = 3233011943332591934L;
     private String taskName = null;
     @Override
     public Message execute() {
@@ -199,6 +200,7 @@ public class SimpleTaskGraph implements IContainer {
    * We are running the map in a separate thread
    */
   private class MapWorker extends SourceTask<Object> {
+    private static final long serialVersionUID = 3233011943332591934L;
     private int sendCount = 0;
     private String taskName = null;
 

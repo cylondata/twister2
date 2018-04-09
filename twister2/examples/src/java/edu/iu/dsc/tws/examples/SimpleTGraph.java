@@ -188,7 +188,7 @@ public class SimpleTGraph implements IContainer {
   }
 
   private class TMapper extends TaskGraphMapper implements Runnable {
-
+    private static final long serialVersionUID = 3233011943332591934L;
     protected TMapper(String taskId, String taskName) {
       super(taskId, taskName);
     }
@@ -209,7 +209,7 @@ public class SimpleTGraph implements IContainer {
   }
 
   private class TShuffler extends TaskGraphMapper implements Runnable {
-
+    private static final long serialVersionUID = 3233011943332591934L;
     protected TShuffler(String taskId, String taskName) {
       super(taskId, taskName);
     }
@@ -230,7 +230,7 @@ public class SimpleTGraph implements IContainer {
   }
 
   private class TReducer extends TaskGraphMapper implements Runnable {
-
+    private static final long serialVersionUID = 3233011943332591934L;
     protected TReducer(String taskId, String taskName) {
       super(taskId, taskName);
     }
