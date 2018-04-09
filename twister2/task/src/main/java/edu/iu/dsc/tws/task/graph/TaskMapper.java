@@ -1,4 +1,4 @@
-package edu.iu.dsc.tws.task.taskgraphbuilder;
+package edu.iu.dsc.tws.task.graph;
 
 public abstract class TaskMapper implements Runnable {
 

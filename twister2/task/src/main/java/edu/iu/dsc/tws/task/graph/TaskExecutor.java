@@ -9,13 +9,26 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.executor;
+package edu.iu.dsc.tws.task.graph;
 
-import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.task.graph.DataflowTaskGraphGenerator;
+/**
+ * This taskexecutor is generated for testing purpose, later
+ * it will be replaced with actual task executors.
+ */
+public class TaskExecutor implements Runnable {
 
-public class TaskIndexGenerator {
-  public TaskPlan build(DataflowTaskGraphGenerator graph) {
-    return null;
+  public void execute(TaskGraphMapper task) {
+    System.out.println("Runnable task for the executor:" + task);
+    task.execute();
+    //task.run();
+  }
+
+  @Override
+  public void run() {
+    System.out.println("hello execution finished");
+  }
+
+  public void print() {
+    System.out.println("Just for testing");
   }
 }

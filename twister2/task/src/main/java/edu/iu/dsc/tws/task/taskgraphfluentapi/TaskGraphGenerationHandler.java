@@ -21,11 +21,11 @@ import java.util.logging.Logger;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
-import edu.iu.dsc.tws.task.taskgraphbuilder.BaseDataflowTaskGraph;
-import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraphGenerator;
-import edu.iu.dsc.tws.task.taskgraphbuilder.ITaskGraph;
-import edu.iu.dsc.tws.task.taskgraphbuilder.TGraphParser;
-import edu.iu.dsc.tws.task.taskgraphbuilder.TaskEdge;
+import edu.iu.dsc.tws.task.graph.BaseDataflowTaskGraph;
+import edu.iu.dsc.tws.task.graph.DataflowTaskGraphGenerator;
+import edu.iu.dsc.tws.task.graph.ITaskGraph;
+import edu.iu.dsc.tws.task.graph.TGraphParser;
+import edu.iu.dsc.tws.task.graph.TaskEdge;
 
 /**
  * This class is mainly responsible for handling the user requests

@@ -47,9 +47,9 @@ import edu.iu.dsc.tws.task.api.SinkTask;
 import edu.iu.dsc.tws.task.api.SourceTask;
 import edu.iu.dsc.tws.task.api.Task;
 import edu.iu.dsc.tws.task.core.TaskExecutorFixedThread;
-import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraphGenerator;
-import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraphParser;
-import edu.iu.dsc.tws.task.taskgraphbuilder.TaskGraphScheduler;
+import edu.iu.dsc.tws.task.graph.DataflowTaskGraphGenerator;
+import edu.iu.dsc.tws.task.graph.DataflowTaskGraphParser;
+import edu.iu.dsc.tws.task.graph.TaskGraphScheduler;
 
 public class MultiTaskGraphExample implements IContainer {
 

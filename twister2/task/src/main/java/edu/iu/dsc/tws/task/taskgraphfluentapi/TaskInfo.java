@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.taskgraphfluentapi;
 
-import edu.iu.dsc.tws.task.taskgraphbuilder.TaskEdge;
+import edu.iu.dsc.tws.task.graph.TaskEdge;
 
 public class TaskInfo {
 

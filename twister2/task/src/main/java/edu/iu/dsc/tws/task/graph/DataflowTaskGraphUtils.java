@@ -9,20 +9,16 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.taskgraphbuilder;
+package edu.iu.dsc.tws.task.graph;
 
-import edu.iu.dsc.tws.task.api.ITask;
+public final class DataflowTaskGraphUtils<T> {
 
-public class DataflowTaskEdge extends DirectedDataflowTaskEdge<ITask, TaskEdge> {
-  public ITask getSourceTaskVertex() {
-    return sourceTaskVertex;
+  private DataflowTaskGraphUtils() {
   }
 
-  public Object getTargetVertex() {
-    return targetTaskVertex;
-  }
-
-  public String toString() {
-    return "(" + sourceTaskVertex + " --> " + targetTaskVertex + ")";
+  @SuppressWarnings("unchecked")
+  public static  <T> T DataflowTaskGraphCast(Object object) {
+    return (T) object;
   }
 }
+

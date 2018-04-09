@@ -9,26 +9,17 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.taskgraphbuilder;
+package edu.iu.dsc.tws.task.graph;
 
-/**
- * This is an example class to specify the dataflow operations
- * such as "MAP", "REDUCE", "SHUFFLE", and others.
- */
-public class TaskEdge {
+public class CManager {
 
-  public String taskEdge;
+  private String message;
 
-  public TaskEdge(String taskedge) {
-    //this.taskEdge = taskedge;
-    this.setDataflowOperation(taskedge);
+  protected CManager(String message) {
+    this.message = message;
   }
 
-  public String getDataflowOperation() {
-    return taskEdge;
-  }
-
-  public void setDataflowOperation(String dataflowOperation) {
-    this.taskEdge = dataflowOperation;
+  public void communicate(String msg) {
+    System.out.println("I am ready for communication:" + msg);
   }
 }

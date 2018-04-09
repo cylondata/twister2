@@ -33,10 +33,10 @@ import edu.iu.dsc.tws.task.api.LinkedQueue;
 import edu.iu.dsc.tws.task.api.Message;
 import edu.iu.dsc.tws.task.api.Task;
 import edu.iu.dsc.tws.task.core.TaskExecutorFixedThread;
-import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraphGenerator;
-import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraphParser;
-import edu.iu.dsc.tws.task.taskgraphbuilder.TaskEdge;
-import edu.iu.dsc.tws.task.taskgraphbuilder.TaskGraphMapper;
+import edu.iu.dsc.tws.task.graph.DataflowTaskGraphGenerator;
+import edu.iu.dsc.tws.task.graph.DataflowTaskGraphParser;
+import edu.iu.dsc.tws.task.graph.TaskEdge;
+import edu.iu.dsc.tws.task.graph.TaskGraphMapper;
 
 /**
  * This is the task graph generation class with input and output files.

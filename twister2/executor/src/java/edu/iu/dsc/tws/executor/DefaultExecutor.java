@@ -16,8 +16,8 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.task.api.ITask;
-import edu.iu.dsc.tws.task.taskgraphbuilder.BaseDataflowTaskGraph;
-import edu.iu.dsc.tws.task.taskgraphbuilder.TaskEdge;
+import edu.iu.dsc.tws.task.graph.BaseDataflowTaskGraph;
+import edu.iu.dsc.tws.task.graph.TaskEdge;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 public class DefaultExecutor implements IExecutor {

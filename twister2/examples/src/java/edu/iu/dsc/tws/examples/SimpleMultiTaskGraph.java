@@ -37,8 +37,8 @@ import edu.iu.dsc.tws.task.api.Task;
 import edu.iu.dsc.tws.task.core.PipelinedTask;
 import edu.iu.dsc.tws.task.core.TaskExecutionOptimizer;
 import edu.iu.dsc.tws.task.core.TaskExecutorFixedThread;
-import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraphGenerator;
-import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraphParser;
+import edu.iu.dsc.tws.task.graph.DataflowTaskGraphGenerator;
+import edu.iu.dsc.tws.task.graph.DataflowTaskGraphParser;
 
 public class SimpleMultiTaskGraph implements IContainer {
 
