@@ -18,7 +18,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.tsched.spi.common.TaskConfig;
+import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.InstanceId;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.InstanceMapCalculation;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.Resource;
@@ -84,6 +87,14 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
     this.instanceRAM = TaskConfig.containerMaxRAMValue;
     this.instanceCPU = TaskConfig.containerMaxCpuValue;
     this.instanceDisk = TaskConfig.containerMaxDiskValue;
+  }
+
+  public void initialize(Config cfg) {
+
+  }
+
+  public TaskSchedulePlan schedule(DataFlowTaskGraph graph, WorkerPlan workerPlan) {
+    return null;
   }
 
   @Override

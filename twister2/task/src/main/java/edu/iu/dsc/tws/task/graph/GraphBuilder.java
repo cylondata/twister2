@@ -20,7 +20,7 @@ public final class GraphBuilder {
     graph = new DataFlowTaskGraph();
   }
 
-  public GraphBuilder newBuilder() {
+  public static GraphBuilder newBuilder() {
     return new GraphBuilder();
   }
 
