@@ -45,8 +45,8 @@ public class RoundRobinScheduling {
     int globalTaskIndex = 1;
     TaskAttributes taskAttributes = new TaskAttributes();
     Map<Integer, List<InstanceId>> roundrobinAllocation = new HashMap<>();
-    //Set<Vertex> parsedTaskSet = dataFlowTaskGraph.getTaskVertexSet();
     try {
+      //int numberOfContainers = workerPlan.getNumberOfWorkers();
       int totalInstances = taskAttributes.getTotalNumberOfInstances(taskVertexSet);
       Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
       LOG.info("Number of Containers:" + numberOfContainers
