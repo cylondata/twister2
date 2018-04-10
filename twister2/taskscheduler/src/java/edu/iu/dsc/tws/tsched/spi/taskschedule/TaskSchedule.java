@@ -11,16 +11,20 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tsched.spi.taskschedule;
 
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.tsched.spi.common.TaskConfig;
 import edu.iu.dsc.tws.tsched.utils.Job;
 
 public interface TaskSchedule {
 
+  void initialize(Config config);
+
+  TaskSchedulePlan tschedule(DataFlowTaskGraph dataFlowTaskGraph);
+
   void initialize(TaskConfig config, Job job);
 
   void initialize(Job job);
-
-
 
   TaskSchedulePlan tschedule() throws ScheduleException;
 
