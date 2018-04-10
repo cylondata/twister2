@@ -63,6 +63,9 @@ public class RRTaskScheduling implements TaskSchedule {
   private double instanceDisk;
   private double instanceCPU;
 
+  /**
+   * This will initialize the instance ram, instance disk, and instance cpu values.
+   */
   @Override
   public void initialize(TaskConfig config, Job job) {
     this.jobObject = job;

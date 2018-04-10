@@ -20,15 +20,17 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.task.graph.Vertex;
 import edu.iu.dsc.tws.tsched.spi.common.TaskConfig;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.InstanceId;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.InstanceMapCalculation;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.Resource;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskInstanceId;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedule;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.utils.Job;
+
+//import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskInstanceId;
 
 public class RoundRobinTaskScheduling implements TaskSchedule {
 
@@ -53,27 +55,7 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
   private Job job;
   //newly added
   private TaskConfig config;
-
-  private static double getContainerCpuValue(Map<Integer,
-      List<TaskInstanceId>> instAllocation) {
-    //These two lines will be replaced once the actual job description file is created...
-    String cpuHint = "0.6";
-    return Double.parseDouble(cpuHint);
-  }
-
-  private static Double getContainerDiskValue(Map<Integer,
-      List<TaskInstanceId>> instAllocation) {
-    //These two lines will be replaced once the actual job description file is created...
-    Long containerDiskValue = 100L;
-    return containerDiskValue.doubleValue();
-  }
-
-  private static Double getContainerRamValue(Map<Integer,
-      List<TaskInstanceId>> instAllocation) {
-    //These two lines will be replaced once the actual job description file is created...
-    Long containerRAMValue = 10L;
-    return containerRAMValue.doubleValue();
-  }
+  private Config cfg;
 
   @Override
   public void initialize(TaskConfig configVal, Job jobObject) {
@@ -89,32 +71,40 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
     this.instanceDisk = TaskConfig.containerMaxDiskValue;
   }
 
-  public void initialize(Config cfg) {
-
-  }
-
-  public TaskSchedulePlan schedule(DataFlowTaskGraph graph, WorkerPlan workerPlan) {
-    return null;
+  @Override
+  public void close() {
   }
 
   @Override
-  public TaskSchedulePlan tschedule() {
+  public void initialize(Config cfg1) {
+    this.cfg = cfg1;
+  }
+
+  @Override
+  public TaskSchedulePlan schedule(DataFlowTaskGraph dataFlowTaskGraph, WorkerPlan workerPlan) {
 
     Set<TaskSchedulePlan.ContainerPlan> containerPlans = new HashSet<>();
+
+    Set<Vertex> taskVertexSet = dataFlowTaskGraph.getTaskVertexSet();
+
     Map<Integer, List<InstanceId>> roundRobinContainerInstanceMap =
-        RoundRobinScheduling.RoundRobinSchedulingAlgorithm(job);
+        RoundRobinScheduling.RoundRobinSchedulingAlgorithm(taskVertexSet,
+            workerPlan.getNumberOfWorkers());
 
     InstanceMapCalculation instanceMapCalculation = new InstanceMapCalculation(instanceRAM,
         instanceCPU, instanceDisk);
 
     Map<Integer, Map<InstanceId, Double>> instancesRamMap =
-        instanceMapCalculation.getInstancesRamMapInContainer(roundRobinContainerInstanceMap, job);
+        instanceMapCalculation.getInstancesRamMapInContainer(roundRobinContainerInstanceMap,
+            taskVertexSet);
 
     Map<Integer, Map<InstanceId, Double>> instancesDiskMap =
-        instanceMapCalculation.getInstancesDiskMapInContainer(roundRobinContainerInstanceMap, job);
+        instanceMapCalculation.getInstancesDiskMapInContainer(roundRobinContainerInstanceMap,
+            taskVertexSet);
 
     Map<Integer, Map<InstanceId, Double>> instancesCPUMap =
-        instanceMapCalculation.getInstancesCPUMapInContainer(roundRobinContainerInstanceMap, job);
+        instanceMapCalculation.getInstancesCPUMapInContainer(roundRobinContainerInstanceMap,
+            taskVertexSet);
 
     for (int containerId : roundRobinContainerInstanceMap.keySet()) {
 
@@ -128,8 +118,11 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
         double instanceCPUValue = instancesCPUMap.get(containerId).get(id);
 
         Resource resource = new Resource(instanceRAMValue, instanceDiskValue, instanceCPUValue);
+        /*taskInstancePlanMap.put(id,
+            new TaskSchedulePlan.TaskInstancePlan("mpitask", 1, 1, resource));*/
         taskInstancePlanMap.put(id,
-            new TaskSchedulePlan.TaskInstancePlan("mpitask", 1, 1, resource));
+            new TaskSchedulePlan.TaskInstancePlan(
+                id.getTaskName(), id.getTaskId(), id.getTaskIndex(), resource));
       }
 
       Resource resource = new Resource(containerRAMValue, containerDiskValue, containerCPUValue);
@@ -137,13 +130,13 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
           new TaskSchedulePlan.ContainerPlan(containerId,
               new HashSet<>(taskInstancePlanMap.values()), resource);
       containerPlans.add(taskContainerPlan);
-
     }
     return new TaskSchedulePlan(job.getJobId(), containerPlans);
   }
 
   @Override
-  public void close() {
+  public TaskSchedulePlan tschedule() {
+    return null;
   }
 }
 
