@@ -12,7 +12,7 @@
 package edu.iu.dsc.tws.task.graph;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.task.api.ITask;
+import edu.iu.dsc.tws.task.api.INode;
 
 /**
  * Users develop ITask object and when it is added to the graph we need additional information
@@ -20,20 +20,20 @@ import edu.iu.dsc.tws.task.api.ITask;
  */
 public class Vertex {
   private String name;
-  private ITask task;
+  private INode task;
   private int cpu;
   private int memory;
   private int parallelism;
 
   private Config config;
 
-  public Vertex(String n, ITask t) {
+  public Vertex(String n, INode t) {
     this.name = n;
     this.task = t;
     config = Config.newBuilder().build();
   }
 
-  public ITask getTask() {
+  public INode getTask() {
     return task;
   }
 
