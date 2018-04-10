@@ -142,6 +142,7 @@ public class InstanceMapCalculation {
         if (ramMap.containsKey(taskName)) {
           Double ramValue = ramMap.get(taskName);
           containerRam.put(instanceId, ramValue);
+          usedRamValue += ramValue;
         } else {
           instancesToBeCalculated.add(instanceId);
         }
@@ -184,10 +185,10 @@ public class InstanceMapCalculation {
 
       for (InstanceId instanceId : instanceIds) {
         String taskName = instanceId.getTaskName();
-
         if (diskMap.containsKey(taskName)) {
           Double diskValue = diskMap.get(taskName);
           containerDisk.put(instanceId, diskValue);
+          usedDiskValue += diskValue;
         } else {
           instancesToBeCalculated.add(instanceId);
         }
@@ -226,31 +227,32 @@ public class InstanceMapCalculation {
       List<InstanceId> instanceIds = containerInstanceAllocationMap.get(containerId);
       Map<InstanceId, Double> containerCPUMap = new HashMap<>();
       instancesCpuContainerMap.put(containerId, containerCPUMap);
-
       List<InstanceId> instancesToBeCalculated = new ArrayList<>();
+
       for (InstanceId instanceId : instanceIds) {
         String taskName = instanceId.getTaskName();
         if (taskCpuMap.containsKey(taskName)) {
           Double taskCpuValue = taskCpuMap.get(taskName);
           containerCPUMap.put(instanceId, taskCpuValue);
+          usedCPUValue += taskCpuValue;
         } else {
           instancesToBeCalculated.add(instanceId);
         }
       }
 
-      Double containerDiskValue = getContainerCpuValue(containerInstanceAllocationMap);
+      Double containerCpuValue = getContainerCpuValue(containerInstanceAllocationMap);
       int instancesAllocationSize = instancesToBeCalculated.size();
       if (instancesAllocationSize != 0) {
-        Double instanceRequiredDisk = 0.0;
-        if (!containerDiskValue.equals(NOT_SPECIFIED_NUMBER_VALUE)) {
-          Double remainingRam = containerDiskValue
-              - DEFAULT_DISK_PADDING_PER_CONTAINER - usedCPUValue;
-          instanceRequiredDisk = remainingRam / instancesAllocationSize;
+        Double instanceRequiredCpu = 0.0;
+        if (!containerCpuValue.equals(NOT_SPECIFIED_NUMBER_VALUE)) {
+          Double remainingCpu = containerCpuValue
+              - DEFAULT_CPU_PADDING_PER_CONTAINER - usedCPUValue;
+          instanceRequiredCpu = remainingCpu / instancesAllocationSize;
         }
         for (InstanceId instanceId : instancesToBeCalculated) {
-          containerCPUMap.put(instanceId, instanceRequiredDisk);
+          containerCPUMap.put(instanceId, instanceRequiredCpu);
         }
-        LOG.info("Instances Required CPU:\t" + instanceRequiredDisk);
+        LOG.info("Instances Required CPU:\t" + instanceRequiredCpu);
       }
     }
     return instancesCpuContainerMap;
