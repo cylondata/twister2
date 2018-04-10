@@ -24,8 +24,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
+import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
@@ -53,39 +55,93 @@ public final class KubernetesWorker {
   public static final String COMPLETIONS_FILE_NAME = "completions.txt";
   public static final long FILE_WAIT_SLEEP_INTERVAL = 30;
   public static final long WAIT_TIME_FOR_WORKER_LIST_BUILD = 3000; // ms
+  public static final int PERSISTENT_DIR_CREATE_TRY_COUNT = 3; // ms
 
   public static Config config = null;
   public static WorkerNetworkInfo thisWorker;
 
-  private KubernetesWorker() { }
+  private KubernetesWorker() {
+  }
 
   public static void main(String[] args) {
 
+    StringBuffer logBuffer = new StringBuffer();
     // first get environment variable values
     String jobPackageFileName = System.getenv(KubernetesField.JOB_PACKAGE_FILENAME + "");
-    LOG.info(KubernetesField.JOB_PACKAGE_FILENAME + ": " + jobPackageFileName);
+    logBuffer.append(KubernetesField.JOB_PACKAGE_FILENAME + ": " + jobPackageFileName + "\n");
 
     String userJobJarFile = System.getenv(KubernetesField.USER_JOB_JAR_FILE + "");
-    LOG.info(KubernetesField.USER_JOB_JAR_FILE + ": " + userJobJarFile);
+    logBuffer.append(KubernetesField.USER_JOB_JAR_FILE + ": " + userJobJarFile + "\n");
 
     String jobDescFileName = System.getenv(KubernetesField.JOB_DESCRIPTION_FILE + "");
-    LOG.info(KubernetesField.JOB_DESCRIPTION_FILE + ": " + jobDescFileName);
+    logBuffer.append(KubernetesField.JOB_DESCRIPTION_FILE + ": " + jobDescFileName + "\n");
 
     String fileSizeStr = System.getenv(KubernetesField.JOB_PACKAGE_FILE_SIZE + "");
-    LOG.info(KubernetesField.JOB_PACKAGE_FILE_SIZE + ": " + fileSizeStr);
+    logBuffer.append(KubernetesField.JOB_PACKAGE_FILE_SIZE + ": " + fileSizeStr + "\n");
 
     String containerName = System.getenv(KubernetesField.CONTAINER_NAME + "");
-    LOG.info(KubernetesField.CONTAINER_NAME + ": " + containerName);
+    logBuffer.append(KubernetesField.CONTAINER_NAME + ": " + containerName + "\n");
 
     String podIP = System.getenv(KubernetesField.POD_IP + "");
-    LOG.info(KubernetesField.POD_IP + ": " + podIP);
+    logBuffer.append(KubernetesField.POD_IP + ": " + podIP + "\n");
 
     String persistentJobDir = System.getenv(KubernetesField.PERSISTENT_JOB_DIR + "");
-    LOG.info(KubernetesField.PERSISTENT_JOB_DIR + ": " + persistentJobDir);
+    logBuffer.append(KubernetesField.PERSISTENT_JOB_DIR + ": " + persistentJobDir + "\n");
+
+    String containersPerPodStr = System.getenv(KubernetesField.CONTAINERS_PER_POD + "");
+    logBuffer.append(KubernetesField.CONTAINERS_PER_POD + ": " + containersPerPodStr + "\n");
+
+    String persLoggingRqst = System.getenv(KubernetesField.PERSISTENT_LOGGING_REQUESTED + "");
+    logBuffer.append(KubernetesField.PERSISTENT_LOGGING_REQUESTED + ": " + persLoggingRqst + "\n");
+
+    String persLoggingType = System.getenv(KubernetesField.PERSISTENT_LOGGING_TYPE + "");
+    logBuffer.append(KubernetesField.PERSISTENT_LOGGING_TYPE + ": " + persLoggingType + "\n");
 
     // this environment variable is not sent by submitting client, it is set by Kubernetes master
     String podName = System.getenv("HOSTNAME");
-    LOG.info("POD_NAME(HOSTNAME): " + podName);
+    logBuffer.append("POD_NAME(HOSTNAME): " + podName + "\n");
+
+    int containersPerPod = Integer.parseInt(containersPerPodStr);
+    int workerID = calculateWorkerID(podName, containerName, containersPerPod);
+
+    K8sWorkerLogger logger = null;
+    K8sPersistentVolume pv = null;
+
+    // create persistent job dir if there is a persistent volume
+    if (persistentJobDir == null || persistentJobDir.trim().isEmpty()) {
+      // no persistent volume is requested, nothing to be done
+    } else {
+      createPersistentJobDir(podName, containerName, persistentJobDir, 0);
+
+      // create persistent volume object
+      pv = new K8sPersistentVolume(persistentJobDir, workerID);
+      pv.getWorkerDir();
+
+      // initialize persistent system logging file if persistent logging type is system
+      if ("true".equals(persLoggingRqst)) {
+        if ("system".equalsIgnoreCase(persLoggingType)) {
+          addLogFileHandler(pv.getLogFileName());
+        }
+      } else {
+        LOG.info("Persistent logging is not requested.");
+      }
+    }
+
+    LOG.info("Received parameters as environment variables: \n" + logBuffer.toString());
+
+    // log persistent volume related messages
+    if (pv == null) {
+      LOG.info("No persistent volume is requested. ");
+    } else {
+      StringBuffer pvInfo = new StringBuffer();
+      pvInfo.append("Persistent storage information: \n");
+      pvInfo.append("Job Dir Path: " + pv.getJobDirPath() + "\n");
+      pvInfo.append("Job Dir exists: " + pv.jobDirExists() + "\n");
+      pvInfo.append("Worker Dir Path: " + pv.getWorkerDirPath() + "\n");
+      pvInfo.append("Worker Dir Exists: " + pv.workerDirExists() + "\n");
+      pvInfo.append("Worker log file: " + pv.getLogFileName());
+      LOG.info(pvInfo.toString());
+    }
 
     // construct relevant variables from environment variables
     long fileSize = Long.parseLong(fileSizeStr);
@@ -94,13 +150,6 @@ public final class KubernetesWorker {
     jobDescFileName = POD_SHARED_VOLUME + "/" + DIR_PREFIX_FOR_JOB_ARCHIVE + jobDescFileName;
     String configDir = POD_SHARED_VOLUME + "/" + DIR_PREFIX_FOR_JOB_ARCHIVE
         + KUBERNETES_CLUSTER_TYPE;
-
-    // create persistent job dir if there is a persistent volume and if this is the first worker
-    if (persistentJobDir == null || persistentJobDir.trim().length() == 0) {
-      LOG.info("No persistent volume is requested. ");
-    } else {
-      createPersistentJobDirIfFirstWorker(podName, containerName, persistentJobDir);
-    }
 
     boolean ready = waitUnpack(containerName, jobPackageFileName, fileSize);
     if (!ready) {
@@ -136,17 +185,13 @@ public final class KubernetesWorker {
       LOG.severe("Can not get all workers to join. Something wrong. .......................");
     }
 
-    K8sPersistentVolume pv = null;
-    if (KubernetesContext.persistentVolumeRequested(config)) {
-      pv = new K8sPersistentVolume(persistentJobDir, thisWorker.getWorkerID());
-//      pv.getWorkerDir();
-      StringBuffer pvInfo = new StringBuffer();
-      pvInfo.append("Persistent storage information: \n");
-      pvInfo.append("Job Dir Path: " + pv.getJobDirPath() + "\n");
-      pvInfo.append("Job Dir exists: " + pv.jobDirExists() + "\n");
-      pvInfo.append("Worker Dir Path: " + pv.getWorkerDirPath() + "\n");
-      pvInfo.append("Worker Dir Exists: " + pv.workerDirExists() + "\n");
-      LOG.info(pvInfo.toString());
+    // if persistent logging type is kubernetes, initialize it
+    if (pv != null && SchedulerContext.persistentLoggingRequested(config)
+        && "kubernetes".equalsIgnoreCase(persLoggingType)) {
+
+      String ns = KubernetesContext.namespace(config);
+      logger = new K8sWorkerLogger(pv.getLogFileName(), ns, podName, containerName);
+      logger.startLoggingSinceBeginning();
     }
 
     ResourceAPI.ComputeResource cr = job.getJobResources().getContainer();
@@ -156,8 +201,24 @@ public final class KubernetesWorker {
   }
 
   /**
+   * add a new log file handler to the root logger
+   * all log messages will also be loggen into this file
+   * @param logFile
+   */
+  public static void addLogFileHandler(String logFile) {
+    Logger rootLogger = Logger.getLogger("");
+
+    try {
+      FileHandler fileHandler = new FileHandler(logFile);
+      fileHandler.setFormatter(new SimpleFormatter());
+      rootLogger.addHandler(fileHandler);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  /**
    * last method to call to close the worker
-   * @param podName
    */
   public static void closeWorker(String podName) {
 
@@ -189,10 +250,9 @@ public final class KubernetesWorker {
    */
   public static void waitIndefinitely() {
 
-    System.out.println();
     while (true) {
       try {
-        System.out.println("Waiting indefinetely idle ... Sleeping 100sec ...");
+        LOG.info("Waiting indefinetely idle. Sleeping 100sec. Time: " + new java.util.Date());
         Thread.sleep(100000);
       } catch (InterruptedException e) {
         e.printStackTrace();
@@ -201,9 +261,18 @@ public final class KubernetesWorker {
   }
 
   /**
+   * calculate the workerID from the given parameters
+   */
+  public static int calculateWorkerID(String podName, String containerName, int workersPerPod) {
+    int podNo = KubernetesUtils.idFromName(podName);
+    int containerIndex = KubernetesUtils.idFromName(containerName);
+
+    return podNo * workersPerPod + containerIndex;
+  }
+
+  /**
    * update the count in the shared file with a lock
    * to let other workers in this pod to know that a worker has finished
-   * @return
    */
   public static int updateCompletions() {
 
@@ -267,7 +336,6 @@ public final class KubernetesWorker {
 
   /**
    * configs from job object will override the ones in config from files if any
-   * @return
    */
   public static Config overrideConfigsFromJob(JobAPI.Job job, Config cnfg) {
 
@@ -286,7 +354,6 @@ public final class KubernetesWorker {
 
   /**
    * loadConfig from config files
-   * @return
    */
   public static Config loadConfig(String configDir) {
 
@@ -310,11 +377,9 @@ public final class KubernetesWorker {
 
   /**
    * Load a jar file dynamically
-   *
+   * <p>
    * This method is copied from:
    * https://stackoverflow.com/questions/27187566/load-jar-dynamically-at-runtime
-   * @param jarFile
-   * @throws Exception
    */
   @SuppressWarnings("rawtypes")
   public static boolean loadLibrary(String jarFile) {
@@ -324,7 +389,7 @@ public final class KubernetesWorker {
       java.net.URLClassLoader loader = (java.net.URLClassLoader) ClassLoader.getSystemClassLoader();
       java.net.URL url = jar.toURI().toURL();
       /*Disallow if already loaded*/
-      for (java.net.URL it: java.util.Arrays.asList(loader.getURLs())) {
+      for (java.net.URL it : java.util.Arrays.asList(loader.getURLs())) {
         if (it.equals(url)) {
           return true;
         }
@@ -379,7 +444,6 @@ public final class KubernetesWorker {
 
   /**
    * write a file with an int in it.
-   * @return
    */
   public static boolean writeFile(String fileName, int number) {
     try {
@@ -402,12 +466,8 @@ public final class KubernetesWorker {
   }
 
 
-
   /**
    * Wait for the hob package file to be transferred to this pod
-   * @param jobFileName
-   * @param fileSize
-   * @return
    */
   public static boolean waitForFileTransfer(String jobFileName, long fileSize) {
 
@@ -459,8 +519,6 @@ public final class KubernetesWorker {
   /**
    * The workers except the one in the first container in a pod wait for
    * the first worker to write the unpack-complete.txt file
-   * @param flagFileName
-   * @return
    */
   public static boolean waitForFlagFile(String flagFileName) {
 
@@ -505,7 +563,7 @@ public final class KubernetesWorker {
             + "] already exist. Something must be wrong. ");
         return false;
       } else {
-        boolean dirCreated = persistentDir.mkdir();
+        boolean dirCreated = persistentDir.mkdirs();
         if (dirCreated) {
           LOG.info("Persistent job dir [" + persistentJobDir + "] created.");
           return true;
@@ -519,4 +577,48 @@ public final class KubernetesWorker {
     // if it is not the first worker, do nothing
     return true;
   }
+
+  /**
+   * which ever worker comes first to this point, it will create the job dir
+   */
+  public static boolean createPersistentJobDir(
+      String podName, String containerName, String persistentJobDir, int attemptNo) {
+
+    if (attemptNo == PERSISTENT_DIR_CREATE_TRY_COUNT) {
+      return false;
+    }
+
+    File persistentDir = new File(persistentJobDir);
+    if (persistentDir.exists()) {
+      // another worker has already created it, return with success
+      return true;
+    } else {
+      boolean dirCreated = persistentDir.mkdirs();
+      if (dirCreated) {
+        LOG.info("Persistent job dir [" + persistentJobDir + "] created by the worker "
+            + "at pod: " + podName + " and on the container: " + containerName);
+        return true;
+      } else {
+
+        // more than one worker may have attempted to create the dir and it may have failed
+        // for this worker but it may have succeeded for another worker.
+        // so the dir may have been created. check it again
+        if (persistentDir.exists()) {
+          return true;
+        } else {
+          // sleep some time and try again
+          LOG.severe("Failed creating persistent dir [" + persistentJobDir + "]. Sleeping and "
+              + " will try again.");
+          try {
+            Thread.sleep(500);
+          } catch (InterruptedException e) {
+            e.printStackTrace();
+          }
+
+          return createPersistentJobDir(podName, containerName, persistentJobDir, attemptNo + 1);
+        }
+      }
+    }
+  }
+
 }
