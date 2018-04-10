@@ -118,6 +118,9 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
         double instanceDiskValue = instancesDiskMap.get(containerId).get(id);
         double instanceCPUValue = instancesCPUMap.get(containerId).get(id);
 
+        LOG.info("Task Id:" + id + "and its instance required resource values:"
+            + instanceRAMValue + "\t" + instanceDiskValue + "\t" + instanceCPUValue);
+
         Resource instanceResource = new Resource(instanceRAMValue,
             instanceDiskValue, instanceCPUValue);
 
@@ -130,6 +133,9 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
       containerRAMValue = (double) worker.getRam(); //later replace 'double' with 'int'
       containerDiskValue = (double) worker.getDisk();
       containerCPUValue = (double) worker.getCpu();
+
+      LOG.info("Task Id:" + containerId + "and its container required resource values:"
+          + containerRAMValue + "\t" + containerCPUValue + "\t" + containerCPUValue);
 
       Resource containerResource = new Resource(
           containerRAMValue, containerDiskValue, containerCPUValue);
