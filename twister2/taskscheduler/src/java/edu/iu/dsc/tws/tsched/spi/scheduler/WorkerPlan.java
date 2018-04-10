@@ -11,6 +11,34 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tsched.spi.scheduler;
 
-public class WorkerPlan {
+import java.util.ArrayList;
+import java.util.List;
 
+public class WorkerPlan {
+  private List<Worker> workers;
+
+  public WorkerPlan() {
+    this.workers = new ArrayList<>();
+  }
+
+  public WorkerPlan(List<Worker> workers) {
+    this.workers = new ArrayList<>(workers);
+  }
+
+  public int getNumberOfWorkers() {
+    return workers.size();
+  }
+
+  public void addWorker(Worker w) {
+    this.workers.add(w);
+  }
+
+  public Worker getWorker(int id) {
+    for (Worker w : workers) {
+      if (w.getId() == id) {
+        return w;
+      }
+    }
+    return null;
+  }
 }
