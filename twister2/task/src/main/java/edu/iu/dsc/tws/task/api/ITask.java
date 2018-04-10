@@ -23,14 +23,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.api;
 
-import java.io.Serializable;
-
 import edu.iu.dsc.tws.common.config.Config;
 
 /**
  * Base interface for tasks
  */
-public interface ITask extends Serializable {
+public interface ITask extends INode {
   /**
    * Prepare the task to be executed
    * @param cfg the configuration
