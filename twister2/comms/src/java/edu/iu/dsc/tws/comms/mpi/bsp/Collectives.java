@@ -16,6 +16,7 @@ import java.nio.Buffer;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.comms.mpi.io.MessageSerializer;
+
 import mpi.MPI;
 import mpi.MPIException;
 
@@ -30,8 +31,6 @@ public class Collectives {
     Buffer buffer = null;
     if (type == MessageType.BUFFER) {
       buffer = (Buffer) object;
-    } else {
-
     }
     mpi.Op operation = getMPIOperation(op);
     mpi.Datatype datatype = getDataTyle(type);
@@ -44,8 +43,6 @@ public class Collectives {
     Buffer buffer = null;
     if (type == MessageType.BUFFER) {
       buffer = (Buffer) object;
-    } else {
-
     }
     mpi.Op operation = getMPIOperation(op);
     mpi.Datatype datatype = getDataTyle(type);
@@ -83,7 +80,7 @@ public class Collectives {
     MPI.COMM_WORLD.bcast(buffer, len, datatype, target);
   }
 
-  mpi.Datatype getDataTyle(MessageType type) {
+  private mpi.Datatype getDataTyle(MessageType type) {
     if (type == MessageType.INTEGER) {
       return MPI.INT;
     } else if (type == MessageType.BYTE || type == MessageType.OBJECT) {
@@ -98,7 +95,7 @@ public class Collectives {
     throw new RuntimeException("Un-supported type");
   }
 
-  mpi.Op getMPIOperation(Op op) {
+  private mpi.Op getMPIOperation(Op op) {
     if (op == Op.SUM) {
       return MPI.SUM;
     } else if (op == Op.MAX) {
