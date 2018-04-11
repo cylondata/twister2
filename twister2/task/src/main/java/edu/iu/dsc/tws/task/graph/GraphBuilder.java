@@ -77,7 +77,7 @@ public final class GraphBuilder {
 
   public DataFlowTaskGraph build() {
     graph.validate();
-
+    graph.build();
     return graph;
   }
 }
