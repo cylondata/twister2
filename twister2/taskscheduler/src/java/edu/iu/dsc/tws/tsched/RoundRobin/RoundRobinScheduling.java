@@ -15,11 +15,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.task.graph.Vertex;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.InstanceId;
-import edu.iu.dsc.tws.tsched.utils.Job;
-import edu.iu.dsc.tws.tsched.utils.JobAttributes;
+import edu.iu.dsc.tws.tsched.utils.TaskAttributes;
 
 public class RoundRobinScheduling {
 
@@ -31,36 +32,31 @@ public class RoundRobinScheduling {
   private static final double DEFAULT_RAM_PADDING_PER_CONTAINER = 2;
   private static final double NOT_SPECIFIED_NUMBER_VALUE = -1;
 
-  private Job job;
-
-  public RoundRobinScheduling() {
-    System.out.println("Will be implemented later");
+  protected RoundRobinScheduling() {
   }
 
-  //public static Map<Integer, List<InstanceId>> RoundRobinSchedulingAlgorithm() {
-  public static Map<Integer, List<InstanceId>> RoundRobinSchedulingAlgorithm(Job job) {
+  /**
+   * This method generate the container -> instance map
+   */
+  public static Map<Integer, List<InstanceId>> RoundRobinSchedulingAlgorithm(
+      Set<Vertex> taskVertexSet, int numberOfContainers) {
+
     int taskIndex = 1;
     int globalTaskIndex = 1;
-
-    //Job job = new Job();
-    //job = job.getJob();
+    TaskAttributes taskAttributes = new TaskAttributes();
     Map<Integer, List<InstanceId>> roundrobinAllocation = new HashMap<>();
     try {
-      int numberOfContainers = JobAttributes.getNumberOfContainers(job);
-      int totalInstances = JobAttributes.getTotalNumberOfInstances(job);
-      LOG.info("Number of Containers:" + numberOfContainers + "\t"
-          + "number of instances:" + totalInstances);
+      //int numberOfContainers = workerPlan.getNumberOfWorkers();
+      int totalInstances = taskAttributes.getTotalNumberOfInstances(taskVertexSet);
+      Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
+      LOG.info("Number of Containers:" + numberOfContainers
+          + "\t" + "number of instances:" + totalInstances);
       for (int i = 1; i <= numberOfContainers; i++) {
         roundrobinAllocation.put(i, new ArrayList<InstanceId>());
       }
       LOG.info("RR Map Before Allocation\t" + roundrobinAllocation);
-
-      //This value will be replaced with the actual job attributes
-      Map<String, Integer> parallelTaskMap = JobAttributes.getParallelTaskMap(job);
       for (String task : parallelTaskMap.keySet()) {
         int numberOfInstances = parallelTaskMap.get(task);
-        LOG.info("Task name:" + task + "\t" + "and number of instances:\t"
-            + numberOfInstances);
         for (int i = 0; i < numberOfInstances; i++) {
           roundrobinAllocation.get(taskIndex).add(new InstanceId(task, globalTaskIndex, i));
           if (taskIndex != numberOfContainers) {

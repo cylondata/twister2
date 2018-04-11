@@ -52,10 +52,6 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
     return taskMap.get(name);
   }
 
-  public boolean tasksEqual(ITask t1, ITask t2) {
-    return t1.taskName().equals(t2.taskName());
-  }
-
   public Set<Edge> outEdges(Vertex task) {
     return outgoingTaskEdgesOf(task);
   }

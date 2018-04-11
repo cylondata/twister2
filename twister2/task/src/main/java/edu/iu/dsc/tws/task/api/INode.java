@@ -11,8 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.api;
 
-/**
- * The interface that that all data input sources (Batch, Streaming, etc)
- */
-public interface Source {
+import java.io.Serializable;
+
+public interface INode extends Serializable {
 }

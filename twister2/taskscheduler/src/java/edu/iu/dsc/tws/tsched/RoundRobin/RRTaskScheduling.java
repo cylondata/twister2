@@ -31,7 +31,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.tsched.spi.common.TaskConfig;
+import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.InstanceId;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.Resource;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedule;
@@ -60,6 +63,9 @@ public class RRTaskScheduling implements TaskSchedule {
   private double instanceDisk;
   private double instanceCPU;
 
+  /**
+   * This will initialize the instance ram, instance disk, and instance cpu values.
+   */
   @Override
   public void initialize(TaskConfig config, Job job) {
     this.jobObject = job;
@@ -76,6 +82,14 @@ public class RRTaskScheduling implements TaskSchedule {
 
   @Override
   public void initialize(Job job) {
+  }
+
+  public void initialize(Config cfg) {
+
+  }
+
+  public TaskSchedulePlan schedule(DataFlowTaskGraph graph, WorkerPlan workerPlan) {
+    return null;
   }
 
   /**
