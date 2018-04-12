@@ -23,15 +23,6 @@ public class Vertex {
   private INode task;
   private int cpu;
   private int memory;
-
-  public int getRam() {
-    return ram;
-  }
-
-  public void setRam(int ram) {
-    this.ram = ram;
-  }
-
   private int ram;
   private int parallelism;
 
@@ -41,6 +32,14 @@ public class Vertex {
     this.name = n;
     this.task = t;
     config = Config.newBuilder().build();
+  }
+
+  public int getRam() {
+    return ram;
+  }
+
+  public void setRam(int ram) {
+    this.ram = ram;
   }
 
   public INode getTask() {
