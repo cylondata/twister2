@@ -37,7 +37,6 @@ import edu.iu.dsc.tws.tsched.utils.TaskAttributes;
  * This class constructs the instance map based on the requested ram, disk, and cpu values
  * of the job.
  */
-
 public class InstanceMapCalculation {
 
   private static final Logger LOG = Logger.getLogger(InstanceMapCalculation.class.getName());
@@ -59,65 +58,6 @@ public class InstanceMapCalculation {
     this.instanceDisk = instanceDisk;
     this.instanceCPU = instanceCPU;
     taskAttributes = new TaskAttributes();
-  }
-
-  private static int getLargestContainerSize(Map<Integer,
-      List<InstanceId>> instancesAllocation) {
-    int max = 0;
-    for (List<InstanceId> instances : instancesAllocation.values()) {
-      if (instances.size() > max) {
-        max = instances.size();
-      }
-    }
-    LOG.info("Maximum container value is:\t" + max);
-    return max;
-  }
-
-  private static double getContainerCpuValue(Map<Integer,
-      List<InstanceId>> instancesAllocation) {
-
-      /*List<JobAPI.Config.KeyValue> jobConfig= job.getJobConfig().getKvsList();
-      double defaultContainerCpu =
-             DEFAULT_CPU_PADDING_PER_CONTAINER + getLargestContainerSize(instancesAllocation);
-
-      String cpuHint = JobUtils.getConfigWithDefault(
-              jobConfig, com.tws.api.Config.TOPOLOGY_CONTAINER_CPU_REQUESTED,
-              Double.toString(defaultContainerCpu)); */
-
-    //These two lines will be once the actual job description file is created.
-    String cpuHint = "0.6";
-    return Double.parseDouble(cpuHint);
-  }
-
-  private static Double getContainerDiskValue(Map<Integer,
-      List<InstanceId>> instancesAllocation) {
-
-      /*ByteAmount defaultContainerDisk = instanceDiskDefault
-                .multiply(getLargestContainerSize(instancesAllocation))
-                .plus(DEFAULT_DISK_PADDING_PER_CONTAINER);
-
-      List<JobAPI.Config.KeyValue> jobConfig = job.getJobConfig().getKvsList();
-       return JobUtils.getConfigWithDefault(jobConfig,
-                com.tws.api.Config.JOB_CONTAINER_DISK_REQUESTED,
-                defaultContainerDisk); */
-
-    //These two lines will be once the actual job description file is created.
-    Long containerDiskValue = 100L;
-    return containerDiskValue.doubleValue();
-  }
-
-  private static Double getContainerRamValue(Map<Integer,
-      List<InstanceId>> instancesAllocation) {
-
-        /*List<JobAPI.Config.KeyValue> jobConfig = job.getJobConfig().getKvsList();
-        return JobUtils.getConfigWithDefault(
-                jobConfig, com.tws.api.Config.JOB_CONTAINER_RAM_REQUESTED,
-                NOT_SPECIFIED_NUMBER_VALUE);*/
-
-    //These two lines will be once the actual job description file is created.
-    Long containerRAMValue = 10L;
-    //return ByteAmount.fromGigabytes (containerRAMValue);
-    return containerRAMValue.doubleValue();
   }
 
   /**
@@ -258,4 +198,64 @@ public class InstanceMapCalculation {
     }
     return instancesCpuContainerMap;
   }
+
+  private static int getLargestContainerSize(Map<Integer,
+      List<InstanceId>> instancesAllocation) {
+    int max = 0;
+    for (List<InstanceId> instances : instancesAllocation.values()) {
+      if (instances.size() > max) {
+        max = instances.size();
+      }
+    }
+    LOG.info("Maximum container value is:\t" + max);
+    return max;
+  }
+
+  private static double getContainerCpuValue(Map<Integer,
+      List<InstanceId>> instancesAllocation) {
+
+      /*List<JobAPI.Config.KeyValue> jobConfig= job.getJobConfig().getKvsList();
+      double defaultContainerCpu =
+             DEFAULT_CPU_PADDING_PER_CONTAINER + getLargestContainerSize(instancesAllocation);
+
+      String cpuHint = JobUtils.getConfigWithDefault(
+              jobConfig, com.tws.api.Config.TOPOLOGY_CONTAINER_CPU_REQUESTED,
+              Double.toString(defaultContainerCpu)); */
+
+    //These two lines will be once the actual job description file is created.
+    String cpuHint = "0.6";
+    return Double.parseDouble(cpuHint);
+  }
+
+  private static Double getContainerDiskValue(Map<Integer,
+      List<InstanceId>> instancesAllocation) {
+
+      /*ByteAmount defaultContainerDisk = instanceDiskDefault
+                .multiply(getLargestContainerSize(instancesAllocation))
+                .plus(DEFAULT_DISK_PADDING_PER_CONTAINER);
+
+      List<JobAPI.Config.KeyValue> jobConfig = job.getJobConfig().getKvsList();
+       return JobUtils.getConfigWithDefault(jobConfig,
+                com.tws.api.Config.JOB_CONTAINER_DISK_REQUESTED,
+                defaultContainerDisk); */
+
+    //These two lines will be once the actual job description file is created.
+    Long containerDiskValue = 100L;
+    return containerDiskValue.doubleValue();
+  }
+
+  private static Double getContainerRamValue(Map<Integer,
+      List<InstanceId>> instancesAllocation) {
+
+        /*List<JobAPI.Config.KeyValue> jobConfig = job.getJobConfig().getKvsList();
+        return JobUtils.getConfigWithDefault(
+                jobConfig, com.tws.api.Config.JOB_CONTAINER_RAM_REQUESTED,
+                NOT_SPECIFIED_NUMBER_VALUE);*/
+
+    //These two lines will be once the actual job description file is created.
+    Long containerRAMValue = 10L;
+    //return ByteAmount.fromGigabytes (containerRAMValue);
+    return containerRAMValue.doubleValue();
+  }
+
 }

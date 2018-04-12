@@ -22,7 +22,6 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.Vertex;
 import edu.iu.dsc.tws.tsched.spi.common.TaskConfig;
-import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.InstanceId;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.InstanceMapCalculation;
@@ -30,8 +29,6 @@ import edu.iu.dsc.tws.tsched.spi.taskschedule.Resource;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedule;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.utils.Job;
-
-//import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskInstanceId;
 
 public class RoundRobinTaskScheduling implements TaskSchedule {
 
@@ -75,10 +72,16 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
   @Override
   public void initialize(Config cfg1) {
     this.cfg = cfg1;
+
+    //The commented value should be enabled once the context class is created.
+    /*this.instanceRAM = Context.instanceRam(cfg);
+    this.instanceDisk = Context.instanceDisk(cfg);
+    this.instanceCPU = Context.instanceCPU(cfg);*/
+
     //Replace double value with int value if it requires.
-    this.instanceRAM = (double) cfg.getIntegerValue("ContainerMaxRamValue", 2000);
+    /*this.instanceRAM = (double) cfg.getIntegerValue("ContainerMaxRamValue", 2000);
     this.instanceDisk = (double) cfg.getIntegerValue("ContainerMaxDiskValue", 200);
-    this.instanceCPU = (double) cfg.getIntegerValue("ContainerMaxCpuValue", 5);
+    this.instanceCPU = (double) cfg.getIntegerValue("ContainerMaxCpuValue", 5);*/
   }
 
   @Override
@@ -129,12 +132,13 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
                 id.getTaskName(), id.getTaskId(), id.getTaskIndex(), instanceResource));
       }
 
-      Worker worker = workerPlan.getWorker(containerId);
-      containerRAMValue = (double) worker.getRam(); //later replace 'double' with 'int'
+      /*Worker worker = workerPlan.getWorker(containerId);
+      containerRAMValue = (double) worker.getRam();
       containerDiskValue = (double) worker.getDisk();
-      containerCPUValue = (double) worker.getCpu();
+      containerCPUValue = (double) worker.getCpu();*/
 
-      LOG.info("Task Id:" + containerId + "and its container required resource values:"
+
+      LOG.info("Container Id:" + containerId + "and its container required resource values:"
           + containerRAMValue + "\t" + containerCPUValue + "\t" + containerCPUValue);
 
       Resource containerResource = new Resource(
@@ -145,7 +149,8 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
 
       containerPlans.add(taskContainerPlan);
     }
-    return new TaskSchedulePlan(job.getJobId(), containerPlans);
+    //return new TaskSchedulePlan(job.getJobId(), containerPlans);
+    return new TaskSchedulePlan(1, containerPlans); //id would be taskgraphid/jobid
   }
 
   @Override
