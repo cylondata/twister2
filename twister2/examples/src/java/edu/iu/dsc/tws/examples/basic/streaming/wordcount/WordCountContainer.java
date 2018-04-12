@@ -69,35 +69,28 @@ public class WordCountContainer implements IContainer {
     channel = network.getDataFlowTWSCommunication();
 
     Map<String, Object> newCfg = new HashMap<>();
-    LOG.info("Setting up reduce dataflow operation");
-    try {
-      keyGather = (MPIDataFlowMultiGather) channel.keyedGather(newCfg, MessageType.OBJECT,
-          destinations, sources,
-          destinations, new WordAggregate());
+    keyGather = (MPIDataFlowMultiGather) channel.keyedGather(newCfg, MessageType.OBJECT,
+        destinations, sources,
+        destinations, new WordAggregate());
 
-      if (id < 2) {
-        for (int i = 0; i < noOfTasksPerExecutor; i++) {
-          // the map thread where data is produced
-          LOG.info(String.format("%d Starting thread %d", id, i + id * noOfTasksPerExecutor));
-          Thread mapThread = new Thread(new StreamingWordSource(config, keyGather, 1000,
-              new ArrayList<>(destinations), noOfTasksPerExecutor * id + i, 10));
-          mapThread.start();
-        }
+    if (id < 2) {
+      for (int i = 0; i < noOfTasksPerExecutor; i++) {
+        // the map thread where data is produced
+        Thread mapThread = new Thread(new StreamingWordSource(config, keyGather, 1000,
+            new ArrayList<>(destinations), noOfTasksPerExecutor * id + i, 10));
+        mapThread.start();
       }
-      // we need to progress the communication
-      while (true) {
-        try {
-          // progress the channel
-          channel.progress();
-          // we should progress the communication directive
-          keyGather.progress();
-          Thread.yield();
-        } catch (Throwable t) {
-          LOG.log(Level.SEVERE, "Something bad happened", t);
-        }
+    }
+    // we need to progress the communication
+    while (true) {
+      try {
+        // progress the channel
+        channel.progress();
+        // we should progress the communication directive
+        keyGather.progress();
+      } catch (Throwable t) {
+        LOG.log(Level.SEVERE, "Error", t);
       }
-    } catch (Throwable t) {
-      t.printStackTrace();
     }
   }
 
@@ -111,7 +104,7 @@ public class WordCountContainer implements IContainer {
     for (int i = 0; i < NO_OF_TASKS / 2; i++) {
       destinations.add(NO_OF_TASKS / 2 + i);
     }
-    LOG.info(String.format("%d sources %s destinations %s",
+    LOG.fine(String.format("%d sources %s destinations %s",
         taskPlan.getThisExecutor(), sources, destinations));
   }
 }

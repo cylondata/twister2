@@ -9,7 +9,6 @@ fi
 if [ $OMPI_COMM_WORLD_RANK = "0" ]; then
     profile=-agentpath:/home/supun/tools/jprofiler7/bin/linux-x64/libjprofilerti.so=port=8849,nowait
     debug=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5006
-    echo "Rank 0"
 fi
 
 profile=

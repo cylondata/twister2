@@ -29,6 +29,12 @@ import java.util.Objects;
 import java.util.Random;
 
 public class RandomString {
+  private String words = "The original and reference implementation Java compilers "
+      + "virtual machines and class libraries were originally released by Sun under proprietary"
+      + "licenses As of May 2007 in compliance with the specifications of the Java Community"
+      + "Process Sun relicensed most of its Java technologies under the GNU General Public License"
+      + "Others have also developed alternative implementations of these Sun technologies such "
+      + "as the GNU Compiler for Java";
   /**
    * Generate a random string.
    */
@@ -48,6 +54,11 @@ public class RandomString {
     return new String(chars);
   }
 
+  public String nextFixedRandomString() {
+    int next = random.nextInt(wordsArrays.length);
+    return wordsArrays[next];
+  }
+
   public static final String UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
   public static final String LOWER = UPPER.toLowerCase(Locale.ROOT);
@@ -64,7 +75,11 @@ public class RandomString {
 
   private int maxLength;
 
+  private String[] wordsArrays;
+
   public RandomString() {
+    wordsArrays = words.split(" ");
+    this.random = new Random();
   }
 
   public RandomString(int length, Random random, String symbols) {

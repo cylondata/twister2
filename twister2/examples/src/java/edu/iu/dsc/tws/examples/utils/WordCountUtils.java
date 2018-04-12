@@ -17,7 +17,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -40,7 +39,7 @@ public final class WordCountUtils {
    */
   public static TaskPlan createWordCountPlan(Config cfg, ResourcePlan plan, int noOfTasks) {
     int noOfProcs = plan.noOfContainers();
-    LOG.log(Level.INFO, "No of containers: " + noOfProcs);
+//    LOG.log(Level.INFO, "No of containers: " + noOfProcs);
     Map<Integer, Set<Integer>> executorToGraphNodes = new HashMap<>();
     Map<Integer, Set<Integer>> groupsToExeuctors = new HashMap<>();
     int thisExecutor = plan.getThisId();
