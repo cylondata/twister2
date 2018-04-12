@@ -30,6 +30,10 @@ public class Edge {
     return taskEdge;
   }
 
+  public String getTaskEdge() {
+    return taskEdge;
+  }
+
   public ITask function() {
     return function;
   }

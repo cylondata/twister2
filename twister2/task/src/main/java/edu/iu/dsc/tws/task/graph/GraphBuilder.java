@@ -25,7 +25,7 @@ public final class GraphBuilder {
   }
 
   public GraphBuilder addTask(String name, ITask task) {
-    graph.addTaskVertex(new Vertex(name, task));
+    graph.addTaskVertex(name, new Vertex(name, task));
     return this;
   }
 

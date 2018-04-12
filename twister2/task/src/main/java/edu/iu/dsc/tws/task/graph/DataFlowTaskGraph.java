@@ -43,6 +43,12 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
     }
   }
 
+  public boolean addTaskVertex(String name, Vertex taskVertex) {
+    addTaskVertex(taskVertex);
+    taskMap.put(name, taskVertex);
+    return true;
+  }
+
   @Override
   public Edge createEdge(Vertex sourceTaskVertex, Vertex targetTaskVertex) {
     return super.createEdge(sourceTaskVertex, targetTaskVertex);
