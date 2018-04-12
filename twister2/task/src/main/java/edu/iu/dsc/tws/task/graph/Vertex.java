@@ -23,6 +23,16 @@ public class Vertex {
   private INode task;
   private int cpu;
   private int memory;
+
+  public int getRam() {
+    return ram;
+  }
+
+  public void setRam(int ram) {
+    this.ram = ram;
+  }
+
+  private int ram;
   private int parallelism;
 
   private Config config;
