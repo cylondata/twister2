@@ -54,7 +54,6 @@ public class NodeCommand extends MPICommand {
     mpiCommand.add(twister2Home);
     mpiCommand.add(twister2Home);
     mpiCommand.add(Paths.get(configDirectoryName, nodesFileName).toString());
-    LOG.info(String.format("Command %s", mpiCommand));
     return mpiCommand;
   }
 

@@ -15,7 +15,6 @@ import java.io.File;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -79,7 +78,7 @@ public final class JobUtils {
 
   public static String jobClassPath(Config cfg, JobAPI.Job job, String wd) {
     StringBuilder classPathBuilder = new StringBuilder();
-    LOG.log(Level.INFO, "Job type: " + job.getJobFormat().getType());
+//    LOG.log(Level.INFO, "Job type: " + job.getJobFormat().getType());
     if (job.getJobFormat().getType() == JobAPI.JobFormatType.SHUFFLE) {
       // Bundled jar
       classPathBuilder.append(

@@ -49,7 +49,7 @@ public final class ResourceSchedulerUtils {
 
     ProcessUtils.extractPackageWithoutDir(workingDirectory + "/" + jobName
             + "/twister2-job.tar.gz",
-        workingDirectory + "/" + jobName, true, false);
+        workingDirectory + "/" + jobName, false, false);
 
     return true;
   }
