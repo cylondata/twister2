@@ -13,6 +13,6 @@ package edu.iu.dsc.tws.master;
 
 import java.util.logging.Logger;
 
-public class CheckpointMaster {
-  private static final Logger LOG = Logger.getLogger(CheckpointMaster.class.getName());
+public class Checkpoint {
+  private static final Logger LOG = Logger.getLogger(Checkpoint.class.getName());
 }

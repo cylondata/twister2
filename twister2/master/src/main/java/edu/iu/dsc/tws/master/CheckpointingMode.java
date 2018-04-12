@@ -11,8 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.master;
 
-import java.util.logging.Logger;
-
-public class CheckpointMaster {
-  private static final Logger LOG = Logger.getLogger(CheckpointMaster.class.getName());
+public enum CheckpointingMode {
+  EXACTLY_ONCE, AT_LEAST_ONCE
 }
