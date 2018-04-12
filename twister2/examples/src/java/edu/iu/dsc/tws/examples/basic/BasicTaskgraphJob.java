@@ -36,7 +36,7 @@ public final class BasicTaskgraphJob {
     BasicJob basicJob = BasicJob.newBuilder()
         .setName("basic-taskgraphJob")
         .setContainerClass(SimpleTGraphExample1.class.getName())
-        .setRequestResource(new ResourceContainer(2, 1024), 2)
+        .setRequestResource(new ResourceContainer(2, 1024, 100), 2)
         .setConfig(jobConfig)
         .build();
 
