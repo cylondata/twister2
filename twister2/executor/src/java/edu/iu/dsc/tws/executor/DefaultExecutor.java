@@ -11,12 +11,19 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor;
 
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.Table;
+
+import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.ITask;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.task.graph.Edge;
+import edu.iu.dsc.tws.task.graph.Vertex;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 public class DefaultExecutor implements IExecutor {
@@ -32,8 +39,19 @@ public class DefaultExecutor implements IExecutor {
    */
   private int workerId;
 
+  /**
+   * Fixed thread executor
+   */
+  private FixedThreadExecutor executor;
+
+  /**
+   * Communications list
+   */
+  private Table<String, String, Communication> table = HashBasedTable.create();
+
   public DefaultExecutor(int workerId) {
     this.workerId = workerId;
+    this.executor = new FixedThreadExecutor();
   }
 
   @Override
@@ -48,15 +66,57 @@ public class DefaultExecutor implements IExecutor {
     }
 
     // lets get the task
-    ITask task = null;
+    Set<TaskSchedulePlan.TaskInstancePlan> instancePlan = p.getTaskInstances();
+    for (TaskSchedulePlan.TaskInstancePlan ip : instancePlan) {
+      Vertex v = taskGraph.vertex(ip.getTaskName());
 
-    // now lets get the outgoing edges of this task
-    Set<String> outOperations = null;
-    Set<String> inOperations = null;
+      if (v == null) {
+        throw new RuntimeException("Non-existing task scheduled: " + ip.getTaskName());
+      }
 
-    // now lets create the communications for these tasks
+      INode node = v.getTask();
+      if (node instanceof ITask) {
+        // lets get the communication
+        Set<Edge> edges = taskGraph.outEdges(v);
+        // now lets create the communication object
+        for (Edge e : edges) {
+          HashSet<Integer> tasks = new HashSet<>();
+          if (table.contains(v.getName(), e.taskEdge)) {
+            table.put(v.getName(), e.taskEdge, new Communication(v.getName(),
+                e.taskEdge, tasks));
+          }
+        }
+        // add this task to an executor
+
+      }
+    }
+
 
     return null;
+  }
+
+  public class Communication {
+    private String source;
+    private String name;
+    private Set<Integer> tasks = new HashSet<>();
+
+    public Communication(String n, String src, Set<Integer> tasks) {
+      this.name = n;
+      this.tasks = tasks;
+      this.source = src;
+    }
+
+    public String getName() {
+      return name;
+    }
+
+    public Set<Integer> getTasks() {
+      return tasks;
+    }
+
+    public String getSource() {
+      return source;
+    }
   }
 
   @Override
