@@ -16,7 +16,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.task.api.Task;
 
-public class CheckpointBarrierTracker implements CheckpointBarrierHandler{
+public class CheckpointBarrierTracker implements CheckpointBarrierHandler {
   private static final Logger LOG = Logger.getLogger(CheckpointBarrierTracker.class.getName());
 
   @Override

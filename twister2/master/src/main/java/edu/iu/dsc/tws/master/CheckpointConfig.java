@@ -91,7 +91,8 @@ public class CheckpointConfig {
 
   public void setMaxConcurrentCheckpoints(int maxConcurrentCheckpoints) {
     if (maxConcurrentCheckpoints < 1) {
-      throw new IllegalArgumentException("The maximum number of concurrent attempts must be at least one.");
+      throw new IllegalArgumentException("The maximum number of concurrent attempts "
+          + "must be at least one.");
     }
     this.maxConcurrentCheckpoints = maxConcurrentCheckpoints;
   }
