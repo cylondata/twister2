@@ -84,7 +84,7 @@ public class Container {
       throw new ScheduleException(String.format(
           "Instance %s already exists in container %s", taskInstancePlan, toString()));
     }
-    assertHasSpace(taskInstancePlan.getResource());
+    //assertHasSpace(taskInstancePlan.getResource());
     this.taskInstances.add(taskInstancePlan);
   }
 
