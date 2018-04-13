@@ -128,6 +128,7 @@ public class InstanceMapCalculation {
       Map<Integer, List<InstanceId>> containerInstanceAllocationMap, Set<Vertex> taskVertexSet) {
 
     Map<String, Double> ramMap = taskAttributes.getTaskRamMap(taskVertexSet);
+    LOG.info("RaM Map Values:" + ramMap);
     Map<Integer, Map<InstanceId, Double>> instancesRamContainerMap = new HashMap<>();
 
     for (int containerId : containerInstanceAllocationMap.keySet()) {
@@ -173,7 +174,7 @@ public class InstanceMapCalculation {
   public Map<Integer, Map<InstanceId, Double>> getInstancesDiskMapInContainer(
       Map<Integer, List<InstanceId>> containerInstanceAllocationMap, Set<Vertex> taskVertexSet) {
 
-    Map<String, Double> diskMap = taskAttributes.getTaskRamMap(taskVertexSet);
+    Map<String, Double> diskMap = taskAttributes.getTaskDiskMap(taskVertexSet);
     Map<Integer, Map<InstanceId, Double>> instancesDiskContainerMap = new HashMap<>();
 
     for (int containerId : containerInstanceAllocationMap.keySet()) {
@@ -258,3 +259,4 @@ public class InstanceMapCalculation {
     return instancesCpuContainerMap;
   }
 }
+
