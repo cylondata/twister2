@@ -16,6 +16,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -44,8 +45,8 @@ public class WorkerController implements IWorkerController {
   private int numberOfPods;
   private int numberOfWorkers;
   private int workersPerPod;
-  private CoreV1Api coreApi;
-  private ApiClient apiClient;
+  private static CoreV1Api coreApi;
+  private static ApiClient apiClient;
   private ArrayList<WorkerNetworkInfo> workerList;
   private WorkerNetworkInfo thisWorker;
 
@@ -67,10 +68,11 @@ public class WorkerController implements IWorkerController {
     createApiInstances();
   }
 
-  public void createApiInstances() {
+  public static void createApiInstances() {
 
     try {
       apiClient = io.kubernetes.client.util.Config.defaultClient();
+      apiClient.getHttpClient().setReadTimeout(0, TimeUnit.MILLISECONDS);
     } catch (IOException e) {
       LOG.log(Level.SEVERE, "Exception when creating ApiClient: ", e);
       throw new RuntimeException(e);
@@ -78,6 +80,14 @@ public class WorkerController implements IWorkerController {
     Configuration.setDefaultApiClient(apiClient);
 
     coreApi = new CoreV1Api(apiClient);
+  }
+
+  public static CoreV1Api getCoreApi() {
+    if (coreApi == null) {
+      createApiInstances();
+    }
+
+    return coreApi;
   }
 
   /**

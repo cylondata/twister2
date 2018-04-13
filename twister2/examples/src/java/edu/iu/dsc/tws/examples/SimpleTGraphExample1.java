@@ -34,15 +34,14 @@ import edu.iu.dsc.tws.task.api.Message;
 import edu.iu.dsc.tws.task.api.OutputCollection;
 import edu.iu.dsc.tws.task.core.TaskExecutorFixedThread;
 import edu.iu.dsc.tws.task.executiongraph.ExecutionGraph;
-import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraphGenerator;
-import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraphParser;
-import edu.iu.dsc.tws.task.taskgraphbuilder.TaskEdge;
-import edu.iu.dsc.tws.tsched.FirstFit.FirstFitTaskScheduling;
+import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.task.graph.DataflowTaskGraphGenerator;
+import edu.iu.dsc.tws.task.graph.DataflowTaskGraphParser;
+import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.tsched.RoundRobin.RoundRobinTaskScheduling;
-import edu.iu.dsc.tws.tsched.spi.common.TaskConfig;
+import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
+import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
-import edu.iu.dsc.tws.tsched.utils.Job;
-import edu.iu.dsc.tws.tsched.utils.Task;
 
 /**
  * This is the task graph generation class with input and output files.
@@ -59,10 +58,11 @@ public class SimpleTGraphExample1 implements IContainer {
   private Status status;
 
   //For time being it is declared as TaskGraphMapper...!
-  private Set<ITask> parsedTaskSet;
+  private Set<ITask> parsedTaskSet = new HashSet<>();
   private DataflowTaskGraphGenerator dataflowTaskGraphGenerator = null;
   private DataflowTaskGraphParser dataflowTaskGraphParser = null;
   private ExecutionGraph executionGraph = null;
+  private TaskSchedulePlan taskSchedulePlan = null;
 
   /**
    * Init method to submit the task to the executor
@@ -94,72 +94,77 @@ public class SimpleTGraphExample1 implements IContainer {
     TaskReducer taskReducer = new TaskReducer("task2");
     TaskShuffler taskShuffler = new TaskShuffler("task3");
     TaskMerger taskMerger = new TaskMerger("task4");
+
     if (containerId == 0) {
-      if (taskGraphFlag >= 0) { //just for verification (replace with proper value)
-        dataflowTaskGraphGenerator = new DataflowTaskGraphGenerator()
-            .generateTaskGraph(taskMapper)
-            .generateTaskGraph(taskMapper, taskReducer, new TaskEdge("Reduce"))
-            .generateTaskGraph(taskMapper, taskShuffler, new TaskEdge("Shuffle"))
-            .generateTaskGraph(taskReducer, taskMerger, new TaskEdge("Merge1"))
-            .generateTaskGraph(taskShuffler, taskMerger, new TaskEdge("Merge2"));
+      WorkerPlan workerPlan = new WorkerPlan();
+      Worker worker1 = new Worker(0);
+      worker1.setCpu(4);
+      worker1.setDisk(100);
+      worker1.setRam(1024);
 
-        LOG.info("Generated Dataflow Task Graph Vertices:"
-            + dataflowTaskGraphGenerator.getTaskgraph().getTaskVertexSet());
+      Worker worker2 = new Worker(1);
+      worker1.setCpu(4);
+      worker1.setDisk(100);
+      worker1.setRam(1024);
+      workerPlan.addWorker(worker1);
+      workerPlan.addWorker(worker2);
 
-        if (dataflowTaskGraphGenerator != null) {
+      GraphBuilder graphBuilder = GraphBuilder.newBuilder();
+      graphBuilder.addTask("task1", taskMapper);
+      graphBuilder.addTask("task2", taskReducer);
+      graphBuilder.addTask("task3", taskShuffler);
+      graphBuilder.addTask("task4", taskMerger);
 
-          //For testing to process the child task source & target vertices
-          dataflowTaskGraphGenerator.getDataflowTaskChildTasks(dataflowTaskGraphGenerator);
-          /////////////////////////////
+      graphBuilder.connect("task1", "task2", "Reduce");
+      graphBuilder.connect("task2", "task3", "Shuffle");
+      graphBuilder.connect("task2", "task4", "merger1");
+      graphBuilder.connect("task3", "task4", "merger2");
 
-          dataflowTaskGraphParser = new DataflowTaskGraphParser(dataflowTaskGraphGenerator);
-          parsedTaskSet = dataflowTaskGraphParser.taskGraphParseAndSchedule();
+      graphBuilder.setParallelism("task1", 2);
+      graphBuilder.setParallelism("task2", 2);
+      graphBuilder.setParallelism("task3", 2);
+      graphBuilder.setParallelism("task4", 1);
 
-          Job job = new Job();
-          job.setJobId(1);
-          job.setTaskLength(parsedTaskSet.size());
-          job.setJob(job);
-          Task[] taskList = new Task[job.getTaskLength()];
-          //Task[] taskList = new Task[parsedTaskSet.size()];
-          int i = 0;
-          for (ITask processedTask : parsedTaskSet) {
-            Task task = new Task();
-            task.setTaskName(String.format("task%d", i));
-            task.setTaskCount(2);
-            task.setRequiredRam(1024.0);
-            task.setRequiredDisk(100.0);
-            task.setRequiredCpu(10.0);
-            taskList[i] = task;
-            i++;
-          }
-          job.setTasklist(taskList);
+      graphBuilder.addConfiguration("task1", "Ram", 1024);
+      graphBuilder.addConfiguration("task1", "Disk", 1000);
+      graphBuilder.addConfiguration("task1", "Cpu", 2);
 
-          TaskSchedulePlan taskSchedulePlan = null;
-          if (TaskConfig.schedulingMode.equals("Round Robin")) {
+      graphBuilder.addConfiguration("task2", "Ram", 1024);
+      graphBuilder.addConfiguration("task2", "Disk", 1000);
+      graphBuilder.addConfiguration("task2", "Cpu", 2);
+
+      graphBuilder.addConfiguration("task4", "Ram", 1024);
+      graphBuilder.addConfiguration("task3", "Disk", 1000);
+      graphBuilder.addConfiguration("task3", "Cpu", 2);
+
+      graphBuilder.addConfiguration("task3", "Ram", 1024);
+      graphBuilder.addConfiguration("task4", "Disk", 1000);
+      graphBuilder.addConfiguration("task4", "Cpu", 2);
+
+      DataFlowTaskGraph dataFlowTaskGraph = graphBuilder.build();
+      LOG.info("Generated Dataflow Task Graph Is:" + dataFlowTaskGraph.getTaskVertexSet());
+
+      if (containerId == 0) { //For running the task scheduling once
+        String schedulingMode = "RoundRobin";
+        if (dataFlowTaskGraph != null) {
+          //if (cfg.get("SchedulingMode").equals("Round Robin")) {
+          if ("RoundRobin".equals(schedulingMode)) {
             RoundRobinTaskScheduling roundRobinTaskScheduling = new RoundRobinTaskScheduling();
-            roundRobinTaskScheduling.initialize(job);
-            taskSchedulePlan = roundRobinTaskScheduling.tschedule();
-          } else if (TaskConfig.schedulingMode.equals("First Fit")) {
-            FirstFitTaskScheduling firstFitTaskScheduling = new FirstFitTaskScheduling();
-            firstFitTaskScheduling.initialize(job);
-            taskSchedulePlan = firstFitTaskScheduling.tschedule();
+            roundRobinTaskScheduling.initialize(cfg);
+            taskSchedulePlan = roundRobinTaskScheduling.schedule(dataFlowTaskGraph, workerPlan);
           }
-          if (taskSchedulePlan.getContainersMap() != null) {
-            System.out.println("Task schedule plan details:" + taskSchedulePlan.getContainersMap());
+          try {
+            if (taskSchedulePlan.getContainersMap() != null) {
+              LOG.info("Task schedule plan details:" + taskSchedulePlan.getContainersMap()
+                  + "\t" + "Task Instance Size:"
+                  + taskSchedulePlan.getContainersMap().keySet().iterator());
+            }
+          } catch (NullPointerException ne) {
+            ne.printStackTrace();
           }
         }
       }
-
-      //parsedTaskSet = executionGraph.parseTaskGraph(dataflowTaskGraphGenerator);
-      /*if (!parsedTaskSet.isEmpty()) {
-        executionGraph = new ExecutionGraph(parsedTaskSet);
-        String message = executionGraph.generateExecutionGraph(containerId);
-        String message = executionGraph.generateExecutionGraph(containerId, parsedTaskSet);
-        TaskExecutorFixedThread taskExecutionGraph =
-            executionGraph.generateExecutionGraph(containerId, parsedTaskSet);
-        LOG.info(message);
-      }*/
-    }
+    }//End of ContainerId validation
   }
 
   /**
@@ -182,7 +187,7 @@ public class SimpleTGraphExample1 implements IContainer {
   }
 
   private class TaskMapper implements ITask {
-
+    private static final long serialVersionUID = 3233011943332591934L;
     public String taskName = null;
 
     protected TaskMapper(String taskName1) {
@@ -242,7 +247,7 @@ public class SimpleTGraphExample1 implements IContainer {
   }
 
   private class TaskReducer implements ITask {
-
+    private static final long serialVersionUID = 3233011943332591934L;
     public String taskName = null;
 
     protected TaskReducer(String taskName1) {
@@ -302,7 +307,7 @@ public class SimpleTGraphExample1 implements IContainer {
   }
 
   private class TaskShuffler implements ITask {
-
+    private static final long serialVersionUID = 3233011943332591934L;
     public String taskName = null;
 
     protected TaskShuffler(String taskName1) {
@@ -362,7 +367,7 @@ public class SimpleTGraphExample1 implements IContainer {
   }
 
   private class TaskMerger implements ITask {
-
+    private static final long serialVersionUID = 3233011943332591934L;
     public String taskName = null;
 
     protected TaskMerger(String taskName1) {
@@ -446,5 +451,5 @@ public class SimpleTGraphExample1 implements IContainer {
 
     }
   }
-
 }
+

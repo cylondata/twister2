@@ -98,7 +98,7 @@ public final class KubernetesUtils {
    * @return
    */
   public static String createPersistentJobDirName(String jobName) {
-    return KubernetesConstants.PERSISTENT_VOLUME_MOUNT + "/" + jobName
+    return KubernetesConstants.PERSISTENT_VOLUME_MOUNT + "/twister2/" + jobName
         + "-" + System.currentTimeMillis();
   }
 
@@ -299,9 +299,11 @@ public final class KubernetesUtils {
         .name(KubernetesField.JOB_PACKAGE_FILENAME + "")
         .value(SchedulerContext.jobPackageFileName(config));
     V1EnvVar var2 = new V1EnvVar()
-        .name(KubernetesField.JOB_PACKAGE_FILE_SIZE + "").value(jobFileSize + "");
+        .name(KubernetesField.JOB_PACKAGE_FILE_SIZE + "")
+        .value(jobFileSize + "");
     V1EnvVar var3 = new V1EnvVar()
-        .name(KubernetesField.CONTAINER_NAME + "").value(containerName);
+        .name(KubernetesField.CONTAINER_NAME + "")
+        .value(containerName);
     V1EnvVar var4 = new V1EnvVar()
         .name(KubernetesField.USER_JOB_JAR_FILE + "")
         .value(SchedulerContext.userJobJarFile(config));
@@ -320,9 +322,22 @@ public final class KubernetesUtils {
         .valueFrom(varSource);
 
     V1EnvVar var7 = new V1EnvVar()
-        .name(KubernetesField.PERSISTENT_JOB_DIR + "").value(persistentJobDir);
+        .name(KubernetesField.PERSISTENT_JOB_DIR + "")
+        .value(persistentJobDir);
 
-    container.setEnv(Arrays.asList(var1, var2, var3, var4, var5, var6, var7));
+    V1EnvVar var8 = new V1EnvVar()
+        .name(KubernetesField.CONTAINERS_PER_POD + "")
+        .value(KubernetesContext.containersPerPod(config) + "");
+
+    V1EnvVar var9 = new V1EnvVar()
+        .name(KubernetesField.PERSISTENT_LOGGING_REQUESTED + "")
+        .value(SchedulerContext.persistentLoggingRequested(config) + "");
+
+    V1EnvVar var10 = new V1EnvVar()
+        .name(KubernetesField.PERSISTENT_LOGGING_TYPE + "")
+        .value(KubernetesContext.persistentLoggingType(config) + "");
+
+    container.setEnv(Arrays.asList(var1, var2, var3, var4, var5, var6, var7, var8, var9, var10));
 
     V1ResourceRequirements resReq = new V1ResourceRequirements();
     resReq.putRequestsItem("cpu", reqContainer.getNoOfCpus() + "");

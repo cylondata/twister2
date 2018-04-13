@@ -18,6 +18,7 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
  * This task reads data from a input data source and ouputs data to another task
  */
 public abstract class SourceTask<T> extends Task {
+  private static final long serialVersionUID = -254264120110286748L;
 //  /**
 //   * The task id's of tasks that this sources task will send messages to
 //   */

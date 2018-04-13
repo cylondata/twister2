@@ -17,7 +17,7 @@ package edu.iu.dsc.tws.task.api;
  * The task takes inputs from another task and outputs to a output source
  */
 public abstract class SinkTask<T> extends Task {
-
+  private static final long serialVersionUID = -254264903510286748L;
   /**
    * The output sink for this task. The output will be written to this
    */

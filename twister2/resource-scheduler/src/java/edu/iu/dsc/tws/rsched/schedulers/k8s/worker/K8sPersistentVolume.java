@@ -16,15 +16,30 @@ import java.io.File;
 import edu.iu.dsc.tws.rsched.spi.container.IPersistentVolume;
 
 public class K8sPersistentVolume implements IPersistentVolume {
-  public static final String WORKER_DIR_PREFIX = "worker-";
+  public static final String WORKER_DIR_NAME_PREFIX = "worker-";
+  public static final String LOG_FILE_NAME_PREFIX = "worker-";
+  public static final String LOG_DIR_NAME = "/logs";
 
   private String jobDirPath;
   private String workerDirPath;
+  private String logFileName;
+  private String logDirPath;
 
   public K8sPersistentVolume(String jobDirPath, int workerID) {
     this.jobDirPath = jobDirPath;
-    workerDirPath = jobDirPath + "/" + WORKER_DIR_PREFIX + workerID;
+    workerDirPath = jobDirPath + "/" + WORKER_DIR_NAME_PREFIX + workerID;
+    logDirPath = jobDirPath + LOG_DIR_NAME;
+    logFileName = logDirPath + "/" + LOG_FILE_NAME_PREFIX + workerID + ".log";
+    createLogDir();
   }
+
+  private void createLogDir() {
+    File logDir = new File(logDirPath);
+    if (!logDir.exists()) {
+      logDir.mkdirs();
+    }
+  }
+
 
   public String getJobDirPath() {
     return jobDirPath;
@@ -59,5 +74,9 @@ public class K8sPersistentVolume implements IPersistentVolume {
       workerDir.mkdir();
       return workerDir;
     }
+  }
+
+  public String getLogFileName() {
+    return logFileName;
   }
 }

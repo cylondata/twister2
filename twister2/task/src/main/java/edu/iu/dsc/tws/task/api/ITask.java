@@ -28,7 +28,7 @@ import edu.iu.dsc.tws.common.config.Config;
 /**
  * Base interface for tasks
  */
-public interface ITask {
+public interface ITask extends INode {
   /**
    * Prepare the task to be executed
    * @param cfg the configuration

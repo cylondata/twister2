@@ -15,6 +15,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.memory.MemoryManager;
 
 public abstract class Task implements ITask {
+  private static final long serialVersionUID = -252364900110286748L;
   /**
    * The unique id assigned to this task. This id will be used for communications
    */

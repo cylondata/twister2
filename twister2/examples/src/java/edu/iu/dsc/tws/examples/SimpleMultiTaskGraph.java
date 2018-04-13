@@ -37,8 +37,8 @@ import edu.iu.dsc.tws.task.api.Task;
 import edu.iu.dsc.tws.task.core.PipelinedTask;
 import edu.iu.dsc.tws.task.core.TaskExecutionOptimizer;
 import edu.iu.dsc.tws.task.core.TaskExecutorFixedThread;
-import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraphGenerator;
-import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraphParser;
+import edu.iu.dsc.tws.task.graph.DataflowTaskGraphGenerator;
+import edu.iu.dsc.tws.task.graph.DataflowTaskGraphParser;
 
 public class SimpleMultiTaskGraph implements IContainer {
 
@@ -129,6 +129,7 @@ public class SimpleMultiTaskGraph implements IContainer {
   }
 
   private class ReceiveWorker extends SinkTask<Task> {
+    private static final long serialVersionUID = 3233011943332591934L;
 
     ReceiveWorker(int tid) {
       super(tid);
@@ -166,6 +167,7 @@ public class SimpleMultiTaskGraph implements IContainer {
    * We are running the map in a separate thread
    */
   private class MapWorker extends SourceTask<Task> {
+    private static final long serialVersionUID = 3233011943332591934L;
     private int sendCount = 0;
 
     MapWorker(int tid, DataFlowOperation dataFlowOperation) {

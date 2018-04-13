@@ -193,6 +193,7 @@ public class SimpleTaskQueue implements IContainer {
    * RevieceWorker
    */
   private class RecieveWorker extends SinkTask<Object> {
+    private static final long serialVersionUID = 3233011943332591934L;
 
     RecieveWorker(int tid) {
       super(tid);
@@ -234,6 +235,7 @@ public class SimpleTaskQueue implements IContainer {
    * We are running the map in a separate thread
    */
   private class MapWorker extends SourceTask<Object> {
+    private static final long serialVersionUID = 3233011943332591934L;
     private int sendCount = 0;
 
     MapWorker(int tid, DataFlowOperation dataFlowOperation) {

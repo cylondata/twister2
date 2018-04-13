@@ -33,10 +33,10 @@ import edu.iu.dsc.tws.task.api.LinkedQueue;
 import edu.iu.dsc.tws.task.api.Message;
 import edu.iu.dsc.tws.task.api.Task;
 import edu.iu.dsc.tws.task.core.TaskExecutorFixedThread;
-import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraphGenerator;
-import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraphParser;
-import edu.iu.dsc.tws.task.taskgraphbuilder.TaskEdge;
-import edu.iu.dsc.tws.task.taskgraphbuilder.TaskGraphMapper;
+import edu.iu.dsc.tws.task.graph.DataflowTaskGraphGenerator;
+import edu.iu.dsc.tws.task.graph.DataflowTaskGraphParser;
+import edu.iu.dsc.tws.task.graph.Edge;
+import edu.iu.dsc.tws.task.graph.TaskGraphMapper;
 
 /**
  * This is the task graph generation class with input and output files.
@@ -99,8 +99,8 @@ public class SimpleTGraph implements IContainer {
     tMapper.addOutputData("mapperOut2", new ArrayList<>());
 
     dataflowTaskGraphGenerator = new DataflowTaskGraphGenerator()
-        .generateTGraph(tMapper, tShuffler, new TaskEdge("Map"))
-        .generateTGraph(tShuffler, tReducer, new TaskEdge("Shuffle"));
+        .generateTGraph(tMapper, tShuffler, new Edge("Map"))
+        .generateTGraph(tShuffler, tReducer, new Edge("Shuffle"));
 
     LOG.info("Generated Dataflow Task Graph Vertices:"
         + dataflowTaskGraphGenerator.getTGraph().getTaskVertexSet());
@@ -188,7 +188,7 @@ public class SimpleTGraph implements IContainer {
   }
 
   private class TMapper extends TaskGraphMapper implements Runnable {
-
+    private static final long serialVersionUID = 3233011943332591934L;
     protected TMapper(String taskId, String taskName) {
       super(taskId, taskName);
     }
@@ -209,7 +209,7 @@ public class SimpleTGraph implements IContainer {
   }
 
   private class TShuffler extends TaskGraphMapper implements Runnable {
-
+    private static final long serialVersionUID = 3233011943332591934L;
     protected TShuffler(String taskId, String taskName) {
       super(taskId, taskName);
     }
@@ -230,7 +230,7 @@ public class SimpleTGraph implements IContainer {
   }
 
   private class TReducer extends TaskGraphMapper implements Runnable {
-
+    private static final long serialVersionUID = 3233011943332591934L;
     protected TReducer(String taskId, String taskName) {
       super(taskId, taskName);
     }

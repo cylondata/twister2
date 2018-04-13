@@ -46,10 +46,10 @@ import edu.iu.dsc.tws.task.api.LinkedQueue;
 import edu.iu.dsc.tws.task.api.Message;
 import edu.iu.dsc.tws.task.core.TaskExecutorFixedThread;
 import edu.iu.dsc.tws.task.executiongraph.ExecutionGraph;
-import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTGraphParser;
-import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraphGenerator;
-import edu.iu.dsc.tws.task.taskgraphbuilder.TaskEdge;
-import edu.iu.dsc.tws.task.taskgraphbuilder.TaskGraphMapper;
+import edu.iu.dsc.tws.task.graph.DataflowTGraphParser;
+import edu.iu.dsc.tws.task.graph.DataflowTaskGraphGenerator;
+import edu.iu.dsc.tws.task.graph.Edge;
+import edu.iu.dsc.tws.task.graph.TaskGraphMapper;
 import edu.iu.dsc.tws.tsched.FirstFit.FirstFitTaskScheduling;
 import edu.iu.dsc.tws.tsched.RoundRobin.RoundRobinTaskScheduling;
 import edu.iu.dsc.tws.tsched.spi.common.TaskConfig;
@@ -111,10 +111,10 @@ public class SimpleTGraphExample implements IContainer {
       if (taskGraphFlag >= 0) {
         dataflowTaskGraphGenerator = new DataflowTaskGraphGenerator()
             .generateTGraph(tMapper)
-            .generateTGraph(tMapper, tReducer, new TaskEdge("Reduce"))
-            .generateTGraph(tMapper, tShuffler, new TaskEdge("Shuffle"))
-            .generateTGraph(tReducer, tMerger, new TaskEdge("Merge1"))
-            .generateTGraph(tShuffler, tMerger, new TaskEdge("Merge2"));
+            .generateTGraph(tMapper, tReducer, new Edge("Reduce"))
+            .generateTGraph(tMapper, tShuffler, new Edge("Shuffle"))
+            .generateTGraph(tReducer, tMerger, new Edge("Merge1"))
+            .generateTGraph(tShuffler, tMerger, new Edge("Merge2"));
 
         LOG.info("Generated Dataflow Task Graph Vertices:"
             + dataflowTaskGraphGenerator.getTGraph().getTaskVertexSet());
@@ -197,7 +197,7 @@ public class SimpleTGraphExample implements IContainer {
 
 
   private class TMapper extends TaskGraphMapper implements Runnable {
-
+    private static final long serialVersionUID = 3233011943332591934L;
     protected TMapper(String taskId, String taskName) {
       super(taskId, taskName);
     }
@@ -219,7 +219,7 @@ public class SimpleTGraphExample implements IContainer {
   }
 
   private class TShuffler extends TaskGraphMapper implements Runnable {
-
+    private static final long serialVersionUID = 3233011943332591934L;
     protected TShuffler(String taskId, String taskName) {
       super(taskId, taskName);
     }
@@ -242,7 +242,7 @@ public class SimpleTGraphExample implements IContainer {
   }
 
   private class TReducer extends TaskGraphMapper implements Runnable {
-
+    private static final long serialVersionUID = 3233011943332591934L;
     protected TReducer(String taskId, String taskName) {
       super(taskId, taskName);
     }
@@ -265,7 +265,7 @@ public class SimpleTGraphExample implements IContainer {
   }
 
   private class TMerger extends TaskGraphMapper implements Runnable {
-
+    private static final long serialVersionUID = 3233011943332591934L;
     protected TMerger(String taskId, String taskName) {
       super(taskId, taskName);
     }

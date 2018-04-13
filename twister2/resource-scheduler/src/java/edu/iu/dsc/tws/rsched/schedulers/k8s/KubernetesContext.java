@@ -43,6 +43,10 @@ public class KubernetesContext extends SchedulerContext {
   public static final String K8S_STORAGE_RECLAIM_POLICY_DEFAULT = "Retain";
   public static final String K8S_STORAGE_RECLAIM_POLICY = "kubernetes.storage.reclaim.policy";
 
+  // it can be either "system" or "kubernetes"
+  public static final String PERSISTENT_LOGGING_TYPE_DEFAULT = "system";
+  public static final String PERSISTENT_LOGGING_TYPE = "persistent.logging.type";
+
   public static int containersPerPod(Config cfg) {
     return cfg.getIntegerValue(CONTAINERS_PER_POD, CONTAINERS_PER_POD_DEFAULT);
   }
@@ -77,6 +81,10 @@ public class KubernetesContext extends SchedulerContext {
 
   public static String storageReclaimPolicy(Config cfg) {
     return cfg.getStringValue(K8S_STORAGE_RECLAIM_POLICY, K8S_STORAGE_RECLAIM_POLICY_DEFAULT);
+  }
+
+  public static String persistentLoggingType(Config cfg) {
+    return cfg.getStringValue(PERSISTENT_LOGGING_TYPE, PERSISTENT_LOGGING_TYPE_DEFAULT);
   }
 
 }

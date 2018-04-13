@@ -17,9 +17,9 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.task.api.ITask;
 import edu.iu.dsc.tws.task.core.TaskExecutorFixedThread;
-import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraphGenerator;
-import edu.iu.dsc.tws.task.taskgraphbuilder.DataflowTaskGraphParser;
-import edu.iu.dsc.tws.task.taskgraphbuilder.TaskExecutor;
+import edu.iu.dsc.tws.task.graph.DataflowTaskGraphGenerator;
+import edu.iu.dsc.tws.task.graph.DataflowTaskGraphParser;
+import edu.iu.dsc.tws.task.graph.TaskExecutor;
 
 /**
  * This is the simple execution graph generator and it will be extended

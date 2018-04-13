@@ -22,7 +22,7 @@ import edu.iu.dsc.tws.task.api.Task;
  * the next task in the pipline without having to submit messages to the queue.
  */
 public class PipelinedTask extends Task {
-
+  private static final long serialVersionUID = -254212900110286748L;
   private List<Task> piplinedTaskList;
 
   public PipelinedTask(int tid, List<Task> taskList) {

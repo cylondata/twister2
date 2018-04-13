@@ -28,6 +28,14 @@ kubernetes.containers_per_pod: "3"
 # Do workers request persistent volume? it could be true or false
 persistent.volume.requested: "true"
 
+# Do workers request persistent logging? it could be true or false
+persistent.logging.requested: "true"
+
+# it could be "system" or "kubernetes"
+# system logging puts less load on the kubernetes master but it may not show some logs from startup
+# kubernetes logging gets the log messages from kubernetes master but it is more complete
+persistent.logging.type: "system"
+
 # nfs server address
 nfs.server.address: "149.165.150.81"
 

@@ -51,4 +51,10 @@ public interface IPersistentVolume {
    * @return
    */
   File getWorkerDir();
+
+  /**
+   * get logfile name for this worker
+   * @return
+   */
+  String getLogFileName();
 }
