@@ -64,7 +64,7 @@ public class RoundRobinScheduling {
           } else {
             taskIndex = 1;
           }
-          LOG.info("Task index and number of containers:\t" + taskIndex
+          LOG.info("Task Id, Task Index, and Number of containers:\t" + taskIndex
               + "\t" + numberOfContainers);
           globalTaskIndex += 1;
         }

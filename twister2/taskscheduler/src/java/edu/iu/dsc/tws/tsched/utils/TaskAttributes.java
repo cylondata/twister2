@@ -25,51 +25,46 @@ public class TaskAttributes {
 
   public Map<String, Double> getTaskRamMap(Set<Vertex> taskVertices) {
     Map<String, Double> taskRamMap = new HashMap<>();
+
     for (Vertex task : taskVertices) {
       Config config = task.getConfig();
       Object ram = config.get("Ram");
       double requiredRam = (double) ((Integer) ram);
       taskRamMap.put(task.getName(), requiredRam);
-      LOG.info("Task Name:" + task.getName() + "\t" + "Required Ram:" + requiredRam);
+      //LOG.info("Task Name:" + task.getName() + "\t" + "Required Ram:" + requiredRam);
     }
     return taskRamMap;
   }
 
   public Map<String, Double> getTaskDiskMap(Set<Vertex> taskVertices) {
-
     Map<String, Double> taskDiskMap = new HashMap<>();
-    for (Vertex task : taskVertices) {
-      //Double requiredDisk = (double) task.getMemory();
-      //taskDiskMap.put(task.getName(), requiredDisk);
 
+    for (Vertex task : taskVertices) {
       Config config = task.getConfig();
       Object disk = config.get("Disk");
       double requiredDisk = (double) ((Integer) disk);
       taskDiskMap.put(task.getName(), requiredDisk);
-      LOG.info("Task Name:" + task.getName() + "\t" + "Required Disk:" + requiredDisk);
+      //LOG.info("Task Name:" + task.getName() + "\t" + "Required Disk:" + requiredDisk);
     }
     return taskDiskMap;
   }
 
   public Map<String, Double> getTaskCPUMap(Set<Vertex> taskVertices) {
-
     Map<String, Double> taskCPUMap = new HashMap<>();
-    for (Vertex task : taskVertices) {
-      //Double requiredCPU = (double) task.getCpu();
-      //taskCPUMap.put(task.getName(), requiredCPU);
 
+    for (Vertex task : taskVertices) {
       Config config = task.getConfig();
       Object cpu = config.get("Cpu");
       double requiredCpu = (double) ((Integer) cpu);
       taskCPUMap.put(task.getName(), requiredCpu);
-      LOG.info("Task Name:" + task.getName() + "\t" + "Required Cpu:" + requiredCpu);
+      //LOG.info("Task Name:" + task.getName() + "\t" + "Required Cpu:" + requiredCpu);
     }
     return taskCPUMap;
   }
 
   public int getTotalNumberOfInstances(Set<Vertex> iTaskSet) {
-    LOG.info("Task Vertex Set:" + iTaskSet);
     HashMap<String, Integer> parallelTaskMap = getParallelTaskMap(iTaskSet);
+
     int totalNumberOfInstances = 0;
     for (int instances : parallelTaskMap.values()) {
       totalNumberOfInstances += instances;
@@ -79,11 +74,12 @@ public class TaskAttributes {
 
   public HashMap<String, Integer> getParallelTaskMap(Set<Vertex> iTaskSet) {
     HashMap<String, Integer> parallelTaskMap = new HashMap<>();
+
     try {
       for (Vertex task : iTaskSet) {
         String taskName = task.getName();
         Integer parallelTaskCount = task.getParallelism();
-        LOG.info("Task Name:" + taskName + "\t" + "parallel task count:" + parallelTaskCount);
+        //LOG.info("Task Name:" + taskName + "\t" + "parallel task count:" + parallelTaskCount);
         parallelTaskMap.put(taskName, parallelTaskCount);
       }
     } catch (Exception ee) {
