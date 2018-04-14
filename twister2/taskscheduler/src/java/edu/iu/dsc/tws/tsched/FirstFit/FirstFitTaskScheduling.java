@@ -25,22 +25,29 @@ package edu.iu.dsc.tws.tsched.FirstFit;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.task.graph.Vertex;
 import edu.iu.dsc.tws.tsched.builder.ContainerIdScorer;
 import edu.iu.dsc.tws.tsched.builder.TaskSchedulePlanBuilder;
 import edu.iu.dsc.tws.tsched.spi.common.Context;
 import edu.iu.dsc.tws.tsched.spi.common.TaskConfig;
+import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.Resource;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.ScheduleException;
+import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedule;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.utils.Job;
 import edu.iu.dsc.tws.tsched.utils.JobAttributes;
 import edu.iu.dsc.tws.tsched.utils.RequiredRam;
+import edu.iu.dsc.tws.tsched.utils.TaskAttributes;
 
-public class FirstFitTaskScheduling {
+public class FirstFitTaskScheduling implements TaskSchedule {
 
   private static final Logger LOG = Logger.getLogger(FirstFitTaskScheduling.class.getName());
 
@@ -64,6 +71,11 @@ public class FirstFitTaskScheduling {
   private Double instanceRAM;
   private Double instanceDisk;
   private Double instanceCPU;
+  private Config cfg;
+
+  //Newly added
+  private Set<Vertex> taskVertexSet = new HashSet<>();
+  private TaskAttributes taskAttributes = new TaskAttributes();
 
   public void initialize(TaskConfig configValue, Job jobObject) {
     this.config = configValue;
@@ -99,13 +111,12 @@ public class FirstFitTaskScheduling {
         Context.instanceDisk(config), Context.instanceCPU(config));
     this.paddingPercentage = JobAttributes.JOB_CONTAINER_PADDING_PERCENTAGE;
 
-    instanceRAM = this.defaultResourceValue.getRam() * DEFAULT_NUMBER_INSTANCES_PER_CONTAINER;
-    instanceDisk = this.defaultResourceValue.getDisk() * DEFAULT_NUMBER_INSTANCES_PER_CONTAINER;
-    instanceCPU = this.defaultResourceValue.getCpu() * DEFAULT_NUMBER_INSTANCES_PER_CONTAINER;
-
-    double jobContainerMaxRamValue = JobAttributes.JOB_CONTAINER_MAX_RAM_VALUE;
-    double jobContainerMaxDiskValue = JobAttributes.JOB_CONTAINER_MAX_DISK_VALUE;
-    double jobContainerMaxCpuValue = JobAttributes.JOB_CONTAINER_MAX_CPU_VALUE;
+    this.instanceRAM = this.defaultResourceValue.getRam()
+        * DEFAULT_NUMBER_INSTANCES_PER_CONTAINER;
+    this.instanceDisk = this.defaultResourceValue.getDisk()
+        * DEFAULT_NUMBER_INSTANCES_PER_CONTAINER;
+    this.instanceCPU = this.defaultResourceValue.getCpu()
+        * DEFAULT_NUMBER_INSTANCES_PER_CONTAINER;
 
     this.maximumContainerResourceValue = new Resource(instanceRAM, instanceDisk, instanceCPU);
 
@@ -118,19 +129,58 @@ public class FirstFitTaskScheduling {
         + "CPUValue:" + this.maximumContainerResourceValue.getCpu());
   }
 
-  private TaskSchedulePlanBuilder newTaskSchedulingPlanBuilder(TaskSchedulePlan previousTaskPlan) {
 
-    LOG.info("Task Schedule Plan Builder For Job Id:" + job.getJobId());
-    return new TaskSchedulePlanBuilder(job.getJobId(), previousTaskPlan)
+  public void initialize(Config cfg1) {
+    this.cfg = cfg1;
+
+    //Retrieve the default instance values from the config file.
+    /*this.instanceRAM = Double.parseDouble(cfg.getStringValue("INSTANCE_RAM"))
+        * DEFAULT_NUMBER_INSTANCES_PER_CONTAINER;
+    this.instanceDisk = Double.parseDouble(cfg.getStringValue("INSTANCE_DISK"))
+        * DEFAULT_NUMBER_INSTANCES_PER_CONTAINER;
+    this.instanceCPU = Double.parseDouble(cfg.getStringValue("INSTANCE_CPU"))
+        * DEFAULT_NUMBER_INSTANCES_PER_CONTAINER;*/
+
+    this.instanceRAM = 1024.0;
+    this.instanceDisk = 100.0;
+    this.instanceCPU = 2.0;
+
+    LOG.info("Instance default values:" + "RamValue:" + instanceRAM + "\t"
+        + "DiskValue:" + instanceDisk + "\t" + "CPUValue:" + instanceCPU);
+
+    this.defaultResourceValue = new Resource(this.instanceRAM, this.instanceDisk, this.instanceCPU);
+
+    this.instanceRAM = this.defaultResourceValue.getRam()
+        * DEFAULT_NUMBER_INSTANCES_PER_CONTAINER;
+    this.instanceDisk = this.defaultResourceValue.getDisk()
+        * DEFAULT_NUMBER_INSTANCES_PER_CONTAINER;
+    this.instanceCPU = this.defaultResourceValue.getCpu()
+        * DEFAULT_NUMBER_INSTANCES_PER_CONTAINER;
+
+    this.maximumContainerResourceValue = new Resource(instanceRAM, instanceDisk, instanceCPU);
+
+    LOG.info("Container maximum values:" + "RamValue:"
+        + this.maximumContainerResourceValue.getRam() + "\t"
+        + "DiskValue:" + this.maximumContainerResourceValue.getDisk() + "\t"
+        + "CPUValue:" + this.maximumContainerResourceValue.getCpu());
+
+  }
+
+  private TaskSchedulePlanBuilder newTaskSchedulingPlanBuilder(TaskSchedulePlan previousTaskPlan) {
+    //return new TaskSchedulePlanBuilder(job.getJobId(), previousTaskPlan)
+    return new TaskSchedulePlanBuilder(1, previousTaskPlan) //Get the proper id
         .setContainerMaximumResourceValue(maximumContainerResourceValue)
         .setInstanceDefaultResourceValue(defaultResourceValue)
         .setRequestedContainerPadding(paddingPercentage)
-        .setTaskRamMap(JobAttributes.getTaskRamMap(job))
-        .setTaskDiskMap(JobAttributes.getTaskDiskMap(job))
-        .setTaskCpuMap(JobAttributes.getTaskCPUMap(job));
+        .setTaskRamMap(taskAttributes.getTaskRamMap(this.taskVertexSet))
+        .setTaskDiskMap(taskAttributes.getTaskDiskMap(this.taskVertexSet))
+        .setTaskCpuMap(taskAttributes.getTaskCPUMap(this.taskVertexSet));
   }
 
-  public TaskSchedulePlan tschedule() throws ScheduleException {
+  @Override
+  public TaskSchedulePlan schedule(DataFlowTaskGraph dataFlowTaskGraph, WorkerPlan workerPlan) {
+
+    this.taskVertexSet = dataFlowTaskGraph.getTaskVertexSet();
     TaskSchedulePlanBuilder taskSchedulePlanBuilder = newTaskSchedulingPlanBuilder(null);
     taskSchedulePlanBuilder = FirstFitFTaskSchedulingAlgorithm(taskSchedulePlanBuilder);
     return taskSchedulePlanBuilder.build();
@@ -138,7 +188,8 @@ public class FirstFitTaskScheduling {
 
   public TaskSchedulePlanBuilder FirstFitFTaskSchedulingAlgorithm(TaskSchedulePlanBuilder
                                                                       taskSchedulePlanBuilder) {
-    Map<String, Integer> parallelTaskMap = JobAttributes.getParallelTaskMap(job);
+    //Map<String, Integer> parallelTaskMap = JobAttributes.getParallelTaskMap(job);
+    Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(this.taskVertexSet);
     assignInstancesToContainers(taskSchedulePlanBuilder, parallelTaskMap);
     return taskSchedulePlanBuilder;
   }
@@ -174,7 +225,8 @@ public class FirstFitTaskScheduling {
 
   private ArrayList<RequiredRam> getSortedRAMInstances(Set<String> taskNameSet) {
     ArrayList<RequiredRam> ramRequirements = new ArrayList<>();
-    Map<String, Double> taskRamMap = JobAttributes.getTaskRamMap(job);
+    //Map<String, Double> taskRamMap = JobAttributes.getTaskRamMap(job);
+    Map<String, Double> taskRamMap = taskAttributes.getTaskRamMap(this.taskVertexSet);
     LOG.info("Task Ram Map Details:" + taskRamMap);
     for (String taskName : taskNameSet) {
       /*ResourceContainer requiredResource = PackingUtils.getResourceRequirement(
@@ -190,11 +242,18 @@ public class FirstFitTaskScheduling {
     return ramRequirements;
   }
 
-  //This method will be implemented for future rescheduling case....
-  public void reschedule() {
+  @Override
+  public void close() {
   }
 
-  public void close() {
+  public TaskSchedulePlan tschedule() throws ScheduleException {
+    TaskSchedulePlanBuilder taskSchedulePlanBuilder = newTaskSchedulingPlanBuilder(null);
+    taskSchedulePlanBuilder = FirstFitFTaskSchedulingAlgorithm(taskSchedulePlanBuilder);
+    return taskSchedulePlanBuilder.build();
+  }
+
+  //This method will be implemented for future rescheduling case....
+  public void reschedule() {
   }
 }
 

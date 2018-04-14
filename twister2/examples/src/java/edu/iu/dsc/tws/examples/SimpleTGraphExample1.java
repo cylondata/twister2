@@ -38,6 +38,7 @@ import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.DataflowTaskGraphGenerator;
 import edu.iu.dsc.tws.task.graph.DataflowTaskGraphParser;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
+import edu.iu.dsc.tws.tsched.FirstFit.FirstFitTaskScheduling;
 import edu.iu.dsc.tws.tsched.RoundRobin.RoundRobinTaskScheduling;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
@@ -145,14 +146,21 @@ public class SimpleTGraphExample1 implements IContainer {
       LOG.info("Generated Dataflow Task Graph Is:" + dataFlowTaskGraph.getTaskVertexSet());
 
       if (containerId == 0) { //For running the task scheduling once
-        String schedulingMode = "RoundRobin";
+        //String schedulingMode = "RoundRobin";
+        String schedulingMode = "FirstFit";
         if (dataFlowTaskGraph != null) {
           //if (cfg.get("SchedulingMode").equals("Round Robin")) {
+
           if ("RoundRobin".equals(schedulingMode)) {
             RoundRobinTaskScheduling roundRobinTaskScheduling = new RoundRobinTaskScheduling();
             roundRobinTaskScheduling.initialize(cfg);
             taskSchedulePlan = roundRobinTaskScheduling.schedule(dataFlowTaskGraph, workerPlan);
+          } else if ("FirstFit".equals(schedulingMode)) {
+            FirstFitTaskScheduling firstFitTaskScheduling = new FirstFitTaskScheduling();
+            firstFitTaskScheduling.initialize(cfg);
+            taskSchedulePlan = firstFitTaskScheduling.schedule(dataFlowTaskGraph, workerPlan);
           }
+
           try {
             if (taskSchedulePlan.getContainersMap() != null) {
               LOG.info("Task schedule plan details:" + taskSchedulePlan.getContainersMap()
