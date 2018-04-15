@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.comms.api.MessageType;
+
 public final class FileLoader {
   private static final Logger LOG = Logger.getLogger(FileLoader.class.getName());
 
@@ -32,13 +34,37 @@ public final class FileLoader {
    * @param size total size of the records
    * @param outFileName out file name
    */
-  public static void saveBytes(List<byte[]> records, List<Integer> sizes,
-                               long size, String outFileName) {
+  public static void saveObjects(List<byte[]> records, List<Integer> sizes,
+                                 long size, String outFileName) {
     try {
       FileChannel rwChannel = new RandomAccessFile(outFileName, "rw").getChannel();
       ByteBuffer os = rwChannel.map(FileChannel.MapMode.READ_WRITE, 0, size);
       for (int i = 0; i < records.size(); i++) {
         byte[] r = records.get(i);
+        os.put(r, 0, sizes.get(i));
+      }
+      rwChannel.close();
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Failed write to disc", e);
+      throw new RuntimeException(e);
+    }
+  }
+
+  /**
+   * Save the list of records to the file system
+   * @param records records to be written
+   * @param size total size of the records
+   * @param outFileName out file name
+   */
+  public static void saveKeyValues(List<KeyValue> records, List<Integer> sizes,
+                                   long size, String outFileName, MessageType keyType) {
+    try {
+      FileChannel rwChannel = new RandomAccessFile(outFileName, "rw").getChannel();
+      ByteBuffer os = rwChannel.map(FileChannel.MapMode.READ_WRITE, 0, size);
+      for (int i = 0; i < records.size(); i++) {
+        Object key = records.get(i).getKey();
+
+        byte[] r = (byte[]) records.get(i).getValue();
         os.put(r, 0, sizes.get(i));
       }
       rwChannel.close();

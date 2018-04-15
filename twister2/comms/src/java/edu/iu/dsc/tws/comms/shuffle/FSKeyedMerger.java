@@ -13,11 +13,14 @@ package edu.iu.dsc.tws.comms.shuffle;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+
+import edu.iu.dsc.tws.comms.api.MessageType;
 
 public class FSKeyedMerger {
   /**
@@ -54,7 +57,7 @@ public class FSKeyedMerger {
   /**
    * List of bytes in the memory so far
    */
-  private List<byte[]> bytesInMemory = new ArrayList<>();
+  private List<KeyValue> recordsInMemory = new ArrayList<>();
 
   /**
    * The number of total bytes in each file part written to disk
@@ -65,6 +68,21 @@ public class FSKeyedMerger {
    * Amount of bytes in the memory
    */
   private long numOfBytesInMemory = 0;
+
+  /**
+   * The type of the key used
+   */
+  private MessageType keyType;
+
+  /**
+   * The data type to be returned, by default it is byte array
+   */
+  private MessageType dataType;
+
+  /**
+   * The key comparator used for comparing keys
+   */
+  private Comparator<Object> keyComparator;
 
   private Lock lock = new ReentrantLock();
   private Condition notFull = lock.newCondition();
@@ -77,11 +95,15 @@ public class FSKeyedMerger {
   private FSStatus status = FSStatus.WRITING;
 
   public FSKeyedMerger(int maxBytesInMemory, int maxRecsInMemory,
-                  String dir, String opName) {
+                       String dir, String opName, MessageType kType,
+                       MessageType dType, Comparator<Object> kComparator) {
     this.maxBytesToKeepInMemory = maxBytesInMemory;
     this.maxRecordsInMemory = maxRecsInMemory;
     this.folder = dir;
     this.operationName = opName;
+    this.keyType = kType;
+    this.dataType = dType;
+    this.keyComparator = kComparator;
   }
 
   /**
@@ -89,19 +111,19 @@ public class FSKeyedMerger {
    * @param data
    * @param length
    */
-  public void add(byte[] data, int length) {
+  public void add(Object key, byte[] data, int length) {
     if (status == FSStatus.READING) {
       throw new RuntimeException("Cannot add after switching to reading");
     }
 
     lock.lock();
     try {
-      bytesInMemory.add(data);
+      recordsInMemory.add(new KeyValue(key, data));
       bytesLength.add(length);
 
       numOfBytesInMemory += length;
       if (numOfBytesInMemory > maxBytesToKeepInMemory
-          || bytesInMemory.size() > maxRecordsInMemory) {
+          || recordsInMemory.size() > maxRecordsInMemory) {
         notFull.signal();
       }
     } finally {
@@ -121,14 +143,12 @@ public class FSKeyedMerger {
     try {
       // it is time to write
       if (numOfBytesInMemory > maxBytesToKeepInMemory
-          || bytesInMemory.size() > maxRecordsInMemory) {
+          || recordsInMemory.size() > maxRecordsInMemory) {
         // save the bytes to disk
-        FileLoader.saveBytes(bytesInMemory, bytesLength,
-            numOfBytesInMemory, getSaveFileName(noOfFileWritten));
-        // save the sizes to disk
-        FileLoader.saveSizes(bytesLength, getSizesFileName(noOfFileWritten));
+        FileLoader.saveKeyValues(recordsInMemory, bytesLength,
+            numOfBytesInMemory, getSaveFileName(noOfFileWritten), keyType);
 
-        bytesInMemory.clear();
+        recordsInMemory.clear();
         bytesLength.clear();
         noOfFileWritten++;
         numOfBytesInMemory = 0;
@@ -141,18 +161,18 @@ public class FSKeyedMerger {
   /**
    * This method gives the values
    */
-  public Iterator<byte[]> readIterator() {
+  public Iterator<KeyValue> readIterator() {
     // lets start with first file
     return new FSIterator();
   }
 
-  private class FSIterator implements Iterator<byte[]> {
+  private class FSIterator implements Iterator<KeyValue> {
     // the current file index
     private int currentFileIndex = 0;
     // Index of the current file
     private int currentIndex = 0;
     // the iterator for list of bytes in memory
-    private Iterator<byte[]> it;
+    private Iterator<KeyValue> it;
     // the current file part opened
     private OpenFile openFilePartBytes;
     // the current sizes file part
@@ -160,7 +180,7 @@ public class FSKeyedMerger {
     private List<Integer> dataSizes;
 
     FSIterator() {
-      it = bytesInMemory.iterator();
+      it = recordsInMemory.iterator();
     }
 
     @Override
@@ -224,7 +244,7 @@ public class FSKeyedMerger {
     }
 
     @Override
-    public byte[] next() {
+    public KeyValue next() {
       // we are reading from in memory
       if (currentFileIndex == 0) {
         return it.next();
@@ -234,7 +254,7 @@ public class FSKeyedMerger {
         int size = dataSizes.get(currentIndex);
         byte[] data = new byte[size];
         openFilePartBytes.getByteBuffer().get(data);
-        return data;
+        return new KeyValue(null, data);
       }
 
       return null;
