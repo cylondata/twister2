@@ -19,6 +19,8 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import edu.iu.dsc.tws.comms.api.MessageType;
+
 /**
  * Save the records to file system and retrieve them, this is just values, so no
  * sorting as in the keyed case
@@ -70,6 +72,11 @@ public class FSMerger {
    */
   private long numOfBytesInMemory = 0;
 
+  /**
+   * The type of value to be returned
+   */
+  private MessageType valueType;
+
   private Lock lock = new ReentrantLock();
   private Condition notFull = lock.newCondition();
 
@@ -81,11 +88,12 @@ public class FSMerger {
   private FSStatus status = FSStatus.WRITING;
 
   public FSMerger(int maxBytesInMemory, int maxRecsInMemory,
-                  String dir, String opName) {
+                  String dir, String opName, MessageType vType) {
     this.maxBytesToKeepInMemory = maxBytesInMemory;
     this.maxRecordsInMemory = maxRecsInMemory;
     this.folder = dir;
     this.operationName = opName;
+    this.valueType = vType;
   }
 
   /**
@@ -127,7 +135,7 @@ public class FSMerger {
       if (numOfBytesInMemory > maxBytesToKeepInMemory
           || bytesInMemory.size() > maxRecordsInMemory) {
         // save the bytes to disk
-        FileLoader.saveBytes(bytesInMemory, bytesLength,
+        FileLoader.saveObjects(bytesInMemory, bytesLength,
             numOfBytesInMemory, getSaveFileName(noOfFileWritten));
         // save the sizes to disk
         FileLoader.saveSizes(bytesLength, getSizesFileName(noOfFileWritten));
