@@ -11,9 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.shuffle;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 
+/**
+ * Represent an open file containing the channel and the buffer
+ */
 public class OpenFile {
   private FileChannel rwChannel;
   private ByteBuffer byteBuffer;
@@ -29,5 +33,9 @@ public class OpenFile {
 
   public ByteBuffer getByteBuffer() {
     return byteBuffer;
+  }
+
+  public void close() throws IOException {
+    rwChannel.close();
   }
 }

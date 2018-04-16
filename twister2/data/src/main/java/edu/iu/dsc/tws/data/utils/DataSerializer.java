@@ -9,23 +9,19 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.shuffle;
+package edu.iu.dsc.tws.data.utils;
 
-public class Record {
-  private Object key;
+import edu.iu.dsc.tws.data.api.DataType;
 
-  private byte[] data;
-
-  public Record(Object key, byte[] data) {
-    this.key = key;
-    this.data = data;
+public final class DataSerializer {
+  private DataSerializer() {
   }
 
-  public Object getKey() {
-    return key;
-  }
-
-  public byte[] getData() {
-    return data;
+  public static byte[] serializeData(Object data, DataType dataType,
+                                     KryoMemorySerializer kryoMemorySerializer) {
+    if (dataType == DataType.OBJECT) {
+      return kryoMemorySerializer.serialize(data);
+    }
+    return null;
   }
 }
