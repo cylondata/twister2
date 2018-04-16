@@ -22,7 +22,8 @@ public final class TaskScheduleUtils {
 
   private TaskScheduleUtils() {
   }
-  public static Resource getResourceRequirement(String component,
+
+  public static Resource getResourceRequirement(String taskName,
                                                 Map<String, Double> componentRamMap,
                                                 Resource defaultInstanceResource,
                                                 Resource maxContainerResource,
@@ -32,14 +33,17 @@ public final class TaskScheduleUtils {
     double instanceDisk = defaultInstanceResource.getDisk();
     double instanceCpu = defaultInstanceResource.getCpu();
 
-    if (componentRamMap.containsKey(component)) {
-      instanceRam = componentRamMap.get(component);
-      instanceDisk = componentRamMap.get(component);
-      instanceCpu = componentRamMap.get(component);
+    if (componentRamMap.containsKey(taskName)) {
+      instanceRam = componentRamMap.get(taskName);
+      instanceDisk = componentRamMap.get(taskName);
+      instanceCpu = componentRamMap.get(taskName);
     }
     assertIsValidInstance(defaultInstanceResource.cloneWithRam(instanceRam),
         MIN_RAM_PER_INSTANCE, maxContainerResource, paddingPercentage);
-    //return defaultInstanceResource.cloneWithRam(instanceRam);
+
+    /*assertIsValidInstance(defaultInstanceResource.cloneWithRam(
+        instanceRam, instanceDisk, instanceCpu),
+        MIN_RAM_PER_INSTANCE, maxContainerResource, paddingPercentage);*/
     return defaultInstanceResource.cloneWithRam(instanceRam, instanceDisk, instanceCpu);
   }
 
@@ -80,8 +84,6 @@ public final class TaskScheduleUtils {
               + "size is %s cores",
           instanceCpu > maxContainerResources.getCpu(), maxContainerResources.getCpu()));
     }
-
-
   }
 
   public static long increaseBy(long value, int paddingPercentage) {
