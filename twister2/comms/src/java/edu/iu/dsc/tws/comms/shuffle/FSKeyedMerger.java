@@ -200,6 +200,7 @@ public class FSKeyedMerger {
         if (!next) {
           // we need to open the first file part
           if (noOfFileWritten > 0) {
+            // we will read the opened one next
             openFilePart();
           } else {
             // no file parts written, end of iteration
@@ -211,11 +212,10 @@ public class FSKeyedMerger {
       }
 
       if (currentFileIndex > 0) {
-        if (currentIndex < 10) {
+        if (currentIndex < openValue.size()) {
           return true;
         } else {
           if (currentFileIndex < noOfFileWritten - 1) {
-            // lets close the alread opend file
             openFilePart();
             return true;
           } else {
@@ -229,7 +229,8 @@ public class FSKeyedMerger {
 
     private void openFilePart() {
       // lets read the bytes from the file
-//      openFilePartBytes = FileLoader.openSavedPart(getSaveFileName(currentFileIndex));
+      openValue = FileLoader.readFile(getSaveFileName(currentFileIndex), keyType,
+          dataType, kryoSerializer);
       currentFileIndex++;
       currentIndex = 0;
     }
@@ -242,9 +243,9 @@ public class FSKeyedMerger {
       }
 
       if (currentFileIndex > 0) {
-//        int size = dataSizes.get(currentIndex);
-        byte[] data = new byte[10];
-        return new KeyValue(null, data);
+        KeyValue kv = openValue.get(currentIndex);
+        currentIndex++;
+        return kv;
       }
 
       return null;

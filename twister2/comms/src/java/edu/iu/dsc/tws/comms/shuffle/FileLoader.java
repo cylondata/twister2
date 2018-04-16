@@ -43,6 +43,7 @@ public final class FileLoader {
       ByteBuffer os = rwChannel.map(FileChannel.MapMode.READ_WRITE, 0, size);
       for (int i = 0; i < records.size(); i++) {
         byte[] r = records.get(i);
+        os.putInt(sizes.get(i));
         os.put(r, 0, sizes.get(i));
       }
       rwChannel.close();
@@ -143,7 +144,7 @@ public final class FileLoader {
             os.putShort(d);
           }
         }
-        os.putInt(r.length);
+        os.putInt(sizes.get(i));
         os.put(r, 0, sizes.get(i));
       }
       rwChannel.close();
@@ -177,6 +178,32 @@ public final class FileLoader {
       }
       rwChannel.close();
       return keyValues;
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public static List<Object> readFile(String fileName, MessageType dataType,
+                                      KryoMemorySerializer deserializer) {
+    String outFileName = Paths.get(fileName).toString();
+    FileChannel rwChannel;
+    try {
+      rwChannel = new RandomAccessFile(outFileName, "rw").getChannel();
+      ByteBuffer os = rwChannel.map(FileChannel.MapMode.READ_ONLY, 0, rwChannel.size());
+
+      List<Object> values = new ArrayList<>();
+      // lets read the key values
+      int totalRead = 0;
+      while (totalRead < rwChannel.size()) {
+        int keySize = os.getInt();
+        Object value = null;
+
+        int dataSize = os.getInt();
+        value = deserialize(dataType, deserializer, os, dataSize);
+        values.add(value);
+      }
+      rwChannel.close();
+      return values;
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
