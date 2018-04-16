@@ -70,6 +70,13 @@ public class Resource {
     this.cpu = cpu;
   }
 
+  public Resource cloneWithRam(double newRam) {
+    return new Resource(this.getRam(), this.getDisk(), this.getCpu());
+  }
+
+  public Resource cloneWithRam(double newRam, double newDisk, double newCpu) {
+    return new Resource(newRam, newDisk, newCpu);
+  }
 }
 
 
