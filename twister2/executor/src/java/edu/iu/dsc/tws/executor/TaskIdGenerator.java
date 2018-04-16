@@ -11,17 +11,19 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor;
 
-import java.util.concurrent.BlockingQueue;
+/**
+ * This is a global task id generator depending on the taskId, task index and task name
+ */
+public class TaskIdGenerator {
 
-import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.Table;
-
-import edu.iu.dsc.tws.task.api.Message;
-
-public class Execution {
-  private Table<String, String, BlockingQueue<Message>> inQueues = HashBasedTable.create();
-
-  private Table<String, String, BlockingQueue<Message>> outQueues = HashBasedTable.create();
-
-
+  /**
+   * Generate a unique global task id
+   * @param taskName name of the task
+   * @param taskId task id
+   * @param taskIndex task index
+   * @return the global task id
+   */
+  public int generateGlobalTaskId(String taskName, int taskId, int taskIndex) {
+    return taskId * 100000 + taskIndex;
+  }
 }

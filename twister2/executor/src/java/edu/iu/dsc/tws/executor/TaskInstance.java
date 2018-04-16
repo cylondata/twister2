@@ -48,6 +48,11 @@ public class TaskInstance {
    */
   private OutputCollection outputCollection;
 
+  /**
+   * The globally unique task id
+   */
+  private int taskId;
+
   public TaskInstance(ITask task, BlockingQueue<Message> inQueue,
                       BlockingQueue<Message> outQueue, Config config) {
     this.task = task;
