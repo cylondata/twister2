@@ -63,6 +63,11 @@ public class FSKeyedMerger {
   private List<KeyValue> recordsInMemory = new ArrayList<>();
 
   /**
+   * The deserialized objects in memory
+   */
+  private List<KeyValue> objectsInMemory = new ArrayList<>();
+
+  /**
    * The number of total bytes in each file part written to disk
    */
   private List<Integer> filePartBytes = new ArrayList<>();
@@ -143,7 +148,15 @@ public class FSKeyedMerger {
   public void switchToReading() {
     status = FSStatus.READING;
     // lets convert the in-memory data to objects
+    deserializeObjects();
+  }
 
+  private void deserializeObjects() {
+    for (int i = 0; i < recordsInMemory.size(); i++) {
+      KeyValue kv = recordsInMemory.get(i);
+      Object o = kryoSerializer.deserialize((byte[]) kv.getValue());
+      objectsInMemory.add(new KeyValue(kv.getKey(), o));
+    }
   }
 
   /**
@@ -187,8 +200,9 @@ public class FSKeyedMerger {
     private Iterator<KeyValue> it;
     // the current values
     private List<KeyValue> openValue;
+
     FSIterator() {
-      it = recordsInMemory.iterator();
+      it = objectsInMemory.iterator();
     }
 
     @Override

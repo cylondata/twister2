@@ -63,6 +63,11 @@ public class FSMerger {
   private List<byte[]> bytesInMemory = new ArrayList<>();
 
   /**
+   * The deserialized objects in memory
+   */
+  private List<Object> objectsInMemory = new ArrayList<>();
+
+  /**
    * The number of total bytes in each file part written to disk
    */
   private List<Integer> filePartBytes = new ArrayList<>();
@@ -129,6 +134,14 @@ public class FSMerger {
 
   public void switchToReading() {
     status = FSStatus.READING;
+    deserializeObjects();
+  }
+
+  private void deserializeObjects() {
+    for (int i = 0; i < bytesInMemory.size(); i++) {
+      Object o = kryoSerializer.deserialize(bytesInMemory.get(i));
+      objectsInMemory.add(o);
+    }
   }
 
   /**
@@ -168,12 +181,12 @@ public class FSMerger {
     // Index of the current file
     private int currentIndex = 0;
     // the iterator for list of bytes in memory
-    private Iterator<byte[]> it;
+    private Iterator<Object> it;
     // the current open values
     private List<Object> openValues;
 
     FSIterator() {
-      it = bytesInMemory.iterator();
+      it = objectsInMemory.iterator();
     }
 
     @Override
