@@ -9,7 +9,25 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.master;
+package edu.iu.dsc.tws.master.container;
 
-public abstract class RuntimeEvent {
+import java.io.IOException;
+
+import edu.iu.dsc.tws.task.api.Task;
+
+public class CheckpointBarrierBuffer implements CheckpointBarrierHandler {
+  @Override
+  public void registerCheckpointEventHandler(Task task) {
+
+  }
+
+  @Override
+  public void cleanup() throws IOException {
+
+  }
+
+  @Override
+  public boolean isEmpty() {
+    return false;
+  }
 }
