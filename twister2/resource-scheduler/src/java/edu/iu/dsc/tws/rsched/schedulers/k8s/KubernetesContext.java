@@ -22,14 +22,17 @@ public class KubernetesContext extends SchedulerContext {
   public static final String KUBERNETES_NAMESPACE_DEFAULT = "default";
   public static final String KUBERNETES_NAMESPACE = "kubernetes.namespace";
 
-  public static final int SERVICE_PORT_DEFAULT = 11111;
-  public static final String SERVICE_PORT = "kubernetes.service.port";
+  public static final String NODE_PORT_SERVICE_REQUESTED_DEFAULT = "false";
+  public static final String NODE_PORT_SERVICE_REQUESTED = "kubernetes.node.port.service.requested";
 
-  public static final int SERVICE_TARGET_PORT_DEFAULT = 33333;
-  public static final String SERVICE_TARGET_PORT = "kubernetes.service.target.port";
+  public static final int SERVICE_NODE_PORT_DEFAULT = 0;
+  public static final String SERVICE_NODE_PORT = "kubernetes.service.node.port";
 
   public static final int K8S_WORKER_BASE_PORT_DEFAULT = 9999;
   public static final String K8S_WORKER_BASE_PORT = "kubernetes.worker.base.port";
+
+  public static final String WORKER_TRANSPORT_PROTOCOL_DEFAULT = "TCP";
+  public static final String WORKER_TRANSPORT_PROTOCOL = "kubernetes.worker.transport.protocol";
 
   public static final String K8S_IMAGE_PULL_POLICY_NAMESPACE = "IfNotPresent";
   public static final String K8S_IMAGE_PULL_POLICY = "kubernetes.image.pull.policy";
@@ -55,12 +58,14 @@ public class KubernetesContext extends SchedulerContext {
     return cfg.getStringValue(KUBERNETES_NAMESPACE, KUBERNETES_NAMESPACE_DEFAULT);
   }
 
-  public static int servicePort(Config cfg) {
-    return cfg.getIntegerValue(SERVICE_PORT, SERVICE_PORT_DEFAULT);
+  public static boolean nodePortServiceRequested(Config cfg) {
+    String request =
+        cfg.getStringValue(NODE_PORT_SERVICE_REQUESTED, NODE_PORT_SERVICE_REQUESTED_DEFAULT);
+    return "true".equalsIgnoreCase(request);
   }
 
-  public static int serviceTargetPort(Config cfg) {
-    return cfg.getIntegerValue(SERVICE_TARGET_PORT, SERVICE_TARGET_PORT_DEFAULT);
+  public static int serviceNodePort(Config cfg) {
+    return cfg.getIntegerValue(SERVICE_NODE_PORT, SERVICE_NODE_PORT_DEFAULT);
   }
 
   public static int workerBasePort(Config cfg) {
@@ -85,6 +90,10 @@ public class KubernetesContext extends SchedulerContext {
 
   public static String persistentLoggingType(Config cfg) {
     return cfg.getStringValue(PERSISTENT_LOGGING_TYPE, PERSISTENT_LOGGING_TYPE_DEFAULT);
+  }
+
+  public static String workerTransportProtocol(Config cfg) {
+    return cfg.getStringValue(WORKER_TRANSPORT_PROTOCOL, WORKER_TRANSPORT_PROTOCOL_DEFAULT);
   }
 
 }
