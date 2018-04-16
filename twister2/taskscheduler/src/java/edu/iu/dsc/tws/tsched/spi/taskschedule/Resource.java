@@ -71,7 +71,7 @@ public class Resource {
   }
 
   public Resource cloneWithRam(double newRam) {
-    return new Resource(this.getRam(), this.getDisk(), this.getCpu());
+    return new Resource(newRam, this.getDisk(), this.getCpu());
   }
 
   public Resource cloneWithRam(double newRam, double newDisk, double newCpu) {
