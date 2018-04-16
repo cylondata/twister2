@@ -35,12 +35,15 @@ import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.proto.system.ResourceAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.bootstrap.IWorkerController;
 import edu.iu.dsc.tws.rsched.bootstrap.WorkerNetworkInfo;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesField;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
-import edu.iu.dsc.tws.rsched.spi.container.IContainer;
+import edu.iu.dsc.tws.rsched.spi.container.IPersistentVolume;
+import edu.iu.dsc.tws.rsched.spi.container.IWorker;
+import edu.iu.dsc.tws.rsched.spi.container.IWorkerLogger;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import edu.iu.dsc.tws.rsched.utils.TarGzipPacker;
 
@@ -195,7 +198,7 @@ public final class KubernetesWorker {
     }
 
     ResourceAPI.ComputeResource cr = job.getJobResources().getContainer();
-    startContainerClass();
+    startWorkerClass(workerController, pv, logger);
 
     closeWorker(podName);
   }
@@ -317,20 +320,22 @@ public final class KubernetesWorker {
   /**
    * start the container class specified in conf files
    */
-  public static void startContainerClass() {
+  public static void startWorkerClass(IWorkerController workerController,
+                                      IPersistentVolume pv,
+                                      IWorkerLogger logger) {
     String containerClass = SchedulerContext.containerClass(config);
-    IContainer container;
+    IWorker container;
     try {
       Object object = ReflectionUtils.newInstance(containerClass);
-      container = (IContainer) object;
-      LOG.info("loaded container class: " + containerClass);
+      container = (IWorker) object;
+      LOG.info("loaded worker class: " + containerClass);
     } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
       LOG.log(Level.SEVERE, String.format("failed to load the container class %s",
           containerClass), e);
       throw new RuntimeException(e);
     }
 
-    container.init(config, thisWorker.getWorkerID(), null);
+    container.init(config, thisWorker.getWorkerID(), null, workerController, pv, logger);
   }
 
 

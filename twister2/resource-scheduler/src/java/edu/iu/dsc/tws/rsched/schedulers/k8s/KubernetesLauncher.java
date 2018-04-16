@@ -112,26 +112,38 @@ public class KubernetesLauncher implements ILauncher {
   }
 
   private void initService(String jobName) {
-    // first check whether there is a running service
+    // first check whether there is a running service with the same name
     String serviceName = KubernetesUtils.createServiceName(jobName);
-    String serviceLabel = KubernetesUtils.createServiceLabel(jobName);
     V1Service service = controller.getService(namespace, serviceName);
+    if (service != null) {
+      LOG.log(Level.WARNING, "There is already a service with the name: " + serviceName
+          + "\nAnother job might be running. "
+          + "\nFirst terminate that job or create a job with a different name."
+          + "\n++++++ Aborting submission ++++++");
+      throw new RuntimeException();
+    }
 
-    // if there is no service, start one
-    if (service == null) {
-      int port = KubernetesContext.servicePort(config);
-      int targetPort = KubernetesContext.serviceTargetPort(config);
-      service = KubernetesUtils.createServiceObject(serviceName, serviceLabel, port, targetPort);
-      boolean serviceCreated = controller.createService(namespace, service);
-      if (!serviceCreated) {
-        LOG.log(Level.SEVERE, "Service could not be created. Aborting submission");
+    // if NodePort service is requested start one,
+    // otherwise start a headless service
+    if (KubernetesContext.nodePortServiceRequested(config)) {
+
+      if (KubernetesContext.containersPerPod(config) != 1) {
+        LOG.log(Level.SEVERE, KubernetesContext.CONTAINERS_PER_POD + " value must be 1, "
+            + "when starting NodePort service. Please change the config value and resubmit the job"
+            + "\n++++++ Aborting submission ++++++");
         throw new RuntimeException();
       }
 
-      // if there is already a service with the same name
+      service = KubernetesUtils.createNodePortServiceObject(config, jobName);
     } else {
-      LOG.log(Level.WARNING, "There is already a service with the name: " + serviceName
-          + "\nNo need to create a new service. Will use the existing one.");
+      service = KubernetesUtils.createHeadlessServiceObject(config, jobName);
+    }
+
+    boolean serviceCreated = controller.createService(namespace, service);
+    if (!serviceCreated) {
+      LOG.log(Level.SEVERE, "Service could not be created."
+          + "\n++++++ Aborting submission ++++++");
+      throw new RuntimeException();
     }
   }
 
@@ -146,14 +158,15 @@ public class KubernetesLauncher implements ILauncher {
       pv = KubernetesUtils.createPersistentVolumeObject(config, pvName);
       boolean pvCreated = controller.createPersistentVolume(pv);
       if (!pvCreated) {
-        LOG.log(Level.SEVERE, "PersistentVolume could not be created. Aborting submission.");
-        System.out.println("submitted pv: \n" + pv);
+        LOG.log(Level.SEVERE, "PersistentVolume could not be created. "
+            + "\n++++++ Aborting submission ++++++");
+//        System.out.println("submitted pv: \n" + pv);
         throw new RuntimeException();
       }
     } else {
       LOG.log(Level.SEVERE, "There is already a PersistentVolume with the name: " + pvName
           + "\nPlease terminate any artifacts from previous jobs or change your job name. "
-          + "Aborting submission.");
+          + "\n++++++ Aborting submission ++++++");
       return false;
     }
 
@@ -165,13 +178,14 @@ public class KubernetesLauncher implements ILauncher {
       pvc = KubernetesUtils.createPersistentVolumeClaimObject(config, pvcName);
       boolean claimCreated = controller.createPersistentVolumeClaim(namespace, pvc);
       if (!claimCreated) {
-        LOG.log(Level.SEVERE, "PersistentVolumeClaim could not be created. Aborting submission");
+        LOG.log(Level.SEVERE, "PersistentVolumeClaim could not be created. "
+            + "\n++++++ Aborting submission ++++++");
         throw new RuntimeException();
       }
     } else {
       LOG.log(Level.WARNING, "There is already a PersistentVolumeClaim with the name: " + pvcName
           + "\nPlease terminate any artifacts from previous jobs or change your job name. "
-          + "Aborting submission.");
+          + "\n++++++ Aborting submission ++++++");
       return false;
     }
 
@@ -190,32 +204,30 @@ public class KubernetesLauncher implements ILauncher {
         controller.getStatefulSet(namespace, jobName, serviceLabelWithApp);
     if (existingStatefulSet != null) {
       LOG.log(Level.SEVERE, "There is already a StatefulSet object in Kubernetes master "
-          + "with the name: " + jobName + "\nFirst terminate this running job and resubmit. ");
+          + "with the name: " + jobName + "\nFirst terminate this running job and resubmit. "
+          + "\n++++++ Aborting submission ++++++");
       return false;
     }
 
-    // create the StatefulSet for this job
+    // create the StatefulSet object for this job
     V1beta2StatefulSet statefulSet = KubernetesUtils.createStatefulSetObjectForJob(
         jobName, resourceRequest, jobFileSize, config);
 
     if (statefulSet == null) {
-      LOG.log(Level.SEVERE, "Aborting submission."
-          + "\nPlease run terminate job to clear up any artifacts from this job, "
-          + "before submitting a new job.");
-
       return false;
     }
 
     boolean statefulSetCreated = controller.createStatefulSetJob(namespace, statefulSet);
     if (!statefulSetCreated) {
-      LOG.log(Level.SEVERE, "Aborting submission."
-          + "\nPlease run terminate job to clear up any artifacts from this job, "
-          + "before submitting a new job.");
+      LOG.log(Level.SEVERE, "\nPlease run terminate job to clear up any artifacts from "
+          + "previous jobs."
+          + "\n++++++ Aborting submission ++++++");
       return false;
     }
 
     return true;
   }
+
   /**
    * Close up any resources
    */
