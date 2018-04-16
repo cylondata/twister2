@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.shuffle;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -19,10 +18,14 @@ import java.util.List;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 
 public class FSKeyedMerger {
+  private static final Logger LOG = Logger.getLogger(FSKeyedMerger.class.getName());
+
   /**
    * Maximum bytes to keep in memory
    */
@@ -87,6 +90,11 @@ public class FSKeyedMerger {
   private Lock lock = new ReentrantLock();
   private Condition notFull = lock.newCondition();
 
+  /**
+   * The kryo serializer
+   */
+  private KryoMemorySerializer kryoSerializer;
+
   private enum FSStatus {
     WRITING,
     READING
@@ -104,6 +112,7 @@ public class FSKeyedMerger {
     this.keyType = kType;
     this.dataType = dType;
     this.keyComparator = kComparator;
+    this.kryoSerializer = new KryoMemorySerializer();
   }
 
   /**
@@ -133,6 +142,8 @@ public class FSKeyedMerger {
 
   public void switchToReading() {
     status = FSStatus.READING;
+    // lets convert the in-memory data to objects
+
   }
 
   /**
@@ -145,8 +156,9 @@ public class FSKeyedMerger {
       if (numOfBytesInMemory > maxBytesToKeepInMemory
           || recordsInMemory.size() > maxRecordsInMemory) {
         // save the bytes to disk
-        FileLoader.saveKeyValues(recordsInMemory, bytesLength,
-            numOfBytesInMemory, getSaveFileName(noOfFileWritten), keyType);
+        int totalSize = FileLoader.saveKeyValues(recordsInMemory, bytesLength,
+            numOfBytesInMemory, getSaveFileName(noOfFileWritten), keyType, kryoSerializer);
+        filePartBytes.add(totalSize);
 
         recordsInMemory.clear();
         bytesLength.clear();
@@ -173,12 +185,8 @@ public class FSKeyedMerger {
     private int currentIndex = 0;
     // the iterator for list of bytes in memory
     private Iterator<KeyValue> it;
-    // the current file part opened
-    private OpenFile openFilePartBytes;
-    // the current sizes file part
-    private OpenFile openFilePartSizes;
-    private List<Integer> dataSizes;
-
+    // the current values
+    private List<KeyValue> openValue;
     FSIterator() {
       it = recordsInMemory.iterator();
     }
@@ -203,10 +211,11 @@ public class FSKeyedMerger {
       }
 
       if (currentFileIndex > 0) {
-        if (currentIndex < dataSizes.size()) {
+        if (currentIndex < 10) {
           return true;
         } else {
           if (currentFileIndex < noOfFileWritten - 1) {
+            // lets close the alread opend file
             openFilePart();
             return true;
           } else {
@@ -217,28 +226,10 @@ public class FSKeyedMerger {
       return false;
     }
 
+
     private void openFilePart() {
       // lets read the bytes from the file
-      openFilePartBytes = FileLoader.openSavedPart(getSaveFileName(currentFileIndex));
-      // read the complete bytes
-      openFilePartSizes = FileLoader.openSavedPart(getSizesFileName(currentFileIndex));
-      dataSizes = new ArrayList<>();
-      int noOfData = 0;
-      try {
-        long size = openFilePartSizes.getRwChannel().size();
-        if (size == 0) {
-          throw new RuntimeException("File part with no data: "
-              + getSizesFileName(currentIndex));
-        }
-        noOfData = (int) (size / 4);
-      } catch (IOException e) {
-        throw new RuntimeException("Cannot access file part: "
-            + getSizesFileName(currentIndex));
-      }
-      // now lets read the sizes
-      for (int i = 0; i < noOfData; i++) {
-        dataSizes.add(openFilePartSizes.getByteBuffer().getInt());
-      }
+//      openFilePartBytes = FileLoader.openSavedPart(getSaveFileName(currentFileIndex));
       currentFileIndex++;
       currentIndex = 0;
     }
@@ -251,9 +242,8 @@ public class FSKeyedMerger {
       }
 
       if (currentFileIndex > 0) {
-        int size = dataSizes.get(currentIndex);
-        byte[] data = new byte[size];
-        openFilePartBytes.getByteBuffer().get(data);
+//        int size = dataSizes.get(currentIndex);
+        byte[] data = new byte[10];
         return new KeyValue(null, data);
       }
 
