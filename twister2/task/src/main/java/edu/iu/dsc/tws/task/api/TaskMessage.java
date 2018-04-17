@@ -21,8 +21,18 @@ public class TaskMessage<T> implements IMessage {
    */
   private T content;
 
+  private int edge;
+
+  private int sourceTask;
+
   public TaskMessage(T data) {
     this.content = data;
+  }
+
+  public TaskMessage(T content, int edge, int sourceTask) {
+    this.content = content;
+    this.edge = edge;
+    this.sourceTask = sourceTask;
   }
 
   public T getContent() {
@@ -35,6 +45,10 @@ public class TaskMessage<T> implements IMessage {
 
   @Override
   public int edge() {
-    return 0;
+    return edge;
+  }
+
+  public int sourceTask() {
+    return sourceTask;
   }
 }
