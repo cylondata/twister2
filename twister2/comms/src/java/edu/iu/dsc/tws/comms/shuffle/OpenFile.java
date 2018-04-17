@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.comms.shuffle;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.util.List;
 
 /**
  * Represent an open file containing the channel and the buffer
@@ -21,10 +22,20 @@ import java.nio.channels.FileChannel;
 public class OpenFile {
   private FileChannel rwChannel;
   private ByteBuffer byteBuffer;
+  private List<KeyValue> keyValues;
+  private int totalBytes;
 
   public OpenFile(FileChannel rwChannel, ByteBuffer buffer) {
     this.rwChannel = rwChannel;
     this.byteBuffer = buffer;
+  }
+
+  public OpenFile(FileChannel rwChannel, ByteBuffer byteBuffer,
+                  List<KeyValue> kValues, int total) {
+    this.rwChannel = rwChannel;
+    this.byteBuffer = byteBuffer;
+    this.keyValues = kValues;
+    this.totalBytes = total;
   }
 
   public FileChannel getRwChannel() {
@@ -37,5 +48,13 @@ public class OpenFile {
 
   public void close() throws IOException {
     rwChannel.close();
+  }
+
+  public List<KeyValue> getKeyValues() {
+    return keyValues;
+  }
+
+  public int getTotalBytes() {
+    return totalBytes;
   }
 }
