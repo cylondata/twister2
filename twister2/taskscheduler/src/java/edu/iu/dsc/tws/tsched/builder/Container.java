@@ -79,13 +79,18 @@ public class Container {
     this.paddingPercentage = paddingPercentage;
   }
 
-  void add(TaskSchedulePlan.TaskInstancePlan taskInstancePlan) {
+  void add(TaskSchedulePlan.TaskInstancePlan taskInstancePlan) throws TaskSchedulerException {
     if (this.taskInstances.contains(taskInstancePlan)) {
       throw new ScheduleException(String.format(
           "Instance %s already exists in container %s", taskInstancePlan, toString()));
     }
     assertHasSpace(taskInstancePlan.getResource());
     this.taskInstances.add(taskInstancePlan);
+
+    /*LOG.info("Resource Value Ram:" + this.getTotalUsedResources().getRam() + "\n");
+    LOG.info("Resource Value Disk:" + this.getTotalUsedResources().getDisk() + "\n");
+    LOG.info("Resource Value Cpu:" + this.getTotalUsedResources().getCpu() + "\n");*/
+
     /*boolean flag = assertHasSpace(taskInstancePlan.getResource());
     if (flag) {
       this.taskInstances.add(taskInstancePlan);
@@ -101,12 +106,12 @@ public class Container {
     double newDisk = usedResources.getDisk() + resourceValue.getDisk() + paddingPercentage;
     double newCpu = usedResources.getCpu() + resourceValue.getCpu() + paddingPercentage;
 
-    LOG.info("New Ram Value:" + newRam + "\t "
+    /*LOG.info("New Ram Value:" + newRam + "\t "
         + "Resource Value Ram:" + this.resource.getRam() + "\n");
     LOG.info("New Disk Value:" + newDisk + "\t "
         + "Resource Value Disk:" + this.resource.getDisk() + "\n");
     LOG.info("New Cpu Value:" + newCpu + "\t"
-        + "Resource Value Cpu:" + this.resource.getCpu() + "\n");
+        + "Resource Value Cpu:" + this.resource.getCpu() + "\n");*/
 
     if (newRam > this.resource.getRam()) {
       try {
@@ -156,6 +161,13 @@ public class Container {
     }
     return new Resource(usedRam, usedDisk, usedCpuCores);
   }
+
+  @Override
+  public String toString() {
+    return String.format("{containerId=%s, instances=%s, capacity=%s, paddingPercentage=%s}",
+        containerId, taskInstances, resource, paddingPercentage);
+  }
+
 }
 
 

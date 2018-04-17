@@ -78,7 +78,7 @@ public class TaskInstanceId {
 
   @Override
   public int hashCode() {
-    int result = taskName != null ? taskName.hashCode() : 0;
+    int result = taskName.hashCode();
     result = 31 * result + taskId;
     result = 31 * result + taskIndex;
     return result;
