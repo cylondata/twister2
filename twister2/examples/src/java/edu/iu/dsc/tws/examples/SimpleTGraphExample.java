@@ -42,8 +42,8 @@ import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
+import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.LinkedQueue;
-import edu.iu.dsc.tws.task.api.Message;
 import edu.iu.dsc.tws.task.core.TaskExecutorFixedThread;
 import edu.iu.dsc.tws.task.executiongraph.ExecutionGraph;
 import edu.iu.dsc.tws.task.graph.DataflowTGraphParser;
@@ -95,7 +95,7 @@ public class SimpleTGraphExample implements IContainer {
     int destination = 1;
 
     Map<String, Object> newCfg = new HashMap<>();
-    LinkedQueue<Message> pongQueue = new LinkedQueue<Message>();
+    LinkedQueue<IMessage> pongQueue = new LinkedQueue<IMessage>();
     taskExecutor.registerQueue(0, pongQueue);
 
     direct = channel.direct(newCfg, MessageType.OBJECT, 0, sources,

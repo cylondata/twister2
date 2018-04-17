@@ -11,10 +11,26 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * Unique edge ids needs to be generated in order to have communication operations.
  * We will keep track of the edges used in the framework and
  */
 public class EdgeGenerator {
+  private int currentEdge = 0;
 
+  public synchronized int generate() {
+    currentEdge++;
+    return currentEdge;
+  }
+
+  public synchronized Set<Integer> generate(int num) {
+    Set<Integer> gen = new HashSet<>();
+    for (int i = 0; i < num; i++) {
+      gen.add(++currentEdge);
+    }
+    return gen;
+  }
 }

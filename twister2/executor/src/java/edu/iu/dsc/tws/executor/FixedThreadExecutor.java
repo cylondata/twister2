@@ -19,14 +19,14 @@ import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.ISource;
 import edu.iu.dsc.tws.task.api.ITask;
-import edu.iu.dsc.tws.task.api.Message;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 
 public class FixedThreadExecutor implements Runnable {
-  private Map<String, BlockingQueue<Message>> inQueues = new HashMap<>();
-  private Map<String, BlockingQueue<Message>> outQueues = new HashMap<>();
+  private Map<String, BlockingQueue<IMessage>> inQueues = new HashMap<>();
+  private Map<String, BlockingQueue<IMessage>> outQueues = new HashMap<>();
   private Table<String, String, DataFlowOperation> outOperations = HashBasedTable.create();
 
   private Map<String, ITask> tasks = new HashMap<>();
@@ -36,18 +36,18 @@ public class FixedThreadExecutor implements Runnable {
   @Override
   public void run() {
     for (Map.Entry<String, ITask> e : tasks.entrySet()) {
-      BlockingQueue<Message> inQueue = inQueues.get(e.getKey());
+      BlockingQueue<IMessage> inQueue = inQueues.get(e.getKey());
       ITask task = e.getValue();
       if (inQueue != null) {
         while (!inQueue.isEmpty()) {
-          Message m = inQueue.peek();
+          IMessage m = inQueue.peek();
           task.execute(m);
         }
       } else {
         throw new RuntimeException("Task without an in stream:" + e.getKey());
       }
 
-      BlockingQueue<Message> outQueue = outQueues.get(e.getKey());
+      BlockingQueue<IMessage> outQueue = outQueues.get(e.getKey());
       if (outQueue != null) {
         DataFlowOperation operation = outOperations.get(e.getKey(), e.getKey());
         while (!outQueue.isEmpty()) {

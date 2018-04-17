@@ -40,8 +40,8 @@ import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
+import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.LinkedQueue;
-import edu.iu.dsc.tws.task.api.Message;
 import edu.iu.dsc.tws.task.api.SinkTask;
 import edu.iu.dsc.tws.task.api.SourceTask;
 import edu.iu.dsc.tws.task.core.TaskExecutorFixedThread;
@@ -86,7 +86,7 @@ public class PingPongCommunicationTaskBased implements IContainer {
     //TODO: if the task creates the dataflowop does the task progress it or the executor
 
     //TODO : FOR NOW the dataflowop is created at container and sent to task
-    LinkedQueue<Message> pongQueue = new LinkedQueue<Message>();
+    LinkedQueue<IMessage> pongQueue = new LinkedQueue<IMessage>();
     taskExecutor.registerQueue(0, pongQueue);
 
     direct = channel.direct(newCfg, MessageType.OBJECT, 0, sources,
@@ -155,12 +155,12 @@ public class PingPongCommunicationTaskBased implements IContainer {
   private class RecieveWorker extends SinkTask<Object> {
     private static final long serialVersionUID = 3233011943332591934L;
     @Override
-    public Message execute() {
+    public IMessage execute() {
       return null;
     }
 
     @Override
-    public Message execute(Message content) {
+    public IMessage execute(IMessage content) {
       return null;
     }
 
@@ -183,7 +183,7 @@ public class PingPongCommunicationTaskBased implements IContainer {
     }
 
     @Override
-    public Message execute() {
+    public IMessage execute() {
       LOG.log(Level.INFO, "Starting map worker");
       for (int i = 0; i < 100000; i++) {
         IntData data = generateData();
@@ -205,7 +205,7 @@ public class PingPongCommunicationTaskBased implements IContainer {
     }
 
     @Override
-    public Message execute(Message content) {
+    public IMessage execute(IMessage content) {
       return execute();
     }
 

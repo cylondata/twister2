@@ -52,17 +52,17 @@ public abstract class Task implements ITask {
   }
 
   @Override
-  public Message execute() {
+  public IMessage execute() {
     return null;
   }
 
   @Override
-  public Message execute(Message content) {
+  public IMessage execute(IMessage content) {
     return null;
   }
 
   @Override
-  public void run(Message content) {
+  public void run(IMessage content) {
 
   }
 
