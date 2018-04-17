@@ -16,12 +16,12 @@ import java.util.concurrent.BlockingQueue;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 
-import edu.iu.dsc.tws.task.api.Message;
+import edu.iu.dsc.tws.task.api.IMessage;
 
 public class Execution {
-  private Table<String, String, BlockingQueue<Message>> inQueues = HashBasedTable.create();
+  private Table<String, String, BlockingQueue<IMessage>> inQueues = HashBasedTable.create();
 
-  private Table<String, String, BlockingQueue<Message>> outQueues = HashBasedTable.create();
+  private Table<String, String, BlockingQueue<IMessage>> outQueues = HashBasedTable.create();
 
 
 }

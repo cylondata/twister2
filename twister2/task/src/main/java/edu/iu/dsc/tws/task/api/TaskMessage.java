@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.task.api;
 /**
  * Wrapper interface for all the messages types.
  */
-public class TaskMessage<T> implements Message {
+public class TaskMessage<T> implements IMessage {
 
   /**
    * Stores the data

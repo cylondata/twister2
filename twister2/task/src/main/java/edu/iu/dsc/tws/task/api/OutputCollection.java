@@ -12,5 +12,5 @@
 package edu.iu.dsc.tws.task.api;
 
 public interface OutputCollection {
-  boolean collect(int edge, Message m);
+  boolean collect(int edge, IMessage m);
 }

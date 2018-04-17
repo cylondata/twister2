@@ -28,9 +28,9 @@ import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
+import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.ITask;
 import edu.iu.dsc.tws.task.api.LinkedQueue;
-import edu.iu.dsc.tws.task.api.Message;
 import edu.iu.dsc.tws.task.api.OutputCollection;
 import edu.iu.dsc.tws.task.core.TaskExecutorFixedThread;
 import edu.iu.dsc.tws.task.executiongraph.ExecutionGraph;
@@ -84,7 +84,7 @@ public class SimpleTGraphExample1 implements IContainer {
     int destination = 1;
 
     Map<String, Object> newCfg = new HashMap<>();
-    LinkedQueue<Message> pongQueue = new LinkedQueue<Message>();
+    LinkedQueue<IMessage> pongQueue = new LinkedQueue<IMessage>();
     taskExecutor.registerQueue(0, pongQueue);
 
     direct = channel.direct(newCfg, MessageType.OBJECT, 0, sources,
@@ -217,7 +217,7 @@ public class SimpleTGraphExample1 implements IContainer {
      * Code that needs to be executed in the Task
      */
     @Override
-    public Message execute() {
+    public IMessage execute() {
       return null;
     }
 
@@ -225,7 +225,7 @@ public class SimpleTGraphExample1 implements IContainer {
      * Code that is executed for a single message
      */
     @Override
-    public Message execute(Message content) {
+    public IMessage execute(IMessage content) {
       return null;
     }
 
@@ -233,7 +233,7 @@ public class SimpleTGraphExample1 implements IContainer {
      * Execute with an incoming message
      */
     @Override
-    public void run(Message content) {
+    public void run(IMessage content) {
 
     }
 
@@ -277,7 +277,7 @@ public class SimpleTGraphExample1 implements IContainer {
      * Code that needs to be executed in the Task
      */
     @Override
-    public Message execute() {
+    public IMessage execute() {
       return null;
     }
 
@@ -285,7 +285,7 @@ public class SimpleTGraphExample1 implements IContainer {
      * Code that is executed for a single message
      */
     @Override
-    public Message execute(Message content) {
+    public IMessage execute(IMessage content) {
       return null;
     }
 
@@ -293,7 +293,7 @@ public class SimpleTGraphExample1 implements IContainer {
      * Execute with an incoming message
      */
     @Override
-    public void run(Message content) {
+    public void run(IMessage content) {
 
     }
 
@@ -337,7 +337,7 @@ public class SimpleTGraphExample1 implements IContainer {
      * Code that needs to be executed in the Task
      */
     @Override
-    public Message execute() {
+    public IMessage execute() {
       return null;
     }
 
@@ -345,7 +345,7 @@ public class SimpleTGraphExample1 implements IContainer {
      * Code that is executed for a single message
      */
     @Override
-    public Message execute(Message content) {
+    public IMessage execute(IMessage content) {
       return null;
     }
 
@@ -353,7 +353,7 @@ public class SimpleTGraphExample1 implements IContainer {
      * Execute with an incoming message
      */
     @Override
-    public void run(Message content) {
+    public void run(IMessage content) {
 
     }
 
@@ -397,7 +397,7 @@ public class SimpleTGraphExample1 implements IContainer {
      * Code that needs to be executed in the Task
      */
     @Override
-    public Message execute() {
+    public IMessage execute() {
       return null;
     }
 
@@ -405,7 +405,7 @@ public class SimpleTGraphExample1 implements IContainer {
      * Code that is executed for a single message
      */
     @Override
-    public Message execute(Message content) {
+    public IMessage execute(IMessage content) {
       return null;
     }
 
@@ -413,7 +413,7 @@ public class SimpleTGraphExample1 implements IContainer {
      * Execute with an incoming message
      */
     @Override
-    public void run(Message content) {
+    public void run(IMessage content) {
 
     }
 

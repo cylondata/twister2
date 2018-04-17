@@ -23,7 +23,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.core;
 
-import edu.iu.dsc.tws.task.api.Message;
+import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.Queue;
 import edu.iu.dsc.tws.task.api.Task;
 
@@ -33,7 +33,7 @@ import edu.iu.dsc.tws.task.api.Task;
  */
 public class RunnableTask implements Runnable {
   private Task executableTask;
-  private Queue<Message> queueRef;
+  private Queue<IMessage> queueRef;
   private boolean isMessageBased = false;
   private int messageProcessLimit = 1;
   private int messageProcessCount = 0;
@@ -47,13 +47,13 @@ public class RunnableTask implements Runnable {
   }
 
   //TODO: would it better to send a referance to the queue and then use that to get the message?
-  public RunnableTask(Task task, Queue<Message> msg) {
+  public RunnableTask(Task task, Queue<IMessage> msg) {
     this.executableTask = task;
     this.queueRef = msg;
     isMessageBased = true;
   }
 
-  public RunnableTask(Task task, Queue<Message> msg, int messageLimit) {
+  public RunnableTask(Task task, Queue<IMessage> msg, int messageLimit) {
     this.executableTask = task;
     this.queueRef = msg;
     this.messageProcessLimit = messageLimit;
@@ -92,11 +92,11 @@ public class RunnableTask implements Runnable {
     this.messageProcessLimit = messageProcessLimit;
   }
 
-  public Queue<Message> getQueueRef() {
+  public Queue<IMessage> getQueueRef() {
     return queueRef;
   }
 
-  public void setQueueRef(Queue<Message> queueRef) {
+  public void setQueueRef(Queue<IMessage> queueRef) {
     this.queueRef = queueRef;
   }
 
