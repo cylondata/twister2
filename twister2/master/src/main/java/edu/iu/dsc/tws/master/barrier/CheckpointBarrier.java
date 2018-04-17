@@ -57,14 +57,12 @@ public class CheckpointBarrier extends RuntimeEvent {
   public boolean equals(Object other) {
     if (other == this) {
       return true;
-    }
-    else if (other == null || other.getClass() != CheckpointBarrier.class) {
+    } else if (other == null || other.getClass() != CheckpointBarrier.class) {
       return false;
-    }
-    else {
+    } else {
       CheckpointBarrier that = (CheckpointBarrier) other;
-      return that.id == this.id && that.timestamp == this.timestamp &&
-          this.checkpointOptions.equals(that.checkpointOptions);
+      return that.id == this.id && that.timestamp == this.timestamp
+          && this.checkpointOptions.equals(that.checkpointOptions);
     }
   }
 

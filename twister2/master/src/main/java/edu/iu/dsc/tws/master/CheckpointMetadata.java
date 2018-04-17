@@ -12,4 +12,5 @@
 package edu.iu.dsc.tws.master;
 
 public class CheckpointMetadata implements java.io.Serializable {
+  private static final long serialVersionUID = -2387652345781312442L;
 }
