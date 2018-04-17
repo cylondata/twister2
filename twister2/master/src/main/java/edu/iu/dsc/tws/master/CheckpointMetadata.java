@@ -11,5 +11,5 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.master;
 
-public abstract class RuntimeEvent {
+public class CheckpointMetadata implements java.io.Serializable {
 }
