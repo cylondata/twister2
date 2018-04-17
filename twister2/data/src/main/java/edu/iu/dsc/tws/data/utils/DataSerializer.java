@@ -9,19 +9,19 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.executor;
+package edu.iu.dsc.tws.data.utils;
 
-import java.util.concurrent.BlockingQueue;
+import edu.iu.dsc.tws.data.api.DataType;
 
-import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.Table;
+public final class DataSerializer {
+  private DataSerializer() {
+  }
 
-import edu.iu.dsc.tws.task.api.Message;
-
-public class Execution {
-  private Table<String, String, BlockingQueue<Message>> inQueues = HashBasedTable.create();
-
-  private Table<String, String, BlockingQueue<Message>> outQueues = HashBasedTable.create();
-
-
+  public static byte[] serializeData(Object data, DataType dataType,
+                                     KryoMemorySerializer kryoMemorySerializer) {
+    if (dataType == DataType.OBJECT) {
+      return kryoMemorySerializer.serialize(data);
+    }
+    return null;
+  }
 }

@@ -9,19 +9,18 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.executor;
+package edu.iu.dsc.tws.rsched.spi.container;
 
-import java.util.concurrent.BlockingQueue;
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.rsched.bootstrap.IWorkerController;
+import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
-import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.Table;
-
-import edu.iu.dsc.tws.task.api.Message;
-
-public class Execution {
-  private Table<String, String, BlockingQueue<Message>> inQueues = HashBasedTable.create();
-
-  private Table<String, String, BlockingQueue<Message>> outQueues = HashBasedTable.create();
-
+public interface IWorker {
+  void init(Config config,
+            int id,
+            ResourcePlan resourcePlan,
+            IWorkerController workerController,
+            IPersistentVolume persistentVolume,
+            IWorkerLogger logger);
 
 }

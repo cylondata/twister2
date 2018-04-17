@@ -20,6 +20,8 @@ import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 
 import edu.iu.dsc.tws.task.api.INode;
+import edu.iu.dsc.tws.task.api.ISink;
+import edu.iu.dsc.tws.task.api.ISource;
 import edu.iu.dsc.tws.task.api.ITask;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.Edge;
@@ -47,7 +49,8 @@ public class DefaultExecutor implements IExecutor {
   /**
    * Communications list
    */
-  private Table<String, String, Communication> table = HashBasedTable.create();
+  private Table<String, String, Communication> sendingTable = HashBasedTable.create();
+  private Table<String, String, Communication> recvTable = HashBasedTable.create();
 
   public DefaultExecutor(int workerId) {
     this.workerId = workerId;
@@ -58,15 +61,13 @@ public class DefaultExecutor implements IExecutor {
   public Execution schedule(DataFlowTaskGraph taskGraph,
                             TaskSchedulePlan taskSchedule) {
     Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap = taskSchedule.getContainersMap();
-
     TaskSchedulePlan.ContainerPlan p = containersMap.get(workerId);
-
     if (p == null) {
       return null;
     }
 
-    // lets get the task
     Set<TaskSchedulePlan.TaskInstancePlan> instancePlan = p.getTaskInstances();
+    // for each task we are going to create the communications
     for (TaskSchedulePlan.TaskInstancePlan ip : instancePlan) {
       Vertex v = taskGraph.vertex(ip.getTaskName());
 
@@ -75,32 +76,46 @@ public class DefaultExecutor implements IExecutor {
       }
 
       INode node = v.getTask();
-      if (node instanceof ITask) {
+      if (node instanceof ITask || node instanceof ISource) {
         // lets get the communication
         Set<Edge> edges = taskGraph.outEdges(v);
         // now lets create the communication object
         for (Edge e : edges) {
           HashSet<Integer> tasks = new HashSet<>();
-          if (table.contains(v.getName(), e.taskEdge)) {
-            table.put(v.getName(), e.taskEdge, new Communication(v.getName(),
+          if (!sendingTable.contains(v.getName(), e.taskEdge)) {
+            sendingTable.put(v.getName(), e.taskEdge, new Communication(v.getName(),
                 e.taskEdge, tasks));
           }
         }
-        // add this task to an executor
+      }
 
+      if (node instanceof ITask || node instanceof ISink) {
+        // lets get the parent tasks
+        Set<Edge> parentEdges = taskGraph.inEdges(v);
+        for (Edge e : parentEdges) {
+          Vertex parent = taskGraph.getParentOfTask(v, e.getTaskEdge());
+          HashSet<Integer> tasks = new HashSet<>();
+          if (!sendingTable.contains(parent.getName(), e.taskEdge)) {
+            recvTable.put(parent.getName(), e.taskEdge, new Communication(parent.getName(),
+                e.taskEdge, tasks));
+          }
+        }
       }
     }
+
+    // now lets create the queues and start the execution
+    Execution execution = new Execution();
 
 
     return null;
   }
 
-  public class Communication {
+  private class Communication {
     private String source;
     private String name;
     private Set<Integer> tasks = new HashSet<>();
 
-    public Communication(String n, String src, Set<Integer> tasks) {
+    Communication(String n, String src, Set<Integer> tasks) {
       this.name = n;
       this.tasks = tasks;
       this.source = src;

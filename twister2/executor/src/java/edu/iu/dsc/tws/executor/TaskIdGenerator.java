@@ -9,23 +9,21 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.shuffle;
+package edu.iu.dsc.tws.executor;
 
-public class Record {
-  private Object key;
+/**
+ * This is a global task id generator depending on the taskId, task index and task name
+ */
+public class TaskIdGenerator {
 
-  private byte[] data;
-
-  public Record(Object key, byte[] data) {
-    this.key = key;
-    this.data = data;
-  }
-
-  public Object getKey() {
-    return key;
-  }
-
-  public byte[] getData() {
-    return data;
+  /**
+   * Generate a unique global task id
+   * @param taskName name of the task
+   * @param taskId task id
+   * @param taskIndex task index
+   * @return the global task id
+   */
+  public int generateGlobalTaskId(String taskName, int taskId, int taskIndex) {
+    return taskId * 100000 + taskIndex;
   }
 }

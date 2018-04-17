@@ -11,31 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.shuffle;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
+public class HeapNode {
+  public KeyValue data;
+  public int listNo;
 
-/**
- * Represent an open file containing the channel and the buffer
- */
-public class OpenFile {
-  private FileChannel rwChannel;
-  private ByteBuffer byteBuffer;
-
-  public OpenFile(FileChannel rwChannel, ByteBuffer buffer) {
-    this.rwChannel = rwChannel;
-    this.byteBuffer = buffer;
-  }
-
-  public FileChannel getRwChannel() {
-    return rwChannel;
-  }
-
-  public ByteBuffer getByteBuffer() {
-    return byteBuffer;
-  }
-
-  public void close() throws IOException {
-    rwChannel.close();
+  public HeapNode(KeyValue data, int listNo) {
+    this.data = data;
+    this.listNo = listNo;
   }
 }

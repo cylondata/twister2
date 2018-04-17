@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.shuffle;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -20,6 +19,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 
 /**
  * Save the records to file system and retrieve them, this is just values, so no
@@ -63,6 +63,11 @@ public class FSMerger {
   private List<byte[]> bytesInMemory = new ArrayList<>();
 
   /**
+   * The deserialized objects in memory
+   */
+  private List<Object> objectsInMemory = new ArrayList<>();
+
+  /**
    * The number of total bytes in each file part written to disk
    */
   private List<Integer> filePartBytes = new ArrayList<>();
@@ -80,6 +85,11 @@ public class FSMerger {
   private Lock lock = new ReentrantLock();
   private Condition notFull = lock.newCondition();
 
+  /**
+   * The kryo serializer
+   */
+  private KryoMemorySerializer kryoSerializer;
+
   private enum FSStatus {
     WRITING,
     READING
@@ -94,6 +104,7 @@ public class FSMerger {
     this.folder = dir;
     this.operationName = opName;
     this.valueType = vType;
+    this.kryoSerializer = new KryoMemorySerializer();
   }
 
   /**
@@ -123,6 +134,14 @@ public class FSMerger {
 
   public void switchToReading() {
     status = FSStatus.READING;
+    deserializeObjects();
+  }
+
+  private void deserializeObjects() {
+    for (int i = 0; i < bytesInMemory.size(); i++) {
+      Object o = kryoSerializer.deserialize(bytesInMemory.get(i));
+      objectsInMemory.add(o);
+    }
   }
 
   /**
@@ -137,8 +156,6 @@ public class FSMerger {
         // save the bytes to disk
         FileLoader.saveObjects(bytesInMemory, bytesLength,
             numOfBytesInMemory, getSaveFileName(noOfFileWritten));
-        // save the sizes to disk
-        FileLoader.saveSizes(bytesLength, getSizesFileName(noOfFileWritten));
 
         bytesInMemory.clear();
         bytesLength.clear();
@@ -153,26 +170,23 @@ public class FSMerger {
   /**
    * This method gives the values
    */
-  public Iterator<byte[]> readIterator() {
+  public Iterator<Object> readIterator() {
     // lets start with first file
     return new FSIterator();
   }
 
-  private class FSIterator implements Iterator<byte[]> {
+  private class FSIterator implements Iterator<Object> {
     // the current file index
     private int currentFileIndex = 0;
     // Index of the current file
     private int currentIndex = 0;
     // the iterator for list of bytes in memory
-    private Iterator<byte[]> it;
-    // the current file part opened
-    private OpenFile openFilePartBytes;
-    // the current sizes file part
-    private OpenFile openFilePartSizes;
-    private List<Integer> dataSizes;
+    private Iterator<Object> it;
+    // the current open values
+    private List<Object> openValues;
 
     FSIterator() {
-      it = bytesInMemory.iterator();
+      it = objectsInMemory.iterator();
     }
 
     @Override
@@ -195,7 +209,7 @@ public class FSMerger {
       }
 
       if (currentFileIndex > 0) {
-        if (currentIndex < dataSizes.size()) {
+        if (currentIndex < openValues.size()) {
           return true;
         } else {
           if (currentFileIndex < noOfFileWritten - 1) {
@@ -211,41 +225,22 @@ public class FSMerger {
 
     private void openFilePart() {
       // lets read the bytes from the file
-      openFilePartBytes = FileLoader.openSavedPart(getSaveFileName(currentFileIndex));
-      // read the complete bytes
-      openFilePartSizes = FileLoader.openSavedPart(getSizesFileName(currentFileIndex));
-      dataSizes = new ArrayList<>();
-      int noOfData = 0;
-      try {
-        long size = openFilePartSizes.getRwChannel().size();
-        if (size == 0) {
-          throw new RuntimeException("File part with no data: "
-              + getSizesFileName(currentIndex));
-        }
-        noOfData = (int) (size / 4);
-      } catch (IOException e) {
-        throw new RuntimeException("Cannot access file part: "
-            + getSizesFileName(currentIndex));
-      }
-      // now lets read the sizes
-      for (int i = 0; i < noOfData; i++) {
-        dataSizes.add(openFilePartSizes.getByteBuffer().getInt());
-      }
+      openValues = FileLoader.readFile(getSaveFileName(currentFileIndex),
+          valueType, kryoSerializer);
       currentFileIndex++;
       currentIndex = 0;
     }
 
     @Override
-    public byte[] next() {
+    public Object next() {
       // we are reading from in memory
       if (currentFileIndex == 0) {
         return it.next();
       }
 
       if (currentFileIndex > 0) {
-        int size = dataSizes.get(currentIndex);
-        byte[] data = new byte[size];
-        openFilePartBytes.getByteBuffer().get(data);
+        Object data = openValues.get(currentIndex);
+        currentIndex++;
         return data;
       }
 

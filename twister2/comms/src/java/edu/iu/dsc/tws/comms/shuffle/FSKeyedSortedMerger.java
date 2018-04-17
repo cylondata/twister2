@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.comms.shuffle;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
@@ -23,9 +24,8 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 
-public class FSKeyedMerger {
-  private static final Logger LOG = Logger.getLogger(FSKeyedMerger.class.getName());
-
+public class FSKeyedSortedMerger {
+  private static final Logger LOG = Logger.getLogger(FSKeyedSortedMerger.class.getName());
   /**
    * Maximum bytes to keep in memory
    */
@@ -107,7 +107,7 @@ public class FSKeyedMerger {
 
   private FSStatus status = FSStatus.WRITING;
 
-  public FSKeyedMerger(int maxBytesInMemory, int maxRecsInMemory,
+  public FSKeyedSortedMerger(int maxBytesInMemory, int maxRecsInMemory,
                        String dir, String opName, MessageType kType,
                        MessageType dType, Comparator<Object> kComparator) {
     this.maxBytesToKeepInMemory = maxBytesInMemory;
@@ -132,7 +132,7 @@ public class FSKeyedMerger {
 
     lock.lock();
     try {
-      recordsInMemory.add(new KeyValue(key, data));
+      recordsInMemory.add(new KeyValue(key, data, keyComparator));
       bytesLength.add(length);
 
       numOfBytesInMemory += length;
@@ -149,6 +149,8 @@ public class FSKeyedMerger {
     status = FSStatus.READING;
     // lets convert the in-memory data to objects
     deserializeObjects();
+    // lets sort the in-memory objects
+    Collections.sort(objectsInMemory);
   }
 
   private void deserializeObjects() {
@@ -163,23 +165,30 @@ public class FSKeyedMerger {
    * This method saves the data to file system
    */
   public void run() {
+    List<KeyValue> list;
     lock.lock();
     try {
-      // it is time to write
-      if (numOfBytesInMemory > maxBytesToKeepInMemory
-          || recordsInMemory.size() > maxRecordsInMemory) {
-        // save the bytes to disk
-        int totalSize = FileLoader.saveKeyValues(recordsInMemory, bytesLength,
-            numOfBytesInMemory, getSaveFileName(noOfFileWritten), keyType, kryoSerializer);
-        filePartBytes.add(totalSize);
-
-        recordsInMemory.clear();
-        bytesLength.clear();
-        noOfFileWritten++;
-        numOfBytesInMemory = 0;
-      }
+      list = recordsInMemory;
+      recordsInMemory = new ArrayList<>();
     } finally {
       lock.unlock();
+    }
+
+    // it is time to write
+    if (numOfBytesInMemory > maxBytesToKeepInMemory
+        || recordsInMemory.size() > maxRecordsInMemory) {
+      // first sort the values
+      Collections.sort(list);
+
+      // save the bytes to disk
+      int totalSize = FileLoader.saveKeyValues(recordsInMemory, bytesLength,
+          numOfBytesInMemory, getSaveFileName(noOfFileWritten), keyType, kryoSerializer);
+      filePartBytes.add(totalSize);
+
+      recordsInMemory.clear();
+      bytesLength.clear();
+      noOfFileWritten++;
+      numOfBytesInMemory = 0;
     }
   }
 

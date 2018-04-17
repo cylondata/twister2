@@ -22,7 +22,6 @@ import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 
-import io.kubernetes.client.custom.IntOrString;
 import io.kubernetes.client.models.V1Container;
 import io.kubernetes.client.models.V1ContainerPort;
 import io.kubernetes.client.models.V1EmptyDirVolumeSource;
@@ -185,7 +184,7 @@ public final class KubernetesUtils {
       LOG.log(Level.SEVERE, "Number of containers has to be divisible by containersPerPod.\n"
           + "Number of containers: " + resourceRequest.getNoOfContainers() + "\n"
           + "containersPerPod: " + containersPerPod + "\n"
-          + "Aborting submission.");
+          + "\n++++++ Aborting submission ++++++");
       return null;
     }
 
@@ -359,17 +358,20 @@ public final class KubernetesUtils {
 
     container.setVolumeMounts(volumeMounts);
 
-    V1ContainerPort port = new V1ContainerPort().name("port1").containerPort(containerPort);
-    port.setProtocol("TCP");
+    V1ContainerPort port = new V1ContainerPort();
+    port.name("port11"); // currently not used
+    port.containerPort(containerPort);
+    port.setProtocol(KubernetesContext.workerTransportProtocol(config));
     container.setPorts(Arrays.asList(port));
 
     return container;
   }
 
-  public static V1Service createServiceObject(String serviceName,
-                                              String serviceLabel,
-                                              int port,
-                                              int targetPort) {
+  public static V1Service createHeadlessServiceObject(Config config, String jobName) {
+
+    String serviceName = createServiceName(jobName);
+    String serviceLabel = createServiceLabel(jobName);
+
     V1Service service = new V1Service();
     service.setKind("Service");
     service.setApiVersion("v1");
@@ -388,11 +390,45 @@ public final class KubernetesUtils {
     selectors.put("app", serviceLabel);
     serviceSpec.setSelector(selectors);
 
+    service.setSpec(serviceSpec);
+
+    return service;
+  }
+
+  public static V1Service createNodePortServiceObject(Config config, String jobName) {
+
+    String serviceName = createServiceName(jobName);
+    String serviceLabel = createServiceLabel(jobName);
+    int workerPort = KubernetesContext.workerBasePort(config);
+    int nodePort = KubernetesContext.serviceNodePort(config);
+    String protocol = KubernetesContext.workerTransportProtocol(config);
+
+    V1Service service = new V1Service();
+    service.setKind("Service");
+    service.setApiVersion("v1");
+
+    // construct and set metadata
+    V1ObjectMeta meta = new V1ObjectMeta();
+    meta.setName(serviceName);
+    service.setMetadata(meta);
+
+    // construct and set service spec
+    V1ServiceSpec serviceSpec = new V1ServiceSpec();
+    // ClusterIP needs to be None for headless service
+    serviceSpec.setType("NodePort");
+    // set selector
+    HashMap<String, String> selectors = new HashMap<String, String>();
+    selectors.put("app", serviceLabel);
+    serviceSpec.setSelector(selectors);
+
     ArrayList<V1ServicePort> ports = new ArrayList<V1ServicePort>();
     V1ServicePort servicePort = new V1ServicePort();
-    servicePort.setPort(port);
-    servicePort.setTargetPort(new IntOrString(targetPort));
-    servicePort.setProtocol("TCP");
+    servicePort.setPort(workerPort);
+    servicePort.setProtocol(protocol);
+//    servicePort.setTargetPort(new IntOrString("port11"));
+    if (nodePort != 0) {
+      servicePort.nodePort(nodePort);
+    }
     ports.add(servicePort);
     serviceSpec.setPorts(ports);
 
