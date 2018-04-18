@@ -24,8 +24,8 @@ public class TaskAttributes {
   private static final Logger LOG = Logger.getLogger(TaskAttributes.class.getName());
 
   public Map<String, Double> getTaskRamMap(Set<Vertex> taskVertices) {
-    Map<String, Double> taskRamMap = new HashMap<>();
 
+    Map<String, Double> taskRamMap = new HashMap<>();
     for (Vertex task : taskVertices) {
       Config config = task.getConfig();
       Object ram = config.get("Ram");
@@ -37,8 +37,8 @@ public class TaskAttributes {
   }
 
   public Map<String, Double> getTaskDiskMap(Set<Vertex> taskVertices) {
-    Map<String, Double> taskDiskMap = new HashMap<>();
 
+    Map<String, Double> taskDiskMap = new HashMap<>();
     for (Vertex task : taskVertices) {
       Config config = task.getConfig();
       Object disk = config.get("Disk");
@@ -50,8 +50,8 @@ public class TaskAttributes {
   }
 
   public Map<String, Double> getTaskCPUMap(Set<Vertex> taskVertices) {
-    Map<String, Double> taskCPUMap = new HashMap<>();
 
+    Map<String, Double> taskCPUMap = new HashMap<>();
     for (Vertex task : taskVertices) {
       Config config = task.getConfig();
       Object cpu = config.get("Cpu");
@@ -63,8 +63,8 @@ public class TaskAttributes {
   }
 
   public int getTotalNumberOfInstances(Set<Vertex> iTaskSet) {
-    HashMap<String, Integer> parallelTaskMap = getParallelTaskMap(iTaskSet);
 
+    HashMap<String, Integer> parallelTaskMap = getParallelTaskMap(iTaskSet);
     int totalNumberOfInstances = 0;
     for (int instances : parallelTaskMap.values()) {
       totalNumberOfInstances += instances;
@@ -73,8 +73,8 @@ public class TaskAttributes {
   }
 
   public HashMap<String, Integer> getParallelTaskMap(Set<Vertex> iTaskSet) {
-    HashMap<String, Integer> parallelTaskMap = new HashMap<>();
 
+    HashMap<String, Integer> parallelTaskMap = new HashMap<>();
     try {
       for (Vertex task : iTaskSet) {
         String taskName = task.getName();
