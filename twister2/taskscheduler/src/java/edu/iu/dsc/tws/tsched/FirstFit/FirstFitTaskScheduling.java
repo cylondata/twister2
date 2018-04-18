@@ -79,6 +79,7 @@ public class FirstFitTaskScheduling implements TaskSchedule {
   //Newly added
   private Set<Vertex> taskVertexSet = new HashSet<>();
   private TaskAttributes taskAttributes = new TaskAttributes();
+  private WorkerPlan workerplan = new WorkerPlan();
 
   @Override
   public void initialize(TaskConfig configValue, Job jobObject) {
@@ -134,7 +135,11 @@ public class FirstFitTaskScheduling implements TaskSchedule {
         + "CPUValue:" + this.maximumContainerResourceValue.getCpu());
   }
 
-
+  /**
+   * This method initialize the config values received from the user and set
+   * the default instance value and container maximum value.
+   * @param cfg1
+   */
   public void initialize(Config cfg1) {
     this.cfg = cfg1;
 
@@ -146,9 +151,9 @@ public class FirstFitTaskScheduling implements TaskSchedule {
     this.instanceCPU = Double.parseDouble(cfg.getStringValue("INSTANCE_CPU"))
         * DEFAULT_NUMBER_INSTANCES_PER_CONTAINER;*/
 
-    this.instanceRAM = 4096.0;
-    this.instanceDisk = 2000.0;
-    this.instanceCPU = 10.0;
+    this.instanceRAM = 1024.0;
+    this.instanceDisk = 1000.0;
+    this.instanceCPU = 5.0;
 
     LOG.info("Instance default values:" + "RamValue:" + instanceRAM + "\t"
         + "DiskValue:" + instanceDisk + "\t" + "CPUValue:" + instanceCPU);
@@ -162,9 +167,13 @@ public class FirstFitTaskScheduling implements TaskSchedule {
     this.instanceCPU = this.defaultResourceValue.getCpu()
         * DEFAULT_NUMBER_INSTANCES_PER_CONTAINER;
 
-    //this.maximumContainerResourceValue = new Resource(instanceRAM, instanceDisk, instanceCPU);
-
     this.paddingPercentage = DEFAULT_CONTAINER_PADDING_PERCENTAGE;
+
+    /*Worker worker = workerplan.getWorker(0);
+    this.maximumContainerResourceValue = new Resource(
+        (double) Math.round(TaskScheduleUtils.increaseBy(worker.getRam(), paddingPercentage)),
+        (double) Math.round(TaskScheduleUtils.increaseBy(worker.getCpu(), paddingPercentage)),
+        (double) Math.round(TaskScheduleUtils.increaseBy(worker.getCpu(), paddingPercentage)));*/
 
     this.maximumContainerResourceValue = new Resource(
         (double) Math.round(TaskScheduleUtils.increaseBy(instanceRAM, paddingPercentage)),
@@ -183,14 +192,15 @@ public class FirstFitTaskScheduling implements TaskSchedule {
         .setContainerMaximumResourceValue(maximumContainerResourceValue)
         .setInstanceDefaultResourceValue(defaultResourceValue)
         .setRequestedContainerPadding(paddingPercentage)
-        .setTaskRamMap(taskAttributes.getTaskRamMap(this.taskVertexSet));
-        //.setTaskDiskMap(taskAttributes.getTaskDiskMap(this.taskVertexSet))
-        //.setTaskCpuMap(taskAttributes.getTaskCPUMap(this.taskVertexSet));
+        .setTaskRamMap(taskAttributes.getTaskRamMap(this.taskVertexSet))
+        .setTaskDiskMap(taskAttributes.getTaskDiskMap(this.taskVertexSet))
+        .setTaskCpuMap(taskAttributes.getTaskCPUMap(this.taskVertexSet));
   }
 
   @Override
   public TaskSchedulePlan schedule(DataFlowTaskGraph dataFlowTaskGraph, WorkerPlan workerPlan) {
     this.taskVertexSet = dataFlowTaskGraph.getTaskVertexSet();
+    this.workerplan = workerPlan;
     TaskSchedulePlanBuilder taskSchedulePlanBuilder = newTaskSchedulingPlanBuilder(null);
     try {
       taskSchedulePlanBuilder = FirstFitFTaskSchedulingAlgorithm(taskSchedulePlanBuilder);
@@ -198,6 +208,7 @@ public class FirstFitTaskScheduling implements TaskSchedule {
       throw new TaskSchedulerException(
           "Couldn't allocate all instances to task schedule plan", te);
     }
+    LOG.info("Total Containers Size:" + taskSchedulePlanBuilder.getContainers().size());
     return taskSchedulePlanBuilder.build();
   }
 
@@ -245,7 +256,7 @@ public class FirstFitTaskScheduling implements TaskSchedule {
       //taskSchedulePlanBuilder.addInstance(taskName);
       taskSchedulePlanBuilder.addInstance(new ContainerIdScorer(), taskName);
     } catch (TaskSchedulerException e) {
-      LOG.info("Caught exception and increase the containers:" + numContainers);
+      //LOG.info("Caught exception and increase the containers:" + numContainers);
       taskSchedulePlanBuilder.updateNumContainers(++numContainers);
       taskSchedulePlanBuilder.addInstance(numContainers, taskName);
     }

@@ -75,8 +75,8 @@ public class TaskSchedulePlanBuilder {
     this.numContainers = 0;
     this.requestedContainerPadding = 0;
     this.taskRamMap = new HashMap<>();
-    /*this.taskDiskMap = new HashMap<>();
-    this.taskCpuMap = new HashMap<>();*/
+    this.taskDiskMap = new HashMap<>();
+    this.taskCpuMap = new HashMap<>();
   }
 
 
@@ -102,7 +102,7 @@ public class TaskSchedulePlanBuilder {
     return this;
   }
 
-  /*public Map<String, Double> getTaskDiskMap() {
+  public Map<String, Double> getTaskDiskMap() {
     return taskDiskMap;
   }
 
@@ -118,7 +118,7 @@ public class TaskSchedulePlanBuilder {
   public TaskSchedulePlanBuilder setTaskCpuMap(Map<String, Double> taskcpuMap) {
     this.taskCpuMap = taskcpuMap;
     return this;
-  }*/
+  }
 
   public int getJobId() {
     return id;
@@ -200,9 +200,6 @@ public class TaskSchedulePlanBuilder {
     container.add(taskInstancePlan);
     String taskName = taskInstancePlan.getTaskName();
 
-    LOG.info("task name details:" + taskName + "\t" + taskInstancePlan.getTaskId()
-        + "\t" + taskInstancePlan.getTaskIndex());
-
     if (taskIndexes.get(taskName) == null) {
       taskIndexes.put(taskName, new TreeSet<>());
     }
@@ -217,8 +214,6 @@ public class TaskSchedulePlanBuilder {
     Integer taskId = taskIds.isEmpty() ? 1 : taskIds.last() + 1;
     Integer taskIndex = taskIndexes.get(taskName) != null
         ? taskIndexes.get(taskName).last() + 1 : 0;
-
-    LOG.info("Task Name:" + taskName + ":Task Index:" + taskIndex + ":Task Id:" + taskId);
     TaskInstanceId taskInstanceId = new TaskInstanceId(taskName, taskId, taskIndex);
     Resource resource = TaskScheduleUtils.getResourceRequirement(
         taskName, this.taskRamMap, this.instanceDefaultResourceValue,
@@ -233,8 +228,8 @@ public class TaskSchedulePlanBuilder {
           "Insufficient container resources to add instance %s with resources %s to container %d.",
           taskInstanceId, resource, containerId), e);
     }
-    LOG.info(String.format("Added to container %d instance %s", containerId,
-        taskInstanceId.getTaskName()));
+    LOG.info(String.format("Added to container %d task instance %s task index %s ", containerId,
+        taskInstanceId.getTaskName(), taskInstanceId.getTaskIndex()));
     return this;
   }
 
@@ -251,11 +246,9 @@ public class TaskSchedulePlanBuilder {
     for (Container container : sortContainers(scorers, this.containers.values())) {
       try {
         addInstance(container.getContainerId(), taskName);
-        LOG.info("Resource Container Id and Task Name:"
-            + container.getContainerId() + "\t" + taskName + "\n");
         return container.getContainerId();
       } catch (TaskSchedulerException e) {
-        e.printStackTrace();
+        //e.printStackTrace();
       }
     }
     throw new TaskSchedulerException(String.format(
@@ -275,12 +268,12 @@ public class TaskSchedulePlanBuilder {
 
   public TaskSchedulePlan build() {
     assertResourceSettings();
-    /*Set<TaskSchedulePlan.ContainerPlan> containerPlans = buildContainerPlans(
-        this.containers, this.taskRamMap, this.taskDiskMap, this.taskCpuMap,
-        this.instanceDefaultResourceValue, this.requestedContainerPadding);*/
     Set<TaskSchedulePlan.ContainerPlan> containerPlans = buildContainerPlans(
+        this.containers, this.taskRamMap, this.taskDiskMap, this.taskCpuMap,
+        this.instanceDefaultResourceValue, this.requestedContainerPadding);
+    /*Set<TaskSchedulePlan.ContainerPlan> containerPlans = buildContainerPlans(
         this.containers, this.taskRamMap, this.instanceDefaultResourceValue,
-        this.requestedContainerPadding);
+        this.requestedContainerPadding);*/
     return new TaskSchedulePlan(id, containerPlans);
   }
 
@@ -335,8 +328,6 @@ public class TaskSchedulePlanBuilder {
     this.taskIds = taskids;
     this.taskIndexes = taskindexes;
     this.containers = containerMap;
-    LOG.info("ResourceContainer size value is:" + containers.size()
-        + "\t" + this.taskIds + "\t" + this.taskIndexes);
   }
 
   private void initContainer(int containerId) {
