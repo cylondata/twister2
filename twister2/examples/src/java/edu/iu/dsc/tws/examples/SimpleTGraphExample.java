@@ -50,12 +50,6 @@ import edu.iu.dsc.tws.task.graph.DataflowTGraphParser;
 import edu.iu.dsc.tws.task.graph.DataflowTaskGraphGenerator;
 import edu.iu.dsc.tws.task.graph.Edge;
 import edu.iu.dsc.tws.task.graph.TaskGraphMapper;
-import edu.iu.dsc.tws.tsched.FirstFit.FirstFitTaskScheduling;
-import edu.iu.dsc.tws.tsched.RoundRobin.RoundRobinTaskScheduling;
-import edu.iu.dsc.tws.tsched.spi.common.TaskConfig;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
-import edu.iu.dsc.tws.tsched.utils.Job;
-import edu.iu.dsc.tws.tsched.utils.Task;
 /**
  * This is the task graph generation class with input and output files.
  * It will be extended further to submit the job to the executor...
@@ -125,7 +119,7 @@ public class SimpleTGraphExample implements IContainer {
           LOG.info("parsed task set:" + parsedTaskSet);
         }
 
-        String taskSchedulingMode = "RoundRobin"; //Should come from Config file
+        /*String taskSchedulingMode = "RoundRobin"; //Should come from Config file
         Job job = new Job();
         job.setTaskLength(parsedTaskSet.size());
         job.setJob(job);
@@ -135,8 +129,6 @@ public class SimpleTGraphExample implements IContainer {
         for (int i = 0; i < parsedTaskSet.size(); i++) {
           task = new Task();
           task.setTaskName("task" + i);
-          //task.setTaskName(parsedTaskSet.getClass().getName());
-          // get the taskname from parsedtaskset
           task.setTaskCount(2);
           task.setRequiredCpu(5.0);
           task.setRequiredDisk(100.0);
@@ -151,31 +143,20 @@ public class SimpleTGraphExample implements IContainer {
             TaskConfig config =
                 new TaskConfig();
             RoundRobinTaskScheduling roundRobinTaskScheduling = new RoundRobinTaskScheduling();
-            //roundRobinTaskScheduling.initialize(config, job);
+            roundRobinTaskScheduling.initialize(config, job);
             taskSchedulePlan = roundRobinTaskScheduling.tschedule();
           } else if ("FirstFit".equals(taskSchedulingMode)) {
             TaskConfig config =
                 new TaskConfig();
             FirstFitTaskScheduling firstFitTaskScheduling = new FirstFitTaskScheduling();
-            //firstFitTaskScheduling.initialize(config, job);
+            firstFitTaskScheduling.initialize(config, job);
             taskSchedulePlan = firstFitTaskScheduling.tschedule();
           }
         } catch (Exception ee) {
           ee.printStackTrace();
-        }
+        }*/
       }
-
-      //parsedTaskSet = executionGraph.parseTaskGraph(dataflowTaskGraphGenerator);
-      /*if (!parsedTaskSet.isEmpty()) {
-        executionGraph = new ExecutionGraph(parsedTaskSet);
-        String message = executionGraph.generateExecutionGraph(containerId);
-        //String message = executionGraph.generateExecutionGraph(containerId, parsedTaskSet);
-        TaskExecutorFixedThread taskExecutionGraph =
-            executionGraph.generateExecutionGraph(containerId, parsedTaskSet);
-        //LOG.info(message);
-      } */
     }
-
   }
 
   /**

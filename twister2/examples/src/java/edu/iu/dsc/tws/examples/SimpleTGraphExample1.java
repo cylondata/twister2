@@ -146,8 +146,8 @@ public class SimpleTGraphExample1 implements IContainer {
       LOG.info("Generated Dataflow Task Graph Is:" + dataFlowTaskGraph.getTaskVertexSet());
 
       if (containerId == 0) { //For running the task scheduling once
-        String schedulingMode = "RoundRobin";
-        //String schedulingMode = "FirstFit";
+        //String schedulingMode = "RoundRobin";
+        String schedulingMode = "FirstFit";
         if (dataFlowTaskGraph != null) {
           //if (cfg.get("SchedulingMode").equals("Round Robin")) {
           if ("RoundRobin".equals(schedulingMode)) {
