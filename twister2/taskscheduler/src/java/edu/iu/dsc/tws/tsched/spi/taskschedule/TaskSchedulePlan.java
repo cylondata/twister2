@@ -48,31 +48,13 @@ public class TaskSchedulePlan {
     Double maxRam = 0.0;
     Double maxDisk = 0.0;
 
-    LOG.info("------------------------------------------------");
     for (ContainerPlan containerPlan : getContainers()) {
       Resource containerResource =
           containerPlan.getScheduledResource().or(containerPlan.getRequiredResource());
       maxCpu = Math.max(maxCpu, containerResource.getCpu());
       maxRam = Math.max(maxRam, containerResource.getRam());
       maxDisk = Math.max(maxDisk, containerResource.getDisk());
-
-      LOG.info("Maximum Ram Value:" + containerResource.getRam() + "\t"
-          + containerResource.getDisk() + "\t"
-          + containerResource.getCpu());
-
-      /*if (maxRam > containerResource.getRam()) {
-        resourceRam = maxRam;
-      } else {
-        resourceRam = containerResource.getRam();
-      }
-
-      if (maxDisk > containerResource.getDisk()) {
-        resourceDisk = maxDisk;
-      } else {
-        resourceDisk = containerResource.getDisk();
-      }*/
     }
-    //return new Resource(maxCpu, resourceRam, resourceDisk);
     return new Resource(maxRam, maxDisk, maxCpu);
   }
 
@@ -120,11 +102,6 @@ public class TaskSchedulePlan {
     }
 
     TaskSchedulePlan that = (TaskSchedulePlan) o;
-
-    /*if (jobId != that.jobId) {
-      return false;
-    }
-    return containers.equals(that.containers);*/
 
     return (getJobId() == that.getJobId())
         && getContainers().equals(that.getContainers());
@@ -269,5 +246,3 @@ public class TaskSchedulePlan {
     }
   }
 }
-
-
