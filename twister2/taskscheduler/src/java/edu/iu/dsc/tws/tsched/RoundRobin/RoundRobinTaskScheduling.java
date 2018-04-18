@@ -122,7 +122,7 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
       }
 
       LOG.info(String.format("Container id:" + containerId
-          + "\tand allocated resource values\t"
+          + "\tand the allocated resource values\t"
           + "ram:" + containerRAMValue.get() + "\t"
           + "disk:" + containerCPUValue.get() + "\t"
           + "cpu:" + containerCPUValue.get()));

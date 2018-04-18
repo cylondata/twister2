@@ -26,12 +26,6 @@ public class RoundRobinScheduling {
 
   private static final Logger LOG = Logger.getLogger(RoundRobinScheduling.class.getName());
 
-  private static final double DEFAULT_DISK_PADDING_PER_CONTAINER = 12;
-  private static final double DEFAULT_CPU_PADDING_PER_CONTAINER = 1;
-  private static final double MIN_RAM_PER_INSTANCE = 180;
-  private static final double DEFAULT_RAM_PADDING_PER_CONTAINER = 2;
-  private static final double NOT_SPECIFIED_NUMBER_VALUE = -1;
-
   protected RoundRobinScheduling() {
   }
 
@@ -46,7 +40,6 @@ public class RoundRobinScheduling {
     TaskAttributes taskAttributes = new TaskAttributes();
     Map<Integer, List<InstanceId>> roundrobinAllocation = new HashMap<>();
     try {
-      //int numberOfContainers = workerPlan.getNumberOfWorkers();
       int totalInstances = taskAttributes.getTotalNumberOfInstances(taskVertexSet);
       Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
       LOG.info(String.format("Number of Containers:" + numberOfContainers
