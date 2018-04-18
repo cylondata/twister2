@@ -49,12 +49,13 @@ public class RoundRobinScheduling {
       //int numberOfContainers = workerPlan.getNumberOfWorkers();
       int totalInstances = taskAttributes.getTotalNumberOfInstances(taskVertexSet);
       Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
-      LOG.info("Number of Containers:" + numberOfContainers
-          + "\t" + "number of instances:" + totalInstances);
+      LOG.info(String.format("Number of Containers:" + numberOfContainers
+          + "\t" + "Number of Task Instances:" + totalInstances));
       for (int i = 1; i <= numberOfContainers; i++) {
         roundrobinAllocation.put(i, new ArrayList<InstanceId>());
       }
-      LOG.info("RR Map Before Allocation\t" + roundrobinAllocation);
+      LOG.info(String.format("Container Map Values Before Allocation\t" + roundrobinAllocation));
+      LOG.info("\n");
       for (String task : parallelTaskMap.keySet()) {
         int numberOfInstances = parallelTaskMap.get(task);
         for (int i = 0; i < numberOfInstances; i++) {
@@ -64,12 +65,11 @@ public class RoundRobinScheduling {
           } else {
             taskIndex = 1;
           }
-          LOG.info("Task Id, Task Index, and Number of containers:\t" + taskIndex
-              + "\t" + numberOfContainers);
           globalTaskIndex += 1;
         }
       }
-      LOG.info("RR Map After Allocation\t" + roundrobinAllocation);
+      LOG.info(String.format("Container Map Values After Allocation\t" + roundrobinAllocation));
+      LOG.info("\n");
     } catch (NullPointerException ne) {
       ne.printStackTrace();
     }

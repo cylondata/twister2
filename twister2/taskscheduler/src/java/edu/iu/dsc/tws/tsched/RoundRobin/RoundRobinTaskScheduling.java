@@ -25,8 +25,8 @@ import edu.iu.dsc.tws.task.graph.Vertex;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.InstanceId;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.InstanceMapCalculation;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.Resource;
+import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskInstanceMapCalculation;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedule;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
@@ -74,8 +74,8 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
         RoundRobinScheduling.RoundRobinSchedulingAlgorithm(taskVertexSet,
             workerPlan.getNumberOfWorkers());
 
-    InstanceMapCalculation instanceMapCalculation = new InstanceMapCalculation(instanceRAM,
-        instanceCPU, instanceDisk);
+    TaskInstanceMapCalculation instanceMapCalculation = new TaskInstanceMapCalculation(
+        instanceRAM, instanceCPU, instanceDisk);
 
     Map<Integer, Map<InstanceId, Double>> instancesRamMap =
         instanceMapCalculation.getInstancesRamMapInContainer(roundRobinContainerInstanceMap,
@@ -106,9 +106,9 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
         double instanceDiskValue = instancesDiskMap.get(containerId).get(id);
         double instanceCPUValue = instancesCPUMap.get(containerId).get(id);
 
-        LOG.info("Task Id and Index\t" + id.getTaskId() + "\t" + id.getTaskIndex() + "\t"
-            + "and its instance required resource values:" + instanceRAMValue + "\t"
-            + instanceDiskValue + "\t" + instanceCPUValue);
+        LOG.info(String.format("Task Id and Index\t" + id.getTaskId() + "\t" + id.getTaskIndex()
+            + "\tand Required Resource:" + instanceRAMValue + "\t"
+            + instanceDiskValue + "\t" + instanceCPUValue));
 
         Resource instanceResource = new Resource(instanceRAMValue,
             instanceDiskValue, instanceCPUValue);
@@ -121,15 +121,17 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
         containerCPUValue.updateAndGet(v -> v + instanceCPUValue);
       }
 
-      LOG.info("Container id:" + containerId + "and the allocated total task instance values,"
+      LOG.info(String.format("Container id:" + containerId
+          + "\tand allocated resource values\t"
           + "ram:" + containerRAMValue.get() + "\t"
           + "disk:" + containerCPUValue.get() + "\t"
-          + "cpu:" + containerCPUValue.get());
+          + "cpu:" + containerCPUValue.get()));
 
       Worker worker = workerPlan.getWorker(containerId);
 
-      LOG.info("worker values:" + workerPlan.getNumberOfWorkers()
-          + "Ram:" + worker.getRam() + "Disk:" + worker.getDisk() + "Cpu:" + worker.getCpu());
+      LOG.info(String.format("Worker values:" + workerPlan.getNumberOfWorkers()
+          + "\tRam:" + worker.getRam() + "\tDisk:" + worker.getDisk()
+          + "\tCpu:" + worker.getCpu()));
 
       Resource containerResource = new Resource((double) worker.getRam(),
           (double) worker.getDisk(), (double) worker.getCpu());

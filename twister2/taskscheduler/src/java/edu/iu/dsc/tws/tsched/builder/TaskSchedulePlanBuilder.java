@@ -470,15 +470,17 @@ public class TaskSchedulePlanBuilder {
           }
           containerCPUValue += instanceCPUValue;
 
-          LOG.info("Required Container Values:" + "Ram Value:" + containerRAMValue + "\t"
-              + "Disk Value:" + containerDiskValue + "\t" + "Cpu Value:" + containerCPUValue);
+          LOG.info(String.format("Required Resource Values for Task Instance:"
+              + taskInstancePlan.getTaskName() + "--Task Index("
+              + taskInstancePlan.getTaskIndex() + ")" + "\tRam Value:" + containerRAMValue
+              + "\tDisk Value:" + containerDiskValue + "\tCpu Value:" + containerCPUValue));
 
           Resource resource = new Resource(instanceRAMValue, instanceDiskValue, instanceCPUValue);
           taskInstancePlans.add(new TaskSchedulePlan.TaskInstancePlan(instanceId.getTaskName(),
               instanceId.getTaskId(), instanceId.getTaskIndex(), resource));
         }
 
-        LOG.info("Total Container Resource Value:" + containerId + "\t"
+        LOG.info("Total Required Resource Value for:" + containerId + "\t"
             + containerRAMValue + "\t" + containerDiskValue + "\t" + containerCPUValue);
 
         containerCPUValue += (requestedContainerPadding * containerCPUValue) / 100;
@@ -488,8 +490,10 @@ public class TaskSchedulePlanBuilder {
         //containerRAMValue = containerRAMValue.increaseBy(requestedContainerPadding);
         //containerDiskValue = containerDiskValue.increaseBy(requestedContainerPadding);
 
-        LOG.info("Container Values After Padding:" + "Ram Value:" + containerRAMValue + "\t"
-            + "Disk Value:" + containerDiskValue + "\t" + "Cpu Value:" + containerCPUValue);
+        LOG.info("Container" + "\t" + containerId + "Values After Padding:"
+            + "Ram Value:" + containerRAMValue + "\t"
+            + "Disk Value:" + containerDiskValue + "\t"
+            + "Cpu Value:" + containerCPUValue);
 
         Resource resource = new Resource(containerRAMValue, containerDiskValue, containerCPUValue);
         TaskSchedulePlan.ContainerPlan containerPlan =
