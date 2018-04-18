@@ -127,6 +127,8 @@ public class SimpleTGraphExample implements IContainer {
 
         String taskSchedulingMode = "RoundRobin"; //Should come from Config file
         Job job = new Job();
+        job.setTaskLength(parsedTaskSet.size());
+        job.setJob(job);
         Task[] tasklist = new Task[parsedTaskSet.size()];
         Task task = null;
         job.setJobId(containerId);
@@ -140,8 +142,8 @@ public class SimpleTGraphExample implements IContainer {
           task.setRequiredDisk(100.0);
           task.setRequiredRam(512.0);
           tasklist[i] = task;
-          job.setTasklist(tasklist);
         }
+        job.setTasklist(tasklist);
 
         TaskSchedulePlan taskSchedulePlan = null;
         try {
@@ -149,13 +151,13 @@ public class SimpleTGraphExample implements IContainer {
             TaskConfig config =
                 new TaskConfig();
             RoundRobinTaskScheduling roundRobinTaskScheduling = new RoundRobinTaskScheduling();
-            roundRobinTaskScheduling.initialize(config, job);
+            //roundRobinTaskScheduling.initialize(config, job);
             taskSchedulePlan = roundRobinTaskScheduling.tschedule();
           } else if ("FirstFit".equals(taskSchedulingMode)) {
             TaskConfig config =
                 new TaskConfig();
             FirstFitTaskScheduling firstFitTaskScheduling = new FirstFitTaskScheduling();
-            firstFitTaskScheduling.initialize(config, job);
+            //firstFitTaskScheduling.initialize(config, job);
             taskSchedulePlan = firstFitTaskScheduling.tschedule();
           }
         } catch (Exception ee) {
