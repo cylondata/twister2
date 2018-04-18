@@ -11,10 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -24,6 +23,7 @@ import com.google.common.collect.Table;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 import edu.iu.dsc.tws.executor.comm.ParallelOperationFactory;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import edu.iu.dsc.tws.task.api.INode;
@@ -57,17 +57,15 @@ public class DefaultExecutor implements IExecutor {
    * Communications list
    */
   private Table<String, String, Communication> parOpTable = HashBasedTable.create();
-
-  private Map<String, List<ITask>> tasksOfExecutor = new HashMap<>();
-  private Map<String, List<ISource>> sourcesOfExecutor = new HashMap<>();
-  private Map<String, List<ISink>> sinksOfExecutor = new HashMap<>();
+  private Table<String, String, Communication> sendTable = HashBasedTable.create();
+  private Table<String, String, Communication> recvTable = HashBasedTable.create();
 
   /**
    * For each task we have multiple instances
    */
   private Table<String, Integer, TaskInstance> taskInstances = HashBasedTable.create();
   private Table<String, Integer, SourceInstance> sourceInstances = HashBasedTable.create();
-  private Table<String, Integer, TaskInstance> sinkInstances = HashBasedTable.create();
+  private Table<String, Integer, SinkInstance> sinkInstances = HashBasedTable.create();
 
   private TWSNetwork network;
 
@@ -75,9 +73,14 @@ public class DefaultExecutor implements IExecutor {
 
   private TaskIdGenerator taskIdGenerator;
 
-  public DefaultExecutor(int workerId) {
-    this.workerId = workerId;
+  private KryoMemorySerializer kryoMemorySerializer;
+
+  public DefaultExecutor(ResourcePlan plan) {
+    this.workerId = plan.getThisId();
     this.executor = new FixedThreadExecutor();
+    this.taskIdGenerator = new TaskIdGenerator();
+    this.kryoMemorySerializer = new KryoMemorySerializer();
+    this.resourcePlan = plan;
   }
 
   @Override
@@ -121,6 +124,8 @@ public class DefaultExecutor implements IExecutor {
           if (!parOpTable.contains(v.getName(), e.taskEdge)) {
             parOpTable.put(v.getName(), e.taskEdge, new Communication(v.getName(),
                 e.taskEdge, srcTasks, tarTasks));
+            sendTable.put(v.getName(), e.taskEdge, new Communication(v.getName(),
+                e.taskEdge, srcTasks, tarTasks));
           }
         }
       }
@@ -139,9 +144,14 @@ public class DefaultExecutor implements IExecutor {
           if (!parOpTable.contains(parent.getName(), e.taskEdge)) {
             parOpTable.put(parent.getName(), e.taskEdge, new Communication(parent.getName(),
                 e.taskEdge, srcTasks, tarTasks));
+            recvTable.put(parent.getName(), e.taskEdge, new Communication(parent.getName(),
+                e.taskEdge, srcTasks, tarTasks));
           }
         }
       }
+
+      // lets create the instance
+      createInstances(cfg, ip, v);
     }
 
     // now lets create the queues and start the execution
@@ -152,6 +162,27 @@ public class DefaultExecutor implements IExecutor {
 
     return execution;
   }
+
+  private void createInstances(Config cfg, TaskSchedulePlan.TaskInstancePlan ip, Vertex v) {
+    // lets add the task
+    byte[] taskBytes = kryoMemorySerializer.serialize(v.getTask());
+    INode newInstance = (INode) kryoMemorySerializer.deserialize(taskBytes);
+    int taskId = taskIdGenerator.generateGlobalTaskId(v.getName(),
+        ip.getTaskId(), ip.getTaskIndex());
+    if (newInstance instanceof ITask) {
+      taskInstances.put(v.getName(), taskId, new TaskInstance((ITask) newInstance,
+          new ArrayBlockingQueue<>(1024), new ArrayBlockingQueue<>(1024), cfg));
+    } else if (newInstance instanceof ISource) {
+      sourceInstances.put(v.getName(), taskId, new SourceInstance((ISource) newInstance,
+          new ArrayBlockingQueue<>(1024), cfg));
+    } else if (newInstance instanceof ISink) {
+      sinkInstances.put(v.getName(), taskId, new SinkInstance((ISink) newInstance,
+          new ArrayBlockingQueue<>(1024), cfg));
+    } else {
+      throw new RuntimeException("Un-known type");
+    }
+  }
+
 
   private int getTaskIdOfTask(String name, TaskSchedulePlan plan) {
     for (TaskSchedulePlan.ContainerPlan cp : plan.getContainers()) {
