@@ -256,7 +256,6 @@ public class FirstFitTaskScheduling implements TaskSchedule {
       //taskSchedulePlanBuilder.addInstance(taskName);
       taskSchedulePlanBuilder.addInstance(new ContainerIdScorer(), taskName);
     } catch (TaskSchedulerException e) {
-      //LOG.info("Caught exception and increase the containers:" + numContainers);
       taskSchedulePlanBuilder.updateNumContainers(++numContainers);
       taskSchedulePlanBuilder.addInstance(numContainers, taskName);
     }

@@ -421,7 +421,7 @@ public class TaskSchedulePlanBuilder {
       Map<Integer, Container> containerValue,
       Map<String, Double> taskramMap,
       Map<String, Double> taskdiskMap,
-      Map<String, Double> taskcpumap,
+      Map<String, Double> taskcpuMap,
       Resource instdefaultresourceValue,
       int containerPadding) {
 
@@ -431,17 +431,13 @@ public class TaskSchedulePlanBuilder {
 
         Container container = containerValue.get(containerId);
 
-        LOG.info("Container Resource Value:" + containerId + "\t"
-            + container.getResource().getRam() + "\t"
-            + container.getResource().getDisk() + "\t"
-            + container.getResource().getCpu());
+        double containerRAMValue = 0.0;
+        double containerDiskValue = 0.0;
+        double containerCPUValue = 0.0;
 
         if (container.getTaskInstances().size() == 0) {
           continue;
         }
-        double containerRAMValue = 0.0;
-        double containerDiskValue = 0.0;
-        double containerCPUValue = 0.0;
 
         Set<TaskSchedulePlan.TaskInstancePlan> taskInstancePlans = new HashSet<>();
 
@@ -467,20 +463,23 @@ public class TaskSchedulePlanBuilder {
           containerDiskValue += instanceDiskValue;
 
           double instanceCPUValue;
-          if (taskcpumap.containsKey(instanceId.getTaskName())) {
-            instanceCPUValue = taskcpumap.get(instanceId.getTaskName());
+          if (taskcpuMap.containsKey(instanceId.getTaskName())) {
+            instanceCPUValue = taskcpuMap.get(instanceId.getTaskName());
           } else {
             instanceCPUValue = instdefaultresourceValue.getCpu();
           }
           containerCPUValue += instanceCPUValue;
 
           LOG.info("Resource Container Values:" + "Ram Value:" + containerRAMValue + "\t"
-              + "Cpu Value:" + containerCPUValue + "\t" + "Disk Value:" + containerDiskValue);
+              + "Disk Value:" + containerDiskValue + "\t" + "Cpu Value:" + containerCPUValue);
 
           Resource resource = new Resource(instanceRAMValue, instanceDiskValue, instanceCPUValue);
           taskInstancePlans.add(new TaskSchedulePlan.TaskInstancePlan(instanceId.getTaskName(),
               instanceId.getTaskId(), instanceId.getTaskIndex(), resource));
         }
+
+        LOG.info("Total Container Resource Value:" + containerId + "\t"
+            + containerRAMValue + "\t" + containerDiskValue + "\t" + containerCPUValue);
 
         containerCPUValue += (requestedContainerPadding * containerCPUValue) / 100;
         containerRAMValue += containerRAMValue + requestedContainerPadding;
@@ -524,7 +523,6 @@ public class TaskSchedulePlanBuilder {
       }
       containerMap.put(currentContainerPlan.getContainerId(), container);
     }
-
     LOG.info("Container Map Values Size Is:" + containerMap.entrySet());
     return containerMap;
   }
