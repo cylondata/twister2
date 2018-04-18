@@ -11,28 +11,14 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.comm;
 
-import java.util.List;
-import java.util.Map;
+import edu.iu.dsc.tws.task.api.IMessage;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
-
-public class PartitionReceiver implements MessageReceiver {
-
-
+public abstract class ParallelOperation implements IParallelOperation {
   @Override
-  public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-
+  public void send(int source, IMessage message) {
   }
 
   @Override
-  public boolean onMessage(int source, int path, int target, int flags, Object object) {
-    return false;
-  }
-
-  @Override
-  public void progress() {
-
+  public void send(int source, IMessage message, int dest) {
   }
 }

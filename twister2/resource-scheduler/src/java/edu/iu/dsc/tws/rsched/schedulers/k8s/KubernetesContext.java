@@ -50,6 +50,9 @@ public class KubernetesContext extends SchedulerContext {
   public static final String PERSISTENT_LOGGING_TYPE_DEFAULT = "system";
   public static final String PERSISTENT_LOGGING_TYPE = "persistent.logging.type";
 
+  public static final String K8S_BIND_WORKER_TO_CPU_DEFAULT = "false";
+  public static final String K8S_BIND_WORKER_TO_CPU = "kubernetes.bind.worker.to.cpu";
+
   public static int containersPerPod(Config cfg) {
     return cfg.getIntegerValue(CONTAINERS_PER_POD, CONTAINERS_PER_POD_DEFAULT);
   }
@@ -96,4 +99,9 @@ public class KubernetesContext extends SchedulerContext {
     return cfg.getStringValue(WORKER_TRANSPORT_PROTOCOL, WORKER_TRANSPORT_PROTOCOL_DEFAULT);
   }
 
+  public static boolean bindWorkerToCPU(Config cfg) {
+    String request =
+        cfg.getStringValue(K8S_BIND_WORKER_TO_CPU, K8S_BIND_WORKER_TO_CPU_DEFAULT);
+    return "true".equalsIgnoreCase(request);
+  }
 }

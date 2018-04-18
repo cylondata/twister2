@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor;
 
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
@@ -21,7 +22,7 @@ public interface IExecutor {
    * @param taskSchedule the task schedule
    * @return the execution created and null if nothing to execute
    */
-  Execution schedule(DataFlowTaskGraph taskGraph,
+  Execution schedule(Config cfg, DataFlowTaskGraph taskGraph,
                      TaskSchedulePlan taskSchedule);
 
   /**

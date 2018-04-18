@@ -11,6 +11,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.comm;
 
+import edu.iu.dsc.tws.task.api.IMessage;
+
 public interface IParallelOperation {
-  void send();
+  void send(int source, IMessage message);
+
+  void send(int source, IMessage message, int dest);
 }

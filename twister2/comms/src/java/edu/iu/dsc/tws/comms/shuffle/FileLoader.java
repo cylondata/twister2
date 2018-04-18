@@ -167,9 +167,10 @@ public final class FileLoader {
       // lets read the key values
       int totalRead = 0;
       while (totalRead < rwChannel.size()) {
+        Object key;
+        Object value;
+
         int keySize = os.getInt();
-        Object key = null;
-        Object value = null;
         key = deserialize(keyType, deserializer, os, keySize);
 
         int dataSize = os.getInt();
@@ -195,8 +196,7 @@ public final class FileLoader {
       // lets read the key values
       int totalRead = 0;
       while (totalRead < rwChannel.size()) {
-        int keySize = os.getInt();
-        Object value = null;
+        Object value;
 
         int dataSize = os.getInt();
         value = deserialize(dataType, deserializer, os, dataSize);

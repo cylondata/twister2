@@ -15,17 +15,13 @@ import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.ITask;
-import edu.iu.dsc.tws.task.api.OutputCollection;
+import edu.iu.dsc.tws.task.api.ISink;
 
-/**
- * The class represents the instance of the executing task
- */
-public class TaskInstance {
+public class SinkInstance {
   /**
    * The actual task executing
    */
-  private ITask task;
+  private ISink task;
 
   /**
    * All the inputs will come through a single queue, otherwise we need to look
@@ -34,44 +30,30 @@ public class TaskInstance {
   private BlockingQueue<IMessage> inQueue;
 
   /**
-   * Output will go throuh a single queue
-   */
-  private BlockingQueue<IMessage> outQueue;
-
-  /**
    * The configuration
    */
   private Config config;
-
-  /**
-   * The output collection to be used
-   */
-  private OutputCollection outputCollection;
 
   /**
    * The globally unique task id
    */
   private int taskId;
 
-  public TaskInstance(ITask task, BlockingQueue<IMessage> inQueue,
-                      BlockingQueue<IMessage> outQueue, Config config) {
+  public SinkInstance(ISink task, BlockingQueue<IMessage> inQueue, Config config) {
     this.task = task;
     this.inQueue = inQueue;
-    this.outQueue = outQueue;
     this.config = config;
   }
 
   public void prepare() {
-    outputCollection = new DefaultOutputCollection(outQueue);
-
-    task.prepare(config, outputCollection);
+    task.prepare(config);
   }
 
   public void execute() {
     while (!inQueue.isEmpty()) {
       IMessage m = inQueue.poll();
 
-      task.run(m);
+      task.execute(m);
     }
   }
 }

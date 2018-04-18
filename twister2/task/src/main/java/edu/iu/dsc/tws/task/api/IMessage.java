@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.task.api;
 /**
  * Wrapper interface for all the messages types.
  */
-public interface Message {
+public interface IMessage {
   /**
    * Returns the content of the message
    * @return content of the message

@@ -39,7 +39,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.task.api.Message;
+import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.Queue;
 import edu.iu.dsc.tws.task.api.Task;
 import edu.iu.dsc.tws.task.api.TaskExecutor;
@@ -53,7 +53,7 @@ public class RunnableFixedTask implements Runnable {
   private static final Logger LOG = Logger.getLogger(RunnableFixedTask.class.getName());
 
   private Task executableTask;
-  private Queue<Message> queueRef;
+  private Queue<IMessage> queueRef;
   private List<Integer> outQueues;
   private boolean isMessageBased = false;
   private int messageProcessLimit = 1;
@@ -77,7 +77,7 @@ public class RunnableFixedTask implements Runnable {
   }
 
   //TODO: would it better to send a referance to the queue and then use that to get the message?
-  public RunnableFixedTask(Task task, Queue<Message> msg, TaskExecutor taskExec,
+  public RunnableFixedTask(Task task, Queue<IMessage> msg, TaskExecutor taskExec,
                            List<Integer> outputQueues) {
     this.executableTask = task;
     this.queueRef = msg;
@@ -86,7 +86,7 @@ public class RunnableFixedTask implements Runnable {
     this.outQueues = outputQueues;
   }
 
-  public RunnableFixedTask(Task task, Queue<Message> msg, int messageLimit,
+  public RunnableFixedTask(Task task, Queue<IMessage> msg, int messageLimit,
                            TaskExecutor taskExec, List<Integer> outputQueues) {
     this.executableTask = task;
     this.queueRef = msg;
@@ -128,11 +128,11 @@ public class RunnableFixedTask implements Runnable {
     this.messageProcessLimit = messageProcessLimit;
   }
 
-  public Queue<Message> getQueueRef() {
+  public Queue<IMessage> getQueueRef() {
     return queueRef;
   }
 
-  public void setQueueRef(Queue<Message> queueRef) {
+  public void setQueueRef(Queue<IMessage> queueRef) {
     this.queueRef = queueRef;
   }
 
@@ -144,7 +144,7 @@ public class RunnableFixedTask implements Runnable {
     LOG.info(String.format("Runnable task %d limit %d", executableTask.taskId(),
         messageProcessLimit));
 
-    Message result;
+    IMessage result;
     if (isMessageBased) {
       //TODO: check if this part needs to be synced
       while (!queueRef.isEmpty()) {
@@ -185,7 +185,7 @@ public class RunnableFixedTask implements Runnable {
   /**
    * Submits the message from the execute method into the specified output queues
    */
-  public void submitToOutputQueue(Message result) {
+  public void submitToOutputQueue(IMessage result) {
     for (Integer outQueue : outQueues) {
       taskExecutor.submitMessage(outQueue, result.getContent());
     }

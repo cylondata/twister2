@@ -11,6 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor;
 
+import java.util.HashSet;
+import java.util.Set;
+
+import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.task.graph.Vertex;
+
 /**
  * This is a global task id generator depending on the taskId, task index and task name
  */
@@ -25,5 +31,16 @@ public class TaskIdGenerator {
    */
   public int generateGlobalTaskId(String taskName, int taskId, int taskIndex) {
     return taskId * 100000 + taskIndex;
+  }
+
+  public Set<Integer> getTaskIds(String taskName, int taskId, DataFlowTaskGraph graph) {
+    Vertex v = graph.vertex(taskName);
+    int parallel = v.getParallelism();
+
+    Set<Integer> sources = new HashSet<>();
+    for (int i = 0; i < parallel; i++) {
+      sources.add(generateGlobalTaskId(taskName, taskId, i));
+    }
+    return sources;
   }
 }

@@ -17,7 +17,7 @@ import java.util.Map;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 
-public interface IFunction {
+public interface IFunction extends INode {
   void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds);
 
   /**

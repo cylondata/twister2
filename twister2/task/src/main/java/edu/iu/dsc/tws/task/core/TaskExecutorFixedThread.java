@@ -23,7 +23,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
-import edu.iu.dsc.tws.task.api.Message;
+import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.Queue;
 import edu.iu.dsc.tws.task.api.Task;
 import edu.iu.dsc.tws.task.api.TaskExecutor;
@@ -55,7 +55,7 @@ public class TaskExecutorFixedThread implements TaskExecutor {
    * Hashmap that contains all the input and output queues of the executor and its associated
    * tasks
    */
-  private Map<Integer, Queue<Message>> queues = new HashMap<Integer, Queue<Message>>();
+  private Map<Integer, Queue<IMessage>> queues = new HashMap<Integer, Queue<IMessage>>();
 
   /**
    * Reverse mapping which maps each queue id to its input task
@@ -104,7 +104,7 @@ public class TaskExecutorFixedThread implements TaskExecutor {
    * Method used to register new queues
    */
   public <T> boolean registerTaskQueue(int qid, int taskId, ExecutorContext.QueueType type,
-                                       Queue<Message> queue) {
+                                       Queue<IMessage> queue) {
     registerQueue(qid, queue);
     if (type == ExecutorContext.QueueType.INPUT) {
       if (!taskInputQueues.containsKey(taskId)) {
@@ -139,7 +139,7 @@ public class TaskExecutorFixedThread implements TaskExecutor {
     }
   }
 
-  public boolean registerQueue(int qid, Queue<Message> queue) {
+  public boolean registerQueue(int qid, Queue<IMessage> queue) {
 
     queues.put(qid, queue);
     queuexTaskInput.put(qid, new ArrayList<>());

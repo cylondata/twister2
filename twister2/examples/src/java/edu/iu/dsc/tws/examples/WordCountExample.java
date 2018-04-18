@@ -23,7 +23,7 @@ import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
-import edu.iu.dsc.tws.task.api.Message;
+import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.SinkTask;
 import edu.iu.dsc.tws.task.api.SourceTask;
 
@@ -63,7 +63,7 @@ public class WordCountExample implements IContainer {
   private class Mapper extends SourceTask<MapperSource> {
     private static final long serialVersionUID = 3233011943332591934L;
     @Override
-    public Message execute() {
+    public IMessage execute() {
       try {
         InputFormat<String, FileInputSplit> txtInput = getInputSource().getInputFormat();
         FileInputSplit inputSplits = (FileInputSplit) getInputSource().getInputSplit();
@@ -77,7 +77,7 @@ public class WordCountExample implements IContainer {
     }
 
     @Override
-    public Message execute(Message content) {
+    public IMessage execute(IMessage content) {
       return null;
     }
 
@@ -90,12 +90,12 @@ public class WordCountExample implements IContainer {
   private class Reducer extends SinkTask<FileWriter> {
     private static final long serialVersionUID = 3233011943332591934L;
     @Override
-    public Message execute() {
+    public IMessage execute() {
       return null;
     }
 
     @Override
-    public Message execute(Message content) {
+    public IMessage execute(IMessage content) {
       return null;
     }
 

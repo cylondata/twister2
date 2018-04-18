@@ -38,13 +38,14 @@ public final class TaskScheduleUtils {
       instanceDisk = componentRamMap.get(taskName);
       instanceCpu = componentRamMap.get(taskName);
     }
-    assertIsValidInstance(defaultInstanceResource.cloneWithRam(instanceRam),
-        MIN_RAM_PER_INSTANCE, maxContainerResource, paddingPercentage);
-
     /*assertIsValidInstance(defaultInstanceResource.cloneWithRam(
         instanceRam, instanceDisk, instanceCpu),
-        MIN_RAM_PER_INSTANCE, maxContainerResource, paddingPercentage);*/
-    return defaultInstanceResource.cloneWithRam(instanceRam, instanceDisk, instanceCpu);
+        MIN_RAM_PER_INSTANCE, maxContainerResource, paddingPercentage);
+    return defaultInstanceResource.cloneWithRam(instanceRam, instanceDisk, instanceCpu);*/
+
+    assertIsValidInstance(defaultInstanceResource.cloneWithRam(instanceRam),
+        MIN_RAM_PER_INSTANCE, maxContainerResource, paddingPercentage);
+    return defaultInstanceResource.cloneWithRam(instanceRam);
   }
 
   private static void assertIsValidInstance(Resource instanceResources,

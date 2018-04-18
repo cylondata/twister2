@@ -11,16 +11,26 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.comm;
 
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.core.TWSCommunication;
-import edu.iu.dsc.tws.comms.core.TWSNetwork;
+import java.util.Set;
 
-public class CommunicationFactory {
+import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.core.TWSNetwork;
+import edu.iu.dsc.tws.data.api.DataType;
+
+public class ParallelOperationFactory {
   private TWSNetwork network;
 
-  private TWSCommunication comm;
+  public ParallelOperationFactory(TWSNetwork network) {
+    this.network = network;
+  }
 
-  public DataFlowOperation build(String operation) {
+  public DataFlowOperation build(String operation, Set<String> sources, Set<String> dests,
+                                 DataType dataType) {
+    return null;
+  }
+
+  public DataFlowOperation build(String operation, Set<String> sources, Set<String> dests,
+                                 DataType dataType, DataType keyType) {
     return null;
   }
 }
