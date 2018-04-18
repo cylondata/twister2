@@ -470,7 +470,7 @@ public class TaskSchedulePlanBuilder {
           }
           containerCPUValue += instanceCPUValue;
 
-          LOG.info("Resource Container Values:" + "Ram Value:" + containerRAMValue + "\t"
+          LOG.info("Required Container Values:" + "Ram Value:" + containerRAMValue + "\t"
               + "Disk Value:" + containerDiskValue + "\t" + "Cpu Value:" + containerCPUValue);
 
           Resource resource = new Resource(instanceRAMValue, instanceDiskValue, instanceCPUValue);
@@ -487,6 +487,9 @@ public class TaskSchedulePlanBuilder {
 
         //containerRAMValue = containerRAMValue.increaseBy(requestedContainerPadding);
         //containerDiskValue = containerDiskValue.increaseBy(requestedContainerPadding);
+
+        LOG.info("Container Values After Padding:" + "Ram Value:" + containerRAMValue + "\t"
+            + "Disk Value:" + containerDiskValue + "\t" + "Cpu Value:" + containerCPUValue);
 
         Resource resource = new Resource(containerRAMValue, containerDiskValue, containerCPUValue);
         TaskSchedulePlan.ContainerPlan containerPlan =

@@ -22,7 +22,6 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.Vertex;
-import edu.iu.dsc.tws.tsched.spi.common.TaskConfig;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.InstanceId;
@@ -30,7 +29,6 @@ import edu.iu.dsc.tws.tsched.spi.taskschedule.InstanceMapCalculation;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.Resource;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedule;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
-import edu.iu.dsc.tws.tsched.utils.Job;
 
 public class RoundRobinTaskScheduling implements TaskSchedule {
 
@@ -39,8 +37,6 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
   private static final double DEFAULT_DISK_PADDING_PER_CONTAINER = 12;
   private static final double DEFAULT_CPU_PADDING_PER_CONTAINER = 1;
   private static final double DEFAULT_RAM_PADDING_PER_CONTAINER = 2;
-  private static final double MIN_RAM_PER_INSTANCE = 180;
-  private static final double NOT_SPECIFIED_NUMBER_VALUE = -1;
 
   private Double instanceRAM;
   private Double instanceDisk;
@@ -48,21 +44,7 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
 
   private Resource containerMaximumResource;
   private Resource defaultResource;
-  private Job job;
   private Config cfg;
-
-  @Override
-  public void initialize(TaskConfig configVal, Job jobObject) {
-    this.job = jobObject;
-  }
-
-  @Override
-  public void initialize(Job jobObject) {
-    this.job = jobObject;
-    this.instanceRAM = TaskConfig.containerMaxRAMValue;
-    this.instanceCPU = TaskConfig.containerMaxCpuValue;
-    this.instanceDisk = TaskConfig.containerMaxDiskValue;
-  }
 
   @Override
   public void initialize(Config cfg1) {
