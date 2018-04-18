@@ -21,6 +21,8 @@ import com.google.common.collect.Table;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
+import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.ISource;
@@ -62,6 +64,10 @@ public class DefaultExecutor implements IExecutor {
   private Table<String, Integer, TaskInstance> sinkInstances = HashBasedTable.create();
 
   private TWSNetwork network;
+
+  private ResourcePlan resourcePlan;
+
+  private TaskIdGenerator taskIdGenerator;
 
   public DefaultExecutor(int workerId) {
     this.workerId = workerId;
@@ -117,7 +123,7 @@ public class DefaultExecutor implements IExecutor {
     }
 
     // we need to build the task plan
-
+    TaskPlan taskPlan = TaskPlanBuilder.build(resourcePlan, taskSchedule, taskIdGenerator);
 
     // now lets create the queues and start the execution
     Execution execution = new Execution();

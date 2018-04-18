@@ -20,19 +20,16 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.mpi.MPIDataFlowPartition;
+import edu.iu.dsc.tws.comms.mpi.TWSMPIChannel;
 import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.executor.EdgeGenerator;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
 
-public class PartitionOperation {
-  private MPIDataFlowPartition partition;
-
+public class PartitionOperation extends ParallelOperation {
   private Config config;
-
-  private TWSNetwork network;
 
   private TWSChannel channel;
 
@@ -42,23 +39,26 @@ public class PartitionOperation {
 
   private TaskPlan taskPlan;
 
-  private int edge;
+  private EdgeGenerator edge;
 
-  public PartitionOperation(Config config, TWSNetwork network, TaskPlan tPlan,
+  private int partitionEdge;
+
+  public PartitionOperation(Config config, TWSMPIChannel network, TaskPlan tPlan,
                             BlockingQueue<IMessage> outMsgs) {
     this.config = config;
-    this.network = network;
     this.taskPlan = tPlan;
     this.outMessages = outMsgs;
+    this.channel = network;
   }
 
-  public void prepare(Set<Integer> srcs, Set<Integer> dests, int e,
+  public void prepare(Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
                       DataType dataType, DataType keyType) {
     this.edge = e;
     op = new MPIDataFlowPartition(channel, srcs, dests, new PartitionReceiver(),
         MPIDataFlowPartition.PartitionStratergy.DIRECT,
         Utils.dataTypeToMessageType(dataType), Utils.dataTypeToMessageType(keyType));
-    op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, e);
+    partitionEdge = e.generate();
+    op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, partitionEdge);
   }
 
   public void send(int source, IMessage message) {
@@ -77,7 +77,7 @@ public class PartitionOperation {
 
     @Override
     public boolean onMessage(int source, int path, int target, int flags, Object object) {
-      TaskMessage<Object> msg = new TaskMessage<>(object, edge, source);
+      TaskMessage<Object> msg = new TaskMessage<>(object, partitionEdge, source);
       return outMessages.offer(msg);
     }
 
