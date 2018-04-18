@@ -18,6 +18,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+import edu.iu.dsc.tws.rsched.schedulers.aurora.AuroraContext;
 import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
 import edu.iu.dsc.tws.rsched.spi.scheduler.ILauncher;
 
@@ -54,6 +55,10 @@ public class KubernetesLauncher implements ILauncher {
   @Override
   public boolean launch(RequestedResources resourceRequest, JobAPI.Job job) {
 
+    if (!configParametersOK()) {
+      return false;
+    }
+
     String jobName = job.getJobName();
 
     String jobPackageFile = SchedulerContext.temporaryPackagesPath(config) + "/"
@@ -62,7 +67,7 @@ public class KubernetesLauncher implements ILauncher {
     File jobFile = new File(jobPackageFile);
     if (!jobFile.exists()) {
       LOG.log(Level.SEVERE, "Can not access job package file: " + jobPackageFile
-          + "\nAborting submission.");
+          + "\n++++++ Aborting submission. ++++++");
       return false;
     }
 
@@ -75,9 +80,10 @@ public class KubernetesLauncher implements ILauncher {
     if (SchedulerContext.persistentVolumeRequested(config)) {
       boolean volumesSetup = initPersistentVolumes(jobName);
       if (!volumesSetup) {
-        LOG.log(Level.SEVERE, "Aborting submission."
-            + "\nPlease run terminate job to clear up any artifacts from this job, "
-            + "before submitting a new job.");
+        LOG.log(Level.SEVERE, "Please run terminate job to clear up any artifacts "
+            + "from previous jobs, before submitting a new job,"
+            + "or submit the job with a different name."
+            + "\n++++++ Aborting submission. ++++++");
         return false;
       }
     }
@@ -101,9 +107,10 @@ public class KubernetesLauncher implements ILauncher {
       long duration = System.currentTimeMillis() - start;
       LOG.info("Transferring all files took: " + duration + " ms.");
     } else {
-      LOG.log(Level.SEVERE, "Transferring the job package to some pods failed. Aborting submission."
-          + "\nPlease run terminate job to clear up any artifacts from this job, "
-          + "before submitting a new job.");
+      LOG.log(Level.SEVERE, "Transferring the job package to some pods failed."
+          + "\nPlease run terminate job to clear up any artifacts from previous jobs, "
+          + "or submit the job with a different name."
+          + "\n++++++ Aborting submission. ++++++");
 //      terminateJob(jobName);
       return false;
     }
@@ -134,9 +141,9 @@ public class KubernetesLauncher implements ILauncher {
         throw new RuntimeException();
       }
 
-      service = KubernetesUtils.createNodePortServiceObject(config, jobName);
+      service = RequestObjectBuilder.createNodePortServiceObject(config, jobName);
     } else {
-      service = KubernetesUtils.createHeadlessServiceObject(config, jobName);
+      service = RequestObjectBuilder.createHeadlessServiceObject(config, jobName);
     }
 
     boolean serviceCreated = controller.createService(namespace, service);
@@ -147,7 +154,6 @@ public class KubernetesLauncher implements ILauncher {
     }
   }
 
-
   private boolean initPersistentVolumes(String jobName) {
 
     // first check whether there is already a persistent volume with the same name
@@ -155,7 +161,7 @@ public class KubernetesLauncher implements ILauncher {
     String pvName = KubernetesUtils.createPersistentVolumeName(jobName);
     V1PersistentVolume pv = controller.getPersistentVolume(pvName);
     if (pv == null) {
-      pv = KubernetesUtils.createPersistentVolumeObject(config, pvName);
+      pv = RequestObjectBuilder.createPersistentVolumeObject(config, pvName);
       boolean pvCreated = controller.createPersistentVolume(pv);
       if (!pvCreated) {
         LOG.log(Level.SEVERE, "PersistentVolume could not be created. "
@@ -175,7 +181,7 @@ public class KubernetesLauncher implements ILauncher {
     // otherwise create a PersistentVolumeClaim
     V1PersistentVolumeClaim pvc = controller.getPersistentVolumeClaim(namespace, pvcName);
     if (pvc == null) {
-      pvc = KubernetesUtils.createPersistentVolumeClaimObject(config, pvcName);
+      pvc = RequestObjectBuilder.createPersistentVolumeClaimObject(config, pvcName);
       boolean claimCreated = controller.createPersistentVolumeClaim(namespace, pvc);
       if (!claimCreated) {
         LOG.log(Level.SEVERE, "PersistentVolumeClaim could not be created. "
@@ -210,7 +216,7 @@ public class KubernetesLauncher implements ILauncher {
     }
 
     // create the StatefulSet object for this job
-    V1beta2StatefulSet statefulSet = KubernetesUtils.createStatefulSetObjectForJob(
+    V1beta2StatefulSet statefulSet = RequestObjectBuilder.createStatefulSetObjectForJob(
         jobName, resourceRequest, jobFileSize, config);
 
     if (statefulSet == null) {
@@ -222,6 +228,40 @@ public class KubernetesLauncher implements ILauncher {
       LOG.log(Level.SEVERE, "\nPlease run terminate job to clear up any artifacts from "
           + "previous jobs."
           + "\n++++++ Aborting submission ++++++");
+      return false;
+    }
+
+    return true;
+  }
+
+  private boolean configParametersOK() {
+
+    // if statically binding requested, number for CPUs per worker has to be an integer
+    if (KubernetesContext.bindWorkerToCPU(config)) {
+      String cpuStr = AuroraContext.cpusPerContainer(config);
+      double cpus = Double.parseDouble(cpuStr);
+      if (cpus % 1 != 0) {
+        LOG.log(Level.SEVERE, String.format("When %s is true, the value of %s has to be an int"
+            + "\n%s= " + cpus
+            + "\n++++++ Aborting submission ++++++",
+            KubernetesContext.K8S_BIND_WORKER_TO_CPU, AuroraContext.CPUS_PER_CONTAINER,
+            AuroraContext.CPUS_PER_CONTAINER));
+        return false;
+      }
+    }
+
+    // number of containers has to be divisible by the containersPerPod
+    // all pods will have equal number of containers
+    // all pods will be identical
+    int containersPerPod = KubernetesContext.containersPerPod(config);
+    int numberOfContainers = Integer.parseInt(AuroraContext.numberOfContainers(config));
+    if (numberOfContainers % containersPerPod != 0) {
+      LOG.log(Level.SEVERE, String.format("%s has to be divisible by %s."
+          + "\n%s: " + numberOfContainers
+          + "\n%s: " + containersPerPod
+          + "\n++++++ Aborting submission ++++++",
+          AuroraContext.NUMBER_OF_CONTAINERS, KubernetesContext.CONTAINERS_PER_POD,
+          AuroraContext.NUMBER_OF_CONTAINERS, KubernetesContext.CONTAINERS_PER_POD));
       return false;
     }
 
