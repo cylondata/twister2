@@ -11,9 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor;
 
-import java.util.HashSet;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.google.common.collect.HashBasedTable;
@@ -21,6 +23,9 @@ import com.google.common.collect.Table;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
+import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.executor.comm.ParallelOperationFactory;
+import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.ISource;
@@ -51,8 +56,11 @@ public class DefaultExecutor implements IExecutor {
   /**
    * Communications list
    */
-  private Table<String, String, Communication> sendingTable = HashBasedTable.create();
-  private Table<String, String, Communication> recvTable = HashBasedTable.create();
+  private Table<String, String, Communication> parOpTable = HashBasedTable.create();
+
+  private Map<String, List<ITask>> tasksOfExecutor = new HashMap<>();
+  private Map<String, List<ISource>> sourcesOfExecutor = new HashMap<>();
+  private Map<String, List<ISink>> sinksOfExecutor = new HashMap<>();
 
   /**
    * For each task we have multiple instances
@@ -63,6 +71,10 @@ public class DefaultExecutor implements IExecutor {
 
   private TWSNetwork network;
 
+  private ResourcePlan resourcePlan;
+
+  private TaskIdGenerator taskIdGenerator;
+
   public DefaultExecutor(int workerId) {
     this.workerId = workerId;
     this.executor = new FixedThreadExecutor();
@@ -71,9 +83,16 @@ public class DefaultExecutor implements IExecutor {
   @Override
   public Execution schedule(Config cfg, DataFlowTaskGraph taskGraph,
                             TaskSchedulePlan taskSchedule) {
+
+    // we need to build the task plan
+    TaskPlan taskPlan = TaskPlanBuilder.build(resourcePlan, taskSchedule, taskIdGenerator);
+    network = new TWSNetwork(cfg, taskPlan);
+    ParallelOperationFactory opFactory = new ParallelOperationFactory(network);
+
     Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap = taskSchedule.getContainersMap();
     TaskSchedulePlan.ContainerPlan p = containersMap.get(workerId);
     if (p == null) {
+      LOG.log(Level.INFO, "Cannot find worker in the task plan: " + workerId);
       return null;
     }
 
@@ -92,10 +111,15 @@ public class DefaultExecutor implements IExecutor {
         Set<Edge> edges = taskGraph.outEdges(v);
         // now lets create the communication object
         for (Edge e : edges) {
-          HashSet<Integer> srcTasks = new HashSet<>();
-          HashSet<Integer> tarTasks = new HashSet<>();
-          if (!sendingTable.contains(v.getName(), e.taskEdge)) {
-            sendingTable.put(v.getName(), e.taskEdge, new Communication(v.getName(),
+          Vertex child = taskGraph.childOfTask(v, e.getTaskEdge());
+          // lets figure out the parents task id
+          Set<Integer> srcTasks = taskIdGenerator.getTaskIds(v.getName(),
+              ip.getTaskId(), taskGraph);
+          Set<Integer> tarTasks = taskIdGenerator.getTaskIds(child.getName(),
+              getTaskIdOfTask(child.getName(), taskSchedule), taskGraph);
+
+          if (!parOpTable.contains(v.getName(), e.taskEdge)) {
+            parOpTable.put(v.getName(), e.taskEdge, new Communication(v.getName(),
                 e.taskEdge, srcTasks, tarTasks));
           }
         }
@@ -106,33 +130,45 @@ public class DefaultExecutor implements IExecutor {
         Set<Edge> parentEdges = taskGraph.inEdges(v);
         for (Edge e : parentEdges) {
           Vertex parent = taskGraph.getParentOfTask(v, e.getTaskEdge());
-          HashSet<Integer> srcTasks = new HashSet<>();
-          HashSet<Integer> tarTasks = new HashSet<>();
-          if (!sendingTable.contains(parent.getName(), e.taskEdge)) {
-            recvTable.put(parent.getName(), e.taskEdge, new Communication(parent.getName(),
+          // lets figure out the parents task id
+          Set<Integer> srcTasks = taskIdGenerator.getTaskIds(parent.getName(),
+              getTaskIdOfTask(parent.getName(), taskSchedule), taskGraph);
+          Set<Integer> tarTasks = taskIdGenerator.getTaskIds(v.getName(),
+              ip.getTaskId(), taskGraph);
+
+          if (!parOpTable.contains(parent.getName(), e.taskEdge)) {
+            parOpTable.put(parent.getName(), e.taskEdge, new Communication(parent.getName(),
                 e.taskEdge, srcTasks, tarTasks));
           }
         }
       }
     }
 
-    // we need to build the task plan
-
-
     // now lets create the queues and start the execution
     Execution execution = new Execution();
-//    for (Table.Cell<String, String, Communication> c : sendingTable.cellSet()) {
+//    for (Table.Cell<String, String, Communication> c : parOpTable.cellSet()) {
 //
 //    }
 
     return execution;
   }
 
+  private int getTaskIdOfTask(String name, TaskSchedulePlan plan) {
+    for (TaskSchedulePlan.ContainerPlan cp : plan.getContainers()) {
+      for (TaskSchedulePlan.TaskInstancePlan ip : cp.getTaskInstances()) {
+        if (name.equals(ip.getTaskName())) {
+          return ip.getTaskId();
+        }
+      }
+    }
+    throw new RuntimeException("Task without a schedule plan: " + name);
+  }
+
   private class Communication {
     private String source;
     private String name;
-    private Set<Integer> sourceTasks = new HashSet<>();
-    private Set<Integer> targetTasks = new HashSet<>();
+    private Set<Integer> sourceTasks;
+    private Set<Integer> targetTasks;
 
     Communication(String n, String src, Set<Integer> srcTasks, Set<Integer> tarTasks) {
       this.name = n;
@@ -151,6 +187,10 @@ public class DefaultExecutor implements IExecutor {
 
     public String getSource() {
       return source;
+    }
+
+    public Set<Integer> getTargetTasks() {
+      return targetTasks;
     }
   }
 

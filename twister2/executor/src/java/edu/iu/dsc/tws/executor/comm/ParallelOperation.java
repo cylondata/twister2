@@ -13,8 +13,12 @@ package edu.iu.dsc.tws.executor.comm;
 
 import edu.iu.dsc.tws.task.api.IMessage;
 
-public interface IParallelOperation {
-  void send(int source, IMessage message);
+public abstract class ParallelOperation implements IParallelOperation {
+  @Override
+  public void send(int source, IMessage message) {
+  }
 
-  void send(int source, IMessage message, int dest);
+  @Override
+  public void send(int source, IMessage message, int dest) {
+  }
 }
