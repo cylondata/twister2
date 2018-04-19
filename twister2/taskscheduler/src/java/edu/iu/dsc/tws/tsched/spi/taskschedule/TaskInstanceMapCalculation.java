@@ -38,9 +38,9 @@ import edu.iu.dsc.tws.tsched.utils.TaskAttributes;
  * of the job.
  */
 
-public class InstanceMapCalculation {
+public class TaskInstanceMapCalculation {
 
-  private static final Logger LOG = Logger.getLogger(InstanceMapCalculation.class.getName());
+  private static final Logger LOG = Logger.getLogger(TaskInstanceMapCalculation.class.getName());
 
   private static final double DEFAULT_DISK_PADDING_PER_CONTAINER = 12;
   private static final double DEFAULT_RAM_PADDING_PER_CONTAINER = 2;
@@ -54,7 +54,7 @@ public class InstanceMapCalculation {
 
   private TaskAttributes taskAttributes = null;
 
-  public InstanceMapCalculation(Double instanceRam, Double instanceDisk, Double instanceCPU) {
+  public TaskInstanceMapCalculation(Double instanceRam, Double instanceDisk, Double instanceCPU) {
     this.instanceRAM = instanceRam;
     this.instanceDisk = instanceDisk;
     this.instanceCPU = instanceCPU;
@@ -128,7 +128,6 @@ public class InstanceMapCalculation {
       Map<Integer, List<InstanceId>> containerInstanceAllocationMap, Set<Vertex> taskVertexSet) {
 
     Map<String, Double> ramMap = taskAttributes.getTaskRamMap(taskVertexSet);
-    LOG.info("RaM Map Values:" + ramMap);
     Map<Integer, Map<InstanceId, Double>> instancesRamContainerMap = new HashMap<>();
 
     for (int containerId : containerInstanceAllocationMap.keySet()) {

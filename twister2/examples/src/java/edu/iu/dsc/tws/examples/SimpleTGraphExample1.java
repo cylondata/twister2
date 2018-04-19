@@ -98,15 +98,15 @@ public class SimpleTGraphExample1 implements IContainer {
 
     if (containerId == 0) {
       WorkerPlan workerPlan = new WorkerPlan();
-      Worker worker1 = new Worker(0);
+      Worker worker1 = new Worker(1);
       worker1.setCpu(4);
-      worker1.setDisk(100);
-      worker1.setRam(1024);
+      worker1.setDisk(4000);
+      worker1.setRam(2048);
 
-      Worker worker2 = new Worker(1);
-      worker1.setCpu(4);
-      worker1.setDisk(100);
-      worker1.setRam(1024);
+      Worker worker2 = new Worker(2);
+      worker2.setCpu(4);
+      worker2.setDisk(4000);
+      worker2.setRam(2048);
       workerPlan.addWorker(worker1);
       workerPlan.addWorker(worker2);
 
@@ -124,21 +124,21 @@ public class SimpleTGraphExample1 implements IContainer {
       graphBuilder.setParallelism("task1", 2);
       graphBuilder.setParallelism("task2", 2);
       graphBuilder.setParallelism("task3", 2);
-      graphBuilder.setParallelism("task4", 1);
+      graphBuilder.setParallelism("task4", 2);
 
-      graphBuilder.addConfiguration("task1", "Ram", 1024);
+      graphBuilder.addConfiguration("task1", "Ram", 512);
       graphBuilder.addConfiguration("task1", "Disk", 1000);
       graphBuilder.addConfiguration("task1", "Cpu", 2);
 
-      graphBuilder.addConfiguration("task2", "Ram", 1024);
+      graphBuilder.addConfiguration("task2", "Ram", 300);
       graphBuilder.addConfiguration("task2", "Disk", 1000);
       graphBuilder.addConfiguration("task2", "Cpu", 2);
 
-      graphBuilder.addConfiguration("task4", "Ram", 1024);
+      graphBuilder.addConfiguration("task3", "Ram", 1024);
       graphBuilder.addConfiguration("task3", "Disk", 1000);
       graphBuilder.addConfiguration("task3", "Cpu", 2);
 
-      graphBuilder.addConfiguration("task3", "Ram", 1024);
+      graphBuilder.addConfiguration("task4", "Ram", 250);
       graphBuilder.addConfiguration("task4", "Disk", 1000);
       graphBuilder.addConfiguration("task4", "Cpu", 2);
 
@@ -150,7 +150,6 @@ public class SimpleTGraphExample1 implements IContainer {
         String schedulingMode = "FirstFit";
         if (dataFlowTaskGraph != null) {
           //if (cfg.get("SchedulingMode").equals("Round Robin")) {
-
           if ("RoundRobin".equals(schedulingMode)) {
             RoundRobinTaskScheduling roundRobinTaskScheduling = new RoundRobinTaskScheduling();
             roundRobinTaskScheduling.initialize(cfg);
@@ -163,9 +162,7 @@ public class SimpleTGraphExample1 implements IContainer {
 
           try {
             if (taskSchedulePlan.getContainersMap() != null) {
-              LOG.info("Task schedule plan details:" + taskSchedulePlan.getContainersMap()
-                  + "\t" + "Task Instance Size:"
-                  + taskSchedulePlan.getContainersMap().keySet().iterator());
+              LOG.info("Task schedule plan details:" + taskSchedulePlan.getContainersMap());
             }
           } catch (NullPointerException ne) {
             ne.printStackTrace();
