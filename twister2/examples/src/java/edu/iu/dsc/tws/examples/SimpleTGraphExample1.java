@@ -33,10 +33,7 @@ import edu.iu.dsc.tws.task.api.ITask;
 import edu.iu.dsc.tws.task.api.LinkedQueue;
 import edu.iu.dsc.tws.task.api.OutputCollection;
 import edu.iu.dsc.tws.task.core.TaskExecutorFixedThread;
-import edu.iu.dsc.tws.task.executiongraph.ExecutionGraph;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.task.graph.DataflowTaskGraphGenerator;
-import edu.iu.dsc.tws.task.graph.DataflowTaskGraphParser;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.tsched.FirstFit.FirstFitTaskScheduling;
 import edu.iu.dsc.tws.tsched.RoundRobin.RoundRobinTaskScheduling;
@@ -58,11 +55,7 @@ public class SimpleTGraphExample1 implements IContainer {
   private TaskExecutorFixedThread taskExecutor;
   private Status status;
 
-  //For time being it is declared as TaskGraphMapper...!
-  private Set<ITask> parsedTaskSet = new HashSet<>();
-  private DataflowTaskGraphGenerator dataflowTaskGraphGenerator = null;
-  private DataflowTaskGraphParser dataflowTaskGraphParser = null;
-  private ExecutionGraph executionGraph = null;
+
   private TaskSchedulePlan taskSchedulePlan = null;
 
   /**
