@@ -21,7 +21,7 @@ import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.ISource;
 import edu.iu.dsc.tws.task.api.OutputCollection;
 
-public class SourceInstance {
+public class SourceInstance implements INodeInstance {
   /**
    * The actual task executing
    */

@@ -23,7 +23,6 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.mpi.MPIDataFlowPartition;
-import edu.iu.dsc.tws.comms.mpi.TWSMPIChannel;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.EdgeGenerator;
 import edu.iu.dsc.tws.task.api.IMessage;
@@ -45,7 +44,7 @@ public class PartitionOperation extends ParallelOperation {
   private int partitionEdge;
 
 
-  public PartitionOperation(Config config, TWSMPIChannel network, TaskPlan tPlan) {
+  public PartitionOperation(Config config, TWSChannel network, TaskPlan tPlan) {
     this.config = config;
     this.taskPlan = tPlan;
     this.channel = network;

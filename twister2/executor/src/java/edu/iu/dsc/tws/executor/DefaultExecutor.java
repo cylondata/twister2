@@ -51,11 +51,6 @@ public class DefaultExecutor implements IExecutor {
   private int workerId;
 
   /**
-   * Fixed thread executor
-   */
-  private FixedThreadExecutor executor;
-
-  /**
    * Communications list
    */
   private Table<String, String, Communication> parOpTable = HashBasedTable.create();
@@ -81,7 +76,6 @@ public class DefaultExecutor implements IExecutor {
 
   public DefaultExecutor(ResourcePlan plan) {
     this.workerId = plan.getThisId();
-    this.executor = new FixedThreadExecutor();
     this.taskIdGenerator = new TaskIdGenerator();
     this.kryoMemorySerializer = new KryoMemorySerializer();
     this.resourcePlan = plan;
@@ -95,7 +89,8 @@ public class DefaultExecutor implements IExecutor {
     // we need to build the task plan
     TaskPlan taskPlan = TaskPlanBuilder.build(resourcePlan, taskSchedule, taskIdGenerator);
     network = new TWSNetwork(cfg, taskPlan);
-    ParallelOperationFactory opFactory = new ParallelOperationFactory(network);
+    ParallelOperationFactory opFactory = new ParallelOperationFactory(
+        cfg, network.getChannel(), taskPlan, edgeGenerator);
 
     Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap = taskSchedule.getContainersMap();
     TaskSchedulePlan.ContainerPlan conPlan = containersMap.get(workerId);
@@ -166,7 +161,7 @@ public class DefaultExecutor implements IExecutor {
 
       // lets create the communication
       IParallelOperation op = opFactory.build(c.getOperation(), c.getSourceTasks(),
-          c.getTargetTasks(), DataType.OBJECT);
+          c.getTargetTasks(), DataType.OBJECT, c.getName());
       // now lets check the sources and targets that are in this executor
       Set<Integer> sourcesOfThisWorker = intersectionOfTasks(conPlan, c.getSourceTasks());
       Set<Integer> targetsOfThisWorker = intersectionOfTasks(conPlan, c.getTargetTasks());
@@ -192,8 +187,6 @@ public class DefaultExecutor implements IExecutor {
           throw new RuntimeException("Not found");
         }
       }
-
-
     }
 
     // lets start the execution
