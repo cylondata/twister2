@@ -11,9 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.executor.comm.IParallelOperation;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.ITask;
 import edu.iu.dsc.tws.task.api.OutputCollection;
@@ -53,12 +56,24 @@ public class TaskInstance {
    */
   private int taskId;
 
+  /**
+   * Parallel operations
+   */
+  private Map<String, IParallelOperation> outParOps = new HashMap<>();
+
+  /**
+   * The edge generator
+   */
+  private EdgeGenerator edgeGenerator;
+
   public TaskInstance(ITask task, BlockingQueue<IMessage> inQueue,
-                      BlockingQueue<IMessage> outQueue, Config config) {
+                      BlockingQueue<IMessage> outQueue, Config config,
+                      EdgeGenerator eGenerator) {
     this.task = task;
     this.inQueue = inQueue;
     this.outQueue = outQueue;
     this.config = config;
+    this.edgeGenerator = eGenerator;
   }
 
   public void prepare() {
@@ -67,11 +82,27 @@ public class TaskInstance {
     task.prepare(config, outputCollection);
   }
 
+  public void registerOutParallelOperation(String edge, IParallelOperation op) {
+    outParOps.put(edge, op);
+  }
+
   public void execute() {
     while (!inQueue.isEmpty()) {
       IMessage m = inQueue.poll();
 
       task.run(m);
+
+      // now check the output queue
+      while (outQueue.isEmpty()) {
+        IMessage message = outQueue.poll();
+        if (message != null) {
+          String edge = message.edge();
+
+          // invoke the communication operation
+          IParallelOperation op = outParOps.get(edge);
+          op.send(taskId, message);
+        }
+      }
     }
   }
 

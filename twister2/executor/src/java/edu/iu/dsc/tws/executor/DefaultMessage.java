@@ -16,9 +16,9 @@ import edu.iu.dsc.tws.task.api.IMessage;
 public class DefaultMessage implements IMessage {
   private Object data;
 
-  private int edge;
+  private String edge;
 
-  public DefaultMessage(Object data, int edge) {
+  public DefaultMessage(Object data, String edge) {
     this.data = data;
     this.edge = edge;
   }
@@ -29,7 +29,7 @@ public class DefaultMessage implements IMessage {
   }
 
   @Override
-  public int edge() {
+  public String edge() {
     return edge;
   }
 }

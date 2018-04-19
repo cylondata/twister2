@@ -14,27 +14,47 @@ package edu.iu.dsc.tws.task.graph;
 import edu.iu.dsc.tws.task.api.ITask;
 
 public class Edge {
-  public String taskEdge;
+  public String name;
   public ITask function;
+  public String operation;
 
   public Edge(String te) {
-    this.taskEdge = te;
+    this.name = te;
+  }
+
+  public Edge(String name, String operation) {
+    this.name = name;
+    this.operation = operation;
   }
 
   public Edge(String taskEdge, ITask function) {
-    this.taskEdge = taskEdge;
+    this.name = taskEdge;
     this.function = function;
   }
 
-  public String name() {
-    return taskEdge;
+  public Edge(String name, String operation, ITask function) {
+    this.name = name;
+    this.function = function;
+    this.operation = operation;
   }
 
-  public String getTaskEdge() {
-    return taskEdge;
+  public String name() {
+    return name;
+  }
+
+  public String getName() {
+    return name;
   }
 
   public ITask function() {
+    return function;
+  }
+
+  public String getOperation() {
+    return operation;
+  }
+
+  public ITask getFunction() {
     return function;
   }
 }

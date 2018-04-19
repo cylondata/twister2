@@ -61,7 +61,7 @@ public final class GraphBuilder {
     return this;
   }
 
-  public GraphBuilder connect(String t1, String t2, String name, ITask task) {
+  public GraphBuilder connect(String t1, String t2, String name, String operation) {
     Vertex v1 = graph.vertex(t1);
     if (v1 == null) {
       throw new RuntimeException("Failed to connect non-existing task: " + t1);
@@ -71,7 +71,21 @@ public final class GraphBuilder {
     if (v2 == null) {
       throw new RuntimeException("Failed to connect non-existing task: " + t2);
     }
-    graph.addTaskEdge(v1, v2, new Edge(name, task));
+    graph.addTaskEdge(v1, v2, new Edge(name, operation));
+    return this;
+  }
+
+  public GraphBuilder connect(String t1, String t2, String name, String operation, ITask task) {
+    Vertex v1 = graph.vertex(t1);
+    if (v1 == null) {
+      throw new RuntimeException("Failed to connect non-existing task: " + t1);
+    }
+
+    Vertex v2 = graph.vertex(t1);
+    if (v2 == null) {
+      throw new RuntimeException("Failed to connect non-existing task: " + t2);
+    }
+    graph.addTaskEdge(v1, v2, new Edge(name, operation, task));
     return this;
   }
 

@@ -16,6 +16,7 @@ import java.util.Set;
 
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.Vertex;
+import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 /**
  * This is a global task id generator depending on the taskId, task index and task name
@@ -42,5 +43,14 @@ public class TaskIdGenerator {
       sources.add(generateGlobalTaskId(taskName, taskId, i));
     }
     return sources;
+  }
+
+  public Set<Integer> getTaskIdsOfContainer(TaskSchedulePlan.ContainerPlan cPlan) {
+    Set<TaskSchedulePlan.TaskInstancePlan> ips = cPlan.getTaskInstances();
+    Set<Integer> tasks = new HashSet<>();
+    for (TaskSchedulePlan.TaskInstancePlan ip : ips) {
+      tasks.add(generateGlobalTaskId(ip.getTaskName(), ip.getTaskId(), ip.getTaskIndex()));
+    }
+    return tasks;
   }
 }

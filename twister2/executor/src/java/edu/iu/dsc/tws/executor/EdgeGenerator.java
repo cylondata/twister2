@@ -11,7 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -21,8 +23,14 @@ import java.util.Set;
 public class EdgeGenerator {
   private int currentEdge = 0;
 
-  public synchronized int generate() {
+  private Map<String, Integer> edges = new HashMap<>();
+
+  private Map<Integer, String> invertedEdges = new HashMap<>();
+
+  public synchronized int generate(String edge) {
     currentEdge++;
+    edges.put(edge, currentEdge);
+    invertedEdges.put(currentEdge, edge);
     return currentEdge;
   }
 
@@ -32,5 +40,13 @@ public class EdgeGenerator {
       gen.add(++currentEdge);
     }
     return gen;
+  }
+
+  public int getIntegerMapping(String edge) {
+    return edges.get(edge);
+  }
+
+  public String getStringMapping(int edge) {
+    return invertedEdges.get(edge);
   }
 }

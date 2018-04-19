@@ -11,9 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.executor.comm.IParallelOperation;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.ISource;
 import edu.iu.dsc.tws.task.api.OutputCollection;
@@ -39,6 +42,11 @@ public class SourceInstance {
    */
   private OutputCollection outputCollection;
 
+  /**
+   * Parallel operations
+   */
+  private Map<String, IParallelOperation> outParOps = new HashMap<>();
+
   public SourceInstance(ISource task, BlockingQueue<IMessage> outQueue, Config config) {
     this.task = task;
     this.outQueue = outQueue;
@@ -57,5 +65,9 @@ public class SourceInstance {
 
   public BlockingQueue<IMessage> getOutQueue() {
     return outQueue;
+  }
+
+  public void registerOutParallelOperation(String edge, IParallelOperation op) {
+    outParOps.put(edge, op);
   }
 }
