@@ -23,7 +23,9 @@ import com.google.common.collect.Table;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
+import edu.iu.dsc.tws.executor.comm.IParallelOperation;
 import edu.iu.dsc.tws.executor.comm.ParallelOperationFactory;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import edu.iu.dsc.tws.task.api.INode;
@@ -156,27 +158,42 @@ public class DefaultExecutor implements IExecutor {
 
     // now lets create the queues and start the execution
     Execution execution = new Execution();
-//    for (Table.Cell<String, String, Communication> c : parOpTable.cellSet()) {
-//
-//    }
+    for (Table.Cell<String, String, Communication> cell : parOpTable.cellSet()) {
+      Communication c = cell.getValue();
+
+      // lets create the communication
+      IParallelOperation op = opFactory.build(c.getName(), c.getSourceTasks(),
+          c.getTargetTasks(), DataType.OBJECT);
+      // now lets check the sources and targets that are in this executor
+
+    }
+
+    // lets start the execution
 
     return execution;
   }
 
-  private void createInstances(Config cfg, TaskSchedulePlan.TaskInstancePlan ip, Vertex v) {
+
+  /**
+   * Create an instance of a task,
+   * @param cfg the configuration
+   * @param ip instance plan
+   * @param vertex vertex
+   */
+  private void createInstances(Config cfg, TaskSchedulePlan.TaskInstancePlan ip, Vertex vertex) {
     // lets add the task
-    byte[] taskBytes = kryoMemorySerializer.serialize(v.getTask());
+    byte[] taskBytes = kryoMemorySerializer.serialize(vertex.getTask());
     INode newInstance = (INode) kryoMemorySerializer.deserialize(taskBytes);
-    int taskId = taskIdGenerator.generateGlobalTaskId(v.getName(),
+    int taskId = taskIdGenerator.generateGlobalTaskId(vertex.getName(),
         ip.getTaskId(), ip.getTaskIndex());
     if (newInstance instanceof ITask) {
-      taskInstances.put(v.getName(), taskId, new TaskInstance((ITask) newInstance,
+      taskInstances.put(vertex.getName(), taskId, new TaskInstance((ITask) newInstance,
           new ArrayBlockingQueue<>(1024), new ArrayBlockingQueue<>(1024), cfg));
     } else if (newInstance instanceof ISource) {
-      sourceInstances.put(v.getName(), taskId, new SourceInstance((ISource) newInstance,
+      sourceInstances.put(vertex.getName(), taskId, new SourceInstance((ISource) newInstance,
           new ArrayBlockingQueue<>(1024), cfg));
     } else if (newInstance instanceof ISink) {
-      sinkInstances.put(v.getName(), taskId, new SinkInstance((ISink) newInstance,
+      sinkInstances.put(vertex.getName(), taskId, new SinkInstance((ISink) newInstance,
           new ArrayBlockingQueue<>(1024), cfg));
     } else {
       throw new RuntimeException("Un-known type");

@@ -33,7 +33,7 @@ public class PartitionOperation extends ParallelOperation {
 
   private TWSChannel channel;
 
-  private BlockingQueue<IMessage> outMessages;
+  private Map<Integer, BlockingQueue<IMessage>> outMessages;
 
   private MPIDataFlowPartition op;
 
@@ -43,11 +43,9 @@ public class PartitionOperation extends ParallelOperation {
 
   private int partitionEdge;
 
-  public PartitionOperation(Config config, TWSMPIChannel network, TaskPlan tPlan,
-                            BlockingQueue<IMessage> outMsgs) {
+  public PartitionOperation(Config config, TWSMPIChannel network, TaskPlan tPlan) {
     this.config = config;
     this.taskPlan = tPlan;
-    this.outMessages = outMsgs;
     this.channel = network;
   }
 
@@ -69,6 +67,14 @@ public class PartitionOperation extends ParallelOperation {
     op.send(source, message, 0, dest);
   }
 
+  @Override
+  public void register(int targetTask, BlockingQueue<IMessage> queue) {
+    if (outMessages.containsKey(targetTask)) {
+      throw new RuntimeException("Existing queue for target task");
+    }
+    outMessages.put(targetTask, queue);
+  }
+
   public class PartitionReceiver implements MessageReceiver {
     @Override
     public void init(Config cfg, DataFlowOperation operation,
@@ -77,8 +83,8 @@ public class PartitionOperation extends ParallelOperation {
 
     @Override
     public boolean onMessage(int source, int path, int target, int flags, Object object) {
-      TaskMessage<Object> msg = new TaskMessage<>(object, partitionEdge, source);
-      return outMessages.offer(msg);
+      TaskMessage<Object> msg = new TaskMessage<>(object, partitionEdge, target);
+      return outMessages.get(target).offer(msg);
     }
 
     @Override

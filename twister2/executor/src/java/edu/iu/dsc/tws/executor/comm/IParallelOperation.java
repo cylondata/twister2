@@ -11,10 +11,14 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.comm;
 
+import java.util.concurrent.BlockingQueue;
+
 import edu.iu.dsc.tws.task.api.IMessage;
 
 public interface IParallelOperation {
   void send(int source, IMessage message);
 
   void send(int source, IMessage message, int dest);
+
+  void register(int targetTask, BlockingQueue<IMessage> queue);
 }

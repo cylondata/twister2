@@ -54,4 +54,8 @@ public class SourceInstance {
   public void execute() {
     task.run();
   }
+
+  public BlockingQueue<IMessage> getOutQueue() {
+    return outQueue;
+  }
 }

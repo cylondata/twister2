@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.executor.comm;
 
 import java.util.Set;
 
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.data.api.DataType;
 
@@ -24,12 +23,12 @@ public class ParallelOperationFactory {
     this.network = network;
   }
 
-  public DataFlowOperation build(String operation, Set<String> sources, Set<String> dests,
+  public IParallelOperation build(String operation, Set<Integer> sources, Set<Integer> dests,
                                  DataType dataType) {
     return null;
   }
 
-  public DataFlowOperation build(String operation, Set<String> sources, Set<String> dests,
+  public IParallelOperation build(String operation, Set<Integer> sources, Set<Integer> dests,
                                  DataType dataType, DataType keyType) {
     return null;
   }
