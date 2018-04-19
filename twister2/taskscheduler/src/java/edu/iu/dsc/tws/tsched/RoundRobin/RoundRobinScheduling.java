@@ -48,7 +48,7 @@ public class RoundRobinScheduling {
         roundrobinAllocation.put(i, new ArrayList<InstanceId>());
       }
       LOG.info(String.format("Container Map Values Before Allocation\t" + roundrobinAllocation));
-      LOG.info("\n");
+      System.out.println();
       for (String task : parallelTaskMap.keySet()) {
         int numberOfInstances = parallelTaskMap.get(task);
         for (int i = 0; i < numberOfInstances; i++) {
