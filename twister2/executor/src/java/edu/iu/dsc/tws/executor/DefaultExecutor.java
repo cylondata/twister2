@@ -74,21 +74,21 @@ public class DefaultExecutor implements IExecutor {
 
   private EdgeGenerator edgeGenerator;
 
-  public DefaultExecutor(ResourcePlan plan) {
+  public DefaultExecutor(ResourcePlan plan, TWSNetwork net) {
     this.workerId = plan.getThisId();
     this.taskIdGenerator = new TaskIdGenerator();
     this.kryoMemorySerializer = new KryoMemorySerializer();
     this.resourcePlan = plan;
     this.edgeGenerator = new EdgeGenerator();
+    this.network = net;
   }
 
   @Override
   public Execution schedule(Config cfg, DataFlowTaskGraph taskGraph,
                             TaskSchedulePlan taskSchedule) {
-
+    noOfThreads = ExecutorContext.threadsPerContainer(cfg);
     // we need to build the task plan
     TaskPlan taskPlan = TaskPlanBuilder.build(resourcePlan, taskSchedule, taskIdGenerator);
-    network = new TWSNetwork(cfg, taskPlan);
     ParallelOperationFactory opFactory = new ParallelOperationFactory(
         cfg, network.getChannel(), taskPlan, edgeGenerator);
 
