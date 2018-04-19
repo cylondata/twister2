@@ -25,6 +25,8 @@ public class TaskMessage<T> implements IMessage {
 
   private int sourceTask;
 
+  private int targetTask;
+
   public TaskMessage(T data) {
     this.content = data;
   }
@@ -50,5 +52,9 @@ public class TaskMessage<T> implements IMessage {
 
   public int sourceTask() {
     return sourceTask;
+  }
+
+  public int getTargetTask() {
+    return targetTask;
   }
 }

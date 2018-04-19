@@ -74,4 +74,12 @@ public class TaskInstance {
       task.run(m);
     }
   }
+
+  public BlockingQueue<IMessage> getInQueue() {
+    return inQueue;
+  }
+
+  public BlockingQueue<IMessage> getOutQueue() {
+    return outQueue;
+  }
 }
