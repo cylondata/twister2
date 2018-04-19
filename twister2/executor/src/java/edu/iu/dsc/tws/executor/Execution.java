@@ -11,5 +11,17 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor;
 
+import java.util.concurrent.BlockingQueue;
+
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.Table;
+
+import edu.iu.dsc.tws.task.api.IMessage;
+
 public class Execution {
+  private Table<String, String, BlockingQueue<IMessage>> inQueues = HashBasedTable.create();
+
+  private Table<String, String, BlockingQueue<IMessage>> outQueues = HashBasedTable.create();
+
+
 }

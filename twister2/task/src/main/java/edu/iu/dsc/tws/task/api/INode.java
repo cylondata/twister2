@@ -14,4 +14,5 @@ package edu.iu.dsc.tws.task.api;
 import java.io.Serializable;
 
 public interface INode extends Serializable {
+
 }

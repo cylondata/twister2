@@ -14,26 +14,20 @@ package edu.iu.dsc.tws.executor;
 import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.task.api.ITask;
-import edu.iu.dsc.tws.task.api.Message;
+import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.ISource;
 import edu.iu.dsc.tws.task.api.OutputCollection;
 
 public class SourceInstance {
   /**
    * The actual task executing
    */
-  private ITask task;
-
-  /**
-   * All the inputs will come through a single queue, otherwise we need to look
-   * at different queues for messages
-   */
-  private BlockingQueue<Message> inQueue;
+  private ISource task;
 
   /**
    * Output will go throuh a single queue
    */
-  private BlockingQueue<Message> outQueue;
+  private BlockingQueue<IMessage> outQueue;
 
   /**
    * The configuration
@@ -45,10 +39,8 @@ public class SourceInstance {
    */
   private OutputCollection outputCollection;
 
-  public SourceInstance(ITask task, BlockingQueue<Message> inQueue,
-                      BlockingQueue<Message> outQueue, Config config) {
+  public SourceInstance(ISource task, BlockingQueue<IMessage> outQueue, Config config) {
     this.task = task;
-    this.inQueue = inQueue;
     this.outQueue = outQueue;
     this.config = config;
   }
@@ -60,10 +52,10 @@ public class SourceInstance {
   }
 
   public void execute() {
-    while (!inQueue.isEmpty()) {
-      Message m = inQueue.poll();
+    task.run();
+  }
 
-      task.run(m);
-    }
+  public BlockingQueue<IMessage> getOutQueue() {
+    return outQueue;
   }
 }

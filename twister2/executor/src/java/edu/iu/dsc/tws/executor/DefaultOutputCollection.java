@@ -14,20 +14,20 @@ package edu.iu.dsc.tws.executor;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.task.api.Message;
+import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.OutputCollection;
 
 public class DefaultOutputCollection implements OutputCollection {
   private static final Logger LOG = Logger.getLogger(DefaultOutputCollection.class.getName());
 
-  private BlockingQueue<Message> outQueue;
+  private BlockingQueue<IMessage> outQueue;
 
-  public DefaultOutputCollection(BlockingQueue<Message> outQueue) {
+  public DefaultOutputCollection(BlockingQueue<IMessage> outQueue) {
     this.outQueue = outQueue;
   }
 
   @Override
-  public boolean collect(int edge, Message m) {
+  public boolean collect(int edge, IMessage m) {
     return this.outQueue.offer(m);
   }
 }

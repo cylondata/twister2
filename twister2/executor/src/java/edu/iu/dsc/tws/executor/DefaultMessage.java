@@ -11,9 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor;
 
-import edu.iu.dsc.tws.task.api.Message;
+import edu.iu.dsc.tws.task.api.IMessage;
 
-public class DefaultMessage implements Message {
+public class DefaultMessage implements IMessage {
   private Object data;
 
   private int edge;

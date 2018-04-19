@@ -16,19 +16,19 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.Vertex;
-import edu.iu.dsc.tws.tsched.spi.common.TaskConfig;
+import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.InstanceId;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.InstanceMapCalculation;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.Resource;
+import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskInstanceMapCalculation;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedule;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
-import edu.iu.dsc.tws.tsched.utils.Job;
 
 public class RoundRobinTaskScheduling implements TaskSchedule {
 
@@ -37,8 +37,6 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
   private static final double DEFAULT_DISK_PADDING_PER_CONTAINER = 12;
   private static final double DEFAULT_CPU_PADDING_PER_CONTAINER = 1;
   private static final double DEFAULT_RAM_PADDING_PER_CONTAINER = 2;
-  private static final double MIN_RAM_PER_INSTANCE = 180;
-  private static final double NOT_SPECIFIED_NUMBER_VALUE = -1;
 
   private Double instanceRAM;
   private Double instanceDisk;
@@ -46,24 +44,7 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
 
   private Resource containerMaximumResource;
   private Resource defaultResource;
-  private Job job;
-  //newly added
-  private TaskConfig config;
   private Config cfg;
-
-  @Override
-  public void initialize(TaskConfig configVal, Job jobObject) {
-    this.config = configVal;
-    this.job = jobObject;
-  }
-
-  @Override
-  public void initialize(Job jobObject) {
-    this.job = jobObject;
-    this.instanceRAM = TaskConfig.containerMaxRAMValue;
-    this.instanceCPU = TaskConfig.containerMaxCpuValue;
-    this.instanceDisk = TaskConfig.containerMaxDiskValue;
-  }
 
   @Override
   public void initialize(Config cfg1) {
@@ -71,6 +52,7 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
     this.instanceRAM = 1024.0;
     this.instanceDisk = 100.0;
     this.instanceCPU = 2.0;
+
     //Retrieve the default instance values from the config file.
     /*this.instanceRAM = Double.parseDouble(cfg.getStringValue("INSTANCE_RAM"));
     this.instanceDisk = Double.parseDouble(cfg.getStringValue("INSTANCE_DISK"));
@@ -88,16 +70,12 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
     Set<TaskSchedulePlan.ContainerPlan> containerPlans = new HashSet<>();
     Set<Vertex> taskVertexSet = dataFlowTaskGraph.getTaskVertexSet();
 
-    Double containerRAMValue = DEFAULT_RAM_PADDING_PER_CONTAINER;
-    Double containerDiskValue = DEFAULT_DISK_PADDING_PER_CONTAINER;
-    Double containerCPUValue = DEFAULT_CPU_PADDING_PER_CONTAINER;
-
     Map<Integer, List<InstanceId>> roundRobinContainerInstanceMap =
         RoundRobinScheduling.RoundRobinSchedulingAlgorithm(taskVertexSet,
             workerPlan.getNumberOfWorkers());
 
-    InstanceMapCalculation instanceMapCalculation = new InstanceMapCalculation(instanceRAM,
-        instanceCPU, instanceDisk);
+    TaskInstanceMapCalculation instanceMapCalculation = new TaskInstanceMapCalculation(
+        instanceRAM, instanceCPU, instanceDisk);
 
     Map<Integer, Map<InstanceId, Double>> instancesRamMap =
         instanceMapCalculation.getInstancesRamMapInContainer(roundRobinContainerInstanceMap,
@@ -113,44 +91,58 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
 
     for (int containerId : roundRobinContainerInstanceMap.keySet()) {
 
+      AtomicReference<Double> containerRAMValue =
+          new AtomicReference<>(DEFAULT_RAM_PADDING_PER_CONTAINER);
+      AtomicReference<Double> containerDiskValue =
+          new AtomicReference<>(DEFAULT_DISK_PADDING_PER_CONTAINER);
+      AtomicReference<Double> containerCPUValue =
+          new AtomicReference<>(DEFAULT_CPU_PADDING_PER_CONTAINER);
+
       List<InstanceId> taskInstanceIds = roundRobinContainerInstanceMap.get(containerId);
       Map<InstanceId, TaskSchedulePlan.TaskInstancePlan> taskInstancePlanMap = new HashMap<>();
 
       for (InstanceId id : taskInstanceIds) {
-
         double instanceRAMValue = instancesRamMap.get(containerId).get(id);
         double instanceDiskValue = instancesDiskMap.get(containerId).get(id);
         double instanceCPUValue = instancesCPUMap.get(containerId).get(id);
 
-        LOG.info("Task Id:" + id + "and its instance required resource values:"
-            + instanceRAMValue + "\t" + instanceDiskValue + "\t" + instanceCPUValue);
+        LOG.info(String.format("Task Id and Index\t" + id.getTaskId() + "\t" + id.getTaskIndex()
+            + "\tand Required Resource:" + instanceRAMValue + "\t"
+            + instanceDiskValue + "\t" + instanceCPUValue));
 
         Resource instanceResource = new Resource(instanceRAMValue,
             instanceDiskValue, instanceCPUValue);
 
-        taskInstancePlanMap.put(id,
-            new TaskSchedulePlan.TaskInstancePlan(
+        taskInstancePlanMap.put(id, new TaskSchedulePlan.TaskInstancePlan(
                 id.getTaskName(), id.getTaskId(), id.getTaskIndex(), instanceResource));
 
-        containerRAMValue += instanceRAMValue;
-        containerDiskValue += instanceDiskValue;
-        containerCPUValue += instanceCPUValue;
+        containerRAMValue.updateAndGet(v -> v + instanceRAMValue);
+        containerDiskValue.updateAndGet(v -> v + instanceDiskValue);
+        containerCPUValue.updateAndGet(v -> v + instanceCPUValue);
       }
 
-      /*Worker worker = workerPlan.getWorker(containerId);
-      containerRAMValue = (double) worker.getRam();
-      containerDiskValue = (double) worker.getDisk();
-      containerCPUValue = (double) worker.getCpu();*/
+      LOG.info(String.format("Container id:" + containerId
+          + "\tand the allocated resource values\t"
+          + "ram:" + containerRAMValue.get() + "\t"
+          + "disk:" + containerCPUValue.get() + "\t"
+          + "cpu:" + containerCPUValue.get()));
 
-      LOG.info("Container Id:" + containerId + "and its container required resource values:"
-          + containerRAMValue + "\t" + containerCPUValue + "\t" + containerCPUValue);
+      Worker worker = workerPlan.getWorker(containerId);
 
-      Resource containerResource = new Resource(
-          containerRAMValue, containerDiskValue, containerCPUValue);
+      LOG.info(String.format("Worker values:" + workerPlan.getNumberOfWorkers()
+          + "\tRam:" + worker.getRam() + "\tDisk:" + worker.getDisk()
+          + "\tCpu:" + worker.getCpu()));
+
+      Resource containerResource = new Resource((double) worker.getRam(),
+          (double) worker.getDisk(), (double) worker.getCpu());
+
+      //Perfectly Working Condition
+      /*Resource containerResource = new Resource(
+          containerRAMValue, containerDiskValue, containerCPUValue);*/
+
       TaskSchedulePlan.ContainerPlan taskContainerPlan =
           new TaskSchedulePlan.ContainerPlan(containerId,
               new HashSet<>(taskInstancePlanMap.values()), containerResource);
-
       containerPlans.add(taskContainerPlan);
     }
     //return new TaskSchedulePlan(job.getJobId(), containerPlans);

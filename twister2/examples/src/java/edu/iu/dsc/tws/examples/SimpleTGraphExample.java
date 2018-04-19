@@ -42,20 +42,14 @@ import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
+import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.LinkedQueue;
-import edu.iu.dsc.tws.task.api.Message;
 import edu.iu.dsc.tws.task.core.TaskExecutorFixedThread;
 import edu.iu.dsc.tws.task.executiongraph.ExecutionGraph;
 import edu.iu.dsc.tws.task.graph.DataflowTGraphParser;
 import edu.iu.dsc.tws.task.graph.DataflowTaskGraphGenerator;
 import edu.iu.dsc.tws.task.graph.Edge;
 import edu.iu.dsc.tws.task.graph.TaskGraphMapper;
-import edu.iu.dsc.tws.tsched.FirstFit.FirstFitTaskScheduling;
-import edu.iu.dsc.tws.tsched.RoundRobin.RoundRobinTaskScheduling;
-import edu.iu.dsc.tws.tsched.spi.common.TaskConfig;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
-import edu.iu.dsc.tws.tsched.utils.Job;
-import edu.iu.dsc.tws.tsched.utils.Task;
 /**
  * This is the task graph generation class with input and output files.
  * It will be extended further to submit the job to the executor...
@@ -95,7 +89,7 @@ public class SimpleTGraphExample implements IContainer {
     int destination = 1;
 
     Map<String, Object> newCfg = new HashMap<>();
-    LinkedQueue<Message> pongQueue = new LinkedQueue<Message>();
+    LinkedQueue<IMessage> pongQueue = new LinkedQueue<IMessage>();
     taskExecutor.registerQueue(0, pongQueue);
 
     direct = channel.direct(newCfg, MessageType.OBJECT, 0, sources,
@@ -125,23 +119,23 @@ public class SimpleTGraphExample implements IContainer {
           LOG.info("parsed task set:" + parsedTaskSet);
         }
 
-        String taskSchedulingMode = "RoundRobin"; //Should come from Config file
+        /*String taskSchedulingMode = "RoundRobin"; //Should come from Config file
         Job job = new Job();
+        job.setTaskLength(parsedTaskSet.size());
+        job.setJob(job);
         Task[] tasklist = new Task[parsedTaskSet.size()];
         Task task = null;
         job.setJobId(containerId);
         for (int i = 0; i < parsedTaskSet.size(); i++) {
           task = new Task();
           task.setTaskName("task" + i);
-          //task.setTaskName(parsedTaskSet.getClass().getName());
-          // get the taskname from parsedtaskset
           task.setTaskCount(2);
           task.setRequiredCpu(5.0);
           task.setRequiredDisk(100.0);
           task.setRequiredRam(512.0);
           tasklist[i] = task;
-          job.setTasklist(tasklist);
         }
+        job.setTasklist(tasklist);
 
         TaskSchedulePlan taskSchedulePlan = null;
         try {
@@ -160,20 +154,9 @@ public class SimpleTGraphExample implements IContainer {
           }
         } catch (Exception ee) {
           ee.printStackTrace();
-        }
+        }*/
       }
-
-      //parsedTaskSet = executionGraph.parseTaskGraph(dataflowTaskGraphGenerator);
-      /*if (!parsedTaskSet.isEmpty()) {
-        executionGraph = new ExecutionGraph(parsedTaskSet);
-        String message = executionGraph.generateExecutionGraph(containerId);
-        //String message = executionGraph.generateExecutionGraph(containerId, parsedTaskSet);
-        TaskExecutorFixedThread taskExecutionGraph =
-            executionGraph.generateExecutionGraph(containerId, parsedTaskSet);
-        //LOG.info(message);
-      } */
     }
-
   }
 
   /**

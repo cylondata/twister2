@@ -36,13 +36,13 @@ public class KryoMemorySerializer {
   private Input kryoIn;
 
   public KryoMemorySerializer() {
-  }
-
-  public void init(Map<String, Object> config) {
     kryo = new Kryo();
     kryo.setReferences(false);
     kryoOut = new Output(2000, 2000000000);
     kryoIn = new Input(1);
+  }
+
+  public void init(Map<String, Object> config) {
   }
 
   public byte[] serialize(Object object) {

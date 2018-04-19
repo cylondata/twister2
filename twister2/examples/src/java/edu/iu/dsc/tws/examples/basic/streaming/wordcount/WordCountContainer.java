@@ -60,38 +60,15 @@ public class WordCountContainer implements IContainer {
     this.noOfTasksPerExecutor = NO_OF_TASKS / plan.noOfContainers();
 
     setupTasks();
-
-    network = new TWSNetwork(cfg, taskPlan);
-    channel = network.getDataFlowTWSCommunication();
-
-    //first get the communication config file
-    network = new TWSNetwork(cfg, taskPlan);
-    channel = network.getDataFlowTWSCommunication();
+    setupNetwork();
 
     Map<String, Object> newCfg = new HashMap<>();
     keyGather = (MPIDataFlowMultiGather) channel.keyedGather(newCfg, MessageType.OBJECT,
         destinations, sources,
         destinations, new WordAggregate());
 
-    if (id < 2) {
-      for (int i = 0; i < noOfTasksPerExecutor; i++) {
-        // the map thread where data is produced
-        Thread mapThread = new Thread(new StreamingWordSource(config, keyGather, 1000,
-            new ArrayList<>(destinations), noOfTasksPerExecutor * id + i, 10));
-        mapThread.start();
-      }
-    }
-    // we need to progress the communication
-    while (true) {
-      try {
-        // progress the channel
-        channel.progress();
-        // we should progress the communication directive
-        keyGather.progress();
-      } catch (Throwable t) {
-        LOG.log(Level.SEVERE, "Error", t);
-      }
-    }
+    scheduleTasks();
+    progress();
   }
 
   private void setupTasks() {
@@ -106,5 +83,39 @@ public class WordCountContainer implements IContainer {
     }
     LOG.fine(String.format("%d sources %s destinations %s",
         taskPlan.getThisExecutor(), sources, destinations));
+  }
+
+  private void setupNetwork() {
+    network = new TWSNetwork(config, taskPlan);
+    channel = network.getDataFlowTWSCommunication();
+
+    //first get the communication config file
+    network = new TWSNetwork(config, taskPlan);
+    channel = network.getDataFlowTWSCommunication();
+  }
+
+  private void scheduleTasks() {
+    if (id < 2) {
+      for (int i = 0; i < noOfTasksPerExecutor; i++) {
+        // the map thread where data is produced
+        Thread mapThread = new Thread(new StreamingWordSource(config, keyGather, 1000,
+            new ArrayList<>(destinations), noOfTasksPerExecutor * id + i, 10));
+        mapThread.start();
+      }
+    }
+  }
+
+  private void progress() {
+    // we need to progress the communication
+    while (true) {
+      try {
+        // progress the channel
+        channel.progress();
+        // we should progress the communication directive
+        keyGather.progress();
+      } catch (Throwable t) {
+        LOG.log(Level.SEVERE, "Error", t);
+      }
+    }
   }
 }

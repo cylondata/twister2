@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.executor.comm;
+package edu.iu.dsc.tws.comms.mpi.io.partition;
 
 import java.util.List;
 import java.util.Map;
@@ -18,9 +18,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 
-public class PartitionReceiver implements MessageReceiver {
-
-
+public class FSFinalReceiver implements MessageReceiver {
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
 
@@ -28,6 +26,10 @@ public class PartitionReceiver implements MessageReceiver {
 
   @Override
   public boolean onMessage(int source, int path, int target, int flags, Object object) {
+    return false;
+  }
+
+  public boolean onMessage(int source, int path, int target, int flags, Object data, Object key) {
     return false;
   }
 

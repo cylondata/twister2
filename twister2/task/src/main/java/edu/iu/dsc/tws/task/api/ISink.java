@@ -19,5 +19,5 @@ import edu.iu.dsc.tws.common.config.Config;
 public interface ISink extends INode {
   void prepare(Config config);
 
-  void execute(Message message);
+  void execute(IMessage message);
 }

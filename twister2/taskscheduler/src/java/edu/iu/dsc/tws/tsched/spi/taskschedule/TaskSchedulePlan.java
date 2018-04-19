@@ -9,23 +9,12 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
 package edu.iu.dsc.tws.tsched.spi.taskschedule;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
@@ -37,7 +26,10 @@ import com.google.common.collect.ImmutableSet;
 
 public class TaskSchedulePlan {
 
+  private static final Logger LOG = Logger.getLogger(TaskSchedulePlan.class.getName());
+
   private final Set<ContainerPlan> containers;
+
   private final Map<Integer, ContainerPlan> containersMap;
   private int jobId;
 
@@ -46,7 +38,7 @@ public class TaskSchedulePlan {
     this.containers = ImmutableSet.copyOf(containers);
     containersMap = new HashMap<>();
     for (ContainerPlan containerPlan : containers) {
-      containersMap.put(containerPlan.containerId, containerPlan);
+      containersMap.put(containerPlan.getContainerId(), containerPlan);
     }
   }
 
@@ -56,36 +48,14 @@ public class TaskSchedulePlan {
     Double maxRam = 0.0;
     Double maxDisk = 0.0;
 
-    Double resourceRam = 0.0;
-    Double resourceDisk = 0.0;
-
     for (ContainerPlan containerPlan : getContainers()) {
       Resource containerResource =
           containerPlan.getScheduledResource().or(containerPlan.getRequiredResource());
       maxCpu = Math.max(maxCpu, containerResource.getCpu());
       maxRam = Math.max(maxRam, containerResource.getRam());
       maxDisk = Math.max(maxDisk, containerResource.getDisk());
-
-      System.out.println("maximum ram value:" + containerResource.getRam() + "\t"
-          + containerResource.getDisk() + "\t"
-          + containerResource.getCpu());
-
-      if (maxRam > containerResource.getRam()) {
-        resourceRam = maxRam;
-      } else {
-        resourceRam = containerResource.getRam();
-      }
-
-      if (maxDisk > containerResource.getDisk()) {
-        resourceDisk = maxDisk;
-      } else {
-        resourceDisk = containerResource.getDisk();
-      }
-      //maxRam = maxRam.max(containerResource.getRam());
-      //maxDisk = maxDisk.max(containerResource.getDisk());
-      //return new Resource(maxCpu, maxRam, maxDisk);
     }
-    return new Resource(maxCpu, resourceRam, resourceDisk);
+    return new Resource(maxRam, maxDisk, maxCpu);
   }
 
   public int getJobId() {
@@ -104,6 +74,24 @@ public class TaskSchedulePlan {
     return containers;
   }
 
+  public Optional<ContainerPlan> getContainer(int containerId) {
+    return Optional.fromNullable(this.containersMap.get(containerId));
+  }
+
+  public Map<String, Integer> getTaskCounts() {
+    Map<String, Integer> taskCounts = new HashMap<>();
+    for (ContainerPlan containerPlan : getContainers()) {
+      for (TaskInstancePlan instancePlan : containerPlan.getTaskInstances()) {
+        Integer count = 0;
+        if (taskCounts.containsKey(instancePlan.getTaskName())) {
+          count = taskCounts.get(instancePlan.getTaskName());
+        }
+        taskCounts.put(instancePlan.getTaskName(), ++count);
+      }
+    }
+    return taskCounts;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -115,10 +103,8 @@ public class TaskSchedulePlan {
 
     TaskSchedulePlan that = (TaskSchedulePlan) o;
 
-    if (jobId != that.jobId) {
-      return false;
-    }
-    return containers.equals(that.containers);
+    return (getJobId() == that.getJobId())
+        && getContainers().equals(that.getContainers());
   }
 
   @Override
@@ -252,7 +238,7 @@ public class TaskSchedulePlan {
     public int hashCode() {
       int result = containerId;
       result = 31 * result + getTaskInstances().hashCode();
-      //result = 31 * result + getRequiredResource().hashCode(); //Check this later
+      result = 31 * result + getRequiredResource().hashCode(); //Check this later
       if (scheduledResource.isPresent()) {
         result = 31 * result + getScheduledResource().get().hashCode();
       }
@@ -260,5 +246,3 @@ public class TaskSchedulePlan {
     }
   }
 }
-
-

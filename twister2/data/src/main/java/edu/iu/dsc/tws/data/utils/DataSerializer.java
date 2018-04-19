@@ -9,18 +9,19 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.executor.comm;
+package edu.iu.dsc.tws.data.utils;
 
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.core.TWSCommunication;
-import edu.iu.dsc.tws.comms.core.TWSNetwork;
+import edu.iu.dsc.tws.data.api.DataType;
 
-public class CommunicationFactory {
-  private TWSNetwork network;
+public final class DataSerializer {
+  private DataSerializer() {
+  }
 
-  private TWSCommunication comm;
-
-  public DataFlowOperation build(String operation) {
+  public static byte[] serializeData(Object data, DataType dataType,
+                                     KryoMemorySerializer kryoMemorySerializer) {
+    if (dataType == DataType.OBJECT) {
+      return kryoMemorySerializer.serialize(data);
+    }
     return null;
   }
 }

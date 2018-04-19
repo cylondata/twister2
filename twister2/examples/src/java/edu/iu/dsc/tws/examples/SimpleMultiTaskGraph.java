@@ -29,8 +29,8 @@ import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
+import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.LinkedQueue;
-import edu.iu.dsc.tws.task.api.Message;
 import edu.iu.dsc.tws.task.api.SinkTask;
 import edu.iu.dsc.tws.task.api.SourceTask;
 import edu.iu.dsc.tws.task.api.Task;
@@ -73,7 +73,7 @@ public class SimpleMultiTaskGraph implements IContainer {
     int destination = 1;
 
     Map<String, Object> newCfg = new HashMap<>();
-    LinkedQueue<Message> pongQueue = new LinkedQueue<Message>();
+    LinkedQueue<IMessage> pongQueue = new LinkedQueue<IMessage>();
 
     taskExecutor.registerQueue(0, pongQueue);
     direct = channel.direct(newCfg, MessageType.OBJECT, 0, sources,
@@ -136,12 +136,12 @@ public class SimpleMultiTaskGraph implements IContainer {
     }
 
     @Override
-    public Message execute() {
+    public IMessage execute() {
       return null;
     }
 
     @Override
-    public Message execute(Message content) {
+    public IMessage execute(IMessage content) {
       try {
         // Sleep for a while
         Thread.sleep(1);
@@ -175,7 +175,7 @@ public class SimpleMultiTaskGraph implements IContainer {
     }
 
     @Override
-    public Message execute() {
+    public IMessage execute() {
       LOG.log(Level.INFO, "Starting map worker");
       for (int i = 0; i < 100000; i++) { //100000
         IntData data = generateData();
@@ -195,7 +195,7 @@ public class SimpleMultiTaskGraph implements IContainer {
     }
 
     @Override
-    public Message execute(Message content) {
+    public IMessage execute(IMessage content) {
       return execute();
     }
 

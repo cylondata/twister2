@@ -43,7 +43,7 @@ public class Container {
                    Resource containerMaximumResourceValue, int requestedContainerPadding) {
     this.containerId = containerId;
     this.resource = containerMaximumResourceValue;
-    this.taskInstances = new HashSet<TaskSchedulePlan.TaskInstancePlan>();
+    this.taskInstances = new HashSet<>();
     this.paddingPercentage = requestedContainerPadding;
   }
 
@@ -79,55 +79,47 @@ public class Container {
     this.paddingPercentage = paddingPercentage;
   }
 
-  void add(TaskSchedulePlan.TaskInstancePlan taskInstancePlan) {
+  void add(TaskSchedulePlan.TaskInstancePlan taskInstancePlan) throws TaskSchedulerException {
     if (this.taskInstances.contains(taskInstancePlan)) {
       throw new ScheduleException(String.format(
           "Instance %s already exists in container %s", taskInstancePlan, toString()));
     }
     assertHasSpace(taskInstancePlan.getResource());
     this.taskInstances.add(taskInstancePlan);
+
+    /*boolean flag = assertHasSpace(taskInstancePlan.getResource());
+    if (flag) {
+      this.taskInstances.add(taskInstancePlan);
+    }*/
   }
 
   private void assertHasSpace(Resource resourceValue) throws TaskSchedulerException {
 
+    boolean flag = false;
     Resource usedResources = this.getTotalUsedResources();
 
     double newRam = usedResources.getRam() + resourceValue.getRam() + paddingPercentage;
-    double newCpu = usedResources.getCpu() + resourceValue.getCpu() + paddingPercentage;
     double newDisk = usedResources.getDisk() + resourceValue.getDisk() + paddingPercentage;
+    double newCpu = usedResources.getCpu() + resourceValue.getCpu() + paddingPercentage;
 
-    LOG.info("New Ram Value:" + newRam + "\t Resource Value Ram:" + this.resource.getRam() + "\n");
     if (newRam > this.resource.getRam()) {
-      try {
-        throw new TaskSchedulerException(String.format("Adding %s bytes of ram to existing %s "
-                + "bytes with %d percent padding would exceed capacity %s",
-            resourceValue.getRam(), usedResources.getRam(),
-            paddingPercentage, this.resource.getRam()));
-      } catch (TaskSchedulerException e) {
-        e.printStackTrace();
-      }
-    }
-    if (newCpu > this.resource.getCpu()) {
-      try {
-        throw new TaskSchedulerException(String.format("Adding %s cores to existing %s "
-                + "cores with %d percent padding would exceed capacity %s",
-            resourceValue.getCpu(), usedResources.getCpu(),
-            paddingPercentage, this.resource.getCpu()));
-      } catch (TaskSchedulerException e) {
-        e.printStackTrace();
-      }
+      throw new TaskSchedulerException(String.format("Adding %s bytes of ram to existing %s "
+              + "bytes with %d percent padding would exceed capacity %s",
+          resourceValue.getRam(), usedResources.getRam(),
+          paddingPercentage, this.resource.getRam()));
     }
     if (newDisk > this.resource.getDisk()) {
-      try {
-        throw new TaskSchedulerException(String.format("Adding %s bytes of disk to existing %s "
-                + "bytes with %s percent padding would exceed capacity %s",
-            resourceValue.getDisk(), usedResources.getDisk(),
-            paddingPercentage, this.resource.getDisk()));
-      } catch (TaskSchedulerException e) {
-        e.printStackTrace();
-      }
+      throw new TaskSchedulerException(String.format("Adding %s bytes of disk to existing %s "
+              + "bytes with %s percent padding would exceed capacity %s",
+          resourceValue.getDisk(), usedResources.getDisk(),
+          paddingPercentage, this.resource.getDisk()));
     }
-    LOG.info("Used Resources:" + resourceValue + "\n");
+    if (newCpu > this.resource.getCpu()) {
+      throw new TaskSchedulerException(String.format("Adding %s cores to existing %s "
+              + "cores with %d percent padding would exceed capacity %s",
+          resourceValue.getCpu(), usedResources.getCpu(),
+          paddingPercentage, this.resource.getCpu()));
+    }
   }
 
   private Resource getTotalUsedResources() {
@@ -135,24 +127,19 @@ public class Container {
     double usedCpuCores = 0.0;
     double usedDisk = 0.0;
     for (TaskSchedulePlan.TaskInstancePlan instancePlan : this.taskInstances) {
-      Resource resourceval = instancePlan.getResource();
-      usedRam += resourceval.getRam();
-      usedCpuCores += resourceval.getCpu();
-      usedDisk += resourceval.getDisk();
+      Resource instancePlanResource = instancePlan.getResource();
+      usedRam += instancePlanResource.getRam();
+      usedCpuCores += instancePlanResource.getCpu();
+      usedDisk += instancePlanResource.getDisk();
     }
     return new Resource(usedRam, usedDisk, usedCpuCores);
   }
 
-  public double increaseBy(int percentage) {
-
-    double factor = 1.0 + ((double) percentage / 100);
-    long max = Math.round(Long.MAX_VALUE / factor);
-        /*checkArgument(asBytes() <= max, String.format(
-                "Increasing %s by %d percent would exceed Long.MAX_LONG", this, percentage));*/
-    //return ByteAmount.fromBytes(Math.round((double) asBytes() * factor));
-    double maxValue = Math.round(max) * factor;
-    return maxValue;
+  @Override
+  public String toString() {
+    return String.format("{containerId=%s, instances=%s, resource=%s, paddingPercentage=%s}",
+        containerId, taskInstances, resource, paddingPercentage);
   }
-
 }
+
 
