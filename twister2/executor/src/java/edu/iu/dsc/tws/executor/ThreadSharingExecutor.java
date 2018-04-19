@@ -11,25 +11,57 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.task.api.Queue;
 
 public class ThreadSharingExecutor {
   private static final Logger LOG = Logger.getLogger(ThreadSharingExecutor.class.getName());
 
   private int numThreads;
 
-  private Queue<BlockingQueue<INodeInstance>> tasks;
+  private BlockingQueue<INodeInstance> tasks;
 
   private TWSChannel channel;
+
+  private List<Thread> threads = new ArrayList<>();
+
+  public ThreadSharingExecutor(int numThreads, TWSChannel channel) {
+    this.numThreads = numThreads;
+    this.channel = channel;
+  }
+
+  public void execute(Execution execution) {
+    // go through the instances
+    Map<Integer, INodeInstance> nodes = execution.getNodes();
+    tasks = new ArrayBlockingQueue<>(nodes.size() * 2);
+    tasks.addAll(nodes.values());
+
+    for (int i = 0; i < numThreads; i++) {
+      Thread t = new Thread(new Worker());
+      t.start();
+      threads.add(t);
+    }
+
+    // we need to progress the channel
+    while (true) {
+      channel.progress();
+    }
+  }
 
   private class Worker implements Runnable {
     @Override
     public void run() {
-
+      while (true) {
+        INodeInstance nodeInstance = tasks.poll();
+        nodeInstance.execute();
+        tasks.offer(nodeInstance);
+      }
     }
   }
 }

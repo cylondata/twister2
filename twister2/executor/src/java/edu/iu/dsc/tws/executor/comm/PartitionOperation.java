@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
@@ -29,6 +30,8 @@ import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
 
 public class PartitionOperation extends ParallelOperation {
+  private static final Logger LOG = Logger.getLogger(PartitionOperation.class.getName());
+
   private Config config;
 
   private TWSChannel channel;
@@ -43,12 +46,20 @@ public class PartitionOperation extends ParallelOperation {
 
   private int partitionEdge;
 
-
   public PartitionOperation(Config config, TWSChannel network, TaskPlan tPlan) {
     this.config = config;
     this.taskPlan = tPlan;
     this.channel = network;
     this.outMessages = new HashMap<>();
+  }
+
+  public void prepare(Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
+                      DataType dataType, String edgeName) {
+    this.edge = e;
+    op = new MPIDataFlowPartition(channel, srcs, dests, new PartitionReceiver(),
+        MPIDataFlowPartition.PartitionStratergy.DIRECT);
+    partitionEdge = e.generate(edgeName);
+    op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, partitionEdge);
   }
 
   public void prepare(Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,

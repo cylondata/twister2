@@ -166,6 +166,7 @@ public class DefaultExecutor implements IExecutor {
       Set<Integer> sourcesOfThisWorker = intersectionOfTasks(conPlan, c.getSourceTasks());
       Set<Integer> targetsOfThisWorker = intersectionOfTasks(conPlan, c.getTargetTasks());
 
+      // todo
       // set the parallel operation to the instance
       // lets see weather this comunication belongs to a task instance
       for (Integer i : sourcesOfThisWorker) {
@@ -190,6 +191,9 @@ public class DefaultExecutor implements IExecutor {
     }
 
     // lets start the execution
+    ThreadSharingExecutor threadSharingExecutor =
+        new ThreadSharingExecutor(noOfThreads, network.getChannel());
+    threadSharingExecutor.execute(execution);
 
     return execution;
   }
