@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.comm;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -33,7 +34,7 @@ public class PartitionOperation extends ParallelOperation {
 
   private TWSChannel channel;
 
-  private BlockingQueue<IMessage> outMessages;
+  private Map<Integer, BlockingQueue<IMessage>> outMessages;
 
   private MPIDataFlowPartition op;
 
@@ -43,21 +44,21 @@ public class PartitionOperation extends ParallelOperation {
 
   private int partitionEdge;
 
-  public PartitionOperation(Config config, TWSMPIChannel network, TaskPlan tPlan,
-                            BlockingQueue<IMessage> outMsgs) {
+
+  public PartitionOperation(Config config, TWSMPIChannel network, TaskPlan tPlan) {
     this.config = config;
     this.taskPlan = tPlan;
-    this.outMessages = outMsgs;
     this.channel = network;
+    this.outMessages = new HashMap<>();
   }
 
   public void prepare(Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
-                      DataType dataType, DataType keyType) {
+                      DataType dataType, DataType keyType, String edgeName) {
     this.edge = e;
     op = new MPIDataFlowPartition(channel, srcs, dests, new PartitionReceiver(),
         MPIDataFlowPartition.PartitionStratergy.DIRECT,
         Utils.dataTypeToMessageType(dataType), Utils.dataTypeToMessageType(keyType));
-    partitionEdge = e.generate();
+    partitionEdge = e.generate(edgeName);
     op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, partitionEdge);
   }
 
@@ -69,6 +70,14 @@ public class PartitionOperation extends ParallelOperation {
     op.send(source, message, 0, dest);
   }
 
+  @Override
+  public void register(int targetTask, BlockingQueue<IMessage> queue) {
+    if (outMessages.containsKey(targetTask)) {
+      throw new RuntimeException("Existing queue for target task");
+    }
+    outMessages.put(targetTask, queue);
+  }
+
   public class PartitionReceiver implements MessageReceiver {
     @Override
     public void init(Config cfg, DataFlowOperation operation,
@@ -77,8 +86,9 @@ public class PartitionOperation extends ParallelOperation {
 
     @Override
     public boolean onMessage(int source, int path, int target, int flags, Object object) {
-      TaskMessage<Object> msg = new TaskMessage<>(object, partitionEdge, source);
-      return outMessages.offer(msg);
+      TaskMessage<Object> msg = new TaskMessage<>(object,
+          edge.getStringMapping(partitionEdge), target);
+      return outMessages.get(target).offer(msg);
     }
 
     @Override

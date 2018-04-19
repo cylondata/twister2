@@ -56,4 +56,8 @@ public class SinkInstance {
       task.execute(m);
     }
   }
+
+  public BlockingQueue<IMessage> getInQueue() {
+    return inQueue;
+  }
 }

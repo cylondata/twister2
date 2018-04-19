@@ -25,5 +25,5 @@ public interface IMessage {
    * The edge this message is traveling
    * @return the edge identifier
    */
-  int edge();
+  String edge();
 }
