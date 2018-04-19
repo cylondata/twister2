@@ -13,8 +13,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.connectors.kafka;
 
+import edu.iu.dsc.tws.data.streaming.StreamingSource;
 import org.apache.kafka.clients.*;
 
-public abstract class KafkaConsumerBase {
+public abstract class KafkaConsumerBase extends StreamingSource {
 
 }
