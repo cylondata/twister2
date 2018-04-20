@@ -11,11 +11,17 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-public class Execution {
+import edu.iu.dsc.tws.executor.comm.IParallelOperation;
+
+public class ExecutionPlan {
   private Map<Integer, INodeInstance> nodes = new HashMap<>();
+
+  private List<IParallelOperation> parallelOperations = new ArrayList<>();
 
   /**
    * Add a node instance of this execution
@@ -28,6 +34,14 @@ public class Execution {
 
   public Map<Integer, INodeInstance> getNodes() {
     return nodes;
+  }
+
+  public void add(IParallelOperation op) {
+    parallelOperations.add(op);
+  }
+
+  public List<IParallelOperation> getParallelOperations() {
+    return parallelOperations;
   }
 
   public void stop() {

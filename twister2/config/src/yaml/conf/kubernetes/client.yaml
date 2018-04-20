@@ -8,14 +8,22 @@ twister2.job.name: "basic-kubernetes"
 # number of CPUs for this job
 twister2.cpu_per_container: "1"
 
-# amount of memory for each CPU in bytes, 1GB=1024*1024*1024
+# amount of memory for each CPU in mega bytes, 1GB=1024 MB
 twister2.ram_per_container: "1024"
 
-# amount of hard disk space on each CPU in bytes, 1GB=1024*1024*1024
+# amount of hard disk space on each CPU in mega bytes, 1GB=1024 MB
 twister2.disk_per_container: "1024"
 
 # number of worker instances
 twister2.number_of_containers: "6"
+
+
+########################################################################
+# Kubernetes related settings
+########################################################################
+# namespace to use in kubernetes
+# default value is "default"
+# kubernetes.namespace: "default"
 
 # number of containers per pod
 # default is 1

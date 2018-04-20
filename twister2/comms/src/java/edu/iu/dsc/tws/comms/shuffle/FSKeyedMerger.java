@@ -274,13 +274,4 @@ public class FSKeyedMerger {
   private String getSaveFileName(int filePart) {
     return folder + "/" + operationName + "/part_" + filePart;
   }
-
-  /**
-   * Get the name of the sizes file name
-   * @param filePart file part index
-   * @return filename
-   */
-  private String getSizesFileName(int filePart) {
-    return folder + "/" + operationName + "/part_sizes_" + filePart;
-  }
 }

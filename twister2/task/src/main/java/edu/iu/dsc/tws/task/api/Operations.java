@@ -11,23 +11,14 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.api;
 
-import edu.iu.dsc.tws.common.config.Config;
-
-/**
- * The abstract class that represents the Last task of a job. This task will be responsible of
- * outputing the results to various output sources such as files or console.
- * The task takes inputs from another task and outputs to a output source
- */
-public abstract class SinkTask implements ISink {
-  private static final long serialVersionUID = -254264903510286748L;
-
-  @Override
-  public void execute(IMessage message) {
-
+public final class Operations {
+  private Operations() {
   }
 
-  @Override
-  public void prepare(Config cfg, TaskContext context) {
-
-  }
+  public static final String PARTITION = "partition";
+  public static final String REDUCE = "reduce";
+  public static final String ALL_REDUCE = "all_reduce";
+  public static final String ALL_GATHER = "all_gather";
+  public static final String KEYED_GATHER = "keyed_gather";
+  public static final String KEYED_REDUCE = "keyed_reduce";
 }

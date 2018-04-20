@@ -11,18 +11,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.api;
 
-import edu.iu.dsc.tws.common.config.Config;
-
 /**
  * The interface that that all data input sources (Batch, Streaming, etc)
  */
 public interface ISource extends INode {
-  /**
-   * Prepare the task to be executed
-   * @param cfg the configuration
-   * @param collection the output collection
-   */
-  void prepare(Config cfg, OutputCollection collection);
   /**
    * Execute without an incoming message
    */

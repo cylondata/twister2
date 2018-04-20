@@ -24,7 +24,7 @@ kubernetes.image.pull.policy: "Always"
 
 # kubernetes can map workers to nodes as specified by the user
 # default value is false
-kubernetes.worker.to.node.mapping: true
+# kubernetes.worker.to.node.mapping: true
 
 # the label key on the nodes that will be used to map workers to nodes
 kubernetes.worker.mapping.key: "kubernetes.io/hostname"
@@ -33,10 +33,16 @@ kubernetes.worker.mapping.key: "kubernetes.io/hostname"
 # possible values: In, NotIn, Exists, DoesNotExist, Gt, Lt
 # Exists/DoesNotExist checks only the existence of the specified key in the node.
 # Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#node-affinity-beta-feature
-kubernetes.worker.mapping.operator: "NotIn"
+kubernetes.worker.mapping.operator: "In"
 
 # values for the mapping key
 # when the mapping operator is either Exists or DoesNotExist, values list must be empty.
 kubernetes.worker.mapping.values: ['e012', 'e013']
 # kubernetes.worker.mapping.values: []
+
+# unifrom worker mapping
+# Valid values: all-same-node, all-separate-nodes, none
+# default value is none
+# kubernetes.worker.mapping.uniform: "all-same-node"
+
 

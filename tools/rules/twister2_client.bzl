@@ -104,6 +104,11 @@ def twister2_client_lib_data_files():
         "//twister2/data/src/main/java:data-java",
     ]
 
+def twister2_client_lib_executor_files():
+    return [
+        "//twister2/executor/src/java:executor-java",
+    ]
+
 def twister2_client_lib_data_lmdb_files():
     return [
         "//twister2/data/src/main/java:data-java",

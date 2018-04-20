@@ -24,7 +24,7 @@ public class Vertex {
   private int cpu;
   private int memory;
   private int ram;
-  private int parallelism;
+  private int parallelism = 1;
 
   private Config config;
 

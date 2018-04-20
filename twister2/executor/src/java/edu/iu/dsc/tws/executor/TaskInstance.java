@@ -20,6 +20,7 @@ import edu.iu.dsc.tws.executor.comm.IParallelOperation;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.ITask;
 import edu.iu.dsc.tws.task.api.OutputCollection;
+import edu.iu.dsc.tws.task.api.TaskContext;
 
 /**
  * The class represents the instance of the executing task
@@ -79,7 +80,7 @@ public class TaskInstance implements INodeInstance {
   public void prepare() {
     outputCollection = new DefaultOutputCollection(outQueue);
 
-    task.prepare(config, outputCollection);
+    task.prepare(config, new TaskContext(0, 0, "", 0));
   }
 
   public void registerOutParallelOperation(String edge, IParallelOperation op) {
@@ -103,6 +104,10 @@ public class TaskInstance implements INodeInstance {
           op.send(taskId, message);
         }
       }
+    }
+
+    for (Map.Entry<String, IParallelOperation> e : outParOps.entrySet()) {
+      e.getValue().progress();
     }
   }
 

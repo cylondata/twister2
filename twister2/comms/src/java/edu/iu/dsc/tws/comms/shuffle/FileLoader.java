@@ -21,6 +21,9 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.lang3.tuple.ImmutableTriple;
+import org.apache.commons.lang3.tuple.Triple;
+
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 
@@ -252,6 +255,38 @@ public final class FileLoader {
       data = bytes;
     }
     return data;
+  }
+
+  public static Triple<List<KeyValue>, Long, Long> openFilePart(String fileName, long startOffSet,
+                                                                int maxSize, MessageType keyType,
+                                                                MessageType dataType,
+                                                                KryoMemorySerializer deserializer) {
+    List<KeyValue> keyValues = new ArrayList<>();
+    String outFileName = Paths.get(fileName).toString();
+    FileChannel rwChannel;
+    try {
+      rwChannel = new RandomAccessFile(outFileName, "rw").getChannel();
+      long size = maxSize < rwChannel.size() - startOffSet
+          ? maxSize : rwChannel.size() - startOffSet;
+      ByteBuffer os = rwChannel.map(FileChannel.MapMode.READ_ONLY, startOffSet, size);
+
+      int totalRead = 0;
+      while (totalRead < size) {
+        Object key;
+        Object value;
+
+        int keySize = os.getInt();
+        key = deserialize(keyType, deserializer, os, keySize);
+
+        int dataSize = os.getInt();
+        value = deserialize(dataType, deserializer, os, dataSize);
+        keyValues.add(new KeyValue(key, value));
+      }
+      rwChannel.close();
+      return new ImmutableTriple<>(keyValues, size + startOffSet, rwChannel.size());
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   /**

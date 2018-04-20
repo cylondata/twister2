@@ -96,7 +96,7 @@ public class PartitionOperation extends ParallelOperation {
 
     @Override
     public boolean onMessage(int source, int path, int target, int flags, Object object) {
-      TaskMessage<Object> msg = new TaskMessage<>(object,
+      TaskMessage msg = new TaskMessage(object,
           edge.getStringMapping(partitionEdge), target);
       return outMessages.get(target).offer(msg);
     }
@@ -104,5 +104,9 @@ public class PartitionOperation extends ParallelOperation {
     @Override
     public void progress() {
     }
+  }
+
+  public void progress() {
+    op.progress();
   }
 }

@@ -35,6 +35,22 @@ public final class TWSNetwork {
 
   private TWSChannel channel;
 
+  public TWSNetwork(Config cfg, int workerId) {
+    // load the network configuration
+    this.config = loadConfig(cfg);
+
+    // lets load the communication implementation
+    String communicationClass = CommunicationContext.communicationClass(config);
+    try {
+      dataFlowTWSCommunication = ReflectionUtils.newInstance(communicationClass);
+      LOG.log(Level.FINE, "Created communication with class: " + communicationClass);
+      this.channel = new TWSMPIChannel(config, MPI.COMM_WORLD, workerId);
+    } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
+      LOG.severe("Failed to load the communications class: " + communicationClass);
+      throw new RuntimeException(e);
+    }
+  }
+
   public TWSNetwork(Config cfg, TaskPlan taskPlan) {
     // load the network configuration
     this.config = loadConfig(cfg);

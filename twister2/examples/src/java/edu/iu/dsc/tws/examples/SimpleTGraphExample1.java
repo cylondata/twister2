@@ -31,7 +31,7 @@ import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.ITask;
 import edu.iu.dsc.tws.task.api.LinkedQueue;
-import edu.iu.dsc.tws.task.api.OutputCollection;
+import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.core.TaskExecutorFixedThread;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
@@ -199,7 +199,7 @@ public class SimpleTGraphExample1 implements IContainer {
      * @param collection the output collection
      */
     @Override
-    public void prepare(Config cfg, OutputCollection collection) {
+    public void prepare(Config cfg, TaskContext collection) {
 
     }
 
@@ -233,14 +233,6 @@ public class SimpleTGraphExample1 implements IContainer {
     @Override
     public void run() {
 
-    }
-
-    /**
-     * Assign the task name
-     */
-    @Override
-    public String taskName() {
-      return taskName;
     }
   }
 
@@ -259,7 +251,7 @@ public class SimpleTGraphExample1 implements IContainer {
      * @param collection the output collection
      */
     @Override
-    public void prepare(Config cfg, OutputCollection collection) {
+    public void prepare(Config cfg, TaskContext collection) {
 
     }
 
@@ -293,14 +285,6 @@ public class SimpleTGraphExample1 implements IContainer {
     @Override
     public void run() {
 
-    }
-
-    /**
-     * Assign the task name
-     */
-    @Override
-    public String taskName() {
-      return taskName;
     }
   }
 
@@ -319,7 +303,7 @@ public class SimpleTGraphExample1 implements IContainer {
      * @param collection the output collection
      */
     @Override
-    public void prepare(Config cfg, OutputCollection collection) {
+    public void prepare(Config cfg, TaskContext collection) {
 
     }
 
@@ -353,14 +337,6 @@ public class SimpleTGraphExample1 implements IContainer {
     @Override
     public void run() {
 
-    }
-
-    /**
-     * Assign the task name
-     */
-    @Override
-    public String taskName() {
-      return taskName;
     }
   }
 
@@ -379,7 +355,7 @@ public class SimpleTGraphExample1 implements IContainer {
      * @param collection the output collection
      */
     @Override
-    public void prepare(Config cfg, OutputCollection collection) {
+    public void prepare(Config cfg, TaskContext collection) {
 
     }
 
@@ -413,14 +389,6 @@ public class SimpleTGraphExample1 implements IContainer {
     @Override
     public void run() {
 
-    }
-
-    /**
-     * Assign the task name
-     */
-    @Override
-    public String taskName() {
-      return taskName;
     }
   }
 

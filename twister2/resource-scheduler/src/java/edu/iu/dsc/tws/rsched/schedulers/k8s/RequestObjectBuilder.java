@@ -28,6 +28,7 @@ import io.kubernetes.client.models.V1EmptyDirVolumeSource;
 import io.kubernetes.client.models.V1EnvVar;
 import io.kubernetes.client.models.V1EnvVarSource;
 import io.kubernetes.client.models.V1LabelSelector;
+import io.kubernetes.client.models.V1LabelSelectorRequirement;
 import io.kubernetes.client.models.V1NFSVolumeSource;
 import io.kubernetes.client.models.V1NodeAffinity;
 import io.kubernetes.client.models.V1NodeSelector;
@@ -40,6 +41,9 @@ import io.kubernetes.client.models.V1PersistentVolumeClaim;
 import io.kubernetes.client.models.V1PersistentVolumeClaimSpec;
 import io.kubernetes.client.models.V1PersistentVolumeClaimVolumeSource;
 import io.kubernetes.client.models.V1PersistentVolumeSpec;
+import io.kubernetes.client.models.V1PodAffinity;
+import io.kubernetes.client.models.V1PodAffinityTerm;
+import io.kubernetes.client.models.V1PodAntiAffinity;
 import io.kubernetes.client.models.V1PodSpec;
 import io.kubernetes.client.models.V1PodTemplateSpec;
 import io.kubernetes.client.models.V1ResourceRequirements;
@@ -92,7 +96,7 @@ public final class RequestObjectBuilder {
     // add selector for the job
     V1LabelSelector selector = new V1LabelSelector();
     String serviceLabel = KubernetesUtils.createServiceLabel(jobName);
-    selector.putMatchLabelsItem("app", serviceLabel);
+    selector.putMatchLabelsItem(KubernetesConstants.SERVICE_LABEL_KEY, serviceLabel);
     setSpec.setSelector(selector);
 
     // construct the pod template
@@ -121,7 +125,7 @@ public final class RequestObjectBuilder {
     V1PodTemplateSpec template = new V1PodTemplateSpec();
     V1ObjectMeta templateMetaData = new V1ObjectMeta();
     HashMap<String, String> labels = new HashMap<String, String>();
-    labels.put("app", serviceLabel);
+    labels.put(KubernetesConstants.SERVICE_LABEL_KEY, serviceLabel);
     templateMetaData.setLabels(labels);
     template.setMetadata(templateMetaData);
 
@@ -163,8 +167,23 @@ public final class RequestObjectBuilder {
     }
     podSpec.setContainers(containers);
 
+    V1Affinity affinity = new V1Affinity();
+    boolean affinitySet = false;
     if (KubernetesContext.workerToNodeMapping(config)) {
-      podSpec.setAffinity(createAffinityObject(config));
+      setNodeAffinity(config, affinity);
+      affinitySet = true;
+    }
+
+    String uniformMappingType = KubernetesContext.workerMappingUniform(config);
+    if ("all-same-node".equalsIgnoreCase(uniformMappingType)
+        || "all-separate-nodes".equalsIgnoreCase(uniformMappingType)) {
+      setUniformMappingAffinity(config, affinity);
+      affinitySet = true;
+    }
+
+    // if affinity is initialized, set it
+    if (affinitySet) {
+      podSpec.setAffinity(affinity);
     }
 
     template.setSpec(podSpec);
@@ -290,7 +309,7 @@ public final class RequestObjectBuilder {
     container.setEnv(Arrays.asList(var1, var2, var3, var4, var5, var6, var7, var8, var9, var10));
   }
 
-  public static V1Affinity createAffinityObject(Config config) {
+  public static void setNodeAffinity(Config config, V1Affinity affinity) {
 
     String key = KubernetesContext.workerMappingKey(config);
     String operator = KubernetesContext.workerMappingOperator(config);
@@ -310,9 +329,39 @@ public final class RequestObjectBuilder {
     V1NodeAffinity nodeAffinity = new V1NodeAffinity();
     nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution(nodeSelector);
 
-    V1Affinity affinity = new V1Affinity();
     affinity.setNodeAffinity(nodeAffinity);
-    return affinity;
+  }
+
+  public static void setUniformMappingAffinity(Config config, V1Affinity affinity) {
+
+    String mappingType = KubernetesContext.workerMappingUniform(config);
+    String key = KubernetesConstants.SERVICE_LABEL_KEY;
+    String operator = "In";
+    String serviceLabel = KubernetesUtils.createServiceLabel(SchedulerContext.jobName(config));
+    List<String> values = Arrays.asList(serviceLabel);
+
+    V1LabelSelectorRequirement labelRequirement = new V1LabelSelectorRequirement();
+    labelRequirement.setKey(key);
+    labelRequirement.setOperator(operator);
+    labelRequirement.setValues(values);
+
+    V1LabelSelector labelSelector = new V1LabelSelector();
+    labelSelector.addMatchExpressionsItem(labelRequirement);
+
+    V1PodAffinityTerm affinityTerm = new V1PodAffinityTerm();
+    affinityTerm.setLabelSelector(labelSelector);
+    affinityTerm.setTopologyKey("kubernetes.io/hostname");
+
+    if ("all-same-node".equalsIgnoreCase(mappingType)) {
+      V1PodAffinity podAffinity = new V1PodAffinity();
+      podAffinity.requiredDuringSchedulingIgnoredDuringExecution(Arrays.asList(affinityTerm));
+      affinity.setPodAffinity(podAffinity);
+    } else if ("all-separate-nodes".equalsIgnoreCase(mappingType)) {
+      V1PodAntiAffinity podAntiAffinity = new V1PodAntiAffinity();
+      podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution(Arrays.asList(affinityTerm));
+      affinity.setPodAntiAffinity(podAntiAffinity);
+    }
+
   }
 
   public static V1Service createHeadlessServiceObject(Config config, String jobName) {
@@ -335,7 +384,7 @@ public final class RequestObjectBuilder {
     serviceSpec.setClusterIP("None");
     // set selector
     HashMap<String, String> selectors = new HashMap<String, String>();
-    selectors.put("app", serviceLabel);
+    selectors.put(KubernetesConstants.SERVICE_LABEL_KEY, serviceLabel);
     serviceSpec.setSelector(selectors);
 
     service.setSpec(serviceSpec);
@@ -366,7 +415,7 @@ public final class RequestObjectBuilder {
     serviceSpec.setType("NodePort");
     // set selector
     HashMap<String, String> selectors = new HashMap<String, String>();
-    selectors.put("app", serviceLabel);
+    selectors.put(KubernetesConstants.SERVICE_LABEL_KEY, serviceLabel);
     serviceSpec.setSelector(selectors);
 
     ArrayList<V1ServicePort> ports = new ArrayList<V1ServicePort>();

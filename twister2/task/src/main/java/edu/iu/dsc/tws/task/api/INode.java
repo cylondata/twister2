@@ -13,6 +13,13 @@ package edu.iu.dsc.tws.task.api;
 
 import java.io.Serializable;
 
-public interface INode extends Serializable {
+import edu.iu.dsc.tws.common.config.Config;
 
+public interface INode extends Serializable {
+  /**
+   * Prepare the task to be executed
+   * @param cfg the configuration
+   * @param context the task context, this has runtime information about the task
+   */
+  void prepare(Config cfg, TaskContext context);
 }

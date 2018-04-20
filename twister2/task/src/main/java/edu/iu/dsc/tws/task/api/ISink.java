@@ -11,13 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.api;
 
-import edu.iu.dsc.tws.common.config.Config;
-
 /**
  * The interface that all Sinks need to implement
  */
 public interface ISink extends INode {
-  void prepare(Config config);
-
   void execute(IMessage message);
 }

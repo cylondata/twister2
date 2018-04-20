@@ -36,7 +36,7 @@ public class ThreadSharingExecutor {
     this.channel = channel;
   }
 
-  public void execute(Execution execution) {
+  public void execute(ExecutionPlan execution) {
     // go through the instances
     Map<Integer, INodeInstance> nodes = execution.getNodes();
     tasks = new ArrayBlockingQueue<>(nodes.size() * 2);
@@ -46,11 +46,6 @@ public class ThreadSharingExecutor {
       Thread t = new Thread(new Worker());
       t.start();
       threads.add(t);
-    }
-
-    // we need to progress the channel
-    while (true) {
-      channel.progress();
     }
   }
 

@@ -14,9 +14,9 @@ package edu.iu.dsc.tws.task.graph;
 import edu.iu.dsc.tws.task.api.ITask;
 
 public class Edge {
-  public String name;
-  public ITask function;
-  public String operation;
+  private String name;
+  private ITask function;
+  private String operation;
 
   public Edge(String te) {
     this.name = te;
