@@ -15,4 +15,62 @@ import java.util.logging.Logger;
 
 public class CheckpointMaster {
   private static final Logger LOG = Logger.getLogger(CheckpointMaster.class.getName());
+
+  private final IExecutor executor;
+
+  private final CheckpointProperties checkpointProperties;
+
+  private final long baseInterval;
+
+  private final long checkpointTimeout;
+
+  private final long minPauseBetweenCheckpoints;
+
+  private final long maxConcurrentCheckpointAttempts;
+
+  private volatile boolean shutdown;
+
+  public CheckpointMaster(
+      long baseInterval,
+      long checkpointTimeout,
+      long minPauseBetweenCheckpoints,
+      int maxConcurrentCheckpointAttempts,
+      IExecutor executor
+  ){
+
+    this.baseInterval = baseInterval;
+    this.checkpointTimeout = checkpointTimeout;
+    this.minPauseBetweenCheckpoints = minPauseBetweenCheckpoints;
+    this.maxConcurrentCheckpointAttempts = maxConcurrentCheckpointAttempts;
+    this.executor = executor;
+
+  }
+
+  public void startCheckpointScheduler(){
+
+  }
+
+  public void stopCheckpointScheduler(){
+
+  }
+
+  public void receiveAcknowledgeMessage(){
+
+  }
+
+  public long getBaseInterval() {
+    return baseInterval;
+  }
+
+  public long getCheckpointTimeout() {
+    return checkpointTimeout;
+  }
+
+  public long getMinPauseBetweenCheckpoints() {
+    return minPauseBetweenCheckpoints;
+  }
+
+  public long getMaxConcurrentCheckpointAttempts() {
+    return maxConcurrentCheckpointAttempts;
+  }
 }
