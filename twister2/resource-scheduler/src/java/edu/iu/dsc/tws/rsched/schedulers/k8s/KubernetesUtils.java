@@ -98,8 +98,8 @@ public final class KubernetesUtils {
    * @param jobName
    * @return
    */
-  public static String createServiceLabelWithApp(String jobName) {
-    return "app=" + createServiceLabel(jobName);
+  public static String createServiceLabelWithKey(String jobName) {
+    return KubernetesConstants.SERVICE_LABEL_KEY + "=" + createServiceLabel(jobName);
   }
 
   /**

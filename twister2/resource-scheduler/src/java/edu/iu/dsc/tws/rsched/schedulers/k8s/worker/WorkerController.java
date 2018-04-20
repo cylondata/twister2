@@ -192,7 +192,7 @@ public class WorkerController implements IWorkerController {
    */
   private void buildWorkerList() {
     String namespace = KubernetesContext.namespace(config);
-    String servicelabel = KubernetesUtils.createServiceLabelWithApp(jobName);
+    String servicelabel = KubernetesUtils.createServiceLabelWithKey(jobName);
     int basePort = KubernetesContext.workerBasePort(config);
 
     V1PodList list = null;
@@ -312,7 +312,7 @@ public class WorkerController implements IWorkerController {
 
     String phase = "Running";
     String namespace = KubernetesContext.namespace(config);
-    String servicelabel = KubernetesUtils.createServiceLabelWithApp(jobName);
+    String servicelabel = KubernetesUtils.createServiceLabelWithKey(jobName);
     Integer timeoutSeconds = (int) (timeoutMiliSec / 1000);
     Watch<V1Pod> watch = null;
 

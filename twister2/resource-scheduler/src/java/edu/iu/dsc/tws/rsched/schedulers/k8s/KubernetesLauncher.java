@@ -206,9 +206,9 @@ public class KubernetesLauncher implements ILauncher {
     // first check whether there is a StatefulSet with the same name,
     // if so, do not submit new job. Give a message and terminate
     // user needs to explicitly terminate that job
-    String serviceLabelWithApp = KubernetesUtils.createServiceLabelWithApp(jobName);
+    String serviceLabelWithKey = KubernetesUtils.createServiceLabelWithKey(jobName);
     V1beta2StatefulSet existingStatefulSet =
-        controller.getStatefulSet(namespace, jobName, serviceLabelWithApp);
+        controller.getStatefulSet(namespace, jobName, serviceLabelWithKey);
     if (existingStatefulSet != null) {
       LOG.log(Level.SEVERE, "There is already a StatefulSet object in Kubernetes master "
           + "with the name: " + jobName + "\nFirst terminate this running job and resubmit. "
