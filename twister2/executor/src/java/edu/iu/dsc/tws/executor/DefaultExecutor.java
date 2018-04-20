@@ -124,7 +124,7 @@ public class DefaultExecutor implements IExecutor {
           if (!parOpTable.contains(v.getName(), e.getName())) {
             parOpTable.put(v.getName(), e.getName(),
                 new Communication(e, v.getName(), child.getName(), srcTasks, tarTasks));
-            sendTable.put(v.getName(), e.getName()  ,
+            sendTable.put(v.getName(), e.getName(),
                 new Communication(e, v.getName(), child.getName(), srcTasks, tarTasks));
           }
         }
