@@ -62,6 +62,10 @@ public class KubernetesContext extends SchedulerContext {
   public static final String K8S_WORKER_MAPPING_OPERATOR = "kubernetes.worker.mapping.operator";
   public static final String K8S_WORKER_MAPPING_VALUES = "kubernetes.worker.mapping.values";
 
+  // it can be either "all-same-node", "all-separate-nodes", "none"
+  public static final String K8S_WORKER_MAPPING_UNIFORM_DEFAULT = "none";
+  public static final String K8S_WORKER_MAPPING_UNIFORM = "kubernetes.worker.mapping.uniform";
+
   public static int containersPerPod(Config cfg) {
     return cfg.getIntegerValue(CONTAINERS_PER_POD, CONTAINERS_PER_POD_DEFAULT);
   }
@@ -125,4 +129,9 @@ public class KubernetesContext extends SchedulerContext {
   public static List<String> workerMappingValues(Config cfg) {
     return cfg.getStringList(K8S_WORKER_MAPPING_VALUES);
   }
+
+  public static String workerMappingUniform(Config cfg) {
+    return cfg.getStringValue(K8S_WORKER_MAPPING_UNIFORM, K8S_WORKER_MAPPING_UNIFORM_DEFAULT);
+  }
+
 }
