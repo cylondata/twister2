@@ -14,12 +14,14 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 
+import io.kubernetes.client.models.V1Affinity;
 import io.kubernetes.client.models.V1Container;
 import io.kubernetes.client.models.V1ContainerPort;
 import io.kubernetes.client.models.V1EmptyDirVolumeSource;
@@ -27,6 +29,10 @@ import io.kubernetes.client.models.V1EnvVar;
 import io.kubernetes.client.models.V1EnvVarSource;
 import io.kubernetes.client.models.V1LabelSelector;
 import io.kubernetes.client.models.V1NFSVolumeSource;
+import io.kubernetes.client.models.V1NodeAffinity;
+import io.kubernetes.client.models.V1NodeSelector;
+import io.kubernetes.client.models.V1NodeSelectorRequirement;
+import io.kubernetes.client.models.V1NodeSelectorTerm;
 import io.kubernetes.client.models.V1ObjectFieldSelector;
 import io.kubernetes.client.models.V1ObjectMeta;
 import io.kubernetes.client.models.V1PersistentVolume;
@@ -157,6 +163,10 @@ public final class RequestObjectBuilder {
     }
     podSpec.setContainers(containers);
 
+    if (KubernetesContext.workerToNodeMapping(config)) {
+      podSpec.setAffinity(createAffinityObject(config));
+    }
+
     template.setSpec(podSpec);
     return template;
   }
@@ -278,6 +288,31 @@ public final class RequestObjectBuilder {
         .value(KubernetesContext.persistentLoggingType(config) + "");
 
     container.setEnv(Arrays.asList(var1, var2, var3, var4, var5, var6, var7, var8, var9, var10));
+  }
+
+  public static V1Affinity createAffinityObject(Config config) {
+
+    String key = KubernetesContext.workerMappingKey(config);
+    String operator = KubernetesContext.workerMappingOperator(config);
+    List<String> values = KubernetesContext.workerMappingValues(config);
+
+    V1NodeSelectorRequirement nsRequirement = new V1NodeSelectorRequirement();
+    nsRequirement.setKey(key);
+    nsRequirement.setOperator(operator);
+    nsRequirement.setValues(values);
+
+    V1NodeSelectorTerm selectorTerm = new V1NodeSelectorTerm();
+    selectorTerm.addMatchExpressionsItem(nsRequirement);
+
+    V1NodeSelector nodeSelector = new V1NodeSelector();
+    nodeSelector.addNodeSelectorTermsItem(selectorTerm);
+
+    V1NodeAffinity nodeAffinity = new V1NodeAffinity();
+    nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution(nodeSelector);
+
+    V1Affinity affinity = new V1Affinity();
+    affinity.setNodeAffinity(nodeAffinity);
+    return affinity;
   }
 
   public static V1Service createHeadlessServiceObject(Config config, String jobName) {

@@ -14,7 +14,7 @@ twister2.network.dataflow.class: "edu.iu.dsc.tws.comms.mpi.MPIDataFlowCommunicat
 # if the job requests NodePort service, it must be true
 # NodePort service makes the workers accessibale from external entities (outside of the cluster)
 # by default, its value is false
-kubernetes.node.port.service.requested: "true"
+kubernetes.node.port.service.requested: true
 
 # if NodePort value is 0, it is automatically assigned a value
 # the user can request a specific port value in the NodePort range by setting the value below
