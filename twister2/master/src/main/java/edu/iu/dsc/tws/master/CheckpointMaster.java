@@ -38,7 +38,7 @@ public class CheckpointMaster {
       long minPauseBetweenCheckpoints,
       int maxConcurrentCheckpointAttempts,
       IExecutor executor
-  ){
+  ) {
 
     this.baseInterval = baseInterval;
     this.checkpointTimeout = checkpointTimeout;
@@ -48,15 +48,15 @@ public class CheckpointMaster {
 
   }
 
-  public void startCheckpointScheduler(){
+  public void startCheckpointScheduler() {
 
   }
 
-  public void stopCheckpointScheduler(){
+  public void stopCheckpointScheduler() {
 
   }
 
-  public void receiveAcknowledgeMessage(){
+  public void receiveAcknowledgeMessage() {
 
   }
 
