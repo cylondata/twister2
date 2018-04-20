@@ -20,6 +20,10 @@ public class TaskContext {
 
   private int parallelism;
 
+  private OutputCollection collection;
+
+  private int edge;
+
   public TaskContext(int taskIndex, int taskId, String taskName, int parallelism) {
     this.taskIndex = taskIndex;
     this.taskId = taskId;
@@ -27,11 +31,20 @@ public class TaskContext {
     this.parallelism = parallelism;
   }
 
+  public TaskContext(int taskIndex, int taskId, String taskName, int parallelism,
+                     OutputCollection collection) {
+    this.taskIndex = taskIndex;
+    this.taskId = taskId;
+    this.taskName = taskName;
+    this.parallelism = parallelism;
+    this.collection = collection;
+  }
+
   /**
    * The task index
    * @return
    */
-  int taskIndex() {
+  public int taskIndex() {
     return taskIndex;
   }
 
@@ -39,18 +52,26 @@ public class TaskContext {
    * Task id
    * @return the task id
    */
-  int taskId() {
+  public int taskId() {
     return taskId;
   }
 
   /**
    * Name of the task
    */
-  String taskName() {
+  public String taskName() {
     return taskName;
   }
 
   public int getParallelism() {
     return parallelism;
+  }
+
+  /**
+   * Write a message to the destination
+   * @param message
+   */
+  public void write(Object message) {
+    collection.collect(edge, new TaskMessage(message, "", taskId));
   }
 }

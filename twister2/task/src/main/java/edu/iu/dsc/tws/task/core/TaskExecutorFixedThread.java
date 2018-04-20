@@ -209,7 +209,7 @@ public class TaskExecutorFixedThread implements TaskExecutor {
     LOG.info("Message : " + message.toString());
     LOG.info("------------------------------------------------");
     synchronized (ExecutorContext.FIXED_EXECUTOR_LOCK) {
-      queues.get(qid).add(new TaskMessage<T>(message));
+      queues.get(qid).add(new TaskMessage(message));
     }
     //Add the related task to the execution queue
     for (Integer extaskid : queuexTaskInput.get(qid)) {

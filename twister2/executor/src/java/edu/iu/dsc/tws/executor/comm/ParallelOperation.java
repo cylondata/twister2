@@ -28,4 +28,8 @@ public abstract class ParallelOperation implements IParallelOperation {
   public void register(int targetTask, BlockingQueue<IMessage> queue) {
 
   }
+
+  @Override
+  public void progress() {
+  }
 }

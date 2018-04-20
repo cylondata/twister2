@@ -19,6 +19,7 @@ load("/tools/rules/twister2_client", "twister2_client_lib_data_lmdb_files")
 load("/tools/rules/twister2_client", "twister2_client_lib_communication_files")
 load("/tools/rules/twister2_client", "twister2_client_example_files")
 load("/tools/rules/twister2_client", "twister2_client_lib_common_files")
+load("/tools/rules/twister2_client", "twister2_client_lib_executor_files")
 
 load("/tools/rules/twister2_core", "twister2_core_files")
 load("/tools/rules/twister2_core", "twister2_core_conf_files")
@@ -103,6 +104,12 @@ pkg_tar(
     srcs = twister2_client_lib_common_files(),
 )
 
+pkg_tar(
+    name = "twister2-core-lib-executor",
+    package_dir = "lib",
+    srcs = twister2_client_lib_executor_files(),
+)
+
 # twister2 client packaging
 
 pkg_tar(
@@ -127,6 +134,7 @@ pkg_tar(
         ":twister2-client-examples",
         ":twister2-client-lib-common",
         ":twister2-client-lib-data-lmdb",
+        ":twister2-core-lib-executor",
     ],
 )
 

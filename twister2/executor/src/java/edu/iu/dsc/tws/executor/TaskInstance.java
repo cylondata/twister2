@@ -105,6 +105,10 @@ public class TaskInstance implements INodeInstance {
         }
       }
     }
+
+    for (Map.Entry<String, IParallelOperation> e : outParOps.entrySet()) {
+      e.getValue().progress();
+    }
   }
 
   public BlockingQueue<IMessage> getInQueue() {

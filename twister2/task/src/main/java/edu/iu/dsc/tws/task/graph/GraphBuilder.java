@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.graph;
 
+import edu.iu.dsc.tws.task.api.ISink;
+import edu.iu.dsc.tws.task.api.ISource;
 import edu.iu.dsc.tws.task.api.ITask;
 
 public final class GraphBuilder {
@@ -22,6 +24,16 @@ public final class GraphBuilder {
 
   public static GraphBuilder newBuilder() {
     return new GraphBuilder();
+  }
+
+  public GraphBuilder addSource(String name, ISource source) {
+    graph.addTaskVertex(name, new Vertex(name, source));
+    return this;
+  }
+
+  public GraphBuilder addSink(String name, ISink sink) {
+    graph.addTaskVertex(name, new Vertex(name, sink));
+    return this;
   }
 
   public GraphBuilder addTask(String name, ITask task) {

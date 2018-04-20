@@ -47,11 +47,6 @@ public class ThreadSharingExecutor {
       t.start();
       threads.add(t);
     }
-
-    // we need to progress the channel
-    while (true) {
-      channel.progress();
-    }
   }
 
   private class Worker implements Runnable {

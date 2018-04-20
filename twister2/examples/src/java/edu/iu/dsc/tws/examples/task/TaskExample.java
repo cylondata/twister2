@@ -11,28 +11,90 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.core.TWSNetwork;
+import edu.iu.dsc.tws.executor.DefaultExecutor;
+import edu.iu.dsc.tws.executor.ExecutionPlan;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
+import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
+import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.SinkTask;
 import edu.iu.dsc.tws.task.api.SourceTask;
 import edu.iu.dsc.tws.task.api.TaskContext;
+import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.task.graph.GraphBuilder;
+import edu.iu.dsc.tws.tsched.RoundRobin.RoundRobinTaskScheduling;
+import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
+import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
+import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 public class TaskExample implements IContainer {
   @Override
   public void init(Config config, int id, ResourcePlan resourcePlan) {
+    Generator g = new Generator();
+    Receiver r = new Receiver();
 
+    GraphBuilder builder = GraphBuilder.newBuilder();
+    builder.addSource("source", g);
+    builder.addSink("sink", r);
+
+    DataFlowTaskGraph graph = builder.build();
+
+    RoundRobinTaskScheduling roundRobinTaskScheduling = new RoundRobinTaskScheduling();
+    roundRobinTaskScheduling.initialize(config);
+
+    WorkerPlan workerPlan = createWorkerPlan(resourcePlan);
+    TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduling.schedule(graph, workerPlan);
+
+    TWSNetwork network = new TWSNetwork(config, resourcePlan.getThisId());
+    DefaultExecutor defaultExecutor = new DefaultExecutor(resourcePlan, network);
+    ExecutionPlan plan = defaultExecutor.schedule(config, graph, taskSchedulePlan);
+
+    // we need to progress the channel
+    while (true) {
+      network.getChannel().progress();
+    }
   }
 
   private class Generator extends SourceTask {
     private static final long serialVersionUID = -254264903510284748L;
+    private TaskContext ctx;
+    private Config config;
     @Override
     public void run() {
+      ctx.write("Hello");
+    }
 
+    @Override
+    public void prepare(Config cfg, TaskContext context) {
+      this.ctx = context;
+    }
+  }
+
+  private class Receiver extends SinkTask {
+    private static final long serialVersionUID = -254264903510284798L;
+    @Override
+    public void execute(IMessage message) {
+      System.out.println(message.getContent());
     }
 
     @Override
     public void prepare(Config cfg, TaskContext context) {
 
     }
+  }
+
+  public WorkerPlan createWorkerPlan(ResourcePlan resourcePlan) {
+    List<Worker> workers = new ArrayList<>();
+    for (ResourceContainer resource : resourcePlan.getContainers()) {
+      Worker w = new Worker(resource.getId());
+      workers.add(w);
+    }
+
+    return new WorkerPlan(workers);
   }
 }
