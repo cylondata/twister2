@@ -13,12 +13,14 @@ package edu.iu.dsc.tws.master;
 
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.executor.IExecutor;
+
 public class CheckpointMaster {
   private static final Logger LOG = Logger.getLogger(CheckpointMaster.class.getName());
 
   private final IExecutor executor;
 
-  private final CheckpointProperties checkpointProperties;
+//  private final CheckpointProperties checkpointProperties;
 
   private final long baseInterval;
 
