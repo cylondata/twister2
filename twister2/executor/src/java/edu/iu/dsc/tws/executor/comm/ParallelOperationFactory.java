@@ -13,18 +13,34 @@ package edu.iu.dsc.tws.executor.comm;
 
 import java.util.Set;
 
-import edu.iu.dsc.tws.comms.core.TWSNetwork;
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.TWSChannel;
+import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.executor.EdgeGenerator;
 
 public class ParallelOperationFactory {
-  private TWSNetwork network;
+  private TWSChannel channel;
 
-  public ParallelOperationFactory(TWSNetwork network) {
-    this.network = network;
+  private Config config;
+
+  private TaskPlan taskPlan;
+
+  private EdgeGenerator edgeGenerator;
+
+  public ParallelOperationFactory(Config cfg, TWSChannel network, TaskPlan plan, EdgeGenerator e) {
+    this.channel = network;
+    this.config = cfg;
+    this.taskPlan = plan;
+    this.edgeGenerator = e;
   }
 
   public IParallelOperation build(String operation, Set<Integer> sources, Set<Integer> dests,
-                                 DataType dataType) {
+                                 DataType dataType, String edge) {
+    if ("partition".equals(operation)) {
+      PartitionOperation partitionOp = new PartitionOperation(config, channel, taskPlan);
+      partitionOp.prepare(sources, dests, edgeGenerator, dataType, null, edge);
+    }
     return null;
   }
 

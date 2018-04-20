@@ -11,26 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor;
 
-import java.util.HashMap;
-import java.util.Map;
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.config.Context;
 
-public class Execution {
-  private Map<Integer, INodeInstance> nodes = new HashMap<>();
+public class ExecutorContext extends Context {
+  public static final String THREADS_PER_WORKER = "twister2.exector.worker.threads";
 
-  /**
-   * Add a node instance of this execution
-   * @param taskId the global task id
-   * @param node the instance
-   */
-  public void add(int taskId, INodeInstance node) {
-    nodes.put(taskId, node);
-  }
-
-  public Map<Integer, INodeInstance> getNodes() {
-    return nodes;
-  }
-
-  public void stop() {
-
+  public static int threadsPerContainer(Config cfg) {
+    return cfg.getIntegerValue(THREADS_PER_WORKER, 1);
   }
 }

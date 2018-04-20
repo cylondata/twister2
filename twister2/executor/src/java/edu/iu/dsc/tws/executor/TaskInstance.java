@@ -24,7 +24,7 @@ import edu.iu.dsc.tws.task.api.OutputCollection;
 /**
  * The class represents the instance of the executing task
  */
-public class TaskInstance {
+public class TaskInstance implements INodeInstance {
   /**
    * The actual task executing
    */

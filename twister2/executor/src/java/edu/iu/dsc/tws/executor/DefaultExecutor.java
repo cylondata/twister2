@@ -51,11 +51,6 @@ public class DefaultExecutor implements IExecutor {
   private int workerId;
 
   /**
-   * Fixed thread executor
-   */
-  private FixedThreadExecutor executor;
-
-  /**
    * Communications list
    */
   private Table<String, String, Communication> parOpTable = HashBasedTable.create();
@@ -79,23 +74,23 @@ public class DefaultExecutor implements IExecutor {
 
   private EdgeGenerator edgeGenerator;
 
-  public DefaultExecutor(ResourcePlan plan) {
+  public DefaultExecutor(ResourcePlan plan, TWSNetwork net) {
     this.workerId = plan.getThisId();
-    this.executor = new FixedThreadExecutor();
     this.taskIdGenerator = new TaskIdGenerator();
     this.kryoMemorySerializer = new KryoMemorySerializer();
     this.resourcePlan = plan;
     this.edgeGenerator = new EdgeGenerator();
+    this.network = net;
   }
 
   @Override
   public Execution schedule(Config cfg, DataFlowTaskGraph taskGraph,
                             TaskSchedulePlan taskSchedule) {
-
+    noOfThreads = ExecutorContext.threadsPerContainer(cfg);
     // we need to build the task plan
     TaskPlan taskPlan = TaskPlanBuilder.build(resourcePlan, taskSchedule, taskIdGenerator);
-    network = new TWSNetwork(cfg, taskPlan);
-    ParallelOperationFactory opFactory = new ParallelOperationFactory(network);
+    ParallelOperationFactory opFactory = new ParallelOperationFactory(
+        cfg, network.getChannel(), taskPlan, edgeGenerator);
 
     Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap = taskSchedule.getContainersMap();
     TaskSchedulePlan.ContainerPlan conPlan = containersMap.get(workerId);
@@ -166,11 +161,12 @@ public class DefaultExecutor implements IExecutor {
 
       // lets create the communication
       IParallelOperation op = opFactory.build(c.getOperation(), c.getSourceTasks(),
-          c.getTargetTasks(), DataType.OBJECT);
+          c.getTargetTasks(), DataType.OBJECT, c.getName());
       // now lets check the sources and targets that are in this executor
       Set<Integer> sourcesOfThisWorker = intersectionOfTasks(conPlan, c.getSourceTasks());
       Set<Integer> targetsOfThisWorker = intersectionOfTasks(conPlan, c.getTargetTasks());
 
+      // todo
       // set the parallel operation to the instance
       // lets see weather this comunication belongs to a task instance
       for (Integer i : sourcesOfThisWorker) {
@@ -192,11 +188,12 @@ public class DefaultExecutor implements IExecutor {
           throw new RuntimeException("Not found");
         }
       }
-
-
     }
 
     // lets start the execution
+    ThreadSharingExecutor threadSharingExecutor =
+        new ThreadSharingExecutor(noOfThreads, network.getChannel());
+    threadSharingExecutor.execute(execution);
 
     return execution;
   }

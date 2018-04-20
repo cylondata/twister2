@@ -11,25 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor;
 
-import edu.iu.dsc.tws.task.api.IMessage;
-
-public class DefaultMessage implements IMessage {
-  private Object data;
-
-  private String edge;
-
-  public DefaultMessage(Object data, String edge) {
-    this.data = data;
-    this.edge = edge;
-  }
-
-  @Override
-  public Object getContent() {
-    return data;
-  }
-
-  @Override
-  public String edge() {
-    return edge;
-  }
+public interface INodeInstance {
+  void execute();
 }
