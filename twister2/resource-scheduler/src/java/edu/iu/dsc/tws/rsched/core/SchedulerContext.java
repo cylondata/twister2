@@ -72,10 +72,10 @@ public class SchedulerContext extends Context {
   public static final String PERSISTENT_VOLUME_TOTAL_DEFAULT = "100Gi";
   public static final String PERSISTENT_VOLUME_TOTAL = "persistent.volume.total";
 
-  public static final String PERSISTENT_VOLUME_REQUESTED_DEFAULT = "false";
+  public static final boolean PERSISTENT_VOLUME_REQUESTED_DEFAULT = false;
   public static final String PERSISTENT_VOLUME_REQUESTED = "persistent.volume.requested";
 
-  public static final String PERSISTENT_LOGGING_REQUESTED_DEFAULT = "false";
+  public static final boolean PERSISTENT_LOGGING_REQUESTED_DEFAULT = false;
   public static final String PERSISTENT_LOGGING_REQUESTED = "persistent.logging.requested";
 
   public static String stateManagerClass(Config cfg) {
@@ -160,15 +160,11 @@ public class SchedulerContext extends Context {
   }
 
   public static boolean persistentVolumeRequested(Config cfg) {
-    String request =
-        cfg.getStringValue(PERSISTENT_VOLUME_REQUESTED, PERSISTENT_VOLUME_REQUESTED_DEFAULT);
-    return "true".equalsIgnoreCase(request);
+    return cfg.getBooleanValue(PERSISTENT_VOLUME_REQUESTED, PERSISTENT_VOLUME_REQUESTED_DEFAULT);
   }
 
   public static boolean persistentLoggingRequested(Config cfg) {
-    String request =
-        cfg.getStringValue(PERSISTENT_LOGGING_REQUESTED, PERSISTENT_LOGGING_REQUESTED_DEFAULT);
-    return "true".equalsIgnoreCase(request);
+    return cfg.getBooleanValue(PERSISTENT_LOGGING_REQUESTED, PERSISTENT_LOGGING_REQUESTED_DEFAULT);
   }
 
 }

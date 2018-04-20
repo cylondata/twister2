@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.rsched.schedulers.k8s;
 
 import java.io.File;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -263,6 +264,23 @@ public class KubernetesLauncher implements ILauncher {
           AuroraContext.NUMBER_OF_CONTAINERS, KubernetesContext.CONTAINERS_PER_POD,
           AuroraContext.NUMBER_OF_CONTAINERS, KubernetesContext.CONTAINERS_PER_POD));
       return false;
+    }
+
+    // when worker to nodes mapping is requested
+    // if the operator is Exists or DoesNotExist,
+    // values list must be empty
+    if (KubernetesContext.workerToNodeMapping(config)) {
+      String operator = KubernetesContext.workerMappingOperator(config);
+      List<String> values = KubernetesContext.workerMappingValues(config);
+      if (("Exists".equalsIgnoreCase(operator) || "DoesNotExist".equalsIgnoreCase(operator))
+          && values != null && values.size() != 0) {
+        LOG.log(Level.SEVERE, String.format("When the value of %s is either Exists or DoesNotExist"
+                + "\n%s list must be empty. Current content of this list: " + values
+                + "\n++++++ Aborting submission ++++++",
+            KubernetesContext.K8S_WORKER_MAPPING_OPERATOR,
+            KubernetesContext.K8S_WORKER_MAPPING_VALUES));
+        return false;
+      }
     }
 
     return true;
