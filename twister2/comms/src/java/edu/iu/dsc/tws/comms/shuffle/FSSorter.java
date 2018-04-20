@@ -52,7 +52,7 @@ public class FSSorter {
 
     private int currentIndex = 0;
 
-    public FilePart(Triple<List<KeyValue>, Long, Long> keyValues) {
+    FilePart(Triple<List<KeyValue>, Long, Long> keyValues) {
       this.keyValues = keyValues;
     }
   }
@@ -78,7 +78,7 @@ public class FSSorter {
       openList.add(new FilePart(fileParts));
     }
     // add the in-memory values to the last
-    openList.add(new FilePart(new ImmutableTriple<>(inMemoryValues, 0l, 0l)));
+    openList.add(new FilePart(new ImmutableTriple<>(inMemoryValues, 0L, 0L)));
 
     // lets add to the heap the first element
     for (int i = 0; i < openList.size(); i++) {
