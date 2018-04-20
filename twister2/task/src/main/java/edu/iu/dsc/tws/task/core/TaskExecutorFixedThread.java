@@ -175,7 +175,7 @@ public class TaskExecutorFixedThread implements TaskExecutor {
                               List<Integer> outputQueues) {
     LOG.info("------------------------------------------");
     LOG.info("Register Task");
-    LOG.info("Task : " + task.taskId());
+    LOG.info("Task : " + 0);
     LOG.info("InputQueue : " + inputQueues.size());
     LOG.info("OutputQueue : " + outputQueues.size());
     LOG.info("------------------------------------------");
@@ -183,17 +183,17 @@ public class TaskExecutorFixedThread implements TaskExecutor {
     //TODO: What happens in the queue already has data when task is registered
     if (inputQueues != null) {
       for (Integer inputQueue : inputQueues) {
-        registerTaskQueue(inputQueue, task.taskId(), ExecutorContext.QueueType.INPUT);
+        registerTaskQueue(inputQueue, 0, ExecutorContext.QueueType.INPUT);
       }
     }
     if (outputQueues != null) {
       for (Integer outputQueue : outputQueues) {
-        registerTaskQueue(outputQueue, task.taskId(), ExecutorContext.QueueType.OUTPUT);
+        registerTaskQueue(outputQueue, 0, ExecutorContext.QueueType.OUTPUT);
       }
     }
 
     //If queues are registered add the task to task map
-    taskMap.put(task.taskId(), task);
+    taskMap.put(0, task);
     return true;
   }
 
@@ -244,12 +244,12 @@ public class TaskExecutorFixedThread implements TaskExecutor {
 
   @Override
   public boolean submitTask(Task task) {
-    if (!taskMap.containsKey(task.taskId())) {
+    if (!taskMap.containsKey(0)) {
       throw new RuntimeException(String.format("Unable to locate task with task id : %d, "
-          + "Please make sure the task is registered", task.taskId()));
+          + "Please make sure the task is registered", 0));
     } else {
-      addRunningTask(task.taskId());
-      executorPool.submit(new RunnableFixedTask(taskMap.get(task.taskId()), this));
+      addRunningTask(0);
+      executorPool.submit(new RunnableFixedTask(taskMap.get(0), this));
     }
     return true;
   }

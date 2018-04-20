@@ -12,15 +12,45 @@
 package edu.iu.dsc.tws.task.api;
 
 public class TaskContext {
-  public int taskId() {
-    return 0;
+  private int taskIndex;
+
+  private int taskId;
+
+  private String taskName;
+
+  private int parallelism;
+
+  public TaskContext(int taskIndex, int taskId, String taskName, int parallelism) {
+    this.taskIndex = taskIndex;
+    this.taskId = taskId;
+    this.taskName = taskName;
+    this.parallelism = parallelism;
   }
 
-  public int taskIndex() {
-    return 0;
+  /**
+   * The task index
+   * @return
+   */
+  int taskIndex() {
+    return taskIndex;
   }
 
-  public int parallelTasks() {
-    return 0;
+  /**
+   * Task id
+   * @return the task id
+   */
+  int taskId() {
+    return taskId;
+  }
+
+  /**
+   * Name of the task
+   */
+  String taskName() {
+    return taskName;
+  }
+
+  public int getParallelism() {
+    return parallelism;
   }
 }

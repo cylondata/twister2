@@ -141,7 +141,7 @@ public class RunnableFixedTask implements Runnable {
     if (executableTask == null) {
       throw new RuntimeException("Task needs to be set to execute");
     }
-    LOG.info(String.format("Runnable task %d limit %d", executableTask.taskId(),
+    LOG.info(String.format("Runnable task %d limit %d", 0,
         messageProcessLimit));
 
     IMessage result;
@@ -170,7 +170,7 @@ public class RunnableFixedTask implements Runnable {
               new RunnableFixedTask(executableTask, queueRef, messageProcessLimit,
                   taskExecutor, outQueues));
         } else {
-          TaskExecutorFixedThread.removeSubmittedTask(executableTask.taskId());
+          TaskExecutorFixedThread.removeSubmittedTask(0);
         }
       }
     } else {
@@ -178,7 +178,7 @@ public class RunnableFixedTask implements Runnable {
       if (result != null && outQueues != null && !outQueues.isEmpty()) {
         submitToOutputQueue(result);
       }
-      TaskExecutorFixedThread.removeSubmittedTask(executableTask.taskId());
+      TaskExecutorFixedThread.removeSubmittedTask(0);
     }
   }
 

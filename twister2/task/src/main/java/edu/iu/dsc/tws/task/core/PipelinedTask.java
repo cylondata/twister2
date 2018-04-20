@@ -26,7 +26,6 @@ public class PipelinedTask extends Task {
   private List<Task> piplinedTaskList;
 
   public PipelinedTask(int tid, List<Task> taskList) {
-    super(tid);
     if (taskList == null || taskList.isEmpty()) {
       throw new RuntimeException("PipelinedTask cannot be initiated with a null or "
           + "empty task list");
@@ -77,10 +76,5 @@ public class PipelinedTask extends Task {
 
   public void setPiplinedTaskList(List<Task> piplinedTaskList) {
     this.piplinedTaskList = piplinedTaskList;
-  }
-
-  @Override
-  public String taskName() {
-    return null;
   }
 }

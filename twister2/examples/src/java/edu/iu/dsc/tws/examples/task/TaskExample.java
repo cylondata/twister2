@@ -9,25 +9,30 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.api;
+package edu.iu.dsc.tws.examples.task;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.rsched.spi.container.IContainer;
+import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
+import edu.iu.dsc.tws.task.api.SourceTask;
+import edu.iu.dsc.tws.task.api.TaskContext;
 
-/**
- * The abstract class that represents the Last task of a job. This task will be responsible of
- * outputing the results to various output sources such as files or console.
- * The task takes inputs from another task and outputs to a output source
- */
-public abstract class SinkTask implements ISink {
-  private static final long serialVersionUID = -254264903510286748L;
-
+public class TaskExample implements IContainer {
   @Override
-  public void execute(IMessage message) {
+  public void init(Config config, int id, ResourcePlan resourcePlan) {
 
   }
 
-  @Override
-  public void prepare(Config cfg, TaskContext context) {
+  private class Generator extends SourceTask {
+    private static final long serialVersionUID = -254264903510284748L;
+    @Override
+    public void run() {
 
+    }
+
+    @Override
+    public void prepare(Config cfg, TaskContext context) {
+
+    }
   }
 }

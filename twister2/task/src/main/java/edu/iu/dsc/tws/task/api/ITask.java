@@ -23,19 +23,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.api;
 
-import edu.iu.dsc.tws.common.config.Config;
-
 /**
  * Base interface for tasks
  */
 public interface ITask extends INode {
-  /**
-   * Prepare the task to be executed
-   * @param cfg the configuration
-   * @param collection the output collection
-   */
-  void prepare(Config cfg, OutputCollection collection);
-
   /**
    * Code that needs to be executed in the Task
    */
@@ -57,9 +48,5 @@ public interface ITask extends INode {
    */
   void run();
 
-  /**
-   * Assign the task name
-   */
 
-  String taskName();
 }

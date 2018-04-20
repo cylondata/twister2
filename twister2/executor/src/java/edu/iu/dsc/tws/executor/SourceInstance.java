@@ -20,6 +20,7 @@ import edu.iu.dsc.tws.executor.comm.IParallelOperation;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.ISource;
 import edu.iu.dsc.tws.task.api.OutputCollection;
+import edu.iu.dsc.tws.task.api.TaskContext;
 
 public class SourceInstance implements INodeInstance {
   /**
@@ -56,7 +57,7 @@ public class SourceInstance implements INodeInstance {
   public void prepare() {
     outputCollection = new DefaultOutputCollection(outQueue);
 
-    task.prepare(config, outputCollection);
+    task.prepare(config, new TaskContext(0, 0, "", 0));
   }
 
   public void execute() {
