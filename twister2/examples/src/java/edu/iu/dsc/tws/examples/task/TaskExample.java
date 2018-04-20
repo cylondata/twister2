@@ -12,12 +12,17 @@
 package edu.iu.dsc.tws.examples.task;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
+import edu.iu.dsc.tws.api.JobConfig;
+import edu.iu.dsc.tws.api.Twister2Submitter;
+import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.executor.DefaultExecutor;
 import edu.iu.dsc.tws.executor.ExecutionPlan;
+import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
@@ -96,5 +101,22 @@ public class TaskExample implements IContainer {
     }
 
     return new WorkerPlan(workers);
+  }
+
+  public static void main(String[] args) {
+    // first load the configurations from command line and config files
+    Config config = ResourceAllocator.loadConfig(new HashMap<>());
+
+    // build JobConfig
+    JobConfig jobConfig = new JobConfig();
+
+    BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
+    jobBuilder.setName("task-example");
+    jobBuilder.setContainerClass(TaskExample.class.getName());
+    jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 4);
+    jobBuilder.setConfig(jobConfig);
+
+    // now submit the job
+    Twister2Submitter.submitContainerJob(jobBuilder.build(), config);
   }
 }
