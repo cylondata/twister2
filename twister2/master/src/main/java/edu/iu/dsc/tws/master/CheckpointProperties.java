@@ -14,4 +14,5 @@ package edu.iu.dsc.tws.master;
 import java.io.Serializable;
 
 public class CheckpointProperties implements Serializable {
+  private static final long serialVersionUID = 2L;
 }
