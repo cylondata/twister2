@@ -84,8 +84,8 @@ public class DefaultExecutor implements IExecutor {
   }
 
   @Override
-  public Execution schedule(Config cfg, DataFlowTaskGraph taskGraph,
-                            TaskSchedulePlan taskSchedule) {
+  public ExecutionPlan schedule(Config cfg, DataFlowTaskGraph taskGraph,
+                                TaskSchedulePlan taskSchedule) {
     noOfThreads = ExecutorContext.threadsPerContainer(cfg);
     // we need to build the task plan
     TaskPlan taskPlan = TaskPlanBuilder.build(resourcePlan, taskSchedule, taskIdGenerator);
@@ -121,11 +121,11 @@ public class DefaultExecutor implements IExecutor {
           Set<Integer> tarTasks = taskIdGenerator.getTaskIds(child.getName(),
               getTaskIdOfTask(child.getName(), taskSchedule), taskGraph);
 
-          if (!parOpTable.contains(v.getName(), e.name)) {
-            parOpTable.put(v.getName(), e.name,
-                new Communication(e.getName(), e.getOperation(), srcTasks, tarTasks));
-            sendTable.put(v.getName(), e.name,
-                new Communication(e.getName(), e.getOperation(), srcTasks, tarTasks));
+          if (!parOpTable.contains(v.getName(), e.getName())) {
+            parOpTable.put(v.getName(), e.getName(),
+                new Communication(e, v.getName(), child.getName(), srcTasks, tarTasks));
+            sendTable.put(v.getName(), e.getName()  ,
+                new Communication(e, v.getName(), child.getName(), srcTasks, tarTasks));
           }
         }
       }
@@ -141,11 +141,11 @@ public class DefaultExecutor implements IExecutor {
           Set<Integer> tarTasks = taskIdGenerator.getTaskIds(v.getName(),
               ip.getTaskId(), taskGraph);
 
-          if (!parOpTable.contains(parent.getName(), e.name)) {
-            parOpTable.put(parent.getName(), e.name,
-                new Communication(e.getName(), e.getOperation(), srcTasks, tarTasks));
-            recvTable.put(parent.getName(), e.name,
-                new Communication(e.getName(), e.getOperation(), srcTasks, tarTasks));
+          if (!parOpTable.contains(parent.getName(), e.getName())) {
+            parOpTable.put(parent.getName(), e.getName(),
+                new Communication(e, parent.getName(), v.getName(), srcTasks, tarTasks));
+            recvTable.put(parent.getName(), e.getName(),
+                new Communication(e, parent.getName(), v.getName(), srcTasks, tarTasks));
           }
         }
       }
@@ -155,39 +155,43 @@ public class DefaultExecutor implements IExecutor {
     }
 
     // now lets create the queues and start the execution
-    Execution execution = new Execution();
+    ExecutionPlan execution = new ExecutionPlan();
     for (Table.Cell<String, String, Communication> cell : parOpTable.cellSet()) {
       Communication c = cell.getValue();
 
       // lets create the communication
-      IParallelOperation op = opFactory.build(c.getOperation(), c.getSourceTasks(),
-          c.getTargetTasks(), DataType.OBJECT, c.getName());
+      IParallelOperation op = opFactory.build(c.getEdge(), c.getSourceTasks(),
+          c.getTargetTasks(), DataType.OBJECT);
       // now lets check the sources and targets that are in this executor
       Set<Integer> sourcesOfThisWorker = intersectionOfTasks(conPlan, c.getSourceTasks());
       Set<Integer> targetsOfThisWorker = intersectionOfTasks(conPlan, c.getTargetTasks());
 
-      // todo
       // set the parallel operation to the instance
       // lets see weather this comunication belongs to a task instance
       for (Integer i : sourcesOfThisWorker) {
-        if (taskInstances.contains(c.getSourceTasks(), i)) {
-          taskInstances.get(c.getSourceTasks(), i).registerOutParallelOperation(c.getName(), op);
-        } else if (sourceInstances.contains(c.getSourceTasks(), i)) {
-          sourceInstances.get(c.getSourceTasks(), i).registerOutParallelOperation(c.getName(), op);
+        if (taskInstances.contains(c.getSourceTask(), i)) {
+          TaskInstance taskInstance = taskInstances.get(c.getSourceTasks(), i);
+          taskInstance.registerOutParallelOperation(c.getEdge().getName(), op);
+        } else if (sourceInstances.contains(c.getSourceTask(), i)) {
+          SourceInstance sourceInstance = sourceInstances.get(c.getSourceTask(), i);
+          sourceInstance.registerOutParallelOperation(c.getEdge().getName(), op);
         } else {
-          throw new RuntimeException("Not found");
+          throw new RuntimeException("Not found: " + c.getSourceTask());
         }
       }
 
       for (Integer i : targetsOfThisWorker) {
-        if (taskInstances.contains(c.getSourceTasks(), i)) {
-          taskInstances.get(c.getSourceTasks(), i).getInQueue();
-        } else if (sourceInstances.contains(c.getSourceTasks(), i)) {
-          sourceInstances.get(c.getSourceTasks(), i).registerOutParallelOperation(c.getName(), op);
+        if (taskInstances.contains(c.getTargetTask(), i)) {
+          TaskInstance taskInstance = taskInstances.get(c.getTargetTask(), i);
+          op.register(i, taskInstance.getInQueue());
+        } else if (sinkInstances.contains(c.getTargetTask(), i)) {
+          SinkInstance sourceInstance = sinkInstances.get(c.getTargetTask(), i);
+          op.register(i, sourceInstance.getInQueue());
         } else {
-          throw new RuntimeException("Not found");
+          throw new RuntimeException("Not found: " + c.getTargetTask());
         }
       }
+      execution.add(op);
     }
 
     // lets start the execution
@@ -245,43 +249,49 @@ public class DefaultExecutor implements IExecutor {
   }
 
   private class Communication {
-    private String name;
+    private Edge edge;
     private Set<Integer> sourceTasks;
     private Set<Integer> targetTasks;
-    private String operation;
+    private String sourceTask;
+    private String targetTask;
 
-    Communication(String tarTask, String op,
+    Communication(Edge e, String srcTask, String tarTast,
                   Set<Integer> srcTasks, Set<Integer> tarTasks) {
-      this.sourceTasks = srcTasks;
-      this.name = tarTask;
+      this.edge = e;
       this.targetTasks = tarTasks;
-      this.operation = op;
+      this.sourceTasks = srcTasks;
+      this.sourceTask = srcTask;
+      this.targetTask = tarTast;
     }
 
     public Set<Integer> getSourceTasks() {
       return sourceTasks;
     }
 
-    public String getName() {
-      return name;
-    }
-
     public Set<Integer> getTargetTasks() {
       return targetTasks;
     }
 
-    public String getOperation() {
-      return operation;
+    public Edge getEdge() {
+      return edge;
+    }
+
+    public String getSourceTask() {
+      return sourceTask;
+    }
+
+    public String getTargetTask() {
+      return targetTask;
     }
   }
 
   @Override
-  public void wait(Execution execution) {
+  public void wait(ExecutionPlan execution) {
 
   }
 
   @Override
-  public void stop(Execution execution) {
+  public void stop(ExecutionPlan execution) {
 
   }
 }

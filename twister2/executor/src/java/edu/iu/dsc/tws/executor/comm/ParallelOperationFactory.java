@@ -18,6 +18,7 @@ import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.EdgeGenerator;
+import edu.iu.dsc.tws.task.graph.Edge;
 
 public class ParallelOperationFactory {
   private TWSChannel channel;
@@ -35,11 +36,11 @@ public class ParallelOperationFactory {
     this.edgeGenerator = e;
   }
 
-  public IParallelOperation build(String operation, Set<Integer> sources, Set<Integer> dests,
-                                 DataType dataType, String edge) {
-    if ("partition".equals(operation)) {
+  public IParallelOperation build(Edge edge, Set<Integer> sources, Set<Integer> dests,
+                                  DataType dataType) {
+    if ("partition".equals(edge.getOperation())) {
       PartitionOperation partitionOp = new PartitionOperation(config, channel, taskPlan);
-      partitionOp.prepare(sources, dests, edgeGenerator, dataType, null, edge);
+      partitionOp.prepare(sources, dests, edgeGenerator, dataType, null, edge.getName());
     }
     return null;
   }

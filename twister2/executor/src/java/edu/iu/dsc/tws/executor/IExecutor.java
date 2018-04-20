@@ -22,18 +22,18 @@ public interface IExecutor {
    * @param taskSchedule the task schedule
    * @return the execution created and null if nothing to execute
    */
-  Execution schedule(Config cfg, DataFlowTaskGraph taskGraph,
-                     TaskSchedulePlan taskSchedule);
+  ExecutionPlan schedule(Config cfg, DataFlowTaskGraph taskGraph,
+                         TaskSchedulePlan taskSchedule);
 
   /**
    * Wait for an execution to finish
    * @param execution the execution to wait for
    */
-  void wait(Execution execution);
+  void wait(ExecutionPlan execution);
 
   /**
    * Close an already running execution
    * @param execution the execution to be stopped
    */
-  void stop(Execution execution);
+  void stop(ExecutionPlan execution);
 }

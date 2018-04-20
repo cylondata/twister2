@@ -36,7 +36,7 @@ public class ThreadSharingExecutor {
     this.channel = channel;
   }
 
-  public void execute(Execution execution) {
+  public void execute(ExecutionPlan execution) {
     // go through the instances
     Map<Integer, INodeInstance> nodes = execution.getNodes();
     tasks = new ArrayBlockingQueue<>(nodes.size() * 2);
