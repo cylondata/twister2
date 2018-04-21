@@ -75,7 +75,7 @@ public class TaskExample implements IContainer {
     }
   }
 
-  private class Generator extends SourceTask {
+  private static class Generator extends SourceTask {
     private static final long serialVersionUID = -254264903510284748L;
     private TaskContext ctx;
     private Config config;
@@ -90,7 +90,7 @@ public class TaskExample implements IContainer {
     }
   }
 
-  private class Receiver extends SinkTask {
+  private static class Receiver extends SinkTask {
     private static final long serialVersionUID = -254264903510284798L;
     @Override
     public void execute(IMessage message) {
