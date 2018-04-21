@@ -9,16 +9,15 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.taskgraphfluentapi;
+package edu.iu.dsc.tws.executor;
 
-/**
- * This interface is responsible for defining the task graph name.
- */
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.config.Context;
 
-public interface ITaskGraph {
+public class ExecutorContext extends Context {
+  public static final String THREADS_PER_WORKER = "twister2.exector.worker.threads";
 
-  ITaskGraph taskgraphName(String taskgraphName);
-
-  ITaskGraphGenerate show();
+  public static int threadsPerContainer(Config cfg) {
+    return cfg.getIntegerValue(THREADS_PER_WORKER, 1);
+  }
 }
-

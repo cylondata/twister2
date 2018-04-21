@@ -14,6 +14,7 @@
 package edu.iu.dsc.tws.common.config;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -207,6 +208,16 @@ public class Config {
       }
     }
     return defaultValue;
+  }
+
+  @SuppressWarnings("unchecked")
+  public List<String> getStringList(String key) {
+    Object value = get(key);
+    if (value instanceof List<?>) {
+      return (List<String>) value;
+    } else {
+      return null;
+    }
   }
 
 

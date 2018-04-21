@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.k8s;
 
+import java.util.List;
+
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
@@ -22,7 +24,7 @@ public class KubernetesContext extends SchedulerContext {
   public static final String KUBERNETES_NAMESPACE_DEFAULT = "default";
   public static final String KUBERNETES_NAMESPACE = "kubernetes.namespace";
 
-  public static final String NODE_PORT_SERVICE_REQUESTED_DEFAULT = "false";
+  public static final boolean NODE_PORT_SERVICE_REQUESTED_DEFAULT = false;
   public static final String NODE_PORT_SERVICE_REQUESTED = "kubernetes.node.port.service.requested";
 
   public static final int SERVICE_NODE_PORT_DEFAULT = 0;
@@ -50,8 +52,19 @@ public class KubernetesContext extends SchedulerContext {
   public static final String PERSISTENT_LOGGING_TYPE_DEFAULT = "system";
   public static final String PERSISTENT_LOGGING_TYPE = "persistent.logging.type";
 
-  public static final String K8S_BIND_WORKER_TO_CPU_DEFAULT = "false";
+  public static final boolean K8S_BIND_WORKER_TO_CPU_DEFAULT = false;
   public static final String K8S_BIND_WORKER_TO_CPU = "kubernetes.bind.worker.to.cpu";
+
+  public static final boolean K8S_WORKER_TO_NODE_MAPPING_DEFAULT = false;
+  public static final String K8S_WORKER_TO_NODE_MAPPING = "kubernetes.worker.to.node.mapping";
+
+  public static final String K8S_WORKER_MAPPING_KEY = "kubernetes.worker.mapping.key";
+  public static final String K8S_WORKER_MAPPING_OPERATOR = "kubernetes.worker.mapping.operator";
+  public static final String K8S_WORKER_MAPPING_VALUES = "kubernetes.worker.mapping.values";
+
+  // it can be either "all-same-node", "all-separate-nodes", "none"
+  public static final String K8S_WORKER_MAPPING_UNIFORM_DEFAULT = "none";
+  public static final String K8S_WORKER_MAPPING_UNIFORM = "kubernetes.worker.mapping.uniform";
 
   public static int containersPerPod(Config cfg) {
     return cfg.getIntegerValue(CONTAINERS_PER_POD, CONTAINERS_PER_POD_DEFAULT);
@@ -62,9 +75,7 @@ public class KubernetesContext extends SchedulerContext {
   }
 
   public static boolean nodePortServiceRequested(Config cfg) {
-    String request =
-        cfg.getStringValue(NODE_PORT_SERVICE_REQUESTED, NODE_PORT_SERVICE_REQUESTED_DEFAULT);
-    return "true".equalsIgnoreCase(request);
+    return cfg.getBooleanValue(NODE_PORT_SERVICE_REQUESTED, NODE_PORT_SERVICE_REQUESTED_DEFAULT);
   }
 
   public static int serviceNodePort(Config cfg) {
@@ -100,8 +111,27 @@ public class KubernetesContext extends SchedulerContext {
   }
 
   public static boolean bindWorkerToCPU(Config cfg) {
-    String request =
-        cfg.getStringValue(K8S_BIND_WORKER_TO_CPU, K8S_BIND_WORKER_TO_CPU_DEFAULT);
-    return "true".equalsIgnoreCase(request);
+    return cfg.getBooleanValue(K8S_BIND_WORKER_TO_CPU, K8S_BIND_WORKER_TO_CPU_DEFAULT);
   }
+
+  public static boolean workerToNodeMapping(Config cfg) {
+    return cfg.getBooleanValue(K8S_WORKER_TO_NODE_MAPPING, K8S_WORKER_TO_NODE_MAPPING_DEFAULT);
+  }
+
+  public static String workerMappingKey(Config cfg) {
+    return cfg.getStringValue(K8S_WORKER_MAPPING_KEY);
+  }
+
+  public static String workerMappingOperator(Config cfg) {
+    return cfg.getStringValue(K8S_WORKER_MAPPING_OPERATOR);
+  }
+
+  public static List<String> workerMappingValues(Config cfg) {
+    return cfg.getStringList(K8S_WORKER_MAPPING_VALUES);
+  }
+
+  public static String workerMappingUniform(Config cfg) {
+    return cfg.getStringValue(K8S_WORKER_MAPPING_UNIFORM, K8S_WORKER_MAPPING_UNIFORM_DEFAULT);
+  }
+
 }

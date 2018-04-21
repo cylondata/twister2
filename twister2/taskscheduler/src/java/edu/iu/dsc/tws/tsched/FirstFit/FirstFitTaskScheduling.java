@@ -89,14 +89,18 @@ public class FirstFitTaskScheduling implements TaskSchedule {
     this.instanceRAM = 1024.0;
     this.instanceDisk = 1000.0;
     this.instanceCPU = 5.0;
+
+    this.paddingPercentage = DEFAULT_CONTAINER_PADDING_PERCENTAGE;
+
     this.defaultResourceValue = new Resource(this.instanceRAM, this.instanceDisk, this.instanceCPU);
+
     this.instanceRAM = this.defaultResourceValue.getRam()
         * DEFAULT_NUMBER_INSTANCES_PER_CONTAINER;
     this.instanceDisk = this.defaultResourceValue.getDisk()
         * DEFAULT_NUMBER_INSTANCES_PER_CONTAINER;
     this.instanceCPU = this.defaultResourceValue.getCpu()
         * DEFAULT_NUMBER_INSTANCES_PER_CONTAINER;
-    this.paddingPercentage = DEFAULT_CONTAINER_PADDING_PERCENTAGE;
+
 
     /*Worker worker = workerplan.getWorker(0);
     this.maximumContainerResourceValue = new Resource(

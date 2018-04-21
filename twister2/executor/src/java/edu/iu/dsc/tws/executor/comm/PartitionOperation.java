@@ -11,10 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.comm;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
@@ -22,13 +24,14 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.mpi.MPIDataFlowPartition;
-import edu.iu.dsc.tws.comms.mpi.TWSMPIChannel;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.EdgeGenerator;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
 
 public class PartitionOperation extends ParallelOperation {
+  private static final Logger LOG = Logger.getLogger(PartitionOperation.class.getName());
+
   private Config config;
 
   private TWSChannel channel;
@@ -43,19 +46,29 @@ public class PartitionOperation extends ParallelOperation {
 
   private int partitionEdge;
 
-  public PartitionOperation(Config config, TWSMPIChannel network, TaskPlan tPlan) {
+  public PartitionOperation(Config config, TWSChannel network, TaskPlan tPlan) {
     this.config = config;
     this.taskPlan = tPlan;
     this.channel = network;
+    this.outMessages = new HashMap<>();
   }
 
   public void prepare(Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
-                      DataType dataType, DataType keyType) {
+                      DataType dataType, String edgeName) {
+    this.edge = e;
+    op = new MPIDataFlowPartition(channel, srcs, dests, new PartitionReceiver(),
+        MPIDataFlowPartition.PartitionStratergy.DIRECT);
+    partitionEdge = e.generate(edgeName);
+    op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, partitionEdge);
+  }
+
+  public void prepare(Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
+                      DataType dataType, DataType keyType, String edgeName) {
     this.edge = e;
     op = new MPIDataFlowPartition(channel, srcs, dests, new PartitionReceiver(),
         MPIDataFlowPartition.PartitionStratergy.DIRECT,
         Utils.dataTypeToMessageType(dataType), Utils.dataTypeToMessageType(keyType));
-    partitionEdge = e.generate();
+    partitionEdge = e.generate(edgeName);
     op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, partitionEdge);
   }
 
@@ -83,12 +96,17 @@ public class PartitionOperation extends ParallelOperation {
 
     @Override
     public boolean onMessage(int source, int path, int target, int flags, Object object) {
-      TaskMessage<Object> msg = new TaskMessage<>(object, partitionEdge, target);
+      TaskMessage msg = new TaskMessage(object,
+          edge.getStringMapping(partitionEdge), target);
       return outMessages.get(target).offer(msg);
     }
 
     @Override
     public void progress() {
     }
+  }
+
+  public void progress() {
+    op.progress();
   }
 }

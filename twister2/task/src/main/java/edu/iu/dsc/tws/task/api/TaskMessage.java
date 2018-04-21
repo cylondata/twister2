@@ -14,39 +14,39 @@ package edu.iu.dsc.tws.task.api;
 /**
  * Wrapper interface for all the messages types.
  */
-public class TaskMessage<T> implements IMessage {
+public class TaskMessage implements IMessage {
 
   /**
    * Stores the data
    */
-  private T content;
+  private Object content;
 
-  private int edge;
+  private String edge;
 
   private int sourceTask;
 
   private int targetTask;
 
-  public TaskMessage(T data) {
+  public TaskMessage(Object data) {
     this.content = data;
   }
 
-  public TaskMessage(T content, int edge, int sourceTask) {
+  public TaskMessage(Object content, String edge, int sourceTask) {
     this.content = content;
     this.edge = edge;
     this.sourceTask = sourceTask;
   }
 
-  public T getContent() {
+  public Object getContent() {
     return content;
   }
 
-  public void setContent(T content) {
+  public void setContent(Object content) {
     this.content = content;
   }
 
   @Override
-  public int edge() {
+  public String edge() {
     return edge;
   }
 

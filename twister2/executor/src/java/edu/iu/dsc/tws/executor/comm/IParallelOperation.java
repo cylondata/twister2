@@ -21,4 +21,6 @@ public interface IParallelOperation {
   void send(int source, IMessage message, int dest);
 
   void register(int targetTask, BlockingQueue<IMessage> queue);
+
+  void progress();
 }

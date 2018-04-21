@@ -16,8 +16,9 @@ import java.util.concurrent.BlockingQueue;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.ISink;
+import edu.iu.dsc.tws.task.api.TaskContext;
 
-public class SinkInstance {
+public class SinkInstance  implements INodeInstance {
   /**
    * The actual task executing
    */
@@ -46,7 +47,7 @@ public class SinkInstance {
   }
 
   public void prepare() {
-    task.prepare(config);
+    task.prepare(config, new TaskContext(0, 0, "", 0));
   }
 
   public void execute() {

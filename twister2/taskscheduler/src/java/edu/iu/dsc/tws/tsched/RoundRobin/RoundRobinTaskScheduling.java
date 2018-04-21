@@ -129,7 +129,7 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
 
       Worker worker = workerPlan.getWorker(containerId);
 
-      LOG.info(String.format("Worker values:" + workerPlan.getNumberOfWorkers()
+      LOG.info(String.format("Worker:" + containerId
           + "\tRam:" + worker.getRam() + "\tDisk:" + worker.getDisk()
           + "\tCpu:" + worker.getCpu()));
 

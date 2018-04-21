@@ -11,17 +11,21 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.executor.comm.IParallelOperation;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.ITask;
 import edu.iu.dsc.tws.task.api.OutputCollection;
+import edu.iu.dsc.tws.task.api.TaskContext;
 
 /**
  * The class represents the instance of the executing task
  */
-public class TaskInstance {
+public class TaskInstance implements INodeInstance {
   /**
    * The actual task executing
    */
@@ -53,18 +57,34 @@ public class TaskInstance {
    */
   private int taskId;
 
+  /**
+   * Parallel operations
+   */
+  private Map<String, IParallelOperation> outParOps = new HashMap<>();
+
+  /**
+   * The edge generator
+   */
+  private EdgeGenerator edgeGenerator;
+
   public TaskInstance(ITask task, BlockingQueue<IMessage> inQueue,
-                      BlockingQueue<IMessage> outQueue, Config config) {
+                      BlockingQueue<IMessage> outQueue, Config config,
+                      EdgeGenerator eGenerator) {
     this.task = task;
     this.inQueue = inQueue;
     this.outQueue = outQueue;
     this.config = config;
+    this.edgeGenerator = eGenerator;
   }
 
   public void prepare() {
     outputCollection = new DefaultOutputCollection(outQueue);
 
-    task.prepare(config, outputCollection);
+    task.prepare(config, new TaskContext(0, 0, "", 0));
+  }
+
+  public void registerOutParallelOperation(String edge, IParallelOperation op) {
+    outParOps.put(edge, op);
   }
 
   public void execute() {
@@ -72,6 +92,22 @@ public class TaskInstance {
       IMessage m = inQueue.poll();
 
       task.run(m);
+
+      // now check the output queue
+      while (outQueue.isEmpty()) {
+        IMessage message = outQueue.poll();
+        if (message != null) {
+          String edge = message.edge();
+
+          // invoke the communication operation
+          IParallelOperation op = outParOps.get(edge);
+          op.send(taskId, message);
+        }
+      }
+    }
+
+    for (Map.Entry<String, IParallelOperation> e : outParOps.entrySet()) {
+      e.getValue().progress();
     }
   }
 

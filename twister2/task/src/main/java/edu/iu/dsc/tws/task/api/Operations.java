@@ -9,10 +9,16 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.tsystem;
+package edu.iu.dsc.tws.task.api;
 
-public interface TaskInterface {
-  void execute();
+public final class Operations {
+  private Operations() {
+  }
 
-  void cancel();
+  public static final String PARTITION = "partition";
+  public static final String REDUCE = "reduce";
+  public static final String ALL_REDUCE = "all_reduce";
+  public static final String ALL_GATHER = "all_gather";
+  public static final String KEYED_GATHER = "keyed_gather";
+  public static final String KEYED_REDUCE = "keyed_reduce";
 }

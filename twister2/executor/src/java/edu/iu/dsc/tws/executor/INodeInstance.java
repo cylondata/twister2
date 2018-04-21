@@ -9,27 +9,8 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.graph;
+package edu.iu.dsc.tws.executor;
 
-import java.util.Set;
-
-import edu.iu.dsc.tws.task.api.ITask;
-import edu.iu.dsc.tws.task.api.Task;
-
-
-/**
- * This is the main interface for the dataflow task graph parser.
- */
-public interface IDataflowTaskGraphParser {
-
-  Set<Task> dataflowTaskGraphParseAndSchedule(int containerId);
-
-  Set<Task> dataflowTaskGraphParseAndSchedule(String message);
-
-  Set<TaskGraphMapper> dataflowTGraphParseAndSchedule();
-
-  Set<ITask> taskGraphParseAndSchedule();
-
-  Set<ITask> taskGraphParseAndSchedule(int containerId);
+public interface INodeInstance {
+  void execute();
 }
-

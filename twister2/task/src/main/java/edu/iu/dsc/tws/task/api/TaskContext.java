@@ -12,15 +12,66 @@
 package edu.iu.dsc.tws.task.api;
 
 public class TaskContext {
-  public int taskId() {
-    return 0;
+  private int taskIndex;
+
+  private int taskId;
+
+  private String taskName;
+
+  private int parallelism;
+
+  private OutputCollection collection;
+
+  private int edge;
+
+  public TaskContext(int taskIndex, int taskId, String taskName, int parallelism) {
+    this.taskIndex = taskIndex;
+    this.taskId = taskId;
+    this.taskName = taskName;
+    this.parallelism = parallelism;
   }
 
+  public TaskContext(int taskIndex, int taskId, String taskName, int parallelism,
+                     OutputCollection collection) {
+    this.taskIndex = taskIndex;
+    this.taskId = taskId;
+    this.taskName = taskName;
+    this.parallelism = parallelism;
+    this.collection = collection;
+  }
+
+  /**
+   * The task index
+   * @return
+   */
   public int taskIndex() {
-    return 0;
+    return taskIndex;
   }
 
-  public int parallelTasks() {
-    return 0;
+  /**
+   * Task id
+   * @return the task id
+   */
+  public int taskId() {
+    return taskId;
+  }
+
+  /**
+   * Name of the task
+   */
+  public String taskName() {
+    return taskName;
+  }
+
+  public int getParallelism() {
+    return parallelism;
+  }
+
+  /**
+   * Write a message to the destination
+   * @param message
+   */
+  public void write(Object message) {
+    collection.collect(edge, new TaskMessage(message, "", taskId));
   }
 }

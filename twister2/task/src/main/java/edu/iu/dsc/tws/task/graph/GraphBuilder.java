@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.graph;
 
+import edu.iu.dsc.tws.task.api.ISink;
+import edu.iu.dsc.tws.task.api.ISource;
 import edu.iu.dsc.tws.task.api.ITask;
 
 public final class GraphBuilder {
@@ -22,6 +24,16 @@ public final class GraphBuilder {
 
   public static GraphBuilder newBuilder() {
     return new GraphBuilder();
+  }
+
+  public GraphBuilder addSource(String name, ISource source) {
+    graph.addTaskVertex(name, new Vertex(name, source));
+    return this;
+  }
+
+  public GraphBuilder addSink(String name, ISink sink) {
+    graph.addTaskVertex(name, new Vertex(name, sink));
+    return this;
   }
 
   public GraphBuilder addTask(String name, ITask task) {
@@ -53,7 +65,7 @@ public final class GraphBuilder {
       throw new RuntimeException("Failed to connect non-existing task: " + t1);
     }
 
-    Vertex v2 = graph.vertex(t1);
+    Vertex v2 = graph.vertex(t2);
     if (v2 == null) {
       throw new RuntimeException("Failed to connect non-existing task: " + t2);
     }
@@ -61,17 +73,31 @@ public final class GraphBuilder {
     return this;
   }
 
-  public GraphBuilder connect(String t1, String t2, String name, ITask task) {
+  public GraphBuilder connect(String t1, String t2, String name, String operation) {
     Vertex v1 = graph.vertex(t1);
     if (v1 == null) {
       throw new RuntimeException("Failed to connect non-existing task: " + t1);
     }
 
-    Vertex v2 = graph.vertex(t1);
+    Vertex v2 = graph.vertex(t2);
     if (v2 == null) {
       throw new RuntimeException("Failed to connect non-existing task: " + t2);
     }
-    graph.addTaskEdge(v1, v2, new Edge(name, task));
+    graph.addTaskEdge(v1, v2, new Edge(name, operation));
+    return this;
+  }
+
+  public GraphBuilder connect(String t1, String t2, String name, String operation, ITask task) {
+    Vertex v1 = graph.vertex(t1);
+    if (v1 == null) {
+      throw new RuntimeException("Failed to connect non-existing task: " + t1);
+    }
+
+    Vertex v2 = graph.vertex(t2);
+    if (v2 == null) {
+      throw new RuntimeException("Failed to connect non-existing task: " + t2);
+    }
+    graph.addTaskEdge(v1, v2, new Edge(name, operation, task));
     return this;
   }
 

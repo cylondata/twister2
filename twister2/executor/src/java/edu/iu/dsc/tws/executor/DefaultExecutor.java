@@ -51,11 +51,6 @@ public class DefaultExecutor implements IExecutor {
   private int workerId;
 
   /**
-   * Fixed thread executor
-   */
-  private FixedThreadExecutor executor;
-
-  /**
    * Communications list
    */
   private Table<String, String, Communication> parOpTable = HashBasedTable.create();
@@ -77,31 +72,35 @@ public class DefaultExecutor implements IExecutor {
 
   private KryoMemorySerializer kryoMemorySerializer;
 
-  public DefaultExecutor(ResourcePlan plan) {
+  private EdgeGenerator edgeGenerator;
+
+  public DefaultExecutor(ResourcePlan plan, TWSNetwork net) {
     this.workerId = plan.getThisId();
-    this.executor = new FixedThreadExecutor();
     this.taskIdGenerator = new TaskIdGenerator();
     this.kryoMemorySerializer = new KryoMemorySerializer();
     this.resourcePlan = plan;
+    this.edgeGenerator = new EdgeGenerator();
+    this.network = net;
   }
 
   @Override
-  public Execution schedule(Config cfg, DataFlowTaskGraph taskGraph,
-                            TaskSchedulePlan taskSchedule) {
-
+  public ExecutionPlan schedule(Config cfg, DataFlowTaskGraph taskGraph,
+                                TaskSchedulePlan taskSchedule) {
+    noOfThreads = ExecutorContext.threadsPerContainer(cfg);
     // we need to build the task plan
     TaskPlan taskPlan = TaskPlanBuilder.build(resourcePlan, taskSchedule, taskIdGenerator);
-    network = new TWSNetwork(cfg, taskPlan);
-    ParallelOperationFactory opFactory = new ParallelOperationFactory(network);
+    ParallelOperationFactory opFactory = new ParallelOperationFactory(
+        cfg, network.getChannel(), taskPlan, edgeGenerator);
 
     Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap = taskSchedule.getContainersMap();
-    TaskSchedulePlan.ContainerPlan p = containersMap.get(workerId);
-    if (p == null) {
+    TaskSchedulePlan.ContainerPlan conPlan = containersMap.get(workerId);
+    if (conPlan == null) {
       LOG.log(Level.INFO, "Cannot find worker in the task plan: " + workerId);
       return null;
     }
 
-    Set<TaskSchedulePlan.TaskInstancePlan> instancePlan = p.getTaskInstances();
+    ExecutionPlan execution = new ExecutionPlan();
+    Set<TaskSchedulePlan.TaskInstancePlan> instancePlan = conPlan.getTaskInstances();
     // for each task we are going to create the communications
     for (TaskSchedulePlan.TaskInstancePlan ip : instancePlan) {
       Vertex v = taskGraph.vertex(ip.getTaskName());
@@ -116,18 +115,18 @@ public class DefaultExecutor implements IExecutor {
         Set<Edge> edges = taskGraph.outEdges(v);
         // now lets create the communication object
         for (Edge e : edges) {
-          Vertex child = taskGraph.childOfTask(v, e.getTaskEdge());
+          Vertex child = taskGraph.childOfTask(v, e.getName());
           // lets figure out the parents task id
           Set<Integer> srcTasks = taskIdGenerator.getTaskIds(v.getName(),
               ip.getTaskId(), taskGraph);
           Set<Integer> tarTasks = taskIdGenerator.getTaskIds(child.getName(),
               getTaskIdOfTask(child.getName(), taskSchedule), taskGraph);
 
-          if (!parOpTable.contains(v.getName(), e.taskEdge)) {
-            parOpTable.put(v.getName(), e.taskEdge, new Communication(v.getName(),
-                e.taskEdge, srcTasks, tarTasks));
-            sendTable.put(v.getName(), e.taskEdge, new Communication(v.getName(),
-                e.taskEdge, srcTasks, tarTasks));
+          if (!parOpTable.contains(v.getName(), e.getName())) {
+            parOpTable.put(v.getName(), e.getName(),
+                new Communication(e, v.getName(), child.getName(), srcTasks, tarTasks));
+            sendTable.put(v.getName(), e.getName(),
+                new Communication(e, v.getName(), child.getName(), srcTasks, tarTasks));
           }
         }
       }
@@ -136,43 +135,81 @@ public class DefaultExecutor implements IExecutor {
         // lets get the parent tasks
         Set<Edge> parentEdges = taskGraph.inEdges(v);
         for (Edge e : parentEdges) {
-          Vertex parent = taskGraph.getParentOfTask(v, e.getTaskEdge());
+          Vertex parent = taskGraph.getParentOfTask(v, e.getName());
           // lets figure out the parents task id
           Set<Integer> srcTasks = taskIdGenerator.getTaskIds(parent.getName(),
               getTaskIdOfTask(parent.getName(), taskSchedule), taskGraph);
           Set<Integer> tarTasks = taskIdGenerator.getTaskIds(v.getName(),
               ip.getTaskId(), taskGraph);
 
-          if (!parOpTable.contains(parent.getName(), e.taskEdge)) {
-            parOpTable.put(parent.getName(), e.taskEdge, new Communication(parent.getName(),
-                e.taskEdge, srcTasks, tarTasks));
-            recvTable.put(parent.getName(), e.taskEdge, new Communication(parent.getName(),
-                e.taskEdge, srcTasks, tarTasks));
+          if (!parOpTable.contains(parent.getName(), e.getName())) {
+            parOpTable.put(parent.getName(), e.getName(),
+                new Communication(e, parent.getName(), v.getName(), srcTasks, tarTasks));
+            recvTable.put(parent.getName(), e.getName(),
+                new Communication(e, parent.getName(), v.getName(), srcTasks, tarTasks));
           }
         }
       }
 
       // lets create the instance
-      createInstances(cfg, ip, v);
+      INodeInstance iNodeInstance = createInstances(cfg, ip, v);
+      execution.addNodes(taskIdGenerator.generateGlobalTaskId(
+          v.getName(), ip.getTaskId(), ip.getTaskIndex()), iNodeInstance);
     }
 
     // now lets create the queues and start the execution
-    Execution execution = new Execution();
     for (Table.Cell<String, String, Communication> cell : parOpTable.cellSet()) {
       Communication c = cell.getValue();
 
       // lets create the communication
-      IParallelOperation op = opFactory.build(c.getName(), c.getSourceTasks(),
+      IParallelOperation op = opFactory.build(c.getEdge(), c.getSourceTasks(),
           c.getTargetTasks(), DataType.OBJECT);
       // now lets check the sources and targets that are in this executor
+      Set<Integer> sourcesOfThisWorker = intersectionOfTasks(conPlan, c.getSourceTasks());
+      Set<Integer> targetsOfThisWorker = intersectionOfTasks(conPlan, c.getTargetTasks());
 
+      // set the parallel operation to the instance
+      // lets see weather this comunication belongs to a task instance
+      for (Integer i : sourcesOfThisWorker) {
+        if (taskInstances.contains(c.getSourceTask(), i)) {
+          TaskInstance taskInstance = taskInstances.get(c.getSourceTasks(), i);
+          taskInstance.registerOutParallelOperation(c.getEdge().getName(), op);
+        } else if (sourceInstances.contains(c.getSourceTask(), i)) {
+          SourceInstance sourceInstance = sourceInstances.get(c.getSourceTask(), i);
+          sourceInstance.registerOutParallelOperation(c.getEdge().getName(), op);
+        } else {
+          throw new RuntimeException("Not found: " + c.getSourceTask());
+        }
+      }
+
+      for (Integer i : targetsOfThisWorker) {
+        if (taskInstances.contains(c.getTargetTask(), i)) {
+          TaskInstance taskInstance = taskInstances.get(c.getTargetTask(), i);
+          op.register(i, taskInstance.getInQueue());
+        } else if (sinkInstances.contains(c.getTargetTask(), i)) {
+          SinkInstance sourceInstance = sinkInstances.get(c.getTargetTask(), i);
+          op.register(i, sourceInstance.getInQueue());
+        } else {
+          throw new RuntimeException("Not found: " + c.getTargetTask());
+        }
+      }
+      execution.addOps(op);
     }
 
     // lets start the execution
+    ThreadSharingExecutor threadSharingExecutor =
+        new ThreadSharingExecutor(noOfThreads, network.getChannel());
+    threadSharingExecutor.execute(execution);
 
     return execution;
   }
 
+  private Set<Integer> intersectionOfTasks(TaskSchedulePlan.ContainerPlan cp,
+                                                Set<Integer> tasks) {
+    Set<Integer> cTasks = taskIdGenerator.getTaskIdsOfContainer(cp);
+    cTasks.retainAll(tasks);
+    return cTasks;
+  }
 
   /**
    * Create an instance of a task,
@@ -180,21 +217,29 @@ public class DefaultExecutor implements IExecutor {
    * @param ip instance plan
    * @param vertex vertex
    */
-  private void createInstances(Config cfg, TaskSchedulePlan.TaskInstancePlan ip, Vertex vertex) {
+  private INodeInstance createInstances(Config cfg,
+                                        TaskSchedulePlan.TaskInstancePlan ip, Vertex vertex) {
     // lets add the task
     byte[] taskBytes = kryoMemorySerializer.serialize(vertex.getTask());
     INode newInstance = (INode) kryoMemorySerializer.deserialize(taskBytes);
     int taskId = taskIdGenerator.generateGlobalTaskId(vertex.getName(),
         ip.getTaskId(), ip.getTaskIndex());
     if (newInstance instanceof ITask) {
-      taskInstances.put(vertex.getName(), taskId, new TaskInstance((ITask) newInstance,
-          new ArrayBlockingQueue<>(1024), new ArrayBlockingQueue<>(1024), cfg));
+      TaskInstance v = new TaskInstance((ITask) newInstance,
+          new ArrayBlockingQueue<>(1024),
+          new ArrayBlockingQueue<>(1024), cfg, edgeGenerator);
+      taskInstances.put(vertex.getName(), taskId, v);
+      return v;
     } else if (newInstance instanceof ISource) {
-      sourceInstances.put(vertex.getName(), taskId, new SourceInstance((ISource) newInstance,
-          new ArrayBlockingQueue<>(1024), cfg));
+      SourceInstance v = new SourceInstance((ISource) newInstance,
+          new ArrayBlockingQueue<>(1024), cfg);
+      sourceInstances.put(vertex.getName(), taskId, v);
+      return v;
     } else if (newInstance instanceof ISink) {
-      sinkInstances.put(vertex.getName(), taskId, new SinkInstance((ISink) newInstance,
-          new ArrayBlockingQueue<>(1024), cfg));
+      SinkInstance v = new SinkInstance((ISink) newInstance,
+          new ArrayBlockingQueue<>(1024), cfg);
+      sinkInstances.put(vertex.getName(), taskId, v);
+      return v;
     } else {
       throw new RuntimeException("Un-known type");
     }
@@ -213,42 +258,49 @@ public class DefaultExecutor implements IExecutor {
   }
 
   private class Communication {
-    private String source;
-    private String name;
+    private Edge edge;
     private Set<Integer> sourceTasks;
     private Set<Integer> targetTasks;
+    private String sourceTask;
+    private String targetTask;
 
-    Communication(String n, String src, Set<Integer> srcTasks, Set<Integer> tarTasks) {
-      this.name = n;
-      this.sourceTasks = srcTasks;
-      this.source = src;
+    Communication(Edge e, String srcTask, String tarTast,
+                  Set<Integer> srcTasks, Set<Integer> tarTasks) {
+      this.edge = e;
       this.targetTasks = tarTasks;
-    }
-
-    public String getName() {
-      return name;
+      this.sourceTasks = srcTasks;
+      this.sourceTask = srcTask;
+      this.targetTask = tarTast;
     }
 
     public Set<Integer> getSourceTasks() {
       return sourceTasks;
     }
 
-    public String getSource() {
-      return source;
-    }
-
     public Set<Integer> getTargetTasks() {
       return targetTasks;
     }
+
+    public Edge getEdge() {
+      return edge;
+    }
+
+    public String getSourceTask() {
+      return sourceTask;
+    }
+
+    public String getTargetTask() {
+      return targetTask;
+    }
   }
 
   @Override
-  public void wait(Execution execution) {
+  public void wait(ExecutionPlan execution) {
 
   }
 
   @Override
-  public void stop(Execution execution) {
+  public void stop(ExecutionPlan execution) {
 
   }
 }

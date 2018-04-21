@@ -99,7 +99,7 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
 
     Edge taskEdge = null;
     for (Edge e : edges) {
-      if (e.taskEdge.equals(edge)) {
+      if (e.getName().equals(edge)) {
         taskEdge = e;
       }
     }
@@ -116,13 +116,13 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
 
     Edge taskEdge = null;
     for (Edge e : edges) {
-      if (e.taskEdge.equals(edge)) {
+      if (e.getName().equals(edge)) {
         taskEdge = e;
       }
     }
 
     if (taskEdge != null) {
-      return connectedChildTask(task, taskEdge);
+      return connectedParentTask(task, taskEdge);
     } else {
       return null;
     }
@@ -139,7 +139,7 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
   private static class EdgeComparator implements Comparator<Edge> {
     @Override
     public int compare(Edge o1, Edge o2) {
-      return new StringComparator().compare(o1.taskEdge, o2.taskEdge);
+      return new StringComparator().compare(o1.getName(), o2.getName());
     }
   }
 

@@ -11,68 +11,22 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.api;
 
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.common.config.Config;
 
 /**
  * The abstract class that represents the start of a application
  * This task reads data from a input data source and ouputs data to another task
  */
-public abstract class SourceTask<T> extends Task {
+public abstract class SourceTask implements ISource {
   private static final long serialVersionUID = -254264120110286748L;
-//  /**
-//   * The task id's of tasks that this sources task will send messages to
-//   */
-//  private Set<Integer> sinks = new HashSet<>();
 
-  /**
-   * The input source for this task. the input data will be read from this
-   */
-  private T inputSource;
-  /**
-   * The data flow operation related to this task. This will be used to send data to the dependent
-   * tasks in the application
-   */
-  private DataFlowOperation dataFlowOperation;
+  @Override
+  public void run() {
 
-  public SourceTask() {
-    super();
   }
 
-  public SourceTask(int tid) {
-    super(tid);
-  }
+  @Override
+  public void prepare(Config cfg, TaskContext context) {
 
-//  public SourceTask(int tid, Set<Integer> sinksSet) {
-//    super(tid);
-//    this.sinks = sinksSet;
-//  }
-
-  public SourceTask(int tid, DataFlowOperation dataFlowOperation) {
-    super(tid);
-    this.dataFlowOperation = dataFlowOperation;
-  }
-
-//  public Set<Integer> getSinks() {
-//    return sinks;
-//  }
-//
-//  public void setSinks(Set<Integer> sinks) {
-//    this.sinks = sinks;
-//  }
-
-  public DataFlowOperation getDataFlowOperation() {
-    return dataFlowOperation;
-  }
-
-  public void setDataFlowOperation(DataFlowOperation dfop) {
-    this.dataFlowOperation = dfop;
-  }
-
-  public T getInputSource() {
-    return inputSource;
-  }
-
-  public void setInputSource(T inputSource) {
-    this.inputSource = inputSource;
   }
 }

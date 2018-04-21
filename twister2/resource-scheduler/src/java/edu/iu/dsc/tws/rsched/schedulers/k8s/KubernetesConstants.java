@@ -20,6 +20,7 @@ public final class KubernetesConstants {
   public static final String CONTAINER_NAME_PREFIX = "twister2-container-";
   public static final String TWISTER2_SERVICE_PREFIX = "twister2-service-";
   public static final String SERVICE_LABEL_PREFIX = "twister2-service-label-";
+  public static final String SERVICE_LABEL_KEY = "app";
   public static final String TWISTER2_STORAGE_CLAIM_PREFIX = "twister2-storage-";
   public static final String PERSISTENT_VOLUME_NAME = "persistent-volume";
   public static final String PERSISTENT_VOLUME_MOUNT = "/persistent";
