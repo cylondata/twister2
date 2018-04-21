@@ -15,15 +15,24 @@ import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.task.api.IMessage;
 
-/**
- * Represents a parallel communication operation
- */
-public interface IParallelOperation {
-  void send(int source, IMessage message);
+public class BroadcastOperation extends ParallelOperation {
+  @Override
+  public void send(int source, IMessage message) {
+    super.send(source, message);
+  }
 
-  void send(int source, IMessage message, int dest);
+  @Override
+  public void send(int source, IMessage message, int dest) {
+    super.send(source, message, dest);
+  }
 
-  void register(int targetTask, BlockingQueue<IMessage> queue);
+  @Override
+  public void register(int targetTask, BlockingQueue<IMessage> queue) {
+    super.register(targetTask, queue);
+  }
 
-  void progress();
+  @Override
+  public void progress() {
+    super.progress();
+  }
 }

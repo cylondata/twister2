@@ -47,8 +47,13 @@ public class ParallelOperationFactory {
     return null;
   }
 
-  public IParallelOperation build(String operation, Set<Integer> sources, Set<Integer> dests,
+  public IParallelOperation build(Edge edge, Set<Integer> sources, Set<Integer> dests,
                                  DataType dataType, DataType keyType) {
+    if (Operations.PARTITION.equals(edge.getOperation())) {
+      PartitionOperation partitionOp = new PartitionOperation(config, channel, taskPlan);
+      partitionOp.prepare(sources, dests, edgeGenerator, dataType, keyType, edge.getName());
+      return partitionOp;
+    }
     return null;
   }
 }
