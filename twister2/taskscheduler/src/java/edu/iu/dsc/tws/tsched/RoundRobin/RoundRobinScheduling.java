@@ -44,7 +44,7 @@ public class RoundRobinScheduling {
       Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
       LOG.info(String.format("Number of Containers:" + numberOfContainers
           + "\t" + "Number of Task Instances:" + totalInstances));
-      for (int i = 1; i <= numberOfContainers; i++) {
+      for (int i = 0; i < numberOfContainers; i++) {
         roundrobinAllocation.put(i, new ArrayList<InstanceId>());
       }
       LOG.info(String.format("Container Map Values Before Allocation\t" + roundrobinAllocation));

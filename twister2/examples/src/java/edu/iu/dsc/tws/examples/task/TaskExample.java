@@ -45,7 +45,17 @@ public class TaskExample implements IContainer {
 
     GraphBuilder builder = GraphBuilder.newBuilder();
     builder.addSource("source", g);
+    builder.setParallelism("source", 4);
     builder.addSink("sink", r);
+    builder.setParallelism("sink", 4);
+
+    builder.addConfiguration("source", "Ram", 512);
+    builder.addConfiguration("source", "Disk", 1000);
+    builder.addConfiguration("source", "Cpu", 2);
+
+    builder.addConfiguration("sink", "Ram", 300);
+    builder.addConfiguration("sink", "Disk", 1000);
+    builder.addConfiguration("sink", "Cpu", 2);
 
     DataFlowTaskGraph graph = builder.build();
 
