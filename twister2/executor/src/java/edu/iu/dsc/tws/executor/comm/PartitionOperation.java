@@ -73,7 +73,7 @@ public class PartitionOperation extends ParallelOperation {
   }
 
   public void send(int source, IMessage message) {
-    op.send(source, message, 0);
+    op.send(source, message.getContent(), 0);
   }
 
   public void send(int source, IMessage message, int dest) {

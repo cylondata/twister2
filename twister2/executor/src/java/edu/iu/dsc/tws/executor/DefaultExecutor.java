@@ -227,12 +227,14 @@ public class DefaultExecutor implements IExecutor {
     if (newInstance instanceof ITask) {
       TaskInstance v = new TaskInstance((ITask) newInstance,
           new ArrayBlockingQueue<>(1024),
-          new ArrayBlockingQueue<>(1024), cfg, edgeGenerator);
+          new ArrayBlockingQueue<>(1024), cfg, edgeGenerator,
+          vertex.getName(), taskId, ip.getTaskIndex(), vertex.getParallelism());
       taskInstances.put(vertex.getName(), taskId, v);
       return v;
     } else if (newInstance instanceof ISource) {
       SourceInstance v = new SourceInstance((ISource) newInstance,
-          new ArrayBlockingQueue<>(1024), cfg);
+          new ArrayBlockingQueue<>(1024), cfg,
+          vertex.getName(), taskId, ip.getTaskIndex(), vertex.getParallelism());
       sourceInstances.put(vertex.getName(), taskId, v);
       return v;
     } else if (newInstance instanceof ISink) {

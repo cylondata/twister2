@@ -57,6 +57,12 @@ public class TaskInstance implements INodeInstance {
    */
   private int taskId;
 
+  private int taskIndex;
+
+  private int parallelism;
+
+  private String taskName;
+
   /**
    * Parallel operations
    */
@@ -69,18 +75,23 @@ public class TaskInstance implements INodeInstance {
 
   public TaskInstance(ITask task, BlockingQueue<IMessage> inQueue,
                       BlockingQueue<IMessage> outQueue, Config config,
-                      EdgeGenerator eGenerator) {
+                      EdgeGenerator eGenerator, String tName,
+                      int tId, int tIndex, int parallel) {
     this.task = task;
     this.inQueue = inQueue;
     this.outQueue = outQueue;
     this.config = config;
     this.edgeGenerator = eGenerator;
+    this.taskId = tId;
+    this.taskIndex = tIndex;
+    this.parallelism = parallel;
+    this.taskName = tName;
   }
 
   public void prepare() {
     outputCollection = new DefaultOutputCollection(outQueue);
 
-    task.prepare(config, new TaskContext(0, 0, "", 0,
+    task.prepare(config, new TaskContext(taskIndex, taskId, taskName, parallelism,
         outputCollection));
   }
 
@@ -95,7 +106,7 @@ public class TaskInstance implements INodeInstance {
       task.run(m);
 
       // now check the output queue
-      while (outQueue.isEmpty()) {
+      while (!outQueue.isEmpty()) {
         IMessage message = outQueue.poll();
         if (message != null) {
           String edge = message.edge();

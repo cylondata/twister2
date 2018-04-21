@@ -83,7 +83,7 @@ public class TaskExample implements IContainer {
     private Config config;
     @Override
     public void run() {
-      ctx.write("Hello");
+      ctx.write("e1", "Hello");
     }
 
     @Override

@@ -22,8 +22,6 @@ public class TaskContext {
 
   private OutputCollection collection;
 
-  private int edge;
-
   public TaskContext(int taskIndex, int taskId, String taskName, int parallelism) {
     this.taskIndex = taskIndex;
     this.taskId = taskId;
@@ -71,7 +69,7 @@ public class TaskContext {
    * Write a message to the destination
    * @param message
    */
-  public void write(Object message) {
-    collection.collect(edge, new TaskMessage(message, "", taskId));
+  public void write(String edge, Object message) {
+    collection.collect(0, new TaskMessage(message, edge, taskId));
   }
 }
