@@ -57,7 +57,7 @@ public class TaskExample implements IContainer {
     builder.addConfiguration("sink", "Ram", 300);
     builder.addConfiguration("sink", "Disk", 1000);
     builder.addConfiguration("sink", "Cpu", 2);
-    builder.connect("source", "sink", Operations.PARTITION);
+    builder.connect("source", "sink", "e1", Operations.PARTITION);
 
     DataFlowTaskGraph graph = builder.build();
 
