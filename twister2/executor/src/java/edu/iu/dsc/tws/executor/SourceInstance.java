@@ -57,7 +57,8 @@ public class SourceInstance implements INodeInstance {
   public void prepare() {
     outputCollection = new DefaultOutputCollection(outQueue);
 
-    task.prepare(config, new TaskContext(0, 0, "", 0));
+    task.prepare(config, new TaskContext(0, 0, "",
+        0, outputCollection));
   }
 
   public void execute() {
