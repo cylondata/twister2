@@ -23,7 +23,6 @@ import edu.iu.dsc.tws.tsched.spi.taskschedule.InstanceId;
 import edu.iu.dsc.tws.tsched.utils.TaskAttributes;
 
 public class RoundRobinScheduling {
-
   private static final Logger LOG = Logger.getLogger(RoundRobinScheduling.class.getName());
 
   protected RoundRobinScheduling() {
@@ -34,38 +33,26 @@ public class RoundRobinScheduling {
    */
   public static Map<Integer, List<InstanceId>> RoundRobinSchedulingAlgorithm(
       Set<Vertex> taskVertexSet, int numberOfContainers) {
-
-    int taskIndex = 1;
-    int globalTaskIndex = 1;
+    int globalTaskIndex = 0;
     TaskAttributes taskAttributes = new TaskAttributes();
     Map<Integer, List<InstanceId>> roundrobinAllocation = new HashMap<>();
-    try {
-      int totalInstances = taskAttributes.getTotalNumberOfInstances(taskVertexSet);
-      Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
-      LOG.info(String.format("Number of Containers:" + numberOfContainers
-          + "\t" + "Number of Task Instances:" + totalInstances));
-      for (int i = 0; i < numberOfContainers; i++) {
-        roundrobinAllocation.put(i, new ArrayList<InstanceId>());
-      }
-      LOG.info(String.format("Container Map Values Before Allocation\t" + roundrobinAllocation));
-      System.out.println();
-      for (String task : parallelTaskMap.keySet()) {
-        int numberOfInstances = parallelTaskMap.get(task);
-        for (int i = 0; i < numberOfInstances; i++) {
-          roundrobinAllocation.get(taskIndex).add(new InstanceId(task, globalTaskIndex, i));
-          if (taskIndex != numberOfContainers) {
-            taskIndex = taskIndex + 1;
-          } else {
-            taskIndex = 1;
-          }
-          globalTaskIndex += 1;
-        }
-      }
-      LOG.info(String.format("Container Map Values After Allocation\t" + roundrobinAllocation));
-      LOG.info("\n");
-    } catch (NullPointerException ne) {
-      ne.printStackTrace();
+    Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
+
+    for (int i = 0; i < numberOfContainers; i++) {
+      roundrobinAllocation.put(i, new ArrayList<InstanceId>());
     }
+
+    for (Map.Entry<String, Integer>  e : parallelTaskMap.entrySet()) {
+      String task = e.getKey();
+      int numberOfInstances = e.getValue();
+      int containerIndex = 0;
+      for (int i = 0; i < numberOfInstances; i++) {
+        containerIndex = i % numberOfContainers;
+        roundrobinAllocation.get(containerIndex).add(new InstanceId(task, globalTaskIndex, i));
+      }
+      globalTaskIndex++;
+    }
+    LOG.info(String.format("Container Map Values After Allocation %s", roundrobinAllocation));
     return roundrobinAllocation;
   }
 }

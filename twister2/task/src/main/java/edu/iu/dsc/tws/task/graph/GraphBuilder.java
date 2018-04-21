@@ -65,7 +65,7 @@ public final class GraphBuilder {
       throw new RuntimeException("Failed to connect non-existing task: " + t1);
     }
 
-    Vertex v2 = graph.vertex(t1);
+    Vertex v2 = graph.vertex(t2);
     if (v2 == null) {
       throw new RuntimeException("Failed to connect non-existing task: " + t2);
     }
@@ -79,7 +79,7 @@ public final class GraphBuilder {
       throw new RuntimeException("Failed to connect non-existing task: " + t1);
     }
 
-    Vertex v2 = graph.vertex(t1);
+    Vertex v2 = graph.vertex(t2);
     if (v2 == null) {
       throw new RuntimeException("Failed to connect non-existing task: " + t2);
     }
@@ -93,7 +93,7 @@ public final class GraphBuilder {
       throw new RuntimeException("Failed to connect non-existing task: " + t1);
     }
 
-    Vertex v2 = graph.vertex(t1);
+    Vertex v2 = graph.vertex(t2);
     if (v2 == null) {
       throw new RuntimeException("Failed to connect non-existing task: " + t2);
     }

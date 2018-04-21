@@ -27,6 +27,7 @@ import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.Operations;
 import edu.iu.dsc.tws.task.api.SinkTask;
 import edu.iu.dsc.tws.task.api.SourceTask;
 import edu.iu.dsc.tws.task.api.TaskContext;
@@ -56,6 +57,7 @@ public class TaskExample implements IContainer {
     builder.addConfiguration("sink", "Ram", 300);
     builder.addConfiguration("sink", "Disk", 1000);
     builder.addConfiguration("sink", "Cpu", 2);
+    builder.connect("source", "sink", Operations.PARTITION);
 
     DataFlowTaskGraph graph = builder.build();
 
