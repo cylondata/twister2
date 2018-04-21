@@ -13,22 +13,22 @@ package edu.iu.dsc.tws.task.graph;
 
 import java.util.Comparator;
 
-public class DirectedDataflowTaskEdge<TV, TE> {
+public class DirectedEdge<TV, TE> {
   protected TV sourceTaskVertex;
   protected TV targetTaskVertex;
   protected TE taskEdge;
 
   protected Comparator<TV> vertexComparator;
 
-  public DirectedDataflowTaskEdge() {
+  public DirectedEdge() {
   }
 
-  public DirectedDataflowTaskEdge(Comparator<TV> vertexComparator) {
+  public DirectedEdge(Comparator<TV> vertexComparator) {
     this.vertexComparator = vertexComparator;
   }
 
-  public DirectedDataflowTaskEdge(TV sourceTaskVertex, TV targetTaskVertex,
-                                  TE taskEdge, Comparator<TV> vertexComparator) {
+  public DirectedEdge(TV sourceTaskVertex, TV targetTaskVertex,
+                      TE taskEdge, Comparator<TV> vertexComparator) {
     this.sourceTaskVertex = sourceTaskVertex;
     this.targetTaskVertex = targetTaskVertex;
     this.taskEdge = taskEdge;
