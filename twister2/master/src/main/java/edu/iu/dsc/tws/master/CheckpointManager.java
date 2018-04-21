@@ -15,8 +15,8 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.executor.IExecutor;
 
-public class CheckpointMaster {
-  private static final Logger LOG = Logger.getLogger(CheckpointMaster.class.getName());
+public class CheckpointManager {
+  private static final Logger LOG = Logger.getLogger(CheckpointManager.class.getName());
 
   private final IExecutor executor;
 
@@ -32,7 +32,7 @@ public class CheckpointMaster {
 
   private volatile boolean shutdown;
 
-  public CheckpointMaster(
+  public CheckpointManager(
       long baseInterval,
       long checkpointTimeout,
       long minPauseBetweenCheckpoints,
