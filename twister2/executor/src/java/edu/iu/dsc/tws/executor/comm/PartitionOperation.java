@@ -11,11 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.comm;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -29,28 +27,13 @@ import edu.iu.dsc.tws.executor.EdgeGenerator;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
 
-public class PartitionOperation extends ParallelOperation {
+public class PartitionOperation extends AbstractParallelOperation {
   private static final Logger LOG = Logger.getLogger(PartitionOperation.class.getName());
 
-  private Config config;
-
-  private TWSChannel channel;
-
-  private Map<Integer, BlockingQueue<IMessage>> outMessages;
-
-  private MPIDataFlowPartition op;
-
-  private TaskPlan taskPlan;
-
-  private EdgeGenerator edge;
-
-  private int partitionEdge;
+  protected MPIDataFlowPartition op;
 
   public PartitionOperation(Config config, TWSChannel network, TaskPlan tPlan) {
-    this.config = config;
-    this.taskPlan = tPlan;
-    this.channel = network;
-    this.outMessages = new HashMap<>();
+    super(config, network, tPlan);
   }
 
   public void prepare(Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
@@ -78,14 +61,6 @@ public class PartitionOperation extends ParallelOperation {
 
   public void send(int source, IMessage message, int dest) {
     op.send(source, message, 0, dest);
-  }
-
-  @Override
-  public void register(int targetTask, BlockingQueue<IMessage> queue) {
-    if (outMessages.containsKey(targetTask)) {
-      throw new RuntimeException("Existing queue for target task");
-    }
-    outMessages.put(targetTask, queue);
   }
 
   public class PartitionReceiver implements MessageReceiver {
