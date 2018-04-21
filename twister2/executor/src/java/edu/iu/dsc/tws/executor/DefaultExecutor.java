@@ -99,6 +99,7 @@ public class DefaultExecutor implements IExecutor {
       return null;
     }
 
+    ExecutionPlan execution = new ExecutionPlan();
     Set<TaskSchedulePlan.TaskInstancePlan> instancePlan = conPlan.getTaskInstances();
     // for each task we are going to create the communications
     for (TaskSchedulePlan.TaskInstancePlan ip : instancePlan) {
@@ -151,11 +152,12 @@ public class DefaultExecutor implements IExecutor {
       }
 
       // lets create the instance
-      createInstances(cfg, ip, v);
+      INodeInstance iNodeInstance = createInstances(cfg, ip, v);
+      execution.addNodes(taskIdGenerator.generateGlobalTaskId(
+          v.getName(), ip.getTaskId(), ip.getTaskIndex()), iNodeInstance);
     }
 
     // now lets create the queues and start the execution
-    ExecutionPlan execution = new ExecutionPlan();
     for (Table.Cell<String, String, Communication> cell : parOpTable.cellSet()) {
       Communication c = cell.getValue();
 
@@ -191,7 +193,7 @@ public class DefaultExecutor implements IExecutor {
           throw new RuntimeException("Not found: " + c.getTargetTask());
         }
       }
-      execution.add(op);
+      execution.addOps(op);
     }
 
     // lets start the execution
@@ -215,22 +217,31 @@ public class DefaultExecutor implements IExecutor {
    * @param ip instance plan
    * @param vertex vertex
    */
-  private void createInstances(Config cfg, TaskSchedulePlan.TaskInstancePlan ip, Vertex vertex) {
+  private INodeInstance createInstances(Config cfg,
+                                        TaskSchedulePlan.TaskInstancePlan ip, Vertex vertex) {
     // lets add the task
     byte[] taskBytes = kryoMemorySerializer.serialize(vertex.getTask());
     INode newInstance = (INode) kryoMemorySerializer.deserialize(taskBytes);
     int taskId = taskIdGenerator.generateGlobalTaskId(vertex.getName(),
         ip.getTaskId(), ip.getTaskIndex());
     if (newInstance instanceof ITask) {
-      taskInstances.put(vertex.getName(), taskId, new TaskInstance((ITask) newInstance,
+      TaskInstance v = new TaskInstance((ITask) newInstance,
           new ArrayBlockingQueue<>(1024),
-          new ArrayBlockingQueue<>(1024), cfg, edgeGenerator));
+          new ArrayBlockingQueue<>(1024), cfg, edgeGenerator,
+          vertex.getName(), taskId, ip.getTaskIndex(), vertex.getParallelism());
+      taskInstances.put(vertex.getName(), taskId, v);
+      return v;
     } else if (newInstance instanceof ISource) {
-      sourceInstances.put(vertex.getName(), taskId, new SourceInstance((ISource) newInstance,
-          new ArrayBlockingQueue<>(1024), cfg));
+      SourceInstance v = new SourceInstance((ISource) newInstance,
+          new ArrayBlockingQueue<>(1024), cfg,
+          vertex.getName(), taskId, ip.getTaskIndex(), vertex.getParallelism());
+      sourceInstances.put(vertex.getName(), taskId, v);
+      return v;
     } else if (newInstance instanceof ISink) {
-      sinkInstances.put(vertex.getName(), taskId, new SinkInstance((ISink) newInstance,
-          new ArrayBlockingQueue<>(1024), cfg));
+      SinkInstance v = new SinkInstance((ISink) newInstance,
+          new ArrayBlockingQueue<>(1024), cfg);
+      sinkInstances.put(vertex.getName(), taskId, v);
+      return v;
     } else {
       throw new RuntimeException("Un-known type");
     }

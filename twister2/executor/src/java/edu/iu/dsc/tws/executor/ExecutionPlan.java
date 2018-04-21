@@ -28,7 +28,7 @@ public class ExecutionPlan {
    * @param taskId the global task id
    * @param node the instance
    */
-  public void add(int taskId, INodeInstance node) {
+  public void addNodes(int taskId, INodeInstance node) {
     nodes.put(taskId, node);
   }
 
@@ -36,7 +36,7 @@ public class ExecutionPlan {
     return nodes;
   }
 
-  public void add(IParallelOperation op) {
+  public void addOps(IParallelOperation op) {
     parallelOperations.add(op);
   }
 

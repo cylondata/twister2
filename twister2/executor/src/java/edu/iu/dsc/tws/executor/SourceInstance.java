@@ -48,20 +48,52 @@ public class SourceInstance implements INodeInstance {
    */
   private Map<String, IParallelOperation> outParOps = new HashMap<>();
 
-  public SourceInstance(ISource task, BlockingQueue<IMessage> outQueue, Config config) {
+  /**
+   * The globally unique task id
+   */
+  private int taskId;
+
+  private int taskIndex;
+
+  private int parallelism;
+
+  private String taskName;
+
+  public SourceInstance(ISource task, BlockingQueue<IMessage> outQueue, Config config, String tName,
+                        int tId, int tIndex, int parallel) {
     this.task = task;
     this.outQueue = outQueue;
     this.config = config;
+    this.taskId = tId;
+    this.taskIndex = tIndex;
+    this.parallelism = parallel;
+    this.taskName = tName;
   }
 
   public void prepare() {
     outputCollection = new DefaultOutputCollection(outQueue);
 
-    task.prepare(config, new TaskContext(0, 0, "", 0));
+    task.prepare(config, new TaskContext(taskIndex, taskId, taskName,
+        parallelism, outputCollection));
   }
 
   public void execute() {
     task.run();
+    // now check the output queue
+    while (!outQueue.isEmpty()) {
+      IMessage message = outQueue.poll();
+      if (message != null) {
+        String edge = message.edge();
+
+        // invoke the communication operation
+        IParallelOperation op = outParOps.get(edge);
+        op.send(taskId, message);
+      }
+    }
+
+    for (Map.Entry<String, IParallelOperation> e : outParOps.entrySet()) {
+      e.getValue().progress();
+    }
   }
 
   public BlockingQueue<IMessage> getOutQueue() {

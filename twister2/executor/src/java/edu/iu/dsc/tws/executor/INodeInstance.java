@@ -13,4 +13,6 @@ package edu.iu.dsc.tws.executor;
 
 public interface INodeInstance {
   void execute();
+
+  void prepare();
 }

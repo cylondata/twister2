@@ -122,7 +122,7 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
     }
 
     if (taskEdge != null) {
-      return connectedChildTask(task, taskEdge);
+      return connectedParentTask(task, taskEdge);
     } else {
       return null;
     }

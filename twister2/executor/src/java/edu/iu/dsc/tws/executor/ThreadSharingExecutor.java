@@ -42,6 +42,10 @@ public class ThreadSharingExecutor {
     tasks = new ArrayBlockingQueue<>(nodes.size() * 2);
     tasks.addAll(nodes.values());
 
+    for (INodeInstance node : tasks) {
+      node.prepare();
+    }
+
     for (int i = 0; i < numThreads; i++) {
       Thread t = new Thread(new Worker());
       t.start();
