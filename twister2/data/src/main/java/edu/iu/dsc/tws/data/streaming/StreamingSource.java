@@ -11,14 +11,16 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.streaming;
 
-import edu.iu.dsc.tws.data.api.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import edu.iu.dsc.tws.data.api.DataSource;
+
 
 
 /**
  * this is the base class for all streaming source.
  */
 public abstract class StreamingSource implements DataSource {
-    protected static final Logger LOG = LoggerFactory.getLogger(StreamingSource.class);
+  protected static final Logger LOG = LoggerFactory.getLogger(StreamingSource.class);
 }

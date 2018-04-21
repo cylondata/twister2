@@ -18,35 +18,36 @@ package edu.iu.dsc.tws.connectors.kafka;
  */
 public class KafkaTopicPartition {
 
-    private final String topic;
-    private final int partitionNum;
+  private final String topic;
+  private final int partitionNum;
 
-    public KafkaTopicPartition(String topic, int partitionNum) {
-        this.topic = topic;
-        this.partitionNum = partitionNum;
-    }
+  public KafkaTopicPartition(String topic, int partitionNum) {
+    this.topic = topic;
+    this.partitionNum = partitionNum;
+  }
 
 
-    public int getPartitionNum() {
-        return partitionNum;
-    }
+  public int getPartitionNum() {
+    return partitionNum;
+  }
 
-    public String getTopic() {
-        return topic;
-    }
+  public String getTopic() {
+    return topic;
+  }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o instanceof KafkaTopicPartition) {
-            KafkaTopicPartition compr = (KafkaTopicPartition) o;
-            return ((compr.getTopic()).equals(this.topic) && compr.getPartitionNum() == this.partitionNum);
 
-        }
-        else {
-            return false;
-        }
-    }
+//    public boolean equals(Object o) {
+//        if (this == o) {
+//            return true;
+//        }
+//        if (o instanceof KafkaTopicPartition) {
+//            KafkaTopicPartition compr = (KafkaTopicPartition) o;
+//            return ((compr.getTopic()).
+//            equals(this.topic) && compr.getPartitionNum() == this.partitionNum);
+//
+//        }
+//        else {
+//            return false;
+//        }
+//    }
 }

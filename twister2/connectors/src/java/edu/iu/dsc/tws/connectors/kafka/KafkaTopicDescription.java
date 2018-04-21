@@ -13,40 +13,44 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.connectors.kafka;
 
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import com.sun.istack.internal.Nullable;
+
+
+
 public class KafkaTopicDescription {
-    private final List<String> fixedTopics;
-    private final Pattern topicPattern;
+  private final List<String> fixedTopics;
+  private final Pattern topicPattern;
 
-    public KafkaTopicDescription(@Nullable List<String> fixedTopics, @Nullable Pattern topicPattern) {
-        if ((fixedTopics != null && topicPattern != null) || (fixedTopics == null && topicPattern == null)) {
-            throw new IllegalArgumentException("Exactly on of the topic must be provided");
-        }
-
-        if (fixedTopics != null && fixedTopics.isEmpty()) {
-            throw new IllegalArgumentException("the fixed topic cannot be empty");
-        }
-        this.fixedTopics = fixedTopics;
-        this.topicPattern = topicPattern;
+  public KafkaTopicDescription(@Nullable List<String> fixedTopics, @Nullable Pattern topicPattern) {
+    if ((fixedTopics != null && topicPattern != null)
+            || (fixedTopics == null && topicPattern == null)) {
+      throw new IllegalArgumentException("Exactly on of the topic must be provided");
     }
 
-    public boolean isFixedTopics() {
-        return fixedTopics != null;
+    if (fixedTopics != null && fixedTopics.isEmpty()) {
+      throw new IllegalArgumentException("the fixed topic cannot be empty");
     }
+    this.fixedTopics = fixedTopics;
+    this.topicPattern = topicPattern;
+  }
 
-    public boolean isTopicPattern() {
-        return topicPattern != null;
-    }
+  public boolean isFixedTopics() {
+    return fixedTopics != null;
+  }
 
-    public List<String> getFixedTopics() {
-        return fixedTopics;
-    }
+  public boolean isTopicPattern() {
+    return topicPattern != null;
+  }
 
-    public Pattern getTopicPattern() {
-        return topicPattern;
-    }
+  public List<String> getFixedTopics() {
+    return fixedTopics;
+  }
+
+  public Pattern getTopicPattern() {
+    return topicPattern;
+  }
 
 }

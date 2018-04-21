@@ -12,19 +12,16 @@
 package edu.iu.dsc.tws.data.api;
 
 import edu.iu.dsc.tws.common.config.Config;
-
 /**
  *  Bass class of all twister2 data sources.
  */
-
 public interface DataSource {
-
     /**
      * configures this datasource with initial values.
      * @param config contains the task ID and reference to the input queue
      * @return This object.
      */
-    DataSource init(Config config);
+  DataSource init(Config config);
 
     /**
      * this method contains the actual readings from data sources
@@ -32,12 +29,11 @@ public interface DataSource {
      * the implementation should contain a volatile variable to break the loop whenever needed, which is triggered by
      * close() method
      */
-    void run();
+  void run();
 
     /**
      * this method is called to break the while loop in the run method.
      * @return this object
      */
-    DataSource close();
-
+  DataSource close();
 }
