@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.task.graph;
 
 import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.ISource;
 import edu.iu.dsc.tws.task.api.ITask;
@@ -88,7 +89,7 @@ public final class GraphBuilder {
     return this;
   }
 
-  public GraphBuilder connect(String t1, String t2, String name, String operation, ITask task) {
+  public GraphBuilder connect(String t1, String t2, String name, String operation, IFunction task) {
     Vertex v1 = graph.vertex(t1);
     if (v1 == null) {
       throw new RuntimeException("Failed to connect non-existing task: " + t1);
