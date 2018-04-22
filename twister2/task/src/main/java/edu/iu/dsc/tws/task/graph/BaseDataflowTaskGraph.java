@@ -20,7 +20,7 @@ import java.util.Set;
 public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
   protected Set<TV> vertices;
   protected Set<TE> edges;
-  protected Set<DirectedDataflowTaskEdge<TV, TE>> directedEdges;
+  protected Set<DirectedEdge<TV, TE>> directedEdges;
   protected Comparator<TV> vertexComparator;
   protected Comparator<TE> edgeComparator;
 
@@ -57,9 +57,9 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     if (containsTaskEdge(taskEdge)) {
       return null;
     } else {
-      DirectedDataflowTaskEdge<TV, TE> directedDataflowTaskEdge =
+      DirectedEdge<TV, TE> directedEdge =
           createDirectedDataflowTaskEdge(taskEdge, sourceTaskVertex, targetTaskVertex);
-      directedEdges.add(directedDataflowTaskEdge);
+      directedEdges.add(directedEdge);
       edges.add(taskEdge);
       return taskEdge;
     }
@@ -84,30 +84,30 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     validateTaskVertex(taskVertex1);
     validateTaskVertex(taskVertex2);
 
-    DirectedDataflowTaskEdge<TV, TE> directedDataflowTaskEdge =
+    DirectedEdge<TV, TE> directedEdge =
         createDirectedDataflowTaskEdge(taskEdge, taskVertex1, taskVertex2);
     edges.add(taskEdge);
-    directedEdges.add(directedDataflowTaskEdge);
+    directedEdges.add(directedEdge);
 
     return true;
   }
 
-  private DirectedDataflowTaskEdge<TV, TE> createDirectedDataflowTaskEdge(
+  private DirectedEdge<TV, TE> createDirectedDataflowTaskEdge(
       TE taskEdge, TV sourceTaskVertex, TV targetTaskVertex) {
 
-    DirectedDataflowTaskEdge<TV, TE> directedDataflowTaskEdge;
-    directedDataflowTaskEdge = new DirectedDataflowTaskEdge<TV, TE>();
+    DirectedEdge<TV, TE> directedEdge;
+    directedEdge = new DirectedEdge<TV, TE>();
 
-    directedDataflowTaskEdge.sourceTaskVertex = sourceTaskVertex;
-    directedDataflowTaskEdge.targetTaskVertex = targetTaskVertex;
-    directedDataflowTaskEdge.taskEdge = taskEdge;
+    directedEdge.sourceTaskVertex = sourceTaskVertex;
+    directedEdge.targetTaskVertex = targetTaskVertex;
+    directedEdge.taskEdge = taskEdge;
 
-    return directedDataflowTaskEdge;
+    return directedEdge;
   }
 
   public Set<TE> getAllTaskEdges(TV sourceTaskVertex, TV targetTaskVertex) {
     Set<TE> ret = new HashSet<>();
-    for (DirectedDataflowTaskEdge<TV, TE> de : directedEdges) {
+    for (DirectedEdge<TV, TE> de : directedEdges) {
       if (vertexComparator.compare(de.sourceTaskVertex, sourceTaskVertex) == 0
           && vertexComparator.compare(de.targetTaskVertex, targetTaskVertex) == 0) {
         ret.add(de.taskEdge);
@@ -128,7 +128,7 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
 
   public Set<TE> incomingTaskEdgesOf(TV taskVertex) {
     Set<TE> ret = new HashSet<>();
-    for (DirectedDataflowTaskEdge<TV, TE> de : directedEdges) {
+    for (DirectedEdge<TV, TE> de : directedEdges) {
       if (vertexComparator.compare(de.targetTaskVertex, taskVertex) == 0) {
         ret.add(de.taskEdge);
       }
@@ -138,7 +138,7 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
 
   public int outDegreeOfTask(TV taskVertex) {
     Set<TE> ret = new HashSet<>();
-    for (DirectedDataflowTaskEdge<TV, TE> de : directedEdges) {
+    for (DirectedEdge<TV, TE> de : directedEdges) {
       if (vertexComparator.compare(de.sourceTaskVertex, taskVertex) == 0) {
         ret.add(de.taskEdge);
       }
@@ -147,9 +147,9 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
   }
 
   public TE removeTaskEdge(TV sourceVertex, TV targetVertex) {
-    Iterator<DirectedDataflowTaskEdge<TV, TE>> it = directedEdges.iterator();
+    Iterator<DirectedEdge<TV, TE>> it = directedEdges.iterator();
     while (it.hasNext()) {
-      DirectedDataflowTaskEdge<TV, TE> de = it.next();
+      DirectedEdge<TV, TE> de = it.next();
       if (vertexComparator.compare(de.sourceTaskVertex, sourceVertex) == 0
           && vertexComparator.compare(de.targetTaskVertex, targetVertex) == 0) {
         it.remove();
@@ -159,9 +159,9 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
   }
 
   public boolean removeTaskEdge(TE taskEdge) {
-    Iterator<DirectedDataflowTaskEdge<TV, TE>> it = directedEdges.iterator();
+    Iterator<DirectedEdge<TV, TE>> it = directedEdges.iterator();
     while (it.hasNext()) {
-      DirectedDataflowTaskEdge<TV, TE> de = it.next();
+      DirectedEdge<TV, TE> de = it.next();
       if (edgeComparator.compare(taskEdge, de.taskEdge) == 0) {
         it.remove();
         return true;
@@ -171,9 +171,9 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
   }
 
   public boolean removeTaskVertex(TV taskVertex) {
-    Iterator<DirectedDataflowTaskEdge<TV, TE>> it = directedEdges.iterator();
+    Iterator<DirectedEdge<TV, TE>> it = directedEdges.iterator();
     while (it.hasNext()) {
-      DirectedDataflowTaskEdge<TV, TE> de = it.next();
+      DirectedEdge<TV, TE> de = it.next();
       if (vertexComparator.compare(taskVertex, de.sourceTaskVertex) == 0
           || vertexComparator.compare(taskVertex, de.targetTaskVertex) == 0) {
         it.remove();
@@ -192,9 +192,9 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
   }
 
   public TV connectedChildTask(TV t, TE edge) {
-    Iterator<DirectedDataflowTaskEdge<TV, TE>> it = directedEdges.iterator();
+    Iterator<DirectedEdge<TV, TE>> it = directedEdges.iterator();
     while (it.hasNext()) {
-      DirectedDataflowTaskEdge<TV, TE> de = it.next();
+      DirectedEdge<TV, TE> de = it.next();
       if (vertexComparator.compare(t, de.sourceTaskVertex) == 0
           || edgeComparator.compare(de.taskEdge, edge) == 0) {
         return de.targetTaskVertex;
@@ -204,9 +204,9 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
   }
 
   public TV connectedParentTask(TV t, TE edge) {
-    Iterator<DirectedDataflowTaskEdge<TV, TE>> it = directedEdges.iterator();
+    Iterator<DirectedEdge<TV, TE>> it = directedEdges.iterator();
     while (it.hasNext()) {
-      DirectedDataflowTaskEdge<TV, TE> de = it.next();
+      DirectedEdge<TV, TE> de = it.next();
       if (vertexComparator.compare(t, de.targetTaskVertex) == 0
           || edgeComparator.compare(de.taskEdge, edge) == 0) {
         return de.sourceTaskVertex;
@@ -217,9 +217,9 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
 
   public Set<TE> taskEdgesOf(TV taskVertex) {
     Set<TE> ret = new HashSet<>();
-    Iterator<DirectedDataflowTaskEdge<TV, TE>> it = directedEdges.iterator();
+    Iterator<DirectedEdge<TV, TE>> it = directedEdges.iterator();
     while (it.hasNext()) {
-      DirectedDataflowTaskEdge<TV, TE> de = it.next();
+      DirectedEdge<TV, TE> de = it.next();
       if (vertexComparator.compare(taskVertex, de.sourceTaskVertex) == 0
           || vertexComparator.compare(taskVertex, de.targetTaskVertex) == 0) {
         ret.add(de.taskEdge);
@@ -230,7 +230,7 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
 
   public Set<TE> outgoingTaskEdgesOf(TV taskVertex) {
     Set<TE> ret = new HashSet<>();
-    for (DirectedDataflowTaskEdge<TV, TE> de : directedEdges) {
+    for (DirectedEdge<TV, TE> de : directedEdges) {
       if (vertexComparator.compare(de.sourceTaskVertex, taskVertex) == 0) {
         ret.add(de.taskEdge);
       }
@@ -240,7 +240,7 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
 
   public int inDegreeOfTask(TV taskVertex) {
     Set<TE> ret = new HashSet<>();
-    for (DirectedDataflowTaskEdge<TV, TE> de : directedEdges) {
+    for (DirectedEdge<TV, TE> de : directedEdges) {
       if (vertexComparator.compare(de.targetTaskVertex, taskVertex) == 0) {
         ret.add(de.taskEdge);
       }
@@ -251,7 +251,7 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
   @Override
   public boolean containsTaskEdge(TV sourceTaskVertex,
                                   TV targetTaskVertex) {
-    for (DirectedDataflowTaskEdge<TV, TE> de : directedEdges) {
+    for (DirectedEdge<TV, TE> de : directedEdges) {
       if (vertexComparator.compare(de.sourceTaskVertex, sourceTaskVertex) == 0
           && vertexComparator.compare(de.targetTaskVertex, targetTaskVertex) == 0) {
         return true;
@@ -301,7 +301,7 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     return removedTaskEdge;
   }
 
-  public DirectedDataflowTaskEdge<TV, TE> getDataflowTaskEdge(TE taskEdge) {
+  public DirectedEdge<TV, TE> getDataflowTaskEdge(TE taskEdge) {
     return null;
   }
 

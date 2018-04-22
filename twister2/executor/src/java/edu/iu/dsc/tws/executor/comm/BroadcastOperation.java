@@ -14,56 +14,49 @@ package edu.iu.dsc.tws.executor.comm;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.mpi.MPIDataFlowPartition;
+import edu.iu.dsc.tws.comms.mpi.MPIDataFlowBroadcast;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.EdgeGenerator;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
 
-public class PartitionOperation extends AbstractParallelOperation {
-  private static final Logger LOG = Logger.getLogger(PartitionOperation.class.getName());
+public class BroadcastOperation extends AbstractParallelOperation {
+  private MPIDataFlowBroadcast op;
 
-  protected MPIDataFlowPartition op;
-
-  public PartitionOperation(Config config, TWSChannel network, TaskPlan tPlan) {
+  public BroadcastOperation(Config config, TWSChannel network, TaskPlan tPlan) {
     super(config, network, tPlan);
   }
 
-  public void prepare(Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
+  public void prepare(int srcs, Set<Integer> dests, EdgeGenerator e,
                       DataType dataType, String edgeName) {
     this.edge = e;
-    op = new MPIDataFlowPartition(channel, srcs, dests, new PartitionReceiver(),
-        MPIDataFlowPartition.PartitionStratergy.DIRECT);
+    op = new MPIDataFlowBroadcast(channel, srcs, dests, new BcastReceiver());
     partitionEdge = e.generate(edgeName);
     op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, partitionEdge);
   }
 
-  public void prepare(Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
-                      DataType dataType, DataType keyType, String edgeName) {
-    this.edge = e;
-    op = new MPIDataFlowPartition(channel, srcs, dests, new PartitionReceiver(),
-        MPIDataFlowPartition.PartitionStratergy.DIRECT,
-        Utils.dataTypeToMessageType(dataType), Utils.dataTypeToMessageType(keyType));
-    partitionEdge = e.generate(edgeName);
-    op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, partitionEdge);
-  }
-
+  @Override
   public void send(int source, IMessage message) {
     op.send(source, message.getContent(), 0);
   }
 
+  @Override
   public void send(int source, IMessage message, int dest) {
-    op.send(source, message, 0, dest);
+    op.send(source, message.getContent(), 0, dest);
   }
 
-  public class PartitionReceiver implements MessageReceiver {
+  @Override
+  public void progress() {
+    op.progress();
+  }
+
+  public class BcastReceiver implements MessageReceiver {
     @Override
     public void init(Config cfg, DataFlowOperation operation,
                      Map<Integer, List<Integer>> expectedIds) {
@@ -79,9 +72,5 @@ public class PartitionOperation extends AbstractParallelOperation {
     @Override
     public void progress() {
     }
-  }
-
-  public void progress() {
-    op.progress();
   }
 }

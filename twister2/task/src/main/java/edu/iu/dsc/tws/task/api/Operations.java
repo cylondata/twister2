@@ -21,4 +21,5 @@ public final class Operations {
   public static final String ALL_GATHER = "all_gather";
   public static final String KEYED_GATHER = "keyed_gather";
   public static final String KEYED_REDUCE = "keyed_reduce";
+  public static final String BROADCAST = "broadcast";
 }

@@ -15,6 +15,9 @@ import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.task.api.IMessage;
 
+/**
+ * Represents a parallel communication operation
+ */
 public interface IParallelOperation {
   void send(int source, IMessage message);
 

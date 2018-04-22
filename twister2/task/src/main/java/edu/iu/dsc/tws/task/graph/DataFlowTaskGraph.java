@@ -37,7 +37,7 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
     validate();
 
     Set<ITask> ret = new HashSet<>();
-    for (DirectedDataflowTaskEdge<Vertex, Edge> de : directedEdges) {
+    for (DirectedEdge<Vertex, Edge> de : directedEdges) {
       taskMap.put(de.sourceTaskVertex.getName(), de.sourceTaskVertex);
       taskMap.put(de.targetTaskVertex.getName(), de.targetTaskVertex);
     }
