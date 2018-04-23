@@ -20,17 +20,23 @@ twister2.resource.scheduler.aurora.env: "devel"
 twister2.job.name: "basic-aurora"
 # twister2.resource.scheduler.aurora.jobname: "basic-aurora"
 
-# number of CPUs for this job
-twister2.cpu_per_container: "1"
+# number of cores for each worker
+# it is a floating point number
+# each worker can have fractional cores such as 0.5 cores or multiple cores as 2
+# default value is 1.0 core
+twister2.worker.cpu: 1.0
 
-# amount of memory for each CPU in bytes, 1GB=1024*1024*1024
-twister2.ram_per_container: "1073741824"
+# amount of memory for each worker in the job in mega bytes as integer
+# default value is 200 MB
+twister2.worker.ram: 200
 
-# amount of hard disk space on each CPU in bytes, 1GB=1024*1024*1024
-twister2.disk_per_container: "1073741824"
+# amount of hard disk space on each worker in mega bytes
+# this only used when running twister2 in Aurora
+# default value is 1024 MB. 
+twister2.worker.disk: 1024
 
-# number of instances for the task
-twister2.number_of_containers: "10"
+# number of worker instances
+twister2.worker.instances: 6
 
 
 

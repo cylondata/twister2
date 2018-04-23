@@ -4,7 +4,7 @@ twister2.network.dataflow.class: "edu.iu.dsc.tws.comms.mpi.MPIDataFlowCommunicat
 # when there are multiple workers in a pod, first worker will get this port number, 
 # second worker will get the next port, and so on.
 # default value is 9999, 
-# kubernetes.worker.base.port: "9999"
+# kubernetes.worker.base.port: 9999
 
 # transport protocol for the worker. TCP or UDP
 # by default, it is TCP
@@ -24,5 +24,5 @@ twister2.network.dataflow.class: "edu.iu.dsc.tws.comms.mpi.MPIDataFlowCommunicat
 # the user can request a specific port value in the NodePort range by setting the value below
 # by default Kubernetes uses the range: 30000-32767 for NodePorts
 # Kubernetes admins can change this range
-# kubernetes.service.node.port: "30003"
+# kubernetes.service.node.port: 30003
 

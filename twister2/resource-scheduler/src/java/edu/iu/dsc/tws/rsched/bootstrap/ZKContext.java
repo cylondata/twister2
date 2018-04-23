@@ -24,7 +24,11 @@ public final class ZKContext {
   // ZooKeeper server IP address and port number
   // They should be given in conf files
   public static final String ZOOKEEPER_SERVER_IP = "twister2.zookeeper.server.ip";
+
+  public static final int ZOOKEEPER_SERVER_PORT_DEFAULT = 2181;
   public static final String ZOOKEEPER_SERVER_PORT = "twister2.zookeeper.server.port";
+
+  public static final int MAX_WAIT_TIME_FOR_ALL_WORKERS_TO_JOIN_DEFAULT = 100000;
   public static final String MAX_WAIT_TIME_FOR_ALL_WORKERS_TO_JOIN =
       "twister2.zookeeper.max.wait.time.for.all.workers.to.join";
 
@@ -38,12 +42,13 @@ public final class ZKContext {
     return cfg.getStringValue(ZOOKEEPER_SERVER_IP);
   }
 
-  public static String zooKeeperServerPort(Config cfg) {
-    return cfg.getStringValue(ZOOKEEPER_SERVER_PORT);
+  public static int zooKeeperServerPort(Config cfg) {
+    return cfg.getIntegerValue(ZOOKEEPER_SERVER_PORT, ZOOKEEPER_SERVER_PORT_DEFAULT);
   }
 
   public static int maxWaitTimeForAllWorkersToJoin(Config cfg) {
-    return Integer.parseInt(cfg.getStringValue(MAX_WAIT_TIME_FOR_ALL_WORKERS_TO_JOIN));
+    return cfg.getIntegerValue(MAX_WAIT_TIME_FOR_ALL_WORKERS_TO_JOIN,
+        MAX_WAIT_TIME_FOR_ALL_WORKERS_TO_JOIN_DEFAULT);
   }
 
 

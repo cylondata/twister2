@@ -58,10 +58,12 @@ nfs.server.address: "149.165.150.81"
 nfs.server.path: "/nfs/shared"
 
 # worker persistent volume size
+# volume size suffixes: Mi, Gi
 persistent.volume.per.worker: "1Gi"
 
 # total persistent volume size for all workers in this job
 # must be equal or higher than the total of all worker persistent volume sizes
+# volume size suffixes: Mi, Gi
 persistent.volume.total: "100Gi"
 
 # the admin should provide a PersistentVolume object with the following storage class. 

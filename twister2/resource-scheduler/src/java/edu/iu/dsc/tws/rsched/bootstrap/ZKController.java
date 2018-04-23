@@ -82,7 +82,7 @@ public class ZKController implements IWorkerController {
    */
   public boolean initialize() {
     String zkServerAddress = ZKContext.zooKeeperServerIP(config);
-    String zkServerPort = ZKContext.zooKeeperServerPort(config);
+    int zkServerPort = ZKContext.zooKeeperServerPort(config);
     zkAddress = zkServerAddress + ":" + zkServerPort;
 
     try {
