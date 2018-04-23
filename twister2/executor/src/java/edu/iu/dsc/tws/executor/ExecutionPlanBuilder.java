@@ -23,7 +23,6 @@ import com.google.common.collect.Table;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 import edu.iu.dsc.tws.executor.comm.IParallelOperation;
 import edu.iu.dsc.tws.executor.comm.ParallelOperationFactory;
@@ -37,8 +36,8 @@ import edu.iu.dsc.tws.task.graph.Edge;
 import edu.iu.dsc.tws.task.graph.Vertex;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
-public class DefaultExecutor implements IExecutor {
-  private static final Logger LOG = Logger.getLogger(DefaultExecutor.class.getName());
+public class ExecutionPlanBuilder implements IExecutor {
+  private static final Logger LOG = Logger.getLogger(ExecutionPlanBuilder.class.getName());
 
   /**
    * no of threads used for this executor
@@ -74,7 +73,7 @@ public class DefaultExecutor implements IExecutor {
 
   private EdgeGenerator edgeGenerator;
 
-  public DefaultExecutor(ResourcePlan plan, TWSNetwork net) {
+  public ExecutionPlanBuilder(ResourcePlan plan, TWSNetwork net) {
     this.workerId = plan.getThisId();
     this.taskIdGenerator = new TaskIdGenerator();
     this.kryoMemorySerializer = new KryoMemorySerializer();
@@ -162,8 +161,7 @@ public class DefaultExecutor implements IExecutor {
       Communication c = cell.getValue();
 
       // lets create the communication
-      IParallelOperation op = opFactory.build(c.getEdge(), c.getSourceTasks(),
-          c.getTargetTasks(), DataType.OBJECT);
+      IParallelOperation op = opFactory.build(c.getEdge(), c.getSourceTasks(), c.getTargetTasks());
       // now lets check the sources and targets that are in this executor
       Set<Integer> sourcesOfThisWorker = intersectionOfTasks(conPlan, c.getSourceTasks());
       Set<Integer> targetsOfThisWorker = intersectionOfTasks(conPlan, c.getTargetTasks());

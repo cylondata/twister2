@@ -89,7 +89,7 @@ public final class RequestObjectBuilder {
     // by default they are started sequentially
     setSpec.setPodManagementPolicy("Parallel");
 
-    int containersPerPod = KubernetesContext.containersPerPod(config);
+    int containersPerPod = KubernetesContext.workersPerPod(config);
     int numberOfPods = resourceRequest.getNoOfContainers() / containersPerPod;
     setSpec.setReplicas(numberOfPods);
 
@@ -158,7 +158,7 @@ public final class RequestObjectBuilder {
 
     podSpec.setVolumes(volumes);
 
-    int containersPerPod = KubernetesContext.containersPerPod(config);
+    int containersPerPod = KubernetesContext.workersPerPod(config);
     int basePort = KubernetesContext.workerBasePort(config);
     ArrayList<V1Container> containers = new ArrayList<V1Container>();
     for (int i = 0; i < containersPerPod; i++) {
@@ -295,8 +295,8 @@ public final class RequestObjectBuilder {
         .value(persistentJobDir);
 
     V1EnvVar var8 = new V1EnvVar()
-        .name(KubernetesField.CONTAINERS_PER_POD + "")
-        .value(KubernetesContext.containersPerPod(config) + "");
+        .name(KubernetesField.WORKERS_PER_POD + "")
+        .value(KubernetesContext.workersPerPod(config) + "");
 
     V1EnvVar var9 = new V1EnvVar()
         .name(KubernetesField.PERSISTENT_LOGGING_REQUESTED + "")

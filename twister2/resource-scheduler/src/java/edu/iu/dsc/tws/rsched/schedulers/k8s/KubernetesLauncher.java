@@ -19,7 +19,6 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.rsched.schedulers.aurora.AuroraContext;
 import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
 import edu.iu.dsc.tws.rsched.spi.scheduler.ILauncher;
 
@@ -98,7 +97,7 @@ public class KubernetesLauncher implements ILauncher {
     // transfer the job package to pods, measure the transfer time
     long start = System.currentTimeMillis();
 
-    int containersPerPod = KubernetesContext.containersPerPod(config);
+    int containersPerPod = KubernetesContext.workersPerPod(config);
     int numberOfPods = resourceRequest.getNoOfContainers() / containersPerPod;
 
     boolean transferred =
@@ -135,8 +134,8 @@ public class KubernetesLauncher implements ILauncher {
     // otherwise start a headless service
     if (KubernetesContext.nodePortServiceRequested(config)) {
 
-      if (KubernetesContext.containersPerPod(config) != 1) {
-        LOG.log(Level.SEVERE, KubernetesContext.CONTAINERS_PER_POD + " value must be 1, "
+      if (KubernetesContext.workersPerPod(config) != 1) {
+        LOG.log(Level.SEVERE, KubernetesContext.WORKERS_PER_POD + " value must be 1, "
             + "when starting NodePort service. Please change the config value and resubmit the job"
             + "\n++++++ Aborting submission ++++++");
         throw new RuntimeException();
@@ -239,30 +238,29 @@ public class KubernetesLauncher implements ILauncher {
 
     // if statically binding requested, number for CPUs per worker has to be an integer
     if (KubernetesContext.bindWorkerToCPU(config)) {
-      String cpuStr = AuroraContext.cpusPerContainer(config);
-      double cpus = Double.parseDouble(cpuStr);
+      double cpus = SchedulerContext.workerCPU(config);
       if (cpus % 1 != 0) {
         LOG.log(Level.SEVERE, String.format("When %s is true, the value of %s has to be an int"
             + "\n%s= " + cpus
             + "\n++++++ Aborting submission ++++++",
-            KubernetesContext.K8S_BIND_WORKER_TO_CPU, AuroraContext.CPUS_PER_CONTAINER,
-            AuroraContext.CPUS_PER_CONTAINER));
+            KubernetesContext.K8S_BIND_WORKER_TO_CPU, SchedulerContext.TWISTER2_WORKER_CPU,
+            SchedulerContext.TWISTER2_WORKER_CPU));
         return false;
       }
     }
 
-    // number of containers has to be divisible by the containersPerPod
+    // number of workers has to be divisible by the workersPerPod
     // all pods will have equal number of containers
     // all pods will be identical
-    int containersPerPod = KubernetesContext.containersPerPod(config);
-    int numberOfContainers = Integer.parseInt(AuroraContext.numberOfContainers(config));
-    if (numberOfContainers % containersPerPod != 0) {
+    int containersPerPod = KubernetesContext.workersPerPod(config);
+    int numberOfWorkers = SchedulerContext.workerInstances(config);
+    if (numberOfWorkers % containersPerPod != 0) {
       LOG.log(Level.SEVERE, String.format("%s has to be divisible by %s."
-          + "\n%s: " + numberOfContainers
+          + "\n%s: " + numberOfWorkers
           + "\n%s: " + containersPerPod
           + "\n++++++ Aborting submission ++++++",
-          AuroraContext.NUMBER_OF_CONTAINERS, KubernetesContext.CONTAINERS_PER_POD,
-          AuroraContext.NUMBER_OF_CONTAINERS, KubernetesContext.CONTAINERS_PER_POD));
+          SchedulerContext.TWISTER2_WORKER_INSTANCES, KubernetesContext.WORKERS_PER_POD,
+          SchedulerContext.TWISTER2_WORKER_INSTANCES, KubernetesContext.WORKERS_PER_POD));
       return false;
     }
 

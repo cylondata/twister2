@@ -11,12 +11,16 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.graph;
 
-import edu.iu.dsc.tws.task.api.ITask;
+import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.task.api.IFunction;
 
 public class Edge {
   private String name;
-  private ITask function;
+  private IFunction function;
   private String operation;
+  private DataType dataType = DataType.OBJECT;
+  private DataType keyType = DataType.OBJECT;
+  private boolean keyed = false;
 
   public Edge(String te) {
     this.name = te;
@@ -27,26 +31,53 @@ public class Edge {
     this.operation = operation;
   }
 
-  public Edge(String taskEdge, ITask function) {
+  public Edge(String taskEdge, IFunction function) {
     this.name = taskEdge;
     this.function = function;
   }
 
-  public Edge(String name, String operation, ITask function) {
+  public Edge(String name, String operation, DataType dataType) {
+    this.name = name;
+    this.operation = operation;
+    this.dataType = dataType;
+  }
+
+  public Edge(String name, String operation, IFunction function) {
     this.name = name;
     this.function = function;
     this.operation = operation;
   }
 
-  public String name() {
-    return name;
+  public Edge(String name, String operation, DataType dataType, DataType keyType) {
+    this.name = name;
+    this.operation = operation;
+    this.dataType = dataType;
+    this.keyType = keyType;
+    this.keyed = true;
+  }
+
+  public Edge(String name, String operation, DataType dataType,
+              DataType keyType, IFunction function) {
+    this.name = name;
+    this.function = function;
+    this.operation = operation;
+    this.dataType = dataType;
+    this.keyType = keyType;
+    this.keyed = true;
+  }
+
+  public Edge(String name, String operation, DataType dataType, IFunction function) {
+    this.name = name;
+    this.function = function;
+    this.operation = operation;
+    this.dataType = dataType;
   }
 
   public String getName() {
     return name;
   }
 
-  public ITask function() {
+  public IFunction getFunction() {
     return function;
   }
 
@@ -54,7 +85,15 @@ public class Edge {
     return operation;
   }
 
-  public ITask getFunction() {
-    return function;
+  public DataType getDataType() {
+    return dataType;
+  }
+
+  public DataType getKeyType() {
+    return keyType;
+  }
+
+  public boolean isKeyed() {
+    return keyed;
   }
 }

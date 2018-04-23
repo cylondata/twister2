@@ -24,7 +24,8 @@ public class ResourceContainer {
   private Map<String, Object> properties = new HashMap<>();
 
   // no of cpus in this container
-  private int noOfCpus;
+  // it can be a fractional number such as 0.5
+  private double noOfCpus;
 
   // memory available to the container
   private int memoryMegaBytes;
@@ -36,12 +37,12 @@ public class ResourceContainer {
     this.id = id;
   }
 
-  public ResourceContainer(int noOfCpus, int memoryMegaBytes) {
+  public ResourceContainer(double noOfCpus, int memoryMegaBytes) {
     this.noOfCpus = noOfCpus;
     this.memoryMegaBytes = memoryMegaBytes;
   }
 
-  public ResourceContainer(int noOfCpus, int memoryMegaBytes, int diskMegaBytes) {
+  public ResourceContainer(double noOfCpus, int memoryMegaBytes, int diskMegaBytes) {
     this.noOfCpus = noOfCpus;
     this.memoryMegaBytes = memoryMegaBytes;
     this.diskMegaBytes = diskMegaBytes;
@@ -59,7 +60,7 @@ public class ResourceContainer {
     return properties.get(key);
   }
 
-  public int getNoOfCpus() {
+  public double getNoOfCpus() {
     return noOfCpus;
   }
 

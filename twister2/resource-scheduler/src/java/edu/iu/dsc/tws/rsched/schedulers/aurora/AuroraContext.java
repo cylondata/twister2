@@ -23,15 +23,10 @@ public class AuroraContext extends SchedulerContext {
   public static final String ROLE = "twister2.resource.scheduler.aurora.role";
   public static final String ENVIRONMENT = "twister2.resource.scheduler.aurora.env";
 
-  public static final String CPUS_PER_CONTAINER = "twister2.cpu_per_container";
-  public static final String RAM_PER_CONTAINER = "twister2.ram_per_container";
-  public static final String DISK_PER_CONTAINER = "twister2.disk_per_container";
-  public static final String NUMBER_OF_CONTAINERS = "twister2.number_of_containers";
+  public static final int TWISTER2_WORKER_DISK_DEFAULT = 1024;
+  public static final String TWISTER2_WORKER_DISK = "twister2.worker.disk";
 
   public static final String AURORA_WORKER_CLASS = "twister2.class.aurora.worker";
-
-  public static final int DEFAULT_RAM_SIZE = 1073741824; // 1GB
-  public static final int DEFAULT_DISK_SIZE = 1073741824; // 1GB
 
   public static String auroraClusterName(Config cfg) {
     return cfg.getStringValue(AURORA_CLUSTER_NAME);
@@ -45,20 +40,9 @@ public class AuroraContext extends SchedulerContext {
     return cfg.getStringValue(ENVIRONMENT);
   }
 
-  public static String cpusPerContainer(Config cfg) {
-    return cfg.getStringValue(CPUS_PER_CONTAINER);
-  }
 
-  public static int ramPerContainer(Config cfg) {
-    return cfg.getIntegerValue(RAM_PER_CONTAINER, DEFAULT_RAM_SIZE);
-  }
-
-  public static int diskPerContainer(Config cfg) {
-    return cfg.getIntegerValue(DISK_PER_CONTAINER, DEFAULT_DISK_SIZE);
-  }
-
-  public static String numberOfContainers(Config cfg) {
-    return cfg.getStringValue(NUMBER_OF_CONTAINERS);
+  public static int workerDisk(Config cfg) {
+    return cfg.getIntegerValue(TWISTER2_WORKER_DISK, TWISTER2_WORKER_DISK_DEFAULT);
   }
 
   public static String auroraWorkerClass(Config cfg) {

@@ -93,11 +93,11 @@ public final class Test {
 //    builder.put(AuroraContext.TWISTER2_PACKAGE_PATH, "/root/twister2");
 //    builder.put(AuroraContext.TWISTER2_PACKAGE_FILE, "twister2-client.tar.gz");
 
-    builder.put(AuroraContext.NUMBER_OF_CONTAINERS, "1");
-    builder.put(AuroraContext.CPUS_PER_CONTAINER, "1");
+    builder.put(SchedulerContext.TWISTER2_WORKER_INSTANCES, "1");
+    builder.put(SchedulerContext.TWISTER2_WORKER_CPU, "1");
     String ramAndDiskSize = "" + 1 * 1024 * 1024 * 1024; // 1GB in bytes
-    builder.put(AuroraContext.RAM_PER_CONTAINER, ramAndDiskSize);
-    builder.put(AuroraContext.DISK_PER_CONTAINER, ramAndDiskSize);
+    builder.put(SchedulerContext.TWISTER2_WORKER_RAM, ramAndDiskSize);
+    builder.put(AuroraContext.TWISTER2_WORKER_DISK, ramAndDiskSize);
     Config config = builder.build();
 
     System.out.println("number of config parameters: " + config.size());

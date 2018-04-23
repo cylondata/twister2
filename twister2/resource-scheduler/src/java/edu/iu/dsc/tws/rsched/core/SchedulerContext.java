@@ -27,14 +27,20 @@ public class SchedulerContext extends Context {
   public static final String JOB_NAME = "twister2.job.name";
   public static final String STATE_MANAGER_ROOT_PATH = "twister2.state.manager.root.path";
   public static final String SYSTEM_PACKAGE_URI = "twister2.system.package.uri";
-  /**
-   * Internal configuration for job package url
-   */
+
+  public static final double TWISTER2_WORKER_CPU_DEFAULT = 1.0;
+  public static final String TWISTER2_WORKER_CPU = "twister2.worker.cpu";
+
+  public static final int TWISTER2_WORKER_RAM_DEFAULT = 200;
+  public static final String TWISTER2_WORKER_RAM = "twister2.worker.ram";
+
+  public static final int TWISTER2_WORKER_INSTANCES_DEFAULT = 1;
+  public static final String TWISTER2_WORKER_INSTANCES = "twister2.worker.instances";
+
+  // Internal configuration for job package url
   public static final String JOB_PACKAGE_URI = "twister2.job.package.uri";
 
-  /**
-   * Temp directory where the files are placed before packing them for upload
-   */
+  // Temp directory where the files are placed before packing them for upload
   public static final String JOB_TEMP_DIR = "twister2.client.job.temp.dir";
 
   /**
@@ -100,6 +106,18 @@ public class SchedulerContext extends Context {
 
   public static String jobName(Config cfg) {
     return cfg.getStringValue(JOB_NAME);
+  }
+
+  public static double workerCPU(Config cfg) {
+    return cfg.getDoubleValue(TWISTER2_WORKER_CPU, TWISTER2_WORKER_CPU_DEFAULT);
+  }
+
+  public static int workerRAM(Config cfg) {
+    return cfg.getIntegerValue(TWISTER2_WORKER_RAM, TWISTER2_WORKER_RAM_DEFAULT);
+  }
+
+  public static int workerInstances(Config cfg) {
+    return cfg.getIntegerValue(TWISTER2_WORKER_INSTANCES, TWISTER2_WORKER_INSTANCES_DEFAULT);
   }
 
   public static String jobDescriptionFile(Config cfg) {

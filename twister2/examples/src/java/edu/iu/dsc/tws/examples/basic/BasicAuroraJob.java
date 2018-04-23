@@ -38,10 +38,11 @@ public final class BasicAuroraJob {
     System.out.println("read config values: " + config.size());
     System.out.println(config);
 
-    int cpus = Integer.parseInt(AuroraContext.cpusPerContainer(config));
-    int ramMegaBytes = AuroraContext.ramPerContainer(config) / (1024 * 1024);
-    int diskMegaBytes = AuroraContext.diskPerContainer(config) / (1024 * 1024);
-    int containers = Integer.parseInt(AuroraContext.numberOfContainers(config));
+    double cpus = SchedulerContext.workerCPU(config);
+    int ramMegaBytes = SchedulerContext.workerRAM(config);
+    int workers = SchedulerContext.workerInstances(config);
+    int diskMegaBytes = AuroraContext.workerDisk(config);
+
     String jobName = SchedulerContext.jobName(config);
     ResourceContainer resourceContainer = new ResourceContainer(cpus, ramMegaBytes, diskMegaBytes);
 
@@ -54,7 +55,7 @@ public final class BasicAuroraJob {
     BasicJob basicJob = BasicJob.newBuilder()
         .setName(jobName)
         .setContainerClass(containerClass)
-        .setRequestResource(resourceContainer, containers)
+        .setRequestResource(resourceContainer, workers)
         .setConfig(jobConfig)
         .build();
 

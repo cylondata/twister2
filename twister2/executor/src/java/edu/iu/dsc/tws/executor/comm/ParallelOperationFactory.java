@@ -37,17 +37,26 @@ public class ParallelOperationFactory {
     this.edgeGenerator = e;
   }
 
-  public IParallelOperation build(Edge edge, Set<Integer> sources, Set<Integer> dests,
-                                  DataType dataType) {
-    if (Operations.PARTITION.equals(edge.getOperation())) {
-      PartitionOperation partitionOp = new PartitionOperation(config, channel, taskPlan);
-      partitionOp.prepare(sources, dests, edgeGenerator, dataType, edge.getName());
-      return partitionOp;
-    } else if (Operations.BROADCAST.equals(edge.getOperation())) {
-      BroadcastOperation bcastOp = new BroadcastOperation(config, channel, taskPlan);
-      // get the first as the source
-      bcastOp.prepare(sources.iterator().next(), dests, edgeGenerator, dataType, edge.getName());
-      return bcastOp;
+  public IParallelOperation build(Edge edge, Set<Integer> sources, Set<Integer> dests) {
+    if (!edge.isKeyed()) {
+      if (Operations.PARTITION.equals(edge.getOperation())) {
+        PartitionOperation partitionOp = new PartitionOperation(config, channel, taskPlan);
+        partitionOp.prepare(sources, dests, edgeGenerator, edge.getDataType(), edge.getName());
+        return partitionOp;
+      } else if (Operations.BROADCAST.equals(edge.getOperation())) {
+        BroadcastOperation bcastOp = new BroadcastOperation(config, channel, taskPlan);
+        // get the first as the source
+        bcastOp.prepare(sources.iterator().next(), dests, edgeGenerator, edge.getDataType(),
+            edge.getName());
+        return bcastOp;
+      }
+    } else {
+      if (Operations.PARTITION.equals(edge.getOperation())) {
+        PartitionOperation partitionOp = new PartitionOperation(config, channel, taskPlan);
+        partitionOp.prepare(sources, dests, edgeGenerator, edge.getDataType(),
+            edge.getKeyType(), edge.getName());
+        return partitionOp;
+      }
     }
     return null;
   }

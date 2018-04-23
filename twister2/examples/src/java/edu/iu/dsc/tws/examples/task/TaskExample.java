@@ -20,8 +20,8 @@ import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
-import edu.iu.dsc.tws.executor.DefaultExecutor;
 import edu.iu.dsc.tws.executor.ExecutionPlan;
+import edu.iu.dsc.tws.executor.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
@@ -68,8 +68,8 @@ public class TaskExample implements IContainer {
     TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduling.schedule(graph, workerPlan);
 
     TWSNetwork network = new TWSNetwork(config, resourcePlan.getThisId());
-    DefaultExecutor defaultExecutor = new DefaultExecutor(resourcePlan, network);
-    ExecutionPlan plan = defaultExecutor.schedule(config, graph, taskSchedulePlan);
+    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);
+    ExecutionPlan plan = executionPlanBuilder.schedule(config, graph, taskSchedulePlan);
 
     // we need to progress the channel
     while (true) {
