@@ -91,8 +91,8 @@ public final class KubernetesWorker {
     String persistentJobDir = System.getenv(KubernetesField.PERSISTENT_JOB_DIR + "");
     logBuffer.append(KubernetesField.PERSISTENT_JOB_DIR + ": " + persistentJobDir + "\n");
 
-    String containersPerPodStr = System.getenv(KubernetesField.CONTAINERS_PER_POD + "");
-    logBuffer.append(KubernetesField.CONTAINERS_PER_POD + ": " + containersPerPodStr + "\n");
+    String containersPerPodStr = System.getenv(KubernetesField.WORKERS_PER_POD + "");
+    logBuffer.append(KubernetesField.WORKERS_PER_POD + ": " + containersPerPodStr + "\n");
 
     String persLoggingRqst = System.getenv(KubernetesField.PERSISTENT_LOGGING_REQUESTED + "");
     logBuffer.append(KubernetesField.PERSISTENT_LOGGING_REQUESTED + ": " + persLoggingRqst + "\n");
@@ -227,9 +227,9 @@ public final class KubernetesWorker {
 
     waitIndefinitely();
 
-//    int containersPerPod = KubernetesContext.containersPerPod(config);
+//    int workersPerPod = KubernetesContext.workersPerPod(config);
 //    // if this is the only container in a pod, delete the pod and exit
-//    if (containersPerPod == 1) {
+//    if (workersPerPod == 1) {
 //      deletePod(podName);
 //      return;
 //    }
@@ -239,10 +239,10 @@ public final class KubernetesWorker {
 //    if (finishedWorkers == -1) {
 //      return;
 //      // if this is not the last worker, just exit
-//    } else if (containersPerPod > (finishedWorkers + 1)) {
+//    } else if (workersPerPod > (finishedWorkers + 1)) {
 //      return;
 //      // if this is the last worker, delete the pod
-//    } else if (containersPerPod == (finishedWorkers + 1)) {
+//    } else if (workersPerPod == (finishedWorkers + 1)) {
 //      deletePod(podName);
 //      return;
 //    }

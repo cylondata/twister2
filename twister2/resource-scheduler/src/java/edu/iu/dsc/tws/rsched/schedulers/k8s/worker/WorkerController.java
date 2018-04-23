@@ -25,7 +25,7 @@ import com.google.gson.reflect.TypeToken;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.rsched.bootstrap.IWorkerController;
 import edu.iu.dsc.tws.rsched.bootstrap.WorkerNetworkInfo;
-import edu.iu.dsc.tws.rsched.schedulers.aurora.AuroraContext;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
 
@@ -53,8 +53,8 @@ public class WorkerController implements IWorkerController {
   public WorkerController(Config config, String podName, String podIpStr, String containerName,
                           String jobName) {
     this.config = config;
-    numberOfWorkers = Integer.parseInt(AuroraContext.numberOfContainers(config));
-    workersPerPod = KubernetesContext.containersPerPod(config);
+    numberOfWorkers = SchedulerContext.workerInstances(config);
+    workersPerPod = KubernetesContext.workersPerPod(config);
     numberOfPods = numberOfWorkers / workersPerPod;
     workerList = new ArrayList<WorkerNetworkInfo>();
     this.jobName = jobName;

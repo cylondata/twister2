@@ -5,18 +5,23 @@
 # twister2 job name
 twister2.job.name: "basic-kubernetes"
 
-# number of CPUs for this job
-twister2.cpu_per_container: "1"
+# number of cores for each worker
+# it is a floating point number
+# each worker can have fractional cores such as 0.5 cores or multiple cores as 2
+# default value is 1.0 core
+twister2.worker.cpu: 1.0
 
-# amount of memory for each CPU in mega bytes, 1GB=1024 MB
-twister2.ram_per_container: "1024"
+# amount of memory for each worker in the job in mega bytes as integer
+# default value is 200 MB
+twister2.worker.ram: 200
 
-# amount of hard disk space on each CPU in mega bytes, 1GB=1024 MB
-twister2.disk_per_container: "1024"
+# amount of hard disk space on each worker in mega bytes
+# this only used when running twister2 in Aurora
+# default value is 1024 MB. 
+twister2.worker.disk: 1024
 
 # number of worker instances
-twister2.number_of_containers: "6"
-
+twister2.worker.instances: 6
 
 ########################################################################
 # Kubernetes related settings
@@ -25,10 +30,10 @@ twister2.number_of_containers: "6"
 # default value is "default"
 # kubernetes.namespace: "default"
 
-# number of containers per pod
+# number of workers (containers) per pod
 # default is 1
-# number_of_containers must be divisible by containers_per_pod
-kubernetes.containers_per_pod: "1"
+# twister2.worker.instances must be divisible by containers_per_pod
+kubernetes.workers.per.pod: 2
 
 ########################################################################
 # persistent volume related settings
