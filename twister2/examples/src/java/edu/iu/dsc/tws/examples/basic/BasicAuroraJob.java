@@ -44,8 +44,7 @@ public final class BasicAuroraJob {
     int diskMegaBytes = AuroraContext.workerDisk(config);
 
     String jobName = SchedulerContext.jobName(config);
-    ResourceContainer resourceContainer =
-        new ResourceContainer((int) cpus, ramMegaBytes, diskMegaBytes);
+    ResourceContainer resourceContainer = new ResourceContainer(cpus, ramMegaBytes, diskMegaBytes);
 
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
