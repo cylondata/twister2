@@ -16,9 +16,9 @@ import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
 public class TaskSchedulerContext extends SchedulerContext {
 
-  public static final String TWISTER_TASK_SCHEDULING_MODE = "twister2.task.scheduling.mode";
-  public static final String TWISTER_TASK_SCHEDULING_MODE_DEFAULT = "FirstFit";
-  //public static final String TWISTER_TASK_SCHEDULING_MODE_DEFAULT = "RoundRobin";
+  public static final String TWISTER2_TASK_SCHEDULING_MODE = "twister2.class.task.taskscheduler";
+  public static final String TWISTER2_TASK_SCHEDULING_MODE_DEFAULT = "RoundRobin";
+  //public static final String TWISTER2_TASK_SCHEDULING_MODE_DEFAULT = "FirstFit";
 
   public static final String TWISTER2_TASK_INSTANCE_RAM = "twister2.task.instance.ram";
   public static final double TWISTER2_TASK_INSTANCE_RAM_DEFAULT = 512.0;
@@ -35,7 +35,6 @@ public class TaskSchedulerContext extends SchedulerContext {
   public static final String TWISTER2_NO_OF_INSTANCES_PER_CONTAINER
       = "twister2.task.default.task.instances";
   public static final int TWISTER2_NO_OF_INSTANCES_PER_CONTAINER_DEFAULT = 4;
-
 
   private static final String TWISTER2_RAM_PADDING_PER_CONTAINER
       = "twister2.ram.padding.container";
@@ -55,7 +54,7 @@ public class TaskSchedulerContext extends SchedulerContext {
 
 
   public static String taskSchedulingMode(Config cfg) {
-    return cfg.getStringValue(TWISTER_TASK_SCHEDULING_MODE, TWISTER_TASK_SCHEDULING_MODE_DEFAULT);
+    return cfg.getStringValue(TWISTER2_TASK_SCHEDULING_MODE, TWISTER2_TASK_SCHEDULING_MODE_DEFAULT);
   }
 
   public static double taskInstanceRam(Config cfg) {
