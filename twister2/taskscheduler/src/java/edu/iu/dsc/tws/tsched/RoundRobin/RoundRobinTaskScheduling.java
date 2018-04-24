@@ -22,6 +22,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.Vertex;
+import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.InstanceId;
@@ -49,19 +50,15 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
   @Override
   public void initialize(Config cfg1) {
     this.cfg = cfg1;
-    this.instanceRAM = 1024.0;
-    this.instanceDisk = 100.0;
-    this.instanceCPU = 2.0;
 
     //Retrieve the default instance values from the config file.
     /*this.instanceRAM = Double.parseDouble(cfg.getStringValue("INSTANCE_RAM"));
     this.instanceDisk = Double.parseDouble(cfg.getStringValue("INSTANCE_DISK"));
     this.instanceCPU = Double.parseDouble(cfg.getStringValue("INSTANCE_CPU"));*/
 
-    //The commented value should be enabled once the context class is created.
-    /*this.instanceRAM = Context.instanceRam(cfg);
-    this.instanceDisk = Context.instanceDisk(cfg);
-    this.instanceCPU = Context.instanceCPU(cfg);*/
+    this.instanceRAM = TaskSchedulerContext.taskInstanceRam(cfg);
+    this.instanceDisk = TaskSchedulerContext.taskInstanceDisk(cfg);
+    this.instanceCPU = TaskSchedulerContext.taskInstanceCpu(cfg);
   }
 
   @Override
@@ -75,7 +72,7 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
             workerPlan.getNumberOfWorkers());
 
     TaskInstanceMapCalculation instanceMapCalculation = new TaskInstanceMapCalculation(
-        instanceRAM, instanceCPU, instanceDisk);
+        this.instanceRAM, this.instanceCPU, this.instanceDisk);
 
     Map<Integer, Map<InstanceId, Double>> instancesRamMap =
         instanceMapCalculation.getInstancesRamMapInContainer(roundRobinContainerInstanceMap,
@@ -124,7 +121,7 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
       LOG.info(String.format("Container id:" + containerId
           + "\tand the allocated resource values\t"
           + "ram:" + containerRAMValue.get() + "\t"
-          + "disk:" + containerCPUValue.get() + "\t"
+          + "disk:" + containerDiskValue.get() + "\t"
           + "cpu:" + containerCPUValue.get()));
 
       Worker worker = workerPlan.getWorker(containerId);
