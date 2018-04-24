@@ -1,0 +1,106 @@
+# a sample statefulset yaml file to create a Twister2 job
+# before creating this statefulset, 
+#   first a service and 
+#   then the persistent volume and 
+#   then the persistent volume claim
+# need to be created. 
+
+apiVersion: apps/v1beta2
+kind: StatefulSet
+metadata:
+  name: <job-name>
+  namespace: <kubernetes.namespace>
+  labels:
+    app: twister2-service-label-<job-name>
+
+spec:
+  # replicas are calculated by dividing twister2.worker.instances/kubernetes.workers.per.pod
+  replicas: <twister2.worker.instances>/<kubernetes.workers.per.pod>
+  serviceName: twister2-service-<job-name>
+  podManagementPolicy: Parallel
+
+  selector:
+    matchLabels:
+      app: twister2-service-label-<job-name>
+
+  template:
+    metadata:
+      labels:
+        app: twister2-service-label-<job-name>
+
+    spec:
+      terminationGracePeriodSeconds: 0
+      volumes:
+      - name: twister2-shared-dir
+        emptyDir: {medium: Memory}
+      - name: persistent-volume
+        persistentVolumeClaim:
+          claimName: twister2-storage-<job-name>
+
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: <kubernetes.worker.mapping.key>
+                operator: <kubernetes.worker.mapping.operator>
+                values: <kubernetes.worker.mapping.values>
+        # pod affinity below is to place all pods in a job to the same node
+        # when we change podAffinity with podAntiAffinity, all pods are started in separate nodes
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - twister2-service-label-<job-name>
+            topologyKey: kubernetes.io/hostname
+
+      containers:
+        # container-index is added automatically inside the code
+        # it starts from 0 and increases sequentially
+        name: twister2-container-<container-index>
+        image: auyar/twister2:v0.01
+        imagePullPolicy: <kubernetes.image.pull.policy>
+        ports:
+          name: port11
+          containerPort: <kubernetes.worker.base.port> + <container-index>
+          protocol: <kubernetes.worker.transport.protocol>
+        resources:
+          requests: # if worker to cpu binding is requested, "requests" replaced with "limits" on this line
+            cpu: <twister2.worker.cpu>
+            memory: <twister2.worker.ram> + "Mi"
+        volumeMounts:
+        - name: twister2-shared-dir
+          mountPath: /twister2-shared
+        - name: persistent-volume
+          mountPath: /persistent
+        env:
+          # below values are sample values. 
+          # they are calculated for each job
+        - name: JOB_PACKAGE_FILENAME
+          value: twister2-job.tar.gz
+        - name: JOB_PACKAGE_FILE_SIZE
+          value: 233740
+        - name: CONTAINER_NAME
+          value: twister2-container-0
+        - name: USER_JOB_JAR_FILE
+          value: libexamples-java.jar
+        - name: JOB_DESCRIPTION_FILE
+          value: basic-kubernetes.job
+        - name: PERSISTENT_JOB_DIR
+          value: /persistent/twister2/basic-kubernetes-1523878691978
+        - name: WORKERS_PER_POD
+          value: 1
+        - name: PERSISTENT_LOGGING_REQUESTED
+          value: true
+        - name: PERSISTENT_LOGGING_TYPE
+          value: system
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+                fieldPath: status.podIP
+
+

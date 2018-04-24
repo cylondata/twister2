@@ -1,0 +1,20 @@
+# This is the NodePort Service object that is sent to Kubernetes master 
+# when creating a NodePort service for a Twister2 job
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: twister2-service-<jobname>
+spec:
+  type: NodePort
+  selector:
+    app: twister2-service-label-<jobname>
+  ports:
+  - port: <kubernetes.worker.base.port>
+    # if NodePort value is 0, nodePort parameter is not set. 
+    # in that case, nodePort value is automatically assigned by kubernetes
+    nodePort: <kubernetes.service.node.port>
+    # we do not set targetPort value, it will be the same as the port value
+    # protocol value is either TCP or UDP. If not set, by default it is UDP. 
+    protocol: <kubernetes.worker.transport.protocol>
+
