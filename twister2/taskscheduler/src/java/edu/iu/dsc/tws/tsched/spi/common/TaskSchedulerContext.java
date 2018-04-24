@@ -29,6 +29,15 @@ public class TaskSchedulerContext extends SchedulerContext {
   public static final String TWISTER2_TASK_INSTANCE_CPU = "twister2.task.instance.cpu";
   public static final double TWISTER2_TASK_INSTANCE_CPU_DEFAULT = 2.0;
 
+  public static final String TWISTER2_CONTAINER_INSTANCE_RAM = "twister2.container.instance.ram";
+  public static final double TWISTER2_CONTAINER_INSTANCE_RAM_DEFAULT = 1024.0;
+
+  public static final String TWISTER2_CONTAINER_INSTANCE_DISK = "twister2.container.instance.disk";
+  public static final double TWISTER2_CONTAINER_INSTANCE_DISK_DEFAULT = 1000.0;
+
+  public static final String TWISTER2_CONTAINER_INSTANCE_CPU = "twister2.container.instance.cpu";
+  public static final double TWISTER2_CONTAINER_INSTANCE_CPU_DEFAULT = 2.0;
+
   public static final String TWISTER2_TASK_PARALLELISM = "twister2.task.parallelism";
   public static final int TWISTER2_TASK_PARALLELISM_DEFAULT = 2;
 
@@ -67,6 +76,21 @@ public class TaskSchedulerContext extends SchedulerContext {
 
   public static double taskInstanceCpu(Config cfg) {
     return cfg.getDoubleValue(TWISTER2_TASK_INSTANCE_CPU, TWISTER2_TASK_INSTANCE_CPU_DEFAULT);
+  }
+
+  public static double containerInstanceRam(Config cfg) {
+    return cfg.getDoubleValue(TWISTER2_CONTAINER_INSTANCE_RAM,
+        TWISTER2_CONTAINER_INSTANCE_RAM_DEFAULT);
+  }
+
+  public static double containerInstanceDisk(Config cfg) {
+    return cfg.getDoubleValue(TWISTER2_CONTAINER_INSTANCE_DISK,
+        TWISTER2_CONTAINER_INSTANCE_DISK_DEFAULT);
+  }
+
+  public static double containerInstanceCpu(Config cfg) {
+    return cfg.getDoubleValue(TWISTER2_CONTAINER_INSTANCE_CPU,
+        TWISTER2_CONTAINER_INSTANCE_CPU_DEFAULT);
   }
 
   public static int taskParallelism(Config cfg) {

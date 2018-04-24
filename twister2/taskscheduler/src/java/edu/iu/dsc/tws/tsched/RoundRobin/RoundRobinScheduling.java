@@ -34,30 +34,7 @@ public class RoundRobinScheduling {
   public static Map<Integer, List<InstanceId>> RoundRobinSchedulingAlgorithm(
       Set<Vertex> taskVertexSet, int numberOfContainers) {
 
-    /*int globalTaskIndex = 0;
-
-    TaskAttributes taskAttributes = new TaskAttributes();
-    Map<Integer, List<InstanceId>> roundrobinAllocation = new HashMap<>();
-    Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
-
-    for (int i = 0; i < numberOfContainers; i++) {
-      roundrobinAllocation.put(i, new ArrayList<InstanceId>());
-    }
-
-    /*for (Map.Entry<String, Integer>  e : parallelTaskMap.entrySet()) {
-      String task = e.getKey();
-      int numberOfInstances = e.getValue();
-      int containerIndex = 0;
-      for (int i = 0; i < numberOfInstances; i++) {
-        containerIndex = i % numberOfContainers;
-        roundrobinAllocation.get(containerIndex).add(new InstanceId(task, globalTaskIndex, i));
-      }
-      globalTaskIndex++;
-    }
-    LOG.info(String.format("Container Map Values After Allocation %s", roundrobinAllocation));
-    return roundrobinAllocation;*/
-
-    int globalTaskIndex = 1;
+    /*int globalTaskIndex = 1;
     int taskIndex = 1;
     TaskAttributes taskAttributes = new TaskAttributes();
     Map<Integer, List<InstanceId>> roundrobinAllocation = new HashMap<>();
@@ -86,6 +63,36 @@ public class RoundRobinScheduling {
         }
       }
       LOG.info("RR Map After Allocation\t" + roundrobinAllocation);
+    } catch (NullPointerException ne) {
+      ne.printStackTrace();
+    }
+    return roundrobinAllocation;*/
+
+
+    int globalTaskIndex = 0;
+    int taskIndex = 0;
+    TaskAttributes taskAttributes = new TaskAttributes();
+    Map<Integer, List<InstanceId>> roundrobinAllocation = new HashMap<>();
+    for (int i = 0; i < numberOfContainers; i++) {
+      roundrobinAllocation.put(i, new ArrayList<>());
+    }
+    try {
+      Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
+      LOG.info("RR Map Before Allocation\t" + roundrobinAllocation);
+      for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
+        String task = e.getKey();
+        int numberOfInstances = e.getValue();
+        LOG.info("Task Name:" + task + "\tNumber Of instances:" + numberOfInstances
+            + "\tTaskIndex:" + globalTaskIndex);
+        int containerIndex = 0;
+        for (int i = 0; i < numberOfInstances; i++) {
+          containerIndex = i % numberOfContainers;
+          roundrobinAllocation.get(containerIndex).add(new InstanceId(task, globalTaskIndex, i));
+        }
+        globalTaskIndex++;
+      }
+      LOG.info(String.format("Container Map Values After Allocation %s", roundrobinAllocation));
+
     } catch (NullPointerException ne) {
       ne.printStackTrace();
     }
