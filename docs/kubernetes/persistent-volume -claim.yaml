@@ -1,0 +1,16 @@
+# This is the Persistent Volume Claim object that is sent to Kubernetes master 
+# when creating a persistent volume cliam for a Twister2 job
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: twister2-storage-<job-name>
+  namespace: <kubernetes.namespace>
+spec:
+  accessModes:
+  - <kubernetes.storage.access.mode>
+  storageClassName: <kubernetes.persistent.storage.class>
+  resources:
+    requests:
+      storage: <persistent.volume.per.worker>
+
