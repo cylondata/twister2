@@ -21,6 +21,7 @@ import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 
+import io.kubernetes.client.custom.Quantity;
 import io.kubernetes.client.models.V1Affinity;
 import io.kubernetes.client.models.V1Container;
 import io.kubernetes.client.models.V1ContainerPort;
@@ -219,11 +220,12 @@ public final class RequestObjectBuilder {
 
     V1ResourceRequirements resReq = new V1ResourceRequirements();
     if (KubernetesContext.bindWorkerToCPU(config)) {
-      resReq.putLimitsItem("cpu", reqContainer.getNoOfCpus() + "");
-      resReq.putLimitsItem("memory", reqContainer.getMemoryMegaBytes() + "Mi");
+//      resReq.putLimitsItem("cpu", reqContainer.getNoOfCpus() + "");
+      resReq.putLimitsItem("cpu", new Quantity(reqContainer.getNoOfCpus() + ""));
+      resReq.putLimitsItem("memory", new Quantity(reqContainer.getMemoryMegaBytes() + "Mi"));
     } else {
-      resReq.putRequestsItem("cpu", reqContainer.getNoOfCpus() + "");
-      resReq.putRequestsItem("memory", reqContainer.getMemoryMegaBytes() + "Mi");
+      resReq.putRequestsItem("cpu", new Quantity(reqContainer.getNoOfCpus() + ""));
+      resReq.putRequestsItem("memory", new Quantity(reqContainer.getMemoryMegaBytes() + "Mi"));
     }
     container.setResources(resReq);
 
@@ -445,8 +447,8 @@ public final class RequestObjectBuilder {
 
     String volumeSize = SchedulerContext.persistentVolumeTotal(config);
     V1PersistentVolumeSpec pvSpec = new V1PersistentVolumeSpec();
-    HashMap<String, String> capacity = new HashMap<>();
-    capacity.put("storage", volumeSize);
+    HashMap<String, Quantity> capacity = new HashMap<>();
+    capacity.put("storage", new Quantity(volumeSize));
     pvSpec.setCapacity(capacity);
 
     String storageClass = KubernetesContext.persistentStorageClass(config);
@@ -486,7 +488,7 @@ public final class RequestObjectBuilder {
 
     V1ResourceRequirements resources = new V1ResourceRequirements();
     String storageSize = SchedulerContext.persistentVolumePerWorker(config);
-    resources.putRequestsItem("storage", storageSize);
+    resources.putRequestsItem("storage", new Quantity(storageSize));
 //    resources.putRequestsItem("storage", Quantity.fromString("1Gi"));
     pvcSpec.setResources(resources);
 
