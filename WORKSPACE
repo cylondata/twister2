@@ -7,12 +7,17 @@ maven_server(
 
 maven_jar(
   name = "io_kubernetes_client_java",
-  artifact = "io.kubernetes:client-java:1.0.0-beta2",
+  artifact = "io.kubernetes:client-java:1.0.0",
 )
 
 maven_jar(
   name = "io_kubernetes_client_java_api",
-  artifact = "io.kubernetes:client-java-api:1.0.0-beta2",
+  artifact = "io.kubernetes:client-java-api:1.0.0",
+)
+
+maven_jar(
+  name = "io_kubernetes_client_java_proto",
+  artifact = "io.kubernetes:client-java-proto:1.0.0",
 )
 
 maven_jar(
@@ -31,13 +36,18 @@ maven_jar(
 )
 
 maven_jar(
-  name = "log4j_log4j",
-  artifact = "log4j:log4j:1.2.17",
+  name = "com_squareup_okio_okio",
+  artifact = "com.squareup.okio:okio:1.6.0",
 )
 
 maven_jar(
-  name = "com_squareup_okio_okio",
-  artifact = "com.squareup.okio:okio:1.6.0",
+  name = "com_squareup_okhttp_logging_interceptor",
+  artifact = "com.squareup.okhttp:logging-interceptor:2.7.5",
+)
+
+maven_jar(
+  name = "com_squareup_okhttp_okhttp_ws",
+  artifact = "com.squareup.okhttp:okhttp-ws:2.7.5",
 )
 
 maven_jar(
@@ -47,7 +57,7 @@ maven_jar(
 
 maven_jar(
   name = "commons_codec_commons_codec",
-  artifact = "commons-codec:commons-codec:1.10",
+  artifact = "commons-codec:commons-codec:1.11",
 )
 
 maven_jar(
