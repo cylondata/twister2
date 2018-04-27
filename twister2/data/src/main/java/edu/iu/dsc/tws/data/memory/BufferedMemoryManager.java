@@ -132,6 +132,11 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
     return putBulk(opID, keyString, value);
   }
 
+  @Override
+  public boolean put(int opID, byte[] key, byte[] data) {
+    return false;
+  }
+
   /*@Override
   public boolean put(int opID, byte[] key, byte[] value) {
     return memoryManager.put(opID, key, value);
@@ -463,6 +468,11 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
       return memoryManager.put(opID, key,
           temp);
     }
+  }
+
+  @Override
+  public boolean flush(int opID) {
+    return false;
   }
 
   /**

@@ -90,58 +90,55 @@ public final class DataSerializer {
   /**
    * get serialized data
    */
-  public static void getserializedData(Object content, MessageType messageType,
-                                       SerializeState state,
-                                       KryoSerializer serializer, ByteBuffer targetBuffer) {
+  public static byte[] getserializedData(Object content, MessageType messageType,
+                                         SerializeState state,
+                                         KryoSerializer serializer) {
     ByteBuffer dataBuffer;
+    //TODO: need to fix performance for other types than byte
     switch (messageType) {
       case INTEGER:
         int[] intdata = (int[]) content;
-        copyIntegers(intdata, targetBuffer);
-        targetBuffer.flip();
-        break;
+        dataBuffer = ByteBuffer.allocate(intdata.length * 4);
+        copyIntegers(intdata, dataBuffer);
+        dataBuffer.flip();
+        return dataBuffer.array();
       case SHORT:
         short[] shortdata = (short[]) content;
-        copyShorts(shortdata, targetBuffer);
-        targetBuffer.flip();
-        break;
+        dataBuffer = ByteBuffer.allocate(shortdata.length * 2);
+        copyShorts(shortdata, dataBuffer);
+        dataBuffer.flip();
+        return dataBuffer.array();
       case LONG:
         long[] longdata = (long[]) content;
-        copyLongs(longdata, targetBuffer);
-        targetBuffer.flip();
-        break;
+        dataBuffer = ByteBuffer.allocate(longdata.length * 8);
+        copyLongs(longdata, dataBuffer);
+        dataBuffer.flip();
+        return dataBuffer.array();
       case DOUBLE:
         double[] doubledata = (double[]) content;
-        copyDoubles(doubledata, targetBuffer);
-        targetBuffer.flip();
-        break;
+        dataBuffer = ByteBuffer.allocate(doubledata.length * 8);
+        copyDoubles(doubledata, dataBuffer);
+        dataBuffer.flip();
+        return dataBuffer.array();
       case OBJECT:
         if (state.getData() == null) {
           byte[] serialize = serializer.serialize(content);
           state.setData(serialize);
         }
-        targetBuffer.putInt(state.getData().length);
-        targetBuffer.put(state.getData());
-        targetBuffer.flip();
-        break;
+        return state.getData();
       case BYTE:
         if (state.getData() == null) {
           state.setData((byte[]) content);
         }
-        targetBuffer.putInt(state.getData().length);
-        targetBuffer.put(state.getData());
-        targetBuffer.flip();
-        break;
+        return state.getData();
       case STRING:
         if (state.getData() == null) {
           byte[] serialize = ((String) content).getBytes(MemoryManagerContext.DEFAULT_CHARSET);
           state.setData(serialize);
         }
-        targetBuffer.putInt(state.getData().length);
-        targetBuffer.put(state.getData());
-        targetBuffer.flip();
-        break;
+        return state.getData();
       default:
+        return null;
     }
   }
 
