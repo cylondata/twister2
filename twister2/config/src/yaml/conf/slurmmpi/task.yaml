@@ -1,0 +1,34 @@
+#Task scheduling algorithm
+#roundrobin Task Scheduling Class
+#twister2.class.task.taskscheduler.class:    edu.iu.dsc.tws.tsched.roundrobin.RoundRobinTaskScheduling
+
+#firstfit Task Scheduling Class
+#twister2.class.task.taskscheduler.class:    edu.iu.dsc.tws.tsched.firstfit.FirstFitTaskScheduling
+
+#Datalocality Aware Task Scheduling Class
+#twister2.class.task.taskscheduler.class:    edu.iu.dsc.tws.tsched.datalocalityaware.DataLocalityAwareTaskScheduling
+
+#Task Scheduling Mode
+twister2.class.task.taskscheduler: "roundrobin"
+#twister2.class.task.taskscheduler: "firstfit"
+#twister2.class.task.taskscheduler:  "DataLocalityAware"
+
+#Default Task Instance Values
+twister2.task.default.task.instances: 2
+twister2.task.instance.ram: 512.0
+twister2.task.instance.disk: 500.0
+twister2.task.instance.cpu: 2.0
+
+#Default Container Padding Values
+twister2.ram.padding.container: 2.0
+twister2.disk.padding.container: 12.0
+twister2.cpu.padding.container: 1.0
+twister2.container.padding.percentage: 1
+
+#Default Container Instance Values
+twister2.container.instance.ram: 1024.0
+twister2.container.instance.disk: 1000.0
+twister2.container.instance.cpu: 2.0
+
+#Default Task Parallelism Value
+twister2.task.parallelism: 2
