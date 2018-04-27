@@ -31,7 +31,6 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.CompletionListener;
-import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
@@ -560,18 +559,26 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
           if (!receiver.passMessageDownstream(object, currentMessage)) {
             break;
           }
+
+          if (currentMessage.getReceivedState() != MPIMessage.ReceivedState.RECEIVE) {
+            currentMessage.release();
+          }
           currentMessage.setReceivedState(MPIMessage.ReceivedState.RECEIVE);
           if (!receiver.receiveMessage(currentMessage, object)) {
             break;
           }
-          currentMessage.release();
+          //currentMessage.release();
           pendingReceiveMessages.poll();
         } else if (state == MPIMessage.ReceivedState.RECEIVE) {
           currentMessage.setReceivedState(MPIMessage.ReceivedState.RECEIVE);
+
+          if (currentMessage.getReceivedState() != MPIMessage.ReceivedState.RECEIVE) {
+            currentMessage.release();
+          }
           if (!receiver.receiveMessage(currentMessage, object)) {
             break;
           }
-          currentMessage.release();
+          //currentMessage.release();
           pendingReceiveMessages.poll();
         }
       } finally {
@@ -689,11 +696,6 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
       //TODO : need to generate operation key and use it
       operationMemoryManager.put(Ints.toByteArray(key), dataBytes);
     }
-    int flags = mpiSendMessage.getFlags();
-    //TODO:check if flags are set
-    if ((flags & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) {
-      operationMemoryManager.flush();
-    }
     return true;
   }
 
@@ -751,12 +753,13 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
 
 //    ByteBuffer tempData;
 //    ByteBuffer tempKey;
-
+    ImmutablePair<byte[], byte[]> tempPair;
+    byte[] dataBytes;
     if (isList) {
       List objectList = (List) data;
       for (Object message : objectList) {
         if (isKeyed) {
-          ImmutablePair<byte[], byte[]> tempPair = (ImmutablePair<byte[], byte[]>) message;
+          tempPair = (ImmutablePair<byte[], byte[]>) message;
 //          setupThreadLocalBuffers(tempPair.getKey().length, tempPair.getValue().length,
 //          currentMessage.getType());
 
@@ -768,7 +771,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
 //          tempData.put(tempPair.getValue());
           operationMemoryManager.put(tempPair.getKey(), tempPair.getValue());
         } else {
-          byte[] dataBytes = (byte[]) message;
+          dataBytes = (byte[]) message;
 //          setupThreadLocalBuffers(4, dataBytes.length, currentMessage.getType());
 //          tempData = threadLocalDataBuffer.get();
 //          tempKey = threadLocalKeyBuffer.get();
@@ -780,7 +783,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
       }
     } else {
       if (isKeyed) {
-        Pair<byte[], byte[]> tempPair = (Pair<byte[], byte[]>) data;
+        tempPair = (ImmutablePair<byte[], byte[]>) data;
 //        setupThreadLocalBuffers(tempPair.getKey().length, tempPair.getValue().length,
 //            currentMessage.getType());
 //
@@ -792,7 +795,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
 //        tempData.put(tempPair.getValue());
         operationMemoryManager.put(tempPair.getKey(), tempPair.getValue());
       } else {
-        byte[] dataBytes = (byte[]) data;
+        dataBytes = (byte[]) data;
 //        setupThreadLocalBuffers(4, dataBytes.length, currentMessage.getType());
 //        tempData = threadLocalDataBuffer.get();
 //        tempKey = threadLocalKeyBuffer.get();
@@ -801,12 +804,6 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
 //        tempData.put(dataBytes);
         operationMemoryManager.put(Ints.toByteArray(sourceID), dataBytes);
       }
-    }
-
-    int flags = currentMessage.getHeader().getFlags();
-    //TODO:check if flags are set
-    if ((flags & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) {
-      operationMemoryManager.flush();
     }
   }
 

@@ -21,7 +21,7 @@ public class LMDBMemoryManagerContext extends Context {
    * Map size for the database. This specifies how large the DB might be. Over-estimating is OK.
    * value set to 2GB
    */
-  public static final long MAP_SIZE_LIMIT = 1048576L * 1024L * 20L;
+  public static final long MAP_SIZE_LIMIT = 1048576L * 1024L * 5L;
 
   /**
    * specifies the maximum number of DBs will be created in 1 environment.
@@ -36,11 +36,11 @@ public class LMDBMemoryManagerContext extends Context {
 
   public static final int DEFAULT_APPEND_BUFFER_SIZE = 1024 * 2;
 
-  public static final int DEFAULT_WRITE_BUFFER_MAP_SIZE = 10000;
+  public static final int DEFAULT_WRITE_BUFFER_MAP_SIZE = 5000000;
 
-  public static final int DATA_BUFF_INIT_CAP = 1024;
+  public static final int DATA_BUFF_INIT_CAP = 128;
 
-  public static final int KEY_BUFF_INIT_CAP = 256;
+  public static final int KEY_BUFF_INIT_CAP = 16;
 
   /**
    * Name of the databse
