@@ -15,6 +15,7 @@ import java.net.URI;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.common.config.TokenSub;
 
 public class SchedulerContext extends Context {
   public static final String STATE_MANAGER_CLASS = "twister2.class.state.manager";
@@ -26,14 +27,20 @@ public class SchedulerContext extends Context {
   public static final String JOB_NAME = "twister2.job.name";
   public static final String STATE_MANAGER_ROOT_PATH = "twister2.state.manager.root.path";
   public static final String SYSTEM_PACKAGE_URI = "twister2.system.package.uri";
-  /**
-   * Internal configuration for job package url
-   */
+
+  public static final double TWISTER2_WORKER_CPU_DEFAULT = 1.0;
+  public static final String TWISTER2_WORKER_CPU = "twister2.worker.cpu";
+
+  public static final int TWISTER2_WORKER_RAM_DEFAULT = 200;
+  public static final String TWISTER2_WORKER_RAM = "twister2.worker.ram";
+
+  public static final int TWISTER2_WORKER_INSTANCES_DEFAULT = 1;
+  public static final String TWISTER2_WORKER_INSTANCES = "twister2.worker.instances";
+
+  // Internal configuration for job package url
   public static final String JOB_PACKAGE_URI = "twister2.job.package.uri";
 
-  /**
-   * Temp directory where the files are placed before packing them for upload
-   */
+  // Temp directory where the files are placed before packing them for upload
   public static final String JOB_TEMP_DIR = "twister2.client.job.temp.dir";
 
   /**
@@ -57,6 +64,25 @@ public class SchedulerContext extends Context {
   // The path from where the workers will transfer twister2 tar.gz packages
   public static final String TWISTER2_PACKAGES_PATH = "twister2.packages.path";
   public static final String WORKER_NAME = "twister2.worker.name";
+  // local temporary packages path on the submitting client
+  public static final String TEMPORARY_PACKAGES_PATH = "temporary.packages.path";
+
+  public static final String NFS_SERVER_ADDRESS = "nfs.server.address";
+  public static final String NFS_SERVER_PATH = "nfs.server.path";
+
+  // persistent volume per worker
+  public static final String PERSISTENT_VOLUME_PER_WORKER_DEFAULT = "1Gi";
+  public static final String PERSISTENT_VOLUME_PER_WORKER = "persistent.volume.per.worker";
+
+  // persistent volume for all workers in this job
+  public static final String PERSISTENT_VOLUME_TOTAL_DEFAULT = "100Gi";
+  public static final String PERSISTENT_VOLUME_TOTAL = "persistent.volume.total";
+
+  public static final boolean PERSISTENT_VOLUME_REQUESTED_DEFAULT = false;
+  public static final String PERSISTENT_VOLUME_REQUESTED = "persistent.volume.requested";
+
+  public static final boolean PERSISTENT_LOGGING_REQUESTED_DEFAULT = false;
+  public static final String PERSISTENT_LOGGING_REQUESTED = "persistent.logging.requested";
 
   public static String stateManagerClass(Config cfg) {
     return cfg.getStringValue(STATE_MANAGER_CLASS);
@@ -82,6 +108,18 @@ public class SchedulerContext extends Context {
     return cfg.getStringValue(JOB_NAME);
   }
 
+  public static double workerCPU(Config cfg) {
+    return cfg.getDoubleValue(TWISTER2_WORKER_CPU, TWISTER2_WORKER_CPU_DEFAULT);
+  }
+
+  public static int workerRAM(Config cfg) {
+    return cfg.getIntegerValue(TWISTER2_WORKER_RAM, TWISTER2_WORKER_RAM_DEFAULT);
+  }
+
+  public static int workerInstances(Config cfg) {
+    return cfg.getIntegerValue(TWISTER2_WORKER_INSTANCES, TWISTER2_WORKER_INSTANCES_DEFAULT);
+  }
+
   public static String jobDescriptionFile(Config cfg) {
     return cfg.getStringValue(JOB_DESCRIPTION_FILE);
   }
@@ -90,12 +128,17 @@ public class SchedulerContext extends Context {
     return cfg.getStringValue(TWISTER2_PACKAGES_PATH);
   }
 
+  public static String temporaryPackagesPath(Config cfg) {
+    return cfg.getStringValue(TEMPORARY_PACKAGES_PATH);
+  }
+
   public static String stateManegerRootPath(Config cfg) {
     return cfg.getStringValue(STATE_MANAGER_ROOT_PATH);
   }
 
   public static String systemPackageUrl(Config cfg) {
-    return cfg.getStringValue(SYSTEM_PACKAGE_URI);
+    return TokenSub.substitute(cfg, cfg.getStringValue(SYSTEM_PACKAGE_URI,
+        "${TWISTER2_DIST}/twister2-core.tar.gz"), Context.substitutions);
   }
 
   public static URI jobPackageUri(Config cfg) {
@@ -118,9 +161,28 @@ public class SchedulerContext extends Context {
     return cfg.getStringValue(USER_JOB_JAR_FILE);
   }
 
-  public static String clusterType(Config cfg) {
-    return cfg.getStringValue(TWISTER2_CLUSTER_TYPE);
+  public static String nfsServerAddress(Config cfg) {
+    return cfg.getStringValue(NFS_SERVER_ADDRESS);
   }
 
+  public static String nfsServerPath(Config cfg) {
+    return cfg.getStringValue(NFS_SERVER_PATH);
+  }
+
+  public static String persistentVolumePerWorker(Config cfg) {
+    return cfg.getStringValue(PERSISTENT_VOLUME_PER_WORKER, PERSISTENT_VOLUME_PER_WORKER_DEFAULT);
+  }
+
+  public static String persistentVolumeTotal(Config cfg) {
+    return cfg.getStringValue(PERSISTENT_VOLUME_TOTAL, PERSISTENT_VOLUME_TOTAL_DEFAULT);
+  }
+
+  public static boolean persistentVolumeRequested(Config cfg) {
+    return cfg.getBooleanValue(PERSISTENT_VOLUME_REQUESTED, PERSISTENT_VOLUME_REQUESTED_DEFAULT);
+  }
+
+  public static boolean persistentLoggingRequested(Config cfg) {
+    return cfg.getBooleanValue(PERSISTENT_LOGGING_REQUESTED, PERSISTENT_LOGGING_REQUESTED_DEFAULT);
+  }
 
 }

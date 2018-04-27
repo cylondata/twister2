@@ -11,11 +11,14 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.k8s;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.squareup.okhttp.Response;
+
+import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
 
 import io.kubernetes.client.ApiClient;
 import io.kubernetes.client.ApiException;
@@ -23,14 +26,23 @@ import io.kubernetes.client.Configuration;
 import io.kubernetes.client.apis.AppsV1beta2Api;
 import io.kubernetes.client.apis.CoreV1Api;
 import io.kubernetes.client.models.V1DeleteOptions;
+import io.kubernetes.client.models.V1PersistentVolume;
+import io.kubernetes.client.models.V1PersistentVolumeClaim;
+import io.kubernetes.client.models.V1PersistentVolumeClaimList;
+import io.kubernetes.client.models.V1PersistentVolumeList;
 import io.kubernetes.client.models.V1Service;
 import io.kubernetes.client.models.V1ServiceList;
 import io.kubernetes.client.models.V1beta2StatefulSet;
 import io.kubernetes.client.models.V1beta2StatefulSetList;
 
+/**
+ * a controller class to talk to the Kubernetes Master to manage jobs
+ */
+
 public class KubernetesController {
   private static final Logger LOG = Logger.getLogger(KubernetesController.class.getName());
 
+  private ApiClient client = null;
   private CoreV1Api coreApi;
   private AppsV1beta2Api beta2Api;
 
@@ -39,7 +51,6 @@ public class KubernetesController {
   }
 
   public void createApiInstances() {
-    ApiClient client = null;
     try {
       client = io.kubernetes.client.util.Config.defaultClient();
     } catch (IOException e) {
@@ -55,22 +66,19 @@ public class KubernetesController {
   /**
    * return the StatefulSet object if it exists in the Kubernetes master,
    * otherwise return null
-   * @param statefulSetName
-   * @param namespace
-   * @return
    */
-  public V1beta2StatefulSet getStatefulSet(String namespace, String statefulSetName) {
-
+  public V1beta2StatefulSet getStatefulSet(String namespace, String statefulSetName,
+                                           String serviceLabel) {
     V1beta2StatefulSetList setList = null;
     try {
       setList = beta2Api.listNamespacedStatefulSet(
-          namespace, null, null, null, null, null, null, null, null, null);
+          namespace, null, null, null, null, serviceLabel, null, null, null, null);
     } catch (ApiException e) {
       LOG.log(Level.SEVERE, "Exception when getting StatefulSet list.", e);
       throw new RuntimeException(e);
     }
 
-    for (V1beta2StatefulSet statefulSet: setList.getItems()) {
+    for (V1beta2StatefulSet statefulSet : setList.getItems()) {
       if (statefulSetName.equals(statefulSet.getMetadata().getName())) {
         return statefulSet;
       }
@@ -81,9 +89,6 @@ public class KubernetesController {
 
   /**
    * create the given service on Kubernetes master
-   * @param namespace
-   * @param statefulSet
-   * @return
    */
   public boolean createStatefulSetJob(String namespace, V1beta2StatefulSet statefulSet) {
 
@@ -114,9 +119,6 @@ public class KubernetesController {
 
   /**
    * delete the given StatefulSet from Kubernetes master
-   * @param namespace
-   * @param statefulSetName
-   * @return
    */
   public boolean deleteStatefulSetJob(String namespace, String statefulSetName) {
 
@@ -159,9 +161,6 @@ public class KubernetesController {
 
   /**
    * create the given service on Kubernetes master
-   * @param namespace
-   * @param service
-   * @return
    */
   public boolean createService(String namespace, V1Service service) {
 
@@ -189,12 +188,10 @@ public class KubernetesController {
   /**
    * return the service object if it exists in the Kubernetes master,
    * otherwise return null
-   * @param serviceName
-   * @param namespace
-   * @return
    */
   public V1Service getService(String namespace, String serviceName) {
-
+// sending the request with label does not work for list services call
+//    String label = "app=" + serviceLabel;
     V1ServiceList serviceList = null;
     try {
       serviceList = coreApi.listNamespacedService(namespace,
@@ -204,7 +201,7 @@ public class KubernetesController {
       throw new RuntimeException(e);
     }
 
-    for (V1Service service: serviceList.getItems()) {
+    for (V1Service service : serviceList.getItems()) {
       if (serviceName.equals(service.getMetadata().getName())) {
         return service;
       }
@@ -215,9 +212,6 @@ public class KubernetesController {
 
   /**
    * delete the given service from Kubernetes master
-   * @param namespace
-   * @param serviceName
-   * @return
    */
   public boolean deleteService(String namespace, String serviceName) {
 
@@ -248,4 +242,232 @@ public class KubernetesController {
       return false;
     }
   }
+
+  /**
+   * transfer the job package to pods in parallel by many threads
+   * @param namespace
+   * @param jobName
+   * @param numberOfPods
+   * @param jobPackageFile
+   * @return
+   */
+  public boolean transferJobPackageInParallel(String namespace, String jobName, int numberOfPods,
+                                              String jobPackageFile) {
+
+    PodWatcher podWatcher = new PodWatcher(namespace, jobName, numberOfPods, client, coreApi);
+    podWatcher.start();
+
+    JobPackageTransferThread[] transferThreads = new JobPackageTransferThread[numberOfPods];
+    for (int i = 0; i < numberOfPods; i++) {
+      transferThreads[i] =
+          new JobPackageTransferThread(namespace, jobName, i, jobPackageFile, podWatcher);
+
+      transferThreads[i].start();
+    }
+
+    // wait all transfer threads to finish up
+    boolean allTransferred = true;
+    for (int i = 0; i < transferThreads.length; i++) {
+      try {
+        transferThreads[i].join();
+        if (!transferThreads[i].packageTransferred()) {
+          LOG.log(Level.SEVERE, "Job Package is not transferred to the pod: "
+              + transferThreads[i].getPodName());
+          allTransferred = false;
+          break;
+        }
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+    }
+
+    // if one transfer fails, stop all transfer threads and return false
+    if (!allTransferred) {
+      for (int i = 0; i < transferThreads.length; i++) {
+        transferThreads[i].setStopExecution();
+      }
+    }
+
+    return allTransferred;
+  }
+
+  /**
+   * sending a command to shell
+   */
+  public static boolean runProcess(String[] command) {
+    StringBuilder stdout = new StringBuilder();
+    StringBuilder stderr = new StringBuilder();
+    int status =
+        ProcessUtils.runSyncProcess(false, command, stderr, new File("."), false);
+
+    if (status != 0) {
+      LOG.severe(String.format(
+          "Failed to run process. Command=%s, STDOUT=%s, STDERR=%s", command, stdout, stderr));
+    }
+    return status == 0;
+  }
+
+  /**
+   * get the PersistentVolumeClaim with the given name
+   * @param namespace
+   * @param pvcName
+   * @return
+   */
+  public V1PersistentVolumeClaim getPersistentVolumeClaim(String namespace, String pvcName) {
+    V1PersistentVolumeClaimList pvcList = null;
+    try {
+      pvcList = coreApi.listNamespacedPersistentVolumeClaim(
+          namespace, null, null, null, null, null, null, null, null, null);
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when getting PersistentVolumeClaim list.", e);
+      throw new RuntimeException(e);
+    }
+
+    for (V1PersistentVolumeClaim pvc : pvcList.getItems()) {
+      if (pvcName.equals(pvc.getMetadata().getName())) {
+        return pvc;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * create the given PersistentVolumeClaim on Kubernetes master
+   */
+  public boolean createPersistentVolumeClaim(String namespace, V1PersistentVolumeClaim pvc) {
+
+    String pvcName = pvc.getMetadata().getName();
+    try {
+      Response response = coreApi.createNamespacedPersistentVolumeClaimCall(
+          namespace, pvc, null, null, null).execute();
+
+      if (response.isSuccessful()) {
+        LOG.log(Level.INFO, "PersistentVolumeClaim [" + pvcName + "] is created.");
+        return true;
+
+      } else {
+        LOG.log(Level.SEVERE, "Error when creating the PersistentVolumeClaim [" + pvcName
+            + "] Response: " + response);
+        return false;
+      }
+
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Exception when creating the PersistentVolumeClaim: " + pvcName, e);
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when creating the PersistentVolumeClaim: " + pvcName, e);
+    }
+    return false;
+  }
+
+  public boolean deletePersistentVolumeClaim(String namespace, String pvcName) {
+
+    try {
+      Response response = coreApi.deleteNamespacedPersistentVolumeClaimCall(
+          pvcName, namespace, null, null, null, null, null, null, null).execute();
+
+      if (response.isSuccessful()) {
+        LOG.log(Level.INFO, "PersistentVolumeClaim [" + pvcName + "] is deleted.");
+        return true;
+
+      } else {
+
+        if (response.code() == 404 && response.message().equals("Not Found")) {
+          LOG.log(Level.WARNING, "There is no PersistentVolumeClaim [" + pvcName
+              + "] to delete on Kubernetes master. It may have already been deleted.");
+          return true;
+        }
+
+        LOG.log(Level.SEVERE, "Error when deleting the PersistentVolumeClaim [" + pvcName
+            + "] Response: " + response);
+        return false;
+      }
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when deleting the PersistentVolumeClaim: " + pvcName, e);
+      return false;
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Exception when deleting the PersistentVolumeClaim: " + pvcName, e);
+      return false;
+    }
+  }
+
+  public V1PersistentVolume getPersistentVolume(String pvName) {
+    V1PersistentVolumeList pvList = null;
+    try {
+      pvList = coreApi.listPersistentVolume(null, null, null, null, null, null, null, null, null);
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when getting PersistentVolume list.", e);
+      throw new RuntimeException(e);
+    }
+
+    for (V1PersistentVolume pv : pvList.getItems()) {
+      if (pvName.equals(pv.getMetadata().getName())) {
+        return pv;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * create the given service on Kubernetes master
+   */
+  public boolean createPersistentVolume(V1PersistentVolume pv) {
+
+    String pvName = pv.getMetadata().getName();
+    try {
+      Response response = coreApi.createPersistentVolumeCall(pv, null, null, null).execute();
+
+      if (response.isSuccessful()) {
+        LOG.log(Level.INFO, "PersistentVolume [" + pvName + "] is created.");
+        return true;
+
+      } else {
+        LOG.log(Level.SEVERE, "Error when creating the PersistentVolume [" + pvName + "]: "
+            + response);
+//        LOG.log(Level.SEVERE, "Submitted PersistentVolume Object: " + pv);
+        return false;
+      }
+
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Exception when creating the PersistentVolume: " + pvName, e);
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when creating the PersistentVolume: " + pvName, e);
+    }
+    return false;
+  }
+
+
+  public boolean deletePersistentVolume(String pvName) {
+
+    try {
+      Response response = coreApi.deletePersistentVolumeCall(
+          pvName, null, null, null, null, null, null, null).execute();
+
+      if (response.isSuccessful()) {
+        LOG.log(Level.INFO, "PersistentVolume [" + pvName + "] is deleted.");
+        return true;
+
+      } else {
+
+        if (response.code() == 404 && response.message().equals("Not Found")) {
+          LOG.log(Level.WARNING, "There is no PersistentVolume [" + pvName
+              + "] to delete on Kubernetes master. It may have already been deleted.");
+          return true;
+        }
+
+        LOG.log(Level.SEVERE, "Error when deleting the PersistentVolume [" + pvName + "]: "
+            + response);
+        return false;
+      }
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when deleting the PersistentVolume: " + pvName, e);
+      return false;
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Exception when deleting the PersistentVolume: " + pvName, e);
+      return false;
+    }
+  }
+
+
 }

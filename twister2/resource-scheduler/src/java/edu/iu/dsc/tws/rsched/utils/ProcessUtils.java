@@ -79,7 +79,9 @@ public final class ProcessUtils {
           if (line == null) {
             break;
           } else {
-            System.err.println(line);
+            if (isVerbose) {
+              System.err.println(line);
+            }
           }
         }
         try {

@@ -3,6 +3,7 @@
 def twister2_client_bin_files():
     return [
         "//twister2/tools/cli/src/python:twister2",
+        "//third_party/nomad:nomad",
     ]
 
 def twister2_client_conf_files():
@@ -40,6 +41,11 @@ def twister2_client_kubernetes_files():
         "//twister2/config/src/yaml:conf-kubernetes-yaml",
     ]
 
+def twister2_client_standalone_files():
+    return [
+        "//twister2/config/src/yaml:conf-standalone-yaml",
+    ]
+
 def twister2_client_lib_task_scheduler_files():
     return [
         "//twister2/taskscheduler/src/java:taskscheduler-java",
@@ -64,13 +70,25 @@ def twister2_client_lib_resource_scheduler_files():
         "@org_apache_zookeeper_zookeeper//jar",
         "@io_kubernetes_client_java//jar",
         "@io_kubernetes_client_java_api//jar",
+        "@io_kubernetes_client_java_proto//jar",
         "@io_swagger_swagger_annotations//jar",
         "@com_google_code_gson_gson//jar",
         "@com_squareup_okhttp_okhttp//jar",
-        "@log4j_log4j//jar",
+        "@com_squareup_okhttp_logging_interceptor//jar",
+        "@com_squareup_okhttp_okhttp_ws//jar",
         "@com_squareup_okio_okio//jar",
         "@joda_time_joda_time//jar",
         "@commons_codec_commons_codec//jar",
+        "@com_hashicorp_nomad//jar",
+        "@com_fasterxml_jackson_core_jackson_annotations//jar",
+        "@com_fasterxml_jackson_core_jackson_core//jar",
+        "@com_fasterxml_jackson_core_jackson_databind//jar",
+        "@com_google_code_findbugs_jsr305//jar",
+        "@commons_logging_commons_logging//jar",
+        "@org_apache_httpcomponents_http_client//jar",
+        "@org_apache_httpcomponents_http_core//jar",
+        "@org_bouncycastle_bcpkix_jdk15on//jar",
+        "@org_bouncycastle_bcprov_jdk15on//jar",
     ]
 
 def twister2_client_lib_api_files():
@@ -86,6 +104,11 @@ def twister2_client_lib_task_files():
 def twister2_client_lib_data_files():
     return [
         "//twister2/data/src/main/java:data-java",
+    ]
+
+def twister2_client_lib_executor_files():
+    return [
+        "//twister2/executor/src/java:executor-java",
     ]
 
 def twister2_client_lib_data_lmdb_files():

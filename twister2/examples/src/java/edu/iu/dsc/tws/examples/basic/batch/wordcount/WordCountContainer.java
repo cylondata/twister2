@@ -61,45 +61,20 @@ public class WordCountContainer implements IContainer {
     this.id = containerId;
     this.noOfTasksPerExecutor = NO_OF_TASKS / plan.noOfContainers();
 
+    // set up the tasks
     setupTasks();
-
-    network = new TWSNetwork(cfg, taskPlan);
-    channel = network.getDataFlowTWSCommunication();
-
-    //first get the communication config file
-    network = new TWSNetwork(cfg, taskPlan);
-    channel = network.getDataFlowTWSCommunication();
-
+    // setup the network
+    setupNetwork();
+    // create the communication
     Map<String, Object> newCfg = new HashMap<>();
-    LOG.info("Setting up reduce dataflow operation");
-      // this method calls the init method
-      // I think this is wrong
     keyGather = (MPIDataFlowMultiGather) channel.keyedGather(newCfg, MessageType.OBJECT,
         destinations, sources, destinations,
         new GatherMultiBatchFinalReceiver(new WordAggregator()),
         new GatherMultiBatchPartialReceiver());
-
-    if (id < 2) {
-      for (int i = 0; i < noOfTasksPerExecutor; i++) {
-        // the map thread where data is produced
-        LOG.info(String.format("%d Starting thread %d", id, i + id * noOfTasksPerExecutor));
-        Thread mapThread = new Thread(new BatchWordSource(config, keyGather, 1000,
-            new ArrayList<>(destinations), noOfTasksPerExecutor * id + i, 200));
-        mapThread.start();
-      }
-    }
-    // we need to progress the communication
-    while (true) {
-      try {
-        // progress the channel
-        channel.progress();
-        // we should progress the communication directive
-        keyGather.progress();
-        Thread.yield();
-      } catch (Throwable t) {
-        LOG.log(Level.SEVERE, "Something bad happened", t);
-      }
-    }
+    // start the threads
+    scheduleTasks();
+    // progress the work
+    progress();
   }
 
   private void setupTasks() {
@@ -111,6 +86,40 @@ public class WordCountContainer implements IContainer {
     destinations = new HashSet<>();
     for (int i = 0; i < NO_OF_TASKS / 2; i++) {
       destinations.add(NO_OF_TASKS / 2 + i);
+    }
+  }
+
+  private void scheduleTasks() {
+    if (id < 2) {
+      for (int i = 0; i < noOfTasksPerExecutor; i++) {
+        // the map thread where data is produced
+        Thread mapThread = new Thread(new BatchWordSource(config, keyGather, 1000,
+            new ArrayList<>(destinations), noOfTasksPerExecutor * id + i, 200));
+        mapThread.start();
+      }
+    }
+  }
+
+  private void setupNetwork() {
+    network = new TWSNetwork(config, taskPlan);
+    channel = network.getDataFlowTWSCommunication();
+
+    //first get the communication config file
+    network = new TWSNetwork(config, taskPlan);
+    channel = network.getDataFlowTWSCommunication();
+  }
+
+  private void progress() {
+    // we need to progress the communication
+    while (true) {
+      try {
+        // progress the channel
+        channel.progress();
+        // we should progress the communication directive
+        keyGather.progress();
+      } catch (Throwable t) {
+        LOG.log(Level.SEVERE, "Something bad happened", t);
+      }
     }
   }
 }

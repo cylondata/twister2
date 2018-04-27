@@ -28,19 +28,18 @@ public final class Context {
   private Context() {
   }
 
-  public static Double instanceRam(Config config) {
-    System.out.println(config.getDoubleValue(Key.INSTANCE_RAM));
+  public static Double instanceRam(TaskConfig config) {
     //return config.getDoubleValue(Key.INSTANCE_RAM);
-    return Double.valueOf(20.0);
+    return Double.valueOf(1024.0);
   }
 
-  public static Double instanceDisk(Config config) {
-    //return config.getDoubleValue (Key.INSTANCE_DISK);
-    return Double.valueOf(200.0);
+  public static Double instanceDisk(TaskConfig config) {
+    //return config.getDoubleValue(Key.INSTANCE_DISK);
+    return Double.valueOf(100.0);
   }
 
-  public static Double instanceCPU(Config config) {
-    //return config.getDoubleValue (Key.INSTANCE_CPU);
-    return Double.valueOf(5.0);
+  public static Double instanceCPU(TaskConfig config) {
+    //return config.getDoubleValue(Key.INSTANCE_CPU);
+    return Double.valueOf(10.0);
   }
 }

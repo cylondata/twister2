@@ -19,14 +19,15 @@ twister2.class.aurora.worker: "edu.iu.dsc.tws.rsched.schedulers.aurora.AuroraWor
 # ZooKeeper related config parameters
 ###################################################################################
 # ZooKeeper server ip address and port number
+# default port number is 2181, if not specified
 twister2.zookeeper.server.ip: "149.165.150.81"
-twister2.zookeeper.server.port: "2181"
+twister2.zookeeper.server.port: 2181
 
 # the root node path of this job on ZooKeeper
 # the default is "/twister2"
 #twister2.zookeeper.root.node.path: "/twister2"
 
 # if the workers want to wait for all others to join a job, max wait time in ms
-twister2.zookeeper.max.wait.time.for.all.workers.to.join: "100000"
+twister2.zookeeper.max.wait.time.for.all.workers.to.join: 100000
 
 

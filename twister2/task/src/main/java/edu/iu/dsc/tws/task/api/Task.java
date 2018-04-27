@@ -11,44 +11,34 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.api;
 
-import edu.iu.dsc.tws.data.memory.MemoryManager;
+import edu.iu.dsc.tws.common.config.Config;
 
-/**
- * Created by pulasthi on 11/6/17.
- */
 public abstract class Task implements ITask {
+  private static final long serialVersionUID = -252364900110286748L;
 
-  /**
-   * The unique id assigned to this task. This id will be used for communications
-   */
-  private int taskId;
 
-  /**
-   * Holds the memory manager associated with the task
-   */
-  private MemoryManager memoryManager;
+  @Override
+  public IMessage execute() {
+    return null;
+  }
 
-  public Task() {
+  @Override
+  public IMessage execute(IMessage content) {
+    return null;
+  }
+
+  @Override
+  public void run(IMessage content) {
 
   }
 
-  public Task(int tid) {
-    this.taskId = tid;
+  @Override
+  public void run() {
+
   }
 
-  public int getTaskId() {
-    return taskId;
-  }
+  @Override
+  public void prepare(Config cfg, TaskContext context) {
 
-  public void setTaskId(int taskId) {
-    this.taskId = taskId;
-  }
-
-  public MemoryManager getMemoryManager() {
-    return memoryManager;
-  }
-
-  public void setMemoryManager(MemoryManager memoryManager) {
-    this.memoryManager = memoryManager;
   }
 }

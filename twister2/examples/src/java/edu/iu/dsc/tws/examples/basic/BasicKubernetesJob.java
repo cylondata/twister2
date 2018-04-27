@@ -50,10 +50,10 @@ public final class BasicKubernetesJob {
    */
   public static void submitJob(Config config) {
 
-    int cpus = Integer.parseInt(AuroraContext.cpusPerContainer(config));
-    int ramMegaBytes = AuroraContext.ramPerContainer(config);
-    int diskMegaBytes = AuroraContext.diskPerContainer(config);
-    int containers = Integer.parseInt(AuroraContext.numberOfContainers(config));
+    double cpus = SchedulerContext.workerCPU(config);
+    int ramMegaBytes = SchedulerContext.workerRAM(config);
+    int workers = SchedulerContext.workerInstances(config);
+    int diskMegaBytes = AuroraContext.workerDisk(config);
     String jobName = SchedulerContext.jobName(config);
     ResourceContainer resourceContainer = new ResourceContainer(cpus, ramMegaBytes, diskMegaBytes);
 
@@ -66,7 +66,7 @@ public final class BasicKubernetesJob {
     BasicJob basicJob = BasicJob.newBuilder()
         .setName(jobName)
         .setContainerClass(containerClass)
-        .setRequestResource(resourceContainer, containers)
+        .setRequestResource(resourceContainer, workers)
         .setConfig(jobConfig)
         .build();
 
@@ -91,5 +91,4 @@ public final class BasicKubernetesJob {
     System.out.println("\tedu.iu.dsc.tws.examples.basic.BasicKubernetesJob submit");
     System.out.println("\tedu.iu.dsc.tws.examples.basic.BasicKubernetesJob terminate");
   }
-
 }

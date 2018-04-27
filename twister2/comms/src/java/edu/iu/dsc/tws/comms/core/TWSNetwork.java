@@ -17,6 +17,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
+import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.mpi.TWSMPIChannel;
 
 import mpi.MPI;
@@ -32,6 +33,24 @@ public final class TWSNetwork {
 
   private TWSCommunication dataFlowTWSCommunication;
 
+  private TWSChannel channel;
+
+  public TWSNetwork(Config cfg, int workerId) {
+    // load the network configuration
+    this.config = loadConfig(cfg);
+
+    // lets load the communication implementation
+    String communicationClass = CommunicationContext.communicationClass(config);
+    try {
+      dataFlowTWSCommunication = ReflectionUtils.newInstance(communicationClass);
+      LOG.log(Level.FINE, "Created communication with class: " + communicationClass);
+      this.channel = new TWSMPIChannel(config, MPI.COMM_WORLD, workerId);
+    } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
+      LOG.severe("Failed to load the communications class: " + communicationClass);
+      throw new RuntimeException(e);
+    }
+  }
+
   public TWSNetwork(Config cfg, TaskPlan taskPlan) {
     // load the network configuration
     this.config = loadConfig(cfg);
@@ -41,12 +60,16 @@ public final class TWSNetwork {
     try {
       dataFlowTWSCommunication = ReflectionUtils.newInstance(communicationClass);
       LOG.log(Level.FINE, "Created communication with class: " + communicationClass);
-      dataFlowTWSCommunication.init(config, taskPlan,
-          new TWSMPIChannel(config, MPI.COMM_WORLD, taskPlan.getThisExecutor()));
+      this.channel = new TWSMPIChannel(config, MPI.COMM_WORLD, taskPlan.getThisExecutor());
+      dataFlowTWSCommunication.init(config, taskPlan, channel);
     } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
       LOG.severe("Failed to load the communications class: " + communicationClass);
       throw new RuntimeException(e);
     }
+  }
+
+  public TWSChannel getChannel() {
+    return channel;
   }
 
   /**

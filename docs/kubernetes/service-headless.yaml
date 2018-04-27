@@ -1,0 +1,12 @@
+# This is the Headless Service object that is sent to Kubernetes master 
+# when creating a job without external services
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: twister2-service-<jobname>
+spec:
+  clusterIP: None
+  selector:
+    app: twister2-service-label-<jobname>
+

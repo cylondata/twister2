@@ -11,31 +11,23 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.api;
 
+import edu.iu.dsc.tws.common.config.Config;
+
 /**
  * The abstract class that represents the Last task of a job. This task will be responsible of
  * outputing the results to various output sources such as files or console.
  * The task takes inputs from another task and outputs to a output source
  */
-public abstract class SinkTask<T> extends Task {
+public abstract class SinkTask implements ISink {
+  private static final long serialVersionUID = -254264903510286748L;
 
-  /**
-   * The output sink for this task. The output will be written to this
-   */
-  private T outputSink;
+  @Override
+  public void execute(IMessage message) {
 
-  public SinkTask() {
-    super();
   }
 
-  public SinkTask(int tid) {
-    super(tid);
-  }
+  @Override
+  public void prepare(Config cfg, TaskContext context) {
 
-  public T getOutputSink() {
-    return outputSink;
-  }
-
-  public void setOutputSink(T outputSink) {
-    this.outputSink = outputSink;
   }
 }

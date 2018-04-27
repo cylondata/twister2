@@ -15,15 +15,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.core.NetworkInfo;
+import edu.iu.dsc.tws.common.net.NetworkInfo;
+import edu.iu.dsc.tws.common.net.tcp.TCPChannel;
+import edu.iu.dsc.tws.common.net.tcp.TCPContext;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.mpi.MPIDataFlowCommunication;
 import edu.iu.dsc.tws.comms.tcp.TWSTCPChannel;
-import edu.iu.dsc.tws.comms.tcp.net.TCPChannel;
-import edu.iu.dsc.tws.comms.tcp.net.TCPContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.bootstrap.WorkerInfo;
+import edu.iu.dsc.tws.rsched.bootstrap.WorkerNetworkInfo;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKController;
 
@@ -57,25 +57,25 @@ public class TCPNetwork {
     // we need to first start the server part of tcp
     // lets first start the channel
     channel = new TCPChannel(config, networkInfo);
-    channel.startFirstPhase();
+    channel.startListening();
 
     // first lets intialize the zk
-    zkController = new ZKController(config, job.getJobName(), workerUniqueId);
+    int numberOfWorkers = job.getJobResources().getNoOfContainers();
+    zkController = new ZKController(config, job.getJobName(), workerUniqueId, numberOfWorkers);
     zkController.initialize();
 
     // the amount of time to wait for all workers to join a job
     int timeLimit =  ZKContext.maxWaitTimeForAllWorkersToJoin(config);
 
-    List<WorkerInfo> workerInfoList = zkController.waitForAllWorkersToJoin(
-        job.getJobResources().getNoOfContainers(), timeLimit);
+    List<WorkerNetworkInfo> workerNetworkInfoList = zkController.waitForAllWorkersToJoin(timeLimit);
 
-    if (workerInfoList == null) {
+    if (workerNetworkInfoList == null) {
       throw new RuntimeException("Error getting the worker list from ZooKeeper");
     }
 
     List<NetworkInfo> networkInfos = new ArrayList<>();
     NetworkInfo thisNet = null;
-    for (WorkerInfo info : workerInfoList) {
+    for (WorkerNetworkInfo info : workerNetworkInfoList) {
       NetworkInfo netInfo = new NetworkInfo(info.getWorkerID());
       netInfo.addProperty(TCPContext.NETWORK_HOSTNAME, info.getWorkerIP());
       netInfo.addProperty(TCPContext.NETWORK_PORT, info.getWorkerPort());
@@ -86,7 +86,7 @@ public class TCPNetwork {
       networkInfos.add(netInfo);
     }
     // now intialize with zookeeper
-    channel.startSecondPhase(networkInfos, thisNet);
+    channel.startConnections(networkInfos, thisNet);
 
     TWSTCPChannel twstcpChannel = new TWSTCPChannel(config, taskPlan.getThisExecutor(), channel);
     // now lets create the dataflow communication

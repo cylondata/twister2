@@ -23,7 +23,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
-import edu.iu.dsc.tws.task.api.Message;
+import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.Queue;
 import edu.iu.dsc.tws.task.api.Task;
 import edu.iu.dsc.tws.task.api.TaskExecutor;
@@ -55,7 +55,7 @@ public class TaskExecutorFixedThread implements TaskExecutor {
    * Hashmap that contains all the input and output queues of the executor and its associated
    * tasks
    */
-  private Map<Integer, Queue<Message>> queues = new HashMap<Integer, Queue<Message>>();
+  private Map<Integer, Queue<IMessage>> queues = new HashMap<Integer, Queue<IMessage>>();
 
   /**
    * Reverse mapping which maps each queue id to its input task
@@ -104,7 +104,7 @@ public class TaskExecutorFixedThread implements TaskExecutor {
    * Method used to register new queues
    */
   public <T> boolean registerTaskQueue(int qid, int taskId, ExecutorContext.QueueType type,
-                                       Queue<Message> queue) {
+                                       Queue<IMessage> queue) {
     registerQueue(qid, queue);
     if (type == ExecutorContext.QueueType.INPUT) {
       if (!taskInputQueues.containsKey(taskId)) {
@@ -139,7 +139,7 @@ public class TaskExecutorFixedThread implements TaskExecutor {
     }
   }
 
-  public boolean registerQueue(int qid, Queue<Message> queue) {
+  public boolean registerQueue(int qid, Queue<IMessage> queue) {
 
     queues.put(qid, queue);
     queuexTaskInput.put(qid, new ArrayList<>());
@@ -175,7 +175,7 @@ public class TaskExecutorFixedThread implements TaskExecutor {
                               List<Integer> outputQueues) {
     LOG.info("------------------------------------------");
     LOG.info("Register Task");
-    LOG.info("Task : " + task.getTaskId());
+    LOG.info("Task : " + 0);
     LOG.info("InputQueue : " + inputQueues.size());
     LOG.info("OutputQueue : " + outputQueues.size());
     LOG.info("------------------------------------------");
@@ -183,17 +183,17 @@ public class TaskExecutorFixedThread implements TaskExecutor {
     //TODO: What happens in the queue already has data when task is registered
     if (inputQueues != null) {
       for (Integer inputQueue : inputQueues) {
-        registerTaskQueue(inputQueue, task.getTaskId(), ExecutorContext.QueueType.INPUT);
+        registerTaskQueue(inputQueue, 0, ExecutorContext.QueueType.INPUT);
       }
     }
     if (outputQueues != null) {
       for (Integer outputQueue : outputQueues) {
-        registerTaskQueue(outputQueue, task.getTaskId(), ExecutorContext.QueueType.OUTPUT);
+        registerTaskQueue(outputQueue, 0, ExecutorContext.QueueType.OUTPUT);
       }
     }
 
     //If queues are registered add the task to task map
-    taskMap.put(task.getTaskId(), task);
+    taskMap.put(0, task);
     return true;
   }
 
@@ -209,7 +209,7 @@ public class TaskExecutorFixedThread implements TaskExecutor {
     LOG.info("Message : " + message.toString());
     LOG.info("------------------------------------------------");
     synchronized (ExecutorContext.FIXED_EXECUTOR_LOCK) {
-      queues.get(qid).add(new TaskMessage<T>(message));
+      queues.get(qid).add(new TaskMessage(message));
     }
     //Add the related task to the execution queue
     for (Integer extaskid : queuexTaskInput.get(qid)) {
@@ -244,12 +244,12 @@ public class TaskExecutorFixedThread implements TaskExecutor {
 
   @Override
   public boolean submitTask(Task task) {
-    if (!taskMap.containsKey(task.getTaskId())) {
+    if (!taskMap.containsKey(0)) {
       throw new RuntimeException(String.format("Unable to locate task with task id : %d, "
-          + "Please make sure the task is registered", task.getTaskId()));
+          + "Please make sure the task is registered", 0));
     } else {
-      addRunningTask(task.getTaskId());
-      executorPool.submit(new RunnableFixedTask(taskMap.get(task.getTaskId()), this));
+      addRunningTask(0);
+      executorPool.submit(new RunnableFixedTask(taskMap.get(0), this));
     }
     return true;
   }

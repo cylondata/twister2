@@ -15,6 +15,7 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -200,4 +201,60 @@ public final class TarGzipPacker {
       e.printStackTrace();
     }
   }
+
+  /**
+   * unpack the received job package
+   * job package needs to be a tar.gz package
+   * it unpacks to the directory where the job package resides
+   * @param sourceGzip
+   * @return
+   */
+  public static boolean unpack(final String sourceGzip) {
+
+    File sourceGzipFile = new File(sourceGzip);
+    File outputDir = sourceGzipFile.getParentFile();
+
+    GzipCompressorInputStream gzIn = null;
+    TarArchiveInputStream tarInputStream = null;
+
+    try {
+      // construct input stream
+      InputStream fin = Files.newInputStream(Paths.get(sourceGzip));
+      BufferedInputStream in = new BufferedInputStream(fin);
+      gzIn = new GzipCompressorInputStream(in);
+      tarInputStream = new TarArchiveInputStream(gzIn);
+
+      TarArchiveEntry entry = null;
+
+      while ((entry = (TarArchiveEntry) tarInputStream.getNextEntry()) != null) {
+
+        File outputFile = new File(outputDir, entry.getName());
+        if (!outputFile.getParentFile().exists()) {
+          boolean dirCreated = outputFile.getParentFile().mkdirs();
+          if (!dirCreated) {
+            LOG.severe("Can not create the output directory: " + outputFile.getParentFile()
+                + "\nFile unpack is unsuccessful.");
+            return false;
+          }
+        }
+
+        if (!outputFile.isDirectory()) {
+          final OutputStream outputFileStream = new FileOutputStream(outputFile);
+          IOUtils.copy(tarInputStream, outputFileStream);
+          outputFileStream.close();
+//          LOG.info("Unpacked the file: " + outputFile.getAbsolutePath());
+        }
+      }
+
+      tarInputStream.close();
+      gzIn.close();
+      return true;
+
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Exception when unpacking job package. ", e);
+      return false;
+    }
+  }
+
+
 }

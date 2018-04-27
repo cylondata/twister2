@@ -37,8 +37,7 @@ public class MPIController implements IController {
   private Config config;
   private String workingDirectory;
   private boolean node = true;
-  private MPICommand
-      command;
+  private MPICommand command;
 
   @Override
   public void initialize(Config mConfig) {
@@ -71,8 +70,8 @@ public class MPIController implements IController {
       return false;
     }
     long containers = resourcePlan.getNoOfContainers();
-    LOG.log(Level.INFO, "Launching job in Slurm scheduler with no of containers = "
-        + containers);
+    LOG.log(Level.INFO, String.format("Launching job in %s scheduler with no of containers = %d",
+        MPIContext.clusterType(config), containers));
 
     String jobDirectory = Paths.get(this.workingDirectory, job.getJobName()).toString();
     boolean jobCreated = createJob(this.workingDirectory, jobDirectory, resourcePlan, job);
@@ -109,13 +108,13 @@ public class MPIController implements IController {
   public boolean createJob(String jobWorkingDirectory, String twister2Home,
                            RequestedResources resources, JobAPI.Job job) {
     // get the command to run the job on Slurm cluster
-    List<String> slurmCmd = command.mpiCommand(jobWorkingDirectory, resources, job);
+    List<String> cmds = command.mpiCommand(jobWorkingDirectory, resources, job);
 
     // change the empty strings of command args to "", because batch
     // doesn't recognize space as an arguments
     List<String> transformedArgs = new ArrayList<>();
-    for (int i = 0; i < slurmCmd.size(); i++) {
-      String arg = slurmCmd.get(i);
+    for (int i = 0; i < cmds.size(); i++) {
+      String arg = cmds.get(i);
       if (arg == null || arg.trim().equals("")) {
         transformedArgs.add("\"\"");
       } else {
@@ -124,7 +123,7 @@ public class MPIController implements IController {
     }
     // add the args to the command
     String[] cmdArray = transformedArgs.toArray(new String[0]);
-    LOG.log(Level.INFO, "Executing job [" + jobWorkingDirectory + "]:",
+    LOG.log(Level.FINE, "Executing job [" + jobWorkingDirectory + "]:",
         Arrays.toString(cmdArray));
     StringBuilder stderr = new StringBuilder();
     return runProcess(twister2Home, cmdArray, stderr);
@@ -136,6 +135,6 @@ public class MPIController implements IController {
   protected boolean runProcess(String jobWorkingDirectory, String[] slurmCmd,
                                StringBuilder stderr) {
     File file = jobWorkingDirectory == null ? null : new File(jobWorkingDirectory);
-    return 0 == ProcessUtils.runSyncProcess(false, slurmCmd, stderr, file, false);
+    return 0 == ProcessUtils.runSyncProcess(false, slurmCmd, stderr, file, true);
   }
 }

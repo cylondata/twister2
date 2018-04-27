@@ -33,20 +33,10 @@ public class PingPongCommunication implements IContainer {
   private static final Logger LOG = Logger.getLogger(PingPongCommunication.class.getName());
 
   private DataFlowOperation direct;
-
-  private enum Status {
-    INIT,
-    MAP_FINISHED,
-    LOAD_RECEIVE_FINISHED,
-  }
-
   private Status status;
 
   /**
    * Initialize the container
-   * @param cfg
-   * @param containerId
-   * @param plan
    */
   public void init(Config cfg, int containerId, ResourcePlan plan) {
     LOG.log(Level.INFO, "Starting the example with container id: " + plan.getThisId());
@@ -95,8 +85,28 @@ public class PingPongCommunication implements IContainer {
     }
   }
 
+  /**
+   * Generate data with an integer array
+   *
+   * @return IntData
+   */
+  private IntData generateData() {
+    int[] d = new int[10];
+    for (int i = 0; i < 10; i++) {
+      d[i] = i;
+    }
+    return new IntData(d);
+  }
+
+  private enum Status {
+    INIT,
+    MAP_FINISHED,
+    LOAD_RECEIVE_FINISHED,
+  }
+
   private class PingPongReceive implements MessageReceiver {
     private int count = 0;
+
     @Override
     public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     }
@@ -124,6 +134,7 @@ public class PingPongCommunication implements IContainer {
    */
   private class MapWorker implements Runnable {
     private int sendCount = 0;
+
     @Override
     public void run() {
       LOG.log(Level.INFO, "Starting map worker");
@@ -145,16 +156,4 @@ public class PingPongCommunication implements IContainer {
     }
   }
 
-  /**
-   * Generate data with an integer array
-   *
-   * @return IntData
-   */
-  private IntData generateData() {
-    int[] d = new int[10];
-    for (int i = 0; i < 10; i++) {
-      d[i] = i;
-    }
-    return new IntData(d);
-  }
 }

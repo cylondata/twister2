@@ -39,7 +39,7 @@ public final class ZKUtil {
   public static CuratorFramework connectToServer(Config config) {
 
     String zkServerAddress = ZKContext.zooKeeperServerIP(config);
-    String zkServerPort = ZKContext.zooKeeperServerPort(config);
+    int zkServerPort = ZKContext.zooKeeperServerPort(config);
     String zkServer = zkServerAddress + ":" + zkServerPort;
 
     try {

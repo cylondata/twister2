@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.task.core;
 
 import java.util.List;
 
-import edu.iu.dsc.tws.task.api.Message;
+import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.Task;
 
 /**
@@ -22,11 +22,10 @@ import edu.iu.dsc.tws.task.api.Task;
  * the next task in the pipline without having to submit messages to the queue.
  */
 public class PipelinedTask extends Task {
-
+  private static final long serialVersionUID = -254212900110286748L;
   private List<Task> piplinedTaskList;
 
   public PipelinedTask(int tid, List<Task> taskList) {
-    super(tid);
     if (taskList == null || taskList.isEmpty()) {
       throw new RuntimeException("PipelinedTask cannot be initiated with a null or "
           + "empty task list");
@@ -35,12 +34,12 @@ public class PipelinedTask extends Task {
   }
 
   @Override
-  public Message execute() {
+  public IMessage execute() {
     return executePipeline();
   }
 
   @Override
-  public Message execute(Message content) {
+  public IMessage execute(IMessage content) {
     return executePipeline(content);
   }
 
@@ -50,7 +49,7 @@ public class PipelinedTask extends Task {
    *
    * @return the result returned from the last task in the task list
    */
-  private Message executePipeline() {
+  private IMessage executePipeline() {
     return executePipeline(null);
   }
 
@@ -59,8 +58,8 @@ public class PipelinedTask extends Task {
    *
    * @return the result returned from the last task in the task list
    */
-  private Message executePipeline(Message content) {
-    Message intermediateResult = content;
+  private IMessage executePipeline(IMessage content) {
+    IMessage intermediateResult = content;
     for (Task task : piplinedTaskList) {
       if (intermediateResult == null) {
         intermediateResult = task.execute();

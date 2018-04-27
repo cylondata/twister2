@@ -10,23 +10,39 @@ twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.NullUploader"
 # twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader"
 
 # container class to run in workers
-twister2.job.basic.container.class: "edu.iu.dsc.tws.examples.basic.BasicAuroraContainer"
+twister2.job.basic.container.class: "edu.iu.dsc.tws.examples.basic.BasicK8sWorker"
 
-# the Aurora worker class
-# twister2.class.aurora.worker: "edu.iu.dsc.tws.rsched.schedulers.k8s.XXXWorker"
+# image pull policy, by default is IfNotPresent
+# it could also be Always
+kubernetes.image.pull.policy: "Always"
 
-###################################################################################
-# ZooKeeper related config parameters
-###################################################################################
-# ZooKeeper server ip address and port number
-twister2.zookeeper.server.ip: "149.165.150.81"
-twister2.zookeeper.server.port: "2181"
+# Statically bind workers to CPUs
+# Workers do not move from the CPU they are started during computation
+# twister2.cpu_per_container has to be an integer
+# by default, its value is false
+# kubernetes.bind.worker.to.cpu: true
 
-# the root node path of this job on ZooKeeper
-# the default is "/twister2"
-#twister2.zookeeper.root.node.path: "/twister2"
+# kubernetes can map workers to nodes as specified by the user
+# default value is false
+# kubernetes.worker.to.node.mapping: true
 
-# if the workers want to wait for all others to join a job, max wait time in ms
-twister2.zookeeper.max.wait.time.for.all.workers.to.join: "100000"
+# the label key on the nodes that will be used to map workers to nodes
+kubernetes.worker.mapping.key: "kubernetes.io/hostname"
+
+# operator to use when mapping workers to nodes based on key value
+# possible values: In, NotIn, Exists, DoesNotExist, Gt, Lt
+# Exists/DoesNotExist checks only the existence of the specified key in the node.
+# Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#node-affinity-beta-feature
+kubernetes.worker.mapping.operator: "In"
+
+# values for the mapping key
+# when the mapping operator is either Exists or DoesNotExist, values list must be empty.
+kubernetes.worker.mapping.values: ['e012', 'e013']
+# kubernetes.worker.mapping.values: []
+
+# unifrom worker mapping
+# Valid values: all-same-node, all-separate-nodes, none
+# default value is none
+# kubernetes.worker.mapping.uniform: "all-same-node"
 
 
