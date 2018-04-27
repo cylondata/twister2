@@ -107,6 +107,7 @@ public class MPIMessageDeSerializer implements MessageDeSerializer {
     }
   }
 
+  @SuppressWarnings("unchecked")
   private Object buildMessage(MPIMessage message) {
     MessageType type = message.getType();
 
@@ -117,11 +118,20 @@ public class MPIMessageDeSerializer implements MessageDeSerializer {
       Pair<Integer, Object> keyPair = KeyDeserializer.deserializeKey(message.getKeyType(),
           message.getBuffers(), serializer);
       MessageType keyType = message.getKeyType();
+      Object data;
+      List<ImmutablePair<byte[], byte[]>> results;
 
       if (MessageTypeUtils.isMultiMessageType(keyType)) {
-        return DataDeserializer.deserializeData(message.getBuffers(),
+        List<byte[]> keyList = (List<byte[]>) keyPair.getValue();
+        data = DataDeserializer.deserializeData(message.getBuffers(),
             message.getHeader().getLength() - keyPair.getKey() - 4 - 4, serializer, type,
             ((List) keyPair.getValue()).size());
+        List<byte[]> dataList = (List<byte[]>) data;
+        results = new ArrayList<>();
+        for (int i = 0; i < keyList.size(); i++) {
+          results.add(new ImmutablePair<>(keyList.get(i), dataList.get(i)));
+        }
+        return results;
       } else if (!MessageTypeUtils.isPrimitiveType(keyType)) {
         return DataDeserializer.deserializeData(message.getBuffers(),
             message.getHeader().getLength() - keyPair.getKey() - 4, serializer, type);
