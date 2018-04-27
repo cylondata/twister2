@@ -97,6 +97,9 @@ public class OperationMemoryManager {
     return memoryManager.put(operationID, key, value);
   }
 
+  public boolean put(byte[] key, byte[] data) {
+    return memoryManager.put(operationID, key, data);
+  }
   /*public boolean put(byte[] key, ByteBuffer value) {
     return memoryManager.put(operationID, key, value);
   }
@@ -211,6 +214,10 @@ public class OperationMemoryManager {
 
   public boolean flush(ByteBuffer key) {
     return memoryManager.flush(operationID, key);
+  }
+
+  public boolean flush() {
+    return memoryManager.flush(operationID);
   }
 
   /*public boolean flush(byte[] key) {

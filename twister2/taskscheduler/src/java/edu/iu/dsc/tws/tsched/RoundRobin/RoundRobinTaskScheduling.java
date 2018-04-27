@@ -50,8 +50,6 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
     this.instanceRAM = TaskSchedulerContext.taskInstanceRam(cfg);
     this.instanceDisk = TaskSchedulerContext.taskInstanceDisk(cfg);
     this.instanceCPU = TaskSchedulerContext.taskInstanceCpu(cfg);
-
-    LOG.info("*******************" + TaskSchedulerContext.defaultTaskInstancesPerContainer(cfg));
   }
 
   @Override
@@ -80,13 +78,6 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
             taskVertexSet);
 
     for (int containerId : roundRobinContainerInstanceMap.keySet()) {
-      LOG.info("Container Id::::" + containerId);
-      /*AtomicReference<Double> containerRAMValue =
-          new AtomicReference<>(DEFAULT_RAM_PADDING_PER_CONTAINER);
-      AtomicReference<Double> containerDiskValue =
-          new AtomicReference<>(DEFAULT_DISK_PADDING_PER_CONTAINER);
-      AtomicReference<Double> containerCPUValue =
-          new AtomicReference<>(DEFAULT_CPU_PADDING_PER_CONTAINER);*/
 
       /*Double containerRAMValue = TaskSchedulerContext.containerInstanceRam(cfg);
       Double containerDiskValue = TaskSchedulerContext.containerInstanceDisk(cfg);
@@ -104,19 +95,15 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
         double instanceDiskValue = instancesDiskMap.get(containerId).get(id);
         double instanceCPUValue = instancesCPUMap.get(containerId).get(id);
 
-        LOG.info(String.format("Task Id and Index\t" + id.getTaskId() + "\t" + id.getTaskIndex()
+        /*LOG.info(String.format("Task Id and Index\t" + id.getTaskId() + "\t" + id.getTaskIndex()
             + "\tand Required Resource:" + instanceRAMValue + "\t" //write into a log file
-            + instanceDiskValue + "\t" + instanceCPUValue));
+            + instanceDiskValue + "\t" + instanceCPUValue));*/
 
         Resource instanceResource = new Resource(instanceRAMValue,
             instanceDiskValue, instanceCPUValue);
 
         taskInstancePlanMap.put(id, new TaskSchedulePlan.TaskInstancePlan(
                 id.getTaskName(), id.getTaskId(), id.getTaskIndex(), instanceResource));
-
-        /*containerRAMValue.updateAndGet(v -> v + instanceRAMValue);
-        containerDiskValue.updateAndGet(v -> v + instanceDiskValue);
-        containerCPUValue.updateAndGet(v -> v + instanceCPUValue);*/
 
         containerRAMValue += instanceRAMValue;
         containerDiskValue += instanceDiskValue;

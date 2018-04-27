@@ -301,17 +301,17 @@ maven_jar(
 
 maven_jar(
   name = "com_fasterxml_jackson_core_jackson_annotations",
-  artifact = "com.fasterxml.jackson.core:jackson-annotations:" + jackson_version,
+  artifact = "com.fasterxml.jackson.core:jackson-annotations:2.8.8",
 )
 
 maven_jar(
   name = "com_fasterxml_jackson_core_jackson_core",
-  artifact = "com.fasterxml.jackson.core:jackson-core:" + jackson_version,
+  artifact = "com.fasterxml.jackson.core:jackson-core:2.8.8",
 )
 
 maven_jar(
   name = "com_fasterxml_jackson_core_jackson_databind",
-  artifact = "com.fasterxml.jackson.core:jackson-databind:" + jackson_version,
+  artifact = "com.fasterxml.jackson.core:jackson-databind:2.8.8",
 )
 
 maven_jar(

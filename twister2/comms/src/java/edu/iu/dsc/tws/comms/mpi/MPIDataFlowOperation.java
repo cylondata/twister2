@@ -24,6 +24,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 
+import com.google.common.primitives.Ints;
+
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -557,18 +559,26 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
           if (!receiver.passMessageDownstream(object, currentMessage)) {
             break;
           }
+
+          if (currentMessage.getReceivedState() != MPIMessage.ReceivedState.RECEIVE) {
+            currentMessage.release();
+          }
           currentMessage.setReceivedState(MPIMessage.ReceivedState.RECEIVE);
           if (!receiver.receiveMessage(currentMessage, object)) {
             break;
           }
-          currentMessage.release();
+          //currentMessage.release();
           pendingReceiveMessages.poll();
         } else if (state == MPIMessage.ReceivedState.RECEIVE) {
           currentMessage.setReceivedState(MPIMessage.ReceivedState.RECEIVE);
+
+          if (currentMessage.getReceivedState() != MPIMessage.ReceivedState.RECEIVE) {
+            currentMessage.release();
+          }
           if (!receiver.receiveMessage(currentMessage, object)) {
             break;
           }
-          currentMessage.release();
+          //currentMessage.release();
           pendingReceiveMessages.poll();
         }
       } finally {
@@ -629,8 +639,8 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
     if (mpiSendMessage.getSerializationState() == null) {
       mpiSendMessage.setSerializationState(new SerializeState());
     }
-    ByteBuffer tempData;
-    ByteBuffer tempKey;
+//    ByteBuffer tempData;
+//    ByteBuffer tempKey;
 
     if (isKeyed) {
       KeyedContent kc = (KeyedContent) messageObject;
@@ -639,37 +649,36 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
             mpiSendMessage.getSerializationState(), keyType, kryoSerializer);
         List<byte[]> data = DataSerializer.getserializedMultiData(kc.getObject(), type,
             mpiSendMessage.getSerializationState(), kryoSerializer);
-        setupThreadLocalBuffers(keys.get(0).length, data.get(0).length, type);
+        //setupThreadLocalBuffers(keys.get(0).length, data.get(0).length, type);
 
-        tempData = threadLocalDataBuffer.get();
-        tempKey = threadLocalKeyBuffer.get();
+//        tempData = threadLocalDataBuffer.get();
+//        tempKey = threadLocalKeyBuffer.get();
         for (int i = 0; i < keys.size(); i++) {
-          tempKey.put(keys.get(i));
-          tempData.putInt(data.get(i).length);
-          tempData.put(data.get(i));
-          operationMemoryManager.put(tempKey, tempData);
-          tempKey.clear();
-          tempData.clear();
-        }
+//          tempKey.put(keys.get(i));
+//          tempData.putInt(data.get(i).length);
+//          tempData.put(data.get(i));
 
+          operationMemoryManager.put(keys.get(i), data.get(i));
+//          tempKey.clear();
+//          tempData.clear();
+        }
       } else {
         byte[] keyBytes = KeySerializer.getserializedKey(kc.getSource(),
             mpiSendMessage.getSerializationState(), keyType, kryoSerializer);
 
         int dataLength = DataSerializer.serializeData(kc.getObject(), type,
             mpiSendMessage.getSerializationState(), kryoSerializer);
-        setupThreadLocalBuffers(keyBytes.length, dataLength, type);
+//        setupThreadLocalBuffers(keyBytes.length, dataLength, type);
+//
+//        tempData = threadLocalDataBuffer.get();
+//        tempKey = threadLocalKeyBuffer.get();
 
-        tempData = threadLocalDataBuffer.get();
-        tempKey = threadLocalKeyBuffer.get();
-
-        tempKey.put(keyBytes);
-        tempKey.flip();
-        DataSerializer.getserializedData(kc.getObject(), type,
-            mpiSendMessage.getSerializationState(), kryoSerializer, tempData);
-        operationMemoryManager.put(tempKey, tempData);
+//        tempKey.put(keyBytes);
+//        tempKey.flip();
+        byte[] dataBytes = DataSerializer.getserializedData(kc.getObject(), type,
+            mpiSendMessage.getSerializationState(), kryoSerializer);
+        operationMemoryManager.put(keyBytes, dataBytes);
       }
-      return true;
     } else {
       //if this is not a keyed operation we will use the source task id as the key
       //Will be implmented after further looking into the use case
@@ -677,16 +686,17 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
       int dataLength = DataSerializer.serializeData(messageObject, type,
           mpiSendMessage.getSerializationState(), kryoSerializer);
 
-      setupThreadLocalBuffers(Integer.BYTES, dataLength, type);
+//      setupThreadLocalBuffers(Integer.BYTES, dataLength, type);
 
-      tempData = threadLocalDataBuffer.get();
-      tempKey = threadLocalKeyBuffer.get();
-      tempKey.putInt(key);
-      DataSerializer.getserializedData(messageObject, type,
-          mpiSendMessage.getSerializationState(), kryoSerializer, tempData);
+//      tempData = threadLocalDataBuffer.get();
+//      tempKey = threadLocalKeyBuffer.get();
+//      tempKey.putInt(key);
+      byte[] dataBytes = DataSerializer.getserializedData(messageObject, type,
+          mpiSendMessage.getSerializationState(), kryoSerializer);
       //TODO : need to generate operation key and use it
-      return operationMemoryManager.put(tempKey, tempData);
+      operationMemoryManager.put(Ints.toByteArray(key), dataBytes);
     }
+    return true;
   }
 
   /**
@@ -741,57 +751,58 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
       isList = true;
     }
 
-    ByteBuffer tempData;
-    ByteBuffer tempKey;
-
+//    ByteBuffer tempData;
+//    ByteBuffer tempKey;
+    ImmutablePair<byte[], byte[]> tempPair;
+    byte[] dataBytes;
     if (isList) {
       List objectList = (List) data;
       for (Object message : objectList) {
         if (isKeyed) {
-          ImmutablePair<byte[], byte[]> tempPair = (ImmutablePair<byte[], byte[]>) message;
-          setupThreadLocalBuffers(tempPair.getKey().length, tempPair.getValue().length,
-              currentMessage.getType());
+          tempPair = (ImmutablePair<byte[], byte[]>) message;
+//          setupThreadLocalBuffers(tempPair.getKey().length, tempPair.getValue().length,
+//          currentMessage.getType());
 
-          tempData = threadLocalDataBuffer.get();
-          tempKey = threadLocalKeyBuffer.get();
-
-          tempKey.put(tempPair.getKey());
-          tempData.putInt(tempPair.getValue().length);
-          tempData.put(tempPair.getValue());
-          operationMemoryManager.put(tempKey, tempData);
+//          tempData = threadLocalDataBuffer.get();
+//          tempKey = threadLocalKeyBuffer.get();
+//
+//          tempKey.put(tempPair.getKey());
+//          tempData.putInt(tempPair.getValue().length);
+//          tempData.put(tempPair.getValue());
+          operationMemoryManager.put(tempPair.getKey(), tempPair.getValue());
         } else {
-          byte[] dataBytes = (byte[]) message;
-          setupThreadLocalBuffers(4, dataBytes.length, currentMessage.getType());
-          tempData = threadLocalDataBuffer.get();
-          tempKey = threadLocalKeyBuffer.get();
-
-          tempKey.putInt(sourceID);
-          tempData.put(dataBytes);
-          operationMemoryManager.put(tempKey, tempData);
+          dataBytes = (byte[]) message;
+//          setupThreadLocalBuffers(4, dataBytes.length, currentMessage.getType());
+//          tempData = threadLocalDataBuffer.get();
+//          tempKey = threadLocalKeyBuffer.get();
+//
+//          tempKey.putInt(sourceID);
+//          tempData.put(dataBytes);
+          operationMemoryManager.put(Ints.toByteArray(sourceID), dataBytes);
         }
       }
     } else {
       if (isKeyed) {
-        Pair<byte[], byte[]> tempPair = (Pair<byte[], byte[]>) data;
-        setupThreadLocalBuffers(tempPair.getKey().length, tempPair.getValue().length,
-            currentMessage.getType());
-
-        tempData = threadLocalDataBuffer.get();
-        tempKey = threadLocalKeyBuffer.get();
-
-        tempKey.put(tempPair.getKey());
-        tempData.putInt(tempPair.getValue().length);
-        tempData.put(tempPair.getValue());
-        operationMemoryManager.put(tempKey, tempData);
+        tempPair = (ImmutablePair<byte[], byte[]>) data;
+//        setupThreadLocalBuffers(tempPair.getKey().length, tempPair.getValue().length,
+//            currentMessage.getType());
+//
+//        tempData = threadLocalDataBuffer.get();
+//        tempKey = threadLocalKeyBuffer.get();
+//
+//        tempKey.put(tempPair.getKey());
+//        tempData.putInt(tempPair.getValue().length);
+//        tempData.put(tempPair.getValue());
+        operationMemoryManager.put(tempPair.getKey(), tempPair.getValue());
       } else {
-        byte[] dataBytes = (byte[]) data;
-        setupThreadLocalBuffers(4, dataBytes.length, currentMessage.getType());
-        tempData = threadLocalDataBuffer.get();
-        tempKey = threadLocalKeyBuffer.get();
-
-        tempKey.putInt(sourceID);
-        tempData.put(dataBytes);
-        operationMemoryManager.put(tempKey, tempData);
+        dataBytes = (byte[]) data;
+//        setupThreadLocalBuffers(4, dataBytes.length, currentMessage.getType());
+//        tempData = threadLocalDataBuffer.get();
+//        tempKey = threadLocalKeyBuffer.get();
+//
+//        tempKey.putInt(sourceID);
+//        tempData.put(dataBytes);
+        operationMemoryManager.put(Ints.toByteArray(sourceID), dataBytes);
       }
     }
   }
@@ -924,7 +935,6 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
       //TODO : need to make the memory manager available globally
       opertionID = (int) System.currentTimeMillis();
       this.kryoSerializer = new KryoSerializer();
-//      Path dataPath = new Path("/scratch/pulasthi/terasort/lmdbdatabase_" + this.executor);
       Path dataPath = new Path(MPIContext.networkStoragePath(config)
           + " /lmdbdatabase_" + this.executor);
       this.memoryManager = new LMDBMemoryManager(dataPath);

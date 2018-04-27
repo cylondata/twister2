@@ -54,6 +54,7 @@ public interface MemoryManager {
    */
   boolean put(int opID, ByteBuffer key, ByteBuffer value);
 
+  boolean put(int opID, byte[] key, byte[] data);
   /**
    * Stores the give key value pair in the memory manager
    * if the key already exists the new value will be added to the key
@@ -216,6 +217,7 @@ public interface MemoryManager {
 
   boolean flush(int opID, String key);
 
+  boolean flush(int opID);
   /*<T extends Serializable> boolean flush(int opID, T key);*/
 
   /**
