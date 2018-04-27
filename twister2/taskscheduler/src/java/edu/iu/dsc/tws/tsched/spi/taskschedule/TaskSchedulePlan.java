@@ -58,11 +58,11 @@ public class TaskSchedulePlan {
     return new Resource(maxRam, maxDisk, maxCpu);
   }
 
-  public int getJobId() {
+  public int getTaskSchedulePlanId() {
     return jobId;
   }
 
-  public void setJobId(int id) {
+  public void setTaskSchedulePlanId(int id) {
     this.jobId = id;
   }
 
@@ -103,7 +103,7 @@ public class TaskSchedulePlan {
 
     TaskSchedulePlan that = (TaskSchedulePlan) o;
 
-    return (getJobId() == that.getJobId())
+    return (getTaskSchedulePlanId() == that.getTaskSchedulePlanId())
         && getContainers().equals(that.getContainers());
   }
 

@@ -30,8 +30,8 @@ public final class TaskConfig {
   public static double containerMaxDiskValue = 1000.00;
   public static int taskParallel = 2;
 
-  public static String schedulingMode = "RoundRobin";
-  //public static String schedulingMode = "FirstFit";
+  public static String schedulingMode = "roundrobin";
+  //public static String schedulingMode = "firstfit";
 
   public TaskConfig() {
   }

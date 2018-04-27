@@ -96,14 +96,15 @@ public class TaskAttributes {
   public HashMap<String, Integer> getParallelTaskMap(Set<Vertex> iTaskSet) {
 
     HashMap<String, Integer> parallelTaskMap = new HashMap<>();
+
     try {
       for (Vertex task : iTaskSet) {
         Config config = task.getConfig();
         String taskName = task.getName();
-        Integer parallelTaskCount = 0;
-        if (task.getParallelism() > 1) {
+        Integer parallelTaskCount;
+        if (task.getParallelism() >= 1) {
           parallelTaskCount = task.getParallelism();
-        } else {
+        } else { //if (task.getParallelism() < 1) {
           parallelTaskCount = TaskSchedulerContext.taskParallelism(config);
         }
         parallelTaskMap.put(taskName, parallelTaskCount);

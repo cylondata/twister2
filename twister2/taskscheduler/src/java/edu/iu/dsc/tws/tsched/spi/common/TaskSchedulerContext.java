@@ -17,8 +17,9 @@ import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 public class TaskSchedulerContext extends SchedulerContext {
 
   public static final String TWISTER2_TASK_SCHEDULING_MODE = "twister2.class.task.taskscheduler";
-  public static final String TWISTER2_TASK_SCHEDULING_MODE_DEFAULT = "RoundRobin";
-  //public static final String TWISTER2_TASK_SCHEDULING_MODE_DEFAULT = "FirstFit";
+  public static final String TWISTER2_TASK_SCHEDULING_MODE_DEFAULT = "roundrobin";
+  //public static final String TWISTER2_TASK_SCHEDULING_MODE_DEFAULT = "firstfit";
+  //public static final String TWISTER2_TASK_SCHEDULING_MODE_DEFAULT = "datalocalityaware";
 
   public static final String TWISTER2_TASK_INSTANCE_RAM = "twister2.task.instance.ram";
   public static final double TWISTER2_TASK_INSTANCE_RAM_DEFAULT = 512.0;
