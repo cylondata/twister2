@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.tsched.RoundRobin;
+package edu.iu.dsc.tws.tsched.roundrobin;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -36,12 +36,10 @@ import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 public class RoundRobinTaskScheduling implements TaskSchedule {
 
   private static final Logger LOG = Logger.getLogger(RoundRobinTaskScheduling.class.getName());
-
+  protected static int taskSchedulePlanId = 0;
   private Double instanceRAM;
   private Double instanceDisk;
   private Double instanceCPU;
-  private Resource containerMaximumResource;
-  private Resource defaultResource;
   private Config cfg;
 
   @Override
@@ -103,7 +101,7 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
             instanceDiskValue, instanceCPUValue);
 
         taskInstancePlanMap.put(id, new TaskSchedulePlan.TaskInstancePlan(
-                id.getTaskName(), id.getTaskId(), id.getTaskIndex(), instanceResource));
+            id.getTaskName(), id.getTaskId(), id.getTaskIndex(), instanceResource));
 
         containerRAMValue += instanceRAMValue;
         containerDiskValue += instanceDiskValue;
@@ -116,16 +114,16 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
       if (worker != null && worker.getCpu() > 0 && worker.getDisk() > 0 && worker.getRam() > 0) {
         containerResource = new Resource((double) worker.getRam(),
             (double) worker.getDisk(), (double) worker.getCpu());
-        /*LOG.info(String.format("Worker (if loop):" + containerId + "\tRam:"
+        LOG.fine(String.format("Worker (if loop):" + containerId + "\tRam:"
             + worker.getRam() + "\tDisk:" + worker.getDisk()  //write into a log file
-            + "\tCpu:" + worker.getCpu()));*/
+            + "\tCpu:" + worker.getCpu()));
       } else {
         containerResource = new Resource(containerRAMValue, containerDiskValue,
             containerCpuValue);
-        /*LOG.info(String.format("Worker (else loop):" + containerId
+        LOG.fine(String.format("Worker (else loop):" + containerId
             + "\tRam:" + containerRAMValue     //write into a log file
             + "\tDisk:" + containerDiskValue
-            + "\tCpu:" + containerCpuValue));*/
+            + "\tCpu:" + containerCpuValue));
       }
 
       TaskSchedulePlan.ContainerPlan taskContainerPlan =
@@ -133,8 +131,8 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
               new HashSet<>(taskInstancePlanMap.values()), containerResource);
       containerPlans.add(taskContainerPlan);
     }
-    //return new TaskSchedulePlan(job.getJobId(), containerPlans);
-    return new TaskSchedulePlan(1, containerPlans); //id would be taskgraphid/jobid
+    //new TaskSchedulePlan(job.getJobId(), containerPlans);
+    return new TaskSchedulePlan(taskSchedulePlanId, containerPlans);
   }
 
   @Override

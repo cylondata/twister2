@@ -33,7 +33,7 @@ import edu.iu.dsc.tws.task.api.SourceTask;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
-import edu.iu.dsc.tws.tsched.RoundRobin.RoundRobinTaskScheduling;
+import edu.iu.dsc.tws.tsched.roundrobin.RoundRobinTaskScheduling;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;

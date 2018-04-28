@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.tsched.RoundRobin;
+package edu.iu.dsc.tws.tsched.roundrobin;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -48,10 +48,13 @@ public class RoundRobinScheduling {
         for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
           String task = e.getKey();
           int numberOfInstances = e.getValue();
-          int containerIndex = 0;
+          int containerIndex;
           for (int i = 0; i < numberOfInstances; i++) {
             containerIndex = i % numberOfContainers;
             roundrobinAllocation.get(containerIndex).add(new InstanceId(task, globalTaskIndex, i));
+            LOG.info("Task Name:" + task + "(" + containerIndex + " )"
+                + "\tNumber Of instances:" + numberOfInstances
+                + "\tTaskIndex:" + containerIndex);
           }
           globalTaskIndex++;
         }

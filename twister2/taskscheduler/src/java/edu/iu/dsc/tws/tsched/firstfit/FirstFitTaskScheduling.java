@@ -21,7 +21,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.tsched.FirstFit;
+package edu.iu.dsc.tws.tsched.firstfit;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -51,9 +51,6 @@ public class FirstFitTaskScheduling implements TaskSchedule {
 
   private static final Logger LOG = Logger.getLogger(FirstFitTaskScheduling.class.getName());
 
-  private static final int DEFAULT_CONTAINER_PADDING_PERCENTAGE = 1;
-  private static final int DEFAULT_NUMBER_INSTANCES_PER_CONTAINER = 4;
-
   private TaskConfig config;
   private Resource defaultResourceValue;
   private Resource maximumContainerResourceValue;
@@ -73,7 +70,6 @@ public class FirstFitTaskScheduling implements TaskSchedule {
   /**
    * This method initialize the config values received from the user and set
    * the default instance value and container maximum value.
-   * @param cfg1
    */
   public void initialize(Config cfg1) {
 
