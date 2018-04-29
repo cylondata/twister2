@@ -12,7 +12,9 @@
 package edu.iu.dsc.tws.master;
 
 import java.io.Serializable;
+import java.util.logging.Logger;
 
 public class CheckpointProperties implements Serializable {
   private static final long serialVersionUID = 2L;
+  private static final Logger LOG = Logger.getLogger(CheckpointProperties.class.getName());
 }

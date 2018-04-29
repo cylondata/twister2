@@ -11,9 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.master.messages;
 
+import java.util.logging.Logger;
+
 public class AcknowledgeCheckpoint extends AbstractCheckpointMessage {
 
   private static final long serialVersionUID = -7606214777192401493L;
+
+  private static final Logger LOG = Logger.getLogger(AcknowledgeCheckpoint.class.getName());
 
   // ------------------------------------------------------------------------
 

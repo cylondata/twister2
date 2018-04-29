@@ -11,10 +11,14 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.master.messages;
 
+import java.util.logging.Logger;
+
 import edu.iu.dsc.tws.master.CheckpointOptions;
 
 public class TriggerCheckpoint extends AbstractCheckpointMessage {
   private static final long serialVersionUID = 2094094662279578953L;
+
+  private static final Logger LOG = Logger.getLogger(TriggerCheckpoint.class.getName());
 
   /** The timestamp associated with the checkpoint */
   private final long timestamp;

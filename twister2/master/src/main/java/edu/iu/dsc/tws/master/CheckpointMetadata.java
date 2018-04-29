@@ -11,6 +11,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.master;
 
+import java.util.logging.Logger;
+
 public class CheckpointMetadata implements java.io.Serializable {
   private static final long serialVersionUID = -2387652345781312442L;
+
+  private static final Logger LOG = Logger.getLogger(CheckpointMetadata.class.getName());
 }

@@ -11,5 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.master;
 
+import java.util.logging.Logger;
+
 public class CheckpointOptions {
+  private static final Logger LOG = Logger.getLogger(CheckpointOptions.class.getName());
 }
