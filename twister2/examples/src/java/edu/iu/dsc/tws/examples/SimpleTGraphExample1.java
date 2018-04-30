@@ -35,8 +35,9 @@ import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.core.TaskExecutorFixedThread;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
-import edu.iu.dsc.tws.tsched.FirstFit.FirstFitTaskScheduling;
-import edu.iu.dsc.tws.tsched.RoundRobin.RoundRobinTaskScheduling;
+import edu.iu.dsc.tws.tsched.firstfit.FirstFitTaskScheduling;
+import edu.iu.dsc.tws.tsched.roundrobin.RoundRobinTaskScheduling;
+import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
@@ -54,7 +55,6 @@ public class SimpleTGraphExample1 implements IContainer {
   private DataFlowOperation direct;
   private TaskExecutorFixedThread taskExecutor;
   private Status status;
-
 
   private TaskSchedulePlan taskSchedulePlan = null;
 
@@ -90,19 +90,6 @@ public class SimpleTGraphExample1 implements IContainer {
     TaskMerger taskMerger = new TaskMerger("task4");
 
     if (containerId == 0) {
-      WorkerPlan workerPlan = new WorkerPlan();
-      Worker worker1 = new Worker(1);
-      worker1.setCpu(4);
-      worker1.setDisk(4000);
-      worker1.setRam(2048);
-
-      Worker worker2 = new Worker(2);
-      worker2.setCpu(4);
-      worker2.setDisk(4000);
-      worker2.setRam(2048);
-      workerPlan.addWorker(worker1);
-      workerPlan.addWorker(worker2);
-
       GraphBuilder graphBuilder = GraphBuilder.newBuilder();
       graphBuilder.addTask("task1", taskMapper);
       graphBuilder.addTask("task2", taskReducer);
@@ -117,9 +104,9 @@ public class SimpleTGraphExample1 implements IContainer {
       graphBuilder.setParallelism("task1", 2);
       graphBuilder.setParallelism("task2", 2);
       graphBuilder.setParallelism("task3", 2);
-      graphBuilder.setParallelism("task4", 2);
+      graphBuilder.setParallelism("task4", 1);
 
-      graphBuilder.addConfiguration("task1", "Ram", 512);
+      graphBuilder.addConfiguration("task1", "Ram", 300);
       graphBuilder.addConfiguration("task1", "Disk", 1000);
       graphBuilder.addConfiguration("task1", "Cpu", 2);
 
@@ -135,27 +122,41 @@ public class SimpleTGraphExample1 implements IContainer {
       graphBuilder.addConfiguration("task4", "Disk", 1000);
       graphBuilder.addConfiguration("task4", "Cpu", 2);
 
+      WorkerPlan workerPlan = new WorkerPlan();
+      Worker worker0 = new Worker(0);
+      Worker worker1 = new Worker(1);
+
+      worker0.setCpu(4);
+      worker0.setDisk(4000);
+      worker0.setRam(2048);
+
+      worker1.setCpu(4);
+      worker1.setDisk(4000);
+      worker1.setRam(2048);
+
+      workerPlan.addWorker(worker0);
+      workerPlan.addWorker(worker1);
+
       DataFlowTaskGraph dataFlowTaskGraph = graphBuilder.build();
       LOG.info("Generated Dataflow Task Graph Is:" + dataFlowTaskGraph.getTaskVertexSet());
 
       if (containerId == 0) { //For running the task scheduling once
-        //String schedulingMode = "RoundRobin";
-        String schedulingMode = "FirstFit";
         if (dataFlowTaskGraph != null) {
-          //if (cfg.get("SchedulingMode").equals("Round Robin")) {
-          if ("RoundRobin".equals(schedulingMode)) {
+          LOG.info("Task Scheduling Mode:" + TaskSchedulerContext.taskSchedulingMode(cfg));
+          if (TaskSchedulerContext.taskSchedulingMode(cfg).equals("roundrobin")) {
             RoundRobinTaskScheduling roundRobinTaskScheduling = new RoundRobinTaskScheduling();
             roundRobinTaskScheduling.initialize(cfg);
             taskSchedulePlan = roundRobinTaskScheduling.schedule(dataFlowTaskGraph, workerPlan);
-          } else if ("FirstFit".equals(schedulingMode)) {
+          } else if (TaskSchedulerContext.taskSchedulingMode(cfg).equals("firstfit")) {
             FirstFitTaskScheduling firstFitTaskScheduling = new FirstFitTaskScheduling();
             firstFitTaskScheduling.initialize(cfg);
             taskSchedulePlan = firstFitTaskScheduling.schedule(dataFlowTaskGraph, workerPlan);
           }
-
           try {
             if (taskSchedulePlan.getContainersMap() != null) {
-              LOG.info("Task schedule plan details:" + taskSchedulePlan.getContainersMap());
+              LOG.info("Task schedule plan details:"
+                  + taskSchedulePlan.getTaskSchedulePlanId() + ":"
+                  + taskSchedulePlan.getContainersMap());
             }
           } catch (NullPointerException ne) {
             ne.printStackTrace();
@@ -418,4 +419,5 @@ public class SimpleTGraphExample1 implements IContainer {
     }
   }
 }
+
 
