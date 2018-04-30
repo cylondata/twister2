@@ -196,7 +196,7 @@ public class ExecutionPlanBuilder implements IExecutor {
 
     // lets start the execution
     ThreadSharingExecutor threadSharingExecutor =
-        new ThreadSharingExecutor(noOfThreads, network.getChannel());
+        new ThreadSharingExecutor(noOfThreads);
     threadSharingExecutor.execute(execution);
 
     return execution;
