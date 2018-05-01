@@ -37,7 +37,6 @@ public class TaskAttributes {
       } else {
         requiredRam = TaskSchedulerContext.taskInstanceRam(config);
       }
-      //double requiredRam = (double) ((Integer) ram);
       taskRamMap.put(task.getName(), requiredRam);
     }
     return taskRamMap;
@@ -50,14 +49,12 @@ public class TaskAttributes {
     double requiredDisk = 0.0;
     for (Vertex task : taskVertices) {
       Config config = task.getConfig();
-      //disk = config.get("Disk");
       if (config.get("Disk") != null) {
         disk = config.get("Disk");
         requiredDisk = (double) ((Integer) disk);
       } else {
         requiredDisk = TaskSchedulerContext.taskInstanceDisk(config);
       }
-      //double requiredDisk = (double) ((Integer) disk);
       taskDiskMap.put(task.getName(), requiredDisk);
     }
     return taskDiskMap;
@@ -70,14 +67,12 @@ public class TaskAttributes {
     double requiredCpu = 0.0;
     for (Vertex task : taskVertices) {
       Config config = task.getConfig();
-      //Object cpu = config.get("Cpu");
       if (config.get("Cpu") != null) {
         cpu = config.get("Cpu");
         requiredCpu = (double) ((Integer) cpu);
       } else {
         requiredCpu = TaskSchedulerContext.taskInstanceCpu(config);
       }
-      //double requiredCpu = (double) ((Integer) cpu);
       taskCPUMap.put(task.getName(), requiredCpu);
     }
     return taskCPUMap;
