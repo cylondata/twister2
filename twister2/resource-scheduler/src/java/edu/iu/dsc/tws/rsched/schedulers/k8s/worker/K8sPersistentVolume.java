@@ -45,6 +45,10 @@ public class K8sPersistentVolume implements IPersistentVolume {
     return jobDirPath;
   }
 
+  public String getLogDirPath() {
+    return logDirPath;
+  }
+
   public String getWorkerDirPath() {
     return workerDirPath;
   }

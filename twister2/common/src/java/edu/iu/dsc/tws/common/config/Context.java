@@ -63,7 +63,6 @@ public class Context {
   public static final ConfigEntry AURORA_SCRIPT = new ConfigEntry(
       "twister2.resource.scheduler.aurora.script", "${TWISTER2_CONF}/twister2.aurora");
 
-
   // an internal property to represent the container id
   public static final String TWISTER2_CONTAINER_ID = "twister2.container.id";
   public static final String TWISTER2_CLUSTER_TYPE = "twister2.cluster.type";
@@ -117,6 +116,10 @@ public class Context {
 
   public static String clientConfigurationFile(Config cfg) {
     return cfg.getStringValue(CLIENT_YAML);
+  }
+
+  public static String systemConfigurationFile(Config cfg) {
+    return cfg.getStringValue(SYSTEM_YAML);
   }
 
   public static String clusterType(Config cfg) {

@@ -48,7 +48,7 @@ public class KubernetesContext extends SchedulerContext {
   public static final String K8S_STORAGE_RECLAIM_POLICY_DEFAULT = "Retain";
   public static final String K8S_STORAGE_RECLAIM_POLICY = "kubernetes.storage.reclaim.policy";
 
-  // it can be either "system" or "kubernetes"
+  // it can be either "system" or "kubernetes". currently not used.
   public static final String PERSISTENT_LOGGING_TYPE_DEFAULT = "system";
   public static final String PERSISTENT_LOGGING_TYPE = "persistent.logging.type";
 

@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
@@ -220,7 +221,6 @@ public final class RequestObjectBuilder {
 
     V1ResourceRequirements resReq = new V1ResourceRequirements();
     if (KubernetesContext.bindWorkerToCPU(config)) {
-//      resReq.putLimitsItem("cpu", reqContainer.getNoOfCpus() + "");
       resReq.putLimitsItem("cpu", new Quantity(reqContainer.getNoOfCpus() + ""));
       resReq.putLimitsItem("memory", new Quantity(reqContainer.getMemoryMegaBytes() + "Mi"));
     } else {
@@ -302,13 +302,26 @@ public final class RequestObjectBuilder {
 
     V1EnvVar var9 = new V1EnvVar()
         .name(KubernetesField.PERSISTENT_LOGGING_REQUESTED + "")
-        .value(SchedulerContext.persistentLoggingRequested(config) + "");
+        .value(LoggingContext.persistentLoggingRequested(config) + "");
 
     V1EnvVar var10 = new V1EnvVar()
-        .name(KubernetesField.PERSISTENT_LOGGING_TYPE + "")
-        .value(KubernetesContext.persistentLoggingType(config) + "");
+        .name(KubernetesField.LOG_LEVEL + "")
+        .value(LoggingContext.loggingLevel(config));
 
-    container.setEnv(Arrays.asList(var1, var2, var3, var4, var5, var6, var7, var8, var9, var10));
+    V1EnvVar var11 = new V1EnvVar()
+        .name(KubernetesField.REDIRECT_SYS_OUT_ERR + "")
+        .value(LoggingContext.redirectSysOutErr(config) + "");
+
+    V1EnvVar var12 = new V1EnvVar()
+        .name(KubernetesField.LOGGING_MAX_FILE_SIZE + "")
+        .value(LoggingContext.maxLogFileSize(config) + "");
+
+    V1EnvVar var13 = new V1EnvVar()
+        .name(KubernetesField.LOGGING_MAX_FILES + "")
+        .value(LoggingContext.maxLogFiles(config) + "");
+
+    container.setEnv(Arrays.asList(
+        var1, var2, var3, var4, var5, var6, var7, var8, var9, var10, var11, var12, var13));
   }
 
   public static void setNodeAffinity(Config config, V1Affinity affinity) {
