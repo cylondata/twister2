@@ -18,8 +18,6 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.comms.api.TWSChannel;
-
 public class ThreadSharingExecutor {
   private static final Logger LOG = Logger.getLogger(ThreadSharingExecutor.class.getName());
 
@@ -27,13 +25,10 @@ public class ThreadSharingExecutor {
 
   private BlockingQueue<INodeInstance> tasks;
 
-  private TWSChannel channel;
-
   private List<Thread> threads = new ArrayList<>();
 
-  public ThreadSharingExecutor(int numThreads, TWSChannel channel) {
+  public ThreadSharingExecutor(int numThreads) {
     this.numThreads = numThreads;
-    this.channel = channel;
   }
 
   public void execute(ExecutionPlan execution) {

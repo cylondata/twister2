@@ -16,9 +16,12 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
+import edu.iu.dsc.tws.common.net.NetworkInfo;
+import edu.iu.dsc.tws.common.net.tcp.TCPChannel;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.mpi.TWSMPIChannel;
+import edu.iu.dsc.tws.comms.tcp.TWSTCPChannel;
 
 import mpi.MPI;
 
@@ -45,6 +48,27 @@ public final class TWSNetwork {
       dataFlowTWSCommunication = ReflectionUtils.newInstance(communicationClass);
       LOG.log(Level.FINE, "Created communication with class: " + communicationClass);
       this.channel = new TWSMPIChannel(config, MPI.COMM_WORLD, workerId);
+    } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
+      LOG.severe("Failed to load the communications class: " + communicationClass);
+      throw new RuntimeException(e);
+    }
+  }
+
+  public TWSNetwork(Config cfg, int workerId, NetworkInfo networkInfo) {
+    // load the network configuration
+    this.config = loadConfig(cfg);
+
+    // lets load the communication implementation
+    String communicationClass = CommunicationContext.communicationClass(config);
+    try {
+      dataFlowTWSCommunication = ReflectionUtils.newInstance(communicationClass);
+      LOG.log(Level.FINE, "Created communication with class: " + communicationClass);
+      String commType = CommunicationContext.communicationType(config);
+      if (CommunicationContext.MPI_COMMUNICATION_TYPE.equals(commType)) {
+        this.channel = new TWSMPIChannel(config, MPI.COMM_WORLD, workerId);
+      } else if (CommunicationContext.TCP_COMMUNICATION_TYPE.equals(commType)) {
+        this.channel = new TWSTCPChannel(config, workerId, new TCPChannel(config, networkInfo));
+      }
     } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
       LOG.severe("Failed to load the communications class: " + communicationClass);
       throw new RuntimeException(e);

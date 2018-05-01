@@ -24,26 +24,24 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
-import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.common.logging.LoggingContext;
+import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.proto.system.ResourceAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.bootstrap.IWorkerController;
 import edu.iu.dsc.tws.rsched.bootstrap.WorkerNetworkInfo;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesField;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
 import edu.iu.dsc.tws.rsched.spi.container.IPersistentVolume;
 import edu.iu.dsc.tws.rsched.spi.container.IWorker;
-import edu.iu.dsc.tws.rsched.spi.container.IWorkerLogger;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import edu.iu.dsc.tws.rsched.utils.TarGzipPacker;
 
@@ -55,7 +53,6 @@ public final class KubernetesWorker {
   private static final Logger LOG = Logger.getLogger(KubernetesWorker.class.getName());
 
   public static final String UNPACK_COMPLETE_FILE_NAME = "unpack-complete.txt";
-  public static final String COMPLETIONS_FILE_NAME = "completions.txt";
   public static final long FILE_WAIT_SLEEP_INTERVAL = 30;
   public static final long WAIT_TIME_FOR_WORKER_LIST_BUILD = 3000; // ms
   public static final int PERSISTENT_DIR_CREATE_TRY_COUNT = 3; // ms
@@ -67,6 +64,9 @@ public final class KubernetesWorker {
   }
 
   public static void main(String[] args) {
+    // we can not initialize the logger fully yet,
+    // but we need to set the format as the first thing
+    LoggingHelper.setLoggingFormat(LoggingHelper.DEFAULT_FORMAT);
 
     StringBuffer logBuffer = new StringBuffer();
     // first get environment variable values
@@ -94,11 +94,20 @@ public final class KubernetesWorker {
     String containersPerPodStr = System.getenv(KubernetesField.WORKERS_PER_POD + "");
     logBuffer.append(KubernetesField.WORKERS_PER_POD + ": " + containersPerPodStr + "\n");
 
-    String persLoggingRqst = System.getenv(KubernetesField.PERSISTENT_LOGGING_REQUESTED + "");
-    logBuffer.append(KubernetesField.PERSISTENT_LOGGING_REQUESTED + ": " + persLoggingRqst + "\n");
+    String persLogReq = System.getenv(KubernetesField.PERSISTENT_LOGGING_REQUESTED + "");
+    logBuffer.append(KubernetesField.PERSISTENT_LOGGING_REQUESTED + ": " + persLogReq + "\n");
 
-    String persLoggingType = System.getenv(KubernetesField.PERSISTENT_LOGGING_TYPE + "");
-    logBuffer.append(KubernetesField.PERSISTENT_LOGGING_TYPE + ": " + persLoggingType + "\n");
+    String logLevel = System.getenv(KubernetesField.LOG_LEVEL + "");
+    logBuffer.append(KubernetesField.LOG_LEVEL + ": " + logLevel + "\n");
+
+    String redirect = System.getenv(KubernetesField.REDIRECT_SYS_OUT_ERR + "");
+    logBuffer.append(KubernetesField.REDIRECT_SYS_OUT_ERR + ": " + redirect + "\n");
+
+    String maxLogFileSize = System.getenv(KubernetesField.LOGGING_MAX_FILE_SIZE + "");
+    logBuffer.append(KubernetesField.LOGGING_MAX_FILE_SIZE + ": " + maxLogFileSize + "\n");
+
+    String maxLogFiles = System.getenv(KubernetesField.LOGGING_MAX_FILES + "");
+    logBuffer.append(KubernetesField.LOGGING_MAX_FILES + ": " + maxLogFiles + "\n");
 
     // this environment variable is not sent by submitting client, it is set by Kubernetes master
     String podName = System.getenv("HOSTNAME");
@@ -107,10 +116,9 @@ public final class KubernetesWorker {
     int containersPerPod = Integer.parseInt(containersPerPodStr);
     int workerID = calculateWorkerID(podName, containerName, containersPerPod);
 
-    K8sWorkerLogger logger = null;
     K8sPersistentVolume pv = null;
 
-    // create persistent job dir if there is a persistent volume
+    // create persistent job dir if there is a persistent volume request
     if (persistentJobDir == null || persistentJobDir.trim().isEmpty()) {
       // no persistent volume is requested, nothing to be done
     } else {
@@ -118,17 +126,15 @@ public final class KubernetesWorker {
 
       // create persistent volume object
       pv = new K8sPersistentVolume(persistentJobDir, workerID);
+      // create worker directory
       pv.getWorkerDir();
-
-      // initialize persistent system logging file if persistent logging type is system
-      if ("true".equals(persLoggingRqst)) {
-        if ("system".equalsIgnoreCase(persLoggingType)) {
-          addLogFileHandler(pv.getLogFileName());
-        }
-      } else {
-        LOG.info("Persistent logging is not requested.");
-      }
     }
+
+    // a temporary config object until the log file is read
+    // it is used to initialize the logger only
+    Config cnfg =
+        getConfigForEnvVariables(persLogReq, logLevel, redirect, maxLogFileSize, maxLogFiles);
+    initLogger(workerID, pv, cnfg);
 
     LOG.info("Received parameters as environment variables: \n" + logBuffer.toString());
 
@@ -142,7 +148,7 @@ public final class KubernetesWorker {
       pvInfo.append("Job Dir exists: " + pv.jobDirExists() + "\n");
       pvInfo.append("Worker Dir Path: " + pv.getWorkerDirPath() + "\n");
       pvInfo.append("Worker Dir Exists: " + pv.workerDirExists() + "\n");
-      pvInfo.append("Worker log file: " + pv.getLogFileName());
+      pvInfo.append("Job log dir: " + pv.getLogDirPath());
       LOG.info(pvInfo.toString());
     }
 
@@ -172,9 +178,7 @@ public final class KubernetesWorker {
     // override some config from job object if any
     config = overrideConfigsFromJob(job, config);
 
-    System.out.println("Loaded config values: ");
-    System.out.println(config.toString());
-    System.out.println();
+    LOG.fine("Loaded config values: \n" + config.toString());
 
     // start worker controller
     WorkerController workerController =
@@ -188,36 +192,66 @@ public final class KubernetesWorker {
       LOG.severe("Can not get all workers to join. Something wrong. .......................");
     }
 
-    // if persistent logging type is kubernetes, initialize it
-    if (pv != null && SchedulerContext.persistentLoggingRequested(config)
-        && "kubernetes".equalsIgnoreCase(persLoggingType)) {
-
-      String ns = KubernetesContext.namespace(config);
-      logger = new K8sWorkerLogger(pv.getLogFileName(), ns, podName, containerName);
-      logger.startLoggingSinceBeginning();
-    }
-
     ResourceAPI.ComputeResource cr = job.getJobResources().getContainer();
-    startWorkerClass(workerController, pv, logger);
+    startWorkerClass(workerController, pv);
 
     closeWorker(podName);
   }
 
   /**
-   * add a new log file handler to the root logger
-   * all log messages will also be loggen into this file
-   * @param logFile
+   * itinialize the logger
+   * @param workerID
+   * @param pv
+   * @param cnfg
    */
-  public static void addLogFileHandler(String logFile) {
-    Logger rootLogger = Logger.getLogger("");
+  public static void initLogger(int workerID, K8sPersistentVolume pv, Config cnfg) {
+    // set logging level
+    LoggingHelper.setLogLevel(LoggingContext.loggingLevel(cnfg));
 
-    try {
-      FileHandler fileHandler = new FileHandler(logFile);
-      fileHandler.setFormatter(new SimpleFormatter());
-      rootLogger.addHandler(fileHandler);
-    } catch (IOException e) {
-      e.printStackTrace();
+    // if persistent logging is requested, initialize it
+    if (pv != null && LoggingContext.persistentLoggingRequested(cnfg)) {
+
+      if (LoggingContext.redirectSysOutErr(cnfg)) {
+        LOG.warning("Redirecting System.out and System.err to the log file. "
+            + "Check the log file for the upcoming log messages. ");
+      }
+
+      LoggingHelper.setupLogging(cnfg, pv.getLogDirPath(),
+          K8sPersistentVolume.LOG_FILE_NAME_PREFIX + workerID);
+
+      LOG.info("Persistent logging to file initialized.");
     }
+  }
+
+  /**
+   * construct a Config object from environment variables to intialize the logger
+   * @param persLogReq
+   * @param logLevel
+   * @param redirect
+   * @param maxFileSize
+   * @param maxFiles
+   * @return
+   */
+  public static Config getConfigForEnvVariables(String persLogReq, String logLevel,
+                                                String redirect, String maxFileSize,
+                                                String maxFiles) {
+    boolean persLogging = false;
+    if ("true".equalsIgnoreCase(persLogReq)) {
+      persLogging = true;
+    }
+
+    boolean redir = false;
+    if ("true".equalsIgnoreCase(redirect)) {
+      redir = true;
+    }
+
+    return Config.newBuilder().
+        put(LoggingContext.PERSISTENT_LOGGING_REQUESTED, persLogging).
+        put(LoggingContext.LOGGING_LEVEL, logLevel).
+        put(LoggingContext.REDIRECT_SYS_OUT_ERR, redir).
+        put(LoggingContext.MAX_LOG_FILE_SIZE, Integer.parseInt(maxFileSize)).
+        put(LoggingContext.MAX_LOG_FILES, Integer.parseInt(maxFiles)).
+        build();
   }
 
   /**
@@ -226,26 +260,6 @@ public final class KubernetesWorker {
   public static void closeWorker(String podName) {
 
     waitIndefinitely();
-
-//    int workersPerPod = KubernetesContext.workersPerPod(config);
-//    // if this is the only container in a pod, delete the pod and exit
-//    if (workersPerPod == 1) {
-//      deletePod(podName);
-//      return;
-//    }
-//
-//    int finishedWorkers = updateCompletions();
-//    // if there is a problem updating the counter in the file, exit
-//    if (finishedWorkers == -1) {
-//      return;
-//      // if this is not the last worker, just exit
-//    } else if (workersPerPod > (finishedWorkers + 1)) {
-//      return;
-//      // if this is the last worker, delete the pod
-//    } else if (workersPerPod == (finishedWorkers + 1)) {
-//      deletePod(podName);
-//      return;
-//    }
   }
 
   /**
@@ -276,10 +290,11 @@ public final class KubernetesWorker {
   /**
    * update the count in the shared file with a lock
    * to let other workers in this pod to know that a worker has finished
+   * currently not used
    */
   public static int updateCompletions() {
 
-    String completionsFile = POD_SHARED_VOLUME + "/" + COMPLETIONS_FILE_NAME;
+    String completionsFile = POD_SHARED_VOLUME + "/completions.txt";
 
     try {
       Path path = Paths.get(completionsFile);
@@ -321,8 +336,7 @@ public final class KubernetesWorker {
    * start the container class specified in conf files
    */
   public static void startWorkerClass(IWorkerController workerController,
-                                      IPersistentVolume pv,
-                                      IWorkerLogger logger) {
+                                      IPersistentVolume pv) {
     String containerClass = SchedulerContext.containerClass(config);
     IWorker container;
     try {
@@ -335,7 +349,7 @@ public final class KubernetesWorker {
       throw new RuntimeException(e);
     }
 
-    container.init(config, thisWorker.getWorkerID(), null, workerController, pv, logger);
+    container.init(config, thisWorker.getWorkerID(), null, workerController, pv);
   }
 
 
@@ -420,7 +434,7 @@ public final class KubernetesWorker {
   public static boolean waitUnpack(String containerName, String jobPackageFileName, long fileSize) {
 
     String flagFileName = POD_SHARED_VOLUME + "/" + UNPACK_COMPLETE_FILE_NAME;
-    String completionsFileName = POD_SHARED_VOLUME + "/" + COMPLETIONS_FILE_NAME;
+//    String completionsFileName = POD_SHARED_VOLUME + "/completions.txt";
 
     // if it is the first container in a pod, unpack the tar.gz file
     if (containerName.endsWith("-0")) {
@@ -429,16 +443,17 @@ public final class KubernetesWorker {
       if (transferred) {
         boolean jobFileUnpacked = TarGzipPacker.unpack(jobPackageFileName);
         if (jobFileUnpacked) {
-          System.out.printf("Job file [%s] unpacked successfully.\n", jobPackageFileName);
+          LOG.info("Job file [" + jobPackageFileName + "] unpacked successfully.");
           boolean written1 = writeFile(flagFileName, 0);
-          boolean written2 = writeFile(completionsFileName, 0);
-          return written1 && written2;
+          return written1;
+//          boolean written2 = writeFile(completionsFileName, 0);
+//          return written1 && written2;
         } else {
-          System.out.println("Job file can not be unpacked.");
+          LOG.severe("Job file can not be unpacked.");
           return false;
         }
       } else {
-        System.out.println("Something went wrong with receiving job file.");
+        LOG.severe("Something went wrong with receiving job file.");
         return false;
       }
 
@@ -464,8 +479,7 @@ public final class KubernetesWorker {
       return true;
 
     } catch (Exception e) {
-      e.printStackTrace();
-      LOG.severe("Exception when writing the file: " + fileName);
+      LOG.log(Level.SEVERE, "Exception when writing the file: " + fileName, e);
       return false;
     }
   }
@@ -600,8 +614,8 @@ public final class KubernetesWorker {
     } else {
       boolean dirCreated = persistentDir.mkdirs();
       if (dirCreated) {
-        LOG.info("Persistent job dir [" + persistentJobDir + "] created by the worker "
-            + "at pod: " + podName + " and on the container: " + containerName);
+//        LOG.info("Persistent job dir [" + persistentJobDir + "] created by the worker "
+//            + "at pod: " + podName + " and on the container: " + containerName);
         return true;
       } else {
 

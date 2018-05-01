@@ -25,7 +25,6 @@ import edu.iu.dsc.tws.rsched.bootstrap.IWorkerController;
 import edu.iu.dsc.tws.rsched.bootstrap.WorkerNetworkInfo;
 import edu.iu.dsc.tws.rsched.spi.container.IPersistentVolume;
 import edu.iu.dsc.tws.rsched.spi.container.IWorker;
-import edu.iu.dsc.tws.rsched.spi.container.IWorkerLogger;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
 public class BasicK8sWorker implements IWorker {
@@ -36,8 +35,7 @@ public class BasicK8sWorker implements IWorker {
                    int id,
                    ResourcePlan resourcePlan,
                    IWorkerController workerController,
-                   IPersistentVolume persistentVolume,
-                   IWorkerLogger logger) {
+                   IPersistentVolume persistentVolume) {
 
     int port = workerController.getWorkerNetworkInfo().getWorkerPort();
 

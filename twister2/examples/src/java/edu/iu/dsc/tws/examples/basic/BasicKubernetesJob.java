@@ -28,6 +28,8 @@ public final class BasicKubernetesJob {
 
   public static void main(String[] args) {
 
+//    LoggingHelper.setupLogging(null, "logs", "client");
+
     // first load the configurations from command line and config files
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
     System.out.println("read config values: " + config.size());
