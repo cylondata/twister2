@@ -335,13 +335,6 @@ maven_jar(
 )
 
 maven_jar(
-  name = "commons_codec_commons_codec",
-  artifact = "commons-codec:commons-codec:1.9",
-  repository = "http://central.maven.org/maven2/",
-  sha1 = "9ce04e34240f674bc72680f8b843b1457383161a",
-)
-
-maven_jar(
   name = "org_bouncycastle_bcprov_jdk15on",
   artifact = "org.bouncycastle:bcprov-jdk15on:1.56",
 )
