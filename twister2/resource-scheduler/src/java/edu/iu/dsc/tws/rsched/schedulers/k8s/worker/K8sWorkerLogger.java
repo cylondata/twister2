@@ -25,6 +25,13 @@ import io.kubernetes.client.ApiException;
 import io.kubernetes.client.ProgressRequestBody;
 import io.kubernetes.client.ProgressResponseBody;
 
+/**
+ * logging by getting log messages from Kubernetes Master
+ * Currently it is not used
+ * It gives error with Kubernetes java client 1.0.0 release
+ * It is also inefficient compared to system logging
+ */
+
 public class K8sWorkerLogger extends Thread implements IWorkerLogger {
   private static final Logger LOG = Logger.getLogger(K8sWorkerLogger.class.getName());
 
@@ -39,6 +46,8 @@ public class K8sWorkerLogger extends Thread implements IWorkerLogger {
   private FileOutputStream logFileWriter;
   private boolean appendToLogFile = false;
   private boolean firstLogMessageReceived = false;
+
+  private int count = 0;
 
   // A relative time in seconds before the current time from which to show logs.
   // can be 1 if it is requested to start logging at that moment
@@ -126,6 +135,16 @@ public class K8sWorkerLogger extends Thread implements IWorkerLogger {
     streamContainerLogs();
   }
 
+  private void writeToLogFile(String level, String str) {
+    try {
+      String logStr = count++ + " " + level + ": " + this.getClass().getCanonicalName()
+          + ".streamContainerLogs " + str + "\n";
+      logFileWriter.write(logStr.getBytes());
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Exception when writing to log file.", e);
+    }
+  }
+
   /**
    * start log listener
    */
@@ -137,26 +156,38 @@ public class K8sWorkerLogger extends Thread implements IWorkerLogger {
           public void update(long bytesRead, long contentLength, boolean done) {
 
             if (done) {
-              LOG.severe("listening for logs done.");
+              writeToLogFile("SEVERE", "listening for logs done.");
             }
 
             if (!firstLogMessageReceived) {
-              LOG.info("Worker logger started and first log message received. Worker log file: "
-                  + logFileName);
+              writeToLogFile("INFO", "Worker logger started and first log message received. "
+                  + "Worker log file: " + logFileName);
               firstLogMessageReceived = true;
             }
 
+            writeToLogFile("INFO", "bytesRead: " + bytesRead + "\tcontentLength: " + contentLength);
+
             try {
               int receivedBytes = (int) (bytesRead - prevBytesRead);
+              if (receivedBytes < 1) {
+                writeToLogFile("SEVERE", "ReceivedBytes less than zero: " + receivedBytes);
+                receivedBytes = (int) bytesRead;
+              }
+
 //                                System.out.println("receivedBytes: " + receivedBytes);
               prevBytesRead = bytesRead;
               byte[] receivedData = new byte[receivedBytes];
-              int readBytes = response.body().source().read(receivedData);
-              if (readBytes == -1) {
-                LOG.severe("The buffer is exhausted. Something wrong.");
-              }
 
-              logFileWriter.write(receivedData);
+              if (response != null && response.body() != null && response.body().source() != null) {
+                int readBytes = response.body().source().read(receivedData);
+                if (readBytes == -1) {
+                  writeToLogFile("SEVERE", "The buffer is exhausted. Something wrong.");
+                  return;
+                }
+
+                logFileWriter.write(receivedData, 0, readBytes);
+//              logFileWriter.write(receivedBytes);
+              }
             } catch (IOException e) {
               LOG.log(Level.SEVERE, "Exception when reading the log message from the log stream.",
                   e);
@@ -212,7 +243,7 @@ public class K8sWorkerLogger extends Thread implements IWorkerLogger {
       // waits at this point to get all log messages continually
       // when closed, this line throws an IOException that we ignore
       // parameter 10000 does not seem to be important
-      response.body().source().request(10000);
+      response.body().source().request(100000);
       return true;
 
     } catch (IOException e) {

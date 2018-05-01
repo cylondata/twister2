@@ -20,7 +20,6 @@ public interface IWorker {
             int id,
             ResourcePlan resourcePlan,
             IWorkerController workerController,
-            IPersistentVolume persistentVolume,
-            IWorkerLogger logger);
+            IPersistentVolume persistentVolume);
 
 }
