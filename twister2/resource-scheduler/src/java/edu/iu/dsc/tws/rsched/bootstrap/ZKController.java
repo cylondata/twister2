@@ -128,7 +128,7 @@ public class ZKController implements IWorkerController {
 
       return true;
     } catch (Exception e) {
-      e.printStackTrace();
+      LOG.log(Level.SEVERE, "Exception when initializing ZKController", e);
       return false;
     }
   }
@@ -186,8 +186,7 @@ public class ZKController implements IWorkerController {
       znodePath = thisNode.getActualPath();
       LOG.log(Level.INFO, "An ephemeral znode is created for this worker: " + znodePath);
     } catch (Exception e) {
-      LOG.log(Level.SEVERE, "Could not create znode for the worker: " + hostAndPort);
-      e.printStackTrace();
+      LOG.log(Level.SEVERE, "Could not create znode for the worker: " + hostAndPort, e);
     }
   }
 
@@ -263,20 +262,20 @@ public class ZKController implements IWorkerController {
    */
   public void printWorkers(List<WorkerNetworkInfo> workers) {
 
-    System.out.println("Number of workers in the job: " + workers.size());
+    StringBuffer logBuffer = new StringBuffer();
+    logBuffer.append("Number of workers in the job: " + workers.size() + "\n");
 
     for (WorkerNetworkInfo worker: workers) {
-      System.out.println(worker);
-//      System.out.println(worker.getWorkerIP().getHostAddress()
-//          + ":" + worker.getWorkerPort() + ":" + worker.getWorkerID());
+      logBuffer.append(worker.toString() + "\n");
     }
+
+    LOG.info(logBuffer.toString());
   }
 
   /**
    * Print current workers in the job as seen by this worker
    */
   public void printCurrentWorkers() {
-    System.out.println("list of current workers in the job: ");
     List<WorkerNetworkInfo> workers = getCurrentWorkers();
     printWorkers(workers);
   }
@@ -337,7 +336,7 @@ public class ZKController implements IWorkerController {
     try {
       return dai.get().preValue();
     } catch (Exception e) {
-      e.printStackTrace();
+      LOG.log(Level.SEVERE, "Could not get DistributedAtomicInteger preValue", e);
       return -1;
     }
   }
@@ -375,8 +374,7 @@ public class ZKController implements IWorkerController {
           Thread.sleep(50);
           duration += 50;
         } catch (InterruptedException e) {
-          LOG.log(Level.INFO, "Thread sleep interrupted. Will try again ...");
-          e.printStackTrace();
+          LOG.log(Level.INFO, "Thread sleep interrupted. Will try again ...", e);
         }
       } else {
         return getCurrentWorkers();
@@ -421,7 +419,7 @@ public class ZKController implements IWorkerController {
         }
         CloseableUtils.closeQuietly(client);
       } catch (Exception e) {
-        e.printStackTrace();
+        LOG.log(Level.SEVERE, "Exception when closing", e);
       }
     }
   }
