@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.examples.basic;
 
 import java.util.HashMap;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
@@ -23,6 +24,8 @@ import edu.iu.dsc.tws.rsched.schedulers.aurora.AuroraContext;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 
 public final class BasicKubernetesJob {
+  private static final Logger LOG = Logger.getLogger(BasicKubernetesJob.class.getName());
+
   private BasicKubernetesJob() {
   }
 
@@ -32,8 +35,7 @@ public final class BasicKubernetesJob {
 
     // first load the configurations from command line and config files
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
-    System.out.println("read config values: " + config.size());
-    System.out.println(config);
+    LOG.fine("read config values: " + config.size() + "\n" + config);
 
     if (args.length == 0) {
       printUsage();
@@ -89,8 +91,10 @@ public final class BasicKubernetesJob {
    * print usage
    */
   public static void printUsage() {
-    System.out.println("Usage: Currently following actions are supported: ");
-    System.out.println("\tedu.iu.dsc.tws.examples.basic.BasicKubernetesJob submit");
-    System.out.println("\tedu.iu.dsc.tws.examples.basic.BasicKubernetesJob terminate");
+    StringBuffer logBuffer = new StringBuffer();
+    logBuffer.append("Usage: Currently following actions are supported: \n");
+    logBuffer.append("\tedu.iu.dsc.tws.examples.basic.BasicKubernetesJob submit\n");
+    logBuffer.append("\tedu.iu.dsc.tws.examples.basic.BasicKubernetesJob terminate\n");
+    LOG.severe(logBuffer.toString());
   }
 }

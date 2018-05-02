@@ -166,7 +166,6 @@ public class KubernetesLauncher implements ILauncher {
       if (!pvCreated) {
         LOG.log(Level.SEVERE, "PersistentVolume could not be created. "
             + "\n++++++ Aborting submission ++++++");
-//        System.out.println("submitted pv: \n" + pv);
         throw new RuntimeException();
       }
     } else {

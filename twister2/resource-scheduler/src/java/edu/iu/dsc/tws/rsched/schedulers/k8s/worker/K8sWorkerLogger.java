@@ -174,7 +174,6 @@ public class K8sWorkerLogger extends Thread implements IWorkerLogger {
                 receivedBytes = (int) bytesRead;
               }
 
-//                                System.out.println("receivedBytes: " + receivedBytes);
               prevBytesRead = bytesRead;
               byte[] receivedData = new byte[receivedBytes];
 

@@ -168,7 +168,7 @@ public class WorkerController implements IWorkerController {
         Thread.sleep(sleepInterval);
         waitTimeCountForLog += sleepInterval;
       } catch (InterruptedException e) {
-        e.printStackTrace();
+        LOG.log(Level.WARNING, "Thread sleep interrupted.", e);
       }
     }
   }

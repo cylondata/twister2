@@ -105,7 +105,7 @@ public class PodWatcher extends Thread {
     try {
       watch.close();
     } catch (IOException e) {
-      e.printStackTrace();
+      LOG.log(Level.WARNING, "Exception when clsoing the watcher.", e);
     }
   }
 }

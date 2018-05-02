@@ -272,7 +272,7 @@ public final class KubernetesWorker {
         LOG.info("Waiting indefinetely idle. Sleeping 100sec. Time: " + new java.util.Date());
         Thread.sleep(100000);
       } catch (InterruptedException e) {
-        e.printStackTrace();
+        LOG.log(Level.WARNING, "Thread sleep interrupted.", e);
       }
     }
   }
@@ -322,7 +322,6 @@ public final class KubernetesWorker {
 
       // close the file channel and release the lock
       fileChannel.close(); // also releases the lock
-//      System.out.print("Closing the channel and releasing lock.");
 
       return count;
 
@@ -528,7 +527,7 @@ public final class KubernetesWorker {
         Thread.sleep(FILE_WAIT_SLEEP_INTERVAL);
         waitTimeCountForLog += FILE_WAIT_SLEEP_INTERVAL;
       } catch (InterruptedException e) {
-        e.printStackTrace();
+        LOG.log(Level.WARNING, "Thread sleep interrupted.", e);
       }
     }
 
@@ -562,7 +561,7 @@ public final class KubernetesWorker {
         Thread.sleep(FILE_WAIT_SLEEP_INTERVAL);
         waitTimeCountForLog += FILE_WAIT_SLEEP_INTERVAL;
       } catch (InterruptedException e) {
-        e.printStackTrace();
+        LOG.log(Level.WARNING, "Thread sleep interrupted.", e);
       }
     }
 
@@ -631,7 +630,7 @@ public final class KubernetesWorker {
           try {
             Thread.sleep(500);
           } catch (InterruptedException e) {
-            e.printStackTrace();
+            LOG.log(Level.WARNING, "Thread sleep interrupted.", e);
           }
 
           return createPersistentJobDir(podName, containerName, persistentJobDir, attemptNo + 1);
