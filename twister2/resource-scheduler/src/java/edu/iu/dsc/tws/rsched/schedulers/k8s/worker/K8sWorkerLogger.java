@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.google.common.io.ByteStreams;
 import com.squareup.okhttp.Call;
 import com.squareup.okhttp.Response;
 
@@ -148,7 +149,7 @@ public class K8sWorkerLogger extends Thread implements IWorkerLogger {
   /**
    * start log listener
    */
-  public boolean streamContainerLogs() {
+  private boolean streamContainerLogs() {
 
     ProgressResponseBody.ProgressListener progressListener =
         new ProgressResponseBody.ProgressListener() {
@@ -222,8 +223,12 @@ public class K8sWorkerLogger extends Thread implements IWorkerLogger {
     try {
       call = WorkerController.getCoreApi().readNamespacedPodLogCall(
           podName, namespace, containerName, followLogStream, limitBytes, pretty,
-          previouslyTerminated, sinceSeconds, tailLines, timestamps,
-          progressListener, progressRequestListener);
+          previouslyTerminated, sinceSeconds, tailLines, timestamps, null, null);
+
+//      call = WorkerController.getCoreApi().readNamespacedPodLogCall(
+//          podName, namespace, containerName, followLogStream, limitBytes, pretty,
+//          previouslyTerminated, sinceSeconds, tailLines, timestamps,
+//          progressListener, progressRequestListener);
 
     } catch (ApiException e) {
       LOG.log(Level.SEVERE, "Exception when constructing the Call. Exception: " + e, e);
@@ -242,7 +247,11 @@ public class K8sWorkerLogger extends Thread implements IWorkerLogger {
       // waits at this point to get all log messages continually
       // when closed, this line throws an IOException that we ignore
       // parameter 10000 does not seem to be important
-      response.body().source().request(100000);
+//      response.body().source().request(100000);
+
+      // a blocking call
+      ByteStreams.copy(response.body().byteStream(), logFileWriter);
+
       return true;
 
     } catch (IOException e) {
