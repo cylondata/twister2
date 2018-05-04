@@ -50,7 +50,7 @@ public class DataLocalityAwareScheduling {
     Set<Map.Entry<String, Integer>> entries = parallelTaskMap.entrySet();
 
     for (Iterator<Map.Entry<String, Integer>> iterator
-         = entries.iterator(); iterator.hasNext(); ) {
+         = entries.iterator(); iterator.hasNext();) {
       Map.Entry<String, Integer> entry = iterator.next();
       String key = entry.getKey();
       Integer value = entry.getValue();
@@ -102,7 +102,7 @@ public class DataLocalityAwareScheduling {
     List<CalculateDataTransferTime> cal = new ArrayList<>();
 
     for (Iterator<Map.Entry<String, List<CalculateDataTransferTime>>> iterator
-         = entries.iterator(); iterator.hasNext(); ) {
+         = entries.iterator(); iterator.hasNext();) {
       Map.Entry<String, List<CalculateDataTransferTime>> entry = iterator.next();
       String key = entry.getKey();
       List<CalculateDataTransferTime> value = entry.getValue();
