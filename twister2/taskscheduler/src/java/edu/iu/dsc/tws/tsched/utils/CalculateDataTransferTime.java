@@ -11,31 +11,35 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tsched.utils;
 
-public class CalculateDataTransferTime {
-
-  private String nodeName;
-  private Double calculateDataTransferTime;
-
-  public CalculateDataTransferTime(String nodename, double requiredDatatransferTime) {
-    this.nodeName = nodename;
-    this.calculateDataTransferTime = requiredDatatransferTime;
-  }
-
-
-  public CalculateDataTransferTime setTaskName(String nodename) {
-    this.nodeName = nodename;
-    return this;
-  }
-
-  public String getNodeName() {
-    return nodeName;
-  }
+public class CalculateDataTransferTime implements Comparable<CalculateDataTransferTime> {
 
   public CalculateDataTransferTime setNodeName(String nodename) {
     this.nodeName = nodename;
     return this;
   }
 
+  private String nodeName;
+  private Double calculateDataTransferTime;
+
+  public int getTaskIndex() {
+    return taskIndex;
+  }
+
+  public CalculateDataTransferTime setTaskIndex(int taskindex) {
+    this.taskIndex = taskindex;
+    return this;
+  }
+
+  private int taskIndex;
+
+  public CalculateDataTransferTime(String nodename, double requiredDatatransferTime) {
+    this.nodeName = nodename;
+    this.calculateDataTransferTime = requiredDatatransferTime;
+  }
+
+  public String getNodeName() {
+    return nodeName;
+  }
 
   public Double getRequiredDataTransferTime() {
     return calculateDataTransferTime;
@@ -64,4 +68,10 @@ public class CalculateDataTransferTime {
   public int hashCode() {
     return calculateDataTransferTime.hashCode();
   }
+
+  @Override
+  public int compareTo(CalculateDataTransferTime o) {
+    return this.getRequiredDataTransferTime().compareTo(o.getRequiredDataTransferTime());
+  }
 }
+
