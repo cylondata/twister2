@@ -30,6 +30,7 @@ import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskInstanceMapCalculation;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedule;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
+//import edu.iu.dsc.tws.task.graph.GraphConstants;
 //import org.apache.commons.lang3.ObjectUtils;
 //import java.util.concurrent.atomic.AtomicReference;
 
@@ -76,10 +77,6 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
             taskVertexSet);
 
     for (int containerId : roundRobinContainerInstanceMap.keySet()) {
-
-      /*Double containerRAMValue = TaskSchedulerContext.containerInstanceRam(cfg);
-      Double containerDiskValue = TaskSchedulerContext.containerInstanceDisk(cfg);
-      Double containerCpuValue = TaskSchedulerContext.containerInstanceCpu(cfg);*/
 
       Double containerRAMValue = TaskSchedulerContext.containerRamPadding(cfg);
       Double containerDiskValue = TaskSchedulerContext.containerDiskPadding(cfg);
