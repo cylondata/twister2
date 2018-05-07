@@ -1,0 +1,17 @@
+# the directory where the file will be uploaded, make sure the user has the necessary permissions
+# to upload the file here.
+twister2.uploader.directory: "/root/.twister2/repository/"
+twister2.uploader.directory.repository: "/root/.twister2/repository/"
+# This is the scp command options that will be used by the uploader, this can be used to
+# specify custom options such as the location of ssh keys.
+twister2.uploader.scp.command.options: ""
+# The scp connection string sets the remote user name and host used by the uploader.
+twister2.uploader.scp.command.connection: "root@149.165.150.81"
+# The ssh command options that will be used when connecting to the uploading host to execute
+# command such as delete files, make directories.
+twister2.uploader.ssh.command.options: ""
+# The ssh connection string sets the remote user name and host used by the uploader.
+twister2.uploader.ssh.command.connection: "root@149.165.150.81"
+
+
+

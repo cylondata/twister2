@@ -21,6 +21,11 @@ maven_jar(
 )
 
 maven_jar(
+  name = "org_apache_mesos_mesos",
+  artifact = "org.apache.mesos:mesos:1.5.0",
+)
+
+maven_jar(
   name = "io_swagger_swagger_annotations",
   artifact = "io.swagger:swagger-annotations:1.5.12",
 )

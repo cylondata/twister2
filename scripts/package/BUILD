@@ -8,6 +8,7 @@ load("/tools/rules/twister2_client", "twister2_client_slurmmpi_files")
 load("/tools/rules/twister2_client", "twister2_client_nodesmpi_files")
 load("/tools/rules/twister2_client", "twister2_client_aurora_files")
 load("/tools/rules/twister2_client", "twister2_client_kubernetes_files")
+load("/tools/rules/twister2_client", "twister2_client_mesos_files")
 load("/tools/rules/twister2_client", "twister2_client_standalone_files")
 load("/tools/rules/twister2_client", "twister2_client_lib_third_party_files")
 load("/tools/rules/twister2_client", "twister2_client_lib_task_scheduler_files")
@@ -123,6 +124,7 @@ pkg_tar(
         ":twister2-client-conf-nodesmpi",
         ":twister2-client-conf-aurora",
         ":twister2-client-conf-kubernetes",
+	":twister2-client-conf-mesos",
         ":twister2-client-conf-standalone",
         ":twister2-client-dist",
         ":twister2-client-lib-third_party",
@@ -160,6 +162,12 @@ pkg_tar(
     name = "twister2-client-conf-kubernetes",
     package_dir = "conf/kubernetes",
     srcs = twister2_client_kubernetes_files(),
+)
+
+pkg_tar(
+    name = "twister2-client-conf-mesos",
+    package_dir = "conf/mesos",
+    srcs = twister2_client_mesos_files(),
 )
 
 pkg_tar(
