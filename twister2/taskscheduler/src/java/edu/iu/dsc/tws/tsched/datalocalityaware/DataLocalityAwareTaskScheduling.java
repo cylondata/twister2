@@ -59,7 +59,7 @@ public class DataLocalityAwareTaskScheduling implements TaskSchedule {
 
     Map<Integer, List<InstanceId>> datalocalityAwareContainerInstanceMap =
         DataLocalityAwareScheduling.DataLocalityAwareSchedulingAlgorithm(taskVertexSet,
-            workerPlan.getNumberOfWorkers(), workerPlan);
+            workerPlan.getNumberOfWorkers(), workerPlan, this.cfg);
 
     TaskInstanceMapCalculation instanceMapCalculation = new TaskInstanceMapCalculation(
         this.instanceRAM, this.instanceCPU, this.instanceDisk);
