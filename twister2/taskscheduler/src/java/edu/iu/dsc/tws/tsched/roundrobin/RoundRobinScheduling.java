@@ -52,9 +52,6 @@ public class RoundRobinScheduling {
           for (int i = 0; i < numberOfInstances; i++) {
             containerIndex = i % numberOfContainers;
             roundrobinAllocation.get(containerIndex).add(new InstanceId(task, globalTaskIndex, i));
-            LOG.info("Task Name:" + task + "(" + containerIndex + " )"
-                + "\tNumber Of instances:" + numberOfInstances
-                + "\tTaskIndex:" + containerIndex);
           }
           globalTaskIndex++;
         }

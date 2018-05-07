@@ -22,6 +22,7 @@ java_library(
         "@io_kubernetes_client_java//jar",
         "@io_kubernetes_client_java_api//jar",
         "@io_kubernetes_client_java_proto//jar",
+	"@org_apache_mesos_mesos//jar",
         "@io_swagger_swagger_annotations//jar",
         "@com_google_code_gson_gson//jar",
         "@com_squareup_okhttp_okhttp//jar",

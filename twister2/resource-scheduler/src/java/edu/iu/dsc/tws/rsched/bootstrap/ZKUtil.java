@@ -86,7 +86,7 @@ public final class ZKUtil {
       }
 
     } catch (Exception e) {
-      e.printStackTrace();
+      LOG.log(Level.SEVERE, "", e);
       return false;
     }
   }
@@ -155,7 +155,7 @@ public final class ZKUtil {
 
       return true;
     } catch (Exception e) {
-      e.printStackTrace();
+      LOG.log(Level.SEVERE, "", e);
       return false;
     }
   }

@@ -76,7 +76,7 @@ public class JobPackageTransferThread extends Thread {
       try {
         Thread.sleep(SLEEP_INTERVAL_BETWEEN_POD_STATUS_CHECKS);
       } catch (InterruptedException e) {
-        e.printStackTrace();
+        LOG.log(Level.WARNING, "Thread sleep interrupted.", e);
       }
 
       podReady = pods.get(podName);
@@ -101,7 +101,7 @@ public class JobPackageTransferThread extends Thread {
 
           Thread.sleep(SLEEP_INTERVAL_BETWEEN_TRANSFER_ATTEMPTS);
         } catch (InterruptedException e) {
-          e.printStackTrace();
+          LOG.log(Level.WARNING, "Thread sleep interrupted.", e);
         }
       }
     }

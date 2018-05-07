@@ -277,7 +277,7 @@ public class KubernetesController {
           break;
         }
       } catch (InterruptedException e) {
-        e.printStackTrace();
+        LOG.log(Level.WARNING, "Thread sleep interrupted.", e);
       }
     }
 

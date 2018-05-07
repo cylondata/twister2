@@ -9,6 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
 package edu.iu.dsc.tws.examples.basic;
 
 import java.util.HashMap;
@@ -20,81 +21,47 @@ import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.rsched.schedulers.aurora.AuroraContext;
+import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosContext;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 
-public final class BasicKubernetesJob {
-  private static final Logger LOG = Logger.getLogger(BasicKubernetesJob.class.getName());
-
-  private BasicKubernetesJob() {
+public final class BasicMesosJob {
+  private static final Logger LOG = Logger.getLogger(BasicMesosJob.class.getName());
+  private BasicMesosJob() {
   }
 
   public static void main(String[] args) {
-
-//    LoggingHelper.setupLogging(null, "logs", "client");
-
-    // first load the configurations from command line and config files
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
-    LOG.fine("read config values: " + config.size() + "\n" + config);
+    System.out.println("read config values: " + config.size());
+    System.out.println(config);
 
-    if (args.length == 0) {
-      printUsage();
-    } else if (args[0].equals("submit")) {
-      submitJob(config);
-    } else if (args[0].equals("terminate")) {
-      terminateJob(config);
-    } else {
-      printUsage();
-    }
+    int cpus = MesosContext.cpusPerContainer(config);
+    int ramMegaBytes = MesosContext.ramPerContainer(config);
+    int diskMegaBytes = MesosContext.diskPerContainer(config);
+    int containers = MesosContext.numberOfContainers(config);
 
-  }
-
-  /**
-   * submit the job
-   */
-  public static void submitJob(Config config) {
-
-    double cpus = SchedulerContext.workerCPU(config);
-    int ramMegaBytes = SchedulerContext.workerRAM(config);
-    int workers = SchedulerContext.workerInstances(config);
-    int diskMegaBytes = AuroraContext.workerDisk(config);
     String jobName = SchedulerContext.jobName(config);
+    jobName += "-" + System.currentTimeMillis();
+    System.out.println("job name is " + jobName);
     ResourceContainer resourceContainer = new ResourceContainer(cpus, ramMegaBytes, diskMegaBytes);
-
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
 
     String containerClass = SchedulerContext.containerClass(config);
+    System.out.println("Container class: " + containerClass);
 
     // build the job
     BasicJob basicJob = BasicJob.newBuilder()
         .setName(jobName)
         .setContainerClass(containerClass)
-        .setRequestResource(resourceContainer, workers)
+        .setRequestResource(resourceContainer, containers)
         .setConfig(jobConfig)
         .build();
 
     // now submit the job
     Twister2Submitter.submitContainerJob(basicJob, config);
+
+    System.out.println("now terminating...");
+    Twister2Submitter.terminateJob(basicJob.getName(), config);
   }
 
-  /**
-   * terminate the job
-   */
-  public static void terminateJob(Config config) {
-
-    String jobName = SchedulerContext.jobName(config);
-    Twister2Submitter.terminateJob(jobName, config);
-  }
-
-  /**
-   * print usage
-   */
-  public static void printUsage() {
-    StringBuffer logBuffer = new StringBuffer();
-    logBuffer.append("Usage: Currently following actions are supported: \n");
-    logBuffer.append("\tedu.iu.dsc.tws.examples.basic.BasicKubernetesJob submit\n");
-    logBuffer.append("\tedu.iu.dsc.tws.examples.basic.BasicKubernetesJob terminate\n");
-    LOG.severe(logBuffer.toString());
-  }
 }
