@@ -35,6 +35,13 @@ public class KryoMemorySerializer {
   private Output kryoOut;
   private Input kryoIn;
 
+  public KryoMemorySerializer(Kryo kryo) {
+    this.kryo = kryo;
+    kryo.setReferences(false);
+    kryoOut = new Output(2000, 2000000000);
+    kryoIn = new Input(1);
+  }
+
   public KryoMemorySerializer() {
     kryo = new Kryo();
     kryo.setReferences(false);

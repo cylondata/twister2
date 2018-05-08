@@ -560,25 +560,25 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
             break;
           }
 
-          if (currentMessage.getReceivedState() != MPIMessage.ReceivedState.RECEIVE) {
-            currentMessage.release();
-          }
+//          if (currentMessage.getReceivedState() != MPIMessage.ReceivedState.RECEIVE) {
+//            currentMessage.release();
+//          }
           currentMessage.setReceivedState(MPIMessage.ReceivedState.RECEIVE);
           if (!receiver.receiveMessage(currentMessage, object)) {
             break;
           }
-          //currentMessage.release();
+          currentMessage.release();
           pendingReceiveMessages.poll();
         } else if (state == MPIMessage.ReceivedState.RECEIVE) {
           currentMessage.setReceivedState(MPIMessage.ReceivedState.RECEIVE);
 
-          if (currentMessage.getReceivedState() != MPIMessage.ReceivedState.RECEIVE) {
-            currentMessage.release();
-          }
+//          if (currentMessage.getReceivedState() != MPIMessage.ReceivedState.RECEIVE) {
+//            currentMessage.release();
+//          }
           if (!receiver.receiveMessage(currentMessage, object)) {
             break;
           }
-          //currentMessage.release();
+          currentMessage.release();
           pendingReceiveMessages.poll();
         }
       } finally {
