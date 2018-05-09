@@ -33,6 +33,10 @@ public class WorkerPlan {
     this.workers.add(w);
   }
 
+  public void removeWorker(Worker w) {
+    this.workers.remove(w);
+  }
+
   public Worker getWorker(int id) {
     for (Worker w : workers) {
       if (w.getId() == id) {
