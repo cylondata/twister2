@@ -20,6 +20,8 @@ import edu.iu.dsc.tws.comms.api.ReduceFunction;
 
 public class ReduceBatchPartialReceiver extends ReduceBatchReceiver {
   private static final Logger LOG = Logger.getLogger(ReduceBatchPartialReceiver.class.getName());
+  private int tempCount = 0;
+  private int totalCount = 0;
 
   public ReduceBatchPartialReceiver(int dst, ReduceFunction reduce) {
     super(dst, reduce);
@@ -31,6 +33,7 @@ public class ReduceBatchPartialReceiver extends ReduceBatchReceiver {
   public void progress() {
     for (int t : messages.keySet()) {
       if (batchDone.get(t)) {
+        //System.out.println("Number of messages send from partial : " + t + "count : ");
         continue;
       }
       // now check weather we have the messages for this source
@@ -39,6 +42,8 @@ public class ReduceBatchPartialReceiver extends ReduceBatchReceiver {
       Map<Integer, Integer> countMap = counts.get(t);
       Map<Integer, Integer> totalCountMap = totalCounts.get(t);
       boolean canProgress = true;
+      int tempBufferCount = bufferCounts.get(t);
+      Object currentVal = null;
 
       while (canProgress) {
 //        LOG.info(String.format("%d reduce partial counts %d %s %s %s %d", executor, t,
@@ -46,6 +51,7 @@ public class ReduceBatchPartialReceiver extends ReduceBatchReceiver {
         boolean found = true;
         boolean allFinished = true;
         boolean allZero = true;
+
 
         for (Map.Entry<Integer, Queue<Object>> e : messagePerTarget.entrySet()) {
           if (e.getValue().size() == 0 && !finishedForTarget.get(e.getKey())) {
@@ -57,26 +63,33 @@ public class ReduceBatchPartialReceiver extends ReduceBatchReceiver {
           }
         }
 
-        if (found && reducedValues.size() < sendPendingMax) {
-          Object previous = null;
+
+        if (found) {
+          currentVal = reducedValueMap.get(t);
           for (Map.Entry<Integer, Queue<Object>> e : messagePerTarget.entrySet()) {
             Queue<Object> valueList = e.getValue();
             if (valueList.size() > 0) {
-              if (previous == null) {
-                previous = valueList.poll();
+              if (currentVal == null) {
+                System.out.println(valueList.size());
+                currentVal = valueList.poll();
+                System.out.println(valueList.size());
+                tempBufferCount += 1;
+                totalCount += 1;
               } else {
                 Object current = valueList.poll();
-                previous = reduceFunction.reduce(previous, current);
+                currentVal = reduceFunction.reduce(currentVal, current);
+                tempBufferCount += 1;
+                totalCount += 1;
               }
             }
           }
-          if (previous != null) {
-            reducedValues.offer(previous);
+          bufferCounts.put(t, tempBufferCount);
+          if (currentVal != null) {
+            reducedValueMap.put(t, currentVal);
           }
         }
 
-        if (reducedValues.size() > 0) {
-          Object previous = reducedValues.peek();
+        if (tempBufferCount >= bufferSize || allFinished) {
           int flags = 0;
           boolean last;
           if (allFinished) {
@@ -92,10 +105,14 @@ public class ReduceBatchPartialReceiver extends ReduceBatchReceiver {
             }
           }
 
-          if (dataFlowOperation.sendPartial(t, previous, flags, destination)) {
+          if (currentVal != null
+              && dataFlowOperation.sendPartial(t, currentVal, flags, destination)) {
             // lets remove the value
             reducedValues.poll();
-
+            bufferCounts.put(t, 0);
+            tempBufferCount = 0;
+            reducedValueMap.put(t, null);
+            tempCount++;
             for (Map.Entry<Integer, Queue<Object>> e : messagePerTarget.entrySet()) {
               Queue<Object> value = e.getValue();
               if (value.size() != 0) {
