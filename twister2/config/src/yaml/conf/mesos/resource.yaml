@@ -1,0 +1,75 @@
+# scheduler class for distributing the topology for execution
+twister2.class.scheduler: "edu.iu.dsc.tws.rsched.schedulers.mesos.MesosScheduler"
+
+# working directory for the topologies
+twister2.scheduler.mesos.scheduler.working.directory: "~/.twister2/repository"#"${TWISTER2_DIST}/topologies/${CLUSTER}/${ROLE}/${TOPOLOGY}"
+
+#directory of core package 
+twister2.directory.core-package: "/root/.twister2/repository/twister2-core/"
+
+# location of java - pick it up from shell environment
+twister2.directory.sandbox.java.home: "${JAVA_HOME}"
+
+# The URI of Mesos Master
+#twister2.mesos.master.uri: "149.165.150.81:5050"     #######don't forget to uncomment when pushing####################
+
+# mesos framework name
+twister2.mesos.framework.name: "Twister2 framework"
+
+twister2.mesos.master.uri: "zk://149.165.150.81:2181/mesos"
+# The maximum time in milliseconds waiting for MesosFramework got registered with Mesos Master
+twister2.mesos.framework.staging.timeout.ms: 2000
+
+# The maximum time in milliseconds waiting for Mesos Scheduler Driver to complete stop()
+twister2.mesos.scheduler.driver.stop.timeout.ms: 5000
+
+# the path to load native mesos library
+twister2.mesos.native.library.path: "/usr/lib/mesos/0.28.1/lib/"
+
+# the core package uri
+twister2.system.package.uri: "${TWISTER2_DIST}/twister2-core.tar.gz"
+
+# mesos fetch uri
+twister2.mesos.fetch.uri: "http://149.165.150.81:8082"
+
+# the job package uri for mesos agent to fetch.
+# For fetching http server must be running on mesos master
+twister2.system.job.uri: "http://149.165.150.81:8082/twister2-job.tar.gz"
+
+# the resource manager class
+twister2.class.state.manager: "edu.iu.dsc.tws.rsched.statemanagers.fs.SharedFileSystemStateManager"
+# launcher class for mesos submission
+twister2.class.launcher: "edu.iu.dsc.tws.rsched.schedulers.mesos.MesosLauncher"
+# the uploader class
+twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.scp.ScpUploader"
+# twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.NullUploader"
+# twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader"
+
+
+
+
+# container class to run in workers
+twister2.job.basic.container.class: "edu.iu.dsc.tws.examples.basic.BasicMesosWorker"
+
+# the Mesos worker class
+twister2.class.mesos.worker: "edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorker"
+
+###################################################################################
+# ZooKeeper related config parameters
+###################################################################################
+# ZooKeeper server ip address and port number
+#twister2.zookeeper.server.ip: "149.165.150.81" #######don't forget to uncomment when pushing##############################################
+twister2.zookeeper.server.ip: "149.165.150.81"
+twister2.zookeeper.server.port: "2181"
+
+# the root node path of this job on ZooKeeper
+# the default is "/twister2"
+#twister2.zookeeper.root.node.path: "/twister2"
+
+# if the workers want to wait for all others to join a job, max wait time in ms
+twister2.zookeeper.max.wait.time.for.all.workers.to.join: "100000"
+
+
+
+
+
