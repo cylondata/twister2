@@ -89,7 +89,7 @@ public class ReduceBatchPartialReceiver extends ReduceBatchReceiver {
           }
         }
 
-        if (tempBufferCount >= bufferSize || allFinished) {
+        if ((!bufferTillEnd && tempBufferCount >= bufferSize) || allFinished) {
           int flags = 0;
           boolean last;
           if (allFinished) {
