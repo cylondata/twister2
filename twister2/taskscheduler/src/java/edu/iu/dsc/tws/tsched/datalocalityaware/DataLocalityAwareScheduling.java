@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -47,122 +48,97 @@ public class DataLocalityAwareScheduling {
 
     int maxTaskInstancesPerContainer =
         TaskSchedulerContext.defaultTaskInstancesPerContainer(config);
-
-    LOG.info(String.format("Max. Task Instances:" + maxTaskInstancesPerContainer));
-
-    int maxContainerTaskObjectSize = 0;
-
+    int maxContainerTaskObjectSize;
     DataLocatorUtils dataLocatorUtils;
     TaskAttributes taskAttributes = new TaskAttributes();
     Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
     Map<Integer, List<InstanceId>> dataAwareAllocation = new HashMap<>();
     Set<Map.Entry<String, Integer>> entries = parallelTaskMap.entrySet();
+    int containerCapacity = maxTaskInstancesPerContainer * numberOfContainers;
+    int totalTask = taskAttributes.getTotalNumberOfInstances(taskVertexSet);
 
     for (int i = 0; i < numberOfContainers; i++) {
       dataAwareAllocation.put(i, new ArrayList<>());
     }
-    LOG.info(String.format("Data Aware Before Allocation:" + dataAwareAllocation + "\n"
+    LOG.info(String.format("Data Aware Before Task Allocation:" + dataAwareAllocation + "\n"
         + "Parallel Task Map Details:" + parallelTaskMap.entrySet()));
     int cIdx = 0;
     int containerIndex = 0;
     List<Integer> removedWorkers = new ArrayList<>();
 
-    for (Iterator<Map.Entry<String, Integer>> iterator
-         = entries.iterator(); iterator.hasNext();) {
-      Map.Entry<String, Integer> entry = iterator.next();
-      String key = entry.getKey();
-      Map<String, List<CalculateDataTransferTime>> workerPlanMap;
+    if (containerCapacity >= totalTask) {
+      LOG.info("Task Scheduling Can be Performed to Allocate the Task Instances:"
+          + containerCapacity + "\t" + totalTask);
+      for (Iterator<Map.Entry<String, Integer>> iterator = entries.iterator();
+           iterator.hasNext();) {
 
-      //List<Integer> removedWorkers = null;
-      for (Vertex vertex : taskVertexSet) {
-        if (vertex.getName().equals(key)
-            && vertex.getConfig().getListValue("dataset") != null) {
-          List<String> datasetList = vertex.getConfig().getListValue("dataset");
-          if (datasetList.size() == 1) {
-            String datasetName = datasetList.get(0);
-            int totalNumberOfInstances = vertex.getParallelism();
-            int globalTaskIndex = 0;
-            dataLocatorUtils = new DataLocatorUtils(datasetName);
-            List<String> datanodesList = dataLocatorUtils.findDataNodes();
-            List<CalculateDataTransferTime> cal = null;
+        Map.Entry<String, Integer> entry = iterator.next();
+        String key = entry.getKey();
+        Map<String, List<CalculateDataTransferTime>> workerPlanMap;
 
-            if (cIdx == 0) {
-              Worker worker = workerPlan.getWorker(containerIndex);
-              workerPlanMap = calculateDistance(datanodesList, workerPlan, cIdx, removedWorkers);
-              cal = findOptimalWorkerNode(vertex, workerPlanMap, cIdx);
-            } else if (cIdx > 0) {
-              Worker worker = workerPlan.getWorker(containerIndex);
-              if (dataAwareAllocation.get(containerIndex).size() >= maxTaskInstancesPerContainer) {
-                try {
-                  removedWorkers.add(worker.getId());
-                } catch (NullPointerException ne) {
-                  ne.printStackTrace();
+        for (Vertex vertex : taskVertexSet) {
+          if (vertex.getName().equals(key)
+              && vertex.getConfig().getListValue("dataset") != null) {
+
+            List<String> datasetList = vertex.getConfig().getListValue("dataset");
+            if (datasetList.size() == 1) {
+              String datasetName = datasetList.get(0);
+              int totalNumberOfInstances = vertex.getParallelism();
+              int globalTaskIndex = 0;
+              dataLocatorUtils = new DataLocatorUtils(datasetName);
+              List<String> datanodesList = dataLocatorUtils.findDataNodes();
+              List<CalculateDataTransferTime> cal = null;
+
+              if (cIdx == 0) {
+                //Worker worker = workerPlan.getWorker(containerIndex);
+                workerPlanMap = calculateDistance(datanodesList, workerPlan, cIdx, removedWorkers);
+                cal = findOptimalWorkerNode(vertex, workerPlanMap, cIdx);
+              } else if (cIdx > 0) {
+                Worker worker = workerPlan.getWorker(containerIndex);
+                if (dataAwareAllocation.get(containerIndex).size()
+                    >= maxTaskInstancesPerContainer) {
+                  try {
+                    removedWorkers.add(worker.getId());
+                  } catch (NullPointerException ne) {
+                    ne.printStackTrace();
+                  }
                 }
+                workerPlanMap = calculateDistance(datanodesList, workerPlan, cIdx, removedWorkers);
+                cal = findOptimalWorkerNode(vertex, workerPlanMap, cIdx);
               }
-              workerPlanMap = calculateDistance(datanodesList, workerPlan, cIdx, removedWorkers);
-              cal = findOptimalWorkerNode(vertex, workerPlanMap, cIdx);
-            }
 
             /*System.out.println(String.format(cal.toString()) + "\tAnd Its Size:" + cal.size());
             System.out.println(String.format("Optimal Worker Node Details:"
                 + cal.size() + "\tworker:" + Collections.min(cal).getNodeName()) + "\t"
                 + Collections.min(cal).getRequiredDataTransferTime());*/
 
-            maxContainerTaskObjectSize = 0;
-            for (int i = 0; i < totalNumberOfInstances; i++) {
-              containerIndex = Integer.parseInt(Collections.min(cal).getNodeName().trim());
-              LOG.info("Worker Node Allocation for task:" + vertex.getName() + "(" + i + ")"
-                  + "-> Worker:" + containerIndex
-                  + "->" + Collections.min(cal).getDataNode());
-              if (maxContainerTaskObjectSize < maxTaskInstancesPerContainer) {
-                dataAwareAllocation.get(containerIndex).add(
-                    new InstanceId(vertex.getName(), globalTaskIndex, i));
-                globalTaskIndex++;
-                maxContainerTaskObjectSize++;
-              } else {
-                LOG.info(String.format("Worker/Container:" + containerIndex
-                    + "--> Reached Max. Task Object Size" + maxContainerTaskObjectSize));
+              maxContainerTaskObjectSize = 0;
+              for (int i = 0; i < totalNumberOfInstances; i++) {
+                containerIndex = Integer.parseInt(Collections.min(cal).getNodeName().trim());
+                LOG.info("Worker Node Allocation for task:" + vertex.getName() + "(" + i + ")"
+                    + "-> Worker:" + containerIndex + "->" + Collections.min(cal).getDataNode());
+                if (maxContainerTaskObjectSize < maxTaskInstancesPerContainer) {
+                  dataAwareAllocation.get(containerIndex).add(
+                      new InstanceId(vertex.getName(), globalTaskIndex, i));
+                  globalTaskIndex++;
+                  maxContainerTaskObjectSize++;
+                } else {
+                  LOG.info(String.format("Worker:" + containerIndex
+                      + "-> Reached Max. Task Object Size:" + maxContainerTaskObjectSize));
+                }
               }
+              ++cIdx;
+              LOG.info(String.format("********************************************************"));
             }
-            ++cIdx;
-            LOG.info(String.format("********************************************************"));
           }
         }
       }
+    } else {
+      LOG.info("Task Scheduling Can't be Performed to Allocate the Task Instances"
+          + containerCapacity + "\t" + totalTask);
     }
-    LOG.info(String.format("Data Aware After Allocation:" + dataAwareAllocation));
+    LOG.info(String.format("Data Aware After Task Allocation:" + dataAwareAllocation));
     return dataAwareAllocation;
-
-//      for (Vertex vertex : taskVertexSet) {
-//        if (vertex.getName().equals(key)
-//            && vertex.getConfig().getListValue("dataset") != null) {
-//          List<String> datasetList = vertex.getConfig().getListValue("dataset");
-//          LOG.info("Key value exists in the task set:" + key + "\t" + value
-//              + "\t" + datasetList.size());
-//          if (datasetList.size() == 1) {
-//            String datasetName = datasetList.get(0);
-//            dataLocatorUtils = new DataLocatorUtils(datasetName);
-//            List<String> datanodesList = dataLocatorUtils.findDataNodes();
-//            int totalNumberOfInstances = vertex.getParallelism();
-//            int globalTaskIndex = 0;
-//            for (int i = 0; i < totalNumberOfInstances; i++) {
-//              workerPlanMap = calculateDistance(datanodesList, workerPlan, i);
-//              List<CalculateDataTransferTime> cal = new ArrayList<>();
-//              cal = findOptimalWorkerNode(vertex, workerPlanMap, i);
-//              System.out.println(String.format(cal.toString()));
-//              System.out.println(String.format("Optimal Worker Node Details:" + cal.size() + "\t"
-//                  + Collections.min(cal).getRequiredDataTransferTime()) + "\t"
-//                  + Collections.min(cal).getNodeName());
-//              //int containerIndex = 2;
-//              int containerIndex = Integer.parseInt(Collections.min(cal).getNodeName().trim());
-//              dataAwareAllocation.get(containerIndex).add(
-//                  new InstanceId(vertex.getName(), globalTaskIndex, i));
-//              globalTaskIndex++;
-//
-//            }
-//          }
-//        }
-//      }
   }
 
   /**
@@ -173,8 +149,8 @@ public class DataLocalityAwareScheduling {
 
     Map<String, List<CalculateDataTransferTime>> workerPlanMap = new HashMap<>();
     Worker worker;
-    double workerBandwidth = 0.0;
-    double workerLatency = 0.0;
+    double workerBandwidth;
+    double workerLatency;
     double calculateDistance = 0.0;
     double datanodeBandwidth;
     double datanodeLatency;
@@ -261,22 +237,26 @@ public class DataLocalityAwareScheduling {
     Set<Map.Entry<String, List<CalculateDataTransferTime>>> entries = workerPlanMap.entrySet();
     List<CalculateDataTransferTime> cal = new ArrayList<>();
 
-    for (Iterator<Map.Entry<String, List<CalculateDataTransferTime>>> iterator
-         = entries.iterator(); iterator.hasNext();) {
-      Map.Entry<String, List<CalculateDataTransferTime>> entry = iterator.next();
-      String key = entry.getKey();
-      List<CalculateDataTransferTime> value = entry.getValue();
-      for (CalculateDataTransferTime requiredDataTransferTime : value) {
-        LOG.info(String.format("Task:" + vertex.getName() + "("
-            + requiredDataTransferTime.getTaskIndex() + ")"
-            + "D.Node:" + key + "-> W.Node:" + requiredDataTransferTime.getNodeName()
-            + "-> D.Time:" + requiredDataTransferTime.getRequiredDataTransferTime()));
-      }
+    try {
+      for (Iterator<Map.Entry<String, List<CalculateDataTransferTime>>> iterator
+           = entries.iterator(); iterator.hasNext();) {
+        Map.Entry<String, List<CalculateDataTransferTime>> entry = iterator.next();
+        String key = entry.getKey();
+        List<CalculateDataTransferTime> value = entry.getValue();
+        for (CalculateDataTransferTime requiredDataTransferTime : value) {
+          LOG.info(String.format("Task:" + vertex.getName() + "("
+              + requiredDataTransferTime.getTaskIndex() + ")"
+              + "D.Node:" + key + "-> W.Node:" + requiredDataTransferTime.getNodeName()
+              + "-> D.Time:" + requiredDataTransferTime.getRequiredDataTransferTime()));
+        }
       /* cal.add(new CalculateDataTransferTime(Collections.min(value).getNodeName(),
           Collections.min(value).getRequiredDataTransferTime()));*/
 
-      cal.add(new CalculateDataTransferTime(Collections.min(value).getNodeName(),
-          Collections.min(value).getRequiredDataTransferTime(), key));
+        cal.add(new CalculateDataTransferTime(Collections.min(value).getNodeName(),
+            Collections.min(value).getRequiredDataTransferTime(), key));
+      }
+    } catch (NoSuchElementException nse) {
+      nse.printStackTrace();
     }
     LOG.info(String.format("********************************************************"));
     return cal;
