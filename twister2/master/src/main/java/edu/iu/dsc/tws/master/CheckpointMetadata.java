@@ -17,4 +17,24 @@ public class CheckpointMetadata implements java.io.Serializable {
   private static final long serialVersionUID = -2387652345781312442L;
 
   private static final Logger LOG = Logger.getLogger(CheckpointMetadata.class.getName());
+
+  /** The ID of the checkpoint */
+  private final long checkpointId;
+
+  /** The timestamp of the checkpoint */
+  private final long timestamp;
+
+  public CheckpointMetadata(long checkpointId, long timestamp) {
+    this.checkpointId = checkpointId;
+    this.timestamp = timestamp;
+  }
+
+  public long getCheckpointId() {
+    return checkpointId;
+  }
+
+  public long getTimestamp() {
+    return timestamp;
+  }
+
 }
