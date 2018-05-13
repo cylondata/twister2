@@ -12,5 +12,5 @@
 package edu.iu.dsc.tws.master;
 
 public enum CheckpointingMode {
-  EXACTLY_ONCE, AT_LEAST_ONCE , AT_MOST_ONCE
+  EXACTLY_ONCE, AT_LEAST_ONCE, AT_MOST_ONCE
 }
