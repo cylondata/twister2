@@ -5,7 +5,7 @@ common_deps_files = [
     "//twister2/resource-scheduler/src/java:resource-scheduler-java",
     "//twister2/comms/src/java:comms-java",
     "//twister2/common/src/java:common-java",
-    "//twister2/connector/src/java:connector-java",
+    "//twister2/connectors/src/java:connector-java",
     "//twister2/task/src/main/java:task-java",
     "//twister2/taskscheduler/src/java:taskscheduler-java",
     "//twister2/proto:proto-taskscheduleplan-java",

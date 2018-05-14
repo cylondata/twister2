@@ -51,7 +51,7 @@ public class TwsKafkaConsumer<T> extends SourceTask {
 
   @Override
   public void prepare(Config cfg, TaskContext context) {
-    this.myIndex = cfg.getIntegerValue("twister2.container.id",0);
+    this.myIndex = cfg.getIntegerValue("twister2.container.id", 0);
     LOG.info("myID : {} , worldSize : {} ", myIndex, worldSize);
     this.partitionFinder = new KafkaPartitionFinder(
         simpleKafkaConfig, worldSize, myIndex, topicDescription);
