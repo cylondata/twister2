@@ -21,12 +21,12 @@ public class LocalFileLocation implements FileLocation {
     hosts = new String[]{host};
   }
 
-//  /**
-//   *
-//   * @param fileName
-//   * @return
-//   * @throws IOException
-//   */
+  /**
+   * This method retrieves the hostnames of the corresponding filename.
+   * @param fileName
+   * @return
+   * @throws IOException
+   */
   @Override
   public String[] getHosts(String fileName) throws IOException {
     return this.hosts;
