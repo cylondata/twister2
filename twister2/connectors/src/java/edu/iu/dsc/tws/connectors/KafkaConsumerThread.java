@@ -25,6 +25,8 @@ import org.apache.kafka.common.TopicPartition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edu.iu.dsc.tws.task.api.TaskContext;
+
 public class KafkaConsumerThread<T> extends Thread {
   private static final Logger LOG = LoggerFactory.getLogger(KafkaConsumerThread.class);
   private Consumer<String, String> consumer;
@@ -36,16 +38,20 @@ public class KafkaConsumerThread<T> extends Thread {
   private List<TopicPartition> topicPartitions;
   private List<KafkaTopicPartitionState> topicPartitionStates;
   private volatile boolean active = true;
+  private volatile TaskContext taskContext;
 
   public KafkaConsumerThread(
       Properties kafkaConsumerConfig, Map<TopicPartition, OffsetAndMetadata> offsetsToCommit,
-      List<TopicPartition> topicPartitions, List<KafkaTopicPartitionState> topicPartitionStates) {
+      List<TopicPartition> topicPartitions, List<KafkaTopicPartitionState> topicPartitionStates,
+      TaskContext context) {
     this.kafkaConsumerConfig = kafkaConsumerConfig;
     this.offsetsToCommit = offsetsToCommit;
     this.topicPartitions = topicPartitions;
     this.topicPartitionStates = topicPartitionStates;
+    this.taskContext = context;
 
   }
+
 
   @Override
   public void run() {
@@ -69,6 +75,7 @@ public class KafkaConsumerThread<T> extends Thread {
 //                    System.out.println(String.valueOf(value));
           System.out.printf("offset = %d, key = %s, value = %s\n",
               record.offset(), record.key(), record.value());
+          LOG.info("record = {} ; offset = {}", record.value(), record.offset());
         }
         for (KafkaTopicPartitionState topicPartitionState : topicPartitionStates) {
 
@@ -139,10 +146,12 @@ public class KafkaConsumerThread<T> extends Thread {
   public void setActive(boolean active) {
     this.active = active;
   }
+
   public void emitRecord(String value, KafkaTopicPartitionState tps, Long offset) {
     LOG.info("emitting record {} from the partition {}", value, offset);
     System.out.println(value);
     tps.setPositionOffset(offset);
+    taskContext.write("e1", value);
   }
 
 }
