@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.connectors.config.KafkaConsumerConfig;
 import edu.iu.dsc.tws.task.api.SourceTask;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
@@ -50,6 +51,21 @@ public class TwsKafkaConsumer<T> extends SourceTask {
 
   @Override
   public void prepare(Config cfg, TaskContext context) {
+    this.worldSize = 1;
+    this.myIndex = 0;
+    this.partitionFinder = new KafkaPartitionFinder(
+        this.kafkaConfigs, worldSize, myIndex, topicDescription);
+    this.topicPartitions = partitionFinder.getRelevantPartitions();
+
+    this.topicPartitionStates = new ArrayList<>();
+    for (TopicPartition tp : topicPartitions) {
+      topicPartitionStates.add(new KafkaTopicPartitionState(tp));
+    }
+
+    this.kafkaConsumerThread = new KafkaConsumerThread<T>(
+        kafkaConfigs, offsetsToCommit, topicPartitions, topicPartitionStates);
+    kafkaConsumerThread.assignPartitions();
+    kafkaConsumerThread.setSeekToBeginning();
 
   }
   public TwsKafkaConsumer(
@@ -69,7 +85,6 @@ public class TwsKafkaConsumer<T> extends SourceTask {
     this.topicDescription = new KafkaTopicDescription(topicPattern);
     createKafkaConfig(servers, consumerGroup);
   }
-
   public Properties getKafkaConfigs() {
     return kafkaConfigs;
   }
@@ -78,52 +93,14 @@ public class TwsKafkaConsumer<T> extends SourceTask {
     this.kafkaConfigs = kafkaConfigs;
   }
 
-  //    public void prepare(Config cfg, TaskContext context) {
-//        this.
-//    }
   public void init() {
     System.out.println("init");
-    this.worldSize = 1;
-    this.myIndex = 0;
-    this.partitionFinder = new KafkaPartitionFinder(
-        this.kafkaConfigs, worldSize, myIndex, topicDescription);
-    this.topicPartitions = partitionFinder.getRelevantPartitions();
 
-    this.topicPartitionStates = new ArrayList<>();
-    for (TopicPartition tp : topicPartitions) {
-      topicPartitionStates.add(new KafkaTopicPartitionState(tp));
-    }
-
-    this.kafkaConsumerThread = new KafkaConsumerThread<T>(
-        kafkaConfigs, offsetsToCommit, topicPartitions, topicPartitionStates);
-    kafkaConsumerThread.assignPartitions();
-    kafkaConsumerThread.setSeekToBeginning();
 
   }
 
-//  public void run(){
-//
-//  }
-
   private Properties createKafkaConfig(List<String> servers, String consumerGroup) {
-
-    StringBuilder strServers = new StringBuilder();
-    for (int i = 0; i < servers.size(); i++) {
-      strServers.append(servers.get(i));
-      if (i + 1 < servers.size()) {
-        strServers.append(",");
-      }
-    }
-    this.kafkaConfigs = new Properties();
-    kafkaConfigs.put("bootstrap.servers", strServers.toString());
-    kafkaConfigs.put("group.id", consumerGroup);
-    kafkaConfigs.put("enable.auto.commit", "false");
-    kafkaConfigs.put("session.timeout.ms", "30000");
-    kafkaConfigs.put("key.deserializer",
-        "org.apache.kafka.common.serialization.StringDeserializer");
-    kafkaConfigs.put("value.deserializer",
-        "org.apache.kafka.common.serialization.StringDeserializer");
-    return kafkaConfigs;
+    return KafkaConsumerConfig.getStringDeserializerConfig(servers, consumerGroup);
   }
 
 }
