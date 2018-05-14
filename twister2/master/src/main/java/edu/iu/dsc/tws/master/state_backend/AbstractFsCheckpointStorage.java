@@ -38,7 +38,8 @@ public abstract class AbstractFsCheckpointStorage implements CheckpointStorage {
     this.jobName = jobName;
   }
 
-  protected static CompletedCheckpointStorageLocation resolveCheckpointPointer(String checkpointPointer) throws IOException {
+  protected static CompletedCheckpointStorageLocation resolveCheckpointPointer(
+      String checkpointPointer) throws IOException {
     return null;
   }
 }

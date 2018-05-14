@@ -13,26 +13,25 @@ package edu.iu.dsc.tws.master.state_backend;
 
 import java.net.URI;
 
-import javax.annotation.Nullable;
 
 import edu.iu.dsc.tws.data.fs.Path;
 
 public abstract class AbstractFileStateBackend extends AbstractStateBackend {
   private static final long serialVersionUID = 1L;
 
-  @Nullable
-  private final Path baseCheckpointPath ;
 
-  protected AbstractFileStateBackend(@Nullable Path baseCheckpointPath) {
+  private final Path baseCheckpointPath;
+
+  protected AbstractFileStateBackend(Path baseCheckpointPath) {
     this.baseCheckpointPath = baseCheckpointPath == null ? null : validatePath(baseCheckpointPath);
   }
 
-  public AbstractFileStateBackend(@Nullable URI baseCheckpointPath) {
+  public AbstractFileStateBackend(URI baseCheckpointPath) {
     this((baseCheckpointPath == null) ? null : new Path(baseCheckpointPath));
 
   }
 
-  @Nullable
+
   public Path getCheckpointPath() {
     return baseCheckpointPath;
   }
@@ -44,14 +43,16 @@ public abstract class AbstractFileStateBackend extends AbstractStateBackend {
     final String pathPart = uri.getPath();
 
     if (scheme == null) {
-      throw new IllegalArgumentException("The scheme (hdfs://, file://, etc) is null. " +
-          "Please specify the file system scheme explicitly in the URI.");
+      throw new IllegalArgumentException("The scheme (hdfs://, file://, etc) is null. "
+          + "Please specify the file system scheme explicitly in the URI.");
     }
     if (pathPart == null) {
-      throw new IllegalArgumentException("The path to store the checkpoint data in is null. " +
-          "Please specify a directory path for the checkpoint data.");
+
+      throw new IllegalArgumentException("The path to store the checkpoint data in is null. "
+          + "Please specify a directory path for the checkpoint data.");
     }
-    if (pathPart.length() == 0 || pathPart.equals("/")) {
+    if (pathPart.length() == 0 || "/".equals(pathPart)) {
+
       throw new IllegalArgumentException("Cannot use the root directory for checkpoints.");
     }
 

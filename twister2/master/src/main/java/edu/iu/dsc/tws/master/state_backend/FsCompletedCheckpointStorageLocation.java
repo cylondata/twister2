@@ -28,7 +28,8 @@ public class FsCompletedCheckpointStorageLocation implements CompletedCheckpoint
 
   private transient FileSystem fs;
 
-  public FsCompletedCheckpointStorageLocation(Path exclusiveCheckpointDir, String externalPointer, FileSystem fs) {
+  public FsCompletedCheckpointStorageLocation(
+      Path exclusiveCheckpointDir, String externalPointer, FileSystem fs) {
     this.exclusiveCheckpointDir = exclusiveCheckpointDir;
     this.externalPointer = externalPointer;
     this.fs = fs;
