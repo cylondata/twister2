@@ -22,7 +22,7 @@ public class LocalFileLocation implements FileLocation {
   }
 
   /**
-   *
+   * This method retrieves the hostnames of the corresponding filename.
    * @param fileName
    * @return
    * @throws IOException
