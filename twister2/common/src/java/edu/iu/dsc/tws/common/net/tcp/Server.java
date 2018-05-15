@@ -28,23 +28,42 @@ import edu.iu.dsc.tws.common.config.Config;
 public class Server implements SelectHandler {
   private static final Logger LOG = Logger.getLogger(Server.class.getName());
 
+  /**
+   * The server socket
+   */
   private ServerSocketChannel serverSocketChannel;
+
+  /**
+   * The address of the socket
+   */
   private InetSocketAddress address;
 
+  /**
+   * The current active connections
+   */
   private Map<SocketChannel, Channel> connectedChannels = new HashMap<>();
 
+  /**
+   * Configuration of the server
+   */
   private Config config;
 
+  /**
+   * Progress of the communications
+   */
   private Progress progress;
 
-  private MessageHandler messageHandler;
+  /**
+   * Notifications about the connections
+   */
+  private ChannelHandler channelHandler;
 
   public Server(Config cfg, String host, int port, Progress loop,
-                MessageHandler msgHandler) {
+                ChannelHandler msgHandler) {
     this.config = cfg;
     this.progress = loop;
     address = new InetSocketAddress(host, port);
-    this.messageHandler = msgHandler;
+    this.channelHandler = msgHandler;
   }
 
   public boolean start() {
@@ -80,25 +99,25 @@ public class Server implements SelectHandler {
     }
   }
 
-  public TCPRequest send(SocketChannel sc, ByteBuffer buffer, int size, int edge) {
+  public TCPMessage send(SocketChannel sc, ByteBuffer buffer, int size, int edge) {
     Channel channel = connectedChannels.get(sc);
     if (channel == null) {
       return null;
     }
 
-    TCPRequest request = new TCPRequest(buffer, edge, size);
+    TCPMessage request = new TCPMessage(buffer, edge, size);
     channel.addWriteRequest(request);
 
     return request;
   }
 
-  public TCPRequest receive(SocketChannel sc, ByteBuffer buffer, int size, int edge) {
+  public TCPMessage receive(SocketChannel sc, ByteBuffer buffer, int size, int edge) {
     Channel channel = connectedChannels.get(sc);
     if (channel == null) {
       return null;
     }
 
-    TCPRequest request = new TCPRequest(buffer, edge, size);
+    TCPMessage request = new TCPMessage(buffer, edge, size);
     channel.addReadRequest(request);
 
     return request;
@@ -132,12 +151,12 @@ public class Server implements SelectHandler {
         socketChannel.configureBlocking(false);
         socketChannel.socket().setTcpNoDelay(true);
 
-        Channel channel = new Channel(config, progress, this, socketChannel, messageHandler);
+        Channel channel = new Channel(config, progress, this, socketChannel, channelHandler);
         channel.enableReading();
         channel.enableWriting();
         connectedChannels.put(socketChannel, channel);
 
-        messageHandler.onConnect(socketChannel, StatusCode.SUCCESS);
+        channelHandler.onConnect(socketChannel, StatusCode.SUCCESS);
       }
     } catch (IOException e) {
       LOG.log(Level.SEVERE, "Error while accepting a new connection ", e);

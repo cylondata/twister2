@@ -11,19 +11,16 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.net.tcp;
 
-import java.nio.channels.SelectableChannel;
+import java.nio.channels.SocketChannel;
 
-/**
- * The select handler, this will be called by the selector
- */
-public interface SelectHandler {
-  void handleRead(SelectableChannel channel);
+public interface ChannelHandler {
+  void onError(SocketChannel channel);
 
-  void handleWrite(SelectableChannel channel);
+  void onConnect(SocketChannel channel, StatusCode status);
 
-  void handleAccept(SelectableChannel channel);
+  void onClose(SocketChannel channel);
 
-  void handleConnect(SelectableChannel channel);
+  void onReceiveComplete(SocketChannel channel, TCPMessage readRequest);
 
-  void handleError(SelectableChannel channel);
+  void onSendComplete(SocketChannel channel, TCPMessage writeRequest);
 }
