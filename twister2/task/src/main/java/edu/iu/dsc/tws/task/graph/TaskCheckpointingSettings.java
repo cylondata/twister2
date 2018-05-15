@@ -34,13 +34,13 @@ public class TaskCheckpointingSettings {
       List<Vertex> verticesToTrigger,
       List<Vertex> verticesToAcknowledge,
       List<Vertex> verticesToConfirm,
-      CheckpointManagerConfiguration checkpointCoordinatorConfiguration) {
+      CheckpointManagerConfiguration checkpointManagerConfiguration) {
 
 
     this.verticesToTrigger = requireNonNull(verticesToTrigger);
     this.verticesToAcknowledge = requireNonNull(verticesToAcknowledge);
     this.verticesToConfirm = requireNonNull(verticesToConfirm);
-    this.checkpointManagerConfiguration = checkpointCoordinatorConfiguration;
+    this.checkpointManagerConfiguration = checkpointManagerConfiguration;
 
   }
 
