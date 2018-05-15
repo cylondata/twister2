@@ -23,7 +23,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -136,6 +135,7 @@ public final class KubernetesWorker {
         getConfigForEnvVariables(persLogReq, logLevel, redirect, maxLogFileSize, maxLogFiles);
     initLogger(workerID, pv, cnfg);
 
+//    LOG.info("KubernetesWorker started. Current time: " + System.currentTimeMillis());
     LOG.info("Received parameters as environment variables: \n" + logBuffer.toString());
 
     // log persistent volume related messages
@@ -184,13 +184,6 @@ public final class KubernetesWorker {
     WorkerController workerController =
         new WorkerController(config, podName, podIP, containerName, job.getJobName());
     thisWorker = workerController.getWorkerNetworkInfo();
-
-    workerController.buildWorkerListWaitForAll(WAIT_TIME_FOR_WORKER_LIST_BUILD);
-
-    List<WorkerNetworkInfo> workerList = workerController.waitForAllWorkersToJoin(10000);
-    if (workerList == null) {
-      LOG.severe("Can not get all workers to join. Something wrong. .......................");
-    }
 
     ResourceAPI.ComputeResource cr = job.getJobResources().getContainer();
     startWorkerClass(workerController, pv);

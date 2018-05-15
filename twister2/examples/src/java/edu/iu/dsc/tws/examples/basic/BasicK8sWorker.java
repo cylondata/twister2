@@ -18,6 +18,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -38,9 +39,15 @@ public class BasicK8sWorker implements IWorker {
                    IWorkerController workerController,
                    IPersistentVolume persistentVolume) {
 
-    int port = workerController.getWorkerNetworkInfo().getWorkerPort();
+    LOG.info("BasicK8sWorker started. Current time: " + System.currentTimeMillis());
 
-    LOG.info("BasicK8sWorker started. Will run en echo server on port: " + port);
+    // wait for all workers in this job to join
+    List<WorkerNetworkInfo> workerList = workerController.waitForAllWorkersToJoin(10000);
+    if (workerList == null) {
+      LOG.severe("Can not get all workers to join. Something wrong. .......................");
+    }
+
+    LOG.info("All workers joined. Current time: " + System.currentTimeMillis());
 
     echoServer(workerController.getWorkerNetworkInfo());
   }
