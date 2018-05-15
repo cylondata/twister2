@@ -32,6 +32,11 @@ filegroup(
 )
 
 filegroup(
+    name = "conf-mesos-yaml",
+    srcs = glob(["conf/mesos/*"]),
+)
+
+filegroup(
     name = "conf-standalone-yaml",
     srcs = glob(["conf/standalone/*"]),
 )

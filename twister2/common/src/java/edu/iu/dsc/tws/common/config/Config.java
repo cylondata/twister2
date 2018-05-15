@@ -179,6 +179,17 @@ public class Config {
     return value != null ? value : defaultValue;
   }
 
+  @SuppressWarnings("unchecked")
+  public List<String> getListValue(String key) {
+    return (List) get(key);
+  }
+
+  public List<String> getListValue(String key, List<String> defaultValue) {
+    List<String> value = getListValue(key);
+    return value != null ? value : defaultValue;
+  }
+
+
   public Boolean getBooleanValue(String key) {
     return (Boolean) get(key);
   }

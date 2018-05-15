@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -35,6 +36,8 @@ import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.core.TaskExecutorFixedThread;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
+import edu.iu.dsc.tws.task.graph.GraphConstants;
+import edu.iu.dsc.tws.tsched.datalocalityaware.DataLocalityAwareTaskScheduling;
 import edu.iu.dsc.tws.tsched.firstfit.FirstFitTaskScheduling;
 import edu.iu.dsc.tws.tsched.roundrobin.RoundRobinTaskScheduling;
 import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
@@ -97,20 +100,60 @@ public class SimpleTGraphExample1 implements IContainer {
       graphBuilder.addTask("task4", taskMerger);
 
       graphBuilder.connect("task1", "task2", "Reduce");
-      graphBuilder.connect("task2", "task3", "Shuffle");
-      graphBuilder.connect("task2", "task4", "merger1");
+      graphBuilder.connect("task1", "task3", "Shuffle");
+      graphBuilder.connect("task2", "task3", "merger1");
       graphBuilder.connect("task3", "task4", "merger2");
 
       graphBuilder.setParallelism("task1", 2);
       graphBuilder.setParallelism("task2", 2);
-      graphBuilder.setParallelism("task3", 2);
+      graphBuilder.setParallelism("task3", 1);
       graphBuilder.setParallelism("task4", 1);
 
-      graphBuilder.addConfiguration("task1", "Ram", 300);
-      graphBuilder.addConfiguration("task1", "Disk", 1000);
-      graphBuilder.addConfiguration("task1", "Cpu", 2);
+      graphBuilder.addConfiguration("task1", "Ram", GraphConstants.taskInstanceRam(cfg));
+      graphBuilder.addConfiguration("task1", "Disk", GraphConstants.taskInstanceDisk(cfg));
+      graphBuilder.addConfiguration("task1", "Cpu", GraphConstants.taskInstanceCpu(cfg));
 
-      graphBuilder.addConfiguration("task2", "Ram", 300);
+      graphBuilder.addConfiguration("task2", "Ram", GraphConstants.taskInstanceRam(cfg));
+      graphBuilder.addConfiguration("task2", "Disk", GraphConstants.taskInstanceDisk(cfg));
+      graphBuilder.addConfiguration("task2", "Cpu", GraphConstants.taskInstanceCpu(cfg));
+
+      graphBuilder.addConfiguration("task3", "Ram", GraphConstants.taskInstanceRam(cfg));
+      graphBuilder.addConfiguration("task3", "Disk", GraphConstants.taskInstanceDisk(cfg));
+      graphBuilder.addConfiguration("task3", "Cpu", GraphConstants.taskInstanceCpu(cfg));
+
+      graphBuilder.addConfiguration("task4", "Ram", GraphConstants.taskInstanceRam(cfg));
+      graphBuilder.addConfiguration("task4", "Disk", GraphConstants.taskInstanceDisk(cfg));
+      graphBuilder.addConfiguration("task4", "Cpu", GraphConstants.taskInstanceCpu(cfg));
+
+      List<String> datasetList;
+
+      datasetList = new ArrayList<>();
+      datasetList.add("dataset1.txt");
+
+      /*datasetList.add("dataset2.txt");
+      datasetList.add("dataset3.txt");
+      datasetList.add("dataset4.txt");*/
+
+      graphBuilder.addConfiguration("task1", "dataset", datasetList);
+
+      datasetList = new ArrayList<>();
+      datasetList.add("dataset2.txt");
+
+      graphBuilder.addConfiguration("task2", "dataset", datasetList);
+
+      datasetList = new ArrayList<>();
+      datasetList.add("dataset3.txt");
+      graphBuilder.addConfiguration("task3", "dataset", datasetList);
+
+      datasetList = new ArrayList<>();
+      datasetList.add("dataset4.txt");
+      graphBuilder.addConfiguration("task4", "dataset", datasetList);
+
+      /*graphBuilder.addConfiguration("task2", "dataset", "dataset2.txt");
+      graphBuilder.addConfiguration("task3", "dataset", "dataset3.txt");
+      graphBuilder.addConfiguration("task4", "dataset", "dataset4.txt");*/
+
+      /*graphBuilder.addConfiguration("task2", "Ram", 300);
       graphBuilder.addConfiguration("task2", "Disk", 1000);
       graphBuilder.addConfiguration("task2", "Cpu", 2);
 
@@ -120,22 +163,34 @@ public class SimpleTGraphExample1 implements IContainer {
 
       graphBuilder.addConfiguration("task4", "Ram", 250);
       graphBuilder.addConfiguration("task4", "Disk", 1000);
-      graphBuilder.addConfiguration("task4", "Cpu", 2);
+      graphBuilder.addConfiguration("task4", "Cpu", 2);*/
 
       WorkerPlan workerPlan = new WorkerPlan();
       Worker worker0 = new Worker(0);
       Worker worker1 = new Worker(1);
+      Worker worker2 = new Worker(2);
 
       worker0.setCpu(4);
       worker0.setDisk(4000);
       worker0.setRam(2048);
+      worker0.addProperty("bandwidth", 1000.0);
+      worker0.addProperty("latency", 0.1);
 
       worker1.setCpu(4);
       worker1.setDisk(4000);
       worker1.setRam(2048);
+      worker1.addProperty("bandwidth", 2000.0);
+      worker1.addProperty("latency", 0.1);
+
+      worker2.setCpu(4);
+      worker2.setDisk(4000);
+      worker2.setRam(2048);
+      worker2.addProperty("bandwidth", 3000.0);
+      worker2.addProperty("latency", 0.1);
 
       workerPlan.addWorker(worker0);
       workerPlan.addWorker(worker1);
+      workerPlan.addWorker(worker2);
 
       DataFlowTaskGraph dataFlowTaskGraph = graphBuilder.build();
       LOG.info("Generated Dataflow Task Graph Is:" + dataFlowTaskGraph.getTaskVertexSet());
@@ -151,6 +206,12 @@ public class SimpleTGraphExample1 implements IContainer {
             FirstFitTaskScheduling firstFitTaskScheduling = new FirstFitTaskScheduling();
             firstFitTaskScheduling.initialize(cfg);
             taskSchedulePlan = firstFitTaskScheduling.schedule(dataFlowTaskGraph, workerPlan);
+          } else if (TaskSchedulerContext.taskSchedulingMode(cfg).equals("datalocalityaware")) {
+            DataLocalityAwareTaskScheduling dataLocalityAwareTaskScheduling = new
+                DataLocalityAwareTaskScheduling();
+            dataLocalityAwareTaskScheduling.initialize(cfg);
+            taskSchedulePlan = dataLocalityAwareTaskScheduling.schedule(
+                dataFlowTaskGraph, workerPlan);
           }
           try {
             if (taskSchedulePlan.getContainersMap() != null) {
@@ -419,5 +480,6 @@ public class SimpleTGraphExample1 implements IContainer {
     }
   }
 }
+
 
 

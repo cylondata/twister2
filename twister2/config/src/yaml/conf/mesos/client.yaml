@@ -1,0 +1,43 @@
+################################################################################
+# Client configuration parameters for submission of twister2 jobs
+################################################################################
+
+# cluster name mesos scheduler runs in
+twister2.resource.scheduler.mesos.cluster: "example"
+
+# role in cluster
+twister2.resource.scheduler.mesos.role: "www-data"
+
+# environment name
+twister2.resource.scheduler.mesos.env: "devel"
+
+# mesos job name
+twister2.job.name: "basic-mesos"
+
+# number of CPUs for this job
+twister2.cpu_per_container: "1"
+
+# amount of memory for each CPU in megabytes
+twister2.ram_per_container: "128"
+
+# amount of hard disk space on each CPU in bytes, 1GB=1024*1024*1024
+twister2.disk_per_container: "128"
+
+# number of instances for the task
+twister2.number_of_containers: "10"
+
+# container per mesos executor
+twister2.container_per_worker: "1"
+
+# nfs server address
+nfs.server.address: "149.165.150.81"
+
+# nfs server path
+nfs.server.path: "/nfs/shared-mesos/twister2"
+
+# worker port
+twister2.worker_port: "31000"
+
+# desired nodes
+#twister2.desired_nodes: "149.165.150.xx,149.165.150.xx,149.165.150.xx"
+twister2.desired_nodes: "all"

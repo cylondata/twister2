@@ -9,10 +9,11 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.tsched.roundrobin;
+package edu.iu.dsc.tws.tsched.datalocalityaware;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -26,17 +27,16 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.InstanceId;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.Resource;
+import edu.iu.dsc.tws.tsched.spi.taskschedule.ScheduleException;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskInstanceMapCalculation;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedule;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
-//import edu.iu.dsc.tws.task.graph.GraphConstants;
-//import org.apache.commons.lang3.ObjectUtils;
-//import java.util.concurrent.atomic.AtomicReference;
+public class DataLocalityAwareTaskScheduling implements TaskSchedule {
 
-public class RoundRobinTaskScheduling implements TaskSchedule {
+  private static final Logger LOG = Logger.getLogger(
+      DataLocalityAwareTaskScheduling.class.getName());
 
-  private static final Logger LOG = Logger.getLogger(RoundRobinTaskScheduling.class.getName());
   protected static int taskSchedulePlanId = 0;
   private Double instanceRAM;
   private Double instanceDisk;
@@ -52,47 +52,43 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
   }
 
   @Override
-  public TaskSchedulePlan schedule(DataFlowTaskGraph dataFlowTaskGraph, WorkerPlan workerPlan) {
+  public TaskSchedulePlan schedule(DataFlowTaskGraph graph, WorkerPlan workerPlan) {
 
     Set<TaskSchedulePlan.ContainerPlan> containerPlans = new HashSet<>();
-    Set<Vertex> taskVertexSet = dataFlowTaskGraph.getTaskVertexSet();
+    Set<Vertex> taskVertexSet = new LinkedHashSet<>(graph.getTaskVertexSet());
 
-    Map<Integer, List<InstanceId>> roundRobinContainerInstanceMap =
-        RoundRobinScheduling.RoundRobinSchedulingAlgorithm(taskVertexSet,
-            workerPlan.getNumberOfWorkers());
+    Map<Integer, List<InstanceId>> datalocalityAwareContainerInstanceMap =
+        DataLocalityAwareScheduling.DataLocalityAwareSchedulingAlgorithm(taskVertexSet,
+            workerPlan.getNumberOfWorkers(), workerPlan, this.cfg);
 
     TaskInstanceMapCalculation instanceMapCalculation = new TaskInstanceMapCalculation(
         this.instanceRAM, this.instanceCPU, this.instanceDisk);
 
     Map<Integer, Map<InstanceId, Double>> instancesRamMap =
-        instanceMapCalculation.getInstancesRamMapInContainer(roundRobinContainerInstanceMap,
+        instanceMapCalculation.getInstancesRamMapInContainer(datalocalityAwareContainerInstanceMap,
             taskVertexSet);
 
     Map<Integer, Map<InstanceId, Double>> instancesDiskMap =
-        instanceMapCalculation.getInstancesDiskMapInContainer(roundRobinContainerInstanceMap,
+        instanceMapCalculation.getInstancesDiskMapInContainer(datalocalityAwareContainerInstanceMap,
             taskVertexSet);
 
     Map<Integer, Map<InstanceId, Double>> instancesCPUMap =
-        instanceMapCalculation.getInstancesCPUMapInContainer(roundRobinContainerInstanceMap,
+        instanceMapCalculation.getInstancesCPUMapInContainer(datalocalityAwareContainerInstanceMap,
             taskVertexSet);
 
-    for (int containerId : roundRobinContainerInstanceMap.keySet()) {
+    for (int containerId : datalocalityAwareContainerInstanceMap.keySet()) {
 
       Double containerRAMValue = TaskSchedulerContext.containerRamPadding(cfg);
       Double containerDiskValue = TaskSchedulerContext.containerDiskPadding(cfg);
       Double containerCpuValue = TaskSchedulerContext.containerCpuPadding(cfg);
 
-      List<InstanceId> taskInstanceIds = roundRobinContainerInstanceMap.get(containerId);
+      List<InstanceId> taskInstanceIds = datalocalityAwareContainerInstanceMap.get(containerId);
       Map<InstanceId, TaskSchedulePlan.TaskInstancePlan> taskInstancePlanMap = new HashMap<>();
 
       for (InstanceId id : taskInstanceIds) {
         double instanceRAMValue = instancesRamMap.get(containerId).get(id);
         double instanceDiskValue = instancesDiskMap.get(containerId).get(id);
         double instanceCPUValue = instancesCPUMap.get(containerId).get(id);
-
-        /*LOG.info(String.format("Task Id and Index\t" + id.getTaskId() + "\t" + id.getTaskIndex()
-            + "\tand Required Resource:" + instanceRAMValue + "\t" //write into a log file
-            + instanceDiskValue + "\t" + instanceCPUValue));*/
 
         Resource instanceResource = new Resource(instanceRAMValue,
             instanceDiskValue, instanceCPUValue);
@@ -128,16 +124,16 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
               new HashSet<>(taskInstancePlanMap.values()), containerResource);
       containerPlans.add(taskContainerPlan);
     }
-    //new TaskSchedulePlan(job.getJobId(), containerPlans);
     return new TaskSchedulePlan(taskSchedulePlanId, containerPlans);
   }
 
   @Override
-  public TaskSchedulePlan tschedule() {
+  public TaskSchedulePlan tschedule() throws ScheduleException {
     return null;
   }
 
   @Override
   public void close() {
+
   }
 }
