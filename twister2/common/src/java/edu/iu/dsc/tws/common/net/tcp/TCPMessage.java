@@ -25,7 +25,7 @@ package edu.iu.dsc.tws.common.net.tcp;
 
 import java.nio.ByteBuffer;
 
-public class TCPRequest {
+public class TCPMessage {
   private final ByteBuffer byteBuffer;
 
   private int position;
@@ -38,7 +38,7 @@ public class TCPRequest {
 
   private int length;
 
-  TCPRequest(ByteBuffer buffer, int e) {
+  TCPMessage(ByteBuffer buffer, int e) {
     this.byteBuffer = buffer;
     this.edge = e;
     this.position = 0;
@@ -46,7 +46,7 @@ public class TCPRequest {
     this.complete = false;
   }
 
-  public TCPRequest(ByteBuffer buffer, int e, int l) {
+  public TCPMessage(ByteBuffer buffer, int e, int l) {
     this.byteBuffer = buffer;
     this.edge = e;
     this.position = 0;

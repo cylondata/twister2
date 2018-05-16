@@ -11,19 +11,30 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.net.tcp;
 
-import java.nio.channels.SelectableChannel;
+import java.util.Random;
 
-/**
- * The select handler, this will be called by the selector
- */
-public interface SelectHandler {
-  void handleRead(SelectableChannel channel);
+public final class RequestID {
+  private static Random randomGenerator = new Random(System.nanoTime());
 
-  void handleWrite(SelectableChannel channel);
+  public static final int ID_SIZE = 32;
 
-  void handleAccept(SelectableChannel channel);
+  private byte[] id;
 
-  void handleConnect(SelectableChannel channel);
+  private RequestID(byte[] id) {
+    this.id = id;
+  }
 
-  void handleError(SelectableChannel channel);
+  public static RequestID fromBytes(byte[] bytes) {
+    return new RequestID(bytes);
+  }
+
+  public static RequestID generate() {
+    byte[] dataBytes = new byte[ID_SIZE];
+    randomGenerator.nextBytes(dataBytes);
+    return new RequestID(dataBytes);
+  }
+
+  public byte[] getId() {
+    return id;
+  }
 }

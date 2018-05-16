@@ -11,16 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.net.tcp;
 
-import java.nio.channels.SocketChannel;
+import com.google.protobuf.Message;
 
-public interface MessageHandler {
-  void onError(SocketChannel channel);
-
-  void onConnect(SocketChannel channel, StatusCode status);
-
-  void onClose(SocketChannel channel);
-
-  void onReceiveComplete(SocketChannel channel, TCPRequest readRequest);
-
-  void onSendComplete(SocketChannel channel, TCPRequest writeRequest);
+public interface ResponseHandler {
+  void onMessage(Message message);
 }
