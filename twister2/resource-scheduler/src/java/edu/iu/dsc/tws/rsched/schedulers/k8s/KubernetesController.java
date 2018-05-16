@@ -295,15 +295,14 @@ public class KubernetesController {
    * sending a command to shell
    */
   public static boolean runProcess(String[] command) {
-    StringBuilder stdout = new StringBuilder();
     StringBuilder stderr = new StringBuilder();
     int status =
         ProcessUtils.runSyncProcess(false, command, stderr, new File("."), false);
 
-    if (status != 0) {
-      LOG.severe(String.format(
-          "Failed to run process. Command=%s, STDOUT=%s, STDERR=%s", command, stdout, stderr));
-    }
+//    if (status != 0) {
+//      LOG.severe(String.format(
+//          "Failed to run process. Command=%s, STDOUT=%s, STDERR=%s", command, stdout, stderr));
+//    }
     return status == 0;
   }
 
