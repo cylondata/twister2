@@ -39,9 +39,9 @@ import edu.iu.dsc.tws.common.config.Config;
 public class Channel {
   private static final Logger LOG = Logger.getLogger(Channel.class.getName());
 
-  private Queue<TCPRequest> pendingSends;
+  private Queue<TCPMessage> pendingSends;
 
-  private Map<Integer, Queue<TCPRequest>> pendingReceives;
+  private Map<Integer, Queue<TCPMessage>> pendingReceives;
 
   private final SocketChannel socketChannel;
 
@@ -53,7 +53,7 @@ public class Channel {
 
   private ByteBuffer writeHeader;
 
-  private TCPRequest readingRequest;
+  private TCPMessage readingRequest;
 
   private int readEdge;
 
@@ -69,17 +69,17 @@ public class Channel {
 
   private DataStatus writeStatus;
 
-  private MessageHandler messageHandler;
+  private ChannelHandler channelHandler;
 
   // header size of each message, we use edge and length as the header
   private static final int HEADER_SIZE = 8;
 
   public Channel(Config cfg, Progress progress, SelectHandler handler,
-                 SocketChannel channel, MessageHandler msgHandler) {
+                 SocketChannel channel, ChannelHandler msgHandler) {
     this.socketChannel = channel;
     this.selectHandler = handler;
     this.looper = progress;
-    this.messageHandler = msgHandler;
+    this.channelHandler = msgHandler;
 
     pendingSends = new ArrayBlockingQueue<>(1024);
     pendingReceives = new HashMap<>();
@@ -94,11 +94,11 @@ public class Channel {
   public void read() {
 //    LOG.info("Reading from channel: " + socketChannel);
     while (pendingReceives.size() > 0) {
-      TCPRequest readRequest = readRequest(socketChannel);
+      TCPMessage readRequest = readRequest(socketChannel);
 
       if (readRequest != null) {
         readRequest.setComplete(true);
-        messageHandler.onReceiveComplete(socketChannel, readRequest);
+        channelHandler.onReceiveComplete(socketChannel, readRequest);
       } else {
         break;
       }
@@ -110,8 +110,8 @@ public class Channel {
     pendingSends.clear();
   }
 
-  public boolean addReadRequest(TCPRequest request) {
-    Queue<TCPRequest> readRequests = getReadRequest(request.getEdge());
+  public boolean addReadRequest(TCPMessage request) {
+    Queue<TCPMessage> readRequests = getReadRequest(request.getEdge());
     ByteBuffer byteBuffer = request.getByteBuffer();
     byteBuffer.position(0);
     byteBuffer.limit(request.getLength());
@@ -119,7 +119,7 @@ public class Channel {
     return readRequests.offer(request);
   }
 
-  public boolean addWriteRequest(TCPRequest request) {
+  public boolean addWriteRequest(TCPMessage request) {
     ByteBuffer byteBuffer = request.getByteBuffer();
     byteBuffer.position(request.getLength());
 
@@ -128,7 +128,7 @@ public class Channel {
 
   public void write() {
     while (pendingSends.size() > 0) {
-      TCPRequest writeRequest = pendingSends.peek();
+      TCPMessage writeRequest = pendingSends.peek();
       if (writeRequest == null) {
         break;
       }
@@ -146,7 +146,7 @@ public class Channel {
         pendingSends.poll();
         writeRequest.setComplete(true);
         // notify the handler
-        messageHandler.onSendComplete(socketChannel, writeRequest);
+        channelHandler.onSendComplete(socketChannel, writeRequest);
       }
     }
 
@@ -155,7 +155,7 @@ public class Channel {
 //    }
   }
 
-  private int writeRequest(SocketChannel channel, TCPRequest request) {
+  private int writeRequest(SocketChannel channel, TCPMessage request) {
     ByteBuffer buffer = request.getByteBuffer();
     int written = 0;
     if (writeStatus == DataStatus.INIT) {
@@ -208,7 +208,7 @@ public class Channel {
     return remaining - wrote;
   }
 
-  private TCPRequest readRequest(SocketChannel channel) {
+  private TCPMessage readRequest(SocketChannel channel) {
     if (readStatus == DataStatus.INIT) {
       readHeader.clear();
       readStatus = DataStatus.HEADER;
@@ -233,7 +233,7 @@ public class Channel {
     if (readStatus == DataStatus.BODY) {
       ByteBuffer buffer;
       if (readingRequest == null) {
-        Queue<TCPRequest> readRequests = getReadRequest(readEdge);
+        Queue<TCPMessage> readRequests = getReadRequest(readEdge);
         if (readRequests.size() == 0) {
           return null;
         }
@@ -259,7 +259,7 @@ public class Channel {
         readEdge = 0;
         buffer.flip();
 
-        TCPRequest ret = readingRequest;
+        TCPMessage ret = readingRequest;
         readingRequest = null;
         readStatus = DataStatus.INIT;
         LOG.log(Level.INFO, String.format("READ Body %d", buffer.limit()));
@@ -331,8 +331,8 @@ public class Channel {
     }
   }
 
-  private Queue<TCPRequest> getReadRequest(int e) {
-    Queue<TCPRequest> readRequests = pendingReceives.get(e);
+  private Queue<TCPMessage> getReadRequest(int e) {
+    Queue<TCPMessage> readRequests = pendingReceives.get(e);
     if (readRequests == null) {
       readRequests = new ArrayBlockingQueue<>(1024);
       pendingReceives.put(e, readRequests);

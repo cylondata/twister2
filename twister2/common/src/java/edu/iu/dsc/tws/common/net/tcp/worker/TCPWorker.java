@@ -18,12 +18,12 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.net.NetworkInfo;
+import edu.iu.dsc.tws.common.net.tcp.ChannelHandler;
 import edu.iu.dsc.tws.common.net.tcp.Client;
-import edu.iu.dsc.tws.common.net.tcp.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.Progress;
 import edu.iu.dsc.tws.common.net.tcp.StatusCode;
 import edu.iu.dsc.tws.common.net.tcp.TCPContext;
-import edu.iu.dsc.tws.common.net.tcp.TCPRequest;
+import edu.iu.dsc.tws.common.net.tcp.TCPMessage;
 
 public class TCPWorker {
   private static final Logger LOG = Logger.getLogger(TCPWorker.class.getName());
@@ -76,13 +76,13 @@ public class TCPWorker {
     ByteBuffer byteBuffer = ByteBuffer.allocate(4);
     masterClient.receive(clientSocketChannel, byteBuffer, 4, -1);
 
-    TCPRequest request = masterClient.send(clientSocketChannel, sendBuffer, 4, -1);
+    TCPMessage request = masterClient.send(clientSocketChannel, sendBuffer, 4, -1);
     if (request == null) {
       LOG.log(Level.WARNING, "Message sending not accepted");
     }
   }
 
-  private class MasterEventHandler implements MessageHandler {
+  private class MasterEventHandler implements ChannelHandler {
     @Override
     public void onError(SocketChannel channel) {
       LOG.log(Level.SEVERE, "Error happened on connection: " + channel);
@@ -101,13 +101,13 @@ public class TCPWorker {
     }
 
     @Override
-    public void onReceiveComplete(SocketChannel channel, TCPRequest readRequest) {
+    public void onReceiveComplete(SocketChannel channel, TCPMessage readRequest) {
       LOG.log(Level.INFO, "Received the hello response");
       isReady = true;
     }
 
     @Override
-    public void onSendComplete(SocketChannel channel, TCPRequest writeRequest) {
+    public void onSendComplete(SocketChannel channel, TCPMessage writeRequest) {
 
     }
   }
