@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import edu.iu.dsc.tws.task.api.TaskContext;
 
-public class KafkaConsumerThread<T> extends Thread {
+public class KafkaConsumerThread<T>  {
   private static final Logger LOG = LoggerFactory.getLogger(KafkaConsumerThread.class);
   private Consumer<String, String> consumer;
   private Properties kafkaConsumerConfig;
@@ -39,21 +39,22 @@ public class KafkaConsumerThread<T> extends Thread {
   private List<KafkaTopicPartitionState> topicPartitionStates;
   private volatile boolean active = true;
   private volatile TaskContext taskContext;
+  private final String edge;
 
   public KafkaConsumerThread(
       Properties kafkaConsumerConfig, Map<TopicPartition, OffsetAndMetadata> offsetsToCommit,
       List<TopicPartition> topicPartitions, List<KafkaTopicPartitionState> topicPartitionStates,
-      TaskContext context) {
+      TaskContext context, String edge) {
     this.kafkaConsumerConfig = kafkaConsumerConfig;
     this.offsetsToCommit = offsetsToCommit;
     this.topicPartitions = topicPartitions;
     this.topicPartitionStates = topicPartitionStates;
     this.taskContext = context;
+    this.edge = edge;
 
   }
 
 
-  @Override
   public void run() {
     LOG.info("starting");
     initiateConnection();
@@ -151,7 +152,7 @@ public class KafkaConsumerThread<T> extends Thread {
     LOG.info("emitting record {} from the partition {}", value, offset);
     System.out.println(value);
     tps.setPositionOffset(offset);
-    taskContext.write("e1", value);
+    taskContext.write(this.edge, value);
   }
 
 }

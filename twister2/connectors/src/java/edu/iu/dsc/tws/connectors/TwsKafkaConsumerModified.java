@@ -32,6 +32,7 @@ public class TwsKafkaConsumerModified<T> extends SourceTask
   private TaskContext taskContext;
   private Map<TopicPartition, OffsetAndMetadata> offsetsToCommit;
   private List<KafkaTopicPartitionState> topicPartitionStates;
+  private final String edge;
 
   private boolean restoreState = false;
   private volatile boolean consumerThreadStarted = false;
@@ -44,17 +45,17 @@ public class TwsKafkaConsumerModified<T> extends SourceTask
   public void run() {
     if (!consumerThreadStarted) {
       try {
-        kafkaConsumerThread.start();
+        kafkaConsumerThread.run();
         LOG.info("Starting the consumer thread");
       } catch (IllegalThreadStateException e) {
         LOG.info("consumer is already started");
       }
     }
   }
-
   @Override
   public void prepare(Config cfg, TaskContext context) {
     this.myIndex = cfg.getIntegerValue("twister2.container.id", 0);
+    this.worldSize = context.getParallelism();
     LOG.info("myID : {} , worldSize : {} ", myIndex, worldSize);
     this.partitionFinder = new KafkaPartitionFinder(
         simpleKafkaConfig, worldSize, myIndex, topicDescription);
@@ -66,7 +67,7 @@ public class TwsKafkaConsumerModified<T> extends SourceTask
     }
 
     this.kafkaConsumerThread = new KafkaConsumerThread<T>(
-        kafkaConfigs, offsetsToCommit, topicPartitions, topicPartitionStates, context);
+        kafkaConfigs, offsetsToCommit, topicPartitions, topicPartitionStates, context, edge);
     kafkaConsumerThread.assignPartitions();
     LOG.info("{} partitions are assigned", this.topicPartitions.size());
     kafkaConsumerThread.setSeekToBeginning();
@@ -75,21 +76,25 @@ public class TwsKafkaConsumerModified<T> extends SourceTask
   public TwsKafkaConsumerModified(
       List<String> topics,
       List<String> servers,
-      String consumerGroup
+      String consumerGroup,
+      String edge
   ) {
     this.topicDescription = new KafkaTopicDescription(topics);
     this.kafkaConfigs = createKafkaConfig(servers, consumerGroup);
     this.simpleKafkaConfig = createSimpleKafkaConfig(servers);
+    this.edge = edge;
   }
 
   public TwsKafkaConsumerModified(
       Pattern topicPattern,
       List<String> servers,
-      String consumerGroup
+      String consumerGroup,
+      String edge
   ) {
     this.topicDescription = new KafkaTopicDescription(topicPattern);
     this.kafkaConfigs = createKafkaConfig(servers, consumerGroup);
     this.simpleKafkaConfig = createSimpleKafkaConfig(servers);
+    this.edge = edge;
   }
   public Properties getKafkaConfigs() {
     return kafkaConfigs;
