@@ -244,6 +244,39 @@ public class KubernetesController {
   }
 
   /**
+   * transfer the job package to the first pod
+   * this is used when persistent storage is used
+   * @param namespace
+   * @param jobName
+   * @param jobPackageFile
+   * @return
+   */
+  public boolean transferJobPackage(String namespace, String jobName, String jobPackageFile) {
+
+    PodWatcher podWatcher = new PodWatcher(namespace, jobName, 1, client, coreApi);
+    podWatcher.start();
+
+    JobPackageTransferThread transferThread =
+        new JobPackageTransferThread(namespace, jobName, 0, jobPackageFile, podWatcher);
+    transferThread.start();
+
+    // wait all transfer threads to finish up
+    try {
+      transferThread.join();
+      if (!transferThread.packageTransferred()) {
+        LOG.log(Level.SEVERE, "Job Package is not transferred to the pod: "
+            + transferThread.getPodName());
+        return false;
+      }
+    } catch (InterruptedException e) {
+      LOG.log(Level.WARNING, "Thread sleep interrupted.", e);
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
    * transfer the job package to pods in parallel by many threads
    * @param namespace
    * @param jobName

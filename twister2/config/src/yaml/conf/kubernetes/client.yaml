@@ -73,3 +73,13 @@ kubernetes.storage.access.mode: "ReadWriteMany"
 # default value is "Retain"
 kubernetes.storage.reclaim.policy: "Retain"
 
+########################################################################
+# Kubernetes job package upload through the persistent volume
+########################################################################
+# when a persistent volume is used, 
+# the job package first can be uploaded to the persistent volume 
+# and all pods can get it from there. 
+# alternatively, the client uploads the job package to each pod separately
+# default value is true
+# kubernetes.persistent.volume.uploading: false
+

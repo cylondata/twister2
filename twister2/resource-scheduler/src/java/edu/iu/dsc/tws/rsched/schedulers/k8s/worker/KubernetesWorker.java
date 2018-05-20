@@ -87,7 +87,7 @@ public final class KubernetesWorker {
     String podIP = System.getenv(KubernetesField.POD_IP + "");
     logBuffer.append(KubernetesField.POD_IP + ": " + podIP + "\n");
 
-    String persistentJobDir = System.getenv(KubernetesField.PERSISTENT_JOB_DIR + "");
+    String persistentJobDir = System.getenv(KubernetesField.PERSISTENT_JOB_DIR + "").trim();
     logBuffer.append(KubernetesField.PERSISTENT_JOB_DIR + ": " + persistentJobDir + "\n");
 
     String containersPerPodStr = System.getenv(KubernetesField.WORKERS_PER_POD + "");
@@ -108,6 +108,9 @@ public final class KubernetesWorker {
     String maxLogFiles = System.getenv(KubernetesField.LOGGING_MAX_FILES + "");
     logBuffer.append(KubernetesField.LOGGING_MAX_FILES + ": " + maxLogFiles + "\n");
 
+    String persUploading = System.getenv(KubernetesField.PERSISTENT_VOLUME_UPLOADING + "");
+    logBuffer.append(KubernetesField.PERSISTENT_VOLUME_UPLOADING + ": " + persUploading + "\n");
+
     // this environment variable is not sent by submitting client, it is set by Kubernetes master
     String podName = System.getenv("HOSTNAME");
     logBuffer.append("POD_NAME(HOSTNAME): " + podName + "\n");
@@ -118,7 +121,7 @@ public final class KubernetesWorker {
     K8sPersistentVolume pv = null;
 
     // create persistent job dir if there is a persistent volume request
-    if (persistentJobDir == null || persistentJobDir.trim().isEmpty()) {
+    if (persistentJobDir == null || persistentJobDir.isEmpty()) {
       // no persistent volume is requested, nothing to be done
     } else {
       createPersistentJobDir(podName, containerName, persistentJobDir, 0);
@@ -135,7 +138,7 @@ public final class KubernetesWorker {
         getConfigForEnvVariables(persLogReq, logLevel, redirect, maxLogFileSize, maxLogFiles);
     initLogger(workerID, pv, cnfg);
 
-//    LOG.info("KubernetesWorker started. Current time: " + System.currentTimeMillis());
+    LOG.info("KubernetesWorker started. Current time: " + System.currentTimeMillis());
     LOG.info("Received parameters as environment variables: \n" + logBuffer.toString());
 
     // log persistent volume related messages
@@ -153,8 +156,13 @@ public final class KubernetesWorker {
     }
 
     // construct relevant variables from environment variables
+    // job package can be either in pod shared drive or in persistent volume
     long fileSize = Long.parseLong(fileSizeStr);
-    jobPackageFileName = POD_SHARED_VOLUME + "/" + jobPackageFileName;
+    if (pv != null && "true".equalsIgnoreCase(persUploading)) {
+      jobPackageFileName = persistentJobDir + "/" + jobPackageFileName;
+    } else {
+      jobPackageFileName = POD_SHARED_VOLUME + "/" + jobPackageFileName;
+    }
     userJobJarFile = POD_SHARED_VOLUME + "/" + DIR_PREFIX_FOR_JOB_ARCHIVE + userJobJarFile;
     jobDescFileName = POD_SHARED_VOLUME + "/" + DIR_PREFIX_FOR_JOB_ARCHIVE + jobDescFileName;
     String configDir = POD_SHARED_VOLUME + "/" + DIR_PREFIX_FOR_JOB_ARCHIVE
@@ -433,7 +441,8 @@ public final class KubernetesWorker {
 
       boolean transferred = waitForFileTransfer(jobPackageFileName, fileSize);
       if (transferred) {
-        boolean jobFileUnpacked = TarGzipPacker.unpack(jobPackageFileName);
+        File outputDir = new File(POD_SHARED_VOLUME);
+        boolean jobFileUnpacked = TarGzipPacker.unpack(jobPackageFileName, outputDir);
         if (jobFileUnpacked) {
           LOG.info("Job file [" + jobPackageFileName + "] unpacked successfully.");
           boolean written1 = writeFile(flagFileName, 0);
@@ -478,14 +487,14 @@ public final class KubernetesWorker {
 
 
   /**
-   * Wait for the hob package file to be transferred to this pod
+   * Wait for the job package file to be transferred to this pod
    */
   public static boolean waitForFileTransfer(String jobFileName, long fileSize) {
 
     boolean transferred = false;
     File jobFile = new File(jobFileName);
 
-    // when waiting, it will print log message at least after this much time
+    // when waiting, it will print log messages at least after this much time
     long logMessageInterval = 1000;
     //this count is restarted after each log message
     long waitTimeCountForLog = 0;
