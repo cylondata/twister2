@@ -100,8 +100,14 @@ public class KubernetesLauncher implements ILauncher {
     int containersPerPod = KubernetesContext.workersPerPod(config);
     int numberOfPods = resourceRequest.getNoOfContainers() / containersPerPod;
 
-    boolean transferred =
-        controller.transferJobPackageInParallel(namespace, jobName, numberOfPods, jobPackageFile);
+    boolean transferred;
+    if (KubernetesContext.persistentVolumeRequested(config)
+        && KubernetesContext.persistentVolumeUploading(config)) {
+      transferred = controller.transferJobPackage(namespace, jobName, jobPackageFile);
+    } else {
+      transferred =
+          controller.transferJobPackageInParallel(namespace, jobName, numberOfPods, jobPackageFile);
+    }
 
     if (transferred) {
       long duration = System.currentTimeMillis() - start;

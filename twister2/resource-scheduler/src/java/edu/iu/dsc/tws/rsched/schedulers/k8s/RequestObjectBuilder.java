@@ -155,7 +155,8 @@ public final class RequestObjectBuilder {
       volumes.add(persistentVolume);
 
       persistentJobDir =
-          KubernetesUtils.createPersistentJobDirName(SchedulerContext.jobName(config));
+          KubernetesUtils.createPersistentJobDirName(SchedulerContext.jobName(config),
+              KubernetesContext.persistentVolumeUploading(config));
     }
 
     podSpec.setVolumes(volumes);
@@ -320,8 +321,12 @@ public final class RequestObjectBuilder {
         .name(KubernetesField.LOGGING_MAX_FILES + "")
         .value(LoggingContext.maxLogFiles(config) + "");
 
+    V1EnvVar var14 = new V1EnvVar()
+        .name(KubernetesField.PERSISTENT_VOLUME_UPLOADING + "")
+        .value(KubernetesContext.persistentVolumeUploading(config) + "");
+
     container.setEnv(Arrays.asList(
-        var1, var2, var3, var4, var5, var6, var7, var8, var9, var10, var11, var12, var13));
+        var1, var2, var3, var4, var5, var6, var7, var8, var9, var10, var11, var12, var13, var14));
   }
 
   public static void setNodeAffinity(Config config, V1Affinity affinity) {
