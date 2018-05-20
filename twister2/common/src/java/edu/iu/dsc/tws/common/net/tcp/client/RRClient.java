@@ -65,6 +65,11 @@ public class RRClient {
 
   private boolean connected = false;
 
+  /**
+   * The client id
+   */
+  private int clientId;
+
   public RRClient(String host, int port, Config cfg, Progress looper) {
     client = new Client(host, port, cfg, looper, new Handler());
   }

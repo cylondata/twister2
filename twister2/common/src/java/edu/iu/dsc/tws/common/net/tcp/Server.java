@@ -41,7 +41,7 @@ public class Server implements SelectHandler {
   /**
    * The current active connections
    */
-  private Map<SocketChannel, Channel> connectedChannels = new HashMap<>();
+  private Map<SocketChannel, BaseNetworkChannel> connectedChannels = new HashMap<>();
 
   /**
    * Configuration of the server
@@ -58,12 +58,26 @@ public class Server implements SelectHandler {
    */
   private ChannelHandler channelHandler;
 
+  /**
+   * Weather fixed buffers are used
+   */
+  private boolean fixedBuffers;
+
   public Server(Config cfg, String host, int port, Progress loop,
                 ChannelHandler msgHandler) {
     this.config = cfg;
     this.progress = loop;
     address = new InetSocketAddress(host, port);
     this.channelHandler = msgHandler;
+  }
+
+  public Server(Config cfg, String host, int port, Progress loop,
+                ChannelHandler msgHandler, boolean fixBuffers) {
+    this.config = cfg;
+    this.progress = loop;
+    address = new InetSocketAddress(host, port);
+    this.channelHandler = msgHandler;
+    this.fixedBuffers = fixBuffers;
   }
 
   public boolean start() {
@@ -85,7 +99,7 @@ public class Server implements SelectHandler {
       LOG.info("Fail to stop server; not yet open.");
       return;
     }
-    for (Map.Entry<SocketChannel, Channel> connections : connectedChannels.entrySet()) {
+    for (Map.Entry<SocketChannel, BaseNetworkChannel> connections : connectedChannels.entrySet()) {
       SocketChannel channel = connections.getKey();
       progress.removeAllInterest(channel);
 
@@ -100,7 +114,7 @@ public class Server implements SelectHandler {
   }
 
   public TCPMessage send(SocketChannel sc, ByteBuffer buffer, int size, int edge) {
-    Channel channel = connectedChannels.get(sc);
+    BaseNetworkChannel channel = connectedChannels.get(sc);
     if (channel == null) {
       return null;
     }
@@ -112,7 +126,7 @@ public class Server implements SelectHandler {
   }
 
   public TCPMessage receive(SocketChannel sc, ByteBuffer buffer, int size, int edge) {
-    Channel channel = connectedChannels.get(sc);
+    BaseNetworkChannel channel = connectedChannels.get(sc);
     if (channel == null) {
       return null;
     }
@@ -125,7 +139,7 @@ public class Server implements SelectHandler {
 
   @Override
   public void handleRead(SelectableChannel ch) {
-    Channel channel = connectedChannels.get(ch);
+    BaseNetworkChannel channel = connectedChannels.get(ch);
     if (channel != null) {
       channel.read();
     } else {
@@ -135,7 +149,7 @@ public class Server implements SelectHandler {
 
   @Override
   public void handleWrite(SelectableChannel ch) {
-    Channel channel = connectedChannels.get(ch);
+    BaseNetworkChannel channel = connectedChannels.get(ch);
     if (channel != null) {
       channel.write();
     } else {
@@ -150,8 +164,15 @@ public class Server implements SelectHandler {
       if (socketChannel != null) {
         socketChannel.configureBlocking(false);
         socketChannel.socket().setTcpNoDelay(true);
+        BaseNetworkChannel channel;
 
-        Channel channel = new Channel(config, progress, this, socketChannel, channelHandler);
+        if (fixedBuffers) {
+          channel = new FixedBufferChannel(config, progress, this,
+              socketChannel, channelHandler);
+        } else {
+          channel = new DynamicBufferChannel(config, progress, this,
+              socketChannel, channelHandler);
+        }
         channel.enableReading();
         channel.enableWriting();
         connectedChannels.put(socketChannel, channel);
@@ -172,7 +193,7 @@ public class Server implements SelectHandler {
   public void handleError(SelectableChannel ch) {
     SocketAddress channelAddress = ((SocketChannel) ch).socket().getRemoteSocketAddress();
     LOG.log(Level.INFO, "Connection is closed: " + channelAddress);
-    Channel channel = connectedChannels.get(ch);
+    BaseNetworkChannel channel = connectedChannels.get(ch);
     if (channel == null) {
       LOG.warning("Error occurred in non-existing channel");
       return;

@@ -9,18 +9,6 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
 package edu.iu.dsc.tws.common.net.tcp;
 
 import java.io.IOException;
@@ -29,53 +17,47 @@ import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SocketChannel;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 
-public class Channel {
-  private static final Logger LOG = Logger.getLogger(Channel.class.getName());
+public abstract class BaseNetworkChannel {
+  private static final Logger LOG = Logger.getLogger(BaseNetworkChannel.class.getName());
 
-  private Queue<TCPMessage> pendingSends;
+  protected BlockingQueue<TCPMessage> pendingSends;
 
-  private Map<Integer, Queue<TCPMessage>> pendingReceives;
+  protected Map<Integer, BlockingQueue<TCPMessage>> pendingReceives;
 
-  private final SocketChannel socketChannel;
+  protected final SocketChannel socketChannel;
 
-  private Progress looper;
+  protected Progress looper;
 
-  private SelectHandler selectHandler;
+  protected SelectHandler selectHandler;
 
-  private ByteBuffer readHeader;
+  protected ByteBuffer readHeader;
 
-  private ByteBuffer writeHeader;
+  protected ByteBuffer writeHeader;
 
-  private TCPMessage readingRequest;
+  protected TCPMessage readingRequest;
 
-  private int readEdge;
+  protected int readEdge;
 
-  private int readSize;
+  protected int readMessageSize;
 
-  private enum DataStatus {
-    INIT,
-    HEADER,
-    BODY
-  }
+  protected DataStatus readStatus;
 
-  private DataStatus readStatus;
+  protected DataStatus writeStatus;
 
-  private DataStatus writeStatus;
-
-  private ChannelHandler channelHandler;
+  protected ChannelHandler channelHandler;
 
   // header size of each message, we use edge and length as the header
   private static final int HEADER_SIZE = 8;
 
-  public Channel(Config cfg, Progress progress, SelectHandler handler,
-                 SocketChannel channel, ChannelHandler msgHandler) {
+  BaseNetworkChannel(Config cfg, Progress progress, SelectHandler handler,
+                     SocketChannel channel, ChannelHandler msgHandler) {
     this.socketChannel = channel;
     this.selectHandler = handler;
     this.looper = progress;
@@ -105,18 +87,15 @@ public class Channel {
     }
   }
 
+  public abstract TCPMessage readRequest(SocketChannel channel);
+
   public void clear() {
     pendingReceives.clear();
     pendingSends.clear();
   }
 
   public boolean addReadRequest(TCPMessage request) {
-    Queue<TCPMessage> readRequests = getReadRequest(request.getEdge());
-    ByteBuffer byteBuffer = request.getByteBuffer();
-    byteBuffer.position(0);
-    byteBuffer.limit(request.getLength());
-
-    return readRequests.offer(request);
+    return false;
   }
 
   public boolean addWriteRequest(TCPMessage request) {
@@ -149,25 +128,21 @@ public class Channel {
         channelHandler.onSendComplete(socketChannel, writeRequest);
       }
     }
-
-//    if (pendingSends.size() == 0) {
-//      disableWriting();
-//    }
   }
 
-  private int writeRequest(SocketChannel channel, TCPMessage request) {
-    ByteBuffer buffer = request.getByteBuffer();
+  private int writeRequest(SocketChannel channel, TCPMessage message) {
+    ByteBuffer buffer = message.getByteBuffer();
     int written = 0;
     if (writeStatus == DataStatus.INIT) {
       // lets flip the buffer
       writeHeader.clear();
       writeStatus = DataStatus.HEADER;
 
-      writeHeader.putInt(request.getLength());
-      writeHeader.putInt(request.getEdge());
+      writeHeader.putInt(message.getLength());
+      writeHeader.putInt(message.getEdge());
       writeHeader.flip();
       LOG.log(Level.INFO, String.format("WRITE Header %d %d",
-          request.getLength(), request.getEdge()));
+          message.getLength(), message.getEdge()));
     }
 
     if (writeStatus == DataStatus.HEADER) {
@@ -208,71 +183,7 @@ public class Channel {
     return remaining - wrote;
   }
 
-  private TCPMessage readRequest(SocketChannel channel) {
-    if (readStatus == DataStatus.INIT) {
-      readHeader.clear();
-      readStatus = DataStatus.HEADER;
-      LOG.log(Level.INFO, "READ Header INIT");
-    }
-
-    if (readStatus == DataStatus.HEADER) {
-      int retval = readFromChannel(channel, readHeader);
-      if (retval != 0) {
-        // either we didnt read fully or we had an error
-        return null;
-      }
-
-      // We read the header fully
-      readHeader.flip();
-      readSize = readHeader.getInt();
-      readEdge = readHeader.getInt();
-      readStatus = DataStatus.BODY;
-      LOG.log(Level.INFO, String.format("READ Header %d %d", readSize, readEdge));
-    }
-
-    if (readStatus == DataStatus.BODY) {
-      ByteBuffer buffer;
-      if (readingRequest == null) {
-        Queue<TCPMessage> readRequests = getReadRequest(readEdge);
-        if (readRequests.size() == 0) {
-          return null;
-        }
-        readingRequest = readRequests.poll();
-        buffer = readingRequest.getByteBuffer();
-        buffer.limit(readSize);
-      } else {
-        buffer = readingRequest.getByteBuffer();
-      }
-
-      int retVal = readFromChannel(channel, buffer);
-      if (retVal < 0) {
-        readSize = 0;
-        readEdge = 0;
-
-        readingRequest = null;
-        readStatus = DataStatus.INIT;
-        LOG.log(Level.SEVERE, "Failed to read");
-        // handle the error
-        return null;
-      } else if (retVal == 0) {
-        readSize = 0;
-        readEdge = 0;
-        buffer.flip();
-
-        TCPMessage ret = readingRequest;
-        readingRequest = null;
-        readStatus = DataStatus.INIT;
-        LOG.log(Level.INFO, String.format("READ Body %d", buffer.limit()));
-        return ret;
-      } else {
-        LOG.log(Level.INFO, String.format("READ Body not COMPLETE %d %d", buffer.limit(), retVal));
-        return null;
-      }
-    }
-    return null;
-  }
-
-  private int readFromChannel(SocketChannel channel, ByteBuffer buffer) {
+  int readFromChannel(SocketChannel channel, ByteBuffer buffer) {
     int remaining = buffer.remaining();
     int read;
     try {
@@ -329,14 +240,5 @@ public class Channel {
     if (looper.isWriteRegistered(socketChannel)) {
       looper.unregisterWrite(socketChannel);
     }
-  }
-
-  private Queue<TCPMessage> getReadRequest(int e) {
-    Queue<TCPMessage> readRequests = pendingReceives.get(e);
-    if (readRequests == null) {
-      readRequests = new ArrayBlockingQueue<>(1024);
-      pendingReceives.put(e, readRequests);
-    }
-    return readRequests;
   }
 }

@@ -33,6 +33,11 @@ public class RRServer {
   private Server server;
 
   /**
+   * Client id to channel
+   */
+  private Map<Integer, SocketChannel> socketChannels = new HashMap<>();
+
+  /**
    * Keep track of the request
    */
   private Map<RequestID, ResponseHandler> requests = new HashMap<>();

@@ -47,7 +47,7 @@ public class Client implements SelectHandler {
   /**
    * The channel to read and receive
    */
-  private Channel channel;
+  private BaseNetworkChannel channel;
 
   /**
    * Weather we are connected
@@ -59,12 +59,27 @@ public class Client implements SelectHandler {
    */
   private ChannelHandler channelHandler;
 
+  /**
+   * Fixed buffers
+   */
+  private boolean fixedBuffers = true;
+
   public Client(String host, int port, Config cfg, Progress looper, ChannelHandler handler) {
     address = new InetSocketAddress(host, port);
     config = cfg;
     isConnected = false;
     progress = looper;
     channelHandler = handler;
+  }
+
+  public Client(String host, int port, Config cfg, Progress looper,
+                ChannelHandler handler, boolean fixBuffers) {
+    address = new InetSocketAddress(host, port);
+    config = cfg;
+    isConnected = false;
+    progress = looper;
+    channelHandler = handler;
+    fixedBuffers = fixBuffers;
   }
 
   public boolean connect() {
@@ -160,7 +175,11 @@ public class Client implements SelectHandler {
       channelHandler.onConnect(socketChannel, StatusCode.ERROR_CONN);
       return;
     }
-    channel = new Channel(config, progress, this, socketChannel, channelHandler);
+    if (fixedBuffers) {
+      channel = new FixedBufferChannel(config, progress, this, socketChannel, channelHandler);
+    } else {
+      channel = new DynamicBufferChannel(config, progress, this, socketChannel, channelHandler);
+    }
     channel.enableReading();
     channel.enableWriting();
 
