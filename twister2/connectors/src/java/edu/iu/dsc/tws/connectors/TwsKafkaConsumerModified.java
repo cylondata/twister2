@@ -52,6 +52,7 @@ public class TwsKafkaConsumerModified<T> extends SourceTask
       }
     }
   }
+
   @Override
   public void prepare(Config cfg, TaskContext context) {
     this.myIndex = cfg.getIntegerValue("twister2.container.id", 0);
@@ -110,11 +111,6 @@ public class TwsKafkaConsumerModified<T> extends SourceTask
 
   private Properties createSimpleKafkaConfig(List<String> servers) {
     return KafkaConsumerConfig.getSimpleKafkaConsumer(servers);
-  }
-
-  // temp method to pass worldSize since config file doesn't have the field //
-  public void setWorldSize(int worldSize) {
-    this.worldSize = worldSize;
   }
 
   @Override
