@@ -43,8 +43,15 @@ public class BasicK8sWorker implements IWorker {
 
     LOG.info("BasicK8sWorker started. Current time: " + System.currentTimeMillis());
 
-    volatileVolume.getWorkerDir();
-    LOG.info("VolatileVolumeDir: " + volatileVolume.getWorkerDirPath());
+    if (volatileVolume != null) {
+      volatileVolume.getWorkerDir();
+      LOG.info("VolatileVolumeDir: " + volatileVolume.getWorkerDirPath());
+    }
+
+    if (persistentVolume != null) {
+      // create worker directory
+      persistentVolume.getWorkerDir();
+    }
 
     // wait for all workers in this job to join
     List<WorkerNetworkInfo> workerList = workerController.waitForAllWorkersToJoin(10000);

@@ -15,8 +15,10 @@ twister2.worker.cpu: 1.0
 # default value is 200 MB
 twister2.worker.ram: 200
 
-# amount of volatile hard disk space on each worker in giga bytes as double
-# default value is 1.0 GB. 
+# amount of volatile hard disk space on each worker in giga bytes as a double
+# set this value to zero if you will not use volatile hard disk space
+# when its value is zero, no volatile disk will be setup of this worker
+# default value is 0 GB. 
 twister2.worker.volatile.disk: 1.0
 
 # number of worker instances in this job
@@ -37,19 +39,17 @@ kubernetes.workers.per.pod: 2
 ########################################################################
 # persistent volume related settings
 ########################################################################
-# Do workers request persistent volume? it could be true or false
-# default value is false
-persistent.volume.requested: true
+# persistent volume size per worker in GB as double
+# default value is 0.0Gi
+# set this value to zero, if you have not persistent disk support
+# when this value is zero, twister2 will not try to set up persistent storage for this job
+persistent.volume.per.worker: 1.0
 
 # nfs server address
 nfs.server.address: "149.165.150.81"
 
 # nfs server path
 nfs.server.path: "/nfs/shared"
-
-# persistent volume size per worker in GB as double
-# default value is 1.0Gi
-persistent.volume.per.worker: 1.0
 
 # total persistent volume size for all workers in this job
 # must be equal or higher than the total of all worker persistent volume sizes
@@ -81,5 +81,5 @@ kubernetes.storage.reclaim.policy: "Retain"
 # and all pods can get it from there. 
 # alternatively, the client uploads the job package to each pod separately
 # default value is true
-# kubernetes.persistent.volume.uploading: false
+# kubernetes.persistent.volume.uploading: true
 
