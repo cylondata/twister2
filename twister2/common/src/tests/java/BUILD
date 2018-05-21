@@ -2,6 +2,7 @@ load("/tools/rules/java_tests", "java_tests")
 
 common_deps_files = [
     "//twister2/common/src/java:common-java",
+    "//twister2/proto:proto-network-java",
     "@org_yaml_snakeyaml//jar",
     "@com_google_protobuf_protobuf_java//jar",
     "//third_party/java:mockito",

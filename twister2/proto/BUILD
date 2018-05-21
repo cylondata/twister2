@@ -88,6 +88,30 @@ java_library(
     ],
 )
 
+proto_library(
+    name = "proto_network",
+    src = "network.proto",
+    gen_cc = 0,
+    gen_java = 1,
+    gen_py = 0,
+    includes = ["twister2/proto"],
+    deps = [
+        ":proto_common",
+    ],
+)
+
+java_library(
+    name = "proto-network-java",
+    srcs = [
+        "Empty.java",
+    ],
+    deps = [
+        ":proto_common_java",
+        ":proto_network_java",
+        "@com_google_protobuf_protobuf_java//jar",
+    ],
+)
+
 filegroup(
     name = "srcs",
     srcs = glob(["**"]),
