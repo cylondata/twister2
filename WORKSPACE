@@ -361,3 +361,33 @@ new_http_archive(
     urls = ["https://releases.hashicorp.com/nomad/0.7.0/nomad_0.7.0_linux_amd64.zip"],
     build_file = "third_party/nomad/nomad.BUILD",
 )
+
+# for hadoop & hdfs
+maven_jar(
+    name = "org_apache_hadoop_hdfs",
+    artifact = "org.apache.hadoop:hadoop-hdfs:2.9.0",
+)
+
+maven_jar(
+    name = "org_apache_hadoop_common",
+    artifact = "org.apache.hadoop:hadoop-common:2.9.0",
+)
+
+maven_jar(
+    name = "org_apache_hadoop_auth",
+    artifact = "org.apache.hadoop:hadoop-auth:2.9.0",
+)
+
+maven_jar(
+    name = "org_apache_hadoop_annotations",
+    artifact = "org.apache.hadoop:hadoop-annotations:2.9.0",
+)
+
+maven_jar(
+    name = "com_google_code_findbugs",
+    artifact = "com.google.code.findbugs:jsr305:3.0.0",
+)
+
+
+
+

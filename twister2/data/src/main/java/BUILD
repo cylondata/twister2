@@ -14,6 +14,11 @@ common_deps_files = [
     "@com_github_jnr_ffi//jar",
     "@com_github_jnr_constants//jar",
     "@commons_lang_commons_lang//jar",
+    "@org_apache_hadoop_hdfs//jar",
+    "@org_apache_hadoop_common//jar",
+    "@org_apache_hadoop_annotations//jar",
+    "@org_apache_hadoop_auth//jar",
+    "@com_google_code_findbugs//jar",
 ]
 
 java_library(
