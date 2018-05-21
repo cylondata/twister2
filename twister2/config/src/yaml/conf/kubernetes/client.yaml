@@ -15,12 +15,11 @@ twister2.worker.cpu: 1.0
 # default value is 200 MB
 twister2.worker.ram: 200
 
-# amount of hard disk space on each worker in mega bytes
-# this only used when running twister2 in Aurora
-# default value is 1024 MB. 
-twister2.worker.disk: 1024
+# amount of volatile hard disk space on each worker in giga bytes as double
+# default value is 1.0 GB. 
+twister2.worker.disk: 1.0
 
-# number of worker instances
+# number of worker instances in this job
 twister2.worker.instances: 6
 
 ########################################################################
@@ -48,14 +47,15 @@ nfs.server.address: "149.165.150.81"
 # nfs server path
 nfs.server.path: "/nfs/shared"
 
-# worker persistent volume size
-# volume size suffixes: Mi, Gi
-persistent.volume.per.worker: "1Gi"
+# persistent volume size per worker in GB as double
+# default value is 1.0Gi
+persistent.volume.per.worker: 1.0
 
 # total persistent volume size for all workers in this job
 # must be equal or higher than the total of all worker persistent volume sizes
-# volume size suffixes: Mi, Gi
-persistent.volume.total: "100Gi"
+# default value is the total of all worker persistent volumes on this job 
+# disk unit is in GB as double
+# persistent.volume.total: 10.0
 
 # the admin should provide a PersistentVolume object with the following storage class. 
 # Default storage class name is "twister2".

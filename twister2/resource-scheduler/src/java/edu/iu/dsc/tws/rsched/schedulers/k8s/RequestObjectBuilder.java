@@ -134,13 +134,22 @@ public final class RequestObjectBuilder {
     V1PodSpec podSpec = new V1PodSpec();
     podSpec.setTerminationGracePeriodSeconds(0L);
 
-    V1Volume volume = new V1Volume();
-    volume.setName(KubernetesConstants.POD_SHARED_VOLUME_NAME);
-    V1EmptyDirVolumeSource volumeSource = new V1EmptyDirVolumeSource();
-    volumeSource.setMedium("Memory");
-    volume.setEmptyDir(volumeSource);
     ArrayList<V1Volume> volumes = new ArrayList<>();
-    volumes.add(volume);
+    V1Volume memoryVolume = new V1Volume();
+    memoryVolume.setName(KubernetesConstants.POD_MEMORY_VOLUME_NAME);
+    V1EmptyDirVolumeSource volumeSource1 = new V1EmptyDirVolumeSource();
+    volumeSource1.setMedium("Memory");
+    memoryVolume.setEmptyDir(volumeSource1);
+    volumes.add(memoryVolume);
+
+    // a volatile disk based volume
+    V1Volume volatileVolume = new V1Volume();
+    volatileVolume.setName(KubernetesConstants.POD_VOLATILE_VOLUME_NAME);
+    V1EmptyDirVolumeSource volumeSource2 = new V1EmptyDirVolumeSource();
+    double vSize = SchedulerContext.workerDisk(config) * SchedulerContext.workerInstances(config);
+    volumeSource2.setSizeLimit(vSize + "Gi");
+    volatileVolume.setEmptyDir(volumeSource2);
+    volumes.add(volatileVolume);
 
     String persistentJobDir = null;
 
@@ -231,10 +240,15 @@ public final class RequestObjectBuilder {
     container.setResources(resReq);
 
     ArrayList<V1VolumeMount> volumeMounts = new ArrayList<>();
-    V1VolumeMount volumeMount = new V1VolumeMount();
-    volumeMount.setName(KubernetesConstants.POD_SHARED_VOLUME_NAME);
-    volumeMount.setMountPath(KubernetesConstants.POD_SHARED_VOLUME);
-    volumeMounts.add(volumeMount);
+    V1VolumeMount memoryVolumeMount = new V1VolumeMount();
+    memoryVolumeMount.setName(KubernetesConstants.POD_MEMORY_VOLUME_NAME);
+    memoryVolumeMount.setMountPath(KubernetesConstants.POD_MEMORY_VOLUME);
+    volumeMounts.add(memoryVolumeMount);
+
+    V1VolumeMount volatileVolumeMount = new V1VolumeMount();
+    volatileVolumeMount.setName(KubernetesConstants.POD_VOLATILE_VOLUME_NAME);
+    volatileVolumeMount.setMountPath(KubernetesConstants.POD_VOLATILE_VOLUME);
+    volumeMounts.add(volatileVolumeMount);
 
     if (SchedulerContext.persistentVolumeRequested(config)) {
       V1VolumeMount persVolumeMount = new V1VolumeMount();
@@ -463,10 +477,10 @@ public final class RequestObjectBuilder {
     meta.setName(pvName);
     pv.setMetadata(meta);
 
-    String volumeSize = SchedulerContext.persistentVolumeTotal(config);
+    double volumeSize = SchedulerContext.persistentVolumeTotal(config);
     V1PersistentVolumeSpec pvSpec = new V1PersistentVolumeSpec();
     HashMap<String, Quantity> capacity = new HashMap<>();
-    capacity.put("storage", new Quantity(volumeSize));
+    capacity.put("storage", new Quantity(volumeSize + "Gi"));
     pvSpec.setCapacity(capacity);
 
     String storageClass = KubernetesContext.persistentStorageClass(config);
@@ -505,8 +519,8 @@ public final class RequestObjectBuilder {
     pvcSpec.setAccessModes(Arrays.asList(accessMode));
 
     V1ResourceRequirements resources = new V1ResourceRequirements();
-    String storageSize = SchedulerContext.persistentVolumePerWorker(config);
-    resources.putRequestsItem("storage", new Quantity(storageSize));
+    double storageSize = SchedulerContext.persistentVolumePerWorker(config);
+    resources.putRequestsItem("storage", new Quantity(storageSize + "Gi"));
 //    resources.putRequestsItem("storage", Quantity.fromString("1Gi"));
     pvcSpec.setResources(resources);
 

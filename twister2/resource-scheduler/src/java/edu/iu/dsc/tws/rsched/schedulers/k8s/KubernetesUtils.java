@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.k8s;
 
-import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.POD_SHARED_VOLUME;
+import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.POD_MEMORY_VOLUME;
 
 public final class KubernetesUtils {
 
@@ -39,7 +39,7 @@ public final class KubernetesUtils {
 
     String targetDir = null;
     if (persistentJobDirName == null) {
-      targetDir = String.format("%s/%s:%s", namespace, podName, POD_SHARED_VOLUME);
+      targetDir = String.format("%s/%s:%s", namespace, podName, POD_MEMORY_VOLUME);
     } else {
       targetDir = String.format("%s/%s:%s", namespace, podName, persistentJobDirName);
     }

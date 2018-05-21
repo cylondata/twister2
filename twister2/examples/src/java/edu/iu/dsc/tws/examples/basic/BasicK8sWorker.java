@@ -26,6 +26,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.rsched.bootstrap.IWorkerController;
 import edu.iu.dsc.tws.rsched.bootstrap.WorkerNetworkInfo;
 import edu.iu.dsc.tws.rsched.spi.container.IPersistentVolume;
+import edu.iu.dsc.tws.rsched.spi.container.IVolatileVolume;
 import edu.iu.dsc.tws.rsched.spi.container.IWorker;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
@@ -37,9 +38,13 @@ public class BasicK8sWorker implements IWorker {
                    int id,
                    ResourcePlan resourcePlan,
                    IWorkerController workerController,
-                   IPersistentVolume persistentVolume) {
+                   IPersistentVolume persistentVolume,
+                   IVolatileVolume volatileVolume) {
 
     LOG.info("BasicK8sWorker started. Current time: " + System.currentTimeMillis());
+
+    volatileVolume.getWorkerDir();
+    LOG.info("VolatileVolumeDir: " + volatileVolume.getWorkerDirPath());
 
     // wait for all workers in this job to join
     List<WorkerNetworkInfo> workerList = workerController.waitForAllWorkersToJoin(10000);

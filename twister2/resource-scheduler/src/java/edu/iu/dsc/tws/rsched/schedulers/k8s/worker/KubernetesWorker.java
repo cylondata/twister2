@@ -46,7 +46,7 @@ import edu.iu.dsc.tws.rsched.utils.TarGzipPacker;
 
 import static edu.iu.dsc.tws.common.config.Context.DIR_PREFIX_FOR_JOB_ARCHIVE;
 import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.KUBERNETES_CLUSTER_TYPE;
-import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.POD_SHARED_VOLUME;
+import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.POD_MEMORY_VOLUME;
 
 public final class KubernetesWorker {
   private static final Logger LOG = Logger.getLogger(KubernetesWorker.class.getName());
@@ -161,11 +161,11 @@ public final class KubernetesWorker {
     if (pv != null && "true".equalsIgnoreCase(persUploading)) {
       jobPackageFileName = persistentJobDir + "/" + jobPackageFileName;
     } else {
-      jobPackageFileName = POD_SHARED_VOLUME + "/" + jobPackageFileName;
+      jobPackageFileName = POD_MEMORY_VOLUME + "/" + jobPackageFileName;
     }
-    userJobJarFile = POD_SHARED_VOLUME + "/" + DIR_PREFIX_FOR_JOB_ARCHIVE + userJobJarFile;
-    jobDescFileName = POD_SHARED_VOLUME + "/" + DIR_PREFIX_FOR_JOB_ARCHIVE + jobDescFileName;
-    String configDir = POD_SHARED_VOLUME + "/" + DIR_PREFIX_FOR_JOB_ARCHIVE
+    userJobJarFile = POD_MEMORY_VOLUME + "/" + DIR_PREFIX_FOR_JOB_ARCHIVE + userJobJarFile;
+    jobDescFileName = POD_MEMORY_VOLUME + "/" + DIR_PREFIX_FOR_JOB_ARCHIVE + jobDescFileName;
+    String configDir = POD_MEMORY_VOLUME + "/" + DIR_PREFIX_FOR_JOB_ARCHIVE
         + KUBERNETES_CLUSTER_TYPE;
 
     boolean ready = waitUnpack(containerName, jobPackageFileName, fileSize);
@@ -194,6 +194,7 @@ public final class KubernetesWorker {
     thisWorker = workerController.getWorkerNetworkInfo();
 
     ResourceAPI.ComputeResource cr = job.getJobResources().getContainer();
+
     startWorkerClass(workerController, pv);
 
     closeWorker(podName);
@@ -295,7 +296,7 @@ public final class KubernetesWorker {
    */
   public static int updateCompletions() {
 
-    String completionsFile = POD_SHARED_VOLUME + "/completions.txt";
+    String completionsFile = POD_MEMORY_VOLUME + "/completions.txt";
 
     try {
       Path path = Paths.get(completionsFile);
@@ -349,7 +350,10 @@ public final class KubernetesWorker {
       throw new RuntimeException(e);
     }
 
-    container.init(config, thisWorker.getWorkerID(), null, workerController, pv);
+    K8sVolatileVolume volatileVolume =
+        new K8sVolatileVolume(SchedulerContext.jobName(config), thisWorker.getWorkerID());
+
+    container.init(config, thisWorker.getWorkerID(), null, workerController, pv, volatileVolume);
   }
 
 
@@ -433,15 +437,15 @@ public final class KubernetesWorker {
 
   public static boolean waitUnpack(String containerName, String jobPackageFileName, long fileSize) {
 
-    String flagFileName = POD_SHARED_VOLUME + "/" + UNPACK_COMPLETE_FILE_NAME;
-//    String completionsFileName = POD_SHARED_VOLUME + "/completions.txt";
+    String flagFileName = POD_MEMORY_VOLUME + "/" + UNPACK_COMPLETE_FILE_NAME;
+//    String completionsFileName = POD_MEMORY_VOLUME + "/completions.txt";
 
     // if it is the first container in a pod, unpack the tar.gz file
     if (containerName.endsWith("-0")) {
 
       boolean transferred = waitForFileTransfer(jobPackageFileName, fileSize);
       if (transferred) {
-        File outputDir = new File(POD_SHARED_VOLUME);
+        File outputDir = new File(POD_MEMORY_VOLUME);
         boolean jobFileUnpacked = TarGzipPacker.unpack(jobPackageFileName, outputDir);
         if (jobFileUnpacked) {
           LOG.info("Job file [" + jobPackageFileName + "] unpacked successfully.");
