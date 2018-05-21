@@ -57,7 +57,7 @@ public final class BasicKubernetesJob {
     double cpus = SchedulerContext.workerCPU(config);
     int ramMegaBytes = SchedulerContext.workerRAM(config);
     int workers = SchedulerContext.workerInstances(config);
-    int diskMegaBytes = (int) (SchedulerContext.workerDisk(config) * 1024);
+    int diskMegaBytes = (int) (SchedulerContext.workerVolatileDisk(config) * 1024);
     String jobName = SchedulerContext.jobName(config);
     ResourceContainer resourceContainer = new ResourceContainer(cpus, ramMegaBytes, diskMegaBytes);
 

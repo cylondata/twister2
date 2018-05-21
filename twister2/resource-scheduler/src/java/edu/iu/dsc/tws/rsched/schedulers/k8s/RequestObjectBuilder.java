@@ -143,13 +143,17 @@ public final class RequestObjectBuilder {
     volumes.add(memoryVolume);
 
     // a volatile disk based volume
-    V1Volume volatileVolume = new V1Volume();
-    volatileVolume.setName(KubernetesConstants.POD_VOLATILE_VOLUME_NAME);
-    V1EmptyDirVolumeSource volumeSource2 = new V1EmptyDirVolumeSource();
-    double vSize = SchedulerContext.workerDisk(config) * SchedulerContext.workerInstances(config);
-    volumeSource2.setSizeLimit(vSize + "Gi");
-    volatileVolume.setEmptyDir(volumeSource2);
-    volumes.add(volatileVolume);
+    // create it if the requested disk space is positive
+    if (SchedulerContext.workerVolatileDisk(config) > 0) {
+      V1Volume volatileVolume = new V1Volume();
+      volatileVolume.setName(KubernetesConstants.POD_VOLATILE_VOLUME_NAME);
+      V1EmptyDirVolumeSource volumeSource2 = new V1EmptyDirVolumeSource();
+      double vSize =
+          SchedulerContext.workerVolatileDisk(config) * SchedulerContext.workerInstances(config);
+      volumeSource2.setSizeLimit(vSize + "Gi");
+      volatileVolume.setEmptyDir(volumeSource2);
+      volumes.add(volatileVolume);
+    }
 
     String persistentJobDir = null;
 
@@ -245,10 +249,12 @@ public final class RequestObjectBuilder {
     memoryVolumeMount.setMountPath(KubernetesConstants.POD_MEMORY_VOLUME);
     volumeMounts.add(memoryVolumeMount);
 
-    V1VolumeMount volatileVolumeMount = new V1VolumeMount();
-    volatileVolumeMount.setName(KubernetesConstants.POD_VOLATILE_VOLUME_NAME);
-    volatileVolumeMount.setMountPath(KubernetesConstants.POD_VOLATILE_VOLUME);
-    volumeMounts.add(volatileVolumeMount);
+    if (SchedulerContext.workerVolatileDisk(config) > 0) {
+      V1VolumeMount volatileVolumeMount = new V1VolumeMount();
+      volatileVolumeMount.setName(KubernetesConstants.POD_VOLATILE_VOLUME_NAME);
+      volatileVolumeMount.setMountPath(KubernetesConstants.POD_VOLATILE_VOLUME);
+      volumeMounts.add(volatileVolumeMount);
+    }
 
     if (SchedulerContext.persistentVolumeRequested(config)) {
       V1VolumeMount persVolumeMount = new V1VolumeMount();

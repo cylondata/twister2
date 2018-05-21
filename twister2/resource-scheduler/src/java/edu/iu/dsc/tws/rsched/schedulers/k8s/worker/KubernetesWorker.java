@@ -128,8 +128,6 @@ public final class KubernetesWorker {
 
       // create persistent volume object
       pv = new K8sPersistentVolume(persistentJobDir, workerID);
-      // create worker directory
-      pv.getWorkerDir();
     }
 
     // a temporary config object until the log file is read
@@ -148,9 +146,7 @@ public final class KubernetesWorker {
       StringBuffer pvInfo = new StringBuffer();
       pvInfo.append("Persistent storage information: \n");
       pvInfo.append("Job Dir Path: " + pv.getJobDirPath() + "\n");
-      pvInfo.append("Job Dir exists: " + pv.jobDirExists() + "\n");
       pvInfo.append("Worker Dir Path: " + pv.getWorkerDirPath() + "\n");
-      pvInfo.append("Worker Dir Exists: " + pv.workerDirExists() + "\n");
       pvInfo.append("Job log dir: " + pv.getLogDirPath());
       LOG.info(pvInfo.toString());
     }
@@ -350,9 +346,11 @@ public final class KubernetesWorker {
       throw new RuntimeException(e);
     }
 
-    K8sVolatileVolume volatileVolume =
-        new K8sVolatileVolume(SchedulerContext.jobName(config), thisWorker.getWorkerID());
-
+    K8sVolatileVolume volatileVolume = null;
+    if (SchedulerContext.workerVolatileDisk(config) > 0) {
+      volatileVolume =
+          new K8sVolatileVolume(SchedulerContext.jobName(config), thisWorker.getWorkerID());
+    }
     container.init(config, thisWorker.getWorkerID(), null, workerController, pv, volatileVolume);
   }
 
