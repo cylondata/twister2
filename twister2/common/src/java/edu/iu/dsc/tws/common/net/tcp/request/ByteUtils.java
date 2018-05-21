@@ -9,10 +9,24 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.common.net.tcp;
+package edu.iu.dsc.tws.common.net.tcp.request;
 
-import com.google.protobuf.Message;
+import java.nio.ByteBuffer;
 
-public interface ResponseHandler {
-  void onMessage(Message message);
+public final class ByteUtils {
+  private ByteUtils() {
+  }
+
+  public static void packString(String val, ByteBuffer buffer) {
+    buffer.putInt(val.length());
+    buffer.put(val.getBytes());
+  }
+
+  public static String unPackString(ByteBuffer buffer) {
+    int len = buffer.getInt();
+    byte[] b = new byte[len];
+    buffer.get(b);
+    return new String(b);
+  }
+
 }
