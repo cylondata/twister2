@@ -35,7 +35,8 @@ public class FsStateBackend extends AbstractFileStateBackend {
   }
 
   @Override
-  public CompletedCheckpointStorageLocation resolveCheckpoint(String externalPointer) throws IOException {
+  public CompletedCheckpointStorageLocation resolveCheckpoint(String externalPointer)
+      throws IOException {
     return null;
   }
 
@@ -45,12 +46,14 @@ public class FsStateBackend extends AbstractFileStateBackend {
   }
 
   @Override
-  public AbstractKeyedStateBackend createKeyedStateBackend(JobName jobname, String operatorIdentifier) throws IOException {
+  public AbstractKeyedStateBackend createKeyedStateBackend(
+      JobName jobname, String operatorIdentifier) throws IOException {
     return null;
   }
 
   @Override
-  public OperatorStateBackend createOperatorStateBackend(String operatorIdentifier) throws Exception {
+  public OperatorStateBackend createOperatorStateBackend(String operatorIdentifier)
+      throws Exception {
     return null;
   }
 }
