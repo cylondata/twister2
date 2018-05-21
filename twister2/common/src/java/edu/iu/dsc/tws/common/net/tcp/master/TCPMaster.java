@@ -22,12 +22,12 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.net.NetworkInfo;
-import edu.iu.dsc.tws.common.net.tcp.MessageHandler;
+import edu.iu.dsc.tws.common.net.tcp.ChannelHandler;
 import edu.iu.dsc.tws.common.net.tcp.Progress;
 import edu.iu.dsc.tws.common.net.tcp.Server;
 import edu.iu.dsc.tws.common.net.tcp.StatusCode;
 import edu.iu.dsc.tws.common.net.tcp.TCPContext;
-import edu.iu.dsc.tws.common.net.tcp.TCPRequest;
+import edu.iu.dsc.tws.common.net.tcp.TCPMessage;
 
 /**
  * The master process to synchronize the creation of connections
@@ -84,7 +84,7 @@ public class TCPMaster {
     }
   }
 
-  private class ServerEventHandler implements MessageHandler {
+  private class ServerEventHandler implements ChannelHandler {
     @Override
     public void onError(SocketChannel channel) {
 
@@ -105,7 +105,7 @@ public class TCPMaster {
     }
 
     @Override
-    public void onReceiveComplete(SocketChannel channel, TCPRequest readRequest) {
+    public void onReceiveComplete(SocketChannel channel, TCPMessage readRequest) {
       // read the process no
       ByteBuffer buffer = readRequest.getByteBuffer();
       int processNo = buffer.getInt();
@@ -122,7 +122,7 @@ public class TCPMaster {
     }
 
     @Override
-    public void onSendComplete(SocketChannel channel, TCPRequest writeRequest) {
+    public void onSendComplete(SocketChannel channel, TCPMessage writeRequest) {
 
     }
   }

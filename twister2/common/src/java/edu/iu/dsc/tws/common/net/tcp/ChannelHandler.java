@@ -9,18 +9,18 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.rsched.spi.container;
+package edu.iu.dsc.tws.common.net.tcp;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.rsched.bootstrap.IWorkerController;
-import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
+import java.nio.channels.SocketChannel;
 
-public interface IWorker {
-  void init(Config config,
-            int id,
-            ResourcePlan resourcePlan,
-            IWorkerController workerController,
-            IPersistentVolume persistentVolume,
-            IVolatileVolume volatileVolume);
+public interface ChannelHandler {
+  void onError(SocketChannel channel);
 
+  void onConnect(SocketChannel channel, StatusCode status);
+
+  void onClose(SocketChannel channel);
+
+  void onReceiveComplete(SocketChannel channel, TCPMessage readRequest);
+
+  void onSendComplete(SocketChannel channel, TCPMessage writeRequest);
 }

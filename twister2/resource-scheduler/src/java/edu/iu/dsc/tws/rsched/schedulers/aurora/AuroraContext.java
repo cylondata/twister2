@@ -23,9 +23,6 @@ public class AuroraContext extends SchedulerContext {
   public static final String ROLE = "twister2.resource.scheduler.aurora.role";
   public static final String ENVIRONMENT = "twister2.resource.scheduler.aurora.env";
 
-  public static final int TWISTER2_WORKER_DISK_DEFAULT = 1024;
-  public static final String TWISTER2_WORKER_DISK = "twister2.worker.disk";
-
   public static final String AURORA_WORKER_CLASS = "twister2.class.aurora.worker";
 
   public static String auroraClusterName(Config cfg) {
@@ -38,11 +35,6 @@ public class AuroraContext extends SchedulerContext {
 
   public static String environment(Config cfg) {
     return cfg.getStringValue(ENVIRONMENT);
-  }
-
-
-  public static int workerDisk(Config cfg) {
-    return cfg.getIntegerValue(TWISTER2_WORKER_DISK, TWISTER2_WORKER_DISK_DEFAULT);
   }
 
   public static String auroraWorkerClass(Config cfg) {

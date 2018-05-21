@@ -1,0 +1,17 @@
+# this is used to allow pods to get, watch and list events from Kubernetes master
+# Twister2 Pods needs to list all pods in a job to discover their cluster IP addresses
+# Twister2 Pods also needs to watch Pod events to see whether all pods started
+# This Role needs to be created at the Kubernetes master for the used namespace,
+# before submitting Twister2 jobs
+# source: https://kubernetes.io/docs/admin/authorization/rbac/
+
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: default
+  name: pod-reader
+rules:
+- apiGroups: [""] # "" indicates the core API group
+  resources: ["pods"]
+  verbs: ["get", "watch", "list"]
+

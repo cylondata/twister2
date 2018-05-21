@@ -1,4 +1,50 @@
 jackson_version = "2.8.8"
+powermock_version = "1.6.2"
+
+maven_jar(
+  name = "org_powermock_powermock_api_mockito",
+  artifact = "org.powermock:powermock-api-mockito:" + powermock_version,
+)
+
+maven_jar(
+  name = "org_powermock_powermock_api_support",
+  artifact = "org.powermock:powermock-api-support:" + powermock_version,
+)
+
+maven_jar(
+  name = "org_powermock_powermock_core",
+  artifact = "org.powermock:powermock-core:" + powermock_version,
+)
+
+maven_jar(
+  name = "org_powermock_powermock_module_junit4",
+  artifact = "org.powermock:powermock-module-junit4:" + powermock_version,
+)
+
+maven_jar(
+  name = "org_powermock_powermock_module_junit4_common",
+  artifact = "org.powermock:powermock-module-junit4-common:" + powermock_version,
+)
+
+maven_jar(
+  name = "org_powermock_powermock_reflect",
+  artifact = "org.powermock:powermock-reflect:" + powermock_version,
+)
+
+maven_jar(
+  name = "junit_junit",
+  artifact = "junit:junit:4.11",
+)
+
+maven_jar(
+  name = "org_javassist_javassist",
+  artifact = "org.javassist:javassist:3.18.1-GA",
+)
+
+maven_jar(
+  name = "org_mockito_mockito_all",
+  artifact = "org.mockito:mockito-all:1.10.19",
+)
 
 maven_server(
   name = "default",

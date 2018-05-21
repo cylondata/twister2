@@ -9,18 +9,24 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.rsched.spi.container;
+package edu.iu.dsc.tws.common.net.tcp.request;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.rsched.bootstrap.IWorkerController;
-import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
+import java.nio.ByteBuffer;
 
-public interface IWorker {
-  void init(Config config,
-            int id,
-            ResourcePlan resourcePlan,
-            IWorkerController workerController,
-            IPersistentVolume persistentVolume,
-            IVolatileVolume volatileVolume);
+public final class ByteUtils {
+  private ByteUtils() {
+  }
+
+  public static void packString(String val, ByteBuffer buffer) {
+    buffer.putInt(val.length());
+    buffer.put(val.getBytes());
+  }
+
+  public static String unPackString(ByteBuffer buffer) {
+    int len = buffer.getInt();
+    byte[] b = new byte[len];
+    buffer.get(b);
+    return new String(b);
+  }
 
 }

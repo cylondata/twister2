@@ -21,7 +21,10 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.common.net.tcp;
+package edu.iu.dsc.tws.common.net.tcp.request;
 
-public class TCPStatus {
+import com.google.protobuf.Message;
+
+public interface MessageHandler {
+  void onMessage(RequestID id, int workerId, Message message);
 }

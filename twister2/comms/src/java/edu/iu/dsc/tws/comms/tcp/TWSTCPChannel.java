@@ -23,7 +23,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.net.tcp.TCPChannel;
-import edu.iu.dsc.tws.common.net.tcp.TCPRequest;
+import edu.iu.dsc.tws.common.net.tcp.TCPMessage;
 import edu.iu.dsc.tws.common.net.tcp.TCPStatus;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.mpi.MPIBuffer;
@@ -44,10 +44,10 @@ public class TWSTCPChannel implements TWSChannel {
 
   @SuppressWarnings("VisibilityModifier")
   private class Request {
-    TCPRequest request;
+    TCPMessage request;
     MPIBuffer buffer;
 
-    Request(TCPRequest request, MPIBuffer buffer) {
+    Request(TCPMessage request, MPIBuffer buffer) {
       this.request = request;
       this.buffer = buffer;
     }
@@ -153,7 +153,7 @@ public class TWSTCPChannel implements TWSChannel {
     for (int i = 0; i < message.getBuffers().size(); i++) {
       sendCount++;
       MPIBuffer buffer = message.getBuffers().get(i);
-      TCPRequest request = comm.iSend(buffer.getByteBuffer(), buffer.getSize(),
+      TCPMessage request = comm.iSend(buffer.getByteBuffer(), buffer.getSize(),
           requests.rank, message.getHeader().getEdge());
       // register to the loop to make progress on the send
       requests.pendingSends.add(new Request(request, buffer));
@@ -164,7 +164,7 @@ public class TWSTCPChannel implements TWSChannel {
     MPIBuffer byteBuffer = requests.availableBuffers.poll();
     if (byteBuffer != null) {
       // post the receive
-      TCPRequest request = postReceive(requests.rank, requests.edge, byteBuffer);
+      TCPMessage request = postReceive(requests.rank, requests.edge, byteBuffer);
       requests.pendingRequests.add(new Request(request, byteBuffer));
     }
   }
@@ -176,7 +176,7 @@ public class TWSTCPChannel implements TWSChannel {
    * @param byteBuffer the buffer
    * @return the request
    */
-  private TCPRequest postReceive(int rank, int stream, MPIBuffer byteBuffer) {
+  private TCPMessage postReceive(int rank, int stream, MPIBuffer byteBuffer) {
     return comm.iRecv(byteBuffer.getByteBuffer(), byteBuffer.getCapacity(), rank, stream);
   }
 

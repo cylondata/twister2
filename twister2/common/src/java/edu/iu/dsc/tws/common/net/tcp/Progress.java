@@ -156,8 +156,6 @@ public class Progress {
           throw new RuntimeException("Unmatched SelectHandler has already been attached"
               + " for other operation");
         }
-        // If call == key.attachment
-        // Just skip
       }
       key.interestOps(key.interestOps() | operation);
     }

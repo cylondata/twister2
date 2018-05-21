@@ -82,7 +82,6 @@ public class PodWatcher extends Thread {
       LOG.log(Level.SEVERE, "Can not start event watcher for the namespace: " + namespace, e);
     }
 
-    boolean result = false;
     int counter = 0;
 
     for (Watch.Response<V1Event> item : watch) {

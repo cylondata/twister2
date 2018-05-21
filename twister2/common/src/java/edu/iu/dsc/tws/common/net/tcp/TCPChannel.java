@@ -44,7 +44,13 @@ public class TCPChannel {
 
   private Map<Integer, SocketChannel> clientChannel;
 
+  /**
+   * Channel to id
+   */
   private Map<SocketChannel, Integer> invertedClientChannels;
+  /**
+   * Channel to id
+   */
   private Map<SocketChannel, Integer> invertedServerChannels;
 
   private Map<Integer, SocketChannel> serverChannel;
@@ -95,7 +101,7 @@ public class TCPChannel {
     looper = new Progress();
 
     // lets connect to other
-    server = new Server(config, hostName, port, looper, new ChannelServerMessageHandler());
+    server = new Server(config, hostName, port, looper, new ChannelServerChannelHandler());
     server.start();
   }
 
@@ -126,7 +132,7 @@ public class TCPChannel {
       int remotePort = TCPContext.getPort(info);
 
       Client client = new Client(remoteHost, remotePort, config,
-          looper, new ClientChannelMessageHandler());
+          looper, new ClientChannelChannelHandler());
       client.connect();
       clients.put(info.getProcId(), client);
       invertedClientChannels.put(client.getSocketChannel(), info.getProcId());
@@ -141,7 +147,7 @@ public class TCPChannel {
     LOG.log(Level.INFO, "Everybody connected: " + clientsConnected + " " + clientsCompleted);
   }
 
-  public TCPRequest iSend(ByteBuffer buffer, int size, int procId, int edge) {
+  public TCPMessage iSend(ByteBuffer buffer, int size, int procId, int edge) {
     SocketChannel ch = clientChannel.get(procId);
     if (ch == null) {
       LOG.log(Level.INFO, "Cannot send on an un-connected channel to: " + procId);
@@ -151,7 +157,7 @@ public class TCPChannel {
     return client.send(ch, buffer, size, edge);
   }
 
-  public TCPRequest iRecv(ByteBuffer buffer, int size, int procId, int edge) {
+  public TCPMessage iRecv(ByteBuffer buffer, int size, int procId, int edge) {
     SocketChannel ch = serverChannel.get(procId);
     if (ch == null) {
       LOG.log(Level.INFO, "Cannot receive on an un-connected channel to: " + procId);
@@ -185,7 +191,7 @@ public class TCPChannel {
     server.stop();
   }
 
-  private class ChannelServerMessageHandler implements MessageHandler {
+  private class ChannelServerChannelHandler implements ChannelHandler {
 
     @Override
     public void onError(SocketChannel channel) {
@@ -206,7 +212,7 @@ public class TCPChannel {
     }
 
     @Override
-    public void onReceiveComplete(SocketChannel channel, TCPRequest readRequest) {
+    public void onReceiveComplete(SocketChannel channel, TCPMessage readRequest) {
       if (readRequest.getEdge() == -1) {
         ByteBuffer buffer = readRequest.getByteBuffer();
         int destProc = buffer.getInt();
@@ -222,13 +228,13 @@ public class TCPChannel {
     }
 
     @Override
-    public void onSendComplete(SocketChannel channel, TCPRequest writeRequest) {
+    public void onSendComplete(SocketChannel channel, TCPMessage writeRequest) {
       LOG.log(Level.INFO, "Server send complete");
       writeRequest.setComplete(true);
     }
   }
 
-  private class ClientChannelMessageHandler implements MessageHandler {
+  private class ClientChannelChannelHandler implements ChannelHandler {
 
     @Override
     public void onError(SocketChannel channel) {
@@ -252,13 +258,13 @@ public class TCPChannel {
     }
 
     @Override
-    public void onReceiveComplete(SocketChannel channel, TCPRequest readRequest) {
+    public void onReceiveComplete(SocketChannel channel, TCPMessage readRequest) {
       LOG.log(Level.INFO, "Client received message");
       readRequest.setComplete(true);
     }
 
     @Override
-    public void onSendComplete(SocketChannel channel, TCPRequest writeRequest) {
+    public void onSendComplete(SocketChannel channel, TCPMessage writeRequest) {
       LOG.log(Level.INFO, "Client send complete");
       writeRequest.setComplete(true);
       if (writeRequest.getEdge() == -1) {
@@ -301,8 +307,8 @@ public class TCPChannel {
       destProcId = 1;
     }
 
-    List<TCPRequest> readRequests = new ArrayList<>();
-    List<TCPRequest> writeRequests = new ArrayList<>();
+    List<TCPMessage> readRequests = new ArrayList<>();
+    List<TCPMessage> writeRequests = new ArrayList<>();
     final int messages = 5;
     // now lets send 5 messages
     for (int i = 0; i < messages; i++) {
@@ -310,11 +316,11 @@ public class TCPChannel {
         ByteBuffer byteBuffer = ByteBuffer.allocate(8);
         byteBuffer.putInt(1);
         byteBuffer.putInt(2);
-        TCPRequest write = master.iSend(byteBuffer, 8, destProcId, 1);
+        TCPMessage write = master.iSend(byteBuffer, 8, destProcId, 1);
         writeRequests.add(write);
       } else {
         ByteBuffer receiveBuffer = ByteBuffer.allocate(8);
-        TCPRequest read = master.iRecv(receiveBuffer, 8, destProcId, 1);
+        TCPMessage read = master.iRecv(receiveBuffer, 8, destProcId, 1);
         readRequests.add(read);
       }
     }
@@ -324,9 +330,9 @@ public class TCPChannel {
     do {
       master.progress();
       if (destProcId == 0) {
-        Iterator<TCPRequest> wItr = writeRequests.iterator();
+        Iterator<TCPMessage> wItr = writeRequests.iterator();
         while (wItr.hasNext()) {
-          TCPRequest w = wItr.next();
+          TCPMessage w = wItr.next();
           if (w.isComplete()) {
             LOG.info("Write complete : " + writeCOmpeted);
             writeCOmpeted++;
@@ -334,9 +340,9 @@ public class TCPChannel {
           }
         }
       } else {
-        Iterator<TCPRequest> rItr = readRequests.iterator();
+        Iterator<TCPMessage> rItr = readRequests.iterator();
         while (rItr.hasNext()) {
-          TCPRequest r = rItr.next();
+          TCPMessage r = rItr.next();
           if (r.isComplete()) {
             ByteBuffer buffer = r.getByteBuffer();
 //            LOG.info("Size: " + buffer.remaining());

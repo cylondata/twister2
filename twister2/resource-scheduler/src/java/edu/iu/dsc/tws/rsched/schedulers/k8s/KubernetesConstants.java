@@ -15,8 +15,10 @@ public final class KubernetesConstants {
 
   public static final String TWISTER2_DOCKER_IMAGE = "auyar/twister2:v0.01";
   public static final String KUBERNETES_CLUSTER_TYPE = "kubernetes";
-  public static final String POD_SHARED_VOLUME_NAME = "twister2-shared-dir";
-  public static final String POD_SHARED_VOLUME = "/twister2-shared";
+  public static final String POD_MEMORY_VOLUME_NAME = "twister2-memory-dir";
+  public static final String POD_MEMORY_VOLUME = "/twister2-memory-dir";
+  public static final String POD_VOLATILE_VOLUME_NAME = "twister2-volatile-dir";
+  public static final String POD_VOLATILE_VOLUME = "/twister2-volatile";
   public static final String CONTAINER_NAME_PREFIX = "twister2-container-";
   public static final String TWISTER2_SERVICE_PREFIX = "twister2-service-";
   public static final String SERVICE_LABEL_PREFIX = "twister2-service-label-";

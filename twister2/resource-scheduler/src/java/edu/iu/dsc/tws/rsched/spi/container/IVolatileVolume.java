@@ -9,14 +9,27 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.common.net.tcp.request;
+package edu.iu.dsc.tws.rsched.spi.container;
 
-import com.google.protobuf.Message;
+import java.io.File;
 
-public abstract class RequestResponseClient {
-  public void sendRequest(Message msg) {
+/**
+ * this is a volatile volume for a worker
+ * it is on the local disk of the node
+ * it will be erased after the worker has completed its work
+ */
+public interface IVolatileVolume {
 
-  }
+  /**
+   * get the directory path of this worker as a string
+   * @return
+   */
+  String getWorkerDirPath();
 
-  public abstract void onResponse(Message msg);
+  /**
+   * get the worker directory as a File object
+   * this method creates the directory if it is not already created
+   * @return
+   */
+  File getWorkerDir();
 }

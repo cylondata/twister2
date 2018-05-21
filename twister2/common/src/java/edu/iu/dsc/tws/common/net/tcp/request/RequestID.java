@@ -11,12 +11,30 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.net.tcp.request;
 
-import com.google.protobuf.Message;
+import java.util.Random;
 
-public abstract class RequestResponseServer {
-  public void sendResponse(MessageID id, Message msg) {
+public final class RequestID {
+  private static Random randomGenerator = new Random(System.nanoTime());
 
+  public static final int ID_SIZE = 32;
+
+  private byte[] id;
+
+  private RequestID(byte[] id) {
+    this.id = id;
   }
 
-  public abstract void onMessage(MessageID id, Message msg);
+  public static RequestID fromBytes(byte[] bytes) {
+    return new RequestID(bytes);
+  }
+
+  public static RequestID generate() {
+    byte[] dataBytes = new byte[ID_SIZE];
+    randomGenerator.nextBytes(dataBytes);
+    return new RequestID(dataBytes);
+  }
+
+  public byte[] getId() {
+    return id;
+  }
 }
