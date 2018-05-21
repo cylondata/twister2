@@ -154,7 +154,6 @@ public class RRClient {
         Message m = builder.build();
 
         MessageHandler handler = responseHandlers.get(messageType);
-
         if (handler == null) {
           LOG.log(Level.WARNING, "Failed to get handler for message: " + messageType);
         } else {

@@ -44,11 +44,6 @@ public class RRServer {
   private List<SocketChannel> socketChannels = new ArrayList<>();
 
   /**
-   * Keep track of the request
-   */
-  private Map<RequestID, MessageHandler> requests = new HashMap<>();
-
-  /**
    * Keep track of the request handler using protocol buffer message types
    */
   private Map<String, MessageHandler> requestHandlers = new HashMap<>();
@@ -68,7 +63,13 @@ public class RRServer {
    */
   private Map<RequestID, Integer> requestToWorkers = new HashMap<>();
 
-  public RRServer(Config cfg, String host, int port, Progress loop) {
+  /**
+   * The worker id
+   */
+  private int workerId;
+
+  public RRServer(Config cfg, String host, int port, Progress loop, int wId) {
+    this.workerId = wId;
     server = new Server(cfg, host, port, loop, new Handler(), false);
   }
 
@@ -77,6 +78,12 @@ public class RRServer {
     messageBuilders.put(builder.getDescriptorForType().getFullName(), builder);
   }
 
+  /**
+   * Send a response to a request id
+   * @param id request id
+   * @param message message
+   * @return true if response was accepted
+   */
   public boolean sendResponse(RequestID id, Message message) {
     if (requestChannels.containsKey(id)) {
       LOG.log(Level.SEVERE, "Trying to send response to non-existing request");
@@ -101,12 +108,18 @@ public class RRServer {
     // pack the name of the message
     ByteUtils.packString(messageType, buffer);
     // pack the worker id
-    buffer.putInt(clientWorkerId);
+    buffer.putInt(workerId);
     // pack data
     buffer.put(data);
 
     TCPMessage request = server.send(channel, buffer, capacity, 0);
-    return request != null;
+    if (request != null) {
+      requestChannels.remove(id);
+      requestToWorkers.remove(id);
+      return true;
+    } else {
+      return false;
+    }
   }
 
   private class Handler implements ChannelHandler {
@@ -137,7 +150,7 @@ public class RRServer {
       String messageType = ByteUtils.unPackString(data);
 
       // now get the worker id
-      int serverWorkerId = data.getInt();
+      int clientId = data.getInt();
 
       RequestID requestID = RequestID.fromBytes(id);
       Message.Builder builder = messageBuilders.get(messageType);
@@ -150,8 +163,11 @@ public class RRServer {
         builder.mergeFrom(data.array());
         Message m = builder.build();
 
-        MessageHandler handler = requests.get(requestID);
-        handler.onMessage(requestID, serverWorkerId, m);
+        MessageHandler handler = requestHandlers.get(messageType);
+        handler.onMessage(requestID, clientId, m);
+
+        requestToWorkers.put(requestID, clientId);
+        requestChannels.put(requestID, channel);
       } catch (InvalidProtocolBufferException e) {
         LOG.log(Level.SEVERE, "Failed to build a message", e);
       }
