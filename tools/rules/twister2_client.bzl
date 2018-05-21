@@ -111,6 +111,10 @@ def twister2_client_lib_data_files():
     return [
         "//twister2/data/src/main/java:data-java",
     ]
+def twister2_client_lib_connector_files():
+    return [
+        "//twister2/connector/src/main/java:connector-java",
+    ]
 
 def twister2_client_lib_executor_files():
     return [
@@ -161,3 +165,12 @@ def twister2_client_lib_third_party_files():
         "@org_slf4j_slf4j_api//jar",
         "@org_slf4j_slf4j_jdk14//jar",
     ]
+#def twister2_client_lib_connector_files():
+#    return [
+#        "//twister2/connectors/src/java:connector-java",
+#        "@org_xerial_snappy_snappy_java//jar",
+#        "@org_lz4_lz4_java//jar",
+#        "@org_slf4j_slf4j_api//jar",
+#        "@org_apache_kafka_kafka_clients//jar",
+#        "@org_apache_kafka_kafka_clients//jar",
+#    ]
