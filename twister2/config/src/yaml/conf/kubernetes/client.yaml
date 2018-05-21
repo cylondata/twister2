@@ -17,7 +17,7 @@ twister2.worker.ram: 200
 
 # amount of volatile hard disk space on each worker in giga bytes as double
 # default value is 1.0 GB. 
-twister2.worker.disk: 1.0
+twister2.worker.volatile.disk: 1.0
 
 # number of worker instances in this job
 twister2.worker.instances: 6

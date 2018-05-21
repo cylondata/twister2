@@ -146,7 +146,8 @@ public final class RequestObjectBuilder {
     V1Volume volatileVolume = new V1Volume();
     volatileVolume.setName(KubernetesConstants.POD_VOLATILE_VOLUME_NAME);
     V1EmptyDirVolumeSource volumeSource2 = new V1EmptyDirVolumeSource();
-    double vSize = SchedulerContext.workerDisk(config) * SchedulerContext.workerInstances(config);
+    double vSize =
+        SchedulerContext.workerVolatileDisk(config) * SchedulerContext.workerInstances(config);
     volumeSource2.setSizeLimit(vSize + "Gi");
     volatileVolume.setEmptyDir(volumeSource2);
     volumes.add(volatileVolume);

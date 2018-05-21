@@ -35,8 +35,8 @@ public class SchedulerContext extends Context {
   public static final String TWISTER2_WORKER_RAM = "twister2.worker.ram";
 
   // volatile disk size per worker in GB
-  public static final double TWISTER2_WORKER_DISK_DEFAULT = 1.0;
-  public static final String TWISTER2_WORKER_DISK = "twister2.worker.disk";
+  public static final double WORKER_VOLATILE_DISK_DEFAULT = 1.0;
+  public static final String WORKER_VOLATILE_DISK = "twister2.worker.volatile.disk";
 
   public static final int TWISTER2_WORKER_INSTANCES_DEFAULT = 1;
   public static final String TWISTER2_WORKER_INSTANCES = "twister2.worker.instances";
@@ -117,8 +117,8 @@ public class SchedulerContext extends Context {
     return cfg.getIntegerValue(TWISTER2_WORKER_RAM, TWISTER2_WORKER_RAM_DEFAULT);
   }
 
-  public static double workerDisk(Config cfg) {
-    return cfg.getDoubleValue(TWISTER2_WORKER_DISK, TWISTER2_WORKER_DISK_DEFAULT);
+  public static double workerVolatileDisk(Config cfg) {
+    return cfg.getDoubleValue(WORKER_VOLATILE_DISK, WORKER_VOLATILE_DISK_DEFAULT);
   }
 
   public static int workerInstances(Config cfg) {
