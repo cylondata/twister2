@@ -27,3 +27,12 @@ def twister2_core_lib_communication_files():
     return [
         "//twister2/comms/src/java:comms-java",
     ]
+
+def twister2_core_lib_connector_files():
+    return [
+        "//twister2/connectors/src/java:connector-java",
+        "@org_xerial_snappy_snappy_java//jar",
+        "@org_lz4_lz4_java//jar",
+        "@org_slf4j_slf4j_api//jar",
+        "@org_apache_kafka_kafka_clients//jar",
+    ]

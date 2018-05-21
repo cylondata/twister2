@@ -113,7 +113,11 @@ def twister2_client_lib_data_files():
     ]
 def twister2_client_lib_connector_files():
     return [
-        "//twister2/connector/src/main/java:connector-java",
+        "//twister2/connectors/src/java:connector-java",
+        "@org_xerial_snappy_snappy_java//jar",
+        "@org_lz4_lz4_java//jar",
+        "@org_slf4j_slf4j_api//jar",
+        "@org_apache_kafka_kafka_clients//jar",
     ]
 
 def twister2_client_lib_executor_files():
