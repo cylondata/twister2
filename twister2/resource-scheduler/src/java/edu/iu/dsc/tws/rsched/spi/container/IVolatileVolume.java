@@ -11,16 +11,25 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.spi.container;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.rsched.bootstrap.IWorkerController;
-import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
+import java.io.File;
 
-public interface IWorker {
-  void init(Config config,
-            int id,
-            ResourcePlan resourcePlan,
-            IWorkerController workerController,
-            IPersistentVolume persistentVolume,
-            IVolatileVolume volatileVolume);
+/**
+ * this is a volatile volume for a worker
+ * it is on the local disk of the node
+ * it will be erased after the worker has completed its work
+ */
+public interface IVolatileVolume {
 
+  /**
+   * get the directory path of this worker as a string
+   * @return
+   */
+  String getWorkerDirPath();
+
+  /**
+   * get the worker directory as a File object
+   * this method creates the directory if it is not already created
+   * @return
+   */
+  File getWorkerDir();
 }

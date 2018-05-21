@@ -34,6 +34,10 @@ public class SchedulerContext extends Context {
   public static final int TWISTER2_WORKER_RAM_DEFAULT = 200;
   public static final String TWISTER2_WORKER_RAM = "twister2.worker.ram";
 
+  // volatile disk size per worker in GB
+  public static final double TWISTER2_WORKER_DISK_DEFAULT = 1.0;
+  public static final String TWISTER2_WORKER_DISK = "twister2.worker.disk";
+
   public static final int TWISTER2_WORKER_INSTANCES_DEFAULT = 1;
   public static final String TWISTER2_WORKER_INSTANCES = "twister2.worker.instances";
 
@@ -70,12 +74,12 @@ public class SchedulerContext extends Context {
   public static final String NFS_SERVER_ADDRESS = "nfs.server.address";
   public static final String NFS_SERVER_PATH = "nfs.server.path";
 
-  // persistent volume per worker
-  public static final String PERSISTENT_VOLUME_PER_WORKER_DEFAULT = "1Gi";
+  // persistent volume per worker in GB: "1.0Gi"
+  public static final double PERSISTENT_VOLUME_PER_WORKER_DEFAULT = 1.0;
   public static final String PERSISTENT_VOLUME_PER_WORKER = "persistent.volume.per.worker";
 
-  // persistent volume for all workers in this job
-  public static final String PERSISTENT_VOLUME_TOTAL_DEFAULT = "100Gi";
+  // persistent volume for all workers in this job in GB: "10.0Gi"
+  // by default, it is the total of all worker persistent volume sizes
   public static final String PERSISTENT_VOLUME_TOTAL = "persistent.volume.total";
 
   public static final boolean PERSISTENT_VOLUME_REQUESTED_DEFAULT = false;
@@ -111,6 +115,10 @@ public class SchedulerContext extends Context {
 
   public static int workerRAM(Config cfg) {
     return cfg.getIntegerValue(TWISTER2_WORKER_RAM, TWISTER2_WORKER_RAM_DEFAULT);
+  }
+
+  public static double workerDisk(Config cfg) {
+    return cfg.getDoubleValue(TWISTER2_WORKER_DISK, TWISTER2_WORKER_DISK_DEFAULT);
   }
 
   public static int workerInstances(Config cfg) {
@@ -166,12 +174,13 @@ public class SchedulerContext extends Context {
     return cfg.getStringValue(NFS_SERVER_PATH);
   }
 
-  public static String persistentVolumePerWorker(Config cfg) {
-    return cfg.getStringValue(PERSISTENT_VOLUME_PER_WORKER, PERSISTENT_VOLUME_PER_WORKER_DEFAULT);
+  public static double persistentVolumePerWorker(Config cfg) {
+    return cfg.getDoubleValue(PERSISTENT_VOLUME_PER_WORKER, PERSISTENT_VOLUME_PER_WORKER_DEFAULT);
   }
 
-  public static String persistentVolumeTotal(Config cfg) {
-    return cfg.getStringValue(PERSISTENT_VOLUME_TOTAL, PERSISTENT_VOLUME_TOTAL_DEFAULT);
+  public static double persistentVolumeTotal(Config cfg) {
+    double defaultValue = workerInstances(cfg) * persistentVolumePerWorker(cfg);
+    return cfg.getDoubleValue(PERSISTENT_VOLUME_TOTAL, defaultValue);
   }
 
   public static boolean persistentVolumeRequested(Config cfg) {

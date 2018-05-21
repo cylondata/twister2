@@ -22,7 +22,6 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.rsched.schedulers.aurora.AuroraContext;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
@@ -41,7 +40,7 @@ public final class BasicAuroraJob {
     double cpus = SchedulerContext.workerCPU(config);
     int ramMegaBytes = SchedulerContext.workerRAM(config);
     int workers = SchedulerContext.workerInstances(config);
-    int diskMegaBytes = AuroraContext.workerDisk(config);
+    int diskMegaBytes = (int) (SchedulerContext.workerDisk(config) * 1024);
 
     String jobName = SchedulerContext.jobName(config);
     ResourceContainer resourceContainer = new ResourceContainer(cpus, ramMegaBytes, diskMegaBytes);

@@ -133,7 +133,7 @@ public class AuroraLauncher implements ILauncher {
     envs.put(AuroraField.JOB_NAME, SchedulerContext.jobName(config));
     envs.put(AuroraField.CPUS_PER_CONTAINER, SchedulerContext.workerCPU(config) + "");
     envs.put(AuroraField.RAM_PER_CONTAINER, SchedulerContext.workerRAM(config) * 1048576 + "");
-    envs.put(AuroraField.DISK_PER_CONTAINER, AuroraContext.workerDisk(config) * 1048576 + "");
+    envs.put(AuroraField.DISK_PER_CONTAINER, AuroraContext.workerDisk(config) * 1073741824 + "");
     envs.put(AuroraField.NUMBER_OF_CONTAINERS, SchedulerContext.workerInstances(config) + "");
     envs.put(AuroraField.TWISTER2_PACKAGES_PATH, SchedulerContext.packagesPath(config));
     envs.put(AuroraField.JOB_DESCRIPTION_FILE, SchedulerContext.jobDescriptionFile(config));
