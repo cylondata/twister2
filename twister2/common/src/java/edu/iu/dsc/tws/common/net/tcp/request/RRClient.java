@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.common.net.tcp.client;
+package edu.iu.dsc.tws.common.net.tcp.request;
 
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
@@ -25,8 +25,6 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.net.tcp.ChannelHandler;
 import edu.iu.dsc.tws.common.net.tcp.Client;
 import edu.iu.dsc.tws.common.net.tcp.Progress;
-import edu.iu.dsc.tws.common.net.tcp.RequestID;
-import edu.iu.dsc.tws.common.net.tcp.ResponseHandler;
 import edu.iu.dsc.tws.common.net.tcp.StatusCode;
 import edu.iu.dsc.tws.common.net.tcp.TCPMessage;
 
@@ -47,40 +45,36 @@ public class RRClient {
   private SocketChannel channel;
 
   /**
-   * Keep track of the request
-   */
-  private Map<RequestID, ResponseHandler> requests = new HashMap<>();
-
-  /**
    * Keep track of the response handler using protocol buffer message types
    */
-  private Map<Message.Builder, ResponseHandler> staticResponseHandlers = new HashMap<>();
+  private Map<String, MessageHandler> responseHandlers = new HashMap<>();
 
   /**
    * Message builders
    */
-  private Map<RequestID, Message.Builder> messageBuilders = new HashMap<>();
+  private Map<String, Message.Builder> messageBuilders = new HashMap<>();
 
-  private int edgeId;
-
+  /**
+   * Weather we are connected
+   */
   private boolean connected = false;
 
   /**
    * The client id
    */
-  private int clientId;
+  private int workerId;
 
-  public RRClient(String host, int port, Config cfg, Progress looper) {
-    client = new Client(host, port, cfg, looper, new Handler());
+  public RRClient(String host, int port, Config cfg, Progress looper, int wId) {
+    this.workerId = wId;
+    client = new Client(host, port, cfg, looper, new Handler(), false);
   }
 
   public RequestID sendRequest(Message message) {
     if (!connected) {
       return null;
     }
-
-    Message.Builder key = message.newBuilderForType();
-    if (!staticResponseHandlers.containsKey(key)) {
+    String messageType = message.getDescriptorForType().getFullName();
+    if (!responseHandlers.containsKey(messageType)) {
       throw new RuntimeException("Message without a response handler");
     }
 
@@ -88,49 +82,33 @@ public class RRClient {
     byte[] data = message.toByteArray();
 
     // lets serialize the message
-    int capacity = id.getId().length + data.length;
+    int capacity = id.getId().length + data.length + 4;
     ByteBuffer buffer = ByteBuffer.allocate(capacity);
+    // we send message id, worker id and data
     buffer.put(id.getId());
+    // pack the name of the message
+    ByteUtils.packString(messageType, buffer);
+    // pack the worker id
+    buffer.putInt(workerId);
+    // pack data
     buffer.put(data);
 
-    TCPMessage request = client.send(channel, buffer, capacity, edgeId);
+    TCPMessage request = client.send(channel, buffer, capacity, 0);
     if (request != null) {
-      ResponseHandler handler = staticResponseHandlers.get(key);
-      messageBuilders.put(id, key);
-      requests.put(id, handler);
       return id;
     } else {
       return null;
     }
   }
 
-  public RequestID sendRequest(Message message, ResponseHandler handler) {
-    if (!connected) {
-      return null;
-    }
-
-    RequestID id = RequestID.generate();
-
-    byte[] data = message.toByteArray();
-
-    // lets serialize the message
-    int capacity = id.getId().length + data.length;
-    ByteBuffer buffer = ByteBuffer.allocate(capacity);
-    buffer.put(id.getId());
-    buffer.put(data);
-
-    TCPMessage request = client.send(channel, buffer, capacity, edgeId);
-    if (request != null) {
-      requests.put(id, handler);
-      messageBuilders.put(id, message.newBuilderForType());
-      return id;
-    } else {
-      return null;
-    }
-  }
-
-  public void registerRequestHandler(Message.Builder builder, ResponseHandler handler) {
-    staticResponseHandlers.put(builder, handler);
+  /**
+   * Register a response handler to a specific message type
+   * @param builder the response message type
+   * @param handler the message callback
+   */
+  public void registerResponseHandler(Message.Builder builder, MessageHandler handler) {
+    responseHandlers.put(builder.getDescriptorForType().getFullName(), handler);
+    messageBuilders.put(builder.getDescriptorForType().getFullName(), builder);
   }
 
   private class Handler implements ChannelHandler {
@@ -158,8 +136,14 @@ public class RRClient {
       byte[] id = new byte[RequestID.ID_SIZE];
       data.get(id);
 
+      // now read the mesage type
+      String messageType = ByteUtils.unPackString(data);
+
+      // now get the worker id
+      int serverWorkerId = data.getInt();
+
       RequestID requestID = RequestID.fromBytes(id);
-      Message.Builder builder = messageBuilders.get(requestID);
+      Message.Builder builder = messageBuilders.get(messageType);
 
       if (builder == null) {
         throw new RuntimeException("Received response without a registered response");
@@ -169,13 +153,12 @@ public class RRClient {
         builder.mergeFrom(data.array());
         Message m = builder.build();
 
-        ResponseHandler handler = requests.get(requestID);
-
-        handler.onMessage(m);
-
-        // remove the references
-        messageBuilders.remove(requestID);
-        requests.remove(requestID);
+        MessageHandler handler = responseHandlers.get(messageType);
+        if (handler == null) {
+          LOG.log(Level.WARNING, "Failed to get handler for message: " + messageType);
+        } else {
+          handler.onMessage(requestID, serverWorkerId, m);
+        }
       } catch (InvalidProtocolBufferException e) {
         LOG.log(Level.SEVERE, "Failed to build a message", e);
       }

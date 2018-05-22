@@ -189,4 +189,13 @@ public class SchedulerContext extends Context {
     return persistentVolumePerWorker(cfg) > 0;
   }
 
+  /**
+   * if workerVolatileDisk is more than zero, return true, otherwise false
+   * @param cfg
+   * @return
+   */
+  public static boolean volatileDiskRequested(Config cfg) {
+    return workerVolatileDisk(cfg) > 0;
+  }
+
 }

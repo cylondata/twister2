@@ -144,7 +144,7 @@ public final class RequestObjectBuilder {
 
     // a volatile disk based volume
     // create it if the requested disk space is positive
-    if (SchedulerContext.workerVolatileDisk(config) > 0) {
+    if (SchedulerContext.volatileDiskRequested(config)) {
       V1Volume volatileVolume = new V1Volume();
       volatileVolume.setName(KubernetesConstants.POD_VOLATILE_VOLUME_NAME);
       V1EmptyDirVolumeSource volumeSource2 = new V1EmptyDirVolumeSource();
@@ -249,7 +249,7 @@ public final class RequestObjectBuilder {
     memoryVolumeMount.setMountPath(KubernetesConstants.POD_MEMORY_VOLUME);
     volumeMounts.add(memoryVolumeMount);
 
-    if (SchedulerContext.workerVolatileDisk(config) > 0) {
+    if (SchedulerContext.volatileDiskRequested(config)) {
       V1VolumeMount volatileVolumeMount = new V1VolumeMount();
       volatileVolumeMount.setName(KubernetesConstants.POD_VOLATILE_VOLUME_NAME);
       volatileVolumeMount.setMountPath(KubernetesConstants.POD_VOLATILE_VOLUME);
