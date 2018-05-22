@@ -64,9 +64,20 @@ public class RRClient {
    */
   private int workerId;
 
-  public RRClient(String host, int port, Config cfg, Progress looper, int wId) {
+  /**
+   * Connection handler
+   */
+  private ConnectHandler connectHandler;
+
+  public RRClient(String host, int port, Config cfg, Progress looper,
+                  int wId, ConnectHandler cHandler) {
+    this.connectHandler = cHandler;
     this.workerId = wId;
     client = new Client(host, port, cfg, looper, new Handler(), false);
+  }
+
+  public void start() {
+    client.connect();
   }
 
   public RequestID sendRequest(Message message) {
@@ -82,7 +93,7 @@ public class RRClient {
     byte[] data = message.toByteArray();
 
     // lets serialize the message
-    int capacity = id.getId().length + data.length + 4;
+    int capacity = id.getId().length + data.length + 4 + messageType.getBytes().length + 4;
     ByteBuffer buffer = ByteBuffer.allocate(capacity);
     // we send message id, worker id and data
     buffer.put(id.getId());
@@ -116,17 +127,20 @@ public class RRClient {
     public void onError(SocketChannel ch) {
       connected = false;
       LOG.severe("Error happened");
+      connectHandler.onError(ch);
     }
 
     @Override
     public void onConnect(SocketChannel ch, StatusCode status) {
       channel = ch;
       connected = true;
+      connectHandler.onConnect(ch, status);
     }
 
     @Override
     public void onClose(SocketChannel ch) {
       connected = false;
+      connectHandler.onClose(ch);
     }
 
     @Override

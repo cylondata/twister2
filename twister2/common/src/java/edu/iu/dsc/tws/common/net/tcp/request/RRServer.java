@@ -68,7 +68,14 @@ public class RRServer {
    */
   private int workerId;
 
-  public RRServer(Config cfg, String host, int port, Progress loop, int wId) {
+  /**
+   * Connection handler
+   */
+  private ConnectHandler connectHandler;
+
+  public RRServer(Config cfg, String host, int port, Progress loop,
+                  int wId, ConnectHandler cHandler) {
+    this.connectHandler = cHandler;
     this.workerId = wId;
     server = new Server(cfg, host, port, loop, new Handler(), false);
   }
@@ -76,6 +83,10 @@ public class RRServer {
   public void registerRequestHandler(Message.Builder builder, MessageHandler handler) {
     requestHandlers.put(builder.getDescriptorForType().getFullName(), handler);
     messageBuilders.put(builder.getDescriptorForType().getFullName(), builder);
+  }
+
+  public void start() {
+    server.start();
   }
 
   /**
@@ -101,7 +112,7 @@ public class RRServer {
     String messageType = message.getDescriptorForType().getFullName();
 
     // lets serialize the message
-    int capacity = id.getId().length + data.length + 4;
+    int capacity = id.getId().length + data.length + 4 + messageType.getBytes().length + 4;
     ByteBuffer buffer = ByteBuffer.allocate(capacity);
     // we send message id, worker id and data
     buffer.put(id.getId());
@@ -126,16 +137,19 @@ public class RRServer {
     @Override
     public void onError(SocketChannel channel) {
       socketChannels.remove(channel);
+      connectHandler.onError(channel);
     }
 
     @Override
     public void onConnect(SocketChannel channel, StatusCode status) {
       socketChannels.add(channel);
+      connectHandler.onConnect(channel, status);
     }
 
     @Override
     public void onClose(SocketChannel channel) {
       socketChannels.remove(channel);
+      connectHandler.onClose(channel);
     }
 
     @Override
