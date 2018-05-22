@@ -164,7 +164,16 @@ public class RRClient {
       }
 
       try {
-        builder.mergeFrom(data.array());
+        builder.clear();
+
+        // size of the header
+        int headerLength = 8 + id.length + messageType.getBytes().length;
+        int dataLength = readRequest.getLength() - headerLength;
+
+        byte[] d = new byte[dataLength];
+        data.get(d);
+
+        builder.mergeFrom(d);
         Message m = builder.build();
 
         MessageHandler handler = responseHandlers.get(messageType);

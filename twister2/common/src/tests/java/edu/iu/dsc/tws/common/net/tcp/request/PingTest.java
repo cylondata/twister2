@@ -14,6 +14,8 @@ package edu.iu.dsc.tws.common.net.tcp.request;
 import java.nio.channels.SocketChannel;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.google.protobuf.Message;
 
@@ -29,6 +31,8 @@ import edu.iu.dsc.tws.common.net.tcp.StatusCode;
 import edu.iu.dsc.tws.proto.network.Network;
 
 public class PingTest {
+  private static final Logger LOG = Logger.getLogger(PingTest.class.getName());
+
   private static int serverPort;
   private ExecutorService threadsPool;
 
@@ -95,6 +99,7 @@ public class PingTest {
     public void onMessage(RequestID id, int workerId, Message message) {
       if (message instanceof Network.Ping) {
         System.out.println("Received ping response message");
+        LOG.log(Level.INFO, "Received message");
       }
     }
   }
