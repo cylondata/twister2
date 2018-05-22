@@ -15,7 +15,7 @@ import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 
 public class KafkaTopicPartitionState {
-  private final TopicPartition topicPartition;
+  private TopicPartition topicPartition;
   private long positionOffset;
   private long commitOffset;
 
@@ -46,5 +46,8 @@ public class KafkaTopicPartitionState {
 
   public OffsetAndMetadata getEmptyMetadataOffset() {
     return new OffsetAndMetadata(positionOffset);
+  }
+
+  public KafkaTopicPartitionState() {
   }
 }

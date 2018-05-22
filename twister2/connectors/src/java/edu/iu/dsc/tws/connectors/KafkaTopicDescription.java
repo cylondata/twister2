@@ -15,8 +15,8 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 public class KafkaTopicDescription {
-  private final List<String> fixedTopics;
-  private final Pattern topicPattern;
+  private List<String> fixedTopics;
+  private Pattern topicPattern;
 
   public KafkaTopicDescription(List<String> fixedTopics, Pattern topicPattern) {
     if ((fixedTopics != null && topicPattern != null)
@@ -52,5 +52,8 @@ public class KafkaTopicDescription {
 
   public Pattern getTopicPattern() {
     return topicPattern;
+  }
+
+  public KafkaTopicDescription() {
   }
 }
