@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.net.tcp.request;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
@@ -73,10 +74,13 @@ public class RRServer {
    */
   private ConnectHandler connectHandler;
 
-  public RRServer(Config cfg, String host, int port, Progress loop,
+  private Progress loop;
+
+  public RRServer(Config cfg, String host, int port, Progress looper,
                   int wId, ConnectHandler cHandler) {
     this.connectHandler = cHandler;
     this.workerId = wId;
+    this.loop = looper;
     server = new Server(cfg, host, port, loop, new Handler(), false);
   }
 
@@ -143,6 +147,15 @@ public class RRServer {
     public void onError(SocketChannel channel) {
       socketChannels.remove(channel);
       connectHandler.onError(channel);
+
+      loop.removeAllInterest(channel);
+
+      try {
+        channel.close();
+        LOG.log(Level.INFO, "Closed the channel: " + channel);
+      } catch (IOException e) {
+        LOG.log(Level.SEVERE, "Channel closed error: " + channel, e);
+      }
     }
 
     @Override

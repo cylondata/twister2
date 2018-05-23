@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.net.tcp.request;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.HashMap;
@@ -69,10 +70,16 @@ public class RRClient {
    */
   private ConnectHandler connectHandler;
 
+  /**
+   * The progress loop
+   */
+  private Progress loop;
+
   public RRClient(String host, int port, Config cfg, Progress looper,
                   int wId, ConnectHandler cHandler) {
     this.connectHandler = cHandler;
     this.workerId = wId;
+    this.loop = looper;
     client = new Client(host, port, cfg, looper, new Handler(), false);
   }
 
@@ -112,6 +119,10 @@ public class RRClient {
     }
   }
 
+  public void disconnect() {
+    client.disconnect();
+  }
+
   /**
    * Register a response handler to a specific message type
    * @param builder the response message type
@@ -125,9 +136,17 @@ public class RRClient {
   private class Handler implements ChannelHandler {
     @Override
     public void onError(SocketChannel ch) {
-      connected = false;
       LOG.severe("Error happened");
       connectHandler.onError(ch);
+      loop.removeAllInterest(ch);
+
+      try {
+        ch.close();
+        LOG.log(Level.INFO, "Closed the channel: " + ch);
+      } catch (IOException e) {
+        LOG.log(Level.SEVERE, "Failed to close channel: " + ch, e);
+      }
+      connected = false;
     }
 
     @Override

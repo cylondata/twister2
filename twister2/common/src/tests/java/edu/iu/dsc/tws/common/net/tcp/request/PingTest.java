@@ -71,9 +71,17 @@ public class PingTest {
     runServer();
     runClient();
 
+    boolean disconnected = false;
     while (true) {
       looper.loop();
-      if (System.currentTimeMillis() - start > 10000) {
+      if (System.currentTimeMillis() - start > 1000) {
+        if (!disconnected) {
+          rrClient.disconnect();
+          disconnected = true;
+        }
+      }
+
+      if (System.currentTimeMillis() - start > 2000) {
         break;
       }
     }
