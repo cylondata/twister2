@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.net.tcp.request;
 
+import java.util.Arrays;
 import java.util.Random;
 
 public final class RequestID {
@@ -36,5 +37,22 @@ public final class RequestID {
 
   public byte[] getId() {
     return id;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    RequestID requestID = (RequestID) o;
+    return Arrays.equals(id, requestID.id);
+  }
+
+  @Override
+  public int hashCode() {
+    return Arrays.hashCode(id);
   }
 }

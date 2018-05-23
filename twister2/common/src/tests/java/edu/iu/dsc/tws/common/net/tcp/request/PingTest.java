@@ -90,6 +90,7 @@ public class PingTest {
   public class ServerPingHandler implements MessageHandler {
     @Override
     public void onMessage(RequestID id, int workerId, Message message) {
+      LOG.log(Level.INFO, "Received message to server");
       rrServer.sendResponse(id, Network.Ping.newBuilder().setPing("Hello").build());
     }
   }

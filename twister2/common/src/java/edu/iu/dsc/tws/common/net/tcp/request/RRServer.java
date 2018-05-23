@@ -96,19 +96,25 @@ public class RRServer {
    * @return true if response was accepted
    */
   public boolean sendResponse(RequestID id, Message message) {
-    if (requestChannels.containsKey(id)) {
+    LOG.log(Level.INFO, String.format("Using channel %s", new String(id.getId())));
+
+    if (!requestChannels.containsKey(id)) {
       LOG.log(Level.SEVERE, "Trying to send response to non-existing request");
       return false;
     }
 
     SocketChannel channel = requestChannels.get(id);
+
+    if (channel == null) {
+      LOG.log(Level.SEVERE, "Channel is NULL for response");
+    }
+
     if (!socketChannels.contains(channel)) {
       LOG.log(Level.WARNING, "Failed to send response on disconnected socket");
       return false;
     }
 
     byte[] data = message.toByteArray();
-    int clientWorkerId = requestToWorkers.get(id);
     String messageType = message.getDescriptorForType().getFullName();
 
     // lets serialize the message
@@ -126,7 +132,6 @@ public class RRServer {
     TCPMessage request = server.send(channel, buffer, capacity, 0);
     if (request != null) {
       requestChannels.remove(id);
-      requestToWorkers.remove(id);
       return true;
     } else {
       return false;
@@ -186,11 +191,14 @@ public class RRServer {
         builder.mergeFrom(d);
         Message m = builder.build();
 
+        if (channel == null) {
+          LOG.log(Level.SEVERE, "Chanel on receive is NULL");
+        }
+        LOG.log(Level.INFO, String.format("Adding channel %s", new String(id)));
+        requestChannels.put(requestID, channel);
+
         MessageHandler handler = requestHandlers.get(messageType);
         handler.onMessage(requestID, clientId, m);
-
-        requestToWorkers.put(requestID, clientId);
-        requestChannels.put(requestID, channel);
       } catch (InvalidProtocolBufferException e) {
         LOG.log(Level.SEVERE, "Failed to build a message", e);
       }
