@@ -50,7 +50,10 @@ public class DynamicBufferChannel extends BaseNetworkChannel {
     if (readStatus == DataStatus.HEADER) {
       int retval = readFromChannel(channel, readHeader);
       if (retval != 0) {
-        // either we didnt read fully or we had an error
+        // we had an error
+        if (retval < 0) {
+          channelHandler.onError(channel);
+        }
         return null;
       }
 
@@ -81,6 +84,9 @@ public class DynamicBufferChannel extends BaseNetworkChannel {
         readingRequest = null;
         readStatus = DataStatus.INIT;
         LOG.log(Level.SEVERE, "Failed to read");
+
+        // we had an error
+        channelHandler.onError(channel);
         // handle the error
         return null;
       } else if (retVal == 0) {
