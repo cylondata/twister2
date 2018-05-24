@@ -25,8 +25,8 @@ package edu.iu.dsc.tws.checkpointmanager;
 
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.executor.IExecutor;
 import edu.iu.dsc.tws.checkpointmanager.state_backend.StateBackend;
+import edu.iu.dsc.tws.executor.IExecutor;
 import edu.iu.dsc.tws.task.graph.Vertex;
 
 public class CheckpointManager {

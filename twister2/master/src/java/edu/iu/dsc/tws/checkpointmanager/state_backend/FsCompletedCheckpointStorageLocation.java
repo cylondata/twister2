@@ -13,10 +13,10 @@ package edu.iu.dsc.tws.checkpointmanager.state_backend;
 
 import java.io.IOException;
 
-import edu.iu.dsc.tws.data.fs.FileSystem;
-import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.checkpointmanager.CompletedCheckpointStorageLocation;
 import edu.iu.dsc.tws.checkpointmanager.state.StreamStateHandle;
+import edu.iu.dsc.tws.data.fs.FileSystem;
+import edu.iu.dsc.tws.data.fs.Path;
 
 public class FsCompletedCheckpointStorageLocation implements CompletedCheckpointStorageLocation {
 

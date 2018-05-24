@@ -87,6 +87,10 @@ public class RRClient {
     client.connect();
   }
 
+  public boolean isConnected() {
+    return connected;
+  }
+
   public RequestID sendRequest(Message message) {
     if (!connected) {
       return null;

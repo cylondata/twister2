@@ -15,9 +15,9 @@ import java.io.IOException;
 
 import javax.print.attribute.standard.JobName;
 
-import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.checkpointmanager.CheckpointStorage;
 import edu.iu.dsc.tws.checkpointmanager.CompletedCheckpointStorageLocation;
+import edu.iu.dsc.tws.data.fs.Path;
 
 public class FsStateBackend extends AbstractFileStateBackend {
 
