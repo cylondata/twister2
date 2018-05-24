@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.connectors.config.KafkaConsumerConfig;
-import edu.iu.dsc.tws.master.CheckpointListener;
+import edu.iu.dsc.tws.checkpointmanager.CheckpointListener;
 import edu.iu.dsc.tws.task.api.SourceTask;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.api.streaming.CheckpointedFunction;
