@@ -189,6 +189,12 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
     Map<Integer, MessageDeSerializer> deSerializerMap = new HashMap<>();
 
     Set<Integer> srcs = TaskPlanUtils.getTasksOfThisExecutor(taskPlan, sources);
+    Set<Integer> tempsrcs = TaskPlanUtils.getTasksOfThisExecutor(taskPlan, sources);
+
+    //need to set minus tasks as well
+    for (Integer src : tempsrcs) {
+      srcs.add((src * -1) - 1);
+    }
     for (int s : srcs) {
       // later look at how not to allocate pairs for this each time
       ArrayBlockingQueue<Pair<Object, MPISendMessage>> pendingSendMessages =
@@ -231,13 +237,13 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
 
   @Override
   public boolean sendPartial(int source, Object message, int flags) {
-    return delegete.sendMessage(source, message, 0,
+    return delegete.sendMessagePartial(source, message, 0,
         flags, sendPartialRoutingParameters(source, 0));
   }
 
   @Override
   public boolean sendPartial(int source, Object message, int flags, int dest) {
-    return delegete.sendMessage(source, message, dest, flags,
+    return delegete.sendMessagePartial(source, message, dest, flags,
         sendPartialRoutingParameters(source, dest));
   }
 
@@ -374,7 +380,6 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
   public boolean receiveSendInternally(int source, int t, int path, int flags, Object message) {
     // okay this must be for the
     if (source == path) {
-      System.out.println(source + " : " + path);
       return finalReceiver.onMessage(source, path, t, flags, message);
     }
     return partialReceiver.onMessage(source, path, t, flags, message);

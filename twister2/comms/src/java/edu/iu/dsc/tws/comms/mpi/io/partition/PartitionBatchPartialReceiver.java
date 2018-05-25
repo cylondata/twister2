@@ -54,7 +54,6 @@ public class PartitionBatchPartialReceiver extends PartitionBatchReceiver {
     // add the object to the map
     messages.get(source).get(path).add(object);
     flagsMap.get(source).get(path).add(flags);
-    System.out.println(source + " : In paritial 111111");
 
 //    if ((flags & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) {
 //      finished.get(target).put(source, true);

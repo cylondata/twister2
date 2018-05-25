@@ -25,6 +25,7 @@ import edu.iu.dsc.tws.comms.api.MessageFlags;
  */
 public class PartitionBatchFinalReceiver extends PartitionBatchReceiver {
   private Map<Integer, Map<Integer, Boolean>> finished;
+  private int messageCount = 0;
 
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     finished = new ConcurrentHashMap<>();
@@ -40,6 +41,7 @@ public class PartitionBatchFinalReceiver extends PartitionBatchReceiver {
   @Override
   public boolean onMessage(int source, int path, int target, int flags, Object object) {
     // add the object to the map
+    messageCount++;
     if ((flags & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) {
       finished.get(target).put(source, true);
     }
@@ -48,6 +50,7 @@ public class PartitionBatchFinalReceiver extends PartitionBatchReceiver {
       System.out.println(target + " : : " + Arrays.toString((byte[]) object));
       System.out.printf("All Done for Task %d \n", target);
     }
+    System.out.println("Task : " + target + " Message Count :" + source);
     return true;
   }
 
