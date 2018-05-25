@@ -75,7 +75,7 @@ public class TaskExample implements IContainer {
     private Config config;
     @Override
     public void run() {
-      ctx.write("e1", "Hello");
+      ctx.write("partition-edge", "Hello");
     }
 
     @Override

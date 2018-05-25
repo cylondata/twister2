@@ -9,14 +9,10 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.common.net.tcp.request;
+package edu.iu.dsc.tws.common.net.tcp;
 
-import com.google.protobuf.Message;
-
-public abstract class RequestResponseServer {
-  public void sendResponse(MessageID id, Message msg) {
-
-  }
-
-  public abstract void onMessage(MessageID id, Message msg);
+public enum DataStatus {
+  INIT,
+  HEADER,
+  BODY
 }

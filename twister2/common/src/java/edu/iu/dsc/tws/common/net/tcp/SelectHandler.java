@@ -13,6 +13,9 @@ package edu.iu.dsc.tws.common.net.tcp;
 
 import java.nio.channels.SelectableChannel;
 
+/**
+ * The select handler, this will be called by the selector
+ */
 public interface SelectHandler {
   void handleRead(SelectableChannel channel);
 

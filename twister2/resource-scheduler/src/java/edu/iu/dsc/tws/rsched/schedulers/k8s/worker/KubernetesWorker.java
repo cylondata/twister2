@@ -23,7 +23,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -47,7 +46,7 @@ import edu.iu.dsc.tws.rsched.utils.TarGzipPacker;
 
 import static edu.iu.dsc.tws.common.config.Context.DIR_PREFIX_FOR_JOB_ARCHIVE;
 import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.KUBERNETES_CLUSTER_TYPE;
-import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.POD_SHARED_VOLUME;
+import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.POD_MEMORY_VOLUME;
 
 public final class KubernetesWorker {
   private static final Logger LOG = Logger.getLogger(KubernetesWorker.class.getName());
@@ -88,7 +87,7 @@ public final class KubernetesWorker {
     String podIP = System.getenv(KubernetesField.POD_IP + "");
     logBuffer.append(KubernetesField.POD_IP + ": " + podIP + "\n");
 
-    String persistentJobDir = System.getenv(KubernetesField.PERSISTENT_JOB_DIR + "");
+    String persistentJobDir = System.getenv(KubernetesField.PERSISTENT_JOB_DIR + "").trim();
     logBuffer.append(KubernetesField.PERSISTENT_JOB_DIR + ": " + persistentJobDir + "\n");
 
     String containersPerPodStr = System.getenv(KubernetesField.WORKERS_PER_POD + "");
@@ -109,6 +108,9 @@ public final class KubernetesWorker {
     String maxLogFiles = System.getenv(KubernetesField.LOGGING_MAX_FILES + "");
     logBuffer.append(KubernetesField.LOGGING_MAX_FILES + ": " + maxLogFiles + "\n");
 
+    String persUploading = System.getenv(KubernetesField.PERSISTENT_VOLUME_UPLOADING + "");
+    logBuffer.append(KubernetesField.PERSISTENT_VOLUME_UPLOADING + ": " + persUploading + "\n");
+
     // this environment variable is not sent by submitting client, it is set by Kubernetes master
     String podName = System.getenv("HOSTNAME");
     logBuffer.append("POD_NAME(HOSTNAME): " + podName + "\n");
@@ -119,15 +121,13 @@ public final class KubernetesWorker {
     K8sPersistentVolume pv = null;
 
     // create persistent job dir if there is a persistent volume request
-    if (persistentJobDir == null || persistentJobDir.trim().isEmpty()) {
+    if (persistentJobDir == null || persistentJobDir.isEmpty()) {
       // no persistent volume is requested, nothing to be done
     } else {
       createPersistentJobDir(podName, containerName, persistentJobDir, 0);
 
       // create persistent volume object
       pv = new K8sPersistentVolume(persistentJobDir, workerID);
-      // create worker directory
-      pv.getWorkerDir();
     }
 
     // a temporary config object until the log file is read
@@ -136,6 +136,7 @@ public final class KubernetesWorker {
         getConfigForEnvVariables(persLogReq, logLevel, redirect, maxLogFileSize, maxLogFiles);
     initLogger(workerID, pv, cnfg);
 
+    LOG.info("KubernetesWorker started. Current time: " + System.currentTimeMillis());
     LOG.info("Received parameters as environment variables: \n" + logBuffer.toString());
 
     // log persistent volume related messages
@@ -145,19 +146,22 @@ public final class KubernetesWorker {
       StringBuffer pvInfo = new StringBuffer();
       pvInfo.append("Persistent storage information: \n");
       pvInfo.append("Job Dir Path: " + pv.getJobDirPath() + "\n");
-      pvInfo.append("Job Dir exists: " + pv.jobDirExists() + "\n");
       pvInfo.append("Worker Dir Path: " + pv.getWorkerDirPath() + "\n");
-      pvInfo.append("Worker Dir Exists: " + pv.workerDirExists() + "\n");
       pvInfo.append("Job log dir: " + pv.getLogDirPath());
       LOG.info(pvInfo.toString());
     }
 
     // construct relevant variables from environment variables
+    // job package can be either in pod shared drive or in persistent volume
     long fileSize = Long.parseLong(fileSizeStr);
-    jobPackageFileName = POD_SHARED_VOLUME + "/" + jobPackageFileName;
-    userJobJarFile = POD_SHARED_VOLUME + "/" + DIR_PREFIX_FOR_JOB_ARCHIVE + userJobJarFile;
-    jobDescFileName = POD_SHARED_VOLUME + "/" + DIR_PREFIX_FOR_JOB_ARCHIVE + jobDescFileName;
-    String configDir = POD_SHARED_VOLUME + "/" + DIR_PREFIX_FOR_JOB_ARCHIVE
+    if (pv != null && "true".equalsIgnoreCase(persUploading)) {
+      jobPackageFileName = persistentJobDir + "/" + jobPackageFileName;
+    } else {
+      jobPackageFileName = POD_MEMORY_VOLUME + "/" + jobPackageFileName;
+    }
+    userJobJarFile = POD_MEMORY_VOLUME + "/" + DIR_PREFIX_FOR_JOB_ARCHIVE + userJobJarFile;
+    jobDescFileName = POD_MEMORY_VOLUME + "/" + DIR_PREFIX_FOR_JOB_ARCHIVE + jobDescFileName;
+    String configDir = POD_MEMORY_VOLUME + "/" + DIR_PREFIX_FOR_JOB_ARCHIVE
         + KUBERNETES_CLUSTER_TYPE;
 
     boolean ready = waitUnpack(containerName, jobPackageFileName, fileSize);
@@ -185,14 +189,8 @@ public final class KubernetesWorker {
         new WorkerController(config, podName, podIP, containerName, job.getJobName());
     thisWorker = workerController.getWorkerNetworkInfo();
 
-    workerController.buildWorkerListWaitForAll(WAIT_TIME_FOR_WORKER_LIST_BUILD);
-
-    List<WorkerNetworkInfo> workerList = workerController.waitForAllWorkersToJoin(10000);
-    if (workerList == null) {
-      LOG.severe("Can not get all workers to join. Something wrong. .......................");
-    }
-
     ResourceAPI.ComputeResource cr = job.getJobResources().getContainer();
+
     startWorkerClass(workerController, pv);
 
     closeWorker(podName);
@@ -294,7 +292,7 @@ public final class KubernetesWorker {
    */
   public static int updateCompletions() {
 
-    String completionsFile = POD_SHARED_VOLUME + "/completions.txt";
+    String completionsFile = POD_MEMORY_VOLUME + "/completions.txt";
 
     try {
       Path path = Paths.get(completionsFile);
@@ -348,7 +346,12 @@ public final class KubernetesWorker {
       throw new RuntimeException(e);
     }
 
-    container.init(config, thisWorker.getWorkerID(), null, workerController, pv);
+    K8sVolatileVolume volatileVolume = null;
+    if (SchedulerContext.volatileDiskRequested(config)) {
+      volatileVolume =
+          new K8sVolatileVolume(SchedulerContext.jobName(config), thisWorker.getWorkerID());
+    }
+    container.init(config, thisWorker.getWorkerID(), null, workerController, pv, volatileVolume);
   }
 
 
@@ -432,15 +435,16 @@ public final class KubernetesWorker {
 
   public static boolean waitUnpack(String containerName, String jobPackageFileName, long fileSize) {
 
-    String flagFileName = POD_SHARED_VOLUME + "/" + UNPACK_COMPLETE_FILE_NAME;
-//    String completionsFileName = POD_SHARED_VOLUME + "/completions.txt";
+    String flagFileName = POD_MEMORY_VOLUME + "/" + UNPACK_COMPLETE_FILE_NAME;
+//    String completionsFileName = POD_MEMORY_VOLUME + "/completions.txt";
 
     // if it is the first container in a pod, unpack the tar.gz file
     if (containerName.endsWith("-0")) {
 
       boolean transferred = waitForFileTransfer(jobPackageFileName, fileSize);
       if (transferred) {
-        boolean jobFileUnpacked = TarGzipPacker.unpack(jobPackageFileName);
+        File outputDir = new File(POD_MEMORY_VOLUME);
+        boolean jobFileUnpacked = TarGzipPacker.unpack(jobPackageFileName, outputDir);
         if (jobFileUnpacked) {
           LOG.info("Job file [" + jobPackageFileName + "] unpacked successfully.");
           boolean written1 = writeFile(flagFileName, 0);
@@ -485,14 +489,14 @@ public final class KubernetesWorker {
 
 
   /**
-   * Wait for the hob package file to be transferred to this pod
+   * Wait for the job package file to be transferred to this pod
    */
   public static boolean waitForFileTransfer(String jobFileName, long fileSize) {
 
     boolean transferred = false;
     File jobFile = new File(jobFileName);
 
-    // when waiting, it will print log message at least after this much time
+    // when waiting, it will print log messages at least after this much time
     long logMessageInterval = 1000;
     //this count is restarted after each log message
     long waitTimeCountForLog = 0;

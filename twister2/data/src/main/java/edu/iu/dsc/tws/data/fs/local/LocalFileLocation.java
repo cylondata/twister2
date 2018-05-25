@@ -9,14 +9,26 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.common.net.tcp.request;
+package edu.iu.dsc.tws.data.fs.local;
 
-import com.google.protobuf.Message;
+import java.io.IOException;
 
-public abstract class RequestResponseClient {
-  public void sendRequest(Message msg) {
+public class LocalFileLocation implements FileLocation {
 
+  private final String[] hosts;
+
+  public LocalFileLocation(String host) {
+    hosts = new String[]{host};
   }
 
-  public abstract void onResponse(Message msg);
+  /**
+   * This method retrieves the hostnames of the corresponding filename.
+   * @param fileName
+   * @return
+   * @throws IOException
+   */
+  @Override
+  public String[] getHosts(String fileName) throws IOException {
+    return this.hosts;
+  }
 }

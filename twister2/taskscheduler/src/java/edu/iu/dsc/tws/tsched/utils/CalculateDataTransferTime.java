@@ -21,6 +21,20 @@ public class CalculateDataTransferTime implements Comparable<CalculateDataTransf
   private String nodeName;
   private Double calculateDataTransferTime;
 
+  private String dataNode;
+
+  public CalculateDataTransferTime(String nodename,
+                                   double requiredDatatransferTime, String datanode) {
+    this.nodeName = nodename;
+    this.calculateDataTransferTime = requiredDatatransferTime;
+    this.dataNode = datanode;
+  }
+
+  public String getDataNode() {
+    return dataNode;
+  }
+
+
   public int getTaskIndex() {
     return taskIndex;
   }
@@ -35,6 +49,11 @@ public class CalculateDataTransferTime implements Comparable<CalculateDataTransf
   public CalculateDataTransferTime(String nodename, double requiredDatatransferTime) {
     this.nodeName = nodename;
     this.calculateDataTransferTime = requiredDatatransferTime;
+  }
+
+  public CalculateDataTransferTime setDataNode(String datanode) {
+    this.dataNode = datanode;
+    return this;
   }
 
   public String getNodeName() {

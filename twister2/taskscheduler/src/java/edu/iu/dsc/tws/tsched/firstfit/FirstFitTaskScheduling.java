@@ -125,9 +125,6 @@ public class FirstFitTaskScheduling implements TaskSchedule {
   public TaskSchedulePlanBuilder FirstFitFTaskSchedulingAlgorithm(
       TaskSchedulePlanBuilder taskSchedulePlanBuilder) throws TaskSchedulerException {
     Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(this.taskVertexSet);
-    for (String task : parallelTaskMap.keySet()) {
-      int numberOfInstances = parallelTaskMap.get(task);
-    }
     assignInstancesToContainers(taskSchedulePlanBuilder, parallelTaskMap);
     return taskSchedulePlanBuilder;
   }

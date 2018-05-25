@@ -24,26 +24,62 @@ import edu.iu.dsc.tws.common.config.Config;
 public class Client implements SelectHandler {
   private static final Logger LOG = Logger.getLogger(Client.class.getName());
 
+  /**
+   * The socket channel
+   */
   private SocketChannel socketChannel;
 
+  /**
+   * Network address
+   */
   private InetSocketAddress address;
 
+  /**
+   * Configuration
+   */
   private Config config;
 
+  /**
+   * Selector
+   */
   private Progress progress;
 
-  private Channel channel;
+  /**
+   * The channel to read and receive
+   */
+  private BaseNetworkChannel channel;
 
+  /**
+   * Weather we are connected
+   */
   private boolean isConnected;
 
-  private MessageHandler messageHandler;
+  /**
+   * The channel callback
+   */
+  private ChannelHandler channelHandler;
 
-  public Client(String host, int port, Config cfg, Progress looper, MessageHandler handler) {
+  /**
+   * Fixed buffers
+   */
+  private boolean fixedBuffers = true;
+
+  public Client(String host, int port, Config cfg, Progress looper, ChannelHandler handler) {
     address = new InetSocketAddress(host, port);
     config = cfg;
     isConnected = false;
     progress = looper;
-    messageHandler = handler;
+    channelHandler = handler;
+  }
+
+  public Client(String host, int port, Config cfg, Progress looper,
+                ChannelHandler handler, boolean fixBuffers) {
+    address = new InetSocketAddress(host, port);
+    config = cfg;
+    isConnected = false;
+    progress = looper;
+    channelHandler = handler;
+    fixedBuffers = fixBuffers;
   }
 
   public boolean connect() {
@@ -66,7 +102,7 @@ public class Client implements SelectHandler {
     return true;
   }
 
-  public TCPRequest send(SocketChannel sc, ByteBuffer buffer, int size, int edge) {
+  public TCPMessage send(SocketChannel sc, ByteBuffer buffer, int size, int edge) {
     if (sc != socketChannel) {
       return null;
     }
@@ -75,13 +111,14 @@ public class Client implements SelectHandler {
       return null;
     }
 
-    TCPRequest request = new TCPRequest(buffer, edge, size);
-    channel.addWriteRequest(request);
-
-    return request;
+    TCPMessage request = new TCPMessage(buffer, edge, size);
+    if (channel.addWriteRequest(request)) {
+      return request;
+    }
+    return null;
   }
 
-  public TCPRequest receive(SocketChannel sc, ByteBuffer buffer, int size, int edge) {
+  public TCPMessage receive(SocketChannel sc, ByteBuffer buffer, int size, int edge) {
     if (sc != socketChannel) {
       return null;
     }
@@ -90,7 +127,7 @@ public class Client implements SelectHandler {
       return null;
     }
 
-    TCPRequest request = new TCPRequest(buffer, edge, size);
+    TCPMessage request = new TCPMessage(buffer, edge, size);
     channel.addReadRequest(request);
 
     return request;
@@ -106,7 +143,7 @@ public class Client implements SelectHandler {
     try {
       socketChannel.close();
       // we call the onclose with null value
-      messageHandler.onClose(null);
+      channelHandler.onClose(null);
     } catch (IOException e) {
       LOG.log(Level.SEVERE, "Failed to stop Client", e);
     }
@@ -135,15 +172,19 @@ public class Client implements SelectHandler {
       }
     } catch (IOException e) {
       LOG.log(Level.SEVERE, "Failed to FinishConnect to endpoint: " + address, e);
-      messageHandler.onConnect(socketChannel, StatusCode.ERROR_CONN);
+      channelHandler.onConnect(socketChannel, StatusCode.ERROR_CONN);
       return;
     }
-    channel = new Channel(config, progress, this, socketChannel, messageHandler);
+    if (fixedBuffers) {
+      channel = new FixedBufferChannel(config, progress, this, socketChannel, channelHandler);
+    } else {
+      channel = new DynamicBufferChannel(config, progress, this, socketChannel, channelHandler);
+    }
     channel.enableReading();
     channel.enableWriting();
 
     isConnected = true;
-    messageHandler.onConnect(socketChannel, StatusCode.SUCCESS);
+    channelHandler.onConnect(socketChannel, StatusCode.SUCCESS);
   }
 
   @Override

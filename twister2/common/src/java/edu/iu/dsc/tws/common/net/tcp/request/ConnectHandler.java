@@ -9,18 +9,14 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.common.net.tcp;
+package edu.iu.dsc.tws.common.net.tcp.request;
 
 import java.nio.channels.SocketChannel;
 
-public interface MessageHandler {
+import edu.iu.dsc.tws.common.net.tcp.StatusCode;
+
+public interface ConnectHandler {
   void onError(SocketChannel channel);
-
   void onConnect(SocketChannel channel, StatusCode status);
-
   void onClose(SocketChannel channel);
-
-  void onReceiveComplete(SocketChannel channel, TCPRequest readRequest);
-
-  void onSendComplete(SocketChannel channel, TCPRequest writeRequest);
 }

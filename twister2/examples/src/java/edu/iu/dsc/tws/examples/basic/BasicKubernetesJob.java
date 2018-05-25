@@ -20,7 +20,6 @@ import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.rsched.schedulers.aurora.AuroraContext;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 
 public final class BasicKubernetesJob {
@@ -32,6 +31,7 @@ public final class BasicKubernetesJob {
   public static void main(String[] args) {
 
 //    LoggingHelper.setupLogging(null, "logs", "client");
+    LOG.info("Job submission time: " + System.currentTimeMillis());
 
     // first load the configurations from command line and config files
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
@@ -57,7 +57,7 @@ public final class BasicKubernetesJob {
     double cpus = SchedulerContext.workerCPU(config);
     int ramMegaBytes = SchedulerContext.workerRAM(config);
     int workers = SchedulerContext.workerInstances(config);
-    int diskMegaBytes = AuroraContext.workerDisk(config);
+    int diskMegaBytes = (int) (SchedulerContext.workerVolatileDisk(config) * 1024);
     String jobName = SchedulerContext.jobName(config);
     ResourceContainer resourceContainer = new ResourceContainer(cpus, ramMegaBytes, diskMegaBytes);
 
