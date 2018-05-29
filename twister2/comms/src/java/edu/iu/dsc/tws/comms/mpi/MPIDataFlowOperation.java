@@ -39,7 +39,6 @@ import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.comms.utils.MessageTypeUtils;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.memory.MemoryManager;
-import edu.iu.dsc.tws.data.memory.MemoryManagerContext;
 import edu.iu.dsc.tws.data.memory.OperationMemoryManager;
 import edu.iu.dsc.tws.data.memory.lmdb.LMDBMemoryManager;
 
@@ -80,7 +79,6 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
   /**
    * Pending send messages
    */
-//  protected Queue<Pair<Object, MPISendMessage>> pendingSendMessages;
   protected Map<Integer, ArrayBlockingQueue<Pair<Object, MPISendMessage>>>
       pendingSendMessagesPerSource;
 
@@ -154,20 +152,6 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
 
   private Map<Integer, Integer> sendSequence = new HashMap<>();
   private Map<Integer, Integer> sendPartialSequence = new HashMap<>();
-
-  private ThreadLocal<ByteBuffer> threadLocalDataBuffer = new ThreadLocal<ByteBuffer>() {
-    @Override
-    protected ByteBuffer initialValue() {
-      return ByteBuffer.allocateDirect(MemoryManagerContext.TL_DATA_BUFF_INIT_CAP);
-    }
-  };
-
-  private ThreadLocal<ByteBuffer> threadLocalKeyBuffer = new ThreadLocal<ByteBuffer>() {
-    @Override
-    protected ByteBuffer initialValue() {
-      return ByteBuffer.allocateDirect(MemoryManagerContext.TL_KEY_BUFF_INIT_CAP);
-    }
-  };
 
   public MPIDataFlowOperation(TWSChannel channel) {
     this.channel = channel;

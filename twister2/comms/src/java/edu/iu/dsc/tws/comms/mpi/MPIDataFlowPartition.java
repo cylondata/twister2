@@ -139,7 +139,6 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
     this.partialReceiver = partialRcvr;
   }
 
-
   /**
    * Initialize
    */
