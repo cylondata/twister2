@@ -80,7 +80,7 @@ public class TaskExampleModified implements IContainer {
     private Config config;
     @Override
     public void run() {
-      ctx.write("e1", "This is a check");
+      ctx.write("e1", "Hello");
     }
 
     @Override
@@ -109,12 +109,12 @@ public class TaskExampleModified implements IContainer {
 
     @Override
     public IMessage execute(IMessage content) {
-      ctx.write("e2", "Tello");
-//      if (content.getContent().equals("Hello")) {
-//        ctx.write("e2", "Hello changed to Tello");
-//      } else {
-//        ctx.write("e2", content.getContent());
-//      }
+//      ctx.write("e2", "Tello");
+      if (content.getContent().equals("Hello")) {
+        ctx.write("e2", "Hello changed to Tello");
+      } else {
+        ctx.write("e2", content.getContent());
+      }
       return content;
     }
 
@@ -145,7 +145,7 @@ public class TaskExampleModified implements IContainer {
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
     jobBuilder.setName("task-example-modified");
     jobBuilder.setContainerClass(TaskExampleModified.class.getName());
-    jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 4);
+    jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 2);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job
