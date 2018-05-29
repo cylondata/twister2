@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.tcp;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -240,5 +241,10 @@ public class TWSTCPChannel implements TWSChannel {
         }
       }
     }
+  }
+
+  @Override
+  public ByteBuffer createBuffer(int capacity) {
+    return ByteBuffer.allocate(capacity);
   }
 }

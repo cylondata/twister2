@@ -71,7 +71,7 @@ public class PartitionOperation extends AbstractParallelOperation {
     }
 
     @Override
-    public boolean onMessage(int source, int path, int target, int flags, Object object) {
+    public boolean onMessage(int source, int destination, int target, int flags, Object object) {
       return false;
     }
 
@@ -88,7 +88,7 @@ public class PartitionOperation extends AbstractParallelOperation {
     }
 
     @Override
-    public boolean onMessage(int source, int path, int target, int flags, Object object) {
+    public boolean onMessage(int source, int destination, int target, int flags, Object object) {
       TaskMessage msg = new TaskMessage(object,
           edge.getStringMapping(partitionEdge), target);
       return outMessages.get(target).offer(msg);

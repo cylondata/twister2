@@ -20,9 +20,6 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 
-/**
- * Created by pulasthi on 5/10/18.
- */
 public class PartitionBatchFinalReceiver extends PartitionBatchReceiver {
   private Map<Integer, Map<Integer, Boolean>> finished;
   private int messageCount = 0;
@@ -39,7 +36,7 @@ public class PartitionBatchFinalReceiver extends PartitionBatchReceiver {
   }
 
   @Override
-  public boolean onMessage(int source, int path, int target, int flags, Object object) {
+  public boolean onMessage(int source, int destination, int target, int flags, Object object) {
     // add the object to the map
     messageCount++;
     if ((flags & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) {

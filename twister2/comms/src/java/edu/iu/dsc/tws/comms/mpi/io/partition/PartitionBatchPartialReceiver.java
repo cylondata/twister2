@@ -22,9 +22,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.mpi.MPIDataFlowPartition;
 
-/**
- * Created by pulasthi on 5/10/18.
- */
+
 public class PartitionBatchPartialReceiver extends PartitionBatchReceiver {
   private Map<Integer, Map<Integer, Boolean>> finished;
   private MPIDataFlowPartition dataFlowOperation;
@@ -50,10 +48,10 @@ public class PartitionBatchPartialReceiver extends PartitionBatchReceiver {
   }
 
   @Override
-  public boolean onMessage(int source, int path, int target, int flags, Object object) {
+  public boolean onMessage(int source, int destination, int target, int flags, Object object) {
     // add the object to the map
-    messages.get(source).get(path).add(object);
-    flagsMap.get(source).get(path).add(flags);
+    messages.get(source).get(destination).add(object);
+    flagsMap.get(source).get(destination).add(flags);
 
 //    if ((flags & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) {
 //      finished.get(target).put(source, true);

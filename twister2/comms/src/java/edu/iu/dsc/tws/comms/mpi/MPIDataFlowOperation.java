@@ -193,7 +193,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
 //    LOG.info(String.format("%d Send buffer size: %d", executor, sendBufferSize));
     this.sendBuffers = new ArrayBlockingQueue<MPIBuffer>(noOfSendBuffers);
     for (int i = 0; i < noOfSendBuffers; i++) {
-      sendBuffers.offer(new MPIBuffer(sendBufferSize));
+      sendBuffers.offer(new MPIBuffer(channel.createBuffer(sendBufferSize)));
     }
     this.receiveBuffers = new HashMap<>();
 
@@ -244,7 +244,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
     for (Integer recv : receivingExecutors) {
       Queue<MPIBuffer> recvList = new LinkedBlockingQueue<>();
       for (int i = 0; i < maxReceiveBuffers; i++) {
-        recvList.add(new MPIBuffer(receiveBufferSize));
+        recvList.add(new MPIBuffer(channel.createBuffer(receiveBufferSize)));
       }
       // register with the channel
       LOG.fine(instancePlan.getThisExecutor() + " Register to receive from: " + recv);
@@ -256,7 +256,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
     int sendBufferSize = MPIContext.bufferSize(config);
     int sendBufferCount = MPIContext.sendBuffersCount(config);
     for (int i = 0; i < sendBufferCount; i++) {
-      MPIBuffer buffer = new MPIBuffer(sendBufferSize);
+      MPIBuffer buffer = new MPIBuffer(channel.createBuffer(sendBufferSize));
       sendBuffers.offer(buffer);
     }
   }

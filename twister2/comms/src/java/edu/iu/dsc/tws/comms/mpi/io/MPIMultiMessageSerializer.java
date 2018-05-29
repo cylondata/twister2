@@ -118,7 +118,6 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
       throw new RuntimeException("The buffers should be able to hold the complete header");
     }
     ByteBuffer byteBuffer = buffer.getByteBuffer();
-//    LOG.info(String.format("%d adding header pos: %d", executor, byteBuffer.position()));
     // now lets put the content of header in
     byteBuffer.putInt(sendMessage.getSource());
     // the path we are on, if not grouped it will be 0 and ignored
@@ -277,7 +276,6 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
     if (byteBuffer.remaining() < 4) {
       return false;
     }
-//    LOG.info(String.format("%d adding sub-header pos: %d", executor, byteBuffer.position()));
     byteBuffer.putInt(length);
     return true;
   }
@@ -340,8 +338,6 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
     if (state.getPart() == SerializeState.Part.INIT) {
       // okay we need to serialize the data
       int dataLength = DataSerializer.serializeData(content, messageType, state, serializer);
-//      LOG.info(String.format("%d serialize data length: %d pos %d",
-//          executor, dataLength, byteBuffer.position()));
 
       if (!buildSubMessageHeader(targetBuffer, dataLength)) {
         LOG.warning("We should always be able to build the header in the current buffer");
@@ -359,16 +355,12 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
 
     boolean completed = DataSerializer.copyDataToBuffer(content,
         messageType, byteBuffer, state, serializer);
-//    LOG.info(String.format("%d pos after data %d",
-//        executor, byteBuffer.position()));
     // now set the size of the buffer
     targetBuffer.setSize(byteBuffer.position());
 
     // okay we are done with the message
     if (completed) {
       // add the key size at the end to total size
-//      LOG.info(String.format("%d total after complete %d",
-//          executor, state.getTotalBytes()));
       state.setBytesCopied(0);
       state.setBufferNo(0);
       state.setData(null);
