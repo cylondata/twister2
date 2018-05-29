@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.net.tcp.request;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
@@ -68,14 +69,28 @@ public class RRServer {
    */
   private int workerId;
 
-  public RRServer(Config cfg, String host, int port, Progress loop, int wId) {
+  /**
+   * Connection handler
+   */
+  private ConnectHandler connectHandler;
+
+  private Progress loop;
+
+  public RRServer(Config cfg, String host, int port, Progress looper,
+                  int wId, ConnectHandler cHandler) {
+    this.connectHandler = cHandler;
     this.workerId = wId;
+    this.loop = looper;
     server = new Server(cfg, host, port, loop, new Handler(), false);
   }
 
   public void registerRequestHandler(Message.Builder builder, MessageHandler handler) {
     requestHandlers.put(builder.getDescriptorForType().getFullName(), handler);
     messageBuilders.put(builder.getDescriptorForType().getFullName(), builder);
+  }
+
+  public void start() {
+    server.start();
   }
 
   /**
@@ -85,23 +100,29 @@ public class RRServer {
    * @return true if response was accepted
    */
   public boolean sendResponse(RequestID id, Message message) {
-    if (requestChannels.containsKey(id)) {
+    LOG.log(Level.INFO, String.format("Using channel %s", new String(id.getId())));
+
+    if (!requestChannels.containsKey(id)) {
       LOG.log(Level.SEVERE, "Trying to send response to non-existing request");
       return false;
     }
 
     SocketChannel channel = requestChannels.get(id);
+
+    if (channel == null) {
+      LOG.log(Level.SEVERE, "Channel is NULL for response");
+    }
+
     if (!socketChannels.contains(channel)) {
       LOG.log(Level.WARNING, "Failed to send response on disconnected socket");
       return false;
     }
 
     byte[] data = message.toByteArray();
-    int clientWorkerId = requestToWorkers.get(id);
     String messageType = message.getDescriptorForType().getFullName();
 
     // lets serialize the message
-    int capacity = id.getId().length + data.length + 4;
+    int capacity = id.getId().length + data.length + 4 + messageType.getBytes().length + 4;
     ByteBuffer buffer = ByteBuffer.allocate(capacity);
     // we send message id, worker id and data
     buffer.put(id.getId());
@@ -115,7 +136,6 @@ public class RRServer {
     TCPMessage request = server.send(channel, buffer, capacity, 0);
     if (request != null) {
       requestChannels.remove(id);
-      requestToWorkers.remove(id);
       return true;
     } else {
       return false;
@@ -126,16 +146,28 @@ public class RRServer {
     @Override
     public void onError(SocketChannel channel) {
       socketChannels.remove(channel);
+      connectHandler.onError(channel);
+
+      loop.removeAllInterest(channel);
+
+      try {
+        channel.close();
+        LOG.log(Level.INFO, "Closed the channel: " + channel);
+      } catch (IOException e) {
+        LOG.log(Level.SEVERE, "Channel closed error: " + channel, e);
+      }
     }
 
     @Override
     public void onConnect(SocketChannel channel, StatusCode status) {
       socketChannels.add(channel);
+      connectHandler.onConnect(channel, status);
     }
 
     @Override
     public void onClose(SocketChannel channel) {
       socketChannels.remove(channel);
+      connectHandler.onClose(channel);
     }
 
     @Override
@@ -160,14 +192,26 @@ public class RRServer {
       }
 
       try {
-        builder.mergeFrom(data.array());
+        builder.clear();
+
+        // size of the header
+        int headerLength = 8 + id.length + messageType.getBytes().length;
+        int dataLength = readRequest.getLength() - headerLength;
+
+        byte[] d = new byte[dataLength];
+        data.get(d);
+
+        builder.mergeFrom(d);
         Message m = builder.build();
+
+        if (channel == null) {
+          LOG.log(Level.SEVERE, "Chanel on receive is NULL");
+        }
+        LOG.log(Level.INFO, String.format("Adding channel %s", new String(id)));
+        requestChannels.put(requestID, channel);
 
         MessageHandler handler = requestHandlers.get(messageType);
         handler.onMessage(requestID, clientId, m);
-
-        requestToWorkers.put(requestID, clientId);
-        requestChannels.put(requestID, channel);
       } catch (InvalidProtocolBufferException e) {
         LOG.log(Level.SEVERE, "Failed to build a message", e);
       }

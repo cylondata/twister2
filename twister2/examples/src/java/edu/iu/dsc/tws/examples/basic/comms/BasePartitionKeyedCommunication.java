@@ -140,7 +140,7 @@ public class BasePartitionKeyedCommunication implements IContainer {
       }
       FinalPartitionReciver finalPartitionRec = new FinalPartitionReciver();
       partition = channel.partition(newCfg, MessageType.INTEGER, MessageType.INTEGER, 2, sources,
-          dests, finalPartitionRec);
+          dests, finalPartitionRec, new PartialPartitionReciver());
 //      partition = channel.partition(newCfg, MessageType.INTEGER, MessageType.INTEGER, 2, sources,
 //          dests, finalPartitionRec);
       finalPartitionRec.setMap(expectedIds);
@@ -217,6 +217,24 @@ public class BasePartitionKeyedCommunication implements IContainer {
       } catch (Throwable t) {
         t.printStackTrace();
       }
+    }
+  }
+
+  private class PartialPartitionReciver implements MessageReceiver {
+
+    @Override
+    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+
+    }
+
+    @Override
+    public boolean onMessage(int source, int path, int target, int flags, Object object) {
+      return false;
+    }
+
+    @Override
+    public void progress() {
+
     }
   }
 

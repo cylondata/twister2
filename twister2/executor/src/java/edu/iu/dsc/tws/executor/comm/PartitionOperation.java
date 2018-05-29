@@ -40,7 +40,7 @@ public class PartitionOperation extends AbstractParallelOperation {
                       DataType dataType, String edgeName) {
     this.edge = e;
     op = new MPIDataFlowPartition(channel, srcs, dests, new PartitionReceiver(),
-        MPIDataFlowPartition.PartitionStratergy.DIRECT);
+        new PartialPartitionReciver(), MPIDataFlowPartition.PartitionStratergy.DIRECT);
     partitionEdge = e.generate(edgeName);
     op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, partitionEdge);
   }
@@ -49,7 +49,7 @@ public class PartitionOperation extends AbstractParallelOperation {
                       DataType dataType, DataType keyType, String edgeName) {
     this.edge = e;
     op = new MPIDataFlowPartition(channel, srcs, dests, new PartitionReceiver(),
-        MPIDataFlowPartition.PartitionStratergy.DIRECT,
+        new PartialPartitionReciver(), MPIDataFlowPartition.PartitionStratergy.DIRECT,
         Utils.dataTypeToMessageType(dataType), Utils.dataTypeToMessageType(keyType));
     partitionEdge = e.generate(edgeName);
     op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, partitionEdge);
@@ -61,6 +61,24 @@ public class PartitionOperation extends AbstractParallelOperation {
 
   public void send(int source, IMessage message, int dest) {
     op.send(source, message, 0, dest);
+  }
+
+  private class PartialPartitionReciver implements MessageReceiver {
+
+    @Override
+    public void init(Config cfg, DataFlowOperation dfop, Map<Integer, List<Integer>> expectedIds) {
+
+    }
+
+    @Override
+    public boolean onMessage(int source, int path, int target, int flags, Object object) {
+      return false;
+    }
+
+    @Override
+    public void progress() {
+
+    }
   }
 
   public class PartitionReceiver implements MessageReceiver {

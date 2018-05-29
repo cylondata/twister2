@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.net.tcp.request;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.HashMap;
@@ -64,9 +65,30 @@ public class RRClient {
    */
   private int workerId;
 
-  public RRClient(String host, int port, Config cfg, Progress looper, int wId) {
+  /**
+   * Connection handler
+   */
+  private ConnectHandler connectHandler;
+
+  /**
+   * The progress loop
+   */
+  private Progress loop;
+
+  public RRClient(String host, int port, Config cfg, Progress looper,
+                  int wId, ConnectHandler cHandler) {
+    this.connectHandler = cHandler;
     this.workerId = wId;
+    this.loop = looper;
     client = new Client(host, port, cfg, looper, new Handler(), false);
+  }
+
+  public void start() {
+    client.connect();
+  }
+
+  public boolean isConnected() {
+    return connected;
   }
 
   public RequestID sendRequest(Message message) {
@@ -82,7 +104,7 @@ public class RRClient {
     byte[] data = message.toByteArray();
 
     // lets serialize the message
-    int capacity = id.getId().length + data.length + 4;
+    int capacity = id.getId().length + data.length + 4 + messageType.getBytes().length + 4;
     ByteBuffer buffer = ByteBuffer.allocate(capacity);
     // we send message id, worker id and data
     buffer.put(id.getId());
@@ -101,6 +123,10 @@ public class RRClient {
     }
   }
 
+  public void disconnect() {
+    client.disconnect();
+  }
+
   /**
    * Register a response handler to a specific message type
    * @param builder the response message type
@@ -114,19 +140,30 @@ public class RRClient {
   private class Handler implements ChannelHandler {
     @Override
     public void onError(SocketChannel ch) {
-      connected = false;
       LOG.severe("Error happened");
+      connectHandler.onError(ch);
+      loop.removeAllInterest(ch);
+
+      try {
+        ch.close();
+        LOG.log(Level.INFO, "Closed the channel: " + ch);
+      } catch (IOException e) {
+        LOG.log(Level.SEVERE, "Failed to close channel: " + ch, e);
+      }
+      connected = false;
     }
 
     @Override
     public void onConnect(SocketChannel ch, StatusCode status) {
       channel = ch;
       connected = true;
+      connectHandler.onConnect(ch, status);
     }
 
     @Override
     public void onClose(SocketChannel ch) {
       connected = false;
+      connectHandler.onClose(ch);
     }
 
     @Override
@@ -150,7 +187,16 @@ public class RRClient {
       }
 
       try {
-        builder.mergeFrom(data.array());
+        builder.clear();
+
+        // size of the header
+        int headerLength = 8 + id.length + messageType.getBytes().length;
+        int dataLength = readRequest.getLength() - headerLength;
+
+        byte[] d = new byte[dataLength];
+        data.get(d);
+
+        builder.mergeFrom(d);
         Message m = builder.build();
 
         MessageHandler handler = responseHandlers.get(messageType);

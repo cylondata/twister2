@@ -97,19 +97,20 @@ public interface TWSCommunication {
 
   DataFlowOperation partition(Map<String, Object> properties, MessageType type, int edge1,
                               Set<Integer> sourceTasks, Set<Integer> destTasks,
-                              MessageReceiver receiver);
+                              MessageReceiver finalRcvr, MessageReceiver partialRcvr);
 
   DataFlowOperation partition(Map<String, Object> properties, MessageType type, int edge1,
                               Set<Integer> sourceTasks, Set<Integer> destTasks,
-                              MessageReceiver receiver, CompletionListener cmpListener);
+                              MessageReceiver finalRcvr, MessageReceiver partialRcvr,
+                              CompletionListener cmpListener);
 
   DataFlowOperation partition(Map<String, Object> properties, MessageType type,
                               MessageType keyType, int edge1,
                               Set<Integer> sourceTasks, Set<Integer> destTasks,
-                              MessageReceiver receiver);
+                              MessageReceiver finalRcvr, MessageReceiver partialRcvr);
 
   DataFlowOperation reduce(Map<String, Object> properties, MessageType type, int edge,
-                              Set<Integer> sourceTasks, int destTask,
-                              MessageReceiver reduceReceiver, MessageReceiver partialReceiver,
-                              CompletionListener compListener);
+                           Set<Integer> sourceTasks, int destTask,
+                           MessageReceiver reduceReceiver, MessageReceiver partialReceiver,
+                           CompletionListener compListener);
 }
