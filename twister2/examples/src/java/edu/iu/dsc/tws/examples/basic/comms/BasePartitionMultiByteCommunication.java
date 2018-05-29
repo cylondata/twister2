@@ -147,7 +147,7 @@ public class BasePartitionMultiByteCommunication implements IContainer {
       FinalPartitionReciver finalPartitionRec = new FinalPartitionReciver();
       partition = channel.partition(newCfg, MessageType.MULTI_FIXED_BYTE,
           MessageType.MULTI_FIXED_BYTE, 2, sources,
-          dests, finalPartitionRec);
+          dests, finalPartitionRec, new PartialPartitionReciver());
       finalPartitionRec.setMap(expectedIds);
       partition.setMemoryMapped(true);
 
@@ -228,6 +228,24 @@ public class BasePartitionMultiByteCommunication implements IContainer {
       } catch (Throwable t) {
         t.printStackTrace();
       }
+    }
+  }
+
+  private class PartialPartitionReciver implements MessageReceiver {
+
+    @Override
+    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+
+    }
+
+    @Override
+    public boolean onMessage(int source, int path, int target, int flags, Object object) {
+      return false;
+    }
+
+    @Override
+    public void progress() {
+
     }
   }
 

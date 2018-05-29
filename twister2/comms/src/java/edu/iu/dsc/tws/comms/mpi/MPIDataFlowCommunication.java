@@ -241,7 +241,7 @@ public class MPIDataFlowCommunication implements TWSCommunication {
                                      Set<Integer> sourceTasks, Set<Integer> destTasks,
                                      int middleTask,
                                      MessageReceiver finalRecvr) {
-  // merge with the user specified configuration, user specified will take precedence
+    // merge with the user specified configuration, user specified will take precedence
     Config mergedCfg = Config.newBuilder().putAll(config).putAll(properties).build();
 
     // create the dataflow operation
@@ -291,12 +291,13 @@ public class MPIDataFlowCommunication implements TWSCommunication {
   @Override
   public DataFlowOperation partition(Map<String, Object> properties, MessageType type, int edge1,
                                      Set<Integer> sourceTasks, Set<Integer> destTasks,
-                                     MessageReceiver receiver) {
+                                     MessageReceiver finalRcvr, MessageReceiver partialRcvr) {
     // merge with the user specified configuration, user specified will take precedence
     Config mergedCfg = Config.newBuilder().putAll(config).putAll(properties).build();
 
     MPIDataFlowPartition dataFlowOperation = new MPIDataFlowPartition(channel,
-        sourceTasks, destTasks, receiver, MPIDataFlowPartition.PartitionStratergy.DIRECT);
+        sourceTasks, destTasks, finalRcvr, partialRcvr,
+        MPIDataFlowPartition.PartitionStratergy.DIRECT);
 
     dataFlowOperation.init(mergedCfg, type, instancePlan, edge1);
     return dataFlowOperation;
@@ -305,12 +306,13 @@ public class MPIDataFlowCommunication implements TWSCommunication {
   @Override
   public DataFlowOperation partition(Map<String, Object> properties, MessageType type, int edge1,
                                      Set<Integer> sourceTasks, Set<Integer> destTasks,
-                                     MessageReceiver receiver, CompletionListener cmpListener) {
+                                     MessageReceiver finalRcvr, MessageReceiver partialRcvr,
+                                     CompletionListener cmpListener) {
     // merge with the user specified configuration, user specified will take precedence
     Config mergedCfg = Config.newBuilder().putAll(config).putAll(properties).build();
 
     MPIDataFlowPartition dataFlowOperation = new MPIDataFlowPartition(channel,
-        sourceTasks, destTasks, receiver,
+        sourceTasks, destTasks, finalRcvr, partialRcvr,
         MPIDataFlowPartition.PartitionStratergy.DIRECT, cmpListener);
 
     dataFlowOperation.init(mergedCfg, type, instancePlan, edge1);
@@ -321,12 +323,13 @@ public class MPIDataFlowCommunication implements TWSCommunication {
   public DataFlowOperation partition(Map<String, Object> properties, MessageType type,
                                      MessageType keyType, int edge1,
                                      Set<Integer> sourceTasks, Set<Integer> destTasks,
-                                     MessageReceiver receiver) {
+                                     MessageReceiver finalRcvr, MessageReceiver partialRcvr) {
     // merge with the user specified configuration, user specified will take precedence
     Config mergedCfg = Config.newBuilder().putAll(config).putAll(properties).build();
 
     MPIDataFlowPartition dataFlowOperation = new MPIDataFlowPartition(channel,
-        sourceTasks, destTasks, receiver, MPIDataFlowPartition.PartitionStratergy.DIRECT,
+        sourceTasks, destTasks, finalRcvr, partialRcvr,
+        MPIDataFlowPartition.PartitionStratergy.DIRECT,
         type, keyType);
 
     dataFlowOperation.init(mergedCfg, type, instancePlan, edge1);
