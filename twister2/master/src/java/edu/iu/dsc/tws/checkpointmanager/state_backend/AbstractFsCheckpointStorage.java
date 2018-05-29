@@ -17,6 +17,7 @@ import javax.print.attribute.standard.JobName;
 
 import edu.iu.dsc.tws.checkpointmanager.CheckpointStorage;
 import edu.iu.dsc.tws.checkpointmanager.CompletedCheckpointStorageLocation;
+import edu.iu.dsc.tws.data.fs.Path;
 
 public abstract class AbstractFsCheckpointStorage implements CheckpointStorage {
 
@@ -41,5 +42,9 @@ public abstract class AbstractFsCheckpointStorage implements CheckpointStorage {
   protected static CompletedCheckpointStorageLocation resolveCheckpointPointer(
       String checkpointPointer) throws IOException {
     return null;
+  }
+
+  protected static Path createCheckpointDirectory(Path baseDirectory, long checkpointId) {
+    return new Path(baseDirectory, CHECKPOINT_DIR_PREFIX + checkpointId);
   }
 }
