@@ -39,7 +39,7 @@ public class KafkaConsumerThread<T>  {
   private List<KafkaTopicPartitionState> topicPartitionStates;
   private volatile boolean active = true;
   private volatile TaskContext taskContext;
-  private final String edge;
+  private String edge;
 
   public KafkaConsumerThread(
       Properties kafkaConsumerConfig, Map<TopicPartition, OffsetAndMetadata> offsetsToCommit,

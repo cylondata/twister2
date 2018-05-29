@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.connectors;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
@@ -28,14 +27,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class KafkaPartitionFinder {
-  private static final Logger LOG = LoggerFactory.getLogger(KafkaPartitionFinder.class);
-  private final String[] bootstrapServers;
-  private final int numRetries;
-  private final int worldSize;
-  private final int myIndex;
+  private static Logger log = LoggerFactory.getLogger(KafkaPartitionFinder.class);
+  private String[] bootstrapServers;
+  private int numRetries;
+  private int worldSize;
+  private int myIndex;
   private Consumer<?, ?> consumer;
-  private final Properties kafkaConsumerConfig;
-  private final KafkaTopicDescription topics;
+  private Properties kafkaConsumerConfig;
+  private KafkaTopicDescription topics;
 
   public KafkaPartitionFinder(
       Properties kafkaConsumerConfig,
@@ -57,8 +56,8 @@ public class KafkaPartitionFinder {
     if (this.topics.isFixedTopics()) {
       return getAllPartitionsForTopics(topics.getFixedTopics());
     } else {
-      ArrayList<String> allTopics = allTopics();
-      ArrayList<String> relevantTopics = new ArrayList<>();
+      List<String> allTopics = allTopics();
+      List<String> relevantTopics = new LinkedList<>();
       Pattern pattern = topics.getTopicPattern();
       for (String topic : allTopics) {
         Matcher matcher = pattern.matcher(topic);
@@ -72,13 +71,14 @@ public class KafkaPartitionFinder {
   }
 
   public List<TopicPartition> getRelevantPartitions() {
-    List<TopicPartition> relevantPartitions = new ArrayList<>();
+    List<TopicPartition> relevantPartitions = new LinkedList<>();
     List<TopicPartition> allPartitions = getAllPartitions();
     for (TopicPartition partition : allPartitions) {
       if (assignPartition(partition)) {
         relevantPartitions.add(partition);
       }
     }
+    log.info("{} Partitions found for Process-{}", relevantPartitions.size(), myIndex);
     return relevantPartitions;
   }
 
@@ -87,9 +87,9 @@ public class KafkaPartitionFinder {
     return this;
   }
 
-  public ArrayList<String> allTopics() throws WakeupException {
+  public List<String> allTopics() throws WakeupException {
     try {
-      return new ArrayList<>(consumer.listTopics().keySet());
+      return new LinkedList<>(consumer.listTopics().keySet());
     } catch (WakeupException e) {
       throw new WakeupException();
     }
@@ -130,5 +130,8 @@ public class KafkaPartitionFinder {
     int startIndxOfTopic = topicPartition.topic().hashCode();
     int partitionAssignIndex = (startIndxOfTopic + topicPartition.partition()) % worldSize;
     return partitionAssignIndex == myIndex;
+  }
+
+  public KafkaPartitionFinder() {
   }
 }

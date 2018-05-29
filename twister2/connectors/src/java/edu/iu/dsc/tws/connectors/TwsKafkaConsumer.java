@@ -1,7 +1,8 @@
 
 package edu.iu.dsc.tws.connectors;
 
-import java.util.ArrayList;
+
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -19,7 +20,7 @@ import edu.iu.dsc.tws.task.api.TaskContext;
 
 public class TwsKafkaConsumer<T> extends SourceTask {
   private static final long serialVersionUID = -264264120110286748L;
-  private static final Logger LOG = LoggerFactory.getLogger(TwsKafkaConsumer.class);
+  private static Logger log = LoggerFactory.getLogger(TwsKafkaConsumer.class);
 
   private Properties kafkaConfigs;
   private Properties simpleKafkaConfig;
@@ -29,7 +30,7 @@ public class TwsKafkaConsumer<T> extends SourceTask {
   private TaskContext taskContext;
   private Map<TopicPartition, OffsetAndMetadata> offsetsToCommit;
   private List<KafkaTopicPartitionState> topicPartitionStates;
-  private final String edge;
+  private String edge;
 
   private boolean restoreState = false;
   private volatile boolean consumerThreadStarted = false;
@@ -43,9 +44,9 @@ public class TwsKafkaConsumer<T> extends SourceTask {
     if (!consumerThreadStarted) {
       try {
         kafkaConsumerThread.run();
-        LOG.info("Starting the consumer thread");
+        log.info("Starting the consumer thread");
       } catch (IllegalThreadStateException e) {
-        LOG.info("consumer is already started");
+        log.info("consumer is already started");
       }
     }
   }
@@ -54,12 +55,12 @@ public class TwsKafkaConsumer<T> extends SourceTask {
   public void prepare(Config cfg, TaskContext context) {
     this.myIndex = cfg.getIntegerValue("twister2.container.id", 0);
     this.worldSize = context.getParallelism();
-    LOG.info("myID : {} , worldSize : {} ", myIndex, worldSize);
+    log.info("myID : {} , worldSize : {} ", myIndex, worldSize);
     this.partitionFinder = new KafkaPartitionFinder(
         simpleKafkaConfig, worldSize, myIndex, topicDescription);
     this.topicPartitions = partitionFinder.getRelevantPartitions();
 
-    this.topicPartitionStates = new ArrayList<>();
+    this.topicPartitionStates = new LinkedList<>();
     for (TopicPartition tp : topicPartitions) {
       topicPartitionStates.add(new KafkaTopicPartitionState(tp));
     }
@@ -67,7 +68,7 @@ public class TwsKafkaConsumer<T> extends SourceTask {
     this.kafkaConsumerThread = new KafkaConsumerThread<T>(
         kafkaConfigs, offsetsToCommit, topicPartitions, topicPartitionStates, context, edge);
     kafkaConsumerThread.assignPartitions();
-    LOG.info("{} partitions are assigned", this.topicPartitions.size());
+    log.info("{} partitions are assigned", this.topicPartitions.size());
     kafkaConsumerThread.setSeekToBeginning();
 
   }
@@ -110,5 +111,6 @@ public class TwsKafkaConsumer<T> extends SourceTask {
     return KafkaConsumerConfig.getSimpleKafkaConsumer(servers);
   }
 
-
+  public TwsKafkaConsumer() {
+  }
 }
