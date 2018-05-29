@@ -19,7 +19,6 @@ import java.nio.ShortBuffer;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.InputFormat;
 import edu.iu.dsc.tws.data.api.formatters.BinaryInputFormatter;
-import edu.iu.dsc.tws.data.api.formatters.TextInputFormatter;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;

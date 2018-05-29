@@ -347,7 +347,7 @@ public final class KubernetesWorker {
     }
 
     K8sVolatileVolume volatileVolume = null;
-    if (SchedulerContext.workerVolatileDisk(config) > 0) {
+    if (SchedulerContext.volatileDiskRequested(config)) {
       volatileVolume =
           new K8sVolatileVolume(SchedulerContext.jobName(config), thisWorker.getWorkerID());
     }

@@ -4,3 +4,6 @@ package tws.proto.net;
 option java_package = "edu.iu.dsc.tws.proto.network";
 option java_outer_classname = "Network";
 
+message Ping {
+    required string ping = 1;
+}
