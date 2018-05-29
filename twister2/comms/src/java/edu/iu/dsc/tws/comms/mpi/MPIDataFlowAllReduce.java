@@ -155,11 +155,6 @@ public class MPIDataFlowAllReduce implements DataFlowOperation {
   }
 
   @Override
-  public MessageType getType() {
-    return type;
-  }
-
-  @Override
   public TaskPlan getTaskPlan() {
     return taskPlan;
   }

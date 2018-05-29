@@ -131,11 +131,6 @@ public class MPIDataFlowMultiGather implements DataFlowOperation {
   }
 
   @Override
-  public MessageType getType() {
-    return type;
-  }
-
-  @Override
   public TaskPlan getTaskPlan() {
     return plan;
   }

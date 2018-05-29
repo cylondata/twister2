@@ -291,11 +291,6 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
   }
 
   @Override
-  public MessageType getType() {
-    return type;
-  }
-
-  @Override
   public TaskPlan getTaskPlan() {
     return instancePlan;
   }

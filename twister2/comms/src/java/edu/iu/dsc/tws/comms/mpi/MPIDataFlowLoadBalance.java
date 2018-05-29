@@ -216,11 +216,6 @@ public class MPIDataFlowLoadBalance implements DataFlowOperation, MPIMessageRece
   }
 
   @Override
-  public MessageType getType() {
-    return type;
-  }
-
-  @Override
   public TaskPlan getTaskPlan() {
     return instancePlan;
   }
