@@ -26,6 +26,9 @@ import edu.iu.dsc.tws.comms.mpi.io.types.DataSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.types.KeySerializer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
+/**
+ * Serialize a list of messages into buffers
+ */
 public class MPIMultiMessageSerializer implements MessageSerializer {
   private static final Logger LOG = Logger.getLogger(MPIMultiMessageSerializer.class.getName());
 
@@ -120,13 +123,9 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
     byteBuffer.putInt(sendMessage.getSource());
     // the path we are on, if not grouped it will be 0 and ignored
     byteBuffer.putInt(sendMessage.getFlags());
-//    if ((sendMessage.getFlags() & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) {
-//      LOG.info(String.format("%d SEND LAST SET %d", executor, sendMessage.getFlags()));
-//    } else {
-//      LOG.info(String.format("%d SEND FLAGS %d", executor, sendMessage.getFlags()));
-//    }
+    // the destination id
     byteBuffer.putInt(sendMessage.getDestintationIdentifier());
-    // we add 0 for now and late change it
+    // we add 0 for length now and later change it
     byteBuffer.putInt(noOfMessage);
     // at this point we haven't put the length and we will do it at the serialization
     sendMessage.setWrittenHeaderSize(HEADER_SIZE);

@@ -28,7 +28,7 @@ public class MPIContext extends CommunicationContext {
   private static final String NETWORK_CHANNEL_PENDING_SIZE = "network.channel.mpi.pending.size";
   private static final String NETWORK_STORAGE_PATH = "network.storage.path";
 
-  public static final int DEFAULT_PATH = 0;
+  public static final int DEFAULT_DESTINATION = 0;
 
   public static int bufferSize(Config cfg) {
     return cfg.getIntegerValue(BUFFER_SIZE, 2048000);
