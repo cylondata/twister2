@@ -76,13 +76,13 @@ public class MesosScheduler implements Scheduler {
     if (taskIdCounter < totalTaskCount) {
       for (Protos.Offer offer : offers) {
 
-        if (offer.getHostname().equals("149.165.150.82")) {
-          index = 0;
-        } else if (offer.getHostname().equals("149.165.150.83")) {
-          index = 1;
-        } else {
-          index = 2;
-        }
+//        if (offer.getHostname().equals("149.165.150.82")) {
+//          index = 0;
+//        } else if (offer.getHostname().equals("149.165.150.83")) {
+//          index = 1;
+//        } else {
+//          index = 2;
+//        }
 
         if (!MesosContext.getDesiredNodes(config).equals("all") && !contains(desiredNodes, offer)) {
           continue;
