@@ -81,11 +81,6 @@ public class MPIDataFlowBroadcast implements DataFlowOperation, MPIMessageReceiv
   }
 
   @Override
-  public MessageType getType() {
-    return type;
-  }
-
-  @Override
   public TaskPlan getTaskPlan() {
     return instancePlan;
   }
@@ -99,15 +94,10 @@ public class MPIDataFlowBroadcast implements DataFlowOperation, MPIMessageReceiv
     MessageHeader header = currentMessage.getHeader();
 
     // we always receive to the main task
-//    LOG.info(String.format("%d received message from %d", instancePlan.getThisExecutor(),
-//        currentMessage.getHeader().getSourceId()));
-    // check weather this message is for a sub task
-
-//      LOG.info(String.format("%d calling fina receiver", instancePlan.getThisExecutor()));
     return finalReceiver.onMessage(
-        header.getSourceId(), MPIContext.DEFAULT_PATH,
+        header.getSourceId(), MPIContext.DEFAULT_DESTINATION,
         router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
-            MPIContext.DEFAULT_PATH), header.getFlags(), object);
+            MPIContext.DEFAULT_DESTINATION), header.getFlags(), object);
   }
 
 
@@ -216,12 +206,14 @@ public class MPIDataFlowBroadcast implements DataFlowOperation, MPIMessageReceiv
   }
 
   public boolean passMessageDownstream(Object object, MPIMessage currentMessage) {
-    int src = router.mainTaskOfExecutor(instancePlan.getThisExecutor(), MPIContext.DEFAULT_PATH);
+    int src = router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
+        MPIContext.DEFAULT_DESTINATION);
+
     RoutingParameters routingParameters;
     if (routingParametersCache.containsKey(src)) {
       routingParameters = routingParametersCache.get(src);
     } else {
-      routingParameters = sendRoutingParameters(src, MPIContext.DEFAULT_PATH);
+      routingParameters = sendRoutingParameters(src, MPIContext.DEFAULT_DESTINATION);
     }
 
     ArrayBlockingQueue<Pair<Object, MPISendMessage>> pendingSendMessages =
@@ -237,7 +229,7 @@ public class MPIDataFlowBroadcast implements DataFlowOperation, MPIMessageReceiv
     }
     MPISendMessage sendMessage = new MPISendMessage(src, mpiMessage,
         currentMessage.getHeader().getEdge(),
-        di, MPIContext.DEFAULT_PATH, currentMessage.getHeader().getFlags(),
+        di, MPIContext.DEFAULT_DESTINATION, currentMessage.getHeader().getFlags(),
         routingParameters.getInternalRoutes(),
         routingParameters.getExternalRoutes());
 
@@ -260,7 +252,6 @@ public class MPIDataFlowBroadcast implements DataFlowOperation, MPIMessageReceiv
       Set<Integer> internalSourceRouting = internalRouting.get(s);
       if (internalSourceRouting != null) {
         // we always use path 0 because only one path
-//      LOG.info(String.format("%d internal routing %s", executor, internalSourceRouting));
         routingParameters.addInternalRoutes(internalSourceRouting);
       } else {
         LOG.info(String.format("%d No internal routes for source %d", executor, s));
@@ -270,13 +261,9 @@ public class MPIDataFlowBroadcast implements DataFlowOperation, MPIMessageReceiv
       Map<Integer, Set<Integer>> externalRouting = router.getExternalSendTasks(s);
       if (externalRouting == null) {
         throw new RuntimeException("Un-expected message from source: " + s);
-      } /*else {
-      LOG.info(String.format("%d No external routes for source %d", executor, s));
-    }*/
+      }
       Set<Integer> externalSourceRouting = externalRouting.get(s);
       if (externalSourceRouting != null) {
-//      LOG.info(String.format("%d external routing %s", executor, externalSourceRouting));
-        // we always use path 0 because only one path
         routingParameters.addExternalRoutes(externalSourceRouting);
       }
       return routingParameters;

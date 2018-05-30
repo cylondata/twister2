@@ -100,13 +100,13 @@ public class SimpleTGraphExample1 implements IContainer {
       graphBuilder.addTask("task4", taskMerger);
 
       graphBuilder.connect("task1", "task2", "Reduce");
-      graphBuilder.connect("task2", "task3", "Shuffle");
-      graphBuilder.connect("task2", "task4", "merger1");
+      graphBuilder.connect("task1", "task3", "Shuffle");
+      graphBuilder.connect("task2", "task3", "merger1");
       graphBuilder.connect("task3", "task4", "merger2");
 
       graphBuilder.setParallelism("task1", 2);
       graphBuilder.setParallelism("task2", 2);
-      graphBuilder.setParallelism("task3", 2);
+      graphBuilder.setParallelism("task3", 1);
       graphBuilder.setParallelism("task4", 1);
 
       graphBuilder.addConfiguration("task1", "Ram", GraphConstants.taskInstanceRam(cfg));
@@ -173,20 +173,20 @@ public class SimpleTGraphExample1 implements IContainer {
       worker0.setCpu(4);
       worker0.setDisk(4000);
       worker0.setRam(2048);
-      worker0.addProperty("bandwidth", 1400.0);
+      worker0.addProperty("bandwidth", 1000.0);
       worker0.addProperty("latency", 0.1);
 
       worker1.setCpu(4);
       worker1.setDisk(4000);
       worker1.setRam(2048);
-      worker1.addProperty("bandwidth", 1000.0);
+      worker1.addProperty("bandwidth", 2000.0);
       worker1.addProperty("latency", 0.1);
 
       worker2.setCpu(4);
       worker2.setDisk(4000);
       worker2.setRam(2048);
-      worker2.addProperty("bandwidth", 2000.0);
-      worker2.addProperty("latency", 0.2);
+      worker2.addProperty("bandwidth", 3000.0);
+      worker2.addProperty("latency", 0.1);
 
       workerPlan.addWorker(worker0);
       workerPlan.addWorker(worker1);
@@ -213,7 +213,7 @@ public class SimpleTGraphExample1 implements IContainer {
             taskSchedulePlan = dataLocalityAwareTaskScheduling.schedule(
                 dataFlowTaskGraph, workerPlan);
           }
-          /*try {
+          try {
             if (taskSchedulePlan.getContainersMap() != null) {
               LOG.info("Task schedule plan details:"
                   + taskSchedulePlan.getTaskSchedulePlanId() + ":"
@@ -221,7 +221,7 @@ public class SimpleTGraphExample1 implements IContainer {
             }
           } catch (NullPointerException ne) {
             ne.printStackTrace();
-          }*/
+          }
         }
       }
     }//End of ContainerId validation
@@ -463,7 +463,7 @@ public class SimpleTGraphExample1 implements IContainer {
     }
 
     @Override
-    public boolean onMessage(int source, int path, int target, int flags, Object object) {
+    public boolean onMessage(int source, int destination, int target, int flags, Object object) {
       count++;
       if (count % 10000 == 0) {
         LOG.info("received message: " + count);

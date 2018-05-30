@@ -42,6 +42,24 @@ public class TaskAttributes {
     return taskRamMap;
   }
 
+  public Map<String, Double> getTaskNetworkMap(Set<Vertex> taskVertices) {
+
+    Map<String, Double> taskNetworkMap = new HashMap<>();
+    Object network;
+    double requiredNetwork = 0.0;
+    for (Vertex task : taskVertices) {
+      Config config = task.getConfig();
+      if (config.get("Network") != null) {
+        network = config.get("Network");
+        requiredNetwork = (double) ((Integer) network);
+      } else {
+        requiredNetwork = TaskSchedulerContext.taskInstanceNetwork(config);
+      }
+      taskNetworkMap.put(task.getName(), requiredNetwork);
+    }
+    return taskNetworkMap;
+  }
+
   public Map<String, Double> getTaskDiskMap(Set<Vertex> taskVertices) {
 
     Map<String, Double> taskDiskMap = new HashMap<>();

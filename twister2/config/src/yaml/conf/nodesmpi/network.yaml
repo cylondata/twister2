@@ -4,5 +4,9 @@ twister2.network.channel.class: "edu.iu.dsc.tws.comms.mpi.MPIDataFlowCommunicati
 network.mpi.buffer.size: 1024000
 network.mpi.sendBuffer.count: 1
 network.mpi.receiveBuffer.count: 1
+# channel pending messages
 network.channel.mpi.pending.size: 2048
+# the send pending messages
 network.mpi.send.pending.max: 1
+# group up to 64 messages
+network.partition.group.max: 64

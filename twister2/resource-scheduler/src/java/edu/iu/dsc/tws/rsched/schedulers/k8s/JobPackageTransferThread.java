@@ -26,8 +26,8 @@ public class JobPackageTransferThread extends Thread {
   private static final Logger LOG = Logger.getLogger(PodWatcher.class.getName());
 
   public static final long SLEEP_INTERVAL_BETWEEN_POD_STATUS_CHECKS = 30;
-  public static final long SLEEP_INTERVAL_BETWEEN_TRANSFER_ATTEMPTS = 50;
-  public static final long MAX_FILE_TRANSFER_TRY_COUNT = 5;
+  public static final long SLEEP_INTERVAL_BETWEEN_TRANSFER_ATTEMPTS = 200;
+  public static final long MAX_FILE_TRANSFER_TRY_COUNT = 50;
 
   private String podName;
   private String[] copyCommand;
@@ -95,10 +95,15 @@ public class JobPackageTransferThread extends Thread {
             + " transferred to the pod: " + podName);
 
       } else {
-        try {
-          LOG.log(Level.WARNING, "Job Package: " + jobPackageFile + " could not be transferred to "
-              + "the pod: " + podName + ". Sleeping and will try again ... " + tryCount++);
+        if (tryCount == 0 || tryCount == (MAX_FILE_TRANSFER_TRY_COUNT - 1)) {
+          LOG.log(Level.INFO, "Job Package: " + jobPackageFile + " could not be transferred to "
+              + "the pod: " + podName + ". Sleeping and will try again ... " + tryCount
+              + "\nFailed command: " + copyCommandAsString());
+        }
 
+        tryCount++;
+
+        try {
           Thread.sleep(SLEEP_INTERVAL_BETWEEN_TRANSFER_ATTEMPTS);
         } catch (InterruptedException e) {
           LOG.log(Level.WARNING, "Thread sleep interrupted.", e);
@@ -106,5 +111,13 @@ public class JobPackageTransferThread extends Thread {
       }
     }
 
+  }
+
+  public String copyCommandAsString() {
+    String copyStr = "";
+    for (String cmd: copyCommand) {
+      copyStr += cmd + " ";
+    }
+    return copyStr;
   }
 }

@@ -30,6 +30,9 @@ public class TaskSchedulerContext extends SchedulerContext {
   public static final String TWISTER2_TASK_INSTANCE_CPU = "twister2.task.instance.cpu";
   public static final double TWISTER2_TASK_INSTANCE_CPU_DEFAULT = 2.0;
 
+  public static final String TWISTER2_TASK_INSTANCE_NETWORK = "twister2.task.instance.network";
+  public static final double TWISTER2_TASK_INSTANCE_NETWORK_DEFAULT = 512.0;
+
   public static final String TWISTER2_CONTAINER_INSTANCE_RAM = "twister2.container.instance.ram";
   public static final double TWISTER2_CONTAINER_INSTANCE_RAM_DEFAULT = 1024.0;
 
@@ -38,6 +41,10 @@ public class TaskSchedulerContext extends SchedulerContext {
 
   public static final String TWISTER2_CONTAINER_INSTANCE_CPU = "twister2.container.instance.cpu";
   public static final double TWISTER2_CONTAINER_INSTANCE_CPU_DEFAULT = 2.0;
+
+  public static final String TWISTER2_CONTAINER_INSTANCE_NETWORK
+      = "twister2.container.instance.network";
+  public static final double TWISTER2_CONTAINER_INSTANCE_NETWORK_DEFAULT = 1024.0;
 
   public static final String TWISTER2_TASK_PARALLELISM = "twister2.task.parallelism";
   public static final int TWISTER2_TASK_PARALLELISM_DEFAULT = 2;
@@ -79,6 +86,11 @@ public class TaskSchedulerContext extends SchedulerContext {
     return cfg.getDoubleValue(TWISTER2_TASK_INSTANCE_CPU, TWISTER2_TASK_INSTANCE_CPU_DEFAULT);
   }
 
+  public static double taskInstanceNetwork(Config cfg) {
+    return cfg.getDoubleValue(TWISTER2_TASK_INSTANCE_NETWORK,
+        TWISTER2_TASK_INSTANCE_NETWORK_DEFAULT);
+  }
+
   public static double containerInstanceRam(Config cfg) {
     return cfg.getDoubleValue(TWISTER2_CONTAINER_INSTANCE_RAM,
         TWISTER2_CONTAINER_INSTANCE_RAM_DEFAULT);
@@ -92,6 +104,12 @@ public class TaskSchedulerContext extends SchedulerContext {
   public static double containerInstanceCpu(Config cfg) {
     return cfg.getDoubleValue(TWISTER2_CONTAINER_INSTANCE_CPU,
         TWISTER2_CONTAINER_INSTANCE_CPU_DEFAULT);
+  }
+
+
+  public static double containerInstanceNetwork(Config cfg) {
+    return cfg.getDoubleValue(TWISTER2_CONTAINER_INSTANCE_NETWORK,
+        TWISTER2_CONTAINER_INSTANCE_NETWORK_DEFAULT);
   }
 
   public static int taskParallelism(Config cfg) {
@@ -123,4 +141,5 @@ public class TaskSchedulerContext extends SchedulerContext {
         TWISTER2_CONTAINER_PADDING_PERCENTAGE_DEFAULT);
   }
 }
+
 

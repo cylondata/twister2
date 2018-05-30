@@ -213,6 +213,16 @@ public final class TarGzipPacker {
 
     File sourceGzipFile = new File(sourceGzip);
     File outputDir = sourceGzipFile.getParentFile();
+    return unpack(sourceGzip, outputDir);
+  }
+
+  /**
+   * unpackage the given tar.gz file to the provided output directory
+   * @param sourceGzip
+   * @param outputDir
+   * @return
+   */
+  public static boolean unpack(final String sourceGzip, File outputDir) {
 
     GzipCompressorInputStream gzIn = null;
     TarArchiveInputStream tarInputStream = null;

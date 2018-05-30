@@ -147,7 +147,7 @@ public class BasePartitionMultiByteCommunication implements IContainer {
       FinalPartitionReciver finalPartitionRec = new FinalPartitionReciver();
       partition = channel.partition(newCfg, MessageType.MULTI_FIXED_BYTE,
           MessageType.MULTI_FIXED_BYTE, 2, sources,
-          dests, finalPartitionRec);
+          dests, finalPartitionRec, new PartialPartitionReciver());
       finalPartitionRec.setMap(expectedIds);
       partition.setMemoryMapped(true);
 
@@ -231,6 +231,24 @@ public class BasePartitionMultiByteCommunication implements IContainer {
     }
   }
 
+  private class PartialPartitionReciver implements MessageReceiver {
+
+    @Override
+    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+
+    }
+
+    @Override
+    public boolean onMessage(int source, int destination, int target, int flags, Object object) {
+      return false;
+    }
+
+    @Override
+    public void progress() {
+
+    }
+  }
+
   private class FinalPartitionReciver implements MessageReceiver {
     private Map<Integer, Map<Integer, Boolean>> finished;
 
@@ -250,7 +268,7 @@ public class BasePartitionMultiByteCommunication implements IContainer {
 
     @Override
     @SuppressWarnings("unchecked")
-    public boolean onMessage(int source, int path, int target, int flags, Object object) {
+    public boolean onMessage(int source, int destination, int target, int flags, Object object) {
       // add the object to the map
       if ((flags & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) {
         finished.get(target).put(source, true);

@@ -11,9 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.k8s;
 
-import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.POD_SHARED_VOLUME;
+import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.POD_MEMORY_VOLUME;
 
 public final class KubernetesUtils {
+
+  public static String persistentJobDirName = null;
 
   private KubernetesUtils() {
   }
@@ -30,10 +32,17 @@ public final class KubernetesUtils {
 
   /**
    * create file copy command to a pod
+   * if persistent storage is used, copy there
    * @return
    */
   public static String[] createCopyCommand(String filename, String namespace, String podName) {
-    String targetDir = String.format("%s/%s:%s", namespace, podName, POD_SHARED_VOLUME);
+
+    String targetDir = null;
+    if (persistentJobDirName == null) {
+      targetDir = String.format("%s/%s:%s", namespace, podName, POD_MEMORY_VOLUME);
+    } else {
+      targetDir = String.format("%s/%s:%s", namespace, podName, persistentJobDirName);
+    }
     return new String[]{"kubectl", "cp", filename, targetDir};
   }
 
@@ -60,9 +69,15 @@ public final class KubernetesUtils {
    * @param jobName
    * @return
    */
-  public static String createPersistentJobDirName(String jobName) {
-    return KubernetesConstants.PERSISTENT_VOLUME_MOUNT + "/twister2/" + jobName
+  public static String createPersistentJobDirName(String jobName, boolean persistentUploading) {
+    String pJobDirName = KubernetesConstants.PERSISTENT_VOLUME_MOUNT + "/twister2/" + jobName
         + "-" + System.currentTimeMillis();
+
+    if (persistentUploading) {
+      persistentJobDirName = pJobDirName;
+    }
+
+    return pJobDirName;
   }
 
   /**

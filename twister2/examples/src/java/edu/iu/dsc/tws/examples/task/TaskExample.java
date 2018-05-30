@@ -41,23 +41,15 @@ import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 public class TaskExample implements IContainer {
   @Override
   public void init(Config config, int id, ResourcePlan resourcePlan) {
-    Generator g = new Generator();
-    Receiver r = new Receiver();
+    GeneratorTask g = new GeneratorTask();
+    RecevingTask r = new RecevingTask();
 
     GraphBuilder builder = GraphBuilder.newBuilder();
     builder.addSource("source", g);
     builder.setParallelism("source", 4);
     builder.addSink("sink", r);
     builder.setParallelism("sink", 4);
-
-    builder.addConfiguration("source", "Ram", 512);
-    builder.addConfiguration("source", "Disk", 1000);
-    builder.addConfiguration("source", "Cpu", 2);
-
-    builder.addConfiguration("sink", "Ram", 300);
-    builder.addConfiguration("sink", "Disk", 1000);
-    builder.addConfiguration("sink", "Cpu", 2);
-    builder.connect("source", "sink", "e1", Operations.PARTITION);
+    builder.connect("source", "sink", "partition-edge", Operations.PARTITION);
 
     DataFlowTaskGraph graph = builder.build();
 
@@ -77,13 +69,13 @@ public class TaskExample implements IContainer {
     }
   }
 
-  private static class Generator extends SourceTask {
+  private static class GeneratorTask extends SourceTask {
     private static final long serialVersionUID = -254264903510284748L;
     private TaskContext ctx;
     private Config config;
     @Override
     public void run() {
-      ctx.write("e1", "Hello");
+      ctx.write("partition-edge", "Hello");
     }
 
     @Override
@@ -92,7 +84,7 @@ public class TaskExample implements IContainer {
     }
   }
 
-  private static class Receiver extends SinkTask {
+  private static class RecevingTask extends SinkTask {
     private static final long serialVersionUID = -254264903510284798L;
     @Override
     public void execute(IMessage message) {

@@ -30,6 +30,8 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.mpi.io.partition.PartitionBatchFinalReceiver;
+import edu.iu.dsc.tws.comms.mpi.io.partition.PartitionBatchPartialReceiver;
 import edu.iu.dsc.tws.examples.IntData;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
@@ -49,9 +51,9 @@ public class BasePartitionCommunication implements IContainer {
 
   private Config config;
 
-  private static final int NO_OF_TASKS = 8;
+  private static final int NO_OF_TASKS = 4;
 
-  private int noOfTasksPerExecutor = 2;
+  private int noOfTasksPerExecutor = 1;
 
   private enum Status {
     INIT,
@@ -100,10 +102,9 @@ public class BasePartitionCommunication implements IContainer {
           }
         }
       }
-      FinalPartitionReciver finalPartitionRec = new FinalPartitionReciver();
+      PartitionBatchFinalReceiver finalPartitionRec = new PartitionBatchFinalReceiver();
       partition = channel.partition(newCfg, MessageType.BYTE, 2, sources,
-          dests, finalPartitionRec);
-      finalPartitionRec.setMap(expectedIds);
+          dests, finalPartitionRec, new PartitionBatchPartialReceiver());
       // partition.setMemoryMapped(true);
 
       for (int i = 0; i < noOfTasksPerExecutor; i++) {
@@ -146,9 +147,9 @@ public class BasePartitionCommunication implements IContainer {
         LOG.log(Level.INFO, "Starting map worker: " + id);
 //        int[] data = {task, task * 100};
         for (int i = 0; i < NO_OF_TASKS; i++) {
-          if (i == task) {
-            continue;
-          }
+//          if (i == task) {
+//            continue;
+//          }
           byte[] data = new byte[12];
           data[0] = 'a';
           data[1] = 'b';
@@ -176,6 +177,24 @@ public class BasePartitionCommunication implements IContainer {
     }
   }
 
+  private class PartialPartitionReciver implements MessageReceiver {
+
+    @Override
+    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+
+    }
+
+    @Override
+    public boolean onMessage(int source, int destination, int target, int flags, Object object) {
+      return false;
+    }
+
+    @Override
+    public void progress() {
+
+    }
+  }
+
   private class FinalPartitionReciver implements MessageReceiver {
     private Map<Integer, Map<Integer, Boolean>> finished;
 
@@ -194,7 +213,7 @@ public class BasePartitionCommunication implements IContainer {
     }
 
     @Override
-    public boolean onMessage(int source, int path, int target, int flags, Object object) {
+    public boolean onMessage(int source, int destination, int target, int flags, Object object) {
       // add the object to the map
       if ((flags & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) {
         finished.get(target).put(source, true);

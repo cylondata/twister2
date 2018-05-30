@@ -14,13 +14,15 @@ package edu.iu.dsc.tws.api.task.job;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.rsched.bootstrap.IWorkerController;
 import edu.iu.dsc.tws.rsched.spi.container.IPersistentVolume;
+import edu.iu.dsc.tws.rsched.spi.container.IVolatileVolume;
 import edu.iu.dsc.tws.rsched.spi.container.IWorker;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
 public class TaskWorker implements IWorker {
   @Override
   public void init(Config config, int id, ResourcePlan resourcePlan,
-                   IWorkerController workerController, IPersistentVolume persistentVolume) {
+                   IWorkerController workerController, IPersistentVolume persistentVolume,
+                   IVolatileVolume volatileVolume) {
 
   }
 }

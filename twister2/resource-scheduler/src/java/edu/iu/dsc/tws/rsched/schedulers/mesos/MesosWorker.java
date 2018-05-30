@@ -102,7 +102,7 @@ public class MesosWorker implements Executor {
       LOG.info("Waiting for all workers to join");
       workerController.waitForAllWorkersToJoin(ZKContext.maxWaitTimeForAllWorkersToJoin(config));
       LOG.info("Everyone has joined");
-      container.init(config, id, null, workerController, null);
+      container.init(config, id, null, workerController, null, null);
       workerController.close();
     } catch (UnknownHostException e) {
       e.printStackTrace();

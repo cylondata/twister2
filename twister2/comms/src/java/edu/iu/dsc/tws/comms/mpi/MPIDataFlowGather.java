@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,7 +19,6 @@ import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.google.common.collect.HashBasedTable;
@@ -42,6 +40,7 @@ import edu.iu.dsc.tws.comms.mpi.io.MessageSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.gather.StreamingPartialGatherReceiver;
 import edu.iu.dsc.tws.comms.routing.InvertedBinaryTreeRouter;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
+import edu.iu.dsc.tws.comms.utils.OperationUtils;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
 public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver {
@@ -61,7 +60,7 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
 
   private int index = 0;
 
-  private int pathToUse = MPIContext.DEFAULT_PATH;
+  private int pathToUse = MPIContext.DEFAULT_DESTINATION;
 
   private MPIDataFlowOperation delegete;
   private TaskPlan instancePlan;
@@ -141,14 +140,14 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
         && partialReceiver != null) {
 //      LOG.info(String.format("%d calling PARTIAL receiver %d", executor, header.getSourceId()));
       return partialReceiver.onMessage(header.getSourceId(),
-          MPIContext.DEFAULT_PATH,
+          MPIContext.DEFAULT_DESTINATION,
           router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
-              MPIContext.DEFAULT_PATH), header.getFlags(), currentMessage);
+              MPIContext.DEFAULT_DESTINATION), header.getFlags(), currentMessage);
     } else {
 //      LOG.info(String.format("%d calling FINAL receiver %d", executor, header.getSourceId()));
       return finalReceiver.onMessage(header.getSourceId(),
-          MPIContext.DEFAULT_PATH, router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
-              MPIContext.DEFAULT_PATH), header.getFlags(), object);
+          MPIContext.DEFAULT_DESTINATION, router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
+              MPIContext.DEFAULT_DESTINATION), header.getFlags(), object);
     }
   }
 
@@ -192,7 +191,7 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
 
     // we are going to add source if we are the main executor
     if (router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
-        MPIContext.DEFAULT_PATH) == source) {
+        MPIContext.DEFAULT_DESTINATION) == source) {
       routingParameters.addInteranlRoute(source);
     }
 
@@ -334,44 +333,12 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
   }
 
   public Map<Integer, List<Integer>> receiveExpectedTaskIds() {
-    Map<Integer, List<Integer>> integerMapMap = router.receiveExpectedTaskIds();
-    // add the main task to receive from iteself
-    int key = router.mainTaskOfExecutor(instancePlan.getThisExecutor(), MPIContext.DEFAULT_PATH);
-    List<Integer> mainReceives = integerMapMap.get(key);
-    if (mainReceives == null) {
-      mainReceives = new ArrayList<>();
-      integerMapMap.put(key, mainReceives);
-    }
-    if (key != destination) {
-      mainReceives.add(key);
-    }
-    return integerMapMap;
+    return OperationUtils.getIntegerListMap(router, instancePlan, destination);
   }
 
   @Override
   public void progress() {
-    try {
-      delegete.progress();
-
-      if (lock.tryLock()) {
-        try {
-          finalReceiver.progress();
-        } finally {
-          lock.unlock();
-        }
-      }
-
-      if (partialLock.tryLock()) {
-        try {
-          partialReceiver.progress();
-        } finally {
-          partialLock.unlock();
-        }
-      }
-    } catch (Throwable t) {
-      LOG.log(Level.SEVERE, "un-expected error", t);
-      throw new RuntimeException(t);
-    }
+    OperationUtils.progressReceivers(delegete, lock, finalReceiver, partialLock, partialReceiver);
   }
 
   @Override
@@ -382,11 +349,6 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
   @Override
   public void finish() {
 
-  }
-
-  @Override
-  public MessageType getType() {
-    return type;
   }
 
   @Override

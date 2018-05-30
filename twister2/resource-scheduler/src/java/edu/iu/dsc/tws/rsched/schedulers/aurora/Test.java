@@ -97,7 +97,7 @@ public final class Test {
     builder.put(SchedulerContext.TWISTER2_WORKER_CPU, "1");
     String ramAndDiskSize = "" + 1 * 1024 * 1024 * 1024; // 1GB in bytes
     builder.put(SchedulerContext.TWISTER2_WORKER_RAM, ramAndDiskSize);
-    builder.put(AuroraContext.TWISTER2_WORKER_DISK, ramAndDiskSize);
+    builder.put(AuroraContext.WORKER_VOLATILE_DISK, ramAndDiskSize);
     Config config = builder.build();
 
     System.out.println("number of config parameters: " + config.size());
