@@ -31,7 +31,7 @@ import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.mpi.io.partition.PartitionBatchFinalReceiver;
-import edu.iu.dsc.tws.comms.mpi.io.partition.PartitionBatchPartialReceiver;
+import edu.iu.dsc.tws.comms.mpi.io.partition.PartitionPartialReceiver;
 import edu.iu.dsc.tws.examples.IntData;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
@@ -104,7 +104,7 @@ public class BasePartitionCommunication implements IContainer {
       }
       PartitionBatchFinalReceiver finalPartitionRec = new PartitionBatchFinalReceiver();
       partition = channel.partition(newCfg, MessageType.BYTE, 2, sources,
-          dests, finalPartitionRec, new PartitionBatchPartialReceiver());
+          dests, finalPartitionRec, new PartitionPartialReceiver());
       // partition.setMemoryMapped(true);
 
       for (int i = 0; i < noOfTasksPerExecutor; i++) {
