@@ -60,6 +60,8 @@ public class MesosWorker implements Executor {
   public void launchTask(ExecutorDriver executorDriver,
                          Protos.TaskInfo taskInfo) {
 
+    LOG.info("Task start time(ms):" + System.currentTimeMillis());
+
     Integer id = Integer.parseInt(taskInfo.getData().toStringUtf8());
     LOG.info("Task " + id + " has started");
     Protos.TaskStatus status = Protos.TaskStatus.newBuilder()

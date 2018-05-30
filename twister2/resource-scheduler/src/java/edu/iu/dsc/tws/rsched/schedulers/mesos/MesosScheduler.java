@@ -17,6 +17,7 @@ import java.util.logging.Logger;
 
 import com.google.protobuf.ByteString;
 
+import org.apache.curator.shaded.com.google.common.primitives.Longs;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.Filters;
 import org.apache.mesos.Protos.Offer;
@@ -64,12 +65,25 @@ public class MesosScheduler implements Scheduler {
     }
     return false;
   }
+
+  private int[] offerControl = new int[3];
   @Override
   public void resourceOffers(SchedulerDriver schedulerDriver,
                              List<Protos.Offer> offers) {
+    LOG.info("In the resourceOffer");
+    int index = 0;
     String[] desiredNodes = MesosContext.getDesiredNodes(config).split(",");
     if (taskIdCounter < totalTaskCount) {
       for (Protos.Offer offer : offers) {
+
+        if (offer.getHostname().equals("149.165.150.82")) {
+          index = 0;
+        } else if (offer.getHostname().equals("149.165.150.83")) {
+          index = 1;
+        } else {
+          index = 2;
+        }
+
         if (!MesosContext.getDesiredNodes(config).equals("all") && !contains(desiredNodes, offer)) {
           continue;
         }
@@ -79,13 +93,15 @@ public class MesosScheduler implements Scheduler {
           MesosPersistentVolume pv = new MesosPersistentVolume(
               controller.createPersistentJobDirName(jobName), workerCounter);
           pv.getJobDir();
-          pv.getWorkerDir();
-          Protos.ExecutorInfo executorInfo =
-              controller.getExecutorInfo(jobName,
-                  MesosPersistentVolume.WORKER_DIR_NAME_PREFIX + workerCounter++);
 
+          LOG.info("before for:");
           Offer.Operation.Launch.Builder launch = Offer.Operation.Launch.newBuilder();
           for (int i = 0; i < MesosContext.containerPerWorker(config); i++) {
+            LOG.info("for:" + i);
+            Protos.ExecutorInfo executorInfo =
+                controller.getExecutorInfo(jobName,
+                    MesosPersistentVolume.WORKER_DIR_NAME_PREFIX + workerCounter++);
+            pv.getWorkerDir();
             Protos.TaskID taskId = buildNewTaskID();
 
             int begin = MesosContext.getWorkerPort(config) + taskIdCounter * 10;
@@ -115,7 +131,8 @@ public class MesosScheduler implements Scheduler {
 
           Filters filters = Filters.newBuilder().setRefuseSeconds(1).build();
           schedulerDriver.acceptOffers(offerIds, operations, filters);
-          LOG.info("Offer from host" + offer.getHostname() + "has been accepted.");
+          offerControl[index]++;
+          LOG.info("Offer from host " + offer.getHostname() + "has been accepted.");
 
         }
 
@@ -186,8 +203,10 @@ public class MesosScheduler implements Scheduler {
   @Override
   public void frameworkMessage(SchedulerDriver schedulerDriver,
                                Protos.ExecutorID executorID, Protos.SlaveID slaveID, byte[] bytes) {
-    System.out.println("Received message (scheduler): " + new String(bytes)
-        + " from " + executorID.getValue());
+   // System.out.println("Received message (scheduler): " + new String(bytes)
+    //    + " from " + executorID.getValue());
+    System.out.println("Executor id:" + executorID.getValue()
+        + " Time: " + Longs.fromByteArray(bytes));
   }
 
   @Override
