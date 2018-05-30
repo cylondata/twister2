@@ -17,11 +17,13 @@
       <sourceFolder url="file://$MODULE_DIR$/tools/java/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/twister2/api/src/java" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/twister2/common/src/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/twister2/common/src/tests/java" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/twister2/comms/src/java" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/twister2/data/src/main/java" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/twister2/data/src/test/java" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/twister2/examples/src/java" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/twister2/executor/src/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/twister2/master/src/java" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/twister2/proto/Empty.java" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/twister2/resource-scheduler/src/java" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/twister2/taskscheduler/src/java" isTestSource="false" />
@@ -95,6 +97,42 @@
         <library name="libproto_job_state_java.jar">
           <CLASSES>
             <root url="jar://$MODULE_DIR$/bazel-bin/twister2/proto/./libproto_job_state_java.jar!/" />
+          </CLASSES>
+          <JAVADOC />
+          <SOURCES />
+      </library>
+    </orderEntry>
+      <orderEntry type="module-library">
+        <library name="libproto_network_java-hjar.jar">
+          <CLASSES>
+            <root url="jar://$MODULE_DIR$/bazel-bin/twister2/proto/./libproto_network_java-hjar.jar!/" />
+          </CLASSES>
+          <JAVADOC />
+          <SOURCES />
+      </library>
+    </orderEntry>
+      <orderEntry type="module-library">
+        <library name="libproto-network-java-hjar.jar">
+          <CLASSES>
+            <root url="jar://$MODULE_DIR$/bazel-bin/twister2/proto/./libproto-network-java-hjar.jar!/" />
+          </CLASSES>
+          <JAVADOC />
+          <SOURCES />
+      </library>
+    </orderEntry>
+      <orderEntry type="module-library">
+        <library name="libproto_network_java.jar">
+          <CLASSES>
+            <root url="jar://$MODULE_DIR$/bazel-bin/twister2/proto/./libproto_network_java.jar!/" />
+          </CLASSES>
+          <JAVADOC />
+          <SOURCES />
+      </library>
+    </orderEntry>
+      <orderEntry type="module-library">
+        <library name="libproto-network-java.jar">
+          <CLASSES>
+            <root url="jar://$MODULE_DIR$/bazel-bin/twister2/proto/./libproto-network-java.jar!/" />
           </CLASSES>
           <JAVADOC />
           <SOURCES />
@@ -239,6 +277,15 @@
         <library name="jnr-ffi-2.1.7-ijar.jar">
           <CLASSES>
             <root url="jar://$MODULE_DIR$/bazel-genfiles/external/./com_github_jnr_ffi/jar/_ijar/jar/external/com_github_jnr_ffi/jar/jnr-ffi-2.1.7-ijar.jar!/" />
+          </CLASSES>
+          <JAVADOC />
+          <SOURCES />
+      </library>
+    </orderEntry>
+      <orderEntry type="module-library">
+        <library name="jsr305-3.0.0-ijar.jar">
+          <CLASSES>
+            <root url="jar://$MODULE_DIR$/bazel-genfiles/external/./com_google_code_findbugs/jar/_ijar/jar/external/com_google_code_findbugs/jar/jsr305-3.0.0-ijar.jar!/" />
           </CLASSES>
           <JAVADOC />
           <SOURCES />
@@ -443,6 +490,15 @@
       </library>
     </orderEntry>
       <orderEntry type="module-library">
+        <library name="junit-4.11-ijar.jar">
+          <CLASSES>
+            <root url="jar://$MODULE_DIR$/bazel-genfiles/external/./junit_junit/jar/_ijar/jar/external/junit_junit/jar/junit-4.11-ijar.jar!/" />
+          </CLASSES>
+          <JAVADOC />
+          <SOURCES />
+      </library>
+    </orderEntry>
+      <orderEntry type="module-library">
         <library name="lmdbjava-0.6.0-ijar.jar">
           <CLASSES>
             <root url="jar://$MODULE_DIR$/bazel-genfiles/external/./lmdb_java/jar/_ijar/jar/external/lmdb_java/jar/lmdbjava-0.6.0-ijar.jar!/" />
@@ -533,6 +589,42 @@
       </library>
     </orderEntry>
       <orderEntry type="module-library">
+        <library name="hadoop-annotations-2.9.0-ijar.jar">
+          <CLASSES>
+            <root url="jar://$MODULE_DIR$/bazel-genfiles/external/./org_apache_hadoop_annotations/jar/_ijar/jar/external/org_apache_hadoop_annotations/jar/hadoop-annotations-2.9.0-ijar.jar!/" />
+          </CLASSES>
+          <JAVADOC />
+          <SOURCES />
+      </library>
+    </orderEntry>
+      <orderEntry type="module-library">
+        <library name="hadoop-auth-2.9.0-ijar.jar">
+          <CLASSES>
+            <root url="jar://$MODULE_DIR$/bazel-genfiles/external/./org_apache_hadoop_auth/jar/_ijar/jar/external/org_apache_hadoop_auth/jar/hadoop-auth-2.9.0-ijar.jar!/" />
+          </CLASSES>
+          <JAVADOC />
+          <SOURCES />
+      </library>
+    </orderEntry>
+      <orderEntry type="module-library">
+        <library name="hadoop-common-2.9.0-ijar.jar">
+          <CLASSES>
+            <root url="jar://$MODULE_DIR$/bazel-genfiles/external/./org_apache_hadoop_common/jar/_ijar/jar/external/org_apache_hadoop_common/jar/hadoop-common-2.9.0-ijar.jar!/" />
+          </CLASSES>
+          <JAVADOC />
+          <SOURCES />
+      </library>
+    </orderEntry>
+      <orderEntry type="module-library">
+        <library name="hadoop-hdfs-2.9.0-ijar.jar">
+          <CLASSES>
+            <root url="jar://$MODULE_DIR$/bazel-genfiles/external/./org_apache_hadoop_hdfs/jar/_ijar/jar/external/org_apache_hadoop_hdfs/jar/hadoop-hdfs-2.9.0-ijar.jar!/" />
+          </CLASSES>
+          <JAVADOC />
+          <SOURCES />
+      </library>
+    </orderEntry>
+      <orderEntry type="module-library">
         <library name="httpclient-4.5.2-ijar.jar">
           <CLASSES>
             <root url="jar://$MODULE_DIR$/bazel-genfiles/external/./org_apache_httpcomponents_http_client/jar/_ijar/jar/external/org_apache_httpcomponents_http_client/jar/httpclient-4.5.2-ijar.jar!/" />
@@ -596,6 +688,24 @@
       </library>
     </orderEntry>
       <orderEntry type="module-library">
+        <library name="javassist-3.18.1-GA-ijar.jar">
+          <CLASSES>
+            <root url="jar://$MODULE_DIR$/bazel-genfiles/external/./org_javassist_javassist/jar/_ijar/jar/external/org_javassist_javassist/jar/javassist-3.18.1-GA-ijar.jar!/" />
+          </CLASSES>
+          <JAVADOC />
+          <SOURCES />
+      </library>
+    </orderEntry>
+      <orderEntry type="module-library">
+        <library name="mockito-all-1.10.19-ijar.jar">
+          <CLASSES>
+            <root url="jar://$MODULE_DIR$/bazel-genfiles/external/./org_mockito_mockito_all/jar/_ijar/jar/external/org_mockito_mockito_all/jar/mockito-all-1.10.19-ijar.jar!/" />
+          </CLASSES>
+          <JAVADOC />
+          <SOURCES />
+      </library>
+    </orderEntry>
+      <orderEntry type="module-library">
         <library name="objenesis-2.1-ijar.jar">
           <CLASSES>
             <root url="jar://$MODULE_DIR$/bazel-genfiles/external/./org_objenesis_objenesis/jar/_ijar/jar/external/org_objenesis_objenesis/jar/objenesis-2.1-ijar.jar!/" />
@@ -608,6 +718,60 @@
         <library name="asm-4.2-ijar.jar">
           <CLASSES>
             <root url="jar://$MODULE_DIR$/bazel-genfiles/external/./org_ow2_asm_asm/jar/_ijar/jar/external/org_ow2_asm_asm/jar/asm-4.2-ijar.jar!/" />
+          </CLASSES>
+          <JAVADOC />
+          <SOURCES />
+      </library>
+    </orderEntry>
+      <orderEntry type="module-library">
+        <library name="powermock-api-mockito-1.6.2-ijar.jar">
+          <CLASSES>
+            <root url="jar://$MODULE_DIR$/bazel-genfiles/external/./org_powermock_powermock_api_mockito/jar/_ijar/jar/external/org_powermock_powermock_api_mockito/jar/powermock-api-mockito-1.6.2-ijar.jar!/" />
+          </CLASSES>
+          <JAVADOC />
+          <SOURCES />
+      </library>
+    </orderEntry>
+      <orderEntry type="module-library">
+        <library name="powermock-api-support-1.6.2-ijar.jar">
+          <CLASSES>
+            <root url="jar://$MODULE_DIR$/bazel-genfiles/external/./org_powermock_powermock_api_support/jar/_ijar/jar/external/org_powermock_powermock_api_support/jar/powermock-api-support-1.6.2-ijar.jar!/" />
+          </CLASSES>
+          <JAVADOC />
+          <SOURCES />
+      </library>
+    </orderEntry>
+      <orderEntry type="module-library">
+        <library name="powermock-core-1.6.2-ijar.jar">
+          <CLASSES>
+            <root url="jar://$MODULE_DIR$/bazel-genfiles/external/./org_powermock_powermock_core/jar/_ijar/jar/external/org_powermock_powermock_core/jar/powermock-core-1.6.2-ijar.jar!/" />
+          </CLASSES>
+          <JAVADOC />
+          <SOURCES />
+      </library>
+    </orderEntry>
+      <orderEntry type="module-library">
+        <library name="powermock-module-junit4-common-1.6.2-ijar.jar">
+          <CLASSES>
+            <root url="jar://$MODULE_DIR$/bazel-genfiles/external/./org_powermock_powermock_module_junit4_common/jar/_ijar/jar/external/org_powermock_powermock_module_junit4_common/jar/powermock-module-junit4-common-1.6.2-ijar.jar!/" />
+          </CLASSES>
+          <JAVADOC />
+          <SOURCES />
+      </library>
+    </orderEntry>
+      <orderEntry type="module-library">
+        <library name="powermock-module-junit4-1.6.2-ijar.jar">
+          <CLASSES>
+            <root url="jar://$MODULE_DIR$/bazel-genfiles/external/./org_powermock_powermock_module_junit4/jar/_ijar/jar/external/org_powermock_powermock_module_junit4/jar/powermock-module-junit4-1.6.2-ijar.jar!/" />
+          </CLASSES>
+          <JAVADOC />
+          <SOURCES />
+      </library>
+    </orderEntry>
+      <orderEntry type="module-library">
+        <library name="powermock-reflect-1.6.2-ijar.jar">
+          <CLASSES>
+            <root url="jar://$MODULE_DIR$/bazel-genfiles/external/./org_powermock_powermock_reflect/jar/_ijar/jar/external/org_powermock_powermock_reflect/jar/powermock-reflect-1.6.2-ijar.jar!/" />
           </CLASSES>
           <JAVADOC />
           <SOURCES />

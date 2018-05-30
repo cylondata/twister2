@@ -34,14 +34,10 @@ public class BasicMesosWorker implements IWorker {
 
   @Override
   public void init(Config config, int id, ResourcePlan resourcePlan,
-<<<<<<< HEAD
-                   IWorkerController workerController, IPersistentVolume persistentVolume) {
-    LOG.info("Mesos Worker start time(ms): " + System.currentTimeMillis());
-
-=======
                    IWorkerController workerController, IPersistentVolume persistentVolume,
                    IVolatileVolume volatileVolume) {
->>>>>>> 494e0bcbb2de98f5edafe1afbbcd7e0f33874293
+    LOG.info("Mesos Worker start time(ms): " + System.currentTimeMillis());
+
     // wait some random amount of time before finishing
     long duration = (long) (Math.random() * 1000);
     int port = workerController.getWorkerNetworkInfo().getWorkerPort();
