@@ -24,7 +24,7 @@
 package edu.iu.dsc.tws.examples.task;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+//import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -56,10 +56,14 @@ public class TaskExampleKafka implements IContainer {
   @Override
   public void init(Config config, int id, ResourcePlan resourcePlan) {
 //    GeneratorTask g = new GeneratorTask();
+    List<String> topics  = new ArrayList<>();
+    topics.add("sample_topic1");
+    List<String> servers = new ArrayList<>();
+    servers.add("localhost:9092");
     RecevingTask r = new RecevingTask();
     TwsKafkaConsumer<String> kafkaConsumer = new TwsKafkaConsumer<String>(
-        Arrays.asList("sample_topic1"),
-        Arrays.asList("localhost:9092"),
+        topics,
+        servers,
         "test",
         "e1");
 
