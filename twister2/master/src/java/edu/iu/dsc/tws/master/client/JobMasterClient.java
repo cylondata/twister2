@@ -32,10 +32,11 @@ import edu.iu.dsc.tws.proto.network.Network.ListWorkersRequest;
 import edu.iu.dsc.tws.proto.network.Network.ListWorkersResponse;
 import edu.iu.dsc.tws.rsched.bootstrap.WorkerNetworkInfo;
 
-public class JobMasterClient {
+public class JobMasterClient extends Thread {
   private static final Logger LOG = Logger.getLogger(JobMasterClient.class.getName());
 
   private static Progress looper;
+  private boolean stopLooper = false;
 
   private int workerID;
   private InetAddress workerIP;
@@ -88,7 +89,9 @@ public class JobMasterClient {
     rrClient.registerResponseHandler(stateChangeResponseBuilder, responseMessageHandler);
 
     rrClient.start();
+    // we loop once to initialize things
     looper.loop();
+    this.start();
 
     workerController.sendWorkerListRequest(ListWorkersRequest.RequestType.IMMEDIATE_RESPONSE);
     pinger.start();
@@ -96,6 +99,29 @@ public class JobMasterClient {
 
   public void close() {
     pinger.stopPinger();
+    stopLooper = true;
+  }
+
+  @Override
+  public void run() {
+
+    long sleepTime = 100;
+
+    while (!stopLooper) {
+      looper.loopBlocking();
+      looper.loopBlocking();
+      looper.loopBlocking();
+      looper.loopBlocking();
+      looper.loopBlocking();
+
+      try {
+        sleep(sleepTime);
+      } catch (InterruptedException e) {
+        if (!stopLooper) {
+          LOG.log(Level.WARNING, "Pinger Thread sleep interrupted.", e);
+        }
+      }
+    }
   }
 
   public boolean sendWorkerStartingMessage() {
@@ -191,7 +217,7 @@ public class JobMasterClient {
     client.sendWorkerStartingMessage();
 
     // wait 500ms
-    loop(500);
+    sleeeep(500);
 
     client.sendWorkerRunningMessage();
 
@@ -199,7 +225,7 @@ public class JobMasterClient {
     WorkerController.printWorkers(workerList);
 
     // wait 2000ms
-    loop(2000);
+    sleeeep(2000);
 
     workerList = client.workerController.waitForAllWorkersToJoin(2000);
     WorkerController.printWorkers(workerList);
@@ -207,16 +233,21 @@ public class JobMasterClient {
     client.sendWorkerCompletedMessage();
     // wait 50
     client.pinger.stopPinger();
-    loop(50);
+    sleeeep(50);
 
     System.out.println("all messaging done. waiting before closing the connection");
 
+    sleeeep(2000);
+    client.close();
+  }
+
+  public static void sleeeep(long duration) {
+
     try {
-      Thread.sleep(2000);
+      Thread.sleep(duration);
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
-    client.close();
   }
 
   public static void loop(long duration) {

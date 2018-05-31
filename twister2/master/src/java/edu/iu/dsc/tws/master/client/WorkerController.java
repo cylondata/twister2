@@ -38,6 +38,11 @@ public class WorkerController implements IWorkerController, MessageHandler {
   private RRClient rrClient;
   private BooleanObject responseReceived = new BooleanObject(false);
 
+  private Object synchObject1 = new Object();
+  private Object synchObject2 = new Object();
+  private boolean waitingResponse1 = false;
+  private boolean waitingResponse2 = false;
+
   public WorkerController(WorkerNetworkInfo thisWorker, int numberOfWorkers, RRClient rrClient) {
     this.numberOfWorkers = numberOfWorkers;
     this.thisWorker = thisWorker;
@@ -53,7 +58,7 @@ public class WorkerController implements IWorkerController, MessageHandler {
 
   @Override
   public WorkerNetworkInfo getWorkerNetworkInfoForID(int id) {
-    for (WorkerNetworkInfo info: workerList) {
+    for (WorkerNetworkInfo info : workerList) {
       if (info.getWorkerID() == id) {
         return info;
       }
@@ -83,26 +88,55 @@ public class WorkerController implements IWorkerController, MessageHandler {
       return workerList;
     }
 
-    sendWorkerListRequest(ListWorkersRequest.RequestType.RESPONSE_AFTER_ALL_JOINED);
-
-    boolean timeLimitReached = JobMasterClient.loopUntil(responseReceived, timeLimit);
-    if (timeLimitReached) {
-      LOG.severe("Timelimit has been reached and the worker list has not been received "
-          + "from the job master. ");
+    boolean sent = sendWorkerListRequest(ListWorkersRequest.RequestType.RESPONSE_AFTER_ALL_JOINED);
+    if (!sent) {
       return null;
+    }
+
+    synchronized (synchObject2) {
+      try {
+        waitingResponse2 = true;
+        synchObject2.wait(timeLimit);
+        // if waitingResponse2 is still true after waking up,
+        // it means the timeLimit has been reached
+        if (waitingResponse2) {
+          waitingResponse2 = false;
+          LOG.severe("Timelimit has been reached and the worker list has not been received "
+              + "from the job master. ");
+          return null;
+        }
+
+      } catch (InterruptedException e) {
+        waitingResponse2 = false;
+        LOG.warning("Waiting thread interrupted when waiting to get response message. ");
+        return null;
+      }
     }
     return workerList;
   }
 
   private List<WorkerNetworkInfo> getWorkerListFromJobMaster() {
 
-    sendWorkerListRequest(ListWorkersRequest.RequestType.IMMEDIATE_RESPONSE);
+    boolean sent = sendWorkerListRequest(ListWorkersRequest.RequestType.IMMEDIATE_RESPONSE);
+    if (!sent) {
+      return null;
+    }
 
-    JobMasterClient.loopUntil(responseReceived, 1000);
+    synchronized (synchObject1) {
+      try {
+        waitingResponse1 = true;
+        synchObject1.wait();
+      } catch (InterruptedException e) {
+        waitingResponse1 = false;
+        LOG.warning("Waiting thread interrupted when waiting to get response message. ");
+        return null;
+      }
+    }
+
     return workerList;
   }
 
-  public void sendWorkerListRequest(ListWorkersRequest.RequestType requestType) {
+  public boolean sendWorkerListRequest(ListWorkersRequest.RequestType requestType) {
     ListWorkersRequest listRequest = ListWorkersRequest.newBuilder()
         .setWorkerID(thisWorker.getWorkerID())
         .setRequestType(requestType)
@@ -113,8 +147,10 @@ public class WorkerController implements IWorkerController, MessageHandler {
 
     if (requestID == null) {
       LOG.severe("When sending ListWorkers message, requestID returned null.");
+      return false;
     } else {
       LOG.info("ListWorkers message sent to the master: \n" + listRequest);
+      return true;
     }
   }
 
@@ -130,7 +166,7 @@ public class WorkerController implements IWorkerController, MessageHandler {
       workerList.clear();
       workerList.add(thisWorker);
 
-      for (ListWorkersResponse.WorkerNetworkInfo receivedWorkerInfo: receivedWorkerInfos) {
+      for (ListWorkersResponse.WorkerNetworkInfo receivedWorkerInfo : receivedWorkerInfos) {
 
         // if received worker info belongs to this worker, do not add
         if (receivedWorkerInfo.getId() != thisWorker.getWorkerID()) {
@@ -141,7 +177,20 @@ public class WorkerController implements IWorkerController, MessageHandler {
         }
       }
 
-      responseReceived.setTrue();
+      if (waitingResponse1) {
+        waitingResponse1 = false;
+        synchronized (synchObject1) {
+          synchObject1.notify();
+        }
+      }
+
+      if (waitingResponse2) {
+        waitingResponse2 = false;
+        synchronized (synchObject2) {
+          synchObject2.notify();
+        }
+      }
+//      responseReceived.setTrue();
 
     } else {
       LOG.warning("Received message unrecognized. \n" + message);
@@ -151,8 +200,6 @@ public class WorkerController implements IWorkerController, MessageHandler {
 
   /**
    * covert the given string to ip address object
-   * @param ipStr
-   * @return
    */
   public static InetAddress convertStringToIP(String ipStr) {
     try {
@@ -172,7 +219,7 @@ public class WorkerController implements IWorkerController, MessageHandler {
     StringBuffer buffer = new StringBuffer();
     buffer.append("Number of workers: " + workers.size() + "\n");
     int i = 0;
-    for (WorkerNetworkInfo worker: workers) {
+    for (WorkerNetworkInfo worker : workers) {
       buffer.append(String.format("%d: workerID[%d] %s\n",
           i++, worker.getWorkerID(), worker.getWorkerName()));
     }

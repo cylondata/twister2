@@ -40,6 +40,7 @@ public class Pinger extends Thread implements MessageHandler {
 
   public void stopPinger() {
     stopRequested = true;
+    interrupt();
   }
 
   @Override
@@ -60,9 +61,11 @@ public class Pinger extends Thread implements MessageHandler {
       }
 
       try {
-        Thread.sleep(interval);
+        sleep(interval);
       } catch (InterruptedException e) {
-        LOG.log(Level.WARNING, "Pinger Thread sleep interrupted.", e);
+        if (!stopRequested) {
+          LOG.log(Level.WARNING, "Pinger Thread sleep interrupted.", e);
+        }
       }
 
     }
