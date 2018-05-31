@@ -21,10 +21,10 @@ public final class HadoopDataInputStream extends FSDataInputStream {
 
   public static final int MIN_SKIP_BYTES = 1024 * 1024;
 
-  private final org.apache.hadoop.fs.FSDataInputStream fsDataInputStream;
+  private final org.apache.hadoop.fs.FSDataInputStream fosInputStream;
 
-  public HadoopDataInputStream(org.apache.hadoop.fs.FSDataInputStream fsdataInputStream) {
-    this.fsDataInputStream = fsdataInputStream;
+  public HadoopDataInputStream(org.apache.hadoop.fs.FSDataInputStream fosInputStream1) {
+    this.fosInputStream = fosInputStream1;
   }
 
   @Override
@@ -40,40 +40,40 @@ public final class HadoopDataInputStream extends FSDataInputStream {
 
   @Override
   public long getPos() throws IOException {
-    return fsDataInputStream.getPos();
+    return fosInputStream.getPos();
   }
 
   @Override
   public int read() throws IOException {
-    return fsDataInputStream.read();
+    return fosInputStream.read();
   }
 
   @Override
   public void close() throws IOException {
-    fsDataInputStream.close();
+    fosInputStream.close();
   }
 
   @Override
   public int read(@Nonnull byte[] buffer, int offset, int length) throws IOException {
-    return fsDataInputStream.read(buffer, offset, length);
+    return fosInputStream.read(buffer, offset, length);
   }
 
   @Override
   public int available() throws IOException {
-    return fsDataInputStream.available();
+    return fosInputStream.available();
   }
 
   @Override
   public long skip(long n) throws IOException {
-    return fsDataInputStream.skip(n);
+    return fosInputStream.skip(n);
   }
 
   public org.apache.hadoop.fs.FSDataInputStream getHadoopInputStream() {
-    return fsDataInputStream;
+    return fosInputStream;
   }
 
   public void forceSeek(long seekPos) throws IOException {
-    fsDataInputStream.seek(seekPos);
+    fosInputStream.seek(seekPos);
   }
 
   public void skipFully(long bytes) throws IOException {
