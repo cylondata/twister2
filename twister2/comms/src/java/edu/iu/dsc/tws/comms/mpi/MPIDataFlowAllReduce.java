@@ -155,11 +155,6 @@ public class MPIDataFlowAllReduce implements DataFlowOperation {
   }
 
   @Override
-  public MessageType getType() {
-    return type;
-  }
-
-  @Override
   public TaskPlan getTaskPlan() {
     return taskPlan;
   }
@@ -183,7 +178,7 @@ public class MPIDataFlowAllReduce implements DataFlowOperation {
     }
 
     @Override
-    public boolean onMessage(int source, int path, int target, int flags, Object object) {
+    public boolean onMessage(int source, int destination, int target, int flags, Object object) {
       return reduceReceiver.receive(target, object);
     }
 

@@ -24,8 +24,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 
-import com.google.common.primitives.Ints;
-
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -35,17 +33,12 @@ import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.mpi.io.KeyedContent;
 import edu.iu.dsc.tws.comms.mpi.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.MessageSerializer;
-import edu.iu.dsc.tws.comms.mpi.io.SerializeState;
-import edu.iu.dsc.tws.comms.mpi.io.types.DataSerializer;
-import edu.iu.dsc.tws.comms.mpi.io.types.KeySerializer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.comms.utils.MessageTypeUtils;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.memory.MemoryManager;
-import edu.iu.dsc.tws.data.memory.MemoryManagerContext;
 import edu.iu.dsc.tws.data.memory.OperationMemoryManager;
 import edu.iu.dsc.tws.data.memory.lmdb.LMDBMemoryManager;
 
@@ -69,6 +62,9 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
   protected boolean isKeyed = false;
   protected Lock lock = new ReentrantLock();
 
+  /**
+   * Executor id
+   */
   protected int executor;
   /**
    * The send sendBuffers used by the operation
@@ -83,7 +79,6 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
   /**
    * Pending send messages
    */
-//  protected Queue<Pair<Object, MPISendMessage>> pendingSendMessages;
   protected Map<Integer, ArrayBlockingQueue<Pair<Object, MPISendMessage>>>
       pendingSendMessagesPerSource;
 
@@ -100,12 +95,24 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
 
   protected KryoSerializer kryoSerializer;
 
+  /**
+   * Weather we are in debug mode
+   */
   protected boolean debug;
 
+  /**
+   * These are the workers from which we receive messages
+   */
   protected Set<Integer> receivingExecutors;
 
+  /**
+   * Weather this is the last receiver
+   */
   protected boolean isLastReceiver;
 
+  /**
+   * The message receiver for MPI messages
+   */
   protected MPIMessageReceiver receiver;
 
   /**
@@ -143,26 +150,8 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
   private int partialSendAttempts = 0;
   private int sendAttempts = 0;
 
-  private long time1 = 0;
-  private long time2 = 0;
-  private int count = 0;
-
   private Map<Integer, Integer> sendSequence = new HashMap<>();
   private Map<Integer, Integer> sendPartialSequence = new HashMap<>();
-
-  private ThreadLocal<ByteBuffer> threadLocalDataBuffer = new ThreadLocal<ByteBuffer>() {
-    @Override
-    protected ByteBuffer initialValue() {
-      return ByteBuffer.allocateDirect(MemoryManagerContext.TL_DATA_BUFF_INIT_CAP);
-    }
-  };
-
-  private ThreadLocal<ByteBuffer> threadLocalKeyBuffer = new ThreadLocal<ByteBuffer>() {
-    @Override
-    protected ByteBuffer initialValue() {
-      return ByteBuffer.allocateDirect(MemoryManagerContext.TL_KEY_BUFF_INIT_CAP);
-    }
-  };
 
   public MPIDataFlowOperation(TWSChannel channel) {
     this.channel = channel;
@@ -204,7 +193,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
 //    LOG.info(String.format("%d Send buffer size: %d", executor, sendBufferSize));
     this.sendBuffers = new ArrayBlockingQueue<MPIBuffer>(noOfSendBuffers);
     for (int i = 0; i < noOfSendBuffers; i++) {
-      sendBuffers.offer(new MPIBuffer(sendBufferSize));
+      sendBuffers.offer(new MPIBuffer(channel.createBuffer(sendBufferSize)));
     }
     this.receiveBuffers = new HashMap<>();
 
@@ -234,17 +223,14 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
   }
 
   private void initProgressTrackers() {
-    Set<Integer> items = pendingSendMessagesPerSource.keySet();
-//    LOG.info(String.format("%d pendingSendMessagesPerSource %s", executor, items));
-    sendProgressTracker = new ProgressionTracker(items);
+    Set<Integer> sendItems = pendingSendMessagesPerSource.keySet();
+    sendProgressTracker = new ProgressionTracker(sendItems);
 
-    Set<Integer> items1 = pendingReceiveMessagesPerSource.keySet();
-//    LOG.info(String.format("%d pendingReceiveMessagesPerSource %s", executor, items1));
-    receiveProgressTracker = new ProgressionTracker(items1);
+    Set<Integer> receiveItems = pendingReceiveMessagesPerSource.keySet();
+    receiveProgressTracker = new ProgressionTracker(receiveItems);
 
-    Set<Integer> items2 = pendingReceiveDeSerializations.keySet();
-//    LOG.info(String.format("%d pendingReceiveDeSerializations %s", executor, items1));
-    deserializeProgressTracker = new ProgressionTracker(items2);
+    Set<Integer> desrializeItems = pendingReceiveDeSerializations.keySet();
+    deserializeProgressTracker = new ProgressionTracker(desrializeItems);
   }
 
   /**
@@ -258,7 +244,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
     for (Integer recv : receivingExecutors) {
       Queue<MPIBuffer> recvList = new LinkedBlockingQueue<>();
       for (int i = 0; i < maxReceiveBuffers; i++) {
-        recvList.add(new MPIBuffer(receiveBufferSize));
+        recvList.add(new MPIBuffer(channel.createBuffer(receiveBufferSize)));
       }
       // register with the channel
       LOG.fine(instancePlan.getThisExecutor() + " Register to receive from: " + recv);
@@ -270,7 +256,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
     int sendBufferSize = MPIContext.bufferSize(config);
     int sendBufferCount = MPIContext.sendBuffersCount(config);
     for (int i = 0; i < sendBufferCount; i++) {
-      MPIBuffer buffer = new MPIBuffer(sendBufferSize);
+      MPIBuffer buffer = new MPIBuffer(channel.createBuffer(sendBufferSize));
       sendBuffers.offer(buffer);
     }
   }
@@ -349,16 +335,11 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
         int startOfInternalRouts = mpiSendMessage.getAcceptedInternalSends();
         List<Integer> inRoutes = new ArrayList<>(mpiSendMessage.getInternalSends());
         for (int i = startOfInternalRouts; i < mpiSendMessage.getInternalSends().size(); i++) {
-          //TODO: if this is the last task do we serialize internal messages and add it to
-          //TODO: Memory Manager. it can be done here
           boolean receiveAccepted;
           if (isStoreBased && isLastReceiver) {
-            serializeAndWriteToMemoryManager(mpiSendMessage, messageObject);
             receiveAccepted = receiver.receiveSendInternally(
                 mpiSendMessage.getSource(), inRoutes.get(i), mpiSendMessage.getPath(),
                 mpiSendMessage.getFlags(), operationMemoryManager);
-            //send memory manager as reply
-            //mpiSendMessage.setSerializationState();
           } else {
             lock.lock();
             try {
@@ -387,8 +368,6 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
           pendingSendMessages.poll();
           continue;
         }
-        //TODO: why build message after sent internally? is it for messages with multiple
-        //TODO: destinations?
         // at this point lets build the message
         MPISendMessage message = (MPISendMessage)
             messageSerializer.get(sendId).build(pair.getKey(), mpiSendMessage);
@@ -423,92 +402,6 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
     }
   }
 
-  private void sendProgress2(Queue<Pair<Object, MPISendMessage>> pendingSendMessages, int sendId) {
-    boolean canProgress = true;
-    while (pendingSendMessages.size() > 0 && canProgress) {
-      // take out pending messages
-      Pair<Object, MPISendMessage> pair = pendingSendMessages.peek();
-      MPISendMessage mpiSendMessage = pair.getValue();
-      Object messageObject = pair.getKey();
-
-      // send it internally
-      int startOfInternalRouts = mpiSendMessage.getAcceptedInternalSends();
-      List<Integer> inRoutes = new ArrayList<>(mpiSendMessage.getInternalSends());
-      for (int i = startOfInternalRouts; i < mpiSendMessage.getInternalSends().size(); i++) {
-        //TODO: if this is the last task do we serialize internal messages and add it to
-        //TODO: Memory Manager. it can be done here
-        boolean receiveAccepted;
-        if (isStoreBased && isLastReceiver) {
-          serializeAndWriteToMemoryManager(mpiSendMessage, messageObject);
-          receiveAccepted = receiver.receiveSendInternally(
-              mpiSendMessage.getSource(), inRoutes.get(i), mpiSendMessage.getPath(),
-              mpiSendMessage.getFlags(), operationMemoryManager);
-          //send memory manager as reply
-          //mpiSendMessage.setSerializationState();
-        } else {
-          lock.lock();
-          try {
-            receiveAccepted = receiver.receiveSendInternally(
-                mpiSendMessage.getSource(), inRoutes.get(i), mpiSendMessage.getPath(),
-                mpiSendMessage.getFlags(), messageObject);
-          } finally {
-            lock.unlock();
-          }
-        }
-
-        if (!receiveAccepted) {
-          canProgress = false;
-          break;
-        } else {
-          mpiSendMessage.incrementAcceptedInternalSends();
-        }
-      }
-
-      // we don't have an external executor to send this message
-      if (mpiSendMessage.getExternalSends().size() == 0
-          && inRoutes.size() == mpiSendMessage.getAcceptedInternalSends()) {
-        mpiSendMessage.setSendState(MPISendMessage.SendState.FINISHED);
-        pendingSendMessages.poll();
-        continue;
-      }
-      //TODO: why build message after sent internally? is it for messages with multiple
-      //TODO: destinations?
-      if (mpiSendMessage.serializedState() == MPISendMessage.SendState.INIT) {
-        // at this point lets build the message
-        messageSerializer.get(sendId).build(pair.getKey(), mpiSendMessage);
-      }
-      // okay we build the message, send it
-      if (mpiSendMessage.serializedState() == MPISendMessage.SendState.SERIALIZED) {
-        List<Integer> exRoutes = new ArrayList<>(mpiSendMessage.getExternalSends());
-        int startOfExternalRouts = mpiSendMessage.getAcceptedExternalSends();
-        int noOfExternalSends = startOfExternalRouts;
-        for (int i = startOfExternalRouts; i < exRoutes.size(); i++) {
-          boolean sendAccepted = sendMessageToTarget(
-              mpiSendMessage.getMPIMessage(), exRoutes.get(i));
-          // if no longer accepts stop
-          if (!sendAccepted) {
-            canProgress = false;
-
-            break;
-          } else {
-            sendCount++;
-            mpiSendMessage.incrementAcceptedExternalSends();
-            noOfExternalSends++;
-          }
-        }
-
-        if (noOfExternalSends == exRoutes.size()
-            && inRoutes.size() == mpiSendMessage.getAcceptedInternalSends()) {
-          // we are done
-          mpiSendMessage.setSendState(MPISendMessage.SendState.FINISHED);
-          pendingSendMessages.poll();
-        }
-      } else {
-        break;
-      }
-    }
-  }
-
   private void receiveDeserializeProgress(MPIMessage currentMessage, int receiveId) {
     if (currentMessage == null) {
       return;
@@ -518,8 +411,6 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
 
     //If this is the last receiver we save to memory store
     if (isStoreBased && isLastReceiver) {
-//      LOG.info("Store based");
-      writeToMemoryManager(currentMessage, receiveId);
       currentMessage.setReceivedState(MPIMessage.ReceivedState.RECEIVE);
       if (!receiver.receiveMessage(currentMessage, operationMemoryManager)) {
         return;
@@ -559,10 +450,6 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
           if (!receiver.passMessageDownstream(object, currentMessage)) {
             break;
           }
-
-//          if (currentMessage.getReceivedState() != MPIMessage.ReceivedState.RECEIVE) {
-//            currentMessage.release();
-//          }
           currentMessage.setReceivedState(MPIMessage.ReceivedState.RECEIVE);
           if (!receiver.receiveMessage(currentMessage, object)) {
             break;
@@ -571,10 +458,6 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
           pendingReceiveMessages.poll();
         } else if (state == MPIMessage.ReceivedState.RECEIVE) {
           currentMessage.setReceivedState(MPIMessage.ReceivedState.RECEIVE);
-
-//          if (currentMessage.getReceivedState() != MPIMessage.ReceivedState.RECEIVE) {
-//            currentMessage.release();
-//          }
           if (!receiver.receiveMessage(currentMessage, object)) {
             break;
           }
@@ -624,185 +507,6 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
       if (receiveId != Integer.MIN_VALUE) {
         receiveProgress(pendingReceiveMessagesPerSource.get(receiveId));
         receiveProgressTracker.finish(receiveId);
-      }
-    }
-  }
-
-  /**
-   * Serialize the message object and send it to store
-   *
-   * @param mpiSendMessage mpi send message that has information
-   * @param messageObject object to be sent
-   */
-  private boolean serializeAndWriteToMemoryManager(MPISendMessage mpiSendMessage,
-                                                   Object messageObject) {
-    if (mpiSendMessage.getSerializationState() == null) {
-      mpiSendMessage.setSerializationState(new SerializeState());
-    }
-//    ByteBuffer tempData;
-//    ByteBuffer tempKey;
-
-    if (isKeyed) {
-      KeyedContent kc = (KeyedContent) messageObject;
-      if (MessageTypeUtils.isMultiMessageType(kc.getKeyType())) {
-        List<byte[]> keys = KeySerializer.getserializedMultiKey(kc.getSource(),
-            mpiSendMessage.getSerializationState(), keyType, kryoSerializer);
-        List<byte[]> data = DataSerializer.getserializedMultiData(kc.getObject(), type,
-            mpiSendMessage.getSerializationState(), kryoSerializer);
-        //setupThreadLocalBuffers(keys.get(0).length, data.get(0).length, type);
-
-//        tempData = threadLocalDataBuffer.get();
-//        tempKey = threadLocalKeyBuffer.get();
-        for (int i = 0; i < keys.size(); i++) {
-//          tempKey.put(keys.get(i));
-//          tempData.putInt(data.get(i).length);
-//          tempData.put(data.get(i));
-
-          operationMemoryManager.put(keys.get(i), data.get(i));
-//          tempKey.clear();
-//          tempData.clear();
-        }
-      } else {
-        byte[] keyBytes = KeySerializer.getserializedKey(kc.getSource(),
-            mpiSendMessage.getSerializationState(), keyType, kryoSerializer);
-
-        int dataLength = DataSerializer.serializeData(kc.getObject(), type,
-            mpiSendMessage.getSerializationState(), kryoSerializer);
-//        setupThreadLocalBuffers(keyBytes.length, dataLength, type);
-//
-//        tempData = threadLocalDataBuffer.get();
-//        tempKey = threadLocalKeyBuffer.get();
-
-//        tempKey.put(keyBytes);
-//        tempKey.flip();
-        byte[] dataBytes = DataSerializer.getserializedData(kc.getObject(), type,
-            mpiSendMessage.getSerializationState(), kryoSerializer);
-        operationMemoryManager.put(keyBytes, dataBytes);
-      }
-    } else {
-      //if this is not a keyed operation we will use the source task id as the key
-      //Will be implmented after further looking into the use case
-      int key = mpiSendMessage.getSource();
-      int dataLength = DataSerializer.serializeData(messageObject, type,
-          mpiSendMessage.getSerializationState(), kryoSerializer);
-
-//      setupThreadLocalBuffers(Integer.BYTES, dataLength, type);
-
-//      tempData = threadLocalDataBuffer.get();
-//      tempKey = threadLocalKeyBuffer.get();
-//      tempKey.putInt(key);
-      byte[] dataBytes = DataSerializer.getserializedData(messageObject, type,
-          mpiSendMessage.getSerializationState(), kryoSerializer);
-      //TODO : need to generate operation key and use it
-      operationMemoryManager.put(Ints.toByteArray(key), dataBytes);
-    }
-    return true;
-  }
-
-  /**
-   * Set's up all the thread local bytebuffers that are needed to copy the data into MM
-   */
-  private void setupThreadLocalBuffers(int keyLength, int dataLength, MessageType messageType) {
-    //We are using a larger buffer anyway so no need to check for primitive just add 4 bytes
-
-    int dataLengthTemp = dataLength + 4;
-    /*if (!MessageTypeUtils.isPrimitiveType(messageType)) {
-      dataLengthTemp = dataLength + 4;
-    }*/
-    //Using temp vars to reduce galls to threadlocal.get()
-    ByteBuffer tempData = threadLocalDataBuffer.get();
-    ByteBuffer tempKey = threadLocalKeyBuffer.get();
-    if (keyLength < MemoryManagerContext.TL_KEY_BUFF_INIT_CAP
-        && dataLengthTemp < MemoryManagerContext.TL_DATA_BUFF_INIT_CAP) {
-      tempData.clear();
-      tempKey.clear();
-      return;
-    }
-    if (tempData.capacity() < dataLengthTemp) {
-      tempData = ByteBuffer.allocateDirect(dataLengthTemp);
-      threadLocalDataBuffer.set(tempData);
-    }
-    if (tempKey.capacity() < keyLength) {
-      tempKey = ByteBuffer.allocateDirect(keyLength);
-      threadLocalKeyBuffer.set(tempKey);
-    }
-
-    tempData.clear();
-    tempKey.clear();
-  }
-
-  /**
-   * extracts the data from the message and writes to the memory manager using the key
-   *
-   * @param currentMessage message to be parsed
-   */
-  @SuppressWarnings({"rawtypes", "unchecked"})
-  private void writeToMemoryManager(MPIMessage currentMessage, int id) {
-    Object data = messageDeSerializer.get(id).getDataBuffers(currentMessage, edge);
-    //TODO: make sure to add the data length for non primitive types when adding to byte buffer
-//    Object data = messageDeSerializer.get(id).build(currentMessage,
-//        currentMessage.getHeader().getEdge());
-
-    int sourceID = currentMessage.getHeader().getSourceId();
-    int noOfMessages = 1;
-    boolean isList = false;
-    if (data instanceof List) {
-      noOfMessages = ((List) data).size();
-      isList = true;
-    }
-
-//    ByteBuffer tempData;
-//    ByteBuffer tempKey;
-    ImmutablePair<byte[], byte[]> tempPair;
-    byte[] dataBytes;
-    if (isList) {
-      List objectList = (List) data;
-      for (Object message : objectList) {
-        if (isKeyed) {
-          tempPair = (ImmutablePair<byte[], byte[]>) message;
-//          setupThreadLocalBuffers(tempPair.getKey().length, tempPair.getValue().length,
-//          currentMessage.getType());
-
-//          tempData = threadLocalDataBuffer.get();
-//          tempKey = threadLocalKeyBuffer.get();
-//
-//          tempKey.put(tempPair.getKey());
-//          tempData.putInt(tempPair.getValue().length);
-//          tempData.put(tempPair.getValue());
-          operationMemoryManager.put(tempPair.getKey(), tempPair.getValue());
-        } else {
-          dataBytes = (byte[]) message;
-//          setupThreadLocalBuffers(4, dataBytes.length, currentMessage.getType());
-//          tempData = threadLocalDataBuffer.get();
-//          tempKey = threadLocalKeyBuffer.get();
-//
-//          tempKey.putInt(sourceID);
-//          tempData.put(dataBytes);
-          operationMemoryManager.put(Ints.toByteArray(sourceID), dataBytes);
-        }
-      }
-    } else {
-      if (isKeyed) {
-        tempPair = (ImmutablePair<byte[], byte[]>) data;
-//        setupThreadLocalBuffers(tempPair.getKey().length, tempPair.getValue().length,
-//            currentMessage.getType());
-//
-//        tempData = threadLocalDataBuffer.get();
-//        tempKey = threadLocalKeyBuffer.get();
-//
-//        tempKey.put(tempPair.getKey());
-//        tempData.putInt(tempPair.getValue().length);
-//        tempData.put(tempPair.getValue());
-        operationMemoryManager.put(tempPair.getKey(), tempPair.getValue());
-      } else {
-        dataBytes = (byte[]) data;
-//        setupThreadLocalBuffers(4, dataBytes.length, currentMessage.getType());
-//        tempData = threadLocalDataBuffer.get();
-//        tempKey = threadLocalKeyBuffer.get();
-//
-//        tempKey.putInt(sourceID);
-//        tempData.put(dataBytes);
-        operationMemoryManager.put(Ints.toByteArray(sourceID), dataBytes);
       }
     }
   }
@@ -905,27 +609,11 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
     return config;
   }
 
-  public MessageType getType() {
-    return type;
-  }
-
   public void setKeyType(MessageType keyType) {
     this.keyType = keyType;
     if (isStoreBased) {
       operationMemoryManager.setKeyType(MessageTypeUtils.toDataMessageType(keyType));
     }
-  }
-
-  public int getOpertionID() {
-    return opertionID;
-  }
-
-  public void setOpertionID(int opertionID) {
-    this.opertionID = opertionID;
-  }
-
-  public boolean isStoreBased() {
-    return isStoreBased;
   }
 
   public void setStoreBased(boolean storeBased) {

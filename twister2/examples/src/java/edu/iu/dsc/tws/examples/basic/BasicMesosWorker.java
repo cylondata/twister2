@@ -36,6 +36,8 @@ public class BasicMesosWorker implements IWorker {
   public void init(Config config, int id, ResourcePlan resourcePlan,
                    IWorkerController workerController, IPersistentVolume persistentVolume,
                    IVolatileVolume volatileVolume) {
+    LOG.info("Mesos Worker start time(ms): " + System.currentTimeMillis());
+
     // wait some random amount of time before finishing
     long duration = (long) (Math.random() * 1000);
     int port = workerController.getWorkerNetworkInfo().getWorkerPort();
@@ -43,7 +45,7 @@ public class BasicMesosWorker implements IWorker {
       System.out.println("I am the worker: " + id);
       System.out.println("I am sleeping " + duration + "ms. Then will close.");
       Thread.sleep(duration);
-      echoServer(port);
+      //echoServer(port);
     } catch (InterruptedException e) {
       e.printStackTrace();
     }

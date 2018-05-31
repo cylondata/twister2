@@ -17,31 +17,33 @@ public interface DataFlowOperation {
   /**
    * Use this to inject partial results in a distributed dataflow operation
    * @param message message
+   * @return true if message is accepted
    */
   boolean sendPartial(int source, Object message, int flags);
 
   /**
    * Send a send message, this call will work asynchronously
-   * @param source
-   * @param message
+   * @param source source task
+   * @param message message as a generic object
+   * @return true if message is accepted
    */
   boolean send(int source, Object message, int flags);
 
   /**
    * Send the message on a specific path
-   * @param source
-   * @param message
-   * @param dest
-   * @return
+   * @param source source task
+   * @param message a generic java object
+   * @param dest destination task
+   * @return true if message is accepted
    */
   boolean send(int source, Object message, int flags, int dest);
 
   /**
    * Send partial message on a specific path
-   * @param source
-   * @param message
-   * @param dest
-   * @return
+   * @param source the source
+   * @param message message as a generic object
+   * @param dest the destination
+   * @return true if message is accepted
    */
   boolean sendPartial(int source, Object message, int flags, int dest);
 
@@ -60,13 +62,16 @@ public interface DataFlowOperation {
    */
   void finish();
 
-  MessageType getType();
-
+  /**
+   * Task plan associated with this operation
+   * @return task plan
+   */
   TaskPlan getTaskPlan();
 
   /**
    * if set to true the operation will be memory mapped
-   * @param memoryMapped
+   *
+   * @param memoryMapped weather using disks
    */
   void setMemoryMapped(boolean memoryMapped);
 }

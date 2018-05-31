@@ -13,8 +13,6 @@ package edu.iu.dsc.tws.master;
 
 import java.io.IOException;
 import java.nio.channels.SocketChannel;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -27,49 +25,83 @@ import edu.iu.dsc.tws.common.net.tcp.request.ConnectHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
-import edu.iu.dsc.tws.proto.system.JobExecutionState;
+import edu.iu.dsc.tws.proto.network.Network;
+import edu.iu.dsc.tws.proto.network.Network.ListWorkersRequest;
+import edu.iu.dsc.tws.proto.network.Network.ListWorkersResponse;
 
 public class JobMaster {
   private static final Logger LOG = Logger.getLogger(JobMaster.class.getName());
 
-  private static ExecutorService threadsPool;
+  public static final int JOB_MASTER_ID = -1;
+//  private static ExecutorService threadsPool;
   private static Progress looper;
+
+  private Config config;
+  private String masterAddress;
+  private int masterPort;
+
   private RRServer rrServer;
+  private WorkerMonitor workerMonitor;
+  private int numberOfWorkers;
 
-  public void runServer(Config config, String host, int port, int workerID) {
-    ServerConnectHandler serverConnectHandler = new ServerConnectHandler();
+  public JobMaster(Config config, String masterAddress, int masterPort, int numberOfWorkers) {
+    this.config = config;
+    this.masterAddress = masterAddress;
+    this.masterPort = masterPort;
+    this.numberOfWorkers = numberOfWorkers;
+  }
 
-    rrServer = new RRServer(config, host, port, looper, workerID, serverConnectHandler);
+  public void init() {
+//    threadsPool = Executors.newSingleThreadExecutor();
+    looper = new Progress();
 
-    JobExecutionState.JobState.Builder jobStateBuilder = JobExecutionState.JobState.newBuilder();
-    RequestMessageHandler requestMessageHandler = new RequestMessageHandler();
-    rrServer.registerRequestHandler(jobStateBuilder, requestMessageHandler);
+    ServerConnectHandler connectHandler = new ServerConnectHandler();
+    rrServer =
+        new RRServer(config, masterAddress, masterPort, looper, JOB_MASTER_ID, connectHandler);
+
+    workerMonitor = new WorkerMonitor(rrServer, numberOfWorkers);
+
+    Network.Ping.Builder pingBuilder = Network.Ping.newBuilder();
+    Network.WorkerStateChange.Builder stateChangeBuilder = Network.WorkerStateChange.newBuilder();
+    Network.WorkerStateChangeResponse.Builder stateChangeResponseBuilder
+        = Network.WorkerStateChangeResponse.newBuilder();
+
+    ListWorkersRequest.Builder listWorkersBuilder = ListWorkersRequest.newBuilder();
+    ListWorkersResponse.Builder listResponseBuilder = ListWorkersResponse.newBuilder();
+
+    rrServer.registerRequestHandler(pingBuilder, workerMonitor);
+    rrServer.registerRequestHandler(stateChangeBuilder, workerMonitor);
+    rrServer.registerRequestHandler(stateChangeResponseBuilder, workerMonitor);
+    rrServer.registerRequestHandler(listWorkersBuilder, workerMonitor);
+    rrServer.registerRequestHandler(listResponseBuilder, workerMonitor);
 
     rrServer.start();
   }
 
   public void close() {
-    threadsPool.shutdownNow();
+//    threadsPool.shutdownNow();
   }
 
   class RequestMessageHandler implements MessageHandler {
 
     @Override
     public void onMessage(RequestID id, int workerId, Message message) {
-      System.out.println("request message received from workerID: " + workerId);
-      System.out.println(message);
 
-      JobExecutionState.JobState jobState = JobExecutionState.JobState.newBuilder()
-          .setCluster("kubernetes-cluster")
-          .setJobName("basic-kubernetes")
-          .setJobId("job-server")
-          .setSubmissionUser("user-y")
-          .setSubmissionTime(System.currentTimeMillis())
-          .build();
+      if (message instanceof Network.Ping) {
+        LOG.info("Ping message received from the worker: " + workerId + "\n" + message);
 
-      rrServer.sendResponse(id, jobState);
-      System.out.println("sent response: " + jobState);
+      } else if (message instanceof Network.WorkerStateChange) {
+        LOG.info("WorkerStateChange message received from the worker: " + workerId
+            + "\n" + message);
 
+        Network.WorkerStateChangeResponse response = Network.WorkerStateChangeResponse.newBuilder()
+            .setWorkerID(workerId)
+            .build();
+
+        rrServer.sendResponse(id, response);
+        System.out.println("WorkerStateChangeResponse sent to the worker: " + workerId
+            + "\n" + response);
+      }
     }
   }
 
@@ -81,7 +113,7 @@ public class JobMaster {
     @Override
     public void onConnect(SocketChannel channel, StatusCode status) {
       try {
-        LOG.log(Level.INFO, "Client connected from:" + channel.getRemoteAddress());
+        LOG.finer("Client connected from:" + channel.getRemoteAddress());
       } catch (IOException e) {
         e.printStackTrace();
       }
@@ -93,24 +125,40 @@ public class JobMaster {
   }
 
   public static void main(String[] args) {
+
+    Logger.getLogger("edu.iu.dsc.tws.common.net.tcp").setLevel(Level.SEVERE);
+
     Config config = null;
     String host = "localhost";
     int port = 11111;
-    int workerID = 1;
+    int numberOfWorkers = 1;
 
-    threadsPool = Executors.newSingleThreadExecutor();
-    looper = new Progress();
+    if (args.length == 1) {
+      numberOfWorkers = Integer.parseInt(args[0]);
+    }
 
-    JobMaster jobMaster = new JobMaster();
-    jobMaster.runServer(config, host, port, workerID);
+    JobMaster jobMaster = new JobMaster(config, host, port, numberOfWorkers);
+    jobMaster.init();
 
-    long runningTime = 100;
-    LOG.info("JobMaster started on port " + port + " will run " + runningTime + " seconds");
+    long timeToRun = 100; // in seconds
+    LOG.info("JobMaster started on port " + port + " will run " + timeToRun + " seconds");
 
-    runningTime *= 1000;
+    timeToRun *= 1000;
     long start = System.currentTimeMillis();
-    while ((System.currentTimeMillis() - start) < runningTime) {
-      looper.loop();
+    long duration = 0;
+    int printIntervals = 100; // in ms
+    int printCount = -1;
+
+    while (duration < timeToRun) {
+      looper.loopBlocking();
+
+      duration = System.currentTimeMillis() - start;
+
+      if (duration / printIntervals > printCount) {
+        printCount = (int) (duration / printIntervals);
+        System.out.println(printCount + ": looping");
+      }
+//      looper.loop();
     }
 
     jobMaster.close();

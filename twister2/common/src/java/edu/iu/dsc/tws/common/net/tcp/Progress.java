@@ -43,6 +43,16 @@ public class Progress {
     }
   }
 
+  public void loopBlocking() {
+    try {
+      selector.select();
+
+      handleSelectedKeys();
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to select");
+    }
+  }
+
   private void handleSelectedKeys() {
     Set<SelectionKey> selectedKeys = selector.selectedKeys();
     Iterator<SelectionKey> keyIterator = selectedKeys.iterator();

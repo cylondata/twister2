@@ -22,9 +22,15 @@ public class MPIBuffer {
   private int size;
   private ByteBuffer byteBuffer;
 
-  public MPIBuffer(int capacity) {
-    this.capacity = capacity;
-    this.byteBuffer = MPI.newByteBuffer(capacity);
+  public MPIBuffer(int cap) {
+    this.capacity = cap;
+    this.byteBuffer = MPI.newByteBuffer(cap);
+    this.byteBuffer.order(CommunicationContext.DEFAULT_BYTEORDER);
+  }
+
+  public MPIBuffer(ByteBuffer buffer) {
+    this.capacity = buffer.capacity();
+    this.byteBuffer = buffer;
     this.byteBuffer.order(CommunicationContext.DEFAULT_BYTEORDER);
   }
 

@@ -36,12 +36,13 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.mpi.io.MPIMessageDeSerializer;
-import edu.iu.dsc.tws.comms.mpi.io.MPIMessageSerializer;
+import edu.iu.dsc.tws.comms.mpi.io.MPIMultiMessageDeserializer;
+import edu.iu.dsc.tws.comms.mpi.io.MPIMultiMessageSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.MessageSerializer;
 import edu.iu.dsc.tws.comms.routing.PartitionRouter;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
+import edu.iu.dsc.tws.comms.utils.OperationUtils;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
 public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiver {
@@ -138,13 +139,12 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
     this.partialReceiver = partialRcvr;
   }
 
-
   /**
    * Initialize
    */
   public void init(Config cfg, MessageType t, TaskPlan taskPlan, int edge) {
     this.thisSources = TaskPlanUtils.getTasksOfThisExecutor(taskPlan, sources);
-    LOG.info(String.format("%d setup loadbalance routing %s",
+    LOG.log(Level.INFO, String.format("%d setup loadbalance routing %s",
         taskPlan.getThisExecutor(), thisSources));
     this.thisTasks = taskPlan.getTasksOfThisExecutor();
     this.router = new PartitionRouter(taskPlan, sources, destinations);
@@ -201,7 +201,7 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
           new ArrayBlockingQueue<Pair<Object, MPISendMessage>>(
               MPIContext.sendPendingMax(cfg));
       pendingSendMessagesPerSource.put(s, pendingSendMessages);
-      serializerMap.put(s, new MPIMessageSerializer(new KryoSerializer()));
+      serializerMap.put(s, new MPIMultiMessageSerializer(new KryoSerializer(), executor));
     }
 
     int maxReceiveBuffers = MPIContext.receiveBufferCount(cfg);
@@ -217,7 +217,7 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
               capacity);
       pendingReceiveMessagesPerSource.put(e, pendingReceiveMessages);
       pendingReceiveDeSerializations.put(e, new ArrayBlockingQueue<MPIMessage>(capacity));
-      deSerializerMap.put(e, new MPIMessageDeSerializer(new KryoSerializer()));
+      deSerializerMap.put(e, new MPIMultiMessageDeserializer(new KryoSerializer(), executor));
     }
 
     for (int src : srcs) {
@@ -259,27 +259,7 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
 
   @Override
   public void progress() {
-    try {
-      delegete.progress();
-      if (lock.tryLock()) {
-        try {
-          finalReceiver.progress();
-        } finally {
-          lock.unlock();
-        }
-      }
-
-      if (partialLock.tryLock()) {
-        try {
-          partialReceiver.progress();
-        } finally {
-          partialLock.unlock();
-        }
-      }
-    } catch (Throwable t) {
-      LOG.log(Level.SEVERE, "un-expected error", t);
-      throw new RuntimeException(t);
-    }
+    OperationUtils.progressReceivers(delegete, lock, finalReceiver, partialLock, partialReceiver);
   }
 
   @Override
@@ -288,11 +268,6 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
 
   @Override
   public void finish() {
-  }
-
-  @Override
-  public MessageType getType() {
-    return type;
   }
 
   @Override
@@ -339,9 +314,9 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
     }
   }
 
-  public RoutingParameters sendPartialRoutingParameters(int source, int path) {
-    if (partialRoutingParamCache.contains(source, path)) {
-      return partialRoutingParamCache.get(source, path);
+  public RoutingParameters sendPartialRoutingParameters(int source, int destination) {
+    if (partialRoutingParamCache.contains(source, destination)) {
+      return partialRoutingParamCache.get(source, destination);
     } else {
       RoutingParameters routingParameters = new RoutingParameters();
       if (partitionStratergy == PartitionStratergy.RANDOM) {
@@ -365,14 +340,14 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
         index = (index + 1) % destinations.size();
         destinationIndex.put(source, index);
       } else if (partitionStratergy == PartitionStratergy.DIRECT) {
-        routingParameters.setDestinationId(path);
-        if (dests.external.contains(path)) {
-          routingParameters.addExternalRoute(path);
+        routingParameters.setDestinationId(destination);
+        if (dests.external.contains(destination)) {
+          routingParameters.addExternalRoute(destination);
         } else {
-          routingParameters.addInteranlRoute(path);
+          routingParameters.addInteranlRoute(destination);
         }
       }
-      partialRoutingParamCache.put(source, path, routingParameters);
+      partialRoutingParamCache.put(source, destination, routingParameters);
       return routingParameters;
     }
   }
@@ -404,7 +379,7 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
 
   public boolean receiveMessage(MPIMessage currentMessage, Object object) {
     MessageHeader header = currentMessage.getHeader();
-    return finalReceiver.onMessage(header.getSourceId(), MPIContext.DEFAULT_PATH,
+    return finalReceiver.onMessage(header.getSourceId(), MPIContext.DEFAULT_DESTINATION,
         header.getDestinationIdentifier(), header.getFlags(), object);
   }
 

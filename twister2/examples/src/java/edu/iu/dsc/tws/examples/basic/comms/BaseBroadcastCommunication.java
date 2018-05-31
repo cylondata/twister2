@@ -170,7 +170,7 @@ public class BaseBroadcastCommunication implements IContainer {
     }
 
     @Override
-    public boolean onMessage(int source, int path, int target, int flags, Object object) {
+    public boolean onMessage(int source, int destination, int target, int flags, Object object) {
       try {
         count++;
         if (count % 1 == 0) {

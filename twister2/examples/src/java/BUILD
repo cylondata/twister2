@@ -13,6 +13,7 @@ common_deps_files = [
     "//twister2/data/src/main/java:data-java",
     "//twister2/executor/src/java:executor-java",
     "//twister2/proto:proto_job_java",
+    "//third_party:ompi_javabinding_java",
     "@com_google_guava_guava//jar",
     "@lmdb_java//jar",
     "@commons_lang_commons_lang//jar",
