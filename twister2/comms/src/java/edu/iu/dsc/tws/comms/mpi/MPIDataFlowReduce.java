@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +42,7 @@ import edu.iu.dsc.tws.comms.mpi.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.MessageSerializer;
 import edu.iu.dsc.tws.comms.routing.InvertedBinaryTreeRouter;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
+import edu.iu.dsc.tws.comms.utils.OperationUtils;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
 public class MPIDataFlowReduce implements DataFlowOperation, MPIMessageReceiver {
@@ -62,7 +62,7 @@ public class MPIDataFlowReduce implements DataFlowOperation, MPIMessageReceiver 
 
   private int index = 0;
 
-  private int pathToUse = MPIContext.DEFAULT_PATH;
+  private int pathToUse = MPIContext.DEFAULT_DESTINATION;
 
   private MPIDataFlowOperation delegete;
   private Config config;
@@ -126,13 +126,13 @@ public class MPIDataFlowReduce implements DataFlowOperation, MPIMessageReceiver 
     // check weather this message is for a sub task
     if (!isLast(header.getSourceId(), header.getFlags(), messageDestId)
         && partialReceiver != null) {
-      return partialReceiver.onMessage(header.getSourceId(), MPIContext.DEFAULT_PATH,
+      return partialReceiver.onMessage(header.getSourceId(), MPIContext.DEFAULT_DESTINATION,
           router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
-              MPIContext.DEFAULT_PATH), header.getFlags(), object);
+              MPIContext.DEFAULT_DESTINATION), header.getFlags(), object);
     } else {
-      return finalReceiver.onMessage(header.getSourceId(), MPIContext.DEFAULT_PATH,
+      return finalReceiver.onMessage(header.getSourceId(), MPIContext.DEFAULT_DESTINATION,
           router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
-              MPIContext.DEFAULT_PATH), header.getFlags(), object);
+              MPIContext.DEFAULT_DESTINATION), header.getFlags(), object);
     }
   }
 
@@ -184,7 +184,7 @@ public class MPIDataFlowReduce implements DataFlowOperation, MPIMessageReceiver 
 
       // we are going to add source if we are the main executor
       if (router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
-          MPIContext.DEFAULT_PATH) == source) {
+          MPIContext.DEFAULT_DESTINATION) == source) {
         routingParameters.addInteranlRoute(source);
       }
 
@@ -326,44 +326,12 @@ public class MPIDataFlowReduce implements DataFlowOperation, MPIMessageReceiver 
   }
 
   public Map<Integer, List<Integer>> receiveExpectedTaskIds() {
-    Map<Integer, List<Integer>> integerMapMap = router.receiveExpectedTaskIds();
-    // add the main task to receive from iteself
-    int key = router.mainTaskOfExecutor(instancePlan.getThisExecutor(), MPIContext.DEFAULT_PATH);
-    List<Integer> mainReceives = integerMapMap.get(key);
-    if (mainReceives == null) {
-      mainReceives = new ArrayList<>();
-      integerMapMap.put(key, mainReceives);
-    }
-    if (key != destination) {
-      mainReceives.add(key);
-    }
-    return integerMapMap;
+    return OperationUtils.getIntegerListMap(router, instancePlan, destination);
   }
 
   @Override
   public void progress() {
-    try {
-      delegete.progress();
-
-      if (lock.tryLock()) {
-        try {
-          finalReceiver.progress();
-        } finally {
-          lock.unlock();
-        }
-      }
-
-      if (partialLock.tryLock()) {
-        try {
-          partialReceiver.progress();
-        } finally {
-          partialLock.unlock();
-        }
-      }
-    } catch (Throwable t) {
-      LOG.log(Level.SEVERE, "un-expected error", t);
-      throw new RuntimeException(t);
-    }
+    OperationUtils.progressReceivers(delegete, lock, finalReceiver, partialLock, partialReceiver);
   }
 
   @Override
@@ -374,11 +342,6 @@ public class MPIDataFlowReduce implements DataFlowOperation, MPIMessageReceiver 
   @Override
   public void finish() {
 
-  }
-
-  @Override
-  public MessageType getType() {
-    return type;
   }
 
   @Override

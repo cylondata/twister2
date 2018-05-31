@@ -131,11 +131,6 @@ public class MPIDataFlowMultiGather implements DataFlowOperation {
   }
 
   @Override
-  public MessageType getType() {
-    return type;
-  }
-
-  @Override
   public TaskPlan getTaskPlan() {
     return plan;
   }
@@ -217,9 +212,9 @@ public class MPIDataFlowMultiGather implements DataFlowOperation {
     }
 
     @Override
-    public boolean onMessage(int source, int path, int target, int flags, Object object) {
+    public boolean onMessage(int source, int dest, int target, int flags, Object object) {
 //      LOG.info(String.format("%d received message %d %d %d", executor, path, target, source));
-      return partialReceiver.onMessage(source, destination, target, flags, object);
+      return partialReceiver.onMessage(source, this.destination, target, flags, object);
     }
 
     @Override
@@ -239,9 +234,9 @@ public class MPIDataFlowMultiGather implements DataFlowOperation {
     }
 
     @Override
-    public boolean onMessage(int source, int path, int target, int flags, Object object) {
+    public boolean onMessage(int source, int dest, int target, int flags, Object object) {
 //      LOG.info(String.format("%d received message %d %d %d", executor, path, target, source));
-      return finalReceiver.onMessage(source, destination, target, flags, object);
+      return finalReceiver.onMessage(source, this.destination, target, flags, object);
     }
 
     @Override

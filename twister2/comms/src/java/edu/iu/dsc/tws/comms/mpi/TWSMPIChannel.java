@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -306,6 +307,11 @@ public class TWSMPIChannel implements TWSChannel {
         throw new RuntimeException("Twister2Network failure", e);
       }
     }
+  }
+
+  @Override
+  public ByteBuffer createBuffer(int capacity) {
+    return MPI.newByteBuffer(capacity);
   }
 }
 

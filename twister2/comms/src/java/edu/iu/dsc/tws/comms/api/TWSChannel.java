@@ -23,6 +23,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.api;
 
+import java.nio.ByteBuffer;
 import java.util.Queue;
 
 import edu.iu.dsc.tws.comms.mpi.MPIBuffer;
@@ -35,4 +36,6 @@ public interface TWSChannel {
   boolean receiveMessage(int rank, int stream,
                          MPIMessageListener callback, Queue<MPIBuffer> receiveBuffers);
   void progress();
+
+  ByteBuffer createBuffer(int capacity);
 }

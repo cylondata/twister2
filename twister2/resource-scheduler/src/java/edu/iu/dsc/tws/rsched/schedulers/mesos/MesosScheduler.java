@@ -17,6 +17,7 @@ import java.util.logging.Logger;
 
 import com.google.protobuf.ByteString;
 
+import org.apache.curator.shaded.com.google.common.primitives.Longs;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.Filters;
 import org.apache.mesos.Protos.Offer;
@@ -25,7 +26,6 @@ import org.apache.mesos.Scheduler;
 import org.apache.mesos.SchedulerDriver;
 
 import edu.iu.dsc.tws.common.config.Config;
-
 
 
 public class MesosScheduler implements Scheduler {
@@ -37,6 +37,7 @@ public class MesosScheduler implements Scheduler {
   private int totalTaskCount;
   private final String jobName;
   private int workerCounter = 0;
+
   public MesosScheduler(MesosController controller, Config mconfig, String jobName) {
     this.controller = controller;
     this.config = mconfig;
@@ -64,12 +65,26 @@ public class MesosScheduler implements Scheduler {
     }
     return false;
   }
+
+  private int[] offerControl = new int[3];
+
   @Override
   public void resourceOffers(SchedulerDriver schedulerDriver,
                              List<Protos.Offer> offers) {
+    LOG.info("In the resourceOffer");
+    int index = 0;
     String[] desiredNodes = MesosContext.getDesiredNodes(config).split(",");
     if (taskIdCounter < totalTaskCount) {
       for (Protos.Offer offer : offers) {
+
+//        if (offer.getHostname().equals("149.165.150.82")) {
+//          index = 0;
+//        } else if (offer.getHostname().equals("149.165.150.83")) {
+//          index = 1;
+//        } else {
+//          index = 2;
+//        }
+
         if (!MesosContext.getDesiredNodes(config).equals("all") && !contains(desiredNodes, offer)) {
           continue;
         }
@@ -79,17 +94,61 @@ public class MesosScheduler implements Scheduler {
           MesosPersistentVolume pv = new MesosPersistentVolume(
               controller.createPersistentJobDirName(jobName), workerCounter);
           pv.getJobDir();
-          pv.getWorkerDir();
-          Protos.ExecutorInfo executorInfo =
-              controller.getExecutorInfo(jobName,
-                  MesosPersistentVolume.WORKER_DIR_NAME_PREFIX + workerCounter++);
 
+          LOG.info("before for:");
           Offer.Operation.Launch.Builder launch = Offer.Operation.Launch.newBuilder();
           for (int i = 0; i < MesosContext.containerPerWorker(config); i++) {
+            LOG.info("for:" + i);
+           /* Protos.ExecutorInfo executorInfo =
+                controller.getExecutorInfo(jobName,
+                    MesosPersistentVolume.WORKER_DIR_NAME_PREFIX + workerCounter++);
+            pv.getWorkerDir();
+            */
             Protos.TaskID taskId = buildNewTaskID();
 
             int begin = MesosContext.getWorkerPort(config) + taskIdCounter * 10;
             int end = begin + 5;
+
+
+            /*Protos.ContainerInfo.DockerInfo.PortMapping mapping
+                = Protos.ContainerInfo.DockerInfo.PortMapping
+                .newBuilder().setHostPort(begin).setContainerPort(22).build();*/
+
+            Protos.Parameter hostIpParam = Protos.Parameter.newBuilder().setKey("env")
+                .setValue("HOST_IP=" + offer.getHostname()).build();
+
+            Protos.Parameter sshPortParam = Protos.Parameter.newBuilder().setKey("env")
+                .setValue("SSH_PORT=" + begin).build();
+
+            Protos.Parameter jobNameParam = Protos.Parameter.newBuilder().setKey("env")
+                .setValue("JOB_NAME=" + jobName).build();
+
+            Protos.Parameter workerIdParam = Protos.Parameter.newBuilder().setKey("env")
+                .setValue("WORKER_ID=" + workerCounter++).build();
+
+            //.setValue("SSH_PORT=" + begin).build();
+            // docker image info
+            Protos.ContainerInfo.DockerInfo.Builder dockerInfoBuilder
+                = Protos.ContainerInfo.DockerInfo.newBuilder();
+            dockerInfoBuilder.setImage("gurhangunduz/twister2-mesos:docker-mpi");
+            //dockerInfoBuilder.addPortMappings(mapping);
+            dockerInfoBuilder.setNetwork(Protos.ContainerInfo.DockerInfo.Network.BRIDGE);
+            dockerInfoBuilder.addParameters(hostIpParam);
+            dockerInfoBuilder.addParameters(sshPortParam);
+            dockerInfoBuilder.addParameters(jobNameParam);
+            dockerInfoBuilder.addParameters(workerIdParam);
+            Protos.Volume volume = Protos.Volume.newBuilder()
+                .setContainerPath("/twister2/")
+                .setHostPath(".")
+                .setMode(Protos.Volume.Mode.RW)
+                .build();
+
+            // container info
+            Protos.ContainerInfo.Builder containerInfoBuilder = Protos.ContainerInfo.newBuilder();
+            containerInfoBuilder.setType(Protos.ContainerInfo.Type.DOCKER);
+            containerInfoBuilder.addVolumes(volume);
+            containerInfoBuilder.setDocker(dockerInfoBuilder.build());
+
             TaskInfo task = TaskInfo.newBuilder()
                 .setName("task " + taskId).setTaskId(taskId)
                 .setSlaveId(offer.getSlaveId())
@@ -97,7 +156,9 @@ public class MesosScheduler implements Scheduler {
                 .addResources(buildResource("mem", MesosContext.ramPerContainer(config)))
                 .addResources(buildRangeResource("ports", begin, end))
                 .setData(ByteString.copyFromUtf8("" + taskId.getValue()))
-                .setExecutor(Protos.ExecutorInfo.newBuilder(executorInfo))
+                //.setExecutor(Protos.ExecutorInfo.newBuilder(executorInfo))
+                .setContainer(containerInfoBuilder)
+                .setCommand(Protos.CommandInfo.newBuilder().setShell(false))
                 .build();
 
             launch.addTaskInfos(TaskInfo.newBuilder(task));
@@ -115,7 +176,8 @@ public class MesosScheduler implements Scheduler {
 
           Filters filters = Filters.newBuilder().setRefuseSeconds(1).build();
           schedulerDriver.acceptOffers(offerIds, operations, filters);
-          LOG.info("Offer from host" + offer.getHostname() + "has been accepted.");
+          offerControl[index]++;
+          LOG.info("Offer from host " + offer.getHostname() + "has been accepted.");
 
         }
 
@@ -183,11 +245,14 @@ public class MesosScheduler implements Scheduler {
     }
 
   }
+
   @Override
   public void frameworkMessage(SchedulerDriver schedulerDriver,
                                Protos.ExecutorID executorID, Protos.SlaveID slaveID, byte[] bytes) {
-    System.out.println("Received message (scheduler): " + new String(bytes)
-        + " from " + executorID.getValue());
+    // System.out.println("Received message (scheduler): " + new String(bytes)
+    //    + " from " + executorID.getValue());
+    System.out.println("Executor id:" + executorID.getValue()
+        + " Time: " + Longs.fromByteArray(bytes));
   }
 
   @Override

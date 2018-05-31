@@ -1,0 +1,76 @@
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+package edu.iu.dsc.tws.comms.utils;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.locks.Lock;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.mpi.MPIContext;
+import edu.iu.dsc.tws.comms.mpi.MPIDataFlowOperation;
+import edu.iu.dsc.tws.comms.routing.InvertedBinaryTreeRouter;
+
+public final class OperationUtils {
+  private static final Logger LOG = Logger.getLogger(OperationUtils.class.getName());
+
+  private OperationUtils() {
+  }
+
+  public static void progressReceivers(MPIDataFlowOperation delegete, Lock lock,
+                                       MessageReceiver finalReceiver, Lock partialLock,
+                                       MessageReceiver partialReceiver) {
+    try {
+      delegete.progress();
+      if (lock.tryLock()) {
+        try {
+          finalReceiver.progress();
+        } finally {
+          lock.unlock();
+        }
+      }
+
+      if (partialLock.tryLock()) {
+        try {
+          partialReceiver.progress();
+        } finally {
+          partialLock.unlock();
+        }
+      }
+    } catch (Throwable t) {
+      LOG.log(Level.SEVERE, "un-expected error", t);
+      throw new RuntimeException(t);
+    }
+  }
+
+  public static Map<Integer, List<Integer>> getIntegerListMap(InvertedBinaryTreeRouter router,
+                                                               TaskPlan instancePlan,
+                                                               int destination) {
+    Map<Integer, List<Integer>> integerMapMap = router.receiveExpectedTaskIds();
+    // add the main task to receive from iteself
+    int key = router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
+        MPIContext.DEFAULT_DESTINATION);
+    List<Integer> mainReceives = integerMapMap.get(key);
+    if (mainReceives == null) {
+      mainReceives = new ArrayList<>();
+      integerMapMap.put(key, mainReceives);
+    }
+    if (key != destination) {
+      mainReceives.add(key);
+    }
+    return integerMapMap;
+  }
+}

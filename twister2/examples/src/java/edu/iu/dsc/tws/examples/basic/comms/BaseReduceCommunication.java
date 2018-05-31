@@ -207,7 +207,7 @@ public class BaseReduceCommunication implements IContainer {
     }
 
     @Override
-    public boolean onMessage(int source, int path, int target, int flags, Object object) {
+    public boolean onMessage(int source, int destination, int target, int flags, Object object) {
 //      LOG.info(String.format("%d Message received for partial %d from %d", id, target, source));
       // add the object to the map
       boolean canAdd = true;
@@ -313,7 +313,7 @@ public class BaseReduceCommunication implements IContainer {
     }
 
     @Override
-    public boolean onMessage(int source, int path, int target, int flags, Object object) {
+    public boolean onMessage(int source, int destination, int target, int flags, Object object) {
       // add the object to the map
       boolean canAdd = true;
       if (count == 0) {

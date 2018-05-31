@@ -124,11 +124,6 @@ public class MPIDataFlowAllGather implements DataFlowOperation {
   }
 
   @Override
-  public MessageType getType() {
-    return null;
-  }
-
-  @Override
   public TaskPlan getTaskPlan() {
     return null;
   }

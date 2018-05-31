@@ -75,12 +75,12 @@ public class MesosWorkerController implements IWorkerController {
 
   @Override
   public int getNumberOfWorkers() {
-    return 0;
+    return zkController.getNumberOfWorkers();
   }
 
   @Override
   public List<WorkerNetworkInfo> getWorkerList() {
-    return null;
+    return zkController.getWorkerList();
   }
 
 

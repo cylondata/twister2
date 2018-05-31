@@ -18,7 +18,12 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 
-public class FSFinalReceiver implements MessageReceiver {
+/**
+ * Base receiver for partition operation
+ */
+public class PartitionBatchReceiver implements MessageReceiver {
+
+  protected int bufferSize = 10;
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
 
@@ -26,11 +31,7 @@ public class FSFinalReceiver implements MessageReceiver {
 
   @Override
   public boolean onMessage(int source, int destination, int target, int flags, Object object) {
-    return false;
-  }
-
-  public boolean onMessage(int source, int path, int target, int flags, Object data, Object key) {
-    return false;
+    return true;
   }
 
   @Override

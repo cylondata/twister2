@@ -114,11 +114,6 @@ public class MPIDataFlowMultiReduce implements DataFlowOperation {
   }
 
   @Override
-  public MessageType getType() {
-    return dataType;
-  }
-
-  @Override
   public TaskPlan getTaskPlan() {
     return taskPlan;
   }
@@ -185,10 +180,10 @@ public class MPIDataFlowMultiReduce implements DataFlowOperation {
     }
 
     @Override
-    public boolean onMessage(int source, int path, int target, int flags, Object object) {
+    public boolean onMessage(int source, int dest, int target, int flags, Object object) {
 //      LOG.info(String.format("%d received message %d %d %d %d",
 //          executor, path, target, source, flags));
-      return partialReceiver.onMessage(source, destination, target, flags, object);
+      return partialReceiver.onMessage(source, this.destination, target, flags, object);
     }
 
     public void progress() {
@@ -207,10 +202,10 @@ public class MPIDataFlowMultiReduce implements DataFlowOperation {
     }
 
     @Override
-    public boolean onMessage(int source, int path, int target, int flags, Object object) {
+    public boolean onMessage(int source, int dest, int target, int flags, Object object) {
 //      LOG.info(String.format("%d received message %d %d %d %d",
 //          executor, path, target, source, flags));
-      return finalReceiver.onMessage(source, destination, target, flags, object);
+      return finalReceiver.onMessage(source, this.destination, target, flags, object);
     }
 
     @Override
