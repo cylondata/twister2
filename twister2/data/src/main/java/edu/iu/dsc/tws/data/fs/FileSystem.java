@@ -271,4 +271,7 @@ public abstract class FileSystem {
    */
   public abstract BlockLocation[] getFileBlockLocations(FileStatus file,
                                                         long start, long len) throws IOException;
+
+  public abstract boolean mkdirs(Path f) throws IOException;
+
 }

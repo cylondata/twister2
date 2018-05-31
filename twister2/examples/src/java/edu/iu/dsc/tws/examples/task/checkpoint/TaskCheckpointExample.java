@@ -30,11 +30,9 @@ import java.util.List;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
-import edu.iu.dsc.tws.checkpointmanager.CheckpointOptions;
 import edu.iu.dsc.tws.checkpointmanager.barrier.CheckpointBarrier;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
-import edu.iu.dsc.tws.examples.task.TaskExample;
 import edu.iu.dsc.tws.executor.ExecutionPlan;
 import edu.iu.dsc.tws.executor.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -91,12 +89,12 @@ public class TaskCheckpointExample implements IContainer {
 
     private long id = 1;
 
-    private CheckpointOptions co = new CheckpointOptions();
-
     @Override
     public void run() {
-      CheckpointBarrier cb = new CheckpointBarrier(id, 2141535, co);
+
+      CheckpointBarrier cb = new CheckpointBarrier(id, 2141535, null);
       ctx.write("partition-edge", cb);
+      id++;
       try {
         Thread.sleep(1000);
       } catch (Exception e) {
@@ -142,8 +140,8 @@ public class TaskCheckpointExample implements IContainer {
     JobConfig jobConfig = new JobConfig();
 
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
-    jobBuilder.setName("task-example");
-    jobBuilder.setContainerClass(TaskExample.class.getName());
+    jobBuilder.setName("task-checkpoint-example");
+    jobBuilder.setContainerClass(TaskCheckpointExample.class.getName());
     jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 
