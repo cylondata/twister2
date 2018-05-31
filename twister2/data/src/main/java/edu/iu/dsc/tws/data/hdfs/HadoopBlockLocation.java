@@ -20,35 +20,14 @@ import edu.iu.dsc.tws.data.fs.BlockLocation;
 public final class HadoopBlockLocation implements BlockLocation {
 
   private static final char DOMAIN_SEPARATOR = '.';
-
   private static final Pattern IPV4_PATTERN = Pattern.compile("^\\d+\\.\\d+\\.\\d+\\.\\d+$");
 
   private final org.apache.hadoop.fs.BlockLocation blockLocation;
 
   private String[] hostnames;
 
-  private HadoopBlockLocation(final org.apache.hadoop.fs.BlockLocation blocklocation) {
+  public HadoopBlockLocation(final org.apache.hadoop.fs.BlockLocation blocklocation) {
     this.blockLocation = blocklocation;
-  }
-
-  private static String stripHostname(final String originalHostname) {
-
-    final int index = originalHostname.indexOf(DOMAIN_SEPARATOR);
-    if (index == -1) {
-      return originalHostname;
-    }
-
-    final Matcher matcher = IPV4_PATTERN.matcher(originalHostname);
-    if (matcher.matches()) {
-      return originalHostname;
-    }
-
-    if (index == 0) {
-      throw new IllegalStateException(
-          "Hostname " + originalHostname + " starts with a " + DOMAIN_SEPARATOR);
-    }
-
-    return originalHostname.substring(0, index);
   }
 
   @Override
@@ -87,4 +66,23 @@ public final class HadoopBlockLocation implements BlockLocation {
     return diff < 0 ? -1 : diff > 0 ? 1 : 0;
   }
 
+  private static String stripHostname(final String originalHostname) {
+
+    final int index = originalHostname.indexOf(DOMAIN_SEPARATOR);
+    if (index == -1) {
+      return originalHostname;
+    }
+
+    final Matcher matcher = IPV4_PATTERN.matcher(originalHostname);
+    if (matcher.matches()) {
+      return originalHostname;
+    }
+
+    if (index == 0) {
+      throw new IllegalStateException(
+          "Hostname " + originalHostname + " starts with a " + DOMAIN_SEPARATOR);
+    }
+
+    return originalHostname.substring(0, index);
+  }
 }

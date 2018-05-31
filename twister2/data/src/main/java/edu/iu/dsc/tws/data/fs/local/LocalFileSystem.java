@@ -22,6 +22,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.data.fs.BlockLocation;
 import edu.iu.dsc.tws.data.fs.FSDataInputStream;
+import edu.iu.dsc.tws.data.fs.FSDataOutputStream;
 import edu.iu.dsc.tws.data.fs.FileStatus;
 import edu.iu.dsc.tws.data.fs.FileSystem;
 import edu.iu.dsc.tws.data.fs.Path;
@@ -148,5 +149,56 @@ public class LocalFileSystem extends FileSystem {
     return new BlockLocation[]{
         new LocalBlockLocation(hostName, file.getLen())
     };
+  }
+
+  //Newly added methods for HDFS -> Twister2 Integration
+  private File pathToFile(Path path, int bufferSize) {
+    Path curPath = path;
+    if (!path.isAbsolute()) {
+      curPath = new Path(getWorkingDirectory(), path);
+    }
+    return new File(curPath.toUri().getPath(), String.valueOf(bufferSize));
+  }
+
+  @Override
+  public FSDataInputStream open(Path path, int bufferSize) throws IOException {
+    Path directoryPath = path;
+    final File file = pathToFile(directoryPath, bufferSize);
+    return new LocalDataInputStream(file);
+  }
+
+  @Override
+  public FSDataOutputStream create(Path f) throws IOException {
+    return null;
+  }
+
+  @Override
+  public boolean delete(Path f, boolean recursive) throws IOException {
+    return false;
+  }
+
+  @Override
+  public FileStatus[] listStatus(Path f) throws IOException {
+    return new FileStatus[0];
+  }
+
+  @Override
+  public boolean mkdirs(Path f) throws IOException {
+    return false;
+  }
+
+  @Override
+  public boolean rename(Path src, Path dst) throws IOException {
+    return false;
+  }
+
+  @Override
+  public long getDefaultBlockSize() {
+    return 0;
+  }
+
+  @Override
+  public boolean isDistributedFS() {
+    return false;
   }
 }
