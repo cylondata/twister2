@@ -11,67 +11,115 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi.io.partition;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Set;
+import java.util.logging.Logger;
+
+import org.apache.commons.lang3.tuple.ImmutableTriple;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.mpi.MPIContext;
 import edu.iu.dsc.tws.comms.mpi.MPIDataFlowPartition;
 
+/**
+ * Partial receiver is only going to get called for messages going to other destinations
+ * We have partial receivers for each actual source
+ */
+public class PartitionBatchPartialReceiver implements MessageReceiver {
+  private static final Logger LOG = Logger.getLogger(PartitionBatchPartialReceiver.class.getName());
 
-public class PartitionBatchPartialReceiver extends PartitionBatchReceiver {
-  private Map<Integer, Map<Integer, Boolean>> finished;
-  private MPIDataFlowPartition dataFlowOperation;
-  protected Map<Integer, Map<Integer, Queue<Object>>> messages = new HashMap<>();
-  protected Map<Integer, Map<Integer, Queue<Integer>>> flagsMap = new HashMap<>();
+  /**
+   * Low water mark
+   */
+  protected int lowWaterMark = 8;
 
+  /**
+   * High water mark to keep track of objects
+   */
+  protected int highWaterMark = 16;
+
+  /**
+   * The executor
+   */
+  protected int executor;
+
+  /**
+   * The destinations set
+   */
+  private Set<Integer> destinations;
+
+  /**
+   * Keep the destination messages
+   */
+  private Map<Integer, List<Object>> destinationMessages = new HashMap<>();
+
+  /**
+   * Keep the list of tuple [Object, Source, Flags] for each destination
+   */
+  private Map<Integer, List<Object>> readyToSend = new HashMap<>();
+
+  /**
+   * The dataflow operation
+   */
+  private DataFlowOperation operation;
+
+  /**
+   * The source task connected to this partial receiver
+   */
+  private int source;
+
+  @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-    finished = new ConcurrentHashMap<>();
-    dataFlowOperation = (MPIDataFlowPartition) op;
-    for (Integer source : expectedIds.keySet()) {
-      Map<Integer, Boolean> perTarget = new ConcurrentHashMap<>();
-      Map<Integer, Queue<Integer>> perTargetFlags = new ConcurrentHashMap<>();
-      Map<Integer, Queue<Object>> perTargetMessages = new ConcurrentHashMap<>();
-      for (Integer target : expectedIds.get(source)) {
-        perTarget.put(target, false);
-        perTargetFlags.put(target, new ArrayBlockingQueue<Integer>(bufferSize));
-        perTargetMessages.put(target, new ArrayBlockingQueue<Object>(bufferSize));
-      }
-      finished.put(source, perTarget);
-      flagsMap.put(source, perTargetFlags);
-      messages.put(source, perTargetMessages);
+    lowWaterMark = MPIContext.getNetworkPartitionMessageGroupMax(cfg);
+    executor = op.getTaskPlan().getThisExecutor();
+
+    destinations = ((MPIDataFlowPartition) op).getDestinations();
+    this.operation = op;
+
+    // lists to keep track of messages for destinations
+    for (int d : destinations) {
+      destinationMessages.put(d, new ArrayList<>());
     }
   }
 
   @Override
-  public boolean onMessage(int source, int destination, int target, int flags, Object object) {
-    // add the object to the map
-    messages.get(source).get(destination).add(object);
-    flagsMap.get(source).get(destination).add(flags);
+  public boolean onMessage(int src, int destination, int target, int flags, Object object) {
+    this.source = src;
+    List<Object> dests = destinationMessages.get(destination);
 
-//    if ((flags & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) {
-//      finished.get(target).put(source, true);
-//    }
+    int size = dests.size();
+    if (size > highWaterMark) {
+      return false;
+    }
 
-//    if (((flags & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) && isAllFinished(target)) {
-//      System.out.println(Arrays.toString((byte[]) object));
-//      System.out.printf("All Done for Task %d \n", target);
-//    }
+    dests.add(new ImmutableTriple<>(object, src, flags));
+
+    if (dests.size() > lowWaterMark) {
+      readyToSend.put(destination, dests);
+    }
+
     return true;
   }
 
   @Override
   public void progress() {
-    for (Integer source : messages.keySet()) {
-      for (Integer target : messages.get(source).keySet()) {
-        if (messages.get(source).get(target).size() > 0) {
-          dataFlowOperation.sendPartial(source, messages.get(source).get(target).poll(),
-              flagsMap.get(source).get(target).poll(), target);
-        }
+    Iterator<Map.Entry<Integer, List<Object>>> it = readyToSend.entrySet().iterator();
+
+    while (it.hasNext()) {
+      Map.Entry<Integer, List<Object>> e = it.next();
+      List<Object> send = new ArrayList<>(e.getValue());
+
+      // if we send this list successfully
+      if (operation.send(source, send, 0, e.getKey())) {
+        // lets remove from ready list and clear the list
+        e.getValue().clear();
+        it.remove();
       }
     }
   }

@@ -9,14 +9,8 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.shuffle;
+package edu.iu.dsc.tws.comms.mpi;
 
-public class HeapNode {
-  public KeyValue data;
-  public int listNo;
+public class OperationContext {
 
-  public HeapNode(KeyValue data, int listNo) {
-    this.data = data;
-    this.listNo = listNo;
-  }
 }

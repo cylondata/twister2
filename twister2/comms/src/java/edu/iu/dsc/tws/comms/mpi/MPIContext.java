@@ -27,6 +27,8 @@ public class MPIContext extends CommunicationContext {
   private static final String SEND_PENDING_MAX = "network.mpi.send.pending.max";
   private static final String NETWORK_CHANNEL_PENDING_SIZE = "network.channel.mpi.pending.size";
   private static final String NETWORK_STORAGE_PATH = "network.storage.path";
+  private static final String NETWORK_PARTITION_MESSAGE_GROUP_MAX =
+      "network.partition.message.group.max";
 
   public static final int DEFAULT_DESTINATION = 0;
 
@@ -57,6 +59,10 @@ public class MPIContext extends CommunicationContext {
 
   public static String networkStoragePath(Config cfg) {
     return cfg.getStringValue(NETWORK_STORAGE_PATH);
+  }
+
+  public static int getNetworkPartitionMessageGroupMax(Config cfg) {
+    return cfg.getIntegerValue(NETWORK_PARTITION_MESSAGE_GROUP_MAX, 8);
   }
 }
 

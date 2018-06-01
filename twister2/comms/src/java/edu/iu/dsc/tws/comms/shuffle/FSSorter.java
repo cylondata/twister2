@@ -19,6 +19,8 @@ import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.apache.commons.lang3.tuple.Triple;
 
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.utils.Heap;
+import edu.iu.dsc.tws.comms.utils.HeapNode;
 import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 
 /**

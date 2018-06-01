@@ -9,4 +9,4 @@ network.channel.mpi.pending.size: 2048
 # the send pending messages
 network.mpi.send.pending.max: 1
 # group up to 64 messages
-network.partition.group.max: 64
+network.partition.message.group.max: 64

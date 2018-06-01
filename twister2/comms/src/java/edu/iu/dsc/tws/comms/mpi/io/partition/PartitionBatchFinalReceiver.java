@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi.io.partition;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -19,17 +20,23 @@ import java.util.concurrent.ConcurrentHashMap;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
+import edu.iu.dsc.tws.comms.api.MessageReceiver;
 
-public class PartitionBatchFinalReceiver extends PartitionBatchReceiver {
+public class PartitionBatchFinalReceiver implements MessageReceiver {
   private Map<Integer, Map<Integer, Boolean>> finished;
+
+  private Map<Integer, Map<Integer, List<Object>>> data;
+
   private int messageCount = 0;
 
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     finished = new ConcurrentHashMap<>();
     for (Integer integer : expectedIds.keySet()) {
       Map<Integer, Boolean> perTarget = new ConcurrentHashMap<>();
-      for (Integer integer1 : expectedIds.get(integer)) {
-        perTarget.put(integer1, false);
+      Map<Integer, List<Object>> d = new ConcurrentHashMap<>();
+      for (Integer exp : expectedIds.get(integer)) {
+        perTarget.put(exp, false);
+        d.put(exp, new ArrayList<>());
       }
       finished.put(integer, perTarget);
     }
@@ -49,6 +56,11 @@ public class PartitionBatchFinalReceiver extends PartitionBatchReceiver {
     }
     System.out.println("Task : " + target + " Message Count :" + source);
     return true;
+  }
+
+  @Override
+  public void progress() {
+
   }
 
   private boolean isAllFinished(int target) {
