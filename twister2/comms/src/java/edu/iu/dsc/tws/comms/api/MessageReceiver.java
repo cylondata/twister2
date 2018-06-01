@@ -30,7 +30,13 @@ public interface MessageReceiver {
   /**
    * The actual message callback
    *
+   * @param source  the source task
+   * @param destination the final destination
+   * @param target the target of this receiver
+   * @param flags the communication flags
    * @param object the actual message
+   *
+   * @return true if the message is accepted
    */
   boolean onMessage(int source, int destination, int target, int flags, Object object);
 

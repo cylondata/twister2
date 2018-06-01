@@ -53,33 +53,129 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
     DIRECT,  // direct task based
   }
 
+  /**
+   * Partitioning stratergy
+   */
   private PartitionStratergy partitionStratergy;
 
+  /**
+   * Sources
+   */
   private Set<Integer> sources;
+
+  /**
+   * Destinations
+   */
   private Set<Integer> destinations;
+
+  /**
+   * Partition router
+   */
   private PartitionRouter router;
 
+  /**
+   * Destination index
+   */
   private Map<Integer, Integer> destinationIndex;
+
+  /**
+   * Sources
+   */
   private Set<Integer> thisSources;
+
+  /**
+   * The destinations
+   */
   private Destinations dests = new Destinations();
+
+  /**
+   * Destinations
+   */
   private List<Integer> destinationsList;
+
+  /**
+   * This tasks
+   */
   private Set<Integer> thisTasks;
+
+  /**
+   * Final receiver
+   */
   private MessageReceiver finalReceiver;
+
+  /**
+   * Partial receiver
+   */
   private MessageReceiver partialReceiver;
+
+  /**
+   * The actual implementation
+   */
   private MPIDataFlowOperation delegete;
+
+  /**
+   * Configuration
+   */
   private Config config;
+
+  /**
+   * Task plan
+   */
   private TaskPlan instancePlan;
+
+  /**
+   * Executor ID
+   */
   private int executor;
+
+  /**
+   * Receive message type, we can receive messages as just bytes
+   */
+  private MessageType receiveType;
+
+  /**
+   * Receive key type, we can receive keys as just bytes
+   */
+  private MessageType receiveKeyType;
+
+  /**
+   * Data type
+   */
   private MessageType type;
+  /**
+   * Key type
+   */
   private MessageType keyType;
+  /**
+   * Weather this is a key based communication
+   */
   private boolean isKeyed;
+
+  /**
+   * Send completion listener
+   */
   private CompletionListener completionListener;
+
+  /**
+   * Routing parameters are cached
+   */
   private Table<Integer, Integer, RoutingParameters> routingParamCache = HashBasedTable.create();
+
+  /**
+   * Routing parameters are cached
+   */
   private Table<Integer, Integer, RoutingParameters> partialRoutingParamCache
       = HashBasedTable.create();
-  private Lock lock = new ReentrantLock();
-  private Lock partialLock = new ReentrantLock();
 
+  /**
+   * Lock for progressing the communication
+   */
+  private Lock lock = new ReentrantLock();
+
+  /**
+   * Lock for progressing the partial receiver
+   */
+  private Lock partialLock = new ReentrantLock();
 
   /**
    * A place holder for keeping the internal and external destinations
@@ -352,12 +448,13 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
     }
   }
 
-  public boolean receiveSendInternally(int source, int t, int path, int flags, Object message) {
+  public boolean receiveSendInternally(int source, int t,
+                                       int destination, int flags, Object message) {
     // okay this must be for the
-    if (source == path) {
-      return finalReceiver.onMessage(source, path, t, flags, message);
+    if (source == destination) {
+      return finalReceiver.onMessage(source, destination, t, flags, message);
     }
-    return partialReceiver.onMessage(source, path, t, flags, message);
+    return partialReceiver.onMessage(source, destination, t, flags, message);
   }
 
   @Override
@@ -387,8 +484,11 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
     return true;
   }
 
-  public MPIDataFlowOperation getDelegete() {
-    return delegete;
+  public Set<Integer> getSources() {
+    return sources;
   }
 
+  public Set<Integer> getDestinations() {
+    return destinations;
+  }
 }

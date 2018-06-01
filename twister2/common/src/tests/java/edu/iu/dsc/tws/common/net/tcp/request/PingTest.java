@@ -99,7 +99,7 @@ public class PingTest {
     @Override
     public void onMessage(RequestID id, int workerId, Message message) {
       LOG.log(Level.INFO, "Received message to server");
-      rrServer.sendResponse(id, Network.Ping.newBuilder().setPing("Hello").build());
+      rrServer.sendResponse(id, Network.Ping.newBuilder().setPingMessage("Hello").build());
     }
   }
 
@@ -128,7 +128,7 @@ public class PingTest {
 
     @Override
     public void onConnect(SocketChannel channel, StatusCode status) {
-      Network.Ping ping = Network.Ping.newBuilder().setPing("Hello").build();
+      Network.Ping ping = Network.Ping.newBuilder().setPingMessage("Hello").build();
       rrClient.sendRequest(ping);
     }
 

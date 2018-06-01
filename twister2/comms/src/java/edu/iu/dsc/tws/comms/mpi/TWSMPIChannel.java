@@ -18,8 +18,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -41,15 +39,13 @@ import mpi.Status;
 public class TWSMPIChannel implements TWSChannel {
   private static final Logger LOG = Logger.getLogger(TWSMPIChannel.class.getName());
 
-  // a lock object to be used
-  private Lock lock = new ReentrantLock();
-
   private int executor;
 
   private int sendCount = 0;
   private int completedSendCount = 0;
   private int receiveCount = 0;
   private int pendingReceiveCount = 0;
+  private boolean debug = false;
 
   @SuppressWarnings("VisibilityModifier")
   private class MPIRequest {
@@ -204,7 +200,6 @@ public class TWSMPIChannel implements TWSChannel {
     }
   }
 
-  private boolean debug = false;
 
   public void setDebug(boolean deb) {
     debug = deb;
@@ -269,7 +264,7 @@ public class TWSMPIChannel implements TWSChannel {
       }
     }
 
-    if (false) {
+    if (debug) {
       LOG.info(String.format(
           "%d sending - sent %d comp send %d receive %d pend recv %d pending sends %d waiting %d",
           executor, sendCount, completedSendCount, receiveCount,
