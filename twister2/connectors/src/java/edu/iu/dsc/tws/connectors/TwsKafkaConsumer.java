@@ -41,13 +41,10 @@ public class TwsKafkaConsumer<T> extends SourceTask {
 
   @Override
   public void run() {
-    if (!consumerThreadStarted) {
-      try {
-        kafkaConsumerThread.run();
-        log.info("Starting the consumer thread");
-      } catch (IllegalThreadStateException e) {
-        log.info("consumer is already started");
-      }
+    try {
+      kafkaConsumerThread.run();
+    } catch (IllegalThreadStateException e) {
+      log.info(e.toString());
     }
   }
 

@@ -40,6 +40,7 @@ public class KafkaConsumerThread<T>  {
   private volatile boolean active = true;
   private volatile TaskContext taskContext;
   private String edge;
+  private boolean fetchLoopStarted = false;
 
   public KafkaConsumerThread(
       Properties kafkaConsumerConfig, Map<TopicPartition, OffsetAndMetadata> offsetsToCommit,
@@ -56,38 +57,34 @@ public class KafkaConsumerThread<T>  {
 
 
   public void run() {
-    LOG.info("starting");
-    initiateConnection();
-    commitOffsets();
-    if (!active) {
-      return;
+    if (!fetchLoopStarted) {
+      LOG.info("starting");
+      initiateConnection();
+      commitOffsets();
+      if (!active) {
+        return;
+      }
+      if (topicPartitions == null) {
+        throw new Error("Topic Partition is not defined");
+      }
+      consumer.assign(topicPartitions);
+      fetchLoopStarted = true;
     }
-    if (topicPartitions == null) {
-      throw new Error("Topic Partition is not defined");
-    }
-    consumer.assign(topicPartitions);
     ConsumerRecords<String, String> records = null;
-    while (active) {
-//            System.out.println("polling");
-      if (records == null) {
-        records = consumer.poll(100);
-        for (ConsumerRecord<String, String> record : records) {
-          System.out.println(record.value().getClass());
-//                    System.out.println(String.valueOf(value));
-          System.out.printf("offset = %d, key = %s, value = %s\n",
-              record.offset(), record.key(), record.value());
-          LOG.info("record = {} ; offset = {}", record.value(), record.offset());
-        }
-        for (KafkaTopicPartitionState topicPartitionState : topicPartitionStates) {
+    records = consumer.poll(100);
+    for (ConsumerRecord<String, String> record : records) {
+      LOG.info("record = {} ; offset = {} ; partitionID = {} ", record.value(), record.offset(),
+          record.partition());
+//      }
+      for (KafkaTopicPartitionState topicPartitionState : topicPartitionStates) {
 
-          List<ConsumerRecord<String, String>> partitionRecords =
-              records.records(topicPartitionState.getTopicPartition());
+        List<ConsumerRecord<String, String>> partitionRecords =
+            records.records(topicPartitionState.getTopicPartition());
 
 
-          for (ConsumerRecord<String, String> record2 : partitionRecords) {
-//                            String value = record2.value();
-//                        emitRecord(value, topicPartitionState, record2.offset());
-          }
+        for (ConsumerRecord<String, String> record2 : partitionRecords) {
+          String value = record2.value();
+          emitRecord(value, topicPartitionState, record2.offset());
         }
       }
     }
@@ -150,7 +147,6 @@ public class KafkaConsumerThread<T>  {
 
   public void emitRecord(String value, KafkaTopicPartitionState tps, Long offset) {
     LOG.info("emitting record {} from the partition {}", value, offset);
-    System.out.println(value);
     tps.setPositionOffset(offset);
     taskContext.write(this.edge, value);
   }

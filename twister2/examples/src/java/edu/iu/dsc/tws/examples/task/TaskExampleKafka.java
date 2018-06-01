@@ -43,7 +43,6 @@ import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.Operations;
 import edu.iu.dsc.tws.task.api.SinkTask;
-import edu.iu.dsc.tws.task.api.SourceTask;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
@@ -55,7 +54,6 @@ import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 public class TaskExampleKafka implements IContainer {
   @Override
   public void init(Config config, int id, ResourcePlan resourcePlan) {
-//    GeneratorTask g = new GeneratorTask();
     List<String> topics  = new ArrayList<>();
     topics.add("sample_topic1");
     List<String> servers = new ArrayList<>();
@@ -92,26 +90,14 @@ public class TaskExampleKafka implements IContainer {
     }
   }
 
-  private static class GeneratorTask extends SourceTask {
-    private static final long serialVersionUID = -254264903510284748L;
-    private TaskContext ctx;
-    private Config config;
-    @Override
-    public void run() {
-      ctx.write("e1", "Hello");
-    }
-
-    @Override
-    public void prepare(Config cfg, TaskContext context) {
-      this.ctx = context;
-    }
-  }
-
   private static class RecevingTask extends SinkTask {
     private static final long serialVersionUID = -254264903510284798L;
+    private int count = 0;
     @Override
     public void execute(IMessage message) {
+      count++;
       System.out.println(message.getContent());
+      System.out.println(count);
     }
 
     @Override
