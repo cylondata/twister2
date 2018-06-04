@@ -27,10 +27,12 @@ import edu.iu.dsc.tws.common.net.tcp.request.ConnectHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
+import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.network.Network;
 import edu.iu.dsc.tws.proto.network.Network.ListWorkersRequest;
 import edu.iu.dsc.tws.proto.network.Network.ListWorkersResponse;
 import edu.iu.dsc.tws.rsched.bootstrap.WorkerNetworkInfo;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
 public class JobMasterClient extends Thread {
   private static final Logger LOG = Logger.getLogger(JobMasterClient.class.getName());
@@ -38,9 +40,8 @@ public class JobMasterClient extends Thread {
   private static Progress looper;
   private boolean stopLooper = false;
 
-  private int workerID;
-  private InetAddress workerIP;
-  private int workerPort;
+  private Config config;
+  private WorkerNetworkInfo thisWorker;
   private int numberOfWorkers;
 
   private String masterAddress;
@@ -50,26 +51,24 @@ public class JobMasterClient extends Thread {
   private Pinger pinger;
   private WorkerController workerController;
 
-  public JobMasterClient(Config config, String masterAddress, int masterPort,
-                         int workerID, InetAddress workerIP, int workerPort, int numberOfWorkers) {
+  public JobMasterClient(Config config, String masterAddress, WorkerNetworkInfo thisWorker) {
+    this.config = config;
     this.masterAddress = masterAddress;
-    this.masterPort = masterPort;
-    this.workerID = workerID;
-    this.workerIP = workerIP;
-    this.workerPort = workerPort;
-    this.numberOfWorkers = numberOfWorkers;
+    this.thisWorker = thisWorker;
+    this.masterPort = JobMasterContext.jobMasterPort(config);
+    this.numberOfWorkers = SchedulerContext.workerInstances(config);
   }
 
   public void init() {
     looper = new Progress();
 
     ClientConnectHandler connectHandler = new ClientConnectHandler();
-    rrClient = new RRClient(masterAddress, masterPort, null, looper, workerID, connectHandler);
+    rrClient = new RRClient(masterAddress, masterPort, null, looper,
+        thisWorker.getWorkerID(), connectHandler);
 
-    long interval = 1000;
-    pinger = new Pinger(workerID, rrClient, interval);
+    long interval = JobMasterContext.pingInterval(config);
+    pinger = new Pinger(thisWorker.getWorkerID(), rrClient, interval);
 
-    WorkerNetworkInfo thisWorker = new WorkerNetworkInfo(workerIP, workerPort, workerID);
     workerController = new WorkerController(thisWorker, numberOfWorkers, rrClient);
 
     Network.Ping.Builder pingBuilder = Network.Ping.newBuilder();
@@ -95,6 +94,10 @@ public class JobMasterClient extends Thread {
 
     workerController.sendWorkerListRequest(ListWorkersRequest.RequestType.IMMEDIATE_RESPONSE);
     pinger.start();
+  }
+
+  public WorkerController getWorkerController() {
+    return workerController;
   }
 
   public void close() {
@@ -133,10 +136,10 @@ public class JobMasterClient extends Thread {
 
   public boolean sendWorkerStartingMessage() {
     Network.WorkerStateChange workerStateChange = Network.WorkerStateChange.newBuilder()
-        .setWorkerID(workerID)
+        .setWorkerID(thisWorker.getWorkerID())
         .setNewState(Network.WorkerState.STARTING)
-        .setIp(workerIP.getHostAddress())
-        .setPort(workerPort)
+        .setIp(thisWorker.getWorkerIP().getHostAddress())
+        .setPort(thisWorker.getWorkerPort())
         .build();
 
     RequestID requestID = rrClient.sendRequest(workerStateChange);
@@ -151,7 +154,7 @@ public class JobMasterClient extends Thread {
 
   public boolean sendWorkerRunningMessage() {
     Network.WorkerStateChange workerStateChange = Network.WorkerStateChange.newBuilder()
-        .setWorkerID(workerID)
+        .setWorkerID(thisWorker.getWorkerID())
         .setNewState(Network.WorkerState.RUNNING)
         .build();
 
@@ -167,7 +170,7 @@ public class JobMasterClient extends Thread {
 
   public boolean sendWorkerCompletedMessage() {
     Network.WorkerStateChange workerStateChange = Network.WorkerStateChange.newBuilder()
-        .setWorkerID(workerID)
+        .setWorkerID(thisWorker.getWorkerID())
         .setNewState(Network.WorkerState.COMPLETED)
         .build();
 
@@ -217,8 +220,15 @@ public class JobMasterClient extends Thread {
     InetAddress workerIP = WorkerController.convertStringToIP("149.165.150.81");
     int workerPort = 10000 + (int) (Math.random() * 10000);
 
-    JobMasterClient client = new JobMasterClient(null, masterAddress, masterPort,
-        workerID, workerIP, workerPort, numberOfWorkers);
+    WorkerNetworkInfo workerNetworkInfo = new WorkerNetworkInfo(workerIP, workerPort, workerID);
+
+    Config cfg = Config.newBuilder()
+        .put(SchedulerContext.TWISTER2_WORKER_INSTANCES, numberOfWorkers)
+        .put(JobMasterContext.PING_INTERVAL, 1000)
+        .put(JobMasterContext.JOB_MASTER_PORT, masterPort)
+        .build();
+
+    JobMasterClient client = new JobMasterClient(cfg, masterAddress, workerNetworkInfo);
     client.init();
 
     client.sendWorkerStartingMessage();

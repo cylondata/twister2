@@ -24,6 +24,7 @@ import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.proto.network.Network;
 import edu.iu.dsc.tws.proto.network.Network.ListWorkersRequest;
 import edu.iu.dsc.tws.proto.network.Network.ListWorkersResponse;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
 public class JobMaster extends Thread {
   private static final Logger LOG = Logger.getLogger(JobMaster.class.getName());
@@ -40,11 +41,11 @@ public class JobMaster extends Thread {
   private int numberOfWorkers;
   private boolean workersCompleted = false;
 
-  public JobMaster(Config config, String masterAddress, int masterPort, int numberOfWorkers) {
+  public JobMaster(Config config, String masterAddress) {
     this.config = config;
     this.masterAddress = masterAddress;
-    this.masterPort = masterPort;
-    this.numberOfWorkers = numberOfWorkers;
+    this.masterPort = JobMasterContext.jobMasterPort(config);
+    this.numberOfWorkers = SchedulerContext.workerInstances(config);
   }
 
   public void init() {
@@ -81,6 +82,7 @@ public class JobMaster extends Thread {
     int loopCount = 10;
     int sleepDuration = 100;
 
+    // initially wait on a blocking call until the first client connects
     looper.loopBlocking();
 
     while (!workersCompleted) {
@@ -114,6 +116,9 @@ public class JobMaster extends Thread {
     }
   }
 
+  /**
+   * this method is executed when worker completed messages received from all workers
+   */
   public void allWorkersCompleted() {
 
     LOG.info("All workers have completed.");
@@ -144,7 +149,6 @@ public class JobMaster extends Thread {
 
     Logger.getLogger("edu.iu.dsc.tws.common.net.tcp").setLevel(Level.WARNING);
 
-    Config config = null;
     String host = "localhost";
     int port = 11111;
     int numberOfWorkers = 1;
@@ -153,7 +157,12 @@ public class JobMaster extends Thread {
       numberOfWorkers = Integer.parseInt(args[0]);
     }
 
-    JobMaster jobMaster = new JobMaster(config, host, port, numberOfWorkers);
+    Config cfg = Config.newBuilder()
+        .put(SchedulerContext.TWISTER2_WORKER_INSTANCES, numberOfWorkers)
+        .put(JobMasterContext.JOB_MASTER_PORT, port)
+        .build();
+
+    JobMaster jobMaster = new JobMaster(cfg, host);
     jobMaster.init();
 
     LOG.info("JobMaster started on port " + port + " with " + numberOfWorkers

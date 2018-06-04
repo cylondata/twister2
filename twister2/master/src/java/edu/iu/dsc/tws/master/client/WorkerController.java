@@ -37,9 +37,13 @@ public class WorkerController implements IWorkerController, MessageHandler {
 
   private RRClient rrClient;
 
+  // these variables are used to wait the response messages
+  // when the worker list is requested from the job master
   private Object synchObject1 = new Object();
-  private Object synchObject2 = new Object();
   private boolean waitingResponse1 = false;
+  public static final long MAX_WAIT_TIME_FOR_IMMEDIATE_RESPONSE = 500;
+
+  private Object synchObject2 = new Object();
   private boolean waitingResponse2 = false;
 
   public WorkerController(WorkerNetworkInfo thisWorker, int numberOfWorkers, RRClient rrClient) {
@@ -124,7 +128,15 @@ public class WorkerController implements IWorkerController, MessageHandler {
     synchronized (synchObject1) {
       try {
         waitingResponse1 = true;
-        synchObject1.wait();
+        synchObject1.wait(MAX_WAIT_TIME_FOR_IMMEDIATE_RESPONSE);
+        // if waitingResponse1 is still true after waking up,
+        // it means the timeLimit has been reached
+        if (waitingResponse1) {
+          waitingResponse1 = false;
+          LOG.info("Timelimit has been reached and the worker list has not been received "
+              + "from the job master. It will provide the list as is.");
+          return workerList;
+        }
       } catch (InterruptedException e) {
         waitingResponse1 = false;
         LOG.warning("Waiting thread interrupted when waiting to get response message. ");

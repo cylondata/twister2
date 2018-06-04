@@ -120,7 +120,7 @@ public class WorkerMonitor implements MessageHandler {
       // if all workers have completed, no need to send the response message back to the client
       if (haveAllWorkersCompleted()) {
         jobMaster.allWorkersCompleted();
-        return;
+//        return;
       }
 
       // send the response message
