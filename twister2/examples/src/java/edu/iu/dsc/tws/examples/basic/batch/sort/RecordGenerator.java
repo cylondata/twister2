@@ -14,18 +14,12 @@ package edu.iu.dsc.tws.examples.basic.batch.sort;
 import java.util.Random;
 
 public class RecordGenerator {
-  private int index;
-
   private int maxRange;
-
-  private int totalTasks;
 
   private Random random;
 
-  public RecordGenerator(int index, int maxRange, int totalTasks) {
-    this.index = index;
+  public RecordGenerator(int maxRange) {
     this.maxRange = maxRange;
-    this.totalTasks = totalTasks;
     this.random = new Random();
   }
 
