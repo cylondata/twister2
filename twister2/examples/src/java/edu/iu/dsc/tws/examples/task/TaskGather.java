@@ -51,7 +51,6 @@ public class TaskGather implements IContainer {
     builder.addSink("sink", r);
     builder.setParallelism("sink", 1);
     builder.connect("source", "sink", "partition-edge", Operations.PARTITION);
-    builder.connect("source", "sink", "partition-edge", Operations.PARTITION);
 
     DataFlowTaskGraph graph = builder.build();
 
@@ -77,9 +76,7 @@ public class TaskGather implements IContainer {
     private Config config;
     @Override
     public void run() {
-
-      ctx.write("partition-edge", "Hello 0");
-      ctx.write("partition-edge", "Hello 1");
+      ctx.write("partition-edge", "Hello0");
     }
 
     @Override
