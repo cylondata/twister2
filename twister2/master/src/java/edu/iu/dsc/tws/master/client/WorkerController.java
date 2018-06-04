@@ -20,13 +20,13 @@ import java.util.logging.Logger;
 
 import com.google.protobuf.Message;
 
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
+import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
 import edu.iu.dsc.tws.proto.network.Network.ListWorkersRequest;
 import edu.iu.dsc.tws.proto.network.Network.ListWorkersResponse;
-import edu.iu.dsc.tws.rsched.bootstrap.IWorkerController;
-import edu.iu.dsc.tws.rsched.bootstrap.WorkerNetworkInfo;
 
 public class WorkerController implements IWorkerController, MessageHandler {
   private static final Logger LOG = Logger.getLogger(WorkerController.class.getName());
@@ -36,11 +36,14 @@ public class WorkerController implements IWorkerController, MessageHandler {
   private int numberOfWorkers;
 
   private RRClient rrClient;
-  private BooleanObject responseReceived = new BooleanObject(false);
 
+  // these variables are used to wait the response messages
+  // when the worker list is requested from the job master
   private Object synchObject1 = new Object();
-  private Object synchObject2 = new Object();
   private boolean waitingResponse1 = false;
+  public static final long MAX_WAIT_TIME_FOR_IMMEDIATE_RESPONSE = 500;
+
+  private Object synchObject2 = new Object();
   private boolean waitingResponse2 = false;
 
   public WorkerController(WorkerNetworkInfo thisWorker, int numberOfWorkers, RRClient rrClient) {
@@ -108,7 +111,7 @@ public class WorkerController implements IWorkerController, MessageHandler {
 
       } catch (InterruptedException e) {
         waitingResponse2 = false;
-        LOG.warning("Waiting thread interrupted when waiting to get response message. ");
+        LOG.warning("Waiting thread interrupted when waiting to get the response message. ");
         return null;
       }
     }
@@ -125,7 +128,15 @@ public class WorkerController implements IWorkerController, MessageHandler {
     synchronized (synchObject1) {
       try {
         waitingResponse1 = true;
-        synchObject1.wait();
+        synchObject1.wait(MAX_WAIT_TIME_FOR_IMMEDIATE_RESPONSE);
+        // if waitingResponse1 is still true after waking up,
+        // it means the timeLimit has been reached
+        if (waitingResponse1) {
+          waitingResponse1 = false;
+          LOG.info("Timelimit has been reached and the worker list has not been received "
+              + "from the job master. It will provide the list as is.");
+          return workerList;
+        }
       } catch (InterruptedException e) {
         waitingResponse1 = false;
         LOG.warning("Waiting thread interrupted when waiting to get response message. ");
@@ -142,7 +153,6 @@ public class WorkerController implements IWorkerController, MessageHandler {
         .setRequestType(requestType)
         .build();
 
-    responseReceived.setFalse();
     RequestID requestID = rrClient.sendRequest(listRequest);
 
     if (requestID == null) {
@@ -190,7 +200,6 @@ public class WorkerController implements IWorkerController, MessageHandler {
           synchObject2.notify();
         }
       }
-//      responseReceived.setTrue();
 
     } else {
       LOG.warning("Received message unrecognized. \n" + message);
@@ -199,7 +208,7 @@ public class WorkerController implements IWorkerController, MessageHandler {
   }
 
   /**
-   * covert the given string to ip address object
+   * convert the given string to ip address object
    */
   public static InetAddress convertStringToIP(String ipStr) {
     try {

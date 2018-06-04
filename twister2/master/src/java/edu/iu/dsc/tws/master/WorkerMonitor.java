@@ -24,14 +24,17 @@ import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
 import edu.iu.dsc.tws.proto.network.Network;
 
 public class WorkerMonitor implements MessageHandler {
-  private static final Logger LOG = Logger.getLogger(JobMaster.class.getName());
+  private static final Logger LOG = Logger.getLogger(WorkerMonitor.class.getName());
 
-  private HashMap<Integer, WorkerInfo> workers;
+  private JobMaster jobMaster;
   private RRServer rrServer;
-  private HashMap<Integer, RequestID> waitList;
   private int numberOfWorkers;
 
-  public WorkerMonitor(RRServer rrServer, int numberOfWorkers) {
+  private HashMap<Integer, WorkerInfo> workers;
+  private HashMap<Integer, RequestID> waitList;
+
+  public WorkerMonitor(JobMaster jobMaster, RRServer rrServer, int numberOfWorkers) {
+    this.jobMaster = jobMaster;
     this.rrServer = rrServer;
     this.numberOfWorkers = numberOfWorkers;
 
@@ -89,27 +92,73 @@ public class WorkerMonitor implements MessageHandler {
       workers.put(message.getWorkerID(), worker);
       LOG.info("WorkerStateChange message received: \n" + message);
 
+      sendWorkerStateChangeResponse(id, message.getWorkerID());
+
       if (workers.size() == numberOfWorkers) {
         sendListWorkersResponseToWaitList();
       }
 
-    } else {
-      if (workers.containsKey(message.getWorkerID())) {
-        workers.get(message.getWorkerID()).setWorkerState(message.getNewState());
-        LOG.info("WorkerStateChange message received: \n" + message);
+      return;
 
-      } else {
-        LOG.warning("WorkerStateChange message received from a worker "
-            + "that has not joined the job yet.\n" + message);
+    } else if (!workers.containsKey(message.getWorkerID())) {
+
+      LOG.warning("WorkerStateChange message received from a worker "
+          + "that has not joined the job yet.\n"
+          + "Not processing the message, just sending a response"
+          + message);
+
+      sendWorkerStateChangeResponse(id, message.getWorkerID());
+      return;
+
+    } else if (message.getNewState() == Network.WorkerState.COMPLETED) {
+
+      workers.get(message.getWorkerID()).setWorkerState(message.getNewState());
+      LOG.info("WorkerStateChange message received: \n" + message);
+
+      // check whether all workers completed
+      // if so, stop the job master
+      // if all workers have completed, no need to send the response message back to the client
+      if (haveAllWorkersCompleted()) {
+        jobMaster.allWorkersCompleted();
+//        return;
+      }
+
+      // send the response message
+      sendWorkerStateChangeResponse(id, message.getWorkerID());
+
+      return;
+
+    } else {
+      workers.get(message.getWorkerID()).setWorkerState(message.getNewState());
+      LOG.info("WorkerStateChange message received: \n" + message);
+
+      // send the response message
+      sendWorkerStateChangeResponse(id, message.getWorkerID());
+    }
+  }
+
+  public boolean haveAllWorkersCompleted() {
+    if (numberOfWorkers != workers.size()) {
+      return false;
+    }
+
+    for (WorkerInfo worker: workers.values()) {
+      if (worker.getWorkerState() != Network.WorkerState.COMPLETED) {
+        return false;
       }
     }
 
+    return true;
+  }
+
+  private void sendWorkerStateChangeResponse(RequestID id, int workerID) {
     Network.WorkerStateChangeResponse response = Network.WorkerStateChangeResponse.newBuilder()
-        .setWorkerID(message.getWorkerID())
+        .setWorkerID(workerID)
         .build();
 
     rrServer.sendResponse(id, response);
     LOG.info("WorkerStateChangeResponse sent:\n" + response);
+
   }
 
   private void listWorkersMessageReceived(RequestID id, Network.ListWorkersRequest listMessage) {

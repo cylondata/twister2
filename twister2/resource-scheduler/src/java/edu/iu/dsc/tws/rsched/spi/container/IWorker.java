@@ -12,7 +12,7 @@
 package edu.iu.dsc.tws.rsched.spi.container;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.rsched.bootstrap.IWorkerController;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
 public interface IWorker {

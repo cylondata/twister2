@@ -189,6 +189,10 @@ public abstract class BaseNetworkChannel {
     try {
       read = channel.read(buffer);
       LOG.log(Level.INFO, "Read size: " + read);
+    } catch (java.nio.channels.ClosedByInterruptException e) {
+      LOG.warning("ClosedByInterruptException thrown. "
+          + "Probably the Channel is closed by the user program intentionally.");
+      return -1;
     } catch (IOException e) {
       LOG.log(Level.SEVERE, "Error in channel.read ", e);
       return -1;

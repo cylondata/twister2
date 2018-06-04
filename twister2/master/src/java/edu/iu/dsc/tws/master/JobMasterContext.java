@@ -16,12 +16,28 @@ import edu.iu.dsc.tws.common.config.Context;
 
 public class JobMasterContext extends Context {
 
-  // client to master ping interval in milliseconds
+  // if true, the job master runs in the submitting client
+  public static final boolean JOB_MASTER_RUNS_IN_CLIENT_DEFAULT = true;
+  public static final String JOB_MASTER_RUNS_IN_CLIENT = "twister2.job.master.runs.in.client";
+
+  // worker to master ping interval in milliseconds
   public static final long PING_INTERVAL_DEFAULT = 1000;
-  public static final String PING_INTERVAL = "twister2.client-master.ping.interval";
+  public static final String PING_INTERVAL = "twister2.worker.ping.interval";
+
+  // client to master ping interval in milliseconds
+  public static final int JOB_MASTER_PORT_DEFAULT = 11111;
+  public static final String JOB_MASTER_PORT = "twister2.job.master.port";
+
+  public static boolean jobMasterRunsInClient(Config cfg) {
+    return cfg.getBooleanValue(JOB_MASTER_RUNS_IN_CLIENT, JOB_MASTER_RUNS_IN_CLIENT_DEFAULT);
+  }
 
   public static long pingInterval(Config cfg) {
     return cfg.getLongValue(PING_INTERVAL, PING_INTERVAL_DEFAULT);
+  }
+
+  public static int jobMasterPort(Config cfg) {
+    return cfg.getIntegerValue(JOB_MASTER_PORT, JOB_MASTER_PORT_DEFAULT);
   }
 
 }

@@ -32,6 +32,8 @@ import org.apache.curator.utils.ZKPaths;
 import org.apache.zookeeper.CreateMode;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
+import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 
 /**
  * gets unique workerID's for each client by using DistributedAtomicInteger

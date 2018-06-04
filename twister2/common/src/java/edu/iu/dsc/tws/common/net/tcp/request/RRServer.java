@@ -93,6 +93,10 @@ public class RRServer {
     server.start();
   }
 
+  public void stop() {
+    server.stop();
+  }
+
   /**
    * Send a response to a request id
    * @param id request id

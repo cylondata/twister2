@@ -19,9 +19,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
+import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.bootstrap.IWorkerController;
-import edu.iu.dsc.tws.rsched.bootstrap.WorkerNetworkInfo;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKController;
 
 

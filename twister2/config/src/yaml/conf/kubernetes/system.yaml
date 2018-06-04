@@ -24,3 +24,21 @@ twister2.logging.max.file.size.mb: 100
 # The maximum number of log files for each worker
 twister2.logging.maximum.files: 5
 
+###################################################################
+# Twister2 Job Master related settings
+###################################################################
+
+# if true, the job master runs in the submitting client
+# if false, job master runs as a separate process in the cluster 
+# by default, it is true
+# when the job master runs in the submitting client, this client has to be submitting the job from a machine in the cluster
+twister2.job.master.runs.in.client: true
+
+# ping message intervals from workers to the job master in milliseconds
+# default value is 1000
+twister2.worker.ping.interval: 1000
+
+# twister2 job master port number
+# default value is 11111
+twister2.job.master.port: 11111
+

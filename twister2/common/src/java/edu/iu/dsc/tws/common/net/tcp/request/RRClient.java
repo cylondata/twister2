@@ -87,6 +87,10 @@ public class RRClient {
     client.connect();
   }
 
+  public void stop() {
+    client.disconnect();
+  }
+
   public boolean isConnected() {
     return connected;
   }
