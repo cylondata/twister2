@@ -21,6 +21,8 @@ import java.util.logging.Logger;
 import com.google.protobuf.Message;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.net.tcp.Progress;
 import edu.iu.dsc.tws.common.net.tcp.StatusCode;
 import edu.iu.dsc.tws.common.net.tcp.request.ConnectHandler;
@@ -31,8 +33,6 @@ import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.network.Network;
 import edu.iu.dsc.tws.proto.network.Network.ListWorkersRequest;
 import edu.iu.dsc.tws.proto.network.Network.ListWorkersResponse;
-import edu.iu.dsc.tws.rsched.bootstrap.WorkerNetworkInfo;
-import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
 public class JobMasterClient extends Thread {
   private static final Logger LOG = Logger.getLogger(JobMasterClient.class.getName());
@@ -56,7 +56,7 @@ public class JobMasterClient extends Thread {
     this.masterAddress = masterAddress;
     this.thisWorker = thisWorker;
     this.masterPort = JobMasterContext.jobMasterPort(config);
-    this.numberOfWorkers = SchedulerContext.workerInstances(config);
+    this.numberOfWorkers = Context.workerInstances(config);
   }
 
   public void init() {
@@ -223,7 +223,7 @@ public class JobMasterClient extends Thread {
     WorkerNetworkInfo workerNetworkInfo = new WorkerNetworkInfo(workerIP, workerPort, workerID);
 
     Config cfg = Config.newBuilder()
-        .put(SchedulerContext.TWISTER2_WORKER_INSTANCES, numberOfWorkers)
+        .put(Context.TWISTER2_WORKER_INSTANCES, numberOfWorkers)
         .put(JobMasterContext.PING_INTERVAL, 1000)
         .put(JobMasterContext.JOB_MASTER_PORT, masterPort)
         .build();

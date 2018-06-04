@@ -69,6 +69,20 @@ public class Context {
 
   public static final String DIR_PREFIX_FOR_JOB_ARCHIVE = "twister2-job/";
 
+  public static final double TWISTER2_WORKER_CPU_DEFAULT = 1.0;
+  public static final String TWISTER2_WORKER_CPU = "twister2.worker.cpu";
+
+  public static final int TWISTER2_WORKER_RAM_DEFAULT = 200;
+  public static final String TWISTER2_WORKER_RAM = "twister2.worker.ram";
+
+  // volatile disk size per worker in GB
+  public static final double WORKER_VOLATILE_DISK_DEFAULT = 0.0;
+  public static final String WORKER_VOLATILE_DISK = "twister2.worker.volatile.disk";
+
+  public static final int TWISTER2_WORKER_INSTANCES_DEFAULT = 1;
+  public static final String TWISTER2_WORKER_INSTANCES = "twister2.worker.instances";
+
+
   static {
     substitutions.put("TWISTER2_HOME", TWISTER2_HOME);
     substitutions.put("HOME", HOME);
@@ -153,4 +167,22 @@ public class Context {
   public static String twister2Home(Config cfg) {
     return cfg.getStringValue(TWISTER2_HOME);
   }
+
+  public static double workerCPU(Config cfg) {
+    return cfg.getDoubleValue(TWISTER2_WORKER_CPU, TWISTER2_WORKER_CPU_DEFAULT);
+  }
+
+  public static int workerRAM(Config cfg) {
+    return cfg.getIntegerValue(TWISTER2_WORKER_RAM, TWISTER2_WORKER_RAM_DEFAULT);
+  }
+
+  public static double workerVolatileDisk(Config cfg) {
+    return cfg.getDoubleValue(WORKER_VOLATILE_DISK, WORKER_VOLATILE_DISK_DEFAULT);
+  }
+
+  public static int workerInstances(Config cfg) {
+    return cfg.getIntegerValue(TWISTER2_WORKER_INSTANCES, TWISTER2_WORKER_INSTANCES_DEFAULT);
+  }
+
+
 }

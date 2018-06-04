@@ -17,6 +17,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.net.tcp.Progress;
 import edu.iu.dsc.tws.common.net.tcp.StatusCode;
 import edu.iu.dsc.tws.common.net.tcp.request.ConnectHandler;
@@ -24,7 +25,6 @@ import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.proto.network.Network;
 import edu.iu.dsc.tws.proto.network.Network.ListWorkersRequest;
 import edu.iu.dsc.tws.proto.network.Network.ListWorkersResponse;
-import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
 public class JobMaster extends Thread {
   private static final Logger LOG = Logger.getLogger(JobMaster.class.getName());
@@ -45,7 +45,7 @@ public class JobMaster extends Thread {
     this.config = config;
     this.masterAddress = masterAddress;
     this.masterPort = JobMasterContext.jobMasterPort(config);
-    this.numberOfWorkers = SchedulerContext.workerInstances(config);
+    this.numberOfWorkers = Context.workerInstances(config);
   }
 
   public void init() {
@@ -158,7 +158,7 @@ public class JobMaster extends Thread {
     }
 
     Config cfg = Config.newBuilder()
-        .put(SchedulerContext.TWISTER2_WORKER_INSTANCES, numberOfWorkers)
+        .put(Context.TWISTER2_WORKER_INSTANCES, numberOfWorkers)
         .put(JobMasterContext.JOB_MASTER_PORT, port)
         .build();
 

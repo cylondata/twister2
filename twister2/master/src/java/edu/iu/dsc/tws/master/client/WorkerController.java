@@ -20,13 +20,13 @@ import java.util.logging.Logger;
 
 import com.google.protobuf.Message;
 
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
+import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
 import edu.iu.dsc.tws.proto.network.Network.ListWorkersRequest;
 import edu.iu.dsc.tws.proto.network.Network.ListWorkersResponse;
-import edu.iu.dsc.tws.rsched.bootstrap.IWorkerController;
-import edu.iu.dsc.tws.rsched.bootstrap.WorkerNetworkInfo;
 
 public class WorkerController implements IWorkerController, MessageHandler {
   private static final Logger LOG = Logger.getLogger(WorkerController.class.getName());

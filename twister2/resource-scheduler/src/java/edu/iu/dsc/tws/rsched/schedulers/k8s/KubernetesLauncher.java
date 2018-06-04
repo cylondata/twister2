@@ -94,6 +94,17 @@ public class KubernetesLauncher implements ILauncher {
       return false;
     }
 
+    // start the Job Master locally
+//    if (JobMasterContext.jobMasterRunsInClient(config)) {
+//      JobMaster jobMaster = null;
+//      try {
+//        jobMaster = new JobMaster(config, InetAddress.getLocalHost().getHostAddress());
+//      } catch (UnknownHostException e) {
+//        LOG.log(Level.SEVERE, "Exception when getting local host address: ", e);
+//      }
+//      jobMaster.init();
+//    }
+
     // transfer the job package to pods, measure the transfer time
     long start = System.currentTimeMillis();
 

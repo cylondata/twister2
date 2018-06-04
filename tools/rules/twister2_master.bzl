@@ -3,6 +3,5 @@
 def twister2_master_lib_files():
     return [
         "//twister2/master/src/java:master-java",
-        "//twister2/resource-scheduler/src/java:resource-scheduler-java",
         "//twister2/proto:proto_network_java",
     ]
