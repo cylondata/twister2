@@ -36,7 +36,6 @@ public class WorkerController implements IWorkerController, MessageHandler {
   private int numberOfWorkers;
 
   private RRClient rrClient;
-  private BooleanObject responseReceived = new BooleanObject(false);
 
   private Object synchObject1 = new Object();
   private Object synchObject2 = new Object();
@@ -108,7 +107,7 @@ public class WorkerController implements IWorkerController, MessageHandler {
 
       } catch (InterruptedException e) {
         waitingResponse2 = false;
-        LOG.warning("Waiting thread interrupted when waiting to get response message. ");
+        LOG.warning("Waiting thread interrupted when waiting to get the response message. ");
         return null;
       }
     }
@@ -142,7 +141,6 @@ public class WorkerController implements IWorkerController, MessageHandler {
         .setRequestType(requestType)
         .build();
 
-    responseReceived.setFalse();
     RequestID requestID = rrClient.sendRequest(listRequest);
 
     if (requestID == null) {
@@ -190,7 +188,6 @@ public class WorkerController implements IWorkerController, MessageHandler {
           synchObject2.notify();
         }
       }
-//      responseReceived.setTrue();
 
     } else {
       LOG.warning("Received message unrecognized. \n" + message);
@@ -199,7 +196,7 @@ public class WorkerController implements IWorkerController, MessageHandler {
   }
 
   /**
-   * covert the given string to ip address object
+   * convert the given string to ip address object
    */
   public static InetAddress convertStringToIP(String ipStr) {
     try {

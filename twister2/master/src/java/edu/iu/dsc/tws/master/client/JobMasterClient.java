@@ -100,28 +100,35 @@ public class JobMasterClient extends Thread {
   public void close() {
     pinger.stopPinger();
     stopLooper = true;
+    interrupt();
   }
 
   @Override
   public void run() {
 
+    int loopCount = 5;
     long sleepTime = 100;
 
     while (!stopLooper) {
-      looper.loopBlocking();
-      looper.loopBlocking();
-      looper.loopBlocking();
-      looper.loopBlocking();
-      looper.loopBlocking();
+      for (int i = 0; i < loopCount; i++) {
+        looper.loop();
+      }
 
       try {
         sleep(sleepTime);
       } catch (InterruptedException e) {
         if (!stopLooper) {
-          LOG.log(Level.WARNING, "Pinger Thread sleep interrupted.", e);
+          LOG.log(Level.WARNING, "JobMasterClient Thread sleep interrupted.", e);
         }
       }
     }
+
+    // if there are any messages to receive in the buffer, get them
+    // we assume there can be at most 3 messages
+    looper.loop();
+    looper.loop();
+    looper.loop();
+    rrClient.stop();
   }
 
   public boolean sendWorkerStartingMessage() {
@@ -231,14 +238,13 @@ public class JobMasterClient extends Thread {
     WorkerController.printWorkers(workerList);
 
     client.sendWorkerCompletedMessage();
-    // wait 50
-    client.pinger.stopPinger();
-    sleeeep(50);
+//    sleeeep(500);
 
-    System.out.println("all messaging done. waiting before closing the connection");
-
-    sleeeep(2000);
     client.close();
+
+    System.out.println("all messaging done. waiting before finishing.");
+
+    sleeeep(500);
   }
 
   public static void sleeeep(long duration) {
@@ -257,25 +263,6 @@ public class JobMasterClient extends Thread {
     while (duration > (System.currentTimeMillis() - start)) {
       looper.loop();
     }
-  }
-
-  /**
-   * loop until condition becomes true or timeLimit has been reached
-   * return true, if timeLimit has been reached
-   * @param condition
-   */
-  public static boolean loopUntil(BooleanObject condition, long timeLimit) {
-
-    long start = System.currentTimeMillis();
-    long duration = 0;
-
-    while (!condition.getValue() && timeLimit > duration) {
-      looper.loop();
-
-      duration = System.currentTimeMillis() - start;
-    }
-
-    return timeLimit <= duration;
   }
 
   public static void main(String[] args) {

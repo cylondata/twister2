@@ -67,8 +67,9 @@ public class Pinger extends Thread implements MessageHandler {
           LOG.log(Level.WARNING, "Pinger Thread sleep interrupted.", e);
         }
       }
-
     }
+
+    LOG.info("Pinger thread has been stopped. No more Ping mesasges will be sent.");
   }
 
   @Override
