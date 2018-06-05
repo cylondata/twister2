@@ -141,6 +141,7 @@ pkg_tar(
         ":twister2-client-lib-task-scheduler",
         ":twister2-client-lib-third_party",
         ":twister2-core-lib-executor",
+        ":twister2-master-lib",
     ],
 )
 

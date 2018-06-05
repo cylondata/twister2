@@ -57,6 +57,8 @@ public class BasicK8sWorker implements IWorker {
     List<WorkerNetworkInfo> workerList = workerController.waitForAllWorkersToJoin(10000);
     if (workerList == null) {
       LOG.severe("Can not get all workers to join. Something wrong. .......................");
+    } else {
+      LOG.info("All workers joined. " + WorkerNetworkInfo.workerListAsString(workerList));
     }
 
     LOG.info("All workers joined. Current time: " + System.currentTimeMillis());
