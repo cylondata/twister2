@@ -73,5 +73,6 @@ public interface DataFlowOperation {
    *
    * @param memoryMapped weather using disks
    */
-  void setMemoryMapped(boolean memoryMapped);
+  default void setMemoryMapped(boolean memoryMapped) {
+  }
 }

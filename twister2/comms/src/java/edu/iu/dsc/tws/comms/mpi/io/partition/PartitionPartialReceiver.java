@@ -124,4 +124,9 @@ public class PartitionPartialReceiver implements MessageReceiver {
       }
     }
   }
+
+  @Override
+  public void onFinish() {
+    // flush everything
+  }
 }

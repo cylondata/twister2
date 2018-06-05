@@ -74,7 +74,7 @@ public class SortJob implements IContainer {
     Map<String, Object> newCfg = new HashMap<>();
     partition = (MPIDataFlowPartition) channel.partition(newCfg, MessageType.OBJECT,
         0, sources, destinations,
-        new PartitionBatchFinalReceiver(new RecordSave()),
+        new PartitionBatchFinalReceiver(new RecordSave(), true, true),
         new PartitionPartialReceiver());
     // start the threads
     scheduleTasks();

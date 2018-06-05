@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.comms.shuffle;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.locks.Condition;
@@ -87,11 +86,6 @@ public class FSKeyedMerger {
    */
   private MessageType dataType;
 
-  /**
-   * The key comparator used for comparing keys
-   */
-  private Comparator<Object> keyComparator;
-
   private Lock lock = new ReentrantLock();
   private Condition notFull = lock.newCondition();
 
@@ -109,14 +103,13 @@ public class FSKeyedMerger {
 
   public FSKeyedMerger(int maxBytesInMemory, int maxRecsInMemory,
                        String dir, String opName, MessageType kType,
-                       MessageType dType, Comparator<Object> kComparator) {
+                       MessageType dType) {
     this.maxBytesToKeepInMemory = maxBytesInMemory;
     this.maxRecordsInMemory = maxRecsInMemory;
     this.folder = dir;
     this.operationName = opName;
     this.keyType = kType;
     this.dataType = dType;
-    this.keyComparator = kComparator;
     this.kryoSerializer = new KryoMemorySerializer();
   }
 

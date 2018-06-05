@@ -142,11 +142,12 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
   /**
    * Data type
    */
-  private MessageType type;
+  private MessageType dataType;
   /**
    * Key type
    */
   private MessageType keyType;
+
   /**
    * Weather this is a key based communication
    */
@@ -179,6 +180,11 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
   private Lock partialLock = new ReentrantLock();
 
   /**
+   * Edge used for communication
+   */
+  private int edge;
+
+  /**
    * A place holder for keeping the internal and external destinations
    */
   @SuppressWarnings("VisibilityModifier")
@@ -190,11 +196,11 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
   public MPIDataFlowPartition(TWSChannel channel, Set<Integer> sourceTasks, Set<Integer> destTasks,
                               MessageReceiver finalRcvr, MessageReceiver partialRcvr,
                               PartitionStratergy partitionStratergy,
-                              MessageType type, MessageType keyType) {
+                              MessageType dataType, MessageType keyType) {
     this(channel, sourceTasks, destTasks, finalRcvr, partialRcvr, partitionStratergy);
     this.isKeyed = true;
     this.keyType = keyType;
-    this.type = type;
+    this.dataType = dataType;
   }
 
   public MPIDataFlowPartition(TWSChannel channel, Set<Integer> srcs,
@@ -239,7 +245,8 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
   /**
    * Initialize
    */
-  public void init(Config cfg, MessageType t, TaskPlan taskPlan, int edge) {
+  public void init(Config cfg, MessageType t, TaskPlan taskPlan, int ed) {
+    this.edge = ed;
     this.thisSources = TaskPlanUtils.getTasksOfThisExecutor(taskPlan, sources);
     LOG.log(Level.INFO, String.format("%d setup loadbalance routing %s",
         taskPlan.getThisExecutor(), thisSources));
@@ -248,7 +255,7 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
     Map<Integer, Set<Integer>> internal = router.getInternalSendTasks(0);
     Map<Integer, Set<Integer>> external = router.getExternalSendTasks(0);
     this.instancePlan = taskPlan;
-    this.type = t;
+    this.dataType = t;
 
     LOG.log(Level.FINE, String.format("%d adding internal/external routing",
         taskPlan.getThisExecutor()));
@@ -307,14 +314,14 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
       receiveExecutorsSize = 1;
     }
     Set<Integer> execs = router.receivingExecutors();
-    for (int e : execs) {
+    for (int ex : execs) {
       int capacity = maxReceiveBuffers * 2 * receiveExecutorsSize;
       Queue<Pair<Object, MPIMessage>> pendingReceiveMessages =
           new ArrayBlockingQueue<Pair<Object, MPIMessage>>(
               capacity);
-      pendingReceiveMessagesPerSource.put(e, pendingReceiveMessages);
-      pendingReceiveDeSerializations.put(e, new ArrayBlockingQueue<MPIMessage>(capacity));
-      deSerializerMap.put(e, new MPIMultiMessageDeserializer(new KryoSerializer(), executor));
+      pendingReceiveMessagesPerSource.put(ex, pendingReceiveMessages);
+      pendingReceiveDeSerializations.put(ex, new ArrayBlockingQueue<MPIMessage>(capacity));
+      deSerializerMap.put(ex, new MPIMultiMessageDeserializer(new KryoSerializer(), executor));
     }
 
     for (int src : srcs) {
@@ -369,6 +376,11 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
 
   @Override
   public void finish() {
+    // first we need to call finish on the partial receivers
+    if (partialReceiver != null) {
+      partialReceiver.onFinish();
+    }
+    // now lets do the barrier
   }
 
   @Override
@@ -495,5 +507,17 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
 
   public Set<Integer> getDestinations() {
     return destinations;
+  }
+
+  public MessageType getDataType() {
+    return dataType;
+  }
+
+  public MessageType getKeyType() {
+    return keyType;
+  }
+
+  public int getEdge() {
+    return edge;
   }
 }

@@ -32,6 +32,10 @@ public class MPIContext extends CommunicationContext {
   private static final String NETWORK_PARTITION_MESSAGE_GROUP_HIGH_WATERMARK =
       "network.partition.message.group.high_water_mark";
 
+  private static final String SHUFFLE_MAX_BYTES_IN_MEMORY = "shuffle.memory.bytes.max";
+  private static final String SHUFFLE_MAX_RECORDS_IN_MEMORY = "shuffle.memory.records.max";
+  private static final String SHUFFLE_DIRECTORY_PATH = "shuffle.directory.path";
+
   public static final int DEFAULT_DESTINATION = 0;
 
   public static int bufferSize(Config cfg) {
@@ -69,6 +73,18 @@ public class MPIContext extends CommunicationContext {
 
   public static int getNetworkPartitionMessageGroupHighWaterMark(Config cfg) {
     return cfg.getIntegerValue(NETWORK_PARTITION_MESSAGE_GROUP_HIGH_WATERMARK, 16);
+  }
+
+  public static String getShuffleDirectoryPath(Config cfg) {
+    return cfg.getStringValue(SHUFFLE_DIRECTORY_PATH, "/tmp");
+  }
+
+  public static int getShuffleMaxRecordsInMemory(Config cfg) {
+    return cfg.getIntegerValue(SHUFFLE_MAX_RECORDS_IN_MEMORY, 64);
+  }
+
+  public static int getShuffleMaxBytesInMemory(Config cfg) {
+    return cfg.getIntegerValue(SHUFFLE_MAX_BYTES_IN_MEMORY, 6400);
   }
 }
 
