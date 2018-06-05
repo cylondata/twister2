@@ -31,8 +31,8 @@ import edu.iu.dsc.tws.comms.mpi.MPIDataFlowPartition;
  * Partial receiver is only going to get called for messages going to other destinations
  * We have partial receivers for each actual source
  */
-public class PartitionBatchPartialReceiver implements MessageReceiver {
-  private static final Logger LOG = Logger.getLogger(PartitionBatchPartialReceiver.class.getName());
+public class PartitionPartialReceiver implements MessageReceiver {
+  private static final Logger LOG = Logger.getLogger(PartitionPartialReceiver.class.getName());
 
   /**
    * Low water mark
@@ -76,7 +76,8 @@ public class PartitionBatchPartialReceiver implements MessageReceiver {
 
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-    lowWaterMark = MPIContext.getNetworkPartitionMessageGroupMax(cfg);
+    lowWaterMark = MPIContext.getNetworkPartitionMessageGroupLowWaterMark(cfg);
+    highWaterMark = MPIContext.getNetworkPartitionMessageGroupHighWaterMark(cfg);
     executor = op.getTaskPlan().getThisExecutor();
 
     destinations = ((MPIDataFlowPartition) op).getDestinations();
@@ -116,7 +117,7 @@ public class PartitionBatchPartialReceiver implements MessageReceiver {
       List<Object> send = new ArrayList<>(e.getValue());
 
       // if we send this list successfully
-      if (operation.send(source, send, 0, e.getKey())) {
+      if (operation.sendPartial(source, send, 0, e.getKey())) {
         // lets remove from ready list and clear the list
         e.getValue().clear();
         it.remove();

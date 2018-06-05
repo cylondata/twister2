@@ -11,5 +11,19 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.basic.batch.sort;
 
+import java.util.Random;
+
 public class RecordGenerator {
+  private int maxRange;
+
+  private Random random;
+
+  public RecordGenerator(int maxRange) {
+    this.maxRange = maxRange;
+    this.random = new Random();
+  }
+
+  public Record next() {
+    return new Record(random.nextInt(maxRange), 10);
+  }
 }
