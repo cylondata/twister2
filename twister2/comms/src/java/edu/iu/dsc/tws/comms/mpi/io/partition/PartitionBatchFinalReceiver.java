@@ -16,18 +16,28 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.GatherBatchReceiver;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 
 public class PartitionBatchFinalReceiver implements MessageReceiver {
+  private static final Logger LOG = Logger.getLogger(PartitionBatchFinalReceiver.class.getName());
   private Map<Integer, Map<Integer, Boolean>> finished;
 
   private Map<Integer, Map<Integer, List<Object>>> data;
 
   private int messageCount = 0;
+
+  private GatherBatchReceiver batchReceiver;
+
+  public PartitionBatchFinalReceiver(GatherBatchReceiver receiver) {
+    this.batchReceiver = receiver;
+  }
 
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     finished = new ConcurrentHashMap<>();
@@ -47,6 +57,9 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
     // add the object to the map
     messageCount++;
     if ((flags & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) {
+      if (finished.get(target) == null) {
+        LOG.log(Level.SEVERE, "Un-expected message to non-existing target: " + target);
+      }
       finished.get(target).put(source, true);
     }
 

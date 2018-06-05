@@ -31,6 +31,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.CompletionListener;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
@@ -333,23 +334,27 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
 
   @Override
   public boolean sendPartial(int source, Object message, int flags) {
+    int newFlags = flags | MessageFlags.ORIGIN_PARTIAL;
     return delegete.sendMessagePartial(source, message, 0,
-        flags, sendPartialRoutingParameters(source, 0));
+        newFlags, sendPartialRoutingParameters(source, 0));
   }
 
   @Override
   public boolean sendPartial(int source, Object message, int flags, int dest) {
-    return delegete.sendMessagePartial(source, message, dest, flags,
+    int newFlags = flags | MessageFlags.ORIGIN_PARTIAL;
+    return delegete.sendMessagePartial(source, message, dest, newFlags,
         sendPartialRoutingParameters(source, dest));
   }
 
   @Override
   public boolean send(int source, Object message, int flags) {
-    return delegete.sendMessage(source, message, 0, flags, sendRoutingParameters(source, 0));
+    int newFlags = flags | MessageFlags.ORIGIN_SENDER;
+    return delegete.sendMessage(source, message, 0, newFlags, sendRoutingParameters(source, 0));
   }
 
   @Override
   public boolean send(int source, Object message, int flags, int dest) {
+    int newFlags = flags | MessageFlags.ORIGIN_SENDER;
     return delegete.sendMessage(source, message, dest, flags, sendRoutingParameters(source, dest));
   }
 
@@ -451,7 +456,7 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
   public boolean receiveSendInternally(int source, int t,
                                        int destination, int flags, Object message) {
     // okay this must be for the
-    if (source == destination) {
+    if ((flags & MessageFlags.ORIGIN_PARTIAL) == MessageFlags.ORIGIN_PARTIAL) {
       return finalReceiver.onMessage(source, destination, t, flags, message);
     }
     return partialReceiver.onMessage(source, destination, t, flags, message);

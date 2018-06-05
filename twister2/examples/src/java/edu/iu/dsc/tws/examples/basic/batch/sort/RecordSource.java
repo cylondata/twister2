@@ -62,13 +62,15 @@ public class RecordSource implements Runnable {
     for (int i = 0; i < noOfWords; i++) {
       Record word = recordGenerator.next();
 
-      int dest = 0;
+      int destIndex = 0;
       int val = word.getKey();
       for (int j = 0; j < partitioning.size() - 1; j++) {
         if (val > partitioning.get(j) && val <= partitioning.get(j + 1)) {
-          dest = j;
+          destIndex = j;
         }
       }
+
+      int dest = destinations.get(destIndex);
 
       int flags = 0;
       if (i >= (noOfWords - noOfDestinations)) {

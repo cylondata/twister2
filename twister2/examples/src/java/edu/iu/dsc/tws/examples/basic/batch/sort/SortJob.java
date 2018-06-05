@@ -29,7 +29,7 @@ import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.mpi.MPIDataFlowPartition;
 import edu.iu.dsc.tws.comms.mpi.io.partition.PartitionBatchFinalReceiver;
-import edu.iu.dsc.tws.comms.mpi.io.partition.PartitionBatchPartialReceiver;
+import edu.iu.dsc.tws.comms.mpi.io.partition.PartitionPartialReceiver;
 import edu.iu.dsc.tws.examples.utils.WordCountUtils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
@@ -45,7 +45,7 @@ public class SortJob implements IContainer {
 
   private TWSCommunication channel;
 
-  private static final int NO_OF_TASKS = 16;
+  private static final int NO_OF_TASKS = 2;
 
   private Config config;
 
@@ -74,8 +74,8 @@ public class SortJob implements IContainer {
     Map<String, Object> newCfg = new HashMap<>();
     partition = (MPIDataFlowPartition) channel.partition(newCfg, MessageType.OBJECT,
         0, sources, destinations,
-        new PartitionBatchFinalReceiver(),
-        new PartitionBatchPartialReceiver());
+        new PartitionBatchFinalReceiver(new RecordSave()),
+        new PartitionPartialReceiver());
     // start the threads
     scheduleTasks();
     // progress the work
@@ -139,7 +139,7 @@ public class SortJob implements IContainer {
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
     jobBuilder.setName("sort-job");
     jobBuilder.setContainerClass(SortJob.class.getName());
-    jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 4);
+    jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 1);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job
