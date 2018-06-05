@@ -219,21 +219,4 @@ public class WorkerController implements IWorkerController, MessageHandler {
     }
   }
 
-  public static void printWorkers(List<WorkerNetworkInfo> workers) {
-
-    if (workers == null) {
-      return;
-    }
-
-    StringBuffer buffer = new StringBuffer();
-    buffer.append("Number of workers: " + workers.size() + "\n");
-    int i = 0;
-    for (WorkerNetworkInfo worker : workers) {
-      buffer.append(String.format("%d: workerID[%d] %s\n",
-          i++, worker.getWorkerID(), worker.getWorkerName()));
-    }
-
-    LOG.info(buffer.toString());
-  }
-
 }

@@ -76,9 +76,7 @@ public class TaskGather implements IContainer {
     private Config config;
     @Override
     public void run() {
-
-      ctx.write("partition-edge", "Hello 0");
-      ctx.write("partition-edge", "Hello 1");
+      ctx.write("partition-edge", "Hello0");
     }
 
     @Override
@@ -118,7 +116,7 @@ public class TaskGather implements IContainer {
     JobConfig jobConfig = new JobConfig();
 
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
-    jobBuilder.setName("task-example");
+    jobBuilder.setName("task-gather");
     jobBuilder.setContainerClass(TaskExample.class.getName());
     jobBuilder.setRequestResource(new ResourceContainer(1, 1024), 1);
     jobBuilder.setConfig(jobConfig);

@@ -19,17 +19,21 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.JobConfig;
+import edu.iu.dsc.tws.api.Twister2Submitter;
+import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.mpi.MPIDataFlowPartition;
-import edu.iu.dsc.tws.comms.mpi.io.gather.GatherMultiBatchFinalReceiver;
-import edu.iu.dsc.tws.comms.mpi.io.gather.GatherMultiBatchPartialReceiver;
-import edu.iu.dsc.tws.examples.basic.batch.wordcount.WordAggregator;
+import edu.iu.dsc.tws.comms.mpi.io.partition.PartitionBatchFinalReceiver;
+import edu.iu.dsc.tws.comms.mpi.io.partition.PartitionPartialReceiver;
 import edu.iu.dsc.tws.examples.utils.WordCountUtils;
+import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
+import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
 public class SortJob implements IContainer {
@@ -41,7 +45,7 @@ public class SortJob implements IContainer {
 
   private TWSCommunication channel;
 
-  private static final int NO_OF_TASKS = 16;
+  private static final int NO_OF_TASKS = 2;
 
   private Config config;
 
@@ -68,10 +72,10 @@ public class SortJob implements IContainer {
     setupNetwork();
     // create the communication
     Map<String, Object> newCfg = new HashMap<>();
-    partition = (MPIDataFlowPartition) channel.keyedGather(newCfg, MessageType.OBJECT,
-        destinations, sources, destinations,
-        new GatherMultiBatchFinalReceiver(new WordAggregator()),
-        new GatherMultiBatchPartialReceiver());
+    partition = (MPIDataFlowPartition) channel.partition(newCfg, MessageType.OBJECT,
+        0, sources, destinations,
+        new PartitionBatchFinalReceiver(new RecordSave(), true, true),
+        new PartitionPartialReceiver());
     // start the threads
     scheduleTasks();
     // progress the work
@@ -123,5 +127,22 @@ public class SortJob implements IContainer {
         LOG.log(Level.SEVERE, "Something bad happened", t);
       }
     }
+  }
+
+  public static void main(String[] args) {
+    // first load the configurations from command line and config files
+    Config config = ResourceAllocator.loadConfig(new HashMap<>());
+
+    // build JobConfig
+    JobConfig jobConfig = new JobConfig();
+
+    BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
+    jobBuilder.setName("sort-job");
+    jobBuilder.setContainerClass(SortJob.class.getName());
+    jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 1);
+    jobBuilder.setConfig(jobConfig);
+
+    // now submit the job
+    Twister2Submitter.submitContainerJob(jobBuilder.build(), config);
   }
 }

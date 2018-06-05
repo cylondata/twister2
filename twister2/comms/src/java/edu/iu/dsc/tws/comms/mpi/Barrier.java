@@ -9,21 +9,8 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.basic.batch.sort;
+package edu.iu.dsc.tws.comms.mpi;
 
-import java.util.Random;
+public class Barrier {
 
-public class RecordGenerator {
-  private int maxRange;
-
-  private Random random;
-
-  public RecordGenerator(int maxRange) {
-    this.maxRange = maxRange;
-    this.random = new Random();
-  }
-
-  public Record next() {
-    return new Record(random.nextInt(maxRange), 10);
-  }
 }

@@ -25,6 +25,7 @@ package edu.iu.dsc.tws.common.discovery;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.List;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -142,6 +143,28 @@ public class WorkerNetworkInfo {
   public int hashCode() {
     return Objects.hash(getWorkerName(), workerID);
   }
+
+  /**
+   * convert the worker list to string for logging
+   * @param workers
+   * @return
+   */
+  public static String workerListAsString(List<WorkerNetworkInfo> workers) {
+    if (workers == null) {
+      return null;
+    }
+
+    StringBuffer buffer = new StringBuffer();
+    buffer.append("Number of workers: " + workers.size() + "\n");
+    int i = 0;
+    for (WorkerNetworkInfo worker : workers) {
+      buffer.append(String.format("%d: workerID[%d] %s\n",
+          i++, worker.getWorkerID(), worker.getWorkerName()));
+    }
+
+    return buffer.toString();
+  }
+
 }
 
 

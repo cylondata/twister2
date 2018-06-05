@@ -21,12 +21,16 @@ public class JobMasterContext extends Context {
   public static final String JOB_MASTER_RUNS_IN_CLIENT = "twister2.job.master.runs.in.client";
 
   // worker to master ping interval in milliseconds
-  public static final long PING_INTERVAL_DEFAULT = 1000;
+  public static final long PING_INTERVAL_DEFAULT = 10000;
   public static final String PING_INTERVAL = "twister2.worker.ping.interval";
 
   // client to master ping interval in milliseconds
   public static final int JOB_MASTER_PORT_DEFAULT = 11111;
   public static final String JOB_MASTER_PORT = "twister2.job.master.port";
+
+  // client to master ping interval in milliseconds
+  public static final String JOB_MASTER_IP_DEFAULT = null;
+  public static final String JOB_MASTER_IP = "twister2.job.master.ip";
 
   public static boolean jobMasterRunsInClient(Config cfg) {
     return cfg.getBooleanValue(JOB_MASTER_RUNS_IN_CLIENT, JOB_MASTER_RUNS_IN_CLIENT_DEFAULT);
@@ -38,6 +42,10 @@ public class JobMasterContext extends Context {
 
   public static int jobMasterPort(Config cfg) {
     return cfg.getIntegerValue(JOB_MASTER_PORT, JOB_MASTER_PORT_DEFAULT);
+  }
+
+  public static String jobMasterIP(Config cfg) {
+    return cfg.getStringValue(JOB_MASTER_IP, JOB_MASTER_IP_DEFAULT);
   }
 
 }

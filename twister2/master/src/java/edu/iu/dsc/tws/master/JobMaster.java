@@ -49,6 +49,8 @@ public class JobMaster extends Thread {
   }
 
   public void init() {
+    Logger.getLogger("edu.iu.dsc.tws.common.net.tcp").setLevel(Level.WARNING);
+
     looper = new Progress();
 
     ServerConnectHandler connectHandler = new ServerConnectHandler();
@@ -78,6 +80,8 @@ public class JobMaster extends Thread {
 
   @Override
   public void run() {
+    LOG.info("JobMaster [" + masterAddress + "] started and waiting worker messages on port: "
+        + masterPort);
 
     int loopCount = 10;
     int sleepDuration = 100;
@@ -121,7 +125,7 @@ public class JobMaster extends Thread {
    */
   public void allWorkersCompleted() {
 
-    LOG.info("All workers have completed.");
+    LOG.info("All workers have completed. JobMaster will stop.");
     workersCompleted = true;
     interrupt();
   }

@@ -12,11 +12,15 @@
 package edu.iu.dsc.tws.rsched.schedulers.k8s;
 
 import java.io.File;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.master.JobMaster;
+import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
@@ -95,15 +99,15 @@ public class KubernetesLauncher implements ILauncher {
     }
 
     // start the Job Master locally
-//    if (JobMasterContext.jobMasterRunsInClient(config)) {
-//      JobMaster jobMaster = null;
-//      try {
-//        jobMaster = new JobMaster(config, InetAddress.getLocalHost().getHostAddress());
-//      } catch (UnknownHostException e) {
-//        LOG.log(Level.SEVERE, "Exception when getting local host address: ", e);
-//      }
-//      jobMaster.init();
-//    }
+    if (JobMasterContext.jobMasterRunsInClient(config)) {
+      JobMaster jobMaster = null;
+      try {
+        jobMaster = new JobMaster(config, InetAddress.getLocalHost().getHostAddress());
+      } catch (UnknownHostException e) {
+        LOG.log(Level.SEVERE, "Exception when getting local host address: ", e);
+      }
+      jobMaster.init();
+    }
 
     // transfer the job package to pods, measure the transfer time
     long start = System.currentTimeMillis();

@@ -11,8 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.basic.batch.sort;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
@@ -20,10 +20,6 @@ import edu.iu.dsc.tws.comms.api.MessageFlags;
 
 public class RecordSource implements Runnable {
   private DataFlowOperation operation;
-
-  private Random random = new Random();
-
-  private char[] tempCharacters;
 
   private static final int MAX_CHARS = 5;
 
@@ -35,39 +31,52 @@ public class RecordSource implements Runnable {
 
   private List<Integer> destinations;
 
-  private RecordGenerator randomString;
-
-  private int noOfWordsSent;
-
   private int executor;
 
   private RecordGenerator recordGenerator;
+
+  private List<Integer> partitioning;
 
   public RecordSource(Config config, DataFlowOperation operation,
                       List<Integer> dests, int tIndex,
                       int noOfRecords, int range, int totalTasks) {
     this.operation = operation;
-    this.tempCharacters = new char[MAX_CHARS];
     this.noOfWords = noOfRecords;
     this.destinations = dests;
     this.taskId = tIndex;
     this.noOfDestinations = destinations.size();
     this.executor = operation.getTaskPlan().getThisExecutor();
-    this.recordGenerator = new RecordGenerator(tIndex, range, totalTasks);
+    this.recordGenerator = new RecordGenerator(range);
+
+    this.partitioning = new ArrayList<>();
+    int perTask = range / totalTasks;
+    int sum = 0;
+    for (int i = 0; i < totalTasks; i++) {
+      partitioning.add(sum);
+      sum += perTask;
+    }
   }
 
   @Override
   public void run() {
-    int nextIndex = 0;
     for (int i = 0; i < noOfWords; i++) {
       Record word = recordGenerator.next();
-      nextIndex = nextIndex % noOfDestinations;
-      int dest = destinations.get(nextIndex);
-      nextIndex++;
+
+      int destIndex = 0;
+      int val = word.getKey();
+      for (int j = 0; j < partitioning.size() - 1; j++) {
+        if (val > partitioning.get(j) && val <= partitioning.get(j + 1)) {
+          destIndex = j;
+        }
+      }
+
+      int dest = destinations.get(destIndex);
+
       int flags = 0;
       if (i >= (noOfWords - noOfDestinations)) {
         flags = MessageFlags.FLAGS_LAST;
       }
+
       // lets try to process if send doesn't succeed
       while (!operation.send(taskId, word, flags, dest)) {
         try {
@@ -76,7 +85,6 @@ public class RecordSource implements Runnable {
           e.printStackTrace();
         }
       }
-      noOfWordsSent++;
     }
   }
 }

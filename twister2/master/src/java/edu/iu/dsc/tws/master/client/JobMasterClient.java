@@ -51,15 +51,17 @@ public class JobMasterClient extends Thread {
   private Pinger pinger;
   private WorkerController workerController;
 
-  public JobMasterClient(Config config, String masterAddress, WorkerNetworkInfo thisWorker) {
+  public JobMasterClient(Config config, WorkerNetworkInfo thisWorker) {
     this.config = config;
-    this.masterAddress = masterAddress;
     this.thisWorker = thisWorker;
+    this.masterAddress = JobMasterContext.jobMasterIP(config);
     this.masterPort = JobMasterContext.jobMasterPort(config);
     this.numberOfWorkers = Context.workerInstances(config);
   }
 
   public void init() {
+    Logger.getLogger("edu.iu.dsc.tws.common.net.tcp").setLevel(Level.SEVERE);
+
     looper = new Progress();
 
     ClientConnectHandler connectHandler = new ClientConnectHandler();
@@ -148,7 +150,7 @@ public class JobMasterClient extends Thread {
       return false;
     }
 
-    LOG.info("Sent the Worker Starting message with requestID: \n" + workerStateChange);
+    LOG.info("Sent the Worker Starting message: \n" + workerStateChange);
     return true;
   }
 
@@ -225,10 +227,11 @@ public class JobMasterClient extends Thread {
     Config cfg = Config.newBuilder()
         .put(Context.TWISTER2_WORKER_INSTANCES, numberOfWorkers)
         .put(JobMasterContext.PING_INTERVAL, 1000)
+        .put(JobMasterContext.JOB_MASTER_IP, masterAddress)
         .put(JobMasterContext.JOB_MASTER_PORT, masterPort)
         .build();
 
-    JobMasterClient client = new JobMasterClient(cfg, masterAddress, workerNetworkInfo);
+    JobMasterClient client = new JobMasterClient(cfg, workerNetworkInfo);
     client.init();
 
     client.sendWorkerStartingMessage();
@@ -239,13 +242,13 @@ public class JobMasterClient extends Thread {
     client.sendWorkerRunningMessage();
 
     List<WorkerNetworkInfo> workerList = client.workerController.getWorkerList();
-    WorkerController.printWorkers(workerList);
+    LOG.info(WorkerNetworkInfo.workerListAsString(workerList));
 
     // wait 2000ms
     sleeeep(2000);
 
     workerList = client.workerController.waitForAllWorkersToJoin(2000);
-    WorkerController.printWorkers(workerList);
+    LOG.info(WorkerNetworkInfo.workerListAsString(workerList));
 
     client.sendWorkerCompletedMessage();
 //    sleeeep(500);
