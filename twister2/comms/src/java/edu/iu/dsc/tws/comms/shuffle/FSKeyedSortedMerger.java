@@ -24,7 +24,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 
-public class FSKeyedSortedMerger {
+public class FSKeyedSortedMerger implements Shuffle {
   private static final Logger LOG = Logger.getLogger(FSKeyedSortedMerger.class.getName());
   /**
    * Maximum bytes to keep in memory
@@ -195,12 +195,12 @@ public class FSKeyedSortedMerger {
   /**
    * This method gives the values
    */
-  public Iterator<KeyValue> readIterator() {
+  public Iterator<Object> readIterator() {
     // lets start with first file
     return new FSIterator();
   }
 
-  private class FSIterator implements Iterator<KeyValue> {
+  private class FSIterator implements Iterator<Object> {
     // the current file index
     private int currentFileIndex = 0;
     // Index of the current file

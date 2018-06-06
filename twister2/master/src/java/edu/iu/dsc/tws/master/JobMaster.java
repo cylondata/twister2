@@ -35,15 +35,23 @@ public class JobMaster extends Thread {
   private Config config;
   private String masterAddress;
   private int masterPort;
+  private String jobName;
 
   private RRServer rrServer;
   private WorkerMonitor workerMonitor;
   private int numberOfWorkers;
   private boolean workersCompleted = false;
 
-  public JobMaster(Config config, String masterAddress) {
+  private IJobTerminator jobTerminator;
+
+  public JobMaster(Config config,
+                   String masterAddress,
+                   IJobTerminator jobTerminator,
+                   String jobName) {
     this.config = config;
     this.masterAddress = masterAddress;
+    this.jobTerminator = jobTerminator;
+    this.jobName = jobName;
     this.masterPort = JobMasterContext.jobMasterPort(config);
     this.numberOfWorkers = Context.workerInstances(config);
   }
@@ -108,9 +116,6 @@ public class JobMaster extends Thread {
       }
     }
 
-//    for (int i = 0; i < loopCount; i++) {
-//      looper.loop();
-//    }
     rrServer.stop();
   }
 
@@ -121,13 +126,17 @@ public class JobMaster extends Thread {
   }
 
   /**
-   * this method is executed when worker completed messages received from all workers
+   * this method is executed when the worker completed message received from all workers
    */
   public void allWorkersCompleted() {
 
     LOG.info("All workers have completed. JobMaster will stop.");
     workersCompleted = true;
-    interrupt();
+//    this.interrupt();
+
+    if (jobTerminator != null) {
+      jobTerminator.terminateJob(jobName);
+    }
   }
 
   public class ServerConnectHandler implements ConnectHandler {
@@ -166,7 +175,7 @@ public class JobMaster extends Thread {
         .put(JobMasterContext.JOB_MASTER_PORT, port)
         .build();
 
-    JobMaster jobMaster = new JobMaster(cfg, host);
+    JobMaster jobMaster = new JobMaster(cfg, host, null, null);
     jobMaster.init();
 
     LOG.info("JobMaster started on port " + port + " with " + numberOfWorkers

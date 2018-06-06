@@ -19,6 +19,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.master.IJobTerminator;
 import edu.iu.dsc.tws.master.JobMaster;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
@@ -31,7 +32,7 @@ import io.kubernetes.client.models.V1PersistentVolumeClaim;
 import io.kubernetes.client.models.V1Service;
 import io.kubernetes.client.models.V1beta2StatefulSet;
 
-public class KubernetesLauncher implements ILauncher {
+public class KubernetesLauncher implements ILauncher, IJobTerminator {
 
   private static final Logger LOG = Logger.getLogger(KubernetesLauncher.class.getName());
 
@@ -102,11 +103,12 @@ public class KubernetesLauncher implements ILauncher {
     if (JobMasterContext.jobMasterRunsInClient(config)) {
       JobMaster jobMaster = null;
       try {
-        jobMaster = new JobMaster(config, InetAddress.getLocalHost().getHostAddress());
+        jobMaster =
+            new JobMaster(config, InetAddress.getLocalHost().getHostAddress(), this, jobName);
+        jobMaster.init();
       } catch (UnknownHostException e) {
         LOG.log(Level.SEVERE, "Exception when getting local host address: ", e);
       }
-      jobMaster.init();
     }
 
     // transfer the job package to pods, measure the transfer time
