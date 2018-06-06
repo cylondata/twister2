@@ -20,6 +20,10 @@ common_deps_files = [
     "@commons_cli_commons_cli//jar",
     "@com_google_protobuf_protobuf_java//jar",
     "@commons_io_commons_io//jar",
+    "@org_apache_hadoop_hdfs//jar",
+    "@org_apache_hadoop_common//jar",
+    "@org_apache_hadoop_annotations//jar",
+    "@org_apache_hadoop_auth//jar",
 ]
 
 java_library(
