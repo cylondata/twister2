@@ -24,6 +24,16 @@ common_deps_files = [
     "@org_apache_hadoop_common//jar",
     "@org_apache_hadoop_annotations//jar",
     "@org_apache_hadoop_auth//jar",
+    "@org_apache_hadoop_mapreduce//jar",
+    "@com_google_code_findbugs//jar",
+    "@com_fasterxml_woodstox//jar",
+    "@org_codehaus_woodstox//jar",
+    "@commons_io//jar",
+    "@commons_collections//jar",
+    "@commons_lang//jar",
+    "@commons_configuration//jar",
+    "@log4j//jar",
+    "@org_apache_htrace//jar",
 ]
 
 java_library(
