@@ -117,7 +117,7 @@ public class TaskGather implements IContainer {
 
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
     jobBuilder.setName("task-gather");
-    jobBuilder.setContainerClass(TaskExample.class.getName());
+    jobBuilder.setContainerClass(TaskGather.class.getName());
     jobBuilder.setRequestResource(new ResourceContainer(1, 1024), 1);
     jobBuilder.setConfig(jobConfig);
 
