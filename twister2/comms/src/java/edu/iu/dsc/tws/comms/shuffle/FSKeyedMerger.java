@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.comms.shuffle;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.locks.Condition;
@@ -23,7 +22,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 
-public class FSKeyedMerger {
+public class FSKeyedMerger implements Shuffle {
   private static final Logger LOG = Logger.getLogger(FSKeyedMerger.class.getName());
 
   /**
@@ -87,11 +86,6 @@ public class FSKeyedMerger {
    */
   private MessageType dataType;
 
-  /**
-   * The key comparator used for comparing keys
-   */
-  private Comparator<Object> keyComparator;
-
   private Lock lock = new ReentrantLock();
   private Condition notFull = lock.newCondition();
 
@@ -109,14 +103,13 @@ public class FSKeyedMerger {
 
   public FSKeyedMerger(int maxBytesInMemory, int maxRecsInMemory,
                        String dir, String opName, MessageType kType,
-                       MessageType dType, Comparator<Object> kComparator) {
+                       MessageType dType) {
     this.maxBytesToKeepInMemory = maxBytesInMemory;
     this.maxRecordsInMemory = maxRecsInMemory;
     this.folder = dir;
     this.operationName = opName;
     this.keyType = kType;
     this.dataType = dType;
-    this.keyComparator = kComparator;
     this.kryoSerializer = new KryoMemorySerializer();
   }
 
@@ -186,12 +179,12 @@ public class FSKeyedMerger {
   /**
    * This method gives the values
    */
-  public Iterator<KeyValue> readIterator() {
+  public Iterator<Object> readIterator() {
     // lets start with first file
     return new FSIterator();
   }
 
-  private class FSIterator implements Iterator<KeyValue> {
+  private class FSIterator implements Iterator<Object> {
     // the current file index
     private int currentFileIndex = 0;
     // Index of the current file

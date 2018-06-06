@@ -49,7 +49,8 @@ public class HadoopFileSystem extends FileSystem {
         FileSystem.class.getClassLoader()).asSubclass(FileSystem.class);
   }
 
-  private static org.apache.hadoop.fs.Path toHadoopPath(Path path) {
+  public static org.apache.hadoop.fs.Path toHadoopPath(Path path) {
+    System.out.println("%%%%%%%%%%%%%% URL is:" + path.toUri());
     return new org.apache.hadoop.fs.Path(path.toUri());
   }
 
@@ -175,6 +176,7 @@ public class HadoopFileSystem extends FileSystem {
 
     for (int i = 0; i < files.length; i++) {
       files[i] = new HadoopFileStatus(hadoopFiles[i]);
+      System.out.println("File Details:" + files[i]);
     }
 
     return files;
@@ -223,6 +225,9 @@ public class HadoopFileSystem extends FileSystem {
       LOG.info("Could not load the Hadoop File system implementation for scheme " + scheme);
     }
     return clazz;
+  }
+
+  public void close() throws IOException {
   }
 }
 

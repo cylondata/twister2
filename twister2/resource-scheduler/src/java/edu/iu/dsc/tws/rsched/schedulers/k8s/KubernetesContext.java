@@ -33,6 +33,12 @@ public class KubernetesContext extends SchedulerContext {
   public static final int K8S_WORKER_BASE_PORT_DEFAULT = 9999;
   public static final String K8S_WORKER_BASE_PORT = "kubernetes.worker.base.port";
 
+  // this value has to be set in order to be used. Therefore its default value is not valid.
+  // this value is not set through config files.
+  // It is set when initiating the worker automatically
+  public static final int K8S_WORKER_PORT_DEFAULT = -1;
+  public static final String K8S_WORKER_PORT = "kubernetes.worker.port";
+
   public static final String WORKER_TRANSPORT_PROTOCOL_DEFAULT = "TCP";
   public static final String WORKER_TRANSPORT_PROTOCOL = "kubernetes.worker.transport.protocol";
 
@@ -87,6 +93,10 @@ public class KubernetesContext extends SchedulerContext {
 
   public static int workerBasePort(Config cfg) {
     return cfg.getIntegerValue(K8S_WORKER_BASE_PORT, K8S_WORKER_BASE_PORT_DEFAULT);
+  }
+
+  public static int workerPort(Config cfg) {
+    return cfg.getIntegerValue(K8S_WORKER_PORT, K8S_WORKER_PORT_DEFAULT);
   }
 
   public static String imagePullPolicy(Config cfg) {

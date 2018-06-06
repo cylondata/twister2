@@ -82,7 +82,8 @@ public class WorkerController implements IWorkerController, MessageHandler {
       return workerList;
     }
 
-    return getWorkerListFromJobMaster();
+    getWorkerListFromJobMaster();
+    return workerList;
   }
 
   @Override
@@ -135,7 +136,7 @@ public class WorkerController implements IWorkerController, MessageHandler {
           waitingResponse1 = false;
           LOG.info("Timelimit has been reached and the worker list has not been received "
               + "from the job master. It will provide the list as is.");
-          return workerList;
+          return null;
         }
       } catch (InterruptedException e) {
         waitingResponse1 = false;
@@ -147,7 +148,7 @@ public class WorkerController implements IWorkerController, MessageHandler {
     return workerList;
   }
 
-  public boolean sendWorkerListRequest(ListWorkersRequest.RequestType requestType) {
+  private boolean sendWorkerListRequest(ListWorkersRequest.RequestType requestType) {
     ListWorkersRequest listRequest = ListWorkersRequest.newBuilder()
         .setWorkerID(thisWorker.getWorkerID())
         .setRequestType(requestType)
@@ -217,23 +218,6 @@ public class WorkerController implements IWorkerController, MessageHandler {
       LOG.log(Level.SEVERE, "Can not convert the IP string to InetAddress: " + ipStr, e);
       throw new RuntimeException(e);
     }
-  }
-
-  public static void printWorkers(List<WorkerNetworkInfo> workers) {
-
-    if (workers == null) {
-      return;
-    }
-
-    StringBuffer buffer = new StringBuffer();
-    buffer.append("Number of workers: " + workers.size() + "\n");
-    int i = 0;
-    for (WorkerNetworkInfo worker : workers) {
-      buffer.append(String.format("%d: workerID[%d] %s\n",
-          i++, worker.getWorkerID(), worker.getWorkerName()));
-    }
-
-    LOG.info(buffer.toString());
   }
 
 }

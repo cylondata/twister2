@@ -35,8 +35,8 @@ twister2.logging.maximum.files: 5
 twister2.job.master.runs.in.client: true
 
 # ping message intervals from workers to the job master in milliseconds
-# default value is 1000
-twister2.worker.ping.interval: 1000
+# default value is 10seconds = 10000
+twister2.worker.ping.interval: 10000
 
 # twister2 job master port number
 # default value is 11111

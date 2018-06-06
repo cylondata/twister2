@@ -9,15 +9,8 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.api;
+package edu.iu.dsc.tws.master;
 
-public final class MessageFlags {
-  private MessageFlags() {
-  }
-
-  public static final int FLAGS_LAST = 1 << 30;
-  public static final int FLAGS_MULTI_MSG = 1 << 29;
-  public static final int ORIGIN_SENDER = 1 << 28;
-  public static final int ORIGIN_PARTIAL = 1 << 27;
-
+public interface IJobTerminator {
+  boolean terminateJob(String jobName);
 }

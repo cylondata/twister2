@@ -25,7 +25,7 @@ import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
  * Save the records to file system and retrieve them, this is just values, so no
  * sorting as in the keyed case
  */
-public class FSMerger {
+public class FSMerger implements Shuffle {
   /**
    * Maximum bytes to keep in memory
    */

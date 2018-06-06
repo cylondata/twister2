@@ -24,11 +24,10 @@ public final class HdfsDataContext extends Context {
 
   private static final String HDFS_CONFIG_DIRECTORY = "twister2.hdfs.config.directory";
   private static final String HDFS_CONFIG_DIRECTORY_DEFAULT
-      = "$HADOOP_HOME/etc/hadoop";
+      = "$HADOOP_HOME/etc/hadoop/core-site.xml";
 
   private static final String HDFS_DATA_DIRECTORY = "twister2.hdfs.data.directory";
-  private static final String HDFS_DATA_DIRECTORY_DEFAULT
-      = "/tmp/twister2hdfs/data";
+  private static final String HDFS_DATA_DIRECTORY_DEFAULT = "/user/kannan/";
 
   private HdfsDataContext() {
   }

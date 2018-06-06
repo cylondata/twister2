@@ -41,6 +41,12 @@ public interface MessageReceiver {
   boolean onMessage(int source, int destination, int target, int flags, Object object);
 
   /**
+   * Called when the end of the operation is reached
+   */
+  default void onFinish() {
+  }
+
+  /**
    * This method will be called by the progress
    */
   void progress();
