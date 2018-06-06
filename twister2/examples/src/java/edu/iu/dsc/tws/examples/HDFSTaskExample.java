@@ -139,7 +139,7 @@ public class HDFSTaskExample implements IContainer {
     } finally {
       try {
         hadoopFileSystem.close();
-        hadoopFileSystem1.close();
+        //hadoopFileSystem1.close();
       } catch (IOException e) {
         e.printStackTrace();
       }
