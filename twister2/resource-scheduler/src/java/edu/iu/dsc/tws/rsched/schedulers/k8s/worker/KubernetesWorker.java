@@ -179,7 +179,6 @@ public final class KubernetesWorker {
 
     jobMasterClient.sendWorkerRunningMessage();
     startWorkerClass(jobMasterClient.getWorkerController(), pv);
-
     closeWorker(podName);
   }
 
@@ -249,6 +248,9 @@ public final class KubernetesWorker {
    */
   public static void closeWorker(String podName) {
 
+    // send worker completed message to the Job Master and wait for job master to delete the worker
+    jobMasterClient.sendWorkerCompletedMessage();
+    jobMasterClient.close();
     waitIndefinitely();
   }
 
@@ -259,7 +261,8 @@ public final class KubernetesWorker {
 
     while (true) {
       try {
-        LOG.info("Waiting indefinetely idle. Sleeping 100sec. Time: " + new java.util.Date());
+        LOG.info("Worker completed. Waiting idly to be deleted by Job Master. Sleeping 100sec. "
+            + "Time: " + new java.util.Date());
         Thread.sleep(100000);
       } catch (InterruptedException e) {
         LOG.log(Level.WARNING, "Thread sleep interrupted.", e);

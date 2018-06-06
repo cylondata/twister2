@@ -94,7 +94,6 @@ public class JobMasterClient extends Thread {
     looper.loop();
     this.start();
 
-    workerController.sendWorkerListRequest(ListWorkersRequest.RequestType.IMMEDIATE_RESPONSE);
     pinger.start();
   }
 

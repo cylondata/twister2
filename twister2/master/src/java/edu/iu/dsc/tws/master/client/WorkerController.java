@@ -82,7 +82,8 @@ public class WorkerController implements IWorkerController, MessageHandler {
       return workerList;
     }
 
-    return getWorkerListFromJobMaster();
+    getWorkerListFromJobMaster();
+    return workerList;
   }
 
   @Override
@@ -135,7 +136,7 @@ public class WorkerController implements IWorkerController, MessageHandler {
           waitingResponse1 = false;
           LOG.info("Timelimit has been reached and the worker list has not been received "
               + "from the job master. It will provide the list as is.");
-          return workerList;
+          return null;
         }
       } catch (InterruptedException e) {
         waitingResponse1 = false;
@@ -147,7 +148,7 @@ public class WorkerController implements IWorkerController, MessageHandler {
     return workerList;
   }
 
-  public boolean sendWorkerListRequest(ListWorkersRequest.RequestType requestType) {
+  private boolean sendWorkerListRequest(ListWorkersRequest.RequestType requestType) {
     ListWorkersRequest listRequest = ListWorkersRequest.newBuilder()
         .setWorkerID(thisWorker.getWorkerID())
         .setRequestType(requestType)
