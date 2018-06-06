@@ -76,7 +76,7 @@ public class TaskGather implements IContainer {
     private Config config;
     @Override
     public void run() {
-      ctx.write("partition-edge", "Hello0");
+      ctx.write("partition-edge", "Twister2");
     }
 
     @Override
