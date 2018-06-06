@@ -17,10 +17,8 @@ import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
-
 import edu.iu.dsc.tws.executor.ExecutionPlan;
 import edu.iu.dsc.tws.executor.INodeInstance;
-import edu.iu.dsc.tws.executor.ThreadSharingExecutor;
 
 public class ThreadStaticExecutor {
 
