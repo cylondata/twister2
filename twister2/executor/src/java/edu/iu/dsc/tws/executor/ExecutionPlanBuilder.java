@@ -26,6 +26,7 @@ import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 import edu.iu.dsc.tws.executor.comm.IParallelOperation;
 import edu.iu.dsc.tws.executor.comm.ParallelOperationFactory;
+import edu.iu.dsc.tws.executor.threading.ThreadStaticExecutor;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.ISink;
@@ -195,9 +196,21 @@ public class ExecutionPlanBuilder implements IExecutor {
     }
 
     // lets start the execution
-    ThreadSharingExecutor threadSharingExecutor =
+    /**
+     * Threading Model can be chosen here
+     * */
+
+    /*ThreadSharingExecutor threadSharingExecutor =
         new ThreadSharingExecutor(noOfThreads);
-    threadSharingExecutor.execute(execution);
+    threadSharingExecutor.execute(execution);*/
+
+    ThreadStaticExecutor threadStaticExecutor =
+        new ThreadStaticExecutor(noOfThreads);
+    threadStaticExecutor.execute(execution);
+
+
+
+
 
     return execution;
   }
