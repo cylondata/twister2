@@ -34,6 +34,7 @@ common_deps_files = [
     "@commons_configuration//jar",
     "@log4j//jar",
     "@org_apache_htrace//jar",
+    "@org_apache_hadoop//jar",
 ]
 
 java_library(

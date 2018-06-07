@@ -43,6 +43,7 @@ import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.data.fs.Path;
+import edu.iu.dsc.tws.data.hdfs.HadoopDataOutputStream;
 import edu.iu.dsc.tws.data.hdfs.HadoopFileSystem;
 import edu.iu.dsc.tws.data.utils.HdfsDataContext;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -112,6 +113,7 @@ public class HDFSTaskExample implements IContainer {
       hadoopFileSystem = org.apache.hadoop.fs.FileSystem.get(conf);
       org.apache.hadoop.fs.Path path = new org.apache.hadoop.fs.Path(directoryString);
       LOG.info("%%%%%%%%%%%% Path Uri Is:" + path);
+      LOG.info(String.format("Conf1:" + conf + "::" + hadoopFileSystem));
       hadoopFileSystem.mkdirs(path);
     } catch (Exception e) {
       e.printStackTrace();
@@ -130,25 +132,24 @@ public class HDFSTaskExample implements IContainer {
       directoryString = "hdfs://hairy.soic.indiana.edu:9000/" + directoryName;
       hadoopFileSystem = org.apache.hadoop.fs.FileSystem.get(conf);
       hadoopFileSystem1 = new HadoopFileSystem(conf, hadoopFileSystem);
-      LOG.info(String.format("Conf:" + hadoopFileSystem + "::::" + hadoopFileSystem1));
+      LOG.info(String.format("Conf2:" + conf + "::" + hadoopFileSystem));
       Path path = new Path(directoryString);
       //hadoopFileSystem1.mkdirs(path);
-      hadoopFileSystem.mkdirs(HadoopFileSystem.toHadoopPath(path));
+      //hadoopFileSystem.mkdirs(HadoopFileSystem.toHadoopPath(path));
+      hadoopFileSystem1.mkdirs(path);
     } catch (Exception e) {
       e.printStackTrace();
     } finally {
       try {
-        hadoopFileSystem.close();
-        //hadoopFileSystem1.close();
+        //hadoopFileSystem.close();
+        hadoopFileSystem1.close();
       } catch (IOException e) {
         e.printStackTrace();
       }
     }
 
-    //Creating a file and writing to the file
+    //Creating a file, reading from a file and writing to the file in hdfs
     FSDataOutputStream hadoopDataOutputStream = null;
-    //HadoopDataOutputStream hadoopDataOutputStream = null;
-    //FSDataOutputStream fsDataOutputStream = null;
     InputStream in = null;
     try {
       String fileName = "user/kannan/test.xml";
@@ -158,9 +159,6 @@ public class HDFSTaskExample implements IContainer {
       if (sourceFileObj.exists()) {
         org.apache.hadoop.fs.Path path = new org.apache.hadoop.fs.Path(directoryString);
         if (!hadoopFileSystem.exists(path)) {
-
-          /*hadoopDataOutputStream = new HadoopDataOutputStream(fsDataOutputStream);
-          hadoopDataOutputStream.getHadoopOutputStream();*/
           hadoopDataOutputStream = hadoopFileSystem.create(path);
           in = new BufferedInputStream(new FileInputStream(sourceFileObj));
           byte[] b = new byte[1024];
@@ -173,10 +171,6 @@ public class HDFSTaskExample implements IContainer {
         System.out.println("File already exists in hdfs");
         return;
       }
-      /*for (int i = 0; i < 10; i++) {
-        hadoopDataOutputStream.write("Hello HDFS Data Output Stream\n".getBytes(DEFAULT_CHARSET));
-      }
-      hadoopDataOutputStream.close();*/
     } catch (Throwable e) {
       e.printStackTrace();
     } finally {
@@ -195,6 +189,95 @@ public class HDFSTaskExample implements IContainer {
       }
     }
 
+
+    //Creating and writing to the file in hdfs directory.
+    try {
+      String fileName = "user/test/test.xml";
+      directoryString = "hdfs://hairy.soic.indiana.edu:9000/" + fileName;
+      hadoopFileSystem = org.apache.hadoop.fs.FileSystem.get(conf);
+      File sourceFileObj = new File("/home/kgovind/hadoop-2.9.0/etc/hadoop/hadoop-env.sh");
+      if (sourceFileObj.exists()) {
+        org.apache.hadoop.fs.Path path = new org.apache.hadoop.fs.Path(directoryString);
+        if (!hadoopFileSystem.exists(path)) {
+          hadoopDataOutputStream = hadoopFileSystem.create(path);
+          for (int i = 0; i < 10; i++) {
+            hadoopDataOutputStream.write(
+                "Hello HDFS Data Output Stream\n".getBytes(DEFAULT_CHARSET));
+          }
+        }
+      } else {
+        System.out.println("File already exists in hdfs");
+        return;
+      }
+    } catch (Throwable e) {
+      e.printStackTrace();
+    }
+
+
+    //Creating and writing to the file in hdfs directory.
+    HadoopFileSystem hadoopFileSystem2 = null;
+    try {
+      HadoopDataOutputStream hadoopDataOutputStream1;
+      String fileName = "user/test/test.xml";
+      directoryString = "hdfs://hairy.soic.indiana.edu:9000/" + fileName;
+      hadoopFileSystem2 =
+          new HadoopFileSystem(conf, org.apache.hadoop.fs.FileSystem.get(conf));
+      Path path = new Path(directoryString);
+      if (!hadoopFileSystem2.exists(path)) {
+        hadoopDataOutputStream1 = hadoopFileSystem2.create(path);
+        for (int i = 0; i < 10; i++) {
+          hadoopDataOutputStream1.write(
+              "Hello, I am writing to Hadoop Data Output Stream\n".getBytes(DEFAULT_CHARSET));
+        }
+      } else {
+        LOG.info("File exists in hdfs");
+        return;
+      }
+    } catch (Throwable e) {
+      e.printStackTrace();
+    } finally {
+      try {
+        if (hadoopFileSystem2 != null) {
+          hadoopFileSystem2.close();
+        }
+      } catch (IOException ioe) {
+        ioe.printStackTrace();
+      }
+    }
+
+    //Reading a file form hdfs directory
+    try {
+      String fileName = "user/core-site.xml";
+      directoryString = "hdfs://hairy.soic.indiana.edu:9000/" + fileName;
+      hadoopFileSystem2 =
+          new HadoopFileSystem(conf, org.apache.hadoop.fs.FileSystem.get(conf));
+      Path path = new Path(directoryString);
+      if (!hadoopFileSystem2.exists(path)) {
+        BufferedReader br = new BufferedReader(new InputStreamReader(
+            hadoopFileSystem2.open(path)));
+        String line;
+        line = br.readLine();
+        while (line != null) {
+          System.out.println(line);
+          line = br.readLine();
+        }
+        br.close();
+      } else {
+        System.out.println("File does not exist on HDFS");
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    } finally {
+      try {
+        if (hadoopFileSystem2 != null) {
+          hadoopFileSystem2.close();
+        }
+      } catch (IOException ioe) {
+        ioe.printStackTrace();
+      }
+    }
+
+    //WORKING code TO COMMENT FOR TESTING hadoop api
     //Reading a file form hdfs directory
     try {
       String fileName = "user/core-site.xml";

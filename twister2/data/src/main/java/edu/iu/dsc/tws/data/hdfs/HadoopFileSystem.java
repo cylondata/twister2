@@ -50,7 +50,6 @@ public class HadoopFileSystem extends FileSystem {
   }
 
   public static org.apache.hadoop.fs.Path toHadoopPath(Path path) {
-    System.out.println("%%%%%%%%%%%%%% URL is:" + path.toUri());
     return new org.apache.hadoop.fs.Path(path.toUri());
   }
 
@@ -176,7 +175,6 @@ public class HadoopFileSystem extends FileSystem {
 
     for (int i = 0; i < files.length; i++) {
       files[i] = new HadoopFileStatus(hadoopFiles[i]);
-      System.out.println("File Details:" + files[i]);
     }
 
     return files;
@@ -214,7 +212,6 @@ public class HadoopFileSystem extends FileSystem {
   public FileStatus[] listFiles(Path f) throws IOException {
     return new FileStatus[0];
   }
-
 
   public Class<?> getHadoopWrapperClassNameForFileSystem(String scheme) {
     Configuration hadoopConf = getHadoopConfiguration();
