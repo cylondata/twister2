@@ -145,7 +145,7 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
           sendMessage.getSerializationState(), buffer, type);
     } else {
       KeyedContent kc = (KeyedContent) payload;
-      return serializeKeyedData(kc.getObject(), kc.getSource(),
+      return serializeKeyedData(kc.getValue(), kc.getKey(),
           sendMessage.getSerializationState(), buffer, kc.getContentType(), kc.getKeyType());
     }
   }

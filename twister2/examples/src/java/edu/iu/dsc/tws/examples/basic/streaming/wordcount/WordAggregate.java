@@ -48,13 +48,13 @@ public class WordAggregate implements MultiMessageReceiver {
     if (object instanceof List) {
       for (Object o : (List) object) {
         if (o instanceof KeyedContent) {
-          addValue(((KeyedContent) o).getObject().toString());
+          addValue(((KeyedContent) o).getValue().toString());
         } else {
           addValue(o.toString());
         }
       }
     } else if (object instanceof KeyedContent) {
-      String value = ((KeyedContent) object).getObject().toString();
+      String value = ((KeyedContent) object).getValue().toString();
       addValue(value);
     } else {
       addValue(object.toString());

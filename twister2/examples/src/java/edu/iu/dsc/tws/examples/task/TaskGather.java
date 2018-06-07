@@ -47,13 +47,13 @@ public class TaskGather implements IContainer {
 
     GraphBuilder builder = GraphBuilder.newBuilder();
     builder.addSource("source", g);
-    builder.setParallelism("source", 1);
+    builder.setParallelism("source", 4);
     builder.addSink("sink", r);
-    builder.setParallelism("sink", 1);
+    builder.setParallelism("sink", 4);
     builder.connect("source", "sink", "partition-edge", Operations.PARTITION);
+    builder.connect("source", "sink", "partition-edge1", Operations.PARTITION);
 
     DataFlowTaskGraph graph = builder.build();
-
     RoundRobinTaskScheduling roundRobinTaskScheduling = new RoundRobinTaskScheduling();
     roundRobinTaskScheduling.initialize(config);
 
@@ -77,6 +77,7 @@ public class TaskGather implements IContainer {
     @Override
     public void run() {
       ctx.write("partition-edge", "Twister2");
+      ctx.write("partition-edge1", "Twister");
     }
 
     @Override
@@ -118,7 +119,7 @@ public class TaskGather implements IContainer {
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
     jobBuilder.setName("task-gather");
     jobBuilder.setContainerClass(TaskGather.class.getName());
-    jobBuilder.setRequestResource(new ResourceContainer(1, 1024), 1);
+    jobBuilder.setRequestResource(new ResourceContainer(4, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job

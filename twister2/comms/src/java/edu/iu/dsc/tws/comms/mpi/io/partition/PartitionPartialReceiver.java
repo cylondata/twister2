@@ -17,9 +17,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
-
-import org.apache.commons.lang3.tuple.ImmutableTriple;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
@@ -74,6 +74,11 @@ public class PartitionPartialReceiver implements MessageReceiver {
    */
   private int source;
 
+  /**
+   * The lock for excluding onMessage and progress
+   */
+  private Lock lock = new ReentrantLock();
+
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     lowWaterMark = MPIContext.getNetworkPartitionMessageGroupLowWaterMark(cfg);
@@ -99,10 +104,16 @@ public class PartitionPartialReceiver implements MessageReceiver {
       return false;
     }
 
-    dests.add(new ImmutableTriple<>(object, src, flags));
+    dests.add(object);
 
     if (dests.size() > lowWaterMark) {
-      readyToSend.put(destination, dests);
+      lock.lock();
+      try {
+        readyToSend.put(destination, new ArrayList<>(dests));
+        dests.clear();
+      } finally {
+        lock.unlock();
+      }
     }
 
     return true;
@@ -110,18 +121,23 @@ public class PartitionPartialReceiver implements MessageReceiver {
 
   @Override
   public void progress() {
-    Iterator<Map.Entry<Integer, List<Object>>> it = readyToSend.entrySet().iterator();
+    lock.lock();
+    try {
+      Iterator<Map.Entry<Integer, List<Object>>> it = readyToSend.entrySet().iterator();
 
-    while (it.hasNext()) {
-      Map.Entry<Integer, List<Object>> e = it.next();
-      List<Object> send = new ArrayList<>(e.getValue());
+      while (it.hasNext()) {
+        Map.Entry<Integer, List<Object>> e = it.next();
+        List<Object> send = new ArrayList<>(e.getValue());
 
-      // if we send this list successfully
-      if (operation.sendPartial(source, send, 0, e.getKey())) {
-        // lets remove from ready list and clear the list
-        e.getValue().clear();
-        it.remove();
+        // if we send this list successfully
+        if (operation.sendPartial(source, send, 0, e.getKey())) {
+          // lets remove from ready list and clear the list
+          e.getValue().clear();
+          it.remove();
+        }
       }
+    } finally {
+      lock.unlock();
     }
   }
 
