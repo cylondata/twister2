@@ -25,25 +25,23 @@ import edu.iu.dsc.tws.comms.api.GatherBatchReceiver;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.mpi.MPIContext;
 import edu.iu.dsc.tws.comms.mpi.MPIDataFlowPartition;
+import edu.iu.dsc.tws.comms.mpi.io.KeyedContent;
 import edu.iu.dsc.tws.comms.shuffle.FSKeyedMerger;
 import edu.iu.dsc.tws.comms.shuffle.FSKeyedSortedMerger;
 import edu.iu.dsc.tws.comms.shuffle.FSMerger;
+import edu.iu.dsc.tws.comms.shuffle.Shuffle;
+import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
 public class PartitionBatchFinalReceiver implements MessageReceiver {
   private static final Logger LOG = Logger.getLogger(PartitionBatchFinalReceiver.class.getName());
+
   private Map<Integer, Map<Integer, Boolean>> finished;
 
-  private Map<Integer, Map<Integer, List<Object>>> data;
-
-  private int messageCount = 0;
+  private Map<Integer, Map<Integer, List<Object>>> inMemoryData;
 
   private GatherBatchReceiver batchReceiver;
 
-  private FSMerger merger;
-
-  private FSKeyedSortedMerger sortedMerger;
-
-  private FSKeyedMerger keyedMerger;
+  private Shuffle sortedMerger;
 
   private boolean sorted;
 
@@ -53,10 +51,15 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
 
   private MPIDataFlowPartition partition;
 
+  private boolean keyed;
+
+  private KryoSerializer kryoSerializer;
+
   public PartitionBatchFinalReceiver(GatherBatchReceiver receiver, boolean srt, boolean d) {
     this.batchReceiver = receiver;
     this.sorted = srt;
     this.disk = d;
+    this.kryoSerializer = new KryoSerializer();
   }
 
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
@@ -77,45 +80,50 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
 
     partition = (MPIDataFlowPartition) op;
     if (partition.getKeyType() == null) {
-      merger = new FSMerger(maxBytesInMemory, maxRecordsInMemory, path,
+      sortedMerger = new FSMerger(maxBytesInMemory, maxRecordsInMemory, path,
           getOperationName(), partition.getDataType());
     } else {
       if (sorted) {
         sortedMerger = new FSKeyedSortedMerger(maxBytesInMemory, maxRecordsInMemory, path,
             getOperationName(), partition.getKeyType(), partition.getDataType(), comparator);
       } else {
-        keyedMerger = new FSKeyedMerger(maxBytesInMemory, maxRecordsInMemory, path,
+        sortedMerger = new FSKeyedMerger(maxBytesInMemory, maxRecordsInMemory, path,
             getOperationName(), partition.getKeyType(), partition.getDataType());
       }
     }
+    keyed = partition.getKeyType() != null;
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public boolean onMessage(int source, int destination, int target, int flags, Object object) {
     // add the object to the map
-    byte[] d = (byte[]) object;
-    merger.add(d, d.length);
+    if (keyed) {
+      List<KeyedContent> keyedContents = (List<KeyedContent>) object;
+      for (KeyedContent kc : keyedContents) {
+        Object data = kc.getValue();
+        byte[] d = kryoSerializer.serialize(data);
+
+        sortedMerger.add(kc.getKey(), d, d.length);
+      }
+    } else {
+      List<Object> contents = (List<Object>) object;
+      for (Object kc : contents) {
+        byte[] d = kryoSerializer.serialize(kc);
+        sortedMerger.add(d, d.length);
+      }
+    }
     return true;
   }
 
   @Override
   public void progress() {
-
-  }
-
-  private boolean isAllFinished(int target) {
-    boolean isDone = true;
-    for (Boolean bol : finished.get(target).values()) {
-      isDone &= bol;
-    }
-    return isDone;
   }
 
   @Override
   public void onFinish() {
-    merger.switchToReading();
-
-    Iterator<Object> itr = merger.readIterator();
+    sortedMerger.switchToReading();
+    Iterator<Object> itr = sortedMerger.readIterator();
     batchReceiver.receive(0, itr);
   }
 

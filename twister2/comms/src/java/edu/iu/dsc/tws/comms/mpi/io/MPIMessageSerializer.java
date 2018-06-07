@@ -144,7 +144,7 @@ public class MPIMessageSerializer implements MessageSerializer {
         return serializeData(payload, sendMessage.getSerializationState(), buffer, type);
       } else {
         KeyedContent keyedContent = (KeyedContent) payload;
-        return serializeKeyedData(keyedContent.getObject(), keyedContent.getSource(),
+        return serializeKeyedData(keyedContent.getValue(), keyedContent.getKey(),
             sendMessage.getSerializationState(), buffer, type, keyedContent.getKeyType());
       }
     }
