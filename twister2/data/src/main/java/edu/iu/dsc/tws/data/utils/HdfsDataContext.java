@@ -13,8 +13,15 @@ package edu.iu.dsc.tws.data.utils;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.common.config.TokenSub;
 
 public final class HdfsDataContext extends Context {
+
+  private static final String HDFS_URL = "twister2.hdfs.url";
+  private static final String HDFS_URL_DEFAULT = "hdfs://localhost:9000//";
+
+  public static final String HADOOP_HOME = "twister2.hadoop.home";
+  public static final String HADOOP_HOME_DEFAULT = "${HADOOP_HOME}";
 
   private static final String HDFS_CLASS = "twister2.hdfs.class";
   private static final String HDFS_CLASS_DEFAULT = "org.apache.hadoop.hdfs.DistributedFileSystem";
@@ -32,6 +39,10 @@ public final class HdfsDataContext extends Context {
   private HdfsDataContext() {
   }
 
+  public static String getHdfsUrlDefault(Config cfg) {
+    return cfg.getStringValue(HDFS_URL, HDFS_URL_DEFAULT);
+  }
+
   public static String getHdfsClassDefault(Config cfg) {
     return cfg.getStringValue(HDFS_CLASS, HDFS_CLASS_DEFAULT);
   }
@@ -46,5 +57,10 @@ public final class HdfsDataContext extends Context {
 
   public static String getHdfsDataDirectory(Config config) {
     return config.getStringValue(HDFS_DATA_DIRECTORY, HDFS_DATA_DIRECTORY_DEFAULT);
+  }
+
+  public static String getHadoopHome(Config config) {
+    return TokenSub.substitute(config, config.getStringValue(HADOOP_HOME,
+        HADOOP_HOME_DEFAULT), Context.substitutions);
   }
 }
