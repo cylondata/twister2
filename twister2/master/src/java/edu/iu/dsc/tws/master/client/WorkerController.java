@@ -37,14 +37,7 @@ public class WorkerController implements IWorkerController, MessageHandler {
 
   private RRClient rrClient;
 
-  // these variables are used to wait the response messages
-  // when the worker list is requested from the job master
-  private Object synchObject1 = new Object();
-  private boolean waitingResponse1 = false;
   public static final long MAX_WAIT_TIME_FOR_IMMEDIATE_RESPONSE = 500;
-
-  private Object synchObject2 = new Object();
-  private boolean waitingResponse2 = false;
 
   public WorkerController(WorkerNetworkInfo thisWorker, int numberOfWorkers, RRClient rrClient) {
     this.numberOfWorkers = numberOfWorkers;
@@ -82,7 +75,10 @@ public class WorkerController implements IWorkerController, MessageHandler {
       return workerList;
     }
 
-    getWorkerListFromJobMaster();
+    // get the worker list from the job master
+    sendWorkerListRequest(ListWorkersRequest.RequestType.IMMEDIATE_RESPONSE,
+        MAX_WAIT_TIME_FOR_IMMEDIATE_RESPONSE);
+
     return workerList;
   }
 
@@ -92,69 +88,25 @@ public class WorkerController implements IWorkerController, MessageHandler {
       return workerList;
     }
 
-    boolean sent = sendWorkerListRequest(ListWorkersRequest.RequestType.RESPONSE_AFTER_ALL_JOINED);
-    if (!sent) {
+    boolean sentAndReceived =
+        sendWorkerListRequest(ListWorkersRequest.RequestType.RESPONSE_AFTER_ALL_JOINED, timeLimit);
+
+    if (!sentAndReceived) {
       return null;
-    }
-
-    synchronized (synchObject2) {
-      try {
-        waitingResponse2 = true;
-        synchObject2.wait(timeLimit);
-        // if waitingResponse2 is still true after waking up,
-        // it means the timeLimit has been reached
-        if (waitingResponse2) {
-          waitingResponse2 = false;
-          LOG.severe("Timelimit has been reached and the worker list has not been received "
-              + "from the job master. ");
-          return null;
-        }
-
-      } catch (InterruptedException e) {
-        waitingResponse2 = false;
-        LOG.warning("Waiting thread interrupted when waiting to get the response message. ");
-        return null;
-      }
-    }
-    return workerList;
-  }
-
-  private List<WorkerNetworkInfo> getWorkerListFromJobMaster() {
-
-    boolean sent = sendWorkerListRequest(ListWorkersRequest.RequestType.IMMEDIATE_RESPONSE);
-    if (!sent) {
-      return null;
-    }
-
-    synchronized (synchObject1) {
-      try {
-        waitingResponse1 = true;
-        synchObject1.wait(MAX_WAIT_TIME_FOR_IMMEDIATE_RESPONSE);
-        // if waitingResponse1 is still true after waking up,
-        // it means the timeLimit has been reached
-        if (waitingResponse1) {
-          waitingResponse1 = false;
-          LOG.info("Timelimit has been reached and the worker list has not been received "
-              + "from the job master. It will provide the list as is.");
-          return null;
-        }
-      } catch (InterruptedException e) {
-        waitingResponse1 = false;
-        LOG.warning("Waiting thread interrupted when waiting to get response message. ");
-        return null;
-      }
     }
 
     return workerList;
   }
 
-  private boolean sendWorkerListRequest(ListWorkersRequest.RequestType requestType) {
+  private boolean sendWorkerListRequest(ListWorkersRequest.RequestType requestType,
+                                        long timeLimit) {
+
     ListWorkersRequest listRequest = ListWorkersRequest.newBuilder()
         .setWorkerID(thisWorker.getWorkerID())
         .setRequestType(requestType)
         .build();
 
-    RequestID requestID = rrClient.sendRequest(listRequest);
+    RequestID requestID = rrClient.sendRequestWaitResponse(listRequest, timeLimit);
 
     if (requestID == null) {
       LOG.severe("When sending ListWorkers message, requestID returned null.");
@@ -185,20 +137,6 @@ public class WorkerController implements IWorkerController, MessageHandler {
           WorkerNetworkInfo workerInfo =
               new WorkerNetworkInfo(ip, receivedWorkerInfo.getPort(), receivedWorkerInfo.getId());
           workerList.add(workerInfo);
-        }
-      }
-
-      if (waitingResponse1) {
-        waitingResponse1 = false;
-        synchronized (synchObject1) {
-          synchObject1.notify();
-        }
-      }
-
-      if (waitingResponse2) {
-        waitingResponse2 = false;
-        synchronized (synchObject2) {
-          synchObject2.notify();
         }
       }
 

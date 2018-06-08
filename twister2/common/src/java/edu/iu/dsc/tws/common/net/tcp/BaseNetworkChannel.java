@@ -128,6 +128,8 @@ public abstract class BaseNetworkChannel {
         channelHandler.onSendComplete(socketChannel, writeRequest);
       }
     }
+
+    disableWriting();
   }
 
   private int writeRequest(SocketChannel channel, TCPMessage message) {

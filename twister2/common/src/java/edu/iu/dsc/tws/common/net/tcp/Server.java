@@ -119,6 +119,8 @@ public class Server implements SelectHandler {
       return null;
     }
 
+    channel.enableWriting();
+
     TCPMessage request = new TCPMessage(buffer, edge, size);
     channel.addWriteRequest(request);
 
