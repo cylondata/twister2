@@ -12,7 +12,6 @@
 
 package edu.iu.dsc.tws.master.client;
 
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.google.protobuf.Message;
@@ -22,15 +21,17 @@ import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
 import edu.iu.dsc.tws.proto.network.Network;
 
-public class Pinger extends Thread implements MessageHandler {
+public class Pinger implements MessageHandler {
   private static final Logger LOG = Logger.getLogger(Pinger.class.getName());
 
   private int workerID;
   private RRClient rrClient;
   private long interval;
 
+  // shows the timestamp of the last ping message send time
+  private long lastPingTime = -1;
+
   private RequestID requestID = null;
-  private boolean stopRequested = false;
 
   public Pinger(int workerID, RRClient rrClient, long interval) {
     this.workerID = workerID;
@@ -38,38 +39,27 @@ public class Pinger extends Thread implements MessageHandler {
     this.interval = interval;
   }
 
-  public void stopPinger() {
-    stopRequested = true;
-    interrupt();
+  public long timeToNextPing() {
+    long nextPingTime = lastPingTime + interval;
+    return nextPingTime - System.currentTimeMillis();
   }
 
-  @Override
-  public void run() {
+  public void sendPingMessage() {
+
     Network.Ping ping = Network.Ping.newBuilder()
         .setWorkerID(workerID)
         .setPingMessage("Ping Message From the Worker to the Job Master")
         .setMessageType(Network.Ping.MessageType.WORKER_TO_MASTER)
         .build();
 
-    while (!stopRequested) {
-      requestID = rrClient.sendRequest(ping);
+    requestID = rrClient.sendRequest(ping);
+    lastPingTime = System.currentTimeMillis();
 
-      if (requestID == null) {
-        LOG.severe("When sending Ping message, the requestID returned null.");
-      } else {
-        LOG.info("Ping request message sent to the master: \n" + ping);
-      }
-
-      try {
-        sleep(interval);
-      } catch (InterruptedException e) {
-        if (!stopRequested) {
-          LOG.log(Level.WARNING, "Pinger Thread sleep interrupted.", e);
-        }
-      }
+    if (requestID == null) {
+      LOG.severe("When sending Ping message, the requestID returned null.");
+    } else {
+      LOG.info("Ping request message sent to the master: \n" + ping);
     }
-
-    LOG.info("Pinger thread has been stopped. No more Ping mesasges will be sent.");
   }
 
   @Override

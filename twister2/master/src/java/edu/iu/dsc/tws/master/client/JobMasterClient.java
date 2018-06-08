@@ -93,8 +93,6 @@ public class JobMasterClient extends Thread {
     // we loop once to initialize things
     looper.loop();
     this.start();
-
-    pinger.start();
   }
 
   public WorkerController getWorkerController() {
@@ -102,36 +100,25 @@ public class JobMasterClient extends Thread {
   }
 
   public void close() {
-    pinger.stopPinger();
     stopLooper = true;
-    interrupt();
+    looper.wakeup();
   }
 
   @Override
   public void run() {
 
-    int loopCount = 5;
-    long sleepTime = 100;
+    // send the first Ping message
+    pinger.sendPingMessage();
 
     while (!stopLooper) {
-      for (int i = 0; i < loopCount; i++) {
-        looper.loop();
-      }
-
-      try {
-        sleep(sleepTime);
-      } catch (InterruptedException e) {
-        if (!stopLooper) {
-          LOG.log(Level.WARNING, "JobMasterClient Thread sleep interrupted.", e);
-        }
+      long timeToNextPing = pinger.timeToNextPing();
+      if (timeToNextPing < 10) {
+        pinger.sendPingMessage();
+      } else {
+        looper.loopBlocking(timeToNextPing);
       }
     }
 
-    // if there are any messages to receive in the buffer, get them
-    // we assume there can be at most 3 messages
-    looper.loop();
-    looper.loop();
-    looper.loop();
     rrClient.stop();
   }
 
@@ -170,18 +157,22 @@ public class JobMasterClient extends Thread {
   }
 
   public boolean sendWorkerCompletedMessage() {
+    // wait limit for the response message to arrive
+    long waitLimit = 1000;
+
     Network.WorkerStateChange workerStateChange = Network.WorkerStateChange.newBuilder()
         .setWorkerID(thisWorker.getWorkerID())
         .setNewState(Network.WorkerState.COMPLETED)
         .build();
 
-    RequestID requestID = rrClient.sendRequest(workerStateChange);
+//    RequestID requestID = rrClient.sendRequest(workerStateChange);
+    LOG.info("Sending the Worker Completed message: \n" + workerStateChange);
+    RequestID requestID = rrClient.sendRequestWaitResponse(workerStateChange, waitLimit);
     if (requestID == null) {
-      LOG.severe("Could not send Worker Completed message.");
+      LOG.severe("Couldn't send Worker Completed message or couldn't receive the response.");
       return false;
     }
 
-    LOG.info("Sent the Worker Completed message: \n" + workerStateChange);
     return true;
   }
 
@@ -236,7 +227,7 @@ public class JobMasterClient extends Thread {
     client.sendWorkerStartingMessage();
 
     // wait 500ms
-    sleeeep(500);
+    sleeeep(5000);
 
     client.sendWorkerRunningMessage();
 
@@ -244,7 +235,7 @@ public class JobMasterClient extends Thread {
     LOG.info(WorkerNetworkInfo.workerListAsString(workerList));
 
     // wait 2000ms
-    sleeeep(2000);
+    sleeeep(5000);
 
     workerList = client.workerController.waitForAllWorkersToJoin(2000);
     LOG.info(WorkerNetworkInfo.workerListAsString(workerList));
@@ -256,7 +247,7 @@ public class JobMasterClient extends Thread {
 
     System.out.println("all messaging done. waiting before finishing.");
 
-    sleeeep(500);
+//    sleeeep(5000);
   }
 
   public static void sleeeep(long duration) {

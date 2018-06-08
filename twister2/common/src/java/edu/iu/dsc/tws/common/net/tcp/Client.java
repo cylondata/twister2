@@ -111,6 +111,7 @@ public class Client implements SelectHandler {
       return null;
     }
 
+    channel.enableWriting();
     TCPMessage request = new TCPMessage(buffer, edge, size);
     if (channel.addWriteRequest(request)) {
       return request;

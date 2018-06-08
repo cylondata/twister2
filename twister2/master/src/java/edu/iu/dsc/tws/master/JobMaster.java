@@ -91,38 +91,16 @@ public class JobMaster extends Thread {
     LOG.info("JobMaster [" + masterAddress + "] started and waiting worker messages on port: "
         + masterPort);
 
-    int loopCount = 10;
-    int sleepDuration = 100;
-
-    // initially wait on a blocking call until the first client connects
-    looper.loopBlocking();
-
     while (!workersCompleted) {
-
-      outerLoop:
-      for (int i = 0; i < loopCount; i++) {
-        if (workersCompleted) {
-          break outerLoop;
-        }
-        looper.loop();
-      }
-
-      try {
-        sleep(sleepDuration);
-      } catch (InterruptedException e) {
-        if (!workersCompleted) {
-          LOG.info("Sleep interrupted. ");
-        }
-      }
+      looper.loopBlocking();
     }
+
+    // to send the last remaining messages if any
+    looper.loop();
+    looper.loop();
+    looper.loop();
 
     rrServer.stop();
-  }
-
-  private void looop(int loopCount) {
-    for (int i = 0; i < loopCount; i++) {
-      looper.loop();
-    }
   }
 
   /**
@@ -132,7 +110,7 @@ public class JobMaster extends Thread {
 
     LOG.info("All workers have completed. JobMaster will stop.");
     workersCompleted = true;
-//    this.interrupt();
+    looper.wakeup();
 
     if (jobTerminator != null) {
       jobTerminator.terminateJob(jobName);

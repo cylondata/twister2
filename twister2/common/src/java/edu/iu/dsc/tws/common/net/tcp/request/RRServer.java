@@ -138,6 +138,7 @@ public class RRServer {
     buffer.put(data);
 
     TCPMessage request = server.send(channel, buffer, capacity, 0);
+
     if (request != null) {
       requestChannels.remove(id);
       return true;
