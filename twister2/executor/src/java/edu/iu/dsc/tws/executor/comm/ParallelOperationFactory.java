@@ -56,6 +56,11 @@ public class ParallelOperationFactory {
         partitionOp.prepare(sources, dests, edgeGenerator, edge.getDataType(),
             edge.getKeyType(), edge.getName());
         return partitionOp;
+      } else if (Operations.BROADCAST.equals(edge.getOperation())) {
+        BroadcastOperation broadcastOp = new BroadcastOperation(config, channel, taskPlan);
+        broadcastOp.prepare(sources.iterator().next(), dests, edgeGenerator, edge.getDataType(),
+            edge.getName());
+        return broadcastOp;
       }
     }
     return null;

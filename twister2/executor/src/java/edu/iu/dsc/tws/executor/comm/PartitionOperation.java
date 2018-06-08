@@ -39,6 +39,7 @@ public class PartitionOperation extends AbstractParallelOperation {
   public void prepare(Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
                       DataType dataType, String edgeName) {
     this.edge = e;
+    LOG.info("ParitionOperation Prepare 1");
     op = new MPIDataFlowPartition(channel, srcs, dests, new PartitionReceiver(),
         new PartialPartitionReciver(), MPIDataFlowPartition.PartitionStratergy.DIRECT);
     partitionEdge = e.generate(edgeName);
@@ -72,6 +73,7 @@ public class PartitionOperation extends AbstractParallelOperation {
 
     @Override
     public boolean onMessage(int source, int destination, int target, int flags, Object object) {
+      //LOG.info("Partial Receiver");
       return false;
     }
 
@@ -85,12 +87,16 @@ public class PartitionOperation extends AbstractParallelOperation {
     @Override
     public void init(Config cfg, DataFlowOperation operation,
                      Map<Integer, List<Integer>> expectedIds) {
+      LOG.info("PartitionReceiver Init");
     }
 
     @Override
     public boolean onMessage(int source, int destination, int target, int flags, Object object) {
+      LOG.info("onMessage : Start");
       TaskMessage msg = new TaskMessage(object,
           edge.getStringMapping(partitionEdge), target);
+      LOG.info("Source : " + source + ", Message : " + msg.getContent() + ", Target : "
+          + target + ", Destination : " + destination);
       return outMessages.get(target).offer(msg);
     }
 
