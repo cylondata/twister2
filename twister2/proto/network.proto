@@ -41,6 +41,7 @@ message WorkerStateChange {
 // to inform that its state change message has been received
 message WorkerStateChangeResponse {
     required int32 workerID = 1;
+    required WorkerState sentState = 2;
 }
 
 // Get the list of wokers in a job from the job master

@@ -92,7 +92,7 @@ public class WorkerMonitor implements MessageHandler {
       workers.put(message.getWorkerID(), worker);
       LOG.info("WorkerStateChange message received: \n" + message);
 
-      sendWorkerStateChangeResponse(id, message.getWorkerID());
+      sendWorkerStateChangeResponse(id, message.getWorkerID(), message.getNewState());
 
       if (workers.size() == numberOfWorkers) {
         sendListWorkersResponseToWaitList();
@@ -107,13 +107,16 @@ public class WorkerMonitor implements MessageHandler {
           + "Not processing the message, just sending a response"
           + message);
 
-      sendWorkerStateChangeResponse(id, message.getWorkerID());
+      sendWorkerStateChangeResponse(id, message.getWorkerID(), message.getNewState());
       return;
 
     } else if (message.getNewState() == Network.WorkerState.COMPLETED) {
 
       workers.get(message.getWorkerID()).setWorkerState(message.getNewState());
       LOG.info("WorkerStateChange message received: \n" + message);
+
+      // send the response message
+      sendWorkerStateChangeResponse(id, message.getWorkerID(), message.getNewState());
 
       // check whether all workers completed
       // if so, stop the job master
@@ -123,9 +126,6 @@ public class WorkerMonitor implements MessageHandler {
 //        return;
       }
 
-      // send the response message
-      sendWorkerStateChangeResponse(id, message.getWorkerID());
-
       return;
 
     } else {
@@ -133,7 +133,7 @@ public class WorkerMonitor implements MessageHandler {
       LOG.info("WorkerStateChange message received: \n" + message);
 
       // send the response message
-      sendWorkerStateChangeResponse(id, message.getWorkerID());
+      sendWorkerStateChangeResponse(id, message.getWorkerID(), message.getNewState());
     }
   }
 
@@ -151,9 +151,12 @@ public class WorkerMonitor implements MessageHandler {
     return true;
   }
 
-  private void sendWorkerStateChangeResponse(RequestID id, int workerID) {
+  private void sendWorkerStateChangeResponse(RequestID id, int workerID,
+                                             Network.WorkerState sentState) {
+
     Network.WorkerStateChangeResponse response = Network.WorkerStateChangeResponse.newBuilder()
         .setWorkerID(workerID)
+        .setSentState(sentState)
         .build();
 
     rrServer.sendResponse(id, response);
