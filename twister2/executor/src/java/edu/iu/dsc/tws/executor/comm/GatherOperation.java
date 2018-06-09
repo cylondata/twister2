@@ -14,14 +14,13 @@ package edu.iu.dsc.tws.executor.comm;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.mpi.MPIDataFlowBroadcast;
 import edu.iu.dsc.tws.comms.mpi.MPIDataFlowGather;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.EdgeGenerator;
@@ -36,10 +35,12 @@ public class GatherOperation extends AbstractParallelOperation {
     super(config, network, tPlan);
   }
 
-  public void prepare(int srcs, int dest, EdgeGenerator e,
-                      DataType dataType, String edgeName) {
+  public void prepare(Set<Integer> srcs, int dest, EdgeGenerator e,
+                      DataType dataType, String edgeName, Config config, TaskPlan taskPlan) {
     this.edge = e;
-    op = new MPIDataFlowGather(channel, srcs, dest, new GatherReceiver(), 0, 0, );
+    op = new MPIDataFlowGather(channel, srcs, dest, new GatherReceiver(), 0, 0, config,
+        MessageType.INTEGER, taskPlan, e.getIntegerMapping(edgeName));
+
     communicationEdge = e.generate(edgeName);
     op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
   }
@@ -62,7 +63,7 @@ public class GatherOperation extends AbstractParallelOperation {
   public class GatherReceiver implements MessageReceiver {
 
     @Override
-    public void init(Config cfg, DataFlowOperation op,
+    public void init(Config cfg, DataFlowOperation operation,
                      Map<Integer, List<Integer>> expectedIds) {
 
     }
