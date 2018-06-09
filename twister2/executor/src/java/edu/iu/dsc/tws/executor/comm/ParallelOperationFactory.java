@@ -75,4 +75,14 @@ public class ParallelOperationFactory {
     }
     return null;
   }
+
+  public IParallelOperation build(Edge edge, Set<Integer> sources, int dest,
+                                  DataType dataType, DataType keyType){
+
+    if(Operations.GATHER.equals(edge.getOperation())){
+
+    }
+    return null;
+  }
+
 }

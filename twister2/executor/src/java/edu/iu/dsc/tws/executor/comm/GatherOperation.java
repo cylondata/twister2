@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.executor.comm;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
@@ -21,34 +22,36 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.mpi.MPIDataFlowBroadcast;
+import edu.iu.dsc.tws.comms.mpi.MPIDataFlowGather;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.EdgeGenerator;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
 
-public class BroadcastOperation extends AbstractParallelOperation {
-  private MPIDataFlowBroadcast op;
+public class GatherOperation extends AbstractParallelOperation {
 
-  public BroadcastOperation(Config config, TWSChannel network, TaskPlan tPlan) {
+  private MPIDataFlowGather op;
+
+  public GatherOperation(Config config, TWSChannel network, TaskPlan tPlan) {
     super(config, network, tPlan);
   }
 
-  public void prepare(int srcs, Set<Integer> dests, EdgeGenerator e,
+  public void prepare(int srcs, int dest, EdgeGenerator e,
                       DataType dataType, String edgeName) {
     this.edge = e;
-    op = new MPIDataFlowBroadcast(channel, srcs, dests, new BcastReceiver());
+    op = new MPIDataFlowGather(channel, srcs, dest, new GatherReceiver(), 0, 0, );
     communicationEdge = e.generate(edgeName);
     op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
   }
 
   @Override
   public void send(int source, IMessage message) {
-    op.send(source, message.getContent(), 0);
+    super.send(source, message);
   }
 
   @Override
   public void send(int source, IMessage message, int dest) {
-    op.send(source, message.getContent(), 0, dest);
+    op.send(source, message, dest);
   }
 
   @Override
@@ -56,10 +59,12 @@ public class BroadcastOperation extends AbstractParallelOperation {
     op.progress();
   }
 
-  public class BcastReceiver implements MessageReceiver {
+  public class GatherReceiver implements MessageReceiver {
+
     @Override
-    public void init(Config cfg, DataFlowOperation operation,
+    public void init(Config cfg, DataFlowOperation op,
                      Map<Integer, List<Integer>> expectedIds) {
+
     }
 
     @Override
@@ -71,6 +76,7 @@ public class BroadcastOperation extends AbstractParallelOperation {
 
     @Override
     public void progress() {
+
     }
   }
 }

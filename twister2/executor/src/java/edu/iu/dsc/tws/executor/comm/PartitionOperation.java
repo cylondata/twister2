@@ -42,8 +42,8 @@ public class PartitionOperation extends AbstractParallelOperation {
     LOG.info("ParitionOperation Prepare 1");
     op = new MPIDataFlowPartition(channel, srcs, dests, new PartitionReceiver(),
         new PartialPartitionReciver(), MPIDataFlowPartition.PartitionStratergy.DIRECT);
-    partitionEdge = e.generate(edgeName);
-    op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, partitionEdge);
+    communicationEdge = e.generate(edgeName);
+    op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
   }
 
   public void prepare(Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
@@ -52,8 +52,8 @@ public class PartitionOperation extends AbstractParallelOperation {
     op = new MPIDataFlowPartition(channel, srcs, dests, new PartitionReceiver(),
         new PartialPartitionReciver(), MPIDataFlowPartition.PartitionStratergy.DIRECT,
         Utils.dataTypeToMessageType(dataType), Utils.dataTypeToMessageType(keyType));
-    partitionEdge = e.generate(edgeName);
-    op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, partitionEdge);
+    communicationEdge = e.generate(edgeName);
+    op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
   }
 
   public void send(int source, IMessage message) {
@@ -94,7 +94,7 @@ public class PartitionOperation extends AbstractParallelOperation {
     public boolean onMessage(int source, int destination, int target, int flags, Object object) {
       LOG.info("onMessage : Start");
       TaskMessage msg = new TaskMessage(object,
-          edge.getStringMapping(partitionEdge), target);
+          edge.getStringMapping(communicationEdge), target);
       LOG.info("Source : " + source + ", Message : " + msg.getContent() + ", Target : "
           + target + ", Destination : " + destination);
       return outMessages.get(target).offer(msg);

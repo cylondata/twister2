@@ -17,6 +17,7 @@ public final class Operations {
 
   public static final String PARTITION = "partition";
   public static final String REDUCE = "reduce";
+  public static final String GATHER = "gather";
   public static final String ALL_REDUCE = "all_reduce";
   public static final String ALL_GATHER = "all_gather";
   public static final String KEYED_GATHER = "keyed_gather";
