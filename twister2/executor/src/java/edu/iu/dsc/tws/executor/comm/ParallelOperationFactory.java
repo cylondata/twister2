@@ -70,6 +70,7 @@ public class ParallelOperationFactory {
         GatherOperation gatherOp = new GatherOperation(config, channel, taskPlan);
         gatherOp.prepare(sources, dests.iterator().next(), edgeGenerator, edge.getDataType(),
             edge.getName(), config, taskPlan);
+        return gatherOp;
       }
     }
     return null;

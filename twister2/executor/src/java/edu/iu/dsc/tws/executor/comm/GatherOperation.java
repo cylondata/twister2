@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.executor.comm;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
@@ -28,7 +29,7 @@ import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
 
 public class GatherOperation extends AbstractParallelOperation {
-
+  private static final Logger LOG = Logger.getLogger(GatherOperation.class.getName());
   private MPIDataFlowGather op;
 
   public GatherOperation(Config config, TWSChannel network, TaskPlan tPlan) {
@@ -37,22 +38,25 @@ public class GatherOperation extends AbstractParallelOperation {
 
   public void prepare(Set<Integer> srcs, int dest, EdgeGenerator e,
                       DataType dataType, String edgeName, Config config, TaskPlan taskPlan) {
+    LOG.info("Edge Name : " + edgeName);
     this.edge = e;
+    communicationEdge = e.generate(edgeName);
     op = new MPIDataFlowGather(channel, srcs, dest, new GatherReceiver(), 0, 0, config,
         MessageType.INTEGER, taskPlan, e.getIntegerMapping(edgeName));
-
-    communicationEdge = e.generate(edgeName);
+    LOG.info(" Edge Int : " + e.getIntegerMapping(edgeName));
     op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
   }
 
   @Override
   public void send(int source, IMessage message) {
-    super.send(source, message);
+    //LOG.info("Message : " + message.getContent());
+    op.send(source, message, 0);
   }
 
   @Override
   public void send(int source, IMessage message, int dest) {
-    op.send(source, message, dest);
+    //LOG.info("Message : " + message.getContent());
+    op.send(source, message, 0, dest);
   }
 
   @Override
@@ -72,6 +76,7 @@ public class GatherOperation extends AbstractParallelOperation {
     public boolean onMessage(int source, int destination, int target, int flags, Object object) {
       TaskMessage msg = new TaskMessage(object,
           edge.getStringMapping(communicationEdge), target);
+      LOG.info("Gather Receiver On Message : " + msg.getContent());
       return outMessages.get(target).offer(msg);
     }
 
