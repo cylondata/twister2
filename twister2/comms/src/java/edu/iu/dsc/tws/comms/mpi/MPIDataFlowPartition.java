@@ -362,7 +362,8 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
   @Override
   public boolean send(int source, Object message, int flags, int dest) {
     int newFlags = flags | MessageFlags.ORIGIN_SENDER;
-    return delegete.sendMessage(source, message, dest, flags, sendRoutingParameters(source, dest));
+    return delegete.sendMessage(source, message, dest, newFlags,
+        sendRoutingParameters(source, dest));
   }
 
   @Override

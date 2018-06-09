@@ -19,11 +19,30 @@ import edu.iu.dsc.tws.task.api.IMessage;
  * Represents a parallel communication operation
  */
 public interface IParallelOperation {
+  /**
+   * Send a message over the operation
+   * @param source source
+   * @param message the message
+   */
   void send(int source, IMessage message);
 
+  /**
+   * Send a message to specific destination
+   * @param source source
+   * @param message message
+   * @param dest destination
+   */
   void send(int source, IMessage message, int dest);
 
+  /**
+   * Register a queue for receiving message
+   * @param targetTask
+   * @param queue
+   */
   void register(int targetTask, BlockingQueue<IMessage> queue);
 
+  /**
+   * Progress the parallel operation
+   */
   void progress();
 }
