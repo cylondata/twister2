@@ -22,6 +22,7 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.mpi.MPIDataFlowPartition;
+import edu.iu.dsc.tws.comms.mpi.io.partition.PartitionPartialReceiver;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.EdgeGenerator;
 import edu.iu.dsc.tws.task.api.IMessage;
@@ -41,7 +42,7 @@ public class PartitionOperation extends AbstractParallelOperation {
     this.edge = e;
     LOG.info("ParitionOperation Prepare 1");
     op = new MPIDataFlowPartition(channel, srcs, dests, new PartitionReceiver(),
-        new PartialPartitionReciver(), MPIDataFlowPartition.PartitionStratergy.DIRECT);
+        new PartitionPartialReceiver(), MPIDataFlowPartition.PartitionStratergy.DIRECT);
     communicationEdge = e.generate(edgeName);
     op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
   }
@@ -50,7 +51,7 @@ public class PartitionOperation extends AbstractParallelOperation {
                       DataType dataType, DataType keyType, String edgeName) {
     this.edge = e;
     op = new MPIDataFlowPartition(channel, srcs, dests, new PartitionReceiver(),
-        new PartialPartitionReciver(), MPIDataFlowPartition.PartitionStratergy.DIRECT,
+        new PartitionPartialReceiver(), MPIDataFlowPartition.PartitionStratergy.DIRECT,
         Utils.dataTypeToMessageType(dataType), Utils.dataTypeToMessageType(keyType));
     communicationEdge = e.generate(edgeName);
     op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
@@ -62,25 +63,6 @@ public class PartitionOperation extends AbstractParallelOperation {
 
   public void send(int source, IMessage message, int dest) {
     op.send(source, message, 0, dest);
-  }
-
-  private class PartialPartitionReciver implements MessageReceiver {
-
-    @Override
-    public void init(Config cfg, DataFlowOperation dfop, Map<Integer, List<Integer>> expectedIds) {
-
-    }
-
-    @Override
-    public boolean onMessage(int source, int destination, int target, int flags, Object object) {
-      //LOG.info("Partial Receiver");
-      return false;
-    }
-
-    @Override
-    public void progress() {
-
-    }
   }
 
   public class PartitionReceiver implements MessageReceiver {
@@ -97,7 +79,13 @@ public class PartitionOperation extends AbstractParallelOperation {
           edge.getStringMapping(communicationEdge), target);
       LOG.info("Source : " + source + ", Message : " + msg.getContent() + ", Target : "
           + target + ", Destination : " + destination);
-      return outMessages.get(target).offer(msg);
+
+      if (object instanceof List) {
+        for (Object o : (List) object) {
+          outMessages.get(target).offer(msg);
+        }
+      }
+      return true;
     }
 
     @Override
