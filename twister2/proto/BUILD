@@ -100,18 +100,6 @@ proto_library(
     ],
 )
 
-java_library(
-    name = "proto-network-java",
-    srcs = [
-        "Empty.java",
-    ],
-    deps = [
-        ":proto_common_java",
-        ":proto_network_java",
-        "@com_google_protobuf_protobuf_java//jar",
-    ],
-)
-
 filegroup(
     name = "srcs",
     srcs = glob(["**"]),
