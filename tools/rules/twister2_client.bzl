@@ -156,7 +156,6 @@ def twister2_client_lib_common_files():
     return [
         "//twister2/common/src/java:config-java",
         "//twister2/common/src/java:common-java",
-        "//twister2/proto:proto-network-java",
     ]
 
 def twister2_client_example_files():

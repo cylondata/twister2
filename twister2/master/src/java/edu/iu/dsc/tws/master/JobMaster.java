@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.master;
 
 import java.io.IOException;
 import java.nio.channels.SocketChannel;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -57,7 +56,6 @@ public class JobMaster extends Thread {
   }
 
   public void init() {
-    Logger.getLogger("edu.iu.dsc.tws.common.net.tcp").setLevel(Level.WARNING);
 
     looper = new Progress();
 
@@ -138,7 +136,7 @@ public class JobMaster extends Thread {
 
   public static void main(String[] args) {
 
-    Logger.getLogger("edu.iu.dsc.tws.common.net.tcp").setLevel(Level.WARNING);
+//    Logger.getLogger("edu.iu.dsc.tws.common.net.tcp").setLevel(Level.WARNING);
 
     String host = "localhost";
     int port = 11111;
