@@ -26,6 +26,7 @@ package edu.iu.dsc.tws.checkpointmanager;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.checkpointmanager.state_backend.StateBackend;
+import edu.iu.dsc.tws.master.JobMaster;
 import edu.iu.dsc.tws.task.graph.Vertex;
 
 public class CheckpointManager {
@@ -33,13 +34,18 @@ public class CheckpointManager {
 
 //  private final CheckpointProperties checkpointProperties;
 
-  private final long baseInterval;
+  //TODO : Make the variables final once finalised
+  private String jobName;
 
-  private final long checkpointTimeout;
+  private JobMaster jobMaster;
 
-  private final long minPauseBetweenCheckpoints;
+  private long baseInterval;
 
-  private final long maxConcurrentCheckpointAttempts;
+  private long checkpointTimeout;
+
+  private long minPauseBetweenCheckpoints;
+
+  private long maxConcurrentCheckpointAttempts;
 
   private volatile boolean shutdown;
 
@@ -62,6 +68,11 @@ public class CheckpointManager {
     this.minPauseBetweenCheckpoints = minPauseBetweenCheckpoints;
     this.maxConcurrentCheckpointAttempts = maxConcurrentCheckpointAttempts;
 
+  }
+
+  public CheckpointManager(String jobName, JobMaster jobMaster) {
+    this.jobName = jobName;
+    this.jobMaster = jobMaster;
   }
 
   public void startCheckpointScheduler() {
