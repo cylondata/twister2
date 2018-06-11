@@ -27,9 +27,13 @@ import edu.iu.dsc.tws.checkpointmanager.CheckpointOptions;
 
 public class CheckpointBarrier extends RuntimeEvent {
 
-  private final long id;
-  private final long timestamp;
-  private final CheckpointOptions checkpointOptions;
+  private long id;
+  private long timestamp;
+  private CheckpointOptions checkpointOptions;
+
+  public CheckpointBarrier() {
+
+  }
 
   public CheckpointBarrier(long id, long timestamp, CheckpointOptions checkpointOptions) {
     this.id = id;

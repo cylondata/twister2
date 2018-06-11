@@ -169,6 +169,12 @@ def twister2_client_lib_third_party_files():
         "@org_slf4j_slf4j_api//jar",
         "@org_slf4j_slf4j_jdk14//jar",
     ]
+
+def twister2_client_lib_master_files():
+    return [
+        "//twister2/connectors/src/java:master-java"
+    ]
+
 #def twister2_client_lib_connector_files():
 #    return [
 #        "//twister2/connectors/src/java:connector-java",

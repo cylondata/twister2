@@ -37,3 +37,9 @@ def twister2_core_lib_connector_files():
         "@org_slf4j_slf4j_api//jar",
         "@org_apache_kafka_kafka_clients//jar",
     ]
+
+def twister2_client_lib_master_files():
+    return [
+        "//twister2/connectors/src/java:master-java"
+    ]
+
