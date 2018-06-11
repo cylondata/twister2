@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.executor.comm;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
@@ -27,6 +28,7 @@ import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
 
 public class BroadcastOperation extends AbstractParallelOperation {
+  private static final Logger LOG = Logger.getLogger(BroadcastOperation.class.getName());
   private MPIDataFlowBroadcast op;
 
   public BroadcastOperation(Config config, TWSChannel network, TaskPlan tPlan) {
@@ -66,7 +68,12 @@ public class BroadcastOperation extends AbstractParallelOperation {
     public boolean onMessage(int source, int destination, int target, int flags, Object object) {
       TaskMessage msg = new TaskMessage(object,
           edge.getStringMapping(communicationEdge), target);
-      return outMessages.get(target).offer(msg);
+      int remainingCap = outMessages.get(target).remainingCapacity();
+      //LOG.info("Remaining Capacity : " + remainingCap);
+      boolean status = outMessages.get(target).offer(msg);
+      LOG.info("Message from Communication : " + msg.getContent() + ", Status : "
+          + status + ", Rem Cap : " + remainingCap);
+      return true;
     }
 
     @Override
