@@ -207,6 +207,10 @@ public final class KubernetesWorker {
         .put(JobMasterContext.JOB_MASTER_PORT, System.getenv(JobMasterContext.JOB_MASTER_PORT))
         .put(Context.TWISTER2_WORKER_INSTANCES, System.getenv(Context.TWISTER2_WORKER_INSTANCES))
         .put(JobMasterContext.PING_INTERVAL, System.getenv(JobMasterContext.PING_INTERVAL))
+        .put(JobMasterContext.JOB_MASTER_ASSIGNS_WORKER_IDS,
+            System.getenv(JobMasterContext.JOB_MASTER_ASSIGNS_WORKER_IDS))
+        .put(JobMasterContext.WORKER_TO_JOB_MASTER_RESPONSE_WAIT_DURATION,
+            System.getenv(JobMasterContext.WORKER_TO_JOB_MASTER_RESPONSE_WAIT_DURATION))
         .build();
   }
 

@@ -20,6 +20,11 @@ public class JobMasterContext extends Context {
   public static final boolean JOB_MASTER_RUNS_IN_CLIENT_DEFAULT = true;
   public static final String JOB_MASTER_RUNS_IN_CLIENT = "twister2.job.master.runs.in.client";
 
+  // if true, the job master runs in the submitting client
+  public static final boolean JOB_MASTER_ASSIGNS_WORKER_IDS_DEFAULT = true;
+  public static final String JOB_MASTER_ASSIGNS_WORKER_IDS =
+      "twister2.job.master.assigns.worker.ids";
+
   // worker to master ping interval in milliseconds
   public static final long PING_INTERVAL_DEFAULT = 10000;
   public static final String PING_INTERVAL = "twister2.worker.ping.interval";
@@ -31,6 +36,16 @@ public class JobMasterContext extends Context {
   // client to master ping interval in milliseconds
   public static final String JOB_MASTER_IP_DEFAULT = null;
   public static final String JOB_MASTER_IP = "twister2.job.master.ip";
+
+  // worker to master response wait time in milliseconds
+  public static final long WORKER_TO_JOB_MASTER_RESPONSE_WAIT_DURATION_DEFAULT = 1000;
+  public static final String WORKER_TO_JOB_MASTER_RESPONSE_WAIT_DURATION
+      = "twister2.worker.to.job.master.response.wait.duration";
+
+  public static boolean jobMasterAssignsWorkerIDs(Config cfg) {
+    return cfg.getBooleanValue(JOB_MASTER_ASSIGNS_WORKER_IDS,
+        JOB_MASTER_ASSIGNS_WORKER_IDS_DEFAULT);
+  }
 
   public static boolean jobMasterRunsInClient(Config cfg) {
     return cfg.getBooleanValue(JOB_MASTER_RUNS_IN_CLIENT, JOB_MASTER_RUNS_IN_CLIENT_DEFAULT);
@@ -46,6 +61,11 @@ public class JobMasterContext extends Context {
 
   public static String jobMasterIP(Config cfg) {
     return cfg.getStringValue(JOB_MASTER_IP, JOB_MASTER_IP_DEFAULT);
+  }
+
+  public static long responseWaitDuration(Config cfg) {
+    return cfg.getLongValue(WORKER_TO_JOB_MASTER_RESPONSE_WAIT_DURATION,
+        WORKER_TO_JOB_MASTER_RESPONSE_WAIT_DURATION_DEFAULT);
   }
 
 }

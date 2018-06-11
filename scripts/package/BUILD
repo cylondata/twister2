@@ -41,6 +41,7 @@ filegroup(
     srcs = [
         ":twister2-client",
         ":twister2-core",
+        ":twister2-master",
     ],
 )
 
