@@ -28,10 +28,10 @@ import org.junit.Test;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
-public class FSMergerTest {
+public class FSKeyedMergerTest {
   private static final Logger LOG = Logger.getLogger(FSMergerTest.class.getName());
 
-  private FSMerger fsMerger;
+  private FSKeyedMerger fsMerger;
 
   private Random random;
 
@@ -47,8 +47,8 @@ public class FSMergerTest {
 
   @Before
   public void before() throws Exception {
-    fsMerger = new FSMerger(1000, 100, "/tmp",
-        "fsmerger", MessageType.OBJECT);
+    fsMerger = new FSKeyedMerger(1000, 100, "/tmp",
+        "fskeyedmerger", MessageType.INTEGER, MessageType.OBJECT);
     random = new Random();
     serializer = new KryoSerializer();
   }
@@ -65,7 +65,8 @@ public class FSMergerTest {
       buffer.clear();
       buffer.putInt(i);
       byte[] serialize = serializer.serialize(i);
-      fsMerger.add(serialize, serialize.length);
+      int[] val = {i};
+      fsMerger.add(val, serialize, serialize.length);
       fsMerger.run();
     }
 
@@ -76,11 +77,12 @@ public class FSMergerTest {
     Set<Integer> set = new HashSet<>();
     while (it.hasNext()) {
       LOG.info("Reading value: " + count);
-      int val = (int) it.next();
-      if (set.contains(val)) {
+      KeyValue val = (KeyValue) it.next();
+      int[] k = (int[]) val.getKey();
+      if (set.contains(k[0])) {
         Assert.fail("Duplicate value");
       }
-      set.add(val);
+      set.add(k[0]);
       count++;
     }
     if (count != 1000) {
