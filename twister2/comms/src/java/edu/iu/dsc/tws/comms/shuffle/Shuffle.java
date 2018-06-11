@@ -18,11 +18,16 @@ public interface Shuffle {
   Iterator<Object> readIterator();
 
   default void add(Object key, byte[] data, int length) {
+    throw new UnsupportedOperationException("Not implemented");
   }
 
   default void add(byte[] data, int length) {
+    throw new UnsupportedOperationException("Not implemented");
   }
 
   default void run() {
+  }
+
+  default void clean() {
   }
 }
