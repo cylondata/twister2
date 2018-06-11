@@ -110,10 +110,24 @@ public final class FileLoader {
           }
         }
       }
-      totalSize += size;
 
+      long sum = 0;
+      for (Integer s : sizes) {
+        sum += s;
+      }
+      if (sum != size) {
+        LOG.log(Level.WARNING, "Sum doesn't equal size: " + sum + " != " + size);
+      }
+      // we need to write the data lengths and key lengths
+      totalSize += size + records.size() * 8;
+      LOG.log(Level.INFO, String.format("Total size: %d sum: %d size %d elements %d",
+          totalSize, sum, size, records.size()));
+
+
+      Files.createDirectories(Paths.get(outFileName).getParent());
       FileChannel rwChannel = new RandomAccessFile(outFileName, "rw").getChannel();
       ByteBuffer os = rwChannel.map(FileChannel.MapMode.READ_WRITE, 0, totalSize);
+      int totalWritten = 0;
       for (int i = 0; i < records.size();  i++) {
         KeyValue keyValue = records.get(i);
         byte[] r = (byte[]) keyValue.getValue();
@@ -128,19 +142,21 @@ public final class FileLoader {
           os.put(key);
         } else if (keyType == MessageType.DOUBLE) {
           double[] kd = (double[]) keyValue.getKey();
-          os.putInt(kd.length);
+          os.putInt(kd.length * 8);
           for (double d : kd) {
             os.putDouble(d);
           }
         } else if (keyType == MessageType.INTEGER) {
           int[] kd = (int[]) keyValue.getKey();
-          os.putInt(kd.length);
+          os.putInt(kd.length * 4);
           for (int d : kd) {
             os.putInt(d);
+            totalWritten += 4;
+            LOG.log(Level.INFO, String.format("Key write %d", totalWritten));
           }
         } else if (keyType == MessageType.LONG) {
           long[] kd = (long[]) keyValue.getKey();
-          os.putInt(kd.length);
+          os.putInt(kd.length * 8);
           for (long d : kd) {
             os.putLong(d);
           }
@@ -152,7 +168,7 @@ public final class FileLoader {
           }
         } else if (keyType == MessageType.SHORT) {
           short[] kd = (short[]) keyValue.getKey();
-          os.putInt(kd.length);
+          os.putInt(kd.length * 2);
           for (short d : kd) {
             os.putShort(d);
           }
@@ -179,6 +195,7 @@ public final class FileLoader {
       List<KeyValue> keyValues = new ArrayList<>();
       // lets read the key values
       int totalRead = 0;
+      int count = 0;
       while (totalRead < rwChannel.size()) {
         Object key;
         Object value;
@@ -189,6 +206,13 @@ public final class FileLoader {
         int dataSize = os.getInt();
         value = deserialize(dataType, deserializer, os, dataSize);
         keyValues.add(new KeyValue(key, value));
+
+        LOG.log(Level.INFO, "Reading data size: " + dataSize + "key size: " + keySize
+            + " count " + count + " file: " + fileName
+            + " total: " + totalRead + " value: " + value + " file size: " + rwChannel.size());
+
+        totalRead += 8 + keySize + dataSize;
+        count++;
       }
       rwChannel.force(true);
       rwChannel.close();
@@ -241,26 +265,26 @@ public final class FileLoader {
       os.get(bytes);
       data = bytes;
     } else if (dataType == MessageType.DOUBLE) {
-      double[] bytes = new double[dataSize];
-      for (int i = 0; i < dataSize; i++) {
+      double[] bytes = new double[dataSize / 8];
+      for (int i = 0; i < dataSize / 8; i++) {
         bytes[i] = os.getDouble();
       }
       data = bytes;
     } else if (dataType == MessageType.INTEGER) {
-      int[] bytes = new int[dataSize];
-      for (int i = 0; i < dataSize; i++) {
+      int[] bytes = new int[dataSize / 4];
+      for (int i = 0; i < dataSize / 4; i++) {
         bytes[i] = os.getInt();
       }
       data = bytes;
     } else if (dataType == MessageType.LONG) {
-      long[] bytes = new long[dataSize];
-      for (int i = 0; i < dataSize; i++) {
+      long[] bytes = new long[dataSize / 8];
+      for (int i = 0; i < dataSize / 8; i++) {
         bytes[i] = os.getLong();
       }
       data = bytes;
     } else if (dataType == MessageType.SHORT) {
-      short[] bytes = new short[dataSize];
-      for (int i = 0; i < dataSize; i++) {
+      short[] bytes = new short[dataSize / 2];
+      for (int i = 0; i < dataSize / 2; i++) {
         bytes[i] = os.getShort();
       }
       data = bytes;
