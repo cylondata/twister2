@@ -15,6 +15,9 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 
+/**
+ * Class for tracking the progress of set of items
+ */
 public class ProgressionTracker {
   private Queue<Integer> progressItems;
 
@@ -33,6 +36,10 @@ public class ProgressionTracker {
     }
   }
 
+  /**
+   * Get the next item
+   * @return next
+   */
   public int next() {
     if (progressItems.size() > 0) {
       Integer next = progressItems.poll();
@@ -46,6 +53,10 @@ public class ProgressionTracker {
     }
   }
 
+  /**
+   * Add the item back to the progression
+   * @param item item
+   */
   public void finish(int item) {
     boolean offer = progressItems.offer(item);
     if (!offer) {

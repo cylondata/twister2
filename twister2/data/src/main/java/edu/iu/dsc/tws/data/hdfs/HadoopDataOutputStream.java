@@ -17,47 +17,47 @@ import edu.iu.dsc.tws.data.fs.FSDataOutputStream;
 
 public final class HadoopDataOutputStream extends FSDataOutputStream {
 
-  private final org.apache.hadoop.fs.FSDataOutputStream fsDataOutputStream;
+  private final org.apache.hadoop.fs.FSDataOutputStream fosOutputStream;
 
-  public HadoopDataOutputStream(org.apache.hadoop.fs.FSDataOutputStream fsDataOutputStream1) {
-    if (fsDataOutputStream1 == null) {
+  public HadoopDataOutputStream(org.apache.hadoop.fs.FSDataOutputStream fsOutputStream1) {
+    if (fsOutputStream1 == null) {
       throw new NullPointerException();
     }
-    this.fsDataOutputStream = fsDataOutputStream1;
+    this.fosOutputStream = fsOutputStream1;
   }
 
   @Override
   public void write(int b) throws IOException {
-    fsDataOutputStream.write(b);
+    fosOutputStream.write(b);
   }
 
   @Override
   public void write(byte[] b, int off, int len) throws IOException {
-    fsDataOutputStream.write(b, off, len);
+    fosOutputStream.write(b, off, len);
   }
 
   @Override
   public void close() throws IOException {
-    fsDataOutputStream.close();
+    fosOutputStream.close();
   }
 
   @Override
   public long getPos() throws IOException {
-    return fsDataOutputStream.getPos();
+    return fosOutputStream.getPos();
   }
 
   @Override
   public void flush() throws IOException {
-    fsDataOutputStream.hflush();
+    fosOutputStream.hflush();
   }
 
   @Override
   public void sync() throws IOException {
-    fsDataOutputStream.hsync();
+    fosOutputStream.hsync();
   }
 
   public org.apache.hadoop.fs.FSDataOutputStream getHadoopOutputStream() {
-    return fsDataOutputStream;
+    return fosOutputStream;
   }
 
 }

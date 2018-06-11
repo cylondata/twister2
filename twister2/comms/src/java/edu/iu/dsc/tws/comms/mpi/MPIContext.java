@@ -27,8 +27,16 @@ public class MPIContext extends CommunicationContext {
   private static final String SEND_PENDING_MAX = "network.mpi.send.pending.max";
   private static final String NETWORK_CHANNEL_PENDING_SIZE = "network.channel.mpi.pending.size";
   private static final String NETWORK_STORAGE_PATH = "network.storage.path";
+  private static final String NETWORK_PARTITION_MESSAGE_GROUP_LOW_WATERMARK =
+      "network.partition.message.group.low_water_mark";
+  private static final String NETWORK_PARTITION_MESSAGE_GROUP_HIGH_WATERMARK =
+      "network.partition.message.group.high_water_mark";
 
-  public static final int DEFAULT_PATH = 0;
+  private static final String SHUFFLE_MAX_BYTES_IN_MEMORY = "shuffle.memory.bytes.max";
+  private static final String SHUFFLE_MAX_RECORDS_IN_MEMORY = "shuffle.memory.records.max";
+  private static final String SHUFFLE_DIRECTORY_PATH = "shuffle.directory.path";
+
+  public static final int DEFAULT_DESTINATION = 0;
 
   public static int bufferSize(Config cfg) {
     return cfg.getIntegerValue(BUFFER_SIZE, 2048000);
@@ -57,6 +65,26 @@ public class MPIContext extends CommunicationContext {
 
   public static String networkStoragePath(Config cfg) {
     return cfg.getStringValue(NETWORK_STORAGE_PATH);
+  }
+
+  public static int getNetworkPartitionMessageGroupLowWaterMark(Config cfg) {
+    return cfg.getIntegerValue(NETWORK_PARTITION_MESSAGE_GROUP_LOW_WATERMARK, 8);
+  }
+
+  public static int getNetworkPartitionMessageGroupHighWaterMark(Config cfg) {
+    return cfg.getIntegerValue(NETWORK_PARTITION_MESSAGE_GROUP_HIGH_WATERMARK, 16);
+  }
+
+  public static String getShuffleDirectoryPath(Config cfg) {
+    return cfg.getStringValue(SHUFFLE_DIRECTORY_PATH, "/tmp");
+  }
+
+  public static int getShuffleMaxRecordsInMemory(Config cfg) {
+    return cfg.getIntegerValue(SHUFFLE_MAX_RECORDS_IN_MEMORY, 64);
+  }
+
+  public static int getShuffleMaxBytesInMemory(Config cfg) {
+    return cfg.getIntegerValue(SHUFFLE_MAX_BYTES_IN_MEMORY, 6400);
   }
 }
 

@@ -186,11 +186,6 @@ public class MPIDirectDataFlowCommunication implements DataFlowOperation, MPIMes
   }
 
   @Override
-  public MessageType getType() {
-    return null;
-  }
-
-  @Override
   public TaskPlan getTaskPlan() {
     return null;
   }

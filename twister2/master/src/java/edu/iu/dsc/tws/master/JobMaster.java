@@ -13,63 +13,107 @@ package edu.iu.dsc.tws.master;
 
 import java.io.IOException;
 import java.nio.channels.SocketChannel;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.google.protobuf.Message;
-
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.net.tcp.Progress;
 import edu.iu.dsc.tws.common.net.tcp.StatusCode;
 import edu.iu.dsc.tws.common.net.tcp.request.ConnectHandler;
-import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
-import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
-import edu.iu.dsc.tws.proto.system.JobExecutionState;
+import edu.iu.dsc.tws.proto.network.Network;
+import edu.iu.dsc.tws.proto.network.Network.ListWorkersRequest;
+import edu.iu.dsc.tws.proto.network.Network.ListWorkersResponse;
 
-public class JobMaster {
+public class JobMaster extends Thread {
   private static final Logger LOG = Logger.getLogger(JobMaster.class.getName());
 
-  private static ExecutorService threadsPool;
+  public static final int JOB_MASTER_ID = -1;
   private static Progress looper;
+
+  private Config config;
+  private String masterAddress;
+  private int masterPort;
+  private String jobName;
+
   private RRServer rrServer;
+  private WorkerMonitor workerMonitor;
+  private int numberOfWorkers;
+  private boolean workersCompleted = false;
 
-  public void runServer(Config config, String host, int port, int workerID) {
-    ServerConnectHandler serverConnectHandler = new ServerConnectHandler();
+  private IJobTerminator jobTerminator;
 
-    rrServer = new RRServer(config, host, port, looper, workerID, serverConnectHandler);
+  public JobMaster(Config config,
+                   String masterAddress,
+                   IJobTerminator jobTerminator,
+                   String jobName) {
+    this.config = config;
+    this.masterAddress = masterAddress;
+    this.jobTerminator = jobTerminator;
+    this.jobName = jobName;
+    this.masterPort = JobMasterContext.jobMasterPort(config);
+    this.numberOfWorkers = Context.workerInstances(config);
+  }
 
-    JobExecutionState.JobState.Builder jobStateBuilder = JobExecutionState.JobState.newBuilder();
-    RequestMessageHandler requestMessageHandler = new RequestMessageHandler();
-    rrServer.registerRequestHandler(jobStateBuilder, requestMessageHandler);
+  public void init() {
+    Logger.getLogger("edu.iu.dsc.tws.common.net.tcp").setLevel(Level.WARNING);
+
+    looper = new Progress();
+
+    ServerConnectHandler connectHandler = new ServerConnectHandler();
+    rrServer =
+        new RRServer(config, masterAddress, masterPort, looper, JOB_MASTER_ID, connectHandler);
+
+    workerMonitor = new WorkerMonitor(this, rrServer, numberOfWorkers);
+
+    Network.Ping.Builder pingBuilder = Network.Ping.newBuilder();
+    Network.WorkerStateChange.Builder stateChangeBuilder = Network.WorkerStateChange.newBuilder();
+    Network.WorkerStateChangeResponse.Builder stateChangeResponseBuilder
+        = Network.WorkerStateChangeResponse.newBuilder();
+
+    ListWorkersRequest.Builder listWorkersBuilder = ListWorkersRequest.newBuilder();
+    ListWorkersResponse.Builder listResponseBuilder = ListWorkersResponse.newBuilder();
+
+    rrServer.registerRequestHandler(pingBuilder, workerMonitor);
+    rrServer.registerRequestHandler(stateChangeBuilder, workerMonitor);
+    rrServer.registerRequestHandler(stateChangeResponseBuilder, workerMonitor);
+    rrServer.registerRequestHandler(listWorkersBuilder, workerMonitor);
+    rrServer.registerRequestHandler(listResponseBuilder, workerMonitor);
 
     rrServer.start();
+    looper.loop();
+    start();
   }
 
-  public void close() {
-    threadsPool.shutdownNow();
+  @Override
+  public void run() {
+    LOG.info("JobMaster [" + masterAddress + "] started and waiting worker messages on port: "
+        + masterPort);
+
+    while (!workersCompleted) {
+      looper.loopBlocking();
+    }
+
+    // to send the last remaining messages if any
+    looper.loop();
+    looper.loop();
+    looper.loop();
+
+    rrServer.stop();
   }
 
-  class RequestMessageHandler implements MessageHandler {
+  /**
+   * this method is executed when the worker completed message received from all workers
+   */
+  public void allWorkersCompleted() {
 
-    @Override
-    public void onMessage(RequestID id, int workerId, Message message) {
-      System.out.println("request message received from workerID: " + workerId);
-      System.out.println(message);
+    LOG.info("All workers have completed. JobMaster will stop.");
+    workersCompleted = true;
+    looper.wakeup();
 
-      JobExecutionState.JobState jobState = JobExecutionState.JobState.newBuilder()
-          .setCluster("kubernetes-cluster")
-          .setJobName("basic-kubernetes")
-          .setJobId("job-server")
-          .setSubmissionUser("user-y")
-          .setSubmissionTime(System.currentTimeMillis())
-          .build();
-
-      rrServer.sendResponse(id, jobState);
-      System.out.println("sent response: " + jobState);
-
+    if (jobTerminator != null) {
+      jobTerminator.terminateJob(jobName);
     }
   }
 
@@ -81,7 +125,7 @@ public class JobMaster {
     @Override
     public void onConnect(SocketChannel channel, StatusCode status) {
       try {
-        LOG.log(Level.INFO, "Client connected from:" + channel.getRemoteAddress());
+        LOG.finer("Client connected from:" + channel.getRemoteAddress());
       } catch (IOException e) {
         e.printStackTrace();
       }
@@ -93,27 +137,27 @@ public class JobMaster {
   }
 
   public static void main(String[] args) {
-    Config config = null;
+
+    Logger.getLogger("edu.iu.dsc.tws.common.net.tcp").setLevel(Level.WARNING);
+
     String host = "localhost";
     int port = 11111;
-    int workerID = 1;
+    int numberOfWorkers = 1;
 
-    threadsPool = Executors.newSingleThreadExecutor();
-    looper = new Progress();
-
-    JobMaster jobMaster = new JobMaster();
-    jobMaster.runServer(config, host, port, workerID);
-
-    long runningTime = 100;
-    LOG.info("JobMaster started on port " + port + " will run " + runningTime + " seconds");
-
-    runningTime *= 1000;
-    long start = System.currentTimeMillis();
-    while ((System.currentTimeMillis() - start) < runningTime) {
-      looper.loop();
+    if (args.length == 1) {
+      numberOfWorkers = Integer.parseInt(args[0]);
     }
 
-    jobMaster.close();
+    Config cfg = Config.newBuilder()
+        .put(Context.TWISTER2_WORKER_INSTANCES, numberOfWorkers)
+        .put(JobMasterContext.JOB_MASTER_PORT, port)
+        .build();
+
+    JobMaster jobMaster = new JobMaster(cfg, host, null, null);
+    jobMaster.init();
+
+    LOG.info("JobMaster started on port " + port + " with " + numberOfWorkers
+        + "\nWill run until all workers complete");
   }
 
 }

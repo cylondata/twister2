@@ -26,13 +26,10 @@ package edu.iu.dsc.tws.checkpointmanager;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.checkpointmanager.state_backend.StateBackend;
-import edu.iu.dsc.tws.executor.IExecutor;
 import edu.iu.dsc.tws.task.graph.Vertex;
 
 public class CheckpointManager {
   private static final Logger LOG = Logger.getLogger(CheckpointManager.class.getName());
-
-  private final IExecutor executor;
 
 //  private final CheckpointProperties checkpointProperties;
 
@@ -57,15 +54,13 @@ public class CheckpointManager {
       Vertex[] tasksToCommitTo,
       CheckpointIdCounter checkpointIdCounter,
       CompletedCheckpointStore completedCheckpointStore,
-      StateBackend checkpointStateBackend,
-      IExecutor executor
+      StateBackend checkpointStateBackend
   ) {
 
     this.baseInterval = baseInterval;
     this.checkpointTimeout = checkpointTimeout;
     this.minPauseBetweenCheckpoints = minPauseBetweenCheckpoints;
     this.maxConcurrentCheckpointAttempts = maxConcurrentCheckpointAttempts;
-    this.executor = executor;
 
   }
 

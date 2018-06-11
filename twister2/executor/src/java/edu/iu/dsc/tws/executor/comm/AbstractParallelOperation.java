@@ -32,7 +32,7 @@ public abstract class AbstractParallelOperation implements IParallelOperation {
 
   protected EdgeGenerator edge;
 
-  protected int partitionEdge;
+  protected int communicationEdge;
 
   public AbstractParallelOperation(Config config, TWSChannel network, TaskPlan tPlan) {
     this.config = config;

@@ -31,17 +31,19 @@ import org.apache.commons.lang3.tuple.Pair;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.CompletionListener;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.mpi.io.MPIMessageDeSerializer;
-import edu.iu.dsc.tws.comms.mpi.io.MPIMessageSerializer;
+import edu.iu.dsc.tws.comms.mpi.io.MPIMultiMessageDeserializer;
+import edu.iu.dsc.tws.comms.mpi.io.MPIMultiMessageSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.MessageSerializer;
 import edu.iu.dsc.tws.comms.routing.PartitionRouter;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
+import edu.iu.dsc.tws.comms.utils.OperationUtils;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
 public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiver {
@@ -52,29 +54,140 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
     DIRECT,  // direct task based
   }
 
+  /**
+   * Partitioning stratergy
+   */
   private PartitionStratergy partitionStratergy;
 
+  /**
+   * Sources
+   */
   private Set<Integer> sources;
+
+  /**
+   * Destinations
+   */
   private Set<Integer> destinations;
+
+  /**
+   * Partition router
+   */
   private PartitionRouter router;
 
+  /**
+   * Destination index
+   */
   private Map<Integer, Integer> destinationIndex;
+
+  /**
+   * Sources
+   */
   private Set<Integer> thisSources;
+
+  /**
+   * The destinations
+   */
   private Destinations dests = new Destinations();
+
+  /**
+   * Destinations
+   */
   private List<Integer> destinationsList;
+
+  /**
+   * This tasks
+   */
   private Set<Integer> thisTasks;
+
+  /**
+   * Final receiver
+   */
   private MessageReceiver finalReceiver;
 
+  /**
+   * Partial receiver
+   */
+  private MessageReceiver partialReceiver;
+
+  /**
+   * The actual implementation
+   */
   private MPIDataFlowOperation delegete;
+
+  /**
+   * Configuration
+   */
   private Config config;
+
+  /**
+   * Task plan
+   */
   private TaskPlan instancePlan;
+
+  /**
+   * Executor ID
+   */
   private int executor;
-  private MessageType type;
+
+  /**
+   * Receive message type, we can receive messages as just bytes
+   */
+  private MessageType receiveType;
+
+  /**
+   * Receive key type, we can receive keys as just bytes
+   */
+  private MessageType receiveKeyType;
+
+  /**
+   * Data type
+   */
+  private MessageType dataType;
+  /**
+   * Key type
+   */
   private MessageType keyType;
+
+  /**
+   * Weather this is a key based communication
+   */
   private boolean isKeyed;
+
+  /**
+   * Send completion listener
+   */
   private CompletionListener completionListener;
+
+  /**
+   * Routing parameters are cached
+   */
   private Table<Integer, Integer, RoutingParameters> routingParamCache = HashBasedTable.create();
+
+  /**
+   * Routing parameters are cached
+   */
+  private Table<Integer, Integer, RoutingParameters> partialRoutingParamCache
+      = HashBasedTable.create();
+
+  /**
+   * Lock for progressing the communication
+   */
   private Lock lock = new ReentrantLock();
+
+  /**
+   * Lock for progressing the partial receiver
+   */
+  private Lock partialLock = new ReentrantLock();
+
+  /**
+   * Edge used for communication
+   */
+  private int edge;
+
+  /**
+   * Weather we are a batch operation
+   */
+  private boolean batch;
 
   /**
    * A place holder for keeping the internal and external destinations
@@ -86,16 +199,18 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
   }
 
   public MPIDataFlowPartition(TWSChannel channel, Set<Integer> sourceTasks, Set<Integer> destTasks,
-                              MessageReceiver receiver, PartitionStratergy partitionStratergy,
-                              MessageType type, MessageType keyType) {
-    this(channel, sourceTasks, destTasks, receiver, partitionStratergy);
+                              MessageReceiver finalRcvr, MessageReceiver partialRcvr,
+                              PartitionStratergy partitionStratergy,
+                              MessageType dataType, MessageType keyType) {
+    this(channel, sourceTasks, destTasks, finalRcvr, partialRcvr, partitionStratergy);
     this.isKeyed = true;
     this.keyType = keyType;
-    this.type = type;
+    this.dataType = dataType;
   }
 
   public MPIDataFlowPartition(TWSChannel channel, Set<Integer> srcs,
                               Set<Integer> dests, MessageReceiver finalRcvr,
+                              MessageReceiver partialRcvr,
                               PartitionStratergy stratergy) {
     this.sources = srcs;
     this.destinations = dests;
@@ -109,10 +224,12 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
     }
 
     this.finalReceiver = finalRcvr;
+    this.partialReceiver = partialRcvr;
   }
 
   public MPIDataFlowPartition(TWSChannel channel, Set<Integer> srcs,
                               Set<Integer> dests, MessageReceiver finalRcvr,
+                              MessageReceiver partialRcvr,
                               PartitionStratergy stratergy,
                               CompletionListener cmpListener) {
     this.sources = srcs;
@@ -127,22 +244,23 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
     }
 
     this.finalReceiver = finalRcvr;
+    this.partialReceiver = partialRcvr;
   }
-
 
   /**
    * Initialize
    */
-  public void init(Config cfg, MessageType t, TaskPlan taskPlan, int edge) {
+  public void init(Config cfg, MessageType t, TaskPlan taskPlan, int ed) {
+    this.edge = ed;
     this.thisSources = TaskPlanUtils.getTasksOfThisExecutor(taskPlan, sources);
-    LOG.info(String.format("%d setup loadbalance routing %s",
+    LOG.log(Level.INFO, String.format("%d setup loadbalance routing %s",
         taskPlan.getThisExecutor(), thisSources));
     this.thisTasks = taskPlan.getTasksOfThisExecutor();
     this.router = new PartitionRouter(taskPlan, sources, destinations);
     Map<Integer, Set<Integer>> internal = router.getInternalSendTasks(0);
     Map<Integer, Set<Integer>> external = router.getExternalSendTasks(0);
     this.instancePlan = taskPlan;
-    this.type = t;
+    this.dataType = t;
 
     LOG.log(Level.FINE, String.format("%d adding internal/external routing",
         taskPlan.getThisExecutor()));
@@ -167,6 +285,10 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
     if (this.finalReceiver != null && isLastReceiver()) {
       this.finalReceiver.init(cfg, this, receiveExpectedTaskIds());
     }
+    if (this.partialReceiver != null) {
+      this.partialReceiver.init(cfg, this, receiveExpectedTaskIds());
+    }
+
 
     Map<Integer, ArrayBlockingQueue<Pair<Object, MPISendMessage>>> pendingSendMessagesPerSource =
         new HashMap<>();
@@ -176,13 +298,19 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
     Map<Integer, MessageDeSerializer> deSerializerMap = new HashMap<>();
 
     Set<Integer> srcs = TaskPlanUtils.getTasksOfThisExecutor(taskPlan, sources);
+    Set<Integer> tempsrcs = TaskPlanUtils.getTasksOfThisExecutor(taskPlan, sources);
+
+    //need to set minus tasks as well
+    for (Integer src : tempsrcs) {
+      srcs.add((src * -1) - 1);
+    }
     for (int s : srcs) {
       // later look at how not to allocate pairs for this each time
       ArrayBlockingQueue<Pair<Object, MPISendMessage>> pendingSendMessages =
           new ArrayBlockingQueue<Pair<Object, MPISendMessage>>(
               MPIContext.sendPendingMax(cfg));
       pendingSendMessagesPerSource.put(s, pendingSendMessages);
-      serializerMap.put(s, new MPIMessageSerializer(new KryoSerializer()));
+      serializerMap.put(s, new MPIMultiMessageSerializer(new KryoSerializer(), executor));
     }
 
     int maxReceiveBuffers = MPIContext.receiveBufferCount(cfg);
@@ -191,14 +319,14 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
       receiveExecutorsSize = 1;
     }
     Set<Integer> execs = router.receivingExecutors();
-    for (int e : execs) {
+    for (int ex : execs) {
       int capacity = maxReceiveBuffers * 2 * receiveExecutorsSize;
       Queue<Pair<Object, MPIMessage>> pendingReceiveMessages =
           new ArrayBlockingQueue<Pair<Object, MPIMessage>>(
               capacity);
-      pendingReceiveMessagesPerSource.put(e, pendingReceiveMessages);
-      pendingReceiveDeSerializations.put(e, new ArrayBlockingQueue<MPIMessage>(capacity));
-      deSerializerMap.put(e, new MPIMessageDeSerializer(new KryoSerializer()));
+      pendingReceiveMessagesPerSource.put(ex, pendingReceiveMessages);
+      pendingReceiveDeSerializations.put(ex, new ArrayBlockingQueue<MPIMessage>(capacity));
+      deSerializerMap.put(ex, new MPIMultiMessageDeserializer(new KryoSerializer(), executor));
     }
 
     for (int src : srcs) {
@@ -218,39 +346,34 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
 
   @Override
   public boolean sendPartial(int source, Object message, int flags) {
-    throw new RuntimeException("Not supported method");
+    int newFlags = flags | MessageFlags.ORIGIN_PARTIAL;
+    return delegete.sendMessagePartial(source, message, 0,
+        newFlags, sendPartialRoutingParameters(source, 0));
   }
 
   @Override
   public boolean sendPartial(int source, Object message, int flags, int dest) {
-    throw new RuntimeException("Not supported method");
+    int newFlags = flags | MessageFlags.ORIGIN_PARTIAL;
+    return delegete.sendMessagePartial(source, message, dest, newFlags,
+        sendPartialRoutingParameters(source, dest));
   }
 
   @Override
   public boolean send(int source, Object message, int flags) {
-    return delegete.sendMessage(source, message, 0, flags, sendRoutingParameters(source, 0));
+    int newFlags = flags | MessageFlags.ORIGIN_SENDER;
+    return delegete.sendMessage(source, message, 0, newFlags, sendRoutingParameters(source, 0));
   }
 
   @Override
   public boolean send(int source, Object message, int flags, int dest) {
-    return delegete.sendMessage(source, message, dest, flags, sendRoutingParameters(source, dest));
+    int newFlags = flags | MessageFlags.ORIGIN_SENDER;
+    return delegete.sendMessage(source, message, dest, newFlags,
+        sendRoutingParameters(source, dest));
   }
 
   @Override
   public void progress() {
-    try {
-      delegete.progress();
-      if (lock.tryLock()) {
-        try {
-          finalReceiver.progress();
-        } finally {
-          lock.unlock();
-        }
-      }
-    } catch (Throwable t) {
-      LOG.log(Level.SEVERE, "un-expected error", t);
-      throw new RuntimeException(t);
-    }
+    OperationUtils.progressReceivers(delegete, lock, finalReceiver, partialLock, partialReceiver);
   }
 
   @Override
@@ -259,11 +382,14 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
 
   @Override
   public void finish() {
-  }
+    // first we need to call finish on the partial receivers
+    if (partialReceiver != null) {
+      partialReceiver.onFinish();
+    }
 
-  @Override
-  public MessageType getType() {
-    return type;
+    // lets do a
+
+    // now lets do the barrier
   }
 
   @Override
@@ -276,9 +402,43 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
     delegete.setStoreBased(memoryMapped);
   }
 
-  private RoutingParameters sendRoutingParameters(int source, int path) {
+  public RoutingParameters sendRoutingParameters(int source, int path) {
     if (routingParamCache.contains(source, path)) {
       return routingParamCache.get(source, path);
+    } else {
+      RoutingParameters routingParameters = new RoutingParameters();
+      if (partitionStratergy == PartitionStratergy.RANDOM) {
+        routingParameters.setDestinationId(0);
+        if (!destinationIndex.containsKey(source)) {
+          throw new RuntimeException(String.format(
+              "Un-expected source %d in loadbalance executor %d %s", source,
+              executor, destinationIndex));
+        }
+
+        int index = destinationIndex.get(source);
+        int route = destinationsList.get(index);
+
+        if (thisTasks.contains(route)) {
+          routingParameters.addInteranlRoute(route);
+        }
+
+        routingParameters.setDestinationId(route);
+
+        index = (index + 1) % destinations.size();
+        destinationIndex.put(source, index);
+      } else if (partitionStratergy == PartitionStratergy.DIRECT) {
+        routingParameters.setDestinationId(path);
+        routingParameters.addInteranlRoute(source);
+
+      }
+      routingParamCache.put(source, path, routingParameters);
+      return routingParameters;
+    }
+  }
+
+  public RoutingParameters sendPartialRoutingParameters(int source, int destination) {
+    if (partialRoutingParamCache.contains(source, destination)) {
+      return partialRoutingParamCache.get(source, destination);
     } else {
       RoutingParameters routingParameters = new RoutingParameters();
       if (partitionStratergy == PartitionStratergy.RANDOM) {
@@ -302,21 +462,25 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
         index = (index + 1) % destinations.size();
         destinationIndex.put(source, index);
       } else if (partitionStratergy == PartitionStratergy.DIRECT) {
-        routingParameters.setDestinationId(path);
-        if (dests.external.contains(path)) {
-          routingParameters.addExternalRoute(path);
+        routingParameters.setDestinationId(destination);
+        if (dests.external.contains(destination)) {
+          routingParameters.addExternalRoute(destination);
         } else {
-          routingParameters.addInteranlRoute(path);
+          routingParameters.addInteranlRoute(destination);
         }
       }
-      routingParamCache.put(source, path, routingParameters);
+      partialRoutingParamCache.put(source, destination, routingParameters);
       return routingParameters;
     }
   }
 
-  public boolean receiveSendInternally(int source, int t, int path, int flags, Object message) {
+  public boolean receiveSendInternally(int source, int t,
+                                       int destination, int flags, Object message) {
     // okay this must be for the
-    return finalReceiver.onMessage(source, path, t, flags, message);
+    if ((flags & MessageFlags.ORIGIN_PARTIAL) == MessageFlags.ORIGIN_PARTIAL) {
+      return finalReceiver.onMessage(source, destination, t, flags, message);
+    }
+    return partialReceiver.onMessage(source, destination, t, flags, message);
   }
 
   @Override
@@ -338,11 +502,31 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
 
   public boolean receiveMessage(MPIMessage currentMessage, Object object) {
     MessageHeader header = currentMessage.getHeader();
-    return finalReceiver.onMessage(header.getSourceId(), MPIContext.DEFAULT_PATH,
+    return finalReceiver.onMessage(header.getSourceId(), MPIContext.DEFAULT_DESTINATION,
         header.getDestinationIdentifier(), header.getFlags(), object);
   }
 
   protected boolean isLastReceiver() {
     return true;
+  }
+
+  public Set<Integer> getSources() {
+    return sources;
+  }
+
+  public Set<Integer> getDestinations() {
+    return destinations;
+  }
+
+  public MessageType getDataType() {
+    return dataType;
+  }
+
+  public MessageType getKeyType() {
+    return keyType;
+  }
+
+  public int getEdge() {
+    return edge;
   }
 }

@@ -23,16 +23,46 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.api;
 
+import java.nio.ByteBuffer;
 import java.util.Queue;
 
 import edu.iu.dsc.tws.comms.mpi.MPIBuffer;
 import edu.iu.dsc.tws.comms.mpi.MPIMessage;
 import edu.iu.dsc.tws.comms.mpi.MPIMessageListener;
 
+/**
+ * Represent a communication channel. A MPI channel or a TCP channel.
+ */
 public interface TWSChannel {
+  /**
+   * Send a message
+   * @param id worker id
+   * @param message message
+   * @param callback callback for message completions
+   * @return true if sending is accepted
+   */
   boolean sendMessage(int id, MPIMessage message, MPIMessageListener callback);
 
-  boolean receiveMessage(int rank, int stream,
+  /**
+   * Receive a message
+   * @param id worker id
+   * @param edge the graph edge to receive from
+   * @param callback callback for message completions
+   * @param receiveBuffers the list of receive buffers
+   * @return true if sending is accepted
+   */
+  boolean receiveMessage(int id, int edge,
                          MPIMessageListener callback, Queue<MPIBuffer> receiveBuffers);
+
+  /**
+   * Progress the channel
+   */
   void progress();
+
+  /**
+   * Create a buffer
+   * @param capacity capacity
+   * @return the byte buffer
+   */
+  ByteBuffer createBuffer(int capacity);
 }

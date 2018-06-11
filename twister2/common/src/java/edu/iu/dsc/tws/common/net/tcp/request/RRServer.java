@@ -93,6 +93,10 @@ public class RRServer {
     server.start();
   }
 
+  public void stop() {
+    server.stop();
+  }
+
   /**
    * Send a response to a request id
    * @param id request id
@@ -134,6 +138,7 @@ public class RRServer {
     buffer.put(data);
 
     TCPMessage request = server.send(channel, buffer, capacity, 0);
+
     if (request != null) {
       requestChannels.remove(id);
       return true;

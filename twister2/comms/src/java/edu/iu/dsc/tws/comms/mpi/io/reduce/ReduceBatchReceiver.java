@@ -44,6 +44,13 @@ public abstract class ReduceBatchReceiver implements MessageReceiver {
   protected Map<Integer, Map<Integer, Integer>> totalCounts = new HashMap<>();
   protected Queue<Object> reducedValues;
 
+  //Variables related to message buffering
+  protected int bufferSize = 10;
+  protected boolean bufferTillEnd = false;
+  protected Map<Integer, Integer> bufferCounts = new HashMap<>();
+  protected Map<Integer, Object> reducedValueMap = new HashMap<>();
+
+
   public ReduceBatchReceiver(ReduceFunction reduceFunction) {
     this.reduceFunction = reduceFunction;
   }
@@ -51,6 +58,13 @@ public abstract class ReduceBatchReceiver implements MessageReceiver {
   public ReduceBatchReceiver(int dst, ReduceFunction reduce) {
     this.destination = dst;
     this.reduceFunction = reduce;
+  }
+
+  public ReduceBatchReceiver(int dst, ReduceFunction reduce, int buffSize, boolean buffTillEnd) {
+    this.destination = dst;
+    this.reduceFunction = reduce;
+    this.bufferSize = buffSize;
+    this.bufferTillEnd = buffTillEnd;
   }
 
   @Override
@@ -79,11 +93,14 @@ public abstract class ReduceBatchReceiver implements MessageReceiver {
       counts.put(e.getKey(), countsPerTask);
       batchDone.put(e.getKey(), false);
       totalCounts.put(e.getKey(), totalCountsPerTask);
+
+      bufferCounts.put(e.getKey(), 0);
+      reducedValueMap.put(e.getKey(), null);
     }
   }
 
   @Override
-  public boolean onMessage(int source, int path, int target, int flags, Object object) {
+  public boolean onMessage(int source, int dest, int target, int flags, Object object) {
     // add the object to the map
     boolean canAdd = true;
 

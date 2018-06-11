@@ -43,8 +43,38 @@ public class Progress {
     }
   }
 
+  public void loopBlocking() {
+    try {
+      selector.select();
+
+      handleSelectedKeys();
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to select");
+    }
+  }
+
+  public void loopBlocking(long blockingDuration) {
+    try {
+      selector.select(blockingDuration);
+
+      handleSelectedKeys();
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to select");
+    }
+  }
+
+  public void wakeup() {
+    try {
+      selector.wakeup();
+
+    } catch (Exception e) {
+      LOG.warning("Failed to wakeup the selector.");
+    }
+  }
+
   private void handleSelectedKeys() {
     Set<SelectionKey> selectedKeys = selector.selectedKeys();
+
     Iterator<SelectionKey> keyIterator = selectedKeys.iterator();
     while (keyIterator.hasNext()) {
       SelectionKey key = keyIterator.next();
@@ -146,8 +176,9 @@ public class Progress {
     } else {
       // Key is not null and key is valid
       if ((key.interestOps() & operation) != 0) {
-        throw new RuntimeException(
-            String.format("%d has been registered in %s", operation, channel));
+        LOG.severe(String.format("%d has been registered in %s", operation, channel));
+//        throw new RuntimeException(
+//            String.format("%d has been registered in %s", operation, channel));
       }
       if (key.attachment() == null) {
         key.attach(callback);

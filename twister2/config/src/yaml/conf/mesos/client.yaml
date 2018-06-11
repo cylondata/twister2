@@ -24,7 +24,7 @@ twister2.ram_per_container: "128"
 twister2.disk_per_container: "128"
 
 # number of instances for the task
-twister2.number_of_containers: "10"
+twister2.number_of_containers: "3"
 
 # container per mesos executor
 twister2.container_per_worker: "1"

@@ -452,10 +452,61 @@ maven_jar(
 )
 
 maven_jar(
+    name = "org_apache_hadoop_mapreduce",
+    artifact = "org.apache.hadoop:hadoop-mapreduce-client-core:2.9.0",
+)
+
+maven_jar(
+    name = "org_apache_hadoop",
+    artifact = "org.apache.hadoop:hadoop-hdfs-client:2.9.0",
+)
+
+maven_jar(
     name = "com_google_code_findbugs",
     artifact = "com.google.code.findbugs:jsr305:3.0.0",
 )
 
+maven_jar(
+    name = "com_fasterxml_woodstox",
+    artifact = "com.fasterxml.woodstox:woodstox-core:5.0.3",
+)
 
+maven_jar(
+    name = "org_codehaus_woodstox",
+    artifact = "org.codehaus.woodstox:stax2-api:3.0.1",
+)
 
+maven_jar(
+    name = "commons_io",
+    artifact = "commons-io:commons-io:2.6",
+)
 
+#maven_jar(
+#    name = "org_apache_commons",
+#    artifact = "org.apache.commons:commons-collections4:4.1",
+#)
+
+maven_jar(
+    name = "commons_collections",
+    artifact = "commons-collections:commons-collections:3.2.2",
+)
+
+maven_jar(
+    name = "commons_lang",
+    artifact = "commons-lang:commons-lang:2.6",
+)
+
+maven_jar(
+    name = "commons_configuration",
+    artifact = "commons-configuration:commons-configuration:1.6",
+)
+
+maven_jar(
+    name = "log4j",
+    artifact = "log4j:log4j:1.2.17",
+)
+
+maven_jar(
+    name = "org_apache_htrace",
+    artifact = "org.apache.htrace:htrace-core4:4.2.0-incubating",
+)

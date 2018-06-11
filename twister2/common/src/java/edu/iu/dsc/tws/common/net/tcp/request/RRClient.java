@@ -70,6 +70,9 @@ public class RRClient {
    */
   private ConnectHandler connectHandler;
 
+  private Object responseWaitObject = new Object();
+  private RequestID requestIdOfWaitedResponse = null;
+
   /**
    * The progress loop
    */
@@ -87,10 +90,43 @@ public class RRClient {
     client.connect();
   }
 
+  public void stop() {
+    client.disconnect();
+  }
+
   public boolean isConnected() {
     return connected;
   }
 
+  public RequestID sendRequestWaitResponse(Message message, long waitLimit) {
+
+    // if this method is already called and waiting for a response
+    if (requestIdOfWaitedResponse != null) {
+      return null;
+    }
+
+    RequestID requestID = sendRequest(message);
+    requestIdOfWaitedResponse = requestID;
+    if (requestIdOfWaitedResponse == null) {
+      return null;
+    }
+
+    synchronized (responseWaitObject) {
+      try {
+        responseWaitObject.wait(waitLimit);
+        if (requestIdOfWaitedResponse != null) {
+          requestIdOfWaitedResponse = null;
+          LOG.severe("Wait limit has been reached. Response message has not been received.");
+          return null;
+        }
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+        return null;
+      }
+    }
+
+    return requestID;
+  }
   public RequestID sendRequest(Message message) {
     if (!connected) {
       return null;
@@ -117,6 +153,7 @@ public class RRClient {
 
     TCPMessage request = client.send(channel, buffer, capacity, 0);
     if (request != null) {
+      loop.wakeup();
       return id;
     } else {
       return null;
@@ -205,6 +242,15 @@ public class RRClient {
         } else {
           handler.onMessage(requestID, serverWorkerId, m);
         }
+
+        // notify if this response is waited
+        if (requestIdOfWaitedResponse != null && requestID.equals(requestIdOfWaitedResponse)) {
+          requestIdOfWaitedResponse = null;
+          synchronized (responseWaitObject) {
+            responseWaitObject.notify();
+          }
+        }
+
       } catch (InvalidProtocolBufferException e) {
         LOG.log(Level.SEVERE, "Failed to build a message", e);
       }

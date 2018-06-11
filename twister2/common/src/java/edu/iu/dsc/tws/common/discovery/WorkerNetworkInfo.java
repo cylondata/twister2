@@ -9,10 +9,23 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.rsched.bootstrap;
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+package edu.iu.dsc.tws.common.discovery;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.List;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -130,6 +143,28 @@ public class WorkerNetworkInfo {
   public int hashCode() {
     return Objects.hash(getWorkerName(), workerID);
   }
+
+  /**
+   * convert the worker list to string for logging
+   * @param workers
+   * @return
+   */
+  public static String workerListAsString(List<WorkerNetworkInfo> workers) {
+    if (workers == null) {
+      return null;
+    }
+
+    StringBuffer buffer = new StringBuffer();
+    buffer.append("Number of workers: " + workers.size() + "\n");
+    int i = 0;
+    for (WorkerNetworkInfo worker : workers) {
+      buffer.append(String.format("%d: workerID[%d] %s\n",
+          i++, worker.getWorkerID(), worker.getWorkerName()));
+    }
+
+    return buffer.toString();
+  }
+
 }
 
 

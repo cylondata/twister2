@@ -15,18 +15,9 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s;
  * Field names passed to KubernetesWorker when starting a worker in a container
  */
 public enum KubernetesField {
-  JOB_PACKAGE_FILENAME, // tar.gz filename for all job related files
   USER_JOB_JAR_FILE,    // java jar file for running user job
   JOB_PACKAGE_FILE_SIZE, // file size of tar.gz file
   CONTAINER_NAME,
-  JOB_DESCRIPTION_FILE,
   POD_IP,
   PERSISTENT_JOB_DIR,
-  WORKERS_PER_POD,
-  PERSISTENT_LOGGING_REQUESTED,
-  LOG_LEVEL,
-  REDIRECT_SYS_OUT_ERR,
-  LOGGING_MAX_FILE_SIZE,
-  LOGGING_MAX_FILES,
-  PERSISTENT_VOLUME_UPLOADING
 }

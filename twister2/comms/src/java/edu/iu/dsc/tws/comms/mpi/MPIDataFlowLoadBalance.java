@@ -216,11 +216,6 @@ public class MPIDataFlowLoadBalance implements DataFlowOperation, MPIMessageRece
   }
 
   @Override
-  public MessageType getType() {
-    return type;
-  }
-
-  @Override
   public TaskPlan getTaskPlan() {
     return instancePlan;
   }
@@ -286,9 +281,9 @@ public class MPIDataFlowLoadBalance implements DataFlowOperation, MPIMessageRece
   public boolean receiveMessage(MPIMessage currentMessage, Object object) {
     MessageHeader header = currentMessage.getHeader();
 
-    return finalReceiver.onMessage(header.getSourceId(), MPIContext.DEFAULT_PATH,
+    return finalReceiver.onMessage(header.getSourceId(), MPIContext.DEFAULT_DESTINATION,
         router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
-            MPIContext.DEFAULT_PATH), header.getFlags(), object);
+            MPIContext.DEFAULT_DESTINATION), header.getFlags(), object);
   }
 
   protected boolean isLastReceiver() {

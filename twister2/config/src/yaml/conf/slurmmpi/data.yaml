@@ -1,0 +1,19 @@
+#twister2.hadoop.home: "/home/kgovind/hadoop-2.9.0"
+
+twister2.hadoop.home: "${HADOOP_HOME}"
+
+twister2.hdfs.url: "hdfs://hairy.soic.indiana.edu:9000//"
+
+twister2.hdfs.class: "org.apache.hadoop.hdfs.DistributedFileSystem"
+
+twister2.hdfs.implementation.key: "fs.hdfs.impl"
+
+#twister2.hdfs.config.directory: "/home/kgovind/hadoop-2.9.0/etc/hadoop/core-site.xml"
+
+twister2.hdfs.config.directory: "${HADOOP_HOME}/etc/hadoop/core-site.xml"
+
+#twister2.hdfs.data.directory: "/scratch/kgovind/twister2hdfs/data"
+
+#twister2.hdfs.data.directory: "/tmp/twister2hdfs/data"
+
+twister2.hdfs.data.directory: "/tmp/hadoop-kgovind/dfs/name"

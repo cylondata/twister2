@@ -11,9 +11,15 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.k8s;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.POD_MEMORY_VOLUME;
 
 public final class KubernetesUtils {
+  private static final Logger LOG = Logger.getLogger(KubernetesUtils.class.getName());
 
   public static String persistentJobDirName = null;
 
@@ -125,6 +131,24 @@ public final class KubernetesUtils {
    */
   public static String createContainerName(int containerIndex) {
     return KubernetesConstants.CONTAINER_NAME_PREFIX + containerIndex;
+  }
+
+  public static String getLocalAddress() {
+    try {
+      return InetAddress.getLocalHost().getHostAddress();
+    } catch (UnknownHostException e) {
+      LOG.log(Level.SEVERE, "Exception when getting local host address: ", e);
+      return null;
+    }
+  }
+
+  public static InetAddress convertToIPAddress(String ipStr) {
+    try {
+      return InetAddress.getByName(ipStr);
+    } catch (UnknownHostException e) {
+      LOG.log(Level.SEVERE, "Exception when converting to IP adress: ", e);
+      return null;
+    }
   }
 
 }

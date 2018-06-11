@@ -11,12 +11,18 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.shuffle;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.apache.commons.io.FileUtils;
 
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
@@ -25,7 +31,9 @@ import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
  * Save the records to file system and retrieve them, this is just values, so no
  * sorting as in the keyed case
  */
-public class FSMerger {
+public class FSMerger implements Shuffle {
+  private static final Logger LOG = Logger.getLogger(FSMerger.class.getName());
+
   /**
    * Maximum bytes to keep in memory
    */
@@ -140,6 +148,7 @@ public class FSMerger {
   private void deserializeObjects() {
     for (int i = 0; i < bytesInMemory.size(); i++) {
       Object o = kryoSerializer.deserialize(bytesInMemory.get(i));
+      LOG.log(Level.INFO, "Adding object: " + o);
       objectsInMemory.add(o);
     }
   }
@@ -154,6 +163,8 @@ public class FSMerger {
       if (numOfBytesInMemory > maxBytesToKeepInMemory
           || bytesInMemory.size() > maxRecordsInMemory) {
         // save the bytes to disk
+        LOG.log(Level.INFO, String.format("Save objects bytes %d objects %d",
+            numOfBytesInMemory, bytesInMemory.size()));
         FileLoader.saveObjects(bytesInMemory, bytesLength,
             numOfBytesInMemory, getSaveFileName(noOfFileWritten));
 
@@ -177,7 +188,7 @@ public class FSMerger {
 
   private class FSIterator implements Iterator<Object> {
     // the current file index
-    private int currentFileIndex = 0;
+    private int currentFileIndex = -1;
     // Index of the current file
     private int currentIndex = 0;
     // the iterator for list of bytes in memory
@@ -193,7 +204,7 @@ public class FSMerger {
     public boolean hasNext() {
       // we are reading from in memory
       boolean next;
-      if (currentFileIndex == 0) {
+      if (currentFileIndex == -1) {
         next = it.hasNext();
         if (!next) {
           // we need to open the first file part
@@ -208,7 +219,7 @@ public class FSMerger {
         }
       }
 
-      if (currentFileIndex > 0) {
+      if (currentFileIndex >= 0) {
         if (currentIndex < openValues.size()) {
           return true;
         } else {
@@ -225,20 +236,21 @@ public class FSMerger {
 
     private void openFilePart() {
       // lets read the bytes from the file
+      currentFileIndex++;
       openValues = FileLoader.readFile(getSaveFileName(currentFileIndex),
           valueType, kryoSerializer);
-      currentFileIndex++;
       currentIndex = 0;
     }
 
     @Override
     public Object next() {
       // we are reading from in memory
-      if (currentFileIndex == 0) {
+      if (currentFileIndex == -1) {
+        LOG.log(Level.INFO, "Getting from objects in memory: " + objectsInMemory.size());
         return it.next();
       }
 
-      if (currentFileIndex > 0) {
+      if (currentFileIndex >= 0) {
         Object data = openValues.get(currentIndex);
         currentIndex++;
         return data;
@@ -246,6 +258,26 @@ public class FSMerger {
 
       return null;
     }
+  }
+
+  /**
+   * Cleanup the directories
+   */
+  public void clean() {
+    File file = new File(getSaveFolderName());
+    try {
+      FileUtils.cleanDirectory(file);
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Failed to clear directory: " + file, e);
+    }
+  }
+
+  /**
+   * Get the file name to save the current part
+   * @return the save file name
+   */
+  private String getSaveFolderName() {
+    return folder + "/" + operationName;
   }
 
   /**

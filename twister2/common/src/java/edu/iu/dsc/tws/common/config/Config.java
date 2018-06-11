@@ -189,9 +189,20 @@ public class Config {
     return value != null ? value : defaultValue;
   }
 
-
   public Boolean getBooleanValue(String key) {
-    return (Boolean) get(key);
+    Object value = get(key);
+    if (value instanceof Boolean) {
+      return (Boolean) value;
+    } else if (value instanceof String) {
+      String strValue = (String) value;
+      if ("true".equalsIgnoreCase(strValue)) {
+        return true;
+      } else if ("false".equalsIgnoreCase(strValue)) {
+        return false;
+      }
+    }
+
+    return null;
   }
 
   public Boolean getBooleanValue(String key, boolean defaultValue) {
