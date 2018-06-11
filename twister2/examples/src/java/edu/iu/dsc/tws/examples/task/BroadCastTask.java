@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.examples.task;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
@@ -39,6 +40,7 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 public class BroadCastTask implements IContainer {
+  private static final Logger LOG = Logger.getLogger(BroadCastTask.class.getName());
   @Override
   public void init(Config config, int id, ResourcePlan resourcePlan) {
     GeneratorTask g = new GeneratorTask();
@@ -46,9 +48,9 @@ public class BroadCastTask implements IContainer {
 
     GraphBuilder builder = GraphBuilder.newBuilder();
     builder.addSource("source", g);
-    builder.setParallelism("source", 4);
+    builder.setParallelism("source", 1);
     builder.addSink("sink", r);
-    builder.setParallelism("sink", 4);
+    builder.setParallelism("sink", 1);
     builder.connect("source", "sink", "broadcast-edge", Operations.BROADCAST);
 
     DataFlowTaskGraph graph = builder.build();
@@ -86,9 +88,12 @@ public class BroadCastTask implements IContainer {
 
   private static class RecevingTask extends SinkTask {
     private static final long serialVersionUID = -254264903510284798L;
+    private static int counter = 0;
     @Override
     public void execute(IMessage message) {
-      System.out.println("Message Braodcasted : " + message.getContent());
+      System.out.println("Message Braodcasted : " + message.getContent() + ", counter : "
+          + counter);
+      counter++;
     }
 
     @Override
