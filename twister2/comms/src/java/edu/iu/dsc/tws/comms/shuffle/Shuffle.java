@@ -22,4 +22,7 @@ public interface Shuffle {
 
   default void add(byte[] data, int length) {
   }
+
+  default void run() {
+  }
 }

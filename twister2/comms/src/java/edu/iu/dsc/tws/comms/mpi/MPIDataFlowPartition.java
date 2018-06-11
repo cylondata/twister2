@@ -185,6 +185,11 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
   private int edge;
 
   /**
+   * Weather we are a batch operation
+   */
+  private boolean batch;
+
+  /**
    * A place holder for keeping the internal and external destinations
    */
   @SuppressWarnings("VisibilityModifier")
@@ -381,6 +386,9 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
     if (partialReceiver != null) {
       partialReceiver.onFinish();
     }
+
+    // lets do a
+
     // now lets do the barrier
   }
 

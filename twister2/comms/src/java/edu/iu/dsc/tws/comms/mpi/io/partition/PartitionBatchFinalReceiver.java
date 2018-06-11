@@ -118,6 +118,7 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
 
   @Override
   public void progress() {
+    sortedMerger.run();
   }
 
   @Override
