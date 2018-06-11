@@ -32,7 +32,6 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.utils.Heap;
 import edu.iu.dsc.tws.comms.utils.HeapNode;
 import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
-import sun.swing.FilePane;
 
 public class FSKeyedSortedMerger implements Shuffle {
   private static final Logger LOG = Logger.getLogger(FSKeyedSortedMerger.class.getName());
