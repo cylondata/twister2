@@ -16,6 +16,7 @@ import java.util.logging.Logger;
 
 import com.google.protobuf.Message;
 
+import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
@@ -24,7 +25,7 @@ import edu.iu.dsc.tws.proto.network.Network;
 public class Pinger implements MessageHandler {
   private static final Logger LOG = Logger.getLogger(Pinger.class.getName());
 
-  private int workerID;
+  private WorkerNetworkInfo thisWorker;
   private RRClient rrClient;
   private long interval;
 
@@ -33,13 +34,18 @@ public class Pinger implements MessageHandler {
 
   private RequestID requestID = null;
 
-  public Pinger(int workerID, RRClient rrClient, long interval) {
-    this.workerID = workerID;
+  public Pinger(WorkerNetworkInfo thisWorker, RRClient rrClient, long interval) {
+    this.thisWorker = thisWorker;
     this.rrClient = rrClient;
     this.interval = interval;
   }
 
   public long timeToNextPing() {
+
+    if (lastPingTime == -1) {
+      return interval;
+    }
+
     long nextPingTime = lastPingTime + interval;
     return nextPingTime - System.currentTimeMillis();
   }
@@ -47,7 +53,7 @@ public class Pinger implements MessageHandler {
   public void sendPingMessage() {
 
     Network.Ping ping = Network.Ping.newBuilder()
-        .setWorkerID(workerID)
+        .setWorkerID(thisWorker.getWorkerID())
         .setPingMessage("Ping Message From the Worker to the Job Master")
         .setMessageType(Network.Ping.MessageType.WORKER_TO_MASTER)
         .build();

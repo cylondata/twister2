@@ -63,7 +63,7 @@ public class JobMaster extends Thread {
     rrServer =
         new RRServer(config, masterAddress, masterPort, looper, JOB_MASTER_ID, connectHandler);
 
-    workerMonitor = new WorkerMonitor(this, rrServer, numberOfWorkers);
+    workerMonitor = new WorkerMonitor(config, this, rrServer);
 
     Network.Ping.Builder pingBuilder = Network.Ping.newBuilder();
     Network.WorkerStateChange.Builder stateChangeBuilder = Network.WorkerStateChange.newBuilder();
