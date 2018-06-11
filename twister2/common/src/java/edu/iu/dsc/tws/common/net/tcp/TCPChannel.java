@@ -144,7 +144,7 @@ public class TCPChannel {
       looper.loop();
     }
 
-    LOG.log(Level.INFO, "Everybody connected: " + clientsConnected + " " + clientsCompleted);
+    LOG.log(Level.FINEST, "Everybody connected: " + clientsConnected + " " + clientsCompleted);
   }
 
   public TCPMessage iSend(ByteBuffer buffer, int size, int procId, int edge) {
@@ -199,7 +199,7 @@ public class TCPChannel {
 
     @Override
     public void onConnect(SocketChannel channel, StatusCode status) {
-      LOG.log(Level.INFO, "Server connected to client");
+      LOG.finest("Server connected to client");
       serverSocketChannels.add(channel);
       postHelloMessage(channel);
     }
@@ -219,7 +219,7 @@ public class TCPChannel {
         // add this to
         invertedServerChannels.put(channel, destProc);
         serverChannel.put(destProc, channel);
-        LOG.log(Level.INFO, "Server received hello message from: " + destProc);
+        LOG.finest("Server received hello message from: " + destProc);
         buffer.clear();
         helloReceiveByteBuffers.add(buffer);
         clientsConnected++;
@@ -229,7 +229,7 @@ public class TCPChannel {
 
     @Override
     public void onSendComplete(SocketChannel channel, TCPMessage writeRequest) {
-      LOG.log(Level.INFO, "Server send complete");
+      LOG.finest("Server send complete");
       writeRequest.setComplete(true);
     }
   }
@@ -242,7 +242,7 @@ public class TCPChannel {
 
     @Override
     public void onConnect(SocketChannel channel, StatusCode status) {
-      LOG.log(Level.INFO, "Client connected to server: " + channel);
+      LOG.finest("Client connected to server: " + channel);
       clientSocketChannels.add(channel);
       Integer key = invertedClientChannels.get(channel);
       // we need to send a hello message to server
@@ -259,13 +259,13 @@ public class TCPChannel {
 
     @Override
     public void onReceiveComplete(SocketChannel channel, TCPMessage readRequest) {
-      LOG.log(Level.INFO, "Client received message");
+      LOG.finest("Client received message");
       readRequest.setComplete(true);
     }
 
     @Override
     public void onSendComplete(SocketChannel channel, TCPMessage writeRequest) {
-      LOG.log(Level.INFO, "Client send complete");
+      LOG.finest("Client send complete");
       writeRequest.setComplete(true);
       if (writeRequest.getEdge() == -1) {
         ByteBuffer buffer = writeRequest.getByteBuffer();

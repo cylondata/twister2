@@ -50,8 +50,8 @@ public class TaskGather implements IContainer {
     builder.setParallelism("source", 4);
     builder.addSink("sink", r);
     builder.setParallelism("sink", 4);
-    builder.connect("source", "sink", "partition-edge", Operations.PARTITION);
-    builder.connect("source", "sink", "partition-edge1", Operations.PARTITION);
+    builder.connect("source", "sink", "gather-edge", Operations.GATHER);
+
 
     DataFlowTaskGraph graph = builder.build();
     RoundRobinTaskScheduling roundRobinTaskScheduling = new RoundRobinTaskScheduling();
@@ -76,8 +76,7 @@ public class TaskGather implements IContainer {
     private Config config;
     @Override
     public void run() {
-      ctx.write("partition-edge", "Twister2");
-      ctx.write("partition-edge1", "Twister");
+      ctx.write("gather-edge", "1");
     }
 
     @Override

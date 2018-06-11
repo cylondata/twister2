@@ -37,8 +37,8 @@ public class BroadcastOperation extends AbstractParallelOperation {
                       DataType dataType, String edgeName) {
     this.edge = e;
     op = new MPIDataFlowBroadcast(channel, srcs, dests, new BcastReceiver());
-    partitionEdge = e.generate(edgeName);
-    op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, partitionEdge);
+    communicationEdge = e.generate(edgeName);
+    op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
   }
 
   @Override
@@ -65,7 +65,7 @@ public class BroadcastOperation extends AbstractParallelOperation {
     @Override
     public boolean onMessage(int source, int destination, int target, int flags, Object object) {
       TaskMessage msg = new TaskMessage(object,
-          edge.getStringMapping(partitionEdge), target);
+          edge.getStringMapping(communicationEdge), target);
       return outMessages.get(target).offer(msg);
     }
 

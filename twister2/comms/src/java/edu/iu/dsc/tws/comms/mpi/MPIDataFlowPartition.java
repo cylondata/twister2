@@ -185,6 +185,11 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
   private int edge;
 
   /**
+   * Weather we are a batch operation
+   */
+  private boolean batch;
+
+  /**
    * A place holder for keeping the internal and external destinations
    */
   @SuppressWarnings("VisibilityModifier")
@@ -362,7 +367,8 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
   @Override
   public boolean send(int source, Object message, int flags, int dest) {
     int newFlags = flags | MessageFlags.ORIGIN_SENDER;
-    return delegete.sendMessage(source, message, dest, flags, sendRoutingParameters(source, dest));
+    return delegete.sendMessage(source, message, dest, newFlags,
+        sendRoutingParameters(source, dest));
   }
 
   @Override
@@ -380,6 +386,9 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
     if (partialReceiver != null) {
       partialReceiver.onFinish();
     }
+
+    // lets do a
+
     // now lets do the barrier
   }
 

@@ -183,7 +183,7 @@ public class RRClient {
 
       try {
         ch.close();
-        LOG.log(Level.INFO, "Closed the channel: " + ch);
+        LOG.log(Level.FINEST, "Closed the channel: " + ch);
       } catch (IOException e) {
         LOG.log(Level.SEVERE, "Failed to close channel: " + ch, e);
       }

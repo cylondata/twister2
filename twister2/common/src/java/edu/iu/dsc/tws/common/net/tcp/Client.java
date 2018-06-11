@@ -88,7 +88,7 @@ public class Client implements SelectHandler {
       socketChannel.configureBlocking(false);
       socketChannel.socket().setTcpNoDelay(true);
 
-      LOG.log(Level.INFO, "Connecting to endpoint: " + address);
+      LOG.finest("Connecting to endpoint: " + address);
       if (socketChannel.connect(address)) {
         handleConnect(socketChannel);
       } else {

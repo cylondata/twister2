@@ -18,6 +18,7 @@ import java.util.logging.Logger;
 
 import com.google.protobuf.Message;
 
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
@@ -28,15 +29,18 @@ public class WorkerMonitor implements MessageHandler {
 
   private JobMaster jobMaster;
   private RRServer rrServer;
+  private Config config;
+
   private int numberOfWorkers;
 
   private HashMap<Integer, WorkerInfo> workers;
   private HashMap<Integer, RequestID> waitList;
 
-  public WorkerMonitor(JobMaster jobMaster, RRServer rrServer, int numberOfWorkers) {
+  public WorkerMonitor(Config config, JobMaster jobMaster, RRServer rrServer) {
+    this.config = config;
     this.jobMaster = jobMaster;
     this.rrServer = rrServer;
-    this.numberOfWorkers = numberOfWorkers;
+    this.numberOfWorkers = JobMasterContext.workerInstances(config);
 
     workers = new HashMap<>();
     waitList = new HashMap<>();
@@ -85,14 +89,21 @@ public class WorkerMonitor implements MessageHandler {
   private void stateChangeMessageReceived(RequestID id, Network.WorkerStateChange message) {
 
     if (message.getNewState() == Network.WorkerState.STARTING) {
-      InetAddress ip = WorkerInfo.covertToIPAddress(message.getIp());
-      int port = message.getPort();
-      WorkerInfo worker = new WorkerInfo(message.getWorkerID(), ip, port);
-      worker.setWorkerState(Network.WorkerState.STARTING);
-      workers.put(message.getWorkerID(), worker);
       LOG.info("WorkerStateChange message received: \n" + message);
 
-      sendWorkerStateChangeResponse(id, message.getWorkerID(), message.getNewState());
+      InetAddress ip = WorkerInfo.covertToIPAddress(message.getWorkerIP());
+      int port = message.getWorkerPort();
+      int workerID = message.getWorkerID();
+
+      if (JobMasterContext.jobMasterAssignsWorkerIDs(config)) {
+        workerID = workers.size();
+      }
+
+      WorkerInfo worker = new WorkerInfo(workerID, ip, port);
+      worker.setWorkerState(Network.WorkerState.STARTING);
+      workers.put(workerID, worker);
+
+      sendWorkerStateChangeResponse(id, workerID, message.getNewState());
 
       if (workers.size() == numberOfWorkers) {
         sendListWorkersResponseToWaitList();
@@ -123,7 +134,6 @@ public class WorkerMonitor implements MessageHandler {
       // if all workers have completed, no need to send the response message back to the client
       if (haveAllWorkersCompleted()) {
         jobMaster.allWorkersCompleted();
-//        return;
       }
 
       return;

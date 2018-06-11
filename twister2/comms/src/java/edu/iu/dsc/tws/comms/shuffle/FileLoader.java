@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,13 +43,22 @@ public final class FileLoader {
   public static void saveObjects(List<byte[]> records, List<Integer> sizes,
                                  long size, String outFileName) {
     try {
+      LOG.info("Saving file: " + outFileName);
+      Files.createDirectories(Paths.get(outFileName).getParent());
       FileChannel rwChannel = new RandomAccessFile(outFileName, "rw").getChannel();
-      ByteBuffer os = rwChannel.map(FileChannel.MapMode.READ_WRITE, 0, size);
+      // we need to write the size of each message
+      ByteBuffer os = rwChannel.map(FileChannel.MapMode.READ_WRITE, 0,
+          size + sizes.size() * 4);
+      int total = 0;
       for (int i = 0; i < records.size(); i++) {
         byte[] r = records.get(i);
+        total += sizes.get(i) + 4;
+        LOG.info("Writing data size: " + sizes.get(i) + " file: "
+            + outFileName + " size: " + i + " total: " + total);
         os.putInt(sizes.get(i));
         os.put(r, 0, sizes.get(i));
       }
+      rwChannel.force(true);
       rwChannel.close();
     } catch (IOException e) {
       LOG.log(Level.SEVERE, "Failed write to disc", e);
@@ -104,7 +114,7 @@ public final class FileLoader {
 
       FileChannel rwChannel = new RandomAccessFile(outFileName, "rw").getChannel();
       ByteBuffer os = rwChannel.map(FileChannel.MapMode.READ_WRITE, 0, totalSize);
-      for (int i = 0; i < records.size(); i++) {
+      for (int i = 0; i < records.size();  i++) {
         KeyValue keyValue = records.get(i);
         byte[] r = (byte[]) keyValue.getValue();
         // serialize key with its length
@@ -180,6 +190,7 @@ public final class FileLoader {
         value = deserialize(dataType, deserializer, os, dataSize);
         keyValues.add(new KeyValue(key, value));
       }
+      rwChannel.force(true);
       rwChannel.close();
       return keyValues;
     } catch (IOException e) {
@@ -198,13 +209,19 @@ public final class FileLoader {
       List<Object> values = new ArrayList<>();
       // lets read the key values
       int totalRead = 0;
+      int count = 0;
       while (totalRead < rwChannel.size()) {
         Object value;
 
         int dataSize = os.getInt();
         value = deserialize(dataType, deserializer, os, dataSize);
         values.add(value);
+        LOG.log(Level.INFO, "Reading data size: " + dataSize + " count "
+            + count + " file: " + fileName + " total: " + totalRead + " value: " + value);
+        totalRead += 4 + dataSize;
+        count++;
       }
+      rwChannel.force(true);
       rwChannel.close();
       return values;
     } catch (IOException e) {

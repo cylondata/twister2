@@ -20,11 +20,13 @@ import java.util.logging.Logger;
 
 import com.google.protobuf.Message;
 
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
+import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.network.Network.ListWorkersRequest;
 import edu.iu.dsc.tws.proto.network.Network.ListWorkersResponse;
 
@@ -36,11 +38,11 @@ public class WorkerController implements IWorkerController, MessageHandler {
   private int numberOfWorkers;
 
   private RRClient rrClient;
+  private Config config;
 
-  public static final long MAX_WAIT_TIME_FOR_IMMEDIATE_RESPONSE = 500;
-
-  public WorkerController(WorkerNetworkInfo thisWorker, int numberOfWorkers, RRClient rrClient) {
-    this.numberOfWorkers = numberOfWorkers;
+  public WorkerController(Config config, WorkerNetworkInfo thisWorker, RRClient rrClient) {
+    this.config = config;
+    this.numberOfWorkers = JobMasterContext.workerInstances(config);
     this.thisWorker = thisWorker;
     this.rrClient = rrClient;
     workerList = new ArrayList<>();
@@ -77,7 +79,7 @@ public class WorkerController implements IWorkerController, MessageHandler {
 
     // get the worker list from the job master
     sendWorkerListRequest(ListWorkersRequest.RequestType.IMMEDIATE_RESPONSE,
-        MAX_WAIT_TIME_FOR_IMMEDIATE_RESPONSE);
+        JobMasterContext.responseWaitDuration(config));
 
     return workerList;
   }

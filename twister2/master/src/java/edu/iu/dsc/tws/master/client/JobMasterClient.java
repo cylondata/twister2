@@ -15,7 +15,6 @@ package edu.iu.dsc.tws.master.client;
 import java.net.InetAddress;
 import java.nio.channels.SocketChannel;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.google.protobuf.Message;
@@ -42,7 +41,6 @@ public class JobMasterClient extends Thread {
 
   private Config config;
   private WorkerNetworkInfo thisWorker;
-  private int numberOfWorkers;
 
   private String masterAddress;
   private int masterPort;
@@ -51,16 +49,16 @@ public class JobMasterClient extends Thread {
   private Pinger pinger;
   private WorkerController workerController;
 
+  private boolean startingMessageSent = false;
+
   public JobMasterClient(Config config, WorkerNetworkInfo thisWorker) {
     this.config = config;
     this.thisWorker = thisWorker;
     this.masterAddress = JobMasterContext.jobMasterIP(config);
     this.masterPort = JobMasterContext.jobMasterPort(config);
-    this.numberOfWorkers = Context.workerInstances(config);
   }
 
   public void init() {
-    Logger.getLogger("edu.iu.dsc.tws.common.net.tcp").setLevel(Level.SEVERE);
 
     looper = new Progress();
 
@@ -69,9 +67,9 @@ public class JobMasterClient extends Thread {
         thisWorker.getWorkerID(), connectHandler);
 
     long interval = JobMasterContext.pingInterval(config);
-    pinger = new Pinger(thisWorker.getWorkerID(), rrClient, interval);
+    pinger = new Pinger(thisWorker, rrClient, interval);
 
-    workerController = new WorkerController(thisWorker, numberOfWorkers, rrClient);
+    workerController = new WorkerController(config, thisWorker, rrClient);
 
     Network.Ping.Builder pingBuilder = Network.Ping.newBuilder();
     rrClient.registerResponseHandler(pingBuilder, pinger);
@@ -107,12 +105,9 @@ public class JobMasterClient extends Thread {
   @Override
   public void run() {
 
-    // send the first Ping message
-    pinger.sendPingMessage();
-
     while (!stopLooper) {
       long timeToNextPing = pinger.timeToNextPing();
-      if (timeToNextPing < 10) {
+      if (timeToNextPing < 30 && startingMessageSent) {
         pinger.sendPingMessage();
       } else {
         looper.loopBlocking(timeToNextPing);
@@ -122,22 +117,33 @@ public class JobMasterClient extends Thread {
     rrClient.stop();
   }
 
-  public boolean sendWorkerStartingMessage() {
+  public WorkerNetworkInfo sendWorkerStartingMessage() {
     Network.WorkerStateChange workerStateChange = Network.WorkerStateChange.newBuilder()
         .setWorkerID(thisWorker.getWorkerID())
         .setNewState(Network.WorkerState.STARTING)
-        .setIp(thisWorker.getWorkerIP().getHostAddress())
-        .setPort(thisWorker.getWorkerPort())
+        .setWorkerIP(thisWorker.getWorkerIP().getHostAddress())
+        .setWorkerPort(thisWorker.getWorkerPort())
         .build();
 
-    RequestID requestID = rrClient.sendRequest(workerStateChange);
-    if (requestID == null) {
-      LOG.severe("Could not send Worker Starting message.");
-      return false;
+    LOG.info("Sending the Worker Starting message: \n" + workerStateChange);
+
+    RequestID requestID = null;
+    if (JobMasterContext.jobMasterAssignsWorkerIDs(config)) {
+      requestID = rrClient.sendRequestWaitResponse(workerStateChange,
+          JobMasterContext.responseWaitDuration(config));
+    } else {
+      requestID = rrClient.sendRequest(workerStateChange);
     }
 
-    LOG.info("Sent the Worker Starting message: \n" + workerStateChange);
-    return true;
+    if (requestID == null) {
+      LOG.severe("Couldn't send Worker Starting message or couldn't receive the response on time.");
+      return null;
+    }
+
+    startingMessageSent = true;
+    pinger.sendPingMessage();
+
+    return thisWorker;
   }
 
   public boolean sendWorkerRunningMessage() {
@@ -157,17 +163,16 @@ public class JobMasterClient extends Thread {
   }
 
   public boolean sendWorkerCompletedMessage() {
-    // wait limit for the response message to arrive
-    long waitLimit = 1000;
 
     Network.WorkerStateChange workerStateChange = Network.WorkerStateChange.newBuilder()
         .setWorkerID(thisWorker.getWorkerID())
         .setNewState(Network.WorkerState.COMPLETED)
         .build();
 
-//    RequestID requestID = rrClient.sendRequest(workerStateChange);
     LOG.info("Sending the Worker Completed message: \n" + workerStateChange);
-    RequestID requestID = rrClient.sendRequestWaitResponse(workerStateChange, waitLimit);
+    RequestID requestID = rrClient.sendRequestWaitResponse(workerStateChange,
+        JobMasterContext.responseWaitDuration(config));
+
     if (requestID == null) {
       LOG.severe("Couldn't send Worker Completed message or couldn't receive the response.");
       return false;
@@ -183,6 +188,15 @@ public class JobMasterClient extends Thread {
 
       if (message instanceof Network.WorkerStateChangeResponse) {
         LOG.info("Received a WorkerStateChange response from the master. \n" + message);
+
+        Network.WorkerStateChangeResponse responseMessage =
+            (Network.WorkerStateChangeResponse) message;
+
+        if (JobMasterContext.jobMasterAssignsWorkerIDs(config)
+            && responseMessage.getSentState() == Network.WorkerState.STARTING) {
+          thisWorker.setWorkerID(responseMessage.getWorkerID());
+        }
+
       } else {
         LOG.warning("Received message unrecognized. \n" + message);
       }
@@ -206,6 +220,35 @@ public class JobMasterClient extends Thread {
     }
   }
 
+  public static void main(String[] args) {
+
+//    Logger.getLogger("edu.iu.dsc.tws.common.net.tcp").setLevel(Level.SEVERE);
+
+    String masterAddress = "localhost";
+    int masterPort = 11111;
+    int workerID = 0;
+    int numberOfWorkers = 1;
+
+    if (args.length == 1) {
+      numberOfWorkers = Integer.parseInt(args[0]);
+    }
+
+    if (args.length == 2) {
+      numberOfWorkers = Integer.parseInt(args[0]);
+      workerID = Integer.parseInt(args[1]);
+    }
+
+    simulateClient(masterAddress, masterPort, workerID, numberOfWorkers);
+
+  }
+
+  /**
+   * a method to simulate JobMasterClient running in workers
+   * @param masterAddress
+   * @param masterPort
+   * @param workerID
+   * @param numberOfWorkers
+   */
   public static void simulateClient(String masterAddress, int masterPort, int workerID,
                                     int numberOfWorkers) {
 
@@ -219,6 +262,7 @@ public class JobMasterClient extends Thread {
         .put(JobMasterContext.PING_INTERVAL, 1000)
         .put(JobMasterContext.JOB_MASTER_IP, masterAddress)
         .put(JobMasterContext.JOB_MASTER_PORT, masterPort)
+        .put(JobMasterContext.JOB_MASTER_ASSIGNS_WORKER_IDS, true)
         .build();
 
     JobMasterClient client = new JobMasterClient(cfg, workerNetworkInfo);
@@ -227,7 +271,7 @@ public class JobMasterClient extends Thread {
     client.sendWorkerStartingMessage();
 
     // wait 500ms
-    sleeeep(5000);
+    sleeeep(2000);
 
     client.sendWorkerRunningMessage();
 
@@ -235,7 +279,7 @@ public class JobMasterClient extends Thread {
     LOG.info(WorkerNetworkInfo.workerListAsString(workerList));
 
     // wait 2000ms
-    sleeeep(5000);
+    sleeeep(2000);
 
     workerList = client.workerController.waitForAllWorkersToJoin(2000);
     LOG.info(WorkerNetworkInfo.workerListAsString(workerList));
@@ -258,37 +302,5 @@ public class JobMasterClient extends Thread {
       e.printStackTrace();
     }
   }
-
-  public static void loop(long duration) {
-
-    long start = System.currentTimeMillis();
-
-    while (duration > (System.currentTimeMillis() - start)) {
-      looper.loop();
-    }
-  }
-
-  public static void main(String[] args) {
-
-    Logger.getLogger("edu.iu.dsc.tws.common.net.tcp").setLevel(Level.SEVERE);
-
-    String masterAddress = "localhost";
-    int masterPort = 11111;
-    int workerID = 0;
-    int numberOfWorkers = 1;
-
-    if (args.length == 1) {
-      numberOfWorkers = Integer.parseInt(args[0]);
-    }
-
-    if (args.length == 2) {
-      numberOfWorkers = Integer.parseInt(args[0]);
-      workerID = Integer.parseInt(args[1]);
-    }
-
-    simulateClient(masterAddress, masterPort, workerID, numberOfWorkers);
-
-  }
-
 
 }
