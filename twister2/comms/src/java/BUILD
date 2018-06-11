@@ -14,6 +14,7 @@ common_deps_files = [
     "//twister2/common/src/java:common-java",
     "//twister2/data/src/main/java:data-java",
     "@net_openhft_chronicle_queue//jar",
+    "@commons_io//jar",
 ]
 
 java_library(

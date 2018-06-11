@@ -63,6 +63,12 @@ public class Context {
   public static final ConfigEntry AURORA_SCRIPT = new ConfigEntry(
       "twister2.resource.scheduler.aurora.script", "${TWISTER2_CONF}/twister2.aurora");
 
+  public static final ConfigEntry DATA_YAML = new ConfigEntry(
+      "twister2.config.file.data.yaml", "${TWISTER2_CONF}/data.yaml");
+
+  public static final ConfigEntry HADOOP_HOME = new ConfigEntry(
+      "twister2.hadoop.home", "${HADOOP_HOME}", null, "HADOOP_HOME");
+
   // an internal property to represent the container id
   public static final String TWISTER2_CONTAINER_ID = "twister2.container.id";
   public static final String TWISTER2_CLUSTER_TYPE = "twister2.cluster.type";
@@ -93,6 +99,7 @@ public class Context {
     substitutions.put("JAVA_HOME", JAVA_HOME);
     substitutions.put("JOB", JOB);
     substitutions.put("CLUSTER", CLUSTER);
+    substitutions.put("HADOOP_HOME", HADOOP_HOME);
   }
 
   static {
@@ -107,6 +114,7 @@ public class Context {
     defaults.put(SYSTEM_YAML.getKey(), SYSTEM_YAML.getDefaultValue());
     defaults.put(UPLOADER_YAML.getKey(), UPLOADER_YAML.getDefaultValue());
     defaults.put(AURORA_SCRIPT.getKey(), AURORA_SCRIPT.getDefaultValue());
+    defaults.put(DATA_YAML.getKey(), DATA_YAML.getDefaultValue());
   }
 
   protected Context() {
@@ -134,6 +142,10 @@ public class Context {
 
   public static String systemConfigurationFile(Config cfg) {
     return cfg.getStringValue(SYSTEM_YAML);
+  }
+
+  public static String dataConfigurationFile(Config cfg) {
+    return cfg.getStringValue(DATA_YAML);
   }
 
   public static String clusterType(Config cfg) {
@@ -184,5 +196,8 @@ public class Context {
     return cfg.getIntegerValue(TWISTER2_WORKER_INSTANCES, TWISTER2_WORKER_INSTANCES_DEFAULT);
   }
 
+  /*public static String hadoopHome(Config cfg) {
+    return cfg.getStringValue(HADOOP_HOME);
+  }*/
 
 }

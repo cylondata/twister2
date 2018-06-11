@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task;
 
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -39,7 +38,7 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
-public class TaskGather implements IContainer {
+public class BroadCastTask implements IContainer {
   @Override
   public void init(Config config, int id, ResourcePlan resourcePlan) {
     GeneratorTask g = new GeneratorTask();
@@ -50,10 +49,10 @@ public class TaskGather implements IContainer {
     builder.setParallelism("source", 4);
     builder.addSink("sink", r);
     builder.setParallelism("sink", 4);
-    builder.connect("source", "sink", "gather-edge", Operations.GATHER);
-
+    builder.connect("source", "sink", "broadcast-edge", Operations.BROADCAST);
 
     DataFlowTaskGraph graph = builder.build();
+
     RoundRobinTaskScheduling roundRobinTaskScheduling = new RoundRobinTaskScheduling();
     roundRobinTaskScheduling.initialize(config);
 
@@ -76,7 +75,7 @@ public class TaskGather implements IContainer {
     private Config config;
     @Override
     public void run() {
-      ctx.write("gather-edge", "1");
+      ctx.write("broadcast-edge", "Hello");
     }
 
     @Override
@@ -89,7 +88,7 @@ public class TaskGather implements IContainer {
     private static final long serialVersionUID = -254264903510284798L;
     @Override
     public void execute(IMessage message) {
-      System.out.println(message.getContent());
+      System.out.println("Message Braodcasted : " + message.getContent());
     }
 
     @Override
@@ -116,13 +115,13 @@ public class TaskGather implements IContainer {
     JobConfig jobConfig = new JobConfig();
 
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
-    jobBuilder.setName("task-gather");
-    jobBuilder.setContainerClass(TaskGather.class.getName());
-    jobBuilder.setRequestResource(new ResourceContainer(4, 1024), 4);
+    jobBuilder.setName("broadcast-task");
+    jobBuilder.setContainerClass(BroadCastTask.class.getName());
+    jobBuilder.setRequestResource(new ResourceContainer(2, 1024),
+        4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job
     Twister2Submitter.submitContainerJob(jobBuilder.build(), config);
   }
 }
-

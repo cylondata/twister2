@@ -69,6 +69,11 @@ public final class TokenSub {
         if (javaPath != null) {
           list.set(i, javaPath);
         }
+      } else if ("${HADOOP_HOME}".equals(elem)) {
+        String hadoopPath = System.getenv("HADOOP_HOME");
+        if (hadoopPath != null) {
+          list.set(i, hadoopPath);
+        }
       } else if (isToken(elem)) {
         Matcher m = TOKEN_PATTERN.matcher(elem);
         if (m.matches()) {
