@@ -319,12 +319,69 @@ public final class FileLoader {
         int keySize = os.getInt();
         key = deserialize(keyType, deserializer, os, keySize);
 
+        // we cannot read further
+        if (totalRead + keySize > size) {
+          break;
+        }
+
         int dataSize = os.getInt();
         value = deserialize(dataType, deserializer, os, dataSize);
+
+        // we cannot read further
+        if (totalRead + keySize + dataSize > size) {
+          break;
+        }
+
         keyValues.add(new KeyValue(key, value));
+        totalRead += 8 + keySize + dataSize;
       }
       rwChannel.close();
-      return new ImmutableTriple<>(keyValues, size + startOffSet, rwChannel.size());
+      return new ImmutableTriple<>(keyValues, totalRead + startOffSet, rwChannel.size());
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public static OpenFilePart openPart(String fileName, long startOffSet,
+                                                                int maxSize, MessageType keyType,
+                                                                MessageType dataType,
+                                                                KryoMemorySerializer deserializer) {
+    List<KeyValue> keyValues = new ArrayList<>();
+    String outFileName = Paths.get(fileName).toString();
+    FileChannel rwChannel;
+    try {
+      rwChannel = new RandomAccessFile(outFileName, "rw").getChannel();
+      long size = maxSize < rwChannel.size() - startOffSet
+          ? maxSize : rwChannel.size() - startOffSet;
+      ByteBuffer os = rwChannel.map(FileChannel.MapMode.READ_ONLY, startOffSet, size);
+
+      int totalRead = 0;
+      while (totalRead < size) {
+        Object key;
+        Object value;
+
+        int keySize = os.getInt();
+        key = deserialize(keyType, deserializer, os, keySize);
+
+        // we cannot read further
+        if (totalRead + keySize > size) {
+          break;
+        }
+
+        int dataSize = os.getInt();
+        value = deserialize(dataType, deserializer, os, dataSize);
+
+        // we cannot read further
+        if (totalRead + keySize + dataSize > size) {
+          break;
+        }
+
+        keyValues.add(new KeyValue(key, value));
+        totalRead += 8 + keySize + dataSize;
+      }
+      rwChannel.close();
+      return new OpenFilePart(keyValues, totalRead + (int) startOffSet,
+          (int) rwChannel.size(), fileName);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
