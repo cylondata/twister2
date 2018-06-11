@@ -44,7 +44,7 @@ public class DynamicBufferChannel extends BaseNetworkChannel {
     if (readStatus == DataStatus.INIT) {
       readHeader.clear();
       readStatus = DataStatus.HEADER;
-      LOG.log(Level.INFO, "READ Header INIT");
+      LOG.finest("READ Header INIT");
     }
 
     if (readStatus == DataStatus.HEADER) {
@@ -62,7 +62,7 @@ public class DynamicBufferChannel extends BaseNetworkChannel {
       readMessageSize = readHeader.getInt();
       readEdge = readHeader.getInt();
       readStatus = DataStatus.BODY;
-      LOG.log(Level.INFO, String.format("READ Header %d %d", readMessageSize, readEdge));
+      LOG.finest(String.format("READ Header %d %d", readMessageSize, readEdge));
     }
 
     if (readStatus == DataStatus.BODY) {
@@ -83,7 +83,7 @@ public class DynamicBufferChannel extends BaseNetworkChannel {
 
         readingRequest = null;
         readStatus = DataStatus.INIT;
-        LOG.log(Level.SEVERE, "Failed to read");
+        LOG.severe("Failed to read");
 
         // we had an error
         channelHandler.onError(channel);
@@ -97,7 +97,7 @@ public class DynamicBufferChannel extends BaseNetworkChannel {
         TCPMessage ret = readingRequest;
         readingRequest = null;
         readStatus = DataStatus.INIT;
-        LOG.log(Level.INFO, String.format("READ Body %d", buffer.limit()));
+        LOG.finest(String.format("READ Body %d", buffer.limit()));
         return ret;
       } else {
         LOG.log(Level.INFO, String.format("READ Body not COMPLETE %d %d", buffer.limit(), retVal));

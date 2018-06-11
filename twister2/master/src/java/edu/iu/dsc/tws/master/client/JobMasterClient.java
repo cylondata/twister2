@@ -15,7 +15,6 @@ package edu.iu.dsc.tws.master.client;
 import java.net.InetAddress;
 import java.nio.channels.SocketChannel;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.google.protobuf.Message;
@@ -60,7 +59,6 @@ public class JobMasterClient extends Thread {
   }
 
   public void init() {
-    Logger.getLogger("edu.iu.dsc.tws.common.net.tcp").setLevel(Level.SEVERE);
 
     looper = new Progress();
 
@@ -270,7 +268,7 @@ public class JobMasterClient extends Thread {
 
   public static void main(String[] args) {
 
-    Logger.getLogger("edu.iu.dsc.tws.common.net.tcp").setLevel(Level.SEVERE);
+//    Logger.getLogger("edu.iu.dsc.tws.common.net.tcp").setLevel(Level.SEVERE);
 
     String masterAddress = "localhost";
     int masterPort = 11111;

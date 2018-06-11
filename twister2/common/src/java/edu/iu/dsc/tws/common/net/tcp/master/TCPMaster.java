@@ -92,7 +92,7 @@ public class TCPMaster {
 
     @Override
     public void onConnect(SocketChannel channel, StatusCode status) {
-      LOG.log(Level.INFO, "Connected : " + channel);
+      LOG.log(Level.FINEST, "Connected : " + channel);
       connectedChannels.add(channel);
       if (connectedChannels.size() == workerInfoList.size()) {
         postReceives();
@@ -101,7 +101,7 @@ public class TCPMaster {
 
     @Override
     public void onClose(SocketChannel channel) {
-      LOG.log(Level.INFO, "Connection closed: " + channel);
+      LOG.log(Level.FINEST, "Connection closed: " + channel);
     }
 
     @Override
@@ -109,14 +109,14 @@ public class TCPMaster {
       // read the process no
       ByteBuffer buffer = readRequest.getByteBuffer();
       int processNo = buffer.getInt();
-      LOG.log(Level.INFO, "Receive complete from: " + processNo);
+      LOG.log(Level.FINEST, "Receive complete from: " + processNo);
       if (channelIntegerMap.containsKey(processNo)) {
         LOG.log(Level.WARNING, String.format("Already received worker id from %d", processNo));
       }
       channelIntegerMap.put(processNo, channel);
 
       if (channelIntegerMap.keySet().size() == workerInfoList.size()) {
-        LOG.log(Level.INFO, "Received from all the servers, sending responses");
+        LOG.log(Level.FINEST, "Received from all the servers, sending responses");
         sendHelloResponse();
       }
     }
