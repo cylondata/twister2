@@ -45,9 +45,7 @@ filegroup(
     ],
 )
 
-######################################################
 # twister2 core packaging
-######################################################
 
 pkg_tar(
     name = "twister2-core",
@@ -135,12 +133,14 @@ pkg_tar(
         ":twister2-client-examples",
         ":twister2-client-lib-api",
         ":twister2-client-lib-common",
+        ":twister2-client-lib-data",
         ":twister2-client-lib-data-lmdb",
         ":twister2-client-lib-resource-scheduler",
         ":twister2-client-lib-task",
         ":twister2-client-lib-task-scheduler",
         ":twister2-client-lib-third_party",
         ":twister2-core-lib-executor",
+        ":twister2-master-lib",
     ],
 )
 

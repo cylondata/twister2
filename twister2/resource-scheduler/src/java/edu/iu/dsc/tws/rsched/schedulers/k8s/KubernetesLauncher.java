@@ -12,11 +12,16 @@
 package edu.iu.dsc.tws.rsched.schedulers.k8s;
 
 import java.io.File;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.master.IJobTerminator;
+import edu.iu.dsc.tws.master.JobMaster;
+import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
@@ -27,7 +32,7 @@ import io.kubernetes.client.models.V1PersistentVolumeClaim;
 import io.kubernetes.client.models.V1Service;
 import io.kubernetes.client.models.V1beta2StatefulSet;
 
-public class KubernetesLauncher implements ILauncher {
+public class KubernetesLauncher implements ILauncher, IJobTerminator {
 
   private static final Logger LOG = Logger.getLogger(KubernetesLauncher.class.getName());
 
@@ -92,6 +97,18 @@ public class KubernetesLauncher implements ILauncher {
     boolean statefulSetInitialized = initStatefulSet(jobName, resourceRequest, jobFileSize);
     if (!statefulSetInitialized) {
       return false;
+    }
+
+    // start the Job Master locally
+    if (JobMasterContext.jobMasterRunsInClient(config)) {
+      JobMaster jobMaster = null;
+      try {
+        jobMaster =
+            new JobMaster(config, InetAddress.getLocalHost().getHostAddress(), this, jobName);
+        jobMaster.init();
+      } catch (UnknownHostException e) {
+        LOG.log(Level.SEVERE, "Exception when getting local host address: ", e);
+      }
     }
 
     // transfer the job package to pods, measure the transfer time

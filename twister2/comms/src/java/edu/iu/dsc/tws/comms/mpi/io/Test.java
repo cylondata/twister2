@@ -114,10 +114,10 @@ public final class Test {
     List list = (List) d;
     for (Object o : list) {
       if (o instanceof KeyedContent) {
-        System.out.println(((KeyedContent) o).getSource());
-        if (((KeyedContent) o).getObject() instanceof IntData) {
+        System.out.println(((KeyedContent) o).getKey());
+        if (((KeyedContent) o).getValue() instanceof IntData) {
           System.out.println("Length: "
-              + ((IntData) ((KeyedContent) o).getObject()).getData().length);
+              + ((IntData) ((KeyedContent) o).getValue()).getData().length);
         }
       }
     }

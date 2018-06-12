@@ -90,19 +90,19 @@ public class TCPWorker {
 
     @Override
     public void onConnect(SocketChannel channel, StatusCode status) {
-      LOG.log(Level.INFO, "Client connected to master: " + channel);
+      LOG.log(Level.FINEST, "Client connected to master: " + channel);
       clientSocketChannel = channel;
       sendAndPost();
     }
 
     @Override
     public void onClose(SocketChannel channel) {
-      LOG.log(Level.INFO, "Connection closed: " + channel);
+      LOG.log(Level.FINEST, "Connection closed: " + channel);
     }
 
     @Override
     public void onReceiveComplete(SocketChannel channel, TCPMessage readRequest) {
-      LOG.log(Level.INFO, "Received the hello response");
+      LOG.log(Level.FINEST, "Received the hello response");
       isReady = true;
     }
 

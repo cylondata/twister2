@@ -120,7 +120,7 @@ public abstract class BaseNetworkChannel {
         selectHandler.handleError(socketChannel);
         return;
       } else {
-        LOG.log(Level.INFO, "Send complete");
+        LOG.finest("Send complete");
         // remove the request
         pendingSends.poll();
         writeRequest.setComplete(true);
@@ -128,6 +128,8 @@ public abstract class BaseNetworkChannel {
         channelHandler.onSendComplete(socketChannel, writeRequest);
       }
     }
+
+    disableWriting();
   }
 
   private int writeRequest(SocketChannel channel, TCPMessage message) {
@@ -141,8 +143,7 @@ public abstract class BaseNetworkChannel {
       writeHeader.putInt(message.getLength());
       writeHeader.putInt(message.getEdge());
       writeHeader.flip();
-      LOG.log(Level.INFO, String.format("WRITE Header %d %d",
-          message.getLength(), message.getEdge()));
+      LOG.finest(String.format("WRITE Header %d %d", message.getLength(), message.getEdge()));
     }
 
     if (writeStatus == DataStatus.HEADER) {
@@ -160,7 +161,7 @@ public abstract class BaseNetworkChannel {
       if (written < 0) {
         return written;
       } else if (written == 0) {
-        LOG.log(Level.INFO, String.format("WRITE BODY %d", buffer.limit()));
+        LOG.finest(String.format("WRITE BODY %d", buffer.limit()));
         writeStatus = DataStatus.INIT;
         return written;
       }
@@ -175,7 +176,7 @@ public abstract class BaseNetworkChannel {
     int wrote = 0;
     try {
       wrote = channel.write(buffer);
-      LOG.info("Wrote " + wrote);
+      LOG.finest("Wrote " + wrote);
     } catch (IOException e) {
       LOG.log(Level.SEVERE, "Error writing to channel ", e);
       return -1;
@@ -188,7 +189,11 @@ public abstract class BaseNetworkChannel {
     int read;
     try {
       read = channel.read(buffer);
-      LOG.log(Level.INFO, "Read size: " + read);
+      LOG.finest("Read size: " + read);
+    } catch (java.nio.channels.ClosedByInterruptException e) {
+      LOG.warning("ClosedByInterruptException thrown. "
+          + "Probably the Channel is closed by the user program intentionally.");
+      return -1;
     } catch (IOException e) {
       LOG.log(Level.SEVERE, "Error in channel.read ", e);
       return -1;

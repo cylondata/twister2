@@ -93,6 +93,10 @@ public class RRServer {
     server.start();
   }
 
+  public void stop() {
+    server.stop();
+  }
+
   /**
    * Send a response to a request id
    * @param id request id
@@ -100,7 +104,7 @@ public class RRServer {
    * @return true if response was accepted
    */
   public boolean sendResponse(RequestID id, Message message) {
-    LOG.log(Level.INFO, String.format("Using channel %s", new String(id.getId())));
+    LOG.log(Level.FINEST, String.format("Using channel %s", new String(id.getId())));
 
     if (!requestChannels.containsKey(id)) {
       LOG.log(Level.SEVERE, "Trying to send response to non-existing request");
@@ -134,6 +138,7 @@ public class RRServer {
     buffer.put(data);
 
     TCPMessage request = server.send(channel, buffer, capacity, 0);
+
     if (request != null) {
       requestChannels.remove(id);
       return true;
@@ -152,7 +157,7 @@ public class RRServer {
 
       try {
         channel.close();
-        LOG.log(Level.INFO, "Closed the channel: " + channel);
+        LOG.log(Level.FINEST, "Closed the channel: " + channel);
       } catch (IOException e) {
         LOG.log(Level.SEVERE, "Channel closed error: " + channel, e);
       }
@@ -207,7 +212,7 @@ public class RRServer {
         if (channel == null) {
           LOG.log(Level.SEVERE, "Chanel on receive is NULL");
         }
-        LOG.log(Level.INFO, String.format("Adding channel %s", new String(id)));
+        LOG.log(Level.FINEST, String.format("Adding channel %s", new String(id)));
         requestChannels.put(requestID, channel);
 
         MessageHandler handler = requestHandlers.get(messageType);

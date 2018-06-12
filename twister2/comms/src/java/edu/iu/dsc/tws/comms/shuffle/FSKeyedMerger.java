@@ -11,19 +11,23 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.shuffle;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.apache.commons.io.FileUtils;
 
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 
-public class FSKeyedMerger {
+public class FSKeyedMerger implements Shuffle {
   private static final Logger LOG = Logger.getLogger(FSKeyedMerger.class.getName());
 
   /**
@@ -87,11 +91,6 @@ public class FSKeyedMerger {
    */
   private MessageType dataType;
 
-  /**
-   * The key comparator used for comparing keys
-   */
-  private Comparator<Object> keyComparator;
-
   private Lock lock = new ReentrantLock();
   private Condition notFull = lock.newCondition();
 
@@ -109,14 +108,13 @@ public class FSKeyedMerger {
 
   public FSKeyedMerger(int maxBytesInMemory, int maxRecsInMemory,
                        String dir, String opName, MessageType kType,
-                       MessageType dType, Comparator<Object> kComparator) {
+                       MessageType dType) {
     this.maxBytesToKeepInMemory = maxBytesInMemory;
     this.maxRecordsInMemory = maxRecsInMemory;
     this.folder = dir;
     this.operationName = opName;
     this.keyType = kType;
     this.dataType = dType;
-    this.keyComparator = kComparator;
     this.kryoSerializer = new KryoMemorySerializer();
   }
 
@@ -186,14 +184,14 @@ public class FSKeyedMerger {
   /**
    * This method gives the values
    */
-  public Iterator<KeyValue> readIterator() {
+  public Iterator<Object> readIterator() {
     // lets start with first file
     return new FSIterator();
   }
 
-  private class FSIterator implements Iterator<KeyValue> {
+  private class FSIterator implements Iterator<Object> {
     // the current file index
-    private int currentFileIndex = 0;
+    private int currentFileIndex = -1;
     // Index of the current file
     private int currentIndex = 0;
     // the iterator for list of bytes in memory
@@ -209,7 +207,7 @@ public class FSKeyedMerger {
     public boolean hasNext() {
       // we are reading from in memory
       boolean next;
-      if (currentFileIndex == 0) {
+      if (currentFileIndex == -1) {
         next = it.hasNext();
         if (!next) {
           // we need to open the first file part
@@ -225,7 +223,7 @@ public class FSKeyedMerger {
         }
       }
 
-      if (currentFileIndex > 0) {
+      if (currentFileIndex >= 0) {
         if (currentIndex < openValue.size()) {
           return true;
         } else {
@@ -243,20 +241,20 @@ public class FSKeyedMerger {
 
     private void openFilePart() {
       // lets read the bytes from the file
+      currentFileIndex++;
       openValue = FileLoader.readFile(getSaveFileName(currentFileIndex), keyType,
           dataType, kryoSerializer);
-      currentFileIndex++;
       currentIndex = 0;
     }
 
     @Override
     public KeyValue next() {
       // we are reading from in memory
-      if (currentFileIndex == 0) {
+      if (currentFileIndex == -1) {
         return it.next();
       }
 
-      if (currentFileIndex > 0) {
+      if (currentFileIndex >= 0) {
         KeyValue kv = openValue.get(currentIndex);
         currentIndex++;
         return kv;
@@ -265,6 +263,27 @@ public class FSKeyedMerger {
       return null;
     }
   }
+
+  /**
+   * Cleanup the directories
+   */
+  public void clean() {
+    File file = new File(getSaveFolderName());
+    try {
+      FileUtils.cleanDirectory(file);
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Failed to clear directory: " + file, e);
+    }
+  }
+
+  /**
+   * Get the file name to save the current part
+   * @return the save file name
+   */
+  private String getSaveFolderName() {
+    return folder + "/" + operationName;
+  }
+
 
   /**
    * Get the file name to save the current part

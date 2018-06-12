@@ -119,6 +119,8 @@ public class Server implements SelectHandler {
       return null;
     }
 
+    channel.enableWriting();
+
     TCPMessage request = new TCPMessage(buffer, edge, size);
     channel.addWriteRequest(request);
 
@@ -192,7 +194,7 @@ public class Server implements SelectHandler {
   @Override
   public void handleError(SelectableChannel ch) {
     SocketAddress channelAddress = ((SocketChannel) ch).socket().getRemoteSocketAddress();
-    LOG.log(Level.INFO, "Connection is closed: " + channelAddress);
+    LOG.finest("Connection is closed: " + channelAddress);
     BaseNetworkChannel channel = connectedChannels.get(ch);
     if (channel == null) {
       LOG.warning("Error occurred in non-existing channel");

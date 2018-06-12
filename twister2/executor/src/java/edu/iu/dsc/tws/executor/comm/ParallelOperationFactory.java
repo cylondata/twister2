@@ -49,6 +49,11 @@ public class ParallelOperationFactory {
         bcastOp.prepare(sources.iterator().next(), dests, edgeGenerator, edge.getDataType(),
             edge.getName());
         return bcastOp;
+      } else if (Operations.GATHER.equals(edge.getOperation())) {
+        GatherOperation gatherOp = new GatherOperation(config, channel, taskPlan);
+        gatherOp.prepare(sources, dests.iterator().next(), edgeGenerator, edge.getDataType(),
+            edge.getName(), config, taskPlan);
+        return gatherOp;
       }
     } else {
       if (Operations.PARTITION.equals(edge.getOperation())) {
@@ -56,6 +61,16 @@ public class ParallelOperationFactory {
         partitionOp.prepare(sources, dests, edgeGenerator, edge.getDataType(),
             edge.getKeyType(), edge.getName());
         return partitionOp;
+      } else if (Operations.BROADCAST.equals(edge.getOperation())) {
+        BroadcastOperation broadcastOp = new BroadcastOperation(config, channel, taskPlan);
+        broadcastOp.prepare(sources.iterator().next(), dests, edgeGenerator, edge.getDataType(),
+            edge.getName());
+        return broadcastOp;
+      } else if (Operations.GATHER.equals(edge.getOperation())) {
+        GatherOperation gatherOp = new GatherOperation(config, channel, taskPlan);
+        gatherOp.prepare(sources, dests.iterator().next(), edgeGenerator, edge.getDataType(),
+            edge.getName(), config, taskPlan);
+        return gatherOp;
       }
     }
     return null;
@@ -70,4 +85,5 @@ public class ParallelOperationFactory {
     }
     return null;
   }
+
 }

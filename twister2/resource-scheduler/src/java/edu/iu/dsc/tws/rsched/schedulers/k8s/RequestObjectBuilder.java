@@ -17,7 +17,9 @@ import java.util.HashMap;
 import java.util.List;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
+import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
@@ -175,11 +177,9 @@ public final class RequestObjectBuilder {
     podSpec.setVolumes(volumes);
 
     int containersPerPod = KubernetesContext.workersPerPod(config);
-    int basePort = KubernetesContext.workerBasePort(config);
     ArrayList<V1Container> containers = new ArrayList<V1Container>();
     for (int i = 0; i < containersPerPod; i++) {
-      containers.add(constructContainer(
-          i, reqContainer, jobFileSize, basePort + 1, persistentJobDir, config));
+      containers.add(constructContainer(i, reqContainer, jobFileSize, persistentJobDir, config));
     }
     podSpec.setContainers(containers);
 
@@ -211,14 +211,12 @@ public final class RequestObjectBuilder {
    * @param containerIndex
    * @param reqContainer
    * @param jobFileSize
-   * @param containerPort
    * @param config
    * @return
    */
   public static V1Container constructContainer(int containerIndex,
                                                ResourceContainer reqContainer,
                                                long jobFileSize,
-                                               int containerPort,
                                                String persistentJobDir,
                                                Config config) {
     // construct container and add it to podSpec
@@ -265,13 +263,17 @@ public final class RequestObjectBuilder {
 
     container.setVolumeMounts(volumeMounts);
 
+    int containerPort = KubernetesContext.workerBasePort(config) + containerIndex;
+
     V1ContainerPort port = new V1ContainerPort();
     port.name("port11"); // currently not used
     port.containerPort(containerPort);
     port.setProtocol(KubernetesContext.workerTransportProtocol(config));
     container.setPorts(Arrays.asList(port));
 
-    setEnvironmentVariables(config, container, containerName, jobFileSize, persistentJobDir);
+    container.setEnv(
+        constructEnvironmentVariables(config, containerName, jobFileSize,
+            persistentJobDir, containerPort));
 
     return container;
   }
@@ -279,29 +281,34 @@ public final class RequestObjectBuilder {
   /**
    * set environment variables for containers
    * @param config
-   * @param container
    * @param containerName
    * @param jobFileSize
    * @param persistentJobDir
    */
-  public static void setEnvironmentVariables(Config config, V1Container container,
-                                             String containerName, long jobFileSize,
-                                             String persistentJobDir) {
-    V1EnvVar var1 = new V1EnvVar()
-        .name(KubernetesField.JOB_PACKAGE_FILENAME + "")
-        .value(SchedulerContext.jobPackageFileName(config));
-    V1EnvVar var2 = new V1EnvVar()
+  public static List<V1EnvVar> constructEnvironmentVariables(Config config,
+                                                   String containerName, long jobFileSize,
+                                                   String persistentJobDir, int workerPort) {
+    ArrayList<V1EnvVar> envVars = new ArrayList<>();
+
+    envVars.add(new V1EnvVar()
+        .name(SchedulerContext.JOB_PACKAGE_FILENAME)
+        .value(SchedulerContext.jobPackageFileName(config)));
+
+    envVars.add(new V1EnvVar()
         .name(KubernetesField.JOB_PACKAGE_FILE_SIZE + "")
-        .value(jobFileSize + "");
-    V1EnvVar var3 = new V1EnvVar()
+        .value(jobFileSize + ""));
+
+    envVars.add(new V1EnvVar()
         .name(KubernetesField.CONTAINER_NAME + "")
-        .value(containerName);
-    V1EnvVar var4 = new V1EnvVar()
+        .value(containerName));
+
+    envVars.add(new V1EnvVar()
         .name(KubernetesField.USER_JOB_JAR_FILE + "")
-        .value(SchedulerContext.userJobJarFile(config));
-    V1EnvVar var5 = new V1EnvVar()
-        .name(KubernetesField.JOB_DESCRIPTION_FILE + "")
-        .value(SchedulerContext.jobDescriptionFile(config));
+        .value(SchedulerContext.userJobJarFile(config)));
+
+    envVars.add(new V1EnvVar()
+        .name(SchedulerContext.JOB_DESCRIPTION_FILE)
+        .value(SchedulerContext.jobDescriptionFile(config)));
 
     // POD_IP with downward API
     V1ObjectFieldSelector fieldSelector = new V1ObjectFieldSelector();
@@ -309,44 +316,75 @@ public final class RequestObjectBuilder {
     V1EnvVarSource varSource = new V1EnvVarSource();
     varSource.setFieldRef(fieldSelector);
 
-    V1EnvVar var6 = new V1EnvVar()
+    envVars.add(new V1EnvVar()
         .name(KubernetesField.POD_IP + "")
-        .valueFrom(varSource);
+        .valueFrom(varSource));
 
-    V1EnvVar var7 = new V1EnvVar()
+    envVars.add(new V1EnvVar()
         .name(KubernetesField.PERSISTENT_JOB_DIR + "")
-        .value(persistentJobDir);
+        .value(persistentJobDir));
 
-    V1EnvVar var8 = new V1EnvVar()
-        .name(KubernetesField.WORKERS_PER_POD + "")
-        .value(KubernetesContext.workersPerPod(config) + "");
+    envVars.add(new V1EnvVar()
+        .name(KubernetesContext.WORKERS_PER_POD)
+        .value(KubernetesContext.workersPerPod(config) + ""));
 
-    V1EnvVar var9 = new V1EnvVar()
-        .name(KubernetesField.PERSISTENT_LOGGING_REQUESTED + "")
-        .value(LoggingContext.persistentLoggingRequested(config) + "");
+    envVars.add(new V1EnvVar()
+        .name(LoggingContext.PERSISTENT_LOGGING_REQUESTED)
+        .value(LoggingContext.persistentLoggingRequested(config) + ""));
 
-    V1EnvVar var10 = new V1EnvVar()
-        .name(KubernetesField.LOG_LEVEL + "")
-        .value(LoggingContext.loggingLevel(config));
+    envVars.add(new V1EnvVar()
+        .name(LoggingContext.LOGGING_LEVEL)
+        .value(LoggingContext.loggingLevel(config)));
 
-    V1EnvVar var11 = new V1EnvVar()
-        .name(KubernetesField.REDIRECT_SYS_OUT_ERR + "")
-        .value(LoggingContext.redirectSysOutErr(config) + "");
+    envVars.add(new V1EnvVar()
+        .name(LoggingContext.REDIRECT_SYS_OUT_ERR)
+        .value(LoggingContext.redirectSysOutErr(config) + ""));
 
-    V1EnvVar var12 = new V1EnvVar()
-        .name(KubernetesField.LOGGING_MAX_FILE_SIZE + "")
-        .value(LoggingContext.maxLogFileSize(config) + "");
+    envVars.add(new V1EnvVar()
+        .name(LoggingContext.MAX_LOG_FILE_SIZE)
+        .value(LoggingContext.maxLogFileSize(config) + ""));
 
-    V1EnvVar var13 = new V1EnvVar()
-        .name(KubernetesField.LOGGING_MAX_FILES + "")
-        .value(LoggingContext.maxLogFiles(config) + "");
+    envVars.add(new V1EnvVar()
+        .name(LoggingContext.MAX_LOG_FILES)
+        .value(LoggingContext.maxLogFiles(config) + ""));
 
-    V1EnvVar var14 = new V1EnvVar()
-        .name(KubernetesField.PERSISTENT_VOLUME_UPLOADING + "")
-        .value(KubernetesContext.persistentVolumeUploading(config) + "");
+    envVars.add(new V1EnvVar()
+        .name(KubernetesContext.PERSISTENT_VOLUME_UPLOADING)
+        .value(KubernetesContext.persistentVolumeUploading(config) + ""));
 
-    container.setEnv(Arrays.asList(
-        var1, var2, var3, var4, var5, var6, var7, var8, var9, var10, var11, var12, var13, var14));
+    envVars.add(new V1EnvVar()
+        .name(Context.TWISTER2_WORKER_INSTANCES)
+        .value(Context.workerInstances(config) + ""));
+
+    envVars.add(new V1EnvVar()
+        .name(KubernetesContext.K8S_WORKER_PORT)
+        .value(workerPort + ""));
+
+    envVars.add(new V1EnvVar()
+        .name(JobMasterContext.JOB_MASTER_PORT)
+        .value(JobMasterContext.jobMasterPort(config) + ""));
+
+    String masterAddress = null;
+    if (JobMasterContext.jobMasterRunsInClient(config)) {
+      masterAddress = KubernetesUtils.getLocalAddress();
+    }
+    envVars.add(new V1EnvVar()
+        .name(JobMasterContext.JOB_MASTER_IP)
+        .value(masterAddress + ""));
+
+    envVars.add(new V1EnvVar()
+        .name(JobMasterContext.PING_INTERVAL)
+        .value(JobMasterContext.pingInterval(config) + ""));
+
+    envVars.add(new V1EnvVar()
+        .name(JobMasterContext.JOB_MASTER_ASSIGNS_WORKER_IDS)
+        .value(JobMasterContext.jobMasterAssignsWorkerIDs(config) + ""));
+
+    envVars.add(new V1EnvVar()
+        .name(JobMasterContext.WORKER_TO_JOB_MASTER_RESPONSE_WAIT_DURATION)
+        .value(JobMasterContext.responseWaitDuration(config) + ""));
+
+    return envVars;
   }
 
   public static void setNodeAffinity(Config config, V1Affinity affinity) {

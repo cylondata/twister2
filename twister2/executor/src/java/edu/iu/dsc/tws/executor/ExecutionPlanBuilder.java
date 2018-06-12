@@ -26,6 +26,7 @@ import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 import edu.iu.dsc.tws.executor.comm.IParallelOperation;
 import edu.iu.dsc.tws.executor.comm.ParallelOperationFactory;
+import edu.iu.dsc.tws.executor.threading.ThreadStaticExecutor;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.ISink;
@@ -175,6 +176,7 @@ public class ExecutionPlanBuilder implements IExecutor {
         } else if (sourceInstances.contains(c.getSourceTask(), i)) {
           SourceInstance sourceInstance = sourceInstances.get(c.getSourceTask(), i);
           sourceInstance.registerOutParallelOperation(c.getEdge().getName(), op);
+         // LOG.info("schedule sourceInstance : " + sourceInstance.getOutQueue().size());
         } else {
           throw new RuntimeException("Not found: " + c.getSourceTask());
         }
@@ -186,6 +188,7 @@ public class ExecutionPlanBuilder implements IExecutor {
           op.register(i, taskInstance.getInQueue());
         } else if (sinkInstances.contains(c.getTargetTask(), i)) {
           SinkInstance sourceInstance = sinkInstances.get(c.getTargetTask(), i);
+         // LOG.info("schedule sinkInstance: inQ Size : " + sourceInstance.getInQueue().size());
           op.register(i, sourceInstance.getInQueue());
         } else {
           throw new RuntimeException("Not found: " + c.getTargetTask());
@@ -195,9 +198,21 @@ public class ExecutionPlanBuilder implements IExecutor {
     }
 
     // lets start the execution
+    /**
+     * Threading Model can be chosen here
+     * */
+/*
     ThreadSharingExecutor threadSharingExecutor =
         new ThreadSharingExecutor(noOfThreads);
-    threadSharingExecutor.execute(execution);
+    threadSharingExecutor.execute(execution);*/
+
+    ThreadStaticExecutor threadStaticExecutor =
+        new ThreadStaticExecutor(noOfThreads, execution);
+    threadStaticExecutor.execute(execution);
+
+
+
+
 
     return execution;
   }
@@ -236,9 +251,13 @@ public class ExecutionPlanBuilder implements IExecutor {
       sourceInstances.put(vertex.getName(), taskId, v);
       return v;
     } else if (newInstance instanceof ISink) {
+      LOG.info("SinkInstance create : else start");
+      LOG.info("TaskId " + taskId + ", vertex " + vertex.getName());
       SinkInstance v = new SinkInstance((ISink) newInstance,
           new ArrayBlockingQueue<>(1024), cfg);
       sinkInstances.put(vertex.getName(), taskId, v);
+      //LOG.info("SinkInstance : " + sinkInstances.size());
+      LOG.info("SinkInstance create : else end");
       return v;
     } else {
       throw new RuntimeException("Un-known type");

@@ -23,8 +23,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.rsched.bootstrap.IWorkerController;
-import edu.iu.dsc.tws.rsched.bootstrap.WorkerNetworkInfo;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
+import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.rsched.spi.container.IPersistentVolume;
 import edu.iu.dsc.tws.rsched.spi.container.IVolatileVolume;
 import edu.iu.dsc.tws.rsched.spi.container.IWorker;
@@ -55,18 +55,20 @@ public class BasicK8sWorker implements IWorker {
 
     // wait for all workers in this job to join
     List<WorkerNetworkInfo> workerList = workerController.waitForAllWorkersToJoin(10000);
-    if (workerList == null) {
+    if (workerList != null) {
+      LOG.info("All workers joined. " + WorkerNetworkInfo.workerListAsString(workerList));
+    } else {
       LOG.severe("Can not get all workers to join. Something wrong. .......................");
     }
 
     LOG.info("All workers joined. Current time: " + System.currentTimeMillis());
 
-    echoServer(workerController.getWorkerNetworkInfo());
+    sleepSomeTime();
+//    echoServer(workerController.getWorkerNetworkInfo());
   }
 
   /**
    * an echo server.
-   * @param workerNetworkInfo
    */
   public static void echoServer(WorkerNetworkInfo workerNetworkInfo) {
 
@@ -112,4 +114,21 @@ public class BasicK8sWorker implements IWorker {
       }
     }
   }
+
+  /**
+   * a test method to make the worker wait indefinitely
+   */
+  public void sleepSomeTime() {
+
+    long maxSleepDuration = 20;
+    long sleepDuration = (long) (Math.random() * maxSleepDuration);
+    try {
+      LOG.info("BasicK8sWorker will sleep: " + sleepDuration + " seconds.");
+      Thread.sleep(sleepDuration * 1000);
+      LOG.info("BasicK8sWorker sleep completed.");
+    } catch (InterruptedException e) {
+      LOG.log(Level.WARNING, "Thread sleep interrupted.", e);
+    }
+  }
+
 }
