@@ -73,6 +73,8 @@ public class TaskInstance implements INodeInstance {
    */
   private EdgeGenerator edgeGenerator;
 
+  private Map<String, Object> graphConfigs;
+
   public TaskInstance(ITask task, BlockingQueue<IMessage> inQueue,
                       BlockingQueue<IMessage> outQueue, Config config,
                       EdgeGenerator eGenerator, String tName,
@@ -88,11 +90,27 @@ public class TaskInstance implements INodeInstance {
     this.taskName = tName;
   }
 
+  public TaskInstance(ITask task, BlockingQueue<IMessage> inQueue,
+                      BlockingQueue<IMessage> outQueue, Config config,
+                      OutputCollection outputCollection, int taskId, int taskIndex, int parallelism, String taskName, Map<String, IParallelOperation> outParOps, EdgeGenerator edgeGenerator, Map<String, Object> graphConfigs) {
+    this.task = task;
+    this.inQueue = inQueue;
+    this.outQueue = outQueue;
+    this.config = config;
+    this.outputCollection = outputCollection;
+    this.taskId = taskId;
+    this.taskIndex = taskIndex;
+    this.parallelism = parallelism;
+    this.taskName = taskName;
+    this.outParOps = outParOps;
+    this.edgeGenerator = edgeGenerator;
+    this.graphConfigs = graphConfigs;
+  }
+
   public void prepare() {
     outputCollection = new DefaultOutputCollection(outQueue);
-
     task.prepare(config, new TaskContext(taskIndex, taskId, taskName, parallelism,
-        outputCollection));
+        outputCollection, graphConfigs));
   }
 
   public void registerOutParallelOperation(String edge, IParallelOperation op) {
