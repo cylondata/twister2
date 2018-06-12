@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.checkpointmanager.state_backend;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.UUID;
 import java.util.logging.Logger;
 
@@ -44,14 +43,15 @@ public class FsCheckpointStreamFactory {
       int fileStateSizeThreshold) {
 
     if (fileStateSizeThreshold < 0) {
-      throw new IllegalArgumentException("The threshold for file state size must be zero or larger.");
+      throw new IllegalArgumentException("The threshold for file "
+          + "state size must be zero or larger.");
     }
     if (fileStateSizeThreshold > MAX_FILE_STATE_THRESHOLD) {
-      throw new IllegalArgumentException("The threshold for file state size cannot be larger than " +
-          MAX_FILE_STATE_THRESHOLD);
+      throw new IllegalArgumentException("The threshold for file "
+          + "state size cannot be larger than " + MAX_FILE_STATE_THRESHOLD);
     }
 
-    this.filesystem =fileSystem;
+    this.filesystem = fileSystem;
     this.checkpointDirectory = checkpointDirectory;
     this.sharedStateDirectory = sharedStateDirectory;
     this.fileStateThreshold = fileStateSizeThreshold;
@@ -77,8 +77,7 @@ public class FsCheckpointStreamFactory {
 
     public FsCheckpointStateOutputStream(
         Path basePath, FileSystem fs,
-        int bufferSize, int localStateThreshold)
-    {
+        int bufferSize, int localStateThreshold) {
       if (bufferSize < localStateThreshold) {
         throw new IllegalArgumentException();
       }
@@ -97,14 +96,16 @@ public class FsCheckpointStreamFactory {
     }
 
     public void write(byte[] b, int off, int len) throws IOException {
-      if (len < writeBuffer.length / 2) {
+      int localOff = off;
+      int localLen = len;
+      if (localLen < writeBuffer.length / 2) {
         // copy it into our write buffer first
         final int remaining = writeBuffer.length - pos;
-        if (len > remaining) {
+        if (localLen > remaining) {
           // copy as much as fits
           System.arraycopy(b, off, writeBuffer, pos, remaining);
-          off += remaining;
-          len -= remaining;
+          localOff += remaining;
+          localLen -= remaining;
           pos += remaining;
 
           // flush the write buffer to make it clear again
@@ -112,14 +113,13 @@ public class FsCheckpointStreamFactory {
         }
 
         // copy what is in the buffer
-        System.arraycopy(b, off, writeBuffer, pos, len);
-        pos += len;
-      }
-      else {
+        System.arraycopy(b, localOff, writeBuffer, pos, localLen);
+        pos += localLen;
+      } else {
         // flush the current buffer
         flush();
         // write the bytes directly
-        outStream.write(b, off, len);
+        outStream.write(b, localOff, localLen);
       }
     }
 
@@ -133,14 +133,12 @@ public class FsCheckpointStreamFactory {
         if (outStream == null) {
           createStream();
         }
-
         // now flush
         if (pos > 0) {
           outStream.write(writeBuffer, 0, pos);
           pos = 0;
         }
-      }
-      else {
+      } else {
         throw new IOException("closed");
       }
     }
@@ -164,12 +162,14 @@ public class FsCheckpointStreamFactory {
           try {
             outStream.close();
           } catch (Throwable throwable) {
-            LOG.warning("Could not close the state stream for {} in "+statePath+" error is"+throwable);
+            LOG.warning("Could not close the state "
+                + "stream for {} in " + statePath + " error is" + throwable);
           } finally {
             try {
               fs.delete(statePath, false);
             } catch (Exception e) {
-              LOG.warning("Cannot delete closed and discarded state stream for in "+statePath+" error is "+e);
+              LOG.warning("Cannot delete closed "
+                  + "and discarded state stream for in " + statePath + " error is " + e);
             }
           }
         }
