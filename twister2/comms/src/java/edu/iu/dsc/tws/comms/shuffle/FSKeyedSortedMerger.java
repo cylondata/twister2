@@ -245,6 +245,7 @@ public class FSKeyedSortedMerger implements Shuffle {
         if (part.hasNext()) {
           KeyValue keyValue = part.next();
 
+//          LOG.info("Inserting value: " + keyValue.getKey());
           heap.insert(keyValue, e.getKey());
           numValuesInHeap++;
         } else {
@@ -279,7 +280,9 @@ public class FSKeyedSortedMerger implements Shuffle {
           openFiles.put(node.listNo, newPart);
 
           if (newPart.hasNext()) {
-            heap.insert(newPart.next(), node.listNo);
+            KeyValue next = newPart.next();
+//            LOG.info("Inserting value: " + next.getKey());
+            heap.insert(next, node.listNo);
             numValuesInHeap++;
           }
         }
