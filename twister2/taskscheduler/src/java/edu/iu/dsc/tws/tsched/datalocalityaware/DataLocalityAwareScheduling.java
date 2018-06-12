@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tsched.datalocalityaware;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -21,7 +22,13 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import org.apache.hadoop.conf.Configuration;
+
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.data.fs.FileStatus;
+import edu.iu.dsc.tws.data.fs.Path;
+import edu.iu.dsc.tws.data.hdfs.HadoopFileSystem;
+import edu.iu.dsc.tws.data.utils.HdfsDataContext;
 import edu.iu.dsc.tws.task.graph.Vertex;
 import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
@@ -71,6 +78,10 @@ public class DataLocalityAwareScheduling {
         dataAwareAllocation.put(i, new ArrayList<>());
       }
 
+      Configuration conf = new Configuration(false);
+      org.apache.hadoop.fs.FileSystem hadoopFileSystem = null;
+      HadoopFileSystem hadoopFileSystem1 = null;
+
       LOG.info(String.format("Data Aware Before Task Allocation:" + dataAwareAllocation + "\n"
           + "Parallel Task Map Details:" + parallelTaskMap.entrySet()));
 
@@ -81,59 +92,75 @@ public class DataLocalityAwareScheduling {
         Map.Entry<String, Integer> entry = iterator.next();
         String key = entry.getKey();
 
+        //Just for testing
         for (Vertex vertex : taskVertexSet) {
           if (vertex.getName().equals(key)
-              && vertex.getConfig().getListValue("dataset") != null) {
-            List<String> datasetList = vertex.getConfig().getListValue("dataset");
-            if (datasetList.size() == 1) {
-              String datasetName = datasetList.get(0);
-              int totalNumberOfInstances = vertex.getParallelism();
-              int globalTaskIndex = 0;
-              dataLocatorUtils = new DataLocatorUtils(datasetName);
-              List<String> datanodesList = dataLocatorUtils.findDataNodes();
-              List<CalculateDataTransferTime> cal = null;
-              if (cIdx == 0) {
-                workerPlanMap = calculateDistance(
-                    datanodesList, workerPlan, cIdx, allocatedWorkers);
-                cal = findOptimalWorkerNode(vertex, workerPlanMap, cIdx);
-              } else if (cIdx > 0) {
-                Worker worker = workerPlan.getWorker(containerIndex);
-                if (dataAwareAllocation.get(containerIndex).size()
-                    >= maxTaskInstancesPerContainer) {
-                  try {
-                    allocatedWorkers.add(worker.getId());
-                  } catch (NullPointerException ne) {
-                    ne.printStackTrace();
-                  }
-                }
-                workerPlanMap = calculateDistance(
-                    datanodesList, workerPlan, cIdx, allocatedWorkers);
-                cal = findOptimalWorkerNode(vertex, workerPlanMap, cIdx);
-              }
-
-            /*System.out.println(String.format(cal.toString()) + "\tAnd Its Size:" + cal.size());
-            System.out.println(String.format("Optimal Worker Node Details:"
-                + cal.size() + "\tworker:" + Collections.min(cal).getNodeName()) + "\t"
-                + Collections.min(cal).getRequiredDataTransferTime());*/
-
-              maxContainerTaskObjectSize = 0;
-              for (int i = 0; i < totalNumberOfInstances; i++) {
-                containerIndex = Integer.parseInt(Collections.min(cal).getNodeName().trim());
-                LOG.info("Worker Node Allocation for task:" + vertex.getName() + "(" + i + ")"
-                    + "-> Worker:" + containerIndex + "->" + Collections.min(cal).getDataNode());
-                if (maxContainerTaskObjectSize < maxTaskInstancesPerContainer) {
-                  dataAwareAllocation.get(containerIndex).add(
-                      new InstanceId(vertex.getName(), globalTaskIndex, i));
-                  globalTaskIndex++;
-                  maxContainerTaskObjectSize++;
-                } else {
-                  LOG.info(String.format("Worker:" + containerIndex
-                      + "-> Reached Max. Task Object Size:" + maxContainerTaskObjectSize));
-                }
-              }
-              ++cIdx;
-              LOG.info(String.format("********************************************************"));
+              && vertex.getConfig().getListValue("inputdataset") != null) {
+            List<String> datasetList = vertex.getConfig().getListValue("inputdataset");
+            for (int i = 0; i < datasetList.size(); i++) {
+              System.out.println("Input File Name (Testing) :" + key + "\t" + datasetList.get(i));
             }
+          }
+        }
+
+        for (Vertex vertex : taskVertexSet) {
+          if (vertex.getName().equals(key)
+              && vertex.getConfig().getListValue("inputdataset") != null) {
+            List<String> datasetList = vertex.getConfig().getListValue("inputdataset");
+            String datasetName = datasetList.get(0);
+            conf.addResource(new org.apache.hadoop.fs.Path(
+                HdfsDataContext.getHdfsConfigDirectory(config)));
+            try {
+              hadoopFileSystem1 =
+                  new HadoopFileSystem(conf, org.apache.hadoop.fs.FileSystem.get(conf));
+              Path path = new Path(datasetName);
+              FileStatus fileStatus = hadoopFileSystem1.getFileStatus(path);
+              String fileURL = fileStatus.getPath().toString();
+              System.out.println("(((((((((((Status of File:)))))))" + fileURL);
+            } catch (IOException e) {
+              e.printStackTrace();
+            }
+
+            int totalNumberOfInstances = vertex.getParallelism();
+            int globalTaskIndex = 0;
+            dataLocatorUtils = new DataLocatorUtils(datasetName);
+            List<String> datanodesList = dataLocatorUtils.findDataNodes();
+            List<CalculateDataTransferTime> cal = null;
+            if (cIdx == 0) {
+              workerPlanMap = calculateDistance(
+                  datanodesList, workerPlan, cIdx, allocatedWorkers);
+              cal = findOptimalWorkerNode(vertex, workerPlanMap, cIdx);
+            } else if (cIdx > 0) {
+              Worker worker = workerPlan.getWorker(containerIndex);
+              if (dataAwareAllocation.get(containerIndex).size()
+                  >= maxTaskInstancesPerContainer) {
+                try {
+                  allocatedWorkers.add(worker.getId());
+                } catch (NullPointerException ne) {
+                  ne.printStackTrace();
+                }
+              }
+              workerPlanMap = calculateDistance(
+                  datanodesList, workerPlan, cIdx, allocatedWorkers);
+              cal = findOptimalWorkerNode(vertex, workerPlanMap, cIdx);
+            }
+            maxContainerTaskObjectSize = 0;
+            for (int i = 0; i < totalNumberOfInstances; i++) {
+              containerIndex = Integer.parseInt(Collections.min(cal).getNodeName().trim());
+              LOG.info("Worker Node Allocation for task:" + vertex.getName() + "(" + i + ")"
+                  + "-> Worker:" + containerIndex + "->" + Collections.min(cal).getDataNode());
+              if (maxContainerTaskObjectSize < maxTaskInstancesPerContainer) {
+                dataAwareAllocation.get(containerIndex).add(
+                    new InstanceId(vertex.getName(), globalTaskIndex, i));
+                globalTaskIndex++;
+                maxContainerTaskObjectSize++;
+              } else {
+                LOG.info(String.format("Worker:" + containerIndex
+                    + "-> Reached Max. Task Object Size:" + maxContainerTaskObjectSize));
+              }
+            }
+            ++cIdx;
+            LOG.info(String.format("********************************************************"));
           }
         }
       }
