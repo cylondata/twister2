@@ -41,6 +41,13 @@ public class KeyValue implements Comparable<KeyValue> {
 
   @Override
   public int compareTo(KeyValue o) {
+    if (keyComparator == null) {
+      return -1;
+    }
+
+    if (o == null) {
+      throw new RuntimeException("o null");
+    }
     return keyComparator.compare(this.getKey(), o.getKey());
   }
 }

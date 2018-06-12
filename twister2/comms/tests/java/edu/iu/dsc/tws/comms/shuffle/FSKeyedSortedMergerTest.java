@@ -62,7 +62,9 @@ public class FSKeyedSortedMergerTest {
   private class KeyComparator implements Comparator<Object> {
     @Override
     public int compare(Object o1, Object o2) {
-      return Integer.compare((Integer) o1, (Integer) o2);
+      int[] val1 = (int[]) o1;
+      int[] val2 = (int[]) o2;
+      return Integer.compare(val1[0], val2[0]);
     }
   }
 
@@ -94,7 +96,7 @@ public class FSKeyedSortedMergerTest {
       count++;
     }
     if (count != 1000) {
-      Assert.fail("Count = " + count);
+      Assert.fail("Count =  " + count);
     }
   }
 }
