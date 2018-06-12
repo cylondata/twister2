@@ -33,7 +33,6 @@ import edu.iu.dsc.tws.task.api.SourceTask;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
-import edu.iu.dsc.tws.task.graph.GraphConstants;
 import edu.iu.dsc.tws.tsched.roundrobin.RoundRobinTaskScheduling;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
@@ -78,8 +77,6 @@ public class PartitionTask implements IContainer {
     @Override
     public void run() {
       ctx.write("partition-edge", "Hello");
-      ctx.addConfigurations("source", "cpu", GraphConstants.taskInstanceRam(config));
-      ctx.addConfigurations("sink", "cpu", GraphConstants.taskInstanceRam(config));
     }
 
     @Override
@@ -128,5 +125,4 @@ public class PartitionTask implements IContainer {
     // now submit the job
     Twister2Submitter.submitContainerJob(jobBuilder.build(), config);
   }
-
 }

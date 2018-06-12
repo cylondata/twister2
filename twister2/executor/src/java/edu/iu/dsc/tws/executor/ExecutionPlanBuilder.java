@@ -241,20 +241,21 @@ public class ExecutionPlanBuilder implements IExecutor {
       TaskInstance v = new TaskInstance((ITask) newInstance,
           new ArrayBlockingQueue<>(1024),
           new ArrayBlockingQueue<>(1024), cfg, edgeGenerator,
-          vertex.getName(), taskId, ip.getTaskIndex(), vertex.getParallelism());
+          vertex.getName(), taskId, ip.getTaskIndex(),
+          vertex.getParallelism(), vertex.getConfig().toMap());
       taskInstances.put(vertex.getName(), taskId, v);
       return v;
     } else if (newInstance instanceof ISource) {
       SourceInstance v = new SourceInstance((ISource) newInstance,
           new ArrayBlockingQueue<>(1024), cfg,
-          vertex.getName(), taskId, ip.getTaskIndex(), vertex.getParallelism());
+          vertex.getName(), taskId, ip.getTaskIndex(),
+          vertex.getParallelism(), vertex.getConfig().toMap());
       sourceInstances.put(vertex.getName(), taskId, v);
       return v;
     } else if (newInstance instanceof ISink) {
-      LOG.info("SinkInstance create : else start");
-      LOG.info("TaskId " + taskId + ", vertex " + vertex.getName());
       SinkInstance v = new SinkInstance((ISink) newInstance,
-          new ArrayBlockingQueue<>(1024), cfg);
+          new ArrayBlockingQueue<>(1024), cfg, taskId, ip.getTaskIndex(),
+          vertex.getParallelism(), vertex.getConfig().toMap());
       sinkInstances.put(vertex.getName(), taskId, v);
       //LOG.info("SinkInstance : " + sinkInstances.size());
       LOG.info("SinkInstance create : else end");

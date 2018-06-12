@@ -20,6 +20,7 @@ java_tests(
     test_classes = [
         "edu.iu.dsc.tws.comms.shuffle.FSMergerTest",
         "edu.iu.dsc.tws.comms.shuffle.FSKeyedMergerTest",
+        "edu.iu.dsc.tws.comms.shuffle.FSKeyedSortedMergerTest",
     ],
     runtime_deps = [
         ":comms-tests",

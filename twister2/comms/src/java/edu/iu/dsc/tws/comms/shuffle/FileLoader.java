@@ -342,6 +342,16 @@ public final class FileLoader {
     }
   }
 
+  /**
+   * Reads a file part upto max size from start offset
+   * @param fileName
+   * @param startOffSet
+   * @param maxSize
+   * @param keyType
+   * @param dataType
+   * @param deserializer
+   * @return
+   */
   public static OpenFilePart openPart(String fileName, long startOffSet,
                                                                 int maxSize, MessageType keyType,
                                                                 MessageType dataType,
@@ -351,11 +361,12 @@ public final class FileLoader {
     FileChannel rwChannel;
     try {
       rwChannel = new RandomAccessFile(outFileName, "rw").getChannel();
-      long size = maxSize < rwChannel.size() - startOffSet
+      long size = maxSize <= rwChannel.size() - startOffSet
           ? maxSize : rwChannel.size() - startOffSet;
       ByteBuffer os = rwChannel.map(FileChannel.MapMode.READ_ONLY, startOffSet, size);
 
       int totalRead = 0;
+      int count = 0;
       while (totalRead < size) {
         Object key;
         Object value;
@@ -376,8 +387,12 @@ public final class FileLoader {
           break;
         }
 
+        LOG.log(Level.INFO, "Reading data size: " + dataSize + " count "
+            + count + " file: " + fileName + " total: " + totalRead + " value: " + value);
+
         keyValues.add(new KeyValue(key, value));
         totalRead += 8 + keySize + dataSize;
+        count++;
       }
       rwChannel.close();
       return new OpenFilePart(keyValues, totalRead + (int) startOffSet,

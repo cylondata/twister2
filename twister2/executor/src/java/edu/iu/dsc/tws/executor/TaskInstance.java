@@ -73,12 +73,12 @@ public class TaskInstance implements INodeInstance {
    */
   private EdgeGenerator edgeGenerator;
 
-  private Map<String, Object> graphConfigs;
+  private Map<String, Object> nodeConfigs;
 
   public TaskInstance(ITask task, BlockingQueue<IMessage> inQueue,
                       BlockingQueue<IMessage> outQueue, Config config,
                       EdgeGenerator eGenerator, String tName,
-                      int tId, int tIndex, int parallel) {
+                      int tId, int tIndex, int parallel, Map<String, Object> cfgs) {
     this.task = task;
     this.inQueue = inQueue;
     this.outQueue = outQueue;
@@ -88,29 +88,13 @@ public class TaskInstance implements INodeInstance {
     this.taskIndex = tIndex;
     this.parallelism = parallel;
     this.taskName = tName;
-  }
-
-  public TaskInstance(ITask task, BlockingQueue<IMessage> inQueue,
-                      BlockingQueue<IMessage> outQueue, Config config,
-                      OutputCollection outputCollection, int taskId, int taskIndex, int parallelism, String taskName, Map<String, IParallelOperation> outParOps, EdgeGenerator edgeGenerator, Map<String, Object> graphConfigs) {
-    this.task = task;
-    this.inQueue = inQueue;
-    this.outQueue = outQueue;
-    this.config = config;
-    this.outputCollection = outputCollection;
-    this.taskId = taskId;
-    this.taskIndex = taskIndex;
-    this.parallelism = parallelism;
-    this.taskName = taskName;
-    this.outParOps = outParOps;
-    this.edgeGenerator = edgeGenerator;
-    this.graphConfigs = graphConfigs;
+    this.nodeConfigs = cfgs;
   }
 
   public void prepare() {
     outputCollection = new DefaultOutputCollection(outQueue);
     task.prepare(config, new TaskContext(taskIndex, taskId, taskName, parallelism,
-        outputCollection, graphConfigs));
+        outputCollection, nodeConfigs));
   }
 
   public void registerOutParallelOperation(String edge, IParallelOperation op) {

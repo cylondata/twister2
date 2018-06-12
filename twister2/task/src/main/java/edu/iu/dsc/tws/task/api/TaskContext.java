@@ -26,20 +26,13 @@ public class TaskContext {
 
   private Map<String, Object> configs;
 
-  public TaskContext(int taskIndex, int taskId, String taskName, int parallelism) {
+  public TaskContext(int taskIndex, int taskId, String taskName,
+                     int parallelism, Map<String, Object> configs) {
     this.taskIndex = taskIndex;
     this.taskId = taskId;
     this.taskName = taskName;
     this.parallelism = parallelism;
-  }
-
-  public TaskContext(int taskIndex, int taskId, String taskName, int parallelism,
-                     OutputCollection collection) {
-    this.taskIndex = taskIndex;
-    this.taskId = taskId;
-    this.taskName = taskName;
-    this.parallelism = parallelism;
-    this.collection = collection;
+    this.configs = configs;
   }
 
   public TaskContext(int taskIndex, int taskId, String taskName, int parallelism,
@@ -91,11 +84,4 @@ public class TaskContext {
   public void write(String edge, Object message) {
     collection.collect(0, new TaskMessage(message, edge, taskId));
   }
-
-  public void setConfigurations(Map<String, Object> configurations){
-    this.configs = configurations;
-  }
-
-
-
 }

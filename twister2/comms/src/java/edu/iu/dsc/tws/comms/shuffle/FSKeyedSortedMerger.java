@@ -192,7 +192,7 @@ public class FSKeyedSortedMerger implements Shuffle {
       Collections.sort(list);
 
       // save the bytes to disk
-      int totalSize = FileLoader.saveKeyValues(recordsInMemory, bytesLength,
+      int totalSize = FileLoader.saveKeyValues(list, bytesLength,
           numOfBytesInMemory, getSaveFileName(noOfFileWritten), keyType, kryoSerializer);
       filePartBytes.add(totalSize);
 
