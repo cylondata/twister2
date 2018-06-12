@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.examples.task;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
@@ -33,6 +34,7 @@ import edu.iu.dsc.tws.task.api.SourceTask;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
+import edu.iu.dsc.tws.task.graph.GraphConstants;
 import edu.iu.dsc.tws.tsched.roundrobin.RoundRobinTaskScheduling;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
@@ -50,6 +52,16 @@ public class TaskExample implements IContainer {
     builder.addSink("sink", r);
     builder.setParallelism("sink", 4);
     builder.connect("source", "sink", "partition-edge", Operations.PARTITION);
+
+    builder.addConfiguration("source", "Ram", GraphConstants.taskInstanceRam(config));
+    builder.addConfiguration("source", "Disk", GraphConstants.taskInstanceDisk(config));
+    builder.addConfiguration("source", "Cpu", GraphConstants.taskInstanceCpu(config));
+
+    List<String> sourceInputDataset = new ArrayList<>();
+    sourceInputDataset.add("dataset1.txt");
+    sourceInputDataset.add("dataset2.txt");
+
+    builder.addConfiguration("source", "inputdataset", sourceInputDataset);
 
     DataFlowTaskGraph graph = builder.build();
 
@@ -81,6 +93,14 @@ public class TaskExample implements IContainer {
     @Override
     public void prepare(Config cfg, TaskContext context) {
       this.ctx = context;
+      java.util.Map<String, Object> configs = ctx.getConfigurations();
+      for (Map.Entry<String, Object> entry : configs.entrySet()) {
+        //System.out.println("key: " + entry.getKey() + "; value: " + entry.getValue());
+        if (entry.getKey().toString().contains("inputdataset")) {
+          System.out.println("Required Key and Value:"
+              + entry.getKey() + "\t" + entry.getValue());
+        }
+      }
     }
   }
 
