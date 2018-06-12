@@ -25,5 +25,5 @@ java_tests(
     runtime_deps = [
         ":comms-tests",
     ],
-    size = "small",
+    size =  "small",
 )

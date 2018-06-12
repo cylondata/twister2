@@ -38,7 +38,7 @@ public class Heap {
     heap = new HeapNode[k + 1];
     position = 0;
     // put some junk values at 0th index node
-    heap[0] = new HeapNode(new KeyValue("", ""), -1);
+    heap[0] = new HeapNode(new KeyValue(new int[]{0}, ""), -1);
   }
 
   public void insert(KeyValue data, int listNo) {

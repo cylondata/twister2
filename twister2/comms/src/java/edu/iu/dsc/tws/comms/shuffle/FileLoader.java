@@ -152,7 +152,7 @@ public final class FileLoader {
           for (int d : kd) {
             os.putInt(d);
             totalWritten += 4;
-            LOG.log(Level.INFO, String.format("Key write %d", totalWritten));
+//            LOG.log(Level.INFO, String.format("Key write %d", totalWritten));
           }
         } else if (keyType == MessageType.LONG) {
           long[] kd = (long[]) keyValue.getKey();
@@ -371,21 +371,27 @@ public final class FileLoader {
         Object key;
         Object value;
 
+        if (totalRead + 4 > size) {
+          break;
+        }
+
         int keySize = os.getInt();
+        // we cannot read further
+        if (totalRead + keySize + 4 > size) {
+          break;
+        }
         key = deserialize(keyType, deserializer, os, keySize);
 
-        // we cannot read further
-        if (totalRead + keySize > size) {
+        if (totalRead + keySize + 8 > size) {
           break;
         }
 
         int dataSize = os.getInt();
-        value = deserialize(dataType, deserializer, os, dataSize);
-
         // we cannot read further
-        if (totalRead + keySize + dataSize > size) {
+        if (totalRead + keySize + dataSize + 8 > size) {
           break;
         }
+        value = deserialize(dataType, deserializer, os, dataSize);
 
         LOG.log(Level.INFO, "Reading data size: " + dataSize + " count "
             + count + " file: " + fileName + " total: " + totalRead + " value: " + value);
@@ -394,9 +400,10 @@ public final class FileLoader {
         totalRead += 8 + keySize + dataSize;
         count++;
       }
+      int size1 = (int) rwChannel.size();
       rwChannel.close();
       return new OpenFilePart(keyValues, totalRead + (int) startOffSet,
-          (int) rwChannel.size(), fileName);
+          size1, fileName);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

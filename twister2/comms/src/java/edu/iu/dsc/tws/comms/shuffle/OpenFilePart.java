@@ -11,11 +11,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.shuffle;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class OpenFilePart {
-  private List<KeyValue> keyValues = new ArrayList<>();
+  private List<KeyValue> keyValues;
 
   private int readOffSet;
 
