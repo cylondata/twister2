@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.comms.shuffle;
 
 import java.nio.ByteBuffer;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Random;
@@ -28,10 +29,10 @@ import org.junit.Test;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
-public class FSMergerTest {
+public class FSKeyedSortedMergerTest {
   private static final Logger LOG = Logger.getLogger(FSMergerTest.class.getName());
 
-  private FSMerger fsMerger;
+  private FSKeyedSortedMerger fsMerger;
 
   private Random random;
 
@@ -47,8 +48,8 @@ public class FSMergerTest {
 
   @Before
   public void before() throws Exception {
-    fsMerger = new FSMerger(1000, 100, "/tmp",
-        "fsmerger", MessageType.OBJECT);
+    fsMerger = new FSKeyedSortedMerger(1000, 100, "/tmp",
+        "fskeyedsortedmerger", MessageType.INTEGER, MessageType.OBJECT, new KeyComparator());
     random = new Random();
     serializer = new KryoSerializer();
   }
@@ -58,6 +59,13 @@ public class FSMergerTest {
     fsMerger.clean();
   }
 
+  private class KeyComparator implements Comparator<Object> {
+    @Override
+    public int compare(Object o1, Object o2) {
+      return Integer.compare((Integer) o1, (Integer) o2);
+    }
+  }
+
   @Test
   public void testStart() throws Exception {
     ByteBuffer buffer = ByteBuffer.allocate(4);
@@ -65,7 +73,8 @@ public class FSMergerTest {
       buffer.clear();
       buffer.putInt(i);
       byte[] serialize = serializer.serialize(i);
-      fsMerger.add(serialize, serialize.length);
+      int[] val = {i};
+      fsMerger.add(val, serialize, serialize.length);
       fsMerger.run();
     }
 
@@ -76,11 +85,12 @@ public class FSMergerTest {
     Set<Integer> set = new HashSet<>();
     while (it.hasNext()) {
       LOG.info("Reading value: " + count);
-      int val = (int) it.next();
-      if (set.contains(val)) {
+      KeyValue val = (KeyValue) it.next();
+      int[] k = (int[]) val.getKey();
+      if (set.contains(k[0])) {
         Assert.fail("Duplicate value");
       }
-      set.add(val);
+      set.add(k[0]);
       count++;
     }
     if (count != 1000) {

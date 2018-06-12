@@ -112,8 +112,15 @@ public class TaskCheckpointExample implements IContainer {
     private static final long serialVersionUID = -254264903520284798L;
     @Override
     public void execute(IMessage message) {
-      CheckpointBarrier cb = (CheckpointBarrier) message.getContent();
-      System.out.println(cb.getId());
+
+      @SuppressWarnings("unchecked")
+      ArrayList<CheckpointBarrier> checkpointBarriers
+          = (ArrayList<CheckpointBarrier>) message.getContent();
+
+      System.out.println("Got an array with size " + checkpointBarriers.size());
+      for (int i = 0; i < checkpointBarriers.size(); i++) {
+        System.out.println("Got checkpoint barrier with id : " + checkpointBarriers.get(i).getId());
+      }
     }
 
     @Override

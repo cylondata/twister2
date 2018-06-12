@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.nio.channels.SocketChannel;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.checkpointmanager.CheckpointManager;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.net.tcp.Progress;
@@ -43,6 +44,8 @@ public class JobMaster extends Thread {
 
   private IJobTerminator jobTerminator;
 
+  private CheckpointManager checkpointManager;
+
   public JobMaster(Config config,
                    String masterAddress,
                    IJobTerminator jobTerminator,
@@ -63,7 +66,7 @@ public class JobMaster extends Thread {
     rrServer =
         new RRServer(config, masterAddress, masterPort, looper, JOB_MASTER_ID, connectHandler);
 
-    workerMonitor = new WorkerMonitor(this, rrServer, numberOfWorkers);
+    workerMonitor = new WorkerMonitor(config, this, rrServer);
 
     Network.Ping.Builder pingBuilder = Network.Ping.newBuilder();
     Network.WorkerStateChange.Builder stateChangeBuilder = Network.WorkerStateChange.newBuilder();
@@ -78,6 +81,8 @@ public class JobMaster extends Thread {
     rrServer.registerRequestHandler(stateChangeResponseBuilder, workerMonitor);
     rrServer.registerRequestHandler(listWorkersBuilder, workerMonitor);
     rrServer.registerRequestHandler(listResponseBuilder, workerMonitor);
+
+    checkpointManager = new CheckpointManager(jobName, this);
 
     rrServer.start();
     looper.loop();

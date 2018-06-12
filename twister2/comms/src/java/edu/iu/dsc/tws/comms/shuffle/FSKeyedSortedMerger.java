@@ -11,17 +11,26 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.shuffle;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.io.FileUtils;
+
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.utils.Heap;
+import edu.iu.dsc.tws.comms.utils.HeapNode;
 import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 
 public class FSKeyedSortedMerger implements Shuffle {
@@ -95,6 +104,7 @@ public class FSKeyedSortedMerger implements Shuffle {
   private Lock lock = new ReentrantLock();
   private Condition notFull = lock.newCondition();
 
+
   /**
    * The kryo serializer
    */
@@ -102,7 +112,8 @@ public class FSKeyedSortedMerger implements Shuffle {
 
   private enum FSStatus {
     WRITING,
-    READING
+    READING,
+    DONE
   }
 
   private FSStatus status = FSStatus.WRITING;
@@ -201,78 +212,106 @@ public class FSKeyedSortedMerger implements Shuffle {
   }
 
   private class FSIterator implements Iterator<Object> {
-    // the current file index
-    private int currentFileIndex = 0;
-    // Index of the current file
-    private int currentIndex = 0;
-    // the iterator for list of bytes in memory
-    private Iterator<KeyValue> it;
-    // the current values
-    private List<KeyValue> openValue;
+    // keep track of the open file
+    private Map<Integer, OpenFilePart> openFiles = new HashMap<>();
+
+    /**
+     * Max memory per file
+     */
+    private int maxMemoryPerFile;
+
+    /**
+     * Heap to load the data from the files
+     */
+    private Heap heap;
+
+    private int numValuesInHeap = 0;
 
     FSIterator() {
-      it = objectsInMemory.iterator();
+      heap = new Heap(noOfFileWritten, keyComparator);
+      // lets initialize the open files
+      maxMemoryPerFile = maxBytesToKeepInMemory / noOfFileWritten;
+      // lets open the files
+      for (int i = 0; i < noOfFileWritten; i++) {
+        OpenFilePart part = FileLoader.openPart(getSaveFileName(i), 0,
+            maxMemoryPerFile, keyType, dataType, kryoSerializer);
+        openFiles.put(i, part);
+      }
+      // lets insert the values in memory as -1 entry
+      openFiles.put(-1, new OpenFilePart(objectsInMemory, 0, 0, null));
+
+      // now lets get first value from each and insert to heap
+      for (Map.Entry<Integer, OpenFilePart> e : openFiles.entrySet()) {
+        OpenFilePart part = e.getValue();
+        if (part.hasNext()) {
+          KeyValue keyValue = part.next();
+
+          heap.insert(keyValue, e.getKey());
+          numValuesInHeap++;
+        } else {
+          LOG.log(Level.WARNING, "File part without any initial values: " + part.getFileName());
+        }
+      }
     }
 
     @Override
     public boolean hasNext() {
-      // we are reading from in memory
-      boolean next;
-      if (currentFileIndex == 0) {
-        next = it.hasNext();
-        if (!next) {
-          // we need to open the first file part
-          if (noOfFileWritten > 0) {
-            // we will read the opened one next
-            openFilePart();
-          } else {
-            // no file parts written, end of iteration
-            return false;
-          }
-        } else {
-          return true;
-        }
-      }
-
-      if (currentFileIndex > 0) {
-        if (currentIndex < openValue.size()) {
-          return true;
-        } else {
-          if (currentFileIndex < noOfFileWritten - 1) {
-            openFilePart();
-            return true;
-          } else {
-            return false;
-          }
-        }
-      }
-      return false;
-    }
-
-
-    private void openFilePart() {
-      // lets read the bytes from the file
-      openValue = FileLoader.readFile(getSaveFileName(currentFileIndex), keyType,
-          dataType, kryoSerializer);
-      currentFileIndex++;
-      currentIndex = 0;
+      // now lets get a value from the same list
+      return numValuesInHeap > 0;
     }
 
     @Override
     public KeyValue next() {
       // we are reading from in memory
-      if (currentFileIndex == 0) {
-        return it.next();
+      HeapNode node = heap.extractMin();
+      numValuesInHeap--;
+
+      // now lets try to insert a value to heap
+      OpenFilePart part = openFiles.get(node.listNo);
+      // okay we don't have anything in this open file
+      if (!part.hasNext()) {
+        // we are done with this file
+        if (part.getFileSize() <= part.getReadOffSet()) {
+          openFiles.remove(node.listNo);
+        } else {
+          // we are not going to do this for -1, memory data
+          OpenFilePart newPart = FileLoader.openPart(getSaveFileName(node.listNo),
+              part.getReadOffSet(), maxMemoryPerFile, keyType, dataType, kryoSerializer);
+          openFiles.put(node.listNo, newPart);
+
+          if (newPart.hasNext()) {
+            heap.insert(newPart.next(), node.listNo);
+            numValuesInHeap++;
+          }
+        }
+      } else {
+        heap.insert(part.next(), node.listNo);
+        numValuesInHeap++;
       }
 
-      if (currentFileIndex > 0) {
-        KeyValue kv = openValue.get(currentIndex);
-        currentIndex++;
-        return kv;
-      }
-
-      return null;
+      return node.data;
     }
+  }
+
+  /**
+   * Cleanup the directories
+   */
+  public void clean() {
+    File file = new File(getSaveFolderName());
+    try {
+      FileUtils.cleanDirectory(file);
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Failed to clear directory: " + file, e);
+    }
+    status = FSStatus.DONE;
+  }
+
+  /**
+   * Get the file name to save the current part
+   * @return the save file name
+   */
+  private String getSaveFolderName() {
+    return folder + "/" + operationName;
   }
 
   /**

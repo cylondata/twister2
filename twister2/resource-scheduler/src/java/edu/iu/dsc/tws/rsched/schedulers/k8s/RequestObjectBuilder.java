@@ -376,6 +376,14 @@ public final class RequestObjectBuilder {
         .name(JobMasterContext.PING_INTERVAL)
         .value(JobMasterContext.pingInterval(config) + ""));
 
+    envVars.add(new V1EnvVar()
+        .name(JobMasterContext.JOB_MASTER_ASSIGNS_WORKER_IDS)
+        .value(JobMasterContext.jobMasterAssignsWorkerIDs(config) + ""));
+
+    envVars.add(new V1EnvVar()
+        .name(JobMasterContext.WORKER_TO_JOB_MASTER_RESPONSE_WAIT_DURATION)
+        .value(JobMasterContext.responseWaitDuration(config) + ""));
+
     return envVars;
   }
 
