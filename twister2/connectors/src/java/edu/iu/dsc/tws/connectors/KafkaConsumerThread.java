@@ -70,25 +70,27 @@ public class KafkaConsumerThread<T>  {
       consumer.assign(topicPartitions);
       fetchLoopStarted = true;
     }
-    ConsumerRecords<String, String> records = null;
+    ConsumerRecords<String, String> records;
     records = consumer.poll(100);
-    for (ConsumerRecord<String, String> record : records) {
-      LOG.info("record = {} ; offset = {} ; partitionID = {} ", record.value(), record.offset(),
-          record.partition());
+    if (records != null) {
+      for (ConsumerRecord<String, String> record : records) {
 //      }
-      for (KafkaTopicPartitionState topicPartitionState : topicPartitionStates) {
+        for (KafkaTopicPartitionState topicPartitionState : topicPartitionStates) {
 
-        List<ConsumerRecord<String, String>> partitionRecords =
-            records.records(topicPartitionState.getTopicPartition());
+          List<ConsumerRecord<String, String>> partitionRecords =
+              records.records(topicPartitionState.getTopicPartition());
 
 
-        for (ConsumerRecord<String, String> record2 : partitionRecords) {
-          String value = record2.value();
-          emitRecord(value, topicPartitionState, record2.offset());
+          for (ConsumerRecord<String, String> record2 : partitionRecords) {
+            String value = record2.value();
+//            LOG.info("record = {} ; offset = {} ;", value, record2.offset());
+            emitRecord(value, topicPartitionState, record2.offset());
+          }
         }
       }
     }
   }
+
   public void initiateConnection() {
     if (this.consumer == null) {
       this.consumer = new KafkaConsumer<>(kafkaConsumerConfig);

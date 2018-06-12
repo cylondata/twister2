@@ -63,7 +63,7 @@ public class TaskExampleKafka implements IContainer {
         topics,
         servers,
         "test",
-        "e1");
+        "partition-edge");
 
     GraphBuilder builder = GraphBuilder.newBuilder();
     builder.addSource("source", kafkaConsumer);
@@ -92,17 +92,17 @@ public class TaskExampleKafka implements IContainer {
 
   private static class RecevingTask extends SinkTask {
     private static final long serialVersionUID = -254264903510284798L;
-    private int count = 0;
+//    private int count = 0;
     @Override
     public void execute(IMessage message) {
-      count++;
+//      count++;
       System.out.println(message.getContent());
-      System.out.println(count);
+//      System.out.println(count);
     }
 
     @Override
     public void prepare(Config cfg, TaskContext context) {
-
+      System.out.println("preparing listening");
     }
   }
 
