@@ -80,6 +80,10 @@ public class TaskContext {
   }
 
 
+  public Map<String, Object> getConfigurations() {
+    return configs;
+  }
+
   /**
    * Write a message to the destination
    * @param message
@@ -88,8 +92,10 @@ public class TaskContext {
     collection.collect(0, new TaskMessage(message, edge, taskId));
   }
 
-  public void addConfigurations(Map<String, Object> configurations){
+  public void setConfigurations(Map<String, Object> configurations){
     this.configs = configurations;
   }
+
+
 
 }
