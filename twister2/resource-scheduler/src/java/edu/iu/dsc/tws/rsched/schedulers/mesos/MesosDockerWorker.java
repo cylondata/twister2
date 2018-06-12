@@ -212,7 +212,7 @@ public class MesosDockerWorker {
     if (b) {
       System.out.println("file created succesfully");
     } else {
-      System.out.println("!!!!!!!something wrong!!!!!");
+      //System.out.println("!!!!!!!something wrong!!!!!");
     }
 
     Writer writer = new BufferedWriter(new OutputStreamWriter(
@@ -264,7 +264,7 @@ public class MesosDockerWorker {
           workerController.getNumberOfWorkers() + "",
           "--host", hosts, "java", "-cp",
           "twister2-job/libexamples-java.jar",
-          "edu.iu.dsc.tws.examples.basic.BasicMpiJob", ">mpiout"};
+          "edu.iu.dsc.tws.examples.basic.BasicMpiJob", ">mpioutfile"};
 
       System.out.println("command:" + String.join(" ", command));
 
