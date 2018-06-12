@@ -152,7 +152,7 @@ public final class FileLoader {
           for (int d : kd) {
             os.putInt(d);
             totalWritten += 4;
-            LOG.log(Level.INFO, String.format("Key write %d", totalWritten));
+//            LOG.log(Level.INFO, String.format("Key write %d", totalWritten));
           }
         } else if (keyType == MessageType.LONG) {
           long[] kd = (long[]) keyValue.getKey();
