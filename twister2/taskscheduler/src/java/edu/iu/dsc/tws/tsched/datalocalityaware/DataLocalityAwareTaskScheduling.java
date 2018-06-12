@@ -134,6 +134,5 @@ public class DataLocalityAwareTaskScheduling implements TaskSchedule {
 
   @Override
   public void close() {
-
   }
 }
