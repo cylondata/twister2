@@ -91,9 +91,9 @@ public class MesosScheduler implements Scheduler {
         LOG.info("Offer comes from host ...:" + offer.getHostname());
         if (controller.isResourceSatisfy(offer)) {
 
-          MesosPersistentVolume pv = new MesosPersistentVolume(
-              controller.createPersistentJobDirName(jobName), workerCounter);
-          pv.getJobDir();
+//          MesosPersistentVolume pv = new MesosPersistentVolume(
+//              controller.createPersistentJobDirName(jobName), workerCounter);
+//          pv.getJobDir();
 
           LOG.info("before for:");
           Offer.Operation.Launch.Builder launch = Offer.Operation.Launch.newBuilder();
@@ -131,8 +131,9 @@ public class MesosScheduler implements Scheduler {
             Protos.ContainerInfo.DockerInfo.Builder dockerInfoBuilder
                 = Protos.ContainerInfo.DockerInfo.newBuilder();
             dockerInfoBuilder.setImage("gurhangunduz/twister2-mesos:docker-mpi");
+            Protos.NetworkInfo netInfo = Protos.NetworkInfo.newBuilder().setName("weave").build();
             //dockerInfoBuilder.addPortMappings(mapping);
-            dockerInfoBuilder.setNetwork(Protos.ContainerInfo.DockerInfo.Network.BRIDGE);
+            dockerInfoBuilder.setNetwork(Protos.ContainerInfo.DockerInfo.Network.USER);
             dockerInfoBuilder.addParameters(hostIpParam);
             dockerInfoBuilder.addParameters(sshPortParam);
             dockerInfoBuilder.addParameters(jobNameParam);
@@ -148,6 +149,7 @@ public class MesosScheduler implements Scheduler {
             containerInfoBuilder.setType(Protos.ContainerInfo.Type.DOCKER);
             containerInfoBuilder.addVolumes(volume);
             containerInfoBuilder.setDocker(dockerInfoBuilder.build());
+            containerInfoBuilder.addNetworkInfos(netInfo);
 
             TaskInfo task = TaskInfo.newBuilder()
                 .setName("task " + taskId).setTaskId(taskId)
