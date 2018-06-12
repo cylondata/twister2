@@ -33,6 +33,7 @@ public class Heap {
   private Comparator<Object> keyComparator;
 
   public Heap(int k, Comparator<Object> kComparator) {
+    this.keyComparator = kComparator;
     // size + 1 because index 0 will be empty
     heap = new HeapNode[k + 1];
     position = 0;
