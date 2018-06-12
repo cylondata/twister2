@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.api;
 
+import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
+
 public class TaskContext {
   private int taskIndex;
 
@@ -18,9 +20,14 @@ public class TaskContext {
 
   private String taskName;
 
+  private String property;
+
+  private Object value;
+
   private int parallelism;
 
   private OutputCollection collection;
+
 
   public TaskContext(int taskIndex, int taskId, String taskName, int parallelism) {
     this.taskIndex = taskIndex;
@@ -34,6 +41,16 @@ public class TaskContext {
     this.taskIndex = taskIndex;
     this.taskId = taskId;
     this.taskName = taskName;
+    this.parallelism = parallelism;
+    this.collection = collection;
+  }
+
+  public TaskContext(int taskIndex, int taskId, String taskName, String property, Object value, int parallelism, OutputCollection collection) {
+    this.taskIndex = taskIndex;
+    this.taskId = taskId;
+    this.taskName = taskName;
+    this.property = property;
+    this.value = value;
     this.parallelism = parallelism;
     this.collection = collection;
   }
@@ -65,6 +82,14 @@ public class TaskContext {
     return parallelism;
   }
 
+  public String getProperty() {
+    return property;
+  }
+
+  public Object getValue() {
+    return value;
+  }
+
   /**
    * Write a message to the destination
    * @param message
@@ -72,4 +97,11 @@ public class TaskContext {
   public void write(String edge, Object message) {
     collection.collect(0, new TaskMessage(message, edge, taskId));
   }
+
+  public void addConfigurations(String taskName, String property, Object value){
+    this.taskName = taskName;
+    this.property = property;
+    this.value = value;
+  }
+
 }
