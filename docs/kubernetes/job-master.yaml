@@ -1,0 +1,80 @@
+# a sample statefulset yaml file to create Twister Job Master
+# before creating this statefulset, 
+#   a service needs to be created for this twister2 job
+#   then the persistent volume and 
+#   then the persistent volume claim
+# need to be created.
+
+apiVersion: apps/v1beta2
+kind: StatefulSet
+metadata:
+  name: <job-name>-<job-master>
+  namespace: <kubernetes.namespace>
+  labels:
+    app: twister2-service-label-<job-name>-<job-master>
+
+spec:
+  replicas: 1
+  serviceName: twister2-service-<jobname>-<job-master>
+
+  selector:
+    matchLabels:
+      app: twister2-service-label-<job-name>-<job-master>
+
+  template:
+    metadata:
+      labels:
+        app: twister2-service-label-<job-name>-<job-master>
+
+    spec:
+      terminationGracePeriodSeconds: 0
+      volumes:
+      - name: persistent-volume
+        persistentVolumeClaim:
+          claimName: twister2-storage-<job-name>
+
+      containers:
+        # container-index is added automatically inside the code
+        # it starts from 0 and increases sequentially
+        name: twister2-job-master
+        image: auyar/twister2:v0.01
+        imagePullPolicy: <kubernetes.image.pull.policy>
+        ports:
+          name: job-master-port
+          containerPort: <twister2.job.master.port>
+          protocol: TCP
+        resources:
+          requests:
+            cpu: <twister2.job.master.cpu>
+            memory: <twister2.job.master.ram> + "Mi"
+        volumeMounts:
+        - name: persistent-volume
+          mountPath: /persistent
+        env:
+          # below values are sample values. 
+          # they are calculated for each job
+        - name: JOB_PACKAGE_FILENAME
+          value: twister2-job.tar.gz
+        - name: JOB_PACKAGE_FILE_SIZE
+          value: 233740
+        - name: CONTAINER_NAME
+          value: twister2-container-0
+        - name: USER_JOB_JAR_FILE
+          value: libexamples-java.jar
+        - name: JOB_DESCRIPTION_FILE
+          value: basic-kubernetes.job
+        - name: PERSISTENT_JOB_DIR
+          value: /persistent/twister2/basic-kubernetes-1523878691978
+        - name: WORKERS_PER_POD
+          value: 1
+        - name: PERSISTENT_LOGGING_REQUESTED
+          value: true
+        - name: PERSISTENT_LOGGING_TYPE
+          value: system
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+                fieldPath: status.podIP
+
+

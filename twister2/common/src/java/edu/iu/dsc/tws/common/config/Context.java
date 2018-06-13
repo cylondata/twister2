@@ -69,6 +69,8 @@ public class Context {
   public static final ConfigEntry HADOOP_HOME = new ConfigEntry(
       "twister2.hadoop.home", "${HADOOP_HOME}", null, "HADOOP_HOME");
 
+  public static final String JOB_NAME = "twister2.job.name";
+
   // an internal property to represent the container id
   public static final String TWISTER2_CONTAINER_ID = "twister2.container.id";
   public static final String TWISTER2_CLUSTER_TYPE = "twister2.cluster.type";
@@ -142,6 +144,10 @@ public class Context {
 
   public static String systemConfigurationFile(Config cfg) {
     return cfg.getStringValue(SYSTEM_YAML);
+  }
+
+  public static String jobName(Config cfg) {
+    return cfg.getStringValue(JOB_NAME);
   }
 
   public static String dataConfigurationFile(Config cfg) {

@@ -15,4 +15,4 @@ ENV CLASSPATH="lib/*"
 
 WORKDIR /twister2/
 
-CMD ["java", "edu.iu.dsc.tws.rsched.schedulers.k8s.worker.KubernetesWorker"]
+#CMD ["java", "edu.iu.dsc.tws.rsched.schedulers.k8s.worker.KubernetesWorker"]
