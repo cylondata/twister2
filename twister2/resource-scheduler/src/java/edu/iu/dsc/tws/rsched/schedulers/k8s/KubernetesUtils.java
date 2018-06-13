@@ -71,11 +71,25 @@ public final class KubernetesUtils {
   }
 
   /**
+   * create service name from job name
+   * @param jobName
+   * @return
+   */
+  public static String createJobMasterServiceName(String jobName) {
+    return KubernetesConstants.TWISTER2_SERVICE_PREFIX + jobName + "-job-master";
+  }
+
+  /**
    * create persistent directory name for a job
+   * if it is already created, return the previous one
    * @param jobName
    * @return
    */
   public static String createPersistentJobDirName(String jobName, boolean persistentUploading) {
+    if (persistentJobDirName != null) {
+      return persistentJobDirName;
+    }
+
     String pJobDirName = KubernetesConstants.PERSISTENT_VOLUME_MOUNT + "/twister2/" + jobName
         + "-" + System.currentTimeMillis();
 
@@ -115,6 +129,16 @@ public final class KubernetesUtils {
   }
 
   /**
+   * create service label from job name
+   * this label is used when constructing statefulset
+   * @param jobName
+   * @return
+   */
+  public static String createJobMasterServiceLabel(String jobName) {
+    return KubernetesConstants.SERVICE_LABEL_PREFIX + jobName + "-job-master";
+  }
+
+  /**
    * this label is used when submitting queries to kubernetes master
    * @param jobName
    * @return
@@ -131,6 +155,15 @@ public final class KubernetesUtils {
    */
   public static String createContainerName(int containerIndex) {
     return KubernetesConstants.CONTAINER_NAME_PREFIX + containerIndex;
+  }
+
+  /**
+   * create container name with the given containerIndex
+   * each container in a pod will have a unique name with this index
+   * @return
+   */
+  public static String createJobMasterStatefulSetName(String jobName) {
+    return jobName + "-job-master";
   }
 
   public static String getLocalAddress() {

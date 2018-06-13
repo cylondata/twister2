@@ -50,7 +50,7 @@ public class BroadCastTask implements IContainer {
     builder.addSource("source", g);
     builder.setParallelism("source", 1);
     builder.addSink("sink", r);
-    builder.setParallelism("sink", 1);
+    builder.setParallelism("sink", 4);
     builder.connect("source", "sink", "broadcast-edge", Operations.BROADCAST);
 
     DataFlowTaskGraph graph = builder.build();
@@ -74,10 +74,12 @@ public class BroadCastTask implements IContainer {
   private static class GeneratorTask extends SourceTask {
     private static final long serialVersionUID = -254264903510284748L;
     private TaskContext ctx;
-    private Config config;
+    private int count = 0;
     @Override
     public void run() {
+      count++;
       ctx.write("broadcast-edge", "Hello");
+      LOG.info("Written: " + count);
     }
 
     @Override
@@ -89,16 +91,17 @@ public class BroadCastTask implements IContainer {
   private static class RecevingTask extends SinkTask {
     private static final long serialVersionUID = -254264903510284798L;
     private static int counter = 0;
+    private TaskContext ctx;
     @Override
     public void execute(IMessage message) {
-      System.out.println("Message Braodcasted : " + message.getContent() + ", counter : "
-          + counter);
+      System.out.println(ctx.taskId() + " Message Braodcasted : "
+          + message.getContent() + ", counter : " + counter);
       counter++;
     }
 
     @Override
     public void prepare(Config cfg, TaskContext context) {
-
+      this.ctx = context;
     }
   }
 
@@ -122,8 +125,7 @@ public class BroadCastTask implements IContainer {
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
     jobBuilder.setName("broadcast-task");
     jobBuilder.setContainerClass(BroadCastTask.class.getName());
-    jobBuilder.setRequestResource(new ResourceContainer(2, 1024),
-        4);
+    jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job

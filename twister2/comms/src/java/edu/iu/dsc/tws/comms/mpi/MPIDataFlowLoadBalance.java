@@ -212,7 +212,7 @@ public class MPIDataFlowLoadBalance implements DataFlowOperation, MPIMessageRece
   }
 
   @Override
-  public void finish() {
+  public void finish(int source) {
   }
 
   @Override

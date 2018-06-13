@@ -229,7 +229,8 @@ public final class RequestObjectBuilder {
     container.setImagePullPolicy(KubernetesContext.imagePullPolicy(config));
 
 //        container.setArgs(Arrays.asList("1000000")); parameter to the main method
-//    container.setCommand(Arrays.asList("java", TWISTER2_WORKER_CLASS));
+    container.setCommand(
+        Arrays.asList("java", "edu.iu.dsc.tws.rsched.schedulers.k8s.worker.KubernetesWorker"));
 
     V1ResourceRequirements resReq = new V1ResourceRequirements();
     if (KubernetesContext.bindWorkerToCPU(config)) {
@@ -442,10 +443,24 @@ public final class RequestObjectBuilder {
 
   }
 
-  public static V1Service createHeadlessServiceObject(Config config, String jobName) {
+  public static V1Service createJobServiceObject(String jobName) {
 
     String serviceName = KubernetesUtils.createServiceName(jobName);
     String serviceLabel = KubernetesUtils.createServiceLabel(jobName);
+
+    return createHeadlessServiceObject(serviceName, serviceLabel);
+  }
+
+  public static V1Service createJobMasterServiceObject(String jobName) {
+
+    String serviceName = KubernetesUtils.createJobMasterServiceName(jobName);
+    String serviceLabel = KubernetesUtils.createJobMasterServiceLabel(jobName);
+
+    return createHeadlessServiceObject(serviceName, serviceLabel);
+  }
+
+  public static V1Service createHeadlessServiceObject(String serviceName, String serviceLabel) {
+
 
     V1Service service = new V1Service();
     service.setKind("Service");

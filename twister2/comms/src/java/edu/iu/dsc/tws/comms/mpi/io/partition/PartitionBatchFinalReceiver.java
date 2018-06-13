@@ -122,7 +122,7 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
   }
 
   @Override
-  public void onFinish() {
+  public void onFinish(int target) {
     sortedMerger.switchToReading();
     Iterator<Object> itr = sortedMerger.readIterator();
     batchReceiver.receive(0, itr);

@@ -216,7 +216,16 @@ public final class KubernetesWorker {
 
   public static void startJobMasterClient(Config cnfg) {
 
-    jobMasterClient = new JobMasterClient(cnfg, thisWorker);
+    DiscoverJobMaster djm = new DiscoverJobMaster();
+    String jobMasterPodName = "basic-kubernetes-job-master-0";
+    String jobMasterIP = djm.waitUntilJobMasterRunning(jobMasterPodName, 10000);
+
+    Config cnf = Config.newBuilder()
+        .putAll(cnfg)
+        .put(JobMasterContext.JOB_MASTER_IP, jobMasterIP)
+        .build();
+
+    jobMasterClient = new JobMasterClient(cnf, thisWorker);
     jobMasterClient.init();
     // we need to make sure that the worker starting message went through
     jobMasterClient.sendWorkerStartingMessage();

@@ -35,6 +35,8 @@ import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.ReduceFunction;
+import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.mpi.io.MPIMultiMessageDeserializer;
@@ -190,6 +192,11 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
   private boolean batch;
 
   /**
+   * The all reduce operation for sycnronizing at the end
+   */
+  private MPIDataFlowAllReduce allReduce;
+
+  /**
    * A place holder for keeping the internal and external destinations
    */
   @SuppressWarnings("VisibilityModifier")
@@ -245,6 +252,9 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
 
     this.finalReceiver = finalRcvr;
     this.partialReceiver = partialRcvr;
+
+    this.allReduce = new MPIDataFlowAllReduce(channel, srcs, dests, 0, new BarrierReduceFn(),
+        new BarrierReceiver(), 0, 0, true);
   }
 
   /**
@@ -374,6 +384,10 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
   @Override
   public void progress() {
     OperationUtils.progressReceivers(delegete, lock, finalReceiver, partialLock, partialReceiver);
+
+    if (allReduce != null) {
+      allReduce.progress();
+    }
   }
 
   @Override
@@ -381,15 +395,14 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
   }
 
   @Override
-  public void finish() {
+  public void finish(int source) {
     // first we need to call finish on the partial receivers
     if (partialReceiver != null) {
-      partialReceiver.onFinish();
+      partialReceiver.onFinish(source * -1);
     }
 
-    // lets do a
-
     // now lets do the barrier
+    allReduce.send(source, new byte[1], 0);
   }
 
   @Override
@@ -400,6 +413,29 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
   @Override
   public void setMemoryMapped(boolean memoryMapped) {
     delegete.setStoreBased(memoryMapped);
+  }
+
+  public class BarrierReduceFn implements ReduceFunction {
+    @Override
+    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+    }
+
+    @Override
+    public Object reduce(Object t1, Object t2) {
+      return t1;
+    }
+  }
+
+  public class BarrierReceiver implements ReduceReceiver {
+    @Override
+    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+    }
+
+    @Override
+    public boolean receive(int target, Object object) {
+      finalReceiver.onFinish(target);
+      return true;
+    }
   }
 
   public RoutingParameters sendRoutingParameters(int source, int path) {

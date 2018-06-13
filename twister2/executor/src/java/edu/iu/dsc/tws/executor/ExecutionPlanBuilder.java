@@ -26,7 +26,7 @@ import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 import edu.iu.dsc.tws.executor.comm.IParallelOperation;
 import edu.iu.dsc.tws.executor.comm.ParallelOperationFactory;
-import edu.iu.dsc.tws.executor.threading.ThreadStaticExecutor;
+//import edu.iu.dsc.tws.executor.threading.ThreadStaticExecutor;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.ISink;
@@ -201,14 +201,13 @@ public class ExecutionPlanBuilder implements IExecutor {
     /**
      * Threading Model can be chosen here
      * */
-/*
     ThreadSharingExecutor threadSharingExecutor =
         new ThreadSharingExecutor(noOfThreads);
-    threadSharingExecutor.execute(execution);*/
+    threadSharingExecutor.execute(execution);
 
-    ThreadStaticExecutor threadStaticExecutor =
-        new ThreadStaticExecutor(noOfThreads, execution);
-    threadStaticExecutor.execute(execution);
+//    ThreadStaticExecutor threadStaticExecutor =
+//        new ThreadStaticExecutor(noOfThreads, execution);
+//    threadStaticExecutor.execute(execution);
 
 
 
@@ -258,7 +257,7 @@ public class ExecutionPlanBuilder implements IExecutor {
           vertex.getParallelism(), vertex.getConfig().toMap());
       sinkInstances.put(vertex.getName(), taskId, v);
       //LOG.info("SinkInstance : " + sinkInstances.size());
-      LOG.info("SinkInstance create : else end");
+      LOG.info(String.format("SinkInstance create : else end %d %d", taskId, ip.getTaskIndex()));
       return v;
     } else {
       throw new RuntimeException("Un-known type");

@@ -74,15 +74,14 @@ public class PartitionOperation extends AbstractParallelOperation {
 
     @Override
     public boolean onMessage(int source, int destination, int target, int flags, Object object) {
-      LOG.info("onMessage : Start");
-      TaskMessage msg = new TaskMessage(object,
-          edge.getStringMapping(communicationEdge), target);
-      LOG.info("Source : " + source + ", Message : " + msg.getContent() + ", Target : "
-          + target + ", Destination : " + destination);
-
       if (object instanceof List) {
         for (Object o : (List) object) {
+          TaskMessage msg = new TaskMessage(o,
+              edge.getStringMapping(communicationEdge), target);
           outMessages.get(target).offer(msg);
+          LOG.info("Source : " + source + ", Message : " + msg.getContent() + ", Target : "
+              + target + ", Destination : " + destination);
+
         }
       }
       return true;

@@ -182,7 +182,7 @@ public class MPIDirectDataFlowCommunication implements DataFlowOperation, MPIMes
   }
 
   @Override
-  public void finish() {
+  public void finish(int target) {
   }
 
   @Override

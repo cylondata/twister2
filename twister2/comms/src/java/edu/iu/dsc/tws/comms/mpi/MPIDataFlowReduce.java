@@ -340,7 +340,7 @@ public class MPIDataFlowReduce implements DataFlowOperation, MPIMessageReceiver 
   }
 
   @Override
-  public void finish() {
+  public void finish(int source) {
 
   }
 

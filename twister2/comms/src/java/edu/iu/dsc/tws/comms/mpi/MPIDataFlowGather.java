@@ -347,7 +347,7 @@ public class MPIDataFlowGather implements DataFlowOperation, MPIMessageReceiver 
   }
 
   @Override
-  public void finish() {
+  public void finish(int source) {
 
   }
 

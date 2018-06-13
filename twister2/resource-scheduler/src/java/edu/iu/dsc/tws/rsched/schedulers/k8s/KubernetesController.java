@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -67,24 +68,25 @@ public class KubernetesController {
    * return the StatefulSet object if it exists in the Kubernetes master,
    * otherwise return null
    */
-  public V1beta2StatefulSet getStatefulSet(String namespace, String statefulSetName,
-                                           String serviceLabel) {
+  public boolean statefulSetsExist(String namespace, List<String> statefulSetNames) {
     V1beta2StatefulSetList setList = null;
     try {
       setList = beta2Api.listNamespacedStatefulSet(
-          namespace, null, null, null, null, serviceLabel, null, null, null, null);
+          namespace, null, null, null, null, null, null, null, null, null);
     } catch (ApiException e) {
       LOG.log(Level.SEVERE, "Exception when getting StatefulSet list.", e);
       throw new RuntimeException(e);
     }
 
     for (V1beta2StatefulSet statefulSet : setList.getItems()) {
-      if (statefulSetName.equals(statefulSet.getMetadata().getName())) {
-        return statefulSet;
+      if (statefulSetNames.contains(statefulSet.getMetadata().getName())) {
+        LOG.severe("There is already a StatefulSet with the name: "
+            + statefulSet.getMetadata().getName());
+        return true;
       }
     }
 
-    return null;
+    return false;
   }
 
   /**
@@ -186,10 +188,10 @@ public class KubernetesController {
   }
 
   /**
-   * return the service object if it exists in the Kubernetes master,
-   * otherwise return null
+   * return true if one of the services exist in Kubernetes master,
+   * otherwise return false
    */
-  public V1Service getService(String namespace, String serviceName) {
+  public boolean servicesExist(String namespace, List<String> serviceNames) {
 // sending the request with label does not work for list services call
 //    String label = "app=" + serviceLabel;
     V1ServiceList serviceList = null;
@@ -202,12 +204,13 @@ public class KubernetesController {
     }
 
     for (V1Service service : serviceList.getItems()) {
-      if (serviceName.equals(service.getMetadata().getName())) {
-        return service;
+      if (serviceNames.contains(service.getMetadata().getName())) {
+        LOG.severe("There is already a service with the name: " + service.getMetadata().getName());
+        return true;
       }
     }
 
-    return null;
+    return false;
   }
 
   /**
@@ -220,18 +223,18 @@ public class KubernetesController {
           serviceName, namespace, null, null, null).execute();
 
       if (response.isSuccessful()) {
-        LOG.log(Level.INFO, "Service [" + serviceName + "] is deleted.");
+        LOG.info("Service [" + serviceName + "] is deleted.");
         return true;
 
       } else {
 
         if (response.code() == 404 && response.message().equals("Not Found")) {
-          LOG.log(Level.SEVERE, "There is no Service [" + serviceName
+          LOG.warning("There is no Service [" + serviceName
               + "] to delete on Kubernetes master. It may have already been terminated.");
           return true;
         }
 
-        LOG.log(Level.SEVERE, "Error when deleting the Service [" + serviceName + "]: " + response);
+        LOG.severe("Error when deleting the Service [" + serviceName + "]: " + response);
         return false;
       }
     } catch (ApiException e) {

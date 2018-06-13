@@ -127,7 +127,7 @@ public class MPIDataFlowMultiGather implements DataFlowOperation {
   }
 
   @Override
-  public void finish() {
+  public void finish(int source) {
   }
 
   @Override

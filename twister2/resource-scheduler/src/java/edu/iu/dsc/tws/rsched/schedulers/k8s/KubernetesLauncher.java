@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s;
 import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -79,7 +80,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     long jobFileSize = jobFile.length();
 
     // initialize the service in Kubernetes master
-    initService(jobName);
+    initServices(jobName);
 
     // if persistent volume is requested, create a persistent volume and a persistent volume claim
     if (SchedulerContext.persistentVolumeRequested(config)) {
@@ -93,12 +94,6 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
       }
     }
 
-    // initialize a stateful set for this job
-    boolean statefulSetInitialized = initStatefulSet(jobName, resourceRequest, jobFileSize);
-    if (!statefulSetInitialized) {
-      return false;
-    }
-
     // start the Job Master locally
     if (JobMasterContext.jobMasterRunsInClient(config)) {
       JobMaster jobMaster = null;
@@ -110,6 +105,13 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
         LOG.log(Level.SEVERE, "Exception when getting local host address: ", e);
       }
     }
+
+    // initialize StatefulSets for this job
+    boolean statefulSetInitialized = initStatefulSets(jobName, resourceRequest, jobFileSize);
+    if (!statefulSetInitialized) {
+      return false;
+    }
+
 
     // transfer the job package to pods, measure the transfer time
     long start = System.currentTimeMillis();
@@ -141,13 +143,20 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     return true;
   }
 
-  private void initService(String jobName) {
-    // first check whether there is a running service with the same name
-    String serviceName = KubernetesUtils.createServiceName(jobName);
-    V1Service service = controller.getService(namespace, serviceName);
-    if (service != null) {
-      LOG.log(Level.WARNING, "There is already a service with the name: " + serviceName
-          + "\nAnother job might be running. "
+  private void initServices(String jobName) {
+    // first check whether there are services running with the same name
+    String workersServiceName = KubernetesUtils.createServiceName(jobName);
+    ArrayList<String> serviceNames = new ArrayList<>();
+    serviceNames.add(workersServiceName);
+
+    String jobMasterServiceName = KubernetesUtils.createJobMasterServiceName(jobName);
+    if (!JobMasterContext.jobMasterRunsInClient(config)) {
+      serviceNames.add(jobMasterServiceName);
+    }
+
+    boolean serviceExists = controller.servicesExist(namespace, serviceNames);
+    if (serviceExists) {
+      LOG.severe("Another job might be running. "
           + "\nFirst terminate that job or create a job with a different name."
           + "\n++++++ Aborting submission ++++++");
       throw new RuntimeException();
@@ -155,6 +164,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
 
     // if NodePort service is requested start one,
     // otherwise start a headless service
+    V1Service serviceForWorkers = null;
     if (KubernetesContext.nodePortServiceRequested(config)) {
 
       if (KubernetesContext.workersPerPod(config) != 1) {
@@ -164,17 +174,30 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
         throw new RuntimeException();
       }
 
-      service = RequestObjectBuilder.createNodePortServiceObject(config, jobName);
+      serviceForWorkers = RequestObjectBuilder.createNodePortServiceObject(config, jobName);
     } else {
-      service = RequestObjectBuilder.createHeadlessServiceObject(config, jobName);
+      serviceForWorkers = RequestObjectBuilder.createJobServiceObject(jobName);
     }
 
-    boolean serviceCreated = controller.createService(namespace, service);
+    boolean serviceCreated = controller.createService(namespace, serviceForWorkers);
     if (!serviceCreated) {
-      LOG.log(Level.SEVERE, "Service could not be created."
+      LOG.severe("Following service could not be created: " + workersServiceName
           + "\n++++++ Aborting submission ++++++");
       throw new RuntimeException();
     }
+
+    // if Job Master runs as a separate pod, initialize a service for that
+    if (!JobMasterContext.jobMasterRunsInClient(config)) {
+
+      V1Service serviceForJobMaster = RequestObjectBuilder.createJobMasterServiceObject(jobName);
+      serviceCreated = controller.createService(namespace, serviceForJobMaster);
+      if (!serviceCreated) {
+        LOG.severe("Following service could not be created: " + jobMasterServiceName
+            + "\n++++++ Aborting submission ++++++");
+        throw new RuntimeException();
+      }
+    }
+
   }
 
   private boolean initPersistentVolumes(String jobName) {
@@ -221,20 +244,45 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
   }
 
 
-  private boolean initStatefulSet(String jobName, RequestedResources resourceRequest,
-                                  long jobFileSize) {
+  private boolean initStatefulSets(String jobName, RequestedResources resourceRequest,
+                                   long jobFileSize) {
 
     // first check whether there is a StatefulSet with the same name,
     // if so, do not submit new job. Give a message and terminate
     // user needs to explicitly terminate that job
-    String serviceLabelWithKey = KubernetesUtils.createServiceLabelWithKey(jobName);
-    V1beta2StatefulSet existingStatefulSet =
-        controller.getStatefulSet(namespace, jobName, serviceLabelWithKey);
-    if (existingStatefulSet != null) {
-      LOG.log(Level.SEVERE, "There is already a StatefulSet object in Kubernetes master "
-          + "with the name: " + jobName + "\nFirst terminate this running job and resubmit. "
+    ArrayList<String> statefulSetNames = new ArrayList<>();
+    statefulSetNames.add(jobName);
+
+    if (!JobMasterContext.jobMasterRunsInClient(config)) {
+      String jobMasterStatefulSetName = KubernetesUtils.createJobMasterStatefulSetName(jobName);
+      statefulSetNames.add(jobMasterStatefulSetName);
+    }
+
+    boolean statefulSetExists = controller.statefulSetsExist(namespace, statefulSetNames);
+
+    if (statefulSetExists) {
+      LOG.severe("First terminate the previously running job with the same name and resubmit. "
           + "\n++++++ Aborting submission ++++++");
       return false;
+    }
+
+    // create statefulset for the job master
+    if (!JobMasterContext.jobMasterRunsInClient(config)) {
+
+      // create the StatefulSet object for this job
+      V1beta2StatefulSet jobMasterStatefulSet =
+          JobMasterRequestObject.createStatefulSetObject(jobName, config);
+
+      if (jobMasterStatefulSet == null) {
+        return false;
+      }
+
+      boolean created = controller.createStatefulSetJob(namespace, jobMasterStatefulSet);
+      if (!created) {
+        LOG.severe("Please run terminate job to clear up any artifacts from previous jobs."
+            + "\n++++++ Aborting submission ++++++");
+        return false;
+      }
     }
 
     // create the StatefulSet object for this job
@@ -247,8 +295,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
 
     boolean statefulSetCreated = controller.createStatefulSetJob(namespace, statefulSet);
     if (!statefulSetCreated) {
-      LOG.log(Level.SEVERE, "\nPlease run terminate job to clear up any artifacts from "
-          + "previous jobs."
+      LOG.severe("Please run terminate job to clear up any artifacts from previous jobs."
           + "\n++++++ Aborting submission ++++++");
       return false;
     }
@@ -319,12 +366,20 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
   @Override
   public boolean terminateJob(String jobName) {
 
-    // first delete the StatefulSet
+    // first delete the job master StatefulSet
+    String jobMasterStatefulSetName = KubernetesUtils.createJobMasterStatefulSetName(jobName);
+    boolean deleted = controller.deleteStatefulSetJob(namespace, jobMasterStatefulSetName);
+
+    // delete workers the StatefulSet
     boolean statefulSetDeleted = controller.deleteStatefulSetJob(namespace, jobName);
 
-    // delete the service
+    // delete the job service
     String serviceName = KubernetesUtils.createServiceName(jobName);
-    boolean deleted = controller.deleteService(namespace, serviceName);
+    deleted = controller.deleteService(namespace, serviceName);
+
+    // delete the job master service
+    String jobMasterServiceName = KubernetesUtils.createJobMasterServiceName(jobName);
+    controller.deleteService(namespace, jobMasterServiceName);
 
     // delete the persistent volume claim
     String pvcName = KubernetesUtils.createStorageClaimName(jobName);

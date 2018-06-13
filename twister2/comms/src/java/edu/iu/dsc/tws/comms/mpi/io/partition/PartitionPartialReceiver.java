@@ -142,7 +142,7 @@ public class PartitionPartialReceiver implements MessageReceiver {
   }
 
   @Override
-  public void onFinish() {
+  public void onFinish(int target) {
     // flush everything
   }
 }
