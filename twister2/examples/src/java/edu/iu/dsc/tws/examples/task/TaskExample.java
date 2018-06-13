@@ -14,7 +14,6 @@ package edu.iu.dsc.tws.examples.task;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
@@ -93,14 +92,6 @@ public class TaskExample implements IContainer {
     @Override
     public void prepare(Config cfg, TaskContext context) {
       this.ctx = context;
-      java.util.Map<String, Object> configs = ctx.getConfigurations();
-      for (Map.Entry<String, Object> entry : configs.entrySet()) {
-        //System.out.println("key: " + entry.getKey() + "; value: " + entry.getValue());
-        if (entry.getKey().toString().contains("inputdataset")) {
-          System.out.println("Required Key and Value:"
-              + entry.getKey() + "\t" + entry.getValue());
-        }
-      }
     }
   }
 
