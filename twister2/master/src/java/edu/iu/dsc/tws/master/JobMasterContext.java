@@ -42,6 +42,24 @@ public class JobMasterContext extends Context {
   public static final String WORKER_TO_JOB_MASTER_RESPONSE_WAIT_DURATION
       = "twister2.worker.to.job.master.response.wait.duration";
 
+  // job master cpu dedication as double
+  public static final double JOB_MASTER_CPU_DEFAULT = 0.2;
+  public static final String JOB_MASTER_CPU = "twister2.job.master.cpu";
+
+  // job master ram size as MB
+  public static final int JOB_MASTER_RAM_DEFAULT = 1000;
+  public static final String JOB_MASTER_RAM = "twister2.job.master.ram";
+
+  // job master volatile disk size in GB
+  public static final double VOLATILE_VOLUME_DEFAULT = 1.0;
+  public static final String VOLATILE_VOLUME = "twister2.job.master.volatile.volume.size";
+
+  // job master volatile disk size in GB
+  public static final double PERSISTENT_VOLUME_DEFAULT = 1.0;
+  public static final String PERSISTENT_VOLUME = "twister2.job.master.persistent.volume.size";
+
+  public static final String PERSISTENT_JOB_DIRECTORY = "job.master.persistent.job.directory";
+
   public static boolean jobMasterAssignsWorkerIDs(Config cfg) {
     return cfg.getBooleanValue(JOB_MASTER_ASSIGNS_WORKER_IDS,
         JOB_MASTER_ASSIGNS_WORKER_IDS_DEFAULT);
@@ -66,6 +84,34 @@ public class JobMasterContext extends Context {
   public static long responseWaitDuration(Config cfg) {
     return cfg.getLongValue(WORKER_TO_JOB_MASTER_RESPONSE_WAIT_DURATION,
         WORKER_TO_JOB_MASTER_RESPONSE_WAIT_DURATION_DEFAULT);
+  }
+
+  public static double volatileVolumeSize(Config cfg) {
+    return cfg.getDoubleValue(VOLATILE_VOLUME, VOLATILE_VOLUME_DEFAULT);
+  }
+
+  public static boolean volatileVolumeRequested(Config cfg) {
+    return volatileVolumeSize(cfg) > 0;
+  }
+
+  public static double persistentVolumeSize(Config cfg) {
+    return cfg.getDoubleValue(PERSISTENT_VOLUME, PERSISTENT_VOLUME_DEFAULT);
+  }
+
+  public static boolean persistentVolumeRequested(Config cfg) {
+    return persistentVolumeSize(cfg) > 0;
+  }
+
+  public static double jobMasterCpu(Config cfg) {
+    return cfg.getDoubleValue(JOB_MASTER_CPU, JOB_MASTER_CPU_DEFAULT);
+  }
+
+  public static int jobMasterRAM(Config cfg) {
+    return cfg.getIntegerValue(JOB_MASTER_RAM, JOB_MASTER_RAM_DEFAULT);
+  }
+
+  public static String persistentJobDirectory(Config cfg) {
+    return cfg.getStringValue(PERSISTENT_JOB_DIRECTORY);
   }
 
 }
