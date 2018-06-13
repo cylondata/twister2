@@ -76,7 +76,7 @@ public class MPIDataFlowBroadcast implements DataFlowOperation, MPIMessageReceiv
   }
 
   @Override
-  public void finish() {
+  public void finish(int target) {
 
   }
 

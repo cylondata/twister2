@@ -60,7 +60,8 @@ public interface DataFlowOperation {
   /**
    * If this is a larger transfer of dataflow style, we need to finish
    */
-  void finish();
+  default void finish(int source) {
+  }
 
   /**
    * Task plan associated with this operation
