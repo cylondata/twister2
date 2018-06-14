@@ -19,6 +19,9 @@ import java.util.Map;
 import edu.iu.dsc.tws.executor.comm.IParallelOperation;
 
 public class ExecutionPlan {
+
+  private int numThreads;
+
   private Map<Integer, INodeInstance> nodes = new HashMap<>();
 
   private List<IParallelOperation> parallelOperations = new ArrayList<>();
@@ -46,5 +49,13 @@ public class ExecutionPlan {
 
   public void stop() {
 
+  }
+
+  public int getNumThreads() {
+    return numThreads;
+  }
+
+  public void setNumThreads(int numThreads) {
+    this.numThreads = numThreads;
   }
 }
