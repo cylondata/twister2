@@ -171,12 +171,11 @@ public class ExecutionPlanBuilder implements IExecutor {
       // lets see weather this comunication belongs to a task instance
       for (Integer i : sourcesOfThisWorker) {
         if (taskInstances.contains(c.getSourceTask(), i)) {
-          TaskInstance taskInstance = taskInstances.get(c.getSourceTasks(), i);
+          TaskInstance taskInstance = taskInstances.get(c.getSourceTask(), i);
           taskInstance.registerOutParallelOperation(c.getEdge().getName(), op);
         } else if (sourceInstances.contains(c.getSourceTask(), i)) {
           SourceInstance sourceInstance = sourceInstances.get(c.getSourceTask(), i);
           sourceInstance.registerOutParallelOperation(c.getEdge().getName(), op);
-         // LOG.info("schedule sourceInstance : " + sourceInstance.getOutQueue().size());
         } else {
           throw new RuntimeException("Not found: " + c.getSourceTask());
         }
