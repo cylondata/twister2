@@ -53,8 +53,6 @@ public class PartitionTask implements IContainer {
     builder.setParallelism("sink", 4);
     builder.connect("source", "sink", "partition-edge", Operations.PARTITION);
 
-
-
     DataFlowTaskGraph graph = builder.build();
 
     RoundRobinTaskScheduling roundRobinTaskScheduling = new RoundRobinTaskScheduling();

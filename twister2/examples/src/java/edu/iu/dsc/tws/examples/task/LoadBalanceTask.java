@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task;
 
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -41,7 +40,7 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
-public class TaskGather implements IContainer {
+public class LoadBalanceTask implements IContainer {
   @Override
   public void init(Config config, int id, ResourcePlan resourcePlan) {
     GeneratorTask g = new GeneratorTask();
@@ -49,13 +48,13 @@ public class TaskGather implements IContainer {
 
     GraphBuilder builder = GraphBuilder.newBuilder();
     builder.addSource("source", g);
-    builder.setParallelism("source", 4);
+    builder.setParallelism("source", 1);
     builder.addSink("sink", r);
     builder.setParallelism("sink", 4);
-    builder.connect("source", "sink", "gather-edge", Operations.GATHER);
-
+    builder.connect("source", "sink", "loadbalance-edge", Operations.LOAD_BALANCE);
 
     DataFlowTaskGraph graph = builder.build();
+
     RoundRobinTaskScheduling roundRobinTaskScheduling = new RoundRobinTaskScheduling();
     roundRobinTaskScheduling.initialize(config);
 
@@ -68,6 +67,7 @@ public class TaskGather implements IContainer {
     ExecutionModel executionModel = new ExecutionModel(ExecutionModel.SHARED);
     ThreadExecutor executor = new ThreadExecutor(executionModel, plan);
     executor.execute();
+
     // we need to progress the channel
     while (true) {
       network.getChannel().progress();
@@ -78,9 +78,10 @@ public class TaskGather implements IContainer {
     private static final long serialVersionUID = -254264903510284748L;
     private TaskContext ctx;
     private Config config;
+
     @Override
     public void run() {
-      ctx.write("gather-edge", "1");
+      ctx.write("loadbalance-edge", "Hello");
     }
 
     @Override
@@ -91,9 +92,12 @@ public class TaskGather implements IContainer {
 
   private static class RecevingTask extends SinkTask {
     private static final long serialVersionUID = -254264903510284798L;
+    private int count = 0;
+
     @Override
     public void execute(IMessage message) {
-      System.out.println(message.getContent());
+      System.out.println("Message Load Balanced : " + message.getContent() + ", Count : " + count);
+      count++;
     }
 
     @Override
@@ -120,13 +124,13 @@ public class TaskGather implements IContainer {
     JobConfig jobConfig = new JobConfig();
 
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
-    jobBuilder.setName("task-gather");
-    jobBuilder.setContainerClass(TaskGather.class.getName());
-    jobBuilder.setRequestResource(new ResourceContainer(4, 1024), 4);
+    jobBuilder.setName("loadbalance-task-example");
+    jobBuilder.setContainerClass(LoadBalanceTask.class.getName());
+    jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job
     Twister2Submitter.submitContainerJob(jobBuilder.build(), config);
   }
-}
 
+}

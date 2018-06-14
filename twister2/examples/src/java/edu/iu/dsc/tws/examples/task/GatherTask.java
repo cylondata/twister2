@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task;
 
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -29,7 +30,6 @@ import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.ITask;
 import edu.iu.dsc.tws.task.api.Operations;
 import edu.iu.dsc.tws.task.api.SinkTask;
 import edu.iu.dsc.tws.task.api.SourceTask;
@@ -41,25 +41,21 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
-public class MultiPartitionTask implements IContainer {
+public class GatherTask implements IContainer {
   @Override
   public void init(Config config, int id, ResourcePlan resourcePlan) {
     GeneratorTask g = new GeneratorTask();
-    InterTask i = new InterTask();
     RecevingTask r = new RecevingTask();
 
     GraphBuilder builder = GraphBuilder.newBuilder();
     builder.addSource("source", g);
     builder.setParallelism("source", 4);
     builder.addSink("sink", r);
-    builder.addTask("inter", i);
-    builder.setParallelism("inter", 4);
     builder.setParallelism("sink", 4);
-    builder.connect("source", "inter", "partition-edge1", Operations.PARTITION);
-    builder.connect("inter", "sink", "partition-edge2", Operations.PARTITION);
+    builder.connect("source", "sink", "gather-edge", Operations.GATHER);
+
 
     DataFlowTaskGraph graph = builder.build();
-
     RoundRobinTaskScheduling roundRobinTaskScheduling = new RoundRobinTaskScheduling();
     roundRobinTaskScheduling.initialize(config);
 
@@ -72,7 +68,6 @@ public class MultiPartitionTask implements IContainer {
     ExecutionModel executionModel = new ExecutionModel(ExecutionModel.SHARED);
     ThreadExecutor executor = new ThreadExecutor(executionModel, plan);
     executor.execute();
-
     // we need to progress the channel
     while (true) {
       network.getChannel().progress();
@@ -83,10 +78,9 @@ public class MultiPartitionTask implements IContainer {
     private static final long serialVersionUID = -254264903510284748L;
     private TaskContext ctx;
     private Config config;
-
     @Override
     public void run() {
-      ctx.write("partition-edge1", "Hello");
+      ctx.write("gather-edge", "1");
     }
 
     @Override
@@ -94,48 +88,12 @@ public class MultiPartitionTask implements IContainer {
       this.ctx = context;
     }
   }
-
-  private static class InterTask implements ITask {
-    private static final long serialVersionUID = -254264903510284748L;
-    private TaskContext ctx;
-    private Config config;
-
-    @Override
-    public IMessage execute() {
-      return null;
-    }
-
-    @Override
-    public void prepare(Config cfg, TaskContext context) {
-      this.config = cfg;
-      this.ctx = context;
-    }
-
-    @Override
-    public IMessage execute(IMessage content) {
-      return null;
-    }
-
-    @Override
-    public void run(IMessage content) {
-      System.out.println("Message InterTask : " + content);
-    }
-
-    @Override
-    public void run() {
-
-    }
-  }
-
 
   private static class RecevingTask extends SinkTask {
     private static final long serialVersionUID = -254264903510284798L;
-    private int count = 0;
-
     @Override
     public void execute(IMessage message) {
-      System.out.println("Message Broadcast : " + message.getContent() + ", Count : " + count);
-      count++;
+      System.out.println(message.getContent());
     }
 
     @Override
@@ -162,12 +120,13 @@ public class MultiPartitionTask implements IContainer {
     JobConfig jobConfig = new JobConfig();
 
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
-    jobBuilder.setName("partition-example");
-    jobBuilder.setContainerClass(MultiPartitionTask.class.getName());
-    jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 4);
+    jobBuilder.setName("task-gather");
+    jobBuilder.setContainerClass(GatherTask.class.getName());
+    jobBuilder.setRequestResource(new ResourceContainer(4, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job
     Twister2Submitter.submitContainerJob(jobBuilder.build(), config);
   }
 }
+
