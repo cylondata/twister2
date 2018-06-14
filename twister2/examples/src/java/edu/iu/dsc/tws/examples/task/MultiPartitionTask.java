@@ -29,6 +29,7 @@ import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.ITask;
 import edu.iu.dsc.tws.task.api.Operations;
 import edu.iu.dsc.tws.task.api.SinkTask;
 import edu.iu.dsc.tws.task.api.SourceTask;
@@ -40,20 +41,22 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
-public class PartitionTask implements IContainer {
+public class MultiPartitionTask implements IContainer {
   @Override
   public void init(Config config, int id, ResourcePlan resourcePlan) {
     GeneratorTask g = new GeneratorTask();
+    InterTask i = new InterTask();
     RecevingTask r = new RecevingTask();
 
     GraphBuilder builder = GraphBuilder.newBuilder();
     builder.addSource("source", g);
-    builder.setParallelism("source", 1);
+    builder.setParallelism("source", 4);
     builder.addSink("sink", r);
+    builder.addTask("inter", i);
+    builder.setParallelism("inter", 4);
     builder.setParallelism("sink", 4);
-    builder.connect("source", "sink", "partition-edge", Operations.PARTITION);
-
-
+    builder.connect("source", "inter", "partition-edge1", Operations.PARTITION);
+    builder.connect("inter", "sink", "partition-edge2", Operations.PARTITION);
 
     DataFlowTaskGraph graph = builder.build();
 
@@ -83,7 +86,7 @@ public class PartitionTask implements IContainer {
 
     @Override
     public void run() {
-      ctx.write("partition-edge", "Hello");
+      ctx.write("partition-edge1", "Hello");
     }
 
     @Override
@@ -91,6 +94,36 @@ public class PartitionTask implements IContainer {
       this.ctx = context;
     }
   }
+
+  private static class InterTask implements ITask {
+    private static final long serialVersionUID = -254264903510284748L;
+
+    @Override
+    public IMessage execute() {
+      return null;
+    }
+
+    @Override
+    public void prepare(Config cfg, TaskContext context) {
+
+    }
+
+    @Override
+    public IMessage execute(IMessage content) {
+      return null;
+    }
+
+    @Override
+    public void run(IMessage content) {
+
+    }
+
+    @Override
+    public void run() {
+
+    }
+  }
+
 
   private static class RecevingTask extends SinkTask {
     private static final long serialVersionUID = -254264903510284798L;
@@ -127,7 +160,7 @@ public class PartitionTask implements IContainer {
 
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
     jobBuilder.setName("partition-example");
-    jobBuilder.setContainerClass(PartitionTask.class.getName());
+    jobBuilder.setContainerClass(MultiPartitionTask.class.getName());
     jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 

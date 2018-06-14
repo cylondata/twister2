@@ -86,6 +86,7 @@ public class ExecutionPlanBuilder implements IExecutor {
   @Override
   public ExecutionPlan schedule(Config cfg, DataFlowTaskGraph taskGraph,
                                 TaskSchedulePlan taskSchedule) {
+
     noOfThreads = ExecutorContext.threadsPerContainer(cfg);
     // we need to build the task plan
     TaskPlan taskPlan = TaskPlanBuilder.build(resourcePlan, taskSchedule, taskIdGenerator);
@@ -100,6 +101,7 @@ public class ExecutionPlanBuilder implements IExecutor {
     }
 
     ExecutionPlan execution = new ExecutionPlan();
+    execution.setNumThreads(noOfThreads);
     Set<TaskSchedulePlan.TaskInstancePlan> instancePlan = conPlan.getTaskInstances();
     // for each task we are going to create the communications
     for (TaskSchedulePlan.TaskInstancePlan ip : instancePlan) {
@@ -171,12 +173,11 @@ public class ExecutionPlanBuilder implements IExecutor {
       // lets see weather this comunication belongs to a task instance
       for (Integer i : sourcesOfThisWorker) {
         if (taskInstances.contains(c.getSourceTask(), i)) {
-          TaskInstance taskInstance = taskInstances.get(c.getSourceTasks(), i);
+          TaskInstance taskInstance = taskInstances.get(c.getSourceTask(), i);
           taskInstance.registerOutParallelOperation(c.getEdge().getName(), op);
         } else if (sourceInstances.contains(c.getSourceTask(), i)) {
           SourceInstance sourceInstance = sourceInstances.get(c.getSourceTask(), i);
           sourceInstance.registerOutParallelOperation(c.getEdge().getName(), op);
-         // LOG.info("schedule sourceInstance : " + sourceInstance.getOutQueue().size());
         } else {
           throw new RuntimeException("Not found: " + c.getSourceTask());
         }
@@ -196,22 +197,6 @@ public class ExecutionPlanBuilder implements IExecutor {
       }
       execution.addOps(op);
     }
-
-    // lets start the execution
-    /**
-     * Threading Model can be chosen here
-     * */
-    ThreadSharingExecutor threadSharingExecutor =
-        new ThreadSharingExecutor(noOfThreads);
-    threadSharingExecutor.execute(execution);
-
-//    ThreadStaticExecutor threadStaticExecutor =
-//        new ThreadStaticExecutor(noOfThreads, execution);
-//    threadStaticExecutor.execute(execution);
-
-
-
-
 
     return execution;
   }
