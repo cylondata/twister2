@@ -86,6 +86,7 @@ public class ExecutionPlanBuilder implements IExecutor {
   @Override
   public ExecutionPlan schedule(Config cfg, DataFlowTaskGraph taskGraph,
                                 TaskSchedulePlan taskSchedule) {
+
     noOfThreads = ExecutorContext.threadsPerContainer(cfg);
     // we need to build the task plan
     TaskPlan taskPlan = TaskPlanBuilder.build(resourcePlan, taskSchedule, taskIdGenerator);
