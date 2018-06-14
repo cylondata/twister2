@@ -118,7 +118,7 @@ public class PartitionTask implements IContainer {
     return new WorkerPlan(workers);
   }
 
-  public static void main(ExecutionModel[] args) {
+  public static void main(String[] args) {
     // first load the configurations from command line and config files
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
