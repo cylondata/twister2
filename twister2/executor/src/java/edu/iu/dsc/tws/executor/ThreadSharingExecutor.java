@@ -27,6 +27,9 @@ public class ThreadSharingExecutor {
 
   private List<Thread> threads = new ArrayList<>();
 
+  public ThreadSharingExecutor() {
+  }
+
   public ThreadSharingExecutor(int numThreads) {
     this.numThreads = numThreads;
   }
@@ -41,7 +44,7 @@ public class ThreadSharingExecutor {
       node.prepare();
     }
 
-    for (int i = 0; i < numThreads; i++) {
+    for (int i = 0; i < execution.getNumThreads(); i++) {
       Thread t = new Thread(new Worker());
       t.start();
       threads.add(t);
