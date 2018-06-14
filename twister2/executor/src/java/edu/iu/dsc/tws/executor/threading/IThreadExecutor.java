@@ -13,6 +13,6 @@ package edu.iu.dsc.tws.executor.threading;
 
 import edu.iu.dsc.tws.executor.ExecutionPlan;
 
-public interface IExecutor {
+public interface IThreadExecutor {
   void execute(ExecutionPlan executionPlan);
 }

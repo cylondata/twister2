@@ -23,7 +23,7 @@ import edu.iu.dsc.tws.executor.ExecutionPlan;
 import edu.iu.dsc.tws.executor.INodeInstance;
 
 
-public class ThreadStaticExecutor {
+public class ThreadStaticExecutor extends ThreadExecutor {
 
   private static final Logger LOG = Logger.getLogger(ThreadStaticExecutor.class.getName());
 
@@ -47,6 +47,7 @@ public class ThreadStaticExecutor {
     }
   }
 
+  @Override
   public void execute(ExecutionPlan execution) {
     // go through the instances
     //LOG.info("ThreadStaticExecutor Execution Starts");
@@ -81,3 +82,5 @@ public class ThreadStaticExecutor {
     }
   }
 }
+
+

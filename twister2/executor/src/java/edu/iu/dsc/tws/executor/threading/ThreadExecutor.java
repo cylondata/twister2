@@ -14,9 +14,9 @@ package edu.iu.dsc.tws.executor.threading;
 import edu.iu.dsc.tws.executor.ExecutionPlan;
 import edu.iu.dsc.tws.executor.ThreadSharingExecutor;
 
-public class Executor implements IExecutor {
+public class ThreadExecutor implements IThreadExecutor {
 
-  private Executor executor;
+  private ThreadExecutor executor;
 
   @Override
   public void execute(ExecutionPlan executionPlan) {
