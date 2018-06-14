@@ -100,6 +100,7 @@ public class ExecutionPlanBuilder implements IExecutor {
     }
 
     ExecutionPlan execution = new ExecutionPlan();
+    execution.setNumThreads(noOfThreads);
     Set<TaskSchedulePlan.TaskInstancePlan> instancePlan = conPlan.getTaskInstances();
     // for each task we are going to create the communications
     for (TaskSchedulePlan.TaskInstancePlan ip : instancePlan) {
@@ -195,22 +196,6 @@ public class ExecutionPlanBuilder implements IExecutor {
       }
       execution.addOps(op);
     }
-
-    // lets start the execution
-    /**
-     * Threading Model can be chosen here
-     * */
-    ThreadSharingExecutor threadSharingExecutor =
-        new ThreadSharingExecutor(noOfThreads);
-    threadSharingExecutor.execute(execution);
-
-//    ThreadStaticExecutor threadStaticExecutor =
-//        new ThreadStaticExecutor(noOfThreads, execution);
-//    threadStaticExecutor.execute(execution);
-
-
-
-
 
     return execution;
   }
