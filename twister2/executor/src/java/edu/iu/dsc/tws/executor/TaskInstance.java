@@ -57,11 +57,25 @@ public class TaskInstance implements INodeInstance {
    */
   private int taskId;
 
+  /**
+   * Task index that goes from 0 to parallism - 1
+   */
   private int taskIndex;
 
+  /**
+   * Number of parallel tasks
+   */
   private int parallelism;
 
+  /**
+   * Name of the task
+   */
   private String taskName;
+
+  /**
+   * Node configurations
+   */
+  private Map<String, Object> nodeConfigs;
 
   /**
    * Parallel operations
@@ -72,8 +86,6 @@ public class TaskInstance implements INodeInstance {
    * The edge generator
    */
   private EdgeGenerator edgeGenerator;
-
-  private Map<String, Object> nodeConfigs;
 
   public TaskInstance(ITask task, BlockingQueue<IMessage> inQueue,
                       BlockingQueue<IMessage> outQueue, Config config,
