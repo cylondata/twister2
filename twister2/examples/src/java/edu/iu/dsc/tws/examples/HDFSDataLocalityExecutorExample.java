@@ -9,30 +9,6 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
 package edu.iu.dsc.tws.examples;
 
 import java.util.ArrayList;
@@ -118,12 +94,12 @@ public class HDFSDataLocalityExecutorExample implements IContainer {
     DataFlowTaskGraph graph = builder.build();
 
     TaskSchedulePlan taskSchedulePlan = null;
-    WorkerPlan workerPlan1 = createWorkerPlan(resourcePlan);
+    WorkerPlan workerPlan = createWorkerPlan(resourcePlan);
 
-    WorkerPlan workerPlan = new WorkerPlan();
+    /*WorkerPlan workerPlan = new WorkerPlan();
     Worker worker0 = new Worker(0);
     Worker worker1 = new Worker(1);
-    //Worker worker2 = new Worker(2);
+    Worker worker2 = new Worker(2);
 
     worker0.setCpu(4);
     worker0.setDisk(4000);
@@ -137,15 +113,15 @@ public class HDFSDataLocalityExecutorExample implements IContainer {
     worker1.addProperty("bandwidth", 2000.0);
     worker1.addProperty("latency", 0.1);
 
-    /*worker2.setCpu(4);
+    worker2.setCpu(4);
     worker2.setDisk(4000);
     worker2.setRam(2048);
     worker2.addProperty("bandwidth", 3000.0);
-    worker2.addProperty("latency", 0.1);*/
+    worker2.addProperty("latency", 0.1);
 
     workerPlan.addWorker(worker0);
     workerPlan.addWorker(worker1);
-    // workerPlan.addWorker(worker2);
+    workerPlan.addWorker(worker2);*/
 
 
     if (TaskSchedulerContext.taskSchedulingMode(config).equals("datalocalityaware")) {
@@ -174,6 +150,16 @@ public class HDFSDataLocalityExecutorExample implements IContainer {
     for (ResourceContainer resource : resourcePlan.getContainers()) {
       Worker w = new Worker(resource.getId());
       System.out.println("Workers Id:\t" + w.getId());
+      if (w.getId() == 0) {
+        w.addProperty("bandwidth", 1000.0);
+        w.addProperty("latency", 0.1);
+      } else if (w.getId() == 1) {
+        w.addProperty("bandwidth", 2000.0);
+        w.addProperty("latency", 0.2);
+      } else {
+        w.addProperty("bandwidth", 3000.0);
+        w.addProperty("latency", 0.3);
+      }
       workers.add(w);
     }
 
