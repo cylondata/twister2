@@ -11,8 +11,18 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.threading;
 
-public interface IThreadExecutor {
+public class ExecutionModel {
 
-  void execute();
+  private String executionModel;
 
+  public ExecutionModel(String executionModel) {
+    this.executionModel = executionModel;
+  }
+
+  public static final java.lang.String DEDICATED = "dedicated";
+  public static final java.lang.String SHARED = "shared";
+
+  public String getExecutionModel() {
+    return executionModel;
+  }
 }

@@ -13,27 +13,30 @@ package edu.iu.dsc.tws.executor.threading;
 
 import edu.iu.dsc.tws.executor.ExecutionPlan;
 
-public class ThreadExecutor implements IThreadExecutor {
+public class ThreadExecutorFactory {
 
   private ExecutionModel executionModel;
 
+  private ThreadExecutor executor;
+
   private ExecutionPlan executionPlan;
 
-  public ThreadExecutor() {
-
-  }
-
-  public ThreadExecutor(ExecutionModel executionModel, ExecutionPlan executionPlan) {
-    this.executionModel = executionModel;
+  public ThreadExecutorFactory(ExecutionModel executionModels, ThreadExecutor executor,
+                               ExecutionPlan executionPlan) {
+    this.executionModel = executionModels;
+    this.executor = executor;
     this.executionPlan = executionPlan;
   }
 
-  @Override
-  public void execute() {
-    // lets start the execution
-    ThreadExecutorFactory threadExecutorFactory = new ThreadExecutorFactory(executionModel,
-        this, executionPlan);
-    threadExecutorFactory.execute();
-  }
+  public IThreadExecutor execute() {
+    if (ExecutionModel.SHARED.equals(executionModel.getExecutionModel())) {
+      ThreadSharingExecutor threadSharingExecutor = new ThreadSharingExecutor(executionPlan);
+      threadSharingExecutor.execute();
+      return threadSharingExecutor;
+    } else if (ExecutionModel.DEDICATED.equals(executionModel.getExecutionModel())) {
+      return null;
+    }
 
+    return null;
+  }
 }

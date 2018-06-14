@@ -35,23 +35,29 @@ public class ThreadStaticExecutor extends ThreadExecutor {
 
   private Hashtable<Thread, INodeInstance> threadTaskMapping;
 
+  private ExecutionPlan executionPlan;
+
+
   public ThreadStaticExecutor(int numThreads) {
     this.numThreads = numThreads;
   }
 
   public ThreadStaticExecutor(int numThreads, ExecutionPlan executionPlan) {
     this.numThreads = numThreads;
+    this.executionPlan = executionPlan;
     if (executionPlan.getNodes().size() != numThreads) {
       //System.out.println("Num of Threads: " + this.numThreads);
       //System.out.println("Num of Nodes : " + executionPlan.getNodes().size());
     }
   }
 
+
+
   @Override
-  public void execute(ExecutionPlan execution) {
+  public void execute() {
     // go through the instances
     //LOG.info("ThreadStaticExecutor Execution Starts");
-    Map<Integer, INodeInstance> nodes = execution.getNodes();
+    Map<Integer, INodeInstance> nodes = executionPlan.getNodes();
     tasks = new ArrayBlockingQueue<>(nodes.size() * 2);
     tasks.addAll(nodes.values());
 
