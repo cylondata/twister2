@@ -11,38 +11,93 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.comm;
 
-import java.util.concurrent.BlockingQueue;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.mpi.MPIDataFlowPartition;
+import edu.iu.dsc.tws.comms.mpi.io.partition.PartitionPartialReceiver;
+import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.executor.EdgeGenerator;
 import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.TaskMessage;
 
 public class PartitionByMultiByteOperation extends AbstractParallelOperation {
+  private static final Logger LOG = Logger.getLogger(PartitionByMultiByteOperation.class.getName());
 
-
+  protected MPIDataFlowPartition op;
 
   public PartitionByMultiByteOperation(Config config, TWSChannel network, TaskPlan tPlan) {
     super(config, network, tPlan);
   }
 
+  public void prepare(Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
+                      DataType dataType, String edgeName) {
+    this.edge = e;
+    op = new MPIDataFlowPartition(channel, srcs, dests, new PartitionReceiver(),
+        new PartitionPartialReceiver(), MPIDataFlowPartition.PartitionStratergy.DIRECT);
+    communicationEdge = e.generate(edgeName);
+    op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
+  }
+
+  public void prepare(Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
+                      DataType dataType, DataType keyType, String edgeName) {
+    this.edge = e;
+    op = new MPIDataFlowPartition(channel, srcs, dests, new PartitionReceiver(),
+        new PartitionPartialReceiver(), MPIDataFlowPartition.PartitionStratergy.DIRECT,
+        Utils.dataTypeToMessageType(dataType), Utils.dataTypeToMessageType(keyType));
+    communicationEdge = e.generate(edgeName);
+    op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
+  }
+
   @Override
   public void send(int source, IMessage message) {
-    super.send(source, message);
+    op.send(source, message.getContent(), 0);
   }
 
   @Override
   public void send(int source, IMessage message, int dest) {
-    super.send(source, message, dest);
-  }
-
-  @Override
-  public void register(int targetTask, BlockingQueue<IMessage> queue) {
-    super.register(targetTask, queue);
+    op.send(source, message, 0, dest);
   }
 
   @Override
   public void progress() {
-    super.progress();
+    op.progress();
+  }
+
+  public class PartitionReceiver implements MessageReceiver {
+    @Override
+    public void init(Config cfg, DataFlowOperation operation,
+                     Map<Integer, List<Integer>> expectedIds) {
+
+    }
+
+    @Override
+    public boolean onMessage(int source, int destination, int target, int flags, Object object) {
+
+      if (object instanceof List) {
+        for (Object o : (List) object) {
+          TaskMessage msg = new TaskMessage(o,
+              edge.getStringMapping(communicationEdge), target);
+          outMessages.get(target).offer(msg);
+          //    LOG.info("Source : " + source + ", Message : " + msg.getContent() + ", Target : "
+          //        + target + ", Destination : " + destination);
+
+        }
+      }
+
+      return true;
+    }
+
+    @Override
+    public void progress() {
+
+    }
   }
 }
