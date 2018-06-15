@@ -11,10 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.executor.comm.IParallelOperation;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.TaskContext;
@@ -30,6 +32,11 @@ public class SinkInstance  implements INodeInstance {
    * at different queues for messages
    */
   private BlockingQueue<IMessage> inQueue;
+
+  /**
+   * Inward parallel operations
+   */
+  private Map<String, IParallelOperation> inParOps = new HashMap<>();
 
   /**
    * The configuration
@@ -83,6 +90,14 @@ public class SinkInstance  implements INodeInstance {
 
       task.execute(m);
     }
+
+    for (Map.Entry<String, IParallelOperation> e : inParOps.entrySet()) {
+      e.getValue().progress();
+    }
+  }
+
+  public void registerInParallelOperation(String edge, IParallelOperation op) {
+    inParOps.put(edge, op);
   }
 
   public BlockingQueue<IMessage> getInQueue() {

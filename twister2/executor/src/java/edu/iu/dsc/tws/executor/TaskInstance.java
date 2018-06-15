@@ -83,6 +83,11 @@ public class TaskInstance implements INodeInstance {
   private Map<String, IParallelOperation> outParOps = new HashMap<>();
 
   /**
+   * Inward parallel operations
+   */
+  private Map<String, IParallelOperation> inParOps = new HashMap<>();
+
+  /**
    * The edge generator
    */
   private EdgeGenerator edgeGenerator;
@@ -113,6 +118,10 @@ public class TaskInstance implements INodeInstance {
     outParOps.put(edge, op);
   }
 
+  public void registerInParallelOperation(String edge, IParallelOperation op) {
+    inParOps.put(edge, op);
+  }
+
   public void execute() {
     while (!inQueue.isEmpty()) {
       IMessage m = inQueue.poll();
@@ -133,6 +142,10 @@ public class TaskInstance implements INodeInstance {
     }
 
     for (Map.Entry<String, IParallelOperation> e : outParOps.entrySet()) {
+      e.getValue().progress();
+    }
+
+    for (Map.Entry<String, IParallelOperation> e : inParOps.entrySet()) {
       e.getValue().progress();
     }
   }
