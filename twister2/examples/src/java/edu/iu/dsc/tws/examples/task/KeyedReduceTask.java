@@ -51,7 +51,7 @@ public class KeyedReduceTask implements IContainer {
     builder.setParallelism("source", 4);
     builder.addSink("sink", r);
     builder.setParallelism("sink", 1);
-    builder.connect("source", "sink", "keyedreduce-edge", Operations.KEYED_REDUCE);
+    builder.connect("source", "sink", "keyed-reduce-edge", Operations.KEYED_REDUCE);
 
     DataFlowTaskGraph graph = builder.build();
 
@@ -81,7 +81,7 @@ public class KeyedReduceTask implements IContainer {
 
     @Override
     public void run() {
-      ctx.write("keyedreduce-edge", "Hello");
+      ctx.write("keyed-reduce-edge", "Hello");
     }
 
     @Override
@@ -96,7 +96,7 @@ public class KeyedReduceTask implements IContainer {
 
     @Override
     public void execute(IMessage message) {
-      System.out.println("Message KeyedReduced : " + message.getContent() + ", Count : " + count);
+      System.out.println("Message Keyed-Reduced : " + message.getContent() + ", Count : " + count);
       count++;
     }
 

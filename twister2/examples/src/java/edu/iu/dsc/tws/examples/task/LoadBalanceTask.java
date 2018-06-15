@@ -48,10 +48,10 @@ public class LoadBalanceTask implements IContainer {
 
     GraphBuilder builder = GraphBuilder.newBuilder();
     builder.addSource("source", g);
-    builder.setParallelism("source", 1);
+    builder.setParallelism("source", 4);
     builder.addSink("sink", r);
     builder.setParallelism("sink", 4);
-    builder.connect("source", "sink", "loadbalance-edge", Operations.LOAD_BALANCE);
+    builder.connect("source", "sink", "load-balance-edge", Operations.LOAD_BALANCE);
 
     DataFlowTaskGraph graph = builder.build();
 
@@ -81,7 +81,7 @@ public class LoadBalanceTask implements IContainer {
 
     @Override
     public void run() {
-      ctx.write("loadbalance-edge", "Hello");
+      ctx.write("load-balance-edge", "Hello");
     }
 
     @Override

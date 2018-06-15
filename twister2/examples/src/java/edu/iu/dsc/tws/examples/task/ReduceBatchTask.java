@@ -11,5 +11,126 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task;
 
-public class ReduceBatchTask {
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+import edu.iu.dsc.tws.api.JobConfig;
+import edu.iu.dsc.tws.api.Twister2Submitter;
+import edu.iu.dsc.tws.api.basic.job.BasicJob;
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.core.TWSNetwork;
+import edu.iu.dsc.tws.executor.ExecutionPlan;
+import edu.iu.dsc.tws.executor.ExecutionPlanBuilder;
+import edu.iu.dsc.tws.executor.threading.ExecutionModel;
+import edu.iu.dsc.tws.executor.threading.ThreadExecutor;
+import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
+import edu.iu.dsc.tws.rsched.spi.container.IContainer;
+import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
+import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
+import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.Operations;
+import edu.iu.dsc.tws.task.api.SinkTask;
+import edu.iu.dsc.tws.task.api.SourceTask;
+import edu.iu.dsc.tws.task.api.TaskContext;
+import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.task.graph.GraphBuilder;
+import edu.iu.dsc.tws.tsched.roundrobin.RoundRobinTaskScheduling;
+import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
+import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
+import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
+
+public class ReduceBatchTask implements IContainer {
+  @Override
+  public void init(Config config, int id, ResourcePlan resourcePlan) {
+    GeneratorTask g = new GeneratorTask();
+    RecevingTask r = new RecevingTask();
+
+    GraphBuilder builder = GraphBuilder.newBuilder();
+    builder.addSource("source", g);
+    builder.setParallelism("source", 4);
+    builder.addSink("sink", r);
+    builder.setParallelism("sink", 1);
+    builder.connect("source", "sink", "reduce-batch-edge", Operations.REDUCE_BATCH);
+
+    DataFlowTaskGraph graph = builder.build();
+
+    RoundRobinTaskScheduling roundRobinTaskScheduling = new RoundRobinTaskScheduling();
+    roundRobinTaskScheduling.initialize(config);
+
+    WorkerPlan workerPlan = createWorkerPlan(resourcePlan);
+    TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduling.schedule(graph, workerPlan);
+
+    TWSNetwork network = new TWSNetwork(config, resourcePlan.getThisId());
+    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);
+    ExecutionPlan plan = executionPlanBuilder.schedule(config, graph, taskSchedulePlan);
+    ExecutionModel executionModel = new ExecutionModel(ExecutionModel.SHARED);
+    ThreadExecutor executor = new ThreadExecutor(executionModel, plan);
+    executor.execute();
+
+    // we need to progress the channel
+    while (true) {
+      network.getChannel().progress();
+    }
+  }
+
+  private static class GeneratorTask extends SourceTask {
+    private static final long serialVersionUID = -254264903510284748L;
+    private TaskContext ctx;
+    private Config config;
+
+    @Override
+    public void run() {
+      ctx.write("reduce-batch-edge", "Hello");
+    }
+
+    @Override
+    public void prepare(Config cfg, TaskContext context) {
+      this.ctx = context;
+    }
+  }
+
+  private static class RecevingTask extends SinkTask {
+    private static final long serialVersionUID = -254264903510284798L;
+    private int count = 0;
+
+    @Override
+    public void execute(IMessage message) {
+      System.out.println("Message Batch Reduced : " + message.getContent() + ", Count : " + count);
+      count++;
+    }
+
+    @Override
+    public void prepare(Config cfg, TaskContext context) {
+
+    }
+  }
+
+  public WorkerPlan createWorkerPlan(ResourcePlan resourcePlan) {
+    List<Worker> workers = new ArrayList<>();
+    for (ResourceContainer resource : resourcePlan.getContainers()) {
+      Worker w = new Worker(resource.getId());
+      workers.add(w);
+    }
+
+    return new WorkerPlan(workers);
+  }
+
+  public static void main(String[] args) {
+    // first load the configurations from command line and config files
+    Config config = ResourceAllocator.loadConfig(new HashMap<>());
+
+    // build JobConfig
+    JobConfig jobConfig = new JobConfig();
+
+    BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
+    jobBuilder.setName("reduce-batch-example");
+    jobBuilder.setContainerClass(ReduceBatchTask.class.getName());
+    jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 4);
+    jobBuilder.setConfig(jobConfig);
+
+    // now submit the job
+    Twister2Submitter.submitContainerJob(jobBuilder.build(), config);
+  }
+
 }

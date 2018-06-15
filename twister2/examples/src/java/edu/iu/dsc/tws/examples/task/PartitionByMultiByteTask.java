@@ -40,7 +40,7 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
-public class ReduceHLTask implements IContainer {
+public class PartitionByMultiByteTask implements IContainer {
   @Override
   public void init(Config config, int id, ResourcePlan resourcePlan) {
     GeneratorTask g = new GeneratorTask();
@@ -50,8 +50,9 @@ public class ReduceHLTask implements IContainer {
     builder.addSource("source", g);
     builder.setParallelism("source", 4);
     builder.addSink("sink", r);
-    builder.setParallelism("sink", 1);
-    builder.connect("source", "sink", "reduce-hl-edge", Operations.REDUCE_HL);
+    builder.setParallelism("sink", 4);
+    builder.connect("source", "sink", "partition-multi-byte-edge",
+        Operations.PARTITION_BY_MULTI_BYTE);
 
     DataFlowTaskGraph graph = builder.build();
 
@@ -72,7 +73,6 @@ public class ReduceHLTask implements IContainer {
     while (true) {
       network.getChannel().progress();
     }
-
   }
 
   private static class GeneratorTask extends SourceTask {
@@ -82,7 +82,7 @@ public class ReduceHLTask implements IContainer {
 
     @Override
     public void run() {
-      ctx.write("reduce-hl-edge", "Hello");
+      ctx.write("partition-multi-byte-edge", "Hello");
     }
 
     @Override
@@ -97,7 +97,7 @@ public class ReduceHLTask implements IContainer {
 
     @Override
     public void execute(IMessage message) {
-      System.out.println("Message HL Reduced : " + message.getContent() + ", Count : " + count);
+      System.out.println("Message Broadcast : " + message.getContent() + ", Count : " + count);
       count++;
     }
 
@@ -125,8 +125,8 @@ public class ReduceHLTask implements IContainer {
     JobConfig jobConfig = new JobConfig();
 
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
-    jobBuilder.setName("reduce-hl-task");
-    jobBuilder.setContainerClass(PartitionTask.class.getName());
+    jobBuilder.setName("partition-example");
+    jobBuilder.setContainerClass(PartitionByMultiByteTask.class.getName());
     jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 

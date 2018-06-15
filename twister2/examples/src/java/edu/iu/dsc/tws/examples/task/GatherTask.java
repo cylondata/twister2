@@ -51,7 +51,7 @@ public class GatherTask implements IContainer {
     builder.addSource("source", g);
     builder.setParallelism("source", 4);
     builder.addSink("sink", r);
-    builder.setParallelism("sink", 4);
+    builder.setParallelism("sink", 1);
     builder.connect("source", "sink", "gather-edge", Operations.GATHER);
 
 
