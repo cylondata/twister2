@@ -40,7 +40,7 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
-public class ParitionKeyedTask implements IContainer {
+public class PartitionKeyedTask implements IContainer {
   @Override
   public void init(Config config, int id, ResourcePlan resourcePlan) {
     GeneratorTask g = new GeneratorTask();
@@ -97,7 +97,8 @@ public class ParitionKeyedTask implements IContainer {
 
     @Override
     public void execute(IMessage message) {
-      System.out.println("Message Partition Keyed:  : " + message.getContent() + ", Count : " + count);
+      System.out.println("Message Partition Keyed:  : " + message.getContent()
+          + ", Count : " + count);
       count++;
     }
 
@@ -126,7 +127,7 @@ public class ParitionKeyedTask implements IContainer {
 
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
     jobBuilder.setName("partition-keyed-example");
-    jobBuilder.setContainerClass(ParitionKeyedTask.class.getName());
+    jobBuilder.setContainerClass(PartitionKeyedTask.class.getName());
     jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 
