@@ -26,7 +26,6 @@ import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 import edu.iu.dsc.tws.executor.comm.IParallelOperation;
 import edu.iu.dsc.tws.executor.comm.ParallelOperationFactory;
-//import edu.iu.dsc.tws.executor.threading.ThreadStaticExecutor;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.ISink;
@@ -54,8 +53,8 @@ public class ExecutionPlanBuilder implements IExecutor {
    * Communications list
    */
   private Table<String, String, Communication> parOpTable = HashBasedTable.create();
-  private Table<String, String, Communication> sendTable = HashBasedTable.create();
-  private Table<String, String, Communication> recvTable = HashBasedTable.create();
+//  private Table<String, String, Communication> sendTable = HashBasedTable.create();
+//  private Table<String, String, Communication> recvTable = HashBasedTable.create();
 
   /**
    * For each task we have multiple instances
@@ -127,8 +126,8 @@ public class ExecutionPlanBuilder implements IExecutor {
           if (!parOpTable.contains(v.getName(), e.getName())) {
             parOpTable.put(v.getName(), e.getName(),
                 new Communication(e, v.getName(), child.getName(), srcTasks, tarTasks));
-            sendTable.put(v.getName(), e.getName(),
-                new Communication(e, v.getName(), child.getName(), srcTasks, tarTasks));
+//            sendTable.put(v.getName(), e.getName(),
+//                new Communication(e, v.getName(), child.getName(), srcTasks, tarTasks));
           }
         }
       }
@@ -147,8 +146,8 @@ public class ExecutionPlanBuilder implements IExecutor {
           if (!parOpTable.contains(parent.getName(), e.getName())) {
             parOpTable.put(parent.getName(), e.getName(),
                 new Communication(e, parent.getName(), v.getName(), srcTasks, tarTasks));
-            recvTable.put(parent.getName(), e.getName(),
-                new Communication(e, parent.getName(), v.getName(), srcTasks, tarTasks));
+//            recvTable.put(parent.getName(), e.getName(),
+//                new Communication(e, parent.getName(), v.getName(), srcTasks, tarTasks));
           }
         }
       }
@@ -187,9 +186,11 @@ public class ExecutionPlanBuilder implements IExecutor {
         if (taskInstances.contains(c.getTargetTask(), i)) {
           TaskInstance taskInstance = taskInstances.get(c.getTargetTask(), i);
           op.register(i, taskInstance.getInQueue());
+          taskInstance.registerInParallelOperation(c.getEdge().getName(), op);
         } else if (sinkInstances.contains(c.getTargetTask(), i)) {
           SinkInstance sourceInstance = sinkInstances.get(c.getTargetTask(), i);
          // LOG.info("schedule sinkInstance: inQ Size : " + sourceInstance.getInQueue().size());
+          sourceInstance.registerInParallelOperation(c.getEdge().getName(), op);
           op.register(i, sourceInstance.getInQueue());
         } else {
           throw new RuntimeException("Not found: " + c.getTargetTask());

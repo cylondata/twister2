@@ -346,6 +346,8 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
               receiveAccepted = receiver.receiveSendInternally(
                   mpiSendMessage.getSource(), inRoutes.get(i), mpiSendMessage.getPath(),
                   mpiSendMessage.getFlags(), messageObject);
+//              LOG.info(String.format("Sending internally %d %d %s",
+//                  mpiSendMessage.getSource(), inRoutes.get(i), receiveAccepted));
             } finally {
               lock.unlock();
             }
@@ -368,6 +370,8 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
           pendingSendMessages.poll();
           continue;
         }
+//        LOG.info(String.format("Sending externally 1 %d %s",
+//            mpiSendMessage.getSource(), mpiSendMessage.getExternalSends()));
         // at this point lets build the message
         MPISendMessage message = (MPISendMessage)
             messageSerializer.get(sendId).build(pair.getKey(), mpiSendMessage);
@@ -378,6 +382,8 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
           int noOfExternalSends = startOfExternalRouts;
           for (int i = startOfExternalRouts; i < exRoutes.size(); i++) {
             boolean sendAccepted = sendMessageToTarget(message.getMPIMessage(), exRoutes.get(i));
+//            LOG.info(String.format("Sending externally %d %s %s",
+//                mpiSendMessage.getSource(), mpiSendMessage.getExternalSends(), sendAccepted));
             // if no longer accepts stop
             if (!sendAccepted) {
               canProgress = false;
@@ -408,7 +414,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
     }
 
     int id = currentMessage.getOriginatingId();
-
+//    LOG.info(String.format("%d Receive deserialize progress", executor));
     //If this is the last receiver we save to memory store
     if (isStoreBased && isLastReceiver) {
       currentMessage.setReceivedState(MPIMessage.ReceivedState.RECEIVE);
@@ -422,7 +428,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
           currentMessage.getHeader().getEdge());
       Queue<Pair<Object, MPIMessage>> pendingReceiveMessages =
           pendingReceiveMessagesPerSource.get(id);
-
+//      LOG.info(String.format("%d Deserialized message", executor));
       currentMessage.setReceivedState(MPIMessage.ReceivedState.INIT);
       if (!pendingReceiveMessages.offer(new ImmutablePair<>(object, currentMessage))) {
         throw new RuntimeException(executor + " We should have enough space: "
@@ -447,6 +453,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
       try {
         if (state == MPIMessage.ReceivedState.DOWN || state == MPIMessage.ReceivedState.INIT) {
           currentMessage.setReceivedState(MPIMessage.ReceivedState.DOWN);
+//          LOG.info(String.format("%d Calling receiver", executor));
           if (!receiver.passMessageDownstream(object, currentMessage)) {
             break;
           }
@@ -593,6 +600,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
 
     if (currentMessage.isComplete()) {
       currentMessages.remove(id);
+      LOG.info(String.format("%d adding to deserialize queue %d", executor, id));
       Queue<MPIMessage> deserializeQueue = pendingReceiveDeSerializations.get(id);
       if (!deserializeQueue.offer(currentMessage)) {
         throw new RuntimeException(executor + " We should have enough space: "
