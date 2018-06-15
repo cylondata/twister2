@@ -55,24 +55,19 @@ public class RoundRobinScheduling {
           }
           globalTaskIndex++;
         }
-      } /*else if (numberOfContainers >= totalTaskInstances) {
-        int globalTaskIndex = 0;
-        int containerIndex = 0;
-        for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
-          String task = e.getKey();
-          int numberOfInstances = e.getValue();
-          for (int i = 0; i < numberOfInstances; i++) {
-            roundrobinAllocation.get(containerIndex).add(
-                new InstanceId(task, globalTaskIndex, i));
-            LOG.info("Task Name(else loop):" + task + "(" + globalTaskIndex + " )"
-                + "\tNumber Of instances:" + numberOfInstances
-                + "\tTaskIndex:" + globalTaskIndex);
-            ++containerIndex;
-            ++globalTaskIndex;
-          }
-        }
-      }*/
+      }
       LOG.info(String.format("Container Map Values After Allocation %s", roundrobinAllocation));
+      for (Map.Entry<Integer, List<InstanceId>> entry : roundrobinAllocation.entrySet()) {
+        Integer integer = entry.getKey();
+        List<InstanceId> instanceIds = entry.getValue();
+        LOG.info("Container Index:" + integer);
+        for (int i = 0; i < instanceIds.size(); i++) {
+          LOG.info("Task Instance Details:"
+              + "\t Task Name:" + instanceIds.get(i).getTaskName()
+              + "\t Task id:" + instanceIds.get(i).getTaskId()
+              + "\t Task index:" + instanceIds.get(i).getTaskIndex());
+        }
+      }
     } catch (NullPointerException ne) {
       ne.printStackTrace();
     }
