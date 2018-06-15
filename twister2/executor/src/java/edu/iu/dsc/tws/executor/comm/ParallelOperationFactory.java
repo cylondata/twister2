@@ -37,6 +37,9 @@ public class ParallelOperationFactory {
     this.edgeGenerator = e;
   }
 
+  /**
+   * Factory Format to Choose the Corresponding Operation
+   */
   public IParallelOperation build(Edge edge, Set<Integer> sources, Set<Integer> dests) {
     if (!edge.isKeyed()) {
       if (Operations.PARTITION.equals(edge.getOperation())) {
@@ -54,6 +57,12 @@ public class ParallelOperationFactory {
         gatherOp.prepare(sources, dests.iterator().next(), edgeGenerator, edge.getDataType(),
             edge.getName(), config, taskPlan);
         return gatherOp;
+      } else if (Operations.PARTITION_BY_MULTI_BYTE.equals(edge.getOperation())) {
+        PartitionByMultiByteOperation partitionByMultiByteOperation
+            = new PartitionByMultiByteOperation(config, channel, taskPlan);
+        partitionByMultiByteOperation.prepare(sources, dests, edgeGenerator, edge.getDataType(),
+            edge.getName());
+        return partitionByMultiByteOperation;
       }
     } else {
       if (Operations.PARTITION.equals(edge.getOperation())) {
@@ -71,6 +80,12 @@ public class ParallelOperationFactory {
         gatherOp.prepare(sources, dests.iterator().next(), edgeGenerator, edge.getDataType(),
             edge.getName(), config, taskPlan);
         return gatherOp;
+      } else if (Operations.PARTITION_BY_MULTI_BYTE.equals(edge.getOperation())) {
+        PartitionByMultiByteOperation partitionByMultiByteOperation
+            = new PartitionByMultiByteOperation(config, channel, taskPlan);
+        partitionByMultiByteOperation.prepare(sources, dests, edgeGenerator, edge.getDataType(),
+            edge.getKeyType(), edge.getName());
+        return partitionByMultiByteOperation;
       }
     }
     return null;
