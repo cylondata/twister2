@@ -106,6 +106,7 @@ public class DataLocalityAwareScheduling {
           if (vertex.getName().equals(taskName)
               && vertex.getConfig().getListValue("inputdataset") != null) {
 
+            System.out.println("-------------------------------------------------");
             List<String> datasetList = vertex.getConfig().getListValue("inputdataset");
             String datasetName = datasetList.get(0);
 
@@ -133,8 +134,8 @@ public class DataLocalityAwareScheduling {
               workerPlanMap = calculateDistance(datanodesList, workerPlan, cIdx, allocatedWorkers);
               cal = findOptimalWorkerNode(vertex, workerPlanMap, cIdx);
             } else if (cIdx > 0) {
-              //Worker worker = workerPlan.getWorker(containerIndex);
-              Worker worker = workerPlan.getWorker(cIdx);
+              Worker worker = workerPlan.getWorker(containerIndex);
+              //Worker worker = workerPlan.getWorker(cIdx);
               if (dataAwareAllocation.get(containerIndex).size()
                   >= maxTaskInstancesPerContainer) {
                 try {
@@ -154,7 +155,6 @@ public class DataLocalityAwareScheduling {
               if (maxContainerTaskObjectSize < maxTaskInstancesPerContainer) {
                 dataAwareAllocation.get(containerIndex).add(
                     new InstanceId(vertex.getName(), globalTaskIndex, i));
-                //globalTaskIndex++;
                 ++maxContainerTaskObjectSize;
               } else {
                 LOG.info(String.format("Worker:" + containerIndex
@@ -174,6 +174,17 @@ public class DataLocalityAwareScheduling {
     }
     LOG.info(String.format("Container Map Values After Allocation %s",
         dataAwareAllocation));
+    for (Map.Entry<Integer, List<InstanceId>> entry : dataAwareAllocation.entrySet()) {
+      Integer integer = entry.getKey();
+      List<InstanceId> instanceIds = entry.getValue();
+      LOG.info("Container Index:" + integer);
+      for (int i = 0; i < instanceIds.size(); i++) {
+        LOG.info("Task Details:"
+            + "\t Task Name:" + instanceIds.get(i).getTaskName()
+            + "\t Task id:" + instanceIds.get(i).getTaskId()
+            + "\t Task index:" + instanceIds.get(i).getTaskIndex());
+      }
+    }
     return dataAwareAllocation;
   }
 
