@@ -15,11 +15,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import com.google.common.primitives.Ints;
+
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
+import edu.iu.dsc.tws.comms.mpi.io.KeyedContent;
 import edu.iu.dsc.tws.executor.ExecutionPlan;
 import edu.iu.dsc.tws.executor.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.ExecutionModel;
@@ -82,7 +86,27 @@ public class PartitionByMultiByteTask implements IContainer {
 
     @Override
     public void run() {
-      ctx.write("partition-multi-byte-edge", "Hello");
+      byte[] data = new byte[12];
+      data[0] = 'a';
+      data[1] = 'b';
+      data[2] = 'c';
+      data[3] = 'd';
+      data[4] = 'd';
+      data[5] = 'd';
+      data[6] = 'd';
+      data[7] = 'd';
+
+      List<byte[]> keyList = new ArrayList<>(10);
+      List<byte[]> dataList = new ArrayList<>(10);
+      for (int k = 0; k < 10; k++) {
+        keyList.add(Ints.toByteArray(k));
+        dataList.add(data);
+      }
+
+      KeyedContent keyedContent = new KeyedContent(keyList, dataList,
+          MessageType.MULTI_FIXED_BYTE, MessageType.MULTI_FIXED_BYTE);
+
+      ctx.write("partition-multi-byte-edge", keyedContent);
     }
 
     @Override
@@ -97,8 +121,7 @@ public class PartitionByMultiByteTask implements IContainer {
 
     @Override
     public void execute(IMessage message) {
-      System.out.println("Message Broadcast : " + message.getContent() + ", Count : " + count);
-      count++;
+      System.out.println("Message Received : " + message.getContent());
     }
 
     @Override
