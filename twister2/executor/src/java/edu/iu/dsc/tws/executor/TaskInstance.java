@@ -57,16 +57,35 @@ public class TaskInstance implements INodeInstance {
    */
   private int taskId;
 
+  /**
+   * Task index that goes from 0 to parallism - 1
+   */
   private int taskIndex;
 
+  /**
+   * Number of parallel tasks
+   */
   private int parallelism;
 
+  /**
+   * Name of the task
+   */
   private String taskName;
+
+  /**
+   * Node configurations
+   */
+  private Map<String, Object> nodeConfigs;
 
   /**
    * Parallel operations
    */
   private Map<String, IParallelOperation> outParOps = new HashMap<>();
+
+  /**
+   * Inward parallel operations
+   */
+  private Map<String, IParallelOperation> inParOps = new HashMap<>();
 
   /**
    * The edge generator
@@ -76,7 +95,7 @@ public class TaskInstance implements INodeInstance {
   public TaskInstance(ITask task, BlockingQueue<IMessage> inQueue,
                       BlockingQueue<IMessage> outQueue, Config config,
                       EdgeGenerator eGenerator, String tName,
-                      int tId, int tIndex, int parallel) {
+                      int tId, int tIndex, int parallel, Map<String, Object> cfgs) {
     this.task = task;
     this.inQueue = inQueue;
     this.outQueue = outQueue;
@@ -86,17 +105,21 @@ public class TaskInstance implements INodeInstance {
     this.taskIndex = tIndex;
     this.parallelism = parallel;
     this.taskName = tName;
+    this.nodeConfigs = cfgs;
   }
 
   public void prepare() {
     outputCollection = new DefaultOutputCollection(outQueue);
-
     task.prepare(config, new TaskContext(taskIndex, taskId, taskName, parallelism,
-        outputCollection));
+        outputCollection, nodeConfigs));
   }
 
   public void registerOutParallelOperation(String edge, IParallelOperation op) {
     outParOps.put(edge, op);
+  }
+
+  public void registerInParallelOperation(String edge, IParallelOperation op) {
+    inParOps.put(edge, op);
   }
 
   public void execute() {
@@ -119,6 +142,10 @@ public class TaskInstance implements INodeInstance {
     }
 
     for (Map.Entry<String, IParallelOperation> e : outParOps.entrySet()) {
+      e.getValue().progress();
+    }
+
+    for (Map.Entry<String, IParallelOperation> e : inParOps.entrySet()) {
       e.getValue().progress();
     }
   }

@@ -98,7 +98,7 @@ public class BaseBroadcastCommunication implements IContainer {
 
       Map<String, Object> newCfg = new HashMap<>();
 
-      LOG.info(String.format("Setting up reduce dataflow operation %d %s", dest, sources));
+      LOG.info(String.format("Setting up broadcast dataflow operation %d %s", dest, sources));
       // this method calls the init method
       // I think this is wrong
       broadcast = channel.broadCast(newCfg, MessageType.OBJECT, 0, dest,

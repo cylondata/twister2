@@ -33,6 +33,8 @@ spec:
       volumes:
       - name: twister2-shared-dir
         emptyDir: {medium: Memory}
+      - name: twister2-volatile-dir
+        emptyDir: {sizeLimit: <twister2.worker.volatile.disk>*<twister2.worker.instances>}
       - name: persistent-volume
         persistentVolumeClaim:
           claimName: twister2-storage-<job-name>
@@ -74,6 +76,8 @@ spec:
         volumeMounts:
         - name: twister2-shared-dir
           mountPath: /twister2-shared
+        - name: twister2-volatile-dir
+          mountPath: /twister2-volatile
         - name: persistent-volume
           mountPath: /persistent
         env:

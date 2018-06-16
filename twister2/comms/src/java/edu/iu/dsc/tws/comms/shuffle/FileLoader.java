@@ -152,7 +152,7 @@ public final class FileLoader {
           for (int d : kd) {
             os.putInt(d);
             totalWritten += 4;
-            LOG.log(Level.INFO, String.format("Key write %d", totalWritten));
+//            LOG.log(Level.INFO, String.format("Key write %d", totalWritten));
           }
         } else if (keyType == MessageType.LONG) {
           long[] kd = (long[]) keyValue.getKey();
@@ -342,6 +342,16 @@ public final class FileLoader {
     }
   }
 
+  /**
+   * Reads a file part upto max size from start offset
+   * @param fileName
+   * @param startOffSet
+   * @param maxSize
+   * @param keyType
+   * @param dataType
+   * @param deserializer
+   * @return
+   */
   public static OpenFilePart openPart(String fileName, long startOffSet,
                                                                 int maxSize, MessageType keyType,
                                                                 MessageType dataType,
@@ -351,37 +361,49 @@ public final class FileLoader {
     FileChannel rwChannel;
     try {
       rwChannel = new RandomAccessFile(outFileName, "rw").getChannel();
-      long size = maxSize < rwChannel.size() - startOffSet
+      long size = maxSize <= rwChannel.size() - startOffSet
           ? maxSize : rwChannel.size() - startOffSet;
       ByteBuffer os = rwChannel.map(FileChannel.MapMode.READ_ONLY, startOffSet, size);
 
       int totalRead = 0;
+      int count = 0;
       while (totalRead < size) {
         Object key;
         Object value;
 
+        if (totalRead + 4 > size) {
+          break;
+        }
+
         int keySize = os.getInt();
+        // we cannot read further
+        if (totalRead + keySize + 4 > size) {
+          break;
+        }
         key = deserialize(keyType, deserializer, os, keySize);
 
-        // we cannot read further
-        if (totalRead + keySize > size) {
+        if (totalRead + keySize + 8 > size) {
           break;
         }
 
         int dataSize = os.getInt();
-        value = deserialize(dataType, deserializer, os, dataSize);
-
         // we cannot read further
-        if (totalRead + keySize + dataSize > size) {
+        if (totalRead + keySize + dataSize + 8 > size) {
           break;
         }
+        value = deserialize(dataType, deserializer, os, dataSize);
+
+        LOG.log(Level.INFO, "Reading data size: " + dataSize + " count "
+            + count + " file: " + fileName + " total: " + totalRead + " value: " + value);
 
         keyValues.add(new KeyValue(key, value));
         totalRead += 8 + keySize + dataSize;
+        count++;
       }
+      int size1 = (int) rwChannel.size();
       rwChannel.close();
       return new OpenFilePart(keyValues, totalRead + (int) startOffSet,
-          (int) rwChannel.size(), fileName);
+          size1, fileName);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

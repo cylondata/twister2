@@ -126,10 +126,12 @@ public abstract class BaseNetworkChannel {
         writeRequest.setComplete(true);
         // notify the handler
         channelHandler.onSendComplete(socketChannel, writeRequest);
+        if (pendingSends.size() == 0) {
+          disableWriting();
+        }
       }
     }
 
-    disableWriting();
   }
 
   private int writeRequest(SocketChannel channel, TCPMessage message) {

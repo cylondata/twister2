@@ -151,7 +151,7 @@ public class MPIDataFlowAllReduce implements DataFlowOperation {
   }
 
   @Override
-  public void finish() {
+  public void finish(int source) {
   }
 
   @Override

@@ -11,9 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.executor.comm.IParallelOperation;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.TaskContext;
@@ -31,6 +34,11 @@ public class SinkInstance  implements INodeInstance {
   private BlockingQueue<IMessage> inQueue;
 
   /**
+   * Inward parallel operations
+   */
+  private Map<String, IParallelOperation> inParOps = new HashMap<>();
+
+  /**
    * The configuration
    */
   private Config config;
@@ -40,14 +48,40 @@ public class SinkInstance  implements INodeInstance {
    */
   private int taskId;
 
-  public SinkInstance(ISink task, BlockingQueue<IMessage> inQueue, Config config) {
+  /**
+   * Task index that goes from 0 to parallism - 1
+   */
+  private int taskIndex;
+
+  /**
+   * Number of parallel tasks
+   */
+  private int parallelism;
+
+  /**
+   * Name of the task
+   */
+  private String taskName;
+
+  /**
+   * Node configurations
+   */
+  private Map<String, Object> nodeConfigs;
+
+  public SinkInstance(ISink task, BlockingQueue<IMessage> inQueue, Config config,
+                      int tId, int tIndex, int parallel, Map<String, Object> cfgs) {
     this.task = task;
     this.inQueue = inQueue;
     this.config = config;
+    this.taskId = tId;
+    this.taskIndex = tIndex;
+    this.parallelism = parallel;
+    this.nodeConfigs = cfgs;
   }
 
   public void prepare() {
-    task.prepare(config, new TaskContext(0, 0, "", 0));
+    task.prepare(config, new TaskContext(taskIndex, taskId, taskName,
+        parallelism, nodeConfigs));
   }
 
   public void execute() {
@@ -56,6 +90,14 @@ public class SinkInstance  implements INodeInstance {
 
       task.execute(m);
     }
+
+    for (Map.Entry<String, IParallelOperation> e : inParOps.entrySet()) {
+      e.getValue().progress();
+    }
+  }
+
+  public void registerInParallelOperation(String edge, IParallelOperation op) {
+    inParOps.put(edge, op);
   }
 
   public BlockingQueue<IMessage> getInQueue() {

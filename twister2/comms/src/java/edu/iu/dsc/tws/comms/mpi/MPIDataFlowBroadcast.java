@@ -76,7 +76,7 @@ public class MPIDataFlowBroadcast implements DataFlowOperation, MPIMessageReceiv
   }
 
   @Override
-  public void finish() {
+  public void finish(int target) {
 
   }
 
@@ -175,12 +175,16 @@ public class MPIDataFlowBroadcast implements DataFlowOperation, MPIMessageReceiv
 
   @Override
   public boolean send(int src, Object message, int flags) {
-    return delegete.sendMessage(src, message, 0, flags, sendRoutingParameters(src, 0));
+    RoutingParameters routingParameters = sendRoutingParameters(src, 0);
+//    LOG.info("Bcast send down 1: " + routingParameters);
+    return delegete.sendMessage(src, message, 0, flags, routingParameters);
   }
 
   @Override
   public boolean send(int src, Object message, int flags, int dest) {
-    return delegete.sendMessage(src, message, dest, flags, sendRoutingParameters(src, 0));
+    RoutingParameters routingParameters = sendRoutingParameters(src, 0);
+//    LOG.info("Bcast sedn down 2: " + routingParameters);
+    return delegete.sendMessage(src, message, dest, flags, routingParameters);
   }
 
   @Override
@@ -215,6 +219,7 @@ public class MPIDataFlowBroadcast implements DataFlowOperation, MPIMessageReceiv
     } else {
       routingParameters = sendRoutingParameters(src, MPIContext.DEFAULT_DESTINATION);
     }
+//    LOG.info("Bcast passing down: " + routingParameters);
 
     ArrayBlockingQueue<Pair<Object, MPISendMessage>> pendingSendMessages =
         pendingSendMessagesPerSource.get(src);

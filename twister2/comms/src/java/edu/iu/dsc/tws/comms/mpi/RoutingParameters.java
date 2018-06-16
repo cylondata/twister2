@@ -60,4 +60,11 @@ public class RoutingParameters {
   public void setDestinationId(int destId) {
     this.destinationId = destId;
   }
+
+  @Override
+  public String toString() {
+    return "RoutingParameters{" + "externalRoutes=" + externalRoutes
+        + ", internalRoutes=" + internalRoutes
+        + ", destinationId=" + destinationId + '}';
+  }
 }

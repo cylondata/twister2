@@ -81,6 +81,10 @@ public class Config {
     return config.lazyCreateConfig(Mode.TRANSFORMED, substitutions);
   }
 
+  public Map<String, Object> toMap() {
+    return new HashMap<>(cfgMap);
+  }
+
   /**
    * Recursively expand each config value until token substitution is exhausted. We must recurse
    * to handle the case where field expansion requires multiple iterations, due to new tokens being

@@ -22,6 +22,8 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.executor.ExecutionPlan;
 import edu.iu.dsc.tws.executor.ExecutionPlanBuilder;
+import edu.iu.dsc.tws.executor.threading.ExecutionModel;
+import edu.iu.dsc.tws.executor.threading.ThreadExecutor;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
@@ -33,6 +35,7 @@ import edu.iu.dsc.tws.task.api.SourceTask;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
+import edu.iu.dsc.tws.task.graph.GraphConstants;
 import edu.iu.dsc.tws.tsched.roundrobin.RoundRobinTaskScheduling;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
@@ -51,6 +54,16 @@ public class TaskExample implements IContainer {
     builder.setParallelism("sink", 4);
     builder.connect("source", "sink", "partition-edge", Operations.PARTITION);
 
+    builder.addConfiguration("source", "Ram", GraphConstants.taskInstanceRam(config));
+    builder.addConfiguration("source", "Disk", GraphConstants.taskInstanceDisk(config));
+    builder.addConfiguration("source", "Cpu", GraphConstants.taskInstanceCpu(config));
+
+    List<String> sourceInputDataset = new ArrayList<>();
+    sourceInputDataset.add("dataset1.txt");
+    sourceInputDataset.add("dataset2.txt");
+
+    builder.addConfiguration("source", "inputdataset", sourceInputDataset);
+
     DataFlowTaskGraph graph = builder.build();
 
     RoundRobinTaskScheduling roundRobinTaskScheduling = new RoundRobinTaskScheduling();
@@ -62,6 +75,9 @@ public class TaskExample implements IContainer {
     TWSNetwork network = new TWSNetwork(config, resourcePlan.getThisId());
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);
     ExecutionPlan plan = executionPlanBuilder.schedule(config, graph, taskSchedulePlan);
+    ExecutionModel executionModel = new ExecutionModel(ExecutionModel.SHARED);
+    ThreadExecutor executor = new ThreadExecutor(executionModel, plan);
+    executor.execute();
 
     // we need to progress the channel
     while (true) {

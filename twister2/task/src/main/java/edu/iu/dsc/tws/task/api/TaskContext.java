@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.api;
 
+import java.util.Map;
+
 public class TaskContext {
   private int taskIndex;
 
@@ -22,20 +24,25 @@ public class TaskContext {
 
   private OutputCollection collection;
 
-  public TaskContext(int taskIndex, int taskId, String taskName, int parallelism) {
+  private Map<String, Object> configs;
+
+  public TaskContext(int taskIndex, int taskId, String taskName,
+                     int parallelism, Map<String, Object> configs) {
     this.taskIndex = taskIndex;
     this.taskId = taskId;
     this.taskName = taskName;
     this.parallelism = parallelism;
+    this.configs = configs;
   }
 
   public TaskContext(int taskIndex, int taskId, String taskName, int parallelism,
-                     OutputCollection collection) {
+                     OutputCollection collection, Map<String, Object> configs) {
     this.taskIndex = taskIndex;
     this.taskId = taskId;
     this.taskName = taskName;
     this.parallelism = parallelism;
     this.collection = collection;
+    this.configs = configs;
   }
 
   /**
@@ -63,6 +70,11 @@ public class TaskContext {
 
   public int getParallelism() {
     return parallelism;
+  }
+
+
+  public Map<String, Object> getConfigurations() {
+    return configs;
   }
 
   /**

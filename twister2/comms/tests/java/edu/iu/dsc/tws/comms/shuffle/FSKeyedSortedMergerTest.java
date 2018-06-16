@@ -17,6 +17,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Random;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.junit.After;
@@ -62,7 +63,9 @@ public class FSKeyedSortedMergerTest {
   private class KeyComparator implements Comparator<Object> {
     @Override
     public int compare(Object o1, Object o2) {
-      return Integer.compare((Integer) o1, (Integer) o2);
+      int[] val1 = (int[]) o1;
+      int[] val2 = (int[]) o2;
+      return Integer.compare(val1[0], val2[0]);
     }
   }
 
@@ -83,10 +86,16 @@ public class FSKeyedSortedMergerTest {
     Iterator<Object> it = fsMerger.readIterator();
     int count = 0;
     Set<Integer> set = new HashSet<>();
+    int current = 0;
     while (it.hasNext()) {
       LOG.info("Reading value: " + count);
       KeyValue val = (KeyValue) it.next();
       int[] k = (int[]) val.getKey();
+      if (k[0] < current) {
+        Assert.fail("Wrong order");
+      }
+      LOG.log(Level.INFO, "Key: " + k[0]);
+      current = k[0];
       if (set.contains(k[0])) {
         Assert.fail("Duplicate value");
       }
@@ -94,7 +103,7 @@ public class FSKeyedSortedMergerTest {
       count++;
     }
     if (count != 1000) {
-      Assert.fail("Count = " + count);
+      Assert.fail("Count =  " + count);
     }
   }
 }

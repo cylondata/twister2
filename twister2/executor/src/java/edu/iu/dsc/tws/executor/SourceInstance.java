@@ -53,14 +53,28 @@ public class SourceInstance implements INodeInstance {
    */
   private int taskId;
 
+  /**
+   * Task index that goes from 0 to parallism - 1
+   */
   private int taskIndex;
 
+  /**
+   * Number of parallel tasks
+   */
   private int parallelism;
 
+  /**
+   * Name of the task
+   */
   private String taskName;
 
+  /**
+   * Node configurations
+   */
+  private Map<String, Object> nodeConfigs;
+
   public SourceInstance(ISource task, BlockingQueue<IMessage> outQueue, Config config, String tName,
-                        int tId, int tIndex, int parallel) {
+                        int tId, int tIndex, int parallel, Map<String, Object> cfgs) {
     this.task = task;
     this.outQueue = outQueue;
     this.config = config;
@@ -68,13 +82,14 @@ public class SourceInstance implements INodeInstance {
     this.taskIndex = tIndex;
     this.parallelism = parallel;
     this.taskName = tName;
+    this.nodeConfigs = cfgs;
   }
 
   public void prepare() {
     outputCollection = new DefaultOutputCollection(outQueue);
 
     task.prepare(config, new TaskContext(taskIndex, taskId, taskName,
-        parallelism, outputCollection));
+        parallelism, outputCollection, nodeConfigs));
   }
 
   public void execute() {
