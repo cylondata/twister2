@@ -9,9 +9,9 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.api;
+package edu.iu.dsc.tws.comms.op;
 
-public enum OpSemantics {
+public enum OperationSemantics {
   STREAMING,
   BATCH,
   BATCH_SORTED
