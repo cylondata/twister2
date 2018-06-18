@@ -57,8 +57,10 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
   protected Map<Integer, MessageSerializer> messageSerializer;
   // we may have multiple routes throughus
 
-  protected MessageType type;
+  protected MessageType dataType;
   protected MessageType keyType = MessageType.BYTE;
+  protected MessageType receiveDataType;
+  protected MessageType receiveKeyType;
   protected boolean isKeyed = false;
   protected Lock lock = new ReentrantLock();
 
@@ -157,10 +159,12 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
     this.channel = channel;
   }
 
+
   /**
    * init method
    */
-  public void init(Config cfg, MessageType messageType, TaskPlan plan,
+  public void init(Config cfg, MessageType messageType, MessageType rcvDataType,
+                   MessageType kType, MessageType rcvKeyType, TaskPlan plan,
                    int graphEdge, Set<Integer> recvExecutors,
                    boolean lastReceiver, MPIMessageReceiver msgReceiver,
                    Map<Integer, ArrayBlockingQueue<Pair<Object, MPISendMessage>>>
@@ -172,7 +176,10 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
     this.config = cfg;
     this.instancePlan = plan;
     this.edge = graphEdge;
-    this.type = messageType;
+    this.dataType = messageType;
+    this.receiveDataType = rcvDataType;
+    this.receiveKeyType = rcvKeyType;
+    this.keyType = kType;
     this.debug = false;
     this.executor = instancePlan.getThisExecutor();
     this.receivingExecutors = recvExecutors;
@@ -206,6 +213,23 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
     initSerializers();
 
     initProgressTrackers();
+  }
+
+  /**
+   * init method
+   */
+  public void init(Config cfg, MessageType messageType, TaskPlan plan,
+                   int graphEdge, Set<Integer> recvExecutors,
+                   boolean lastReceiver, MPIMessageReceiver msgReceiver,
+                   Map<Integer, ArrayBlockingQueue<Pair<Object, MPISendMessage>>>
+                       pendingSendPerSource,
+                   Map<Integer, Queue<Pair<Object, MPIMessage>>> pRMPS,
+                   Map<Integer, Queue<MPIMessage>> pendingReceiveDesrialize,
+                   Map<Integer, MessageSerializer> serializer,
+                   Map<Integer, MessageDeSerializer> deSerializer, boolean k) {
+    init(cfg, messageType, messageType, keyType, keyType,
+        plan, graphEdge, recvExecutors, lastReceiver, msgReceiver,
+        pendingSendPerSource, pRMPS, pendingReceiveDesrialize, serializer, deSerializer, k);
   }
 
   public void setCompletionListener(CompletionListener cmpListener) {
@@ -267,7 +291,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
     ArrayBlockingQueue<Pair<Object, MPISendMessage>> pendingSendMessages =
         pendingSendMessagesPerSource.get(source * -1 - 1);
     if (pendingSendMessages.remainingCapacity() > 0) {
-      MPIMessage mpiMessage = new MPIMessage(source, type, MPIMessageDirection.OUT, this);
+      MPIMessage mpiMessage = new MPIMessage(source, dataType, MPIMessageDirection.OUT, this);
       int di = -1;
       if (routingParameters.getExternalRoutes().size() > 0) {
         di = routingParameters.getDestinationId();
@@ -298,7 +322,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
     ArrayBlockingQueue<Pair<Object, MPISendMessage>> pendingSendMessages =
         pendingSendMessagesPerSource.get(source);
     if (pendingSendMessages.remainingCapacity() > 0) {
-      MPIMessage mpiMessage = new MPIMessage(source, type, MPIMessageDirection.OUT, this);
+      MPIMessage mpiMessage = new MPIMessage(source, dataType, MPIMessageDirection.OUT, this);
 
       int di = -1;
       if (routingParameters.getExternalRoutes().size() > 0) {
@@ -586,9 +610,9 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
     byteBuffer.flip();
     receiveCount++;
     if (currentMessage == null) {
-      currentMessage = new MPIMessage(id, type, MPIMessageDirection.IN, this);
+      currentMessage = new MPIMessage(id, receiveDataType, MPIMessageDirection.IN, this);
       if (isKeyed) {
-        currentMessage.setKeyType(keyType);
+        currentMessage.setKeyType(receiveKeyType);
       }
       currentMessages.put(id, currentMessage);
       MessageHeader header = messageDeSerializer.get(id).buildHeader(buffer, e);
@@ -636,10 +660,10 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
       this.memoryManager = new LMDBMemoryManager(dataPath);
       if (!isKeyed) {
         this.operationMemoryManager = memoryManager.addOperation(opertionID,
-            MessageTypeUtils.toDataMessageType(type));
+            MessageTypeUtils.toDataMessageType(dataType));
       } else {
         this.operationMemoryManager = memoryManager.addOperation(opertionID,
-            MessageTypeUtils.toDataMessageType(type),
+            MessageTypeUtils.toDataMessageType(dataType),
             MessageTypeUtils.toDataMessageType(keyType));
       }
     }
