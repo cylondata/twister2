@@ -29,6 +29,7 @@ import edu.iu.dsc.tws.comms.mpi.io.MPIMultiMessageDeserializer;
 import edu.iu.dsc.tws.comms.mpi.io.MPIMultiMessageSerializer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
+@SuppressWarnings({"unchecked", "rawtypes"})
 public class Test {
   private KryoSerializer serializer;
 
