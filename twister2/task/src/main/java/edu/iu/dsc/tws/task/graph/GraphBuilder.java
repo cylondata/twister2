@@ -138,4 +138,14 @@ public final class GraphBuilder {
     graph.build();
     return graph;
   }
+
+  /**
+   * Set the operation mode of the graph, default is set to stream
+   * @param mode
+   * @return
+   */
+  public DataFlowTaskGraph operationMode(OperationMode mode) {
+    graph.setOperationMode(mode);
+    return graph;
+  }
 }
