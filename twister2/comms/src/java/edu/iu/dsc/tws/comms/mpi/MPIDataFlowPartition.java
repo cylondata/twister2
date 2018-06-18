@@ -43,6 +43,8 @@ import edu.iu.dsc.tws.comms.mpi.io.MPIMultiMessageDeserializer;
 import edu.iu.dsc.tws.comms.mpi.io.MPIMultiMessageSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.mpi.io.MessageSerializer;
+import edu.iu.dsc.tws.comms.op.EdgeGenerator;
+import edu.iu.dsc.tws.comms.op.OperationSemantics;
 import edu.iu.dsc.tws.comms.routing.PartitionRouter;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.comms.utils.OperationUtils;
@@ -187,14 +189,14 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
   private int edge;
 
   /**
-   * Weather we are a batch operation
-   */
-  private boolean batch;
-
-  /**
    * The all reduce operation for sycnronizing at the end
    */
   private MPIDataFlowAllReduce allReduce;
+
+  /**
+   * The operation semantics
+   */
+  private OperationSemantics opSemantics;
 
   /**
    * A place holder for keeping the internal and external destinations
@@ -257,6 +259,65 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
         new BarrierReceiver(), 0, 0, true);
   }
 
+  public MPIDataFlowPartition(Config cfg, TWSChannel channel, TaskPlan tPlan, Set<Integer> srcs,
+                              Set<Integer> dests, MessageReceiver finalRcvr,
+                              MessageReceiver partialRcvr,
+                              PartitionStratergy strategy,
+                              MessageType dType, MessageType rcvType,
+                              OperationSemantics sem,
+                              EdgeGenerator eGenerator) {
+    this(cfg, channel, tPlan, srcs, dests, finalRcvr, partialRcvr, strategy, dType, rcvType,
+        null, null, sem, eGenerator);
+    this.isKeyed = false;
+  }
+
+  public MPIDataFlowPartition(Config cfg, TWSChannel channel, TaskPlan tPlan, Set<Integer> srcs,
+                              Set<Integer> dests, MessageReceiver finalRcvr,
+                              MessageReceiver partialRcvr,
+                              PartitionStratergy strategy,
+                              MessageType dType, MessageType rcvType,
+                              MessageType kType, MessageType rcvKType,
+                              OperationSemantics sem,
+                              EdgeGenerator eGenerator) {
+    this.instancePlan = tPlan;
+    this.config = cfg;
+    this.sources = srcs;
+    this.destinations = dests;
+    this.destinationIndex = new HashMap<>();
+    this.destinationsList = new ArrayList<>(destinations);
+    this.delegete = new MPIDataFlowOperation(channel);
+    this.partitionStratergy = strategy;
+    this.dataType = dType;
+    this.receiveType = rcvType;
+    this.keyType = kType;
+    this.receiveKeyType = rcvKType;
+    this.edge = eGenerator.nextEdge();
+    this.opSemantics = sem;
+
+    if (keyType != null) {
+      this.isKeyed = true;
+    }
+
+    // sources
+    for (int src : sources) {
+      destinationIndex.put(src, 0);
+    }
+
+    this.finalReceiver = finalRcvr;
+    this.partialReceiver = partialRcvr;
+
+    if (sem == OperationSemantics.STREAMING_BATCH_SORTED
+        || sem == OperationSemantics.STREAMING_BATCH) {
+      int redEdge = eGenerator.nextEdge();
+      this.allReduce = new MPIDataFlowAllReduce(channel, sources, dests,
+          sources.size() + dests.size(), new BarrierReduceFn(),
+          new BarrierReceiver(), redEdge, eGenerator.nextEdge(), true);
+      this.allReduce.init(config, dataType, tPlan, redEdge);
+    }
+
+    init(cfg, dType, instancePlan, edge);
+  }
+
   /**
    * Initialize
    */
@@ -291,7 +352,6 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
 
     LOG.log(Level.FINE, String.format("%d done adding internal/external routing",
         taskPlan.getThisExecutor()));
-    //TODO : Does this send the correct receiveExpectedTaskIds for partition communication
     if (this.finalReceiver != null && isLastReceiver()) {
       this.finalReceiver.init(cfg, this, receiveExpectedTaskIds());
     }
@@ -347,7 +407,7 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
 
     delegete.setCompletionListener(completionListener);
 
-    delegete.init(cfg, t, taskPlan, edge,
+    delegete.init(cfg, t, receiveType, keyType, receiveKeyType, taskPlan, edge,
         router.receivingExecutors(), router.isLastReceiver(), this,
         pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
         pendingReceiveDeSerializations, serializerMap, deSerializerMap, isKeyed);
@@ -402,7 +462,11 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
     }
 
     // now lets do the barrier
-    allReduce.send(source, new byte[1], 0);
+    if (opSemantics == OperationSemantics.STREAMING_BATCH_SORTED
+        || opSemantics == OperationSemantics.STREAMING_BATCH) {
+      LOG.log(Level.INFO, String.format("%d Finishing communication %d", executor, source));
+      allReduce.send(source, new byte[1], 0);
+    }
   }
 
   @Override
@@ -433,12 +497,13 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
 
     @Override
     public boolean receive(int target, Object object) {
+      LOG.log(Level.INFO, String.format("%d Finished communication %d", executor, target));
       finalReceiver.onFinish(target);
       return true;
     }
   }
 
-  public RoutingParameters sendRoutingParameters(int source, int path) {
+  private RoutingParameters sendRoutingParameters(int source, int path) {
     if (routingParamCache.contains(source, path)) {
       return routingParamCache.get(source, path);
     } else {
@@ -472,7 +537,7 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
     }
   }
 
-  public RoutingParameters sendPartialRoutingParameters(int source, int destination) {
+  private RoutingParameters sendPartialRoutingParameters(int source, int destination) {
     if (partialRoutingParamCache.contains(source, destination)) {
       return partialRoutingParamCache.get(source, destination);
     } else {
