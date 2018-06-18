@@ -24,10 +24,7 @@ import java.util.logging.Logger;
 import org.apache.hadoop.conf.Configuration;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.fs.FileStatus;
-import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.hdfs.HadoopFileSystem;
-import edu.iu.dsc.tws.data.utils.HdfsDataContext;
 import edu.iu.dsc.tws.task.graph.Vertex;
 import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
@@ -35,7 +32,7 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.InstanceId;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.ScheduleException;
 import edu.iu.dsc.tws.tsched.utils.CalculateDataTransferTime;
-import edu.iu.dsc.tws.tsched.utils.DataLocatorUtils;
+import edu.iu.dsc.tws.tsched.utils.DataNodeLocatorUtils;
 import edu.iu.dsc.tws.tsched.utils.TaskAttributes;
 
 /**
@@ -65,9 +62,8 @@ public class DataLocalityAwareScheduling {
 
     int maxTaskInstancesPerContainer =
         TaskSchedulerContext.defaultTaskInstancesPerContainer(config);
-    //int maxContainerTaskObjectSize;
 
-    DataLocatorUtils dataLocatorUtils;
+    DataNodeLocatorUtils dataNodeLocatorUtils = new DataNodeLocatorUtils(config);
     TaskAttributes taskAttributes = new TaskAttributes();
 
     Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
@@ -118,27 +114,13 @@ public class DataLocalityAwareScheduling {
           if (vertex.getName().equals(taskName)
               && vertex.getConfig().getListValue("inputdataset") != null) {
 
-            List<String> datasetList = vertex.getConfig().getListValue("inputdataset");
-            String datasetName = datasetList.get(0);
-            conf.addResource(new org.apache.hadoop.fs.Path(
-                HdfsDataContext.getHdfsConfigDirectory(config)));
-            try {
-              hadoopFileSystem1 =
-                  new HadoopFileSystem(conf, org.apache.hadoop.fs.FileSystem.get(conf));
-              Path path = new Path(datasetName);
-              FileStatus fileStatus = hadoopFileSystem1.getFileStatus(path);
-              String fileURL = fileStatus.getPath().toString();
-              System.out.println("(((((((((((Status of File:)))))))" + fileURL);
-            } catch (java.io.IOException e) {
-              e.printStackTrace();
-            }
-            //This class is used to locate the name of the datanodes.
-            dataLocatorUtils = new DataLocatorUtils(datasetName);
-            List<String> datanodesList = dataLocatorUtils.findDataNodes();
-            List<CalculateDataTransferTime> cal = null;
+            //List<String> inputDataList = vertex.getConfig().getListValue("inputdataset");
+            List<String> datanodesList = dataNodeLocatorUtils.
+                findDataNodesLocation(vertex.getConfig().getListValue("inputdataset"));
+
             int totalNumberOfInstances = vertex.getParallelism();
             int maxContainerTaskObjectSize = 0;
-
+            List<CalculateDataTransferTime> cal = null;
             /**
              * If the cIdx is zero, simply calculate the distance between the worker node and
              * the datanodes. Else, if the cIdx values is greater than 0, check the container
@@ -184,7 +166,6 @@ public class DataLocalityAwareScheduling {
             }
             globalTaskIndex++;
             ++cIdx;
-            LOG.info("********************************************************");
           }
         }
       }
@@ -324,20 +305,19 @@ public class DataLocalityAwareScheduling {
         Map.Entry<String, List<CalculateDataTransferTime>> entry = iterator.next();
         String key = entry.getKey();
         List<CalculateDataTransferTime> value = entry.getValue();
-        for (CalculateDataTransferTime requiredDataTransferTime : value) {
+        cal.add(new CalculateDataTransferTime(Collections.min(value).getNodeName(),
+            Collections.min(value).getRequiredDataTransferTime(), key));
+
+        /*for (CalculateDataTransferTime requiredDataTransferTime : value) {
           LOG.info(String.format("Task:" + vertex.getName() + "("
               + requiredDataTransferTime.getTaskIndex() + ")"
               + "D.Node:" + key + "-> W.Node:" + requiredDataTransferTime.getNodeName()
               + "-> D.Time:" + requiredDataTransferTime.getRequiredDataTransferTime()));
-        }
-
-        cal.add(new CalculateDataTransferTime(Collections.min(value).getNodeName(),
-            Collections.min(value).getRequiredDataTransferTime(), key));
+        }*/
       }
     } catch (NoSuchElementException nse) {
       nse.printStackTrace();
     }
-    //LOG.info(String.format("********************************************************"));
     return cal;
   }
 }

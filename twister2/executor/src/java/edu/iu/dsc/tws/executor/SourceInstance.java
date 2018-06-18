@@ -99,7 +99,6 @@ public class SourceInstance implements INodeInstance {
       IMessage message = outQueue.poll();
       if (message != null) {
         String edge = message.edge();
-
         // invoke the communication operation
         IParallelOperation op = outParOps.get(edge);
         op.send(taskId, message);
