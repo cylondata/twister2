@@ -18,13 +18,17 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.api.ReduceFunction;
+import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.mpi.MPIDataFlowReduce;
+import edu.iu.dsc.tws.comms.mpi.io.reduce.ReduceStreamingFinalReceiver;
+import edu.iu.dsc.tws.comms.mpi.io.reduce.ReduceStreamingPartialReceiver;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.EdgeGenerator;
 import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.TaskMessage;
 
 public class ReduceOperation extends AbstractParallelOperation {
 
@@ -39,8 +43,9 @@ public class ReduceOperation extends AbstractParallelOperation {
   public void prepare(Set<Integer> sources, int dest, EdgeGenerator e,
                       DataType dataType, String edgeName) {
     this.edge = e;
-    op = new MPIDataFlowReduce(channel, sources, dest, new ReduceReceiver(),
-        new ReducePartialReceiver());
+    op = new MPIDataFlowReduce(channel, sources, dest,
+        new ReduceStreamingFinalReceiver(new IdentityFunction(), new FinalReduceReceiver()),
+        new ReduceStreamingPartialReceiver(dest, new IdentityFunction()));
     communicationEdge = e.generate(edgeName);
     op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
   }
@@ -60,29 +65,21 @@ public class ReduceOperation extends AbstractParallelOperation {
     op.progress();
   }
 
-  public class ReduceReceiver implements MessageReceiver {
-    @Override
-    public void init(Config cfg, DataFlowOperation operation,
-                     Map<Integer, List<Integer>> expectedIds) {
 
+  public static class IdentityFunction implements ReduceFunction {
+    @Override
+    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     }
 
     @Override
-    public boolean onMessage(int source, int destination, int target, int flags, Object object) {
-//      LOG.info("Reduce Final Receiver : " + source + ", " + destination + ", Object : "
-//          + (String) object);
-
-
-      return true;
-    }
-
-    @Override
-    public void progress() {
+    public Object reduce(Object t1, Object t2) {
+      return t1;
     }
   }
 
-  public class ReducePartialReceiver implements MessageReceiver {
 
+  public class FinalReduceReceiver implements ReduceReceiver {
+    private int count = 0;
     @Override
     public void init(Config cfg, DataFlowOperation operation,
                      Map<Integer, List<Integer>> expectedIds) {
@@ -90,16 +87,15 @@ public class ReduceOperation extends AbstractParallelOperation {
     }
 
     @Override
-    public boolean onMessage(int source, int destination, int target, int flags, Object object) {
-//      LOG.info("Reduce Partial Receiver : " + source + ", " + destination + ", Object : "
-//          + (String) object);
-
+    public boolean receive(int target, Object object) {
+      count++;
+      if (count > 5900 || count % 10 == 0) {
+        //LOG.info(String.format("Received %d", count));
+      }
+      TaskMessage msg = new TaskMessage(object,
+          edge.getStringMapping(communicationEdge), target);
+      outMessages.get(target).offer(msg);
       return true;
-    }
-
-    @Override
-    public void progress() {
-
     }
   }
 

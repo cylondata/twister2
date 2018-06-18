@@ -14,11 +14,13 @@ package edu.iu.dsc.tws.examples.task;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.executor.ExecutionPlan;
 import edu.iu.dsc.tws.executor.ExecutionPlanBuilder;
@@ -28,6 +30,7 @@ import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
+import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.Operations;
 import edu.iu.dsc.tws.task.api.SinkTask;
@@ -105,6 +108,24 @@ public class ReduceTask implements IContainer {
 
     }
   }
+
+  public static class IdentityFunction implements IFunction {
+    private static final long serialVersionUID = -254264903510284748L;
+
+    @Override
+    public void init(Config cfg, DataFlowOperation op, Map<Integer,
+        List<Integer>> expectedIds, TaskContext context) {
+
+    }
+
+    @Override
+    public boolean onMessage(int source, int path, int target, int flags, Object object) {
+      System.out.println("Source : " + source + ", Path : " + path + "Target : " + target
+          + " Object : " + object.getClass().getName());
+      return true;
+    }
+  }
+
 
   public WorkerPlan createWorkerPlan(ResourcePlan resourcePlan) {
     List<Worker> workers = new ArrayList<>();
