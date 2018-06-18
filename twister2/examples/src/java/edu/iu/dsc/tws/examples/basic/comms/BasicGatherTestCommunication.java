@@ -122,10 +122,10 @@ public class BasicGatherTestCommunication implements IContainer {
       // I think this is wrong
 
       aggregate = channel.gather(newCfg, MessageType.INTEGER, 0, sources,
-          dest, new FinalGatherReceive());
+          dest, new FinalGatherReceiver());
 
 //      aggregate = channel.gather(newCfg, MessageType.OBJECT, 0, sources,
-//          dest, new FinalGatherReceive());
+//          dest, new FinalGatherReceiver());
 
       for (int i = 0; i < noOfTasksPerExecutor; i++) {
         // the map thread where data is produced
@@ -190,7 +190,7 @@ public class BasicGatherTestCommunication implements IContainer {
     }
   }
 
-  private class FinalGatherReceive implements MessageReceiver {
+  private class FinalGatherReceiver implements MessageReceiver {
     // lets keep track of the messages
     // for each task we need to keep track of incoming messages
     private List<Integer> dataList;

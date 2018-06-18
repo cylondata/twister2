@@ -38,12 +38,11 @@ public class GatherOperation extends AbstractParallelOperation {
 
   public void prepare(Set<Integer> srcs, int dest, EdgeGenerator e,
                       DataType dataType, String edgeName, Config config, TaskPlan taskPlan) {
-    LOG.info("Edge Name : " + edgeName);
     this.edge = e;
-    communicationEdge = e.generate(edgeName);
+
     op = new MPIDataFlowGather(channel, srcs, dest, new GatherReceiver(), 0, 0, config,
-        MessageType.INTEGER, taskPlan, e.getIntegerMapping(edgeName));
-    LOG.info(" Edge Int : " + e.getIntegerMapping(edgeName));
+        MessageType.INTEGER, taskPlan, 0);
+    communicationEdge = e.generate(edgeName);
     op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
   }
 
@@ -76,8 +75,10 @@ public class GatherOperation extends AbstractParallelOperation {
     public boolean onMessage(int source, int destination, int target, int flags, Object object) {
       TaskMessage msg = new TaskMessage(object,
           edge.getStringMapping(communicationEdge), target);
-      LOG.info("Gather Receiver On Message : " + msg.getContent());
-      return outMessages.get(target).offer(msg);
+      LOG.info("Gather Receiver On Message : " + object.getClass().getName());
+      boolean status = outMessages.get(target).offer(msg);
+      LOG.info("Status : " + status);
+      return status;
     }
 
     @Override

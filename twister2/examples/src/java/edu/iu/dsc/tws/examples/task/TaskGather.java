@@ -41,7 +41,7 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
-public class GatherTask implements IContainer {
+public class TaskGather implements IContainer {
   @Override
   public void init(Config config, int id, ResourcePlan resourcePlan) {
     GeneratorTask g = new GeneratorTask();
@@ -80,7 +80,7 @@ public class GatherTask implements IContainer {
     private Config config;
     @Override
     public void run() {
-      ctx.write("gather-edge", "1");
+      ctx.write("gather-edge", "Hello");
     }
 
     @Override
@@ -121,7 +121,7 @@ public class GatherTask implements IContainer {
 
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
     jobBuilder.setName("task-gather");
-    jobBuilder.setContainerClass(GatherTask.class.getName());
+    jobBuilder.setContainerClass(TaskGather.class.getName());
     jobBuilder.setRequestResource(new ResourceContainer(4, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 
