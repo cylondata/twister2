@@ -96,7 +96,8 @@ public class PartitionTask implements IContainer {
 
     @Override
     public void execute(IMessage message) {
-      System.out.println("Message Partition Received : " + message.getContent() + ", Count : " + count);
+      System.out.println("Message Partition Received : " + message.getContent()
+          + ", Count : " + count);
       count++;
     }
 
