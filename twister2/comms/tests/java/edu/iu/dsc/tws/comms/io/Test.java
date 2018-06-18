@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.mpi.io;
+package edu.iu.dsc.tws.comms.io;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,10 +23,13 @@ import edu.iu.dsc.tws.comms.mpi.MPIMessage;
 import edu.iu.dsc.tws.comms.mpi.MPIMessageDirection;
 import edu.iu.dsc.tws.comms.mpi.MPIMessageReleaseCallback;
 import edu.iu.dsc.tws.comms.mpi.MPISendMessage;
+import edu.iu.dsc.tws.comms.mpi.io.IntData;
+import edu.iu.dsc.tws.comms.mpi.io.KeyedContent;
+import edu.iu.dsc.tws.comms.mpi.io.MPIMultiMessageDeserializer;
+import edu.iu.dsc.tws.comms.mpi.io.MPIMultiMessageSerializer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
-@SuppressWarnings({"rawtypes", "unchecked"})
-public final class Test {
+public class Test {
   private KryoSerializer serializer;
 
   private MPIMultiMessageSerializer multiMessageSerializer;

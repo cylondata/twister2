@@ -14,7 +14,6 @@ package edu.iu.dsc.tws.examples.basic.batch.sort;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -24,12 +23,14 @@ import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.core.TWSCommunication;
+import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.mpi.MPIDataFlowPartition;
 import edu.iu.dsc.tws.comms.mpi.io.partition.PartitionBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.mpi.io.partition.PartitionPartialReceiver;
+import edu.iu.dsc.tws.comms.op.EdgeGenerator;
+import edu.iu.dsc.tws.comms.op.OperationSemantics;
 import edu.iu.dsc.tws.examples.utils.WordCountUtils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
@@ -43,9 +44,9 @@ public class SortJob implements IContainer {
 
   private TWSNetwork network;
 
-  private TWSCommunication channel;
+  private TWSChannel channel;
 
-  private static final int NO_OF_TASKS = 2;
+  private static final int NO_OF_TASKS = 16;
 
   private Config config;
 
@@ -70,12 +71,12 @@ public class SortJob implements IContainer {
     setupTasks();
     // setup the network
     setupNetwork();
-    // create the communication
-    Map<String, Object> newCfg = new HashMap<>();
-    partition = (MPIDataFlowPartition) channel.partition(newCfg, MessageType.OBJECT,
-        0, sources, destinations,
+
+    partition = new MPIDataFlowPartition(config, channel, taskPlan, sources, destinations,
         new PartitionBatchFinalReceiver(new RecordSave(), true, true),
-        new PartitionPartialReceiver());
+        new PartitionPartialReceiver(), MPIDataFlowPartition.PartitionStratergy.DIRECT,
+        MessageType.OBJECT, MessageType.OBJECT, null, null,
+        OperationSemantics.STREAMING_BATCH, new EdgeGenerator(0));
     // start the threads
     scheduleTasks();
     // progress the work
@@ -83,7 +84,7 @@ public class SortJob implements IContainer {
   }
 
   private void setupTasks() {
-    taskPlan = WordCountUtils.createWordCountPlan(config, resourcePlan, NO_OF_TASKS);
+    taskPlan = WordCountUtils.createWordCountPlan(config, resourcePlan, NO_OF_TASKS + 2);
     sources = new HashSet<>();
     for (int i = 0; i < NO_OF_TASKS / 2; i++) {
       sources.add(i);
@@ -108,11 +109,7 @@ public class SortJob implements IContainer {
 
   private void setupNetwork() {
     network = new TWSNetwork(config, taskPlan);
-    channel = network.getDataFlowTWSCommunication();
-
-    //first get the communication config file
-    network = new TWSNetwork(config, taskPlan);
-    channel = network.getDataFlowTWSCommunication();
+    channel = network.getChannel();
   }
 
   private void progress() {
