@@ -26,12 +26,14 @@ package edu.iu.dsc.tws.examples.task.checkpoint;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.checkpointmanager.barrier.CheckpointBarrier;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.executor.ExecutionPlan;
 import edu.iu.dsc.tws.executor.ExecutionPlanBuilder;
@@ -57,8 +59,13 @@ import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 public class TaskCheckpointExample implements IContainer {
   @Override
   public void init(Config config, int id, ResourcePlan resourcePlan) {
+
+    TWSNetwork network = new TWSNetwork(config, resourcePlan.getThisId());
+    TWSCommunication channel = network.getDataFlowTWSCommunication();
+
+
     GeneratorCheckpointTask g = new GeneratorCheckpointTask();
-    RecevingCheckpointTask r = new RecevingCheckpointTask();
+    RecevingCheckpointTask r = new RecevingCheckpointTask(channel);
 
     GraphBuilder builder = GraphBuilder.newBuilder();
     builder.addSource("source", g);
@@ -85,7 +92,7 @@ public class TaskCheckpointExample implements IContainer {
     WorkerPlan workerPlan = createWorkerPlan(resourcePlan);
     TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduling.schedule(graph, workerPlan);
 
-    TWSNetwork network = new TWSNetwork(config, resourcePlan.getThisId());
+
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);
     ExecutionPlan plan = executionPlanBuilder.schedule(config, graph, taskSchedulePlan);
     ExecutionModel executionModel = new ExecutionModel(ExecutionModel.SHARED);
@@ -124,18 +131,33 @@ public class TaskCheckpointExample implements IContainer {
     }
   }
 
-  private static class RecevingCheckpointTask extends SinkTask {
+  private static final class RecevingCheckpointTask extends SinkTask {
     private static final long serialVersionUID = -254264903520284798L;
+
+    private TWSCommunication channel;
+
+    private int taskId;
+
+    private Map<String, Object> newCfg = new HashMap<>();
+
+    private RecevingCheckpointTask() { }
+
+    private RecevingCheckpointTask(TWSCommunication channel) {
+      super();
+      this.channel = channel;
+    }
+
     @Override
     public void execute(IMessage message) {
 
       CheckpointBarrier cb = (CheckpointBarrier) message.getContent();
-      System.out.println(cb.getId());
+      System.out.println(cb.getId() + " from taskId : " + taskId);
+//      channel.direct(newCfg, MessageType.OBJECT, 0, )
     }
 
     @Override
     public void prepare(Config cfg, TaskContext context) {
-
+      this.taskId = context.taskId();
     }
   }
 
