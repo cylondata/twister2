@@ -87,7 +87,6 @@ public class SinkInstance  implements INodeInstance {
   public void execute() {
     while (!inQueue.isEmpty()) {
       IMessage m = inQueue.poll();
-
       task.execute(m);
     }
 

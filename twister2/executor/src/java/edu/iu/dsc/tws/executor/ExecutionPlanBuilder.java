@@ -189,7 +189,6 @@ public class ExecutionPlanBuilder implements IExecutor {
           taskInstance.registerInParallelOperation(c.getEdge().getName(), op);
         } else if (sinkInstances.contains(c.getTargetTask(), i)) {
           SinkInstance sourceInstance = sinkInstances.get(c.getTargetTask(), i);
-         // LOG.info("schedule sinkInstance: inQ Size : " + sourceInstance.getInQueue().size());
           sourceInstance.registerInParallelOperation(c.getEdge().getName(), op);
           op.register(i, sourceInstance.getInQueue());
         } else {
@@ -242,8 +241,6 @@ public class ExecutionPlanBuilder implements IExecutor {
           new ArrayBlockingQueue<>(1024), cfg, taskId, ip.getTaskIndex(),
           vertex.getParallelism(), vertex.getConfig().toMap());
       sinkInstances.put(vertex.getName(), taskId, v);
-      //LOG.info("SinkInstance : " + sinkInstances.size());
-      LOG.info(String.format("SinkInstance create : else end %d %d", taskId, ip.getTaskIndex()));
       return v;
     } else {
       throw new RuntimeException("Un-known type");
