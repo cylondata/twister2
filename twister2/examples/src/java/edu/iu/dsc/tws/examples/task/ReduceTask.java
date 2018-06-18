@@ -125,7 +125,7 @@ public class ReduceTask implements IContainer {
 
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
     jobBuilder.setName("reduce-task");
-    jobBuilder.setContainerClass(PartitionTask.class.getName());
+    jobBuilder.setContainerClass(ReduceTask.class.getName());
     jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 
