@@ -51,7 +51,7 @@ public class TaskSchedulerContext extends SchedulerContext {
 
   public static final String TWISTER2_NO_OF_INSTANCES_PER_CONTAINER
       = "twister2.task.default.task.instances";
-  public static final int TWISTER2_NO_OF_INSTANCES_PER_CONTAINER_DEFAULT = 2;
+  public static final int TWISTER2_NO_OF_INSTANCES_PER_CONTAINER_DEFAULT = 3;
 
   private static final String TWISTER2_RAM_PADDING_PER_CONTAINER
       = "twister2.ram.padding.container";
