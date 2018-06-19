@@ -64,7 +64,7 @@ public class ParallelOperationFactory {
             edge.getName());
         return partitionByMultiByteOperation;
       } else if (Operations.REDUCE.equals(edge.getOperation())) {
-        ReduceOperation reduceOperation  = new ReduceOperation(config, channel, taskPlan);
+        ReduceOperation reduceOperation = new ReduceOperation(config, channel, taskPlan);
         reduceOperation.prepare(sources, dests.iterator().next(), edgeGenerator,
             edge.getDataType(), edge.getName());
         return reduceOperation;
@@ -83,7 +83,7 @@ public class ParallelOperationFactory {
       } else if (Operations.GATHER.equals(edge.getOperation())) {
         GatherOperation gatherOp = new GatherOperation(config, channel, taskPlan);
         gatherOp.prepare(sources, dests.iterator().next(), edgeGenerator, edge.getDataType(),
-            edge.getName(), config, taskPlan);
+            edge.getKeyType(), edge.getName(), config, taskPlan);
         return gatherOp;
       } else if (Operations.PARTITION_BY_MULTI_BYTE.equals(edge.getOperation())) {
         PartitionByMultiByteOperation partitionByMultiByteOperation
@@ -92,7 +92,7 @@ public class ParallelOperationFactory {
             edge.getKeyType(), edge.getName());
         return partitionByMultiByteOperation;
       } else if (Operations.REDUCE.equals(edge.getOperation())) {
-        ReduceOperation reduceOperation  = new ReduceOperation(config, channel, taskPlan);
+        ReduceOperation reduceOperation = new ReduceOperation(config, channel, taskPlan);
         reduceOperation.prepare(sources, dests.iterator().next(), edgeGenerator,
             edge.getDataType(), edge.getName());
         return reduceOperation;
@@ -102,7 +102,7 @@ public class ParallelOperationFactory {
   }
 
   public IParallelOperation build(Edge edge, Set<Integer> sources, Set<Integer> dests,
-                                 DataType dataType, DataType keyType) {
+                                  DataType dataType, DataType keyType) {
     if (Operations.PARTITION.equals(edge.getOperation())) {
       PartitionOperation partitionOp = new PartitionOperation(config, channel, taskPlan);
       partitionOp.prepare(sources, dests, edgeGenerator, dataType, keyType, edge.getName());
