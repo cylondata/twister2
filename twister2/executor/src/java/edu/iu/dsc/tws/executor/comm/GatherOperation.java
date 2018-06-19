@@ -56,13 +56,13 @@ public class GatherOperation extends AbstractParallelOperation {
   @Override
   public void send(int source, IMessage message) {
     //LOG.info("Message : " + message.getContent());
-    op.send(source, message, 0);
+    op.send(source, message.getContent(), 0);
   }
 
   @Override
   public void send(int source, IMessage message, int dest) {
     //LOG.info("Message : " + message.getContent());
-    op.send(source, message, 0, dest);
+    op.send(source, message.getContent(), 0, dest);
   }
 
   @Override
@@ -85,9 +85,16 @@ public class GatherOperation extends AbstractParallelOperation {
     public boolean onMessage(int source, int destination, int target, int flags, Object object) {
 
       // add the object to the map
-      LOG.info("Source : " + source + ", Destination : " + destination + ", Target : "
-          + target + ", Object : " + ((TaskMessage) object).getContent().toString());
+      if (object instanceof List) {
+        for (Object o : (List) object) {
+          TaskMessage msg = new TaskMessage(o,
+              edge.getStringMapping(communicationEdge), target);
+          outMessages.get(target).offer(msg);
+          //    LOG.info("Source : " + source + ", Message : " + msg.getContent() + ", Target : "
+          //        + target + ", Destination : " + destination);
 
+        }
+      }
       return true;
 
     }

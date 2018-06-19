@@ -68,6 +68,11 @@ public class ParallelOperationFactory {
         reduceOperation.prepare(sources, dests.iterator().next(), edgeGenerator,
             edge.getDataType(), edge.getName());
         return reduceOperation;
+      } else if (Operations.ALL_REDUCE.equals(edge.getOperation())) {
+        AllReduceOperation allReduceOperation = new AllReduceOperation(config, channel, taskPlan);
+        allReduceOperation.prepare(sources, dests, edgeGenerator, edge.getDataType(),
+            edge.getName());
+        return allReduceOperation;
       }
     } else {
       if (Operations.PARTITION.equals(edge.getOperation())) {
@@ -96,6 +101,11 @@ public class ParallelOperationFactory {
         reduceOperation.prepare(sources, dests.iterator().next(), edgeGenerator,
             edge.getDataType(), edge.getName());
         return reduceOperation;
+      } else if (Operations.ALL_REDUCE.equals(edge.getOperation())) {
+        AllReduceOperation allReduceOperation = new AllReduceOperation(config, channel, taskPlan);
+        allReduceOperation.prepare(sources, dests, edgeGenerator, edge.getDataType(),
+            edge.getName());
+        return allReduceOperation;
       }
     }
     return null;
