@@ -17,6 +17,8 @@ import java.util.List;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
+import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.mpi.io.KeyedContent;
 
 public class RecordSource implements Runnable {
   private DataFlowOperation operation;
@@ -78,7 +80,8 @@ public class RecordSource implements Runnable {
       }
 
       // lets try to process if send doesn't succeed
-      while (!operation.send(taskId, word, flags, dest)) {
+      while (!operation.send(taskId, new KeyedContent(word.getKey(), word.getData(),
+          MessageType.INTEGER, MessageType.BYTE), flags, dest)) {
         try {
           Thread.sleep(1);
         } catch (InterruptedException e) {
@@ -86,5 +89,6 @@ public class RecordSource implements Runnable {
         }
       }
     }
+    operation.finish(taskId);
   }
 }
