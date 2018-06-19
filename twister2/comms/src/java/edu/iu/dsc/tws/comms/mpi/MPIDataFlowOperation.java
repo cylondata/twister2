@@ -321,6 +321,9 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
                              int flags, RoutingParameters routingParameters) {
     ArrayBlockingQueue<Pair<Object, MPISendMessage>> pendingSendMessages =
         pendingSendMessagesPerSource.get(source);
+    if (pendingSendMessages == null) {
+      throw new RuntimeException(String.format("%d No send messages %d", executor, source));
+    }
     if (pendingSendMessages.remainingCapacity() > 0) {
       MPIMessage mpiMessage = new MPIMessage(source, dataType, MPIMessageDirection.OUT, this);
 

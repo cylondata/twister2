@@ -66,6 +66,8 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
     String path = MPIContext.getShuffleDirectoryPath(cfg);
 
     finished = new ConcurrentHashMap<>();
+    partition = (MPIDataFlowPartition) op;
+    keyed = partition.getKeyType() != null;
     for (Integer target : expectedIds.keySet()) {
       Map<Integer, Boolean> perTarget = new ConcurrentHashMap<>();
       for (Integer exp : expectedIds.get(target)) {
@@ -74,7 +76,6 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
       finished.put(target, perTarget);
 
       Shuffle sortedMerger;
-      partition = (MPIDataFlowPartition) op;
       if (partition.getKeyType() == null) {
         sortedMerger = new FSMerger(maxBytesInMemory, maxRecordsInMemory, path,
             getOperationName(target), partition.getDataType());
@@ -89,11 +90,7 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
         }
       }
       sortedMergers.put(target, sortedMerger);
-
     }
-
-
-    keyed = partition.getKeyType() != null;
   }
 
   @Override
@@ -103,6 +100,7 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
     if (sortedMerger == null) {
       throw new RuntimeException("Un-expected target: " + target);
     }
+    LOG.info(String.format("Receive message %d", target));
     // add the object to the map
     if (keyed) {
       List<KeyedContent> keyedContents = (List<KeyedContent>) object;

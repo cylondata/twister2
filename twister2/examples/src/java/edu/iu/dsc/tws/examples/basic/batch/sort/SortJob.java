@@ -46,7 +46,7 @@ public class SortJob implements IContainer {
 
   private TWSChannel channel;
 
-  private static final int NO_OF_TASKS = 16;
+  private static final int NO_OF_TASKS = 4;
 
   private Config config;
 
@@ -75,7 +75,7 @@ public class SortJob implements IContainer {
     partition = new MPIDataFlowPartition(config, channel, taskPlan, sources, destinations,
         new PartitionBatchFinalReceiver(new RecordSave(), true, true),
         new PartitionPartialReceiver(), MPIDataFlowPartition.PartitionStratergy.DIRECT,
-        MessageType.OBJECT, MessageType.OBJECT, null, null,
+        MessageType.BYTE, MessageType.BYTE, MessageType.INTEGER, MessageType.INTEGER,
         OperationSemantics.STREAMING_BATCH, new EdgeGenerator(0));
     // start the threads
     scheduleTasks();
@@ -84,7 +84,7 @@ public class SortJob implements IContainer {
   }
 
   private void setupTasks() {
-    taskPlan = WordCountUtils.createWordCountPlan(config, resourcePlan, NO_OF_TASKS + 2);
+    taskPlan = WordCountUtils.createWordCountPlan(config, resourcePlan, NO_OF_TASKS);
     sources = new HashSet<>();
     for (int i = 0; i < NO_OF_TASKS / 2; i++) {
       sources.add(i);
@@ -136,7 +136,7 @@ public class SortJob implements IContainer {
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
     jobBuilder.setName("sort-job");
     jobBuilder.setContainerClass(SortJob.class.getName());
-    jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 1);
+    jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job
