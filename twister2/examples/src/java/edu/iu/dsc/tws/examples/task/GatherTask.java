@@ -45,7 +45,7 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
-public class TaskGather implements IContainer {
+public class GatherTask implements IContainer {
 
   private RandomString randomString;
 
@@ -109,10 +109,12 @@ public class TaskGather implements IContainer {
   }
 
   private static class RecevingTask extends SinkTask {
+    private int count = 0;
     private static final long serialVersionUID = -254264903510284798L;
     @Override
     public void execute(IMessage message) {
-      System.out.println(message.getContent());
+      System.out.println("Message Gathered : " + message.getContent() + ", Count : " + count);
+      count++;
     }
 
     @Override
@@ -142,7 +144,7 @@ public class TaskGather implements IContainer {
 
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
     jobBuilder.setName("task-gather");
-    jobBuilder.setContainerClass(TaskGather.class.getName());
+    jobBuilder.setContainerClass(GatherTask.class.getName());
     jobBuilder.setRequestResource(new ResourceContainer(4, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 
