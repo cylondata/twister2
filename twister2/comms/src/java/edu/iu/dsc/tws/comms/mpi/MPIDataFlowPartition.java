@@ -324,8 +324,8 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
   public void init(Config cfg, MessageType t, TaskPlan taskPlan, int ed) {
     this.edge = ed;
     this.thisSources = TaskPlanUtils.getTasksOfThisExecutor(taskPlan, sources);
-    LOG.log(Level.INFO, String.format("%d setup loadbalance routing %s",
-        taskPlan.getThisExecutor(), thisSources));
+    LOG.log(Level.INFO, String.format("%d setup loadbalance routing %s %s",
+        taskPlan.getThisExecutor(), sources, destinations));
     this.thisTasks = taskPlan.getTasksOfThisExecutor();
     this.router = new PartitionRouter(taskPlan, sources, destinations);
     Map<Integer, Set<Integer>> internal = router.getInternalSendTasks(0);
