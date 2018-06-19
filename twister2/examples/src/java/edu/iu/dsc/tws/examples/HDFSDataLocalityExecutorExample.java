@@ -22,6 +22,8 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.executor.ExecutionPlan;
 import edu.iu.dsc.tws.executor.ExecutionPlanBuilder;
+import edu.iu.dsc.tws.executor.threading.ExecutionModel;
+import edu.iu.dsc.tws.executor.threading.ThreadExecutor;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
@@ -62,7 +64,7 @@ public class HDFSDataLocalityExecutorExample implements IContainer {
   @Override
   public void init(Config config, int id, ResourcePlan resourcePlan) {
     GeneratorTask g = new GeneratorTask();
-    RecevingTask r = new RecevingTask();
+    ReceivingTask r = new ReceivingTask();
 
     GraphBuilder builder = GraphBuilder.newBuilder();
     builder.addSource("source", g);
@@ -71,24 +73,26 @@ public class HDFSDataLocalityExecutorExample implements IContainer {
     builder.setParallelism("sink", 2);
     builder.connect("source", "sink", "partition-edge", Operations.PARTITION);
 
-    builder.addConfiguration("source", "Ram", GraphConstants.taskInstanceRam(config));
-    builder.addConfiguration("source", "Disk", GraphConstants.taskInstanceDisk(config));
-    builder.addConfiguration("source", "Cpu", GraphConstants.taskInstanceCpu(config));
+    //Adding source task property configurations
 
     List<String> sourceInputDataset = new ArrayList<>();
     sourceInputDataset.add("dataset1.txt");
-    //sourceInputDataset.add("dataset2.txt");
+    sourceInputDataset.add("dataset2.txt");
 
+    builder.addConfiguration("source", "Ram", GraphConstants.taskInstanceRam(config));
+    builder.addConfiguration("source", "Disk", GraphConstants.taskInstanceDisk(config));
+    builder.addConfiguration("source", "Cpu", GraphConstants.taskInstanceCpu(config));
     builder.addConfiguration("source", "inputdataset", sourceInputDataset);
 
+    //Adding sink task property configurations
+
     List<String> sinkInputDataset = new ArrayList<>();
-    sinkInputDataset.add("dataset2.txt");
-    //sinkInputDataset.add("dataset4.txt");
+    sinkInputDataset.add("dataset3.txt");
+    sinkInputDataset.add("dataset4.txt");
 
     builder.addConfiguration("sink", "Ram", GraphConstants.taskInstanceRam(config));
     builder.addConfiguration("sink", "Disk", GraphConstants.taskInstanceDisk(config));
     builder.addConfiguration("sink", "Cpu", GraphConstants.taskInstanceCpu(config));
-
     builder.addConfiguration("sink", "inputdataset", sinkInputDataset);
 
     DataFlowTaskGraph graph = builder.build();
@@ -123,7 +127,6 @@ public class HDFSDataLocalityExecutorExample implements IContainer {
     workerPlan.addWorker(worker1);
     workerPlan.addWorker(worker2);*/
 
-
     if (TaskSchedulerContext.taskSchedulingMode(config).equals("datalocalityaware")) {
       DataLocalityAwareTaskScheduling dataLocalityAwareTaskScheduling = new
           DataLocalityAwareTaskScheduling();
@@ -138,6 +141,9 @@ public class HDFSDataLocalityExecutorExample implements IContainer {
     TWSNetwork network = new TWSNetwork(config, resourcePlan.getThisId());
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);
     ExecutionPlan plan = executionPlanBuilder.schedule(config, graph, taskSchedulePlan);
+    ExecutionModel executionModel = new ExecutionModel(ExecutionModel.SHARED);
+    ThreadExecutor executor = new ThreadExecutor(executionModel, plan);
+    executor.execute();
 
     // we need to progress the channel
     while (true) {
@@ -149,7 +155,6 @@ public class HDFSDataLocalityExecutorExample implements IContainer {
     List<Worker> workers = new ArrayList<>();
     for (ResourceContainer resource : resourcePlan.getContainers()) {
       Worker w = new Worker(resource.getId());
-      System.out.println("Workers Id:\t" + w.getId());
       if (w.getId() == 0) {
         w.addProperty("bandwidth", 1000.0);
         w.addProperty("latency", 0.1);
@@ -179,7 +184,7 @@ public class HDFSDataLocalityExecutorExample implements IContainer {
     @Override
     public void prepare(Config cfg, TaskContext context) {
       this.ctx = context;
-      java.util.Map<String, Object> configs = ctx.getConfigurations();
+      java.util.Map<String, Object> configs = context.getConfigurations();
       for (java.util.Map.Entry<String, Object> entry : configs.entrySet()) {
         System.out.println("key: " + entry.getKey() + "; value: " + entry.getValue());
         if (entry.getKey().toString().contains("inputdataset")) {
@@ -190,17 +195,20 @@ public class HDFSDataLocalityExecutorExample implements IContainer {
     }
   }
 
-  private static class RecevingTask extends SinkTask {
+  private static class ReceivingTask extends SinkTask {
+
     private static final long serialVersionUID = -254264903510284798L;
+    private int count = 0;
 
     @Override
     public void execute(IMessage message) {
-      System.out.println(message.getContent());
+      System.out.println("Message Partition Received : " + message.getContent()
+          + ", Count : " + count);
+      count++;
     }
 
     @Override
     public void prepare(Config cfg, TaskContext context) {
-
     }
   }
 }

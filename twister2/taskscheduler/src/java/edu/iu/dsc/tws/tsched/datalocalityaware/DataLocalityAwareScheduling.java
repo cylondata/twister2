@@ -21,10 +21,7 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import org.apache.hadoop.conf.Configuration;
-
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.hdfs.HadoopFileSystem;
 import edu.iu.dsc.tws.task.graph.Vertex;
 import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
@@ -60,28 +57,24 @@ public class DataLocalityAwareScheduling {
   public static Map<Integer, List<InstanceId>> DataLocalityAwareSchedulingAlgorithm(
       Set<Vertex> taskVertexSet, int numberOfContainers, WorkerPlan workerPlan, Config config) {
 
-    int maxTaskInstancesPerContainer =
-        TaskSchedulerContext.defaultTaskInstancesPerContainer(config);
-
     DataNodeLocatorUtils dataNodeLocatorUtils = new DataNodeLocatorUtils(config);
     TaskAttributes taskAttributes = new TaskAttributes();
 
-    Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
-
-    Map<Integer, List<InstanceId>> dataAwareAllocation = new HashMap<>();
-
-    Set<Map.Entry<String, Integer>> taskEntrySet = parallelTaskMap.entrySet();
-
-    List<Integer> allocatedWorkers = new ArrayList<>();
-
-    LOG.info(String.format("No. of Containers:\t" + numberOfContainers
-        + "\tMax Task Instances Per Container:\t" + maxTaskInstancesPerContainer));
-
+    int maxTaskInstancesPerContainer =
+        TaskSchedulerContext.defaultTaskInstancesPerContainer(config);
     int containerCapacity = maxTaskInstancesPerContainer * numberOfContainers;
     int totalTask = taskAttributes.getTotalNumberOfInstances(taskVertexSet);
     int cIdx = 0;
     int containerIndex = 0;
     int globalTaskIndex = 0;
+
+    Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
+    Map<Integer, List<InstanceId>> dataAwareAllocation = new HashMap<>();
+    Set<Map.Entry<String, Integer>> taskEntrySet = parallelTaskMap.entrySet();
+    List<Integer> allocatedWorkers = new ArrayList<>();
+
+    LOG.info(String.format("No. of Containers:\t" + numberOfContainers
+        + "\tMax Task Instances Per Container:\t" + maxTaskInstancesPerContainer));
 
     //To check the allocated containers can hold all the parallel task instances.
     if (containerCapacity >= totalTask) {
@@ -94,10 +87,6 @@ public class DataLocalityAwareScheduling {
 
       LOG.info(String.format("Data Aware Before Task Allocation:\t" + dataAwareAllocation
           + "Parallel Task Map Details:" + parallelTaskMap.entrySet()));
-
-      Configuration conf = new Configuration(false);
-      org.apache.hadoop.fs.FileSystem hadoopFileSystem = null;
-      HadoopFileSystem hadoopFileSystem1 = null;
 
       for (Iterator<Map.Entry<String, Integer>> iterator = taskEntrySet.iterator();
            iterator.hasNext();) {
@@ -161,7 +150,7 @@ public class DataLocalityAwareScheduling {
                 ++maxContainerTaskObjectSize;
               } else {
                 LOG.info(String.format("Worker:" + containerIndex
-                    + "-> Reached Max. Task Object Size:" + maxContainerTaskObjectSize));
+                    + "\t Reached Max. Task Object Size:" + maxContainerTaskObjectSize));
               }
             }
             globalTaskIndex++;
