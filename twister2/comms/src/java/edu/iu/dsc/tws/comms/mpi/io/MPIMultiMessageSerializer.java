@@ -334,8 +334,8 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
       // okay we need to serialize the data
       int dataLength = DataSerializer.serializeData(content,
           contentType, state, serializer);
-      LOG.info(String.format("%d serialize data length: %d pos %d",
-          executor, dataLength, byteBuffer.position()));
+//      LOG.info(String.format("%d serialize data length: %d pos %d",
+//          executor, dataLength, byteBuffer.position()));
       // at this point we know the length of the data
       if (!buildSubMessageHeader(targetBuffer, dataLength + keyLength)) {
         LOG.warning("We should always be able to build the header in the current buffer");
@@ -343,20 +343,20 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
       }
       // add the header bytes to the total bytes
       state.setTotalBytes(state.getTotalBytes() + NORMAL_SUB_MESSAGE_HEADER_SIZE);
-      LOG.info(String.format("%d pos after header %d",
-          executor, byteBuffer.position()));
-      LOG.info(String.format("%d total after header %d",
-          executor, state.getTotalBytes()));
+//      LOG.info(String.format("%d pos after header %d",
+//          executor, byteBuffer.position()));
+//      LOG.info(String.format("%d total after header %d",
+//          executor, state.getTotalBytes()));
     }
 
     if (state.getPart() == SerializeState.Part.INIT
         || state.getPart() == SerializeState.Part.HEADER) {
       boolean complete = KeySerializer.copyKeyToBuffer(key,
           keyType, targetBuffer.getByteBuffer(), state, serializer);
-      LOG.info(String.format("%d pos after key copy %d",
-          executor, byteBuffer.position()));
-      LOG.info(String.format("%d total after key %d",
-          executor, state.getTotalBytes()));
+//      LOG.info(String.format("%d pos after key copy %d",
+//          executor, byteBuffer.position()));
+//      LOG.info(String.format("%d total after key %d",
+//          executor, state.getTotalBytes()));
       if (complete) {
         state.setPart(SerializeState.Part.BODY);
       } else {
@@ -371,16 +371,16 @@ public class MPIMultiMessageSerializer implements MessageSerializer {
 
     boolean completed = DataSerializer.copyDataToBuffer(content,
         contentType, byteBuffer, state, serializer);
-    LOG.info(String.format("%d pos after data %d",
-        executor, byteBuffer.position()));
+//    LOG.info(String.format("%d pos after data %d",
+//        executor, byteBuffer.position()));
     // now set the size of the buffer
     targetBuffer.setSize(byteBuffer.position());
 
     // okay we are done with the message
     if (completed) {
       // add the key size at the end to total size
-      LOG.info(String.format("%d total after complete %d",
-          executor, state.getTotalBytes()));
+//      LOG.info(String.format("%d total after complete %d",
+//          executor, state.getTotalBytes()));
       state.setBytesCopied(0);
       state.setBufferNo(0);
       state.setData(null);

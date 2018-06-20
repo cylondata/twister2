@@ -86,9 +86,6 @@ public final class KubernetesWorker {
     String podIP = System.getenv(KubernetesField.POD_IP + "");
     logBuffer.append(KubernetesField.POD_IP + ": " + podIP + "\n");
 
-    String persistentJobDir = System.getenv(KubernetesField.PERSISTENT_JOB_DIR + "").trim();
-    logBuffer.append(KubernetesField.PERSISTENT_JOB_DIR + ": " + persistentJobDir + "\n");
-
     // this environment variable is not sent by submitting client, it is set by Kubernetes master
     String podName = System.getenv("HOSTNAME");
     logBuffer.append("POD_NAME(HOSTNAME): " + podName + "\n");
@@ -103,11 +100,12 @@ public final class KubernetesWorker {
         new WorkerNetworkInfo(KubernetesUtils.convertToIPAddress(podIP), workerPort, workerID);
 
     K8sPersistentVolume pv = null;
+    String persistentJobDir = KubernetesContext.persistentJobDirectory(envConfigs);
     // create persistent job dir if there is a persistent volume request
     if (persistentJobDir == null || persistentJobDir.isEmpty()) {
       // no persistent volume is requested, nothing to be done
     } else {
-      createPersistentJobDir(podName, containerName, persistentJobDir, 0);
+      createPersistentJobDir(podName, persistentJobDir, 0);
 
       // create persistent volume object
       pv = new K8sPersistentVolume(persistentJobDir, workerID);
@@ -133,7 +131,7 @@ public final class KubernetesWorker {
     }
 
     // start WorkerController to talk to the job master
-    startJobMasterClient(envConfigs);
+    startJobMasterClient(envConfigs, podName);
 
     // construct relevant variables from environment variables
     // job package can be either in pod shared drive or in persistent volume
@@ -193,6 +191,8 @@ public final class KubernetesWorker {
         .put(SchedulerContext.JOB_DESCRIPTION_FILE,
             System.getenv(SchedulerContext.JOB_DESCRIPTION_FILE))
         .put(KubernetesContext.WORKERS_PER_POD, System.getenv(KubernetesContext.WORKERS_PER_POD))
+        .put(KubernetesContext.PERSISTENT_JOB_DIRECTORY,
+            System.getenv(KubernetesContext.PERSISTENT_JOB_DIRECTORY))
         .put(LoggingContext.PERSISTENT_LOGGING_REQUESTED,
             System.getenv(LoggingContext.PERSISTENT_LOGGING_REQUESTED))
         .put(LoggingContext.LOGGING_LEVEL, System.getenv(LoggingContext.LOGGING_LEVEL))
@@ -214,16 +214,29 @@ public final class KubernetesWorker {
         .build();
   }
 
-  public static void startJobMasterClient(Config cnfg) {
+  public static void startJobMasterClient(Config cnfg, String podName) {
 
-    DiscoverJobMaster djm = new DiscoverJobMaster();
-    String jobMasterPodName = "basic-kubernetes-job-master-0";
-    String jobMasterIP = djm.waitUntilJobMasterRunning(jobMasterPodName, 10000);
+    String jobMasterIP = JobMasterContext.jobMasterIP(cnfg);
+    jobMasterIP = jobMasterIP.trim();
+    Config cnf = cnfg;
 
-    Config cnf = Config.newBuilder()
-        .putAll(cnfg)
-        .put(JobMasterContext.JOB_MASTER_IP, jobMasterIP)
-        .build();
+    // if jobMasterIP is null, or the length zero,
+    // job master runs as a separate pod
+    // get its IP address first
+    if (jobMasterIP == null || jobMasterIP.length() == 0) {
+      String jobName = podName.substring(0, podName.lastIndexOf("-"));
+      String jobMasterPodName = KubernetesUtils.createJobMasterPodName(jobName);
+
+      DiscoverJobMaster djm = new DiscoverJobMaster();
+      jobMasterIP = djm.waitUntilJobMasterRunning(jobMasterPodName, 10000);
+
+      cnf = Config.newBuilder()
+          .putAll(cnfg)
+          .put(JobMasterContext.JOB_MASTER_IP, jobMasterIP)
+          .build();
+    }
+
+    LOG.info("JobMasterIP: " + jobMasterIP);
 
     jobMasterClient = new JobMasterClient(cnf, thisWorker);
     jobMasterClient.init();
@@ -613,8 +626,9 @@ public final class KubernetesWorker {
   /**
    * which ever worker comes first to this point, it will create the job dir
    */
-  public static boolean createPersistentJobDir(
-      String podName, String containerName, String persistentJobDir, int attemptNo) {
+  public static boolean createPersistentJobDir(String podName,
+                                               String persistentJobDir,
+                                               int attemptNo) {
 
     if (attemptNo == PERSISTENT_DIR_CREATE_TRY_COUNT) {
       return false;
@@ -627,8 +641,7 @@ public final class KubernetesWorker {
     } else {
       boolean dirCreated = persistentDir.mkdirs();
       if (dirCreated) {
-//        LOG.info("Persistent job dir [" + persistentJobDir + "] created by the worker "
-//            + "at pod: " + podName + " and on the container: " + containerName);
+        LOG.info("Persistent job dir [" + persistentJobDir + "] created by the pod: " + podName);
         return true;
       } else {
 
@@ -647,7 +660,7 @@ public final class KubernetesWorker {
             LOG.log(Level.WARNING, "Thread sleep interrupted.", e);
           }
 
-          return createPersistentJobDir(podName, containerName, persistentJobDir, attemptNo + 1);
+          return createPersistentJobDir(podName, persistentJobDir, attemptNo + 1);
         }
       }
     }

@@ -58,7 +58,13 @@ public class JobMasterClient extends Thread {
     this.masterPort = JobMasterContext.jobMasterPort(config);
   }
 
-  public void init() {
+  /**
+   * initialize JobMasterClient
+   * wait until it connects to JobMaster
+   * return false, if it can not connec to JobMaster
+   * @return
+   */
+  public boolean init() {
 
     looper = new Progress();
 
@@ -87,10 +93,19 @@ public class JobMasterClient extends Thread {
     rrClient.registerResponseHandler(stateChangeBuilder, responseMessageHandler);
     rrClient.registerResponseHandler(stateChangeResponseBuilder, responseMessageHandler);
 
-    rrClient.start();
-    // we loop once to initialize things
-    looper.loop();
+    // connect to JobMaster
+    long connectionTimeLimit = 10000;
+    tryUntilConnected(connectionTimeLimit);
+
+    if (rrClient.isConnected()) {
+      LOG.info("JobMasterClient connected to JobMaster.");
+    } else {
+      LOG.severe("JobMasterClient can not connect to Job Master. Exiting .....");
+      return false;
+    }
+
     this.start();
+    return true;
   }
 
   public WorkerController getWorkerController() {
@@ -114,7 +129,46 @@ public class JobMasterClient extends Thread {
       }
     }
 
-    rrClient.stop();
+    rrClient.disconnect();
+  }
+
+  public boolean tryUntilConnected(long timeLimit) {
+    long startTime = System.currentTimeMillis();
+    long duration = 0;
+    long sleepInterval = 30;
+
+    long logInterval = 1000;
+    long nextLogTime = logInterval;
+
+    while (duration < timeLimit) {
+      // try connecting
+      rrClient.connect();
+      // loop once to connect
+      looper.loop();
+
+      if (rrClient.isConnected()) {
+        return true;
+      }
+
+      try {
+        sleep(sleepInterval);
+      } catch (InterruptedException e) {
+        LOG.warning("Sleep interrupted.");
+      }
+
+      if (rrClient.isConnected()) {
+        return true;
+      }
+
+      duration = System.currentTimeMillis() - startTime;
+
+      if (duration > nextLogTime) {
+        LOG.info("Still trying to connect to Job Master");
+        nextLogTime += logInterval;
+      }
+    }
+
+    return false;
   }
 
   public WorkerNetworkInfo sendWorkerStartingMessage() {
@@ -220,13 +274,14 @@ public class JobMasterClient extends Thread {
     }
   }
 
+  /**
+   * a test method to run JobMasterClient
+   * @param args
+   */
   public static void main(String[] args) {
 
-//    Logger.getLogger("edu.iu.dsc.tws.common.net.tcp").setLevel(Level.SEVERE);
-
     String masterAddress = "localhost";
-    int masterPort = 11111;
-    int workerID = 0;
+    int workerTempID = 0;
     int numberOfWorkers = 1;
 
     if (args.length == 1) {
@@ -235,33 +290,29 @@ public class JobMasterClient extends Thread {
 
     if (args.length == 2) {
       numberOfWorkers = Integer.parseInt(args[0]);
-      workerID = Integer.parseInt(args[1]);
+      workerTempID = Integer.parseInt(args[1]);
     }
 
-    simulateClient(masterAddress, masterPort, workerID, numberOfWorkers);
-
+    simulateClient(masterAddress, workerTempID, numberOfWorkers);
   }
 
   /**
    * a method to simulate JobMasterClient running in workers
    * @param masterAddress
-   * @param masterPort
-   * @param workerID
    * @param numberOfWorkers
    */
-  public static void simulateClient(String masterAddress, int masterPort, int workerID,
+  public static void simulateClient(String masterAddress, int workerTempID,
                                     int numberOfWorkers) {
 
     InetAddress workerIP = WorkerController.convertStringToIP("149.165.150.81");
     int workerPort = 10000 + (int) (Math.random() * 10000);
 
-    WorkerNetworkInfo workerNetworkInfo = new WorkerNetworkInfo(workerIP, workerPort, workerID);
+    WorkerNetworkInfo workerNetworkInfo = new WorkerNetworkInfo(workerIP, workerPort, workerTempID);
 
     Config cfg = Config.newBuilder()
         .put(Context.TWISTER2_WORKER_INSTANCES, numberOfWorkers)
         .put(JobMasterContext.PING_INTERVAL, 1000)
         .put(JobMasterContext.JOB_MASTER_IP, masterAddress)
-        .put(JobMasterContext.JOB_MASTER_PORT, masterPort)
         .put(JobMasterContext.JOB_MASTER_ASSIGNS_WORKER_IDS, true)
         .build();
 
@@ -271,7 +322,7 @@ public class JobMasterClient extends Thread {
     client.sendWorkerStartingMessage();
 
     // wait 500ms
-    sleeeep(2000);
+    sleeeep(5000);
 
     client.sendWorkerRunningMessage();
 
@@ -279,7 +330,7 @@ public class JobMasterClient extends Thread {
     LOG.info(WorkerNetworkInfo.workerListAsString(workerList));
 
     // wait 2000ms
-    sleeeep(2000);
+    sleeeep(5000);
 
     workerList = client.workerController.waitForAllWorkersToJoin(2000);
     LOG.info(WorkerNetworkInfo.workerListAsString(workerList));

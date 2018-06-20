@@ -102,6 +102,10 @@ public class Client implements SelectHandler {
     return true;
   }
 
+  public boolean isConnected() {
+    return isConnected;
+  }
+
   public TCPMessage send(SocketChannel sc, ByteBuffer buffer, int size, int edge) {
     if (sc != socketChannel) {
       return null;
@@ -172,7 +176,8 @@ public class Client implements SelectHandler {
         progress.unregisterConnect(selectableChannel);
       }
     } catch (IOException e) {
-      LOG.log(Level.SEVERE, "Failed to FinishConnect to endpoint: " + address, e);
+      LOG.log(Level.FINE, "Failed to FinishConnect to endpoint: " + address);
+//      LOG.log(Level.SEVERE, "Failed to FinishConnect to endpoint: " + address, e);
       channelHandler.onConnect(socketChannel, StatusCode.ERROR_CONN);
       return;
     }
