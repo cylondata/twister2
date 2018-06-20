@@ -58,8 +58,6 @@ public class JobMasterContext extends Context {
   public static final double PERSISTENT_VOLUME_DEFAULT = 1.0;
   public static final String PERSISTENT_VOLUME = "twister2.job.master.persistent.volume.size";
 
-  public static final String PERSISTENT_JOB_DIRECTORY = "job.master.persistent.job.directory";
-
   public static boolean jobMasterAssignsWorkerIDs(Config cfg) {
     return cfg.getBooleanValue(JOB_MASTER_ASSIGNS_WORKER_IDS,
         JOB_MASTER_ASSIGNS_WORKER_IDS_DEFAULT);
@@ -108,10 +106,6 @@ public class JobMasterContext extends Context {
 
   public static int jobMasterRAM(Config cfg) {
     return cfg.getIntegerValue(JOB_MASTER_RAM, JOB_MASTER_RAM_DEFAULT);
-  }
-
-  public static String persistentJobDirectory(Config cfg) {
-    return cfg.getStringValue(PERSISTENT_JOB_DIRECTORY);
   }
 
 }
