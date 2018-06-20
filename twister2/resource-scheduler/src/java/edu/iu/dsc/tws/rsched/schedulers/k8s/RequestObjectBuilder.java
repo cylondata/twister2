@@ -322,7 +322,7 @@ public final class RequestObjectBuilder {
         .valueFrom(varSource));
 
     envVars.add(new V1EnvVar()
-        .name(KubernetesField.PERSISTENT_JOB_DIR + "")
+        .name(KubernetesContext.PERSISTENT_JOB_DIRECTORY)
         .value(persistentJobDir));
 
     envVars.add(new V1EnvVar()
@@ -371,7 +371,7 @@ public final class RequestObjectBuilder {
     }
     envVars.add(new V1EnvVar()
         .name(JobMasterContext.JOB_MASTER_IP)
-        .value(masterAddress + ""));
+        .value(masterAddress));
 
     envVars.add(new V1EnvVar()
         .name(JobMasterContext.PING_INTERVAL)

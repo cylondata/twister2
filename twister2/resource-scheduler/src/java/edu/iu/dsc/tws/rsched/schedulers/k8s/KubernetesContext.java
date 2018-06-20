@@ -75,6 +75,8 @@ public class KubernetesContext extends SchedulerContext {
   public static final boolean PERSISTENT_VOLUME_UPLOADING_DEFAULT = true;
   public static final String PERSISTENT_VOLUME_UPLOADING = "kubernetes.persistent.volume.uploading";
 
+  public static final String PERSISTENT_JOB_DIRECTORY = "job.master.persistent.job.directory";
+
   public static int workersPerPod(Config cfg) {
     return cfg.getIntegerValue(WORKERS_PER_POD, WORKERS_PER_POD_DEFAULT);
   }
@@ -149,6 +151,10 @@ public class KubernetesContext extends SchedulerContext {
 
   public static boolean persistentVolumeUploading(Config cfg) {
     return cfg.getBooleanValue(PERSISTENT_VOLUME_UPLOADING, PERSISTENT_VOLUME_UPLOADING_DEFAULT);
+  }
+
+  public static String persistentJobDirectory(Config cfg) {
+    return cfg.getStringValue(PERSISTENT_JOB_DIRECTORY);
   }
 
 }

@@ -158,12 +158,22 @@ public final class KubernetesUtils {
   }
 
   /**
-   * create container name with the given containerIndex
-   * each container in a pod will have a unique name with this index
+   * create StatefulSet name for the given job name
+   * add a suffix to job name
    * @return
    */
   public static String createJobMasterStatefulSetName(String jobName) {
     return jobName + "-job-master";
+  }
+
+  /**
+   * create pod name for the job master
+   * there will be one pod for the job master
+   * we add a suffix to statefulset name
+   * @return
+   */
+  public static String createJobMasterPodName(String jobName) {
+    return createJobMasterStatefulSetName(jobName) + "-0";
   }
 
   public static String getLocalAddress() {
