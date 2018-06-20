@@ -13,12 +13,18 @@ package edu.iu.dsc.tws.examples.basic.batch.sort;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
+import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.mpi.io.KeyedContent;
 
 public class RecordSource implements Runnable {
+  private static final Logger LOG = Logger.getLogger(RecordSource.class.getName());
+
   private DataFlowOperation operation;
 
   private static final int MAX_CHARS = 5;
@@ -77,8 +83,10 @@ public class RecordSource implements Runnable {
         flags = MessageFlags.FLAGS_LAST;
       }
 
+      LOG.log(Level.INFO, String.format("%d Sending message to %d %d", executor, taskId, dest));
       // lets try to process if send doesn't succeed
-      while (!operation.send(taskId, word, flags, dest)) {
+      while (!operation.send(taskId, new KeyedContent(word.getKey(), word.getData(),
+          MessageType.INTEGER, MessageType.BYTE), flags, dest)) {
         try {
           Thread.sleep(1);
         } catch (InterruptedException e) {
@@ -86,5 +94,6 @@ public class RecordSource implements Runnable {
         }
       }
     }
+    operation.finish(taskId);
   }
 }

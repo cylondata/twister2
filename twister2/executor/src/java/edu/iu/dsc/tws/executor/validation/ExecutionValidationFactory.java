@@ -9,10 +9,16 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.api;
+package edu.iu.dsc.tws.executor.validation;
 
-public enum OpSemantics {
-  STREAMING,
-  BATCH,
-  BATCH_SORTED
+import edu.iu.dsc.tws.task.api.Operations;
+
+public class ExecutionValidationFactory extends ExecutionValidation {
+
+  private Operations ops;
+
+  @Override
+  public boolean validate() {
+    return super.validate();
+  }
 }

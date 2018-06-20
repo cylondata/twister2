@@ -38,6 +38,7 @@ public class BroadcastOperation extends AbstractParallelOperation {
   public void prepare(int srcs, Set<Integer> dests, EdgeGenerator e,
                       DataType dataType, String edgeName) {
     this.edge = e;
+    LOG.info(String.format("Srcs %d dests %s", srcs, dests));
     op = new MPIDataFlowBroadcast(channel, srcs, dests, new BcastReceiver());
     communicationEdge = e.generate(edgeName);
     op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);

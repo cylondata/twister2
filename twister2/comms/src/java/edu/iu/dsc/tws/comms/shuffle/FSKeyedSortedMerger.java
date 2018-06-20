@@ -104,6 +104,10 @@ public class FSKeyedSortedMerger implements Shuffle {
   private Lock lock = new ReentrantLock();
   private Condition notFull = lock.newCondition();
 
+  /**
+   * The id of the task
+   */
+  private int target;
 
   /**
    * The kryo serializer
@@ -120,7 +124,7 @@ public class FSKeyedSortedMerger implements Shuffle {
 
   public FSKeyedSortedMerger(int maxBytesInMemory, int maxRecsInMemory,
                        String dir, String opName, MessageType kType,
-                       MessageType dType, Comparator<Object> kComparator) {
+                       MessageType dType, Comparator<Object> kComparator, int tar) {
     this.maxBytesToKeepInMemory = maxBytesInMemory;
     this.maxRecordsInMemory = maxRecsInMemory;
     this.folder = dir;
@@ -129,6 +133,7 @@ public class FSKeyedSortedMerger implements Shuffle {
     this.dataType = dType;
     this.keyComparator = kComparator;
     this.kryoSerializer = new KryoMemorySerializer();
+    this.target = tar;
   }
 
   /**
@@ -143,7 +148,7 @@ public class FSKeyedSortedMerger implements Shuffle {
 
     lock.lock();
     try {
-      recordsInMemory.add(new KeyValue(key, data, keyComparator));
+      recordsInMemory.add(new KeyValue(convertKeyToArray(key), data, keyComparator));
       bytesLength.add(length);
 
       numOfBytesInMemory += length;
@@ -229,7 +234,11 @@ public class FSKeyedSortedMerger implements Shuffle {
     FSIterator() {
       heap = new Heap(noOfFileWritten + 1, keyComparator);
       // lets initialize the open files
-      maxMemoryPerFile = maxBytesToKeepInMemory / noOfFileWritten;
+      if (noOfFileWritten > 0) {
+        maxMemoryPerFile = maxBytesToKeepInMemory / noOfFileWritten;
+      } else {
+        maxMemoryPerFile = maxBytesToKeepInMemory;
+      }
       // lets open the files
       for (int i = 0; i < noOfFileWritten; i++) {
         OpenFilePart part = FileLoader.openPart(getSaveFileName(i), 0,
@@ -249,7 +258,8 @@ public class FSKeyedSortedMerger implements Shuffle {
           heap.insert(keyValue, e.getKey());
           numValuesInHeap++;
         } else {
-          LOG.log(Level.WARNING, "File part without any initial values: " + part.getFileName());
+          LOG.log(Level.WARNING, String.format("File part without any initial values: %s target %d",
+              part.getFileName(), target));
         }
       }
     }
@@ -332,5 +342,16 @@ public class FSKeyedSortedMerger implements Shuffle {
    */
   private String getSizesFileName(int filePart) {
     return folder + "/" + operationName + "/part_sizes_" + filePart;
+  }
+
+  private Object convertKeyToArray(Object key) {
+    if (keyType == MessageType.INTEGER) {
+      int[] ints = {(int) key};
+      LOG.info("Size of key: " + ints.length);
+      return ints;
+    } else if (keyType == MessageType.SHORT) {
+      return new short[]{(short) key};
+    }
+    return null;
   }
 }

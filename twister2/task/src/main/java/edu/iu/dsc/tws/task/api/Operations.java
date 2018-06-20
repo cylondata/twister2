@@ -16,11 +16,16 @@ public final class Operations {
   }
 
   public static final String PARTITION = "partition";
+  public static final String PARTITION_BY_MULTI_BYTE = "partition_by_multi_byte";
   public static final String REDUCE = "reduce";
+  public static final String REDUCE_BATCH = "reduce_batch";
+  public static final String REDUCE_HL = "reduce_hl";
   public static final String GATHER = "gather";
   public static final String ALL_REDUCE = "all_reduce";
   public static final String ALL_GATHER = "all_gather";
   public static final String KEYED_GATHER = "keyed_gather";
   public static final String KEYED_REDUCE = "keyed_reduce";
+  public static final String KEYED_PARTITION = "keyed_partition";
   public static final String BROADCAST = "broadcast";
+  public static final String LOAD_BALANCE = "load_balance";
 }

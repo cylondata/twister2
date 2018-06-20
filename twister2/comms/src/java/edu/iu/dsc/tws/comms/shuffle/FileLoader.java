@@ -53,8 +53,8 @@ public final class FileLoader {
       for (int i = 0; i < records.size(); i++) {
         byte[] r = records.get(i);
         total += sizes.get(i) + 4;
-        LOG.info("Writing data size: " + sizes.get(i) + " file: "
-            + outFileName + " size: " + i + " total: " + total);
+//        LOG.info("Writing data size: " + sizes.get(i) + " file: "
+//            + outFileName + " size: " + i + " total: " + total);
         os.putInt(sizes.get(i));
         os.put(r, 0, sizes.get(i));
       }
@@ -207,9 +207,9 @@ public final class FileLoader {
         value = deserialize(dataType, deserializer, os, dataSize);
         keyValues.add(new KeyValue(key, value));
 
-        LOG.log(Level.INFO, "Reading data size: " + dataSize + "key size: " + keySize
-            + " count " + count + " file: " + fileName
-            + " total: " + totalRead + " value: " + value + " file size: " + rwChannel.size());
+//        LOG.log(Level.INFO, "Reading data size: " + dataSize + "key size: " + keySize
+//            + " count " + count + " file: " + fileName
+//            + " total: " + totalRead + " value: " + value + " file size: " + rwChannel.size());
 
         totalRead += 8 + keySize + dataSize;
         count++;
@@ -240,8 +240,8 @@ public final class FileLoader {
         int dataSize = os.getInt();
         value = deserialize(dataType, deserializer, os, dataSize);
         values.add(value);
-        LOG.log(Level.INFO, "Reading data size: " + dataSize + " count "
-            + count + " file: " + fileName + " total: " + totalRead + " value: " + value);
+//        LOG.log(Level.INFO, "Reading data size: " + dataSize + " count "
+//            + count + " file: " + fileName + " total: " + totalRead + " value: " + value);
         totalRead += 4 + dataSize;
         count++;
       }
@@ -393,8 +393,8 @@ public final class FileLoader {
         }
         value = deserialize(dataType, deserializer, os, dataSize);
 
-        LOG.log(Level.INFO, "Reading data size: " + dataSize + " count "
-            + count + " file: " + fileName + " total: " + totalRead + " value: " + value);
+//        LOG.log(Level.INFO, "Reading data size: " + dataSize + " count "
+//            + count + " file: " + fileName + " total: " + totalRead + " value: " + value);
 
         keyValues.add(new KeyValue(key, value));
         totalRead += 8 + keySize + dataSize;

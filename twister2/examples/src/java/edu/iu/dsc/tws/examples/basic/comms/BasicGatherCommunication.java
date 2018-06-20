@@ -91,7 +91,7 @@ public class BasicGatherCommunication implements IContainer {
 
     Map<String, Object> newCfg = new HashMap<>();
 
-    LOG.info("Setting up reduce dataflow operation");
+    LOG.info("Setting up gather dataflow operation");
 
     try {
       // this method calls the init method

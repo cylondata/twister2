@@ -22,8 +22,15 @@ import edu.iu.dsc.tws.task.api.ITask;
 public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
   private Map<String, Vertex> taskMap = new HashMap<>();
 
+  private OperationMode operationMode = OperationMode.STREAMING;
+
   public DataFlowTaskGraph() {
     super(new VertexComparator(), new EdgeComparator());
+  }
+
+  public DataFlowTaskGraph(OperationMode mode) {
+    super(new VertexComparator(), new EdgeComparator());
+    this.operationMode = mode;
   }
 
   @Override
@@ -156,5 +163,13 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
       }
       return obj1.compareTo(obj2);
     }
+  }
+
+  public OperationMode getOperationMode() {
+    return operationMode;
+  }
+
+  public void setOperationMode(OperationMode operationMode) {
+    this.operationMode = operationMode;
   }
 }

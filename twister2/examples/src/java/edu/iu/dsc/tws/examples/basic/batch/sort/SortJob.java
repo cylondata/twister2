@@ -12,9 +12,9 @@
 package edu.iu.dsc.tws.examples.basic.batch.sort;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -24,12 +24,14 @@ import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.core.TWSCommunication;
+import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.mpi.MPIDataFlowPartition;
 import edu.iu.dsc.tws.comms.mpi.io.partition.PartitionBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.mpi.io.partition.PartitionPartialReceiver;
+import edu.iu.dsc.tws.comms.op.EdgeGenerator;
+import edu.iu.dsc.tws.comms.op.OperationSemantics;
 import edu.iu.dsc.tws.examples.utils.WordCountUtils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
@@ -43,9 +45,9 @@ public class SortJob implements IContainer {
 
   private TWSNetwork network;
 
-  private TWSCommunication channel;
+  private TWSChannel channel;
 
-  private static final int NO_OF_TASKS = 2;
+  private static final int NO_OF_TASKS = 4;
 
   private Config config;
 
@@ -70,12 +72,13 @@ public class SortJob implements IContainer {
     setupTasks();
     // setup the network
     setupNetwork();
-    // create the communication
-    Map<String, Object> newCfg = new HashMap<>();
-    partition = (MPIDataFlowPartition) channel.partition(newCfg, MessageType.OBJECT,
-        0, sources, destinations,
-        new PartitionBatchFinalReceiver(new RecordSave(), true, true),
-        new PartitionPartialReceiver());
+
+    partition = new MPIDataFlowPartition(config, channel, taskPlan, sources, destinations,
+        new PartitionBatchFinalReceiver(new RecordSave(), true, true,
+            new IntegerComparator()),
+        new PartitionPartialReceiver(), MPIDataFlowPartition.PartitionStratergy.DIRECT,
+        MessageType.BYTE, MessageType.BYTE, MessageType.INTEGER, MessageType.INTEGER,
+        OperationSemantics.STREAMING_BATCH, new EdgeGenerator(0));
     // start the threads
     scheduleTasks();
     // progress the work
@@ -108,11 +111,21 @@ public class SortJob implements IContainer {
 
   private void setupNetwork() {
     network = new TWSNetwork(config, taskPlan);
-    channel = network.getDataFlowTWSCommunication();
+    channel = network.getChannel();
+  }
 
-    //first get the communication config file
-    network = new TWSNetwork(config, taskPlan);
-    channel = network.getDataFlowTWSCommunication();
+  private class IntegerComparator implements Comparator<Object> {
+    @Override
+    public int compare(Object o1, Object o2) {
+      int[] o11 = (int[]) o1;
+      int[] o21 = (int[]) o2;
+      try {
+        return Integer.compare(o11[0], o21[0]);
+      } catch (ArrayIndexOutOfBoundsException e) {
+        LOG.info("Sizes of keys: " + o11.length + " " + o21.length);
+        throw new RuntimeException("Err", e);
+      }
+    }
   }
 
   private void progress() {
@@ -139,7 +152,7 @@ public class SortJob implements IContainer {
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
     jobBuilder.setName("sort-job");
     jobBuilder.setContainerClass(SortJob.class.getName());
-    jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 1);
+    jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job

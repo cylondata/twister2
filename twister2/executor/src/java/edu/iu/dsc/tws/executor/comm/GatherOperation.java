@@ -19,7 +19,6 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
-import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.mpi.MPIDataFlowGather;
@@ -27,6 +26,7 @@ import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.EdgeGenerator;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
+
 
 public class GatherOperation extends AbstractParallelOperation {
   private static final Logger LOG = Logger.getLogger(GatherOperation.class.getName());
@@ -38,25 +38,31 @@ public class GatherOperation extends AbstractParallelOperation {
 
   public void prepare(Set<Integer> srcs, int dest, EdgeGenerator e,
                       DataType dataType, String edgeName, Config config, TaskPlan taskPlan) {
-    LOG.info("Edge Name : " + edgeName);
     this.edge = e;
     communicationEdge = e.generate(edgeName);
-    op = new MPIDataFlowGather(channel, srcs, dest, new GatherReceiver(), 0, 0, config,
-        MessageType.INTEGER, taskPlan, e.getIntegerMapping(edgeName));
-    LOG.info(" Edge Int : " + e.getIntegerMapping(edgeName));
+    op = new MPIDataFlowGather(channel, srcs, dest, new FinalGatherReceiver(), 0, 0,
+        config, Utils.dataTypeToMessageType(dataType), taskPlan, e.getIntegerMapping(edgeName));
+    op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
+  }
+
+  public void prepare(Set<Integer> srcs, int dest, EdgeGenerator e, DataType dataType,
+                      DataType keyType, String edgeName, Config config, TaskPlan taskPlan) {
+    op = new MPIDataFlowGather(channel, srcs, dest, new FinalGatherReceiver(), 0, 0,
+        config, Utils.dataTypeToMessageType(dataType), Utils.dataTypeToMessageType(keyType),
+        taskPlan, e.getIntegerMapping(edgeName));
     op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
   }
 
   @Override
   public void send(int source, IMessage message) {
     //LOG.info("Message : " + message.getContent());
-    op.send(source, message, 0);
+    op.send(source, message.getContent(), 0);
   }
 
   @Override
   public void send(int source, IMessage message, int dest) {
     //LOG.info("Message : " + message.getContent());
-    op.send(source, message, 0, dest);
+    op.send(source, message.getContent(), 0, dest);
   }
 
   @Override
@@ -64,8 +70,10 @@ public class GatherOperation extends AbstractParallelOperation {
     op.progress();
   }
 
-  public class GatherReceiver implements MessageReceiver {
 
+  private class FinalGatherReceiver implements MessageReceiver {
+    // lets keep track of the messages
+    // for each task we need to keep track of incoming messages
     @Override
     public void init(Config cfg, DataFlowOperation operation,
                      Map<Integer, List<Integer>> expectedIds) {
@@ -73,16 +81,27 @@ public class GatherOperation extends AbstractParallelOperation {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public boolean onMessage(int source, int destination, int target, int flags, Object object) {
-      TaskMessage msg = new TaskMessage(object,
-          edge.getStringMapping(communicationEdge), target);
-      LOG.info("Gather Receiver On Message : " + msg.getContent());
-      return outMessages.get(target).offer(msg);
+
+      // add the object to the map
+      if (object instanceof List) {
+        for (Object o : (List) object) {
+          TaskMessage msg = new TaskMessage(o,
+              edge.getStringMapping(communicationEdge), target);
+          outMessages.get(target).offer(msg);
+          //    LOG.info("Source : " + source + ", Message : " + msg.getContent() + ", Target : "
+          //        + target + ", Destination : " + destination);
+
+        }
+      }
+      return true;
+
     }
 
-    @Override
     public void progress() {
 
     }
   }
+
 }

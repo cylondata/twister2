@@ -53,12 +53,24 @@ public class SourceInstance implements INodeInstance {
    */
   private int taskId;
 
+  /**
+   * Task index that goes from 0 to parallism - 1
+   */
   private int taskIndex;
 
+  /**
+   * Number of parallel tasks
+   */
   private int parallelism;
 
+  /**
+   * Name of the task
+   */
   private String taskName;
 
+  /**
+   * Node configurations
+   */
   private Map<String, Object> nodeConfigs;
 
   public SourceInstance(ISource task, BlockingQueue<IMessage> outQueue, Config config, String tName,
@@ -87,7 +99,6 @@ public class SourceInstance implements INodeInstance {
       IMessage message = outQueue.poll();
       if (message != null) {
         String edge = message.edge();
-
         // invoke the communication operation
         IParallelOperation op = outParOps.get(edge);
         op.send(taskId, message);

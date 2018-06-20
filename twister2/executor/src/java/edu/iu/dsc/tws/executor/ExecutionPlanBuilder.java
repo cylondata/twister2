@@ -26,7 +26,6 @@ import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 import edu.iu.dsc.tws.executor.comm.IParallelOperation;
 import edu.iu.dsc.tws.executor.comm.ParallelOperationFactory;
-//import edu.iu.dsc.tws.executor.threading.ThreadStaticExecutor;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.ISink;
@@ -54,8 +53,8 @@ public class ExecutionPlanBuilder implements IExecutor {
    * Communications list
    */
   private Table<String, String, Communication> parOpTable = HashBasedTable.create();
-  private Table<String, String, Communication> sendTable = HashBasedTable.create();
-  private Table<String, String, Communication> recvTable = HashBasedTable.create();
+//  private Table<String, String, Communication> sendTable = HashBasedTable.create();
+//  private Table<String, String, Communication> recvTable = HashBasedTable.create();
 
   /**
    * For each task we have multiple instances
@@ -86,6 +85,7 @@ public class ExecutionPlanBuilder implements IExecutor {
   @Override
   public ExecutionPlan schedule(Config cfg, DataFlowTaskGraph taskGraph,
                                 TaskSchedulePlan taskSchedule) {
+
     noOfThreads = ExecutorContext.threadsPerContainer(cfg);
     // we need to build the task plan
     TaskPlan taskPlan = TaskPlanBuilder.build(resourcePlan, taskSchedule, taskIdGenerator);
@@ -100,6 +100,7 @@ public class ExecutionPlanBuilder implements IExecutor {
     }
 
     ExecutionPlan execution = new ExecutionPlan();
+    execution.setNumThreads(noOfThreads);
     Set<TaskSchedulePlan.TaskInstancePlan> instancePlan = conPlan.getTaskInstances();
     // for each task we are going to create the communications
     for (TaskSchedulePlan.TaskInstancePlan ip : instancePlan) {
@@ -125,8 +126,8 @@ public class ExecutionPlanBuilder implements IExecutor {
           if (!parOpTable.contains(v.getName(), e.getName())) {
             parOpTable.put(v.getName(), e.getName(),
                 new Communication(e, v.getName(), child.getName(), srcTasks, tarTasks));
-            sendTable.put(v.getName(), e.getName(),
-                new Communication(e, v.getName(), child.getName(), srcTasks, tarTasks));
+//            sendTable.put(v.getName(), e.getName(),
+//                new Communication(e, v.getName(), child.getName(), srcTasks, tarTasks));
           }
         }
       }
@@ -145,8 +146,8 @@ public class ExecutionPlanBuilder implements IExecutor {
           if (!parOpTable.contains(parent.getName(), e.getName())) {
             parOpTable.put(parent.getName(), e.getName(),
                 new Communication(e, parent.getName(), v.getName(), srcTasks, tarTasks));
-            recvTable.put(parent.getName(), e.getName(),
-                new Communication(e, parent.getName(), v.getName(), srcTasks, tarTasks));
+//            recvTable.put(parent.getName(), e.getName(),
+//                new Communication(e, parent.getName(), v.getName(), srcTasks, tarTasks));
           }
         }
       }
@@ -171,12 +172,11 @@ public class ExecutionPlanBuilder implements IExecutor {
       // lets see weather this comunication belongs to a task instance
       for (Integer i : sourcesOfThisWorker) {
         if (taskInstances.contains(c.getSourceTask(), i)) {
-          TaskInstance taskInstance = taskInstances.get(c.getSourceTasks(), i);
+          TaskInstance taskInstance = taskInstances.get(c.getSourceTask(), i);
           taskInstance.registerOutParallelOperation(c.getEdge().getName(), op);
         } else if (sourceInstances.contains(c.getSourceTask(), i)) {
           SourceInstance sourceInstance = sourceInstances.get(c.getSourceTask(), i);
           sourceInstance.registerOutParallelOperation(c.getEdge().getName(), op);
-         // LOG.info("schedule sourceInstance : " + sourceInstance.getOutQueue().size());
         } else {
           throw new RuntimeException("Not found: " + c.getSourceTask());
         }
@@ -186,9 +186,10 @@ public class ExecutionPlanBuilder implements IExecutor {
         if (taskInstances.contains(c.getTargetTask(), i)) {
           TaskInstance taskInstance = taskInstances.get(c.getTargetTask(), i);
           op.register(i, taskInstance.getInQueue());
+          taskInstance.registerInParallelOperation(c.getEdge().getName(), op);
         } else if (sinkInstances.contains(c.getTargetTask(), i)) {
           SinkInstance sourceInstance = sinkInstances.get(c.getTargetTask(), i);
-         // LOG.info("schedule sinkInstance: inQ Size : " + sourceInstance.getInQueue().size());
+          sourceInstance.registerInParallelOperation(c.getEdge().getName(), op);
           op.register(i, sourceInstance.getInQueue());
         } else {
           throw new RuntimeException("Not found: " + c.getTargetTask());
@@ -196,22 +197,6 @@ public class ExecutionPlanBuilder implements IExecutor {
       }
       execution.addOps(op);
     }
-
-    // lets start the execution
-    /**
-     * Threading Model can be chosen here
-     * */
-    ThreadSharingExecutor threadSharingExecutor =
-        new ThreadSharingExecutor(noOfThreads);
-    threadSharingExecutor.execute(execution);
-
-//    ThreadStaticExecutor threadStaticExecutor =
-//        new ThreadStaticExecutor(noOfThreads, execution);
-//    threadStaticExecutor.execute(execution);
-
-
-
-
 
     return execution;
   }
@@ -256,8 +241,6 @@ public class ExecutionPlanBuilder implements IExecutor {
           new ArrayBlockingQueue<>(1024), cfg, taskId, ip.getTaskIndex(),
           vertex.getParallelism(), vertex.getConfig().toMap());
       sinkInstances.put(vertex.getName(), taskId, v);
-      //LOG.info("SinkInstance : " + sinkInstances.size());
-      LOG.info(String.format("SinkInstance create : else end %d %d", taskId, ip.getTaskIndex()));
       return v;
     } else {
       throw new RuntimeException("Un-known type");

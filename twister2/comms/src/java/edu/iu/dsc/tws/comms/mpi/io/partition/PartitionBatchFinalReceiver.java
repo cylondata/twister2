@@ -11,8 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi.io.partition;
 
-import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -37,11 +37,9 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
 
   private Map<Integer, Map<Integer, Boolean>> finished;
 
-  private Map<Integer, Map<Integer, List<Object>>> inMemoryData;
-
   private GatherBatchReceiver batchReceiver;
 
-  private Shuffle sortedMerger;
+  private Map<Integer, Shuffle> sortedMergers = new HashMap<>();
 
   private boolean sorted;
 
@@ -55,11 +53,13 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
 
   private KryoSerializer kryoSerializer;
 
-  public PartitionBatchFinalReceiver(GatherBatchReceiver receiver, boolean srt, boolean d) {
+  public PartitionBatchFinalReceiver(GatherBatchReceiver receiver, boolean srt,
+                                     boolean d, Comparator<Object> com) {
     this.batchReceiver = receiver;
     this.sorted = srt;
     this.disk = d;
     this.kryoSerializer = new KryoSerializer();
+    this.comparator = com;
   }
 
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
@@ -68,35 +68,41 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
     String path = MPIContext.getShuffleDirectoryPath(cfg);
 
     finished = new ConcurrentHashMap<>();
-    for (Integer integer : expectedIds.keySet()) {
-      Map<Integer, Boolean> perTarget = new ConcurrentHashMap<>();
-      Map<Integer, List<Object>> d = new ConcurrentHashMap<>();
-      for (Integer exp : expectedIds.get(integer)) {
-        perTarget.put(exp, false);
-        d.put(exp, new ArrayList<>());
-      }
-      finished.put(integer, perTarget);
-    }
-
     partition = (MPIDataFlowPartition) op;
-    if (partition.getKeyType() == null) {
-      sortedMerger = new FSMerger(maxBytesInMemory, maxRecordsInMemory, path,
-          getOperationName(), partition.getDataType());
-    } else {
-      if (sorted) {
-        sortedMerger = new FSKeyedSortedMerger(maxBytesInMemory, maxRecordsInMemory, path,
-            getOperationName(), partition.getKeyType(), partition.getDataType(), comparator);
-      } else {
-        sortedMerger = new FSKeyedMerger(maxBytesInMemory, maxRecordsInMemory, path,
-            getOperationName(), partition.getKeyType(), partition.getDataType());
-      }
-    }
     keyed = partition.getKeyType() != null;
+    for (Integer target : expectedIds.keySet()) {
+      Map<Integer, Boolean> perTarget = new ConcurrentHashMap<>();
+      for (Integer exp : expectedIds.get(target)) {
+        perTarget.put(exp, false);
+      }
+      finished.put(target, perTarget);
+
+      Shuffle sortedMerger;
+      if (partition.getKeyType() == null) {
+        sortedMerger = new FSMerger(maxBytesInMemory, maxRecordsInMemory, path,
+            getOperationName(target), partition.getDataType());
+      } else {
+        if (sorted) {
+          sortedMerger = new FSKeyedSortedMerger(maxBytesInMemory, maxRecordsInMemory, path,
+              getOperationName(target), partition.getKeyType(),
+              partition.getDataType(), comparator, target);
+        } else {
+          sortedMerger = new FSKeyedMerger(maxBytesInMemory, maxRecordsInMemory, path,
+              getOperationName(target), partition.getKeyType(), partition.getDataType());
+        }
+      }
+      sortedMergers.put(target, sortedMerger);
+    }
   }
 
   @Override
   @SuppressWarnings("unchecked")
   public boolean onMessage(int source, int destination, int target, int flags, Object object) {
+    Shuffle sortedMerger = sortedMergers.get(target);
+    if (sortedMerger == null) {
+      throw new RuntimeException("Un-expected target: " + target);
+    }
+    LOG.info(String.format("Receive message %d", target));
     // add the object to the map
     if (keyed) {
       List<KeyedContent> keyedContents = (List<KeyedContent>) object;
@@ -118,18 +124,21 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
 
   @Override
   public void progress() {
-    sortedMerger.run();
+    for (Shuffle sorts : sortedMergers.values()) {
+      sorts.run();
+    }
   }
 
   @Override
   public void onFinish(int target) {
+    Shuffle sortedMerger = sortedMergers.get(target);
     sortedMerger.switchToReading();
     Iterator<Object> itr = sortedMerger.readIterator();
-    batchReceiver.receive(0, itr);
+    batchReceiver.receive(target, itr);
   }
 
-  private String getOperationName() {
+  private String getOperationName(int target) {
     int edge = partition.getEdge();
-    return "partition-" + edge;
+    return "partition-" + edge + "-" + target;
   }
 }

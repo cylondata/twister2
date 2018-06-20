@@ -9,43 +9,24 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
 package edu.iu.dsc.tws.examples;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
+import edu.iu.dsc.tws.data.api.HDFSConnector;
 import edu.iu.dsc.tws.executor.ExecutionPlan;
 import edu.iu.dsc.tws.executor.ExecutionPlanBuilder;
+import edu.iu.dsc.tws.executor.threading.ExecutionModel;
+import edu.iu.dsc.tws.executor.threading.ThreadExecutor;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
@@ -66,6 +47,10 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 public class HDFSDataLocalityExecutorExample implements IContainer {
+
+  private static final Logger LOG =
+      Logger.getLogger(HDFSDataLocalityExecutorExample.class.getName());
+
   public static void main(String[] args) {
     // first load the configurations from command line and config files
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
@@ -86,7 +71,7 @@ public class HDFSDataLocalityExecutorExample implements IContainer {
   @Override
   public void init(Config config, int id, ResourcePlan resourcePlan) {
     GeneratorTask g = new GeneratorTask();
-    RecevingTask r = new RecevingTask();
+    ReceivingTask r = new ReceivingTask();
 
     GraphBuilder builder = GraphBuilder.newBuilder();
     builder.addSource("source", g);
@@ -95,58 +80,37 @@ public class HDFSDataLocalityExecutorExample implements IContainer {
     builder.setParallelism("sink", 2);
     builder.connect("source", "sink", "partition-edge", Operations.PARTITION);
 
+    //Adding source task property configurations
+    List<String> sourceInputDataset = new ArrayList<>();
+    sourceInputDataset.add("dataset1.txt");
+    sourceInputDataset.add("dataset2.txt");
+
     builder.addConfiguration("source", "Ram", GraphConstants.taskInstanceRam(config));
     builder.addConfiguration("source", "Disk", GraphConstants.taskInstanceDisk(config));
     builder.addConfiguration("source", "Cpu", GraphConstants.taskInstanceCpu(config));
-
-    List<String> sourceInputDataset = new ArrayList<>();
-    sourceInputDataset.add("dataset1.txt");
-    //sourceInputDataset.add("dataset2.txt");
-
     builder.addConfiguration("source", "inputdataset", sourceInputDataset);
 
+    List<String> sourceOutputDataset = new ArrayList<>();
+    sourceOutputDataset.add("sourceoutput.txt");
+    builder.addConfiguration("source", "outputdataset", sourceOutputDataset);
+
+    //Adding sink task property configurations
     List<String> sinkInputDataset = new ArrayList<>();
-    sinkInputDataset.add("dataset2.txt");
-    //sinkInputDataset.add("dataset4.txt");
+    sinkInputDataset.add("dataset3.txt");
+    sinkInputDataset.add("dataset4.txt");
 
     builder.addConfiguration("sink", "Ram", GraphConstants.taskInstanceRam(config));
     builder.addConfiguration("sink", "Disk", GraphConstants.taskInstanceDisk(config));
     builder.addConfiguration("sink", "Cpu", GraphConstants.taskInstanceCpu(config));
-
     builder.addConfiguration("sink", "inputdataset", sinkInputDataset);
 
+    List<String> sinkOutputDataset = new ArrayList<>();
+    sinkOutputDataset.add("sinkoutput.txt");
+    builder.addConfiguration("sink", "outputdataset", sinkOutputDataset);
+
     DataFlowTaskGraph graph = builder.build();
-
     TaskSchedulePlan taskSchedulePlan = null;
-    WorkerPlan workerPlan1 = createWorkerPlan(resourcePlan);
-
-    WorkerPlan workerPlan = new WorkerPlan();
-    Worker worker0 = new Worker(0);
-    Worker worker1 = new Worker(1);
-    //Worker worker2 = new Worker(2);
-
-    worker0.setCpu(4);
-    worker0.setDisk(4000);
-    worker0.setRam(2048);
-    worker0.addProperty("bandwidth", 1000.0);
-    worker0.addProperty("latency", 0.1);
-
-    worker1.setCpu(4);
-    worker1.setDisk(4000);
-    worker1.setRam(2048);
-    worker1.addProperty("bandwidth", 2000.0);
-    worker1.addProperty("latency", 0.1);
-
-    /*worker2.setCpu(4);
-    worker2.setDisk(4000);
-    worker2.setRam(2048);
-    worker2.addProperty("bandwidth", 3000.0);
-    worker2.addProperty("latency", 0.1);*/
-
-    workerPlan.addWorker(worker0);
-    workerPlan.addWorker(worker1);
-    // workerPlan.addWorker(worker2);
-
+    WorkerPlan workerPlan = createWorkerPlan(resourcePlan);
 
     if (TaskSchedulerContext.taskSchedulingMode(config).equals("datalocalityaware")) {
       DataLocalityAwareTaskScheduling dataLocalityAwareTaskScheduling = new
@@ -162,6 +126,9 @@ public class HDFSDataLocalityExecutorExample implements IContainer {
     TWSNetwork network = new TWSNetwork(config, resourcePlan.getThisId());
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);
     ExecutionPlan plan = executionPlanBuilder.schedule(config, graph, taskSchedulePlan);
+    ExecutionModel executionModel = new ExecutionModel(ExecutionModel.SHARED);
+    ThreadExecutor executor = new ThreadExecutor(executionModel, plan);
+    executor.execute();
 
     // we need to progress the channel
     while (true) {
@@ -173,7 +140,16 @@ public class HDFSDataLocalityExecutorExample implements IContainer {
     List<Worker> workers = new ArrayList<>();
     for (ResourceContainer resource : resourcePlan.getContainers()) {
       Worker w = new Worker(resource.getId());
-      System.out.println("Workers Id:\t" + w.getId());
+      if (w.getId() == 0) {
+        w.addProperty("bandwidth", 1000.0);
+        w.addProperty("latency", 0.1);
+      } else if (w.getId() == 1) {
+        w.addProperty("bandwidth", 2000.0);
+        w.addProperty("latency", 0.2);
+      } else {
+        w.addProperty("bandwidth", 3000.0);
+        w.addProperty("latency", 0.3);
+      }
       workers.add(w);
     }
 
@@ -184,6 +160,8 @@ public class HDFSDataLocalityExecutorExample implements IContainer {
     private static final long serialVersionUID = -254264903510284748L;
     private TaskContext ctx;
     private Config config;
+    private String outputFile;
+    private String inputFile;
 
     @Override
     public void run() {
@@ -193,28 +171,61 @@ public class HDFSDataLocalityExecutorExample implements IContainer {
     @Override
     public void prepare(Config cfg, TaskContext context) {
       this.ctx = context;
-      java.util.Map<String, Object> configs = ctx.getConfigurations();
+      /*Map<String, Object> configs = context.getConfigurations();
       for (java.util.Map.Entry<String, Object> entry : configs.entrySet()) {
-        System.out.println("key: " + entry.getKey() + "; value: " + entry.getValue());
+        LOG.info("Key: " + entry.getKey() + ": Value: " + entry.getValue());
         if (entry.getKey().toString().contains("inputdataset")) {
-          System.out.println("Required Key and Value:"
-              + entry.getKey() + "\t" + entry.getValue());
+          this.inputFile = entry.getValue().toString();
+          LOG.info("Input File(s):" + entry.getKey() + "\t" + this.inputFile);
+        } else if (entry.getKey().toString().contains("outputdataset")) {
+          this.outputFile = entry.getValue().toString();
+          LOG.info("Output File(s):" + entry.getKey() + "\t" + this.outputFile);
         }
-      }
+      }*/
     }
   }
 
-  private static class RecevingTask extends SinkTask {
+  private static class ReceivingTask extends SinkTask {
     private static final long serialVersionUID = -254264903510284798L;
+    private int count = 0;
+    private TaskContext ctx;
+    private Config config;
+    private String outputFile;
+    private String inputFile;
 
     @Override
     public void execute(IMessage message) {
-      System.out.println(message.getContent());
+
+      HDFSConnector hdfsConnector = new HDFSConnector(config, outputFile);
+      LOG.info("Message Partition Received : " + message.getContent()
+          + ", Count : " + count);
+      hdfsConnector.HDFSConnect(message.getContent().toString(), count);
+      count++;
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void prepare(Config cfg, TaskContext context) {
+      this.ctx = context;
+      this.config = cfg;
 
+      Map<String, Object> configs = context.getConfigurations();
+      for (Map.Entry<String, Object> entry : configs.entrySet()) {
+        if (entry.getKey().toString().contains("inputdataset")) {
+          List<String> inputFiles = (List<String>) entry.getValue();
+          for (int i = 0; i < inputFiles.size(); i++) {
+            this.inputFile = inputFiles.get(i);
+            LOG.info("Input File(s):" + this.inputFile);
+          }
+        } else if (entry.getKey().toString().contains("outputdataset")) {
+          List<String> outputFiles = (List<String>) entry.getValue();
+          for (int i = 0; i < outputFiles.size(); i++) {
+            this.outputFile = outputFiles.get(i);
+            LOG.info("Output File(s):" + this.outputFile);
+          }
+        }
+      }
     }
+
   }
 }

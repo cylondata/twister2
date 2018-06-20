@@ -21,35 +21,17 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.tsched.spi.common;
+package edu.iu.dsc.tws.data.api;
 
-public final class TaskConfig {
+import edu.iu.dsc.tws.data.hdfs.HadoopFileSystem;
 
-  public static double containerMaxRAMValue = 2096.00;
-  public static double containerMaxCpuValue = 100.00;
-  public static double containerMaxDiskValue = 1000.00;
-  public static int taskParallel = 2;
+/**
+ * This interface hides the configuration and connection details of the Hadoop File System.
+ */
+public interface IHDFSConnector {
 
-  public static String schedulingMode = "roundrobin";
-  //public static String schedulingMode = "firstfit";
+  HadoopFileSystem HDFSConnect(String message, int count);
 
-  public TaskConfig() {
-  }
+  void HDFSConnect(String message);
 
-  public Double getDoubleValue(Key key) {
-    Object value = get(key);
-    Double dValue = 0.0;
-    if (value instanceof Double) {
-      dValue = (Double) value;
-    }
-    return dValue;
-  }
-
-  public Object get(Key key) {
-    return get(key.value());
-  }
-
-  private Object get(String value) {
-    return value;
-  }
 }

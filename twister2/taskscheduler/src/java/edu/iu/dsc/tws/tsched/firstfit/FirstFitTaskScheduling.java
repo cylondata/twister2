@@ -23,7 +23,6 @@ import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.Vertex;
 import edu.iu.dsc.tws.tsched.builder.ContainerIdScorer;
 import edu.iu.dsc.tws.tsched.builder.TaskSchedulePlanBuilder;
-import edu.iu.dsc.tws.tsched.spi.common.TaskConfig;
 import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
 import edu.iu.dsc.tws.tsched.spi.scheduler.TaskSchedulerException;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
@@ -39,7 +38,6 @@ public class FirstFitTaskScheduling implements TaskSchedule {
 
   private static final Logger LOG = Logger.getLogger(FirstFitTaskScheduling.class.getName());
 
-  private TaskConfig config;
   private Resource defaultResourceValue;
   private Resource maximumContainerResourceValue;
   private int paddingPercentage;
@@ -117,8 +115,6 @@ public class FirstFitTaskScheduling implements TaskSchedule {
       throw new TaskSchedulerException(
           "Couldn't allocate all instances to task schedule plan", te);
     }
-    LOG.info(String.format("Total Containers Size:"
-        + taskSchedulePlanBuilder.getContainers().size()));
     return taskSchedulePlanBuilder.build();
   }
 

@@ -37,6 +37,9 @@ public class ParallelOperationFactory {
     this.edgeGenerator = e;
   }
 
+  /**
+   * Factory Format to Choose the Corresponding Operation
+   */
   public IParallelOperation build(Edge edge, Set<Integer> sources, Set<Integer> dests) {
     if (!edge.isKeyed()) {
       if (Operations.PARTITION.equals(edge.getOperation())) {
@@ -54,6 +57,22 @@ public class ParallelOperationFactory {
         gatherOp.prepare(sources, dests.iterator().next(), edgeGenerator, edge.getDataType(),
             edge.getName(), config, taskPlan);
         return gatherOp;
+      } else if (Operations.PARTITION_BY_MULTI_BYTE.equals(edge.getOperation())) {
+        PartitionByMultiByteOperation partitionByMultiByteOperation
+            = new PartitionByMultiByteOperation(config, channel, taskPlan);
+        partitionByMultiByteOperation.prepare(sources, dests, edgeGenerator, edge.getDataType(),
+            edge.getName());
+        return partitionByMultiByteOperation;
+      } else if (Operations.REDUCE.equals(edge.getOperation())) {
+        ReduceOperation reduceOperation = new ReduceOperation(config, channel, taskPlan);
+        reduceOperation.prepare(sources, dests.iterator().next(), edgeGenerator,
+            edge.getDataType(), edge.getName());
+        return reduceOperation;
+      } else if (Operations.ALL_REDUCE.equals(edge.getOperation())) {
+        AllReduceOperation allReduceOperation = new AllReduceOperation(config, channel, taskPlan);
+        allReduceOperation.prepare(sources, dests, edgeGenerator, edge.getDataType(),
+            edge.getName());
+        return allReduceOperation;
       }
     } else {
       if (Operations.PARTITION.equals(edge.getOperation())) {
@@ -69,15 +88,31 @@ public class ParallelOperationFactory {
       } else if (Operations.GATHER.equals(edge.getOperation())) {
         GatherOperation gatherOp = new GatherOperation(config, channel, taskPlan);
         gatherOp.prepare(sources, dests.iterator().next(), edgeGenerator, edge.getDataType(),
-            edge.getName(), config, taskPlan);
+            edge.getKeyType(), edge.getName(), config, taskPlan);
         return gatherOp;
+      } else if (Operations.PARTITION_BY_MULTI_BYTE.equals(edge.getOperation())) {
+        PartitionByMultiByteOperation partitionByMultiByteOperation
+            = new PartitionByMultiByteOperation(config, channel, taskPlan);
+        partitionByMultiByteOperation.prepare(sources, dests, edgeGenerator, edge.getDataType(),
+            edge.getKeyType(), edge.getName());
+        return partitionByMultiByteOperation;
+      } else if (Operations.REDUCE.equals(edge.getOperation())) {
+        ReduceOperation reduceOperation = new ReduceOperation(config, channel, taskPlan);
+        reduceOperation.prepare(sources, dests.iterator().next(), edgeGenerator,
+            edge.getDataType(), edge.getName());
+        return reduceOperation;
+      } else if (Operations.ALL_REDUCE.equals(edge.getOperation())) {
+        AllReduceOperation allReduceOperation = new AllReduceOperation(config, channel, taskPlan);
+        allReduceOperation.prepare(sources, dests, edgeGenerator, edge.getDataType(),
+            edge.getName());
+        return allReduceOperation;
       }
     }
     return null;
   }
 
   public IParallelOperation build(Edge edge, Set<Integer> sources, Set<Integer> dests,
-                                 DataType dataType, DataType keyType) {
+                                  DataType dataType, DataType keyType) {
     if (Operations.PARTITION.equals(edge.getOperation())) {
       PartitionOperation partitionOp = new PartitionOperation(config, channel, taskPlan);
       partitionOp.prepare(sources, dests, edgeGenerator, dataType, keyType, edge.getName());

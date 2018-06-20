@@ -50,7 +50,8 @@ public class FSKeyedSortedMergerTest {
   @Before
   public void before() throws Exception {
     fsMerger = new FSKeyedSortedMerger(1000, 100, "/tmp",
-        "fskeyedsortedmerger", MessageType.INTEGER, MessageType.OBJECT, new KeyComparator());
+        "fskeyedsortedmerger", MessageType.INTEGER, MessageType.OBJECT,
+        new KeyComparator(), 0);
     random = new Random();
     serializer = new KryoSerializer();
   }
