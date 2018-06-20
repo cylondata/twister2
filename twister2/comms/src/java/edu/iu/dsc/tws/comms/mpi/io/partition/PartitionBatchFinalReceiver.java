@@ -53,11 +53,13 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
 
   private KryoSerializer kryoSerializer;
 
-  public PartitionBatchFinalReceiver(GatherBatchReceiver receiver, boolean srt, boolean d) {
+  public PartitionBatchFinalReceiver(GatherBatchReceiver receiver, boolean srt,
+                                     boolean d, Comparator<Object> com) {
     this.batchReceiver = receiver;
     this.sorted = srt;
     this.disk = d;
     this.kryoSerializer = new KryoSerializer();
+    this.comparator = com;
   }
 
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
@@ -83,7 +85,7 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
         if (sorted) {
           sortedMerger = new FSKeyedSortedMerger(maxBytesInMemory, maxRecordsInMemory, path,
               getOperationName(target), partition.getKeyType(),
-              partition.getDataType(), comparator);
+              partition.getDataType(), comparator, target);
         } else {
           sortedMerger = new FSKeyedMerger(maxBytesInMemory, maxRecordsInMemory, path,
               getOperationName(target), partition.getKeyType(), partition.getDataType());

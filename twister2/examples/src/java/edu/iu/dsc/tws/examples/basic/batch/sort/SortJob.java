@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.examples.basic.batch.sort;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -73,7 +74,8 @@ public class SortJob implements IContainer {
     setupNetwork();
 
     partition = new MPIDataFlowPartition(config, channel, taskPlan, sources, destinations,
-        new PartitionBatchFinalReceiver(new RecordSave(), true, true),
+        new PartitionBatchFinalReceiver(new RecordSave(), true, true,
+            new IntegerComparator()),
         new PartitionPartialReceiver(), MPIDataFlowPartition.PartitionStratergy.DIRECT,
         MessageType.BYTE, MessageType.BYTE, MessageType.INTEGER, MessageType.INTEGER,
         OperationSemantics.STREAMING_BATCH, new EdgeGenerator(0));
@@ -110,6 +112,20 @@ public class SortJob implements IContainer {
   private void setupNetwork() {
     network = new TWSNetwork(config, taskPlan);
     channel = network.getChannel();
+  }
+
+  private class IntegerComparator implements Comparator<Object> {
+    @Override
+    public int compare(Object o1, Object o2) {
+      int[] o11 = (int[]) o1;
+      int[] o21 = (int[]) o2;
+      try {
+        return Integer.compare(o11[0], o21[0]);
+      } catch (ArrayIndexOutOfBoundsException e) {
+        LOG.info("Sizes of keys: " + o11.length + " " + o21.length);
+        throw new RuntimeException("Err", e);
+      }
+    }
   }
 
   private void progress() {

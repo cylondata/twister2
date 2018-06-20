@@ -61,7 +61,6 @@ public final class KeyDeserializer {
         break;
       case DOUBLE:
         currentIndex = getReadIndex(buffers, currentIndex, 8);
-        //TODO: should this be getInt or getDouble
         key = buffers.get(currentIndex).getByteBuffer().getDouble();
         keyLength = 8;
         break;
