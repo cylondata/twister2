@@ -44,20 +44,32 @@ public class HDFSConnector implements IHDFSConnector {
     this.outputFile = outputFile1;
   }
 
-  /**
-   * To connect the HDFS file system
-   */
-  public HadoopFileSystem HDFSConnect(String message, int count) {
+  @Override
+  public HadoopFileSystem HDFSConnect() {
 
     Configuration conf = new Configuration(false);
     conf.addResource(new org.apache.hadoop.fs.Path(HdfsDataContext.getHdfsConfigDirectory(config)));
-
-    HadoopDataOutputStream hadoopDataOutputStream = null;
     HadoopFileSystem hadoopFileSystem = null;
+
     try {
       hadoopFileSystem = new HadoopFileSystem(conf, org.apache.hadoop.fs.FileSystem.get(conf));
-      String directoryString = HdfsDataContext.getHdfsUrlDefault(config)
-          + "/user/kannan/" + outputFile;
+    } catch (IOException ioe) {
+      ioe.printStackTrace();
+    }
+    return hadoopFileSystem;
+  }
+
+  /**
+   * To connect the HDFS file system
+   */
+  public void HDFSConnect(String message, int count) {
+
+    HadoopFileSystem hadoopFileSystem = HDFSConnect();
+    HadoopDataOutputStream hadoopDataOutputStream = null;
+
+    try {
+      String directoryString =
+          HdfsDataContext.getHdfsUrlDefault(config) + "/user/kannan/" + outputFile;
       Path path = new Path(directoryString);
       if (!hadoopFileSystem.exists(path)) {
         LOG.info("Directory String Is:%%%" + directoryString + "\t"
@@ -65,34 +77,33 @@ public class HDFSConnector implements IHDFSConnector {
         hadoopDataOutputStream = hadoopFileSystem.create(path);
         hadoopDataOutputStream.write(
             "Hello, I am writing to Hadoop Data Output Stream\n".getBytes(DEFAULT_CHARSET));
-        //hadoopDataOutputStream.write(message.toString().getBytes());
       } else if (hadoopFileSystem.exists(path)) {
         hadoopDataOutputStream = hadoopFileSystem.append(path);
         hadoopDataOutputStream.write(
             "Hello, I am appending to Hadoop Data Output Stream\n".getBytes(DEFAULT_CHARSET));
-        //hadoopDataOutputStream.write(message.getBytes());
-        return hadoopFileSystem;
       }
     } catch (IOException e) {
       e.printStackTrace();
     } finally {
       try {
         if (hadoopFileSystem != null) {
+          LOG.info("I am closing the streams");
+          if (hadoopDataOutputStream != null) {
+            hadoopDataOutputStream.close();
+          }
           hadoopFileSystem.close();
-          hadoopDataOutputStream.close();
         }
       } catch (IOException ioe) {
         ioe.printStackTrace();
       }
     }
-    return hadoopFileSystem;
   }
 
   @Override
   public void HDFSConnect(String message) {
+
     Configuration conf = new Configuration(false);
     conf.addResource(new org.apache.hadoop.fs.Path(HdfsDataContext.getHdfsConfigDirectory(config)));
-
     HadoopDataOutputStream hadoopDataOutputStream = null;
     HadoopFileSystem hadoopFileSystem = null;
 
