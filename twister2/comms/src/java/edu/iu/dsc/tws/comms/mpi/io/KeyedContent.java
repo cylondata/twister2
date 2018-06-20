@@ -30,12 +30,12 @@ public class KeyedContent {
     this.value = object;
   }
 
-  public KeyedContent(Object source, Object object,
-                      MessageType keyType, MessageType contentType) {
-    this.key = source;
-    this.value = object;
+  public KeyedContent(Object k, Object data,
+                      MessageType keyType, MessageType dataType) {
+    this.key = k;
+    this.value = data;
     this.keyType = keyType;
-    this.contentType = contentType;
+    this.contentType = dataType;
   }
 
   public MessageType getKeyType() {

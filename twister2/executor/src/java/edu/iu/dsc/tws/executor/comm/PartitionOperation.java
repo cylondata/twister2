@@ -88,6 +88,11 @@ public class PartitionOperation extends AbstractParallelOperation {
     }
 
     @Override
+    public void onFinish(int target) {
+
+    }
+
+    @Override
     public void progress() {
     }
   }

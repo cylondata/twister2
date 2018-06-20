@@ -88,10 +88,6 @@ public class ReduceOperation extends AbstractParallelOperation {
 
     @Override
     public boolean receive(int target, Object object) {
-      count++;
-      if (count > 5900 || count % 10 == 0) {
-        //LOG.info(String.format("Received %d", count));
-      }
       TaskMessage msg = new TaskMessage(object,
           edge.getStringMapping(communicationEdge), target);
       outMessages.get(target).offer(msg);

@@ -11,21 +11,27 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.op;
 
-public enum OperationSemantics {
-  /**
-   * Pure streaming without an end
-   */
-  STREAMING,
-  /**
-   * Only one communication
-   */
-  BATCH,
-  /**
-   * Streaming with and end, not sorted
-   */
-  STREAMING_BATCH,
-  /**
-   * Streaming with an end and sorted
-   */
-  STREAMING_BATCH_SORTED,
+import java.util.HashSet;
+import java.util.Set;
+
+public class EdgeGenerator {
+  private int current;
+
+  public EdgeGenerator(int curr) {
+    this.current = curr;
+  }
+
+  public int nextEdge() {
+    this.current++;
+    return current;
+  }
+
+  public Set<Integer> nextEdge(int number) {
+    Set<Integer> edges = new HashSet<>();
+    for (int i = 0; i < number; i++) {
+      current++;
+      edges.add(current);
+    }
+    return edges;
+  }
 }
