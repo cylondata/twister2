@@ -77,9 +77,9 @@ public class KeyedReduceOperation extends AbstractParallelOperation {
     private long start = System.nanoTime();
 
     @Override
-    public void init(Config cfg, DataFlowOperation op,
+    public void init(Config cfg, DataFlowOperation operation,
                      Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
-      Map<Integer, List<Integer>> exp = expectedIds.get(op);
+      Map<Integer, List<Integer>> exp = expectedIds.get(operation);
       for (Map.Entry<Integer, List<Integer>> e : exp.entrySet()) {
         Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
         Map<Integer, Integer> countsPerTask = new HashMap<>();
@@ -184,7 +184,7 @@ public class KeyedReduceOperation extends AbstractParallelOperation {
     private long start = System.nanoTime();
 
     @Override
-    public void init(Config cfg, DataFlowOperation op,
+    public void init(Config cfg, DataFlowOperation operation,
                      Map<Integer, Map<Integer, List<Integer>>> exp) {
       Map<Integer, List<Integer>> expectedIds = exp.get(0);
       for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
