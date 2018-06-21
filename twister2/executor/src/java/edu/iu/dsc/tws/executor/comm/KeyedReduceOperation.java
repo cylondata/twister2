@@ -37,11 +37,11 @@ public class KeyedReduceOperation extends AbstractParallelOperation {
     super(config, network, tPlan);
   }
 
-  public void prepare(Set<Integer> sources, Set<Integer>  dests, EdgeGenerator e,
+  public void prepare(Set<Integer> sources, Set<Integer> dests, EdgeGenerator e,
                       DataType dataType, String edgeName) {
     this.edge = e;
-    op = new MPIDataFlowMultiReduce(channel, sources, dests, new FinalReduceReceive()
-        , new PartialReduceWorker(), dests);
+    op = new MPIDataFlowMultiReduce(channel, sources, dests, new FinalReduceReceive(),
+        new PartialReduceWorker(), dests);
     communicationEdge = e.generate(edgeName);
     op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
   }
@@ -79,7 +79,7 @@ public class KeyedReduceOperation extends AbstractParallelOperation {
     @Override
     public void init(Config cfg, DataFlowOperation operation,
                      Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
-      Map<Integer, List<Integer>> exp = expectedIds.get(operation);
+      Map<Integer, List<Integer>> exp = expectedIds.get(8);
       for (Map.Entry<Integer, List<Integer>> e : exp.entrySet()) {
         Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
         Map<Integer, Integer> countsPerTask = new HashMap<>();
@@ -89,8 +89,8 @@ public class KeyedReduceOperation extends AbstractParallelOperation {
           countsPerTask.put(i, 0);
         }
 
-        LOG.info(String.format("Partial Task %d receives from %s"
-            , e.getKey(), e.getValue().toString()));
+        LOG.info(String.format("Partial Task %d receives from %s",
+            e.getKey(), e.getValue().toString()));
 
         messages.put(e.getKey(), messagesPerTask);
         counts.put(e.getKey(), countsPerTask);
@@ -186,7 +186,7 @@ public class KeyedReduceOperation extends AbstractParallelOperation {
     @Override
     public void init(Config cfg, DataFlowOperation operation,
                      Map<Integer, Map<Integer, List<Integer>>> exp) {
-      Map<Integer, List<Integer>> expectedIds = exp.get(0);
+      Map<Integer, List<Integer>> expectedIds = exp.get(8);
       for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
         Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
         Map<Integer, Integer> countsPerTask = new HashMap<>();
