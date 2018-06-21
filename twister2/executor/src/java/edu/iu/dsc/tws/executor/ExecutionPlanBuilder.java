@@ -176,6 +176,7 @@ public class ExecutionPlanBuilder implements IExecutor {
           taskInstance.registerOutParallelOperation(c.getEdge().getName(), op);
         } else if (sourceInstances.contains(c.getSourceTask(), i)) {
           SourceInstance sourceInstance = sourceInstances.get(c.getSourceTask(), i);
+          LOG.info("Edge : " + c.getEdge().getName() + ", Op : " + op.getClass().getName());
           sourceInstance.registerOutParallelOperation(c.getEdge().getName(), op);
         } else {
           throw new RuntimeException("Not found: " + c.getSourceTask());

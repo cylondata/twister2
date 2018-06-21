@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.examples.task;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
@@ -41,6 +42,9 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 public class KeyedReduceTask implements IContainer {
+  private static final Logger LOG = Logger.getLogger(KeyedReduceTask.class.getName());
+
+
   @Override
   public void init(Config config, int id, ResourcePlan resourcePlan) {
     GeneratorTask g = new GeneratorTask();
@@ -115,6 +119,7 @@ public class KeyedReduceTask implements IContainer {
 
     return new WorkerPlan(workers);
   }
+
 
   public static void main(String[] args) {
     // first load the configurations from command line and config files
