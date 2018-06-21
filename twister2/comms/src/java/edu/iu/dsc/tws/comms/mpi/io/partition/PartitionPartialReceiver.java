@@ -37,12 +37,12 @@ public class PartitionPartialReceiver implements MessageReceiver {
   /**
    * Low water mark
    */
-  protected int lowWaterMark = 8;
+  private int lowWaterMark = 8;
 
   /**
    * High water mark to keep track of objects
    */
-  protected int highWaterMark = 16;
+  private int highWaterMark = 16;
 
   /**
    * The executor
@@ -144,5 +144,20 @@ public class PartitionPartialReceiver implements MessageReceiver {
   @Override
   public void onFinish(int target) {
     // flush everything
+    lock.lock();
+    try {
+      for (Map.Entry<Integer, List<Object>> e : destinationMessages.entrySet()) {
+        List<Object> messages = new ArrayList<>();
+        Integer key = e.getKey();
+        if (readyToSend.containsKey(key)) {
+          messages = readyToSend.get(key);
+        } else {
+          readyToSend.put(key, messages);
+        }
+        messages.addAll(e.getValue());
+      }
+    } finally {
+      lock.unlock();
+    }
   }
 }

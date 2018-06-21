@@ -207,9 +207,9 @@ public final class FileLoader {
         value = deserialize(dataType, deserializer, os, dataSize);
         keyValues.add(new KeyValue(key, value));
 
-//        LOG.log(Level.INFO, "Reading data size: " + dataSize + "key size: " + keySize
-//            + " count " + count + " file: " + fileName
-//            + " total: " + totalRead + " value: " + value + " file size: " + rwChannel.size());
+        LOG.log(Level.INFO, "Reading data size: " + dataSize + "key size: " + keySize
+            + " count " + count + " file: " + fileName
+            + " total: " + totalRead + " value: " + value + " file size: " + rwChannel.size());
 
         totalRead += 8 + keySize + dataSize;
         count++;
@@ -461,5 +461,16 @@ public final class FileLoader {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  public static Object convertKeyToArray(MessageType keyType, Object key) {
+    if (keyType == MessageType.INTEGER) {
+      int[] ints = {(int) key};
+      LOG.info("Size of key: " + ints.length);
+      return ints;
+    } else if (keyType == MessageType.SHORT) {
+      return new short[]{(short) key};
+    }
+    return null;
   }
 }
