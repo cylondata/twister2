@@ -17,6 +17,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -32,6 +33,9 @@ import edu.iu.dsc.tws.comms.shuffle.FSMerger;
 import edu.iu.dsc.tws.comms.shuffle.Shuffle;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
+/**
+ * A receiver that goes to disk
+ */
 public class PartitionBatchFinalReceiver implements MessageReceiver {
   private static final Logger LOG = Logger.getLogger(PartitionBatchFinalReceiver.class.getName());
 
@@ -53,6 +57,8 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
 
   private KryoSerializer kryoSerializer;
 
+  private int executor = 0;
+
   public PartitionBatchFinalReceiver(GatherBatchReceiver receiver, boolean srt,
                                      boolean d, Comparator<Object> com) {
     this.batchReceiver = receiver;
@@ -67,6 +73,7 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
     int maxRecordsInMemory = MPIContext.getShuffleMaxRecordsInMemory(cfg);
     String path = MPIContext.getShuffleDirectoryPath(cfg);
 
+    executor = op.getTaskPlan().getThisExecutor();
     finished = new ConcurrentHashMap<>();
     partition = (MPIDataFlowPartition) op;
     keyed = partition.getKeyType() != null;
@@ -134,7 +141,11 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
     Shuffle sortedMerger = sortedMergers.get(target);
     sortedMerger.switchToReading();
     Iterator<Object> itr = sortedMerger.readIterator();
-    batchReceiver.receive(target, itr);
+    try {
+      batchReceiver.receive(target, itr);
+    } catch (RuntimeException e) {
+      LOG.log(Level.INFO, "Array index: exe " + executor + " target: " + target, e);
+    }
   }
 
   private String getOperationName(int target) {

@@ -146,9 +146,18 @@ public class FSKeyedSortedMerger implements Shuffle {
       throw new RuntimeException("Cannot add after switching to reading");
     }
 
+    Object k1 = convertKeyToArray(key);
+    int[] k = (int[]) k1;
+    try {
+      int i = k[0];
+    } catch (ArrayIndexOutOfBoundsException e) {
+      throw new RuntimeException("EEEE", e);
+    }
+
+    LOG.log(Level.INFO, "adding value: target: " + target + " " + recordsInMemory.size());
     lock.lock();
     try {
-      recordsInMemory.add(new KeyValue(convertKeyToArray(key), data, keyComparator));
+      recordsInMemory.add(new KeyValue(k1, data, keyComparator));
       bytesLength.add(length);
 
       numOfBytesInMemory += length;
@@ -164,9 +173,27 @@ public class FSKeyedSortedMerger implements Shuffle {
   public void switchToReading() {
     status = FSStatus.READING;
     // lets convert the in-memory data to objects
-    deserializeObjects();
+    // deserializeObjects();
     // lets sort the in-memory objects
+
+    for (KeyValue k1 : objectsInMemory) {
+      int[] k = (int[]) k1.getKey();
+      try {
+        int i = k[0];
+      } catch (ArrayIndexOutOfBoundsException e) {
+        throw new RuntimeException("EEEE 1", e);
+      }
+    }
     Collections.sort(objectsInMemory);
+
+    for (KeyValue k1 : objectsInMemory) {
+      int[] k = (int[]) k1.getKey();
+      try {
+        int i = k[0];
+      } catch (ArrayIndexOutOfBoundsException e) {
+        throw new RuntimeException("EEEE 2", e);
+      }
+    }
   }
 
   private void deserializeObjects() {
