@@ -12,7 +12,9 @@
 package edu.iu.dsc.tws.examples.basic.batch.sort;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -43,6 +45,8 @@ public class RecordSource implements Runnable {
 
   private List<Integer> partitioning;
 
+  private Map<Integer, Integer> totalSends = new HashMap<>();
+
   public RecordSource(Config config, DataFlowOperation operation,
                       List<Integer> dests, int tIndex,
                       int noOfRecords, int range, int totalTasks) {
@@ -60,6 +64,9 @@ public class RecordSource implements Runnable {
     for (int i = 0; i < totalTasks; i++) {
       partitioning.add(sum);
       sum += perTask;
+    }
+    for (Integer d : dests) {
+      totalSends.put(d, 0);
     }
   }
 
@@ -83,6 +90,10 @@ public class RecordSource implements Runnable {
         flags = MessageFlags.FLAGS_LAST;
       }
 
+      int total = totalSends.get(dest);
+      total += 1;
+      totalSends.put(dest, total);
+
       LOG.log(Level.INFO, String.format("%d Sending message to %d %d", executor, taskId, dest));
       // lets try to process if send doesn't succeed
       while (!operation.send(taskId, new KeyedContent(word.getKey(), word.getData(),
@@ -94,6 +105,7 @@ public class RecordSource implements Runnable {
         }
       }
     }
+    LOG.log(Level.INFO, String.format("%d total sends %s", executor, totalSends));
     operation.finish(taskId);
   }
 }

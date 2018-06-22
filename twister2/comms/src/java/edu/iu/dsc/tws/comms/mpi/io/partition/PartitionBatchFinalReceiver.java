@@ -59,6 +59,8 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
 
   private int executor = 0;
 
+  private Map<Integer, Integer> totalReceives = new HashMap<>();
+
   public PartitionBatchFinalReceiver(GatherBatchReceiver receiver, boolean srt,
                                      boolean d, Comparator<Object> com) {
     this.batchReceiver = receiver;
@@ -99,6 +101,7 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
         }
       }
       sortedMergers.put(target, sortedMerger);
+      totalReceives.put(target, 0);
     }
   }
 
@@ -110,6 +113,7 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
       throw new RuntimeException("Un-expected target: " + target);
     }
     LOG.info(String.format("Receive message %d", target));
+
     // add the object to the map
     if (keyed) {
       List<KeyedContent> keyedContents = (List<KeyedContent>) object;
@@ -119,13 +123,20 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
 
         sortedMerger.add(kc.getKey(), d, d.length);
       }
+      int total = totalReceives.get(target);
+      total += keyedContents.size();
+      totalReceives.put(target, total);
     } else {
       List<Object> contents = (List<Object>) object;
       for (Object kc : contents) {
         byte[] d = kryoSerializer.serialize(kc);
         sortedMerger.add(d, d.length);
       }
+      int total = totalReceives.get(target);
+      total += contents.size();
+      totalReceives.put(target, total);
     }
+    LOG.info(String.format("%d %d On Message totals %s", executor, target, totalReceives));
     return true;
   }
 
@@ -141,6 +152,7 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
     Shuffle sortedMerger = sortedMergers.get(target);
     sortedMerger.switchToReading();
     Iterator<Object> itr = sortedMerger.readIterator();
+    LOG.info(String.format("%d %d On finish totals %s", executor, target, totalReceives));
     try {
       batchReceiver.receive(target, itr);
     } catch (RuntimeException e) {

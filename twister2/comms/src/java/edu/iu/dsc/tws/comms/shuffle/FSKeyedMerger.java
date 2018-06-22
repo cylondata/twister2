@@ -129,8 +129,9 @@ public class FSKeyedMerger implements Shuffle {
     }
 
     lock.lock();
+    Object k1 = FileLoader.convertKeyToArray(keyType, key);
     try {
-      recordsInMemory.add(new KeyValue(key, data));
+      recordsInMemory.add(new KeyValue(k1, data));
       bytesLength.add(length);
 
       numOfBytesInMemory += length;
@@ -144,9 +145,14 @@ public class FSKeyedMerger implements Shuffle {
   }
 
   public void switchToReading() {
-    status = FSStatus.READING;
-    // lets convert the in-memory data to objects
-    deserializeObjects();
+    lock.lock();
+    try {
+      status = FSStatus.READING;
+      // lets convert the in-memory data to objects
+      deserializeObjects();
+    } finally {
+      lock.unlock();
+    }
   }
 
   private void deserializeObjects() {

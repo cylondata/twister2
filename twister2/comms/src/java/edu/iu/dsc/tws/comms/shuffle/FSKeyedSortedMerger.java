@@ -146,7 +146,7 @@ public class FSKeyedSortedMerger implements Shuffle {
       throw new RuntimeException("Cannot add after switching to reading");
     }
 
-    Object k1 = convertKeyToArray(key);
+    Object k1 = FileLoader.convertKeyToArray(keyType, key);
     int[] k = (int[]) k1;
     try {
       int i = k[0];
@@ -369,16 +369,5 @@ public class FSKeyedSortedMerger implements Shuffle {
    */
   private String getSizesFileName(int filePart) {
     return folder + "/" + operationName + "/part_sizes_" + filePart;
-  }
-
-  private Object convertKeyToArray(Object key) {
-    if (keyType == MessageType.INTEGER) {
-      int[] ints = {(int) key};
-      LOG.info("Size of key: " + ints.length);
-      return ints;
-    } else if (keyType == MessageType.SHORT) {
-      return new short[]{(short) key};
-    }
-    return null;
   }
 }
