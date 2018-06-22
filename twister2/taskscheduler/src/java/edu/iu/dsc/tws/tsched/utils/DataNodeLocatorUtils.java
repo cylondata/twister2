@@ -64,7 +64,7 @@ public class DataNodeLocatorUtils {
     String[] fName = new String[inputDataList.size() - 1];
     for (int i = 0; i < this.inputDataList.size(); i++) {
       this.datasetName = this.inputDataList.get(i);
-      fName[0] = inputDataList.get(0);
+      fName[0] = inputDataList.get(i);
       try {
         hadoopFileSystem =
             new HadoopFileSystem(conf, org.apache.hadoop.fs.FileSystem.get(conf));
