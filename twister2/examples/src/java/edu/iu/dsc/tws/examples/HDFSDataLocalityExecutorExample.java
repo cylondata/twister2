@@ -174,9 +174,6 @@ public class HDFSDataLocalityExecutorExample implements IContainer {
   private static class GeneratorTask extends SourceTask {
     private static final long serialVersionUID = -254264903510284748L;
     private TaskContext ctx;
-    private Config config;
-    private String outputFile;
-    private String inputFile;
 
     @Override
     public void run() {
@@ -215,13 +212,7 @@ public class HDFSDataLocalityExecutorExample implements IContainer {
 
       Map<String, Object> configs = context.getConfigurations();
       for (Map.Entry<String, Object> entry : configs.entrySet()) {
-        if (entry.getKey().toString().contains("inputdataset")) {
-          List<String> inputFiles = (List<String>) entry.getValue();
-          for (int i = 0; i < inputFiles.size(); i++) {
-            this.inputFile = inputFiles.get(i);
-            LOG.info("Input File(s):" + this.inputFile);
-          }
-        } else if (entry.getKey().toString().contains("outputdataset")) {
+        if (entry.getKey().toString().contains("outputdataset")) {
           List<String> outputFiles = (List<String>) entry.getValue();
           for (int i = 0; i < outputFiles.size(); i++) {
             this.outputFile = outputFiles.get(i);
