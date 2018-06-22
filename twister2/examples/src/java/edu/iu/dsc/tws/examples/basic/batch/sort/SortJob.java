@@ -74,7 +74,7 @@ public class SortJob implements IContainer {
     setupNetwork();
 
     partition = new MPIDataFlowPartition(config, channel, taskPlan, sources, destinations,
-        new PartitionBatchFinalReceiver(new RecordSave(), true, true,
+        new PartitionBatchFinalReceiver(new RecordSave(), false, true,
             new IntegerComparator()),
         new PartitionPartialReceiver(), MPIDataFlowPartition.PartitionStratergy.DIRECT,
         MessageType.BYTE, MessageType.BYTE, MessageType.INTEGER, MessageType.INTEGER,
@@ -98,7 +98,7 @@ public class SortJob implements IContainer {
   }
 
   private void scheduleTasks() {
-    if (id < 2) {
+    if (id < NO_OF_TASKS / 2) {
       for (int i = 0; i < noOfTasksPerExecutor; i++) {
         // the map thread where data is produced
         Thread mapThread = new Thread(new RecordSource(config, partition,
@@ -152,7 +152,7 @@ public class SortJob implements IContainer {
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
     jobBuilder.setName("sort-job");
     jobBuilder.setContainerClass(SortJob.class.getName());
-    jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 4);
+    jobBuilder.setRequestResource(new ResourceContainer(2, 1024), NO_OF_TASKS);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job
