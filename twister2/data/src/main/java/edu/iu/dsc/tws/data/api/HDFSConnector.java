@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.data.api;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.logging.FileHandler;
@@ -21,14 +22,19 @@ import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hdfs.DFSClient;
+import org.apache.hadoop.hdfs.protocol.ClientProtocol;
+import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
+import org.apache.hadoop.hdfs.protocol.HdfsConstants;
 import org.apache.hadoop.hdfs.tools.DFSck;
-import org.apache.hadoop.util.ToolRunner;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.hdfs.HadoopDataOutputStream;
 import edu.iu.dsc.tws.data.hdfs.HadoopFileSystem;
 import edu.iu.dsc.tws.data.utils.HdfsDataContext;
+
+import static org.apache.hadoop.util.ToolRunner.run;
 
 /**
  * This is the abstraction class for the HDFS file system and establishing
@@ -54,7 +60,6 @@ public class HDFSConnector implements IHDFSConnector {
 
   @Override
   public HadoopFileSystem HDFSConnect() {
-
     try {
       fileHandler = new FileHandler("/home/kgovind/twister2/twister2hdfs.log");
       LOG.addHandler(fileHandler);
@@ -154,34 +159,35 @@ public class HDFSConnector implements IHDFSConnector {
 
   /**
    * This method will be used to locate the datanode location of the input file.
-   * @param fName
    */
-  public void getDFSCK(String[] fName) {
+  public String getDFSCK(String[] fName) {
 
     Configuration conf = new Configuration(false);
     conf.addResource(new org.apache.hadoop.fs.Path(HdfsDataContext.getHdfsConfigDirectory(config)));
-    HadoopFileSystem hadoopFileSystem = null;
     ByteArrayOutputStream bStream = new ByteArrayOutputStream();
     PrintStream out = new PrintStream(bStream, true);
-
+    String datanodeName = null;
+    StringBuilder stringBuilder = new StringBuilder();
     try {
-      String directoryString = HdfsDataContext.getHdfsUrlDefault(config) + "/" + fName[0];
-      hadoopFileSystem = new HadoopFileSystem(conf, org.apache.hadoop.fs.FileSystem.get(conf));
-      Path path = new Path(directoryString);
-      LOG.info("%%%%%I am entering DFSck:" + fName[0]);
-      ToolRunner.run(new DFSck(conf, out), fName);
-      LOG.info("B Stream:" + bStream.toString());
+      InetSocketAddress namenodeAddress =
+          new InetSocketAddress("hairy.soic.indiana.edu", 9000);
+      DFSClient dfsClient = new DFSClient(namenodeAddress, conf);
+      ClientProtocol nameNode = dfsClient.getNamenode();
+      DatanodeInfo[] datanodeReport =
+          nameNode.getDatanodeReport(HdfsConstants.DatanodeReportType.ALL);
+      for (DatanodeInfo di : datanodeReport) {
+        datanodeName = di.getHostName();
+        LOG.info("DataNode Name: " + datanodeName);
+        //System.out.println("Data Node Details:" + di.getDatanodeReport());
+      }
+      run(new DFSck(conf, out), fName);
+      System.out.println(bStream.toString());
+      //out.println();
     } catch (IOException ioe) {
       ioe.printStackTrace();
     } catch (Exception e) {
       e.printStackTrace();
-    } finally {
-      try {
-        hadoopFileSystem.close();
-        fileHandler.close();
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
     }
+    return datanodeName;
   }
 }
