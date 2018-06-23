@@ -21,10 +21,7 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import org.apache.hadoop.conf.Configuration;
-
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.hdfs.HadoopFileSystem;
 import edu.iu.dsc.tws.task.graph.Vertex;
 import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
@@ -60,14 +57,18 @@ public class DataLocalityAwareScheduling {
   public static Map<Integer, List<InstanceId>> DataLocalityAwareSchedulingAlgorithm(
       Set<Vertex> taskVertexSet, int numberOfContainers, WorkerPlan workerPlan, Config config) {
 
-    int maxTaskInstancesPerContainer =
-        TaskSchedulerContext.defaultTaskInstancesPerContainer(config);
-
     DataNodeLocatorUtils dataNodeLocatorUtils = new DataNodeLocatorUtils(config);
     TaskAttributes taskAttributes = new TaskAttributes();
 
-    Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
+    int maxTaskInstancesPerContainer =
+        TaskSchedulerContext.defaultTaskInstancesPerContainer(config);
+    int containerCapacity = maxTaskInstancesPerContainer * numberOfContainers;
+    int totalTask = taskAttributes.getTotalNumberOfInstances(taskVertexSet);
+    int cIdx = 0;
+    int containerIndex = 0;
+    int globalTaskIndex = 0;
 
+    Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
     Map<Integer, List<InstanceId>> dataAwareAllocation = new HashMap<>();
 
     Set<Map.Entry<String, Integer>> taskEntrySet = parallelTaskMap.entrySet();
@@ -76,12 +77,6 @@ public class DataLocalityAwareScheduling {
 
     LOG.info(String.format("No. of Containers:\t" + numberOfContainers
         + "\tMax Task Instances Per Container:\t" + maxTaskInstancesPerContainer));
-
-    int containerCapacity = maxTaskInstancesPerContainer * numberOfContainers;
-    int totalTask = taskAttributes.getTotalNumberOfInstances(taskVertexSet);
-    int cIdx = 0;
-    int containerIndex = 0;
-    int globalTaskIndex = 0;
 
     //To check the allocated containers can hold all the parallel task instances.
     if (containerCapacity >= totalTask) {
@@ -94,10 +89,6 @@ public class DataLocalityAwareScheduling {
 
       LOG.info(String.format("Data Aware Before Task Allocation:\t" + dataAwareAllocation
           + "Parallel Task Map Details:" + parallelTaskMap.entrySet()));
-
-      Configuration conf = new Configuration(false);
-      org.apache.hadoop.fs.FileSystem hadoopFileSystem = null;
-      HadoopFileSystem hadoopFileSystem1 = null;
 
       for (Iterator<Map.Entry<String, Integer>> iterator = taskEntrySet.iterator();
            iterator.hasNext();) {
@@ -114,13 +105,12 @@ public class DataLocalityAwareScheduling {
           if (vertex.getName().equals(taskName)
               && vertex.getConfig().getListValue("inputdataset") != null) {
 
-            //List<String> inputDataList = vertex.getConfig().getListValue("inputdataset");
-            List<String> datanodesList = dataNodeLocatorUtils.
-                findDataNodesLocation(vertex.getConfig().getListValue("inputdataset"));
-
             int totalNumberOfInstances = vertex.getParallelism();
             int maxContainerTaskObjectSize = 0;
+
             List<CalculateDataTransferTime> cal = null;
+            List<String> datanodesList;
+
             /**
              * If the cIdx is zero, simply calculate the distance between the worker node and
              * the datanodes. Else, if the cIdx values is greater than 0, check the container
@@ -129,9 +119,13 @@ public class DataLocalityAwareScheduling {
              * next scheduling cycle.
              */
             if (cIdx == 0) {
+              datanodesList = dataNodeLocatorUtils.
+                  findDataNodesLocation(vertex.getConfig().getListValue("inputdataset"));
               workerPlanMap = calculateDistance(datanodesList, workerPlan, cIdx, allocatedWorkers);
               cal = findOptimalWorkerNode(vertex, workerPlanMap, cIdx);
             } else if (cIdx > 0) {
+              datanodesList = dataNodeLocatorUtils.
+                  findDataNodesLocation(vertex.getConfig().getListValue("inputdataset"));
               Worker worker = workerPlan.getWorker(containerIndex);
               //Worker worker = workerPlan.getWorker(cIdx);
               if (dataAwareAllocation.get(containerIndex).size()
@@ -145,7 +139,6 @@ public class DataLocalityAwareScheduling {
               workerPlanMap = calculateDistance(datanodesList, workerPlan, cIdx, allocatedWorkers);
               cal = findOptimalWorkerNode(vertex, workerPlanMap, cIdx);
             }
-
             /**
              * This loop allocate the task instances to the respective container, before allocation
              * it will check whether the container has reached maximum task instance size which is
@@ -161,7 +154,7 @@ public class DataLocalityAwareScheduling {
                 ++maxContainerTaskObjectSize;
               } else {
                 LOG.info(String.format("Worker:" + containerIndex
-                    + "-> Reached Max. Task Object Size:" + maxContainerTaskObjectSize));
+                    + "Reached Max. Task Object Size:" + maxContainerTaskObjectSize));
               }
             }
             globalTaskIndex++;

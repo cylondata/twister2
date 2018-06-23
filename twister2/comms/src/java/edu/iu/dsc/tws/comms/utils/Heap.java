@@ -42,6 +42,12 @@ public class Heap {
   }
 
   public void insert(KeyValue data, int listNo) {
+    int[] key = (int[]) data.getKey();
+    try {
+      int i = key[0];
+    } catch (ArrayIndexOutOfBoundsException e) {
+      throw e;
+    }
     // check if Heap is empty
     if (position == 0) {
       // insert the first element in heap

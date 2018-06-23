@@ -324,14 +324,17 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
   public void init(Config cfg, MessageType t, TaskPlan taskPlan, int ed) {
     this.edge = ed;
     this.thisSources = TaskPlanUtils.getTasksOfThisExecutor(taskPlan, sources);
-    LOG.log(Level.INFO, String.format("%d setup loadbalance routing %s",
-        taskPlan.getThisExecutor(), thisSources));
+    LOG.log(Level.INFO, String.format("%d setup loadbalance routing %s %s",
+        taskPlan.getThisExecutor(), sources, destinations));
     this.thisTasks = taskPlan.getTasksOfThisExecutor();
     this.router = new PartitionRouter(taskPlan, sources, destinations);
     Map<Integer, Set<Integer>> internal = router.getInternalSendTasks(0);
     Map<Integer, Set<Integer>> external = router.getExternalSendTasks(0);
     this.instancePlan = taskPlan;
     this.dataType = t;
+    if (this.receiveType == null) {
+      this.receiveType = dataType;
+    }
 
     LOG.log(Level.FINE, String.format("%d adding internal/external routing",
         taskPlan.getThisExecutor()));
@@ -461,12 +464,12 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
       partialReceiver.onFinish(source * -1);
     }
 
-    // now lets do the barrier
-    if (opSemantics == OperationSemantics.STREAMING_BATCH_SORTED
-        || opSemantics == OperationSemantics.STREAMING_BATCH) {
-      LOG.log(Level.INFO, String.format("%d Finishing communication %d", executor, source));
-      allReduce.send(source, new byte[1], 0);
-    }
+//    // now lets do the barrier
+//    if (opSemantics == OperationSemantics.STREAMING_BATCH_SORTED
+//        || opSemantics == OperationSemantics.STREAMING_BATCH) {
+//      LOG.log(Level.INFO, String.format("%d Finishing communication %d", executor, source));
+//      allReduce.send(source, new byte[1], 0);
+//    }
   }
 
   @Override

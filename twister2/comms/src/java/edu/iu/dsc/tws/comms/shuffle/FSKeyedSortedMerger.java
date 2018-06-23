@@ -104,6 +104,10 @@ public class FSKeyedSortedMerger implements Shuffle {
   private Lock lock = new ReentrantLock();
   private Condition notFull = lock.newCondition();
 
+  /**
+   * The id of the task
+   */
+  private int target;
 
   /**
    * The kryo serializer
@@ -120,7 +124,7 @@ public class FSKeyedSortedMerger implements Shuffle {
 
   public FSKeyedSortedMerger(int maxBytesInMemory, int maxRecsInMemory,
                        String dir, String opName, MessageType kType,
-                       MessageType dType, Comparator<Object> kComparator) {
+                       MessageType dType, Comparator<Object> kComparator, int tar) {
     this.maxBytesToKeepInMemory = maxBytesInMemory;
     this.maxRecordsInMemory = maxRecsInMemory;
     this.folder = dir;
@@ -129,6 +133,7 @@ public class FSKeyedSortedMerger implements Shuffle {
     this.dataType = dType;
     this.keyComparator = kComparator;
     this.kryoSerializer = new KryoMemorySerializer();
+    this.target = tar;
   }
 
   /**
@@ -141,9 +146,18 @@ public class FSKeyedSortedMerger implements Shuffle {
       throw new RuntimeException("Cannot add after switching to reading");
     }
 
+    Object k1 = FileLoader.convertKeyToArray(keyType, key);
+    int[] k = (int[]) k1;
+    try {
+      int i = k[0];
+    } catch (ArrayIndexOutOfBoundsException e) {
+      throw new RuntimeException("EEEE", e);
+    }
+
+    LOG.log(Level.INFO, "adding value: target: " + target + " " + recordsInMemory.size());
     lock.lock();
     try {
-      recordsInMemory.add(new KeyValue(key, data, keyComparator));
+      recordsInMemory.add(new KeyValue(k1, data, keyComparator));
       bytesLength.add(length);
 
       numOfBytesInMemory += length;
@@ -159,9 +173,27 @@ public class FSKeyedSortedMerger implements Shuffle {
   public void switchToReading() {
     status = FSStatus.READING;
     // lets convert the in-memory data to objects
-    deserializeObjects();
+    // deserializeObjects();
     // lets sort the in-memory objects
+
+    for (KeyValue k1 : objectsInMemory) {
+      int[] k = (int[]) k1.getKey();
+      try {
+        int i = k[0];
+      } catch (ArrayIndexOutOfBoundsException e) {
+        throw new RuntimeException("EEEE 1", e);
+      }
+    }
     Collections.sort(objectsInMemory);
+
+    for (KeyValue k1 : objectsInMemory) {
+      int[] k = (int[]) k1.getKey();
+      try {
+        int i = k[0];
+      } catch (ArrayIndexOutOfBoundsException e) {
+        throw new RuntimeException("EEEE 2", e);
+      }
+    }
   }
 
   private void deserializeObjects() {
@@ -229,7 +261,11 @@ public class FSKeyedSortedMerger implements Shuffle {
     FSIterator() {
       heap = new Heap(noOfFileWritten + 1, keyComparator);
       // lets initialize the open files
-      maxMemoryPerFile = maxBytesToKeepInMemory / noOfFileWritten;
+      if (noOfFileWritten > 0) {
+        maxMemoryPerFile = maxBytesToKeepInMemory / noOfFileWritten;
+      } else {
+        maxMemoryPerFile = maxBytesToKeepInMemory;
+      }
       // lets open the files
       for (int i = 0; i < noOfFileWritten; i++) {
         OpenFilePart part = FileLoader.openPart(getSaveFileName(i), 0,
@@ -249,7 +285,8 @@ public class FSKeyedSortedMerger implements Shuffle {
           heap.insert(keyValue, e.getKey());
           numValuesInHeap++;
         } else {
-          LOG.log(Level.WARNING, "File part without any initial values: " + part.getFileName());
+          LOG.log(Level.WARNING, String.format("File part without any initial values: %s target %d",
+              part.getFileName(), target));
         }
       }
     }

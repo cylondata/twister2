@@ -93,10 +93,11 @@ public class DiscoverJobMaster {
           && jobMasterPodName.equals(item.object.getMetadata().getName())
           && phase.equals(item.object.getStatus().getPhase())) {
 
-        LOG.log(Level.INFO, "Received pod Running event for the job master pod: "
-            + item.object.getMetadata().getName());
-
         podIP = item.object.getStatus().getPodIP();
+
+        LOG.info("Received pod Running event for the job master pod: "
+            + item.object.getMetadata().getName() + " jobMasterIP: " + podIP);
+
         break;
       }
     }
@@ -109,6 +110,4 @@ public class DiscoverJobMaster {
 
     return podIP;
   }
-
-
 }

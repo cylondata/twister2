@@ -13,15 +13,19 @@ package edu.iu.dsc.tws.comms.mpi.io.partition;
 
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.GatherBatchReceiver;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.mpi.MPIContext;
 import edu.iu.dsc.tws.comms.mpi.MPIDataFlowPartition;
@@ -32,10 +36,11 @@ import edu.iu.dsc.tws.comms.shuffle.FSMerger;
 import edu.iu.dsc.tws.comms.shuffle.Shuffle;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
+/**
+ * A receiver that goes to disk
+ */
 public class PartitionBatchFinalReceiver implements MessageReceiver {
   private static final Logger LOG = Logger.getLogger(PartitionBatchFinalReceiver.class.getName());
-
-  private Map<Integer, Map<Integer, Boolean>> finished;
 
   private GatherBatchReceiver batchReceiver;
 
@@ -53,11 +58,32 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
 
   private KryoSerializer kryoSerializer;
 
-  public PartitionBatchFinalReceiver(GatherBatchReceiver receiver, boolean srt, boolean d) {
+  private int executor = 0;
+
+  private Map<Integer, Integer> totalReceives = new HashMap<>();
+
+  /**
+   * Finished sources per target (target -> finished sources)
+   */
+  private Map<Integer, Set<Integer>> finishedSources = new HashMap<>();
+
+  /**
+   * After all the sources finished for a target we add to this set
+   */
+  private Set<Integer> finishedTargets = new HashSet<>();
+
+  /**
+   * We add to this set after calling receive
+   */
+  private Set<Integer> finishedTargetsCompleted = new HashSet<>();
+
+  public PartitionBatchFinalReceiver(GatherBatchReceiver receiver, boolean srt,
+                                     boolean d, Comparator<Object> com) {
     this.batchReceiver = receiver;
     this.sorted = srt;
     this.disk = d;
     this.kryoSerializer = new KryoSerializer();
+    this.comparator = com;
   }
 
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
@@ -65,16 +91,17 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
     int maxRecordsInMemory = MPIContext.getShuffleMaxRecordsInMemory(cfg);
     String path = MPIContext.getShuffleDirectoryPath(cfg);
 
-    finished = new ConcurrentHashMap<>();
+    executor = op.getTaskPlan().getThisExecutor();
+    finishedSources = new HashMap<>();
+    partition = (MPIDataFlowPartition) op;
+    keyed = partition.getKeyType() != null;
     for (Integer target : expectedIds.keySet()) {
       Map<Integer, Boolean> perTarget = new ConcurrentHashMap<>();
       for (Integer exp : expectedIds.get(target)) {
         perTarget.put(exp, false);
       }
-      finished.put(target, perTarget);
 
       Shuffle sortedMerger;
-      partition = (MPIDataFlowPartition) op;
       if (partition.getKeyType() == null) {
         sortedMerger = new FSMerger(maxBytesInMemory, maxRecordsInMemory, path,
             getOperationName(target), partition.getDataType());
@@ -82,18 +109,16 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
         if (sorted) {
           sortedMerger = new FSKeyedSortedMerger(maxBytesInMemory, maxRecordsInMemory, path,
               getOperationName(target), partition.getKeyType(),
-              partition.getDataType(), comparator);
+              partition.getDataType(), comparator, target);
         } else {
           sortedMerger = new FSKeyedMerger(maxBytesInMemory, maxRecordsInMemory, path,
               getOperationName(target), partition.getKeyType(), partition.getDataType());
         }
       }
       sortedMergers.put(target, sortedMerger);
-
+      totalReceives.put(target, 0);
+      finishedSources.put(target, new HashSet<>());
     }
-
-
-    keyed = partition.getKeyType() != null;
   }
 
   @Override
@@ -103,6 +128,25 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
     if (sortedMerger == null) {
       throw new RuntimeException("Un-expected target: " + target);
     }
+    LOG.info(String.format("Receive message %d", target));
+
+    if ((flags & MessageFlags.EMPTY) == MessageFlags.EMPTY) {
+      Set<Integer> finished = finishedSources.get(target);
+      if (finished.contains(source)) {
+        LOG.log(Level.WARNING,
+            String.format("%d Duplicate finish from source %d", executor, source));
+      } else {
+        finished.add(source);
+      }
+      if (finished.size() == partition.getSources().size()) {
+        LOG.log(Level.INFO,
+            String.format("%d Finished targets %d %s %s", executor, target,
+                finishedSources, finishedTargets));
+        finishedTargets.add(target);
+      }
+      return true;
+    }
+
     // add the object to the map
     if (keyed) {
       List<KeyedContent> keyedContents = (List<KeyedContent>) object;
@@ -112,13 +156,20 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
 
         sortedMerger.add(kc.getKey(), d, d.length);
       }
+      int total = totalReceives.get(target);
+      total += keyedContents.size();
+      totalReceives.put(target, total);
     } else {
       List<Object> contents = (List<Object>) object;
       for (Object kc : contents) {
         byte[] d = kryoSerializer.serialize(kc);
         sortedMerger.add(d, d.length);
       }
+      int total = totalReceives.get(target);
+      total += contents.size();
+      totalReceives.put(target, total);
     }
+    LOG.info(String.format("%d %d On Message totals %s", executor, target, totalReceives));
     return true;
   }
 
@@ -127,6 +178,13 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
     for (Shuffle sorts : sortedMergers.values()) {
       sorts.run();
     }
+
+    for (int i : finishedTargets) {
+      if (!finishedTargetsCompleted.contains(i)) {
+        onFinish(i);
+        finishedTargetsCompleted.add(i);
+      }
+    }
   }
 
   @Override
@@ -134,7 +192,12 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
     Shuffle sortedMerger = sortedMergers.get(target);
     sortedMerger.switchToReading();
     Iterator<Object> itr = sortedMerger.readIterator();
-    batchReceiver.receive(target, itr);
+    LOG.info(String.format("%d %d On finish totals %s", executor, target, totalReceives));
+    try {
+      batchReceiver.receive(target, itr);
+    } catch (RuntimeException e) {
+      LOG.log(Level.INFO, "Array index: exe " + executor + " target: " + target, e);
+    }
   }
 
   private String getOperationName(int target) {

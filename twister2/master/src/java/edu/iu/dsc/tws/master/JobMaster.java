@@ -18,8 +18,6 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.checkpointmanager.CheckpointManager;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.common.logging.LoggingContext;
-import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.net.tcp.Progress;
 import edu.iu.dsc.tws.common.net.tcp.StatusCode;
 import edu.iu.dsc.tws.common.net.tcp.request.ConnectHandler;
@@ -31,18 +29,57 @@ import edu.iu.dsc.tws.proto.network.Network.ListWorkersResponse;
 public class JobMaster extends Thread {
   private static final Logger LOG = Logger.getLogger(JobMaster.class.getName());
 
+  /**
+   * Job Master ID is assigned as -1,
+   * workers will have IDs starting from 0 and icreasing by one
+   */
   public static final int JOB_MASTER_ID = -1;
+
+  /**
+   * A singleton Progress object monitors network channel
+   */
   private static Progress looper;
 
+  /**
+   * config object for the Job Master
+   */
   private Config config;
+
+  /**
+   * the ip address of this job master
+   */
   private String masterAddress;
+
+  /**
+   * port number of this job master
+   */
   private int masterPort;
+
+  /**
+   * name of the job this Job Master will manage
+   */
   private String jobName;
 
+  /**
+   * the network object to receive and send messages
+   */
   private RRServer rrServer;
+
+  /**
+   * the object to monitor workers
+   */
   private WorkerMonitor workerMonitor;
+
+  /**
+   * a flag to show that whether the job is done
+   * when it is converted to true, the job master exits
+   */
   private boolean workersCompleted = false;
 
+  /**
+   * Job Terminator object.
+   * it will the terminate all workers and cleanup job resources.
+   */
   private IJobTerminator jobTerminator;
 
   private CheckpointManager checkpointManager;
@@ -86,6 +123,7 @@ public class JobMaster extends Thread {
 
     rrServer.start();
     looper.loop();
+
     start();
   }
 
@@ -128,7 +166,7 @@ public class JobMaster extends Thread {
     @Override
     public void onConnect(SocketChannel channel, StatusCode status) {
       try {
-        LOG.finer("Client connected from:" + channel.getRemoteAddress());
+        LOG.info("Client connected from:" + channel.getRemoteAddress());
       } catch (IOException e) {
         e.printStackTrace();
       }
@@ -139,83 +177,41 @@ public class JobMaster extends Thread {
     }
   }
 
+  /**
+   * this main method is for locally testing only
+   * JobMaster is started by:
+   *    edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobMasterStarter
+   * @param args
+   */
   public static void main(String[] args) {
-    // we can not initialize the logger fully yet,
-    // but we need to set the format as the first thing
-    LoggingHelper.setLoggingFormat(LoggingHelper.DEFAULT_FORMAT);
 
-    Config envConfigs = buildConfigFromEnvVariables();
+    int numberOfWorkers = 1;
+    if (args.length == 1) {
+      numberOfWorkers = Integer.parseInt(args[0]);
+    }
 
-    initLogger(envConfigs);
+    Config configs = buildConfig(numberOfWorkers);
 
-    LOG.info("JobMaster started. Current time: " + System.currentTimeMillis());
-    LOG.info("Received parameters as environment variables: \n" + envConfigs);
+    LOG.info("Config parameters: \n" + configs);
 
-    String host = JobMasterContext.jobMasterIP(envConfigs);
-    String jobName = Context.jobName(envConfigs);
+    String host = JobMasterContext.jobMasterIP(configs);
+    String jobName = Context.jobName(configs);
 
-    JobMaster jobMaster = new JobMaster(envConfigs, host, null, jobName);
+    JobMaster jobMaster = new JobMaster(configs, host, null, jobName);
     jobMaster.init();
-
   }
 
 
   /**
-   * construct a Config object from environment variables
+   * construct a Config object
    * @return
    */
-  public static Config buildConfigFromEnvVariables() {
+  public static Config buildConfig(int numberOfWorkers) {
     return Config.newBuilder()
-        .put(JobMasterContext.JOB_MASTER_IP, System.getenv(JobMasterContext.JOB_MASTER_IP))
-        .put(JobMasterContext.JOB_MASTER_PORT, System.getenv(JobMasterContext.JOB_MASTER_PORT))
-        .put(Context.JOB_NAME, System.getenv(Context.JOB_NAME))
-        .put(Context.TWISTER2_WORKER_INSTANCES, System.getenv(Context.TWISTER2_WORKER_INSTANCES))
-        .put(JobMasterContext.JOB_MASTER_ASSIGNS_WORKER_IDS,
-            System.getenv(JobMasterContext.JOB_MASTER_ASSIGNS_WORKER_IDS))
-        .put(JobMasterContext.PERSISTENT_JOB_DIRECTORY,
-            System.getenv(JobMasterContext.PERSISTENT_JOB_DIRECTORY))
-        .put(JobMasterContext.PING_INTERVAL, System.getenv(JobMasterContext.PING_INTERVAL))
-        .put(LoggingContext.PERSISTENT_LOGGING_REQUESTED,
-            System.getenv(LoggingContext.PERSISTENT_LOGGING_REQUESTED))
-        .put(LoggingContext.LOGGING_LEVEL, System.getenv(LoggingContext.LOGGING_LEVEL))
-        .put(LoggingContext.REDIRECT_SYS_OUT_ERR,
-            System.getenv(LoggingContext.REDIRECT_SYS_OUT_ERR))
-        .put(LoggingContext.MAX_LOG_FILE_SIZE, System.getenv(LoggingContext.MAX_LOG_FILE_SIZE))
-        .put(LoggingContext.MAX_LOG_FILES, System.getenv(LoggingContext.MAX_LOG_FILES))
+        .put(JobMasterContext.JOB_MASTER_IP, "localhost")
+        .put(Context.JOB_NAME, "basic-kube")
+        .put(Context.TWISTER2_WORKER_INSTANCES, numberOfWorkers)
+        .put(JobMasterContext.JOB_MASTER_ASSIGNS_WORKER_IDS, "true")
         .build();
   }
-
-  /**
-   * itinialize the logger
-   * @param cnfg
-   */
-  public static void initLogger(Config cnfg) {
-    // set logging level
-    LoggingHelper.setLogLevel(LoggingContext.loggingLevel(cnfg));
-
-    String persistentJobDir = JobMasterContext.persistentJobDirectory(cnfg);
-    // if no persistent volume requested, return
-    if (persistentJobDir == null) {
-      return;
-    }
-
-    // if persistent logging is requested, initialize it
-    if (LoggingContext.persistentLoggingRequested(cnfg)) {
-
-      if (LoggingContext.redirectSysOutErr(cnfg)) {
-        LOG.warning("Redirecting System.out and System.err to the log file. "
-            + "Check the log file for the upcoming log messages. ");
-      }
-
-      String persistentLogDir = persistentJobDir + "/logs";
-      String logFileName = "jobMaster";
-
-      LoggingHelper.setupLogging(cnfg, persistentLogDir, logFileName);
-
-      LOG.info("Persistent logging to file initialized.");
-    }
-  }
-
-
-
 }

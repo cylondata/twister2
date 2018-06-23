@@ -64,10 +64,21 @@ public class ParallelOperationFactory {
             edge.getName());
         return partitionByMultiByteOperation;
       } else if (Operations.REDUCE.equals(edge.getOperation())) {
-        ReduceOperation reduceOperation  = new ReduceOperation(config, channel, taskPlan);
+        ReduceOperation reduceOperation = new ReduceOperation(config, channel, taskPlan);
         reduceOperation.prepare(sources, dests.iterator().next(), edgeGenerator,
             edge.getDataType(), edge.getName());
         return reduceOperation;
+      } else if (Operations.ALL_REDUCE.equals(edge.getOperation())) {
+        AllReduceOperation allReduceOperation = new AllReduceOperation(config, channel, taskPlan);
+        allReduceOperation.prepare(sources, dests, edgeGenerator, edge.getDataType(),
+            edge.getName());
+        return allReduceOperation;
+      } else if (Operations.KEYED_REDUCE.equals(edge.getOperation())) {
+        KeyedReduceOperation keyedReduceOperation
+            = new KeyedReduceOperation(config, channel, taskPlan);
+        keyedReduceOperation.prepare(sources, dests, edgeGenerator, edge.getDataType(),
+            edge.getName());
+        return keyedReduceOperation;
       }
     } else {
       if (Operations.PARTITION.equals(edge.getOperation())) {
@@ -83,7 +94,7 @@ public class ParallelOperationFactory {
       } else if (Operations.GATHER.equals(edge.getOperation())) {
         GatherOperation gatherOp = new GatherOperation(config, channel, taskPlan);
         gatherOp.prepare(sources, dests.iterator().next(), edgeGenerator, edge.getDataType(),
-            edge.getName(), config, taskPlan);
+            edge.getKeyType(), edge.getName(), config, taskPlan);
         return gatherOp;
       } else if (Operations.PARTITION_BY_MULTI_BYTE.equals(edge.getOperation())) {
         PartitionByMultiByteOperation partitionByMultiByteOperation
@@ -92,17 +103,28 @@ public class ParallelOperationFactory {
             edge.getKeyType(), edge.getName());
         return partitionByMultiByteOperation;
       } else if (Operations.REDUCE.equals(edge.getOperation())) {
-        ReduceOperation reduceOperation  = new ReduceOperation(config, channel, taskPlan);
+        ReduceOperation reduceOperation = new ReduceOperation(config, channel, taskPlan);
         reduceOperation.prepare(sources, dests.iterator().next(), edgeGenerator,
             edge.getDataType(), edge.getName());
         return reduceOperation;
+      } else if (Operations.ALL_REDUCE.equals(edge.getOperation())) {
+        AllReduceOperation allReduceOperation = new AllReduceOperation(config, channel, taskPlan);
+        allReduceOperation.prepare(sources, dests, edgeGenerator, edge.getDataType(),
+            edge.getName());
+        return allReduceOperation;
+      } else if (Operations.KEYED_REDUCE.equals(edge.getOperation())) {
+        KeyedReduceOperation keyedReduceOperation
+            = new KeyedReduceOperation(config, channel, taskPlan);
+        keyedReduceOperation.prepare(sources, dests, edgeGenerator, edge.getDataType(),
+            edge.getName());
+        return keyedReduceOperation;
       }
     }
     return null;
   }
 
   public IParallelOperation build(Edge edge, Set<Integer> sources, Set<Integer> dests,
-                                 DataType dataType, DataType keyType) {
+                                  DataType dataType, DataType keyType) {
     if (Operations.PARTITION.equals(edge.getOperation())) {
       PartitionOperation partitionOp = new PartitionOperation(config, channel, taskPlan);
       partitionOp.prepare(sources, dests, edgeGenerator, dataType, keyType, edge.getName());

@@ -58,7 +58,7 @@ public class RRClient {
   /**
    * Weather we are connected
    */
-  private boolean connected = false;
+//  private boolean connected = false;
 
   /**
    * The client id
@@ -86,16 +86,16 @@ public class RRClient {
     client = new Client(host, port, cfg, looper, new Handler(), false);
   }
 
-  public void start() {
-    client.connect();
+  public boolean connect() {
+    return client.connect();
   }
 
-  public void stop() {
+  public void disconnect() {
     client.disconnect();
   }
 
   public boolean isConnected() {
-    return connected;
+    return client.isConnected();
   }
 
   public RequestID sendRequestWaitResponse(Message message, long waitLimit) {
@@ -128,7 +128,7 @@ public class RRClient {
     return requestID;
   }
   public RequestID sendRequest(Message message) {
-    if (!connected) {
+    if (!client.isConnected()) {
       return null;
     }
     String messageType = message.getDescriptorForType().getFullName();
@@ -160,10 +160,6 @@ public class RRClient {
     }
   }
 
-  public void disconnect() {
-    client.disconnect();
-  }
-
   /**
    * Register a response handler to a specific message type
    * @param builder the response message type
@@ -187,19 +183,19 @@ public class RRClient {
       } catch (IOException e) {
         LOG.log(Level.SEVERE, "Failed to close channel: " + ch, e);
       }
-      connected = false;
+//      connected = false;
     }
 
     @Override
     public void onConnect(SocketChannel ch, StatusCode status) {
       channel = ch;
-      connected = true;
+//      connected = true;
       connectHandler.onConnect(ch, status);
     }
 
     @Override
     public void onClose(SocketChannel ch) {
-      connected = false;
+//      connected = false;
       connectHandler.onClose(ch);
     }
 

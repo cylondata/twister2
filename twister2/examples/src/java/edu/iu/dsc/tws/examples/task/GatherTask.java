@@ -15,12 +15,16 @@ package edu.iu.dsc.tws.examples.task;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Random;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
+import edu.iu.dsc.tws.comms.mpi.io.KeyedContent;
+import edu.iu.dsc.tws.examples.utils.RandomString;
 import edu.iu.dsc.tws.executor.ExecutionPlan;
 import edu.iu.dsc.tws.executor.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.ExecutionModel;
@@ -41,7 +45,10 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
-public class TaskGather implements IContainer {
+public class GatherTask implements IContainer {
+
+  private RandomString randomString;
+
   @Override
   public void init(Config config, int id, ResourcePlan resourcePlan) {
     GeneratorTask g = new GeneratorTask();
@@ -78,22 +85,36 @@ public class TaskGather implements IContainer {
     private static final long serialVersionUID = -254264903510284748L;
     private TaskContext ctx;
     private Config config;
+    private static RandomString randomString;
     @Override
     public void run() {
-      ctx.write("gather-edge", "Hello");
+      randomString = new RandomString(128000, new Random(), RandomString.ALPHANUM);
+      String data = generateStringData();
+      // lets generate a message
+      KeyedContent message = new KeyedContent(0, data,
+          MessageType.INTEGER, MessageType.OBJECT);
+//      System.out.println("Message : Key :" + message.getKey().toString() + ", Value : "
+//          + message.getValue());
+      ctx.write("gather-edge", "1");
     }
 
     @Override
     public void prepare(Config cfg, TaskContext context) {
       this.ctx = context;
     }
+
+    private static String generateStringData() {
+      return "1";
+    }
   }
 
   private static class RecevingTask extends SinkTask {
+    private int count = 0;
     private static final long serialVersionUID = -254264903510284798L;
     @Override
     public void execute(IMessage message) {
-      System.out.println(message.getContent());
+      System.out.println("Message Gathered : " + message.getContent() + ", Count : " + count);
+      count++;
     }
 
     @Override
@@ -112,6 +133,8 @@ public class TaskGather implements IContainer {
     return new WorkerPlan(workers);
   }
 
+
+
   public static void main(String[] args) {
     // first load the configurations from command line and config files
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
@@ -121,7 +144,7 @@ public class TaskGather implements IContainer {
 
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
     jobBuilder.setName("task-gather");
-    jobBuilder.setContainerClass(TaskGather.class.getName());
+    jobBuilder.setContainerClass(GatherTask.class.getName());
     jobBuilder.setRequestResource(new ResourceContainer(4, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 

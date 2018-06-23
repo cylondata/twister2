@@ -117,7 +117,7 @@ public class PingTest {
     rrClient = new RRClient("localhost", 23456, cfg, looper, 2,
         new ClientConnectHandler());
     rrClient.registerResponseHandler(Network.Ping.newBuilder(), new ClientPingHandler());
-    rrClient.start();
+    rrClient.connect();
   }
 
   public class ClientConnectHandler implements ConnectHandler {

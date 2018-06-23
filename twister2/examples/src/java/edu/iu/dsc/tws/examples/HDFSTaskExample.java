@@ -156,25 +156,33 @@ public class HDFSTaskExample implements IContainer {
     graphBuilder.addConfiguration("task4", "Disk", GraphConstants.taskInstanceDisk(cfg));
     graphBuilder.addConfiguration("task4", "Cpu", GraphConstants.taskInstanceCpu(cfg));
 
-    List<String> datasetList;
+    List<String> datasetList = new ArrayList<>();
+
+    datasetList.add("dataset1.txt");
+    graphBuilder.addConfiguration("task1", "inputdataset", datasetList);
 
     datasetList = new ArrayList<>();
-    datasetList.add("dataset1.txt");
-
-    graphBuilder.addConfiguration("task1", "dataset", datasetList);
-
-    //datasetList = new ArrayList<>();
     datasetList.add("dataset2.txt");
+    graphBuilder.addConfiguration("task2", "inputdataset", datasetList);
 
-    graphBuilder.addConfiguration("task2", "dataset", datasetList);
-
-    //datasetList = new ArrayList<>();
+    datasetList = new ArrayList<>();
     datasetList.add("dataset3.txt");
-    graphBuilder.addConfiguration("task3", "dataset", datasetList);
+    graphBuilder.addConfiguration("task3", "inputdataset", datasetList);
 
-    //datasetList = new ArrayList<>();
+    datasetList = new ArrayList<>();
     datasetList.add("dataset4.txt");
-    graphBuilder.addConfiguration("task4", "dataset", datasetList);
+    graphBuilder.addConfiguration("task4", "inputdataset", datasetList);
+
+    /*List<String> datasetList = new ArrayList<>();
+
+    graphBuilder.addConfiguration("task1", "dataset", datasetList.add("dataset1.txt"));
+    graphBuilder.addConfiguration("task2", "dataset", datasetList.add("dataset2.txt"));
+    graphBuilder.addConfiguration("task3", "dataset", datasetList.add("dataset3.txt"));
+    graphBuilder.addConfiguration("task4", "dataset", datasetList.add("dataset4.txt"));*/
+
+    /*graphBuilder.addConfiguration("task2", "dataset1", "dataset2.txt");
+    graphBuilder.addConfiguration("task3", "dataset1", "dataset3.txt");
+    graphBuilder.addConfiguration("task4", "dataset1", "dataset4.txt");*/
 
     WorkerPlan workerPlan = new WorkerPlan();
     Worker worker0 = new Worker(0);
@@ -204,45 +212,10 @@ public class HDFSTaskExample implements IContainer {
     workerPlan.addWorker(worker2);
 
     DataFlowTaskGraph dataFlowTaskGraph = graphBuilder.build();
+
     if (containerId == 0) {
-      if (dataFlowTaskGraph != null) {
-        LOG.info("Task Scheduling Mode:" + TaskSchedulerContext.taskSchedulingMode(cfg));
-
-        if (TaskSchedulerContext.taskSchedulingMode(cfg).equals("roundrobin")) {
-          RoundRobinTaskScheduling roundRobinTaskScheduling = new RoundRobinTaskScheduling();
-          roundRobinTaskScheduling.initialize(cfg);
-          taskSchedulePlan = roundRobinTaskScheduling.schedule(dataFlowTaskGraph, workerPlan);
-
-        } else if (TaskSchedulerContext.taskSchedulingMode(cfg).equals("firstfit")) {
-          FirstFitTaskScheduling firstFitTaskScheduling = new FirstFitTaskScheduling();
-          firstFitTaskScheduling.initialize(cfg);
-          taskSchedulePlan = firstFitTaskScheduling.schedule(dataFlowTaskGraph, workerPlan);
-
-        } else if (TaskSchedulerContext.taskSchedulingMode(cfg).equals("datalocalityaware")) {
-          DataLocalityAwareTaskScheduling dataLocalityAwareTaskScheduling = new
-              DataLocalityAwareTaskScheduling();
-          dataLocalityAwareTaskScheduling.initialize(cfg);
-          taskSchedulePlan = dataLocalityAwareTaskScheduling.schedule(
-              dataFlowTaskGraph, workerPlan);
-        }
-        try {
-          if (taskSchedulePlan.getContainersMap() != null) {
-            LOG.info("Task schedule plan details:"
-                + taskSchedulePlan.getTaskSchedulePlanId() + ":"
-                + taskSchedulePlan.getContainersMap());
-          }
-        } catch (NullPointerException ne) {
-          ne.printStackTrace();
-        }
-      }
-
-
       //Twister2 -> HDFS Integration Testing....
       //Move the code to the actual task to perform the processing.
-
-      //String srcFileLocation = "/user/hdfs-site.xml";
-      //String pathString = HdfsDataContext.getHdfsUrlDefault(cfg) + srcFileLocation;
-
       String srcFileLocation = null;
       String pathString = null;
       Configuration conf = new Configuration(false);
@@ -275,7 +248,7 @@ public class HDFSTaskExample implements IContainer {
       //creating a directory using Twister2 API -> HDFS
       HadoopFileSystem hadoopFileSystem1 = null;
       try {
-        String directoryName = "/user/test";
+        String directoryName = "/user/kgovind";
         directoryString = HdfsDataContext.getHdfsUrlDefault(cfg) + directoryName;
         hadoopFileSystem = org.apache.hadoop.fs.FileSystem.get(conf);
         hadoopFileSystem1 = new HadoopFileSystem(conf, hadoopFileSystem);
@@ -297,7 +270,7 @@ public class HDFSTaskExample implements IContainer {
       HadoopFileSystem hadoopFileSystem2 = null;
       HadoopDataOutputStream hadoopDataOutputStream1 = null;
       try {
-        String fileName = "/user/kannan/test.xml";
+        String fileName = "/user/kannan/dataset1.txt";
         directoryString = HdfsDataContext.getHdfsUrlDefault(cfg) + fileName;
         hadoopFileSystem2 =
             new HadoopFileSystem(conf, org.apache.hadoop.fs.FileSystem.get(conf));
@@ -337,7 +310,80 @@ public class HDFSTaskExample implements IContainer {
 
       //Creating and writing to the file using Twister2 API -> HDFS
       try {
-        String fileName = "/user/test/test1.xml";
+        String fileName = "/user/kannan/dataset2.txt";
+        directoryString = HdfsDataContext.getHdfsUrlDefault(cfg) + fileName;
+        hadoopFileSystem = org.apache.hadoop.fs.FileSystem.get(conf);
+        File sourceFileObj = new File("/home/kgovind/hadoop-2.9.0/etc/hadoop/hadoop-env.sh");
+        if (sourceFileObj.exists()) {
+          org.apache.hadoop.fs.Path path = new org.apache.hadoop.fs.Path(directoryString);
+          if (!hadoopFileSystem.exists(path)) {
+            hadoopDataOutputStream = hadoopFileSystem.create(path);
+            for (int i = 0; i < 10; i++) {
+              hadoopDataOutputStream.write(
+                  "Hello HDFS Data Output Stream\n".getBytes(DEFAULT_CHARSET));
+            }
+          }
+        } else {
+          System.out.println("File already exists in hdfs");
+          return;
+        }
+      } catch (Throwable e) {
+        e.printStackTrace();
+      } finally {
+        try {
+          if (hadoopFileSystem != null) {
+            hadoopFileSystem.close();
+            //hadoopDataOutputStream.close();
+          }
+        } catch (IOException ioe) {
+          ioe.printStackTrace();
+        }
+      }
+
+
+      //Creating a file, reading from a file and writing to the file using Twister2 API -> HDFS
+      try {
+        String fileName = "/user/kannan/dataset3.txt";
+        directoryString = HdfsDataContext.getHdfsUrlDefault(cfg) + fileName;
+        hadoopFileSystem2 =
+            new HadoopFileSystem(conf, org.apache.hadoop.fs.FileSystem.get(conf));
+        Path path = new Path(directoryString);
+        File sourceFileObj = new File("/home/kgovind/hadoop-2.9.0/etc/hadoop/hadoop-env.sh");
+        if (sourceFileObj.exists()) {
+          if (!hadoopFileSystem2.exists(path)) {
+            hadoopDataOutputStream1 = hadoopFileSystem2.create(path);
+            in = new BufferedInputStream(new FileInputStream(sourceFileObj));
+            byte[] b = new byte[1024];
+            int numBytes = 0;
+            while ((numBytes = in.read(b)) > 0) {
+              hadoopDataOutputStream1.write(b, 0, numBytes);
+            }
+          }
+        } else {
+          System.out.println("File already exists in hdfs");
+          return;
+        }
+      } catch (Throwable e) {
+        e.printStackTrace();
+      } finally {
+        try {
+          if (in != null) {
+            in.close();
+          }
+          if (hadoopDataOutputStream1 != null) {
+            hadoopDataOutputStream1.close();
+          }
+          if (hadoopFileSystem2 != null) {
+            hadoopFileSystem2.close();
+          }
+        } catch (IOException ioe) {
+          ioe.printStackTrace();
+        }
+      }
+
+      //Creating and writing to the file using Twister2 API -> HDFS
+      try {
+        String fileName = "/user/kannan/dataset4.txt";
         directoryString = HdfsDataContext.getHdfsUrlDefault(cfg) + fileName;
         hadoopFileSystem = org.apache.hadoop.fs.FileSystem.get(conf);
         File sourceFileObj = new File("/home/kgovind/hadoop-2.9.0/etc/hadoop/hadoop-env.sh");
@@ -370,7 +416,7 @@ public class HDFSTaskExample implements IContainer {
 
       //Creating and writing to the file using Twister2 API -> HDFS
       try {
-        String fileName = "/user/test/test.xml";
+        String fileName = "/user/kgovind/dataset1.txt";
         directoryString = HdfsDataContext.getHdfsUrlDefault(cfg) + fileName;
         hadoopFileSystem2 =
             new HadoopFileSystem(conf, org.apache.hadoop.fs.FileSystem.get(conf));
@@ -398,9 +444,104 @@ public class HDFSTaskExample implements IContainer {
         }
       }
 
+      //Creating and writing to the file using Twister2 API -> HDFS
+      try {
+        String fileName = "/user/kgovind/dataset2.txt";
+        directoryString = HdfsDataContext.getHdfsUrlDefault(cfg) + fileName;
+        hadoopFileSystem2 =
+            new HadoopFileSystem(conf, org.apache.hadoop.fs.FileSystem.get(conf));
+        Path path = new Path(directoryString);
+        if (!hadoopFileSystem2.exists(path)) {
+          hadoopDataOutputStream1 = hadoopFileSystem2.create(path);
+          for (int i = 0; i < 10; i++) {
+            hadoopDataOutputStream1.write(
+                "Hello, I am writing to Hadoop Data Output Stream\n".getBytes(DEFAULT_CHARSET));
+          }
+        } else {
+          LOG.info("File exists in hdfs");
+          return;
+        }
+      } catch (Throwable e) {
+        e.printStackTrace();
+      } finally {
+        try {
+          if (hadoopFileSystem2 != null) {
+            hadoopFileSystem2.close();
+            hadoopDataOutputStream1.close();
+          }
+        } catch (IOException ioe) {
+          ioe.printStackTrace();
+        }
+      }
+
+      //Creating and writing to the file using Twister2 API -> HDFS
+      try {
+        String fileName = "/user/kgovind/dataset3.txt";
+        directoryString = HdfsDataContext.getHdfsUrlDefault(cfg) + fileName;
+        hadoopFileSystem2 =
+            new HadoopFileSystem(conf, org.apache.hadoop.fs.FileSystem.get(conf));
+        Path path = new Path(directoryString);
+        if (!hadoopFileSystem2.exists(path)) {
+          hadoopDataOutputStream1 = hadoopFileSystem2.create(path);
+          for (int i = 0; i < 10; i++) {
+            hadoopDataOutputStream1.write(
+                "Hello, I am writing to Hadoop Data Output Stream\n".getBytes(DEFAULT_CHARSET));
+          }
+        } else {
+          LOG.info("File exists in hdfs");
+          return;
+        }
+      } catch (Throwable e) {
+        e.printStackTrace();
+      } finally {
+        try {
+          if (hadoopFileSystem2 != null) {
+            hadoopFileSystem2.close();
+            hadoopDataOutputStream1.close();
+          }
+        } catch (IOException ioe) {
+          ioe.printStackTrace();
+        }
+      }
+
+      //Creating and writing to the file using Twister2 API -> HDFS
+      try {
+        String fileName = "/user/kgovind/dataset4.txt";
+        directoryString = HdfsDataContext.getHdfsUrlDefault(cfg) + fileName;
+        hadoopFileSystem2 =
+            new HadoopFileSystem(conf, org.apache.hadoop.fs.FileSystem.get(conf));
+        Path path = new Path(directoryString);
+        if (!hadoopFileSystem2.exists(path)) {
+          hadoopDataOutputStream1 = hadoopFileSystem2.create(path);
+          for (int i = 0; i < 10; i++) {
+            hadoopDataOutputStream1.write(
+                "Hello, I am writing to Hadoop Data Output Stream\n".getBytes(DEFAULT_CHARSET));
+          }
+        } else if (hadoopFileSystem2.exists(path))  {
+          hadoopDataOutputStream1 = hadoopFileSystem2.append(path);
+          for (int i = 0; i < 10; i++) {
+            hadoopDataOutputStream1.write(
+                "Hi, I am appending to Hadoop Data Output Stream\n".getBytes(DEFAULT_CHARSET));
+          }
+          LOG.info("File exists in hdfs");
+          //return;
+        }
+      } catch (Throwable e) {
+        e.printStackTrace();
+      } finally {
+        try {
+          if (hadoopFileSystem2 != null) {
+            hadoopFileSystem2.close();
+            hadoopDataOutputStream1.close();
+          }
+        } catch (IOException ioe) {
+          ioe.printStackTrace();
+        }
+      }
+
       //Reading a file using Twister2 API -> HDFS
       try {
-        String fileName = "/user/test/test.xml";
+        String fileName = "/user/kgovind/dataset2.txt";
         directoryString = HdfsDataContext.getHdfsUrlDefault(cfg) + fileName;
         hadoopFileSystem2 =
             new HadoopFileSystem(conf, org.apache.hadoop.fs.FileSystem.get(conf));
@@ -411,7 +552,7 @@ public class HDFSTaskExample implements IContainer {
           String line;
           line = br.readLine();
           while (line != null) {
-            System.out.println(line);
+            //System.out.println(line);
             line = br.readLine();
           }
           br.close();
@@ -432,7 +573,7 @@ public class HDFSTaskExample implements IContainer {
 
       //Reading a file using Twister2 API -> HDFS
       try {
-        String fileName = "/user/kannan/test.xml";
+        String fileName = "/user/kannan/dataset1.txt";
         directoryString = HdfsDataContext.getHdfsUrlDefault(cfg) + fileName;
         hadoopFileSystem2 =
             new HadoopFileSystem(conf, org.apache.hadoop.fs.FileSystem.get(conf));
@@ -443,7 +584,7 @@ public class HDFSTaskExample implements IContainer {
           String line;
           line = br.readLine();
           while (line != null) {
-            System.out.println(line);
+            //System.out.println(line);
             line = br.readLine();
           }
           br.close();
@@ -464,7 +605,7 @@ public class HDFSTaskExample implements IContainer {
 
       //Retrieve file status using Twister2 API -> HDFS
       try {
-        srcFileLocation = "/user/kannan/test.xml";
+        srcFileLocation = "/user/kannan/dataset1.txt";
         pathString = HdfsDataContext.getHdfsUrlDefault(cfg) + srcFileLocation;
         hadoopFileSystem2 =
             new HadoopFileSystem(conf, org.apache.hadoop.fs.FileSystem.get(conf));
@@ -487,8 +628,9 @@ public class HDFSTaskExample implements IContainer {
 
 
       //Deleting a directory using Twister2 API -> HDFS
+      // Commented for testing...it is a working code
      /* try {
-        srcFileLocation = "/user/test";
+        srcFileLocation = "/user/kgovind";
         pathString = HdfsDataContext.getHdfsUrlDefault(cfg) + srcFileLocation;
         hadoopFileSystem2 =
             new HadoopFileSystem(conf, org.apache.hadoop.fs.FileSystem.get(conf));
@@ -509,7 +651,38 @@ public class HDFSTaskExample implements IContainer {
           ioe.printStackTrace();
         }
       }*/
+
+      if (dataFlowTaskGraph != null) {
+        LOG.info("Task Scheduling Mode:" + TaskSchedulerContext.taskSchedulingMode(cfg));
+        if (TaskSchedulerContext.taskSchedulingMode(cfg).equals("roundrobin")) {
+          RoundRobinTaskScheduling roundRobinTaskScheduling = new RoundRobinTaskScheduling();
+          roundRobinTaskScheduling.initialize(cfg);
+          taskSchedulePlan = roundRobinTaskScheduling.schedule(dataFlowTaskGraph, workerPlan);
+
+        } else if (TaskSchedulerContext.taskSchedulingMode(cfg).equals("firstfit")) {
+          FirstFitTaskScheduling firstFitTaskScheduling = new FirstFitTaskScheduling();
+          firstFitTaskScheduling.initialize(cfg);
+          taskSchedulePlan = firstFitTaskScheduling.schedule(dataFlowTaskGraph, workerPlan);
+
+        } else if (TaskSchedulerContext.taskSchedulingMode(cfg).equals("datalocalityaware")) {
+          DataLocalityAwareTaskScheduling dataLocalityAwareTaskScheduling = new
+              DataLocalityAwareTaskScheduling();
+          dataLocalityAwareTaskScheduling.initialize(cfg);
+          taskSchedulePlan = dataLocalityAwareTaskScheduling.schedule(
+              dataFlowTaskGraph, workerPlan);
+        }
+        try {
+          if (taskSchedulePlan.getContainersMap() != null) {
+            LOG.info("Task schedule plan details:"
+                + taskSchedulePlan.getTaskSchedulePlanId() + ":"
+                + taskSchedulePlan.getContainersMap());
+          }
+        } catch (NullPointerException ne) {
+          ne.printStackTrace();
+        }
+      }
     }
+
     System.out.println("I am entering the HDFS Data Task Example");
     System.out.println("HDFS Data Context:" + HdfsDataContext.getHdfsClassDefault(cfg));
     System.out.println("HDFS Implementation Key:" + HdfsDataContext.getHdfsImplementationKey(cfg));
@@ -559,7 +732,7 @@ public class HDFSTaskExample implements IContainer {
     @Override
     public void prepare(Config cfg, TaskContext context) {
       this.ctx = context;
-      LOG.info("Input Files:" + cfg.getStringValue("dataset"));
+      LOG.info("Input Files:" + cfg.getListValue("dataset"));
     }
 
     /**
@@ -612,7 +785,7 @@ public class HDFSTaskExample implements IContainer {
      */
     @Override
     public void prepare(Config cfg, TaskContext collection) {
-      LOG.info("Input Files:" + cfg.getStringValue("dataset"));
+      LOG.info("Input Files:" + cfg.getListValue("dataset"));
     }
 
     /**
@@ -664,7 +837,7 @@ public class HDFSTaskExample implements IContainer {
      */
     @Override
     public void prepare(Config cfg, TaskContext collection) {
-      LOG.info("Input Files:" + cfg.getStringValue("dataset"));
+      LOG.info("Input Files:" + cfg.getListValue("dataset"));
     }
 
     /**
@@ -716,7 +889,7 @@ public class HDFSTaskExample implements IContainer {
      */
     @Override
     public void prepare(Config cfg, TaskContext collection) {
-      LOG.info("Input Files:" + cfg.getStringValue("dataset"));
+      LOG.info("Input Files:" + cfg.getListValue("dataset"));
     }
 
     /**

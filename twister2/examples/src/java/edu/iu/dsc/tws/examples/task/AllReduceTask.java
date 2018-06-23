@@ -50,7 +50,7 @@ public class AllReduceTask implements IContainer {
     builder.addSource("source", g);
     builder.setParallelism("source", 4);
     builder.addSink("sink", r);
-    builder.setParallelism("sink", 1);
+    builder.setParallelism("sink", 4);
     builder.connect("source", "sink", "all-reduce-edge", Operations.ALL_REDUCE);
 
     DataFlowTaskGraph graph = builder.build();
@@ -126,7 +126,7 @@ public class AllReduceTask implements IContainer {
 
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
     jobBuilder.setName("reduce-task-example");
-    jobBuilder.setContainerClass(ReduceTask.class.getName());
+    jobBuilder.setContainerClass(AllReduceTask.class.getName());
     jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 

@@ -11,6 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.core.CommunicationContext;
 
@@ -37,6 +40,8 @@ public class MPIContext extends CommunicationContext {
   private static final String SHUFFLE_DIRECTORY_PATH = "shuffle.directory.path";
 
   public static final int DEFAULT_DESTINATION = 0;
+
+  public static final List<Object> EMPTY_OBJECT = new ArrayList<>();
 
   public static int bufferSize(Config cfg) {
     return cfg.getIntegerValue(BUFFER_SIZE, 2048000);
