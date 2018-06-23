@@ -132,14 +132,12 @@ public class PartitionPartialReceiver implements MessageReceiver {
   public void progress() {
     lock.lock();
     try {
-
-      if (finish) {
-        if (readyToSend.isEmpty()) {
-          for (int dest : destinations) {
-            if (!finishedDestinations.contains(dest)) {
-              if (operation.sendPartial(source, new byte[1], MessageFlags.EMPTY, dest)) {
-                finishedDestinations.add(dest);
-              }
+      if (finish && readyToSend.isEmpty()) {
+        for (int dest : destinations) {
+          if (!finishedDestinations.contains(dest)) {
+            if (operation.sendPartial(source, new byte[1], MessageFlags.EMPTY, dest)) {
+              LOG.info(String.format("%d Sending FINISH to %d", executor, dest));
+              finishedDestinations.add(dest);
             }
           }
         }

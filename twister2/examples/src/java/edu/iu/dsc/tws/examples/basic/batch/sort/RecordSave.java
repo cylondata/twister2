@@ -45,13 +45,12 @@ public class RecordSave implements GatherBatchReceiver {
 
   @Override
   public void receive(int target, Iterator<Object> it) {
+    int count = 0;
     while (it.hasNext()) {
       Object next = it.next();
-      if (next instanceof List) {
-        for (Object o : (List) next) {
-          totalCount++;
-        }
-      }
+      totalCount++;
+      count++;
     }
+    LOG.info(String.format("Received message for targe: %d", count));
   }
 }

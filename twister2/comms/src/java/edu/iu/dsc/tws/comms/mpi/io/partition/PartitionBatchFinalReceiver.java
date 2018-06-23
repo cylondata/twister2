@@ -133,11 +133,15 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
     if ((flags & MessageFlags.EMPTY) == MessageFlags.EMPTY) {
       Set<Integer> finished = finishedSources.get(target);
       if (finished.contains(source)) {
-        LOG.log(Level.WARNING, String.format("Duplicate finish from source %d", source));
+        LOG.log(Level.WARNING,
+            String.format("%d Duplicate finish from source %d", executor, source));
       } else {
         finished.add(source);
       }
       if (finished.size() == partition.getSources().size()) {
+        LOG.log(Level.INFO,
+            String.format("%d Finished targets %d %s %s", executor, target,
+                finishedSources, finishedTargets));
         finishedTargets.add(target);
       }
       return true;

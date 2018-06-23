@@ -20,7 +20,6 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.mpi.io.KeyedContent;
 
@@ -86,9 +85,9 @@ public class RecordSource implements Runnable {
       int dest = destinations.get(destIndex);
 
       int flags = 0;
-      if (i >= (noOfWords - noOfDestinations)) {
-        flags = MessageFlags.FLAGS_LAST;
-      }
+//      if (i >= (noOfWords - noOfDestinations)) {
+//        flags = MessageFlags.FLAGS_LAST;
+//      }
 
       int total = totalSends.get(dest);
       total += 1;
