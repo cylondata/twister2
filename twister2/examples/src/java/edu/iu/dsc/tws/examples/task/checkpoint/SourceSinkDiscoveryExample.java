@@ -15,6 +15,7 @@ import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Logger;
 
 import com.google.protobuf.Message;
 
@@ -52,6 +53,8 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 public class SourceSinkDiscoveryExample implements IContainer {
+
+  private static final Logger LOG = Logger.getLogger(SourceSinkDiscoveryExample.class.getName());
 
   @Override
   public void init(Config config, int id, ResourcePlan resourcePlan) {
@@ -99,7 +102,7 @@ public class SourceSinkDiscoveryExample implements IContainer {
   }
 
   private static class GeneratorTask extends SourceTask {
-    private static final long serialVersionUID = -254264903510284748L;
+    private static final long serialVersionUID = -254264903510214748L;
     private TaskContext ctx;
     private Config config;
 
@@ -126,7 +129,7 @@ public class SourceSinkDiscoveryExample implements IContainer {
     private class ClientConnectHandler implements ConnectHandler {
       @Override
       public void onError(SocketChannel channel) {
-
+        LOG.info("ClientConnectHandler error thrown inside Source Task");
       }
 
       @Override
@@ -141,21 +144,21 @@ public class SourceSinkDiscoveryExample implements IContainer {
 
       @Override
       public void onClose(SocketChannel channel) {
-
+        LOG.info("ClientConnect Handler inside Source task closed");
       }
     }
 
     private class ClientMessageHandler implements MessageHandler {
       @Override
       public void onMessage(RequestID id, int workerId, Message message) {
-
+        client.disconnect();
       }
     }
   }
 
 
   private static class ReceivingTask extends SinkTask {
-    private static final long serialVersionUID = -254264903510284798L;
+    private static final long serialVersionUID = -254264903511284798L;
     @Override
     public void execute(IMessage message) {
       System.out.println(message.getContent());
