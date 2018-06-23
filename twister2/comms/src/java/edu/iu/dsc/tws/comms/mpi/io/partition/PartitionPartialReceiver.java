@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.comms.mpi.io.partition;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +24,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.mpi.MPIContext;
 import edu.iu.dsc.tws.comms.mpi.MPIDataFlowPartition;
@@ -79,6 +81,13 @@ public class PartitionPartialReceiver implements MessageReceiver {
    */
   private Lock lock = new ReentrantLock();
 
+  /**
+   * Weather the operation has finished
+   */
+  private boolean finish = false;
+
+  private Set<Integer> finishedDestinations = new HashSet<>();
+
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     lowWaterMark = MPIContext.getNetworkPartitionMessageGroupLowWaterMark(cfg);
@@ -123,6 +132,20 @@ public class PartitionPartialReceiver implements MessageReceiver {
   public void progress() {
     lock.lock();
     try {
+
+      if (finish) {
+        if (readyToSend.isEmpty()) {
+          for (int dest : destinations) {
+            if (!finishedDestinations.contains(dest)) {
+              if (operation.sendPartial(source, new byte[1], MessageFlags.EMPTY, dest)) {
+                finishedDestinations.add(dest);
+              }
+            }
+          }
+        }
+        return;
+      }
+
       Iterator<Map.Entry<Integer, List<Object>>> it = readyToSend.entrySet().iterator();
 
       while (it.hasNext()) {
@@ -156,6 +179,8 @@ public class PartitionPartialReceiver implements MessageReceiver {
         }
         messages.addAll(e.getValue());
       }
+      // finished
+      finish = true;
     } finally {
       lock.unlock();
     }

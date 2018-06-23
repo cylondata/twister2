@@ -13,9 +13,11 @@ package edu.iu.dsc.tws.comms.mpi.io.partition;
 
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -23,6 +25,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.GatherBatchReceiver;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.mpi.MPIContext;
 import edu.iu.dsc.tws.comms.mpi.MPIDataFlowPartition;
@@ -38,8 +41,6 @@ import edu.iu.dsc.tws.comms.utils.KryoSerializer;
  */
 public class PartitionBatchFinalReceiver implements MessageReceiver {
   private static final Logger LOG = Logger.getLogger(PartitionBatchFinalReceiver.class.getName());
-
-  private Map<Integer, Map<Integer, Boolean>> finished;
 
   private GatherBatchReceiver batchReceiver;
 
@@ -61,6 +62,21 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
 
   private Map<Integer, Integer> totalReceives = new HashMap<>();
 
+  /**
+   * Finished sources per target (target -> finished sources)
+   */
+  private Map<Integer, Set<Integer>> finishedSources = new HashMap<>();
+
+  /**
+   * After all the sources finished for a target we add to this set
+   */
+  private Set<Integer> finishedTargets = new HashSet<>();
+
+  /**
+   * We add to this set after calling receive
+   */
+  private Set<Integer> finishedTargetsCompleted = new HashSet<>();
+
   public PartitionBatchFinalReceiver(GatherBatchReceiver receiver, boolean srt,
                                      boolean d, Comparator<Object> com) {
     this.batchReceiver = receiver;
@@ -76,7 +92,7 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
     String path = MPIContext.getShuffleDirectoryPath(cfg);
 
     executor = op.getTaskPlan().getThisExecutor();
-    finished = new ConcurrentHashMap<>();
+    finishedSources = new HashMap<>();
     partition = (MPIDataFlowPartition) op;
     keyed = partition.getKeyType() != null;
     for (Integer target : expectedIds.keySet()) {
@@ -84,7 +100,6 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
       for (Integer exp : expectedIds.get(target)) {
         perTarget.put(exp, false);
       }
-      finished.put(target, perTarget);
 
       Shuffle sortedMerger;
       if (partition.getKeyType() == null) {
@@ -102,6 +117,7 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
       }
       sortedMergers.put(target, sortedMerger);
       totalReceives.put(target, 0);
+      finishedSources.put(target, new HashSet<>());
     }
   }
 
@@ -113,6 +129,19 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
       throw new RuntimeException("Un-expected target: " + target);
     }
     LOG.info(String.format("Receive message %d", target));
+
+    if ((flags & MessageFlags.EMPTY) == MessageFlags.EMPTY) {
+      Set<Integer> finished = finishedSources.get(target);
+      if (finished.contains(source)) {
+        LOG.log(Level.WARNING, String.format("Duplicate finish from source %d", source));
+      } else {
+        finished.add(source);
+      }
+      if (finished.size() == partition.getSources().size()) {
+        finishedTargets.add(target);
+      }
+      return true;
+    }
 
     // add the object to the map
     if (keyed) {
@@ -144,6 +173,13 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
   public void progress() {
     for (Shuffle sorts : sortedMergers.values()) {
       sorts.run();
+    }
+
+    for (int i : finishedTargets) {
+      if (!finishedTargetsCompleted.contains(i)) {
+        onFinish(i);
+        finishedTargetsCompleted.add(i);
+      }
     }
   }
 

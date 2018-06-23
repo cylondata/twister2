@@ -464,12 +464,12 @@ public class MPIDataFlowPartition implements DataFlowOperation, MPIMessageReceiv
       partialReceiver.onFinish(source * -1);
     }
 
-    // now lets do the barrier
-    if (opSemantics == OperationSemantics.STREAMING_BATCH_SORTED
-        || opSemantics == OperationSemantics.STREAMING_BATCH) {
-      LOG.log(Level.INFO, String.format("%d Finishing communication %d", executor, source));
-      allReduce.send(source, new byte[1], 0);
-    }
+//    // now lets do the barrier
+//    if (opSemantics == OperationSemantics.STREAMING_BATCH_SORTED
+//        || opSemantics == OperationSemantics.STREAMING_BATCH) {
+//      LOG.log(Level.INFO, String.format("%d Finishing communication %d", executor, source));
+//      allReduce.send(source, new byte[1], 0);
+//    }
   }
 
   @Override

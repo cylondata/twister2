@@ -29,6 +29,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.CompletionListener;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
@@ -451,8 +452,12 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
       currentMessage.incrementRefCount();
       currentMessage.release();
     } else {
-      Object object = messageDeSerializer.get(receiveId).build(currentMessage,
-          currentMessage.getHeader().getEdge());
+      MessageHeader header = currentMessage.getHeader();
+      Object object = MPIContext.EMPTY_OBJECT;
+      if ((header.getFlags() & MessageFlags.EMPTY) != MessageFlags.EMPTY) {
+        object = messageDeSerializer.get(receiveId).build(currentMessage,
+            currentMessage.getHeader().getEdge());
+      }
       Queue<Pair<Object, MPIMessage>> pendingReceiveMessages =
           pendingReceiveMessagesPerSource.get(id);
 //      LOG.info(String.format("%d Deserialized message", executor));

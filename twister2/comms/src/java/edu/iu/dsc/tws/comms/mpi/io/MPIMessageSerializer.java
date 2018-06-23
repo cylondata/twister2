@@ -16,6 +16,7 @@ import java.util.Queue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.mpi.MPIBuffer;
@@ -81,11 +82,16 @@ public class MPIMessageSerializer implements MessageSerializer {
 
       if (sendMessage.serializedState() == MPISendMessage.SendState.HEADER_BUILT
           || sendMessage.serializedState() == MPISendMessage.SendState.BODY_BUILT) {
-        // build the body
-        // first we need to serialize the body if needed
-        boolean complete = serializeBody(message, sendMessage, buffer);
-        if (complete) {
+        if ((sendMessage.getFlags() & MessageFlags.EMPTY) == MessageFlags.EMPTY) {
           sendMessage.setSendState(MPISendMessage.SendState.SERIALIZED);
+          sendMessage.getSerializationState().setTotalBytes(0);
+        } else {
+          // build the body
+          // first we need to serialize the body if needed
+          boolean complete = serializeBody(message, sendMessage, buffer);
+          if (complete) {
+            sendMessage.setSendState(MPISendMessage.SendState.SERIALIZED);
+          }
         }
       }
       // okay we are adding this buffer
