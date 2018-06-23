@@ -100,6 +100,18 @@ proto_library(
     ],
 )
 
+proto_library(
+    name = "proto_checkpoint",
+    src = "checkpoint.proto",
+    gen_cc = 0,
+    gen_java = 1,
+    gen_py = 0,
+    includes = ["twister2/proto"],
+    deps = [
+        ":proto_common",
+    ],
+)
+
 java_library(
     name = "proto-network-java",
     srcs = [
