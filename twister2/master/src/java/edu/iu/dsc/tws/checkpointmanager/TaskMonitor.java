@@ -28,7 +28,9 @@ import java.util.logging.Logger;
 
 import com.google.protobuf.Message;
 
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
+import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
 import edu.iu.dsc.tws.proto.checkpoint.Checkpoint;
 
@@ -37,9 +39,17 @@ public class TaskMonitor implements MessageHandler {
   private static final Logger LOG = Logger.getLogger(TaskMonitor.class.getName());
 
   private CheckpointManager checkpointManager;
+  private Config config;
+  private RRServer rrServer;
 
   private List<Integer> sourceTaskList;
   private List<Integer> sinkTaskList;
+
+  public TaskMonitor(Config cfg, CheckpointManager checkpointManager, RRServer server) {
+    this.config = cfg;
+    this.checkpointManager = checkpointManager;
+    this.rrServer = server;
+  }
 
   @Override
   public void onMessage(RequestID id, int taskId, Message message) {

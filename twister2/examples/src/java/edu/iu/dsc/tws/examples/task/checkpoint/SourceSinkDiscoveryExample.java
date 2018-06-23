@@ -57,8 +57,8 @@ public class SourceSinkDiscoveryExample implements IContainer {
   public void init(Config config, int id, ResourcePlan resourcePlan) {
     edu.iu.dsc.tws.examples.task.checkpoint.SourceSinkDiscoveryExample.GeneratorTask g
         = new edu.iu.dsc.tws.examples.task.checkpoint.SourceSinkDiscoveryExample.GeneratorTask();
-    edu.iu.dsc.tws.examples.task.checkpoint.SourceSinkDiscoveryExample.RecevingTask r
-        = new edu.iu.dsc.tws.examples.task.checkpoint.SourceSinkDiscoveryExample.RecevingTask();
+    ReceivingTask r
+        = new ReceivingTask();
 
     GraphBuilder builder = GraphBuilder.newBuilder();
     builder.addSource("source", g);
@@ -154,7 +154,7 @@ public class SourceSinkDiscoveryExample implements IContainer {
   }
 
 
-  private static class RecevingTask extends SinkTask {
+  private static class ReceivingTask extends SinkTask {
     private static final long serialVersionUID = -254264903510284798L;
     @Override
     public void execute(IMessage message) {
