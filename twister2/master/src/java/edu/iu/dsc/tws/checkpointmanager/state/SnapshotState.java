@@ -18,7 +18,7 @@ public class SnapshotState {
   private long jobId;
   private HashMap<Integer, Snapshot> states = new HashMap<>();
 
-  public void update(Object statre) {
+  public void update(Object state) {
     //serializing the state and add it to the snapshot  with the specific nodeID
   }
 

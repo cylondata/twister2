@@ -16,5 +16,6 @@ public interface StatefulJob {
   void addState(SnapshotState snapshotState);
 
   void restoreState(SnapshotState snapshotState);
+
 }
 
