@@ -21,18 +21,28 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 package edu.iu.dsc.tws.examples.task;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.connectors.TwsKafkaConsumer;
 import edu.iu.dsc.tws.connectors.TwsKafkaProducer;
@@ -44,11 +54,9 @@ import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
-import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.Operations;
 import edu.iu.dsc.tws.task.api.SinkTask;
-import edu.iu.dsc.tws.task.api.SourceTask;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
@@ -57,7 +65,7 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
-public class ReduceKafkaTask implements IContainer {
+public class ReduceKafkaTask2 implements IContainer {
   @Override
   public void init(Config config, int id, ResourcePlan resourcePlan) {
     List<String> topics  = new ArrayList<>();
@@ -69,19 +77,19 @@ public class ReduceKafkaTask implements IContainer {
         servers,
         "test",
         "reduce-edge");
-//    RecevingTask r = new RecevingTask();
-    TwsKafkaProducer<String> r = new TwsKafkaProducer<>(
+    TwsKafkaProducer<String> r2 = new TwsKafkaProducer<>(
         "outTopic",
         servers
     );
 
+    RecevingTask r = new RecevingTask();
 
     GraphBuilder builder = GraphBuilder.newBuilder();
     builder.addSource("source", g);
     builder.setParallelism("source", 4);
     builder.addSink("sink", r);
     builder.setParallelism("sink", 1);
-    builder.connect("source", "sink", "reduce-edge", Operations.REDUCE);
+    builder.connect("source", "sink", "reduce-edge", Operations.PARTITION);
 
     DataFlowTaskGraph graph = builder.build();
 
@@ -104,56 +112,6 @@ public class ReduceKafkaTask implements IContainer {
     }
   }
 
-  private static class GeneratorTask extends SourceTask {
-    private static final long serialVersionUID = -254264903510284748L;
-    private TaskContext ctx;
-    private Config config;
-
-    @Override
-    public void run() {
-      ctx.write("reduce-edge", "Hello");
-    }
-
-    @Override
-    public void prepare(Config cfg, TaskContext context) {
-      this.ctx = context;
-    }
-  }
-
-  private static class RecevingTask extends SinkTask {
-    private static final long serialVersionUID = -254264903510284798L;
-    private int count = 0;
-
-    @Override
-    public void execute(IMessage message) {
-      System.out.println("Message Reduced : " + message.getContent() + ", Count : " + count);
-      count++;
-    }
-
-    @Override
-    public void prepare(Config cfg, TaskContext context) {
-
-    }
-  }
-
-  public static class IdentityFunction implements IFunction {
-    private static final long serialVersionUID = -254264903510284748L;
-
-    @Override
-    public void init(Config cfg, DataFlowOperation op, Map<Integer,
-        List<Integer>> expectedIds, TaskContext context) {
-
-    }
-
-    @Override
-    public boolean onMessage(int source, int path, int target, int flags, Object object) {
-      System.out.println("Source : " + source + ", Path : " + path + "Target : " + target
-          + " Object : " + object.getClass().getName());
-      return true;
-    }
-  }
-
-
   public WorkerPlan createWorkerPlan(ResourcePlan resourcePlan) {
     List<Worker> workers = new ArrayList<>();
     for (ResourceContainer resource : resourcePlan.getContainers()) {
@@ -164,6 +122,18 @@ public class ReduceKafkaTask implements IContainer {
     return new WorkerPlan(workers);
   }
 
+  private static class RecevingTask extends SinkTask {
+    private static final long serialVersionUID = -254264903510284798L;
+    @Override
+    public void execute(IMessage message) {
+      System.out.println(message.getContent());
+    }
+
+    @Override
+    public void prepare(Config cfg, TaskContext context) {
+
+    }
+  }
   public static void main(String[] args) {
     // first load the configurations from command line and config files
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
@@ -173,7 +143,7 @@ public class ReduceKafkaTask implements IContainer {
 
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
     jobBuilder.setName("reduce-task");
-    jobBuilder.setContainerClass(ReduceKafkaTask.class.getName());
+    jobBuilder.setContainerClass(ReduceKafkaTask2.class.getName());
     jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 
