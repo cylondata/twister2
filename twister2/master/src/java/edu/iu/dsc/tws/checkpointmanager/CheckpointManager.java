@@ -128,6 +128,7 @@ public class CheckpointManager {
   public class ServerConnectHandler implements ConnectHandler {
     @Override
     public void onError(SocketChannel channel) {
+      LOG.severe("Checkpoint manager Server Connect Handler did not start");
     }
 
     @Override

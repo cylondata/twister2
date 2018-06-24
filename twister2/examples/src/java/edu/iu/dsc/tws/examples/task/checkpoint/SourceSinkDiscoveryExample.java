@@ -129,11 +129,13 @@ public class SourceSinkDiscoveryExample implements IContainer {
     private class ClientConnectHandler implements ConnectHandler {
       @Override
       public void onError(SocketChannel channel) {
-        LOG.info("ClientConnectHandler error thrown inside Source Task");
+        LOG.severe("ClientConnectHandler error thrown inside Source Task");
       }
 
       @Override
       public void onConnect(SocketChannel channel, StatusCode status) {
+        LOG.info("ClientConnectHandler inside Source Task got connected");
+
         Checkpoint.TaskDiscovery message = Checkpoint.TaskDiscovery.newBuilder()
             .setTaskID(ctx.taskId())
             .setTaskType(Checkpoint.TaskDiscovery.TaskType.SOURCE)
@@ -151,6 +153,9 @@ public class SourceSinkDiscoveryExample implements IContainer {
     private class ClientMessageHandler implements MessageHandler {
       @Override
       public void onMessage(RequestID id, int workerId, Message message) {
+        LOG.info("ClientMessageHandler inside sink task got message from worker ID "
+            + workerId);
+
         client.disconnect();
       }
     }
