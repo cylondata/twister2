@@ -171,28 +171,15 @@ public class FSKeyedSortedMerger implements Shuffle {
   }
 
   public void switchToReading() {
-    status = FSStatus.READING;
-    // lets convert the in-memory data to objects
-    // deserializeObjects();
-    // lets sort the in-memory objects
-
-    for (KeyValue k1 : objectsInMemory) {
-      int[] k = (int[]) k1.getKey();
-      try {
-        int i = k[0];
-      } catch (ArrayIndexOutOfBoundsException e) {
-        throw new RuntimeException("EEEE 1", e);
-      }
-    }
-    Collections.sort(objectsInMemory);
-
-    for (KeyValue k1 : objectsInMemory) {
-      int[] k = (int[]) k1.getKey();
-      try {
-        int i = k[0];
-      } catch (ArrayIndexOutOfBoundsException e) {
-        throw new RuntimeException("EEEE 2", e);
-      }
+    lock.lock();
+    try {
+      status = FSStatus.READING;
+      // lets convert the in-memory data to objects
+//       deserializeObjects();
+      // lets sort the in-memory objects
+      Collections.sort(objectsInMemory);
+    } finally {
+      lock.unlock();
     }
   }
 

@@ -632,7 +632,7 @@ public class MPIDataFlowOperation implements MPIMessageListener, MPIMessageRelea
 
     if (currentMessage.isComplete()) {
       currentMessages.remove(id);
-      LOG.info(String.format("%d adding to deserialize queue %d", executor, id));
+//      LOG.info(String.format("%d adding to deserialize queue %d", executor, id));
       Queue<MPIMessage> deserializeQueue = pendingReceiveDeSerializations.get(id);
       if (!deserializeQueue.offer(currentMessage)) {
         throw new RuntimeException(executor + " We should have enough space: "

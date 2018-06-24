@@ -93,7 +93,7 @@ public class RecordSource implements Runnable {
       total += 1;
       totalSends.put(dest, total);
 
-      LOG.log(Level.INFO, String.format("%d Sending message to %d %d", executor, taskId, dest));
+//      LOG.log(Level.INFO, String.format("%d Sending message to %d %d", executor, taskId, dest));
       // lets try to process if send doesn't succeed
       while (!operation.send(taskId, new KeyedContent(word.getKey(), word.getData(),
           MessageType.INTEGER, MessageType.BYTE), flags, dest)) {
