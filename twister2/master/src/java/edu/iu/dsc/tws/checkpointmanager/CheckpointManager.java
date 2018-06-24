@@ -23,10 +23,18 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.checkpointmanager;
 
+import java.io.IOException;
+import java.nio.channels.SocketChannel;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.checkpointmanager.state_backend.StateBackend;
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.net.tcp.Progress;
+import edu.iu.dsc.tws.common.net.tcp.StatusCode;
+import edu.iu.dsc.tws.common.net.tcp.request.ConnectHandler;
+import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.master.JobMaster;
+import edu.iu.dsc.tws.proto.checkpoint.Checkpoint;
 import edu.iu.dsc.tws.task.graph.Vertex;
 
 public class CheckpointManager {
@@ -38,6 +46,12 @@ public class CheckpointManager {
   private String jobName;
 
   private JobMaster jobMaster;
+
+  private RRServer rrServer;
+
+  private Config cfg;
+
+  private Progress looper;
 
   private long baseInterval;
 
@@ -67,6 +81,13 @@ public class CheckpointManager {
     this.checkpointTimeout = checkpointTimeout;
     this.minPauseBetweenCheckpoints = minPauseBetweenCheckpoints;
     this.maxConcurrentCheckpointAttempts = maxConcurrentCheckpointAttempts;
+
+    TaskMonitor taskMonitor = new TaskMonitor(cfg, this, rrServer);
+
+    rrServer = new RRServer(cfg, "localhost", 6789, looper,
+        -2, new ServerConnectHandler());
+
+    rrServer.registerRequestHandler(Checkpoint.TaskDiscovery.newBuilder(), taskMonitor);
 
   }
 
@@ -101,5 +122,26 @@ public class CheckpointManager {
 
   public long getMaxConcurrentCheckpointAttempts() {
     return maxConcurrentCheckpointAttempts;
+  }
+
+
+  public class ServerConnectHandler implements ConnectHandler {
+    @Override
+    public void onError(SocketChannel channel) {
+      LOG.severe("Checkpoint manager Server Connect Handler did not start");
+    }
+
+    @Override
+    public void onConnect(SocketChannel channel, StatusCode status) {
+      try {
+        LOG.finer("Client connected from:" + channel.getRemoteAddress());
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
+
+    @Override
+    public void onClose(SocketChannel channel) {
+    }
   }
 }

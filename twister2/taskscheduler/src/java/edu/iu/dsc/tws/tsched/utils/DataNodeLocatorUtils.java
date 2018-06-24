@@ -18,6 +18,7 @@ import java.util.logging.Logger;
 import org.apache.hadoop.conf.Configuration;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.data.api.HDFSConnector;
 import edu.iu.dsc.tws.data.fs.FileStatus;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.hdfs.HadoopFileSystem;
@@ -35,6 +36,7 @@ public class DataNodeLocatorUtils {
   private String datasetName;
   private List<String> inputDataList = new ArrayList<String>();
   private Config config;
+  private HDFSConnector hdfsConnector;
 
   public DataNodeLocatorUtils(Config config1) {
     this.config = config1;
@@ -49,30 +51,34 @@ public class DataNodeLocatorUtils {
    */
   public List<String> findDataNodesLocation(List<String> inputDataList1) {
 
-    this.inputDataList = inputDataList1;
-    List<String> dataNodes = new ArrayList<>();
-
     Configuration conf = new Configuration(false);
-    org.apache.hadoop.fs.FileSystem hadoopFileSystem = null;
-    HadoopFileSystem hadoopFileSystem1;
+    conf.addResource(new org.apache.hadoop.fs.Path(
+        HdfsDataContext.getHdfsConfigDirectory(config)));
 
+    hdfsConnector = new HDFSConnector(config);
+    this.inputDataList = inputDataList1;
+
+    List<String> dataNodes = new ArrayList<>();
+    HadoopFileSystem hadoopFileSystem;
+
+    String[] fName = new String[inputDataList.size() - 1];
     for (int i = 0; i < this.inputDataList.size(); i++) {
       this.datasetName = this.inputDataList.get(i);
-      conf.addResource(new org.apache.hadoop.fs.Path(
-          HdfsDataContext.getHdfsConfigDirectory(config)));
+      fName[0] = inputDataList.get(i);
       try {
-        hadoopFileSystem1 =
+        hadoopFileSystem =
             new HadoopFileSystem(conf, org.apache.hadoop.fs.FileSystem.get(conf));
         Path path = new Path(datasetName);
-        FileStatus fileStatus = hadoopFileSystem1.getFileStatus(path);
+        FileStatus fileStatus = hadoopFileSystem.getFileStatus(path);
+
         if (!fileStatus.getPath().isNullOrEmpty()) {
+
           String fileURL = fileStatus.getPath().toString();
-          /*StringTokenizer stringTokenizer = new StringTokenizer(fileURL, ":");
-          while (stringTokenizer.hasMoreTokens()) {
-            String key = stringTokenizer.nextToken();
-            System.out.println("String tokenizer:" + key.toString());
-          }*/
-          LOG.info("HDFS File URL is:" + fileURL);
+          String datanodeName = hdfsConnector.getDFSCK(fName);
+
+          LOG.info("HDFS File URL is:" + fileURL
+              + "and Data Node Name is:" + datanodeName);
+
           if ("dataset1.txt".equals(datasetName)) {
             dataNodes.add("datanode1");
             dataNodes.add("datanode2");
@@ -103,20 +109,26 @@ public class DataNodeLocatorUtils {
    */
   public List<String> findDataNodesLocation(String inputFileName) {
 
-    this.datasetName = inputFileName;
-    List<String> dataNodes = new ArrayList<>();
-
     Configuration conf = new Configuration(false);
     conf.addResource(new org.apache.hadoop.fs.Path(
         HdfsDataContext.getHdfsConfigDirectory(config)));
 
-    org.apache.hadoop.fs.FileSystem hadoopFileSystem = null;
-    HadoopFileSystem hadoopFileSystem1;
+    hdfsConnector = new HDFSConnector(config);
+    this.datasetName = inputFileName;
+
+    List<String> dataNodes = new ArrayList<>();
+    HadoopFileSystem hadoopFileSystem;
+
+    String[] fName = new String[1];
+    fName[0] = datasetName;
     try {
-      hadoopFileSystem1 =
+      hadoopFileSystem =
           new HadoopFileSystem(conf, org.apache.hadoop.fs.FileSystem.get(conf));
       Path path = new Path(datasetName);
-      FileStatus fileStatus = hadoopFileSystem1.getFileStatus(path);
+      FileStatus fileStatus = hadoopFileSystem.getFileStatus(path);
+
+      String datanodeName = hdfsConnector.getDFSCK(fName);
+
       if (!fileStatus.getPath().isNullOrEmpty()) {
         String fileURL = fileStatus.getPath().toString();
         LOG.info("HDFS File URL is:" + fileURL);
@@ -140,25 +152,5 @@ public class DataNodeLocatorUtils {
 
     return dataNodes;
   }
-
-
-  //To assign a different hostnames for the datasets...
- /* public List<String> findDataNodes() {
-    List<String> dataNodes = new ArrayList<>();
-    if ("dataset1.txt".equals(datasetName)) {
-      dataNodes.add("datanode1");
-      dataNodes.add("datanode2");
-    } else if ("dataset2.txt".equals(datasetName)) {
-      dataNodes.add("datanode3");
-      dataNodes.add("datanode4");
-    } else if ("dataset3.txt".equals(datasetName)) {
-      dataNodes.add("datanode5");
-      dataNodes.add("datanode6");
-    } else if ("dataset4.txt".equals(datasetName)) {
-      dataNodes.add("datanode7");
-      dataNodes.add("datanode8");
-    }
-    return dataNodes;
-  }*/
 }
 

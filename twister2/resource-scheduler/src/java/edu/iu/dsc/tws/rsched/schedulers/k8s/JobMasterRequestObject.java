@@ -155,7 +155,8 @@ public final class JobMasterRequestObject {
     container.setImagePullPolicy(KubernetesContext.imagePullPolicy(config));
 
 //        container.setArgs(Arrays.asList("1000000")); parameter to the main method
-    container.setCommand(Arrays.asList("java", "edu.iu.dsc.tws.master.JobMaster"));
+    container.setCommand(
+        Arrays.asList("java", "edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobMasterStarter"));
 
     V1ResourceRequirements resReq = new V1ResourceRequirements();
     resReq.putRequestsItem("cpu", new Quantity(JobMasterContext.jobMasterCpu(config) + ""));
@@ -220,6 +221,10 @@ public final class JobMasterRequestObject {
         .value(Context.jobName(config)));
 
     envVars.add(new V1EnvVar()
+        .name(KubernetesContext.KUBERNETES_NAMESPACE)
+        .value(KubernetesContext.namespace(config)));
+
+    envVars.add(new V1EnvVar()
         .name(Context.TWISTER2_WORKER_INSTANCES)
         .value(Context.workerInstances(config) + ""));
 
@@ -228,7 +233,7 @@ public final class JobMasterRequestObject {
         .value(JobMasterContext.jobMasterAssignsWorkerIDs(config) + ""));
 
     envVars.add(new V1EnvVar()
-        .name(JobMasterContext.PERSISTENT_JOB_DIRECTORY)
+        .name(KubernetesContext.PERSISTENT_JOB_DIRECTORY)
         .value(persistentJobDir));
 
     envVars.add(new V1EnvVar()

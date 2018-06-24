@@ -75,6 +75,10 @@ public final class MPIProcess {
       HelpFormatter formatter = new HelpFormatter();
       formatter.printHelp("SubmitterMain", cmdOptions);
       throw new RuntimeException("Error parsing command line options: ", e);
+    } catch (Throwable t) {
+      String msg = "Un-expected error";
+      LOG.log(Level.SEVERE, msg, t);
+      throw new RuntimeException(msg);
     } finally {
       try {
         MPI.Finalize();

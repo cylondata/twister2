@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.examples.basic.batch.sort;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -46,7 +47,7 @@ public class SortJob implements IContainer {
 
   private TWSChannel channel;
 
-  private static final int NO_OF_TASKS = 16;
+  private static final int NO_OF_TASKS = 4;
 
   private Config config;
 
@@ -73,9 +74,10 @@ public class SortJob implements IContainer {
     setupNetwork();
 
     partition = new MPIDataFlowPartition(config, channel, taskPlan, sources, destinations,
-        new PartitionBatchFinalReceiver(new RecordSave(), true, true),
+        new PartitionBatchFinalReceiver(new RecordSave(), false, true,
+            new IntegerComparator()),
         new PartitionPartialReceiver(), MPIDataFlowPartition.PartitionStratergy.DIRECT,
-        MessageType.OBJECT, MessageType.OBJECT, null, null,
+        MessageType.BYTE, MessageType.BYTE, MessageType.INTEGER, MessageType.INTEGER,
         OperationSemantics.STREAMING_BATCH, new EdgeGenerator(0));
     // start the threads
     scheduleTasks();
@@ -84,7 +86,7 @@ public class SortJob implements IContainer {
   }
 
   private void setupTasks() {
-    taskPlan = WordCountUtils.createWordCountPlan(config, resourcePlan, NO_OF_TASKS + 2);
+    taskPlan = WordCountUtils.createWordCountPlan(config, resourcePlan, NO_OF_TASKS);
     sources = new HashSet<>();
     for (int i = 0; i < NO_OF_TASKS / 2; i++) {
       sources.add(i);
@@ -96,7 +98,7 @@ public class SortJob implements IContainer {
   }
 
   private void scheduleTasks() {
-    if (id < 2) {
+    if (id < NO_OF_TASKS / 2) {
       for (int i = 0; i < noOfTasksPerExecutor; i++) {
         // the map thread where data is produced
         Thread mapThread = new Thread(new RecordSource(config, partition,
@@ -110,6 +112,20 @@ public class SortJob implements IContainer {
   private void setupNetwork() {
     network = new TWSNetwork(config, taskPlan);
     channel = network.getChannel();
+  }
+
+  private class IntegerComparator implements Comparator<Object> {
+    @Override
+    public int compare(Object o1, Object o2) {
+      int[] o11 = (int[]) o1;
+      int[] o21 = (int[]) o2;
+      try {
+        return Integer.compare(o11[0], o21[0]);
+      } catch (ArrayIndexOutOfBoundsException e) {
+        LOG.info("Sizes of keys: " + o11.length + " " + o21.length);
+        throw new RuntimeException("Err", e);
+      }
+    }
   }
 
   private void progress() {
@@ -136,7 +152,7 @@ public class SortJob implements IContainer {
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
     jobBuilder.setName("sort-job");
     jobBuilder.setContainerClass(SortJob.class.getName());
-    jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 1);
+    jobBuilder.setRequestResource(new ResourceContainer(2, 1024), NO_OF_TASKS);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job

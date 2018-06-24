@@ -60,7 +60,6 @@ public class MPIMultiMessageDeserializer implements MessageDeSerializer {
     if (header == null) {
       throw new RuntimeException("Header must be built before the message");
     }
-//    LOG.info(String.format("%d deserilizing message", executor));
     while (readLength < header.getLength()) {
       List<MPIBuffer> messageBuffers = new ArrayList<>();
       MPIBuffer mpiBuffer = buffers.get(bufferIndex);
@@ -189,15 +188,18 @@ public class MPIMultiMessageDeserializer implements MessageDeSerializer {
     if (keyed) {
       Pair<Integer, Object> keyPair = KeyDeserializer.deserializeKey(mpiMessage.getKeyType(),
           message, serializer);
+      Object data;
       if (MessageTypeUtils.isMultiMessageType(mpiMessage.getKeyType())) {
         //TODO :need to check correctness for multi-message
-        return DataDeserializer.deserializeData(message,
+        data = DataDeserializer.deserializeData(message,
             length - keyPair.getKey(), serializer, type,
             ((List) keyPair.getValue()).size());
       } else {
-        return DataDeserializer.deserializeData(message, length - keyPair.getKey(),
+        data = DataDeserializer.deserializeData(message, length - keyPair.getKey(),
             serializer, type);
       }
+      return new KeyedContent(keyPair.getValue(), data,
+          mpiMessage.getKeyType(), mpiMessage.getType());
     } else {
       return DataDeserializer.deserializeData(message, length, serializer, type);
     }

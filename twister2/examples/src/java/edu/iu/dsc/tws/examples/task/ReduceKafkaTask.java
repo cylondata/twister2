@@ -35,6 +35,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.connectors.TwsKafkaConsumer;
+import edu.iu.dsc.tws.connectors.TwsKafkaProducer;
 import edu.iu.dsc.tws.executor.ExecutionPlan;
 import edu.iu.dsc.tws.executor.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.ExecutionModel;
@@ -68,7 +69,12 @@ public class ReduceKafkaTask implements IContainer {
         servers,
         "test",
         "reduce-edge");
-    RecevingTask r = new RecevingTask();
+//    RecevingTask r = new RecevingTask();
+    TwsKafkaProducer<String> r = new TwsKafkaProducer<>(
+        "outTopic",
+        servers
+    );
+
 
     GraphBuilder builder = GraphBuilder.newBuilder();
     builder.addSource("source", g);

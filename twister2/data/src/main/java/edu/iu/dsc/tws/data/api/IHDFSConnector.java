@@ -9,14 +9,19 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.rsched.schedulers.k8s;
+package edu.iu.dsc.tws.data.api;
+
+import edu.iu.dsc.tws.data.hdfs.HadoopFileSystem;
 
 /**
- * Field names passed to KubernetesWorker when starting a worker in a container
+ * This interface hides the configuration and connection details of the Hadoop File System.
  */
-public enum KubernetesField {
-  USER_JOB_JAR_FILE,    // java jar file for running user job
-  JOB_PACKAGE_FILE_SIZE, // file size of tar.gz file
-  CONTAINER_NAME,
-  POD_IP
+public interface IHDFSConnector {
+
+  HadoopFileSystem HDFSConnect();
+
+  void HDFSConnect(String message, int count);
+
+  void HDFSConnect(String message);
+
 }

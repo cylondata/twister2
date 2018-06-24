@@ -10,6 +10,7 @@ common_deps_files = [
     "//twister2/taskscheduler/src/java:taskscheduler-java",
     "//twister2/proto:proto-taskscheduleplan-java",
     "//twister2/proto:proto_taskscheduleplan_java",
+    "//twister2/proto:proto_checkpoint_java",
     "//twister2/api/src/java:api-java",
     "//twister2/data/src/main/java:data-java",
     "//twister2/executor/src/java:executor-java",

@@ -64,6 +64,9 @@ public final class WordCountUtils {
       for (int j = 0; j < taskPerExecutor; j++) {
         nodesOfExecutor.add(i * taskPerExecutor + j);
       }
+      if (i == 0) {
+        nodesOfExecutor.add(noOfTasks);
+      }
       executorToGraphNodes.put(i, nodesOfExecutor);
     }
 

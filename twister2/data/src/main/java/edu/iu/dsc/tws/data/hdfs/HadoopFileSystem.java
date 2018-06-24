@@ -157,6 +157,12 @@ public class HadoopFileSystem extends FileSystem {
     return new HadoopDataOutputStream(fsDataOutputStream);
   }
 
+  public HadoopDataOutputStream append(Path path) throws IOException {
+    final org.apache.hadoop.fs.FSDataOutputStream fsDataOutputStream =
+        this.fileSystem.append(toHadoopPath(path));
+    return new HadoopDataOutputStream(fsDataOutputStream);
+  }
+
   @Override
   public boolean delete(final Path f, final boolean recursive) throws IOException {
     return this.fileSystem.delete(toHadoopPath(f), recursive);
