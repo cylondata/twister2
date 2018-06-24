@@ -17,11 +17,11 @@ public class Snapshot {
 
   private HashMap<String, Object> stateMap = new HashMap<>();
 
-  public Object getState(String stateName){
+  public Object getState(String stateName) {
     return stateMap.get(stateName);
   }
 
-  public void addState(String stateName, Object object){
+  public void addState(String stateName, Object object) {
     stateMap.put(stateName, object);
   }
 }
