@@ -187,7 +187,7 @@ public class SourceSinkDiscoveryExample implements IContainer {
 
     }
 
-    private class ClientConnectHandler implements ConnectHandler{
+    private class ClientConnectHandler implements ConnectHandler {
       @Override
       public void onError(SocketChannel channel) {
         LOG.severe("ClientConnectHandler error thrown inside Sink Task");
