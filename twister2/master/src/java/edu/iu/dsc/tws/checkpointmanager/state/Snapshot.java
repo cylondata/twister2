@@ -11,5 +11,17 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.checkpointmanager.state;
 
+import java.util.HashMap;
+
 public class Snapshot {
+
+  private HashMap<String, Object> stateMap = new HashMap<>();
+
+  public Object getState(String stateName){
+    return stateMap.get(stateName);
+  }
+
+  public void addState(String stateName, Object object){
+    stateMap.put(stateName, object);
+  }
 }
