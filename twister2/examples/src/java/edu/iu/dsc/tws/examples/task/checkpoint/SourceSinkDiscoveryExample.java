@@ -153,7 +153,7 @@ public class SourceSinkDiscoveryExample implements IContainer {
     private class ClientMessageHandler implements MessageHandler {
       @Override
       public void onMessage(RequestID id, int workerId, Message message) {
-        LOG.info("ClientMessageHandler inside sink task got message from worker ID "
+        LOG.info("ClientMessageHandler inside source task got message from worker ID "
             + workerId);
 
         client.disconnect();
@@ -165,6 +165,7 @@ public class SourceSinkDiscoveryExample implements IContainer {
   private static class ReceivingTask extends SinkTask {
     private static final long serialVersionUID = -254264903511284798L;
     private Config config;
+    private TaskContext ctx;
 
     private RRClient client;
     private Progress looper;
@@ -176,6 +177,8 @@ public class SourceSinkDiscoveryExample implements IContainer {
 
     @Override
     public void prepare(Config cfg, TaskContext context) {
+      this.ctx = context;
+
       client = new RRClient("localhost", 6789, cfg, looper,
           context.taskId(), new ClientConnectHandler());
 
@@ -187,12 +190,19 @@ public class SourceSinkDiscoveryExample implements IContainer {
     private class ClientConnectHandler implements ConnectHandler{
       @Override
       public void onError(SocketChannel channel) {
-
+        LOG.severe("ClientConnectHandler error thrown inside Sink Task");
       }
 
       @Override
       public void onConnect(SocketChannel channel, StatusCode status) {
+        LOG.info("ClientConnectHandler inside Sink Task got connected");
 
+        Checkpoint.TaskDiscovery message = Checkpoint.TaskDiscovery.newBuilder()
+            .setTaskID(ctx.taskId())
+            .setTaskType(Checkpoint.TaskDiscovery.TaskType.SINK)
+            .build();
+
+        client.sendRequest(message);
       }
 
       @Override
@@ -204,7 +214,10 @@ public class SourceSinkDiscoveryExample implements IContainer {
     private class ClientMessageHandler implements MessageHandler {
       @Override
       public void onMessage(RequestID id, int workerId, Message message) {
+        LOG.info("ClientMessageHandler inside sink task got message from worker ID "
+            + workerId);
 
+        client.disconnect();
       }
     }
   }
