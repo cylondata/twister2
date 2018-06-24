@@ -128,7 +128,7 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
     if (sortedMerger == null) {
       throw new RuntimeException("Un-expected target: " + target);
     }
-    LOG.info(String.format("Receive message %d", target));
+//    LOG.info(String.format("Receive message %d", target));
 
     if ((flags & MessageFlags.EMPTY) == MessageFlags.EMPTY) {
       Set<Integer> finished = finishedSources.get(target);
@@ -139,9 +139,9 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
         finished.add(source);
       }
       if (finished.size() == partition.getSources().size()) {
-        LOG.log(Level.INFO,
-            String.format("%d Finished targets %d %s %s", executor, target,
-                finishedSources, finishedTargets));
+//        LOG.log(Level.INFO,
+//            String.format("%d Finished targets %d %s %s", executor, target,
+//                finishedSources, finishedTargets));
         finishedTargets.add(target);
       }
       return true;
@@ -169,7 +169,7 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
       total += contents.size();
       totalReceives.put(target, total);
     }
-    LOG.info(String.format("%d %d On Message totals %s", executor, target, totalReceives));
+//    LOG.info(String.format("%d %d On Message totals %s", executor, target, totalReceives));
     return true;
   }
 
@@ -192,7 +192,7 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
     Shuffle sortedMerger = sortedMergers.get(target);
     sortedMerger.switchToReading();
     Iterator<Object> itr = sortedMerger.readIterator();
-    LOG.info(String.format("%d %d On finish totals %s", executor, target, totalReceives));
+//    LOG.info(String.format("%d %d On finish totals %s", executor, target, totalReceives));
     try {
       batchReceiver.receive(target, itr);
     } catch (RuntimeException e) {
