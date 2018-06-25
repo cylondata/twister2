@@ -18,12 +18,19 @@ public class SnapshotState {
   private long jobId;
   private HashMap<Integer, Snapshot> states = new HashMap<>();
 
-  public void update(Object state) {
+  public void update(Integer nodeID, Object state) {
+    StorableState storableState = new StorableState(state);
+    if (states.containsKey(nodeID)) {
+      states.get(nodeID).addState(storableState);
+    } else {
+      Snapshot snapshot = new Snapshot();
+      snapshot.addState(storableState);
+      states.put(nodeID, snapshot);
+    }
     //serializing the state and add it to the snapshot  with the specific nodeID
   }
 
   public Snapshot getState(Integer nodeID) {
-    //return the deserialized snapshot
-    return null;
+    return states.get(nodeID);
   }
 }
