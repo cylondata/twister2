@@ -64,8 +64,6 @@ public final class JobMasterStarter {
       e.printStackTrace();
     }
 
-    jobMaster.allWorkersCompleted();
-
     waitIndefinitely();
   }
 
