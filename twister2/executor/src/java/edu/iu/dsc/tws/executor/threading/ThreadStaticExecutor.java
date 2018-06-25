@@ -12,7 +12,7 @@
 package edu.iu.dsc.tws.executor.threading;
 
 import java.util.ArrayList;
-import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -21,6 +21,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.executor.ExecutionPlan;
 import edu.iu.dsc.tws.executor.INodeInstance;
+import edu.iu.dsc.tws.executor.comm.IParallelOperation;
 
 
 public class ThreadStaticExecutor extends ThreadExecutor {
@@ -33,30 +34,23 @@ public class ThreadStaticExecutor extends ThreadExecutor {
 
   private List<Thread> threads = new ArrayList<>();
 
-  private Hashtable<Thread, INodeInstance> threadTaskMapping;
-
   private ExecutionPlan executionPlan;
 
+  public ThreadStaticExecutor() {
+  }
 
   public ThreadStaticExecutor(int numThreads) {
     this.numThreads = numThreads;
   }
 
-  public ThreadStaticExecutor(int numThreads, ExecutionPlan executionPlan) {
-    this.numThreads = numThreads;
+  public ThreadStaticExecutor(ExecutionPlan executionPlan) {
     this.executionPlan = executionPlan;
-    if (executionPlan.getNodes().size() != numThreads) {
-      //System.out.println("Num of Threads: " + this.numThreads);
-      //System.out.println("Num of Nodes : " + executionPlan.getNodes().size());
-    }
   }
-
-
 
   @Override
   public void execute() {
     // go through the instances
-    //LOG.info("ThreadStaticExecutor Execution Starts");
+
     Map<Integer, INodeInstance> nodes = executionPlan.getNodes();
     tasks = new ArrayBlockingQueue<>(nodes.size() * 2);
     tasks.addAll(nodes.values());
@@ -65,12 +59,30 @@ public class ThreadStaticExecutor extends ThreadExecutor {
       node.prepare();
     }
 
-    for (int i = 0; i < numThreads; i++) {
-      Thread t = new Thread(new ThreadStaticExecutor.Worker());
+
+
+    List<IParallelOperation> parallelOperations = executionPlan.getParallelOperations();
+    Iterator<IParallelOperation> itr = parallelOperations.iterator();
+    while (itr.hasNext()) {
+      IParallelOperation op = itr.next();
+      LOG.info("IParallelOperation Type : " + op.getClass().getName());
+    }
+
+    LOG.info("Execution Thread Count : " + executionPlan.getNumThreads() + "No of Tasks : "
+        + tasks.size() + ", Tasks " + executionPlan.getNodes().keySet().size());
+
+    for (int i = 0; i < tasks.size(); i++) {
+      INodeInstance iNodeInstance = tasks.poll();
+      Thread t = new Thread(new TaskWorker(iNodeInstance));
+      t.setName("Thread-" + iNodeInstance.getClass().getSimpleName());
       t.start();
       threads.add(t);
+      tasks.offer(iNodeInstance);
     }
-    //LOG.info("ThreadStaticExecutor Execution Ends");
+
+    for (int i = 0; i < threads.size(); i++) {
+      System.out.println(ThreadStaticExecutor.class.getName() + " : " + threads.get(i).getName());
+    }
   }
 
 
@@ -85,6 +97,20 @@ public class ThreadStaticExecutor extends ThreadExecutor {
         tasks.offer(nodeInstance);
         //LOG.info("Worker Works");
       }
+    }
+  }
+
+  private class TaskWorker implements Runnable {
+
+    private INodeInstance iNodeInstance;
+
+    TaskWorker(INodeInstance instance) {
+      this.iNodeInstance = instance;
+    }
+
+    @Override
+    public void run() {
+      this.iNodeInstance.execute();
     }
   }
 }
