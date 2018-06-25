@@ -28,3 +28,8 @@ def twister2_core_lib_communication_files():
         "//twister2/comms/src/java:comms-java",
         "//twister2/proto:proto-network-java",
     ]
+
+#def twister2_client_lib_data_files():
+#    return [
+#        "//twister2/data/src/main/java:data-java",
+#    ]

@@ -110,6 +110,21 @@ def twister2_client_lib_task_files():
 def twister2_client_lib_data_files():
     return [
         "//twister2/data/src/main/java:data-java",
+        "@org_apache_hadoop_hdfs//jar",
+        "@org_apache_hadoop_common//jar",
+        "@org_apache_hadoop_annotations//jar",
+        "@org_apache_hadoop_auth//jar",
+        "@org_apache_hadoop_mapreduce//jar",
+        "@com_google_code_findbugs//jar",
+        "@com_fasterxml_woodstox//jar",
+        "@org_codehaus_woodstox//jar",
+        "@commons_io//jar",
+        "@commons_collections//jar",
+        "@commons_lang//jar",
+        "@commons_configuration//jar",
+        "@log4j//jar",
+        "@org_apache_htrace//jar",
+        "@org_apache_hadoop//jar",
     ]
 
 def twister2_client_lib_executor_files():
