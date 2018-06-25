@@ -42,7 +42,7 @@ import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.Operations;
 import edu.iu.dsc.tws.task.api.SinkTask;
-import edu.iu.dsc.tws.task.api.SourceTask;
+import edu.iu.dsc.tws.task.api.SourceCheckpointableTask;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
@@ -101,64 +101,14 @@ public class SourceSinkDiscoveryExample implements IContainer {
     }
   }
 
-  private static class GeneratorTask extends SourceTask {
+  private static class GeneratorTask extends SourceCheckpointableTask {
     private static final long serialVersionUID = -254264903510214748L;
-    private TaskContext ctx;
-    private Config config;
-
-    private RRClient client;
-    private Progress looper;
 
     @Override
     public void run() {
       ctx.write("partition-edge", "Hello");
     }
 
-    @Override
-    public void prepare(Config cfg, TaskContext context) {
-      this.ctx = context;
-
-      client = new RRClient("localhost", 6789, cfg, looper,
-          context.taskId(), new ClientConnectHandler());
-
-      client.registerResponseHandler(Checkpoint.TaskDiscovery.newBuilder(),
-          new ClientMessageHandler());
-
-    }
-
-    private class ClientConnectHandler implements ConnectHandler {
-      @Override
-      public void onError(SocketChannel channel) {
-        LOG.severe("ClientConnectHandler error thrown inside Source Task");
-      }
-
-      @Override
-      public void onConnect(SocketChannel channel, StatusCode status) {
-        LOG.info("ClientConnectHandler inside Source Task got connected");
-
-        Checkpoint.TaskDiscovery message = Checkpoint.TaskDiscovery.newBuilder()
-            .setTaskID(ctx.taskId())
-            .setTaskType(Checkpoint.TaskDiscovery.TaskType.SOURCE)
-            .build();
-
-        client.sendRequest(message);
-      }
-
-      @Override
-      public void onClose(SocketChannel channel) {
-        LOG.info("ClientConnect Handler inside Source task closed");
-      }
-    }
-
-    private class ClientMessageHandler implements MessageHandler {
-      @Override
-      public void onMessage(RequestID id, int workerId, Message message) {
-        LOG.info("ClientMessageHandler inside source task got message from worker ID "
-            + workerId);
-
-        client.disconnect();
-      }
-    }
   }
 
 
