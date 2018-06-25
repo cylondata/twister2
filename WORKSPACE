@@ -52,6 +52,28 @@ maven_server(
 )
 
 maven_jar(
+      name = "org_lz4_lz4_java",
+      artifact = "org.lz4:lz4-java:1.4",
+)
+
+maven_jar(
+      name = "org_slf4j_slf4j_api",
+      artifact = "org.slf4j:slf4j-api:1.7.25",
+
+)
+
+maven_jar(
+      name = "org_xerial_snappy_snappy_java",
+      artifact = "org.xerial.snappy:snappy-java:1.1.4",
+
+)
+
+maven_jar(
+      name = "org_apache_kafka_kafka_clients",
+      artifact = "org.apache.kafka:kafka-clients:1.0.0",
+)
+
+maven_jar(
   name = "io_kubernetes_client_java",
   artifact = "io.kubernetes:client-java:1.0.0",
 )

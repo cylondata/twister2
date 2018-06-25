@@ -9,6 +9,7 @@ common_deps_files = [
     "//twister2/task/src/main/java:task-java",
     "//twister2/data/src/main/java:data-java",
     "//twister2/resource-scheduler/src/java:resource-scheduler-java",
+    "//twister2/master/src/java:master-java",
     "@com_google_guava_guava//jar",
 ]
 
@@ -17,5 +18,3 @@ java_library(
     srcs = glob(["**/*.java"]),
     deps = common_deps_files,
 )
-
-
