@@ -1,5 +1,7 @@
 # Twister2
 
+[![Build Status](https://travis-ci.org/DSC-SPIDAL/twister2.svg?branch=master)](https://travis-ci.org/DSC-SPIDAL/twister2)
+
 Twister2 is a big data tool kit supporting different parallel computing 
 paradigms for big data applications. Twister2 models a parallel computation as a graph. Depending on the requirements the graph can be deployed, executed with different choices making Twister2 capable of running different applications including classic parallel computing, data parallel, streaming or function as a service applications.
 

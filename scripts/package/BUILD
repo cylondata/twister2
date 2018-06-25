@@ -20,11 +20,13 @@ load("/tools/rules/twister2_client", "twister2_client_lib_communication_files")
 load("/tools/rules/twister2_client", "twister2_client_example_files")
 load("/tools/rules/twister2_client", "twister2_client_lib_common_files")
 load("/tools/rules/twister2_client", "twister2_client_lib_executor_files")
+load("/tools/rules/twister2_client", "twister2_client_lib_connector_files")
 load("/tools/rules/twister2_core", "twister2_core_files")
 load("/tools/rules/twister2_core", "twister2_core_conf_files")
 load("/tools/rules/twister2_core", "twister2_core_lib_communication_files")
 load("/tools/rules/twister2_core", "twister2_core_lib_resource_scheduler_files")
 load("/tools/rules/twister2_core", "twister2_core_lib_task_scheduler_files")
+load("/tools/rules/twister2_core", "twister2_core_lib_connector_files")
 load("/tools/rules/twister2_master", "twister2_master_lib_files")
 
 generated_release_files = [
@@ -45,7 +47,9 @@ filegroup(
     ],
 )
 
+######################################################
 # twister2 core packaging
+######################################################
 
 pkg_tar(
     name = "twister2-core",
@@ -56,6 +60,7 @@ pkg_tar(
         ":twister2-core-lib-api",
         ":twister2-core-lib-common",
         ":twister2-core-lib-communication",
+        ":twister2-core-lib-connector",
         ":twister2-core-lib-resource-scheduler",
         ":twister2-core-lib-task",
         ":twister2-core-lib-task-scheduler",
@@ -111,6 +116,12 @@ pkg_tar(
     package_dir = "lib",
 )
 
+pkg_tar(
+    name = "twister2-core-lib-connector",
+    srcs = twister2_client_lib_connector_files(),
+    package_dir = "lib",
+)
+
 ######################################################
 # twister2 client packaging
 ######################################################
@@ -133,6 +144,7 @@ pkg_tar(
         ":twister2-client-examples",
         ":twister2-client-lib-api",
         ":twister2-client-lib-common",
+        ":twister2-client-lib-connector",
         ":twister2-client-lib-data",
         ":twister2-client-lib-data-lmdb",
         ":twister2-client-lib-resource-scheduler",
@@ -243,6 +255,12 @@ pkg_tar(
 pkg_tar(
     name = "twister2-client-lib-common",
     srcs = twister2_client_lib_common_files(),
+    package_dir = "lib",
+)
+
+pkg_tar(
+    name = "twister2-client-lib-connector",
+    srcs = twister2_client_lib_connector_files(),
     package_dir = "lib",
 )
 

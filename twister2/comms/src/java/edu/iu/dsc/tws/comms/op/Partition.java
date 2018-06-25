@@ -11,10 +11,14 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.op;
 
+import java.util.logging.Logger;
+
 import edu.iu.dsc.tws.comms.mpi.MPIContext;
 import edu.iu.dsc.tws.comms.mpi.MPIDataFlowPartition;
 
 public class Partition {
+  private static final Logger LOG = Logger.getLogger(Partition.class.getName());
+
   private MPIDataFlowPartition partition;
 
   private Communicator comm;

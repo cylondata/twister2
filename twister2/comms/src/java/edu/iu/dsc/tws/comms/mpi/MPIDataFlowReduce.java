@@ -17,7 +17,6 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
@@ -70,9 +69,6 @@ public class MPIDataFlowReduce implements DataFlowOperation, MPIMessageReceiver 
   private int executor;
   private MessageType type;
 
-  private AtomicBoolean finalReceiverProgress;
-  private AtomicBoolean partialRecevierProgress;
-
   private CompletionListener completionListener;
 
   private Table<Integer, Integer, RoutingParameters> routingParamCache = HashBasedTable.create();
@@ -91,8 +87,6 @@ public class MPIDataFlowReduce implements DataFlowOperation, MPIMessageReceiver 
     this.partialReceiver = partialRcvr;
     this.pathToUse = p;
     this.delegete = new MPIDataFlowOperation(channel);
-    this.finalReceiverProgress = new AtomicBoolean(false);
-    this.partialRecevierProgress = new AtomicBoolean(false);
   }
 
   public MPIDataFlowReduce(TWSChannel channel, Set<Integer> sources, int destination,

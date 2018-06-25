@@ -120,8 +120,8 @@ public final class FileLoader {
       }
       // we need to write the data lengths and key lengths
       totalSize += size + records.size() * 8;
-      LOG.log(Level.INFO, String.format("Total size: %d sum: %d size %d elements %d",
-          totalSize, sum, size, records.size()));
+//      LOG.log(Level.INFO, String.format("Total size: %d sum: %d size %d elements %d",
+//          totalSize, sum, size, records.size()));
 
 
       Files.createDirectories(Paths.get(outFileName).getParent());
@@ -461,5 +461,16 @@ public final class FileLoader {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  public static Object convertKeyToArray(MessageType keyType, Object key) {
+    if (keyType == MessageType.INTEGER) {
+      int[] ints = {(int) key};
+//      LOG.info("Size of key: " + ints.length);
+      return ints;
+    } else if (keyType == MessageType.SHORT) {
+      return new short[]{(short) key};
+    }
+    return null;
   }
 }

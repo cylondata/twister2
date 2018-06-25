@@ -11,18 +11,30 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.api;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
+import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.logging.FileHandler;
 import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hdfs.DFSClient;
+import org.apache.hadoop.hdfs.protocol.ClientProtocol;
+import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
+import org.apache.hadoop.hdfs.protocol.HdfsConstants;
+import org.apache.hadoop.hdfs.tools.DFSck;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.hdfs.HadoopDataOutputStream;
 import edu.iu.dsc.tws.data.hdfs.HadoopFileSystem;
 import edu.iu.dsc.tws.data.utils.HdfsDataContext;
+
+import static org.apache.hadoop.util.ToolRunner.run;
 
 /**
  * This is the abstraction class for the HDFS file system and establishing
@@ -34,6 +46,7 @@ public class HDFSConnector implements IHDFSConnector {
   private static final Logger LOG = Logger.getLogger(HDFSConnector.class.getName());
   private Config config;
   private String outputFile;
+  private FileHandler fileHandler;
 
   public HDFSConnector(Config config1) {
     this.config = config1;
@@ -44,20 +57,40 @@ public class HDFSConnector implements IHDFSConnector {
     this.outputFile = outputFile1;
   }
 
+
+  @Override
+  public HadoopFileSystem HDFSConnect() {
+    try {
+      fileHandler = new FileHandler("/home/kgovind/twister2/twister2hdfs.log");
+      LOG.addHandler(fileHandler);
+      SimpleFormatter simpleFormatter = new SimpleFormatter();
+      fileHandler.setFormatter(simpleFormatter);
+    } catch (IOException ioe) {
+      ioe.printStackTrace();
+    }
+    Configuration conf = new Configuration(false);
+    conf.addResource(new org.apache.hadoop.fs.Path(HdfsDataContext.getHdfsConfigDirectory(config)));
+    HadoopFileSystem hadoopFileSystem = null;
+
+    try {
+      hadoopFileSystem = new HadoopFileSystem(conf, org.apache.hadoop.fs.FileSystem.get(conf));
+    } catch (IOException ioe) {
+      ioe.printStackTrace();
+    }
+    return hadoopFileSystem;
+  }
+
   /**
    * To connect the HDFS file system
    */
-  public HadoopFileSystem HDFSConnect(String message, int count) {
+  public void HDFSConnect(String message, int count) {
 
-    Configuration conf = new Configuration(false);
-    conf.addResource(new org.apache.hadoop.fs.Path(HdfsDataContext.getHdfsConfigDirectory(config)));
-
+    HadoopFileSystem hadoopFileSystem = HDFSConnect();
     HadoopDataOutputStream hadoopDataOutputStream = null;
-    HadoopFileSystem hadoopFileSystem = null;
+
     try {
-      hadoopFileSystem = new HadoopFileSystem(conf, org.apache.hadoop.fs.FileSystem.get(conf));
-      String directoryString = HdfsDataContext.getHdfsUrlDefault(config)
-          + "/user/kannan/" + outputFile;
+      String directoryString =
+          HdfsDataContext.getHdfsUrlDefault(config) + "/user/kannan/" + outputFile;
       Path path = new Path(directoryString);
       if (!hadoopFileSystem.exists(path)) {
         LOG.info("Directory String Is:%%%" + directoryString + "\t"
@@ -65,34 +98,33 @@ public class HDFSConnector implements IHDFSConnector {
         hadoopDataOutputStream = hadoopFileSystem.create(path);
         hadoopDataOutputStream.write(
             "Hello, I am writing to Hadoop Data Output Stream\n".getBytes(DEFAULT_CHARSET));
-        //hadoopDataOutputStream.write(message.toString().getBytes());
       } else if (hadoopFileSystem.exists(path)) {
         hadoopDataOutputStream = hadoopFileSystem.append(path);
         hadoopDataOutputStream.write(
             "Hello, I am appending to Hadoop Data Output Stream\n".getBytes(DEFAULT_CHARSET));
-        //hadoopDataOutputStream.write(message.getBytes());
-        return hadoopFileSystem;
       }
     } catch (IOException e) {
       e.printStackTrace();
     } finally {
       try {
         if (hadoopFileSystem != null) {
+          LOG.info("I am closing the streams");
+          if (hadoopDataOutputStream != null) {
+            hadoopDataOutputStream.close();
+          }
           hadoopFileSystem.close();
-          hadoopDataOutputStream.close();
         }
       } catch (IOException ioe) {
         ioe.printStackTrace();
       }
     }
-    return hadoopFileSystem;
   }
 
   @Override
   public void HDFSConnect(String message) {
+
     Configuration conf = new Configuration(false);
     conf.addResource(new org.apache.hadoop.fs.Path(HdfsDataContext.getHdfsConfigDirectory(config)));
-
     HadoopDataOutputStream hadoopDataOutputStream = null;
     HadoopFileSystem hadoopFileSystem = null;
 
@@ -115,11 +147,47 @@ public class HDFSConnector implements IHDFSConnector {
       try {
         if (hadoopFileSystem != null) {
           hadoopFileSystem.close();
-          hadoopDataOutputStream.close();
+          if (hadoopDataOutputStream != null) {
+            hadoopDataOutputStream.close();
+          }
         }
       } catch (IOException ioe) {
         ioe.printStackTrace();
       }
     }
+  }
+
+  /**
+   * This method will be used to locate the datanode location of the input file.
+   */
+  public String getDFSCK(String[] fName) {
+
+    Configuration conf = new Configuration(false);
+    conf.addResource(new org.apache.hadoop.fs.Path(HdfsDataContext.getHdfsConfigDirectory(config)));
+    ByteArrayOutputStream bStream = new ByteArrayOutputStream();
+    PrintStream out = new PrintStream(bStream, true);
+    String datanodeName = null;
+    StringBuilder stringBuilder = new StringBuilder();
+    try {
+      InetSocketAddress namenodeAddress =
+          new InetSocketAddress("hairy.soic.indiana.edu", 9000);
+      DFSClient dfsClient = new DFSClient(namenodeAddress, conf);
+      ClientProtocol nameNode = dfsClient.getNamenode();
+      DatanodeInfo[] datanodeReport =
+          nameNode.getDatanodeReport(HdfsConstants.DatanodeReportType.ALL);
+      for (DatanodeInfo di : datanodeReport) {
+        datanodeName = di.getHostName();
+        LOG.info("DataNode Name: " + datanodeName);
+        //System.out.println("Data Node Details:" + di.getDatanodeReport());
+      }
+      run(new DFSck(conf, out), fName);
+      System.out.println(bStream.toString());
+      //out.println();
+    } catch (IOException ioe) {
+      ioe.printStackTrace();
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    return datanodeName;
   }
 }

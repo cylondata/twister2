@@ -11,11 +11,14 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.FileHandler;
 import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
@@ -51,6 +54,8 @@ public class HDFSDataLocalityExecutorExample implements IContainer {
   private static final Logger LOG =
       Logger.getLogger(HDFSDataLocalityExecutorExample.class.getName());
 
+  private FileHandler fileHandler;
+
   public static void main(String[] args) {
     // first load the configurations from command line and config files
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
@@ -70,6 +75,16 @@ public class HDFSDataLocalityExecutorExample implements IContainer {
 
   @Override
   public void init(Config config, int id, ResourcePlan resourcePlan) {
+
+    try {
+      fileHandler = new FileHandler("/home/kgovind/twister2/taskscheduler.log");
+      LOG.addHandler(fileHandler);
+      SimpleFormatter simpleFormatter = new SimpleFormatter();
+      fileHandler.setFormatter(simpleFormatter);
+    } catch (IOException ioe) {
+      ioe.printStackTrace();
+    }
+
     GeneratorTask g = new GeneratorTask();
     ReceivingTask r = new ReceivingTask();
 
@@ -159,9 +174,6 @@ public class HDFSDataLocalityExecutorExample implements IContainer {
   private static class GeneratorTask extends SourceTask {
     private static final long serialVersionUID = -254264903510284748L;
     private TaskContext ctx;
-    private Config config;
-    private String outputFile;
-    private String inputFile;
 
     @Override
     public void run() {
@@ -171,17 +183,6 @@ public class HDFSDataLocalityExecutorExample implements IContainer {
     @Override
     public void prepare(Config cfg, TaskContext context) {
       this.ctx = context;
-      /*Map<String, Object> configs = context.getConfigurations();
-      for (java.util.Map.Entry<String, Object> entry : configs.entrySet()) {
-        LOG.info("Key: " + entry.getKey() + ": Value: " + entry.getValue());
-        if (entry.getKey().toString().contains("inputdataset")) {
-          this.inputFile = entry.getValue().toString();
-          LOG.info("Input File(s):" + entry.getKey() + "\t" + this.inputFile);
-        } else if (entry.getKey().toString().contains("outputdataset")) {
-          this.outputFile = entry.getValue().toString();
-          LOG.info("Output File(s):" + entry.getKey() + "\t" + this.outputFile);
-        }
-      }*/
     }
   }
 
@@ -192,14 +193,14 @@ public class HDFSDataLocalityExecutorExample implements IContainer {
     private Config config;
     private String outputFile;
     private String inputFile;
+    private HDFSConnector hdfsConnector = null;
 
     @Override
     public void execute(IMessage message) {
 
-      HDFSConnector hdfsConnector = new HDFSConnector(config, outputFile);
       LOG.info("Message Partition Received : " + message.getContent()
           + ", Count : " + count);
-      hdfsConnector.HDFSConnect(message.getContent().toString(), count);
+      hdfsConnector.HDFSConnect(message.getContent().toString());
       count++;
     }
 
@@ -211,21 +212,15 @@ public class HDFSDataLocalityExecutorExample implements IContainer {
 
       Map<String, Object> configs = context.getConfigurations();
       for (Map.Entry<String, Object> entry : configs.entrySet()) {
-        if (entry.getKey().toString().contains("inputdataset")) {
-          List<String> inputFiles = (List<String>) entry.getValue();
-          for (int i = 0; i < inputFiles.size(); i++) {
-            this.inputFile = inputFiles.get(i);
-            LOG.info("Input File(s):" + this.inputFile);
-          }
-        } else if (entry.getKey().toString().contains("outputdataset")) {
+        if (entry.getKey().toString().contains("outputdataset")) {
           List<String> outputFiles = (List<String>) entry.getValue();
           for (int i = 0; i < outputFiles.size(); i++) {
             this.outputFile = outputFiles.get(i);
             LOG.info("Output File(s):" + this.outputFile);
           }
         }
+        hdfsConnector = new HDFSConnector(config, outputFile);
       }
     }
-
   }
 }

@@ -293,5 +293,7 @@ public abstract class FileSystem {
   public abstract long getDefaultBlockSize();
 
   public abstract boolean isDistributedFS();
-}
 
+
+
+}

@@ -31,7 +31,7 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.mpi.io.KeyedContent;
+import edu.iu.dsc.tws.examples.IntData;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.utils.RandomString;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -50,7 +50,7 @@ public class BaseAllGatherCommunication implements IContainer {
 
   private Config config;
 
-  private static final int NO_OF_TASKS = 8;
+  private static final int NO_OF_TASKS = 16;
 
   private int noOfTasksPerExecutor = 2;
 
@@ -140,12 +140,10 @@ public class BaseAllGatherCommunication implements IContainer {
 //      MPIBuffer data = new MPIBuffer(1024);
         startTime = System.nanoTime();
         for (int i = 0; i < 1000; i++) {
-          String data = generateStringData();
+          IntData data = generateData();
           // lets generate a message
-          KeyedContent mesage = new KeyedContent(task, data,
-              MessageType.INTEGER, MessageType.OBJECT);
 //
-          while (!allAggregate.send(task, mesage, 0)) {
+          while (!allAggregate.send(task, data, 0)) {
             // lets wait a litte and try again
             try {
               Thread.sleep(1);
@@ -198,6 +196,9 @@ public class BaseAllGatherCommunication implements IContainer {
         messages.put(e.getKey(), messagesPerTask);
         counts.put(e.getKey(), countsPerTask);
       }
+
+      LOG.info("Messages KeysetSize : " + messages.keySet().size()
+          + ", Message EntrySetSize : " + messages.entrySet().size());
     }
 
     @Override
@@ -247,7 +248,7 @@ public class BaseAllGatherCommunication implements IContainer {
             if (e.getValue().size() == 0) {
               found = false;
               canProgress = false;
-              LOG.info("found : " + found + ", canProgress : " + canProgress);
+              //LOG.info("found : " + found + ", canProgress : " + canProgress);
             } else {
               o = e.getValue().get(0);
               LOG.info("o value : " + o.toString() + ", " + o.getClass().getName());
@@ -278,6 +279,15 @@ public class BaseAllGatherCommunication implements IContainer {
         }
       }
     }
+  }
+
+  private IntData generateData() {
+    int s = 64000;
+    int[] d = new int[s];
+    for (int i = 0; i < s; i++) {
+      d[i] = i;
+    }
+    return new IntData(d);
   }
 
   public static void main(String[] args) {

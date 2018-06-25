@@ -110,6 +110,29 @@ def twister2_client_lib_task_files():
 def twister2_client_lib_data_files():
     return [
         "//twister2/data/src/main/java:data-java",
+        "@org_apache_hadoop_hdfs//jar",
+        "@org_apache_hadoop_common//jar",
+        "@org_apache_hadoop_annotations//jar",
+        "@org_apache_hadoop_auth//jar",
+        "@org_apache_hadoop_mapreduce//jar",
+        "@com_google_code_findbugs//jar",
+        "@com_fasterxml_woodstox//jar",
+        "@org_codehaus_woodstox//jar",
+        "@commons_io//jar",
+        "@commons_collections//jar",
+        "@commons_lang//jar",
+        "@commons_configuration//jar",
+        "@log4j//jar",
+        "@org_apache_htrace//jar",
+        "@org_apache_hadoop//jar",
+    ]
+def twister2_client_lib_connector_files():
+    return [
+        "//twister2/connectors/src/java:connector-java",
+        "@org_xerial_snappy_snappy_java//jar",
+        "@org_lz4_lz4_java//jar",
+        "@org_slf4j_slf4j_api//jar",
+        "@org_apache_kafka_kafka_clients//jar",
     ]
 
 def twister2_client_lib_executor_files():
@@ -161,3 +184,18 @@ def twister2_client_lib_third_party_files():
         "@org_slf4j_slf4j_api//jar",
         "@org_slf4j_slf4j_jdk14//jar",
     ]
+
+def twister2_client_lib_master_files():
+    return [
+        "//twister2/connectors/src/java:master-java"
+    ]
+
+#def twister2_client_lib_connector_files():
+#    return [
+#        "//twister2/connectors/src/java:connector-java",
+#        "@org_xerial_snappy_snappy_java//jar",
+#        "@org_lz4_lz4_java//jar",
+#        "@org_slf4j_slf4j_api//jar",
+#        "@org_apache_kafka_kafka_clients//jar",
+#        "@org_apache_kafka_kafka_clients//jar",
+#    ]
