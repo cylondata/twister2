@@ -27,9 +27,9 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.mpi.MPIDataFlowPartition;
-import edu.iu.dsc.tws.comms.mpi.io.partition.PartitionBatchFinalReceiver;
-import edu.iu.dsc.tws.comms.mpi.io.partition.PartitionPartialReceiver;
+import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
+import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionBatchFinalReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
 import edu.iu.dsc.tws.comms.op.EdgeGenerator;
 import edu.iu.dsc.tws.comms.op.OperationSemantics;
 import edu.iu.dsc.tws.examples.utils.WordCountUtils;
@@ -41,7 +41,7 @@ import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 public class SortJob implements IContainer {
   private static final Logger LOG = Logger.getLogger(SortJob.class.getName());
 
-  private MPIDataFlowPartition partition;
+  private DataFlowPartition partition;
 
   private TWSNetwork network;
 
@@ -73,10 +73,10 @@ public class SortJob implements IContainer {
     // setup the network
     setupNetwork();
 
-    partition = new MPIDataFlowPartition(config, channel, taskPlan, sources, destinations,
+    partition = new DataFlowPartition(config, channel, taskPlan, sources, destinations,
         new PartitionBatchFinalReceiver(new RecordSave(), false, true,
             new IntegerComparator()),
-        new PartitionPartialReceiver(), MPIDataFlowPartition.PartitionStratergy.DIRECT,
+        new PartitionPartialReceiver(), DataFlowPartition.PartitionStratergy.DIRECT,
         MessageType.BYTE, MessageType.BYTE, MessageType.INTEGER, MessageType.INTEGER,
         OperationSemantics.STREAMING_BATCH, new EdgeGenerator(0));
     // start the threads

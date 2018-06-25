@@ -24,7 +24,7 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.mpi.MPIDataFlowMultiGather;
+import edu.iu.dsc.tws.comms.dfw.DataFlowMultiGather;
 import edu.iu.dsc.tws.examples.utils.WordCountUtils;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
@@ -32,7 +32,7 @@ import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 public class WordCountContainer implements IContainer {
   private static final Logger LOG = Logger.getLogger(WordCountContainer.class.getName());
 
-  private MPIDataFlowMultiGather keyGather;
+  private DataFlowMultiGather keyGather;
 
   private TWSNetwork network;
 
@@ -63,7 +63,7 @@ public class WordCountContainer implements IContainer {
     setupNetwork();
 
     Map<String, Object> newCfg = new HashMap<>();
-    keyGather = (MPIDataFlowMultiGather) channel.keyedGather(newCfg, MessageType.OBJECT,
+    keyGather = (DataFlowMultiGather) channel.keyedGather(newCfg, MessageType.OBJECT,
         destinations, sources,
         destinations, new WordAggregate());
 

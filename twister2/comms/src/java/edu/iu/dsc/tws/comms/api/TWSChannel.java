@@ -26,9 +26,9 @@ package edu.iu.dsc.tws.comms.api;
 import java.nio.ByteBuffer;
 import java.util.Queue;
 
-import edu.iu.dsc.tws.comms.mpi.MPIBuffer;
-import edu.iu.dsc.tws.comms.mpi.MPIMessage;
-import edu.iu.dsc.tws.comms.mpi.MPIMessageListener;
+import edu.iu.dsc.tws.comms.dfw.ChannelListener;
+import edu.iu.dsc.tws.comms.dfw.DataBuffer;
+import edu.iu.dsc.tws.comms.dfw.MPIMessage;
 
 /**
  * Represent a communication channel. A MPI channel or a TCP channel.
@@ -41,7 +41,7 @@ public interface TWSChannel {
    * @param callback callback for message completions
    * @return true if sending is accepted
    */
-  boolean sendMessage(int id, MPIMessage message, MPIMessageListener callback);
+  boolean sendMessage(int id, MPIMessage message, ChannelListener callback);
 
   /**
    * Receive a message
@@ -52,7 +52,7 @@ public interface TWSChannel {
    * @return true if sending is accepted
    */
   boolean receiveMessage(int id, int edge,
-                         MPIMessageListener callback, Queue<MPIBuffer> receiveBuffers);
+                         ChannelListener callback, Queue<DataBuffer> receiveBuffers);
 
   /**
    * Progress the channel

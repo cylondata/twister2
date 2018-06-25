@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MultiMessageReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.mpi.io.KeyedContent;
+import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
 
 public class WordAggregate implements MultiMessageReceiver {
   private static final Logger LOG = Logger.getLogger(WordAggregate.class.getName());

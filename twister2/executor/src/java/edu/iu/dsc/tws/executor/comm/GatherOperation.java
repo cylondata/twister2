@@ -21,7 +21,7 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.mpi.MPIDataFlowGather;
+import edu.iu.dsc.tws.comms.dfw.DataFlowGather;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.EdgeGenerator;
 import edu.iu.dsc.tws.task.api.IMessage;
@@ -30,7 +30,7 @@ import edu.iu.dsc.tws.task.api.TaskMessage;
 
 public class GatherOperation extends AbstractParallelOperation {
   private static final Logger LOG = Logger.getLogger(GatherOperation.class.getName());
-  private MPIDataFlowGather op;
+  private DataFlowGather op;
 
   public GatherOperation(Config config, TWSChannel network, TaskPlan tPlan) {
     super(config, network, tPlan);
@@ -40,14 +40,14 @@ public class GatherOperation extends AbstractParallelOperation {
                       DataType dataType, String edgeName, Config config, TaskPlan taskPlan) {
     this.edge = e;
     communicationEdge = e.generate(edgeName);
-    op = new MPIDataFlowGather(channel, srcs, dest, new FinalGatherReceiver(), 0, 0,
+    op = new DataFlowGather(channel, srcs, dest, new FinalGatherReceiver(), 0, 0,
         config, Utils.dataTypeToMessageType(dataType), taskPlan, e.getIntegerMapping(edgeName));
     op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
   }
 
   public void prepare(Set<Integer> srcs, int dest, EdgeGenerator e, DataType dataType,
                       DataType keyType, String edgeName, Config config, TaskPlan taskPlan) {
-    op = new MPIDataFlowGather(channel, srcs, dest, new FinalGatherReceiver(), 0, 0,
+    op = new DataFlowGather(channel, srcs, dest, new FinalGatherReceiver(), 0, 0,
         config, Utils.dataTypeToMessageType(dataType), Utils.dataTypeToMessageType(keyType),
         taskPlan, e.getIntegerMapping(edgeName));
     op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);

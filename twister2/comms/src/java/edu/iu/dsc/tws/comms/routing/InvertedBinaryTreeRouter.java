@@ -21,7 +21,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.mpi.MPIContext;
+import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 
 public class InvertedBinaryTreeRouter {
   private static final Logger LOG = Logger.getLogger(InvertedBinaryTreeRouter.class.getName());
@@ -46,8 +46,8 @@ public class InvertedBinaryTreeRouter {
    */
   public InvertedBinaryTreeRouter(Config cfg, TaskPlan plan,
                                   int root, Set<Integer> dests, int index) {
-    int interNodeDegree = MPIContext.interNodeDegree(cfg, 2);
-    int intraNodeDegree = MPIContext.intraNodeDegree(cfg, 2);
+    int interNodeDegree = DataFlowContext.interNodeDegree(cfg, 2);
+    int intraNodeDegree = DataFlowContext.intraNodeDegree(cfg, 2);
     this.executor = plan.getThisExecutor();
     this.mainTaskLast = false;
     // lets build the tree
