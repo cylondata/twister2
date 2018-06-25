@@ -11,19 +11,26 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.checkpointmanager.state;
 
-import java.util.HashMap;
 
 public class SnapshotState {
 
   private long jobId;
-  private HashMap<Integer, Snapshot> states = new HashMap<>();
+  private int nodeId;
+  private Snapshot snapshot;
+
+  public SnapshotState(long jobId, int nodeId) {
+    this.jobId = jobId;
+    this.nodeId = nodeId;
+    this.snapshot = new Snapshot();
+  }
 
   public void update(Object state) {
+    StorableState storableState = new StorableState(state);
+    this.snapshot.addState(storableState);
     //serializing the state and add it to the snapshot  with the specific nodeID
   }
 
-  public Snapshot getState(Integer nodeID) {
-    //return the deserialized snapshot
-    return null;
+  public Snapshot getState() {
+    return snapshot;
   }
 }
