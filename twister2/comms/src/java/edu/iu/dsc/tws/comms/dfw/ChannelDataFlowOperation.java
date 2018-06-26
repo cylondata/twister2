@@ -89,13 +89,13 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
   /**
    * Pending receives in case the receives are not ready
    */
-  protected Map<Integer, Queue<Pair<Object, MPIMessage>>> pendingReceiveMessagesPerSource;
+  protected Map<Integer, Queue<Pair<Object, ChannelMessage>>> pendingReceiveMessagesPerSource;
 
-  protected Map<Integer, Queue<MPIMessage>> pendingReceiveDeSerializations;
+  protected Map<Integer, Queue<ChannelMessage>> pendingReceiveDeSerializations;
   /**
    * Non grouped current messages
    */
-  private Map<Integer, MPIMessage> currentMessages = new HashMap<>();
+  private Map<Integer, ChannelMessage> currentMessages = new HashMap<>();
 
   protected KryoSerializer kryoSerializer;
 
@@ -171,8 +171,8 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
                    boolean lastReceiver, ChannelReceiver msgReceiver,
                    Map<Integer, ArrayBlockingQueue<Pair<Object, OutMessage>>>
                        pendingSendPerSource,
-                   Map<Integer, Queue<Pair<Object, MPIMessage>>> pRMPS,
-                   Map<Integer, Queue<MPIMessage>> pendingReceiveDesrialize,
+                   Map<Integer, Queue<Pair<Object, ChannelMessage>>> pRMPS,
+                   Map<Integer, Queue<ChannelMessage>> pendingReceiveDesrialize,
                    Map<Integer, MessageSerializer> serializer,
                    Map<Integer, MessageDeSerializer> deSerializer, boolean k) {
     this.config = cfg;
@@ -225,8 +225,8 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
                    boolean lastReceiver, ChannelReceiver msgReceiver,
                    Map<Integer, ArrayBlockingQueue<Pair<Object, OutMessage>>>
                        pendingSendPerSource,
-                   Map<Integer, Queue<Pair<Object, MPIMessage>>> pRMPS,
-                   Map<Integer, Queue<MPIMessage>> pendingReceiveDesrialize,
+                   Map<Integer, Queue<Pair<Object, ChannelMessage>>> pRMPS,
+                   Map<Integer, Queue<ChannelMessage>> pendingReceiveDesrialize,
                    Map<Integer, MessageSerializer> serializer,
                    Map<Integer, MessageDeSerializer> deSerializer, boolean k) {
     init(cfg, messageType, messageType, keyType, keyType,
@@ -293,14 +293,15 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     ArrayBlockingQueue<Pair<Object, OutMessage>> pendingSendMessages =
         pendingSendMessagesPerSource.get(source * -1 - 1);
     if (pendingSendMessages.remainingCapacity() > 0) {
-      MPIMessage mpiMessage = new MPIMessage(source, dataType, MessageDirection.OUT, this);
+      ChannelMessage channelMessage = new ChannelMessage(source, dataType,
+          MessageDirection.OUT, this);
       int di = -1;
       if (routingParameters.getExternalRoutes().size() > 0) {
         di = routingParameters.getDestinationId();
       }
       // create a send message to keep track of the serialization
       // at the intial stage the sub-edge is 0
-      OutMessage sendMessage = new OutMessage(source, mpiMessage, edge,
+      OutMessage sendMessage = new OutMessage(source, channelMessage, edge,
           di, path, flags, routingParameters.getInternalRoutes(),
           routingParameters.getExternalRoutes());
 
@@ -327,13 +328,14 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
       throw new RuntimeException(String.format("%d No send messages %d", executor, source));
     }
     if (pendingSendMessages.remainingCapacity() > 0) {
-      MPIMessage mpiMessage = new MPIMessage(source, dataType, MessageDirection.OUT, this);
+      ChannelMessage channelMessage = new ChannelMessage(source, dataType,
+          MessageDirection.OUT, this);
 
       int di = -1;
       if (routingParameters.getExternalRoutes().size() > 0) {
         di = routingParameters.getDestinationId();
       }
-      OutMessage sendMessage = new OutMessage(source, mpiMessage, edge,
+      OutMessage sendMessage = new OutMessage(source, channelMessage, edge,
           di, path, flags, routingParameters.getInternalRoutes(),
           routingParameters.getExternalRoutes());
 
@@ -437,7 +439,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     }
   }
 
-  private void receiveDeserializeProgress(MPIMessage currentMessage, int receiveId) {
+  private void receiveDeserializeProgress(ChannelMessage currentMessage, int receiveId) {
     if (currentMessage == null) {
       return;
     }
@@ -446,7 +448,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
 //    LOG.info(String.format("%d Receive deserialize progress", executor));
     //If this is the last receiver we save to memory store
     if (isStoreBased && isLastReceiver) {
-      currentMessage.setReceivedState(MPIMessage.ReceivedState.RECEIVE);
+      currentMessage.setReceivedState(ChannelMessage.ReceivedState.RECEIVE);
       if (!receiver.receiveMessage(currentMessage, operationMemoryManager)) {
         return;
       }
@@ -459,10 +461,10 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
         object = messageDeSerializer.get(receiveId).build(currentMessage,
             currentMessage.getHeader().getEdge());
       }
-      Queue<Pair<Object, MPIMessage>> pendingReceiveMessages =
+      Queue<Pair<Object, ChannelMessage>> pendingReceiveMessages =
           pendingReceiveMessagesPerSource.get(id);
 //      LOG.info(String.format("%d Deserialized message", executor));
-      currentMessage.setReceivedState(MPIMessage.ReceivedState.INIT);
+      currentMessage.setReceivedState(ChannelMessage.ReceivedState.INIT);
       if (!pendingReceiveMessages.offer(new ImmutablePair<>(object, currentMessage))) {
         throw new RuntimeException(executor + " We should have enough space: "
             + pendingReceiveMessages.size());
@@ -471,33 +473,34 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
   }
 
 
-  private void receiveProgress(Queue<Pair<Object, MPIMessage>> pendingReceiveMessages) {
+  private void receiveProgress(Queue<Pair<Object, ChannelMessage>> pendingReceiveMessages) {
     while (pendingReceiveMessages.size() > 0) {
-      Pair<Object, MPIMessage> pair = pendingReceiveMessages.peek();
-      MPIMessage.ReceivedState state = pair.getRight().getReceivedState();
-      MPIMessage currentMessage = pair.getRight();
+      Pair<Object, ChannelMessage> pair = pendingReceiveMessages.peek();
+      ChannelMessage.ReceivedState state = pair.getRight().getReceivedState();
+      ChannelMessage currentMessage = pair.getRight();
       Object object = pair.getLeft();
 
-      if (state == MPIMessage.ReceivedState.INIT) {
+      if (state == ChannelMessage.ReceivedState.INIT) {
         currentMessage.incrementRefCount();
       }
 
       lock.lock();
       try {
-        if (state == MPIMessage.ReceivedState.DOWN || state == MPIMessage.ReceivedState.INIT) {
-          currentMessage.setReceivedState(MPIMessage.ReceivedState.DOWN);
+        if (state == ChannelMessage.ReceivedState.DOWN
+            || state == ChannelMessage.ReceivedState.INIT) {
+          currentMessage.setReceivedState(ChannelMessage.ReceivedState.DOWN);
 //          LOG.info(String.format("%d Calling receiver", executor));
           if (!receiver.passMessageDownstream(object, currentMessage)) {
             break;
           }
-          currentMessage.setReceivedState(MPIMessage.ReceivedState.RECEIVE);
+          currentMessage.setReceivedState(ChannelMessage.ReceivedState.RECEIVE);
           if (!receiver.receiveMessage(currentMessage, object)) {
             break;
           }
           currentMessage.release();
           pendingReceiveMessages.poll();
-        } else if (state == MPIMessage.ReceivedState.RECEIVE) {
-          currentMessage.setReceivedState(MPIMessage.ReceivedState.RECEIVE);
+        } else if (state == ChannelMessage.ReceivedState.RECEIVE) {
+          currentMessage.setReceivedState(ChannelMessage.ReceivedState.RECEIVE);
           if (!receiver.receiveMessage(currentMessage, object)) {
             break;
           }
@@ -551,14 +554,14 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     }
   }
 
-  private boolean sendMessageToTarget(MPIMessage mpiMessage, int i) {
-    mpiMessage.incrementRefCount();
+  private boolean sendMessageToTarget(ChannelMessage channelMessage, int i) {
+    channelMessage.incrementRefCount();
     int e = instancePlan.getExecutorForChannel(i);
-    return channel.sendMessage(e, mpiMessage, this);
+    return channel.sendMessage(e, channelMessage, this);
   }
 
   @Override
-  public void release(MPIMessage message) {
+  public void release(ChannelMessage message) {
     if (message.doneProcessing()) {
       int originatingId = message.getOriginatingId();
       releaseTheBuffers(originatingId, message);
@@ -566,12 +569,12 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
   }
 
   @Override
-  public void onSendComplete(int id, int messageStream, MPIMessage message) {
+  public void onSendComplete(int id, int messageStream, ChannelMessage message) {
     // ok we don't have anything else to do
     message.release();
   }
 
-  protected void releaseTheBuffers(int id, MPIMessage message) {
+  protected void releaseTheBuffers(int id, ChannelMessage message) {
     if (MessageDirection.IN == message.getMessageDirection()) {
       Queue<DataBuffer> list = receiveBuffers.get(id);
       for (DataBuffer buffer : message.getBuffers()) {
@@ -613,13 +616,13 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
   @Override
   public void onReceiveComplete(int id, int e, DataBuffer buffer) {
     // we need to try to build the message here, we may need many more messages to complete
-    MPIMessage currentMessage = currentMessages.get(id);
+    ChannelMessage currentMessage = currentMessages.get(id);
     ByteBuffer byteBuffer = buffer.getByteBuffer();
     byteBuffer.position(buffer.getSize());
     byteBuffer.flip();
     receiveCount++;
     if (currentMessage == null) {
-      currentMessage = new MPIMessage(id, receiveDataType, MessageDirection.IN, this);
+      currentMessage = new ChannelMessage(id, receiveDataType, MessageDirection.IN, this);
       if (isKeyed) {
         currentMessage.setKeyType(receiveKeyType);
       }
@@ -634,7 +637,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     if (currentMessage.isComplete()) {
       currentMessages.remove(id);
 //      LOG.info(String.format("%d adding to deserialize queue %d", executor, id));
-      Queue<MPIMessage> deserializeQueue = pendingReceiveDeSerializations.get(id);
+      Queue<ChannelMessage> deserializeQueue = pendingReceiveDeSerializations.get(id);
       if (!deserializeQueue.offer(currentMessage)) {
         throw new RuntimeException(executor + " We should have enough space: "
             + deserializeQueue.size());

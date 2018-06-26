@@ -20,8 +20,8 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
-import edu.iu.dsc.tws.comms.dfw.MPIMessage;
 import edu.iu.dsc.tws.comms.dfw.OutMessage;
 import edu.iu.dsc.tws.comms.dfw.io.types.DataSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.types.KeySerializer;
@@ -65,8 +65,8 @@ public class MultiMessageSerializer implements MessageSerializer {
     OutMessage sendMessage = (OutMessage) partialBuildObject;
 
     // we got an already serialized message, lets just return it
-    MPIMessage mpiMessage = sendMessage.getMPIMessage();
-    if (mpiMessage.isComplete()) {
+    ChannelMessage channelMessage = sendMessage.getMPIMessage();
+    if (channelMessage.isComplete()) {
       sendMessage.setSendState(OutMessage.SendState.SERIALIZED);
       return sendMessage;
     }
@@ -100,11 +100,11 @@ public class MultiMessageSerializer implements MessageSerializer {
       }
 
       // okay we are adding this buffer
-      mpiMessage.addBuffer(buffer);
+      channelMessage.addBuffer(buffer);
       if (sendMessage.serializedState() == OutMessage.SendState.SERIALIZED) {
         SerializeState state = sendMessage.getSerializationState();
         int totalBytes = state.getTotalBytes();
-        mpiMessage.getBuffers().get(0).getByteBuffer().putInt(12, totalBytes);
+        channelMessage.getBuffers().get(0).getByteBuffer().putInt(12, totalBytes);
 
         MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
             sendMessage.getEdge(), totalBytes);
@@ -113,7 +113,7 @@ public class MultiMessageSerializer implements MessageSerializer {
         state.setTotalBytes(0);
 
         // mark the original message as complete
-        mpiMessage.setComplete(true);
+        channelMessage.setComplete(true);
       }
     }
     return sendMessage;
@@ -173,9 +173,9 @@ public class MultiMessageSerializer implements MessageSerializer {
     // we will copy until we have space left or we are have serialized all the objects
     for (int i = startIndex; i < objectList.size(); i++) {
       Object o = objectList.get(i);
-      if (o instanceof MPIMessage) {
-        MPIMessage mpiMessage = (MPIMessage) o;
-        boolean complete = serializeBufferedMessage(mpiMessage, state, buffer);
+      if (o instanceof ChannelMessage) {
+        ChannelMessage channelMessage = (ChannelMessage) o;
+        boolean complete = serializeBufferedMessage(channelMessage, state, buffer);
         // we copied this completely
         if (complete) {
           state.setCurrentObject(i + 1);
@@ -210,7 +210,7 @@ public class MultiMessageSerializer implements MessageSerializer {
    *
    * @return the number of complete messages written
    */
-  private boolean serializeBufferedMessage(MPIMessage message, SerializeState state,
+  private boolean serializeBufferedMessage(ChannelMessage message, SerializeState state,
                                            DataBuffer targetBuffer) {
     ByteBuffer targetByteBuffer = targetBuffer.getByteBuffer();
     byte[] tempBytes = new byte[targetBuffer.getCapacity()];

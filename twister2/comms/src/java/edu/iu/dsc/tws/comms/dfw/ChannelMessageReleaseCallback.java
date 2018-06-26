@@ -12,5 +12,5 @@
 package edu.iu.dsc.tws.comms.dfw;
 
 public interface ChannelMessageReleaseCallback {
-  void release(MPIMessage message);
+  void release(ChannelMessage message);
 }

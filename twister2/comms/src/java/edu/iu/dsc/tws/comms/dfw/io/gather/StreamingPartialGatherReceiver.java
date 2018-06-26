@@ -23,8 +23,8 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
-import edu.iu.dsc.tws.comms.dfw.MPIMessage;
 
 public class StreamingPartialGatherReceiver implements MessageReceiver {
   private static final Logger LOG = Logger.getLogger(
@@ -78,8 +78,8 @@ public class StreamingPartialGatherReceiver implements MessageReceiver {
       // other wise they will bre reclaimed
 //        LOG.info(String.format("%d Partial true: target %d source %d %s",
 //            executor, target, source, counts.get(target)));
-      if (object instanceof MPIMessage) {
-        ((MPIMessage) object).incrementRefCount();
+      if (object instanceof ChannelMessage) {
+        ((ChannelMessage) object).incrementRefCount();
       }
       m.add(object);
       counts.get(target).put(source, c + 1);

@@ -62,11 +62,11 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public boolean receiveMessage(MPIMessage currentMessage, Object object) {
+  public boolean receiveMessage(ChannelMessage currentMessage, Object object) {
     MessageHeader header = currentMessage.getHeader();
     LOG.info("================================================");
     LOG.info("MessageHeader : " + header.toString());
-    LOG.info("MPIMessage : " + currentMessage.toString());
+    LOG.info("ChannelMessage : " + currentMessage.toString());
     LOG.info("Message Object : " + object.toString());
     LOG.info("Source ID : " + header.getSourceId());
     LOG.info("Source ID : " + header.getSourceId());
@@ -89,7 +89,7 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public boolean passMessageDownstream(Object object, MPIMessage currentMessage) {
+  public boolean passMessageDownstream(Object object, ChannelMessage currentMessage) {
     return false;
   }
 
@@ -115,8 +115,9 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
 
     Map<Integer, ArrayBlockingQueue<Pair<Object, OutMessage>>> pendingSendMessagesPerSource =
         new HashMap<>();
-    Map<Integer, Queue<Pair<Object, MPIMessage>>> pendingReceiveMessagesPerSource = new HashMap<>();
-    Map<Integer, Queue<MPIMessage>> pendingReceiveDeSerializations = new HashMap<>();
+    Map<Integer, Queue<Pair<Object, ChannelMessage>>> pendingReceiveMessagesPerSource
+        = new HashMap<>();
+    Map<Integer, Queue<ChannelMessage>> pendingReceiveDeSerializations = new HashMap<>();
     Map<Integer, MessageSerializer> serializerMap = new HashMap<>();
     Map<Integer, MessageDeSerializer> deSerializerMap = new HashMap<>();
 
@@ -127,7 +128,7 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
           new ArrayBlockingQueue<Pair<Object, OutMessage>>(
               DataFlowContext.sendPendingMax(cfg));
       pendingSendMessagesPerSource.put(s, pendingSendMessages);
-      pendingReceiveDeSerializations.put(s, new ArrayBlockingQueue<MPIMessage>(
+      pendingReceiveDeSerializations.put(s, new ArrayBlockingQueue<ChannelMessage>(
           DataFlowContext.sendPendingMax(cfg)));
       serializerMap.put(s, new SingleMessageSerializer(new KryoSerializer()));
     }

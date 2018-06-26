@@ -24,8 +24,8 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.GatherBatchReceiver;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
-import edu.iu.dsc.tws.comms.dfw.MPIMessage;
 import edu.iu.dsc.tws.data.memory.OperationMemoryManager;
 
 public class GatherBatchFinalReceiver implements MessageReceiver {
@@ -88,8 +88,8 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
 //      LOG.info(String.format("%d Final add FALSE target %d source %d", executor, target, source));
     } else {
 //      LOG.info(String.format("%d Final add TRUE target %d source %d", executor, target, source));
-      if (object instanceof MPIMessage) {
-        ((MPIMessage) object).incrementRefCount();
+      if (object instanceof ChannelMessage) {
+        ((ChannelMessage) object).incrementRefCount();
         //TODO: how to handle refcount with store based data, is it needed?
       } else if (object instanceof OperationMemoryManager) {
         isStoreBased = true;

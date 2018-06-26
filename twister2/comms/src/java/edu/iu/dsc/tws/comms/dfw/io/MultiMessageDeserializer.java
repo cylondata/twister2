@@ -22,8 +22,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
-import edu.iu.dsc.tws.comms.dfw.MPIMessage;
 import edu.iu.dsc.tws.comms.dfw.io.types.DataDeserializer;
 import edu.iu.dsc.tws.comms.dfw.io.types.KeyDeserializer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
@@ -50,7 +50,7 @@ public class MultiMessageDeserializer implements MessageDeSerializer {
 
   @Override
   public Object build(Object partialObject, int edge) {
-    MPIMessage currentMessage = (MPIMessage) partialObject;
+    ChannelMessage currentMessage = (ChannelMessage) partialObject;
     int readLength = 0;
     int bufferIndex = 0;
     List<DataBuffer> buffers = currentMessage.getBuffers();
@@ -101,7 +101,7 @@ public class MultiMessageDeserializer implements MessageDeSerializer {
 
   @Override
   public Object getDataBuffers(Object partialObject, int edge) {
-    MPIMessage currentMessage = (MPIMessage) partialObject;
+    ChannelMessage currentMessage = (ChannelMessage) partialObject;
     int readLength = 0;
     int bufferIndex = 0;
     List<DataBuffer> buffers = currentMessage.getBuffers();
@@ -148,15 +148,16 @@ public class MultiMessageDeserializer implements MessageDeSerializer {
     return returnList;
   }
 
-  public Object getSingleDataBuffers(MPIMessage mpiMessage, List<DataBuffer> message, int length) {
-    MessageType type = mpiMessage.getType();
+  public Object getSingleDataBuffers(ChannelMessage channelMessage,
+                                     List<DataBuffer> message, int length) {
+    MessageType type = channelMessage.getType();
 
     if (!keyed) {
       return DataDeserializer.getAsByteBuffer(message,
           length, type);
     } else {
       Pair<Integer, Object> keyPair = KeyDeserializer.
-          getKeyAsByteBuffer(mpiMessage.getKeyType(),
+          getKeyAsByteBuffer(channelMessage.getKeyType(),
               message);
       byte[] data = DataDeserializer.getAsByteBuffer(message,
           length - keyPair.getKey(), type);
@@ -183,13 +184,13 @@ public class MultiMessageDeserializer implements MessageDeSerializer {
     return headerBuilder.build();
   }
 
-  private Object buildMessage(MPIMessage mpiMessage, List<DataBuffer> message, int length) {
-    MessageType type = mpiMessage.getType();
+  private Object buildMessage(ChannelMessage channelMessage, List<DataBuffer> message, int length) {
+    MessageType type = channelMessage.getType();
     if (keyed) {
-      Pair<Integer, Object> keyPair = KeyDeserializer.deserializeKey(mpiMessage.getKeyType(),
+      Pair<Integer, Object> keyPair = KeyDeserializer.deserializeKey(channelMessage.getKeyType(),
           message, serializer);
       Object data;
-      if (MessageTypeUtils.isMultiMessageType(mpiMessage.getKeyType())) {
+      if (MessageTypeUtils.isMultiMessageType(channelMessage.getKeyType())) {
         //TODO :need to check correctness for multi-message
         data = DataDeserializer.deserializeData(message,
             length - keyPair.getKey(), serializer, type,
@@ -199,7 +200,7 @@ public class MultiMessageDeserializer implements MessageDeSerializer {
             serializer, type);
       }
       return new KeyedContent(keyPair.getValue(), data,
-          mpiMessage.getKeyType(), mpiMessage.getType());
+          channelMessage.getKeyType(), channelMessage.getType());
     } else {
       return DataDeserializer.deserializeData(message, length, serializer, type);
     }

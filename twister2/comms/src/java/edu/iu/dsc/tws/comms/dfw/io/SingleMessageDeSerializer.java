@@ -21,8 +21,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
-import edu.iu.dsc.tws.comms.dfw.MPIMessage;
 import edu.iu.dsc.tws.comms.dfw.io.types.DataDeserializer;
 import edu.iu.dsc.tws.comms.dfw.io.types.KeyDeserializer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
@@ -46,7 +46,7 @@ public class SingleMessageDeSerializer implements MessageDeSerializer {
 
   @Override
   public Object build(Object partialObject, int edge) {
-    MPIMessage currentMessage = (MPIMessage) partialObject;
+    ChannelMessage currentMessage = (ChannelMessage) partialObject;
     return buildMessage(currentMessage);
   }
 
@@ -69,7 +69,7 @@ public class SingleMessageDeSerializer implements MessageDeSerializer {
   @Override
   @SuppressWarnings("unchecked")
   public Object getDataBuffers(Object partialObject, int edge) {
-    MPIMessage message = (MPIMessage) partialObject;
+    ChannelMessage message = (ChannelMessage) partialObject;
     MessageType type = message.getType();
     //Used when handling multi messages
     List<ImmutablePair<byte[], byte[]>> results;
@@ -108,7 +108,7 @@ public class SingleMessageDeSerializer implements MessageDeSerializer {
   }
 
   @SuppressWarnings("unchecked")
-  private Object buildMessage(MPIMessage message) {
+  private Object buildMessage(ChannelMessage message) {
     MessageType type = message.getType();
 
     if (!keyed) {

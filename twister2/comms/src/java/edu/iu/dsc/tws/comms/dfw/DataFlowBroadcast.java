@@ -90,7 +90,7 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
     delegete.setStoreBased(memoryMapped);
   }
 
-  public boolean receiveMessage(MPIMessage currentMessage, Object object) {
+  public boolean receiveMessage(ChannelMessage currentMessage, Object object) {
     MessageHeader header = currentMessage.getHeader();
 
     // we always receive to the main task
@@ -127,8 +127,9 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
         source, destinations, router.sendQueueIds()));
 
 
-    Map<Integer, Queue<Pair<Object, MPIMessage>>> pendingReceiveMessagesPerSource = new HashMap<>();
-    Map<Integer, Queue<MPIMessage>> pendingReceiveDeSerializations = new HashMap<>();
+    Map<Integer, Queue<Pair<Object, ChannelMessage>>> pendingReceiveMessagesPerSource =
+        new HashMap<>();
+    Map<Integer, Queue<ChannelMessage>> pendingReceiveDeSerializations = new HashMap<>();
     Map<Integer, MessageSerializer> serializerMap = new HashMap<>();
     Map<Integer, MessageDeSerializer> deSerializerMap = new HashMap<>();
 
@@ -150,11 +151,11 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
     Set<Integer> execs = router.receivingExecutors();
     for (int e : execs) {
       int capacity = maxReceiveBuffers * 2 * receiveExecutorsSize;
-      Queue<Pair<Object, MPIMessage>> pendingReceiveMessages =
-          new ArrayBlockingQueue<Pair<Object, MPIMessage>>(
+      Queue<Pair<Object, ChannelMessage>> pendingReceiveMessages =
+          new ArrayBlockingQueue<Pair<Object, ChannelMessage>>(
               capacity);
       pendingReceiveMessagesPerSource.put(e, pendingReceiveMessages);
-      pendingReceiveDeSerializations.put(e, new ArrayBlockingQueue<MPIMessage>(capacity));
+      pendingReceiveDeSerializations.put(e, new ArrayBlockingQueue<ChannelMessage>(capacity));
       deSerializerMap.put(e, new SingleMessageDeSerializer(new KryoSerializer()));
     }
 
@@ -209,7 +210,7 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
     }
   }
 
-  public boolean passMessageDownstream(Object object, MPIMessage currentMessage) {
+  public boolean passMessageDownstream(Object object, ChannelMessage currentMessage) {
     int src = router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
         DataFlowContext.DEFAULT_DESTINATION);
 
@@ -224,7 +225,8 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
     ArrayBlockingQueue<Pair<Object, OutMessage>> pendingSendMessages =
         pendingSendMessagesPerSource.get(src);
 
-    MPIMessage mpiMessage = new MPIMessage(src, type, MessageDirection.OUT, delegete);
+    ChannelMessage channelMessage = new ChannelMessage(src, type,
+        MessageDirection.OUT, delegete);
 
     // create a send message to keep track of the serialization
     // at the intial stage the sub-edge is 0
@@ -232,7 +234,7 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
     if (routingParameters.getExternalRoutes().size() > 0) {
       di = routingParameters.getDestinationId();
     }
-    OutMessage sendMessage = new OutMessage(src, mpiMessage,
+    OutMessage sendMessage = new OutMessage(src, channelMessage,
         currentMessage.getHeader().getEdge(),
         di, DataFlowContext.DEFAULT_DESTINATION, currentMessage.getHeader().getFlags(),
         routingParameters.getInternalRoutes(),

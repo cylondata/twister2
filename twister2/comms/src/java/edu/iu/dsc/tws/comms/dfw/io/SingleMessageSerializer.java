@@ -19,8 +19,8 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
-import edu.iu.dsc.tws.comms.dfw.MPIMessage;
 import edu.iu.dsc.tws.comms.dfw.OutMessage;
 import edu.iu.dsc.tws.comms.dfw.io.types.DataSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.types.KeySerializer;
@@ -97,10 +97,10 @@ public class SingleMessageSerializer implements MessageSerializer {
       // okay we are adding this buffer
       sendMessage.getMPIMessage().addBuffer(buffer);
       if (sendMessage.serializedState() == OutMessage.SendState.SERIALIZED) {
-        MPIMessage mpiMessage = sendMessage.getMPIMessage();
+        ChannelMessage channelMessage = sendMessage.getMPIMessage();
         SerializeState state = sendMessage.getSerializationState();
         int totalBytes = state.getTotalBytes();
-        mpiMessage.getBuffers().get(0).getByteBuffer().putInt(12, totalBytes);
+        channelMessage.getBuffers().get(0).getByteBuffer().putInt(12, totalBytes);
 
         MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
             sendMessage.getEdge(), totalBytes);
@@ -109,7 +109,7 @@ public class SingleMessageSerializer implements MessageSerializer {
         state.setTotalBytes(0);
 
         // mark the original message as complete
-        mpiMessage.setComplete(true);
+        channelMessage.setComplete(true);
       } else {
         LOG.fine("Message NOT FULLY serialized");
       }

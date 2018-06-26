@@ -23,8 +23,8 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
-import edu.iu.dsc.tws.comms.dfw.MPIMessage;
 
 public class GatherBatchPartialReceiver implements MessageReceiver {
   private static final Logger LOG = Logger.getLogger(GatherBatchPartialReceiver.class.getName());
@@ -83,8 +83,8 @@ public class GatherBatchPartialReceiver implements MessageReceiver {
     if (m.size() >= sendPendingMax) {
       canAdd = false;
     } else {
-      if (object instanceof MPIMessage) {
-        ((MPIMessage) object).incrementRefCount();
+      if (object instanceof ChannelMessage) {
+        ((ChannelMessage) object).incrementRefCount();
       }
       Integer c = counts.get(target).get(source);
       counts.get(target).put(source, c + 1);

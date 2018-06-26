@@ -12,7 +12,7 @@
 package edu.iu.dsc.tws.comms.dfw;
 
 public interface ChannelReceiver {
-  boolean receiveMessage(MPIMessage currentMessage, Object object);
+  boolean receiveMessage(ChannelMessage currentMessage, Object object);
   boolean receiveSendInternally(int source, int t, int path, int flags, Object message);
-  boolean passMessageDownstream(Object object, MPIMessage currentMessage);
+  boolean passMessageDownstream(Object object, ChannelMessage currentMessage);
 }

@@ -36,9 +36,9 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.dfw.ChannelListener;
+import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
-import edu.iu.dsc.tws.comms.dfw.MPIMessage;
 
 import mpi.Intracomm;
 import mpi.MPI;
@@ -97,11 +97,11 @@ public class TWSMPIChannel implements TWSChannel {
     List<MPIRequest> pendingSends;
     int rank;
     int edge;
-    MPIMessage message;
+    ChannelMessage message;
     ChannelListener callback;
 
     MPISendRequests(int rank, int e,
-                           MPIMessage message, ChannelListener callback) {
+                    ChannelMessage message, ChannelListener callback) {
       this.rank = rank;
       this.edge = e;
       this.message = message;
@@ -147,7 +147,7 @@ public class TWSMPIChannel implements TWSChannel {
    * @param message the message
    * @return true if the message is accepted to be sent
    */
-  public boolean sendMessage(int id, MPIMessage message, ChannelListener callback) {
+  public boolean sendMessage(int id, ChannelMessage message, ChannelListener callback) {
     boolean offer = pendingSends.offer(
         new MPISendRequests(id, message.getHeader().getEdge(), message, callback));
 //    LOG.info(String.format("%d Pending sends count: %d wait: %d",
@@ -174,7 +174,7 @@ public class TWSMPIChannel implements TWSChannel {
    * @param requests the message
    */
   private void postMessage(MPISendRequests requests) {
-    MPIMessage message = requests.message;
+    ChannelMessage message = requests.message;
     for (int i = 0; i < message.getBuffers().size(); i++) {
       try {
         sendCount++;

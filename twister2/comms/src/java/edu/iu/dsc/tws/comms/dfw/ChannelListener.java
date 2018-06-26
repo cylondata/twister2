@@ -24,5 +24,5 @@ public interface ChannelListener {
    * @param id  the rank from which the receive happens
    * @param message message
    */
-  void onSendComplete(int id, int stream, MPIMessage message);
+  void onSendComplete(int id, int stream, ChannelMessage message);
 }

@@ -365,8 +365,9 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
 
     Map<Integer, ArrayBlockingQueue<Pair<Object, OutMessage>>> pendingSendMessagesPerSource =
         new HashMap<>();
-    Map<Integer, Queue<Pair<Object, MPIMessage>>> pendingReceiveMessagesPerSource = new HashMap<>();
-    Map<Integer, Queue<MPIMessage>> pendingReceiveDeSerializations = new HashMap<>();
+    Map<Integer, Queue<Pair<Object, ChannelMessage>>> pendingReceiveMessagesPerSource
+        = new HashMap<>();
+    Map<Integer, Queue<ChannelMessage>> pendingReceiveDeSerializations = new HashMap<>();
     Map<Integer, MessageSerializer> serializerMap = new HashMap<>();
     Map<Integer, MessageDeSerializer> deSerializerMap = new HashMap<>();
 
@@ -394,11 +395,11 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
     Set<Integer> execs = router.receivingExecutors();
     for (int ex : execs) {
       int capacity = maxReceiveBuffers * 2 * receiveExecutorsSize;
-      Queue<Pair<Object, MPIMessage>> pendingReceiveMessages =
-          new ArrayBlockingQueue<Pair<Object, MPIMessage>>(
+      Queue<Pair<Object, ChannelMessage>> pendingReceiveMessages =
+          new ArrayBlockingQueue<Pair<Object, ChannelMessage>>(
               capacity);
       pendingReceiveMessagesPerSource.put(ex, pendingReceiveMessages);
-      pendingReceiveDeSerializations.put(ex, new ArrayBlockingQueue<MPIMessage>(capacity));
+      pendingReceiveDeSerializations.put(ex, new ArrayBlockingQueue<ChannelMessage>(capacity));
       deSerializerMap.put(ex, new MultiMessageDeserializer(new KryoSerializer(), executor));
     }
 
@@ -581,7 +582,7 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public boolean passMessageDownstream(Object object, MPIMessage currentMessage) {
+  public boolean passMessageDownstream(Object object, ChannelMessage currentMessage) {
     return true;
   }
 
@@ -597,7 +598,7 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
     return destinations.contains(taskIdentifier);
   }
 
-  public boolean receiveMessage(MPIMessage currentMessage, Object object) {
+  public boolean receiveMessage(ChannelMessage currentMessage, Object object) {
     MessageHeader header = currentMessage.getHeader();
     return finalReceiver.onMessage(header.getSourceId(), DataFlowContext.DEFAULT_DESTINATION,
         header.getDestinationIdentifier(), header.getFlags(), object);

@@ -18,9 +18,9 @@ import java.util.concurrent.ArrayBlockingQueue;
 
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.ChannelMessageReleaseCallback;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
-import edu.iu.dsc.tws.comms.dfw.MPIMessage;
 import edu.iu.dsc.tws.comms.dfw.MessageDirection;
 import edu.iu.dsc.tws.comms.dfw.OutMessage;
 import edu.iu.dsc.tws.comms.dfw.io.IntData;
@@ -64,7 +64,7 @@ public class Test {
     IntData data = new IntData();
     List list = new ArrayList<>();
     list.add(data);
-    MPIMessage message = serializeObject(list, 1);
+    ChannelMessage message = serializeObject(list, 1);
 
     deserialize(message);
   }
@@ -76,7 +76,7 @@ public class Test {
     list.add(new KeyedContent(new Short((short) 0), data));
     data = new IntData(128);
     list.add(new KeyedContent(new Short((short) 1), data));
-    MPIMessage message = serializeObject(list, 1);
+    ChannelMessage message = serializeObject(list, 1);
     System.out.println("Serialized first");
     deserialize(message);
 
@@ -85,7 +85,7 @@ public class Test {
 //    list.add(new KeyedContent(new Short((short) 2), data));
 //    data = new IntData(128000);
 //    list.add(new KeyedContent(new Short((short) 3), data));
-//    MPIMessage message2 = serializeObject(list, 1);
+//    ChannelMessage message2 = serializeObject(list, 1);
 ////    System.out.println("Serialized second");
 ////
 //    list = new ArrayList<>();
@@ -94,12 +94,12 @@ public class Test {
 ////    data = new IntData(128000);
 ////    list.add(new MultiObject(1, data));
 //
-//    MPIMessage second = serializeObject(list, 1);
+//    ChannelMessage second = serializeObject(list, 1);
 //
 //    deserialize(second);
   }
 
-  private void deserialize(MPIMessage message) {
+  private void deserialize(ChannelMessage message) {
     List<DataBuffer> buffers = message.getBuffers();
     for (DataBuffer dataBuffer : buffers) {
       dataBuffer.getByteBuffer().flip();
@@ -128,22 +128,22 @@ public class Test {
     System.out.println("End");
   }
 
-  private MPIMessage serializeObject(List object, int source) {
-    MPIMessage mpiMessage = new MPIMessage(source, MessageType.OBJECT,
+  private ChannelMessage serializeObject(List object, int source) {
+    ChannelMessage channelMessage = new ChannelMessage(source, MessageType.OBJECT,
         MessageDirection.OUT, new MessageListener());
-    mpiMessage.setKeyType(MessageType.INTEGER);
+    channelMessage.setKeyType(MessageType.INTEGER);
 
     int di = -1;
-    OutMessage sendMessage = new OutMessage(source, mpiMessage, 0,
+    OutMessage sendMessage = new OutMessage(source, channelMessage, 0,
         di, 0, 0, null, null);
     multiMessageSerializer.build(object, sendMessage);
 
-    return mpiMessage;
+    return channelMessage;
   }
 
   private class MessageListener implements ChannelMessageReleaseCallback {
     @Override
-    public void release(MPIMessage message) {
+    public void release(ChannelMessage message) {
 
     }
   }

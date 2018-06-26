@@ -112,7 +112,7 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
    * @param currentMessage
    * @param object
    */
-  public boolean receiveMessage(MPIMessage currentMessage, Object object) {
+  public boolean receiveMessage(ChannelMessage currentMessage, Object object) {
     MessageHeader header = currentMessage.getHeader();
 
     // we always receive to the main task
@@ -210,7 +210,7 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public boolean passMessageDownstream(Object object, MPIMessage currentMessage) {
+  public boolean passMessageDownstream(Object object, ChannelMessage currentMessage) {
     return true;
   }
 
@@ -264,8 +264,9 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
 
     Map<Integer, ArrayBlockingQueue<Pair<Object, OutMessage>>> pendingSendMessagesPerSource =
         new HashMap<>();
-    Map<Integer, Queue<Pair<Object, MPIMessage>>> pendingReceiveMessagesPerSource = new HashMap<>();
-    Map<Integer, Queue<MPIMessage>> pendingReceiveDeSerializations = new HashMap<>();
+    Map<Integer, Queue<Pair<Object, ChannelMessage>>> pendingReceiveMessagesPerSource
+        = new HashMap<>();
+    Map<Integer, Queue<ChannelMessage>> pendingReceiveDeSerializations = new HashMap<>();
     Map<Integer, MessageSerializer> serializerMap = new HashMap<>();
     Map<Integer, MessageDeSerializer> deSerializerMap = new HashMap<>();
 
@@ -287,11 +288,11 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
     Set<Integer> execs = router.receivingExecutors();
     for (int e : execs) {
       int capacity = maxReceiveBuffers * 2 * receiveExecutorsSize;
-      Queue<Pair<Object, MPIMessage>> pendingReceiveMessages =
-          new ArrayBlockingQueue<Pair<Object, MPIMessage>>(
+      Queue<Pair<Object, ChannelMessage>> pendingReceiveMessages =
+          new ArrayBlockingQueue<Pair<Object, ChannelMessage>>(
               capacity);
       pendingReceiveMessagesPerSource.put(e, pendingReceiveMessages);
-      pendingReceiveDeSerializations.put(e, new ArrayBlockingQueue<MPIMessage>(capacity));
+      pendingReceiveDeSerializations.put(e, new ArrayBlockingQueue<ChannelMessage>(capacity));
       deSerializerMap.put(e, new SingleMessageDeSerializer(new KryoSerializer()));
     }
 

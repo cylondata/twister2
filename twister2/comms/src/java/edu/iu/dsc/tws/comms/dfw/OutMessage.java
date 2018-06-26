@@ -28,7 +28,7 @@ public class OutMessage {
 
   private int writtenHeaderSize = 0;
 
-  private MPIMessage ref;
+  private ChannelMessage ref;
 
   private boolean complete = false;
 
@@ -61,7 +61,7 @@ public class OutMessage {
   private SendState sendState = SendState.INIT;
 
 
-  public OutMessage(int src, MPIMessage message, int e, int di, int p, int f,
+  public OutMessage(int src, ChannelMessage message, int e, int di, int p, int f,
                     Set<Integer> intSends, Set<Integer> extSends) {
     this.ref = message;
     this.source = src;
@@ -97,7 +97,7 @@ public class OutMessage {
     this.writtenHeaderSize = writtenHeaderSize;
   }
 
-  public MPIMessage getMPIMessage() {
+  public ChannelMessage getMPIMessage() {
     return ref;
   }
 

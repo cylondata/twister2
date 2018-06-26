@@ -23,8 +23,8 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
+import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
-import edu.iu.dsc.tws.comms.dfw.MPIMessage;
 
 public abstract class ReduceBatchReceiver implements MessageReceiver {
   private static final Logger LOG = Logger.getLogger(ReduceBatchReceiver.class.getName());
@@ -117,8 +117,8 @@ public abstract class ReduceBatchReceiver implements MessageReceiver {
     } else {
 //      LOG.info(String.format("%d Partial add TRUE target %d source %d %s %s",
 //          executor, target, source, finishedMessages, counts.get(target)));
-      if (object instanceof MPIMessage) {
-        ((MPIMessage) object).incrementRefCount();
+      if (object instanceof ChannelMessage) {
+        ((ChannelMessage) object).incrementRefCount();
       }
       Integer c = counts.get(target).get(source);
       counts.get(target).put(source, c + 1);

@@ -28,8 +28,8 @@ import edu.iu.dsc.tws.common.net.tcp.TCPMessage;
 import edu.iu.dsc.tws.common.net.tcp.TCPStatus;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.dfw.ChannelListener;
+import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
-import edu.iu.dsc.tws.comms.dfw.MPIMessage;
 
 public class TWSTCPChannel implements TWSChannel {
   private static final Logger LOG = Logger.getLogger(TWSTCPChannel.class.getName());
@@ -77,11 +77,11 @@ public class TWSTCPChannel implements TWSChannel {
     List<Request> pendingSends;
     int rank;
     int edge;
-    MPIMessage message;
+    ChannelMessage message;
     ChannelListener callback;
 
     TCPSendRequests(int rank, int e,
-                    MPIMessage message, ChannelListener callback) {
+                    ChannelMessage message, ChannelListener callback) {
       this.rank = rank;
       this.edge = e;
       this.message = message;
@@ -122,7 +122,7 @@ public class TWSTCPChannel implements TWSChannel {
    * @param message the message
    * @return true if the message is accepted to be sent
    */
-  public boolean sendMessage(int id, MPIMessage message, ChannelListener callback) {
+  public boolean sendMessage(int id, ChannelMessage message, ChannelListener callback) {
     boolean offer = pendingSends.offer(
         new TCPSendRequests(id, message.getHeader().getEdge(), message, callback));
     if (offer) {
@@ -150,7 +150,7 @@ public class TWSTCPChannel implements TWSChannel {
    * @param requests the message
    */
   private void postMessage(TCPSendRequests requests) {
-    MPIMessage message = requests.message;
+    ChannelMessage message = requests.message;
     for (int i = 0; i < message.getBuffers().size(); i++) {
       sendCount++;
       DataBuffer buffer = message.getBuffers().get(i);

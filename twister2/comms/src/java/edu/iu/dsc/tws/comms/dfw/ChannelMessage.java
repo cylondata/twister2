@@ -18,8 +18,8 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
 
-public class MPIMessage {
-  private static final Logger LOG = Logger.getLogger(MPIMessage.class.getName());
+public class ChannelMessage {
+  private static final Logger LOG = Logger.getLogger(ChannelMessage.class.getName());
   /**
    * List of buffers filled with the message
    */
@@ -80,12 +80,12 @@ public class MPIMessage {
    */
   private ReceivedState receivedState;
 
-  public MPIMessage() {
+  public ChannelMessage() {
   }
 
-  public MPIMessage(int originatingId, MessageType messageType,
-                    MessageDirection messageDirection,
-                    ChannelMessageReleaseCallback releaseListener) {
+  public ChannelMessage(int originatingId, MessageType messageType,
+                        MessageDirection messageDirection,
+                        ChannelMessageReleaseCallback releaseListener) {
     this.refCount = 0;
     this.messageDirection = messageDirection;
     this.releaseListener = releaseListener;
