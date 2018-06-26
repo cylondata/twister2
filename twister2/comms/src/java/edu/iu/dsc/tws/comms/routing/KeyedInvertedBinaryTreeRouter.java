@@ -23,7 +23,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.mpi.MPIContext;
+import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
 public class KeyedInvertedBinaryTreeRouter {
@@ -57,8 +57,8 @@ public class KeyedInvertedBinaryTreeRouter {
    */
   public KeyedInvertedBinaryTreeRouter(Config cfg, TaskPlan plan,
                                   Set<Integer> roots, Set<Integer> dests) {
-    int interNodeDegree = MPIContext.interNodeDegree(cfg, 2);
-    int intraNodeDegree = MPIContext.intraNodeDegree(cfg, 2);
+    int interNodeDegree = DataFlowContext.interNodeDegree(cfg, 2);
+    int intraNodeDegree = DataFlowContext.intraNodeDegree(cfg, 2);
     mainTaskLast = false;
     this.taskPlan = plan;
     this.destinationIdentifiers = new HashMap<>();

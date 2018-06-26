@@ -21,7 +21,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.mpi.io.KeyedContent;
+import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
 
 public class RecordSource implements Runnable {
   private static final Logger LOG = Logger.getLogger(RecordSource.class.getName());

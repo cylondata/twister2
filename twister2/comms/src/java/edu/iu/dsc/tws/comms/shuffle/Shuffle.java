@@ -13,21 +13,49 @@ package edu.iu.dsc.tws.comms.shuffle;
 
 import java.util.Iterator;
 
+/**
+ * Different interfaces to go to disk
+ */
 public interface Shuffle {
+  /**
+   * Switch to reading, we cannot add after this
+   */
   void switchToReading();
+
+  /**
+   * Get a read iterator
+   * @return
+   */
   Iterator<Object> readIterator();
 
+  /**
+   * Add an object with a key
+   * @param key the object key
+   * @param data the data
+   * @param length length of the data
+   */
   default void add(Object key, byte[] data, int length) {
     throw new UnsupportedOperationException("Not implemented");
   }
 
+  /**
+   * Add object
+   * @param data the data as bytes
+   * @param length the length of data
+   */
   default void add(byte[] data, int length) {
     throw new UnsupportedOperationException("Not implemented");
   }
 
+  /**
+   * Execute the shuffle operation. This will save the content
+   */
   default void run() {
   }
 
+  /**
+   * Clean the file system
+   */
   default void clean() {
   }
 }

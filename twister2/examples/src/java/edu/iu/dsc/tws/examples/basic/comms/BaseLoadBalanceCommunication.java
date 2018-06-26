@@ -38,7 +38,7 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.mpi.MPIBuffer;
+import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.examples.IntData;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
@@ -110,7 +110,7 @@ public class BaseLoadBalanceCommunication implements IContainer {
     // we need to progress the communication
     try {
       if (id == 0 || id == 1) {
-        MPIBuffer data = new MPIBuffer(1024);
+        DataBuffer data = new DataBuffer(1024);
         data.setSize(24);
         for (int i = 0; i < 50000; i++) {
           mapFunction(data);

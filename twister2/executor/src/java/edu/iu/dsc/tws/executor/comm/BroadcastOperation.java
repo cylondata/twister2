@@ -21,7 +21,7 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.mpi.MPIDataFlowBroadcast;
+import edu.iu.dsc.tws.comms.dfw.DataFlowBroadcast;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.EdgeGenerator;
 import edu.iu.dsc.tws.task.api.IMessage;
@@ -29,7 +29,7 @@ import edu.iu.dsc.tws.task.api.TaskMessage;
 
 public class BroadcastOperation extends AbstractParallelOperation {
   private static final Logger LOG = Logger.getLogger(BroadcastOperation.class.getName());
-  private MPIDataFlowBroadcast op;
+  private DataFlowBroadcast op;
 
   public BroadcastOperation(Config config, TWSChannel network, TaskPlan tPlan) {
     super(config, network, tPlan);
@@ -39,7 +39,7 @@ public class BroadcastOperation extends AbstractParallelOperation {
                       DataType dataType, String edgeName) {
     this.edge = e;
     LOG.info(String.format("Srcs %d dests %s", srcs, dests));
-    op = new MPIDataFlowBroadcast(channel, srcs, dests, new BcastReceiver());
+    op = new DataFlowBroadcast(channel, srcs, dests, new BcastReceiver());
     communicationEdge = e.generate(edgeName);
     op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
   }

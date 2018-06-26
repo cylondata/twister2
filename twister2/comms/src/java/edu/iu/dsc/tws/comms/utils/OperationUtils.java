@@ -20,8 +20,8 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.mpi.MPIContext;
-import edu.iu.dsc.tws.comms.mpi.MPIDataFlowOperation;
+import edu.iu.dsc.tws.comms.dfw.ChannelDataFlowOperation;
+import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 import edu.iu.dsc.tws.comms.routing.InvertedBinaryTreeRouter;
 
 public final class OperationUtils {
@@ -30,7 +30,7 @@ public final class OperationUtils {
   private OperationUtils() {
   }
 
-  public static void progressReceivers(MPIDataFlowOperation delegete, Lock lock,
+  public static void progressReceivers(ChannelDataFlowOperation delegete, Lock lock,
                                        MessageReceiver finalReceiver, Lock partialLock,
                                        MessageReceiver partialReceiver) {
     try {
@@ -62,7 +62,7 @@ public final class OperationUtils {
     Map<Integer, List<Integer>> integerMapMap = router.receiveExpectedTaskIds();
     // add the main task to receive from iteself
     int key = router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
-        MPIContext.DEFAULT_DESTINATION);
+        DataFlowContext.DEFAULT_DESTINATION);
     List<Integer> mainReceives = integerMapMap.get(key);
     if (mainReceives == null) {
       mainReceives = new ArrayList<>();

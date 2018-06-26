@@ -1,4 +1,5 @@
-twister2.network.dataflow.class: "edu.iu.dsc.tws.comms.mpi.MPIDataFlowCommunication"
+twister2.network.dataflow.class: "edu.iu.dsc.tws.comms.dfw.DataFlowCommunication"
+twister2.network.channel.class: "edu.iu.dsc.tws.comms.dfw.DataFlowCommunication"
 
 # the base port number workers will use internally to communicate with each other
 # when there are multiple workers in a pod, first worker will get this port number, 
