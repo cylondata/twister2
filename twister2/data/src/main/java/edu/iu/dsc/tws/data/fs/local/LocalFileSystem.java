@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.UnknownHostException;
+import java.nio.file.FileAlreadyExistsException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -184,7 +185,18 @@ public class LocalFileSystem extends FileSystem {
 
   @Override
   public boolean mkdirs(Path f) throws IOException {
-    return false;
+    return mkdirsInternal(pathToFile(f));
+  }
+
+  private boolean mkdirsInternal(File file) throws IOException {
+    if (file.isDirectory()) {
+      return true;
+    } else if (file.exists() && !file.isDirectory()) {
+      throw new FileAlreadyExistsException(file.getAbsolutePath());
+    } else {
+      File parent = file.getParentFile();
+      return (parent == null || mkdirsInternal(parent)) && file.mkdir();
+    }
   }
 
   @Override

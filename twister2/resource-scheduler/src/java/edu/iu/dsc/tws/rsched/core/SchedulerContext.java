@@ -65,10 +65,6 @@ public class SchedulerContext extends Context {
   public static final double PERSISTENT_VOLUME_PER_WORKER_DEFAULT = 0.0;
   public static final String PERSISTENT_VOLUME_PER_WORKER = "persistent.volume.per.worker";
 
-  // persistent volume for all workers in this job in GB
-  // by default, it is the total of all worker persistent volume sizes
-  public static final String PERSISTENT_VOLUME_TOTAL = "persistent.volume.total";
-
   public static String stateManagerClass(Config cfg) {
     return cfg.getStringValue(STATE_MANAGER_CLASS);
   }
@@ -140,11 +136,6 @@ public class SchedulerContext extends Context {
 
   public static double persistentVolumePerWorker(Config cfg) {
     return cfg.getDoubleValue(PERSISTENT_VOLUME_PER_WORKER, PERSISTENT_VOLUME_PER_WORKER_DEFAULT);
-  }
-
-  public static double persistentVolumeTotal(Config cfg) {
-    double defaultValue = workerInstances(cfg) * persistentVolumePerWorker(cfg);
-    return cfg.getDoubleValue(PERSISTENT_VOLUME_TOTAL, defaultValue);
   }
 
   /**

@@ -11,18 +11,21 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.comm;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.checkpointmanager.barrier.CheckpointBarrier;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.mpi.MPIDataFlowPartition;
-import edu.iu.dsc.tws.comms.mpi.io.partition.PartitionPartialReceiver;
+import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
+import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.EdgeGenerator;
 import edu.iu.dsc.tws.task.api.IMessage;
@@ -30,8 +33,11 @@ import edu.iu.dsc.tws.task.api.TaskMessage;
 
 public class PartitionOperation extends AbstractParallelOperation {
   private static final Logger LOG = Logger.getLogger(PartitionOperation.class.getName());
+  private HashMap<Integer, ArrayList<Integer>> barrierMap = new HashMap<>();
+  private HashMap<Integer, Integer> incommingMap = new HashMap<>();
+  private HashMap<Integer, ArrayList<Object>> incommingBuffer = new HashMap<>();
 
-  protected MPIDataFlowPartition op;
+  protected DataFlowPartition op;
 
   public PartitionOperation(Config config, TWSChannel network, TaskPlan tPlan) {
     super(config, network, tPlan);
@@ -41,8 +47,8 @@ public class PartitionOperation extends AbstractParallelOperation {
                       DataType dataType, String edgeName) {
     this.edge = e;
     //LOG.info("ParitionOperation Prepare 1");
-    op = new MPIDataFlowPartition(channel, srcs, dests, new PartitionReceiver(),
-        new PartitionPartialReceiver(), MPIDataFlowPartition.PartitionStratergy.DIRECT);
+    op = new DataFlowPartition(channel, srcs, dests, new PartitionReceiver(),
+        new PartitionPartialReceiver(), DataFlowPartition.PartitionStratergy.DIRECT);
     communicationEdge = e.generate(edgeName);
     op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
   }
@@ -50,8 +56,8 @@ public class PartitionOperation extends AbstractParallelOperation {
   public void prepare(Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
                       DataType dataType, DataType keyType, String edgeName) {
     this.edge = e;
-    op = new MPIDataFlowPartition(channel, srcs, dests, new PartitionReceiver(),
-        new PartitionPartialReceiver(), MPIDataFlowPartition.PartitionStratergy.DIRECT,
+    op = new DataFlowPartition(channel, srcs, dests, new PartitionReceiver(),
+        new PartitionPartialReceiver(), DataFlowPartition.PartitionStratergy.DIRECT,
         Utils.dataTypeToMessageType(dataType), Utils.dataTypeToMessageType(keyType));
     communicationEdge = e.generate(edgeName);
     op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
@@ -74,15 +80,46 @@ public class PartitionOperation extends AbstractParallelOperation {
 
     @Override
     public boolean onMessage(int source, int destination, int target, int flags, Object object) {
-      if (object instanceof List) {
-        for (Object o : (List) object) {
-          TaskMessage msg = new TaskMessage(o,
-              edge.getStringMapping(communicationEdge), target);
-          outMessages.get(target).offer(msg);
-      //    LOG.info("Source : " + source + ", Message : " + msg.getContent() + ", Target : "
-      //        + target + ", Destination : " + destination);
-
+      if (barrierMap.containsKey(source)) {
+        if (barrierMap.get(source).size() == 0) {
+          barrierMap.remove(source);
+          if (object instanceof List) {
+            for (Object o : (List) object) {
+              TaskMessage msg = new TaskMessage(o,
+                  edge.getStringMapping(communicationEdge), target);
+              outMessages.get(target).offer(msg);
+            }
+          } else if (object instanceof CheckpointBarrier) {
+            barrierMap.get(source).add(destination);
+            ArrayList<Object> bufferMessege = new ArrayList<>();
+            bufferMessege.add(object);
+            incommingBuffer.put(source, bufferMessege);
+          }
+        } else if (barrierMap.get(source).size() == incommingMap.get(source)) {
+          for (Object message : incommingBuffer.get(source)) {
+            if (message instanceof List) {
+              for (Object o : (List) message) {
+                TaskMessage msg = new TaskMessage(o,
+                    edge.getStringMapping(communicationEdge), target);
+                outMessages.get(target).offer(msg);
+              }
+            }
+          }
         }
+      } else {
+        if (object instanceof List) {
+          for (Object o : (List) object) {
+            TaskMessage msg = new TaskMessage(o,
+                edge.getStringMapping(communicationEdge), target);
+            outMessages.get(target).offer(msg);
+
+          }
+        } else if (object instanceof CheckpointBarrier) {
+          ArrayList<Integer> destinationMap = new ArrayList<Integer>();
+          destinationMap.add(destination);
+          barrierMap.put(source, destinationMap);
+        }
+
       }
       return true;
     }

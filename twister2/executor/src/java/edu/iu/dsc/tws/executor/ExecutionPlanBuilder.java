@@ -53,8 +53,6 @@ public class ExecutionPlanBuilder implements IExecutor {
    * Communications list
    */
   private Table<String, String, Communication> parOpTable = HashBasedTable.create();
-//  private Table<String, String, Communication> sendTable = HashBasedTable.create();
-//  private Table<String, String, Communication> recvTable = HashBasedTable.create();
 
   /**
    * For each task we have multiple instances
@@ -126,8 +124,6 @@ public class ExecutionPlanBuilder implements IExecutor {
           if (!parOpTable.contains(v.getName(), e.getName())) {
             parOpTable.put(v.getName(), e.getName(),
                 new Communication(e, v.getName(), child.getName(), srcTasks, tarTasks));
-//            sendTable.put(v.getName(), e.getName(),
-//                new Communication(e, v.getName(), child.getName(), srcTasks, tarTasks));
           }
         }
       }
@@ -146,8 +142,6 @@ public class ExecutionPlanBuilder implements IExecutor {
           if (!parOpTable.contains(parent.getName(), e.getName())) {
             parOpTable.put(parent.getName(), e.getName(),
                 new Communication(e, parent.getName(), v.getName(), srcTasks, tarTasks));
-//            recvTable.put(parent.getName(), e.getName(),
-//                new Communication(e, parent.getName(), v.getName(), srcTasks, tarTasks));
           }
         }
       }
@@ -227,20 +221,20 @@ public class ExecutionPlanBuilder implements IExecutor {
           new ArrayBlockingQueue<>(1024),
           new ArrayBlockingQueue<>(1024), cfg, edgeGenerator,
           vertex.getName(), taskId, ip.getTaskIndex(),
-          vertex.getParallelism(), vertex.getConfig().toMap());
+          vertex.getParallelism(), workerId, vertex.getConfig().toMap());
       taskInstances.put(vertex.getName(), taskId, v);
       return v;
     } else if (newInstance instanceof ISource) {
       SourceInstance v = new SourceInstance((ISource) newInstance,
           new ArrayBlockingQueue<>(1024), cfg,
           vertex.getName(), taskId, ip.getTaskIndex(),
-          vertex.getParallelism(), vertex.getConfig().toMap());
+          vertex.getParallelism(), workerId, vertex.getConfig().toMap());
       sourceInstances.put(vertex.getName(), taskId, v);
       return v;
     } else if (newInstance instanceof ISink) {
       SinkInstance v = new SinkInstance((ISink) newInstance,
           new ArrayBlockingQueue<>(1024), cfg, taskId, ip.getTaskIndex(),
-          vertex.getParallelism(), vertex.getConfig().toMap());
+          vertex.getParallelism(), workerId, vertex.getConfig().toMap());
       sinkInstances.put(vertex.getName(), taskId, v);
       return v;
     } else {

@@ -13,18 +13,26 @@ package edu.iu.dsc.tws.comms.shuffle;
 
 import java.util.List;
 
+/**
+ * Represent an open file part.
+ */
 public class OpenFilePart {
+  // the key values read
   private List<KeyValue> keyValues;
 
+  // the current read offset
   private int readOffSet;
 
+  // size of the file
   private int fileSize;
 
+  // name of te file
   private String fileName;
 
+  // the current read index of key values
   private int keyValueIndex = 0;
 
-  public OpenFilePart(List<KeyValue> keyValues, int readOffSet, int fileSize, String fileName) {
+  OpenFilePart(List<KeyValue> keyValues, int readOffSet, int fileSize, String fileName) {
     this.keyValues = keyValues;
     this.readOffSet = readOffSet;
     this.fileSize = fileSize;

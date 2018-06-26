@@ -27,9 +27,9 @@ import edu.iu.dsc.tws.common.net.tcp.TCPChannel;
 import edu.iu.dsc.tws.common.net.tcp.TCPMessage;
 import edu.iu.dsc.tws.common.net.tcp.TCPStatus;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.comms.mpi.MPIBuffer;
-import edu.iu.dsc.tws.comms.mpi.MPIMessage;
-import edu.iu.dsc.tws.comms.mpi.MPIMessageListener;
+import edu.iu.dsc.tws.comms.dfw.ChannelListener;
+import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
+import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 
 public class TWSTCPChannel implements TWSChannel {
   private static final Logger LOG = Logger.getLogger(TWSTCPChannel.class.getName());
@@ -46,9 +46,9 @@ public class TWSTCPChannel implements TWSChannel {
   @SuppressWarnings("VisibilityModifier")
   private class Request {
     TCPMessage request;
-    MPIBuffer buffer;
+    DataBuffer buffer;
 
-    Request(TCPMessage request, MPIBuffer buffer) {
+    Request(TCPMessage request, DataBuffer buffer) {
       this.request = request;
       this.buffer = buffer;
     }
@@ -59,11 +59,11 @@ public class TWSTCPChannel implements TWSChannel {
     List<Request> pendingRequests;
     int rank;
     int edge;
-    MPIMessageListener callback;
-    Queue<MPIBuffer> availableBuffers;
+    ChannelListener callback;
+    Queue<DataBuffer> availableBuffers;
 
     TCPReceiveRequests(int rank, int e,
-                       MPIMessageListener callback, Queue<MPIBuffer> buffers) {
+                       ChannelListener callback, Queue<DataBuffer> buffers) {
       this.rank = rank;
       this.edge = e;
       this.callback = callback;
@@ -77,11 +77,11 @@ public class TWSTCPChannel implements TWSChannel {
     List<Request> pendingSends;
     int rank;
     int edge;
-    MPIMessage message;
-    MPIMessageListener callback;
+    ChannelMessage message;
+    ChannelListener callback;
 
     TCPSendRequests(int rank, int e,
-                    MPIMessage message, MPIMessageListener callback) {
+                    ChannelMessage message, ChannelListener callback) {
       this.rank = rank;
       this.edge = e;
       this.message = message;
@@ -122,7 +122,7 @@ public class TWSTCPChannel implements TWSChannel {
    * @param message the message
    * @return true if the message is accepted to be sent
    */
-  public boolean sendMessage(int id, MPIMessage message, MPIMessageListener callback) {
+  public boolean sendMessage(int id, ChannelMessage message, ChannelListener callback) {
     boolean offer = pendingSends.offer(
         new TCPSendRequests(id, message.getHeader().getEdge(), message, callback));
     if (offer) {
@@ -139,7 +139,7 @@ public class TWSTCPChannel implements TWSChannel {
    * @return
    */
   public boolean receiveMessage(int rank, int stream,
-                                MPIMessageListener callback, Queue<MPIBuffer> receiveBuffers) {
+                                ChannelListener callback, Queue<DataBuffer> receiveBuffers) {
     return registeredReceives.add(new TCPReceiveRequests(rank, stream, callback,
         receiveBuffers));
   }
@@ -150,10 +150,10 @@ public class TWSTCPChannel implements TWSChannel {
    * @param requests the message
    */
   private void postMessage(TCPSendRequests requests) {
-    MPIMessage message = requests.message;
+    ChannelMessage message = requests.message;
     for (int i = 0; i < message.getBuffers().size(); i++) {
       sendCount++;
-      MPIBuffer buffer = message.getBuffers().get(i);
+      DataBuffer buffer = message.getBuffers().get(i);
       TCPMessage request = comm.iSend(buffer.getByteBuffer(), buffer.getSize(),
           requests.rank, message.getHeader().getEdge());
       // register to the loop to make progress on the send
@@ -162,7 +162,7 @@ public class TWSTCPChannel implements TWSChannel {
   }
 
   private void postReceive(TCPReceiveRequests requests) {
-    MPIBuffer byteBuffer = requests.availableBuffers.poll();
+    DataBuffer byteBuffer = requests.availableBuffers.poll();
     if (byteBuffer != null) {
       // post the receive
       TCPMessage request = postReceive(requests.rank, requests.edge, byteBuffer);
@@ -177,7 +177,7 @@ public class TWSTCPChannel implements TWSChannel {
    * @param byteBuffer the buffer
    * @return the request
    */
-  private TCPMessage postReceive(int rank, int stream, MPIBuffer byteBuffer) {
+  private TCPMessage postReceive(int rank, int stream, DataBuffer byteBuffer) {
     return comm.iRecv(byteBuffer.getByteBuffer(), byteBuffer.getCapacity(), rank, stream);
   }
 

@@ -16,13 +16,13 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.mpi.MPIDataFlowAllGather;
+import edu.iu.dsc.tws.comms.dfw.DataFlowAllGather;
 import edu.iu.dsc.tws.task.api.IMessage;
 
 public class AllGatherOperation extends AbstractParallelOperation {
   private static final Logger LOG = Logger.getLogger(AllGatherOperation.class.getName());
 
-  protected MPIDataFlowAllGather op;
+  protected DataFlowAllGather op;
 
 
   public AllGatherOperation(Config config, TWSChannel network, TaskPlan tPlan) {

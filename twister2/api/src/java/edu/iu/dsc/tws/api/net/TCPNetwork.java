@@ -21,7 +21,7 @@ import edu.iu.dsc.tws.common.net.tcp.TCPChannel;
 import edu.iu.dsc.tws.common.net.tcp.TCPContext;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.mpi.MPIDataFlowCommunication;
+import edu.iu.dsc.tws.comms.dfw.DataFlowCommunication;
 import edu.iu.dsc.tws.comms.tcp.TWSTCPChannel;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
@@ -90,7 +90,7 @@ public class TCPNetwork {
 
     TWSTCPChannel twstcpChannel = new TWSTCPChannel(config, taskPlan.getThisExecutor(), channel);
     // now lets create the dataflow communication
-    dataFlowCommunication = new MPIDataFlowCommunication();
+    dataFlowCommunication = new DataFlowCommunication();
     dataFlowCommunication.init(config, taskPlan, twstcpChannel);
   }
 

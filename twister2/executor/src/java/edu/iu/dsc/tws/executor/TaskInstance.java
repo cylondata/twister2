@@ -92,10 +92,15 @@ public class TaskInstance implements INodeInstance {
    */
   private EdgeGenerator edgeGenerator;
 
+  /**
+   * The worker id
+   */
+  private int workerId;
+
   public TaskInstance(ITask task, BlockingQueue<IMessage> inQueue,
                       BlockingQueue<IMessage> outQueue, Config config,
                       EdgeGenerator eGenerator, String tName,
-                      int tId, int tIndex, int parallel, Map<String, Object> cfgs) {
+                      int tId, int tIndex, int parallel, int wId, Map<String, Object> cfgs) {
     this.task = task;
     this.inQueue = inQueue;
     this.outQueue = outQueue;
@@ -106,11 +111,12 @@ public class TaskInstance implements INodeInstance {
     this.parallelism = parallel;
     this.taskName = tName;
     this.nodeConfigs = cfgs;
+    this.workerId = wId;
   }
 
   public void prepare() {
     outputCollection = new DefaultOutputCollection(outQueue);
-    task.prepare(config, new TaskContext(taskIndex, taskId, taskName, parallelism,
+    task.prepare(config, new TaskContext(taskIndex, taskId, taskName, parallelism, workerId,
         outputCollection, nodeConfigs));
   }
 

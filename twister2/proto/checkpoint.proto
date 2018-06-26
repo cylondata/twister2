@@ -1,0 +1,17 @@
+syntax = "proto2";
+package tws.proto.task;
+
+option java_package = "edu.iu.dsc.tws.proto.checkpoint";
+option java_outer_classname = "Checkpoint";
+
+//TaskDiscovery message is sent from the source and sink task to checkpoint manager
+//when worker initiates.
+message TaskDiscovery {
+    required int32 taskID = 1;
+    required TaskType taskType = 2;
+
+    enum TaskType {
+        SOURCE = 0;
+        SINK = 1;
+    }
+}

@@ -45,21 +45,9 @@ kubernetes.workers.per.pod: 2
 # when this value is zero, twister2 will not try to set up persistent storage for this job
 persistent.volume.per.worker: 1.0
 
-# nfs server address
-nfs.server.address: "149.165.150.81"
-
-# nfs server path
-nfs.server.path: "/nfs/shared"
-
-# total persistent volume size for all workers in this job
-# must be equal or higher than the total of all worker persistent volume sizes
-# default value is the total of all worker persistent volumes on this job 
-# disk unit is in GB as double
-# persistent.volume.total: 10.0
-
-# the admin should provide a PersistentVolume object with the following storage class. 
+# the admin should provide a PersistentVolume object with the following storage class.
 # Default storage class name is "twister2".
-kubernetes.persistent.storage.class: "twister2"
+kubernetes.persistent.storage.class: "twister2-nfs-storage"
 
 # persistent storage access mode. 
 # It shows the access mode for workers to access the shared persistent storage.
@@ -67,11 +55,6 @@ kubernetes.persistent.storage.class: "twister2"
 # other alternatives: "ReadWriteOnce", "ReadOnlyMany"
 # https://kubernetes.io/docs/concepts/storage/persistent-volumes
 kubernetes.storage.access.mode: "ReadWriteMany"
-
-# what happens to the storage after the job has finished
-# the storage can be retained (Retain), or deleted (Delete)
-# default value is "Retain"
-kubernetes.storage.reclaim.policy: "Retain"
 
 ########################################################################
 # Kubernetes job package upload through the persistent volume

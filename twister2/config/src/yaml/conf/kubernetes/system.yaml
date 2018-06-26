@@ -49,7 +49,7 @@ twister2.job.master.port: 11111
 # worker to job master response wait time in milliseconds
 # this is for messages that wait for a response from the job master
 # default value is 10seconds = 10000
-twister2.worker.to.job.master.response.wait.duration: 1000
+twister2.worker.to.job.master.response.wait.duration: 10000
 
 # twister2 job master volatile volume size in GB
 # default value is 1.0 Gi

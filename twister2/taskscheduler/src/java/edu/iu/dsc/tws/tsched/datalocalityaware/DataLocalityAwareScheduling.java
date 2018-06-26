@@ -70,7 +70,9 @@ public class DataLocalityAwareScheduling {
 
     Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
     Map<Integer, List<InstanceId>> dataAwareAllocation = new HashMap<>();
+
     Set<Map.Entry<String, Integer>> taskEntrySet = parallelTaskMap.entrySet();
+
     List<Integer> allocatedWorkers = new ArrayList<>();
 
     LOG.info(String.format("No. of Containers:\t" + numberOfContainers
@@ -103,13 +105,12 @@ public class DataLocalityAwareScheduling {
           if (vertex.getName().equals(taskName)
               && vertex.getConfig().getListValue("inputdataset") != null) {
 
-            //List<String> inputDataList = vertex.getConfig().getListValue("inputdataset");
-            List<String> datanodesList = dataNodeLocatorUtils.
-                findDataNodesLocation(vertex.getConfig().getListValue("inputdataset"));
-
             int totalNumberOfInstances = vertex.getParallelism();
             int maxContainerTaskObjectSize = 0;
+
             List<CalculateDataTransferTime> cal = null;
+            List<String> datanodesList;
+
             /**
              * If the cIdx is zero, simply calculate the distance between the worker node and
              * the datanodes. Else, if the cIdx values is greater than 0, check the container
@@ -118,9 +119,13 @@ public class DataLocalityAwareScheduling {
              * next scheduling cycle.
              */
             if (cIdx == 0) {
+              datanodesList = dataNodeLocatorUtils.
+                  findDataNodesLocation(vertex.getConfig().getListValue("inputdataset"));
               workerPlanMap = calculateDistance(datanodesList, workerPlan, cIdx, allocatedWorkers);
               cal = findOptimalWorkerNode(vertex, workerPlanMap, cIdx);
             } else if (cIdx > 0) {
+              datanodesList = dataNodeLocatorUtils.
+                  findDataNodesLocation(vertex.getConfig().getListValue("inputdataset"));
               Worker worker = workerPlan.getWorker(containerIndex);
               //Worker worker = workerPlan.getWorker(cIdx);
               if (dataAwareAllocation.get(containerIndex).size()
@@ -134,7 +139,6 @@ public class DataLocalityAwareScheduling {
               workerPlanMap = calculateDistance(datanodesList, workerPlan, cIdx, allocatedWorkers);
               cal = findOptimalWorkerNode(vertex, workerPlanMap, cIdx);
             }
-
             /**
              * This loop allocate the task instances to the respective container, before allocation
              * it will check whether the container has reached maximum task instance size which is
@@ -150,7 +154,7 @@ public class DataLocalityAwareScheduling {
                 ++maxContainerTaskObjectSize;
               } else {
                 LOG.info(String.format("Worker:" + containerIndex
-                    + "\t Reached Max. Task Object Size:" + maxContainerTaskObjectSize));
+                    + "Reached Max. Task Object Size:" + maxContainerTaskObjectSize));
               }
             }
             globalTaskIndex++;

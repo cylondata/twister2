@@ -22,7 +22,7 @@ import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.mpi.MPIDataFlowAllReduce;
+import edu.iu.dsc.tws.comms.dfw.DataFlowAllReduce;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.EdgeGenerator;
 import edu.iu.dsc.tws.task.api.IMessage;
@@ -31,7 +31,7 @@ import edu.iu.dsc.tws.task.api.TaskMessage;
 public class AllReduceOperation extends AbstractParallelOperation {
   private static final Logger LOG = Logger.getLogger(AllReduceOperation.class.getName());
 
-  protected MPIDataFlowAllReduce op;
+  protected DataFlowAllReduce op;
 
   public AllReduceOperation(Config config, TWSChannel network, TaskPlan tPlan) {
     super(config, network, tPlan);
@@ -40,7 +40,7 @@ public class AllReduceOperation extends AbstractParallelOperation {
   public void prepare(Set<Integer> sources, Set<Integer>  dest, EdgeGenerator e,
                       DataType dataType, String edgeName) {
     this.edge = e;
-    op = new MPIDataFlowAllReduce(channel, sources, dest, 0, new IndentityFunction(),
+    op = new DataFlowAllReduce(channel, sources, dest, 0, new IndentityFunction(),
         new FinalReduceReceive(), 0, 0, true);
     communicationEdge = e.generate(edgeName);
     op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);

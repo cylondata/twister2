@@ -1,5 +1,6 @@
-# This is the Persistent Volume object that is sent to Kubernetes master 
-# when creating a persistent volume for a Twister2 job
+# This is the Persistent Volume object that was used to create a PersistentVolume for each job.
+# We no loner use this.
+# We use persistent storage provisioners to dynamically create a PersistentVolume for each job.
 
 apiVersion: v1
 kind: PersistentVolume
