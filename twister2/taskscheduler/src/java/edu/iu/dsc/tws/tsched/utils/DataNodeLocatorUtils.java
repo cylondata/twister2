@@ -61,10 +61,18 @@ public class DataNodeLocatorUtils {
     List<String> dataNodes = new ArrayList<>();
     HadoopFileSystem hadoopFileSystem;
 
-    String[] fName = new String[inputDataList.size() - 1];
+    //String[] fName = new String[inputDataList.size() - 1];
     for (int i = 0; i < this.inputDataList.size(); i++) {
       this.datasetName = this.inputDataList.get(i);
-      fName[0] = inputDataList.get(i);
+      String[] fName = new String[0];
+      if (inputDataList.size() == 1) {
+        fName = new String[inputDataList.size()];
+        fName[0] = inputDataList.get(i);
+      } else if (inputDataList.size() > 1) {
+        fName = new String[inputDataList.size() - 1];
+        fName[0] = inputDataList.get(i);
+      }
+
       try {
         hadoopFileSystem =
             new HadoopFileSystem(conf, org.apache.hadoop.fs.FileSystem.get(conf));
@@ -119,7 +127,7 @@ public class DataNodeLocatorUtils {
     List<String> dataNodes = new ArrayList<>();
     HadoopFileSystem hadoopFileSystem;
 
-    String[] fName = new String[1];
+    String[] fName = new String[0];
     fName[0] = datasetName;
     try {
       hadoopFileSystem =
