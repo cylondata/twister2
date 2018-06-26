@@ -93,8 +93,8 @@ public class JobMasterClient extends Thread {
     rrClient.registerResponseHandler(stateChangeBuilder, responseMessageHandler);
     rrClient.registerResponseHandler(stateChangeResponseBuilder, responseMessageHandler);
 
-    // connect to JobMaster
-    long connectionTimeLimit = 10000;
+    // connect to JobMaster, wait up to 50 seconds
+    long connectionTimeLimit = 50000;
     tryUntilConnected(connectionTimeLimit);
 
     if (rrClient.isConnected()) {

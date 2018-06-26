@@ -536,18 +536,18 @@ public final class RequestObjectBuilder {
     meta.setName(pvName);
     pv.setMetadata(meta);
 
-    double volumeSize = SchedulerContext.persistentVolumeTotal(config);
+//    double volumeSize = SchedulerContext.persistentVolumeTotal(config);
     V1PersistentVolumeSpec pvSpec = new V1PersistentVolumeSpec();
     HashMap<String, Quantity> capacity = new HashMap<>();
-    capacity.put("storage", new Quantity(volumeSize + "Gi"));
+//    capacity.put("storage", new Quantity(volumeSize + "Gi"));
     pvSpec.setCapacity(capacity);
 
     String storageClass = KubernetesContext.persistentStorageClass(config);
     String accessMode = KubernetesContext.storageAccessMode(config);
-    String reclaimPolicy = KubernetesContext.storageReclaimPolicy(config);
+//    String reclaimPolicy = KubernetesContext.storageReclaimPolicy(config);
     pvSpec.setStorageClassName(storageClass);
     pvSpec.setAccessModes(Arrays.asList(accessMode));
-    pvSpec.setPersistentVolumeReclaimPolicy(reclaimPolicy);
+//    pvSpec.setPersistentVolumeReclaimPolicy(reclaimPolicy);
 //    pvSpec.setMountOptions(Arrays.asList("hard", "nfsvers=4.1"));
 
     V1NFSVolumeSource nfsVolumeSource = new V1NFSVolumeSource();
@@ -570,11 +570,14 @@ public final class RequestObjectBuilder {
     V1ObjectMeta meta = new V1ObjectMeta();
     meta.setName(pvcName);
     pvc.setMetadata(meta);
-
     String storageClass = KubernetesContext.persistentStorageClass(config);
+    HashMap<String, String> annotations = new HashMap<>();
+    annotations.put("volume.beta.kubernetes.io/storage-class", storageClass);
+    meta.setAnnotations(annotations);
+
     String accessMode = KubernetesContext.storageAccessMode(config);
     V1PersistentVolumeClaimSpec pvcSpec = new V1PersistentVolumeClaimSpec();
-    pvcSpec.setStorageClassName(storageClass);
+//    pvcSpec.setStorageClassName(storageClass);
     pvcSpec.setAccessModes(Arrays.asList(accessMode));
 
     V1ResourceRequirements resources = new V1ResourceRequirements();

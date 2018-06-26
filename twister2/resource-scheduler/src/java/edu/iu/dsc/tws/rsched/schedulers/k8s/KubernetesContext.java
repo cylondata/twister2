@@ -51,9 +51,6 @@ public class KubernetesContext extends SchedulerContext {
   public static final String K8S_STORAGE_ACCESS_MODE_DEFAULT = "ReadWriteMany";
   public static final String K8S_STORAGE_ACCESS_MODE = "kubernetes.storage.access.mode";
 
-  public static final String K8S_STORAGE_RECLAIM_POLICY_DEFAULT = "Retain";
-  public static final String K8S_STORAGE_RECLAIM_POLICY = "kubernetes.storage.reclaim.policy";
-
   // it can be either "system" or "kubernetes". currently not used.
   public static final String PERSISTENT_LOGGING_TYPE_DEFAULT = "system";
   public static final String PERSISTENT_LOGGING_TYPE = "persistent.logging.type";
@@ -111,10 +108,6 @@ public class KubernetesContext extends SchedulerContext {
 
   public static String storageAccessMode(Config cfg) {
     return cfg.getStringValue(K8S_STORAGE_ACCESS_MODE, K8S_STORAGE_ACCESS_MODE_DEFAULT);
-  }
-
-  public static String storageReclaimPolicy(Config cfg) {
-    return cfg.getStringValue(K8S_STORAGE_RECLAIM_POLICY, K8S_STORAGE_RECLAIM_POLICY_DEFAULT);
   }
 
   public static String persistentLoggingType(Config cfg) {

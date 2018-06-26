@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s.worker;
 
 import java.io.File;
 
+import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.spi.container.IPersistentVolume;
 
 public class K8sPersistentVolume implements IPersistentVolume {
@@ -24,6 +25,10 @@ public class K8sPersistentVolume implements IPersistentVolume {
   private String workerDirPath;
   private String logFileName;
   private String logDirPath;
+
+  public K8sPersistentVolume(int workerID) {
+    this(KubernetesConstants.PERSISTENT_VOLUME_MOUNT, workerID);
+  }
 
   public K8sPersistentVolume(String jobDirPath, int workerID) {
     this.jobDirPath = jobDirPath;
