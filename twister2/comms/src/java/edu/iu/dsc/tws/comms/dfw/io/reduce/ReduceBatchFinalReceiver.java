@@ -108,6 +108,8 @@ public class ReduceBatchFinalReceiver extends ReduceBatchReceiver {
           }
         }
         reduceReceiver.receive(t, previous);
+        // we can call on finish at this point
+        onFinish(t);
       }
     }
   }

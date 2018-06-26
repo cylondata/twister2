@@ -178,6 +178,8 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
         } else {
           gatherBatchReceiver.receive(t, memoryManagers.get(t).iterator());
         }
+        // we can call on finish at this point
+        onFinish(t);
       }
     }
   }
