@@ -43,10 +43,10 @@ import mpi.MPIException;
  * This is the base process started by the resource scheduler. This process will lanch the container
  * code and it will eventually will load the tasks.
  */
-public final class MPIProcess {
-  private static final Logger LOG = Logger.getLogger(MPIProcess.class.getName());
+public final class MPIWorker {
+  private static final Logger LOG = Logger.getLogger(MPIWorker.class.getName());
 
-  private MPIProcess() {
+  private MPIWorker() {
   }
 
   public static void main(String[] args) {
