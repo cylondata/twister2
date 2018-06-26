@@ -68,8 +68,13 @@ public class SinkInstance  implements INodeInstance {
    */
   private Map<String, Object> nodeConfigs;
 
+  /**
+   * The worker id
+   */
+  private int workerId;
+
   public SinkInstance(ISink task, BlockingQueue<IMessage> inQueue, Config config,
-                      int tId, int tIndex, int parallel, Map<String, Object> cfgs) {
+                      int tId, int tIndex, int parallel, int wId, Map<String, Object> cfgs) {
     this.task = task;
     this.inQueue = inQueue;
     this.config = config;
@@ -77,11 +82,13 @@ public class SinkInstance  implements INodeInstance {
     this.taskIndex = tIndex;
     this.parallelism = parallel;
     this.nodeConfigs = cfgs;
+    this.workerId = wId;
+
   }
 
   public void prepare() {
     task.prepare(config, new TaskContext(taskIndex, taskId, taskName,
-        parallelism, nodeConfigs));
+        parallelism, workerId, nodeConfigs));
   }
 
   public void execute() {

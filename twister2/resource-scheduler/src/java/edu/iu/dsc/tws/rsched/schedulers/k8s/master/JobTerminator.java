@@ -44,8 +44,8 @@ public class JobTerminator implements IJobTerminator {
     boolean pvcDeleted = controller.deletePersistentVolumeClaim(namespace, pvcName);
 
     // delete the persistent volume
-    String pvName = KubernetesUtils.createPersistentVolumeName(jobName);
-    boolean pvDeleted = controller.deletePersistentVolume(pvName);
+//    String pvName = KubernetesUtils.createPersistentVolumeName(jobName);
+//    boolean pvDeleted = controller.deletePersistentVolume(pvName);
 
     // first delete the job master StatefulSet
     String jobMasterStatefulSetName = KubernetesUtils.createJobMasterStatefulSetName(jobName);
@@ -56,7 +56,6 @@ public class JobTerminator implements IJobTerminator {
         && serviceForWorkersDeleted
         && serviceForJobMasterDeleted
         && pvcDeleted
-        && pvDeleted
         && ssForJobMasterDeleted;
   }
 }

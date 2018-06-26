@@ -34,8 +34,6 @@ spec:
           claimName: twister2-storage-<job-name>
 
       containers:
-        # container-index is added automatically inside the code
-        # it starts from 0 and increases sequentially
         name: twister2-job-master
         image: auyar/twister2:v0.01
         imagePullPolicy: <kubernetes.image.pull.policy>
@@ -53,24 +51,32 @@ spec:
         env:
           # below values are sample values. 
           # they are calculated for each job
-        - name: JOB_PACKAGE_FILENAME
-          value: twister2-job.tar.gz
-        - name: JOB_PACKAGE_FILE_SIZE
-          value: 233740
-        - name: CONTAINER_NAME
-          value: twister2-container-0
-        - name: USER_JOB_JAR_FILE
-          value: libexamples-java.jar
-        - name: JOB_DESCRIPTION_FILE
-          value: basic-kubernetes.job
-        - name: PERSISTENT_JOB_DIR
-          value: /persistent/twister2/basic-kubernetes-1523878691978
-        - name: WORKERS_PER_POD
-          value: 1
-        - name: PERSISTENT_LOGGING_REQUESTED
-          value: true
-        - name: PERSISTENT_LOGGING_TYPE
-          value: system
+        - name: twister2.job.master.ip
+          value: <ip.of.job.master>
+        - name: twister2.job.master.port
+          value: <port>
+        - name: twister2.job.name
+          value: <job.name>
+        - name: kubernetes.namespace
+          value: <k8s.namespace>
+        - name: twister2.worker.instances
+          value: <value>
+        - name: twister2.job.master.assigns.worker.ids
+          value: <true or false>
+        - name: job.master.persistent.job.directory
+          value: <value>
+        - name: twister2.worker.ping.interval
+          value: <value>
+        - name: persistent.logging.requested
+          value: <true or false>
+        - name: twister2.logging.level
+          value: <value>
+        - name: twister2.logging.redirect.sysouterr
+          value: <value>
+        - name: twister2.logging.max.file.size.mb
+          value: <value>
+        - name: twister2.logging.maximum.files
+          value: <value>
         - name: POD_IP
           valueFrom:
             fieldRef:

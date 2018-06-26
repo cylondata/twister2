@@ -17,11 +17,21 @@ rules:
   verbs: ["get", "watch", "list"]
 
   # job master needs to delete services, volumes and statefulsets
-  # "" indicates the core API group, deletes services and PersistentVolumeClaims
-  # "apps" delete statefulsets
-- apiGroups: ["", "apps"]
-  resources: ["services", "statefulsets", "persistentvolumes", "persistentvolumeclaims"]
-  verbs: ["delete"]
+- apiGroups: [""]
+  resources: ["persistentvolumes"]
+  verbs: ["get", "list", "watch", "delete"]
+
+- apiGroups: [""]
+  resources: ["persistentvolumeclaims"]
+  verbs: ["get", "list", "watch", "delete"]
+
+- apiGroups: [""]
+  resources: ["services"]
+  verbs: ["get", "list", "watch", "delete"]
+
+- apiGroups: ["apps"]
+  resources: ["statefulsets"]
+  verbs: ["get", "list", "watch", "delete"]
 
 ---
 
@@ -35,9 +45,6 @@ subjects:
 - kind: Group
   name: system:authenticated
   apiGroup: rbac.authorization.k8s.io
-#- kind: User
-#  name: jane # Name is case sensitive
-#  apiGroup: rbac.authorization.k8s.io
 roleRef:
   kind: Role
   name: twister2-role
