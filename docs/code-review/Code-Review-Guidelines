@@ -1,6 +1,6 @@
 # Twister2 Code Review Guidelines
 
-The kinds of things that we will look when performing code reviews. 
+The list of the things that we will look when performing code reviews. 
 
 ## Logging
 Has the logger for each class been initialized?
