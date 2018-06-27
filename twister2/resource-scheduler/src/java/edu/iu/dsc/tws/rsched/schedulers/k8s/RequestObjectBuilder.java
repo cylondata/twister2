@@ -527,6 +527,14 @@ public final class RequestObjectBuilder {
     return service;
   }
 
+  /**
+   * we initially used this method to create PersistentVolumes
+   * we no longer use this method
+   * it is just here in case we may need it for some reason at one point
+   * @param config
+   * @param pvName
+   * @return
+   */
   public static V1PersistentVolume createPersistentVolumeObject(Config config, String pvName) {
     V1PersistentVolume pv = new V1PersistentVolume();
     pv.setApiVersion("v1");
@@ -570,20 +578,22 @@ public final class RequestObjectBuilder {
     V1ObjectMeta meta = new V1ObjectMeta();
     meta.setName(pvcName);
     pvc.setMetadata(meta);
+
     String storageClass = KubernetesContext.persistentStorageClass(config);
-    HashMap<String, String> annotations = new HashMap<>();
-    annotations.put("volume.beta.kubernetes.io/storage-class", storageClass);
-    meta.setAnnotations(annotations);
+
+    // two methods to set StorageClass, we set in pvcSpec
+//    HashMap<String, String> annotations = new HashMap<>();
+//    annotations.put("volume.beta.kubernetes.io/storage-class", storageClass);
+//    meta.setAnnotations(annotations);
 
     String accessMode = KubernetesContext.storageAccessMode(config);
     V1PersistentVolumeClaimSpec pvcSpec = new V1PersistentVolumeClaimSpec();
-//    pvcSpec.setStorageClassName(storageClass);
+    pvcSpec.setStorageClassName(storageClass);
     pvcSpec.setAccessModes(Arrays.asList(accessMode));
 
     V1ResourceRequirements resources = new V1ResourceRequirements();
     double storageSize = SchedulerContext.persistentVolumePerWorker(config);
     resources.putRequestsItem("storage", new Quantity(storageSize + "Gi"));
-//    resources.putRequestsItem("storage", Quantity.fromString("1Gi"));
     pvcSpec.setResources(resources);
 
     pvc.setSpec(pvcSpec);

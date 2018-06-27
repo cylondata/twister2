@@ -79,7 +79,7 @@ public class KeyedReduceOperation extends AbstractParallelOperation {
     @Override
     public void init(Config cfg, DataFlowOperation operation,
                      Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
-      Map<Integer, List<Integer>> exp = expectedIds.get(8);
+      Map<Integer, List<Integer>> exp = expectedIds.get(0);
       for (Map.Entry<Integer, List<Integer>> e : exp.entrySet()) {
         Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
         Map<Integer, Integer> countsPerTask = new HashMap<>();
@@ -186,7 +186,7 @@ public class KeyedReduceOperation extends AbstractParallelOperation {
     @Override
     public void init(Config cfg, DataFlowOperation operation,
                      Map<Integer, Map<Integer, List<Integer>>> exp) {
-      Map<Integer, List<Integer>> expectedIds = exp.get(8);
+      Map<Integer, List<Integer>> expectedIds = exp.get(0);
       for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
         Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
         Map<Integer, Integer> countsPerTask = new HashMap<>();

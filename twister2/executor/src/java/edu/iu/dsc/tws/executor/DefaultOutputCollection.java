@@ -31,11 +31,8 @@ public class DefaultOutputCollection implements OutputCollection {
   @Override
   public boolean collect(int edge, IMessage m) {
     boolean offer = this.outQueue.offer(m);
-    if (!offer) {
-      LOG.info("Failed to offer: " + count);
-    } else {
+    if (offer) {
       count++;
-      LOG.info("Offered: " + count);
     }
     return offer;
   }
