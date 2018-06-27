@@ -221,11 +221,6 @@ public class DataFlowLoadBalance implements DataFlowOperation, ChannelReceiver {
     return instancePlan;
   }
 
-  @Override
-  public void setMemoryMapped(boolean memoryMapped) {
-    delegete.setStoreBased(memoryMapped);
-  }
-
   private RoutingParameters sendRoutingParameters(int source, int path) {
     RoutingParameters routingParameters = new RoutingParameters();
     int destination = 0;

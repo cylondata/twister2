@@ -127,10 +127,4 @@ public class DataFlowAllGather implements DataFlowOperation {
   public TaskPlan getTaskPlan() {
     return null;
   }
-
-  @Override
-  public void setMemoryMapped(boolean memoryMapped) {
-    reduce.setMemoryMapped(memoryMapped);
-    broadcast.setMemoryMapped(memoryMapped);
-  }
 }
