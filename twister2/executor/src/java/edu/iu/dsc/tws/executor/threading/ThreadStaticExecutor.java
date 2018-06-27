@@ -110,7 +110,10 @@ public class ThreadStaticExecutor extends ThreadExecutor {
 
     @Override
     public void run() {
-      this.iNodeInstance.execute();
+      while (true) {
+        this.iNodeInstance.execute();
+      }
+
     }
   }
 }

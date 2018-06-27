@@ -72,8 +72,8 @@ public class BroadcastOperation extends AbstractParallelOperation {
       int remainingCap = outMessages.get(target).remainingCapacity();
       //LOG.info("Remaining Capacity : " + remainingCap);
       boolean status = outMessages.get(target).offer(msg);
-      LOG.info("Message from Communication : " + msg.getContent() + ", Status : "
-          + status + ", Rem Cap : " + remainingCap);
+      /*LOG.info("Message from Communication : " + msg.getContent() + ", Status : "
+          + status + ", Rem Cap : " + remainingCap);*/
       return true;
     }
 
