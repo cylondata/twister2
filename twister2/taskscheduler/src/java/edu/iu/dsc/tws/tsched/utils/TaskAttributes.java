@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.tsched.utils;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -127,4 +128,35 @@ public class TaskAttributes {
     }
     return parallelTaskMap;
   }
+
+  public HashMap<String, Integer> getParallelTaskMap(Vertex taskVertex) {
+
+    HashMap<String, Integer> parallelTaskMap = new LinkedHashMap<>();
+
+    try {
+      Config config = taskVertex.getConfig();
+      String taskName = taskVertex.getName();
+      Integer parallelTaskCount;
+      if (taskVertex.getParallelism() >= 1) {
+        parallelTaskCount = taskVertex.getParallelism();
+      } else {
+        parallelTaskCount = TaskSchedulerContext.taskParallelism(config);
+      }
+      parallelTaskMap.put(taskName, parallelTaskCount);
+    } catch (Exception ee) {
+      ee.printStackTrace();
+    }
+    return parallelTaskMap;
+  }
+
+  public int getTotalNumberOfInstances(Vertex taskVertex) {
+
+    HashMap<String, Integer> parallelTaskMap = getParallelTaskMap(taskVertex);
+    int totalNumberOfInstances = 0;
+    for (int instances : parallelTaskMap.values()) {
+      totalNumberOfInstances += instances;
+    }
+    return totalNumberOfInstances;
+  }
+
 }
