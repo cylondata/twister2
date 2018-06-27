@@ -135,16 +135,6 @@ public class DataFlowMultiGather implements DataFlowOperation {
     return plan;
   }
 
-  @Override
-  public void setMemoryMapped(boolean memoryMapped) {
-    //Needs to be called after init
-    for (DataFlowGather dataFlowGather : gatherMap.values()) {
-      dataFlowGather.setMemoryMapped(memoryMapped);
-    }
-
-  }
-
-
   /**
    * Initialize
    * @param config

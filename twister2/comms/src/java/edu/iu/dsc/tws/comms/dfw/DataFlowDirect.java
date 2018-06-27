@@ -191,11 +191,6 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
     return null;
   }
 
-  @Override
-  public void setMemoryMapped(boolean memoryMapped) {
-    delegete.setStoreBased(memoryMapped);
-  }
-
   private boolean isLastReceiver() {
     return router.isLastReceiver();
   }

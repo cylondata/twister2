@@ -473,7 +473,6 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public void setMemoryMapped(boolean memoryMapped) {
-    delegete.setStoreBased(memoryMapped);
   }
 
   public class BarrierReduceFn implements ReduceFunction {

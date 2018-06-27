@@ -118,15 +118,6 @@ public class DataFlowMultiReduce implements DataFlowOperation {
     return taskPlan;
   }
 
-  @Override
-  public void setMemoryMapped(boolean memoryMapped) {
-    //Needs to be called after init
-    for (DataFlowReduce mpiDataFlowGather : reduceMap.values()) {
-      mpiDataFlowGather.setMemoryMapped(memoryMapped);
-    }
-  }
-
-
   /**
    * Initialize
    * @param config

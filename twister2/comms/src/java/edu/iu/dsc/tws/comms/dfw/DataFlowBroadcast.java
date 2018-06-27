@@ -85,11 +85,6 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
     return instancePlan;
   }
 
-  @Override
-  public void setMemoryMapped(boolean memoryMapped) {
-    delegete.setStoreBased(memoryMapped);
-  }
-
   public boolean receiveMessage(ChannelMessage currentMessage, Object object) {
     MessageHeader header = currentMessage.getHeader();
 
@@ -245,7 +240,7 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
         new ImmutablePair<Object, OutMessage>(object, sendMessage));
   }
 
-  public RoutingParameters sendRoutingParameters(int s, int path) {
+  private RoutingParameters sendRoutingParameters(int s, int path) {
     if (routingParametersCache.containsKey(s)) {
       return routingParametersCache.get(s);
     } else {

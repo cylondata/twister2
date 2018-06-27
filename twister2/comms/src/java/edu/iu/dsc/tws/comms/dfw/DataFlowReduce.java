@@ -346,6 +346,5 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public void setMemoryMapped(boolean memoryMapped) {
-    delegete.setStoreBased(memoryMapped);
   }
 }
