@@ -24,7 +24,7 @@ public interface Shuffle {
 
   /**
    * Get a read iterator
-   * @return
+   * @return an iterator
    */
   Iterator<Object> readIterator();
 

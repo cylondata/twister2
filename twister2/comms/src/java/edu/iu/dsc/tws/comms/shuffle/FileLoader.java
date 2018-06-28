@@ -344,13 +344,13 @@ public final class FileLoader {
 
   /**
    * Reads a file part upto max size from start offset
-   * @param fileName
-   * @param startOffSet
-   * @param maxSize
-   * @param keyType
-   * @param dataType
-   * @param deserializer
-   * @return
+   * @param fileName name
+   * @param startOffSet start offset in bytes
+   * @param maxSize max size to read
+   * @param keyType key type
+   * @param dataType data type
+   * @param deserializer the deserializer
+   * @return OpenFilePart with read information and null if fails
    */
   public static OpenFilePart openPart(String fileName, long startOffSet,
                                                                 int maxSize, MessageType keyType,
@@ -393,8 +393,8 @@ public final class FileLoader {
         }
         value = deserialize(dataType, deserializer, os, dataSize);
 
-//        LOG.log(Level.INFO, "Reading data size: " + dataSize + " count "
-//            + count + " file: " + fileName + " total: " + totalRead + " value: " + value);
+        // LOG.log(Level.INFO, "Reading data size: " + dataSize + " count "
+        // + count + " file: " + fileName + " total: " + totalRead + " value: " + value);
 
         keyValues.add(new KeyValue(key, value));
         totalRead += 8 + keySize + dataSize;

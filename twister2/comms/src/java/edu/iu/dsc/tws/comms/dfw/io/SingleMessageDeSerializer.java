@@ -28,11 +28,20 @@ import edu.iu.dsc.tws.comms.dfw.io.types.KeyDeserializer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.comms.utils.MessageTypeUtils;
 
+/**
+ * Deserialize a single message in a buffer
+ */
 public class SingleMessageDeSerializer implements MessageDeSerializer {
   private static final Logger LOG = Logger.getLogger(SingleMessageDeSerializer.class.getName());
 
+  /**
+   * The kryo serializer
+   */
   private KryoSerializer serializer;
 
+  /**
+   * Weather keys are used
+   */
   private boolean keyed;
 
   public SingleMessageDeSerializer(KryoSerializer kryoSerializer) {
