@@ -16,24 +16,24 @@ import java.util.List;
 import java.util.Map;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.BatchReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.GatherBatchReceiver;
 import edu.iu.dsc.tws.comms.api.MultiMessageReceiver;
 
 public class GatherMultiBatchFinalReceiver implements MultiMessageReceiver {
-  private GatherBatchReceiver gatherBatchReceiver;
+  private BatchReceiver batchReceiver;
 
   private Map<Integer, GatherBatchFinalReceiver> receiverMap = new HashMap<>();
 
-  public GatherMultiBatchFinalReceiver(GatherBatchReceiver receiver) {
-    this.gatherBatchReceiver = receiver;
+  public GatherMultiBatchFinalReceiver(BatchReceiver receiver) {
+    this.batchReceiver = receiver;
   }
 
   @Override
   public void init(Config cfg, DataFlowOperation op,
                    Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
     for (Map.Entry<Integer, Map<Integer, List<Integer>>> e : expectedIds.entrySet()) {
-      GatherBatchFinalReceiver finalReceiver = new GatherBatchFinalReceiver(gatherBatchReceiver);
+      GatherBatchFinalReceiver finalReceiver = new GatherBatchFinalReceiver(batchReceiver);
       receiverMap.put(e.getKey(), finalReceiver);
 
       finalReceiver.init(cfg, op, e.getValue());

@@ -31,10 +31,10 @@ import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
-public final class StandaloneProcess {
-  private static final Logger LOG = Logger.getLogger(StandaloneProcess.class.getName());
+public final class StandaloneWorker {
+  private static final Logger LOG = Logger.getLogger(StandaloneWorker.class.getName());
 
-  private StandaloneProcess() {
+  private StandaloneWorker() {
   }
 
   public static void main(String[] args) {
@@ -52,7 +52,7 @@ public final class StandaloneProcess {
       // we are loading the configuration for all the components
       Config config = loadConfigurations(cmd, rank);
       // normal worker
-      LOG.log(Level.FINE, "A worker process is starting...");
+      LOG.log(Level.INFO, "A worker process is starting...");
       worker(config, rank);
     } catch (ParseException e) {
       HelpFormatter formatter = new HelpFormatter();

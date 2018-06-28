@@ -75,7 +75,6 @@ public abstract class ReduceBatchReceiver implements MessageReceiver {
     this.executor = dataFlowOperation.getTaskPlan().getThisExecutor();
     this.reducedValues = new ArrayBlockingQueue<>(sendPendingMax);
 
-    LOG.fine(String.format("%d gather partial expected ids %s", executor, expectedIds));
     for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
       Map<Integer, Queue<Object>> messagesPerTask = new HashMap<>();
       Map<Integer, Boolean> finishedPerTask = new HashMap<>();
@@ -112,11 +111,7 @@ public abstract class ReduceBatchReceiver implements MessageReceiver {
 
     if (m.size() >= sendPendingMax) {
       canAdd = false;
-//      LOG.info(String.format("%d Partial add FALSE target %d source %d %s %s",
-//          executor, target, source, finishedMessages, counts.get(target)));
     } else {
-//      LOG.info(String.format("%d Partial add TRUE target %d source %d %s %s",
-//          executor, target, source, finishedMessages, counts.get(target)));
       if (object instanceof ChannelMessage) {
         ((ChannelMessage) object).incrementRefCount();
       }
@@ -128,7 +123,6 @@ public abstract class ReduceBatchReceiver implements MessageReceiver {
 
       m.add(object);
       if ((flags & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) {
-//        LOG.info(String.format("%d Received LAST FLAG", executor));
         finishedMessages.put(source, true);
       }
     }

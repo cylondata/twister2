@@ -86,8 +86,8 @@ import java.util.logging.Logger;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.BatchReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.GatherBatchReceiver;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
@@ -226,7 +226,7 @@ public class BasicMemoryManagerKeyedGatherCommunication implements IContainer {
     }
   }
 
-  private class FinalGatherReceive implements GatherBatchReceiver {
+  private class FinalGatherReceive implements BatchReceiver {
     // lets keep track of the messages
     // for each task we need to keep track of incoming messages
     private List<Integer> dataList;

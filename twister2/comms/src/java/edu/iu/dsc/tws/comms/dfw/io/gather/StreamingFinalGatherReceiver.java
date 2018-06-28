@@ -17,15 +17,15 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.BatchReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.GatherBatchReceiver;
 
 public class StreamingFinalGatherReceiver extends StreamingPartialGatherReceiver {
   private static final Logger LOG = Logger.getLogger(StreamingFinalGatherReceiver.class.getName());
 
-  private GatherBatchReceiver receiver;
+  private BatchReceiver receiver;
 
-  public StreamingFinalGatherReceiver(GatherBatchReceiver receiver) {
+  public StreamingFinalGatherReceiver(BatchReceiver receiver) {
     this.receiver = receiver;
   }
 
