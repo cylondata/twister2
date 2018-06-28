@@ -47,6 +47,7 @@ public class ReduceOperation extends AbstractParallelOperation {
         new ReduceStreamingFinalReceiver(new IdentityFunction(), new FinalReduceReceiver()),
         new ReduceStreamingPartialReceiver(dest, new IdentityFunction()));
     communicationEdge = e.generate(edgeName);
+    LOG.info("===Communication Edge : " + communicationEdge);
     op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
   }
 

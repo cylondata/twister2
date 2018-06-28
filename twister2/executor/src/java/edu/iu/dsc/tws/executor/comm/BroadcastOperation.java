@@ -41,6 +41,7 @@ public class BroadcastOperation extends AbstractParallelOperation {
     LOG.info(String.format("Srcs %d dests %s", srcs, dests));
     op = new DataFlowBroadcast(channel, srcs, dests, new BcastReceiver());
     communicationEdge = e.generate(edgeName);
+    LOG.info("===Communication Edge : " + communicationEdge);
     op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
   }
 

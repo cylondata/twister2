@@ -91,6 +91,7 @@ public class ComplexByteTask implements IContainer {
     @Override
     public void run() {
       int size = 16;
+
       int[] arr = genRandomInt(size);
       ctx.write("partition-edge", arr);
       //System.out.println("Message Count : " + count);

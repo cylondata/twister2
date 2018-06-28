@@ -55,7 +55,7 @@ public class ComplexTask implements IContainer {
     builder.setParallelism("intermediate", 4);
     builder.addSink("sink", r);
     builder.setParallelism("sink", 1);
-    builder.connect("source", "intermediate", "partition-edge", Operations.BROADCAST);
+    builder.connect("source", "intermediate", "broadcast-edge", Operations.BROADCAST);
     builder.connect("intermediate", "sink", "gather-edge", Operations.GATHER);
 
     DataFlowTaskGraph graph = builder.build();
@@ -90,7 +90,7 @@ public class ComplexTask implements IContainer {
 
     @Override
     public void run() {
-      ctx.write("partition-edge", "Hello");
+      ctx.write("broadcast-edge", "Hello");
       //System.out.println("Message Count : " + count);
       count++;
     }
