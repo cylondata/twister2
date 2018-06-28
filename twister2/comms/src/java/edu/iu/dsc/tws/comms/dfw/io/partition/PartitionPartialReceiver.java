@@ -86,9 +86,10 @@ public class PartitionPartialReceiver implements MessageReceiver {
    */
   private boolean finish = false;
 
+  /**
+   * we have sent to these destinations
+   */
   private Set<Integer> finishedDestinations = new HashSet<>();
-
-  private int totals = 0;
 
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
@@ -126,7 +127,6 @@ public class PartitionPartialReceiver implements MessageReceiver {
         lock.unlock();
       }
     }
-    totals++;
     return true;
   }
 
@@ -138,12 +138,13 @@ public class PartitionPartialReceiver implements MessageReceiver {
         for (int dest : destinations) {
           if (!finishedDestinations.contains(dest)) {
             if (operation.sendPartial(source, new byte[1], MessageFlags.EMPTY, dest)) {
-//              LOG.info(String.format("%d Sending FINISH to %d", executor, dest));
               finishedDestinations.add(dest);
+            } else {
+              // no point in going further
+              break;
             }
           }
         }
-//        LOG.info(String.format("%d %d Partial totals %d", executor, source, totals));
         return;
       }
 

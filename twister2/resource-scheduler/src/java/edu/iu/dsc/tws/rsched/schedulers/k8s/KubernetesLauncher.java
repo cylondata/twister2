@@ -25,10 +25,10 @@ import edu.iu.dsc.tws.master.JobMaster;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobMasterRequestObject;
 import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
 import edu.iu.dsc.tws.rsched.spi.scheduler.ILauncher;
 
-import io.kubernetes.client.models.V1PersistentVolume;
 import io.kubernetes.client.models.V1PersistentVolumeClaim;
 import io.kubernetes.client.models.V1Service;
 import io.kubernetes.client.models.V1beta2StatefulSet;
@@ -204,22 +204,22 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
 
     // first check whether there is already a persistent volume with the same name
     // if not, create a new one
-    String pvName = KubernetesUtils.createPersistentVolumeName(jobName);
-    V1PersistentVolume pv = controller.getPersistentVolume(pvName);
-    if (pv == null) {
-      pv = RequestObjectBuilder.createPersistentVolumeObject(config, pvName);
-      boolean pvCreated = controller.createPersistentVolume(pv);
-      if (!pvCreated) {
-        LOG.log(Level.SEVERE, "PersistentVolume could not be created. "
-            + "\n++++++ Aborting submission ++++++");
-        throw new RuntimeException();
-      }
-    } else {
-      LOG.log(Level.SEVERE, "There is already a PersistentVolume with the name: " + pvName
-          + "\nPlease terminate any artifacts from previous jobs or change your job name. "
-          + "\n++++++ Aborting submission ++++++");
-      return false;
-    }
+//    String pvName = KubernetesUtils.createPersistentVolumeName(jobName);
+//    V1PersistentVolume pv = controller.getPersistentVolume(pvName);
+//    if (pv == null) {
+//      pv = RequestObjectBuilder.createPersistentVolumeObject(config, pvName);
+//      boolean pvCreated = controller.createPersistentVolume(pv);
+//      if (!pvCreated) {
+//        LOG.log(Level.SEVERE, "PersistentVolume could not be created. "
+//            + "\n++++++ Aborting submission ++++++");
+//        throw new RuntimeException();
+//      }
+//    } else {
+//      LOG.log(Level.SEVERE, "There is already a PersistentVolume with the name: " + pvName
+//          + "\nPlease terminate any artifacts from previous jobs or change your job name. "
+//          + "\n++++++ Aborting submission ++++++");
+//      return false;
+//    }
 
     String pvcName = KubernetesUtils.createStorageClaimName(jobName);
     // check whether there is a PersistentVolumeClaim object, if so, no need to create a new one
@@ -386,8 +386,8 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     boolean claimDeleted = controller.deletePersistentVolumeClaim(namespace, pvcName);
 
     // delete the persistent volume
-    String pvName = KubernetesUtils.createPersistentVolumeName(jobName);
-    boolean pvDeleted = controller.deletePersistentVolume(pvName);
+//    String pvName = KubernetesUtils.createPersistentVolumeName(jobName);
+//    boolean pvDeleted = controller.deletePersistentVolume(pvName);
 
     return true;
   }

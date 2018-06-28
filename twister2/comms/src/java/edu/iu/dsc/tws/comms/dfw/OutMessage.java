@@ -153,8 +153,8 @@ public class OutMessage {
     return acceptedInternalSends;
   }
 
-  public int incrementAcceptedInternalSends() {
-    return ++acceptedInternalSends;
+  public void incrementAcceptedInternalSends() {
+    ++acceptedInternalSends;
   }
 
   public int getFlags() {

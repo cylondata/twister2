@@ -26,16 +26,19 @@ public class TaskContext {
 
   private Map<String, Object> configs;
 
+  private int workerId;
+
   public TaskContext(int taskIndex, int taskId, String taskName,
-                     int parallelism, Map<String, Object> configs) {
+                     int parallelism, int wId, Map<String, Object> configs) {
     this.taskIndex = taskIndex;
     this.taskId = taskId;
     this.taskName = taskName;
     this.parallelism = parallelism;
     this.configs = configs;
+    this.workerId = wId;
   }
 
-  public TaskContext(int taskIndex, int taskId, String taskName, int parallelism,
+  public TaskContext(int taskIndex, int taskId, String taskName, int parallelism, int wId,
                      OutputCollection collection, Map<String, Object> configs) {
     this.taskIndex = taskIndex;
     this.taskId = taskId;
@@ -43,6 +46,7 @@ public class TaskContext {
     this.parallelism = parallelism;
     this.collection = collection;
     this.configs = configs;
+    this.workerId = wId;
   }
 
   /**
@@ -72,6 +76,9 @@ public class TaskContext {
     return parallelism;
   }
 
+  public int getWorkerId() {
+    return workerId;
+  }
 
   public Map<String, Object> getConfigurations() {
     return configs;

@@ -23,8 +23,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.BatchReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.GatherBatchReceiver;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
@@ -42,24 +42,48 @@ import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 public class PartitionBatchFinalReceiver implements MessageReceiver {
   private static final Logger LOG = Logger.getLogger(PartitionBatchFinalReceiver.class.getName());
 
-  private GatherBatchReceiver batchReceiver;
+  /**
+   * The receiver
+   */
+  private BatchReceiver batchReceiver;
 
+  /**
+   * Sort mergers for each target
+   */
   private Map<Integer, Shuffle> sortedMergers = new HashMap<>();
 
+  /**
+   * weather we need to sort the records according to key
+   */
   private boolean sorted;
 
   private boolean disk;
 
+  /**
+   * Comparator for sorting records
+   */
   private Comparator<Object> comparator;
 
+  /**
+   * The operation
+   */
   private DataFlowPartition partition;
 
+  /**
+   * Weather a keyed operation is used
+   */
   private boolean keyed;
 
   private KryoSerializer kryoSerializer;
 
-  private int executor = 0;
+  /**
+   * The worker id
+   */
+  private int worker = 0;
 
+  /**
+   * Keep track of totals for debug purposes
+   */
   private Map<Integer, Integer> totalReceives = new HashMap<>();
 
   /**
@@ -77,7 +101,7 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
    */
   private Set<Integer> finishedTargetsCompleted = new HashSet<>();
 
-  public PartitionBatchFinalReceiver(GatherBatchReceiver receiver, boolean srt,
+  public PartitionBatchFinalReceiver(BatchReceiver receiver, boolean srt,
                                      boolean d, Comparator<Object> com) {
     this.batchReceiver = receiver;
     this.sorted = srt;
@@ -91,7 +115,7 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
     int maxRecordsInMemory = DataFlowContext.getShuffleMaxRecordsInMemory(cfg);
     String path = DataFlowContext.getShuffleDirectoryPath(cfg);
 
-    executor = op.getTaskPlan().getThisExecutor();
+    worker = op.getTaskPlan().getThisExecutor();
     finishedSources = new HashMap<>();
     partition = (DataFlowPartition) op;
     keyed = partition.getKeyType() != null;
@@ -126,22 +150,18 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
   public boolean onMessage(int source, int destination, int target, int flags, Object object) {
     Shuffle sortedMerger = sortedMergers.get(target);
     if (sortedMerger == null) {
-      throw new RuntimeException("Un-expected target: " + target);
+      throw new RuntimeException("Un-expected target id: " + target);
     }
-//    LOG.info(String.format("Receive message %d", target));
 
     if ((flags & MessageFlags.EMPTY) == MessageFlags.EMPTY) {
       Set<Integer> finished = finishedSources.get(target);
       if (finished.contains(source)) {
         LOG.log(Level.WARNING,
-            String.format("%d Duplicate finish from source %d", executor, source));
+            String.format("%d Duplicate finish from source id %d", worker, source));
       } else {
         finished.add(source);
       }
       if (finished.size() == partition.getSources().size()) {
-//        LOG.log(Level.INFO,
-//            String.format("%d Finished targets %d %s %s", executor, target,
-//                finishedSources, finishedTargets));
         finishedTargets.add(target);
       }
       return true;
@@ -169,7 +189,6 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
       total += contents.size();
       totalReceives.put(target, total);
     }
-//    LOG.info(String.format("%d %d On Message totals %s", executor, target, totalReceives));
     return true;
   }
 
@@ -192,12 +211,7 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
     Shuffle sortedMerger = sortedMergers.get(target);
     sortedMerger.switchToReading();
     Iterator<Object> itr = sortedMerger.readIterator();
-//    LOG.info(String.format("%d %d On finish totals %s", executor, target, totalReceives));
-    try {
-      batchReceiver.receive(target, itr);
-    } catch (RuntimeException e) {
-      LOG.log(Level.INFO, "Array index: exe " + executor + " target: " + target, e);
-    }
+    batchReceiver.receive(target, itr);
   }
 
   private String getOperationName(int target) {

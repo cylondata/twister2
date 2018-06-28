@@ -43,6 +43,7 @@ public class GatherOperation extends AbstractParallelOperation {
     op = new DataFlowGather(channel, srcs, dest, new FinalGatherReceiver(), 0, 0,
         config, Utils.dataTypeToMessageType(dataType), taskPlan, e.getIntegerMapping(edgeName));
     op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
+    LOG.info("===CommunicationEdge : " + communicationEdge);
   }
 
   public void prepare(Set<Integer> srcs, int dest, EdgeGenerator e, DataType dataType,
@@ -50,6 +51,8 @@ public class GatherOperation extends AbstractParallelOperation {
     op = new DataFlowGather(channel, srcs, dest, new FinalGatherReceiver(), 0, 0,
         config, Utils.dataTypeToMessageType(dataType), Utils.dataTypeToMessageType(keyType),
         taskPlan, e.getIntegerMapping(edgeName));
+    communicationEdge = e.generate(edgeName);
+    LOG.info("===CommunicationEdge : " + communicationEdge);
     op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
   }
 

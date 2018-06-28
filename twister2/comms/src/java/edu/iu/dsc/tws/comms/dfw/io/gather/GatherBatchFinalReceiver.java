@@ -20,8 +20,8 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.BatchReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.GatherBatchReceiver;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
@@ -40,13 +40,13 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
   protected DataFlowOperation dataFlowOperation;
   protected int executor;
   protected int sendPendingMax = 128;
-  protected GatherBatchReceiver gatherBatchReceiver;
+  protected BatchReceiver batchReceiver;
   protected Map<Integer, Boolean> batchDone = new HashMap<>();
   protected boolean isStoreBased;
   protected Map<Integer, OperationMemoryManager> memoryManagers;
 
-  public GatherBatchFinalReceiver(GatherBatchReceiver gatherBatchReceiver) {
-    this.gatherBatchReceiver = gatherBatchReceiver;
+  public GatherBatchFinalReceiver(BatchReceiver batchReceiver) {
+    this.batchReceiver = batchReceiver;
   }
 
   @Override
@@ -74,7 +74,7 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
     this.memoryManagers = new HashMap<>();
     this.dataFlowOperation = op;
     this.executor = dataFlowOperation.getTaskPlan().getThisExecutor();
-    this.gatherBatchReceiver.init(cfg, op, expectedIds);
+    this.batchReceiver.init(cfg, op, expectedIds);
   }
 
   @Override
@@ -174,9 +174,9 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
 //        LOG.info(String.format("%d final all finished %d", executor, t));
         batchDone.put(t, true);
         if (!isStoreBased) {
-          gatherBatchReceiver.receive(t, finalMessages.get(t).iterator());
+          batchReceiver.receive(t, finalMessages.get(t).iterator());
         } else {
-          gatherBatchReceiver.receive(t, memoryManagers.get(t).iterator());
+          batchReceiver.receive(t, memoryManagers.get(t).iterator());
         }
         // we can call on finish at this point
         onFinish(t);

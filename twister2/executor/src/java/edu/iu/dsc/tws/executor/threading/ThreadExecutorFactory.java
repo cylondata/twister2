@@ -34,7 +34,9 @@ public class ThreadExecutorFactory {
       threadSharingExecutor.execute();
       return threadSharingExecutor;
     } else if (ExecutionModel.DEDICATED.equals(executionModel.getExecutionModel())) {
-      return null;
+      ThreadStaticExecutor threadStaticExecutor = new ThreadStaticExecutor(executionPlan);
+      threadStaticExecutor.execute();
+      return threadStaticExecutor;
     }
 
     return null;

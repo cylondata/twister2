@@ -62,8 +62,6 @@ public class ReduceBatchFinalReceiver extends ReduceBatchReceiver {
       Map<Integer, Boolean> finishedForTarget = finished.get(t);
       Map<Integer, Integer> countMap = counts.get(t);
       Map<Integer, Integer> totalCountMap = totalCounts.get(t);
-//      LOG.info(String.format("%d reduce final counts %d %s %s %s", executor, t, countMap,
-//          totalCountMap, finishedForTarget));
       boolean found = true;
       for (Map.Entry<Integer, Queue<Object>> e : map.entrySet()) {
         if (e.getValue().size() == 0 && !finishedForTarget.get(e.getKey())) {
@@ -95,7 +93,6 @@ public class ReduceBatchFinalReceiver extends ReduceBatchReceiver {
       }
 
       if (allFinished) {
-//        LOG.info(String.format("%d final all finished %d", executor, t));
         batchDone.put(t, true);
         Object previous = null;
         List<Object> finalMessagePerTask = finalMessages.get(t);

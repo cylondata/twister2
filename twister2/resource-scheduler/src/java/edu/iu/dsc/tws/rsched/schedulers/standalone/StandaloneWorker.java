@@ -24,16 +24,17 @@ import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
+import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.rsched.schedulers.mpi.MPIProcess;
+import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
-public final class StandaloneProcess {
-  private static final Logger LOG = Logger.getLogger(MPIProcess.class.getName());
+public final class StandaloneWorker {
+  private static final Logger LOG = Logger.getLogger(StandaloneWorker.class.getName());
 
-  private StandaloneProcess() {
+  private StandaloneWorker() {
   }
 
   public static void main(String[] args) {
@@ -51,7 +52,7 @@ public final class StandaloneProcess {
       // we are loading the configuration for all the components
       Config config = loadConfigurations(cmd, rank);
       // normal worker
-      LOG.log(Level.FINE, "A worker process is starting...");
+      LOG.log(Level.INFO, "A worker process is starting...");
       worker(config, rank);
     } catch (ParseException e) {
       HelpFormatter formatter = new HelpFormatter();
@@ -152,20 +153,20 @@ public final class StandaloneProcess {
     ResourcePlan resourcePlan = createResourcePlan(config);
     LOG.info("Starting worker");
     System.out.println("Starting worker");
-//    String containerClass = SchedulerContext.containerClass(config);
-//    IContainer container;
-//    try {
-//      Object object = ReflectionUtils.newInstance(containerClass);
-//      container = (IContainer) object;
-//      LOG.log(Level.FINE, "loaded container class: " + containerClass);
-//    } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-//      LOG.log(Level.SEVERE, String.format("failed to load the container class %s",
-//          containerClass), e);
-//      throw new RuntimeException(e);
-//    }
-//
-//    // now initialize the container
-//    container.init(config, rank, resourcePlan);
+    String containerClass = SchedulerContext.containerClass(config);
+    IContainer container;
+    try {
+      Object object = ReflectionUtils.newInstance(containerClass);
+      container = (IContainer) object;
+      LOG.log(Level.FINE, "loaded container class: " + containerClass);
+    } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+      LOG.log(Level.SEVERE, String.format("failed to load the container class %s",
+          containerClass), e);
+      throw new RuntimeException(e);
+    }
+
+    // now initialize the container
+    container.init(config, rank, resourcePlan);
   }
 
   private static ResourcePlan createResourcePlan(Config config) {

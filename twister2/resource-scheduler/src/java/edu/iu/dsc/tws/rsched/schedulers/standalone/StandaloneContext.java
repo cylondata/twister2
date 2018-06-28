@@ -37,7 +37,7 @@ public class StandaloneContext extends SchedulerContext {
   public static final String SHARED_FILE_SYSTEM = "twister2.filesystem.shared";
   // shell script to be executed
   public static final String NOMAD_SHELL_SCRIPT = "twister2.nomad.shell.script";
-  public static final String NOMAD_HERON_SCRIPT_NAME = "nomad_run.sh";
+  public static final String NOMAD_HERON_SCRIPT_NAME = "nomad.sh";
   public static final String NOMAD_URI = "twister2.nomad.scheduler.uri";
 
   public static String workingDirectory(Config config) {

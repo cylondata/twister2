@@ -55,8 +55,14 @@ import mpi.Status;
 public class TWSMPIChannel implements TWSChannel {
   private static final Logger LOG = Logger.getLogger(TWSMPIChannel.class.getName());
 
+  /**
+   * Worker id
+   */
   private int executor;
 
+  /**
+   * Some debug counters
+   */
   private int sendCount = 0;
   private int completedSendCount = 0;
   private int receiveCount = 0;
@@ -160,7 +166,7 @@ public class TWSMPIChannel implements TWSChannel {
    * @param rank
    * @param stream
    * @param callback
-   * @return
+   * @return true if the message is accepted
    */
   public boolean receiveMessage(int rank, int stream,
                                 ChannelListener callback, Queue<DataBuffer> receiveBuffers) {

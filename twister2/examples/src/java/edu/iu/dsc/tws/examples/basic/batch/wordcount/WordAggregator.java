@@ -18,11 +18,11 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.BatchReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.GatherBatchReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 
-public class WordAggregator implements GatherBatchReceiver {
+public class WordAggregator implements BatchReceiver {
   private static final Logger LOG = Logger.getLogger(WordAggregator.class.getName());
 
   private Config config;

@@ -159,12 +159,6 @@ public class DataFlowAllReduce implements DataFlowOperation {
     return taskPlan;
   }
 
-  @Override
-  public void setMemoryMapped(boolean memoryMapped) {
-    reduce.setMemoryMapped(memoryMapped);
-    broadcast.setMemoryMapped(memoryMapped);
-  }
-
   private static class BCastReceiver implements MessageReceiver {
     private ReduceReceiver reduceReceiver;
 

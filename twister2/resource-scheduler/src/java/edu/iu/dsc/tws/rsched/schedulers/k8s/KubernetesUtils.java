@@ -90,8 +90,10 @@ public final class KubernetesUtils {
       return persistentJobDirName;
     }
 
-    String pJobDirName = KubernetesConstants.PERSISTENT_VOLUME_MOUNT + "/twister2/" + jobName
-        + "-" + System.currentTimeMillis();
+//    String pJobDirName = KubernetesConstants.PERSISTENT_VOLUME_MOUNT + "/twister2/" + jobName
+//        + "-" + System.currentTimeMillis();
+
+    String pJobDirName = KubernetesConstants.PERSISTENT_VOLUME_MOUNT;
 
     if (persistentUploading) {
       persistentJobDirName = pJobDirName;

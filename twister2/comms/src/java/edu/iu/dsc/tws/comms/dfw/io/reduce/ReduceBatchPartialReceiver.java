@@ -20,8 +20,6 @@ import edu.iu.dsc.tws.comms.api.ReduceFunction;
 
 public class ReduceBatchPartialReceiver extends ReduceBatchReceiver {
   private static final Logger LOG = Logger.getLogger(ReduceBatchPartialReceiver.class.getName());
-  private int tempCount = 0;
-  private int totalCount = 0;
 
   public ReduceBatchPartialReceiver(int dst, ReduceFunction reduce) {
     super(dst, reduce);
@@ -46,8 +44,6 @@ public class ReduceBatchPartialReceiver extends ReduceBatchReceiver {
       Object currentVal = null;
 
       while (canProgress) {
-//        LOG.info(String.format("%d reduce partial counts %d %s %s %s %d", executor, t,
-//            countMap, totalCountMap, finishedForTarget, reducedValues.size()));
         boolean found = true;
         boolean allFinished = true;
         boolean allZero = true;
@@ -74,12 +70,10 @@ public class ReduceBatchPartialReceiver extends ReduceBatchReceiver {
                 currentVal = valueList.poll();
                 System.out.println(valueList.size());
                 tempBufferCount += 1;
-                totalCount += 1;
               } else {
                 Object current = valueList.poll();
                 currentVal = reduceFunction.reduce(currentVal, current);
                 tempBufferCount += 1;
-                totalCount += 1;
               }
             }
           }
@@ -112,7 +106,6 @@ public class ReduceBatchPartialReceiver extends ReduceBatchReceiver {
             bufferCounts.put(t, 0);
             tempBufferCount = 0;
             reducedValueMap.put(t, null);
-            tempCount++;
             for (Map.Entry<Integer, Queue<Object>> e : messagePerTarget.entrySet()) {
               Queue<Object> value = e.getValue();
               if (value.size() != 0) {
@@ -130,8 +123,6 @@ public class ReduceBatchPartialReceiver extends ReduceBatchReceiver {
               break;
             }
           } else {
-//          LOG.info(String.format("%d FALSE reduce partial counts %d %s %s", executor, t, countMap,
-//                finishedForTarget));
             canProgress = false;
           }
         }
