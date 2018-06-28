@@ -14,8 +14,9 @@ package edu.iu.dsc.tws.rsched.bootstrap;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.config.Context;
 
-public final class ZKContext {
+public final class ZKContext extends Context {
   public static final Logger LOG = Logger.getLogger(ZKContext.class.getName());
 
   public static final String ROOT_NODE = "twister2.zookeeper.root.node.path";
