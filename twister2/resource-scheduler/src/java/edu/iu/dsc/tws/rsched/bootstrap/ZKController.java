@@ -41,7 +41,7 @@ import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
  * it does not keep the list of worker nodes, it is already kept in PathChildrenCache
  * If a worker joins after failure, it gets its previous ID
  * There is no gap in id sequence.
- * All worker names and IDs are kept in job node as data
+ * All worker names and IDs are kept in the job node as data
  * Each worker appends its worker name-ID pair to this list when they join
  * They append to this list in synchronized fashion by acquiring a distributed lock:
  *   InterProcessMutex
@@ -93,27 +93,32 @@ public class ZKController implements IWorkerController {
 
       dai = new DistributedAtomicInteger(client, daiPath, new ExponentialBackoffRetry(1000, 3));
 
-      // check whether the job node exist, if not, get a workerID
-      // if the job node does not exists, it means that this is not rejoining
+      // check whether the job node exist, if not,
+      // it means, this worker is the first worker to join
+      // get a workerID, create the jobZnode, append worker info
       if (client.checkExists().forPath(jobPath) == null) {
         int workerID = createWorkerID();
         workerNetworkInfo = new WorkerNetworkInfo(hostAndPort, workerID);
         createWorkerZnode();
         appendWorkerInfo();
 
-        // if the parent exists, check whether this worker joined the job before
+        // if the job node exists, it is not the first worker
+        // check whether this worker joined the job before
         // whether it is coming from a failure
       } else {
         byte[] parentData = client.getData().forPath(jobPath);
         String parentStr = new String(parentData);
 
+        // it has not joined before,
+        // create workerID, append its info to the jobZnode
         if (parentStr.indexOf(hostAndPort) < 0) {
           int workerID = createWorkerID();
           workerNetworkInfo = new WorkerNetworkInfo(hostAndPort, workerID);
           createWorkerZnode();
           appendWorkerInfo();
 
-          // if this worker is coming from a failure, get the ID from the parent content
+          // this worker is coming from a failure,
+          // get the workerID from the jobZnode content
         } else {
           int workerID = getWorkerIDFromParentData(parentStr);
           workerNetworkInfo = new WorkerNetworkInfo(hostAndPort, workerID);
@@ -126,7 +131,7 @@ public class ZKController implements IWorkerController {
       childrenCache = new PathChildrenCache(client, jobPath, true);
       childrenCache.start();
 
-      LOG.log(Level.INFO, "This worker: " + workerNetworkInfo + " initialized successfully.");
+      LOG.info("This worker: " + workerNetworkInfo + " initialized successfully.");
 
       return true;
     } catch (Exception e) {
@@ -135,6 +140,7 @@ public class ZKController implements IWorkerController {
     }
   }
 
+  @Override
   public WorkerNetworkInfo getWorkerNetworkInfo() {
     return workerNetworkInfo;
   }
@@ -151,6 +157,7 @@ public class ZKController implements IWorkerController {
     return null;
   }
 
+  @Override
   public int getNumberOfWorkers() {
     return numberOfWorkers;
   }
@@ -181,12 +188,13 @@ public class ZKController implements IWorkerController {
    */
   private void createWorkerZnode() {
     try {
-      String tempNodePath = jobPath + "/" + hostAndPort;
-      thisNode = createPersistentZnode(tempNodePath, workerNetworkInfo.getWorkerIDAsBytes());
+      String thisNodePath = ZKUtil.constructWorkerPath(jobPath, hostAndPort);
+      thisNode = ZKUtil.createPersistentEphemeralZnode(
+          client, thisNodePath, workerNetworkInfo.getWorkerIDAsBytes());
       thisNode.start();
       thisNode.waitForInitialCreate(10000, TimeUnit.MILLISECONDS);
       znodePath = thisNode.getActualPath();
-      LOG.log(Level.INFO, "An ephemeral znode is created for this worker: " + znodePath);
+      LOG.info("An ephemeral znode is created for this worker: " + znodePath);
     } catch (Exception e) {
       LOG.log(Level.SEVERE, "Could not create znode for the worker: " + hostAndPort, e);
     }
@@ -246,20 +254,6 @@ public class ZKController implements IWorkerController {
   }
 
   /**
-   * create a PersistentNode object for this worker in job znode
-   * it is ephemeral and persistent
-   * it will be deleted after the worker leaves or fails
-   * it will be persistent for occasional network problems
-   * @param path
-   * @param payload
-   * @return
-   * @throws Exception
-   */
-  public PersistentNode createPersistentZnode(String path, byte[] payload) throws Exception {
-    return new PersistentNode(client, CreateMode.EPHEMERAL, true, path, payload);
-  }
-
-  /**
    * Print all given workers
    */
   public void printWorkers(List<WorkerNetworkInfo> workers) {
@@ -301,6 +295,7 @@ public class ZKController implements IWorkerController {
   /**
    * Get all joined workers including the ones finished
    */
+  @Override
   public List<WorkerNetworkInfo> getWorkerList() {
 
     byte[] parentData = null;
@@ -367,6 +362,7 @@ public class ZKController implements IWorkerController {
    * some workers may have already left, so current worker list may be less than the total
    * return null if timeLimit is reached or en exception thrown while waiting
    */
+  @Override
   public List<WorkerNetworkInfo> waitForAllWorkersToJoin(long timeLimit) {
 
     long duration = 0;

@@ -16,9 +16,12 @@ import java.util.logging.Logger;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.framework.recipes.nodes.PersistentNode;
 import org.apache.curator.retry.ExponentialBackoffRetry;
+import org.apache.zookeeper.CreateMode;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.config.Context;
 //import static edu.iu.dsc.tws.rsched.bootstrap.ZKContext.ROOT_NODE;
 
 /**
@@ -119,6 +122,22 @@ public final class ZKUtil {
   }
 
   /**
+   * construct a worker path from the given job path and worker network info
+   * @return
+   */
+  public static String constructWorkerPath(String jobPath, String workerHostAndPort) {
+    return jobPath + "/" + workerHostAndPort;
+  }
+
+  /**
+   * construct a worker path from the given job path and worker network info
+   * @return
+   */
+  public static String constructJobMasterPath(Config config) {
+    return ZKContext.rootNode(config) + "/" + Context.jobName(config) + "-job-master";
+  }
+
+  /**
    * delete job related znode from previous sessions
    * @param jobName
    * @return
@@ -176,5 +195,39 @@ public final class ZKUtil {
       return false;
     }
   }
+
+  /**
+   * create a PersistentNode object in the given path
+   * it is ephemeral and persistent
+   * it will be deleted after the worker leaves or fails
+   * it will be persistent for occasional network problems
+   * @param path
+   * @param payload
+   * @return
+   * @throws Exception
+   */
+  public static PersistentNode createPersistentEphemeralZnode(CuratorFramework client,
+                                                              String path,
+                                                              byte[] payload) {
+
+    return new PersistentNode(client, CreateMode.EPHEMERAL, true, path, payload);
+  }
+
+  /**
+   * create a PersistentNode object in the given path
+   * it needs to be deleted explicitly, not ephemeral
+   * it will be persistent for occasional network problems
+   * @param path
+   * @param payload
+   * @return
+   * @throws Exception
+   */
+  public static PersistentNode createPersistentZnode(CuratorFramework client,
+                                                              String path,
+                                                              byte[] payload) {
+
+    return new PersistentNode(client, CreateMode.EPHEMERAL, false, path, payload);
+  }
+
 
 }
