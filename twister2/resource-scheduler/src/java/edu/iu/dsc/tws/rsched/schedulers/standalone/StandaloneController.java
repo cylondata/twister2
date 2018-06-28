@@ -50,8 +50,6 @@ public class StandaloneController implements IController {
 
   private boolean isVerbose;
 
-  private String jobWorkingDirectory;
-
   public StandaloneController(boolean isVerbose) {
     this.isVerbose = isVerbose;
   }
@@ -118,7 +116,7 @@ public class StandaloneController implements IController {
     Task task = new Task();
     // get the job working directory
     String workingDirectory = StandaloneContext.workingDirectory(config);
-    this.jobWorkingDirectory = Paths.get(workingDirectory, job.getJobName()).toString();
+    String jobWorkingDirectory = Paths.get(workingDirectory, job.getJobName()).toString();
     String configDirectoryName = Paths.get(workingDirectory,
         job.getJobName(), SchedulerContext.clusterType(config)).toString();
 
