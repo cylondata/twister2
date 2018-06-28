@@ -17,7 +17,7 @@ import java.util.Map;
 
 import edu.iu.dsc.tws.common.config.Config;
 
-public interface GatherBatchReceiver {
+public interface BatchReceiver {
   void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds);
   void receive(int target, Iterator<Object> it);
 }

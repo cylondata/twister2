@@ -35,8 +35,6 @@ import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.io.MessageDeSerializer;
@@ -254,9 +252,6 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
 
     this.finalReceiver = finalRcvr;
     this.partialReceiver = partialRcvr;
-
-    this.allReduce = new DataFlowAllReduce(channel, srcs, dests, 0, new BarrierReduceFn(),
-        new BarrierReceiver(), 0, 0, true);
   }
 
   public DataFlowPartition(Config cfg, TWSChannel channel, TaskPlan tPlan, Set<Integer> srcs,
@@ -305,15 +300,6 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
 
     this.finalReceiver = finalRcvr;
     this.partialReceiver = partialRcvr;
-
-    if (sem == OperationSemantics.STREAMING_BATCH_SORTED
-        || sem == OperationSemantics.STREAMING_BATCH) {
-      int redEdge = eGenerator.nextEdge();
-      this.allReduce = new DataFlowAllReduce(channel, sources, dests,
-          sources.size() + dests.size(), new BarrierReduceFn(),
-          new BarrierReceiver(), redEdge, eGenerator.nextEdge(), true);
-      this.allReduce.init(config, dataType, tPlan, redEdge);
-    }
 
     init(cfg, dType, instancePlan, edge);
   }
@@ -448,10 +434,6 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
   @Override
   public void progress() {
     OperationUtils.progressReceivers(delegete, lock, finalReceiver, partialLock, partialReceiver);
-
-    if (allReduce != null) {
-      allReduce.progress();
-    }
   }
 
   @Override
@@ -469,34 +451,6 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
   @Override
   public TaskPlan getTaskPlan() {
     return instancePlan;
-  }
-
-  @Override
-  public void setMemoryMapped(boolean memoryMapped) {
-  }
-
-  public class BarrierReduceFn implements ReduceFunction {
-    @Override
-    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-    }
-
-    @Override
-    public Object reduce(Object t1, Object t2) {
-      return t1;
-    }
-  }
-
-  public class BarrierReceiver implements ReduceReceiver {
-    @Override
-    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-    }
-
-    @Override
-    public boolean receive(int target, Object object) {
-      LOG.log(Level.INFO, String.format("%d Finished communication %d", executor, target));
-      finalReceiver.onFinish(target);
-      return true;
-    }
   }
 
   private RoutingParameters sendRoutingParameters(int source, int path) {

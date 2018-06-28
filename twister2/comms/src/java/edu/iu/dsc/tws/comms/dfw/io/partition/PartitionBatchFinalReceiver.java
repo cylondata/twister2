@@ -23,8 +23,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.BatchReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.GatherBatchReceiver;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
@@ -42,18 +42,36 @@ import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 public class PartitionBatchFinalReceiver implements MessageReceiver {
   private static final Logger LOG = Logger.getLogger(PartitionBatchFinalReceiver.class.getName());
 
-  private GatherBatchReceiver batchReceiver;
+  /**
+   * The receiver
+   */
+  private BatchReceiver batchReceiver;
 
+  /**
+   * Sort mergers for each target
+   */
   private Map<Integer, Shuffle> sortedMergers = new HashMap<>();
 
+  /**
+   * weather we need to sort the records according to key
+   */
   private boolean sorted;
 
   private boolean disk;
 
+  /**
+   * Comparator for sorting records
+   */
   private Comparator<Object> comparator;
 
+  /**
+   * The operation
+   */
   private DataFlowPartition partition;
 
+  /**
+   * Weather a keyed operation is used
+   */
   private boolean keyed;
 
   private KryoSerializer kryoSerializer;
@@ -83,7 +101,7 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
    */
   private Set<Integer> finishedTargetsCompleted = new HashSet<>();
 
-  public PartitionBatchFinalReceiver(GatherBatchReceiver receiver, boolean srt,
+  public PartitionBatchFinalReceiver(BatchReceiver receiver, boolean srt,
                                      boolean d, Comparator<Object> com) {
     this.batchReceiver = receiver;
     this.sorted = srt;
