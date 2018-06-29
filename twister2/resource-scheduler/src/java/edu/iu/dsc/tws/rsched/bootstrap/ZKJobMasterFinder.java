@@ -23,8 +23,12 @@ import edu.iu.dsc.tws.common.config.Context;
 
 /**
  * this class is used to discover the Job Master ip address and port number through ZooKeeper
- * JobMaster creates a znode of the ZooKeeper server
+ * JobMaster creates a znode at the ZooKeeper server
  * this class queries this node and retrieves the job master address from the content of that znode
+ *
+ * When that znode can not be retrieved immediately,
+ * it creates a NodeCache object and gets the value from this cache,
+ * instead of querying continually
  */
 public class ZKJobMasterFinder {
   public static final Logger LOG = Logger.getLogger(ZKJobMasterFinder.class.getName());
@@ -107,7 +111,7 @@ public class ZKJobMasterFinder {
     return null;
   }
 
-  public String getJobMasterIPandPortFromCache() {
+  private String getJobMasterIPandPortFromCache() {
 
     // if the job master address already retrieved, return it
     if (jobMasterIP != null) {
