@@ -43,12 +43,12 @@ public class RoundRobinBatchScheduling {
     for (int i = 0; i < numberOfContainers; i++) {
       fifoAllocation.put(i, new ArrayList<>());
     }
-    //LOG.info(String.format("Container Map Values Before Allocation %s", fifoAllocation));
+
+    LOG.info(String.format("Container Map Values Before Allocation %s", fifoAllocation));
 
     try {
       Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertex);
       int containerIndex = 0;
-
       for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
         String task = e.getKey();
         int numberOfInstances = e.getValue();
@@ -61,19 +61,7 @@ public class RoundRobinBatchScheduling {
         }
         taskId1++;
       }
-      //LOG.info(String.format("Container Map Values After Allocation %s", fifoAllocation));
-
-      /*for (Map.Entry<Integer, List<InstanceId>> entry : fifoAllocation.entrySet()) {
-        Integer integer = entry.getKey();
-        List<InstanceId> instanceIds = entry.getValue();
-        for (int i = 0; i < instanceIds.size(); i++) {
-          LOG.info("Task -> Instance -> Container -> Map Details:"
-              + "\t Task Name:" + instanceIds.get(i).getTaskName()
-              + "\t Task id:" + instanceIds.get(i).getTaskId()
-              + "\t Task index:" + instanceIds.get(i).getTaskIndex()
-              + "\t Container Index:" + integer);
-        }
-      }*/
+      LOG.info(String.format("Container Map Values After Allocation %s", fifoAllocation));
     } catch (NullPointerException ne) {
       ne.printStackTrace();
     }
@@ -91,60 +79,31 @@ public class RoundRobinBatchScheduling {
     for (int i = 0; i < numberOfContainers; i++) {
       fifoAllocation.put(i, new ArrayList<>());
     }
+
+    LOG.info(String.format("Container Map Values Before Allocation %s", fifoAllocation));
+
     try {
       Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
-      int totalTaskInstances = taskAttributes.getTotalNumberOfInstances(taskVertexSet);
-
-      //if (numberOfContainers < totalTaskInstances) {
-
-      LOG.info(String.format("Container Map Values Before Allocation %s", fifoAllocation));
-
       int taskId = 0;
       int containerIndex = 0;
 
       for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
         String task = e.getKey();
         int numberOfInstances = e.getValue();
-        System.out.println("%%% Task Name Is:%%%" + task);
 
         for (int taskIndex = 0; taskIndex < numberOfInstances; taskIndex++) {
-            /*if (fifoAllocation.get(containerIndex).size()
-                < TaskSchedulerContext.defaultTaskInstancesPerContainer(config)) {
-              System.out.println("I am inside if block");
-              fifoAllocation.get(containerIndex).add(new InstanceId(task, taskId, taskIndex));
-            } else if (fifoAllocation.get(containerIndex).size()
-                > TaskSchedulerContext.defaultTaskInstancesPerContainer(config)) {
-              fifoAllocation.get(containerIndex).add(new InstanceId(task, taskId, taskIndex));
-              System.out.println("I am inside else block");
-            }*/
           fifoAllocation.get(containerIndex).add(new InstanceId(task, taskId, taskIndex));
           ++containerIndex;
-
           if (containerIndex >= fifoAllocation.size()) {
             containerIndex = 0;
           }
         }
         taskId++;
-        //containerIndex++;
       }
-      //}
-      /*LOG.info(String.format("Container Map Values After Allocation %s", fifoAllocation));
-      for (Map.Entry<Integer, List<InstanceId>> entry : fifoAllocation.entrySet()) {
-        Integer integer = entry.getKey();
-        List<InstanceId> instanceIds = entry.getValue();
-        LOG.info("Container Index:" + integer);
-        for (int i = 0; i < instanceIds.size(); i++) {
-          LOG.info("Task Instance Details:"
-              + "\t Task Name:" + instanceIds.get(i).getTaskName()
-              + "\t Task id:" + instanceIds.get(i).getTaskId()
-              + "\t Task index:" + instanceIds.get(i).getTaskIndex());
-        }
-      }*/
+      LOG.info(String.format("Container Map Values After Allocation %s", fifoAllocation));
     } catch (NullPointerException ne) {
       ne.printStackTrace();
     }
     return fifoAllocation;
   }
-
-
 }
