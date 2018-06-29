@@ -12,7 +12,7 @@
 package edu.iu.dsc.tws.rsched.schedulers.k8s;
 
 /**
- * Field names passed to KubernetesWorker when starting a worker in a container
+ * Field names passed to KubernetesWorkerStarter when starting a worker in a container
  */
 public enum KubernetesField {
   USER_JOB_JAR_FILE,    // java jar file for running user job
