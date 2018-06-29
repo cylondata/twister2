@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.tsched.datalocalityaware;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -55,9 +54,7 @@ public class DataLocalityAwareTaskScheduling implements TaskSchedule {
   public TaskSchedulePlan schedule(DataFlowTaskGraph graph, WorkerPlan workerPlan) {
 
     Set<TaskSchedulePlan.ContainerPlan> containerPlans = new HashSet<>();
-    //Set<Vertex> taskVertexSet = new LinkedHashSet<>(graph.getTaskVertexSet());
-
-    LinkedHashSet<Vertex> taskVertexSet = graph.getTaskVertexSet();
+    Set<Vertex> taskVertexSet = graph.getTaskVertexSet();
 
     Map<Integer, List<InstanceId>> datalocalityAwareContainerInstanceMap =
         DataLocalityAwareScheduling.DataLocalityAwareSchedulingAlgorithm(taskVertexSet,
