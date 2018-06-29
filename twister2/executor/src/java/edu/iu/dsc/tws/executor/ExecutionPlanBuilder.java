@@ -26,6 +26,7 @@ import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 import edu.iu.dsc.tws.executor.comm.IParallelOperation;
 import edu.iu.dsc.tws.executor.comm.ParallelOperationFactory;
+import edu.iu.dsc.tws.executor.core.ExecutorContext;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.ISink;
@@ -85,6 +86,8 @@ public class ExecutionPlanBuilder implements IExecutor {
                                 TaskSchedulePlan taskSchedule) {
 
     noOfThreads = ExecutorContext.threadsPerContainer(cfg);
+    LOG.log(Level.INFO, " ExecutionBuilder Thread Count: " + noOfThreads);
+
     // we need to build the task plan
     TaskPlan taskPlan = TaskPlanBuilder.build(resourcePlan, taskSchedule, taskIdGenerator);
     ParallelOperationFactory opFactory = new ParallelOperationFactory(
@@ -98,7 +101,7 @@ public class ExecutionPlanBuilder implements IExecutor {
     }
 
     ExecutionPlan execution = new ExecutionPlan();
-    execution.setNumThreads(noOfThreads);
+
     Set<TaskSchedulePlan.TaskInstancePlan> instancePlan = conPlan.getTaskInstances();
     // for each task we are going to create the communications
     for (TaskSchedulePlan.TaskInstancePlan ip : instancePlan) {
@@ -166,6 +169,7 @@ public class ExecutionPlanBuilder implements IExecutor {
       // lets see weather this comunication belongs to a task instance
       for (Integer i : sourcesOfThisWorker) {
         if (taskInstances.contains(c.getSourceTask(), i)) {
+          LOG.info("SourceofThisWorker TaskInstance");
           TaskInstance taskInstance = taskInstances.get(c.getSourceTask(), i);
           taskInstance.registerOutParallelOperation(c.getEdge().getName(), op);
         } else if (sourceInstances.contains(c.getSourceTask(), i)) {
@@ -179,6 +183,7 @@ public class ExecutionPlanBuilder implements IExecutor {
 
       for (Integer i : targetsOfThisWorker) {
         if (taskInstances.contains(c.getTargetTask(), i)) {
+          LOG.info("TargetofThisWorker TaskInstance");
           TaskInstance taskInstance = taskInstances.get(c.getTargetTask(), i);
           op.register(i, taskInstance.getInQueue());
           taskInstance.registerInParallelOperation(c.getEdge().getName(), op);
