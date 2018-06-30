@@ -18,26 +18,26 @@ import java.util.concurrent.ArrayBlockingQueue;
 
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.mpi.MPIBuffer;
-import edu.iu.dsc.tws.comms.mpi.MPIMessage;
-import edu.iu.dsc.tws.comms.mpi.MPIMessageDirection;
-import edu.iu.dsc.tws.comms.mpi.MPIMessageReleaseCallback;
-import edu.iu.dsc.tws.comms.mpi.MPISendMessage;
-import edu.iu.dsc.tws.comms.mpi.io.IntData;
-import edu.iu.dsc.tws.comms.mpi.io.KeyedContent;
-import edu.iu.dsc.tws.comms.mpi.io.MPIMultiMessageDeserializer;
-import edu.iu.dsc.tws.comms.mpi.io.MPIMultiMessageSerializer;
+import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
+import edu.iu.dsc.tws.comms.dfw.ChannelMessageReleaseCallback;
+import edu.iu.dsc.tws.comms.dfw.DataBuffer;
+import edu.iu.dsc.tws.comms.dfw.MessageDirection;
+import edu.iu.dsc.tws.comms.dfw.OutMessage;
+import edu.iu.dsc.tws.comms.dfw.io.IntData;
+import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
+import edu.iu.dsc.tws.comms.dfw.io.MultiMessageDeserializer;
+import edu.iu.dsc.tws.comms.dfw.io.MultiMessageSerializer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class Test {
   private KryoSerializer serializer;
 
-  private MPIMultiMessageSerializer multiMessageSerializer;
+  private MultiMessageSerializer multiMessageSerializer;
 
-  private MPIMultiMessageDeserializer mpiMultiMessageDeserializer;
+  private MultiMessageDeserializer multiMessageDeserializer;
 
-  private Queue<MPIBuffer> bufferQueue = new ArrayBlockingQueue<MPIBuffer>(1024);
+  private Queue<DataBuffer> bufferQueue = new ArrayBlockingQueue<DataBuffer>(1024);
 
   public static void main(String[] args) {
     System.out.println("aaaa");
@@ -49,13 +49,13 @@ public class Test {
   public Test() {
     serializer = new KryoSerializer();
     serializer.init(null);
-    multiMessageSerializer = new MPIMultiMessageSerializer(serializer, 0);
+    multiMessageSerializer = new MultiMessageSerializer(serializer, 0);
     multiMessageSerializer.init(null, bufferQueue, true);
-    mpiMultiMessageDeserializer = new MPIMultiMessageDeserializer(serializer, 0);
-    mpiMultiMessageDeserializer.init(null, true);
+    multiMessageDeserializer = new MultiMessageDeserializer(serializer, 0);
+    multiMessageDeserializer.init(null, true);
 
     for (int i = 0; i < 10; i++) {
-      bufferQueue.offer(new MPIBuffer(2048));
+      bufferQueue.offer(new DataBuffer(2048));
     }
   }
 
@@ -64,7 +64,7 @@ public class Test {
     IntData data = new IntData();
     List list = new ArrayList<>();
     list.add(data);
-    MPIMessage message = serializeObject(list, 1);
+    ChannelMessage message = serializeObject(list, 1);
 
     deserialize(message);
   }
@@ -76,7 +76,7 @@ public class Test {
     list.add(new KeyedContent(new Short((short) 0), data));
     data = new IntData(128);
     list.add(new KeyedContent(new Short((short) 1), data));
-    MPIMessage message = serializeObject(list, 1);
+    ChannelMessage message = serializeObject(list, 1);
     System.out.println("Serialized first");
     deserialize(message);
 
@@ -85,7 +85,7 @@ public class Test {
 //    list.add(new KeyedContent(new Short((short) 2), data));
 //    data = new IntData(128000);
 //    list.add(new KeyedContent(new Short((short) 3), data));
-//    MPIMessage message2 = serializeObject(list, 1);
+//    ChannelMessage message2 = serializeObject(list, 1);
 ////    System.out.println("Serialized second");
 ////
 //    list = new ArrayList<>();
@@ -94,27 +94,27 @@ public class Test {
 ////    data = new IntData(128000);
 ////    list.add(new MultiObject(1, data));
 //
-//    MPIMessage second = serializeObject(list, 1);
+//    ChannelMessage second = serializeObject(list, 1);
 //
 //    deserialize(second);
   }
 
-  private void deserialize(MPIMessage message) {
-    List<MPIBuffer> buffers = message.getBuffers();
-    for (MPIBuffer mpiBuffer : buffers) {
-      mpiBuffer.getByteBuffer().flip();
-      mpiBuffer.getByteBuffer().rewind();
+  private void deserialize(ChannelMessage message) {
+    List<DataBuffer> buffers = message.getBuffers();
+    for (DataBuffer dataBuffer : buffers) {
+      dataBuffer.getByteBuffer().flip();
+      dataBuffer.getByteBuffer().rewind();
     }
 
     if (message.isComplete()) {
       System.out.printf("Complete message");
     }
     message.setKeyType(MessageType.SHORT);
-    MessageHeader header = mpiMultiMessageDeserializer.buildHeader(message.getBuffers().get(0), 0);
+    MessageHeader header = multiMessageDeserializer.buildHeader(message.getBuffers().get(0), 0);
     message.setHeader(header);
     System.out.println(String.format("%d %d %d", header.getLength(),
         header.getSourceId(), header.getEdge()));
-    Object d = mpiMultiMessageDeserializer.build(message, 0);
+    Object d = multiMessageDeserializer.build(message, 0);
     List list = (List) d;
     for (Object o : list) {
       if (o instanceof KeyedContent) {
@@ -128,22 +128,22 @@ public class Test {
     System.out.println("End");
   }
 
-  private MPIMessage serializeObject(List object, int source) {
-    MPIMessage mpiMessage = new MPIMessage(source, MessageType.OBJECT,
-        MPIMessageDirection.OUT, new MessageListener());
-    mpiMessage.setKeyType(MessageType.INTEGER);
+  private ChannelMessage serializeObject(List object, int source) {
+    ChannelMessage channelMessage = new ChannelMessage(source, MessageType.OBJECT,
+        MessageDirection.OUT, new MessageListener());
+    channelMessage.setKeyType(MessageType.INTEGER);
 
     int di = -1;
-    MPISendMessage sendMessage = new MPISendMessage(source, mpiMessage, 0,
+    OutMessage sendMessage = new OutMessage(source, channelMessage, 0,
         di, 0, 0, null, null);
     multiMessageSerializer.build(object, sendMessage);
 
-    return mpiMessage;
+    return channelMessage;
   }
 
-  private class MessageListener implements MPIMessageReleaseCallback {
+  private class MessageListener implements ChannelMessageReleaseCallback {
     @Override
-    public void release(MPIMessage message) {
+    public void release(ChannelMessage message) {
 
     }
   }

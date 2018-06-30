@@ -122,6 +122,17 @@ public class FSKeyedSortedMerger implements Shuffle {
 
   private FSStatus status = FSStatus.WRITING;
 
+  /**
+   * Create a key based sorted merger
+   * @param maxBytesInMemory
+   * @param maxRecsInMemory
+   * @param dir
+   * @param opName
+   * @param kType
+   * @param dType
+   * @param kComparator
+   * @param tar
+   */
   public FSKeyedSortedMerger(int maxBytesInMemory, int maxRecsInMemory,
                        String dir, String opName, MessageType kType,
                        MessageType dType, Comparator<Object> kComparator, int tar) {
@@ -196,28 +207,29 @@ public class FSKeyedSortedMerger implements Shuffle {
    */
   public void run() {
     List<KeyValue> list;
-    // it is time to write
-    if (numOfBytesInMemory > maxBytesToKeepInMemory
-        || recordsInMemory.size() > maxRecordsInMemory) {
-      lock.lock();
-      try {
+    lock.lock();
+    try {
+      // it is time to write
+      if (numOfBytesInMemory > maxBytesToKeepInMemory
+          || recordsInMemory.size() > maxRecordsInMemory) {
         list = recordsInMemory;
         recordsInMemory = new ArrayList<>();
-      } finally {
-        lock.unlock();
+
+        // first sort the values
+        Collections.sort(list);
+
+        // save the bytes to disk
+        int totalSize = FileLoader.saveKeyValues(list, bytesLength,
+            numOfBytesInMemory, getSaveFileName(noOfFileWritten), keyType, kryoSerializer);
+        filePartBytes.add(totalSize);
+
+        recordsInMemory.clear();
+        bytesLength.clear();
+        noOfFileWritten++;
+        numOfBytesInMemory = 0;
       }
-      // first sort the values
-      Collections.sort(list);
-
-      // save the bytes to disk
-      int totalSize = FileLoader.saveKeyValues(list, bytesLength,
-          numOfBytesInMemory, getSaveFileName(noOfFileWritten), keyType, kryoSerializer);
-      filePartBytes.add(totalSize);
-
-      recordsInMemory.clear();
-      bytesLength.clear();
-      noOfFileWritten++;
-      numOfBytesInMemory = 0;
+    } finally {
+      lock.unlock();
     }
   }
 
@@ -268,7 +280,6 @@ public class FSKeyedSortedMerger implements Shuffle {
         if (part.hasNext()) {
           KeyValue keyValue = part.next();
 
-//          LOG.info("Inserting value: " + keyValue.getKey());
           heap.insert(keyValue, e.getKey());
           numValuesInHeap++;
         } else {
@@ -305,7 +316,6 @@ public class FSKeyedSortedMerger implements Shuffle {
 
           if (newPart.hasNext()) {
             KeyValue next = newPart.next();
-//            LOG.info("Inserting value: " + next.getKey());
             heap.insert(next, node.listNo);
             numValuesInHeap++;
           }

@@ -22,9 +22,9 @@ import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.mpi.MPIDataFlowReduce;
-import edu.iu.dsc.tws.comms.mpi.io.reduce.ReduceStreamingFinalReceiver;
-import edu.iu.dsc.tws.comms.mpi.io.reduce.ReduceStreamingPartialReceiver;
+import edu.iu.dsc.tws.comms.dfw.DataFlowReduce;
+import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceStreamingFinalReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceStreamingPartialReceiver;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.EdgeGenerator;
 import edu.iu.dsc.tws.task.api.IMessage;
@@ -34,7 +34,7 @@ public class ReduceOperation extends AbstractParallelOperation {
 
   private static final Logger LOG = Logger.getLogger(ReduceOperation.class.getName());
 
-  protected MPIDataFlowReduce op;
+  protected DataFlowReduce op;
 
   public ReduceOperation(Config config, TWSChannel network, TaskPlan tPlan) {
     super(config, network, tPlan);
@@ -43,10 +43,11 @@ public class ReduceOperation extends AbstractParallelOperation {
   public void prepare(Set<Integer> sources, int dest, EdgeGenerator e,
                       DataType dataType, String edgeName) {
     this.edge = e;
-    op = new MPIDataFlowReduce(channel, sources, dest,
+    op = new DataFlowReduce(channel, sources, dest,
         new ReduceStreamingFinalReceiver(new IdentityFunction(), new FinalReduceReceiver()),
         new ReduceStreamingPartialReceiver(dest, new IdentityFunction()));
     communicationEdge = e.generate(edgeName);
+    LOG.info("===Communication Edge : " + communicationEdge);
     op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
   }
 

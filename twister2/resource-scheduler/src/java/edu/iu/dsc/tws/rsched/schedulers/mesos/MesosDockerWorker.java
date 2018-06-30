@@ -38,8 +38,6 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
-import edu.iu.dsc.tws.common.logging.LoggingContext;
-import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
@@ -136,7 +134,11 @@ public class MesosDockerWorker {
     String twister2Home = Paths.get("").toAbsolutePath().toString();
     String configDir = "twister2-job/mesos/";
     worker.config = ConfigLoader.loadConfig(twister2Home, configDir);
+    worker.jobName = jobName;
 
+    MesosWorkerLogger logger = new MesosWorkerLogger(worker.config,
+        "/persistent-volume/logs", "worker" + workerId);
+    logger.initLogging();
     String containerClass = SchedulerContext.containerClass(worker.config);
     IWorker container;
     try {
@@ -207,47 +209,7 @@ public class MesosDockerWorker {
     //System.setProperty("file.encoding", "Cp1252");
 
     //PrintWriter writer = new PrintWriter("hosts.txt", "UTF-8");
-    File file = new File(homeDir + "/.ssh/config");
-    boolean b = file.getParentFile().mkdirs();
-    if (b) {
-      System.out.println("file created succesfully");
-    } else {
-      //System.out.println("!!!!!!!something wrong!!!!!");
-    }
 
-    Writer writer = new BufferedWriter(new OutputStreamWriter(
-        new FileOutputStream(homeDir + "/.ssh/config", true)));
-
-    writer.write("Host *\n\tStrictHostKeyChecking no\n\tUserKnownHostsFile /dev/null\n"
-        + "\tIdentityFile ~/.ssh/id_rsa\n");
-
-
-    //ProcessUtils.runProcess("touch hosts.txt", new StringBuilder(), true);
-    String hosts = "";
-
-    for (int i = 0; i < workerCount; i++) {
-
-        /*writer.write(workerNetworkInfoList.get(i).getWorkerIP().getHostAddress()
-            + " port=" + workerNetworkInfoList.get(i).getWorkerPort() + "\n");
-        */
-
-      writer.write("Host w" + workerNetworkInfoList.get(i).getWorkerID() + "\n"
-          + "\tHostname " + workerNetworkInfoList.get(i).getWorkerIP().getHostAddress() + "\n"
-          + "\tPort " + workerNetworkInfoList.get(i).getWorkerPort() + "\n");
-
-      System.out.println("Host w" + workerNetworkInfoList.get(i).getWorkerID() + "\n"
-          + "\tHostname " + workerNetworkInfoList.get(i).getWorkerIP().getHostAddress() + "\n"
-          + "\tPort " + workerNetworkInfoList.get(i).getWorkerPort() + "\n");
-
-
-      hosts += "w" + workerNetworkInfoList.get(i).getWorkerID() + ",";
-
-
-    }
-
-
-    writer.close();
-    hosts = hosts.substring(0, hosts.lastIndexOf(','));
 
       /*String[] command = {"mpirun", "-allow-run-as-root", "-np",
           workerController.getNumberOfWorkers() + "", "-hosts", hosts.substring(0,
@@ -257,6 +219,59 @@ public class MesosDockerWorker {
 
 
     if (id == 0) {
+
+
+
+
+
+
+      File file = new File(homeDir + "/.ssh/config");
+      boolean b = file.getParentFile().mkdirs();
+      if (b) {
+        System.out.println("file created succesfully");
+      } else {
+        //System.out.println("!!!!!!!something wrong!!!!!");
+      }
+
+      Writer writer = new BufferedWriter(new OutputStreamWriter(
+          new FileOutputStream(homeDir + "/.ssh/config", true)));
+
+      writer.write("Host *\n\tStrictHostKeyChecking no\n\tUserKnownHostsFile /dev/null\n"
+          + "\tIdentityFile ~/.ssh/id_rsa\n");
+
+
+      //ProcessUtils.runProcess("touch hosts.txt", new StringBuilder(), true);
+      String hosts = "";
+
+      for (int i = 0; i < workerCount; i++) {
+
+        /*writer.write(workerNetworkInfoList.get(i).getWorkerIP().getHostAddress()
+            + " port=" + workerNetworkInfoList.get(i).getWorkerPort() + "\n");
+        */
+
+        writer.write("Host w" + workerNetworkInfoList.get(i).getWorkerID() + "\n"
+            + "\tHostname " + workerNetworkInfoList.get(i).getWorkerIP().getHostAddress() + "\n"
+            + "\tPort " + workerNetworkInfoList.get(i).getWorkerPort() + "\n");
+
+        System.out.println("Host w" + workerNetworkInfoList.get(i).getWorkerID() + "\n"
+            + "\tHostname " + workerNetworkInfoList.get(i).getWorkerIP().getHostAddress() + "\n"
+            + "\tPort " + workerNetworkInfoList.get(i).getWorkerPort() + "\n");
+
+
+        hosts += "w" + workerNetworkInfoList.get(i).getWorkerID() + ",";
+
+
+      }
+
+
+      writer.close();
+      hosts = hosts.substring(0, hosts.lastIndexOf(','));
+
+
+
+
+
+
 
       System.out.println("Before mpirun");
       System.out.println("hosts " + hosts);
@@ -278,24 +293,4 @@ public class MesosDockerWorker {
   }
 
 
-  /**
-   * Initialize the logger
-   */
-  public static void initLogging(Config cnfg, String logDir, String logFileName) {
-    // set logging level
-    LoggingHelper.setLogLevel(LoggingContext.loggingLevel(cnfg));
-
-    // if persistent logging is requested, initialize it
-    if (LoggingContext.persistentLoggingRequested(cnfg)) {
-
-      if (LoggingContext.redirectSysOutErr(cnfg)) {
-        LOG.warning("Redirecting System.out and System.err to the log file. "
-            + "Check the log file for the upcoming log messages. ");
-      }
-
-      LoggingHelper.setupLogging(cnfg, logDir, logFileName);
-
-      LOG.info("Persistent logging to file initialized.");
-    }
-  }
 }

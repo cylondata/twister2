@@ -11,11 +11,15 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.op;
 
-import edu.iu.dsc.tws.comms.mpi.MPIContext;
-import edu.iu.dsc.tws.comms.mpi.MPIDataFlowPartition;
+import java.util.logging.Logger;
+
+import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
+import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
 
 public class Partition {
-  private MPIDataFlowPartition partition;
+  private static final Logger LOG = Logger.getLogger(Partition.class.getName());
+
+  private DataFlowPartition partition;
 
   private Communicator comm;
 
@@ -27,7 +31,7 @@ public class Partition {
     if (!comm.getSources().contains(source)) {
       throw new RuntimeException("Source is not in the communicator");
     }
-    partition.send(source, message, 0, MPIContext.DEFAULT_DESTINATION);
+    partition.send(source, message, 0, DataFlowContext.DEFAULT_DESTINATION);
   }
 
   public void keyedPartition(int source, Object message, int destination) {

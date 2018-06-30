@@ -30,16 +30,15 @@ def twister2_core_lib_communication_files():
     ]
 
 def twister2_core_lib_connector_files():
-    return [
-        "//twister2/connectors/src/java:connector-java",
-        "@org_xerial_snappy_snappy_java//jar",
-        "@org_lz4_lz4_java//jar",
-        "@org_slf4j_slf4j_api//jar",
-        "@org_apache_kafka_kafka_clients//jar",
-    ]
+      return [
+          "//twister2/connectors/src/java:connector-java",
+          "@org_xerial_snappy_snappy_java//jar",
+          "@org_lz4_lz4_java//jar",
+          "@org_slf4j_slf4j_api//jar",
+          "@org_apache_kafka_kafka_clients//jar",
+      ]
 
 def twister2_client_lib_master_files():
-    return [
-        "//twister2/connectors/src/java:master-java"
-    ]
-
+      return [
+          "//twister2/connectors/src/java:master-java"
+      ]

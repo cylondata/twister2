@@ -23,7 +23,7 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MultiMessageReceiver;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.mpi.MPIDataFlowMultiReduce;
+import edu.iu.dsc.tws.comms.dfw.DataFlowMultiReduce;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.EdgeGenerator;
 import edu.iu.dsc.tws.task.api.IMessage;
@@ -31,7 +31,7 @@ import edu.iu.dsc.tws.task.api.IMessage;
 public class KeyedReduceOperation extends AbstractParallelOperation {
   private static final Logger LOG = Logger.getLogger(KeyedReduceOperation.class.getName());
 
-  protected MPIDataFlowMultiReduce op;
+  protected DataFlowMultiReduce op;
 
   public KeyedReduceOperation(Config config, TWSChannel network, TaskPlan tPlan) {
     super(config, network, tPlan);
@@ -40,7 +40,7 @@ public class KeyedReduceOperation extends AbstractParallelOperation {
   public void prepare(Set<Integer> sources, Set<Integer> dests, EdgeGenerator e,
                       DataType dataType, String edgeName) {
     this.edge = e;
-    op = new MPIDataFlowMultiReduce(channel, sources, dests, new FinalReduceReceive(),
+    op = new DataFlowMultiReduce(channel, sources, dests, new FinalReduceReceive(),
         new PartialReduceWorker(), dests);
     communicationEdge = e.generate(edgeName);
     op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
@@ -79,7 +79,7 @@ public class KeyedReduceOperation extends AbstractParallelOperation {
     @Override
     public void init(Config cfg, DataFlowOperation operation,
                      Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
-      Map<Integer, List<Integer>> exp = expectedIds.get(8);
+      Map<Integer, List<Integer>> exp = expectedIds.get(0);
       for (Map.Entry<Integer, List<Integer>> e : exp.entrySet()) {
         Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
         Map<Integer, Integer> countsPerTask = new HashMap<>();
@@ -186,7 +186,7 @@ public class KeyedReduceOperation extends AbstractParallelOperation {
     @Override
     public void init(Config cfg, DataFlowOperation operation,
                      Map<Integer, Map<Integer, List<Integer>>> exp) {
-      Map<Integer, List<Integer>> expectedIds = exp.get(8);
+      Map<Integer, List<Integer>> expectedIds = exp.get(0);
       for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
         Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
         Map<Integer, Integer> countsPerTask = new HashMap<>();

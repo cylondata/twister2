@@ -91,19 +91,27 @@ public class MesosScheduler implements Scheduler {
         LOG.info("Offer comes from host ...:" + offer.getHostname());
         if (controller.isResourceSatisfy(offer)) {
 
-//          MesosPersistentVolume pv = new MesosPersistentVolume(
-//              controller.createPersistentJobDirName(jobName), workerCounter);
-//          pv.getJobDir();
+
+          //creates job directory on nfs
+          MesosPersistentVolume pv = new MesosPersistentVolume(
+              controller.createPersistentJobDirName(jobName), workerCounter);
+          String persistentVolumeDir = pv.getJobDir().getAbsolutePath();
+
 
           LOG.info("before for:");
           Offer.Operation.Launch.Builder launch = Offer.Operation.Launch.newBuilder();
           for (int i = 0; i < MesosContext.containerPerWorker(config); i++) {
-            LOG.info("for:" + i);
+
+            //creates directory for each worker
+            pv.getWorkerDir();
+
            /* Protos.ExecutorInfo executorInfo =
                 controller.getExecutorInfo(jobName,
-                    MesosPersistentVolume.WORKER_DIR_NAME_PREFIX + workerCounter++);
+                    MesosPersistentVolume.WORKER_DIR_NAME_PREFIX + workerCounter);
             pv.getWorkerDir();
             */
+
+            //workerCounter++;
             Protos.TaskID taskId = buildNewTaskID();
 
             int begin = MesosContext.getWorkerPort(config) + taskIdCounter * 10;
@@ -131,7 +139,8 @@ public class MesosScheduler implements Scheduler {
             Protos.ContainerInfo.DockerInfo.Builder dockerInfoBuilder
                 = Protos.ContainerInfo.DockerInfo.newBuilder();
             dockerInfoBuilder.setImage("gurhangunduz/twister2-mesos:docker-mpi");
-            Protos.NetworkInfo netInfo = Protos.NetworkInfo.newBuilder().setName("weave").build();
+            Protos.NetworkInfo netInfo = Protos.NetworkInfo.newBuilder()
+                .setName("mesos-overlay").build();
             //dockerInfoBuilder.addPortMappings(mapping);
             dockerInfoBuilder.setNetwork(Protos.ContainerInfo.DockerInfo.Network.USER);
             dockerInfoBuilder.addParameters(hostIpParam);
@@ -144,10 +153,17 @@ public class MesosScheduler implements Scheduler {
                 .setMode(Protos.Volume.Mode.RW)
                 .build();
 
+            Protos.Volume persistentVolume = Protos.Volume.newBuilder()
+                .setContainerPath("/persistent-volume/")
+                .setHostPath(persistentVolumeDir)
+                .setMode(Protos.Volume.Mode.RW)
+                .build();
+
             // container info
             Protos.ContainerInfo.Builder containerInfoBuilder = Protos.ContainerInfo.newBuilder();
             containerInfoBuilder.setType(Protos.ContainerInfo.Type.DOCKER);
             containerInfoBuilder.addVolumes(volume);
+            containerInfoBuilder.addVolumes(persistentVolume);
             containerInfoBuilder.setDocker(dockerInfoBuilder.build());
             containerInfoBuilder.addNetworkInfos(netInfo);
 

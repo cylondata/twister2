@@ -9,6 +9,18 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 package edu.iu.dsc.tws.comms.mpi;
 
 import java.nio.ByteBuffer;
@@ -23,6 +35,10 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
+import edu.iu.dsc.tws.comms.dfw.ChannelListener;
+import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
+import edu.iu.dsc.tws.comms.dfw.DataBuffer;
+import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 
 import mpi.Intracomm;
 import mpi.MPI;
@@ -39,8 +55,14 @@ import mpi.Status;
 public class TWSMPIChannel implements TWSChannel {
   private static final Logger LOG = Logger.getLogger(TWSMPIChannel.class.getName());
 
+  /**
+   * Worker id
+   */
   private int executor;
 
+  /**
+   * Some debug counters
+   */
   private int sendCount = 0;
   private int completedSendCount = 0;
   private int receiveCount = 0;
@@ -50,9 +72,9 @@ public class TWSMPIChannel implements TWSChannel {
   @SuppressWarnings("VisibilityModifier")
   private class MPIRequest {
     Request request;
-    MPIBuffer buffer;
+    DataBuffer buffer;
 
-    MPIRequest(Request request, MPIBuffer buffer) {
+    MPIRequest(Request request, DataBuffer buffer) {
       this.request = request;
       this.buffer = buffer;
     }
@@ -63,11 +85,11 @@ public class TWSMPIChannel implements TWSChannel {
     List<MPIRequest> pendingRequests;
     int rank;
     int edge;
-    MPIMessageListener callback;
-    Queue<MPIBuffer> availableBuffers;
+    ChannelListener callback;
+    Queue<DataBuffer> availableBuffers;
 
     MPIReceiveRequests(int rank, int e,
-                              MPIMessageListener callback, Queue<MPIBuffer> buffers) {
+                       ChannelListener callback, Queue<DataBuffer> buffers) {
       this.rank = rank;
       this.edge = e;
       this.callback = callback;
@@ -81,11 +103,11 @@ public class TWSMPIChannel implements TWSChannel {
     List<MPIRequest> pendingSends;
     int rank;
     int edge;
-    MPIMessage message;
-    MPIMessageListener callback;
+    ChannelMessage message;
+    ChannelListener callback;
 
     MPISendRequests(int rank, int e,
-                           MPIMessage message, MPIMessageListener callback) {
+                    ChannelMessage message, ChannelListener callback) {
       this.rank = rank;
       this.edge = e;
       this.message = message;
@@ -117,7 +139,7 @@ public class TWSMPIChannel implements TWSChannel {
 
   public TWSMPIChannel(Config config, Intracomm comm, int exec) {
     this.comm = comm;
-    int pendingSize = MPIContext.networkChannelPendingSize(config);
+    int pendingSize = DataFlowContext.networkChannelPendingSize(config);
     this.pendingSends = new ArrayBlockingQueue<MPISendRequests>(pendingSize);
     this.registeredReceives = Collections.synchronizedList(new ArrayList<>(1024));
     this.waitForCompletionSends = Collections.synchronizedList(new ArrayList<>(1024));
@@ -131,7 +153,7 @@ public class TWSMPIChannel implements TWSChannel {
    * @param message the message
    * @return true if the message is accepted to be sent
    */
-  public boolean sendMessage(int id, MPIMessage message, MPIMessageListener callback) {
+  public boolean sendMessage(int id, ChannelMessage message, ChannelListener callback) {
     boolean offer = pendingSends.offer(
         new MPISendRequests(id, message.getHeader().getEdge(), message, callback));
 //    LOG.info(String.format("%d Pending sends count: %d wait: %d",
@@ -144,10 +166,10 @@ public class TWSMPIChannel implements TWSChannel {
    * @param rank
    * @param stream
    * @param callback
-   * @return
+   * @return true if the message is accepted
    */
   public boolean receiveMessage(int rank, int stream,
-                                MPIMessageListener callback, Queue<MPIBuffer> receiveBuffers) {
+                                ChannelListener callback, Queue<DataBuffer> receiveBuffers) {
     return registeredReceives.add(new MPIReceiveRequests(rank, stream, callback,
         receiveBuffers));
   }
@@ -158,11 +180,11 @@ public class TWSMPIChannel implements TWSChannel {
    * @param requests the message
    */
   private void postMessage(MPISendRequests requests) {
-    MPIMessage message = requests.message;
+    ChannelMessage message = requests.message;
     for (int i = 0; i < message.getBuffers().size(); i++) {
       try {
         sendCount++;
-        MPIBuffer buffer = message.getBuffers().get(i);
+        DataBuffer buffer = message.getBuffers().get(i);
         Request request = comm.iSend(buffer.getByteBuffer(), buffer.getSize(),
             MPI.BYTE, requests.rank, message.getHeader().getEdge());
         // register to the loop to make progress on the send
@@ -174,7 +196,7 @@ public class TWSMPIChannel implements TWSChannel {
   }
 
   private void postReceive(MPIReceiveRequests requests) {
-    MPIBuffer byteBuffer = requests.availableBuffers.poll();
+    DataBuffer byteBuffer = requests.availableBuffers.poll();
     while (byteBuffer != null) {
       // post the receive
       pendingReceiveCount++;
@@ -191,7 +213,7 @@ public class TWSMPIChannel implements TWSChannel {
    * @param byteBuffer the buffer
    * @return the request
    */
-  private Request postReceive(int rank, int stream, MPIBuffer byteBuffer) {
+  private Request postReceive(int rank, int stream, DataBuffer byteBuffer) {
     try {
       return comm.iRecv(byteBuffer.getByteBuffer(), byteBuffer.getCapacity(),
           MPI.BYTE, rank, stream);

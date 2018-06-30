@@ -21,7 +21,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.mpi.MPIContext;
+import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 
 public class BinaryTreeRouter {
   private static final Logger LOG = Logger.getLogger(BinaryTreeRouter.class.getName());
@@ -45,8 +45,8 @@ public class BinaryTreeRouter {
    */
   public BinaryTreeRouter(Config cfg, TaskPlan plan,
                                   int root, Set<Integer> dests) {
-    int interNodeDegree = MPIContext.interNodeDegree(cfg, 2);
-    int intraNodeDegree = MPIContext.intraNodeDegree(cfg, 2);
+    int interNodeDegree = DataFlowContext.interNodeDegree(cfg, 2);
+    int intraNodeDegree = DataFlowContext.intraNodeDegree(cfg, 2);
     mainTaskLast = false;
     // lets build the tree
     BinaryTree tree = new BinaryTree(interNodeDegree, intraNodeDegree, plan, root, dests);

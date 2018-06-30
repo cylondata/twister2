@@ -71,7 +71,7 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.mpi.io.KeyedContent;
+import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
 import edu.iu.dsc.tws.data.memory.OperationMemoryManager;
 import edu.iu.dsc.tws.examples.IntData;
 import edu.iu.dsc.tws.examples.Utils;

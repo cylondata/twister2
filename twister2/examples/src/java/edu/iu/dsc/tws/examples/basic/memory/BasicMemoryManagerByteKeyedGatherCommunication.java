@@ -99,16 +99,16 @@ import java.util.logging.Logger;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.BatchReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.GatherBatchReceiver;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.mpi.io.KeyedContent;
-import edu.iu.dsc.tws.comms.mpi.io.gather.GatherBatchFinalReceiver;
-import edu.iu.dsc.tws.comms.mpi.io.gather.GatherBatchPartialReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
+import edu.iu.dsc.tws.comms.dfw.io.gather.GatherBatchFinalReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.gather.GatherBatchPartialReceiver;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.utils.RandomString;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
@@ -251,7 +251,7 @@ public class BasicMemoryManagerByteKeyedGatherCommunication implements IContaine
     }
   }
 
-  private class FinalGatherReceive implements GatherBatchReceiver {
+  private class FinalGatherReceive implements BatchReceiver {
     // lets keep track of the messages
     // for each task we need to keep track of incoming messages
     private List<Integer> dataList;

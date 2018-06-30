@@ -24,8 +24,8 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.mpi.MPIDataFlowPartition;
-import edu.iu.dsc.tws.comms.mpi.io.partition.PartitionPartialReceiver;
+import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
+import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.EdgeGenerator;
 import edu.iu.dsc.tws.task.api.IMessage;
@@ -37,7 +37,7 @@ public class PartitionOperation extends AbstractParallelOperation {
   private HashMap<Integer, Integer> incommingMap = new HashMap<>();
   private HashMap<Integer, ArrayList<Object>> incommingBuffer = new HashMap<>();
 
-  protected MPIDataFlowPartition op;
+  protected DataFlowPartition op;
 
   public PartitionOperation(Config config, TWSChannel network, TaskPlan tPlan) {
     super(config, network, tPlan);
@@ -47,8 +47,8 @@ public class PartitionOperation extends AbstractParallelOperation {
                       DataType dataType, String edgeName) {
     this.edge = e;
     //LOG.info("ParitionOperation Prepare 1");
-    op = new MPIDataFlowPartition(channel, srcs, dests, new PartitionReceiver(),
-        new PartitionPartialReceiver(), MPIDataFlowPartition.PartitionStratergy.DIRECT);
+    op = new DataFlowPartition(channel, srcs, dests, new PartitionReceiver(),
+        new PartitionPartialReceiver(), DataFlowPartition.PartitionStratergy.DIRECT);
     communicationEdge = e.generate(edgeName);
     op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
   }
@@ -56,8 +56,8 @@ public class PartitionOperation extends AbstractParallelOperation {
   public void prepare(Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
                       DataType dataType, DataType keyType, String edgeName) {
     this.edge = e;
-    op = new MPIDataFlowPartition(channel, srcs, dests, new PartitionReceiver(),
-        new PartitionPartialReceiver(), MPIDataFlowPartition.PartitionStratergy.DIRECT,
+    op = new DataFlowPartition(channel, srcs, dests, new PartitionReceiver(),
+        new PartitionPartialReceiver(), DataFlowPartition.PartitionStratergy.DIRECT,
         Utils.dataTypeToMessageType(dataType), Utils.dataTypeToMessageType(keyType));
     communicationEdge = e.generate(edgeName);
     op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
