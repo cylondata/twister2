@@ -52,7 +52,7 @@ public class KafkaPartitionFinder {
     initializeConnection();
   }
 
-  public List<TopicPartition> getAllPartitions() {
+  private List<TopicPartition> getAllPartitions() {
     if (this.topics.isFixedTopics()) {
       return getAllPartitionsForTopics(topics.getFixedTopics());
     } else {
@@ -82,12 +82,12 @@ public class KafkaPartitionFinder {
     return relevantPartitions;
   }
 
-  public KafkaPartitionFinder initializeConnection() {
+  private KafkaPartitionFinder initializeConnection() {
     this.consumer = new KafkaConsumer<>(kafkaConsumerConfig);
     return this;
   }
 
-  public List<String> allTopics() throws WakeupException {
+  private List<String> allTopics() throws WakeupException {
     try {
       return new LinkedList<>(consumer.listTopics().keySet());
     } catch (WakeupException e) {
@@ -95,7 +95,7 @@ public class KafkaPartitionFinder {
     }
   }
 
-  protected List<TopicPartition> getAllPartitionsForTopics(List<String> topics2)
+  private List<TopicPartition> getAllPartitionsForTopics(List<String> topics2)
       throws WakeupException {
     List<TopicPartition> partitions = new LinkedList<>();
 

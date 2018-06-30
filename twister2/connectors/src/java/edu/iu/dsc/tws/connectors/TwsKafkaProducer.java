@@ -11,16 +11,21 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.connectors;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 
+import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.TopicPartition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.connectors.config.KafkaConsumerConfig;
 import edu.iu.dsc.tws.connectors.config.KafkaProducerConfig;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.SinkTask;
@@ -33,23 +38,37 @@ public class TwsKafkaProducer<T> extends SinkTask {
   private int myIndex;
   private int worldSize;
   private List<String> listOfTopics = null;
-  private String singleTopic = null;
   private Producer<String, String> producer;
+  private KafkaPartitionFinder kafkaPartitionFinder;
+  private KafkaTopicDescription topicDescription;
+  private List<TopicPartition> topicPartitions;
   @Override
   public void execute(IMessage message) {
     log.info("Recieved message {}", message.getContent());
-    if (this.singleTopic == null) {
-      for (String topic : this.listOfTopics) {
-        log.info("Producing to kafka message : {} , Topic : {}", message.getContent(), topic);
-        producer.send(new ProducerRecord<String, String>(topic,
+//    if (this.singleTopic == null) {
+//      for (String topic : this.listOfTopics) {
+//        log.info("Producing to kafka message : {} , Topic : {}", message.getContent(), topic);
+//        producer.send(new ProducerRecord<String, String>(topic,
+//            message.getContent().toString(),
+//            message.getContent().toString()));
+//      }
+//    } else {
+//      log.info("Producing to kafka message : {} , Topic : {}", message.getContent(), singleTopic);
+//      producer.send(new ProducerRecord<String, String>(singleTopic,
+//          message.getContent().toString(),
+//          message.getContent().toString()));
+//    }
+    if (topicPartitions.isEmpty()) {
+      log.info("No partition found for given topic(s)");
+    } else {
+      for (TopicPartition topicPartition : topicPartitions) {
+        log.info("Producing to kafka, Message : {} , Topic : {}, Partition : {}",
+            message.getContent(), topicPartition.topic(), topicPartition.partition());
+        producer.send(new ProducerRecord<String, String>(topicPartition.topic(),
+            topicPartition.partition(),
             message.getContent().toString(),
             message.getContent().toString()));
       }
-    } else {
-      log.info("Producing to kafka message : {} , Topic : {}", message.getContent(), singleTopic);
-      producer.send(new ProducerRecord<String, String>(singleTopic,
-          message.getContent().toString(),
-          message.getContent().toString()));
     }
 
   }
@@ -59,6 +78,10 @@ public class TwsKafkaProducer<T> extends SinkTask {
     this.myIndex = cfg.getIntegerValue("twister2.container.id", 0);
     this.worldSize = context.getParallelism();
     log.info("myID : {} , worldSize : {} ", myIndex, worldSize);
+    this.topicDescription = new KafkaTopicDescription(listOfTopics);
+    this.kafkaPartitionFinder = new KafkaPartitionFinder(
+        this.kafkaConfigs, worldSize, myIndex, topicDescription);
+    this.topicPartitions = kafkaPartitionFinder.getRelevantPartitions();
     this.producer = new KafkaProducer<String, String>(this.kafkaConfigs);
 
   }
@@ -76,7 +99,8 @@ public class TwsKafkaProducer<T> extends SinkTask {
       List<String> servers
   ) {
     this.kafkaConfigs = createKafkaConfig(servers);
-    this.singleTopic = singletopic;
+    this.listOfTopics = new ArrayList<>();
+    listOfTopics.add(singletopic);
   }
 
   private Properties createKafkaConfig(List<String> servers) {
@@ -90,6 +114,7 @@ public class TwsKafkaProducer<T> extends SinkTask {
   public Properties getKafkaConfigs() {
     return kafkaConfigs;
   }
+
 
   public void setKafkaConfigs(Properties kafkaConfigs) {
     this.kafkaConfigs = kafkaConfigs;
