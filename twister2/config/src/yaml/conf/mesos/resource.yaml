@@ -32,6 +32,11 @@ twister2.system.package.uri: "${TWISTER2_DIST}/twister2-core.tar.gz"
 # mesos fetch uri
 twister2.mesos.fetch.uri: "http://149.165.150.81:8082"
 
+#overlay network name for docker containers
+twister2.mesos.overlay.network.name: "mesos-overlay"
+
+twister2.docker.image.name: "gurhangunduz/twister2-mesos:docker-mpi"
+
 # the job package uri for mesos agent to fetch.
 # For fetching http server must be running on mesos master
 twister2.system.job.uri: "http://149.165.150.81:8082/twister2-job.tar.gz"
@@ -68,6 +73,7 @@ twister2.zookeeper.server.port: "2181"
 
 # if the workers want to wait for all others to join a job, max wait time in ms
 twister2.zookeeper.max.wait.time.for.all.workers.to.join: "100000"
+
 
 
 
