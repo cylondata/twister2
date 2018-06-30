@@ -59,7 +59,7 @@
   
 6. Bazel build system
   * Twister2 requires Bazel build system version 0.8.1
-  * Download bazel from https://github.com/bazelbuild/bazel/releases/download/0.8.1/bazel-0.8.1-installer-linux-x86_64.sh
+  * Download bazel from https://github.com/bazelbuild/bazel/releases/download/0.8.1/bazel-0.8.1-installer-linux-x86_64.sh (for Mac https://github.com/bazelbuild/bazel/releases/download/0.8.1/bazel-0.8.1-installer-linux-x86_64.sh)
   * Execute the following commands
 
   ```
