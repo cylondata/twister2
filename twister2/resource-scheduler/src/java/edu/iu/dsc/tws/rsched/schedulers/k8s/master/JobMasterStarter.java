@@ -22,7 +22,7 @@ import edu.iu.dsc.tws.master.JobMaster;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
-import edu.iu.dsc.tws.rsched.schedulers.k8s.worker.KubernetesWorker;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.worker.KubernetesWorkerStarter;
 
 public final class JobMasterStarter {
   private static final Logger LOG = Logger.getLogger(JobMasterStarter.class.getName());
@@ -43,7 +43,7 @@ public final class JobMasterStarter {
     if (persistentJobDir == null || persistentJobDir.isEmpty()) {
       // no persistent volume is requested, nothing to be done
     } else {
-      KubernetesWorker.createPersistentJobDir(podName, persistentJobDir, 0);
+      KubernetesWorkerStarter.createPersistentJobDir(podName, persistentJobDir, 0);
     }
 
     initLogger(envConfigs);

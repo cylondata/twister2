@@ -23,6 +23,7 @@ public class SchedulerContext extends Context {
   public static final String LAUNCHER_CLASS = "twister2.class.launcher";
   public static final String UPLOADER_CLASS = "twister2.class.uploader";
   public static final String CONTAINER_CLASS = "twister2.job.basic.container.class";
+  public static final String THREADS_PER_WORKER = "twister2.exector.worker.threads";
 
   public static final String STATE_MANAGER_ROOT_PATH = "twister2.state.manager.root.path";
   public static final String SYSTEM_PACKAGE_URI = "twister2.system.package.uri";
@@ -138,10 +139,15 @@ public class SchedulerContext extends Context {
     return cfg.getDoubleValue(PERSISTENT_VOLUME_PER_WORKER, PERSISTENT_VOLUME_PER_WORKER_DEFAULT);
   }
 
+  public static String numOfThreads(Config cfg) {
+    String numThreads = cfg.getStringValue(THREADS_PER_WORKER, "1");
+    System.out.println("NumofThreads String : " + numThreads);
+    return numThreads;
+  }
+
+
   /**
    * if persistentVolumePerWorker is more than zero, return true, otherwise false
-   * @param cfg
-   * @return
    */
   public static boolean persistentVolumeRequested(Config cfg) {
     return persistentVolumePerWorker(cfg) > 0;
@@ -149,8 +155,6 @@ public class SchedulerContext extends Context {
 
   /**
    * if workerVolatileDisk is more than zero, return true, otherwise false
-   * @param cfg
-   * @return
    */
   public static boolean volatileDiskRequested(Config cfg) {
     return workerVolatileDisk(cfg) > 0;
