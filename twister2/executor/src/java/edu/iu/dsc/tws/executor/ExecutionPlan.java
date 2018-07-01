@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Map;
 
 import edu.iu.dsc.tws.executor.comm.IParallelOperation;
-import edu.iu.dsc.tws.task.graph.Edge;
 import edu.iu.dsc.tws.task.graph.Vertex;
 
 public class ExecutionPlan {
