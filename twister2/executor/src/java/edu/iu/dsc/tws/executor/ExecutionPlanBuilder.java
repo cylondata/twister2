@@ -143,6 +143,7 @@ public class ExecutionPlanBuilder implements IExecutor {
             parOpTable.put(parent.getName(), e.getName(),
                 new Communication(e, parent.getName(), v.getName(), srcTasks, tarTasks));
           }
+          execution.addIncomingVertex(parent, v);
         }
       }
 
