@@ -47,6 +47,8 @@ public final class MessageTypeUtils {
         return DataMessageType.SHORT;
       case MULTI_FIXED_BYTE:
         return DataMessageType.MULTI_FIXED_BYTE;
+      case BARRIER:
+        return  DataMessageType.BARRIER;
       default:
         throw new RuntimeException("The given Message type does not have a corresponding"
             + " DataMessageType");
@@ -77,5 +79,14 @@ public final class MessageTypeUtils {
     return false;
   }
 
+  /**
+   * checks if the Checks if the given message type is Barrier
+   */
+  public static boolean isBarrierMessageType(MessageType type) {
+    if (type == MessageType.BARRIER) {
+      return true;
+    }
+    return false;
+  }
 
 }

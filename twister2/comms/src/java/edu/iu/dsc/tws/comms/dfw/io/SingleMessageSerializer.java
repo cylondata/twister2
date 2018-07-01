@@ -153,8 +153,9 @@ public class SingleMessageSerializer implements MessageSerializer {
         return serializeKeyedData(keyedContent.getValue(), keyedContent.getKey(),
             sendMessage.getSerializationState(), buffer, type, keyedContent.getKeyType());
       }
-    }
-    if (type == MessageType.BUFFER) {
+    } else if (type == MessageType.BUFFER) {
+      return serializeBuffer(payload, sendMessage, buffer);
+    } else if (type == MessageType.BARRIER) {
       return serializeBuffer(payload, sendMessage, buffer);
     }
     return false;

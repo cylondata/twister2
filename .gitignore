@@ -16,3 +16,8 @@ hs_err_pid*
 .idea/
 ./twister2/.idea/
 *.iml
+bazel-bin
+bazel-genfiles
+bazel-out
+bazel-testlogs
+bazel-twister2
