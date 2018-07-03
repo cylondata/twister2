@@ -60,7 +60,7 @@ public class DataLocalityBatchTaskScheduling implements TaskSchedule {
    */
   public List<TaskSchedulePlan> scheduleBatch(DataFlowTaskGraph graph, WorkerPlan workerPlan) {
 
-    Set<TaskSchedulePlan.ContainerPlan> containerPlans = new HashSet<>();
+    //Set<TaskSchedulePlan.ContainerPlan> containerPlans = new HashSet<>();
     Set<Vertex> taskVertexSet = new LinkedHashSet<>(graph.getTaskVertexSet());
     Map<Integer, List<InstanceId>> datalocalityAwareContainerInstanceMap;
     List<TaskSchedulePlan> taskSchedulePlanList = new ArrayList<>();
@@ -70,6 +70,8 @@ public class DataLocalityBatchTaskScheduling implements TaskSchedule {
       datalocalityAwareContainerInstanceMap =
           DataLocalityBatchScheduling.DataLocalityBatchSchedulingAlgo(vertex,
               workerPlan.getNumberOfWorkers(), workerPlan, this.cfg);
+
+      Set<TaskSchedulePlan.ContainerPlan> containerPlans = new HashSet<>();
 
       TaskInstanceMapCalculation instanceMapCalculation = new TaskInstanceMapCalculation(
           this.instanceRAM, this.instanceCPU, this.instanceDisk);
@@ -126,10 +128,12 @@ public class DataLocalityBatchTaskScheduling implements TaskSchedule {
               + "\tCpu:" + containerCpuValue));
         }
 
-        TaskSchedulePlan.ContainerPlan taskContainerPlan =
-            new TaskSchedulePlan.ContainerPlan(containerId,
-                new HashSet<>(taskInstancePlanMap.values()), containerResource);
-        containerPlans.add(taskContainerPlan);
+        if (taskInstancePlanMap.values() != null) {
+          TaskSchedulePlan.ContainerPlan taskContainerPlan =
+              new TaskSchedulePlan.ContainerPlan(containerId,
+                  new HashSet<>(taskInstancePlanMap.values()), containerResource);
+          containerPlans.add(taskContainerPlan);
+        }
       }
       taskSchedulePlanList.add(new TaskSchedulePlan(taskSchedulePlanId, containerPlans));
       taskSchedulePlanId++;
