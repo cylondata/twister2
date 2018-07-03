@@ -31,7 +31,7 @@ message TaskSchedulePlan {
 }
 
 message TaskSchedulePlanList {
-    //required int32 jobid = 1;
     int32 jobid = 1;
     repeated TaskSchedulePlan taskscheduleplan = 2;
+    //required int32 jobid = 1;
 }
