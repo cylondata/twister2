@@ -12,6 +12,7 @@
 
 package edu.iu.dsc.tws.rsched.schedulers.mesos;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.mesos.MesosSchedulerDriver;
@@ -19,6 +20,8 @@ import org.apache.mesos.Protos;
 import org.apache.mesos.Scheduler;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.master.JobMaster;
+import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
 import edu.iu.dsc.tws.rsched.spi.scheduler.ILauncher;
@@ -84,6 +87,24 @@ public class MesosLauncher implements ILauncher {
 
   @Override
   public boolean launch(RequestedResources resourceRequest, JobAPI.Job job) {
+
+
+    // start the Job Master locally
+    if (JobMasterContext.jobMasterRunsInClient(config)) {
+      JobMaster jobMaster = null;
+      try {
+        jobMaster =
+            new JobMaster(config, "149.165.150.81",
+                //InetAddress.getLocalHost().getHostAddress(),
+                null, job.getJobName());
+        jobMaster.init();
+      } catch (Exception e) {
+        LOG.log(Level.SEVERE, "Exception when getting local host address: ", e);
+      }
+    }
+
+
+
     runFramework(MesosContext.getMesosMasterUri(config), job.getJobName());
 
     return false;

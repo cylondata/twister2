@@ -155,11 +155,21 @@ public class MesosScheduler implements Scheduler {
                   .setMode(Protos.Volume.Mode.RW)
                   .build();
 
+
+              //temporary solution for some jar packages
+              Protos.Volume customJarsVolume = Protos.Volume.newBuilder()
+                  .setContainerPath("/customJars/")
+                  .setHostPath("/root/.twister2/repository/customJars")
+                  .setMode(Protos.Volume.Mode.RW)
+                  .build();
+
+
               // container info
               Protos.ContainerInfo.Builder containerInfoBuilder = Protos.ContainerInfo.newBuilder();
               containerInfoBuilder.setType(Protos.ContainerInfo.Type.DOCKER);
               containerInfoBuilder.addVolumes(volume);
               containerInfoBuilder.addVolumes(persistentVolume);
+              containerInfoBuilder.addVolumes(customJarsVolume);
               containerInfoBuilder.setDocker(dockerInfoBuilder.build());
               containerInfoBuilder.addNetworkInfos(netInfo);
               ((TaskInfo.Builder) taskBuilder).setContainer(containerInfoBuilder);
