@@ -58,11 +58,10 @@ public class RoundRobinBatchTaskScheduling implements TaskSchedule {
       DataFlowTaskGraph dataFlowTaskGraph, WorkerPlan workerPlan) {
 
     List<TaskSchedulePlan> taskSchedulePlanList = new ArrayList<>();
-    Map<Integer, List<InstanceId>> roundrobinContainerInstanceMap = new HashMap<>();
+    Map<Integer, List<InstanceId>> roundrobinContainerInstanceMap;
     Set<Vertex> taskVertexSet = dataFlowTaskGraph.getTaskVertexSet();
 
     for (Vertex vertex : taskVertexSet) {
-      //LOG.info("%%%%%% Task Vertex Is:%%%%%%%%" + vertex.getName());
       roundrobinContainerInstanceMap = RoundRobinBatchScheduling.
           RoundRobinBatchSchedulingAlgo(vertex, workerPlan.getNumberOfWorkers(), cfg);
 

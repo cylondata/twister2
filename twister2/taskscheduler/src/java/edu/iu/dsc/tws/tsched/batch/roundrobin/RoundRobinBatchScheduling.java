@@ -44,7 +44,7 @@ public class RoundRobinBatchScheduling {
       fifoAllocation.put(i, new ArrayList<>());
     }
 
-    LOG.info(String.format("Container Map Values Before Allocation %s", fifoAllocation));
+    //LOG.info(String.format("Container Map Values Before Allocation %s", fifoAllocation));
 
     try {
       Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertex);
@@ -61,7 +61,7 @@ public class RoundRobinBatchScheduling {
         }
         taskId1++;
       }
-      LOG.info(String.format("Container Map Values After Allocation %s", fifoAllocation));
+      //LOG.info(String.format("Container Map Values After Allocation %s", fifoAllocation));
     } catch (NullPointerException ne) {
       ne.printStackTrace();
     }
@@ -84,13 +84,13 @@ public class RoundRobinBatchScheduling {
 
     try {
       Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
+
       int taskId = 0;
       int containerIndex = 0;
 
       for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
         String task = e.getKey();
         int numberOfInstances = e.getValue();
-
         for (int taskIndex = 0; taskIndex < numberOfInstances; taskIndex++) {
           fifoAllocation.get(containerIndex).add(new InstanceId(task, taskId, taskIndex));
           ++containerIndex;

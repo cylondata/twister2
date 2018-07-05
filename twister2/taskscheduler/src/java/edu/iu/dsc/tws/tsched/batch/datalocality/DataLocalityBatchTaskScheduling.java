@@ -60,12 +60,13 @@ public class DataLocalityBatchTaskScheduling implements TaskSchedule {
    */
   public List<TaskSchedulePlan> scheduleBatch(DataFlowTaskGraph graph, WorkerPlan workerPlan) {
 
-    //Set<TaskSchedulePlan.ContainerPlan> containerPlans = new HashSet<>();
     Set<Vertex> taskVertexSet = new LinkedHashSet<>(graph.getTaskVertexSet());
     Map<Integer, List<InstanceId>> datalocalityAwareContainerInstanceMap;
     List<TaskSchedulePlan> taskSchedulePlanList = new ArrayList<>();
 
     for (Vertex vertex : taskVertexSet) {
+
+      //System.out.println("Outgoing task edges:" + graph.outgoingTaskEdgesOf(vertex).size());
 
       datalocalityAwareContainerInstanceMap =
           DataLocalityBatchScheduling.DataLocalityBatchSchedulingAlgo(vertex,
