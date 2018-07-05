@@ -112,6 +112,7 @@ public class MesosWorkerController implements IWorkerController {
     } else {
       LOG.log(Level.INFO, "Waited " + duration + " ms for all workers to join.");
 
+      workerList = zkController.getWorkerList();
       System.out.println("list of current workers in the job: ");
       zkController.printWorkers(workerList);
 

@@ -37,6 +37,8 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
+import edu.iu.dsc.tws.master.JobMasterContext;
+import edu.iu.dsc.tws.master.client.JobMasterClient;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
@@ -48,6 +50,7 @@ public class MesosDockerWorker {
   public static final Logger LOG = Logger.getLogger(MesosDockerWorker.class.getName());
   private Config config;
   private String jobName;
+  public static JobMasterClient jobMasterClient;
 
 
   public static void main(String[] args) throws Exception {
@@ -57,7 +60,6 @@ public class MesosDockerWorker {
     String homeDir = System.getenv("HOME");
     int workerId = Integer.parseInt(System.getenv("WORKER_ID"));
     String jobName = System.getenv("JOB_NAME");
-
     int id = workerId;
     MesosDockerWorker worker = new MesosDockerWorker();
 
@@ -110,6 +112,7 @@ public class MesosDockerWorker {
     StringBuilder outputBuilder = new StringBuilder();
     int workerCount = workerController.getNumberOfWorkers();
     System.out.println("worker count " + workerCount);
+    worker.startJobMasterClient(workerController.getWorkerNetworkInfo());
 
 
     //docker master has the id equals to zero
@@ -165,6 +168,36 @@ public class MesosDockerWorker {
     }
 
 
+  }
+
+
+  public void startJobMasterClient(WorkerNetworkInfo networkInfo) {
+
+    String jobMasterIP = JobMasterContext.jobMasterIP(config);
+    jobMasterIP = jobMasterIP.trim();
+    Config cnf = config;
+
+    // if jobMasterIP is null, or the length zero,
+    // job master runs as a separate pod
+    // get its IP address first
+    /*if (jobMasterIP == null || jobMasterIP.length() == 0) {
+
+      DiscoverJobMaster djm = new DiscoverJobMaster();
+      jobMasterIP = djm.waitUntilJobMasterRunning(jobMasterPodName, 10000);
+
+      cnf = Config.newBuilder()
+          .putAll(cnfg)
+          .put(JobMasterContext.JOB_MASTER_IP, jobMasterIP)
+          .build();
+    }
+    */
+
+    LOG.info("JobMasterIP: " + jobMasterIP);
+
+    jobMasterClient = new JobMasterClient(cnf, networkInfo);
+    jobMasterClient.init();
+    // we need to make sure that the worker starting message went through
+    jobMasterClient.sendWorkerStartingMessage();
   }
 
 

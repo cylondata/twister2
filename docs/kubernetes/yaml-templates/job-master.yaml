@@ -1,7 +1,6 @@
 # a sample statefulset yaml file to create Twister Job Master
 # before creating this statefulset, 
 #   a service needs to be created for this twister2 job
-#   then the persistent volume and 
 #   then the persistent volume claim
 # need to be created.
 
