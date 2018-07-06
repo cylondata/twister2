@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # Twister2 documentation build configuration file, created by
-# sphinx-quickstart on Fri Jul  6 11:16:10 2018.
+# sphinx-quickstart on Fri Jul  6 12:03:27 2018.
 #
 # This file is execfile()d with the current directory set to its
 # containing dir.
@@ -36,7 +36,7 @@ templates_path = ['_templates']
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 # source_suffix = ['.rst', '.md']
-source_suffix = '.rst'
+source_suffix = '.md'
 
 # The encoding of source files.
 #source_encoding = 'utf-8-sig'
