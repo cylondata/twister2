@@ -358,7 +358,6 @@ public class ResourceAllocator {
 //        .put(SchedulerContext.TWISTER2_PACKAGES_PATH, packagesPath)
         .put(SchedulerContext.JOB_PACKAGE_URI, packageURI)
         .put(SchedulerContext.THREADS_PER_WORKER, threadNumber)
-//        .putAll(config)
         .build();
 
     // this is a handler chain based execution in resource allocator. We need to

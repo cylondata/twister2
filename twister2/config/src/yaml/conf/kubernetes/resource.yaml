@@ -14,7 +14,7 @@ twister2.job.basic.container.class: "edu.iu.dsc.tws.examples.basic.BasicK8sWorke
 
 # image pull policy, by default is IfNotPresent
 # it could also be Always
-kubernetes.image.pull.policy: "Always"
+# kubernetes.image.pull.policy: "Always"
 
 # Statically bind workers to CPUs
 # Workers do not move from the CPU they are started during computation

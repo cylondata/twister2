@@ -407,6 +407,8 @@ public final class KubernetesWorkerStarter {
     LOG.log(Level.INFO, String.format("Loading configuration with twister2_home: %s and "
         + "configuration: %s", twister2Home, configDir));
     Config conf1 = ConfigLoader.loadConfig(twister2Home, configDir);
+    LOG.info("Loaded: " + conf1.size() + " parameters from config files.");
+
     Config conf2 = Config.newBuilder().
         putAll(conf1).
         put(Context.TWISTER2_HOME.getKey(), twister2Home).
