@@ -36,17 +36,16 @@ import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.RequestObjectBuilder;
 
 import io.kubernetes.client.custom.Quantity;
 import io.kubernetes.client.models.V1Container;
 import io.kubernetes.client.models.V1ContainerPort;
-import io.kubernetes.client.models.V1EmptyDirVolumeSource;
 import io.kubernetes.client.models.V1EnvVar;
 import io.kubernetes.client.models.V1EnvVarSource;
 import io.kubernetes.client.models.V1LabelSelector;
 import io.kubernetes.client.models.V1ObjectFieldSelector;
 import io.kubernetes.client.models.V1ObjectMeta;
-import io.kubernetes.client.models.V1PersistentVolumeClaimVolumeSource;
 import io.kubernetes.client.models.V1PodSpec;
 import io.kubernetes.client.models.V1PodTemplateSpec;
 import io.kubernetes.client.models.V1ResourceRequirements;
@@ -119,25 +118,16 @@ public final class JobMasterRequestObject {
     // a volatile disk based volume
     // create it if the requested disk space is positive
     if (JobMasterContext.volatileVolumeRequested(config)) {
-      V1Volume volatileVolume = new V1Volume();
-      volatileVolume.setName(KubernetesConstants.POD_VOLATILE_VOLUME_NAME);
-      V1EmptyDirVolumeSource volumeSource = new V1EmptyDirVolumeSource();
       double vSize = JobMasterContext.volatileVolumeSize(config);
-      volumeSource.setSizeLimit(vSize + "Gi");
-      volatileVolume.setEmptyDir(volumeSource);
+      V1Volume volatileVolume = RequestObjectBuilder.createVolatileVolumeObject(vSize);
       volumes.add(volatileVolume);
     }
 
     String persistentJobDir = null;
 
     if (JobMasterContext.persistentVolumeRequested(config)) {
-      V1Volume persistentVolume = new V1Volume();
-      persistentVolume.setName(KubernetesConstants.PERSISTENT_VOLUME_NAME);
-      V1PersistentVolumeClaimVolumeSource perVolSource = new V1PersistentVolumeClaimVolumeSource();
       String claimName = KubernetesUtils.createStorageClaimName(jobName);
-      perVolSource.setClaimName(claimName);
-      persistentVolume.setPersistentVolumeClaim(perVolSource);
-
+      V1Volume persistentVolume = RequestObjectBuilder.createPersistentVolumeObject(claimName);
       volumes.add(persistentVolume);
 
       persistentJobDir =

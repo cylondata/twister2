@@ -51,6 +51,7 @@ import io.kubernetes.client.models.V1PodAntiAffinity;
 import io.kubernetes.client.models.V1PodSpec;
 import io.kubernetes.client.models.V1PodTemplateSpec;
 import io.kubernetes.client.models.V1ResourceRequirements;
+import io.kubernetes.client.models.V1SecretVolumeSource;
 import io.kubernetes.client.models.V1Service;
 import io.kubernetes.client.models.V1ServicePort;
 import io.kubernetes.client.models.V1ServiceSpec;
@@ -147,26 +148,17 @@ public final class RequestObjectBuilder {
     // a volatile disk based volume
     // create it if the requested disk space is positive
     if (SchedulerContext.volatileDiskRequested(config)) {
-      V1Volume volatileVolume = new V1Volume();
-      volatileVolume.setName(KubernetesConstants.POD_VOLATILE_VOLUME_NAME);
-      V1EmptyDirVolumeSource volumeSource2 = new V1EmptyDirVolumeSource();
-      double vSize =
+      double volumeSize =
           SchedulerContext.workerVolatileDisk(config) * SchedulerContext.workerInstances(config);
-      volumeSource2.setSizeLimit(vSize + "Gi");
-      volatileVolume.setEmptyDir(volumeSource2);
+      V1Volume volatileVolume = createVolatileVolumeObject(volumeSize);
       volumes.add(volatileVolume);
     }
 
     String persistentJobDir = null;
 
     if (SchedulerContext.persistentVolumeRequested(config)) {
-      V1Volume persistentVolume = new V1Volume();
-      persistentVolume.setName(KubernetesConstants.PERSISTENT_VOLUME_NAME);
-      V1PersistentVolumeClaimVolumeSource perVolSource = new V1PersistentVolumeClaimVolumeSource();
       String claimName = KubernetesUtils.createStorageClaimName(SchedulerContext.jobName(config));
-      perVolSource.setClaimName(claimName);
-      persistentVolume.setPersistentVolumeClaim(perVolSource);
-
+      V1Volume persistentVolume = createPersistentVolumeObject(claimName);
       volumes.add(persistentVolume);
 
       persistentJobDir =
@@ -174,9 +166,22 @@ public final class RequestObjectBuilder {
               KubernetesContext.persistentVolumeUploading(config));
     }
 
+    // if openmpi is used, we initialize a Secret volume on each pod
+    if (KubernetesContext.workersUseOpenMPI(config)) {
+      String secretName = "kubempi-ssh-key";
+      V1Volume secretVolume = createSecretVolumeObject(secretName);
+      volumes.add(secretVolume);
+    }
+
     podSpec.setVolumes(volumes);
 
     int containersPerPod = KubernetesContext.workersPerPod(config);
+
+    // if openmpi is used, we initialize only one container for each pod
+    if (KubernetesContext.workersUseOpenMPI(config)) {
+      containersPerPod = 1;
+    }
+
     ArrayList<V1Container> containers = new ArrayList<V1Container>();
     for (int i = 0; i < containersPerPod; i++) {
       containers.add(constructContainer(i, reqContainer, jobFileSize, persistentJobDir, config));
@@ -206,6 +211,34 @@ public final class RequestObjectBuilder {
     return template;
   }
 
+  public static V1Volume createVolatileVolumeObject(double volumeSize) {
+    V1Volume volatileVolume = new V1Volume();
+    volatileVolume.setName(KubernetesConstants.POD_VOLATILE_VOLUME_NAME);
+    V1EmptyDirVolumeSource volumeSource2 = new V1EmptyDirVolumeSource();
+    volumeSource2.setSizeLimit(volumeSize + "Gi");
+    volatileVolume.setEmptyDir(volumeSource2);
+    return volatileVolume;
+  }
+
+  public static V1Volume createPersistentVolumeObject(String claimName) {
+    V1Volume persistentVolume = new V1Volume();
+    persistentVolume.setName(KubernetesConstants.PERSISTENT_VOLUME_NAME);
+    V1PersistentVolumeClaimVolumeSource perVolSource = new V1PersistentVolumeClaimVolumeSource();
+    perVolSource.setClaimName(claimName);
+    persistentVolume.setPersistentVolumeClaim(perVolSource);
+    return persistentVolume;
+  }
+
+  public static V1Volume createSecretVolumeObject(String secretName) {
+    V1Volume secretVolume = new V1Volume();
+    secretVolume.setName(KubernetesConstants.SECRET_VOLUME_NAME);
+    V1SecretVolumeSource secretVolumeSource = new V1SecretVolumeSource();
+    secretVolumeSource.setSecretName(secretName);
+    secretVolumeSource.setDefaultMode(256);
+    secretVolume.setSecret(secretVolumeSource);
+    return secretVolume;
+  }
+
   /**
    * construct a container
    * @param containerIndex
@@ -229,9 +262,15 @@ public final class RequestObjectBuilder {
     container.setImagePullPolicy(KubernetesContext.imagePullPolicy(config));
 
 //        container.setArgs(Arrays.asList("1000000")); parameter to the main method
-    container.setCommand(
-        Arrays.asList(
-            "java", "edu.iu.dsc.tws.rsched.schedulers.k8s.worker.KubernetesWorkerStarter"));
+    if (KubernetesContext.workersUseOpenMPI(config)) {
+      container.setCommand(
+          Arrays.asList(
+              "./init_openmpi.sh"));
+    } else {
+      container.setCommand(
+          Arrays.asList(
+              "java", "edu.iu.dsc.tws.rsched.schedulers.k8s.worker.KubernetesWorkerStarter"));
+    }
 
     V1ResourceRequirements resReq = new V1ResourceRequirements();
     if (KubernetesContext.bindWorkerToCPU(config)) {
@@ -260,6 +299,14 @@ public final class RequestObjectBuilder {
       V1VolumeMount persVolumeMount = new V1VolumeMount();
       persVolumeMount.setName(KubernetesConstants.PERSISTENT_VOLUME_NAME);
       persVolumeMount.setMountPath(KubernetesConstants.PERSISTENT_VOLUME_MOUNT);
+      volumeMounts.add(persVolumeMount);
+    }
+
+    // mount Secret object as a volume
+    if (KubernetesContext.workersUseOpenMPI(config)) {
+      V1VolumeMount persVolumeMount = new V1VolumeMount();
+      persVolumeMount.setName(KubernetesConstants.SECRET_VOLUME_NAME);
+      persVolumeMount.setMountPath(KubernetesConstants.SECRET_VOLUME_MOUNT);
       volumeMounts.add(persVolumeMount);
     }
 
@@ -386,6 +433,10 @@ public final class RequestObjectBuilder {
         .name(JobMasterContext.WORKER_TO_JOB_MASTER_RESPONSE_WAIT_DURATION)
         .value(JobMasterContext.responseWaitDuration(config) + ""));
 
+    envVars.add(new V1EnvVar()
+        .name(KubernetesContext.KUBERNETES_NAMESPACE)
+        .value(KubernetesContext.namespace(config)));
+
     return envVars;
   }
 
@@ -461,7 +512,6 @@ public final class RequestObjectBuilder {
   }
 
   public static V1Service createHeadlessServiceObject(String serviceName, String serviceLabel) {
-
 
     V1Service service = new V1Service();
     service.setKind("Service");

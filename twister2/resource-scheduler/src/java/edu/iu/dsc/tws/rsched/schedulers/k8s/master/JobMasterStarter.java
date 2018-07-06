@@ -147,4 +147,20 @@ public final class JobMasterStarter {
     }
   }
 
+  /**
+   * a method to make the worker wait indefinitely
+   */
+  public static void waitIndefinitely2() {
+
+    while (true) {
+      try {
+        System.out.println("Worker thread waiting indefinitely. Sleeping 100sec. "
+            + "Time: " + new java.util.Date());
+        Thread.sleep(100000);
+      } catch (InterruptedException e) {
+        System.out.println("Thread sleep interrupted.");
+      }
+    }
+  }
+
 }

@@ -256,7 +256,7 @@ public class KubernetesController {
    */
   public boolean transferJobPackage(String namespace, String jobName, String jobPackageFile) {
 
-    PodWatcher podWatcher = new PodWatcher(namespace, jobName, 1, client, coreApi);
+    PodWatcher podWatcher = new PodWatcher(namespace, jobName, 1);
     podWatcher.start();
 
     JobPackageTransferThread transferThread =
@@ -290,7 +290,7 @@ public class KubernetesController {
   public boolean transferJobPackageInParallel(String namespace, String jobName, int numberOfPods,
                                               String jobPackageFile) {
 
-    PodWatcher podWatcher = new PodWatcher(namespace, jobName, numberOfPods, client, coreApi);
+    PodWatcher podWatcher = new PodWatcher(namespace, jobName, numberOfPods);
     podWatcher.start();
 
     JobPackageTransferThread[] transferThreads = new JobPackageTransferThread[numberOfPods];

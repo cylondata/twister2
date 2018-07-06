@@ -22,10 +22,13 @@ public class KubernetesContext extends SchedulerContext {
   public static final String WORKERS_PER_POD = "kubernetes.workers.per.pod";
 
   public static final String KUBERNETES_NAMESPACE_DEFAULT = "default";
-  public static final String KUBERNETES_NAMESPACE = "kubernetes.namespace";
+  public static final String KUBERNETES_NAMESPACE = "kubernetes_namespace";
 
   public static final boolean NODE_PORT_SERVICE_REQUESTED_DEFAULT = false;
   public static final String NODE_PORT_SERVICE_REQUESTED = "kubernetes.node.port.service.requested";
+
+  public static final boolean WORKERS_USE_OPENMPI_DEFAULT = false;
+  public static final String WORKERS_USE_OPENMPI = "kubernetes.workers.use.openmpi";
 
   public static final int SERVICE_NODE_PORT_DEFAULT = 0;
   public static final String SERVICE_NODE_PORT = "kubernetes.service.node.port";
@@ -80,6 +83,10 @@ public class KubernetesContext extends SchedulerContext {
 
   public static String namespace(Config cfg) {
     return cfg.getStringValue(KUBERNETES_NAMESPACE, KUBERNETES_NAMESPACE_DEFAULT);
+  }
+
+  public static boolean workersUseOpenMPI(Config cfg) {
+    return cfg.getBooleanValue(WORKERS_USE_OPENMPI, WORKERS_USE_OPENMPI_DEFAULT);
   }
 
   public static boolean nodePortServiceRequested(Config cfg) {
