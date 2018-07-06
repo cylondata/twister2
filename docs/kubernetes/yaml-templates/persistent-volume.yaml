@@ -1,0 +1,19 @@
+# This is the Persistent Volume object that was used to create a PersistentVolume for each job.
+# We no loner use this.
+# We use persistent storage provisioners to dynamically create a PersistentVolume for each job.
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: persistent-volume-<job-name>
+spec:
+  accessModes:
+  - <kubernetes.storage.access.mode>
+  capacity:
+    storage: <persistent.volume.total>
+  nfs:
+    path: <nfs.server.path>
+    server: <nfs.server.address>
+  persistentVolumeReclaimPolicy: <kubernetes.storage.reclaim.policy>
+  storageClassName: <kubernetes.persistent.storage.class>
+
