@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Map;
 
 import edu.iu.dsc.tws.executor.comm.IParallelOperation;
-import edu.iu.dsc.tws.task.graph.Edge;
 import edu.iu.dsc.tws.task.graph.Vertex;
 
 public class ExecutionPlan {
@@ -64,12 +63,12 @@ public class ExecutionPlan {
   }
 
   public void addIncomingVertex(Vertex parent, Vertex child) {
-    if (this.incomingVertex.containsKey(parent)) {
-      this.incomingVertex.get(parent).add(child);
+    if (this.incomingVertex.containsKey(child)) {
+      this.incomingVertex.get(child).add(parent);
     } else {
-      List<Vertex> childVertex = new ArrayList<>();
-      childVertex.add(child);
-      this.incomingVertex.put(parent, childVertex);
+      List<Vertex> parentVertex = new ArrayList<>();
+      parentVertex.add(child);
+      this.incomingVertex.put(child, parentVertex);
     }
   }
 
