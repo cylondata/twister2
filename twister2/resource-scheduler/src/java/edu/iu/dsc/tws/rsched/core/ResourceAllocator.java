@@ -59,6 +59,8 @@ public class ResourceAllocator {
    */
   public static Config loadConfig(Map<String, Object> cfg) {
 
+    LOG.info("=============Loading Configurations====================");
+
     // first lets read the essential properties from java system properties
     String twister2Home = System.getProperty(SchedulerContext.TWISTER_2_HOME);
     String configDir = System.getProperty(SchedulerContext.CONFIG_DIR);
@@ -92,6 +94,7 @@ public class ResourceAllocator {
     LOG.log(Level.INFO, String.format("Loading configuration with twister2_home: %s and "
         + "configuration: %s and cluster: %s", twister2Home, configDir, clusterType));
     Config config = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterType);
+    LOG.info("============= Configurations Loaded ====================");
     return Config.newBuilder().
         putAll(config).
         put(SchedulerContext.TWISTER2_HOME.getKey(), twister2Home).
@@ -292,6 +295,13 @@ public class ResourceAllocator {
       throw new RuntimeException("The uploader class must be specified");
     }
 
+    String threadNumber = SchedulerContext.numOfThreads(config);
+    if (threadNumber == null) {
+      threadNumber = new String("1"); // initializing to single threaded application
+    }
+    LOG.info("Allocated Thread Number : " + threadNumber);
+
+
     ILauncher launcher;
     IUploader uploader;
     IStateManager statemgr;
@@ -347,6 +357,8 @@ public class ResourceAllocator {
         .put(SchedulerContext.TWISTER2_PACKAGES_PATH, scpPath)
 //        .put(SchedulerContext.TWISTER2_PACKAGES_PATH, packagesPath)
         .put(SchedulerContext.JOB_PACKAGE_URI, packageURI)
+        .put(SchedulerContext.THREADS_PER_WORKER, threadNumber)
+        .putAll(config)
         .build();
 
     // this is a handler chain based execution in resource allocator. We need to

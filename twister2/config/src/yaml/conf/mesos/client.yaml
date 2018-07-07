@@ -41,3 +41,5 @@ twister2.worker_port: "31000"
 # desired nodes
 #twister2.desired_nodes: "149.165.150.xx,149.165.150.xx,149.165.150.xx"
 twister2.desired_nodes: "all"
+
+twister2.use_docker_container: "true"

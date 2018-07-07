@@ -230,7 +230,8 @@ public final class RequestObjectBuilder {
 
 //        container.setArgs(Arrays.asList("1000000")); parameter to the main method
     container.setCommand(
-        Arrays.asList("java", "edu.iu.dsc.tws.rsched.schedulers.k8s.worker.KubernetesWorker"));
+        Arrays.asList(
+            "java", "edu.iu.dsc.tws.rsched.schedulers.k8s.worker.KubernetesWorkerStarter"));
 
     V1ResourceRequirements resReq = new V1ResourceRequirements();
     if (KubernetesContext.bindWorkerToCPU(config)) {

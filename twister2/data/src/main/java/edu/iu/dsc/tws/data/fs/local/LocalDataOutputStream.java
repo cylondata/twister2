@@ -69,4 +69,6 @@ public class LocalDataOutputStream extends FSDataOutputStream {
   public long getPos() throws IOException {
     return fos.getChannel().position();
   }
+
+
 }

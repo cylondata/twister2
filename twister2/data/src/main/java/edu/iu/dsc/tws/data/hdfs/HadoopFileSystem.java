@@ -231,6 +231,7 @@ public class HadoopFileSystem extends FileSystem {
   }
 
   public void close() throws IOException {
+    this.fileSystem.close();
   }
 }
 
