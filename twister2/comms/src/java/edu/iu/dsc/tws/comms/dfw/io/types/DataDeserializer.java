@@ -56,6 +56,8 @@ public final class DataDeserializer {
         return deserializeObject(buffers, length, serializer);
       case MULTI_FIXED_BYTE:
         return deserializeMultiBytes(buffers, length, count);
+      case BARRIER:
+        return deserializeMultiBytes(buffers, length, count);
       default:
         break;
     }

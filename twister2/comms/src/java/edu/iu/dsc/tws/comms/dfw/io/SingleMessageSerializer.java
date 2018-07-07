@@ -145,7 +145,7 @@ public class SingleMessageSerializer implements MessageSerializer {
     MessageType type = sendMessage.getMPIMessage().getType();
     if (type == MessageType.OBJECT || type == MessageType.INTEGER || type == MessageType.LONG
         || type == MessageType.DOUBLE || type == MessageType.BYTE || type == MessageType.STRING
-        || type == MessageType.MULTI_FIXED_BYTE) {
+        || type == MessageType.MULTI_FIXED_BYTE || type == MessageType.BARRIER) {
       if (!keyed) {
         return serializeData(payload, sendMessage.getSerializationState(), buffer, type);
       } else {
@@ -154,8 +154,6 @@ public class SingleMessageSerializer implements MessageSerializer {
             sendMessage.getSerializationState(), buffer, type, keyedContent.getKeyType());
       }
     } else if (type == MessageType.BUFFER) {
-      return serializeBuffer(payload, sendMessage, buffer);
-    } else if (type == MessageType.BARRIER) {
       return serializeBuffer(payload, sendMessage, buffer);
     }
     return false;
