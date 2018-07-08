@@ -11,11 +11,15 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.standalone;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.master.JobMaster;
+import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
@@ -63,6 +67,20 @@ public class StandaloneLauncher implements ILauncher {
     // slurm and start the job
     IController controller = new StandaloneController(true);
     controller.initialize(newConfig);
+
+    // start the Job Master locally
+    if (JobMasterContext.jobMasterRunsInClient(config)) {
+      JobMaster jobMaster = null;
+      try {
+        jobMaster =
+            new JobMaster(config, InetAddress.getLocalHost().getHostAddress(),
+                new StandaloneTerminator(), job.getJobName());
+        jobMaster.init();
+      } catch (UnknownHostException e) {
+        LOG.log(Level.SEVERE, "Exception when getting local host address: ", e);
+      }
+    }
+
     return controller.start(resourcePlan, job);
   }
 
