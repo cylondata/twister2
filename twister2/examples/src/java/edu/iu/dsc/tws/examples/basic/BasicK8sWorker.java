@@ -116,12 +116,13 @@ public class BasicK8sWorker implements IWorker {
   }
 
   /**
-   * a test method to make the worker wait indefinitely
+   * a test method to make the worker wait some time
    */
   public void sleepSomeTime() {
 
-    long maxSleepDuration = 20;
-    long sleepDuration = (long) (Math.random() * maxSleepDuration);
+    long maxSleepDuration = 300; // 5 minutes
+    long sleepDuration = maxSleepDuration;
+//    long sleepDuration = (long) (Math.random() * maxSleepDuration);
     try {
       LOG.info("BasicK8sWorker will sleep: " + sleepDuration + " seconds.");
       Thread.sleep(sleepDuration * 1000);

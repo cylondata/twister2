@@ -3,7 +3,7 @@
 ################################################################################
 
 # twister2 job name
-twister2.job.name: "basic-kubernetes"
+twister2.job.name: "basic-kube"
 
 # number of cores for each worker
 # it is a floating point number
@@ -64,5 +64,5 @@ kubernetes.storage.access.mode: "ReadWriteMany"
 # and all pods can get it from there. 
 # alternatively, the client uploads the job package to each pod separately
 # default value is true
-kubernetes.persistent.volume.uploading: false
+kubernetes.persistent.volume.uploading: true
 

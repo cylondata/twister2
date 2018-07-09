@@ -13,16 +13,14 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s.worker;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.channels.FileLock;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -42,6 +40,7 @@ import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesField;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.PodWatchUtils;
 import edu.iu.dsc.tws.rsched.spi.container.IPersistentVolume;
 import edu.iu.dsc.tws.rsched.spi.container.IWorker;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
@@ -54,9 +53,10 @@ import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.POD_MEMOR
 public final class KubernetesWorkerStarter {
   private static final Logger LOG = Logger.getLogger(KubernetesWorkerStarter.class.getName());
 
-  public static final String UNPACK_COMPLETE_FILE_NAME = "unpack-complete.txt";
-  public static final long FILE_WAIT_SLEEP_INTERVAL = 30;
-  public static final int PERSISTENT_DIR_CREATE_TRY_COUNT = 3; // ms
+  private static final String UNPACK_COMPLETE_FILE_NAME = "unpack-complete.txt";
+  private static final String FLAG_FILE_NAME = POD_MEMORY_VOLUME + "/" + UNPACK_COMPLETE_FILE_NAME;
+  private static final long FILE_WAIT_SLEEP_INTERVAL = 30;
+  private static final int PERSISTENT_DIR_CREATE_TRY_COUNT = 3; // ms
 
   public static Config config = null;
   public static WorkerNetworkInfo thisWorker;
@@ -137,10 +137,11 @@ public final class KubernetesWorkerStarter {
     // job package can be either in pod shared drive or in persistent volume
     String jobPackageFileName = SchedulerContext.jobPackageFileName(envConfigs);
     long fileSize = Long.parseLong(fileSizeStr);
+    String jobPackageFullFileName = null;
     if (pv != null && KubernetesContext.persistentVolumeUploading(envConfigs)) {
-      jobPackageFileName = persistentJobDir + "/" + jobPackageFileName;
+      jobPackageFullFileName = persistentJobDir + "/" + jobPackageFileName;
     } else {
-      jobPackageFileName = POD_MEMORY_VOLUME + "/" + jobPackageFileName;
+      jobPackageFullFileName = POD_MEMORY_VOLUME + "/" + jobPackageFileName;
     }
     String jobDescFileName = SchedulerContext.jobDescriptionFile(envConfigs);
     userJobJarFile = POD_MEMORY_VOLUME + "/" + DIR_PREFIX_FOR_JOB_ARCHIVE + userJobJarFile;
@@ -148,10 +149,19 @@ public final class KubernetesWorkerStarter {
     String configDir = POD_MEMORY_VOLUME + "/" + DIR_PREFIX_FOR_JOB_ARCHIVE
         + KUBERNETES_CLUSTER_TYPE;
 
-    boolean ready = waitUnpack(containerName, jobPackageFileName, fileSize);
-    if (!ready) {
-      return;
+    // if persistent uploading is used and this is the first worker in the first pod
+    // get the job package file, copy to persistent directory
+    if (podName.endsWith("-0") && containerName.endsWith("-0")
+        && pv != null && KubernetesContext.persistentVolumeUploading(envConfigs)) {
+      waitCopyUnpack(jobPackageFileName, POD_MEMORY_VOLUME, persistentJobDir, fileSize);
+    } else {
+
+      boolean ready = waitUnpack(containerName, jobPackageFullFileName, fileSize);
+      if (!ready) {
+        return;
+      }
     }
+
 
     boolean loaded = loadLibrary(userJobJarFile);
     if (!loaded) {
@@ -176,7 +186,7 @@ public final class KubernetesWorkerStarter {
     ResourceAPI.ComputeResource cr = job.getJobResources().getContainer();
 
     jobMasterClient.sendWorkerRunningMessage();
-    startWorkerClass(jobMasterClient.getWorkerController(), pv);
+    startWorker(jobMasterClient.getWorkerController(), pv);
     closeWorker(podName);
   }
 
@@ -186,6 +196,8 @@ public final class KubernetesWorkerStarter {
    */
   public static Config buildConfigFromEnvVariables() {
     return Config.newBuilder()
+        .put(KubernetesContext.KUBERNETES_NAMESPACE,
+            System.getenv(KubernetesContext.KUBERNETES_NAMESPACE))
         .put(SchedulerContext.JOB_PACKAGE_FILENAME,
             System.getenv(SchedulerContext.JOB_PACKAGE_FILENAME))
         .put(SchedulerContext.JOB_DESCRIPTION_FILE,
@@ -227,8 +239,13 @@ public final class KubernetesWorkerStarter {
       String jobName = podName.substring(0, podName.lastIndexOf("-"));
       String jobMasterPodName = KubernetesUtils.createJobMasterPodName(jobName);
 
-      DiscoverJobMaster djm = new DiscoverJobMaster();
-      jobMasterIP = djm.waitUntilJobMasterRunning(jobMasterPodName, 10000);
+//      DiscoverJobMaster djm = new DiscoverJobMaster();
+//      jobMasterIP = djm.waitUntilJobMasterRunning(jobMasterPodName, 10000);
+      String namespace = KubernetesContext.namespace(cnfg);
+      jobMasterIP = PodWatchUtils.getJobMasterIP(jobMasterPodName, jobName, namespace, 100);
+      if (jobMasterIP == null) {
+        throw new RuntimeException("Can not get JobMaster IP address. Aborting ...........");
+      }
 
       cnf = Config.newBuilder()
           .putAll(cnfg)
@@ -307,54 +324,10 @@ public final class KubernetesWorkerStarter {
   }
 
   /**
-   * update the count in the shared file with a lock
-   * to let other workers in this pod to know that a worker has finished
-   * currently not used
-   */
-  public static int updateCompletions() {
-
-    String completionsFile = POD_MEMORY_VOLUME + "/completions.txt";
-
-    try {
-      Path path = Paths.get(completionsFile);
-      FileChannel fileChannel = FileChannel.open(path,
-          StandardOpenOption.WRITE, StandardOpenOption.READ);
-      LOG.info("Opened File channel. Acquiring lock ...");
-
-      FileLock lock = fileChannel.lock(); // exclusive lock
-      LOG.info("Acquired the file lock. Validity of the lock: " + lock.isValid());
-
-      // read the counter from the file
-      ByteBuffer buffer = ByteBuffer.allocate(20);
-      int noOfBytesRead = fileChannel.read(buffer);
-      byte[] readByteArray = buffer.array();
-      String inStr = new String(readByteArray, 0, noOfBytesRead, StandardCharsets.UTF_8);
-      int count = Integer.parseInt(inStr);
-
-      // update the counter and write back to the file
-      count++;
-      String outStr = Integer.toString(count);
-      byte[] outByteArray = outStr.getBytes(StandardCharsets.UTF_8);
-      ByteBuffer outBuffer = ByteBuffer.wrap(outByteArray);
-      fileChannel.write(outBuffer, 0);
-      LOG.info("Counter in file [" + completionsFile + "] updated to: " + count);
-
-      // close the file channel and release the lock
-      fileChannel.close(); // also releases the lock
-
-      return count;
-
-    } catch (IOException e) {
-      LOG.log(Level.SEVERE, "Exception when updating the counter in file: " + completionsFile, e);
-      return -1;
-    }
-  }
-
-  /**
    * start the container class specified in conf files
    */
-  public static void startWorkerClass(IWorkerController workerController,
-                                      IPersistentVolume pv) {
+  public static void startWorker(IWorkerController workerController,
+                                 IPersistentVolume pv) {
     String containerClass = SchedulerContext.containerClass(config);
     IWorker container;
     try {
@@ -458,35 +431,97 @@ public final class KubernetesWorkerStarter {
     }
   }
 
-  public static boolean waitUnpack(String containerName, String jobPackageFileName, long fileSize) {
+  /**
+   * when persistent drive uploading is used
+   * the job package first uploaded to the memory directory of the first pod
+   * First pod copies the job package file to persistent directory for other workers to receive it
+   * it unpacks it in its memory directory for other workers in its pod
+   *
+   * copying to persistent directory seems to be faster when done with plain streams
+   * as compared to do it with Files.copy method
+   * my preliminary tests has shown that way
+   * so i used that type of copying
+   */
+  public static boolean waitCopyUnpack(String jobPackageFileName,
+                                       String memDir,
+                                       String persDir,
+                                       long fileSize) {
 
-    String flagFileName = POD_MEMORY_VOLUME + "/" + UNPACK_COMPLETE_FILE_NAME;
-//    String completionsFileName = POD_MEMORY_VOLUME + "/completions.txt";
+    String jobPackageMemDirFileName = memDir + "/" + jobPackageFileName;
+    boolean transferred = waitForFileTransfer(jobPackageMemDirFileName, fileSize);
+
+    if (transferred) {
+      // first copy the job package to persistent directory
+      String jobPackagePersDirFileName = persDir + "/" + jobPackageFileName;
+      try {
+        copyFile(new File(jobPackageMemDirFileName), new File(jobPackagePersDirFileName));
+//        Files.copy(Paths.get(jobPackageMemDirFileName), Paths.get(jobPackagePersDirFileName));
+
+      } catch (IOException e) {
+        throw new RuntimeException(
+            String.format("Can not copy the job package from the memory directory [%s]"
+            + "to the persistent directory [%s]",
+                jobPackageMemDirFileName, jobPackagePersDirFileName));
+      }
+
+      File outputDir = new File(memDir);
+      boolean jobFileUnpacked = TarGzipPacker.unpack(jobPackageMemDirFileName, outputDir);
+      if (jobFileUnpacked) {
+        LOG.info("Job file [" + jobPackageFileName + "] unpacked successfully.");
+        boolean written = writeFile(FLAG_FILE_NAME, 1);
+        return written;
+      } else {
+        LOG.severe("Job file can not be unpacked.");
+        return false;
+      }
+    } else {
+      LOG.severe("Something went wrong with receiving the job file: " + jobPackageFileName);
+      return false;
+    }
+  }
+
+  public static boolean waitUnpack(String containerName, String jobPackageFileName, long fileSize) {
 
     // if it is the first container in a pod, unpack the tar.gz file
     if (containerName.endsWith("-0")) {
 
       boolean transferred = waitForFileTransfer(jobPackageFileName, fileSize);
+
       if (transferred) {
         File outputDir = new File(POD_MEMORY_VOLUME);
         boolean jobFileUnpacked = TarGzipPacker.unpack(jobPackageFileName, outputDir);
         if (jobFileUnpacked) {
           LOG.info("Job file [" + jobPackageFileName + "] unpacked successfully.");
-          boolean written1 = writeFile(flagFileName, 0);
-          return written1;
-//          boolean written2 = writeFile(completionsFileName, 0);
-//          return written1 && written2;
+          boolean written = writeFile(FLAG_FILE_NAME, 1);
+          return written;
         } else {
           LOG.severe("Job file can not be unpacked.");
           return false;
         }
       } else {
-        LOG.severe("Something went wrong with receiving job file.");
+        LOG.severe("Something went wrong with receiving the job file: " + jobPackageFileName);
         return false;
       }
 
     } else {
-      return waitForFlagFile(flagFileName);
+      return waitForFlagFile(FLAG_FILE_NAME);
+    }
+  }
+
+  private static void copyFile(File source, File dest) throws IOException {
+    InputStream is = null;
+    OutputStream os = null;
+    try {
+      is = new FileInputStream(source);
+      os = new FileOutputStream(dest);
+      byte[] buffer = new byte[1024];
+      int length;
+      while ((length = is.read(buffer)) > 0) {
+        os.write(buffer, 0, length);
+      }
+    } finally {
+      is.close();
+      os.close();
     }
   }
 
@@ -527,6 +562,10 @@ public final class KubernetesWorkerStarter {
     long waitTimeCountForLog = 0;
 
     while (!transferred) {
+      // first call ls in the parent directory to refresh the file list, to update NFS cache
+      // ref: https://stackoverflow.com/questions/3833127/alternative-to-file-exists-in-java
+      jobFile.getParentFile().list();
+
       if (jobFile.exists()) {
         // if the file is fully received
         if (fileSize == jobFile.length()) {

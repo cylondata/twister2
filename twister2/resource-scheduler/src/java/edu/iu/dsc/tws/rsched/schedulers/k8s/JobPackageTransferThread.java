@@ -91,17 +91,17 @@ public class JobPackageTransferThread extends Thread {
     while (!transferred && tryCount < MAX_FILE_TRANSFER_TRY_COUNT && !stopExecution) {
       transferred = KubernetesController.runProcess(copyCommand);
       if (transferred) {
-        LOG.log(Level.INFO, "Job Package: " + jobPackageFile
-            + " transferred to the pod: " + podName);
+        LOG.info("Job Package: " + jobPackageFile + " transferred to the pod: " + podName);
 
       } else {
-        if (tryCount == 0 || tryCount == (MAX_FILE_TRANSFER_TRY_COUNT - 1)) {
-          LOG.log(Level.INFO, "Job Package: " + jobPackageFile + " could not be transferred to "
+
+        tryCount++;
+
+        if (tryCount == 5 || tryCount == (MAX_FILE_TRANSFER_TRY_COUNT - 1)) {
+          LOG.warning("Job Package: " + jobPackageFile + " could not be transferred to "
               + "the pod: " + podName + ". Sleeping and will try again ... " + tryCount
               + "\nFailed command: " + copyCommandAsString());
         }
-
-        tryCount++;
 
         try {
           Thread.sleep(SLEEP_INTERVAL_BETWEEN_TRANSFER_ATTEMPTS);

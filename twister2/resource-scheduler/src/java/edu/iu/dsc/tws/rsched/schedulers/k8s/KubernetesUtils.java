@@ -38,17 +38,11 @@ public final class KubernetesUtils {
 
   /**
    * create file copy command to a pod
-   * if persistent storage is used, copy there
    * @return
    */
   public static String[] createCopyCommand(String filename, String namespace, String podName) {
 
-    String targetDir = null;
-    if (persistentJobDirName == null) {
-      targetDir = String.format("%s/%s:%s", namespace, podName, POD_MEMORY_VOLUME);
-    } else {
-      targetDir = String.format("%s/%s:%s", namespace, podName, persistentJobDirName);
-    }
+    String targetDir = String.format("%s/%s:%s", namespace, podName, POD_MEMORY_VOLUME);
     return new String[]{"kubectl", "cp", filename, targetDir};
   }
 
@@ -147,6 +141,15 @@ public final class KubernetesUtils {
    */
   public static String createServiceLabelWithKey(String jobName) {
     return KubernetesConstants.SERVICE_LABEL_KEY + "=" + createServiceLabel(jobName);
+  }
+
+  /**
+   * this label is used when submitting queries to kubernetes master
+   * @param jobName
+   * @return
+   */
+  public static String createJobMasterServiceLabelWithKey(String jobName) {
+    return KubernetesConstants.SERVICE_LABEL_KEY + "=" + createJobMasterServiceLabel(jobName);
   }
 
   /**
