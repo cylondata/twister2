@@ -22,7 +22,7 @@ public class KubernetesContext extends SchedulerContext {
   public static final String WORKERS_PER_POD = "kubernetes.workers.per.pod";
 
   public static final String KUBERNETES_NAMESPACE_DEFAULT = "default";
-  public static final String KUBERNETES_NAMESPACE = "kubernetes_namespace";
+  public static final String KUBERNETES_NAMESPACE = "kubernetes.namespace";
 
   public static final boolean NODE_PORT_SERVICE_REQUESTED_DEFAULT = false;
   public static final String NODE_PORT_SERVICE_REQUESTED = "kubernetes.node.port.service.requested";
