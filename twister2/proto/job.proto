@@ -21,7 +21,26 @@ message Config {
         bytes serialized_value = 3;
     }
     repeated KeyValue kvs = 1;
+    map<string, bytes> config_byte_map = 2;
 }
+
+message ObjectMap {
+    map<string, Object> conifg_map = 1;
+}
+
+message ConfigMap {
+    map<string, bytes> config_byte_map = 1;
+}
+
+message Object{
+    string string_object = 1;
+    int32 int_object = 2;
+    float float_object = 3;
+    double double_object = 4;
+    bool bool_object = 5;
+    message object {}
+}
+
 
 message Container {
     string class_name = 1;
@@ -48,4 +67,8 @@ message Job {
     Config config = 4;
     // how the job is layed out
     JobFormat job_format = 5;
+
+    ObjectMap objectMap = 6;
+
+    ConfigMap configMap = 7;
 }

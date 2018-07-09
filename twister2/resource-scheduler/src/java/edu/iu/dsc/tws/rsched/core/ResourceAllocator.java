@@ -59,7 +59,7 @@ public class ResourceAllocator {
    */
   public static Config loadConfig(Map<String, Object> cfg) {
 
-    LOG.info("=============Loading Configurations====================");
+    LOG.info("=============*Loading Configurations*====================");
 
     // first lets read the essential properties from java system properties
     String twister2Home = System.getProperty(SchedulerContext.TWISTER_2_HOME);
@@ -94,7 +94,7 @@ public class ResourceAllocator {
     LOG.log(Level.INFO, String.format("Loading configuration with twister2_home: %s and "
         + "configuration: %s and cluster: %s", twister2Home, configDir, clusterType));
     Config config = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterType);
-    LOG.info("============= Configurations Loaded ====================");
+    LOG.info("=============*Configurations Loaded*====================");
     return Config.newBuilder().
         putAll(config).
         put(SchedulerContext.TWISTER2_HOME.getKey(), twister2Home).
