@@ -11,6 +11,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.standalone;
 
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -24,7 +28,10 @@ import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
+import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
+import edu.iu.dsc.tws.master.client.JobMasterClient;
+import edu.iu.dsc.tws.master.client.WorkerController;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
@@ -170,7 +177,51 @@ public final class StandaloneWorker {
   }
 
   private static ResourcePlan createResourcePlan(Config config) {
-
+    Map<String, Integer> ports = getPorts(config);
+    JobMasterClient client = createMasterClient(config, 0,
+        new InetSocketAddress(0).getAddress(), ports);
+    WorkerController workerController = client.getWorkerController();
+    workerController.waitForAllWorkersToJoin(30000);
     return null;
+  }
+
+  /**
+   * Start the TCP servers here
+   */
+  private static void initNetworkServers() {
+  }
+
+  /**
+   * Create the job master client to get information about the workers
+   */
+  private static JobMasterClient createMasterClient(Config cfg, int workerId, InetAddress addr,
+                                             Map<String, Integer> ports) {
+    if (!ports.containsKey("worker")) {
+      throw new RuntimeException("Worker port must be allocated by the scheduler");
+    }
+    int port = ports.get("worker");
+    // we start the job master client
+    JobMasterClient jobMasterClient = new JobMasterClient(cfg,
+        new WorkerNetworkInfo(addr, port, workerId));
+    jobMasterClient.init();
+    return jobMasterClient;
+  }
+
+  /**
+   * Get the ports from the environment variable
+   * @param cfg the configuration
+   * @return port name -> port map
+   */
+  private static Map<String, Integer> getPorts(Config cfg) {
+    String portNamesConfig = StandaloneContext.networkPortNames(cfg);
+    String[] portNames = portNamesConfig.split(",");
+    Map<String, Integer> ports = new HashMap<>();
+    // now lets get these ports
+    for (String pName : portNames) {
+      String portNumber = System.getenv("NOMAD_PORT_" + pName);
+      int port = Integer.valueOf(portNumber);
+      ports.put(pName, port);
+    }
+    return ports;
   }
 }
