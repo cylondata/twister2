@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.rsched.schedulers.standalone;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -201,11 +202,17 @@ public final class StandaloneWorker {
     // now start listening
     TCPChannel channel = initNetworkServers(config, null, index);
     List<WorkerNetworkInfo> wInfo = workerController.getWorkerList();
+    List<NetworkInfo> nInfos = new ArrayList<>();
     for (WorkerNetworkInfo w : wInfo) {
       ResourceContainer container = new ResourceContainer(w.getWorkerID());
       resourcePlan.addContainer(container);
+
+      NetworkInfo networkInfo = new NetworkInfo(w.getWorkerID());
+      networkInfo.addProperty(TCPContext.NETWORK_PORT, w.getWorkerPort());
+      networkInfo.addProperty(TCPContext.NETWORK_HOSTNAME, w.getWorkerIP());
+      nInfos.add(networkInfo);
     }
-    channel.startConnections(null, null);
+    channel.startConnections(nInfos, null);
     return resourcePlan;
   }
 
