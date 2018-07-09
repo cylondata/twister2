@@ -64,7 +64,7 @@ public final class MPIMasterStarter {
     ArrayList<String> podNames = createPodNames(jobName, numberOfPods);
 
     long start = System.currentTimeMillis();
-    int timeoutSeconds = 50;
+    int timeoutSeconds = 100;
     HashMap<String, String> podNamesIPs =
         PodWatchUtils.getRunningPodIPs(podNames, jobName, namespace, timeoutSeconds);
 

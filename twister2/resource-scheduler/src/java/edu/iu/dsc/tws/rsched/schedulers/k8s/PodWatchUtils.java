@@ -55,12 +55,49 @@ public final class PodWatchUtils {
   }
 
   /**
+   * watch pods until getting the Running event for Job Master pod
+   * return its IP address
+   */
+  public static String getJobMasterIP(String jobMasterName,
+                                      String jobName,
+                                      String namespace,
+                                      int timeout) {
+
+    ArrayList<String> jobMasterNameAsList = new ArrayList<>();
+    jobMasterNameAsList.add(jobMasterName);
+
+    String serviceLabel = KubernetesUtils.createJobMasterServiceLabelWithKey(jobName);
+
+    HashMap<String, String> nameAndIP =
+        discoverRunningPodIPs(jobMasterNameAsList, namespace, serviceLabel, timeout);
+
+    if (nameAndIP == null) {
+      return null;
+    }
+
+    return nameAndIP.get(jobMasterName);
+  }
+
+  /**
    * watch pods until getting the Running event for all the pods in the given list
    * return pod names and IP addresses as a HashMap
    */
   public static HashMap<String, String> getRunningPodIPs(ArrayList<String> podNames,
                                                          String jobName,
                                                          String namespace,
+                                                         int timeout) {
+
+    String serviceLabel = KubernetesUtils.createServiceLabelWithKey(jobName);
+    return discoverRunningPodIPs(podNames, namespace, serviceLabel, timeout);
+  }
+
+  /**
+   * watch pods until getting the Running event for all the pods in the given list
+   * return pod names and IP addresses as a HashMap
+   */
+  public static HashMap<String, String> discoverRunningPodIPs(ArrayList<String> podNames,
+                                                         String namespace,
+                                                         String labelSelector,
                                                          int timeout) {
 
     /** Pod Phases: Pending, Running, Succeeded, Failed, Unknown
@@ -73,20 +110,19 @@ public final class PodWatchUtils {
     HashMap<String, String> podNamesIPs = new HashMap<>();
 
     String phase = "Running";
-    String serviceLabel = KubernetesUtils.createServiceLabelWithKey(jobName);
     Integer timeoutSeconds = timeout;
     Watch<V1Pod> watch = null;
 
     try {
       watch = Watch.createWatch(
           apiClient,
-          coreApi.listNamespacedPodCall(namespace, null, null, null, null, serviceLabel,
+          coreApi.listNamespacedPodCall(namespace, null, null, null, null, labelSelector,
               null, null, timeoutSeconds, Boolean.TRUE, null, null),
           new TypeToken<Watch.Response<V1Pod>>() {
           }.getType());
 
     } catch (ApiException e) {
-      String logMessage = "Exception when watching the pods for the job: " + jobName + "\n"
+      String logMessage = "Exception when watching the pods to get the IPs: \n"
           + "exCode: " + e.getCode() + "\n"
           + "responseBody: " + e.getResponseBody();
       LOG.log(Level.SEVERE, logMessage, e);

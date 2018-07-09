@@ -340,6 +340,10 @@ public final class RequestObjectBuilder {
     ArrayList<V1EnvVar> envVars = new ArrayList<>();
 
     envVars.add(new V1EnvVar()
+        .name(KubernetesContext.KUBERNETES_NAMESPACE)
+        .value(KubernetesContext.namespace(config)));
+
+    envVars.add(new V1EnvVar()
         .name(SchedulerContext.JOB_PACKAGE_FILENAME)
         .value(SchedulerContext.jobPackageFileName(config)));
 

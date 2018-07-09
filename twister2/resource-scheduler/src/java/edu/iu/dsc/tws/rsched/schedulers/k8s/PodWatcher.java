@@ -51,6 +51,12 @@ public class PodWatcher extends Thread {
   /**
    * watch for a Container Started event in all pods
    * then stop the execution
+   * we can also watch for a pod Running event, however that usually takes much longer
+   * When we use Container Started event, our first try to transfer the file may fail,
+   * we retry it, and usually it succeeds after a few tries.
+   *
+   * we conducted some tests and compared these two approaches
+   * transferring files after Container Started event is usually much faster
    */
   public void run() {
 
