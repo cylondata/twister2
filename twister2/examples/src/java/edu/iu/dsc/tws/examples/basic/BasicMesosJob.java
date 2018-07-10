@@ -19,6 +19,7 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosContext;
@@ -44,7 +45,11 @@ public final class BasicMesosJob {
     System.out.println("job name is " + jobName);
     ResourceContainer resourceContainer = new ResourceContainer(cpus, ramMegaBytes, diskMegaBytes);
     // build JobConfig
+    HashMap<String, byte[]> objectHashMap = new HashMap<>();
+    objectHashMap.put(SchedulerContext.THREADS_PER_WORKER, new KryoSerializer().serialize(8));
+    // build JobConfig
     JobConfig jobConfig = new JobConfig();
+    jobConfig.putAll(objectHashMap);
 
     String containerClass = SchedulerContext.containerClass(config);
     System.out.println("Container class: " + containerClass);
