@@ -31,6 +31,8 @@ import org.apache.commons.cli.ParseException;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
+import edu.iu.dsc.tws.common.logging.LoggingContext;
+import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.net.NetworkInfo;
 import edu.iu.dsc.tws.common.net.tcp.TCPChannel;
 import edu.iu.dsc.tws.common.net.tcp.TCPContext;
@@ -189,6 +191,8 @@ public final class StandaloneWorker {
 
     int index = Integer.valueOf(indexEnv);
     int id = Integer.valueOf(idEnv);
+
+    initLogger(config, index);
     LOG.log(Level.INFO, String.format("Worker id = %d and index = %d", id, index));
 
     ResourcePlan resourcePlan = new ResourcePlan("", index);
@@ -261,5 +265,26 @@ public final class StandaloneWorker {
       ports.put(pName, port);
     }
     return ports;
+  }
+
+  private static void initLogger(Config cfg, int workerID) {
+    // we can not initialize the logger fully yet,
+    // but we need to set the format as the first thing
+    LoggingHelper.setLoggingFormat(LoggingHelper.DEFAULT_FORMAT);
+
+    // set logging level
+    LoggingHelper.setLogLevel(LoggingContext.loggingLevel(cfg));
+
+    String persistentJobDir = getTaskDirectory();
+    // if no persistent volume requested, return
+    if (persistentJobDir == null) {
+      return;
+    }
+    LoggingHelper.setupLogging(cfg, persistentJobDir + "/logs",
+        "worker-" + workerID);
+  }
+
+  private static String getTaskDirectory() {
+    return System.getenv("NOMAD_TASK_DIR");
   }
 }

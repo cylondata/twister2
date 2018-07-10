@@ -161,7 +161,7 @@ public class ConfigTestTask implements IContainer {
     jobBuilder.setName("config-test-task");
     jobBuilder.setContainerClass(ConfigTestTask.class.getName());
     jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 4);
-    jobBuilder.setMapConfig(jobMapConfig);
+//    jobBuilder.setMapConfig(jobMapConfig);
 
     // now submit the job
     LOG.info("Twister2Submitter In Action ... ");
