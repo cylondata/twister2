@@ -32,8 +32,10 @@ import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
 import edu.iu.dsc.tws.comms.op.EdgeGenerator;
 import edu.iu.dsc.tws.comms.op.OperationSemantics;
+import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.examples.utils.WordCountUtils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
@@ -147,7 +149,11 @@ public class SortJob implements IContainer {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
     // build JobConfig
+    HashMap<String, byte[]> objectHashMap = new HashMap<>();
+    objectHashMap.put(SchedulerContext.THREADS_PER_WORKER, new KryoSerializer().serialize(1));
+    // build JobConfig
     JobConfig jobConfig = new JobConfig();
+    jobConfig.putAll(objectHashMap);
 
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
     jobBuilder.setName("sort-job");
