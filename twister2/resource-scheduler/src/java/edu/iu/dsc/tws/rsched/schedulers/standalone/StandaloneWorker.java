@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.standalone;
 
+import java.io.File;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
@@ -190,10 +191,9 @@ public final class StandaloneWorker {
     String idEnv = System.getenv("NOMAD_ALLOC_ID");
 
     int index = Integer.valueOf(indexEnv);
-    int id = Integer.valueOf(idEnv);
 
     initLogger(config, index);
-    LOG.log(Level.INFO, String.format("Worker id = %d and index = %d", id, index));
+    LOG.log(Level.INFO, String.format("Worker id = %s and index = %d", idEnv, index));
 
     ResourcePlan resourcePlan = new ResourcePlan("", index);
 
@@ -280,8 +280,15 @@ public final class StandaloneWorker {
     if (persistentJobDir == null) {
       return;
     }
-    LoggingHelper.setupLogging(cfg, persistentJobDir + "/logs",
-        "worker-" + workerID);
+
+    String logDir = persistentJobDir + "/logs";
+    File directory = new File(logDir);
+    if (!directory.exists()) {
+      if (!directory.mkdirs()) {
+        throw new RuntimeException("Failed to create log directory: " + logDir);
+      }
+    }
+    LoggingHelper.setupLogging(cfg, logDir, "worker-" + workerID);
   }
 
   private static String getTaskDirectory() {
