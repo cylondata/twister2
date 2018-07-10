@@ -158,7 +158,6 @@ public class SchedulerContext extends Context {
       }
     }
 
-    System.out.println("Number of Threads In Config : " + numThreads);
     return numThreads;
   }
 
