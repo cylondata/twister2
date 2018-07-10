@@ -17,8 +17,10 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.examples.basic.comms.BaseReduceCommunication;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 
 public final class BasicReduceJob {
@@ -30,7 +32,12 @@ public final class BasicReduceJob {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
     // build JobConfig
+    HashMap<String, byte[]> objectHashMap = new HashMap<>();
+    objectHashMap.put(SchedulerContext.THREADS_PER_WORKER, new KryoSerializer().serialize(1));
+    // build JobConfig
     JobConfig jobConfig = new JobConfig();
+    jobConfig.putAll(objectHashMap);
+
 
     // build the job
     BasicJob basicJob = BasicJob.newBuilder()
