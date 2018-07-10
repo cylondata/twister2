@@ -22,6 +22,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.task.graph.Edge;
 import edu.iu.dsc.tws.task.graph.Vertex;
 import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
@@ -62,11 +63,33 @@ public class DataLocalityBatchTaskScheduling implements TaskSchedule {
 
     Set<Vertex> taskVertexSet = new LinkedHashSet<>(graph.getTaskVertexSet());
     Map<Integer, List<InstanceId>> datalocalityAwareContainerInstanceMap;
+
     List<TaskSchedulePlan> taskSchedulePlanList = new ArrayList<>();
+    List<Vertex> childTask = new ArrayList<>();
 
     for (Vertex vertex : taskVertexSet) {
+      if (graph.outgoingTaskEdgesOf(vertex).size() >= 2) {
+        System.out.println("Outgoing task edges:"
+            + vertex.getName() + "\t" + graph.outgoingTaskEdgesOf(vertex).size());
+        childTask.add(vertex);
+        //System.out.println("Graph:" + graph.childrenOfTask(vertex));
+      }
+      System.out.println("Incoming task edges:"
+          + vertex.getName() + "\t" + graph.inEdges(vertex).size());
 
-      //System.out.println("Outgoing task edges:" + graph.outgoingTaskEdgesOf(vertex).size());
+      if (graph.inEdges(vertex).size() >= 2) {
+        System.out.println("Incoming task edges:"
+            + vertex.getName() + "\t" + graph.inEdges(vertex));
+        LOG.info(" " + graph.childrenOfTask(vertex));
+        Set<Edge> vertices = graph.incomingTaskEdgesOf(vertex);
+        for (Edge e : vertices) {
+          System.out.println("values:" + e.getName() + "\t"
+              + graph.getParentOfTask(vertex, e.getName().toString()).getName());
+        }
+      }
+    }
+
+    for (Vertex vertex : taskVertexSet) {
 
       datalocalityAwareContainerInstanceMap =
           DataLocalityBatchScheduling.DataLocalityBatchSchedulingAlgo(vertex,
