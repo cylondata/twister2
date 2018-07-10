@@ -106,6 +106,10 @@ public final class JobUtils {
   /**
    * configs from job object will override the ones in config from files if any
    */
+
+  /**
+   * [Deprecated Function]
+   * **/
   public static Config overrideConfigs(JobAPI.Job job, Config config) {
     Config.Builder builder = Config.newBuilder().putAll(config);
     JobAPI.Config conf = job.getConfig();
@@ -115,6 +119,10 @@ public final class JobUtils {
     return builder.build();
   }
 
+
+  /**
+   * [Deprecated Function]
+   * **/
   public static Config overrideMapConfigs(JobAPI.Job job, Config config) {
     Config.Builder builder = Config.newBuilder().putAll(config);
     JobAPI.ObjectMap objectMap = job.getObjectMap();
@@ -149,8 +157,8 @@ public final class JobUtils {
 
   public static Config overrideConfigMap(JobAPI.Job job, Config config) {
     Config.Builder builder = Config.newBuilder().putAll(config);
-    JobAPI.ConfigMap configMap = job.getConfigMap();
-    Map<String, ByteString> configMapSerialized = configMap.getConfigByteMapMap();
+    JobAPI.Config conf = job.getConfig();
+    Map<String, ByteString> configMapSerialized = conf.getConfigByteMapMap();
     for (Map.Entry<String, ByteString> e : configMapSerialized.entrySet()) {
       String key = e.getKey();
       byte[] bytes = e.getValue().toByteArray();

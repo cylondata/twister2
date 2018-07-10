@@ -164,8 +164,7 @@ public final class MPIWorker {
     String jobDescFile = JobUtils.getJobDescriptionFilePath(jobName, workerConfig);
     JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
 
-    Config updatedConfig = JobUtils.overrideConfigs(job, config);
-    updatedConfig = JobUtils.overrideConfigMap(job, config);
+    Config updatedConfig = JobUtils.overrideConfigMap(job, config);
 
     updatedConfig = Config.newBuilder().putAll(updatedConfig).
         put(MPIContext.TWISTER2_HOME.getKey(), twister2Home).
