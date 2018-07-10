@@ -34,12 +34,14 @@ import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
+import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.connectors.TwsKafkaConsumer;
 import edu.iu.dsc.tws.executor.ExecutionPlan;
 import edu.iu.dsc.tws.executor.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.ExecutionModel;
 import edu.iu.dsc.tws.executor.threading.ThreadExecutor;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
@@ -59,7 +61,7 @@ import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 public class ReduceKafkaTask implements IContainer {
   @Override
   public void init(Config config, int id, ResourcePlan resourcePlan) {
-    List<String> topics  = new ArrayList<>();
+    List<String> topics = new ArrayList<>();
     topics.add("sample_topic1");
     List<String> servers = new ArrayList<>();
     servers.add("localhost:9092");
@@ -120,7 +122,9 @@ public class ReduceKafkaTask implements IContainer {
 
     @Override
     public void execute(IMessage message) {
-      System.out.println("Message Reduced : " + message.getContent() + ", Count : " + count);
+      if (count % 1000000 == 0) {
+        System.out.println("Message Reduced : " + message.getContent() + ", Count : " + count);
+      }
       count++;
     }
 
@@ -163,7 +167,11 @@ public class ReduceKafkaTask implements IContainer {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
     // build JobConfig
+    HashMap<String, byte[]> objectHashMap = new HashMap<>();
+    objectHashMap.put(SchedulerContext.THREADS_PER_WORKER, new KryoSerializer().serialize(8));
+    // build JobConfig
     JobConfig jobConfig = new JobConfig();
+    jobConfig.putAll(objectHashMap);
 
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
     jobBuilder.setName("reduce-task");

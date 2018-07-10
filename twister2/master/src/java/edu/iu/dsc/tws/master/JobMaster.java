@@ -92,6 +92,18 @@ public class JobMaster extends Thread {
     this.masterPort = JobMasterContext.jobMasterPort(config);
   }
 
+  public JobMaster(Config config,
+                   String masterAddress,
+                   IJobTerminator jobTerminator,
+                   String jobName,
+                   int masterPort) {
+    this.config = config;
+    this.masterAddress = masterAddress;
+    this.jobTerminator = jobTerminator;
+    this.jobName = jobName;
+    this.masterPort = masterPort;
+  }
+
   public void init() {
 
     looper = new Progress();

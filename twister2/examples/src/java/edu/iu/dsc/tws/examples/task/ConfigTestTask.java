@@ -14,12 +14,14 @@ package edu.iu.dsc.tws.examples.task;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.executor.ExecutionPlan;
@@ -31,6 +33,7 @@ import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
+import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.Operations;
 import edu.iu.dsc.tws.task.api.SinkTask;
@@ -43,21 +46,22 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
-public class KeyedReduceTask implements IContainer {
-  private static final Logger LOG = Logger.getLogger(KeyedReduceTask.class.getName());
-
+public class ConfigTestTask implements IContainer {
+  public static final Logger LOG = Logger.getLogger(ConfigTestTask.class.getName());
 
   @Override
   public void init(Config config, int id, ResourcePlan resourcePlan) {
     GeneratorTask g = new GeneratorTask();
     RecevingTask r = new RecevingTask();
 
+    System.out.println("Config-Threads : " + SchedulerContext.numOfThreads(config));
+
     GraphBuilder builder = GraphBuilder.newBuilder();
     builder.addSource("source", g);
     builder.setParallelism("source", 4);
     builder.addSink("sink", r);
     builder.setParallelism("sink", 1);
-    builder.connect("source", "sink", "keyed-reduce-edge", Operations.KEYED_REDUCE);
+    builder.connect("source", "sink", "reduce-edge", Operations.REDUCE);
 
     DataFlowTaskGraph graph = builder.build();
 
@@ -87,7 +91,7 @@ public class KeyedReduceTask implements IContainer {
 
     @Override
     public void run() {
-      ctx.write("keyed-reduce-edge", "Hello");
+      ctx.write("reduce-edge", "Hello");
     }
 
     @Override
@@ -103,8 +107,7 @@ public class KeyedReduceTask implements IContainer {
     @Override
     public void execute(IMessage message) {
       if (count % 1000000 == 0) {
-        System.out.println("Message Keyed-Reduced : " + message.getContent()
-            + ", Count : " + count);
+        System.out.println("Message Reduced : " + message.getContent() + ", Count : " + count);
       }
       count++;
     }
@@ -114,6 +117,24 @@ public class KeyedReduceTask implements IContainer {
 
     }
   }
+
+  public static class IdentityFunction implements IFunction {
+    private static final long serialVersionUID = -254264903510284748L;
+
+    @Override
+    public void init(Config cfg, DataFlowOperation op, Map<Integer,
+        List<Integer>> expectedIds, TaskContext context) {
+
+    }
+
+    @Override
+    public boolean onMessage(int source, int path, int target, int flags, Object object) {
+      System.out.println("Source : " + source + ", Path : " + path + "Target : " + target
+          + " Object : " + object.getClass().getName());
+      return true;
+    }
+  }
+
 
   public WorkerPlan createWorkerPlan(ResourcePlan resourcePlan) {
     List<Worker> workers = new ArrayList<>();
@@ -125,25 +146,25 @@ public class KeyedReduceTask implements IContainer {
     return new WorkerPlan(workers);
   }
 
-
   public static void main(String[] args) {
     // first load the configurations from command line and config files
+    LOG.info("Loading Configurations From ConfigTestTask");
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
-    // build JobConfig
     HashMap<String, byte[]> objectHashMap = new HashMap<>();
     objectHashMap.put(SchedulerContext.THREADS_PER_WORKER, new KryoSerializer().serialize(8));
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(objectHashMap);
+
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
-    jobBuilder.setName("partition-example");
-    jobBuilder.setContainerClass(KeyedReduceTask.class.getName());
+    jobBuilder.setName("config-test-task");
+    jobBuilder.setContainerClass(ConfigTestTask.class.getName());
     jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job
+    LOG.info("Twister2Submitter In Action ... ");
     Twister2Submitter.submitContainerJob(jobBuilder.build(), config);
   }
-
 }

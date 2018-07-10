@@ -86,7 +86,7 @@ public class ExecutionPlanBuilder implements IExecutor {
                                 TaskSchedulePlan taskSchedule) {
 
     noOfThreads = ExecutorContext.threadsPerContainer(cfg);
-    LOG.log(Level.INFO, " ExecutionBuilder Thread Count: " + noOfThreads);
+    LOG.log(Level.INFO, " ExecutionBuilder Thread Count : " + noOfThreads);
 
     // we need to build the task plan
     TaskPlan taskPlan = TaskPlanBuilder.build(resourcePlan, taskSchedule, taskIdGenerator);

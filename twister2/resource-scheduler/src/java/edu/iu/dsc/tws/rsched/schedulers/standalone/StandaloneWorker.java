@@ -13,7 +13,9 @@ package edu.iu.dsc.tws.rsched.schedulers.standalone;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -29,12 +31,18 @@ import org.apache.commons.cli.ParseException;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
+import edu.iu.dsc.tws.common.logging.LoggingContext;
+import edu.iu.dsc.tws.common.logging.LoggingHelper;
+import edu.iu.dsc.tws.common.net.NetworkInfo;
+import edu.iu.dsc.tws.common.net.tcp.TCPChannel;
+import edu.iu.dsc.tws.common.net.tcp.TCPContext;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.master.client.JobMasterClient;
 import edu.iu.dsc.tws.master.client.WorkerController;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
+import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
@@ -177,18 +185,52 @@ public final class StandaloneWorker {
   }
 
   private static ResourcePlan createResourcePlan(Config config) {
+    // first get the worker id
+    String indexEnv = System.getenv("NOMAD_ALLOC_INDEX");
+    String idEnv = System.getenv("NOMAD_ALLOC_ID");
+
+    int index = Integer.valueOf(indexEnv);
+    int id = Integer.valueOf(idEnv);
+
+    initLogger(config, index);
+    LOG.log(Level.INFO, String.format("Worker id = %d and index = %d", id, index));
+
+    ResourcePlan resourcePlan = new ResourcePlan("", index);
+
     Map<String, Integer> ports = getPorts(config);
-    JobMasterClient client = createMasterClient(config, 0,
+    JobMasterClient client = createMasterClient(config, index,
         new InetSocketAddress(0).getAddress(), ports);
     WorkerController workerController = client.getWorkerController();
     workerController.waitForAllWorkersToJoin(30000);
-    return null;
+
+    // now start listening
+    TCPChannel channel = initNetworkServers(config, null, index);
+    List<WorkerNetworkInfo> wInfo = workerController.getWorkerList();
+    List<NetworkInfo> nInfos = new ArrayList<>();
+    for (WorkerNetworkInfo w : wInfo) {
+      ResourceContainer container = new ResourceContainer(w.getWorkerID());
+      resourcePlan.addContainer(container);
+
+      NetworkInfo networkInfo = new NetworkInfo(w.getWorkerID());
+      networkInfo.addProperty(TCPContext.NETWORK_PORT, w.getWorkerPort());
+      networkInfo.addProperty(TCPContext.NETWORK_HOSTNAME, w.getWorkerIP());
+      nInfos.add(networkInfo);
+    }
+    channel.startConnections(nInfos, null);
+    return resourcePlan;
   }
 
   /**
    * Start the TCP servers here
    */
-  private static void initNetworkServers() {
+  private static TCPChannel initNetworkServers(Config cfg, WorkerNetworkInfo networkInfo,
+                                               int workerId) {
+    NetworkInfo netInfo = new NetworkInfo(workerId);
+    netInfo.addProperty(TCPContext.NETWORK_HOSTNAME, networkInfo.getWorkerIP());
+    netInfo.addProperty(TCPContext.NETWORK_PORT, networkInfo.getWorkerPort());
+    TCPChannel channel = new TCPChannel(cfg, netInfo);
+    channel.startListening();
+    return channel;
   }
 
   /**
@@ -223,5 +265,26 @@ public final class StandaloneWorker {
       ports.put(pName, port);
     }
     return ports;
+  }
+
+  private static void initLogger(Config cfg, int workerID) {
+    // we can not initialize the logger fully yet,
+    // but we need to set the format as the first thing
+    LoggingHelper.setLoggingFormat(LoggingHelper.DEFAULT_FORMAT);
+
+    // set logging level
+    LoggingHelper.setLogLevel(LoggingContext.loggingLevel(cfg));
+
+    String persistentJobDir = getTaskDirectory();
+    // if no persistent volume requested, return
+    if (persistentJobDir == null) {
+      return;
+    }
+    LoggingHelper.setupLogging(cfg, persistentJobDir + "/logs",
+        "worker-" + workerID);
+  }
+
+  private static String getTaskDirectory() {
+    return System.getenv("NOMAD_TASK_DIR");
   }
 }

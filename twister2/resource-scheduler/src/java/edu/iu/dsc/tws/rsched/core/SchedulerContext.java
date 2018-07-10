@@ -140,8 +140,24 @@ public class SchedulerContext extends Context {
   }
 
   public static String numOfThreads(Config cfg) {
-    String numThreads = cfg.getStringValue(THREADS_PER_WORKER, "1");
-    System.out.println("NumofThreads String : " + numThreads);
+    String numThreads = "";
+    Object threadObj = cfg.get(THREADS_PER_WORKER);
+    if (threadObj == null) {
+      numThreads = "1";
+    } else {
+      if (threadObj instanceof Integer) {
+        numThreads = String.valueOf(threadObj);
+      } else if (threadObj instanceof String) {
+        numThreads = (String) threadObj;
+      } else if (threadObj instanceof Float) {
+        numThreads = String.valueOf((int) threadObj);
+      } else if (threadObj instanceof Double) {
+        numThreads = String.valueOf((int) threadObj);
+      } else {
+        numThreads = "1";
+      }
+    }
+
     return numThreads;
   }
 

@@ -20,9 +20,11 @@ import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
+import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.executor.ExecutionPlan;
 import edu.iu.dsc.tws.executor.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
@@ -78,6 +80,7 @@ public class TaskExampleModified implements IContainer {
     private static final long serialVersionUID = -254264903510284748L;
     private TaskContext ctx;
     private Config config;
+
     @Override
     public void run() {
       ctx.write("e1", "Hello");
@@ -91,6 +94,7 @@ public class TaskExampleModified implements IContainer {
 
   private static class RecevingTaskModified extends SinkTask {
     private static final long serialVersionUID = -254264903510284798L;
+
     @Override
     public void execute(IMessage message) {
       System.out.println(message.getContent());
@@ -140,7 +144,11 @@ public class TaskExampleModified implements IContainer {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
     // build JobConfig
+    HashMap<String, byte[]> objectHashMap = new HashMap<>();
+    objectHashMap.put(SchedulerContext.THREADS_PER_WORKER, new KryoSerializer().serialize(8));
+    // build JobConfig
     JobConfig jobConfig = new JobConfig();
+    jobConfig.putAll(objectHashMap);
 
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
     jobBuilder.setName("task-example-modified");
