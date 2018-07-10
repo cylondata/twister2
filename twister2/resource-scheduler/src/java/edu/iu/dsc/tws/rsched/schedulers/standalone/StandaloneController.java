@@ -120,6 +120,11 @@ public class StandaloneController implements IController {
     String configDirectoryName = Paths.get(workingDirectory,
         job.getJobName(), SchedulerContext.clusterType(config)).toString();
 
+    String corePackageFile = SchedulerContext.temporaryPackagesPath(config) + "/"
+        + SchedulerContext.corePackageFileName(config);
+    String jobPackageFile = SchedulerContext.temporaryPackagesPath(config) + "/"
+        + SchedulerContext.jobPackageFileName(config);
+
     String nomadScriptContent = getNomadScriptContent(config, configDirectoryName);
 
     task.setName(taskName);
@@ -155,12 +160,12 @@ public class StandaloneController implements IController {
     } else {
       envVars.put(StandaloneContext.DOWNLOAD_PACKAGE_ENV, "true");
     }
-    envVars.put(StandaloneContext.CORE_PACKAGE_ENV,
-        StandaloneContext.corePackageFileName(config));
-    envVars.put(StandaloneContext.JOB_PACKAGE_FILENAME,
-        StandaloneContext.jobPackageFileName(config));
+    // we are putting the core packages as env variable
+    envVars.put(StandaloneContext.CORE_PACKAGE_ENV, corePackageFile);
+    envVars.put(StandaloneContext.JOB_PACKAGE_ENV, jobPackageFile);
 
     task.setEnv(envVars);
+    task.setResources(resourceReqs);
     return task;
   }
 
@@ -200,7 +205,7 @@ public class StandaloneController implements IController {
     mpiCommand.add(job.getJobName());
     mpiCommand.add(twister2Home);
     mpiCommand.add(twister2Home);
-    LOG.info(String.format("Command %s", mpiCommand));
+    LOG.log(Level.FINE, String.format("Command %s", mpiCommand));
 
     String[] array = new String[mpiCommand.size()];
     for (int i = 0; i < array.length; i++) {

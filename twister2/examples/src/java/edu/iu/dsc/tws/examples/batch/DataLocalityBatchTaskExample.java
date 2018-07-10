@@ -25,7 +25,12 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.data.api.HDFSConnector;
+import edu.iu.dsc.tws.executor.ExecutionPlan;
+import edu.iu.dsc.tws.executor.ExecutionPlanBuilder;
+import edu.iu.dsc.tws.executor.threading.ExecutionModel;
+import edu.iu.dsc.tws.executor.threading.ThreadExecutor;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
@@ -84,12 +89,18 @@ public class DataLocalityBatchTaskExample implements IContainer {
     GeneratorTask g = new GeneratorTask();
     ReceivingTask r = new ReceivingTask();
 
+    MergingTask m = new MergingTask();
+
     GraphBuilder builder = GraphBuilder.newBuilder();
     builder.addSource("source", g);
     builder.setParallelism("source", 4);
     builder.addSink("sink", r);
     builder.setParallelism("sink", 3);
     builder.connect("source", "sink", "partition-edge", Operations.PARTITION);
+
+    builder.addSink("merge", m);
+    builder.setParallelism("merge", 3);
+    builder.connect("source", "merge", "partition-edge", Operations.PARTITION);
 
     //Adding source task property configurations
     List<String> sourceInputDataset = new ArrayList<>();
@@ -119,14 +130,29 @@ public class DataLocalityBatchTaskExample implements IContainer {
     sinkOutputDataset.add("sinkoutput.txt");
     builder.addConfiguration("sink", "outputdataset", sinkOutputDataset);
 
+    //Adding merge property
+    List<String> mergeInputDataset = new ArrayList<>();
+    mergeInputDataset.add("dataset3.txt");
+    mergeInputDataset.add("dataset4.txt");
+
+    builder.addConfiguration("sink", "Ram", GraphConstants.taskInstanceRam(config));
+    builder.addConfiguration("sink", "Disk", GraphConstants.taskInstanceDisk(config));
+    builder.addConfiguration("sink", "Cpu", GraphConstants.taskInstanceCpu(config));
+    builder.addConfiguration("sink", "inputdataset", sinkInputDataset);
+
+    List<String> mergeOutputDataset = new ArrayList<>();
+    mergeOutputDataset.add("sinkoutput.txt");
+    builder.addConfiguration("sink", "outputdataset", mergeOutputDataset);
+
     DataFlowTaskGraph graph = builder.build();
     WorkerPlan workerPlan = createWorkerPlan(resourcePlan);
 
     List<TaskSchedulePlan> taskSchedulePlanList = new ArrayList<>();
-    TaskSchedulePlan taskSchedulePlan;
+    TaskSchedulePlan taskSchedulePlan = null;
 
     String jobType = "batch";
 
+    //if (id == 0) {
     if ("batch".equals(jobType)
         && TaskSchedulerContext.taskSchedulingMode(config).equals("datalocalityaware")) {
       DataLocalityBatchTaskScheduling dataLocalityBatchTaskScheduling = new
@@ -155,8 +181,9 @@ public class DataLocalityBatchTaskExample implements IContainer {
         }
       }
     }
+    //}
 
-    /*TWSNetwork network = new TWSNetwork(config, resourcePlan.getThisId());
+    TWSNetwork network = new TWSNetwork(config, resourcePlan.getThisId());
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);
     ExecutionPlan plan = executionPlanBuilder.schedule(config, graph, taskSchedulePlan);
     ExecutionModel executionModel = new ExecutionModel(ExecutionModel.SHARED);
@@ -166,7 +193,7 @@ public class DataLocalityBatchTaskExample implements IContainer {
     // we need to progress the channel
     while (true) {
       network.getChannel().progress();
-    }*/
+    }
   }
 
   public WorkerPlan createWorkerPlan(ResourcePlan resourcePlan) {
@@ -205,6 +232,44 @@ public class DataLocalityBatchTaskExample implements IContainer {
   }
 
   private static class ReceivingTask extends SinkTask {
+    private static final long serialVersionUID = -254264903510284798L;
+    private int count = 0;
+    private TaskContext ctx;
+    private Config config;
+    private String outputFile;
+    private String inputFile;
+    private HDFSConnector hdfsConnector = null;
+
+    @Override
+    public void execute(IMessage message) {
+
+      LOG.info("Message Partition Received : " + message.getContent()
+          + ", Count : " + count);
+      hdfsConnector.HDFSConnect(message.getContent().toString());
+      count++;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public void prepare(Config cfg, TaskContext context) {
+      this.ctx = context;
+      this.config = cfg;
+
+      Map<String, Object> configs = context.getConfigurations();
+      for (Map.Entry<String, Object> entry : configs.entrySet()) {
+        if (entry.getKey().toString().contains("outputdataset")) {
+          List<String> outputFiles = (List<String>) entry.getValue();
+          for (int i = 0; i < outputFiles.size(); i++) {
+            this.outputFile = outputFiles.get(i);
+            LOG.info("Output File(s):" + this.outputFile);
+          }
+        }
+        hdfsConnector = new HDFSConnector(config, outputFile);
+      }
+    }
+  }
+
+  private static class MergingTask extends SinkTask {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
     private TaskContext ctx;

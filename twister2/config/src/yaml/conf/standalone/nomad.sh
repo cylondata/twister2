@@ -3,13 +3,35 @@
 em="\"\""
 c=$2
 
-profile=
-debug=
-
 echo $c
 
-echo "java $debug $profile -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.util.logging.config.file=nodesmpi/logger.properties -cp $2 edu.iu.dsc.tws.rsched.schedulers.standalone.StandaloneWorker --container_class $3 --job_name $4 --twister2_home $5 --cluster_type nodesmpi --config_dir $6"
-java $debug $profile -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.util.logging.config.file=nodesmpi/logger.properties -cp $2 edu.iu.dsc.tws.rsched.schedulers.standalone.StandaloneProcess --container_class $3 --job_name $4 --twister2_home $5 --cluster_type nodesmpi --config_dir $6
+if [ $NOMAD_ALLOC_INDEX = "2" ]; then
+    profile=-agentpath:/home/supun/tools/jprofiler7/bin/linux-x64/libjprofilerti.so=port=8849,nowait
+    debug=-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5006
+fi
+
+echo $NOMAD_ALLOC_INDEX
+echo $NOMAD_ALLOC_ID
+echo $debug
+
+# download the package
+cp ${CORE_PACKAGE_ENV} .
+cp ${JOB_PACKAGE_ENV} .
+
+tar -xvf twister2-core.tar.gz
+tar -xvf twister2-job.tar.gz --strip 1
+
+profile=
+#debug=
+
+ls
+
+cp="*:twister2-core/lib/*"
+echo $cp
+#echo "java $debug $profile -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.util.logging.config.file=nodesmpi/logger.properties -cp $2 edu.iu.dsc.tws.rsched.schedulers.standalone.StandaloneWorker --container_class $3 --job_name $4 --twister2_home $5 --cluster_type nodesmpi --config_dir $6"
+java $debug $profile -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.util.logging.config.file=nodesmpi/logger.properties -cp $cp edu.iu.dsc.tws.rsched.schedulers.standalone.StandaloneWorker --container_class $3 --job_name $4 --twister2_home $5 --cluster_type nodesmpi --config_dir $6 2>&1 | tee out.txt
+
+cat out.txt
 
 EXIT_STATUS=0
 
