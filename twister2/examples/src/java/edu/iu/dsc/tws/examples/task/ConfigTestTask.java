@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.JobMapConfig;
+import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
@@ -152,16 +152,16 @@ public class ConfigTestTask implements IContainer {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
     HashMap<String, byte[]> objectHashMap = new HashMap<>();
-    objectHashMap.put(SchedulerContext.THREADS_PER_WORKER, new KryoSerializer().serialize(4));
+    objectHashMap.put(SchedulerContext.THREADS_PER_WORKER, new KryoSerializer().serialize(8));
     // build JobConfig
-    JobMapConfig jobMapConfig = new JobMapConfig();
-    jobMapConfig.putAll(objectHashMap);
+    JobConfig jobConfig = new JobConfig();
+    jobConfig.putAll(objectHashMap);
 
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
     jobBuilder.setName("config-test-task");
     jobBuilder.setContainerClass(ConfigTestTask.class.getName());
     jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 4);
-//    jobBuilder.setMapConfig(jobMapConfig);
+    jobBuilder.setConfig(jobConfig);
 
     // now submit the job
     LOG.info("Twister2Submitter In Action ... ");
