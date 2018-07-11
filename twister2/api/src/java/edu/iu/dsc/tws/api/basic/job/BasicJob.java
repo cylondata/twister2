@@ -11,13 +11,17 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.basic.job;
 
+import java.util.AbstractMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import com.google.protobuf.ByteString;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.JobMapConfig;
+import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.proto.system.ResourceAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
@@ -46,7 +50,19 @@ public final class BasicJob {
 
     JobAPI.Config.Builder configBuilder = JobAPI.Config.newBuilder();
 
-    for (Map.Entry<String, byte[]> e : config.entrySet()) {
+    Set<Map.Entry<String, Object>> configEntry = config.entrySet();
+    Set<Map.Entry<String, byte[]>> configByteEntry = new HashSet<>();
+    KryoSerializer kryoSerializer = new KryoSerializer();
+    for (Map.Entry<String, Object> e : configEntry) {
+      String key = e.getKey();
+      Object object = e.getValue();
+      byte[] objectByte = kryoSerializer.serialize(object);
+      Map.Entry<String, byte[]> entry =
+          new AbstractMap.SimpleEntry<String, byte[]>(key, objectByte);
+      configByteEntry.add(entry);
+    }
+
+    for (Map.Entry<String, byte[]> e : configByteEntry) {
       String key = e.getKey();
       byte[] bytes = e.getValue();
       ByteString byteString = ByteString.copyFrom(bytes);
