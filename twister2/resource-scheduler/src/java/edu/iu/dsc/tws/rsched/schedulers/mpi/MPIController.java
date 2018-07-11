@@ -85,7 +85,7 @@ public class MPIController implements IController {
   }
 
   @Override
-  public boolean kill() {
+  public boolean kill(JobAPI.Job job) {
     String[] killCommand = command.killCommand();
 
     StringBuilder stderr = new StringBuilder();

@@ -37,3 +37,6 @@ twister2.job.master.runs.in.client: false
 # if true, job master assigns the worker IDs,
 # if false, workers have their IDs when regitering with the job master
 twister2.job.master.assigns.worker.ids: false
+
+# the job master ip to be used, this is used only in client based masters
+twister2.job.master.ip: "127.0.0.1"
