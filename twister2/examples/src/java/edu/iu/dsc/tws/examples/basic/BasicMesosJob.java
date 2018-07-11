@@ -45,11 +45,11 @@ public final class BasicMesosJob {
     System.out.println("job name is " + jobName);
     ResourceContainer resourceContainer = new ResourceContainer(cpus, ramMegaBytes, diskMegaBytes);
     // build JobConfig
-    HashMap<String, byte[]> objectHashMap = new HashMap<>();
-    objectHashMap.put(SchedulerContext.THREADS_PER_WORKER, new KryoSerializer().serialize(8));
-    // build JobConfig
+    HashMap<String, Object> configurations = new HashMap<>();
+    configurations.put(SchedulerContext.THREADS_PER_WORKER, 8);
+
     JobConfig jobConfig = new JobConfig();
-    jobConfig.putAll(objectHashMap);
+    jobConfig.putAll(configurations);
 
     String containerClass = SchedulerContext.containerClass(config);
     System.out.println("Container class: " + containerClass);

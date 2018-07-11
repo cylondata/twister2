@@ -215,11 +215,12 @@ public class BaseAllReduceCommunication implements IContainer {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
     // build JobConfig
-    HashMap<String, byte[]> objectHashMap = new HashMap<>();
-    objectHashMap.put(SchedulerContext.THREADS_PER_WORKER, new KryoSerializer().serialize(1));
+    HashMap<String, Object> configurations = new HashMap<>();
+    configurations.put(SchedulerContext.THREADS_PER_WORKER, 8);
+
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
-    jobConfig.putAll(objectHashMap);
+    jobConfig.putAll(configurations);
 
     // build the job
     BasicJob basicJob = BasicJob.newBuilder()
