@@ -136,6 +136,7 @@ public class JobMaster extends Thread {
 
   @Override
   public void run() {
+
     LOG.info("JobMaster [" + masterAddress + "] started and waiting worker messages on port: "
         + masterPort);
 
@@ -221,4 +222,5 @@ public class JobMaster extends Thread {
         .put(JobMasterContext.JOB_MASTER_ASSIGNS_WORKER_IDS, "true")
         .build();
   }
+
 }
