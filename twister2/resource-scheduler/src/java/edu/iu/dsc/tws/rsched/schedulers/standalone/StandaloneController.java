@@ -71,6 +71,8 @@ public class StandaloneController implements IController {
       LOG.log(Level.INFO, "Submitted job to nomad: " + response);
     } catch (IOException | NomadException e) {
       LOG.log(Level.SEVERE, "Failed to submit the job: ", e);
+    } finally {
+      closeClient(nomadApiClient);
     }
     return false;
   }
@@ -80,8 +82,33 @@ public class StandaloneController implements IController {
   }
 
   @Override
-  public boolean kill() {
-    return false;
+  public boolean kill(JobAPI.Job job) {
+    String jobName = job.getJobName();
+
+    String uri = StandaloneContext.nomadSchedulerUri(config);
+    LOG.log(Level.INFO, "Killing Job " + jobName);
+    NomadApiClient nomadApiClient = new NomadApiClient(
+        new NomadApiConfiguration.Builder().setAddress(uri).build());
+    try {
+      nomadApiClient.getJobsApi().deregister("");
+    } catch (RuntimeException | IOException | NomadException e) {
+      LOG.log(Level.SEVERE, "Failed to terminate job " + jobName
+          + " with error: " + e.getMessage(), e);
+      return false;
+    } finally {
+      closeClient(nomadApiClient);
+    }
+    return true;
+  }
+
+  private void closeClient(NomadApiClient nomadApiClient) {
+    try {
+      if (nomadApiClient != null) {
+        nomadApiClient.close();
+      }
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, String.format("Error closing client: %s", e.getMessage()), e);
+    }
   }
 
   private Job getJob(JobAPI.Job job, RequestedResources resources) {

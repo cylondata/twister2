@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.rsched.schedulers.standalone;
 
 import java.io.File;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -38,6 +38,7 @@ import edu.iu.dsc.tws.common.net.NetworkInfo;
 import edu.iu.dsc.tws.common.net.tcp.TCPChannel;
 import edu.iu.dsc.tws.common.net.tcp.TCPContext;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
+import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.client.JobMasterClient;
 import edu.iu.dsc.tws.master.client.WorkerController;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
@@ -198,8 +199,14 @@ public final class StandaloneWorker {
     ResourcePlan resourcePlan = new ResourcePlan("", index);
 
     Map<String, Integer> ports = getPorts(config);
-    JobMasterClient client = createMasterClient(config, index,
-        new InetSocketAddress(0).getAddress(), ports);
+    JobMasterClient client = null;
+    String jobMasterIP = JobMasterContext.jobMasterIP(config);
+    try {
+      client = createMasterClient(config, index,
+          InetAddress.getByAddress(jobMasterIP.getBytes()), ports);
+    } catch (UnknownHostException e) {
+      throw new RuntimeException("Failed to get network address: " + jobMasterIP);
+    }
     WorkerController workerController = client.getWorkerController();
     workerController.waitForAllWorkersToJoin(30000);
 
