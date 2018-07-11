@@ -89,11 +89,7 @@ public class StandaloneLauncher implements ILauncher {
         if (jobMaster != null) {
           jobMaster.join();
         }
-        while (true) {
-          Thread.sleep(100);
-        }
-      } catch (InterruptedException e) {
-        e.printStackTrace();
+      } catch (InterruptedException ignore) {
       }
     }
     return start;

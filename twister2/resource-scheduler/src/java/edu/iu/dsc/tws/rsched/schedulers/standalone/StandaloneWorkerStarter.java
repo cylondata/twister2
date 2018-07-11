@@ -48,10 +48,10 @@ import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
-public final class StandaloneWorker {
-  private static final Logger LOG = Logger.getLogger(StandaloneWorker.class.getName());
+public final class StandaloneWorkerStarter {
+  private static final Logger LOG = Logger.getLogger(StandaloneWorkerStarter.class.getName());
 
-  private StandaloneWorker() {
+  private StandaloneWorkerStarter() {
   }
 
   public static void main(String[] args) {
@@ -186,6 +186,11 @@ public final class StandaloneWorker {
     container.init(config, rank, resourcePlan);
   }
 
+  /**
+   * Create the resource plan
+   * @param config config
+   * @return
+   */
   private static ResourcePlan createResourcePlan(Config config) {
     // first get the worker id
     String indexEnv = System.getenv("NOMAD_ALLOC_INDEX");
@@ -202,9 +207,13 @@ public final class StandaloneWorker {
     JobMasterClient client = null;
     String jobMasterIP = JobMasterContext.jobMasterIP(config);
     int masterPort = JobMasterContext.jobMasterPort(config);
+    TCPChannel channel;
     try {
+      channel = initNetworkServer(config,
+          new WorkerNetworkInfo(InetAddress.getByName("0.0.0.0"), ports.get("worker"), index),
+          index);
       client = createMasterClient(config, index,
-          InetAddress.getByName(jobMasterIP), ports);
+          InetAddress.getByName(jobMasterIP), masterPort);
     } catch (UnknownHostException e) {
       throw new RuntimeException("Failed to get network address: " + jobMasterIP, e);
     }
@@ -212,7 +221,7 @@ public final class StandaloneWorker {
     workerController.waitForAllWorkersToJoin(30000);
 
     // now start listening
-    TCPChannel channel = initNetworkServers(config, null, index);
+
     List<WorkerNetworkInfo> wInfo = workerController.getWorkerList();
     List<NetworkInfo> nInfos = new ArrayList<>();
     for (WorkerNetworkInfo w : wInfo) {
@@ -230,9 +239,12 @@ public final class StandaloneWorker {
 
   /**
    * Start the TCP servers here
+   * @param cfg the configuration
+   * @param networkInfo network info
+   * @param workerId worker id
    */
-  private static TCPChannel initNetworkServers(Config cfg, WorkerNetworkInfo networkInfo,
-                                               int workerId) {
+  private static TCPChannel initNetworkServer(Config cfg, WorkerNetworkInfo networkInfo,
+                                              int workerId) {
     NetworkInfo netInfo = new NetworkInfo(workerId);
     netInfo.addProperty(TCPContext.NETWORK_HOSTNAME, networkInfo.getWorkerIP());
     netInfo.addProperty(TCPContext.NETWORK_PORT, networkInfo.getWorkerPort());
@@ -245,11 +257,7 @@ public final class StandaloneWorker {
    * Create the job master client to get information about the workers
    */
   private static JobMasterClient createMasterClient(Config cfg, int workerId, InetAddress addr,
-                                             Map<String, Integer> ports) {
-    if (!ports.containsKey("worker")) {
-      throw new RuntimeException("Worker port must be allocated by the scheduler");
-    }
-    int port = ports.get("worker");
+                                             int port) {
     // we start the job master client
     JobMasterClient jobMasterClient = new JobMasterClient(cfg,
         new WorkerNetworkInfo(addr, port, workerId));
@@ -275,6 +283,11 @@ public final class StandaloneWorker {
     return ports;
   }
 
+  /**
+   * Initialize the loggers to log into the task local directory
+   * @param cfg the configuration
+   * @param workerID worker id
+   */
   private static void initLogger(Config cfg, int workerID) {
     // we can not initialize the logger fully yet,
     // but we need to set the format as the first thing
