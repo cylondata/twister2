@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.threading;
 
+import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.executor.ExecutionPlan;
 
 public class ThreadExecutor implements IThreadExecutor {
@@ -18,6 +19,8 @@ public class ThreadExecutor implements IThreadExecutor {
   private ExecutionModel executionModel;
 
   private ExecutionPlan executionPlan;
+
+  private TWSNetwork network;
 
   public ThreadExecutor() {
 
@@ -28,12 +31,32 @@ public class ThreadExecutor implements IThreadExecutor {
     this.executionPlan = executionPlan;
   }
 
+  public ThreadExecutor(ExecutionModel executionModel, ExecutionPlan executionPlan,
+                        TWSNetwork network) {
+    this.executionModel = executionModel;
+    this.executionPlan = executionPlan;
+    this.network = network;
+  }
+
+  /***
+   * Communication Channel must be progressed after the task execution model
+   * is initialized. It must be progressed only after execution is instantiated.
+   * */
   @Override
   public void execute() {
     // lets start the execution
     ThreadExecutorFactory threadExecutorFactory = new ThreadExecutorFactory(executionModel,
         this, executionPlan);
     threadExecutorFactory.execute();
+  }
+
+  /**
+   * Progresses the communication Channel
+   */
+  public void progressComms() {
+    while (true) {
+      this.network.getChannel().progress();
+    }
   }
 
 }
