@@ -110,52 +110,16 @@ public final class JobUtils {
   /**
    * [Deprecated Function]
    * **/
-  public static Config overrideConfigs(JobAPI.Job job, Config config) {
+ /* public static Config overrideConfigs(JobAPI.Job job, Config config) {
     Config.Builder builder = Config.newBuilder().putAll(config);
     JobAPI.Config conf = job.getConfig();
     for (JobAPI.Config.KeyValue kv : conf.getKvsList()) {
       builder.put(kv.getKey(), kv.getValue());
     }
     return builder.build();
-  }
+  }*/
 
-
-  /**
-   * [Deprecated Function]
-   * **/
-  public static Config overrideMapConfigs(JobAPI.Job job, Config config) {
-    Config.Builder builder = Config.newBuilder().putAll(config);
-    JobAPI.ObjectMap objectMap = job.getObjectMap();
-    System.out.println("Override Map COnfigs");
-    for (Map.Entry<String, JobAPI.Object> e : objectMap.getConifgMapMap().entrySet()) {
-
-      if (e.getValue() instanceof JobAPI.Object) {
-        JobAPI.Object obj = e.getValue();
-        if (obj.getIntObject() != 0) {
-          System.out.println("Int Object Instance");
-          builder.put(e.getKey(), obj.getIntObject());
-          System.out.println("Key : " + e.getKey() + ", Value : " + obj.getIntObject());
-        } else if (obj.getStringObject() != null) {
-          builder.put(e.getKey(), obj.getStringObject());
-          System.out.println("Key : " + e.getKey() + ", Value : " + obj.getStringObject());
-        } else if (obj.getFloatObject() != 0.0) {
-          builder.put(e.getKey(), obj.getFloatObject());
-          System.out.println("Key : " + e.getKey() + ", Value : " + obj.getStringObject());
-        } else if (obj.getDoubleObject() != 0.0) {
-          builder.put(e.getKey(), obj.getDoubleObject());
-          System.out.println("Key : " + e.getKey() + ", Value : " + obj.getStringObject());
-        } else {
-          builder.put(e.getKey(), "1");
-          System.out.println("Key : " + e.getKey() + ", Value : 1");
-        }
-      }
-
-
-    }
-    return builder.build();
-  }
-
-  public static Config overrideConfigMap(JobAPI.Job job, Config config) {
+  public static Config overrideConfigs(JobAPI.Job job, Config config) {
     Config.Builder builder = Config.newBuilder().putAll(config);
     JobAPI.Config conf = job.getConfig();
     Map<String, ByteString> configMapSerialized = conf.getConfigByteMapMap();
