@@ -56,11 +56,11 @@ public final class MemoryManagerGatherJob {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
     // build JobConfig
-    HashMap<String, byte[]> objectHashMap = new HashMap<>();
-    objectHashMap.put(SchedulerContext.THREADS_PER_WORKER, new KryoSerializer().serialize(1));
-    // build JobConfig
+    HashMap<String, Object> configurations = new HashMap<>();
+    configurations.put(SchedulerContext.THREADS_PER_WORKER, 8);
+
     JobConfig jobConfig = new JobConfig();
-    jobConfig.putAll(objectHashMap);
+    jobConfig.putAll(configurations);
 
     // build the job
     BasicJob basicJob = BasicJob.newBuilder()

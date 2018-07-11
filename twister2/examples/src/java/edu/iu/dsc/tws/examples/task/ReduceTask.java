@@ -151,13 +151,12 @@ public class ReduceTask implements IContainer {
     // first load the configurations from command line and config files
     System.out.println("==================Reduce Task Example========================");
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
-
-    ConfigUtil configUtil = new ConfigUtil();
-    configUtil.setThreads(8);
+    HashMap<String, Object> configurations = new HashMap<>();
+    configurations.put(SchedulerContext.THREADS_PER_WORKER, 8);
 
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
-    jobConfig.putAll(configUtil.getConfigs());
+    jobConfig.putAll(configurations);
 
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
     jobBuilder.setName("reduce-task");
