@@ -359,10 +359,6 @@ public final class RequestObjectBuilder {
         .name(KubernetesField.USER_JOB_JAR_FILE + "")
         .value(SchedulerContext.userJobJarFile(config)));
 
-    envVars.add(new V1EnvVar()
-        .name(SchedulerContext.JOB_DESCRIPTION_FILE)
-        .value(SchedulerContext.jobDescriptionFile(config)));
-
     // POD_IP with downward API
     V1ObjectFieldSelector fieldSelector = new V1ObjectFieldSelector();
     fieldSelector.setFieldPath("status.podIP");
@@ -440,6 +436,22 @@ public final class RequestObjectBuilder {
     envVars.add(new V1EnvVar()
         .name(KubernetesContext.KUBERNETES_NAMESPACE)
         .value(KubernetesContext.namespace(config)));
+
+    envVars.add(new V1EnvVar()
+        .name(KubernetesField.CLASS_TO_RUN + "")
+        .value("edu.iu.dsc.tws.rsched.schedulers.k8s.mpi.MPIMasterStarter"));
+
+    envVars.add(new V1EnvVar()
+        .name(KubernetesField.POD_MEMORY_VOLUME + "")
+        .value(KubernetesConstants.POD_MEMORY_VOLUME));
+
+    envVars.add(new V1EnvVar()
+        .name(KubernetesField.DIR_PREFIX_FOR_JOB_ARCHIVE + "")
+        .value(Context.DIR_PREFIX_FOR_JOB_ARCHIVE));
+
+    envVars.add(new V1EnvVar()
+        .name(KubernetesField.JOB_PACKAGE_FILENAME + "")
+        .value(SchedulerContext.jobPackageFileName(config)));
 
     return envVars;
   }

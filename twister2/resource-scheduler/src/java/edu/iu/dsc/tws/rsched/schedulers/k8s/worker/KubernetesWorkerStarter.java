@@ -143,7 +143,9 @@ public final class KubernetesWorkerStarter {
     } else {
       jobPackageFullFileName = POD_MEMORY_VOLUME + "/" + jobPackageFileName;
     }
-    String jobDescFileName = SchedulerContext.jobDescriptionFile(envConfigs);
+
+    String jobName = podName.substring(0, podName.lastIndexOf("-"));
+    String jobDescFileName = SchedulerContext.createJobDescriptionFileName(jobName);
     userJobJarFile = POD_MEMORY_VOLUME + "/" + DIR_PREFIX_FOR_JOB_ARCHIVE + userJobJarFile;
     jobDescFileName = POD_MEMORY_VOLUME + "/" + DIR_PREFIX_FOR_JOB_ARCHIVE + jobDescFileName;
     String configDir = POD_MEMORY_VOLUME + "/" + DIR_PREFIX_FOR_JOB_ARCHIVE
@@ -200,8 +202,6 @@ public final class KubernetesWorkerStarter {
             System.getenv(KubernetesContext.KUBERNETES_NAMESPACE))
         .put(SchedulerContext.JOB_PACKAGE_FILENAME,
             System.getenv(SchedulerContext.JOB_PACKAGE_FILENAME))
-        .put(SchedulerContext.JOB_DESCRIPTION_FILE,
-            System.getenv(SchedulerContext.JOB_DESCRIPTION_FILE))
         .put(KubernetesContext.WORKERS_PER_POD, System.getenv(KubernetesContext.WORKERS_PER_POD))
         .put(KubernetesContext.PERSISTENT_JOB_DIRECTORY,
             System.getenv(KubernetesContext.PERSISTENT_JOB_DIRECTORY))
@@ -239,8 +239,6 @@ public final class KubernetesWorkerStarter {
       String jobName = podName.substring(0, podName.lastIndexOf("-"));
       String jobMasterPodName = KubernetesUtils.createJobMasterPodName(jobName);
 
-//      DiscoverJobMaster djm = new DiscoverJobMaster();
-//      jobMasterIP = djm.waitUntilJobMasterRunning(jobMasterPodName, 10000);
       String namespace = KubernetesContext.namespace(cnfg);
       jobMasterIP = PodWatchUtils.getJobMasterIP(jobMasterPodName, jobName, namespace, 100);
       if (jobMasterIP == null) {
@@ -280,7 +278,7 @@ public final class KubernetesWorkerStarter {
       }
 
       LoggingHelper.setupLogging(cnfg, pv.getLogDirPath(),
-          K8sPersistentVolume.LOG_FILE_NAME_PREFIX + workerID);
+          K8sPersistentVolume.WORKER_LOG_FILE_NAME_PREFIX + workerID);
 
       LOG.info("Persistent logging to file initialized.");
     }
@@ -546,7 +544,6 @@ public final class KubernetesWorkerStarter {
       return false;
     }
   }
-
 
   /**
    * Wait for the job package file to be transferred to this pod

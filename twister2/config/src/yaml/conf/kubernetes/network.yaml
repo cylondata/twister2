@@ -6,7 +6,7 @@ twister2.network.channel.class: "edu.iu.dsc.tws.comms.dfw.DataFlowCommunication"
 #############################################################################
 # By default, OpenMPI is not enabled
 # To use OpenMPI, set this to true
-kubernetes.workers.use.openmpi: false
+kubernetes.workers.use.openmpi: true
 
 #############################################################################
 # Worker port settings
