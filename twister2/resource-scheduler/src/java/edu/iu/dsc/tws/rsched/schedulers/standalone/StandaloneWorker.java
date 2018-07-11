@@ -201,11 +201,12 @@ public final class StandaloneWorker {
     Map<String, Integer> ports = getPorts(config);
     JobMasterClient client = null;
     String jobMasterIP = JobMasterContext.jobMasterIP(config);
+    int masterPort = JobMasterContext.jobMasterPort(config);
     try {
       client = createMasterClient(config, index,
-          InetAddress.getByAddress(jobMasterIP.getBytes()), ports);
+          InetAddress.getByName(jobMasterIP), ports);
     } catch (UnknownHostException e) {
-      throw new RuntimeException("Failed to get network address: " + jobMasterIP);
+      throw new RuntimeException("Failed to get network address: " + jobMasterIP, e);
     }
     WorkerController workerController = client.getWorkerController();
     workerController.waitForAllWorkersToJoin(30000);

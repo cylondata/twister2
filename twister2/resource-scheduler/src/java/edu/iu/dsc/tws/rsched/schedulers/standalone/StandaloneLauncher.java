@@ -69,8 +69,8 @@ public class StandaloneLauncher implements ILauncher {
     controller.initialize(newConfig);
 
     // start the Job Master locally
+    JobMaster jobMaster = null;
     if (JobMasterContext.jobMasterRunsInClient(config)) {
-      JobMaster jobMaster = null;
       try {
         jobMaster =
             new JobMaster(config, InetAddress.getLocalHost().getHostAddress(),
@@ -78,10 +78,25 @@ public class StandaloneLauncher implements ILauncher {
         jobMaster.init();
       } catch (UnknownHostException e) {
         LOG.log(Level.SEVERE, "Exception when getting local host address: ", e);
+        throw new RuntimeException(e);
       }
     }
 
-    return controller.start(resourcePlan, job);
+    boolean start = controller.start(resourcePlan, job);
+    // now lets wait on client
+    if (JobMasterContext.jobMasterRunsInClient(config)) {
+      try {
+        if (jobMaster != null) {
+          jobMaster.join();
+        }
+        while (true) {
+          Thread.sleep(100);
+        }
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+    }
+    return start;
   }
 
   /**
