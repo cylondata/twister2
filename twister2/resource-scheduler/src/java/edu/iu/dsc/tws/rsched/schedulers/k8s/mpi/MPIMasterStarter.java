@@ -15,17 +15,24 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
-import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesField;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.PodWatchUtils;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerUtils;
 import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
+import static edu.iu.dsc.tws.common.config.Context.DIR_PREFIX_FOR_JOB_ARCHIVE;
+import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.KUBERNETES_CLUSTER_TYPE;
+import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.POD_MEMORY_VOLUME;
 
 /**
  * This class is started in the first pod in a StatefulSet
@@ -38,28 +45,49 @@ public final class MPIMasterStarter {
   private static final Logger LOG = Logger.getLogger(MPIMasterStarter.class.getName());
 
   private static final String HOSTFILE_NAME = "hostfile";
+  private static Config config = null;
 
   private MPIMasterStarter() { }
 
   public static void main(String[] args) {
+    // we can not initialize the logger fully yet,
+    // but we need to set the format as the first thing
+    LoggingHelper.setLoggingFormat(LoggingHelper.DEFAULT_FORMAT);
 
-    String workerInstancesStr = System.getenv(Context.TWISTER2_WORKER_INSTANCES);
-//    String workerInstancesStr = System.getenv("TWISTER2_WORKER_INSTANCES");
-    LOG.info("workerInstancesStr: " + workerInstancesStr);
-    int numberOfWorkers = Integer.parseInt(workerInstancesStr);
+    String configDir = POD_MEMORY_VOLUME + "/" + DIR_PREFIX_FOR_JOB_ARCHIVE
+        + KUBERNETES_CLUSTER_TYPE;
 
-    String workersPerPodStr = System.getenv(KubernetesContext.WORKERS_PER_POD);
-//    String workersPerPodStr = System.getenv("WORKERS_PER_POD");
-    LOG.info("workersPerPodStr: " + workersPerPodStr);
-    int workersPerPod = Integer.parseInt(workersPerPodStr);
+    config = K8sWorkerUtils.loadConfig(configDir);
 
-    String namespace = System.getenv(KubernetesContext.KUBERNETES_NAMESPACE);
-//    String namespace = System.getenv("KUBERNETES_NAMESPACE");
-    String podIP = System.getenv(KubernetesField.POD_IP + "");
+    K8sWorkerUtils.initLogger(config, "mpiMaster");
 
+    int numberOfWorkers = Context.workerInstances(config);
+    int workersPerPod = KubernetesContext.workersPerPod(config);
+    String namespace = KubernetesContext.namespace(config);
     int numberOfPods = numberOfWorkers / workersPerPod;
-    String podName = System.getenv("HOSTNAME");
+
+    InetAddress localHost = null;
+    try {
+      localHost = InetAddress.getLocalHost();
+
+    } catch (UnknownHostException e) {
+      LOG.log(Level.SEVERE, "Cannot get localHost.", e);
+      throw new RuntimeException("Cannot get localHost.", e);
+    }
+
+    String podName = localHost.getHostName();
+    String podIP = localHost.getHostAddress();
     String jobName = podName.substring(0, podName.lastIndexOf("-"));
+
+    LOG.info("MPIMaster information summary: \n"
+        + "podName: " + podName + "\n"
+        + "podIP: " + podIP + "\n"
+        + "jobName: " + jobName + "\n"
+        + "namespace: " + namespace + "\n"
+        + "numberOfWorkers: " + numberOfWorkers + "\n"
+        + "workersPerPod: " + workersPerPod + "\n"
+        + "numberOfPods: " + numberOfPods
+    );
 
     ArrayList<String> podNames = createPodNames(jobName, numberOfPods);
 
@@ -79,7 +107,16 @@ public final class MPIMasterStarter {
 
     createHostFile(podIP, podNamesIPs);
 
-    String[] mpirunCommand = mpirunCommand("Ring", workersPerPod);
+    // get job master IP address
+    String jobMasterPodName = KubernetesUtils.createJobMasterPodName(jobName);
+    start = System.currentTimeMillis();
+    String jobMasterIP = PodWatchUtils.getJobMasterIP(jobMasterPodName, jobName, namespace, 100);
+    duration = System.currentTimeMillis() - start;
+    LOG.info("Job Master IP address: " + jobMasterIP);
+    LOG.info("The time to get the Job Master IP address: " + duration + "ms");
+
+    String classToRun = "edu.iu.dsc.tws.rsched.schedulers.k8s.mpi.MPIWorkerStarter";
+    String[] mpirunCommand = mpirunCommand(classToRun, workersPerPod, jobMasterIP);
 
     // some times, sshd may have not been started on one of the pods
     // even though we received pod Running event
@@ -156,7 +193,10 @@ public final class MPIMasterStarter {
     return podNames;
   }
 
-  public static String[] mpirunCommand(String className, int workersPerPod) {
+  public static String[] mpirunCommand(String className, int workersPerPod, String jobMasterIP) {
+
+    String commandLineArgument = createJobMasterIPCommandLineArgument(jobMasterIP);
+
     return new String[]
         {"mpirun",
             "--hostfile",
@@ -165,7 +205,9 @@ public final class MPIMasterStarter {
             "-npernode",
             workersPerPod + "",
             "java",
-            className};
+            className,
+            commandLineArgument
+        };
   }
 
   /**
@@ -174,13 +216,15 @@ public final class MPIMasterStarter {
   public static boolean runProcess(String[] command) {
     StringBuilder stderr = new StringBuilder();
     boolean isVerbose = true;
+    LOG.info("mpirun will be executed with the command: \n" + commandAsAString(command));
+
     int status = ProcessUtils.runSyncProcess(false, command, stderr, new File("."), isVerbose);
 
     if (status != 0) {
       LOG.severe(String.format(
           "Failed to execute mpirun. Command=%s, STDERR=%s", commandAsAString(command), stderr));
     } else {
-      LOG.info("mpirun is executed with the command: " + commandAsAString(command));
+      LOG.info("mpirun execution completed with success...");
       if (stderr.length() != 0) {
         LOG.info("The error output:\n " + stderr.toString());
       }
@@ -195,6 +239,18 @@ public final class MPIMasterStarter {
     }
 
     return command;
+  }
+
+  public static String createJobMasterIPCommandLineArgument(String value) {
+    return "jobMasterIP=" + value;
+  }
+
+  public static String getJobMasterIPCommandLineArgumentValue(String commandLineArgument) {
+    if (commandLineArgument == null || !commandLineArgument.startsWith("jobMasterIP=")) {
+      return null;
+    }
+
+    return commandLineArgument.substring(commandLineArgument.indexOf('=') + 1);
   }
 
 }

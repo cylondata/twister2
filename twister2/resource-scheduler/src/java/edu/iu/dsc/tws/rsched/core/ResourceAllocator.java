@@ -235,7 +235,7 @@ public class ResourceAllocator {
     updatedJob = JobAPI.Job.newBuilder(job).setJobFormat(format).build();
 
     // add job description file to the archive
-    String jobDescFileName = job.getJobName() + ".job";
+    String jobDescFileName = SchedulerContext.createJobDescriptionFileName(job.getJobName());
     boolean added = packer.addFileToArchive(jobDescFileName, updatedJob.toByteArray());
     if (!added) {
       throw new RuntimeException("Failed to add the job description file to the archive: "
@@ -263,7 +263,6 @@ public class ResourceAllocator {
     updatedConfig = Config.newBuilder()
         .putAll(config)
         .put(SchedulerContext.USER_JOB_JAR_FILE, jobJarFileName)
-        .put(SchedulerContext.JOB_DESCRIPTION_FILE, jobDescFileName)
         .put(SchedulerContext.TEMPORARY_PACKAGES_PATH, tempDirPathString)
         .build();
 

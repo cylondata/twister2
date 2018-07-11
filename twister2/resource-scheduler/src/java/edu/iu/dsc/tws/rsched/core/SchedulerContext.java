@@ -43,7 +43,6 @@ public class SchedulerContext extends Context {
   public static final String CLUSTER_TYPE = "cluster_type";
   public static final String USER_JOB_JAR_FILE = "job_file";
   public static final String JOB_DESCRIPTION_FILE_CMD_VAR = "job_desc_file";
-  public static final String JOB_DESCRIPTION_FILE = "twister2.job.description.file";
 
   public static final String WORKING_DIRECTORY = "twister2.working_directory";
 
@@ -84,10 +83,6 @@ public class SchedulerContext extends Context {
 
   public static String containerClass(Config cfg) {
     return cfg.getStringValue(CONTAINER_CLASS);
-  }
-
-  public static String jobDescriptionFile(Config cfg) {
-    return cfg.getStringValue(JOB_DESCRIPTION_FILE);
   }
 
   public static String packagesPath(Config cfg) {
@@ -174,6 +169,10 @@ public class SchedulerContext extends Context {
    */
   public static boolean volatileDiskRequested(Config cfg) {
     return workerVolatileDisk(cfg) > 0;
+  }
+
+  public static String createJobDescriptionFileName(String jobName) {
+    return jobName + ".job";
   }
 
 }
