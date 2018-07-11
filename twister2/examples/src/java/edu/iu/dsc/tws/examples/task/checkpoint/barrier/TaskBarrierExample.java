@@ -21,11 +21,8 @@ import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.checkpointmanager.barrier.CheckpointBarrier;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
-//import edu.iu.dsc.tws.examples.task.checkpoint.TaskCheckpointExample;
 import edu.iu.dsc.tws.executor.ExecutionPlan;
 import edu.iu.dsc.tws.executor.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.ExecutionModel;
@@ -109,9 +106,7 @@ public class TaskBarrierExample implements IContainer {
     public void run() {
 
       CheckpointBarrier cb = new CheckpointBarrier(id, 2141535, null);
-      KeyedContent keyedContent = new KeyedContent("barrier", cb,
-          MessageType.STRING, MessageType.OBJECT);
-      ctx.write("partition-edge", keyedContent);
+      ctx.write("partition-edge", cb);
       id++;
       try {
         Thread.sleep(1000);

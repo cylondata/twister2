@@ -145,7 +145,7 @@ public class SingleMessageSerializer implements MessageSerializer {
     MessageType type = sendMessage.getMPIMessage().getType();
     if (type == MessageType.OBJECT || type == MessageType.INTEGER || type == MessageType.LONG
         || type == MessageType.DOUBLE || type == MessageType.BYTE || type == MessageType.STRING
-        || type == MessageType.MULTI_FIXED_BYTE || type == MessageType.BARRIER) {
+        || type == MessageType.MULTI_FIXED_BYTE) {
       if (!keyed) {
         return serializeData(payload, sendMessage.getSerializationState(), buffer, type);
       } else {

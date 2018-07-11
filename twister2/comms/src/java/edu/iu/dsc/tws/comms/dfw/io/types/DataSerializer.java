@@ -59,11 +59,6 @@ public final class DataSerializer {
           state.setData(getBytes(content));
         }
         return state.getData().length;
-      case BARRIER:
-        if (state.getData() == null) {
-          state.setData(getBytes(content));
-        }
-        return state.getData().length;
       default:
         break;
     }
@@ -142,11 +137,6 @@ public final class DataSerializer {
           state.setData(serialize);
         }
         return state.getData();
-      case BARRIER:
-        if (state.getData() == null) {
-          state.setData((byte[]) content);
-        }
-        return state.getData();
       default:
         return null;
     }
@@ -159,8 +149,6 @@ public final class DataSerializer {
     switch (messageType) {
       case MULTI_FIXED_BYTE:
         return (List<byte[]>) object;
-      case BARRIER:
-        return  (List<byte[]>) object;
       default:
         return null;
     }
@@ -224,11 +212,6 @@ public final class DataSerializer {
         }
         return copyDataBytes(targetBuffer, state);
       case MULTI_FIXED_BYTE:
-        if (state.getData() == null) {
-          state.setData(getBytes(data));
-        }
-        return copyDataBytes(targetBuffer, state);
-      case BARRIER:
         if (state.getData() == null) {
           state.setData(getBytes(data));
         }

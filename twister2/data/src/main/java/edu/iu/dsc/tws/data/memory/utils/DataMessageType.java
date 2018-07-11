@@ -36,6 +36,5 @@ public enum DataMessageType {
   OBJECT,
   BUFFER,
   EMPTY,
-  BARRIER,
   SHORT;
 }
