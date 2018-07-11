@@ -73,7 +73,7 @@ public final class MesosJobMasterStarter {
 
 
 
-    if (JobMasterContext.jobMasterRunsInClient(config)) {
+    if (!JobMasterContext.jobMasterRunsInClient(config)) {
       JobMaster jobMaster = null;
       try {
         jobMaster =
