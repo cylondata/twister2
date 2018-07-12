@@ -21,6 +21,7 @@ import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.executor.ExecutionPlan;
 import edu.iu.dsc.tws.executor.ExecutionPlanBuilder;
@@ -72,9 +73,8 @@ public class ReduceTask implements IContainer {
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);
     ExecutionPlan plan = executionPlanBuilder.schedule(config, graph, taskSchedulePlan);
     ExecutionModel executionModel = new ExecutionModel(ExecutionModel.SHARED);
-    ThreadExecutor executor = new ThreadExecutor(executionModel, plan);
+    ThreadExecutor executor = new ThreadExecutor(executionModel, plan, network.getChannel());
     executor.execute();
-    progressComms(network);
   }
 
   private static class GeneratorTask extends SourceTask {
@@ -137,12 +137,6 @@ public class ReduceTask implements IContainer {
     }
 
     return new WorkerPlan(workers);
-  }
-
-  public void progressComms(TWSNetwork network) {
-    while (true) {
-      network.getChannel().progress();
-    }
   }
 
 
