@@ -42,10 +42,11 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.api.ReduceFunction;
+import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowBroadcast;
+import edu.iu.dsc.tws.comms.dfw.DataFlowAllReduce;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.EdgeGenerator;
 import edu.iu.dsc.tws.executor.comm.AbstractParallelOperation;
@@ -53,21 +54,21 @@ import edu.iu.dsc.tws.executor.comm.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
 
-public class BroadcastOperation extends AbstractParallelOperation {
-  private static final Logger LOG = Logger.getLogger(BroadcastOperation.class.getName());
-  private DataFlowBroadcast op;
+public class AllReduceBatchOperation extends AbstractParallelOperation {
+  private static final Logger LOG = Logger.getLogger(AllReduceBatchOperation.class.getName());
 
-  public BroadcastOperation(Config config, TWSChannel network, TaskPlan tPlan) {
+  protected DataFlowAllReduce op;
+
+  public AllReduceBatchOperation(Config config, TWSChannel network, TaskPlan tPlan) {
     super(config, network, tPlan);
   }
 
-  public void prepare(int srcs, Set<Integer> dests, EdgeGenerator e,
+  public void prepare(Set<Integer> sources, Set<Integer>  dest, EdgeGenerator e,
                       DataType dataType, String edgeName) {
     this.edge = e;
-    LOG.info(String.format("Srcs %d dests %s", srcs, dests));
-    op = new DataFlowBroadcast(channel, srcs, dests, new BcastReceiver());
+    op = new DataFlowAllReduce(channel, sources, dest, 0, new IndentityFunction(),
+        new FinalReduceReceive(), 0, 0, true);
     communicationEdge = e.generate(edgeName);
-    LOG.info("===Communication Edge : " + communicationEdge);
     op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
   }
 
@@ -86,26 +87,31 @@ public class BroadcastOperation extends AbstractParallelOperation {
     op.progress();
   }
 
-  public class BcastReceiver implements MessageReceiver {
+  public static class IndentityFunction implements ReduceFunction {
+
     @Override
+    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+    }
+
+    @Override
+    public Object reduce(Object t1, Object t2) {
+      return t1;
+    }
+  }
+
+  public class FinalReduceReceive implements ReduceReceiver {
+    private int count = 0;
+
     public void init(Config cfg, DataFlowOperation operation,
                      Map<Integer, List<Integer>> expectedIds) {
     }
 
     @Override
-    public boolean onMessage(int source, int destination, int target, int flags, Object object) {
+    public boolean receive(int target, Object object) {
       TaskMessage msg = new TaskMessage(object,
           edge.getStringMapping(communicationEdge), target);
-      int remainingCap = outMessages.get(target).remainingCapacity();
-      //LOG.info("Remaining Capacity : " + remainingCap);
-      boolean status = outMessages.get(target).offer(msg);
-      /*LOG.info("Message from Communication : " + msg.getContent() + ", Status : "
-          + status + ", Rem Cap : " + remainingCap);*/
+      outMessages.get(target).offer(msg);
       return true;
-    }
-
-    @Override
-    public void progress() {
     }
   }
 }

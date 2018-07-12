@@ -27,6 +27,7 @@ import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 import edu.iu.dsc.tws.executor.comm.IParallelOperation;
 import edu.iu.dsc.tws.executor.comm.ParallelOperationFactory;
 import edu.iu.dsc.tws.executor.core.ExecutorContext;
+import edu.iu.dsc.tws.executor.core.ParallelOperationType;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.ISink;
@@ -161,6 +162,127 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
 
       // lets create the communication
       IParallelOperation op = opFactory.build(c.getEdge(), c.getSourceTasks(), c.getTargetTasks());
+      // now lets check the sources and targets that are in this executor
+      Set<Integer> sourcesOfThisWorker = intersectionOfTasks(conPlan, c.getSourceTasks());
+      Set<Integer> targetsOfThisWorker = intersectionOfTasks(conPlan, c.getTargetTasks());
+
+      // set the parallel operation to the instance
+      // lets see weather this comunication belongs to a task instance
+      for (Integer i : sourcesOfThisWorker) {
+        if (taskInstances.contains(c.getSourceTask(), i)) {
+          LOG.info("SourceofThisWorker TaskInstance");
+          TaskInstance taskInstance = taskInstances.get(c.getSourceTask(), i);
+          taskInstance.registerOutParallelOperation(c.getEdge().getName(), op);
+        } else if (sourceInstances.contains(c.getSourceTask(), i)) {
+          SourceInstance sourceInstance = sourceInstances.get(c.getSourceTask(), i);
+          LOG.info("Edge : " + c.getEdge().getName() + ", Op : " + op.getClass().getName());
+          sourceInstance.registerOutParallelOperation(c.getEdge().getName(), op);
+        } else {
+          throw new RuntimeException("Not found: " + c.getSourceTask());
+        }
+      }
+
+      for (Integer i : targetsOfThisWorker) {
+        if (taskInstances.contains(c.getTargetTask(), i)) {
+          LOG.info("TargetofThisWorker TaskInstance");
+          TaskInstance taskInstance = taskInstances.get(c.getTargetTask(), i);
+          op.register(i, taskInstance.getInQueue());
+          taskInstance.registerInParallelOperation(c.getEdge().getName(), op);
+        } else if (sinkInstances.contains(c.getTargetTask(), i)) {
+          SinkInstance sourceInstance = sinkInstances.get(c.getTargetTask(), i);
+          sourceInstance.registerInParallelOperation(c.getEdge().getName(), op);
+          op.register(i, sourceInstance.getInQueue());
+        } else {
+          throw new RuntimeException("Not found: " + c.getTargetTask());
+        }
+      }
+      execution.addOps(op);
+    }
+
+    return execution;
+  }
+
+  @Override
+  public ExecutionPlan schedule(Config cfg, DataFlowTaskGraph taskGraph,
+                                TaskSchedulePlan taskSchedule,
+                                ParallelOperationType parallelOperationType) {
+    noOfThreads = ExecutorContext.threadsPerContainer(cfg);
+    LOG.log(Level.INFO, " ExecutionBuilder Thread Count : " + noOfThreads);
+
+    // we need to build the task plan
+    TaskPlan taskPlan = TaskPlanBuilder.build(resourcePlan, taskSchedule, taskIdGenerator);
+    ParallelOperationFactory opFactory = new ParallelOperationFactory(
+        cfg, network.getChannel(), taskPlan, edgeGenerator);
+
+    Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap = taskSchedule.getContainersMap();
+    TaskSchedulePlan.ContainerPlan conPlan = containersMap.get(workerId);
+    if (conPlan == null) {
+      LOG.log(Level.INFO, "Cannot find worker in the task plan: " + workerId);
+      return null;
+    }
+
+    ExecutionPlan execution = new ExecutionPlan();
+
+    Set<TaskSchedulePlan.TaskInstancePlan> instancePlan = conPlan.getTaskInstances();
+    // for each task we are going to create the communications
+    for (TaskSchedulePlan.TaskInstancePlan ip : instancePlan) {
+      Vertex v = taskGraph.vertex(ip.getTaskName());
+
+      if (v == null) {
+        throw new RuntimeException("Non-existing task scheduled: " + ip.getTaskName());
+      }
+
+      INode node = v.getTask();
+      if (node instanceof ITask || node instanceof ISource) {
+        // lets get the communication
+        Set<Edge> edges = taskGraph.outEdges(v);
+        // now lets create the communication object
+        for (Edge e : edges) {
+          Vertex child = taskGraph.childOfTask(v, e.getName());
+          // lets figure out the parents task id
+          Set<Integer> srcTasks = taskIdGenerator.getTaskIds(v.getName(),
+              ip.getTaskId(), taskGraph);
+          Set<Integer> tarTasks = taskIdGenerator.getTaskIds(child.getName(),
+              getTaskIdOfTask(child.getName(), taskSchedule), taskGraph);
+
+          if (!parOpTable.contains(v.getName(), e.getName())) {
+            parOpTable.put(v.getName(), e.getName(),
+                new Communication(e, v.getName(), child.getName(), srcTasks, tarTasks));
+          }
+        }
+      }
+
+      if (node instanceof ITask || node instanceof ISink) {
+        // lets get the parent tasks
+        Set<Edge> parentEdges = taskGraph.inEdges(v);
+        for (Edge e : parentEdges) {
+          Vertex parent = taskGraph.getParentOfTask(v, e.getName());
+          // lets figure out the parents task id
+          Set<Integer> srcTasks = taskIdGenerator.getTaskIds(parent.getName(),
+              getTaskIdOfTask(parent.getName(), taskSchedule), taskGraph);
+          Set<Integer> tarTasks = taskIdGenerator.getTaskIds(v.getName(),
+              ip.getTaskId(), taskGraph);
+
+          if (!parOpTable.contains(parent.getName(), e.getName())) {
+            parOpTable.put(parent.getName(), e.getName(),
+                new Communication(e, parent.getName(), v.getName(), srcTasks, tarTasks));
+          }
+        }
+      }
+
+      // lets create the instance
+      INodeInstance iNodeInstance = createInstances(cfg, ip, v);
+      execution.addNodes(taskIdGenerator.generateGlobalTaskId(
+          v.getName(), ip.getTaskId(), ip.getTaskIndex()), iNodeInstance);
+    }
+
+    // now lets create the queues and start the execution
+    for (Table.Cell<String, String, Communication> cell : parOpTable.cellSet()) {
+      Communication c = cell.getValue();
+
+      // lets create the communication
+      IParallelOperation op = opFactory.build(c.getEdge(), c.getSourceTasks(), c.getTargetTasks(),
+          parallelOperationType);
       // now lets check the sources and targets that are in this executor
       Set<Integer> sourcesOfThisWorker = intersectionOfTasks(conPlan, c.getSourceTasks());
       Set<Integer> targetsOfThisWorker = intersectionOfTasks(conPlan, c.getTargetTasks());

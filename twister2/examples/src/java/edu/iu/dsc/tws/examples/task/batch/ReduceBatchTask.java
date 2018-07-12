@@ -34,9 +34,10 @@ import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
-import edu.iu.dsc.tws.examples.task.streaming.ReduceStreamingTask;
 import edu.iu.dsc.tws.executor.ExecutionPlan;
 import edu.iu.dsc.tws.executor.ExecutionPlanBuilder;
+import edu.iu.dsc.tws.executor.core.CommunicationOperationType;
+import edu.iu.dsc.tws.executor.core.ParallelOperationType;
 import edu.iu.dsc.tws.executor.threading.ExecutionModel;
 import edu.iu.dsc.tws.executor.threading.ThreadExecutor;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -46,7 +47,6 @@ import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.Operations;
 import edu.iu.dsc.tws.task.api.SinkTask;
 import edu.iu.dsc.tws.task.api.SourceTask;
 import edu.iu.dsc.tws.task.api.TaskContext;
@@ -63,7 +63,7 @@ public class ReduceBatchTask implements IContainer {
   public void init(Config config, int id, ResourcePlan resourcePlan) {
     GeneratorTask g = new GeneratorTask();
     RecevingTask r = new RecevingTask();
-
+    System.out.println("Reduce Batch Task Starting ...");
     System.out.println("Config-Threads : " + SchedulerContext.numOfThreads(config));
 
     GraphBuilder builder = GraphBuilder.newBuilder();
@@ -71,7 +71,8 @@ public class ReduceBatchTask implements IContainer {
     builder.setParallelism("source", 4);
     builder.addSink("sink", r);
     builder.setParallelism("sink", 1);
-    builder.connect("source", "sink", "reduce-edge", Operations.REDUCE);
+    builder.connect("source", "sink", "reduce-edge",
+        CommunicationOperationType.BATCH_REDUCE);
 
     DataFlowTaskGraph graph = builder.build();
 
@@ -83,7 +84,8 @@ public class ReduceBatchTask implements IContainer {
 
     TWSNetwork network = new TWSNetwork(config, resourcePlan.getThisId());
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);
-    ExecutionPlan plan = executionPlanBuilder.schedule(config, graph, taskSchedulePlan);
+    ExecutionPlan plan = executionPlanBuilder.schedule(config, graph, taskSchedulePlan,
+        ParallelOperationType.BATCH);
     ExecutionModel executionModel = new ExecutionModel(ExecutionModel.SHARED);
     ThreadExecutor executor = new ThreadExecutor(executionModel, plan, network.getChannel());
     executor.execute();
@@ -111,7 +113,7 @@ public class ReduceBatchTask implements IContainer {
 
     @Override
     public void execute(IMessage message) {
-      if (count % 10000 == 0) {
+      if (count % 100000 == 0) {
         System.out.println("Message Reduced : " + message.getContent() + ", Count : " + count);
       }
       count++;
@@ -154,7 +156,7 @@ public class ReduceBatchTask implements IContainer {
 
   public static void main(String[] args) {
     // first load the configurations from command line and config files
-    System.out.println("==================Reduce Task Example========================");
+    System.out.println("==================Reduce Batch Task Example========================");
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
     HashMap<String, Object> configurations = new HashMap<>();
     configurations.put(SchedulerContext.THREADS_PER_WORKER, 8);
@@ -164,8 +166,8 @@ public class ReduceBatchTask implements IContainer {
     jobConfig.putAll(configurations);
 
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
-    jobBuilder.setName("reduce-task");
-    jobBuilder.setContainerClass(ReduceStreamingTask.class.getName());
+    jobBuilder.setName("reduce-batch-task");
+    jobBuilder.setContainerClass(ReduceBatchTask.class.getName());
     jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 

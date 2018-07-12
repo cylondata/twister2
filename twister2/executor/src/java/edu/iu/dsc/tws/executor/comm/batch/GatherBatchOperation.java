@@ -54,11 +54,11 @@ import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
 
 
-public class GatherOperation extends AbstractParallelOperation {
-  private static final Logger LOG = Logger.getLogger(GatherOperation.class.getName());
+public class GatherBatchOperation extends AbstractParallelOperation {
+  private static final Logger LOG = Logger.getLogger(GatherBatchOperation.class.getName());
   private DataFlowGather op;
 
-  public GatherOperation(Config config, TWSChannel network, TaskPlan tPlan) {
+  public GatherBatchOperation(Config config, TWSChannel network, TaskPlan tPlan) {
     super(config, network, tPlan);
   }
 
