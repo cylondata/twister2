@@ -11,15 +11,20 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task.streaming;
 
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Random;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
+import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
+import edu.iu.dsc.tws.examples.utils.RandomString;
 import edu.iu.dsc.tws.executor.ExecutionPlan;
 import edu.iu.dsc.tws.executor.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.ExecutionModel;
@@ -33,7 +38,6 @@ import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.Operations;
 import edu.iu.dsc.tws.task.api.SinkTask;
 import edu.iu.dsc.tws.task.api.SourceTask;
-import edu.iu.dsc.tws.task.api.Task;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
@@ -42,25 +46,24 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
-public class TaskExampleModified implements IContainer {
+public class GatherStreamingTask implements IContainer {
+
+  private RandomString randomString;
+
   @Override
   public void init(Config config, int id, ResourcePlan resourcePlan) {
-    GeneratorTaskModified g = new GeneratorTaskModified();
-    RecevingTaskModified r = new RecevingTaskModified();
-    MiddleTaskModified m = new MiddleTaskModified();
+    GeneratorTask g = new GeneratorTask();
+    RecevingTask r = new RecevingTask();
 
     GraphBuilder builder = GraphBuilder.newBuilder();
     builder.addSource("source", g);
-    builder.setParallelism("source", 2);
-    builder.addTask("middle", m);
-    builder.setParallelism("middle", 2);
+    builder.setParallelism("source", 4);
     builder.addSink("sink", r);
-    builder.setParallelism("sink", 2);
-    builder.connect("source", "middle", "e1", Operations.PARTITION);
-    builder.connect("middle", "sink", "e2", Operations.PARTITION);
+    builder.setParallelism("sink", 1);
+    builder.connect("source", "sink", "gather-edge", Operations.GATHER);
+
 
     DataFlowTaskGraph graph = builder.build();
-
     RoundRobinTaskScheduling roundRobinTaskScheduling = new RoundRobinTaskScheduling();
     roundRobinTaskScheduling.initialize(config);
 
@@ -75,56 +78,49 @@ public class TaskExampleModified implements IContainer {
     executor.execute();
   }
 
-  private static class GeneratorTaskModified extends SourceTask {
+  private static class GeneratorTask extends SourceTask {
     private static final long serialVersionUID = -254264903510284748L;
     private TaskContext ctx;
     private Config config;
+    private static RandomString randomString;
 
     @Override
     public void run() {
-      ctx.write("e1", "Hello");
+      randomString = new RandomString(128000, new Random(), RandomString.ALPHANUM);
+      String data = generateStringData();
+      // lets generate a message
+      KeyedContent message = new KeyedContent(0, data,
+          MessageType.INTEGER, MessageType.OBJECT);
+//      System.out.println("Message : Key :" + message.getKey().toString() + ", Value : "
+//          + message.getValue());
+      ctx.write("gather-edge", "1");
     }
 
     @Override
     public void prepare(Config cfg, TaskContext context) {
       this.ctx = context;
     }
+
+    private static String generateStringData() {
+      return "1";
+    }
   }
 
-  private static class RecevingTaskModified extends SinkTask {
+  private static class RecevingTask extends SinkTask {
+    private int count = 0;
     private static final long serialVersionUID = -254264903510284798L;
 
     @Override
     public void execute(IMessage message) {
-      System.out.println(message.getContent());
-    }
-
-    @Override
-    public void prepare(Config cfg, TaskContext context) {
-
-    }
-  }
-
-  private static class MiddleTaskModified extends Task {
-    private static final long serialVersionUID = -254264903510284749L;
-    private TaskContext ctx;
-    private Config config;
-
-    @Override
-    public IMessage execute(IMessage content) {
-//      ctx.write("e2", "Tello");
-      if (content.getContent().equals("Hello")) {
-        ctx.write("e2", "Hello changed to Tello");
-      } else {
-        ctx.write("e2", content.getContent());
+      if (count % 100000 == 0) {
+        System.out.println("Message Gathered : " + message.getContent() + ", Count : " + count);
       }
-      return content;
+      count++;
     }
 
     @Override
     public void prepare(Config cfg, TaskContext context) {
-      super.prepare(cfg, context);
-      this.ctx = context;
+
     }
   }
 
@@ -137,6 +133,7 @@ public class TaskExampleModified implements IContainer {
 
     return new WorkerPlan(workers);
   }
+
 
   public static void main(String[] args) {
     // first load the configurations from command line and config files
@@ -151,12 +148,13 @@ public class TaskExampleModified implements IContainer {
     jobConfig.putAll(configurations);
 
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
-    jobBuilder.setName("task-example-modified");
-    jobBuilder.setContainerClass(TaskExampleModified.class.getName());
-    jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 2);
+    jobBuilder.setName("task-gather");
+    jobBuilder.setContainerClass(GatherStreamingTask.class.getName());
+    jobBuilder.setRequestResource(new ResourceContainer(4, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job
     Twister2Submitter.submitContainerJob(jobBuilder.build(), config);
   }
 }
+

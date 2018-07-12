@@ -9,7 +9,19 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.task.streaming;
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+package edu.iu.dsc.tws.examples.task.batch;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,6 +32,7 @@ import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
+import edu.iu.dsc.tws.examples.task.streaming.PartitionKeyedStreamingTask;
 import edu.iu.dsc.tws.executor.ExecutionPlan;
 import edu.iu.dsc.tws.executor.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.ExecutionModel;
@@ -33,7 +46,6 @@ import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.Operations;
 import edu.iu.dsc.tws.task.api.SinkTask;
 import edu.iu.dsc.tws.task.api.SourceTask;
-import edu.iu.dsc.tws.task.api.Task;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
@@ -42,22 +54,19 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
-public class TaskExampleModified implements IContainer {
+public class PartitionKeyedBatchTask implements IContainer {
   @Override
   public void init(Config config, int id, ResourcePlan resourcePlan) {
-    GeneratorTaskModified g = new GeneratorTaskModified();
-    RecevingTaskModified r = new RecevingTaskModified();
-    MiddleTaskModified m = new MiddleTaskModified();
+    GeneratorTask g = new GeneratorTask();
+    RecevingTask r = new RecevingTask();
 
     GraphBuilder builder = GraphBuilder.newBuilder();
     builder.addSource("source", g);
-    builder.setParallelism("source", 2);
-    builder.addTask("middle", m);
-    builder.setParallelism("middle", 2);
+    builder.setParallelism("source", 4);
     builder.addSink("sink", r);
-    builder.setParallelism("sink", 2);
-    builder.connect("source", "middle", "e1", Operations.PARTITION);
-    builder.connect("middle", "sink", "e2", Operations.PARTITION);
+    builder.setParallelism("sink", 4);
+    builder.connect("source", "sink", "partition-keyed-edge",
+        Operations.KEYED_PARTITION);
 
     DataFlowTaskGraph graph = builder.build();
 
@@ -75,14 +84,14 @@ public class TaskExampleModified implements IContainer {
     executor.execute();
   }
 
-  private static class GeneratorTaskModified extends SourceTask {
+  private static class GeneratorTask extends SourceTask {
     private static final long serialVersionUID = -254264903510284748L;
     private TaskContext ctx;
     private Config config;
 
     @Override
     public void run() {
-      ctx.write("e1", "Hello");
+      ctx.write("partition-keyed-edge", "Hello");
     }
 
     @Override
@@ -91,40 +100,22 @@ public class TaskExampleModified implements IContainer {
     }
   }
 
-  private static class RecevingTaskModified extends SinkTask {
+  private static class RecevingTask extends SinkTask {
     private static final long serialVersionUID = -254264903510284798L;
+    private int count = 0;
 
     @Override
     public void execute(IMessage message) {
-      System.out.println(message.getContent());
-    }
-
-    @Override
-    public void prepare(Config cfg, TaskContext context) {
-
-    }
-  }
-
-  private static class MiddleTaskModified extends Task {
-    private static final long serialVersionUID = -254264903510284749L;
-    private TaskContext ctx;
-    private Config config;
-
-    @Override
-    public IMessage execute(IMessage content) {
-//      ctx.write("e2", "Tello");
-      if (content.getContent().equals("Hello")) {
-        ctx.write("e2", "Hello changed to Tello");
-      } else {
-        ctx.write("e2", content.getContent());
+      if (count % 1000000 == 0) {
+        System.out.println("Message Partition Keyed:  : " + message.getContent()
+            + ", Count : " + count);
       }
-      return content;
+      count++;
     }
 
     @Override
     public void prepare(Config cfg, TaskContext context) {
-      super.prepare(cfg, context);
-      this.ctx = context;
+
     }
   }
 
@@ -151,9 +142,9 @@ public class TaskExampleModified implements IContainer {
     jobConfig.putAll(configurations);
 
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
-    jobBuilder.setName("task-example-modified");
-    jobBuilder.setContainerClass(TaskExampleModified.class.getName());
-    jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 2);
+    jobBuilder.setName("partition-keyed-example");
+    jobBuilder.setContainerClass(PartitionKeyedStreamingTask.class.getName());
+    jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job

@@ -42,22 +42,22 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
-public class TaskExampleModified implements IContainer {
+public class ComplexStreamingTask implements IContainer {
   @Override
   public void init(Config config, int id, ResourcePlan resourcePlan) {
-    GeneratorTaskModified g = new GeneratorTaskModified();
-    RecevingTaskModified r = new RecevingTaskModified();
-    MiddleTaskModified m = new MiddleTaskModified();
+    GeneratorTask g = new GeneratorTask();
+    IntermediateTask i = new IntermediateTask();
+    ReceivingTask r = new ReceivingTask();
 
     GraphBuilder builder = GraphBuilder.newBuilder();
     builder.addSource("source", g);
-    builder.setParallelism("source", 2);
-    builder.addTask("middle", m);
-    builder.setParallelism("middle", 2);
+    builder.setParallelism("source", 1);
+    builder.addTask("intermediate", i);
+    builder.setParallelism("intermediate", 4);
     builder.addSink("sink", r);
-    builder.setParallelism("sink", 2);
-    builder.connect("source", "middle", "e1", Operations.PARTITION);
-    builder.connect("middle", "sink", "e2", Operations.PARTITION);
+    builder.setParallelism("sink", 1);
+    builder.connect("source", "intermediate", "broadcast-edge", Operations.BROADCAST);
+    builder.connect("intermediate", "sink", "gather-edge", Operations.GATHER);
 
     DataFlowTaskGraph graph = builder.build();
 
@@ -69,20 +69,25 @@ public class TaskExampleModified implements IContainer {
 
     TWSNetwork network = new TWSNetwork(config, resourcePlan.getThisId());
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);
+    ExecutionPlan executionPlan = new ExecutionPlan();
     ExecutionPlan plan = executionPlanBuilder.schedule(config, graph, taskSchedulePlan);
-    ExecutionModel executionModel = new ExecutionModel(ExecutionModel.SHARED);
+    ExecutionModel executionModel = new ExecutionModel(ExecutionModel.DEDICATED);
     ThreadExecutor executor = new ThreadExecutor(executionModel, plan, network.getChannel());
     executor.execute();
   }
 
-  private static class GeneratorTaskModified extends SourceTask {
+
+  private static class GeneratorTask extends SourceTask {
     private static final long serialVersionUID = -254264903510284748L;
     private TaskContext ctx;
     private Config config;
+    private int count = 0;
 
     @Override
     public void run() {
-      ctx.write("e1", "Hello");
+      ctx.write("broadcast-edge", "Hello");
+      //System.out.println("Message Count : " + count);
+      count++;
     }
 
     @Override
@@ -91,12 +96,17 @@ public class TaskExampleModified implements IContainer {
     }
   }
 
-  private static class RecevingTaskModified extends SinkTask {
+  private static class ReceivingTask extends SinkTask {
     private static final long serialVersionUID = -254264903510284798L;
+    private int count = 0;
 
     @Override
     public void execute(IMessage message) {
-      System.out.println(message.getContent());
+      if (count % 1000000 == 0) {
+        System.out.println("Message Reduced Received : " + message.getContent()
+            + ", Count : " + count);
+      }
+      count++;
     }
 
     @Override
@@ -105,25 +115,36 @@ public class TaskExampleModified implements IContainer {
     }
   }
 
-  private static class MiddleTaskModified extends Task {
-    private static final long serialVersionUID = -254264903510284749L;
+  private static class IntermediateTask extends Task {
+    private static final long serialVersionUID = -254264903510284798L;
     private TaskContext ctx;
-    private Config config;
+    private int count = 0;
+
+    @Override
+    public IMessage execute() {
+      System.out.println("Intermediate Task Executed");
+      return null;
+    }
 
     @Override
     public IMessage execute(IMessage content) {
-//      ctx.write("e2", "Tello");
-      if (content.getContent().equals("Hello")) {
-        ctx.write("e2", "Hello changed to Tello");
-      } else {
-        ctx.write("e2", content.getContent());
-      }
-      return content;
+      System.out.println("IntermediateTask:execute: " + content.getContent());
+      return null;
+    }
+
+    @Override
+    public void run(IMessage content) {
+      //System.out.println("IntermediateTask : " + content.getContent());
+      this.ctx.write("gather-edge", content.getContent() + "-int");
+    }
+
+    @Override
+    public void run() {
+
     }
 
     @Override
     public void prepare(Config cfg, TaskContext context) {
-      super.prepare(cfg, context);
       this.ctx = context;
     }
   }
@@ -151,10 +172,11 @@ public class TaskExampleModified implements IContainer {
     jobConfig.putAll(configurations);
 
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
-    jobBuilder.setName("task-example-modified");
-    jobBuilder.setContainerClass(TaskExampleModified.class.getName());
-    jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 2);
+    jobBuilder.setName("complex-task-example");
+    jobBuilder.setContainerClass(ComplexStreamingTask.class.getName());
+    jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
+
 
     // now submit the job
     Twister2Submitter.submitContainerJob(jobBuilder.build(), config);

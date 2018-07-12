@@ -15,11 +15,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import com.google.common.primitives.Ints;
+
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
+import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
 import edu.iu.dsc.tws.executor.ExecutionPlan;
 import edu.iu.dsc.tws.executor.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.ExecutionModel;
@@ -33,7 +37,6 @@ import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.Operations;
 import edu.iu.dsc.tws.task.api.SinkTask;
 import edu.iu.dsc.tws.task.api.SourceTask;
-import edu.iu.dsc.tws.task.api.Task;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
@@ -42,22 +45,19 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
-public class TaskExampleModified implements IContainer {
+public class PartitionByMultiByteStreamingTask implements IContainer {
   @Override
   public void init(Config config, int id, ResourcePlan resourcePlan) {
-    GeneratorTaskModified g = new GeneratorTaskModified();
-    RecevingTaskModified r = new RecevingTaskModified();
-    MiddleTaskModified m = new MiddleTaskModified();
+    GeneratorTask g = new GeneratorTask();
+    RecevingTask r = new RecevingTask();
 
     GraphBuilder builder = GraphBuilder.newBuilder();
     builder.addSource("source", g);
-    builder.setParallelism("source", 2);
-    builder.addTask("middle", m);
-    builder.setParallelism("middle", 2);
+    builder.setParallelism("source", 4);
     builder.addSink("sink", r);
-    builder.setParallelism("sink", 2);
-    builder.connect("source", "middle", "e1", Operations.PARTITION);
-    builder.connect("middle", "sink", "e2", Operations.PARTITION);
+    builder.setParallelism("sink", 4);
+    builder.connect("source", "sink", "partition-multi-byte-edge",
+        Operations.PARTITION_BY_MULTI_BYTE);
 
     DataFlowTaskGraph graph = builder.build();
 
@@ -75,14 +75,34 @@ public class TaskExampleModified implements IContainer {
     executor.execute();
   }
 
-  private static class GeneratorTaskModified extends SourceTask {
+  private static class GeneratorTask extends SourceTask {
     private static final long serialVersionUID = -254264903510284748L;
     private TaskContext ctx;
     private Config config;
 
     @Override
     public void run() {
-      ctx.write("e1", "Hello");
+      byte[] data = new byte[12];
+      data[0] = 'a';
+      data[1] = 'b';
+      data[2] = 'c';
+      data[3] = 'd';
+      data[4] = 'd';
+      data[5] = 'd';
+      data[6] = 'd';
+      data[7] = 'd';
+
+      List<byte[]> keyList = new ArrayList<>(10);
+      List<byte[]> dataList = new ArrayList<>(10);
+      for (int k = 0; k < 10; k++) {
+        keyList.add(Ints.toByteArray(k));
+        dataList.add(data);
+      }
+
+      KeyedContent keyedContent = new KeyedContent(keyList, dataList,
+          MessageType.MULTI_FIXED_BYTE, MessageType.MULTI_FIXED_BYTE);
+
+      ctx.write("partition-multi-byte-edge", keyedContent);
     }
 
     @Override
@@ -91,40 +111,21 @@ public class TaskExampleModified implements IContainer {
     }
   }
 
-  private static class RecevingTaskModified extends SinkTask {
+  private static class RecevingTask extends SinkTask {
     private static final long serialVersionUID = -254264903510284798L;
+    private int count = 0;
 
     @Override
     public void execute(IMessage message) {
-      System.out.println(message.getContent());
-    }
-
-    @Override
-    public void prepare(Config cfg, TaskContext context) {
-
-    }
-  }
-
-  private static class MiddleTaskModified extends Task {
-    private static final long serialVersionUID = -254264903510284749L;
-    private TaskContext ctx;
-    private Config config;
-
-    @Override
-    public IMessage execute(IMessage content) {
-//      ctx.write("e2", "Tello");
-      if (content.getContent().equals("Hello")) {
-        ctx.write("e2", "Hello changed to Tello");
-      } else {
-        ctx.write("e2", content.getContent());
+      if (count % 1000000 == 0) {
+        System.out.println("Message Received : " + message.getContent());
       }
-      return content;
+      count++;
     }
 
     @Override
     public void prepare(Config cfg, TaskContext context) {
-      super.prepare(cfg, context);
-      this.ctx = context;
+
     }
   }
 
@@ -151,9 +152,9 @@ public class TaskExampleModified implements IContainer {
     jobConfig.putAll(configurations);
 
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
-    jobBuilder.setName("task-example-modified");
-    jobBuilder.setContainerClass(TaskExampleModified.class.getName());
-    jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 2);
+    jobBuilder.setName("partition-example");
+    jobBuilder.setContainerClass(PartitionByMultiByteStreamingTask.class.getName());
+    jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job
