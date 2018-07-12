@@ -74,7 +74,8 @@ public class StandaloneLauncher implements ILauncher {
       try {
         jobMaster =
             new JobMaster(config, InetAddress.getLocalHost().getHostAddress(),
-                new StandaloneTerminator(), job.getJobName());
+                new StandaloneTerminator(), job.getJobName(),
+                JobMasterContext.jobMasterPort(config),  job.getJobResources().getNoOfContainers());
         jobMaster.init();
       } catch (UnknownHostException e) {
         LOG.log(Level.SEVERE, "Exception when getting local host address: ", e);

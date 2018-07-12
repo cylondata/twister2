@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.master;
 import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.google.protobuf.Message;
@@ -37,10 +38,15 @@ public class WorkerMonitor implements MessageHandler {
   private HashMap<Integer, RequestID> waitList;
 
   public WorkerMonitor(Config config, JobMaster jobMaster, RRServer rrServer) {
+    this(config, jobMaster, rrServer, JobMasterContext.workerInstances(config));
+  }
+
+  public WorkerMonitor(Config config, JobMaster jobMaster,
+                       RRServer rrServer, int numWorkers) {
     this.config = config;
     this.jobMaster = jobMaster;
     this.rrServer = rrServer;
-    this.numberOfWorkers = JobMasterContext.workerInstances(config);
+    this.numberOfWorkers = numWorkers;
 
     workers = new HashMap<>();
     waitList = new HashMap<>();
@@ -181,17 +187,15 @@ public class WorkerMonitor implements MessageHandler {
       sendListWorkersResponse(listMessage.getWorkerID(), id);
     } else if (listMessage.getRequestType()
         == Network.ListWorkersRequest.RequestType.RESPONSE_AFTER_ALL_JOINED) {
-
       // if all workers already joined, send the current list
       if (workers.size() == numberOfWorkers) {
-
         sendListWorkersResponse(listMessage.getWorkerID(), id);
-
         // if some workers have not yet joined, put this worker into the wait list
       } else {
-
         waitList.put(listMessage.getWorkerID(), id);
       }
+      LOG.log(Level.INFO, String.format("Workers expecting %d joined %d",
+          numberOfWorkers, workers.size()));
     }
   }
 

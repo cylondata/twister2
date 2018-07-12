@@ -81,27 +81,31 @@ public class JobMaster extends Thread {
    */
   private IJobTerminator jobTerminator;
 
+  /**
+   * Number of workers expected
+   */
+  private int numberOfWorkers;
+
   public JobMaster(Config config,
                    String masterAddress,
                    IJobTerminator jobTerminator,
                    String jobName) {
-    this.config = config;
-    this.masterAddress = masterAddress;
-    this.jobTerminator = jobTerminator;
-    this.jobName = jobName;
-    this.masterPort = JobMasterContext.jobMasterPort(config);
+    this(config, masterAddress, jobTerminator, jobName, JobMasterContext.jobMasterPort(config),
+        JobMasterContext.workerInstances(config));
   }
 
   public JobMaster(Config config,
                    String masterAddress,
                    IJobTerminator jobTerminator,
                    String jobName,
-                   int masterPort) {
+                   int masterPort,
+                   int numWorkers) {
     this.config = config;
     this.masterAddress = masterAddress;
     this.jobTerminator = jobTerminator;
     this.jobName = jobName;
     this.masterPort = masterPort;
+    this.numberOfWorkers = numWorkers;
   }
 
   public void init() {
@@ -112,7 +116,7 @@ public class JobMaster extends Thread {
     rrServer =
         new RRServer(config, masterAddress, masterPort, looper, JOB_MASTER_ID, connectHandler);
 
-    workerMonitor = new WorkerMonitor(config, this, rrServer);
+    workerMonitor = new WorkerMonitor(config, this, rrServer, numberOfWorkers);
 
     Network.Ping.Builder pingBuilder = Network.Ping.newBuilder();
     Network.WorkerStateChange.Builder stateChangeBuilder = Network.WorkerStateChange.newBuilder();
