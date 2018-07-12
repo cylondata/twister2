@@ -128,7 +128,8 @@ public class ReduceHLStreamingTask implements IContainer {
 
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
     jobBuilder.setName("reduce-hl-task");
-    jobBuilder.setContainerClass(edu.iu.dsc.tws.examples.task.streaming.PartitionTask.class.getName());
+    jobBuilder.setContainerClass(edu.iu.dsc.tws.examples.task.streaming.ReduceHLStreamingTask
+        .class.getName());
     jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 

@@ -191,7 +191,8 @@ public class SourceSinkDiscoveryExample implements IContainer {
 
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
     jobBuilder.setName("source-sink-discovery-example");
-    jobBuilder.setContainerClass(edu.iu.dsc.tws.examples.task.TaskExample.class.getName());
+    jobBuilder.setContainerClass(edu.iu.dsc.tws.examples.task.streaming.TaskStreamingExample
+        .class.getName());
     jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 

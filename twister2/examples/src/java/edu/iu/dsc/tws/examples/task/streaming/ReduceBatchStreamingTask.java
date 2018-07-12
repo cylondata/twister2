@@ -52,7 +52,7 @@ public class ReduceBatchStreamingTask implements IContainer {
     builder.setParallelism("source", 4);
     builder.addSink("sink", r);
     builder.setParallelism("sink", 1);
-    builder.connect("source", "sink", "reduce-batch-edge", Operations.REDUCE_BATCH);
+    builder.connect("source", "sink", "reduce-batch-edge", Operations.REDUCE);
 
     DataFlowTaskGraph graph = builder.build();
 
