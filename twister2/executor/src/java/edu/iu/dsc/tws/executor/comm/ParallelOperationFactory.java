@@ -34,9 +34,9 @@ import edu.iu.dsc.tws.executor.comm.streaming.PartitionByMultiByteStreamingOpera
 import edu.iu.dsc.tws.executor.comm.streaming.PartitionStreamingOperation;
 import edu.iu.dsc.tws.executor.comm.streaming.ReduceStreamingOperation;
 import edu.iu.dsc.tws.executor.core.CommunicationOperationType;
-import edu.iu.dsc.tws.executor.core.ParallelOperationType;
 import edu.iu.dsc.tws.task.api.Operations;
 import edu.iu.dsc.tws.task.graph.Edge;
+import edu.iu.dsc.tws.task.graph.OperationMode;
 
 public class ParallelOperationFactory {
   private static final Logger LOG = Logger.getLogger(ParallelOperationFactory.class.getName());
@@ -60,9 +60,9 @@ public class ParallelOperationFactory {
    * the sub cateogories depends on the communication used for each edge in the task graph.
    * ***/
   public IParallelOperation build(Edge edge, Set<Integer> sources, Set<Integer> dests,
-                                  ParallelOperationType parallelOperationType) {
+                                  OperationMode operationMode) {
 
-    if (parallelOperationType.equals(ParallelOperationType.BATCH)) {
+    if (operationMode.equals(OperationMode.BATCH)) {
       LOG.info("Batch Job Building ...");
       if (!edge.isKeyed()) {
         if (CommunicationOperationType.BATCH_PARTITION.equals(edge.getOperation())) {
@@ -154,7 +154,7 @@ public class ParallelOperationFactory {
         }
       }
 
-    } else if (parallelOperationType.equals(ParallelOperationType.STREAMING)) {
+    } else if (operationMode.equals(OperationMode.STREAMING)) {
       LOG.info("Streaming Job Building ...");
       if (!edge.isKeyed()) {
         if (CommunicationOperationType.STREAMING_PARTITION.equals(edge.getOperation())) {

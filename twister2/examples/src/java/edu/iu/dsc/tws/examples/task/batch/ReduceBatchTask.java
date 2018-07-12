@@ -37,7 +37,6 @@ import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.executor.ExecutionPlan;
 import edu.iu.dsc.tws.executor.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.core.CommunicationOperationType;
-import edu.iu.dsc.tws.executor.core.ParallelOperationType;
 import edu.iu.dsc.tws.executor.threading.ExecutionModel;
 import edu.iu.dsc.tws.executor.threading.ThreadExecutor;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -52,6 +51,7 @@ import edu.iu.dsc.tws.task.api.SourceTask;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
+import edu.iu.dsc.tws.task.graph.OperationMode;
 import edu.iu.dsc.tws.tsched.roundrobin.RoundRobinTaskScheduling;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
@@ -73,6 +73,7 @@ public class ReduceBatchTask implements IContainer {
     builder.setParallelism("sink", 1);
     builder.connect("source", "sink", "reduce-edge",
         CommunicationOperationType.BATCH_REDUCE);
+    builder.operationMode(OperationMode.BATCH);
 
     DataFlowTaskGraph graph = builder.build();
 
@@ -84,8 +85,7 @@ public class ReduceBatchTask implements IContainer {
 
     TWSNetwork network = new TWSNetwork(config, resourcePlan.getThisId());
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);
-    ExecutionPlan plan = executionPlanBuilder.schedule(config, graph, taskSchedulePlan,
-        ParallelOperationType.BATCH);
+    ExecutionPlan plan = executionPlanBuilder.schedule(config, graph, taskSchedulePlan);
     ExecutionModel executionModel = new ExecutionModel(ExecutionModel.SHARED);
     ThreadExecutor executor = new ThreadExecutor(executionModel, plan, network.getChannel());
     executor.execute();

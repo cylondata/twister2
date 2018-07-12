@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.executor;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.executor.core.ParallelOperationType;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
@@ -25,11 +24,6 @@ public interface IExecutionPlanBuilder {
    */
   ExecutionPlan schedule(Config cfg, DataFlowTaskGraph taskGraph,
                          TaskSchedulePlan taskSchedule);
-
-  ExecutionPlan schedule(Config cfg, DataFlowTaskGraph taskGraph,
-                         TaskSchedulePlan taskSchedule,
-                         ParallelOperationType parallelOperationType);
-
 
   /**
    * Wait for an execution to finish
