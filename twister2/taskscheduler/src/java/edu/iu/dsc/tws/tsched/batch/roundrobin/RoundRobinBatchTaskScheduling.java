@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.tsched.batch.roundrobin;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -59,7 +60,59 @@ public class RoundRobinBatchTaskScheduling implements TaskSchedule {
 
     List<TaskSchedulePlan> taskSchedulePlanList = new ArrayList<>();
     Map<Integer, List<InstanceId>> roundrobinContainerInstanceMap;
-    Set<Vertex> taskVertexSet = dataFlowTaskGraph.getTaskVertexSet();
+    //Set<Vertex> taskVertexSet = dataFlowTaskGraph.getTaskVertexSet();
+    Set<Vertex> taskVertexSet = new LinkedHashSet<>(dataFlowTaskGraph.getTaskVertexSet());
+
+    List<Set<Vertex>> taskVertexList = new ArrayList<>();
+    Set<Vertex> newVertexSet = new LinkedHashSet<>();
+
+    for (Vertex vertex : taskVertexSet) {
+      if (dataFlowTaskGraph.outgoingTaskEdgesOf(vertex).size() >= 2) {
+        Set<Vertex> parentTask = new LinkedHashSet<>();
+        parentTask.add(vertex);
+        taskVertexList.add(parentTask);
+
+        Set<Vertex> vertexSet = dataFlowTaskGraph.childrenOfTask(vertex);
+        taskVertexList.add(vertexSet);
+
+        for (Vertex vertex1 : vertexSet) {
+          LOG.info("%%%% Vertex:" + vertex + "-> child tasks ->"
+              + vertex1.getName() + "->" + vertex1.getTask());
+        }
+      } else {
+        LOG.info("Vertex Name for else loop:" + vertex.getName());
+        /*for (int i = 0; i < taskVertexList.size(); i++) {
+          Set<Vertex> vv = taskVertexList.get(i);
+          if (vv.contains(vertex)) {
+            LOG.info("Vertex" + vertex.getName() + " is already added");
+          } else {
+            newVertexSet.add(vertex);
+            taskVertexList.add(newVertexSet);
+          }
+        }*/
+        newVertexSet.add(vertex);
+        taskVertexList.add(newVertexSet);
+      }
+    }
+
+    /*else if (dataFlowTaskGraph.incomingTaskEdgesOf(vertex).size() >= 2) {
+        Set<Vertex> vertexSet = dataFlowTaskGraph.parentsOfTask(vertex);
+        for (Vertex vertex1 : vertexSet) {
+          LOG.info("%%%% Vertex:" + vertex + "-> parent tasks ->"
+              + vertex1.getName() + "->" + vertex1.getTask());
+        }
+    }*/
+
+    LOG.info("Task Vertex Size:" + taskVertexList.size());
+
+    for (int i = 0; i < taskVertexList.size(); i++) {
+      LOG.info("Task Vertex Set Details:" + taskVertexList.get(i).size());
+      Set<Vertex> vertexSet = taskVertexList.get(i);
+      for (Vertex vertex: vertexSet) {
+        LOG.info("Vertex Details:" + vertex.getName());
+      }
+    }
+
 
     for (Vertex vertex : taskVertexSet) {
       roundrobinContainerInstanceMap = RoundRobinBatchScheduling.
@@ -96,11 +149,6 @@ public class RoundRobinBatchTaskScheduling implements TaskSchedule {
           double instanceRAMValue = instancesRamMap.get(containerId).get(id);
           double instanceDiskValue = instancesDiskMap.get(containerId).get(id);
           double instanceCPUValue = instancesCPUMap.get(containerId).get(id);
-
-          /*LOG.info(String.format("Task Id and Index ->" + id.getTaskId()
-              + "(" + id.getTaskIndex() + ")" + "->Task Name ->" + id.getTaskName()
-              + "Container Id:" + containerId + "-> and Req. Resource:"
-              + instanceRAMValue + ":" + instanceDiskValue + ":" + instanceCPUValue));*/
 
           Resource instanceResource = new Resource(instanceRAMValue,
               instanceDiskValue, instanceCPUValue);

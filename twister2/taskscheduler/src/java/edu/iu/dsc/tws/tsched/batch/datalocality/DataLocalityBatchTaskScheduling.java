@@ -63,31 +63,31 @@ public class DataLocalityBatchTaskScheduling implements TaskSchedule {
 
     Set<Vertex> taskVertexSet = new LinkedHashSet<>(graph.getTaskVertexSet());
     Map<Integer, List<InstanceId>> datalocalityAwareContainerInstanceMap;
-
     List<TaskSchedulePlan> taskSchedulePlanList = new ArrayList<>();
+
     List<Vertex> childTask = new ArrayList<>();
+    List<Set<Edge>> taskEdgeSet = new ArrayList<>();
 
     for (Vertex vertex : taskVertexSet) {
       if (graph.outgoingTaskEdgesOf(vertex).size() >= 2) {
-        System.out.println("Outgoing task edges:"
-            + vertex.getName() + "\t" + graph.outgoingTaskEdgesOf(vertex).size());
-        childTask.add(vertex);
-        //System.out.println("Graph:" + graph.childrenOfTask(vertex));
-      }
-      System.out.println("Incoming task edges:"
-          + vertex.getName() + "\t" + graph.inEdges(vertex).size());
+        taskEdgeSet.add(graph.taskEdgesOf(vertex));
+        System.out.println("Task Edge Set Size:" + taskEdgeSet.size());
+        for (int i = 0; i < taskEdgeSet.size(); i++) {
+          Set<Edge> edgeSet = taskEdgeSet.get(i);
+          for (Edge edge : edgeSet) {
+            System.out.println("Edge and Corresponding Vertex Values:"
+                + graph.connectedParentTask(vertex, edge).getName());
 
-      if (graph.inEdges(vertex).size() >= 2) {
-        System.out.println("Incoming task edges:"
-            + vertex.getName() + "\t" + graph.inEdges(vertex));
-        LOG.info(" " + graph.childrenOfTask(vertex));
-        Set<Edge> vertices = graph.incomingTaskEdgesOf(vertex);
-        for (Edge e : vertices) {
-          System.out.println("values:" + e.getName() + "\t"
-              + graph.getParentOfTask(vertex, e.getName().toString()).getName());
+            System.out.println("Edge and Corresponding Vertex Values:"
+                + edge.getName() + "\t"
+                + graph.connectedChildTask(vertex, edge).getName());
+          }
         }
       }
     }
+
+    LOG.info("Task Vertex Greater than 2:"
+        + childTask + "\t" + childTask.get(0).getName());
 
     for (Vertex vertex : taskVertexSet) {
 
