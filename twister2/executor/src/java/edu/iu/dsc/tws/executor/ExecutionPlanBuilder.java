@@ -37,7 +37,7 @@ import edu.iu.dsc.tws.task.graph.Edge;
 import edu.iu.dsc.tws.task.graph.Vertex;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
-public class ExecutionPlanBuilder implements IExecutor {
+public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
   private static final Logger LOG = Logger.getLogger(ExecutionPlanBuilder.class.getName());
 
   /**
