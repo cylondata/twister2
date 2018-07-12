@@ -46,7 +46,7 @@ import edu.iu.dsc.tws.rsched.spi.container.IWorker;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import edu.iu.dsc.tws.rsched.utils.TarGzipPacker;
 
-import static edu.iu.dsc.tws.common.config.Context.DIR_PREFIX_FOR_JOB_ARCHIVE;
+import static edu.iu.dsc.tws.common.config.Context.JOB_ARCHIVE_DIRECTORY;
 import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.KUBERNETES_CLUSTER_TYPE;
 import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.POD_MEMORY_VOLUME;
 
@@ -146,10 +146,10 @@ public final class KubernetesWorkerStarter {
 
     String jobName = podName.substring(0, podName.lastIndexOf("-"));
     String jobDescFileName = SchedulerContext.createJobDescriptionFileName(jobName);
-    userJobJarFile = POD_MEMORY_VOLUME + "/" + DIR_PREFIX_FOR_JOB_ARCHIVE + userJobJarFile;
-    jobDescFileName = POD_MEMORY_VOLUME + "/" + DIR_PREFIX_FOR_JOB_ARCHIVE + jobDescFileName;
-    String configDir = POD_MEMORY_VOLUME + "/" + DIR_PREFIX_FOR_JOB_ARCHIVE
-        + KUBERNETES_CLUSTER_TYPE;
+    userJobJarFile = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY + "/" + userJobJarFile;
+    jobDescFileName = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY + "/" + jobDescFileName;
+    String configDir =
+        POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY + "/" + KUBERNETES_CLUSTER_TYPE;
 
     // if persistent uploading is used and this is the first worker in the first pod
     // get the job package file, copy to persistent directory

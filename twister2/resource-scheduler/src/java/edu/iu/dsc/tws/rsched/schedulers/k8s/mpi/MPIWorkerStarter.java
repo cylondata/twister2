@@ -39,7 +39,7 @@ import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import mpi.MPI;
 import mpi.MPIException;
 
-import static edu.iu.dsc.tws.common.config.Context.DIR_PREFIX_FOR_JOB_ARCHIVE;
+import static edu.iu.dsc.tws.common.config.Context.JOB_ARCHIVE_DIRECTORY;
 import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.KUBERNETES_CLUSTER_TYPE;
 import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.POD_MEMORY_VOLUME;
 
@@ -60,7 +60,7 @@ public final class MPIWorkerStarter {
     LoggingHelper.setLoggingFormat(LoggingHelper.DEFAULT_FORMAT);
 
     // load the configuration parameters from configuration directory
-    String configDir = POD_MEMORY_VOLUME + "/" + DIR_PREFIX_FOR_JOB_ARCHIVE
+    String configDir = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY + "/"
         + KUBERNETES_CLUSTER_TYPE;
 
     config = K8sWorkerUtils.loadConfig(configDir);
@@ -89,7 +89,7 @@ public final class MPIWorkerStarter {
     // read job description file
     String jobName = SchedulerContext.jobName(config);
     String jobDescFileName = SchedulerContext.createJobDescriptionFileName(jobName);
-    jobDescFileName = POD_MEMORY_VOLUME + "/" + DIR_PREFIX_FOR_JOB_ARCHIVE + jobDescFileName;
+    jobDescFileName = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY + "/" + jobDescFileName;
     JobAPI.Job job = JobUtils.readJobFile(null, jobDescFileName);
     LOG.info("Job description file is loaded: " + jobDescFileName);
 

@@ -446,8 +446,8 @@ public final class RequestObjectBuilder {
         .value(KubernetesConstants.POD_MEMORY_VOLUME));
 
     envVars.add(new V1EnvVar()
-        .name(KubernetesField.DIR_PREFIX_FOR_JOB_ARCHIVE + "")
-        .value(Context.DIR_PREFIX_FOR_JOB_ARCHIVE));
+        .name(KubernetesField.JOB_ARCHIVE_DIRECTORY + "")
+        .value(Context.JOB_ARCHIVE_DIRECTORY));
 
     envVars.add(new V1EnvVar()
         .name(KubernetesField.JOB_PACKAGE_FILENAME + "")
