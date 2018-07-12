@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.executor.threading;
 
 import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.executor.ExecutionPlan;
 
 public class ThreadExecutor implements IThreadExecutor {
