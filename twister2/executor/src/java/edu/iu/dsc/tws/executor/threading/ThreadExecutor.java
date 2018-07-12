@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.threading;
 
-import edu.iu.dsc.tws.comms.core.TWSNetwork;
+import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.executor.ExecutionPlan;
 
 public class ThreadExecutor implements IThreadExecutor {
@@ -20,7 +20,7 @@ public class ThreadExecutor implements IThreadExecutor {
 
   private ExecutionPlan executionPlan;
 
-  private TWSNetwork network;
+  private TWSChannel channel;
 
   public ThreadExecutor() {
 
@@ -32,10 +32,10 @@ public class ThreadExecutor implements IThreadExecutor {
   }
 
   public ThreadExecutor(ExecutionModel executionModel, ExecutionPlan executionPlan,
-                        TWSNetwork network) {
+                        TWSChannel channel) {
     this.executionModel = executionModel;
     this.executionPlan = executionPlan;
-    this.network = network;
+    this.channel = channel;
   }
 
   /***
@@ -48,6 +48,7 @@ public class ThreadExecutor implements IThreadExecutor {
     ThreadExecutorFactory threadExecutorFactory = new ThreadExecutorFactory(executionModel,
         this, executionPlan);
     threadExecutorFactory.execute();
+    progressComms();
   }
 
   /**
@@ -55,7 +56,7 @@ public class ThreadExecutor implements IThreadExecutor {
    */
   public void progressComms() {
     while (true) {
-      this.network.getChannel().progress();
+      this.channel.progress();
     }
   }
 
