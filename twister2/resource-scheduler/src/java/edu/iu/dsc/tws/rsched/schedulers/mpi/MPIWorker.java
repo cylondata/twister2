@@ -210,7 +210,12 @@ public final class MPIWorker {
     container.init(config, rank, resourcePlan);
   }
 
-  private static ResourcePlan createResourcePlan(Config config) {
+  /**
+   * create a ResourcePlan
+   * @param config
+   * @return
+   */
+  public static ResourcePlan createResourcePlan(Config config) {
     try {
       int rank = MPI.COMM_WORLD.getRank();
       ResourcePlan resourcePlan = new ResourcePlan(
