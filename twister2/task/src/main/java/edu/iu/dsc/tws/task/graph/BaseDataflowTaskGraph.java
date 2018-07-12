@@ -238,6 +238,26 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     return ret;
   }
 
+  public Set<TV> childrenOfTask(TV t) {
+    Set<TV> ret = new HashSet<>();
+    for (DirectedEdge<TV, TE> de : directedEdges) {
+      if (vertexComparator.compare(de.sourceTaskVertex, t) == 0) {
+        ret.add(de.targetTaskVertex);
+      }
+    }
+    return ret;
+  }
+
+  public Set<TV> parentsOfTask(TV t) {
+    Set<TV> ret = new HashSet<>();
+    for (DirectedEdge<TV, TE> de : directedEdges) {
+      if (vertexComparator.compare(de.targetTaskVertex, t) == 0) {
+        ret.add(de.sourceTaskVertex);
+      }
+    }
+    return ret;
+  }
+
   public int inDegreeOfTask(TV taskVertex) {
     Set<TE> ret = new HashSet<>();
     for (DirectedEdge<TV, TE> de : directedEdges) {
