@@ -262,6 +262,8 @@ public final class StandaloneWorkerStarter {
     JobMasterClient jobMasterClient = new JobMasterClient(cfg,
         new WorkerNetworkInfo(addr, port, workerId));
     jobMasterClient.init();
+    // now lets send the starting message
+    jobMasterClient.sendWorkerStartingMessage();
     return jobMasterClient;
   }
 
