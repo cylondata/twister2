@@ -56,17 +56,17 @@ public class WorkerMonitor implements MessageHandler {
   public void onMessage(RequestID id, int workerId, Message message) {
 
     if (message instanceof Network.Ping) {
-
+      LOG.log(Level.INFO, "Ping request received: " + message.toString());
       Network.Ping ping = (Network.Ping) message;
       pingMessageReceived(id, ping);
 
     } else if (message instanceof Network.WorkerStateChange) {
-
+      LOG.log(Level.INFO, "Worker change request received: " + message.toString());
       Network.WorkerStateChange wscMessage = (Network.WorkerStateChange) message;
       stateChangeMessageReceived(id, wscMessage);
 
     } else if (message instanceof Network.ListWorkersRequest) {
-
+      LOG.log(Level.INFO, "List worker request received: " + message.toString());
       Network.ListWorkersRequest listMessage = (Network.ListWorkersRequest) message;
       listWorkersMessageReceived(id, listMessage);
 
@@ -96,7 +96,6 @@ public class WorkerMonitor implements MessageHandler {
 
     if (message.getNewState() == Network.WorkerState.STARTING) {
       LOG.info("WorkerStateChange message received: \n" + message);
-
       InetAddress ip = WorkerInfo.covertToIPAddress(message.getWorkerIP());
       int port = message.getWorkerPort();
       int workerID = message.getWorkerID();
@@ -185,18 +184,22 @@ public class WorkerMonitor implements MessageHandler {
     if (listMessage.getRequestType() == Network.ListWorkersRequest.RequestType.IMMEDIATE_RESPONSE) {
 
       sendListWorkersResponse(listMessage.getWorkerID(), id);
+      LOG.log(Level.INFO, String.format("IR Workers expecting %d joined %d",
+          numberOfWorkers, workers.size()));
     } else if (listMessage.getRequestType()
         == Network.ListWorkersRequest.RequestType.RESPONSE_AFTER_ALL_JOINED) {
+      waitList.put(listMessage.getWorkerID(), id);
       // if all workers already joined, send the current list
       if (workers.size() == numberOfWorkers) {
-        sendListWorkersResponse(listMessage.getWorkerID(), id);
+//        sendListWorkersResponse(listMessage.getWorkerID(), id);
+        sendListWorkersResponseToWaitList();
         // if some workers have not yet joined, put this worker into the wait list
-      } else {
-        waitList.put(listMessage.getWorkerID(), id);
       }
-      LOG.log(Level.INFO, String.format("Workers expecting %d joined %d",
+      LOG.log(Level.INFO, String.format("WA Workers expecting %d joined %d",
           numberOfWorkers, workers.size()));
     }
+    LOG.log(Level.INFO, String.format("Workers expecting %d joined %d",
+        numberOfWorkers, workers.size()));
   }
 
   private void sendListWorkersResponse(int workerID, RequestID requestID) {

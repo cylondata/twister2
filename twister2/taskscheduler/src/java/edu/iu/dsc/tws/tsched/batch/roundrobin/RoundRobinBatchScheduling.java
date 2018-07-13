@@ -18,7 +18,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.graph.Vertex;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.InstanceId;
 import edu.iu.dsc.tws.tsched.utils.TaskAttributes;
@@ -36,15 +35,15 @@ public class RoundRobinBatchScheduling {
    * This method generate the container -> instance map
    */
   public static Map<Integer, List<InstanceId>> RoundRobinBatchSchedulingAlgo(
-      Vertex taskVertex, int numberOfContainers, Config config) {
+      Vertex taskVertex, int numberOfContainers) {
 
     TaskAttributes taskAttributes = new TaskAttributes();
-    Map<Integer, List<InstanceId>> fifoAllocation = new HashMap<>();
+    Map<Integer, List<InstanceId>> roundrobinAllocation = new HashMap<>();
     for (int i = 0; i < numberOfContainers; i++) {
-      fifoAllocation.put(i, new ArrayList<>());
+      roundrobinAllocation.put(i, new ArrayList<>());
     }
 
-    //LOG.info(String.format("Container Map Values Before Allocation %s", fifoAllocation));
+    //LOG.info(String.format("Container Map Values Before Allocation %s", roundrobinAllocation));
 
     try {
       Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertex);
@@ -53,38 +52,36 @@ public class RoundRobinBatchScheduling {
         String task = e.getKey();
         int numberOfInstances = e.getValue();
         for (int taskIndex = 0; taskIndex < numberOfInstances; taskIndex++) {
-          fifoAllocation.get(containerIndex).add(new InstanceId(task, taskId1, taskIndex));
+          roundrobinAllocation.get(containerIndex).add(new InstanceId(task, taskId1, taskIndex));
           ++containerIndex;
-          if (containerIndex >= fifoAllocation.size()) {
+          if (containerIndex >= roundrobinAllocation.size()) {
             containerIndex = 0;
           }
         }
         taskId1++;
       }
-      //LOG.info(String.format("Container Map Values After Allocation %s", fifoAllocation));
+      //LOG.info(String.format("Container Map Values After Allocation %s", roundrobinAllocation));
     } catch (NullPointerException ne) {
       ne.printStackTrace();
     }
-    return fifoAllocation;
+    return roundrobinAllocation;
   }
 
   /**
    * This method generate the container -> instance map
    */
   public static Map<Integer, List<InstanceId>> RoundRobinBatchSchedulingAlgo(
-      Set<Vertex> taskVertexSet, int numberOfContainers, Config config) {
+      Set<Vertex> taskVertexSet, int numberOfContainers) {
 
     TaskAttributes taskAttributes = new TaskAttributes();
-    Map<Integer, List<InstanceId>> fifoAllocation = new HashMap<>();
+    Map<Integer, List<InstanceId>> roundrobinAllocation = new HashMap<>();
     for (int i = 0; i < numberOfContainers; i++) {
-      fifoAllocation.put(i, new ArrayList<>());
+      roundrobinAllocation.put(i, new ArrayList<>());
     }
 
-    LOG.info(String.format("Container Map Values Before Allocation %s", fifoAllocation));
-
+    //LOG.info(String.format("Container Map Values Before Allocation %s", roundrobinAllocation));
     try {
       Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
-
       int taskId = 0;
       int containerIndex = 0;
 
@@ -92,18 +89,20 @@ public class RoundRobinBatchScheduling {
         String task = e.getKey();
         int numberOfInstances = e.getValue();
         for (int taskIndex = 0; taskIndex < numberOfInstances; taskIndex++) {
-          fifoAllocation.get(containerIndex).add(new InstanceId(task, taskId, taskIndex));
+          //roundrobinAllocation.get(containerIndex).add(new InstanceId(task, taskId, taskIndex));
+          roundrobinAllocation.get(containerIndex).add(new InstanceId(task, taskId1, taskIndex));
           ++containerIndex;
-          if (containerIndex >= fifoAllocation.size()) {
+          if (containerIndex >= roundrobinAllocation.size()) {
             containerIndex = 0;
           }
         }
+        taskId1++;
         taskId++;
       }
-      LOG.info(String.format("Container Map Values After Allocation %s", fifoAllocation));
+      //LOG.info(String.format("Container Map Values After Allocation %s", roundrobinAllocation));
     } catch (NullPointerException ne) {
       ne.printStackTrace();
     }
-    return fifoAllocation;
+    return roundrobinAllocation;
   }
 }

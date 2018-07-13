@@ -70,7 +70,7 @@ public final class StandaloneWorkerStarter {
       Config config = loadConfigurations(cmd, rank);
       // normal worker
       LOG.log(Level.INFO, "A worker process is starting...");
-      worker(config, rank);
+      createWorker(config, rank);
     } catch (ParseException e) {
       HelpFormatter formatter = new HelpFormatter();
       formatter.printHelp("SubmitterMain", cmdOptions);
@@ -154,22 +154,22 @@ public final class StandaloneWorkerStarter {
 
     String jobDescFile = JobUtils.getJobDescriptionFilePath(jobName, workerConfig);
     JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
+    job.getJobResources().getNoOfContainers();
 
     Config updatedConfig = JobUtils.overrideConfigs(job, config);
-
     updatedConfig = Config.newBuilder().putAll(updatedConfig).
         put(SchedulerContext.TWISTER2_HOME.getKey(), twister2Home).
         put(SchedulerContext.CONTAINER_CLASS, container).
         put(SchedulerContext.TWISTER2_CONTAINER_ID, id).
-        put(SchedulerContext.TWISTER2_CLUSTER_TYPE, clusterType).build();
+        put(SchedulerContext.TWISTER2_CLUSTER_TYPE, clusterType).
+        put(SchedulerContext.JOB_NAME, job.getJobName()).build();
     return updatedConfig;
   }
 
-  private static void worker(Config config, int rank) {
+  private static void createWorker(Config config, int rank) {
     // lets create the resource plan
     ResourcePlan resourcePlan = createResourcePlan(config);
     LOG.info("Starting worker");
-    System.out.println("Starting worker");
     String containerClass = SchedulerContext.containerClass(config);
     IContainer container;
     try {
@@ -209,10 +209,12 @@ public final class StandaloneWorkerStarter {
     int masterPort = JobMasterContext.jobMasterPort(config);
     TCPChannel channel;
     try {
+      Integer workerPort = ports.get("worker");
       channel = initNetworkServer(config,
-          new WorkerNetworkInfo(InetAddress.getByName("0.0.0.0"), ports.get("worker"), index),
+          new WorkerNetworkInfo(InetAddress.getByName("0.0.0.0"), workerPort, index),
           index);
-      client = createMasterClient(config, index, jobMasterIP, masterPort);
+      client = createMasterClient(config, index, InetAddress.getLocalHost().getHostName(),
+          workerPort, masterPort, jobMasterIP);
     } catch (UnknownHostException e) {
       throw new RuntimeException("Failed to get network address: " + jobMasterIP, e);
     }
@@ -255,12 +257,20 @@ public final class StandaloneWorkerStarter {
   /**
    * Create the job master client to get information about the workers
    */
-  private static JobMasterClient createMasterClient(Config cfg, int workerId, String host,
-                                             int port) throws UnknownHostException {
+  private static JobMasterClient createMasterClient(Config cfg, int workerId,
+                                                    String host, int workerPort,
+                                                    int masterPort,
+                                                    String masterHost) throws UnknownHostException {
+    String jobName = StandaloneContext.jobName(cfg);
+    String jobDescFile = JobUtils.getJobDescriptionFilePath(jobName, cfg);
+    JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
+    int numberContainers = job.getJobResources().getNoOfContainers();
+
     // we start the job master client
     JobMasterClient jobMasterClient = new JobMasterClient(cfg,
-        new WorkerNetworkInfo(InetAddress.getByName(host), port, workerId));
-    LOG.log(Level.INFO, String.format("Connecting to job master %s:%d", host, port));
+        new WorkerNetworkInfo(InetAddress.getByName(host), workerPort, workerId),
+        masterHost, masterPort, numberContainers);
+    LOG.log(Level.INFO, String.format("Connecting to job master %s:%d", host, workerPort));
     jobMasterClient.init();
     // now lets send the starting message
     jobMasterClient.sendWorkerStartingMessage();

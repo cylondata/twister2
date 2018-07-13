@@ -46,7 +46,7 @@ import edu.iu.dsc.tws.rsched.spi.container.IWorker;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import edu.iu.dsc.tws.rsched.utils.TarGzipPacker;
 
-import static edu.iu.dsc.tws.common.config.Context.DIR_PREFIX_FOR_JOB_ARCHIVE;
+import static edu.iu.dsc.tws.common.config.Context.JOB_ARCHIVE_DIRECTORY;
 import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.KUBERNETES_CLUSTER_TYPE;
 import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.POD_MEMORY_VOLUME;
 
@@ -92,7 +92,7 @@ public final class KubernetesWorkerStarter {
 
     // set workerID
     int containersPerPod = KubernetesContext.workersPerPod(envConfigs);
-    int workerID = calculateWorkerID(podName, containerName, containersPerPod);
+    int workerID = K8sWorkerUtils.calculateWorkerID(podName, containerName, containersPerPod);
 
     // set thisWorker variable
     int workerPort = KubernetesContext.workerPort(envConfigs);
@@ -146,10 +146,10 @@ public final class KubernetesWorkerStarter {
 
     String jobName = podName.substring(0, podName.lastIndexOf("-"));
     String jobDescFileName = SchedulerContext.createJobDescriptionFileName(jobName);
-    userJobJarFile = POD_MEMORY_VOLUME + "/" + DIR_PREFIX_FOR_JOB_ARCHIVE + userJobJarFile;
-    jobDescFileName = POD_MEMORY_VOLUME + "/" + DIR_PREFIX_FOR_JOB_ARCHIVE + jobDescFileName;
-    String configDir = POD_MEMORY_VOLUME + "/" + DIR_PREFIX_FOR_JOB_ARCHIVE
-        + KUBERNETES_CLUSTER_TYPE;
+    userJobJarFile = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY + "/" + userJobJarFile;
+    jobDescFileName = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY + "/" + jobDescFileName;
+    String configDir =
+        POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY + "/" + KUBERNETES_CLUSTER_TYPE;
 
     // if persistent uploading is used and this is the first worker in the first pod
     // get the job package file, copy to persistent directory
@@ -214,7 +214,7 @@ public final class KubernetesWorkerStarter {
         .put(LoggingContext.MAX_LOG_FILES, System.getenv(LoggingContext.MAX_LOG_FILES))
         .put(KubernetesContext.PERSISTENT_VOLUME_UPLOADING,
             System.getenv(KubernetesContext.PERSISTENT_VOLUME_UPLOADING))
-        .put(KubernetesContext.K8S_WORKER_PORT, System.getenv(KubernetesContext.K8S_WORKER_PORT))
+        .put(KubernetesField.WORKER_PORT + "", System.getenv(KubernetesField.WORKER_PORT + ""))
         .put(JobMasterContext.JOB_MASTER_IP, System.getenv(JobMasterContext.JOB_MASTER_IP))
         .put(JobMasterContext.JOB_MASTER_PORT, System.getenv(JobMasterContext.JOB_MASTER_PORT))
         .put(Context.TWISTER2_WORKER_INSTANCES, System.getenv(Context.TWISTER2_WORKER_INSTANCES))
@@ -309,16 +309,6 @@ public final class KubernetesWorkerStarter {
         LOG.log(Level.WARNING, "Thread sleep interrupted.", e);
       }
     }
-  }
-
-  /**
-   * calculate the workerID from the given parameters
-   */
-  public static int calculateWorkerID(String podName, String containerName, int workersPerPod) {
-    int podNo = KubernetesUtils.idFromName(podName);
-    int containerIndex = KubernetesUtils.idFromName(containerName);
-
-    return podNo * workersPerPod + containerIndex;
   }
 
   /**

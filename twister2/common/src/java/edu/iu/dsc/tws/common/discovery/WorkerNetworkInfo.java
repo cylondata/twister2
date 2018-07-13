@@ -43,6 +43,11 @@ public class WorkerNetworkInfo {
     this.workerID = workerID;
   }
 
+  /**
+   * workerName has both IP and port in the form of ip:port
+   * @param workerName
+   * @param workerID
+   */
   public WorkerNetworkInfo(String workerName, int workerID) {
     this.ip = constructWorkerIP(workerName);
     this.port = Integer.parseInt(workerName.substring(workerName.indexOf(":") + 1));

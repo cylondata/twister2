@@ -41,8 +41,13 @@ public class WorkerController implements IWorkerController, MessageHandler {
   private Config config;
 
   public WorkerController(Config config, WorkerNetworkInfo thisWorker, RRClient rrClient) {
+    this(config, thisWorker, rrClient, JobMasterContext.workerInstances(config));
+  }
+
+  public WorkerController(Config config, WorkerNetworkInfo thisWorker,
+                          RRClient rrClient, int numberOfWorkers) {
     this.config = config;
-    this.numberOfWorkers = JobMasterContext.workerInstances(config);
+    this.numberOfWorkers = numberOfWorkers;
     this.thisWorker = thisWorker;
     this.rrClient = rrClient;
     workerList = new ArrayList<>();
