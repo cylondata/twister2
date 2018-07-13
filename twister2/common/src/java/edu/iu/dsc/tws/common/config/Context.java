@@ -75,11 +75,14 @@ public class Context {
   public static final String TWISTER2_CONTAINER_ID = "twister2.container.id";
   public static final String TWISTER2_CLUSTER_TYPE = "twister2.cluster.type";
 
-  public static final String DIR_PREFIX_FOR_JOB_ARCHIVE = "twister2-job/";
+  // job files will be packed in this directory in tar.gz file
+  // job files will also be unpacked to this directory
+  public static final String JOB_ARCHIVE_DIRECTORY = "twister2-job";
 
   public static final double TWISTER2_WORKER_CPU_DEFAULT = 1.0;
   public static final String TWISTER2_WORKER_CPU = "twister2.worker.cpu";
 
+  // RAM in mega bytes
   public static final int TWISTER2_WORKER_RAM_DEFAULT = 200;
   public static final String TWISTER2_WORKER_RAM = "twister2.worker.ram";
 
@@ -186,14 +189,28 @@ public class Context {
     return cfg.getStringValue(TWISTER2_HOME);
   }
 
+  /**
+   * CPU as double.
+   * Can be any value more than 0.0
+   * Examples: 0.2, 2.5, etc
+   * @return
+   */
   public static double workerCPU(Config cfg) {
     return cfg.getDoubleValue(TWISTER2_WORKER_CPU, TWISTER2_WORKER_CPU_DEFAULT);
   }
 
+  /**
+   * RAM in Mega Bytes
+   * @return
+   */
   public static int workerRAM(Config cfg) {
     return cfg.getIntegerValue(TWISTER2_WORKER_RAM, TWISTER2_WORKER_RAM_DEFAULT);
   }
 
+  /**
+   * Disk in Giga Bytes
+   * @return
+   */
   public static double workerVolatileDisk(Config cfg) {
     return cfg.getDoubleValue(WORKER_VOLATILE_DISK, WORKER_VOLATILE_DISK_DEFAULT);
   }
