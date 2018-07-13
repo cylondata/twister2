@@ -262,15 +262,14 @@ public final class RequestObjectBuilder {
     container.setImagePullPolicy(KubernetesContext.imagePullPolicy(config));
 
 //        container.setArgs(Arrays.asList("1000000")); parameter to the main method
+
+    String startScript = null;
     if (KubernetesContext.workersUseOpenMPI(config)) {
-      container.setCommand(
-          Arrays.asList(
-              "./init_openmpi.sh"));
+      startScript = "./init_openmpi.sh";
     } else {
-      container.setCommand(
-          Arrays.asList(
-              "java", "edu.iu.dsc.tws.rsched.schedulers.k8s.worker.KubernetesWorkerStarter"));
+      startScript = "./init_nonmpi.sh";
     }
+    container.setCommand(Arrays.asList(startScript));
 
     V1ResourceRequirements resReq = new V1ResourceRequirements();
     if (KubernetesContext.bindWorkerToCPU(config)) {
@@ -337,6 +336,7 @@ public final class RequestObjectBuilder {
   public static List<V1EnvVar> constructEnvironmentVariables(Config config,
                                                    String containerName, long jobFileSize,
                                                    String persistentJobDir, int workerPort) {
+
     ArrayList<V1EnvVar> envVars = new ArrayList<>();
 
     envVars.add(new V1EnvVar()
@@ -406,10 +406,6 @@ public final class RequestObjectBuilder {
         .value(Context.workerInstances(config) + ""));
 
     envVars.add(new V1EnvVar()
-        .name(KubernetesContext.K8S_WORKER_PORT)
-        .value(workerPort + ""));
-
-    envVars.add(new V1EnvVar()
         .name(JobMasterContext.JOB_MASTER_PORT)
         .value(JobMasterContext.jobMasterPort(config) + ""));
 
@@ -437,9 +433,18 @@ public final class RequestObjectBuilder {
         .name(KubernetesContext.KUBERNETES_NAMESPACE)
         .value(KubernetesContext.namespace(config)));
 
-    envVars.add(new V1EnvVar()
-        .name(KubernetesField.CLASS_TO_RUN + "")
-        .value("edu.iu.dsc.tws.rsched.schedulers.k8s.mpi.MPIMasterStarter"));
+    if (KubernetesContext.workersUseOpenMPI(config)) {
+
+      envVars.add(new V1EnvVar()
+          .name(KubernetesField.CLASS_TO_RUN + "")
+          .value("edu.iu.dsc.tws.rsched.schedulers.k8s.mpi.MPIMasterStarter"));
+
+    } else {
+
+      envVars.add(new V1EnvVar()
+          .name(KubernetesField.CLASS_TO_RUN + "")
+          .value("edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerStarter"));
+    }
 
     envVars.add(new V1EnvVar()
         .name(KubernetesField.POD_MEMORY_VOLUME + "")
@@ -452,6 +457,14 @@ public final class RequestObjectBuilder {
     envVars.add(new V1EnvVar()
         .name(KubernetesField.JOB_PACKAGE_FILENAME + "")
         .value(SchedulerContext.jobPackageFileName(config)));
+
+    envVars.add(new V1EnvVar()
+        .name(KubernetesField.WORKER_PORT + "")
+        .value(workerPort + ""));
+
+    envVars.add(new V1EnvVar()
+        .name(KubernetesField.UPLOAD_METHOD + "")
+        .value(KubernetesContext.uploadMethod(config)));
 
     return envVars;
   }

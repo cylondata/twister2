@@ -75,6 +75,10 @@ public class KubernetesContext extends SchedulerContext {
   public static final boolean PERSISTENT_VOLUME_UPLOADING_DEFAULT = true;
   public static final String PERSISTENT_VOLUME_UPLOADING = "kubernetes.persistent.volume.uploading";
 
+  // it can be either "webserver", "client-to-pods"
+  public static final String K8S_UPLOADING_METHOD_DEFAULT = "webserver";
+  public static final String K8S_UPLOADING_METHOD = "twister2.kubernetes.uploading.method";
+
   public static final String PERSISTENT_JOB_DIRECTORY = "job.master.persistent.job.directory";
 
   public static int workersPerPod(Config cfg) {
@@ -155,6 +159,10 @@ public class KubernetesContext extends SchedulerContext {
 
   public static String persistentJobDirectory(Config cfg) {
     return cfg.getStringValue(PERSISTENT_JOB_DIRECTORY);
+  }
+
+  public static String uploadMethod(Config cfg) {
+    return cfg.getStringValue(K8S_UPLOADING_METHOD, K8S_UPLOADING_METHOD_DEFAULT);
   }
 
 }

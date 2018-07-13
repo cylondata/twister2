@@ -112,32 +112,33 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
       return false;
     }
 
+    if (KubernetesContext.uploadMethod(config).equalsIgnoreCase("client-to-pods")) {
+      // transfer the job package to pods, measure the transfer time
+      long start = System.currentTimeMillis();
 
-    // transfer the job package to pods, measure the transfer time
-//    long start = System.currentTimeMillis();
-//
-//    int containersPerPod = KubernetesContext.workersPerPod(config);
-//    int numberOfPods = resourceRequest.getNoOfContainers() / containersPerPod;
-//
-//    boolean transferred;
-//    if (KubernetesContext.persistentVolumeRequested(config)
-//        && KubernetesContext.persistentVolumeUploading(config)) {
-//      transferred = controller.transferJobPackage(namespace, jobName, jobPackageFile);
-//    } else {
-//      transferred =
-//        controller.transferJobPackageInParallel(namespace, jobName, numberOfPods, jobPackageFile);
-//    }
-//
-//    if (transferred) {
-//      long duration = System.currentTimeMillis() - start;
-//      LOG.info("Transferring all files took: " + duration + " ms.");
-//    } else {
-//      LOG.log(Level.SEVERE, "Transferring the job package to some pods failed."
-//          + "\nPlease run terminate job to clear up any artifacts from previous jobs, "
-//          + "or submit the job with a different name."
-//          + "\n++++++ Aborting submission. ++++++");
-//      return false;
-//    }
+      int containersPerPod = KubernetesContext.workersPerPod(config);
+      int numberOfPods = resourceRequest.getNoOfContainers() / containersPerPod;
+
+      boolean transferred;
+      if (KubernetesContext.persistentVolumeRequested(config)
+          && KubernetesContext.persistentVolumeUploading(config)) {
+        transferred = controller.transferJobPackage(namespace, jobName, jobPackageFile);
+      } else {
+        transferred =
+          controller.transferJobPackageInParallel(namespace, jobName, numberOfPods, jobPackageFile);
+      }
+
+      if (transferred) {
+        long duration = System.currentTimeMillis() - start;
+        LOG.info("Transferring all files took: " + duration + " ms.");
+      } else {
+        LOG.log(Level.SEVERE, "Transferring the job package to some pods failed."
+            + "\nPlease run terminate job to clear up any artifacts from previous jobs, "
+            + "or submit the job with a different name."
+            + "\n++++++ Aborting submission. ++++++");
+        return false;
+      }
+    }
 
     return true;
   }

@@ -92,7 +92,7 @@ public final class KubernetesWorkerStarter {
 
     // set workerID
     int containersPerPod = KubernetesContext.workersPerPod(envConfigs);
-    int workerID = calculateWorkerID(podName, containerName, containersPerPod);
+    int workerID = K8sWorkerUtils.calculateWorkerID(podName, containerName, containersPerPod);
 
     // set thisWorker variable
     int workerPort = KubernetesContext.workerPort(envConfigs);
@@ -214,7 +214,7 @@ public final class KubernetesWorkerStarter {
         .put(LoggingContext.MAX_LOG_FILES, System.getenv(LoggingContext.MAX_LOG_FILES))
         .put(KubernetesContext.PERSISTENT_VOLUME_UPLOADING,
             System.getenv(KubernetesContext.PERSISTENT_VOLUME_UPLOADING))
-        .put(KubernetesContext.K8S_WORKER_PORT, System.getenv(KubernetesContext.K8S_WORKER_PORT))
+        .put(KubernetesField.WORKER_PORT + "", System.getenv(KubernetesField.WORKER_PORT + ""))
         .put(JobMasterContext.JOB_MASTER_IP, System.getenv(JobMasterContext.JOB_MASTER_IP))
         .put(JobMasterContext.JOB_MASTER_PORT, System.getenv(JobMasterContext.JOB_MASTER_PORT))
         .put(Context.TWISTER2_WORKER_INSTANCES, System.getenv(Context.TWISTER2_WORKER_INSTANCES))
@@ -309,16 +309,6 @@ public final class KubernetesWorkerStarter {
         LOG.log(Level.WARNING, "Thread sleep interrupted.", e);
       }
     }
-  }
-
-  /**
-   * calculate the workerID from the given parameters
-   */
-  public static int calculateWorkerID(String podName, String containerName, int workersPerPod) {
-    int podNo = KubernetesUtils.idFromName(podName);
-    int containerIndex = KubernetesUtils.idFromName(containerName);
-
-    return podNo * workersPerPod + containerIndex;
   }
 
   /**

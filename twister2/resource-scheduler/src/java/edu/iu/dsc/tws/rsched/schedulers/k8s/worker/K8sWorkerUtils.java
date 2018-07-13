@@ -175,9 +175,17 @@ public final class K8sWorkerUtils {
     JobMasterClient jobMasterClient = new JobMasterClient(cnf, networkInfo);
     jobMasterClient.init();
 
-
-
     return jobMasterClient;
+  }
+
+  /**
+   * calculate the workerID from the given parameters
+   */
+  public static int calculateWorkerID(String podName, String containerName, int workersPerPod) {
+    int podNo = KubernetesUtils.idFromName(podName);
+    int containerIndex = KubernetesUtils.idFromName(containerName);
+
+    return podNo * workersPerPod + containerIndex;
   }
 
 }
