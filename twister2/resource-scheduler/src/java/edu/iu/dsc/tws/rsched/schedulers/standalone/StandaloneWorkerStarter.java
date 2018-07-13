@@ -212,8 +212,7 @@ public final class StandaloneWorkerStarter {
       channel = initNetworkServer(config,
           new WorkerNetworkInfo(InetAddress.getByName("0.0.0.0"), ports.get("worker"), index),
           index);
-      client = createMasterClient(config, index,
-          InetAddress.getByName(jobMasterIP), masterPort);
+      client = createMasterClient(config, index, jobMasterIP, masterPort);
     } catch (UnknownHostException e) {
       throw new RuntimeException("Failed to get network address: " + jobMasterIP, e);
     }
@@ -256,12 +255,15 @@ public final class StandaloneWorkerStarter {
   /**
    * Create the job master client to get information about the workers
    */
-  private static JobMasterClient createMasterClient(Config cfg, int workerId, InetAddress addr,
-                                             int port) {
+  private static JobMasterClient createMasterClient(Config cfg, int workerId, String host,
+                                             int port) throws UnknownHostException {
     // we start the job master client
     JobMasterClient jobMasterClient = new JobMasterClient(cfg,
-        new WorkerNetworkInfo(addr, port, workerId));
+        new WorkerNetworkInfo(InetAddress.getByName(host), port, workerId));
+    LOG.log(Level.INFO, String.format("Connecting to job master %s:%d", host, port));
     jobMasterClient.init();
+    // now lets send the starting message
+    jobMasterClient.sendWorkerStartingMessage();
     return jobMasterClient;
   }
 
