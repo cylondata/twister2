@@ -185,6 +185,8 @@ public class WorkerMonitor implements MessageHandler {
     if (listMessage.getRequestType() == Network.ListWorkersRequest.RequestType.IMMEDIATE_RESPONSE) {
 
       sendListWorkersResponse(listMessage.getWorkerID(), id);
+      LOG.log(Level.INFO, String.format("IR Workers expecting %d joined %d",
+          numberOfWorkers, workers.size()));
     } else if (listMessage.getRequestType()
         == Network.ListWorkersRequest.RequestType.RESPONSE_AFTER_ALL_JOINED) {
       // if all workers already joined, send the current list
@@ -194,9 +196,11 @@ public class WorkerMonitor implements MessageHandler {
       } else {
         waitList.put(listMessage.getWorkerID(), id);
       }
-      LOG.log(Level.INFO, String.format("Workers expecting %d joined %d",
+      LOG.log(Level.INFO, String.format("WA Workers expecting %d joined %d",
           numberOfWorkers, workers.size()));
     }
+    LOG.log(Level.INFO, String.format("Workers expecting %d joined %d",
+        numberOfWorkers, workers.size()));
   }
 
   private void sendListWorkersResponse(int workerID, RequestID requestID) {

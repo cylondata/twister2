@@ -52,10 +52,16 @@ public class JobMasterClient extends Thread {
   private boolean startingMessageSent = false;
 
   public JobMasterClient(Config config, WorkerNetworkInfo thisWorker) {
+    this(config, thisWorker, JobMasterContext.jobMasterIP(config),
+        JobMasterContext.jobMasterPort(config));
+  }
+
+  public JobMasterClient(Config config, WorkerNetworkInfo thisWorker,
+                         String masterHost, int masterPort) {
     this.config = config;
     this.thisWorker = thisWorker;
-    this.masterAddress = JobMasterContext.jobMasterIP(config);
-    this.masterPort = JobMasterContext.jobMasterPort(config);
+    this.masterAddress = masterHost;
+    this.masterPort = masterPort;
   }
 
   /**
