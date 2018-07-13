@@ -22,7 +22,7 @@ public interface IExecutionPlanBuilder {
    * @param taskSchedule the task schedule
    * @return the execution created and null if nothing to execute
    */
-  ExecutionPlan schedule(Config cfg, DataFlowTaskGraph taskGraph,
+  ExecutionPlan execute(Config cfg, DataFlowTaskGraph taskGraph,
                          TaskSchedulePlan taskSchedule);
 
   /**

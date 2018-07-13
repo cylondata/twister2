@@ -83,7 +83,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
   }
 
   @Override
-  public ExecutionPlan schedule(Config cfg, DataFlowTaskGraph taskGraph,
+  public ExecutionPlan execute(Config cfg, DataFlowTaskGraph taskGraph,
                                 TaskSchedulePlan taskSchedule) {
 
     noOfThreads = ExecutorContext.threadsPerContainer(cfg);
