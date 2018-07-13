@@ -480,6 +480,9 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     if ((header.getFlags() & MessageFlags.EMPTY) != MessageFlags.EMPTY) {
       object = messageDeSerializer.get(receiveId).build(currentMessage,
           currentMessage.getHeader().getEdge());
+    } else if ((header.getFlags() & MessageFlags.BARRIER) == MessageFlags.BARRIER) {
+      object = messageDeSerializer.get(receiveId).build(currentMessage,
+          currentMessage.getHeader().getEdge());
     }
     Queue<Pair<Object, ChannelMessage>> pendingReceiveMessages =
         pendingReceiveMessagesPerSource.get(id);
