@@ -54,69 +54,32 @@ public class RoundRobinBatchTaskScheduling implements TaskSchedule {
   /**
    * This method is responsible for handling the batch dataflow task graph.
    */
-  @SuppressWarnings("unchecked")
   public List<TaskSchedulePlan> scheduleBatch(
       DataFlowTaskGraph dataFlowTaskGraph, WorkerPlan workerPlan) {
 
     List<TaskSchedulePlan> taskSchedulePlanList = new ArrayList<>();
     Map<Integer, List<InstanceId>> roundrobinContainerInstanceMap;
+
     //Set<Vertex> taskVertexSet = dataFlowTaskGraph.getTaskVertexSet();
     Set<Vertex> taskVertexSet = new LinkedHashSet<>(dataFlowTaskGraph.getTaskVertexSet());
+    List<Set<Vertex>> taskVertexList = parseVertexSet(taskVertexSet, dataFlowTaskGraph);
 
-    List<Set<Vertex>> taskVertexList = new ArrayList<>();
-    Set<Vertex> newVertexSet = new LinkedHashSet<>();
-
-    for (Vertex vertex : taskVertexSet) {
-      if (dataFlowTaskGraph.outgoingTaskEdgesOf(vertex).size() >= 2) {
-        Set<Vertex> parentTask = new LinkedHashSet<>();
-        parentTask.add(vertex);
-        taskVertexList.add(parentTask);
-
-        Set<Vertex> vertexSet = dataFlowTaskGraph.childrenOfTask(vertex);
-        taskVertexList.add(vertexSet);
-
-        for (Vertex vertex1 : vertexSet) {
-          LOG.info("%%%% Vertex:" + vertex + "-> child tasks ->"
-              + vertex1.getName() + "->" + vertex1.getTask());
-        }
-      } else {
-        LOG.info("Vertex Name for else loop:" + vertex.getName());
-        /*for (int i = 0; i < taskVertexList.size(); i++) {
-          Set<Vertex> vv = taskVertexList.get(i);
-          if (vv.contains(vertex)) {
-            LOG.info("Vertex" + vertex.getName() + " is already added");
-          } else {
-            newVertexSet.add(vertex);
-            taskVertexList.add(newVertexSet);
-          }
-        }*/
-        newVertexSet.add(vertex);
-        taskVertexList.add(newVertexSet);
-      }
-    }
-
-    /*else if (dataFlowTaskGraph.incomingTaskEdgesOf(vertex).size() >= 2) {
-        Set<Vertex> vertexSet = dataFlowTaskGraph.parentsOfTask(vertex);
-        for (Vertex vertex1 : vertexSet) {
-          LOG.info("%%%% Vertex:" + vertex + "-> parent tasks ->"
-              + vertex1.getName() + "->" + vertex1.getTask());
-        }
-    }*/
-
-    LOG.info("Task Vertex Size:" + taskVertexList.size());
+    LOG.info("Task Vertex Set List Size: %%%%" + taskVertexList.size());
 
     for (int i = 0; i < taskVertexList.size(); i++) {
-      LOG.info("Task Vertex Set Details:" + taskVertexList.get(i).size());
+
       Set<Vertex> vertexSet = taskVertexList.get(i);
-      for (Vertex vertex: vertexSet) {
-        LOG.info("Vertex Details:" + vertex.getName());
+
+      LOG.info("%%%% Task Vertex Set Size: %%%%" + vertexSet.size());
+
+      if (vertexSet.size() > 1) {
+        roundrobinContainerInstanceMap = RoundRobinBatchScheduling.
+            RoundRobinBatchSchedulingAlgo(vertexSet, workerPlan.getNumberOfWorkers());
+      } else {
+        Vertex vertex = vertexSet.iterator().next();
+        roundrobinContainerInstanceMap = RoundRobinBatchScheduling.
+            RoundRobinBatchSchedulingAlgo(vertex, workerPlan.getNumberOfWorkers());
       }
-    }
-
-
-    for (Vertex vertex : taskVertexSet) {
-      roundrobinContainerInstanceMap = RoundRobinBatchScheduling.
-          RoundRobinBatchSchedulingAlgo(vertex, workerPlan.getNumberOfWorkers(), cfg);
 
       Set<TaskSchedulePlan.ContainerPlan> containerPlans = new HashSet<>();
 
@@ -164,7 +127,8 @@ public class RoundRobinBatchTaskScheduling implements TaskSchedule {
         Worker worker = workerPlan.getWorker(containerId);
         Resource containerResource;
 
-        if (worker != null && worker.getCpu() > 0 && worker.getDisk() > 0 && worker.getRam() > 0) {
+        if (worker != null && worker.getCpu() > 0
+            && worker.getDisk() > 0 && worker.getRam() > 0) {
           containerResource = new Resource((double) worker.getRam(),
               (double) worker.getDisk(), (double) worker.getCpu());
           LOG.fine(String.format("Worker (if loop):" + containerId + "\tRam:"
@@ -206,21 +170,49 @@ public class RoundRobinBatchTaskScheduling implements TaskSchedule {
     return taskSchedulePlanList;
   }
 
+  @SuppressWarnings("unchecked")
+  private List<Set<Vertex>> parseVertexSet(
+      Set<Vertex> taskVertexSet, DataFlowTaskGraph dataFlowTaskGraph) {
+
+    List<Set<Vertex>> taskVertexList = new ArrayList<>();
+
+    for (Vertex vertex : taskVertexSet) {
+      if (dataFlowTaskGraph.outgoingTaskEdgesOf(vertex).size() >= 2) {
+        Set<Vertex> parentTask = new LinkedHashSet<>();
+        parentTask.add(vertex);
+        taskVertexList.add(parentTask);
+
+        LinkedHashSet<Vertex> vertexSet = (LinkedHashSet) dataFlowTaskGraph.childrenOfTask(vertex);
+        taskVertexList.add(vertexSet);
+
+      } else if (dataFlowTaskGraph.incomingTaskEdgesOf(vertex).size() >= 2) {
+        Set<Vertex> parentTask1 = new LinkedHashSet<>();
+        for (int i = 0; i < taskVertexList.size(); i++) {
+          Set<Vertex> vv = taskVertexList.get(i);
+          for (Vertex vertex1 : vv) {
+            if (!vertex1.getName().equals(vv) && !parentTask1.contains(vertex)) {
+              LOG.info("vv details:" + vertex1.getName()
+                  + "\tvertex details:" + vertex.getName());
+              parentTask1.add(vertex);
+              taskVertexList.add(parentTask1);
+            }
+          }
+        }
+      }
+    }
+    return taskVertexList;
+  }
+
   @Override
   public TaskSchedulePlan schedule(DataFlowTaskGraph dataFlowTaskGraph, WorkerPlan workerPlan) {
 
     Set<TaskSchedulePlan.ContainerPlan> containerPlans = new HashSet<>();
     Set<Vertex> taskVertexSet = dataFlowTaskGraph.getTaskVertexSet();
-
-//  Map<Integer, List<InstanceId>> roundrobinContainerInstanceMap = FIFOBatchScheduling.
-//      FIFOSchedulingAlgorithm(taskVertexSet, workerPlan.getNumberOfWorkers(), cfg);
-
     Map<Integer, List<InstanceId>> roundrobinContainerInstanceMap;
 
     for (Vertex vertex : taskVertexSet) {
       roundrobinContainerInstanceMap = RoundRobinBatchScheduling.
-          RoundRobinBatchSchedulingAlgo(vertex, workerPlan.getNumberOfWorkers(), cfg);
-      System.out.println("Vertex V is:" + vertex.getName() + "\t" + vertex);
+          RoundRobinBatchSchedulingAlgo(vertex, workerPlan.getNumberOfWorkers());
 
       TaskInstanceMapCalculation instanceMapCalculation = new TaskInstanceMapCalculation(
           this.instanceRAM, this.instanceCPU, this.instanceDisk);
