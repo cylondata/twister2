@@ -264,7 +264,7 @@ public final class StandaloneWorkerStarter {
     // we start the job master client
     JobMasterClient jobMasterClient = new JobMasterClient(cfg,
         new WorkerNetworkInfo(InetAddress.getByName(host), workerPort, workerId),
-        masterHost, masterPort);
+        masterHost, masterPort, 4);
     LOG.log(Level.INFO, String.format("Connecting to job master %s:%d", host, workerPort));
     jobMasterClient.init();
     // now lets send the starting message

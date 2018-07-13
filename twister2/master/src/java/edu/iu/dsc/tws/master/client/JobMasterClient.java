@@ -51,17 +51,20 @@ public class JobMasterClient extends Thread {
 
   private boolean startingMessageSent = false;
 
+  private int numberOfWorkers;
+
   public JobMasterClient(Config config, WorkerNetworkInfo thisWorker) {
     this(config, thisWorker, JobMasterContext.jobMasterIP(config),
-        JobMasterContext.jobMasterPort(config));
+        JobMasterContext.jobMasterPort(config), JobMasterContext.workerInstances(config));
   }
 
   public JobMasterClient(Config config, WorkerNetworkInfo thisWorker,
-                         String masterHost, int masterPort) {
+                         String masterHost, int masterPort, int numberOfWorkers) {
     this.config = config;
     this.thisWorker = thisWorker;
     this.masterAddress = masterHost;
     this.masterPort = masterPort;
+    this.numberOfWorkers = numberOfWorkers;
   }
 
   /**
@@ -81,7 +84,7 @@ public class JobMasterClient extends Thread {
     long interval = JobMasterContext.pingInterval(config);
     pinger = new Pinger(thisWorker, rrClient, interval);
 
-    workerController = new WorkerController(config, thisWorker, rrClient);
+    workerController = new WorkerController(config, thisWorker, rrClient, numberOfWorkers);
 
     Network.Ping.Builder pingBuilder = Network.Ping.newBuilder();
     rrClient.registerResponseHandler(pingBuilder, pinger);
