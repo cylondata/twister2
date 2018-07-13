@@ -209,10 +209,12 @@ public final class StandaloneWorkerStarter {
     int masterPort = JobMasterContext.jobMasterPort(config);
     TCPChannel channel;
     try {
+      Integer workerPort = ports.get("worker");
       channel = initNetworkServer(config,
-          new WorkerNetworkInfo(InetAddress.getByName("0.0.0.0"), ports.get("worker"), index),
+          new WorkerNetworkInfo(InetAddress.getByName("0.0.0.0"), workerPort, index),
           index);
-      client = createMasterClient(config, index, jobMasterIP, masterPort);
+      client = createMasterClient(config, index, InetAddress.getLocalHost().getHostName(),
+          workerPort, masterPort, jobMasterIP);
     } catch (UnknownHostException e) {
       throw new RuntimeException("Failed to get network address: " + jobMasterIP, e);
     }
@@ -255,12 +257,15 @@ public final class StandaloneWorkerStarter {
   /**
    * Create the job master client to get information about the workers
    */
-  private static JobMasterClient createMasterClient(Config cfg, int workerId, String host,
-                                             int port) throws UnknownHostException {
+  private static JobMasterClient createMasterClient(Config cfg, int workerId,
+                                                    String host, int workerPort,
+                                                    int masterPort,
+                                                    String masterHost) throws UnknownHostException {
     // we start the job master client
     JobMasterClient jobMasterClient = new JobMasterClient(cfg,
-        new WorkerNetworkInfo(InetAddress.getByName(host), port, workerId));
-    LOG.log(Level.INFO, String.format("Connecting to job master %s:%d", host, port));
+        new WorkerNetworkInfo(InetAddress.getByName(host), workerPort, workerId),
+        masterHost, masterPort);
+    LOG.log(Level.INFO, String.format("Connecting to job master %s:%d", host, workerPort));
     jobMasterClient.init();
     // now lets send the starting message
     jobMasterClient.sendWorkerStartingMessage();
