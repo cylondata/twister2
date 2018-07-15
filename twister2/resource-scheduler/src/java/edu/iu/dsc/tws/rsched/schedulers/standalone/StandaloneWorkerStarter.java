@@ -213,7 +213,8 @@ public final class StandaloneWorkerStarter {
       channel = initNetworkServer(config,
           new WorkerNetworkInfo(InetAddress.getByName("0.0.0.0"), workerPort, index),
           index);
-      client = createMasterClient(config, index, InetAddress.getLocalHost().getHostName(),
+      String localIp = getIPAddress();
+      client = createMasterClient(config, index, localIp,
           workerPort, masterPort, jobMasterIP);
     } catch (UnknownHostException e) {
       throw new RuntimeException("Failed to get network address: " + jobMasterIP, e);
@@ -231,7 +232,7 @@ public final class StandaloneWorkerStarter {
 
       NetworkInfo networkInfo = new NetworkInfo(w.getWorkerID());
       networkInfo.addProperty(TCPContext.NETWORK_PORT, w.getWorkerPort());
-      networkInfo.addProperty(TCPContext.NETWORK_HOSTNAME, w.getWorkerIP());
+      networkInfo.addProperty(TCPContext.NETWORK_HOSTNAME, w.getWorkerIP().toString());
       nInfos.add(networkInfo);
     }
     channel.startConnections(nInfos, null);
@@ -258,7 +259,7 @@ public final class StandaloneWorkerStarter {
    * Create the job master client to get information about the workers
    */
   private static JobMasterClient createMasterClient(Config cfg, int workerId,
-                                                    String host, int workerPort,
+                                                    String workerHost, int workerPort,
                                                     int masterPort,
                                                     String masterHost) throws UnknownHostException {
     String jobName = StandaloneContext.jobName(cfg);
@@ -268,9 +269,9 @@ public final class StandaloneWorkerStarter {
 
     // we start the job master client
     JobMasterClient jobMasterClient = new JobMasterClient(cfg,
-        new WorkerNetworkInfo(InetAddress.getByName(host), workerPort, workerId),
+        new WorkerNetworkInfo(InetAddress.getByName(workerHost), workerPort, workerId),
         masterHost, masterPort, numberContainers);
-    LOG.log(Level.INFO, String.format("Connecting to job master %s:%d", host, workerPort));
+    LOG.log(Level.INFO, String.format("Connecting to job master %s:%d", workerHost, workerPort));
     jobMasterClient.init();
     // now lets send the starting message
     jobMasterClient.sendWorkerStartingMessage();
@@ -326,5 +327,9 @@ public final class StandaloneWorkerStarter {
 
   private static String getTaskDirectory() {
     return System.getenv("NOMAD_TASK_DIR");
+  }
+
+  private static String getIPAddress() {
+    return System.getenv("NOMAD_IP_worker");
   }
 }

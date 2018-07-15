@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.common.net.tcp;
 
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.nio.channels.UnresolvedAddressException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -128,14 +129,18 @@ public class TCPChannel {
         continue;
       }
 
-      String remoteHost = TCPContext.getHostName(info);
-      int remotePort = TCPContext.getPort(info);
+      try {
+        String remoteHost = TCPContext.getHostName(info);
+        int remotePort = TCPContext.getPort(info);
 
-      Client client = new Client(remoteHost, remotePort, config,
-          looper, new ClientChannelChannelHandler());
-      client.connect();
-      clients.put(info.getProcId(), client);
-      invertedClientChannels.put(client.getSocketChannel(), info.getProcId());
+        Client client = new Client(remoteHost, remotePort, config,
+            looper, new ClientChannelChannelHandler());
+        client.connect();
+        clients.put(info.getProcId(), client);
+        invertedClientChannels.put(client.getSocketChannel(), info.getProcId());
+      } catch (UnresolvedAddressException e) {
+
+      }
     }
 
     //now wait for the handshakes to happen
