@@ -54,7 +54,7 @@ public class BasicK8sWorker implements IWorker {
     }
 
     // wait for all workers in this job to join
-    List<WorkerNetworkInfo> workerList = workerController.waitForAllWorkersToJoin(10000);
+    List<WorkerNetworkInfo> workerList = workerController.waitForAllWorkersToJoin(50000);
     if (workerList != null) {
       LOG.info("All workers joined. " + WorkerNetworkInfo.workerListAsString(workerList));
     } else {

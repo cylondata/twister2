@@ -35,7 +35,7 @@ import org.apache.commons.compress.utils.IOUtils;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import static edu.iu.dsc.tws.common.config.Context.DIR_PREFIX_FOR_JOB_ARCHIVE;
+import static edu.iu.dsc.tws.common.config.Context.JOB_ARCHIVE_DIRECTORY;
 /**
  * a class to generate a tar.gz file.
  * Used to pack multiple files into an archive file
@@ -121,7 +121,7 @@ public final class TarGzipPacker {
    */
   public boolean addFileToArchive(String filename) {
     File file = new File(filename);
-    return addFileToArchive(file, DIR_PREFIX_FOR_JOB_ARCHIVE);
+    return addFileToArchive(file, JOB_ARCHIVE_DIRECTORY + "/");
   }
 
   /**
@@ -157,7 +157,7 @@ public final class TarGzipPacker {
 
     File dir = new File(path);
 
-    String prefix = DIR_PREFIX_FOR_JOB_ARCHIVE + dir.getName() + "/";
+    String prefix = JOB_ARCHIVE_DIRECTORY + "/" + dir.getName() + "/";
     for (File file : dir.listFiles()) {
       boolean added = addFileToArchive(file, prefix);
       if (!added) {
@@ -175,7 +175,7 @@ public final class TarGzipPacker {
    */
   public boolean addFileToArchive(String filename, byte[] contents) {
 
-    String filePathInTar = DIR_PREFIX_FOR_JOB_ARCHIVE + filename;
+    String filePathInTar = JOB_ARCHIVE_DIRECTORY + "/" + filename;
     try {
       TarArchiveEntry entry = new TarArchiveEntry(filePathInTar);
       entry.setSize(contents.length);

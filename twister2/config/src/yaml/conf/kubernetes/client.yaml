@@ -64,5 +64,5 @@ kubernetes.storage.access.mode: "ReadWriteMany"
 # and all pods can get it from there. 
 # alternatively, the client uploads the job package to each pod separately
 # default value is true
-kubernetes.persistent.volume.uploading: true
+kubernetes.persistent.volume.uploading: false
 

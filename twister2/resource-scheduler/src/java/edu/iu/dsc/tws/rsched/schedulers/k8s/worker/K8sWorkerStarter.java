@@ -9,11 +9,10 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.rsched.schedulers.k8s.mpi;
+package edu.iu.dsc.tws.rsched.schedulers.k8s.worker;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -21,43 +20,37 @@ import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
-import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.client.JobMasterClient;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
-import edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sPersistentVolume;
-import edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sVolatileVolume;
-import edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerUtils;
-import edu.iu.dsc.tws.rsched.schedulers.mpi.MPIWorker;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesField;
 import edu.iu.dsc.tws.rsched.spi.container.IPersistentVolume;
 import edu.iu.dsc.tws.rsched.spi.container.IWorker;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
-
-import mpi.MPI;
-import mpi.MPIException;
-
 import static edu.iu.dsc.tws.common.config.Context.JOB_ARCHIVE_DIRECTORY;
 import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.KUBERNETES_CLUSTER_TYPE;
 import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.POD_MEMORY_VOLUME;
 
-public final class MPIWorkerStarter {
-  private static final Logger LOG = Logger.getLogger(MPIWorkerStarter.class.getName());
+public final class K8sWorkerStarter {
+  private static final Logger LOG = Logger.getLogger(K8sWorkerStarter.class.getName());
 
   private static Config config = null;
   private static int workerID = -1; // -1 means, not initialized
-  private static int numberOfWorkers = -1; // -1 means, not initialized
   private static WorkerNetworkInfo workerNetworkInfo;
   private static JobMasterClient jobMasterClient;
 
-  private MPIWorkerStarter() { }
+  private K8sWorkerStarter() { }
 
   public static void main(String[] args) {
     // we can not initialize the logger fully yet,
     // but we need to set the format as the first thing
     LoggingHelper.setLoggingFormat(LoggingHelper.DEFAULT_FORMAT);
+
+    // all environment variables
+    int workerPort = Integer.parseInt(System.getenv(KubernetesField.WORKER_PORT + ""));
 
     // load the configuration parameters from configuration directory
     String configDir = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY + "/"
@@ -65,15 +58,24 @@ public final class MPIWorkerStarter {
 
     config = K8sWorkerUtils.loadConfig(configDir);
 
-    // initialize MPI
+    // get podName and podIP from localhost
+    InetAddress localHost = null;
     try {
-      MPI.Init(args);
-      workerID = MPI.COMM_WORLD.getRank();
-      numberOfWorkers = MPI.COMM_WORLD.getSize();
-    } catch (MPIException e) {
-      LOG.log(Level.SEVERE, "Could not get rank or size from MPI.COMM_WORLD", e);
-      throw new RuntimeException(e);
+      localHost = InetAddress.getLocalHost();
+    } catch (UnknownHostException e) {
+      throw new RuntimeException("Cannot get localHost.", e);
     }
+
+    String podIP = localHost.getHostAddress();
+    String podName = localHost.getHostName();
+    String containerName = System.getenv(KubernetesField.CONTAINER_NAME + "");
+
+    // set workerID
+    int containersPerPod = KubernetesContext.workersPerPod(config);
+    workerID = K8sWorkerUtils.calculateWorkerID(podName, containerName, containersPerPod);
+
+    // set workerNetworkInfo
+    workerNetworkInfo = new WorkerNetworkInfo(localHost, workerPort, workerID);
 
     // initialize persistent volume
     K8sPersistentVolume pv = null;
@@ -98,36 +100,14 @@ public final class MPIWorkerStarter {
     // job file configurations will override
     config = K8sWorkerUtils.overrideConfigs(job, config);
 
-    InetAddress localHost = null;
-    try {
-      localHost = InetAddress.getLocalHost();
-      String podIP = localHost.getHostAddress();
-      String podName = localHost.getHostName();
+    LOG.info("Worker information summary: \n"
+        + "workerID: " + workerID + "\n"
+        + "POD_IP: " + podIP + "\n"
+        + "HOSTNAME(podname): " + podName + "\n"
+        + "workerPort: " + workerPort + "\n"
+    );
 
-      int workerPort = KubernetesContext.workerBasePort(config) + workerID;
-
-      workerNetworkInfo = new WorkerNetworkInfo(localHost, workerPort, workerID);
-
-      LOG.info("Worker information summary: \n"
-          + "MPI Rank(workerID): " + workerID + "\n"
-          + "MPI Size(number of workers): " + numberOfWorkers + "\n"
-          + "POD_IP: " + podIP + "\n"
-          + "HOSTNAME(podname): " + podName
-      );
-    } catch (UnknownHostException e) {
-      LOG.log(Level.SEVERE, "Cannot get localHost.", e);
-    }
-
-    String jobMasterIP = MPIMasterStarter.getJobMasterIPCommandLineArgumentValue(args[0]);
-    if (jobMasterIP == null) {
-      throw new RuntimeException("JobMasterIP address is null");
-    }
-
-    config = Config.newBuilder()
-        .putAll(config)
-        .put(JobMasterContext.JOB_MASTER_IP, jobMasterIP)
-        .build();
-
+    // start JobMasterClient
     jobMasterClient = K8sWorkerUtils.startJobMasterClient(config, workerNetworkInfo);
     // we need to make sure that the worker starting message went through
     jobMasterClient.sendWorkerStartingMessage();
@@ -138,11 +118,6 @@ public final class MPIWorkerStarter {
     // start the worker
     startWorker(jobMasterClient.getWorkerController(), pv);
 
-    // finalize MPI
-    try {
-      MPI.Finalize();
-    } catch (MPIException ignore) { }
-
     // close the worker
     closeWorker();
   }
@@ -152,6 +127,7 @@ public final class MPIWorkerStarter {
    */
   public static void startWorker(IWorkerController workerController,
                                  IPersistentVolume pv) {
+
     String workerClass = SchedulerContext.containerClass(config);
     IWorker worker;
     try {
@@ -169,7 +145,7 @@ public final class MPIWorkerStarter {
           new K8sVolatileVolume(SchedulerContext.jobName(config), workerID);
     }
 
-    ResourcePlan resourcePlan = MPIWorker.createResourcePlan(config);
+    ResourcePlan resourcePlan = null;
 
     worker.init(config, workerID, resourcePlan, workerController, pv, volatileVolume);
   }

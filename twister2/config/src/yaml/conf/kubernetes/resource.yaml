@@ -5,12 +5,13 @@ twister2.class.state.manager: "edu.iu.dsc.tws.rsched.statemanagers.fs.SharedFile
 # launcher class for aurora submission
 twister2.class.launcher: edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesLauncher
 # the uplaoder class
-twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.scp.ScpUploader"
-# twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.NullUploader"
+# twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.scp.ScpUploader"
+twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.NullUploader"
 # twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader"
 
 # container class to run in workers
 twister2.job.basic.container.class: "edu.iu.dsc.tws.examples.basic.BasicK8sWorker"
+# twister2.job.basic.container.class: "edu.iu.dsc.tws.examples.basic.comms.BaseBroadcastCommunication"
 
 # image pull policy, by default is IfNotPresent
 # it could also be Always

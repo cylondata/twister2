@@ -29,7 +29,7 @@ import edu.iu.dsc.tws.rsched.bootstrap.ZKController;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
-import static edu.iu.dsc.tws.common.config.Context.DIR_PREFIX_FOR_JOB_ARCHIVE;
+import static edu.iu.dsc.tws.common.config.Context.JOB_ARCHIVE_DIRECTORY;
 
 public final class AuroraWorker {
   public static final Logger LOG = Logger.getLogger(AuroraWorker.class.getName());
@@ -86,7 +86,7 @@ public final class AuroraWorker {
    */
   private void readJobDescFile() {
     String jobDescFile = System.getProperty(SchedulerContext.JOB_DESCRIPTION_FILE_CMD_VAR);
-    jobDescFile = DIR_PREFIX_FOR_JOB_ARCHIVE + jobDescFile;
+    jobDescFile = JOB_ARCHIVE_DIRECTORY + "/" + jobDescFile;
     job = JobUtils.readJobFile(null, jobDescFile);
 
     // printing for testing
@@ -102,7 +102,7 @@ public final class AuroraWorker {
     // first lets read the essential properties from java system properties
     String twister2Home = Paths.get("").toAbsolutePath().toString();
     String clusterType = System.getProperty(SchedulerContext.CLUSTER_TYPE);
-    String configDir = twister2Home + "/" + DIR_PREFIX_FOR_JOB_ARCHIVE + clusterType;
+    String configDir = twister2Home + "/" + JOB_ARCHIVE_DIRECTORY + "/" + clusterType;
 
     LOG.log(Level.INFO, String.format("Loading configuration with twister2_home: %s and "
         + "configuration: %s", twister2Home, configDir));
