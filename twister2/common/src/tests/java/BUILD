@@ -20,6 +20,7 @@ java_library(
 java_tests(
     test_classes = [
         "edu.iu.dsc.tws.common.net.tcp.request.PingTest",
+        "edu.iu.dsc.tws.common.net.tcp.request.TwoChannelTest",
     ],
     runtime_deps = [
         ":common-tests",

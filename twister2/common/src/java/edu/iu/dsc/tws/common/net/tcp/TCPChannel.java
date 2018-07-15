@@ -26,6 +26,9 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.net.NetworkInfo;
 import edu.iu.dsc.tws.common.net.tcp.worker.TCPWorker;
 
+/**
+ * A channel implementation, that supports iSend and iRecv semantics.
+ */
 public class TCPChannel {
   private static final Logger LOG = Logger.getLogger(TCPChannel.class.getName());
 
