@@ -210,10 +210,10 @@ public final class StandaloneWorkerStarter {
     TCPChannel channel;
     try {
       Integer workerPort = ports.get("worker");
-      channel = initNetworkServer(config,
-          new WorkerNetworkInfo(InetAddress.getByName("0.0.0.0"), workerPort, index),
-          index);
       String localIp = getIPAddress();
+      channel = initNetworkServer(config,
+          new WorkerNetworkInfo(InetAddress.getByName(localIp), workerPort, index),
+          index);
       client = createMasterClient(config, index, localIp,
           workerPort, masterPort, jobMasterIP);
     } catch (UnknownHostException e) {
@@ -248,7 +248,7 @@ public final class StandaloneWorkerStarter {
   private static TCPChannel initNetworkServer(Config cfg, WorkerNetworkInfo networkInfo,
                                               int workerId) {
     NetworkInfo netInfo = new NetworkInfo(workerId);
-    netInfo.addProperty(TCPContext.NETWORK_HOSTNAME, networkInfo.getWorkerIP());
+    netInfo.addProperty(TCPContext.NETWORK_HOSTNAME, networkInfo.getWorkerIP().getHostName());
     netInfo.addProperty(TCPContext.NETWORK_PORT, networkInfo.getWorkerPort());
     TCPChannel channel = new TCPChannel(cfg, netInfo);
     channel.startListening();

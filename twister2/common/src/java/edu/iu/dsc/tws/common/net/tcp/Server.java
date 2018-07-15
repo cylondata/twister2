@@ -89,7 +89,7 @@ public class Server implements SelectHandler {
       return true;
     } catch (IOException e) {
       LOG.log(Level.SEVERE, "Failed to start server", e);
-      return false;
+      throw new RuntimeException("Failed to start server", e);
     }
   }
 
