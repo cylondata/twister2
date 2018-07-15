@@ -17,10 +17,9 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.connectors.config.KafkaConsumerConfig;
 import edu.iu.dsc.tws.task.api.SourceTask;
 import edu.iu.dsc.tws.task.api.TaskContext;
-//import edu.iu.dsc.tws.task.api.streaming.CheckpointedFunction;
 
 public class TwsKafkaConsumerModified<T> extends SourceTask {
-//    implements CheckpointedFunction, CheckpointListener
+
   private static final long serialVersionUID = -264264120110286748L;
   private static final Logger LOG = LoggerFactory.getLogger(TwsKafkaConsumer.class);
 
