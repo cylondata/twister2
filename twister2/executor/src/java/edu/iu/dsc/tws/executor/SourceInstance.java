@@ -78,6 +78,17 @@ public class SourceInstance implements INodeInstance {
    */
   private int workerId;
 
+  /**
+   * For batch tasks: identifying the final message
+   **/
+
+  private boolean isDone;
+
+  private boolean isFinalTask;
+
+  private int callBackCount = 0;
+
+
   public SourceInstance(ISource task, BlockingQueue<IMessage> outQueue, Config config, String tName,
                         int tId, int tIndex, int parallel, int wId, Map<String, Object> cfgs) {
     this.task = task;
@@ -91,6 +102,21 @@ public class SourceInstance implements INodeInstance {
     this.workerId = wId;
   }
 
+  public SourceInstance(ISource task, BlockingQueue<IMessage> outQueue, Config config, String tName,
+                        int tId, int tIndex, int parallel, int wId,
+                        Map<String, Object> cfgs, boolean isDone) {
+    this.task = task;
+    this.outQueue = outQueue;
+    this.config = config;
+    this.taskId = tId;
+    this.taskIndex = tIndex;
+    this.parallelism = parallel;
+    this.taskName = tName;
+    this.nodeConfigs = cfgs;
+    this.workerId = wId;
+    this.isDone = isDone;
+  }
+
   public void prepare() {
     outputCollection = new DefaultOutputCollection(outQueue);
 
@@ -98,22 +124,40 @@ public class SourceInstance implements INodeInstance {
         parallelism, workerId, outputCollection, nodeConfigs));
   }
 
+  @Override
+  public void interrupt() {
+
+  }
+
   public void execute() {
-    task.run();
-    // now check the output queue
-    while (!outQueue.isEmpty()) {
-      IMessage message = outQueue.poll();
-      if (message != null) {
-        String edge = message.edge();
-        // invoke the communication operation
-        IParallelOperation op = outParOps.get(edge);
-        op.send(taskId, message);
+
+    /*if (task instanceof SourceTask) {
+      SourceTask sourceTask = (SourceTask) task;
+
+    }*/
+
+    if (!this.isDone) {
+      task.run();
+      // now check the output queue
+      while (!outQueue.isEmpty()) {
+        IMessage message = outQueue.poll();
+        if (message != null) {
+          String edge = message.edge();
+          // invoke the communication operation
+          IParallelOperation op = outParOps.get(edge);
+          if (!message.getContent().equals("<END>")) {
+            op.send(taskId, message);
+          }
+        }
       }
+
+      for (Map.Entry<String, IParallelOperation> e : outParOps.entrySet()) {
+        e.getValue().progress();
+      }
+    } else {
+      System.out.println("All Source Tasks executed ...");
     }
 
-    for (Map.Entry<String, IParallelOperation> e : outParOps.entrySet()) {
-      e.getValue().progress();
-    }
   }
 
   public BlockingQueue<IMessage> getOutQueue() {
@@ -123,4 +167,5 @@ public class SourceInstance implements INodeInstance {
   public void registerOutParallelOperation(String edge, IParallelOperation op) {
     outParOps.put(edge, op);
   }
+
 }

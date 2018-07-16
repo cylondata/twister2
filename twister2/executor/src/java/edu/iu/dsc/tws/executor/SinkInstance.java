@@ -91,6 +91,11 @@ public class SinkInstance  implements INodeInstance {
         parallelism, workerId, nodeConfigs));
   }
 
+  @Override
+  public void interrupt() {
+
+  }
+
   public void execute() {
     while (!inQueue.isEmpty()) {
       IMessage m = inQueue.poll();

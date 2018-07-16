@@ -28,6 +28,8 @@ public class TaskContext {
 
   private int workerId;
 
+  private boolean isDone;
+
   public TaskContext(int taskIndex, int taskId, String taskName,
                      int parallelism, int wId, Map<String, Object> configs) {
     this.taskIndex = taskIndex;
@@ -47,6 +49,19 @@ public class TaskContext {
     this.collection = collection;
     this.configs = configs;
     this.workerId = wId;
+  }
+
+  public TaskContext(int taskIndex, int taskId, String taskName, int parallelism,
+                     OutputCollection collection, Map<String, Object> configs,
+                     int workerId, boolean isDone) {
+    this.taskIndex = taskIndex;
+    this.taskId = taskId;
+    this.taskName = taskName;
+    this.parallelism = parallelism;
+    this.collection = collection;
+    this.configs = configs;
+    this.workerId = workerId;
+    this.isDone = isDone;
   }
 
   /**
@@ -91,4 +106,13 @@ public class TaskContext {
   public void write(String edge, Object message) {
     collection.collect(0, new TaskMessage(message, edge, taskId));
   }
+
+  public boolean isDone() {
+    return isDone;
+  }
+
+  public void setDone(boolean done) {
+    isDone = done;
+  }
+
 }

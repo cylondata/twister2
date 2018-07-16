@@ -15,4 +15,6 @@ public interface INodeInstance {
   void execute();
 
   void prepare();
+
+  void interrupt();
 }

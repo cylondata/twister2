@@ -29,4 +29,5 @@ public abstract class SourceTask implements ISource {
   public void prepare(Config cfg, TaskContext context) {
 
   }
+
 }

@@ -102,6 +102,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
     }
 
     ExecutionPlan execution = new ExecutionPlan();
+    execution.setNumThreads(noOfThreads);
 
     Set<TaskSchedulePlan.TaskInstancePlan> instancePlan = conPlan.getTaskInstances();
     // for each task we are going to create the communications
@@ -160,6 +161,10 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
     for (Table.Cell<String, String, Communication> cell : parOpTable.cellSet()) {
       Communication c = cell.getValue();
 
+      int sourceTaskSize = c.getSourceTasks().size();
+      int targetTaskSize = c.getTargetTasks().size();
+      System.out.println("####Source Task Size : " + sourceTaskSize
+          + ", Target Task Size : " + targetTaskSize + "####");
       // lets create the communication
       OperationMode operationMode = taskGraph.getOperationMode();
       IParallelOperation op = opFactory.build(c.getEdge(), c.getSourceTasks(), c.getTargetTasks(),
