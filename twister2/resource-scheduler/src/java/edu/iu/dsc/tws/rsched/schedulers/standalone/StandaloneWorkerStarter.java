@@ -219,11 +219,12 @@ public final class StandaloneWorkerStarter {
     } catch (UnknownHostException e) {
       throw new RuntimeException("Failed to get network address: " + jobMasterIP, e);
     }
+    // this is a synchronization step for starting the servers, when we get this information
+    // from master, we know that the servers are started
     WorkerController workerController = client.getWorkerController();
     workerController.waitForAllWorkersToJoin(30000);
 
-    // now start listening
-
+    // now start the client connections
     List<WorkerNetworkInfo> wInfo = workerController.getWorkerList();
     List<NetworkInfo> nInfos = new ArrayList<>();
     for (WorkerNetworkInfo w : wInfo) {
@@ -236,6 +237,8 @@ public final class StandaloneWorkerStarter {
       nInfos.add(networkInfo);
     }
     channel.startConnections(nInfos, null);
+    // now lets wait for connections to be established
+    channel.waitForConnections();
     return resourcePlan;
   }
 
