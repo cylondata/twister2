@@ -11,6 +11,7 @@ metadata:
   namespace: <kubernetes.namespace>
   labels:
     app: twister2-service-label-<job-name>-<job-master>
+    twister2-job-pods: twister2-<job-name>
 
 spec:
   replicas: 1

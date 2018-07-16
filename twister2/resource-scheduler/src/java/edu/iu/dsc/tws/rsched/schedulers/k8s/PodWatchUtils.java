@@ -38,7 +38,8 @@ public final class PodWatchUtils {
   private static CoreV1Api coreApi;
   private static ApiClient apiClient;
 
-  private PodWatchUtils() { }
+  private PodWatchUtils() {
+  }
 
   public static void createApiInstances() {
 
@@ -82,13 +83,27 @@ public final class PodWatchUtils {
    * watch pods until getting the Running event for all the pods in the given list
    * return pod names and IP addresses as a HashMap
    */
-  public static HashMap<String, String> getRunningPodIPs(ArrayList<String> podNames,
-                                                         String jobName,
-                                                         String namespace,
-                                                         int timeout) {
+  public static HashMap<String, String> getRunningWorkerPodIPs(ArrayList<String> podNames,
+                                                               String jobName,
+                                                               String namespace,
+                                                               int timeout) {
 
     String serviceLabel = KubernetesUtils.createServiceLabelWithKey(jobName);
     return discoverRunningPodIPs(podNames, namespace, serviceLabel, timeout);
+  }
+
+  /**
+   * this is used to get IP addresses of both worker and job master pods
+   * watch pods until getting the Running event for all the pods in the given list
+   * return pod names and IP addresses as a HashMap
+   */
+  public static HashMap<String, String> getRunningJobPodIPs(ArrayList<String> podNames,
+                                                            String jobName,
+                                                            String namespace,
+                                                            int timeout) {
+
+    String jobPodsLabel = KubernetesUtils.createJobPodsLabelWithKey(jobName);
+    return discoverRunningPodIPs(podNames, namespace, jobPodsLabel, timeout);
   }
 
   /**
@@ -96,9 +111,9 @@ public final class PodWatchUtils {
    * return pod names and IP addresses as a HashMap
    */
   public static HashMap<String, String> discoverRunningPodIPs(ArrayList<String> podNames,
-                                                         String namespace,
-                                                         String labelSelector,
-                                                         int timeout) {
+                                                              String namespace,
+                                                              String labelSelector,
+                                                              int timeout) {
 
     /** Pod Phases: Pending, Running, Succeeded, Failed, Unknown
      * ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase */
@@ -170,8 +185,8 @@ public final class PodWatchUtils {
    */
   public static boolean watchPodsToRunning(String namespace,
                                            String jobName,
-                                          HashMap<String, Boolean> pods,
-                                          int timeout) {
+                                           HashMap<String, Boolean> pods,
+                                           int timeout) {
 
     /** Pod Phases: Pending, Running, Succeeded, Failed, Unknown
      * ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase */
@@ -232,7 +247,7 @@ public final class PodWatchUtils {
   }
 
   private static boolean allTrue(Collection<Boolean> flags) {
-    for (Boolean flag: flags) {
+    for (Boolean flag : flags) {
       if (!flag) {
         return false;
       }
@@ -265,7 +280,8 @@ public final class PodWatchUtils {
           apiClient,
           coreApi.listNamespacedEventCall(namespace, null, null, null, null, null,
               null, null, timeoutSeconds, Boolean.TRUE, null, null),
-          new TypeToken<Watch.Response<V1Event>>() { }.getType());
+          new TypeToken<Watch.Response<V1Event>>() {
+          }.getType());
 
     } catch (ApiException e) {
       LOG.log(Level.SEVERE, "Can not start event watcher for the namespace: " + namespace, e);
