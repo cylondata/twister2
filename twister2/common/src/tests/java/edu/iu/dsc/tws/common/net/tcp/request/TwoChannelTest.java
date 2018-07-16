@@ -71,6 +71,7 @@ public class TwoChannelTest {
         public void run() {
           TCPChannel channel = channels.get(j);
           channel.startConnections(networkInfos, null);
+          channel.waitForConnections();
         }
       });
       t.start();
@@ -98,14 +99,22 @@ public class TwoChannelTest {
 
     for (int i = 0; i < NO_OF_CHANNELS; i++) {
       TCPChannel channel = channels.get(i);
-      TCPMessage message = channel.iRecv(buffers.get(i), 10, i, 1);
-      recvs.add(message);
+      for (int j = 0; j < NO_OF_CHANNELS; j++) {
+        if (j != i) {
+          TCPMessage message = channel.iRecv(buffers.get(j), 10, j, 1);
+          recvs.add(message);
+        }
+      }
     }
 
     for (int i = 0; i < NO_OF_CHANNELS; i++) {
       TCPChannel channel = channels.get(i);
-      TCPMessage message = channel.iSend(buffers.get(i), 10, i, 1);
-      sends.add(message);
+      for (int j = 0; j < NO_OF_CHANNELS; j++) {
+        if (j != i) {
+          TCPMessage message = channel.iSend(buffers.get(j), 10, j, 1);
+          sends.add(message);
+        }
+      }
     }
 
     List<Integer> completedSends = new ArrayList<>();

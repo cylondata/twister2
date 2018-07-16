@@ -142,17 +142,9 @@ public class TCPChannel {
         clients.put(info.getProcId(), client);
         invertedClientChannels.put(client.getSocketChannel(), info.getProcId());
       } catch (UnresolvedAddressException e) {
-
+        throw new RuntimeException("Failed to create client", e);
       }
     }
-
-    //now wait for the handshakes to happen
-    while (clientsConnected != (networkInfos.size() - 1)
-        || (clientsCompleted != networkInfos.size() - 1)) {
-      looper.loop();
-    }
-
-    LOG.log(Level.FINEST, "Everybody connected: " + clientsConnected + " " + clientsCompleted);
   }
 
   public TCPMessage iSend(ByteBuffer buffer, int size, int procId, int edge) {
@@ -197,6 +189,20 @@ public class TCPChannel {
     }
 
     server.stop();
+  }
+
+  public void waitForConnections() {
+    //now wait for the handshakes to happen
+    while (clientsConnected != (networkInfos.size() - 1)
+        || (clientsCompleted != networkInfos.size() - 1)) {
+      looper.loop();
+    }
+
+    while (serverChannel.size() != networkInfos.size() - 1) {
+      looper.loop();
+    }
+
+    LOG.log(Level.FINEST, "Everybody connected: " + clientsConnected + " " + clientsCompleted);
   }
 
   private class ChannelServerChannelHandler implements ChannelHandler {
