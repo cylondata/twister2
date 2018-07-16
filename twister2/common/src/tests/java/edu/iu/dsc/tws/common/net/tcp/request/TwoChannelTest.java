@@ -77,7 +77,6 @@ public class TwoChannelTest {
       t.start();
       threads.add(t);
     }
-
     // lets wait for the connections to be made
     for (int i = 0; i < NO_OF_CHANNELS; i++) {
       Thread t = threads.get(i);
@@ -87,9 +86,9 @@ public class TwoChannelTest {
 
   @After
   public void tearDown() throws Exception {
-    for (TCPChannel channel : channels) {
-      channel.stop();
-    }
+//    for (TCPChannel channel : channels) {
+////      channel.stop();
+//    }
   }
 
   @Test
@@ -101,7 +100,9 @@ public class TwoChannelTest {
       TCPChannel channel = channels.get(i);
       for (int j = 0; j < NO_OF_CHANNELS; j++) {
         if (j != i) {
-          TCPMessage message = channel.iRecv(buffers.get(j), 10, j, 1);
+          ByteBuffer buffer = buffers.get(j);
+          buffer.clear();
+          TCPMessage message = channel.iRecv(buffer, 10, j, 1);
           recvs.add(message);
         }
       }
@@ -111,7 +112,10 @@ public class TwoChannelTest {
       TCPChannel channel = channels.get(i);
       for (int j = 0; j < NO_OF_CHANNELS; j++) {
         if (j != i) {
-          TCPMessage message = channel.iSend(buffers.get(j), 10, j, 1);
+          ByteBuffer buffer = buffers.get(j);
+          buffer.clear();
+          buffer.put(new byte[10]);
+          TCPMessage message = channel.iSend(buffer, 10, j, 1);
           sends.add(message);
         }
       }

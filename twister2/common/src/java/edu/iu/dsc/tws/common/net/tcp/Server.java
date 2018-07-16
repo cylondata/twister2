@@ -118,6 +118,8 @@ public class Server implements SelectHandler {
     if (channel == null) {
       return null;
     }
+    buffer.limit(size);
+    buffer.position(0);
 
     channel.enableWriting();
 

@@ -105,7 +105,7 @@ public class TCPChannel {
     looper = new Progress();
 
     // lets connect to other
-    server = new Server(config, hostName, port, looper, new ChannelServerChannelHandler());
+    server = new Server(config, hostName, port, looper, new ServerChannelHandler(), true);
     server.start();
   }
 
@@ -172,6 +172,7 @@ public class TCPChannel {
 
   private void sendHelloMessage(int destProcId, SocketChannel sc) {
     ByteBuffer buffer = helloSendByteBuffers.remove(0);
+    buffer.clear();
     buffer.putInt(thisInfo.getProcId());
 
     Client client = clients.get(destProcId);
@@ -191,6 +192,9 @@ public class TCPChannel {
     server.stop();
   }
 
+  /**
+   * Wait for handshakes to happen between servers and clients
+   */
   public void waitForConnections() {
     //now wait for the handshakes to happen
     while (clientsConnected != (networkInfos.size() - 1)
@@ -205,7 +209,7 @@ public class TCPChannel {
     LOG.log(Level.FINEST, "Everybody connected: " + clientsConnected + " " + clientsCompleted);
   }
 
-  private class ChannelServerChannelHandler implements ChannelHandler {
+  private class ServerChannelHandler implements ChannelHandler {
 
     @Override
     public void onError(SocketChannel channel) {
