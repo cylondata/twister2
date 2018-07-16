@@ -137,29 +137,27 @@ public class RoundRobinBatchTaskExample implements IContainer {
     TaskSchedulePlan taskSchedulePlan = null;
 
 
-    if (id == 0) {
-      if ("Batch".equalsIgnoreCase(jobType)
-          && "roundrobin".equalsIgnoreCase(schedulingType)) {
-        RoundRobinBatchTaskScheduling rrBatchTaskScheduling = new RoundRobinBatchTaskScheduling();
-        rrBatchTaskScheduling.initialize(config);
-        WorkerPlan workerPlan = createWorkerPlan(resourcePlan);
-        taskSchedulePlanList = rrBatchTaskScheduling.scheduleBatch(graph, workerPlan);
-      }
+    if ("Batch".equalsIgnoreCase(jobType)
+        && "roundrobin".equalsIgnoreCase(schedulingType)) {
+      RoundRobinBatchTaskScheduling rrBatchTaskScheduling = new RoundRobinBatchTaskScheduling();
+      rrBatchTaskScheduling.initialize(config);
+      WorkerPlan workerPlan = createWorkerPlan(resourcePlan);
+      taskSchedulePlanList = rrBatchTaskScheduling.scheduleBatch(graph, workerPlan);
+    }
 
-      for (int j = 0; j < taskSchedulePlanList.size(); j++) {
-        taskSchedulePlan = taskSchedulePlanList.get(j);
-        Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap
-            = taskSchedulePlan.getContainersMap();
-        LOG.info("Task Schedule Plan:" + j);
-        for (Map.Entry<Integer, TaskSchedulePlan.ContainerPlan> entry : containersMap.entrySet()) {
-          Integer integer = entry.getKey();
-          TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
-          Set<TaskSchedulePlan.TaskInstancePlan> taskContainerPlan
-              = containerPlan.getTaskInstances();
-          for (TaskSchedulePlan.TaskInstancePlan ip : taskContainerPlan) {
-            LOG.info("\tTask Id:" + ip.getTaskId() + "\tTask Index:" + ip.getTaskIndex()
-                + "\tTask Name:" + ip.getTaskName() + "\tContainer Id:" + integer);
-          }
+    for (int j = 0; j < taskSchedulePlanList.size(); j++) {
+      taskSchedulePlan = taskSchedulePlanList.get(j);
+      Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap
+          = taskSchedulePlan.getContainersMap();
+      LOG.info("Task Schedule Plan:" + j);
+      for (Map.Entry<Integer, TaskSchedulePlan.ContainerPlan> entry : containersMap.entrySet()) {
+        Integer integer = entry.getKey();
+        TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
+        Set<TaskSchedulePlan.TaskInstancePlan> taskContainerPlan
+            = containerPlan.getTaskInstances();
+        for (TaskSchedulePlan.TaskInstancePlan ip : taskContainerPlan) {
+          LOG.info("\tTask Id:" + ip.getTaskId() + "\tTask Index:" + ip.getTaskIndex()
+              + "\tTask Name:" + ip.getTaskName() + "\tContainer Id:" + integer);
         }
       }
     }
