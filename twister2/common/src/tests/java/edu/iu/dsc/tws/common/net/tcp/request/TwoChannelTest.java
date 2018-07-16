@@ -39,6 +39,8 @@ public class TwoChannelTest {
 
   private Config cfg;
 
+  private List<Thread> threads = new ArrayList<>();
+
   @Before
   public void setUp() throws Exception {
     cfg = Config.newBuilder().build();
@@ -53,17 +55,32 @@ public class TwoChannelTest {
       TCPChannel channel = new TCPChannel(cfg, info);
       channel.startListening();
       channels.add(channel);
-    }
-
-    for (int i = 0; i < NO_OF_CHANNELS; i++) {
-      TCPChannel channel = channels.get(i);
-      channel.startConnections(networkInfos, null);
+      networkInfos.add(info);
     }
 
     // we use only one buffer
     for (int i = 0; i < NO_OF_CHANNELS; i++) {
       ByteBuffer b = ByteBuffer.allocate(1024);
       buffers.add(b);
+    }
+
+    for (int i = 0; i < NO_OF_CHANNELS; i++) {
+      final int j = i;
+      Thread t = new Thread(new Runnable() {
+        @Override
+        public void run() {
+          TCPChannel channel = channels.get(j);
+          channel.startConnections(networkInfos, null);
+        }
+      });
+      t.start();
+      threads.add(t);
+    }
+
+    // lets wait for the connections to be made
+    for (int i = 0; i < NO_OF_CHANNELS; i++) {
+      Thread t = threads.get(i);
+      t.join();
     }
   }
 
@@ -109,6 +126,9 @@ public class TwoChannelTest {
             completedRcvs.add(i);
           }
         }
+
+        TCPChannel ch = channels.get(i);
+        ch.progress();
       }
     }
   }
