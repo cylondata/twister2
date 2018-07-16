@@ -93,6 +93,8 @@ public class AllReduceBatchTask implements IContainer {
       ctx.write("all-reduce-edge", "Hello");
     }
 
+
+
     @Override
     public void prepare(Config cfg, TaskContext context) {
       this.ctx = context;

@@ -24,7 +24,7 @@
 package edu.iu.dsc.tws.executor.threading;
 
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -33,7 +33,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.executor.ExecutionPlan;
 import edu.iu.dsc.tws.executor.INodeInstance;
-import edu.iu.dsc.tws.executor.comm.IParallelOperation;
+
 
 public class ThreadSharingExecutor extends ThreadExecutor {
   private static final Logger LOG = Logger.getLogger(ThreadSharingExecutor.class.getName());
@@ -42,7 +42,11 @@ public class ThreadSharingExecutor extends ThreadExecutor {
 
   private BlockingQueue<INodeInstance> tasks;
 
+  private BlockingQueue<INodeInstance> executedTasks;
+
   private List<Thread> threads = new ArrayList<>();
+
+  private HashMap<Thread, INodeInstance> threadTaskList = new HashMap<>();
 
   private ExecutionPlan executionPlan;
 
@@ -60,37 +64,25 @@ public class ThreadSharingExecutor extends ThreadExecutor {
   @Override
   public void execute() {
     // go through the instances
-
     Map<Integer, INodeInstance> nodes = executionPlan.getNodes();
     tasks = new ArrayBlockingQueue<>(nodes.size() * 2);
     tasks.addAll(nodes.values());
 
     for (INodeInstance node : tasks) {
+      LOG.info("Node Type : " + node.getClass().getName());
       node.prepare();
     }
 
-
-
-    List<IParallelOperation> parallelOperations = executionPlan.getParallelOperations();
-    Iterator<IParallelOperation> itr = parallelOperations.iterator();
-    while (itr.hasNext()) {
-      IParallelOperation op = itr.next();
-      LOG.info("IParallelOperation Type : " + op.getClass().getName());
-    }
-
-    LOG.info("Execution Thread Count : " + executionPlan.getNumThreads() + "No of Tasks : "
-        + tasks.size() + ", Tasks " + executionPlan.getNodes().keySet().size());
-
+    /*LOG.info("Execution Thread Count : " + executionPlan.getNumThreads() + ", No of Tasks : "
+        + tasks.size() + ", Tasks " + executionPlan.getNodes().keySet().size());*/
+    LOG.info("@Task Size = " + tasks.size());
     for (int i = 0; i < tasks.size(); i++) {
       Thread t = new Thread(new Worker());
       t.setName("Thread-" + tasks.getClass().getSimpleName() + "-" + i);
       t.start();
       threads.add(t);
     }
-
-    for (int i = 0; i < threads.size(); i++) {
-      System.out.println(ThreadStaticExecutor.class.getName() + " : " + threads.get(i).getName());
-    }
+    //LOG.info("!@TaskSize = " + tasks.size());
   }
 
   private class Worker implements Runnable {
@@ -103,6 +95,4 @@ public class ThreadSharingExecutor extends ThreadExecutor {
       }
     }
   }
-
-
 }

@@ -46,6 +46,7 @@ import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.ITaskContext;
 import edu.iu.dsc.tws.task.api.SinkTask;
 import edu.iu.dsc.tws.task.api.SourceTask;
 import edu.iu.dsc.tws.task.api.TaskContext;
@@ -91,19 +92,36 @@ public class ReduceBatchTask implements IContainer {
     executor.execute();
   }
 
-  private static class GeneratorTask extends SourceTask {
+  private static class GeneratorTask extends SourceTask implements ITaskContext {
     private static final long serialVersionUID = -254264903510284748L;
     private TaskContext ctx;
     private Config config;
 
     @Override
     public void run() {
-      ctx.write("reduce-edge", "Hello");
+      for (int i = 0; i < 10; i++) {
+        ctx.write("reduce-edge", "Hello " + i);
+      }
+      ctx.write("reduce-edge", "<END>");
     }
+
 
     @Override
     public void prepare(Config cfg, TaskContext context) {
       this.ctx = context;
+    }
+
+    @Override
+    public void overrideTaskContext(TaskContext context) {
+      this.ctx = context;
+    }
+
+    public TaskContext getCtx() {
+      return ctx;
+    }
+
+    public void setCtx(TaskContext ctx) {
+      this.ctx = ctx;
     }
   }
 
@@ -113,9 +131,7 @@ public class ReduceBatchTask implements IContainer {
 
     @Override
     public void execute(IMessage message) {
-      if (count % 100000 == 0) {
-        System.out.println("Message Reduced : " + message.getContent() + ", Count : " + count);
-      }
+      System.out.println("Message Reduced : " + message.getContent() + ", Count : " + count);
       count++;
     }
 
@@ -168,7 +184,7 @@ public class ReduceBatchTask implements IContainer {
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
     jobBuilder.setName("reduce-batch-task");
     jobBuilder.setContainerClass(ReduceBatchTask.class.getName());
-    jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 4);
+    jobBuilder.setRequestResource(new ResourceContainer(1, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job

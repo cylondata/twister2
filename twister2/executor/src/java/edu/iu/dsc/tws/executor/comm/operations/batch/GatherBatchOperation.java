@@ -33,7 +33,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.executor.comm.batch;
+package edu.iu.dsc.tws.executor.comm.operations.batch;
 
 import java.util.List;
 import java.util.Map;
@@ -45,8 +45,7 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
-import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
+import edu.iu.dsc.tws.comms.dfw.DataFlowGather;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.EdgeGenerator;
 import edu.iu.dsc.tws.executor.comm.AbstractParallelOperation;
@@ -54,43 +53,45 @@ import edu.iu.dsc.tws.executor.comm.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
 
-public class PartitionByMultiByteBatchOperation extends AbstractParallelOperation {
-  private static final Logger LOG
-      = Logger.getLogger(PartitionByMultiByteBatchOperation.class.getName());
 
-  protected DataFlowPartition op;
+public class GatherBatchOperation extends AbstractParallelOperation {
+  private static final Logger LOG = Logger.getLogger(GatherBatchOperation.class.getName());
+  private DataFlowGather op;
 
-  public PartitionByMultiByteBatchOperation(Config config, TWSChannel network, TaskPlan tPlan) {
+  public GatherBatchOperation(Config config, TWSChannel network, TaskPlan tPlan) {
     super(config, network, tPlan);
   }
 
-  public void prepare(Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
-                      DataType dataType, String edgeName) {
+  public void prepare(Set<Integer> srcs, int dest, EdgeGenerator e,
+                      DataType dataType, String edgeName, Config config, TaskPlan taskPlan) {
     this.edge = e;
-    op = new DataFlowPartition(channel, srcs, dests, new PartitionReceiver(),
-        new PartitionPartialReceiver(), DataFlowPartition.PartitionStratergy.DIRECT);
     communicationEdge = e.generate(edgeName);
+    op = new DataFlowGather(channel, srcs, dest, new FinalGatherReceiver(), 0, 0,
+        config, Utils.dataTypeToMessageType(dataType), taskPlan, e.getIntegerMapping(edgeName));
     op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
+    LOG.info("===CommunicationEdge : " + communicationEdge);
   }
 
-  public void prepare(Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
-                      DataType dataType, DataType keyType, String edgeName) {
-    this.edge = e;
-    op = new DataFlowPartition(channel, srcs, dests, new PartitionReceiver(),
-        new PartitionPartialReceiver(), DataFlowPartition.PartitionStratergy.DIRECT,
-        Utils.dataTypeToMessageType(dataType), Utils.dataTypeToMessageType(keyType));
+  public void prepare(Set<Integer> srcs, int dest, EdgeGenerator e, DataType dataType,
+                      DataType keyType, String edgeName, Config config, TaskPlan taskPlan) {
+    op = new DataFlowGather(channel, srcs, dest, new FinalGatherReceiver(), 0, 0,
+        config, Utils.dataTypeToMessageType(dataType), Utils.dataTypeToMessageType(keyType),
+        taskPlan, e.getIntegerMapping(edgeName));
     communicationEdge = e.generate(edgeName);
+    LOG.info("===CommunicationEdge : " + communicationEdge);
     op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
   }
 
   @Override
   public void send(int source, IMessage message) {
+    //LOG.info("Message : " + message.getContent());
     op.send(source, message.getContent(), 0);
   }
 
   @Override
   public void send(int source, IMessage message, int dest) {
-    op.send(source, message, 0, dest);
+    //LOG.info("Message : " + message.getContent());
+    op.send(source, message.getContent(), 0, dest);
   }
 
   @Override
@@ -98,7 +99,10 @@ public class PartitionByMultiByteBatchOperation extends AbstractParallelOperatio
     op.progress();
   }
 
-  public class PartitionReceiver implements MessageReceiver {
+
+  private class FinalGatherReceiver implements MessageReceiver {
+    // lets keep track of the messages
+    // for each task we need to keep track of incoming messages
     @Override
     public void init(Config cfg, DataFlowOperation operation,
                      Map<Integer, List<Integer>> expectedIds) {
@@ -106,8 +110,10 @@ public class PartitionByMultiByteBatchOperation extends AbstractParallelOperatio
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public boolean onMessage(int source, int destination, int target, int flags, Object object) {
 
+      // add the object to the map
       if (object instanceof List) {
         for (Object o : (List) object) {
           TaskMessage msg = new TaskMessage(o,
@@ -118,13 +124,13 @@ public class PartitionByMultiByteBatchOperation extends AbstractParallelOperatio
 
         }
       }
-
       return true;
+
     }
 
-    @Override
     public void progress() {
 
     }
   }
+
 }
