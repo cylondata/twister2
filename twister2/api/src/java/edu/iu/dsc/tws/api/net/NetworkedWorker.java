@@ -24,13 +24,15 @@ import edu.iu.dsc.tws.common.net.NetworkInfo;
 import edu.iu.dsc.tws.common.net.tcp.TCPChannel;
 import edu.iu.dsc.tws.common.net.tcp.TCPContext;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
+import edu.iu.dsc.tws.comms.core.TWSNetwork;
+import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.tcp.TWSTCPChannel;
 import edu.iu.dsc.tws.rsched.spi.container.IPersistentVolume;
 import edu.iu.dsc.tws.rsched.spi.container.IVolatileVolume;
 import edu.iu.dsc.tws.rsched.spi.container.IWorker;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
-public class NetworkedWorker implements IWorker {
+public abstract class NetworkedWorker implements IWorker {
   private static final Logger LOG = Logger.getLogger(NetworkedWorker.class.getName());
 
   @Override
@@ -38,8 +40,17 @@ public class NetworkedWorker implements IWorker {
                    IWorkerController workerController, IPersistentVolume persistentVolume,
                    IVolatileVolume volatileVolume) {
     TWSChannel channel = initializeNetwork(config, workerController);
+    TWSNetwork network = new TWSNetwork(config, channel, createTaskPlan());
+
     // now lets call the initial of the actual worker
+    init(config, id, resourcePlan, network, workerController, persistentVolume, volatileVolume);
   }
+
+  public abstract void init(Config config, int id, ResourcePlan resourcePlan, TWSNetwork network,
+                            IWorkerController workerController, IPersistentVolume persistentVolume,
+                            IVolatileVolume volatileVolume);
+
+  public abstract TaskPlan createTaskPlan();
 
   public static TWSChannel initializeNetwork(Config config, IWorkerController wController) {
     TCPChannel channel;
