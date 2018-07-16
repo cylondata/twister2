@@ -12,11 +12,7 @@
 package edu.iu.dsc.tws.rsched.schedulers.standalone;
 
 import java.io.File;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -31,20 +27,17 @@ import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
-import edu.iu.dsc.tws.common.net.NetworkInfo;
-import edu.iu.dsc.tws.common.net.tcp.TCPChannel;
-import edu.iu.dsc.tws.common.net.tcp.TCPContext;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.master.JobMasterContext;
-import edu.iu.dsc.tws.master.client.JobMasterClient;
-import edu.iu.dsc.tws.master.client.WorkerController;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+import edu.iu.dsc.tws.rsched.schedulers.standalone.worker.JobMasterBasedWorkerController;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
-import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
+import edu.iu.dsc.tws.rsched.spi.container.IWorker;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
@@ -70,7 +63,7 @@ public final class StandaloneWorkerStarter {
       Config config = loadConfigurations(cmd, rank);
       // normal worker
       LOG.log(Level.INFO, "A worker process is starting...");
-      createWorker(config, rank);
+      createWorker(config);
     } catch (ParseException e) {
       HelpFormatter formatter = new HelpFormatter();
       formatter.printHelp("SubmitterMain", cmdOptions);
@@ -166,24 +159,33 @@ public final class StandaloneWorkerStarter {
     return updatedConfig;
   }
 
-  private static void createWorker(Config config, int rank) {
+  private static void createWorker(Config config) {
     // lets create the resource plan
-    ResourcePlan resourcePlan = createResourcePlan(config);
-    LOG.info("Starting worker");
+    IWorkerController workerController = createWorkerController(config);
+    WorkerNetworkInfo workerNetworkInfo = workerController.getWorkerNetworkInfo();
+
     String containerClass = SchedulerContext.containerClass(config);
-    IContainer container;
+
+    ResourcePlan resourcePlan = new ResourcePlan(SchedulerContext.clusterType(config),
+        workerNetworkInfo.getWorkerID());
+
     try {
       Object object = ReflectionUtils.newInstance(containerClass);
-      container = (IContainer) object;
+      if (object instanceof IContainer) {
+        IContainer container = (IContainer) object;
+        // now initialize the container
+        container.init(config, workerNetworkInfo.getWorkerID(), resourcePlan);
+      } else if (object instanceof IWorker) {
+        IWorker worker = (IWorker) object;
+        worker.init(config, workerNetworkInfo.getWorkerID(), resourcePlan,
+            workerController, null, null);
+      }
       LOG.log(Level.FINE, "loaded container class: " + containerClass);
     } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
       LOG.log(Level.SEVERE, String.format("failed to load the container class %s",
           containerClass), e);
       throw new RuntimeException(e);
     }
-
-    // now initialize the container
-    container.init(config, rank, resourcePlan);
   }
 
   /**
@@ -191,7 +193,7 @@ public final class StandaloneWorkerStarter {
    * @param config config
    * @return
    */
-  private static ResourcePlan createResourcePlan(Config config) {
+  private static IWorkerController createWorkerController(Config config) {
     // first get the worker id
     String indexEnv = System.getenv("NOMAD_ALLOC_INDEX");
     String idEnv = System.getenv("NOMAD_ALLOC_ID");
@@ -201,84 +203,19 @@ public final class StandaloneWorkerStarter {
     initLogger(config, index);
     LOG.log(Level.INFO, String.format("Worker id = %s and index = %d", idEnv, index));
 
-    ResourcePlan resourcePlan = new ResourcePlan("", index);
-
     Map<String, Integer> ports = getPorts(config);
-    JobMasterClient client = null;
+    Map<String, String> localIps = getIPAddress(ports);
+
     String jobMasterIP = JobMasterContext.jobMasterIP(config);
     int masterPort = JobMasterContext.jobMasterPort(config);
-    TCPChannel channel;
-    try {
-      Integer workerPort = ports.get("worker");
-      String localIp = getIPAddress();
-      channel = initNetworkServer(config,
-          new WorkerNetworkInfo(InetAddress.getByName(localIp), workerPort, index),
-          index);
-      client = createMasterClient(config, index, localIp,
-          workerPort, masterPort, jobMasterIP);
-    } catch (UnknownHostException e) {
-      throw new RuntimeException("Failed to get network address: " + jobMasterIP, e);
-    }
-    // this is a synchronization step for starting the servers, when we get this information
-    // from master, we know that the servers are started
-    WorkerController workerController = client.getWorkerController();
-    workerController.waitForAllWorkersToJoin(30000);
 
-    // now start the client connections
-    List<WorkerNetworkInfo> wInfo = workerController.getWorkerList();
-    List<NetworkInfo> nInfos = new ArrayList<>();
-    for (WorkerNetworkInfo w : wInfo) {
-      ResourceContainer container = new ResourceContainer(w.getWorkerID());
-      resourcePlan.addContainer(container);
-
-      NetworkInfo networkInfo = new NetworkInfo(w.getWorkerID());
-      networkInfo.addProperty(TCPContext.NETWORK_PORT, w.getWorkerPort());
-      networkInfo.addProperty(TCPContext.NETWORK_HOSTNAME, w.getWorkerIP().toString());
-      nInfos.add(networkInfo);
-    }
-    channel.startConnections(nInfos, null);
-    // now lets wait for connections to be established
-    channel.waitForConnections();
-    return resourcePlan;
-  }
-
-  /**
-   * Start the TCP servers here
-   * @param cfg the configuration
-   * @param networkInfo network info
-   * @param workerId worker id
-   */
-  private static TCPChannel initNetworkServer(Config cfg, WorkerNetworkInfo networkInfo,
-                                              int workerId) {
-    NetworkInfo netInfo = new NetworkInfo(workerId);
-    netInfo.addProperty(TCPContext.NETWORK_HOSTNAME, networkInfo.getWorkerIP().getHostName());
-    netInfo.addProperty(TCPContext.NETWORK_PORT, networkInfo.getWorkerPort());
-    TCPChannel channel = new TCPChannel(cfg, netInfo);
-    channel.startListening();
-    return channel;
-  }
-
-  /**
-   * Create the job master client to get information about the workers
-   */
-  private static JobMasterClient createMasterClient(Config cfg, int workerId,
-                                                    String workerHost, int workerPort,
-                                                    int masterPort,
-                                                    String masterHost) throws UnknownHostException {
-    String jobName = StandaloneContext.jobName(cfg);
-    String jobDescFile = JobUtils.getJobDescriptionFilePath(jobName, cfg);
+    String jobName = StandaloneContext.jobName(config);
+    String jobDescFile = JobUtils.getJobDescriptionFilePath(jobName, config);
     JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
     int numberContainers = job.getJobResources().getNoOfContainers();
 
-    // we start the job master client
-    JobMasterClient jobMasterClient = new JobMasterClient(cfg,
-        new WorkerNetworkInfo(InetAddress.getByName(workerHost), workerPort, workerId),
-        masterHost, masterPort, numberContainers);
-    LOG.log(Level.INFO, String.format("Connecting to job master %s:%d", workerHost, workerPort));
-    jobMasterClient.init();
-    // now lets send the starting message
-    jobMasterClient.sendWorkerStartingMessage();
-    return jobMasterClient;
+    return new JobMasterBasedWorkerController(config, index, numberContainers,
+        jobMasterIP, masterPort, ports, localIps);
   }
 
   /**
@@ -332,7 +269,11 @@ public final class StandaloneWorkerStarter {
     return System.getenv("NOMAD_TASK_DIR");
   }
 
-  private static String getIPAddress() {
-    return System.getenv("NOMAD_IP_worker");
+  private static Map<String, String> getIPAddress(Map<String, Integer> ports) {
+    Map<String, String> ips = new HashMap<>();
+    for (Map.Entry<String, Integer> e : ports.entrySet()) {
+      ips.put(e.getKey(), System.getenv("NOMAD_IP_" + e.getKey()));
+    }
+    return ips;
   }
 }
