@@ -115,6 +115,10 @@ public class Client implements SelectHandler {
       return null;
     }
 
+    // we set the limit to size and position to 0 in-order to write this message
+    buffer.limit(size);
+    buffer.position(0);
+
     channel.enableWriting();
     TCPMessage request = new TCPMessage(buffer, edge, size);
     if (channel.addWriteRequest(request)) {

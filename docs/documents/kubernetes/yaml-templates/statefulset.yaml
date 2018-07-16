@@ -12,7 +12,7 @@ metadata:
   namespace: <kubernetes.namespace>
   labels:
     app: twister2-service-label-<job-name>
-
+    twister2-job-pods: twister2-<job-name>
 spec:
   # replicas are calculated by dividing twister2.worker.instances/kubernetes.workers.per.pod
   replicas: <twister2.worker.instances>/<kubernetes.workers.per.pod>

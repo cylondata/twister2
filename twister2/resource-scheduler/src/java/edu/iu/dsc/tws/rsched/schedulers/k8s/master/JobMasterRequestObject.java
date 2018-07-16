@@ -107,6 +107,10 @@ public final class JobMasterRequestObject {
     HashMap<String, String> labels = new HashMap<String, String>();
     labels.put(KubernetesConstants.SERVICE_LABEL_KEY,
         KubernetesUtils.createJobMasterServiceLabel(jobName));
+
+    String jobPodsLabel = KubernetesUtils.createJobPodsLabel(Context.jobName(config));
+    labels.put(KubernetesConstants.TWISTER2_JOB_PODS_KEY, jobPodsLabel);
+
     templateMetaData.setLabels(labels);
     template.setMetadata(templateMetaData);
 

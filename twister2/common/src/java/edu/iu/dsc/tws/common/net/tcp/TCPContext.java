@@ -61,7 +61,7 @@ public class TCPContext extends Context {
   }
 
   public static String getHostName(NetworkInfo networkInfo) {
-    return networkInfo.getProperties().get(NETWORK_HOSTNAME).toString();
+    return (String) networkInfo.getProperties().get(NETWORK_HOSTNAME);
   }
 
   public static int getPort(NetworkInfo networkInfo) {

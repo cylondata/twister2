@@ -89,7 +89,7 @@ public class Server implements SelectHandler {
       return true;
     } catch (IOException e) {
       LOG.log(Level.SEVERE, "Failed to start server", e);
-      return false;
+      throw new RuntimeException("Failed to start server", e);
     }
   }
 
@@ -118,6 +118,8 @@ public class Server implements SelectHandler {
     if (channel == null) {
       return null;
     }
+    buffer.limit(size);
+    buffer.position(0);
 
     channel.enableWriting();
 
