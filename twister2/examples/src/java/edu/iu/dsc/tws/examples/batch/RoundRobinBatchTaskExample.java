@@ -46,6 +46,8 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
+//import edu.iu.dsc.tws.comms.core.TWSNetwork;
+
 public class RoundRobinBatchTaskExample implements IContainer {
 
   private static final Logger LOG =
@@ -95,7 +97,7 @@ public class RoundRobinBatchTaskExample implements IContainer {
     builder.addSink("sink2", r);
     builder.setParallelism("sink2", 3);
 
-    builder.addSink("merge", r);
+    builder.addSink("merge", m1);
     builder.setParallelism("merge", 3);
 
     builder.addSink("final", f);
@@ -133,6 +135,7 @@ public class RoundRobinBatchTaskExample implements IContainer {
 
     List<TaskSchedulePlan> taskSchedulePlanList = new ArrayList<>();
     TaskSchedulePlan taskSchedulePlan = null;
+
 
     if (id == 0) {
       if ("Batch".equalsIgnoreCase(jobType)
