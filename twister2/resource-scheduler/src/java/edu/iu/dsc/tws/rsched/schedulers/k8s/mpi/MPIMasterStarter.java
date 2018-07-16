@@ -94,7 +94,7 @@ public final class MPIMasterStarter {
     long start = System.currentTimeMillis();
     int timeoutSeconds = 100;
     HashMap<String, String> podNamesIPs =
-        PodWatchUtils.getRunningPodIPs(podNames, jobName, namespace, timeoutSeconds);
+        PodWatchUtils.getRunningJobPodIPs(podNames, jobName, namespace, timeoutSeconds);
 
     if (podNamesIPs == null) {
       LOG.severe("Could not get all pods running. Aborting. "
@@ -102,18 +102,14 @@ public final class MPIMasterStarter {
       return;
     }
 
+    String jobMasterPodName = KubernetesUtils.createJobMasterPodName(jobName);
+    String jobMasterIP = podNamesIPs.remove(jobMasterPodName);
+    LOG.info("Job Master IP address: " + jobMasterIP);
+
     long duration = System.currentTimeMillis() - start;
     LOG.info("Getting all pods running took: " + duration + " ms.");
 
     createHostFile(podIP, podNamesIPs);
-
-    // get job master IP address
-    String jobMasterPodName = KubernetesUtils.createJobMasterPodName(jobName);
-    start = System.currentTimeMillis();
-    String jobMasterIP = PodWatchUtils.getJobMasterIP(jobMasterPodName, jobName, namespace, 100);
-    duration = System.currentTimeMillis() - start;
-    LOG.info("Job Master IP address: " + jobMasterIP);
-    LOG.info("The time to get the Job Master IP address: " + duration + "ms");
 
     String classToRun = "edu.iu.dsc.tws.rsched.schedulers.k8s.mpi.MPIWorkerStarter";
     String[] mpirunCommand = mpirunCommand(classToRun, workersPerPod, jobMasterIP);
@@ -177,7 +173,7 @@ public final class MPIMasterStarter {
   }
 
   /**
-   * create all pod names in this StatefulSet except the first pod
+   * create all pod names in this job, except the first worker pod (this pod)
    * @param jobName
    * @param numberOfPods
    * @return
@@ -189,6 +185,9 @@ public final class MPIMasterStarter {
       String podName = KubernetesUtils.podNameFromJobName(jobName, i);
       podNames.add(podName);
     }
+
+    String jobMasterPodName = KubernetesUtils.createJobMasterPodName(jobName);
+    podNames.add(jobMasterPodName);
 
     return podNames;
   }

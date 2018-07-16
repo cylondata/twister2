@@ -60,9 +60,6 @@ public class ResourceAllocator {
    * @param cfg the config values in this map will be put into returned Config
    */
   public static Config loadConfig(Map<String, Object> cfg) {
-
-    LOG.info("=============*Loading Configurations*====================");
-
     // first lets read the essential properties from java system properties
     String twister2Home = System.getProperty(SchedulerContext.TWISTER_2_HOME);
     String configDir = System.getProperty(SchedulerContext.CONFIG_DIR);
@@ -96,7 +93,6 @@ public class ResourceAllocator {
     LOG.log(Level.INFO, String.format("Loading configuration with twister2_home: %s and "
         + "configuration: %s and cluster: %s", twister2Home, configDir, clusterType));
     Config config = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterType);
-    LOG.info("=============*Configurations Loaded*====================");
 
     // if this is a Kubernetes cluster and Kubernetes upload method is set as client-to-pods
     // do not use a regular uploader

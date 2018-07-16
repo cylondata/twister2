@@ -22,7 +22,7 @@ tar -xvf twister2-core.tar.gz
 tar -xvf twister2-job.tar.gz --strip 1
 
 profile=
-#debug=
+debug=
 
 ls
 

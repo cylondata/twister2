@@ -131,6 +131,10 @@ public final class RequestObjectBuilder {
     V1ObjectMeta templateMetaData = new V1ObjectMeta();
     HashMap<String, String> labels = new HashMap<String, String>();
     labels.put(KubernetesConstants.SERVICE_LABEL_KEY, serviceLabel);
+
+    String jobPodsLabel = KubernetesUtils.createJobPodsLabel(Context.jobName(config));
+    labels.put(KubernetesConstants.TWISTER2_JOB_PODS_KEY, jobPodsLabel);
+
     templateMetaData.setLabels(labels);
     template.setMetadata(templateMetaData);
 

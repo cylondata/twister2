@@ -210,19 +210,21 @@ public final class StandaloneWorkerStarter {
     TCPChannel channel;
     try {
       Integer workerPort = ports.get("worker");
+      String localIp = getIPAddress();
       channel = initNetworkServer(config,
-          new WorkerNetworkInfo(InetAddress.getByName("0.0.0.0"), workerPort, index),
+          new WorkerNetworkInfo(InetAddress.getByName(localIp), workerPort, index),
           index);
-      client = createMasterClient(config, index, InetAddress.getLocalHost().getHostName(),
+      client = createMasterClient(config, index, localIp,
           workerPort, masterPort, jobMasterIP);
     } catch (UnknownHostException e) {
       throw new RuntimeException("Failed to get network address: " + jobMasterIP, e);
     }
+    // this is a synchronization step for starting the servers, when we get this information
+    // from master, we know that the servers are started
     WorkerController workerController = client.getWorkerController();
     workerController.waitForAllWorkersToJoin(30000);
 
-    // now start listening
-
+    // now start the client connections
     List<WorkerNetworkInfo> wInfo = workerController.getWorkerList();
     List<NetworkInfo> nInfos = new ArrayList<>();
     for (WorkerNetworkInfo w : wInfo) {
@@ -231,10 +233,12 @@ public final class StandaloneWorkerStarter {
 
       NetworkInfo networkInfo = new NetworkInfo(w.getWorkerID());
       networkInfo.addProperty(TCPContext.NETWORK_PORT, w.getWorkerPort());
-      networkInfo.addProperty(TCPContext.NETWORK_HOSTNAME, w.getWorkerIP());
+      networkInfo.addProperty(TCPContext.NETWORK_HOSTNAME, w.getWorkerIP().toString());
       nInfos.add(networkInfo);
     }
     channel.startConnections(nInfos, null);
+    // now lets wait for connections to be established
+    channel.waitForConnections();
     return resourcePlan;
   }
 
@@ -247,7 +251,7 @@ public final class StandaloneWorkerStarter {
   private static TCPChannel initNetworkServer(Config cfg, WorkerNetworkInfo networkInfo,
                                               int workerId) {
     NetworkInfo netInfo = new NetworkInfo(workerId);
-    netInfo.addProperty(TCPContext.NETWORK_HOSTNAME, networkInfo.getWorkerIP());
+    netInfo.addProperty(TCPContext.NETWORK_HOSTNAME, networkInfo.getWorkerIP().getHostName());
     netInfo.addProperty(TCPContext.NETWORK_PORT, networkInfo.getWorkerPort());
     TCPChannel channel = new TCPChannel(cfg, netInfo);
     channel.startListening();
@@ -258,7 +262,7 @@ public final class StandaloneWorkerStarter {
    * Create the job master client to get information about the workers
    */
   private static JobMasterClient createMasterClient(Config cfg, int workerId,
-                                                    String host, int workerPort,
+                                                    String workerHost, int workerPort,
                                                     int masterPort,
                                                     String masterHost) throws UnknownHostException {
     String jobName = StandaloneContext.jobName(cfg);
@@ -268,9 +272,9 @@ public final class StandaloneWorkerStarter {
 
     // we start the job master client
     JobMasterClient jobMasterClient = new JobMasterClient(cfg,
-        new WorkerNetworkInfo(InetAddress.getByName(host), workerPort, workerId),
+        new WorkerNetworkInfo(InetAddress.getByName(workerHost), workerPort, workerId),
         masterHost, masterPort, numberContainers);
-    LOG.log(Level.INFO, String.format("Connecting to job master %s:%d", host, workerPort));
+    LOG.log(Level.INFO, String.format("Connecting to job master %s:%d", workerHost, workerPort));
     jobMasterClient.init();
     // now lets send the starting message
     jobMasterClient.sendWorkerStartingMessage();
@@ -326,5 +330,9 @@ public final class StandaloneWorkerStarter {
 
   private static String getTaskDirectory() {
     return System.getenv("NOMAD_TASK_DIR");
+  }
+
+  private static String getIPAddress() {
+    return System.getenv("NOMAD_IP_worker");
   }
 }

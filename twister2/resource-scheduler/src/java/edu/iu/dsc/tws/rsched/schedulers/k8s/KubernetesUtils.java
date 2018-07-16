@@ -134,6 +134,10 @@ public final class KubernetesUtils {
     return KubernetesConstants.SERVICE_LABEL_PREFIX + jobName + "-job-master";
   }
 
+  public static String createJobPodsLabel(String jobName) {
+    return KubernetesConstants.TWISTER2_JOB_PODS_PREFIX + jobName;
+  }
+
   /**
    * this label is used when submitting queries to kubernetes master
    * @param jobName
@@ -150,6 +154,10 @@ public final class KubernetesUtils {
    */
   public static String createJobMasterServiceLabelWithKey(String jobName) {
     return KubernetesConstants.SERVICE_LABEL_KEY + "=" + createJobMasterServiceLabel(jobName);
+  }
+
+  public static String createJobPodsLabelWithKey(String jobName) {
+    return KubernetesConstants.TWISTER2_JOB_PODS_KEY + "=" + createJobPodsLabel(jobName);
   }
 
   /**

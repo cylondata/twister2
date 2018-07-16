@@ -35,6 +35,11 @@ public class DynamicBufferChannel extends BaseNetworkChannel {
     }
   }
 
+  @Override
+  public boolean addReadRequest(TCPMessage request) {
+    throw new UnsupportedOperationException("In dynamic mode, read requests are not added");
+  }
+
   /**
    * Read the request
    * @param channel

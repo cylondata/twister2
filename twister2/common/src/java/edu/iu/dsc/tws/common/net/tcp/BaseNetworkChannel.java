@@ -100,7 +100,13 @@ public abstract class BaseNetworkChannel {
 
   public boolean addWriteRequest(TCPMessage request) {
     ByteBuffer byteBuffer = request.getByteBuffer();
-    byteBuffer.position(request.getLength());
+    if (request.getLength() == 0) {
+      throw new RuntimeException("Cannot send a message with 0 length");
+    }
+
+    if (byteBuffer.remaining() == 0) {
+      throw new RuntimeException("Cannot send a message with 0 length");
+    }
 
     return pendingSends.offer(request);
   }
@@ -158,7 +164,6 @@ public abstract class BaseNetworkChannel {
     }
 
     if (writeStatus == DataStatus.BODY) {
-      buffer.flip();
       written = writeToChannel(channel, buffer);
       if (written < 0) {
         return written;
@@ -175,7 +180,7 @@ public abstract class BaseNetworkChannel {
   private int writeToChannel(SocketChannel channel, ByteBuffer buffer) {
     int remaining = buffer.remaining();
     assert remaining > 0;
-    int wrote = 0;
+    int wrote;
     try {
       wrote = channel.write(buffer);
       LOG.finest("Wrote " + wrote);
