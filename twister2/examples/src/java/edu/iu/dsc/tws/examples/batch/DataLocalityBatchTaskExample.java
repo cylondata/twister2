@@ -140,14 +140,14 @@ public class DataLocalityBatchTaskExample implements IContainer {
     mergeInputDataset.add("dataset3.txt");
     mergeInputDataset.add("dataset4.txt");
 
-    builder.addConfiguration("sink", "Ram", GraphConstants.taskInstanceRam(config));
-    builder.addConfiguration("sink", "Disk", GraphConstants.taskInstanceDisk(config));
-    builder.addConfiguration("sink", "Cpu", GraphConstants.taskInstanceCpu(config));
-    builder.addConfiguration("sink", "inputdataset", sinkInputDataset);
+    builder.addConfiguration("merge", "Ram", GraphConstants.taskInstanceRam(config));
+    builder.addConfiguration("merge", "Disk", GraphConstants.taskInstanceDisk(config));
+    builder.addConfiguration("merge", "Cpu", GraphConstants.taskInstanceCpu(config));
+    builder.addConfiguration("merge", "inputdataset", sinkInputDataset);
 
     List<String> mergeOutputDataset = new ArrayList<>();
-    mergeOutputDataset.add("sinkoutput.txt");
-    builder.addConfiguration("sink", "outputdataset", mergeOutputDataset);
+    mergeOutputDataset.add("mergeoutput.txt");
+    builder.addConfiguration("merge", "outputdataset", mergeOutputDataset);
 
     DataFlowTaskGraph graph = builder.build();
     WorkerPlan workerPlan = createWorkerPlan(resourcePlan);
@@ -157,7 +157,6 @@ public class DataLocalityBatchTaskExample implements IContainer {
 
     String jobType = "batch";
 
-    //if (id == 0) {
     if ("batch".equals(jobType)
         && TaskSchedulerContext.taskSchedulingMode(config).equals("datalocalityaware")) {
       DataLocalityBatchTaskScheduling dataLocalityBatchTaskScheduling = new
@@ -186,7 +185,6 @@ public class DataLocalityBatchTaskExample implements IContainer {
         }
       }
     }
-    //}
 
     TWSNetwork network = new TWSNetwork(config, resourcePlan.getThisId());
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);

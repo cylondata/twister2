@@ -32,6 +32,7 @@ import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
+import edu.iu.dsc.tws.rsched.spi.container.IWorker;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
@@ -185,17 +186,23 @@ public final class MPIWorker {
     ResourcePlan resourcePlan = createResourcePlan(config);
 
     String containerClass = MPIContext.containerClass(config);
-    IContainer container;
     try {
       Object object = ReflectionUtils.newInstance(containerClass);
-      container = (IContainer) object;
+      if (object instanceof IContainer) {
+        IContainer container = (IContainer) object;
+        // now initialize the container
+        container.init(config, rank, resourcePlan);
+      } else if (object instanceof IWorker) {
+        IWorker worker = (IWorker) object;
+        worker.init(config, rank, resourcePlan,
+            null, null, null);
+      }
       LOG.log(Level.FINE, "loaded container class: " + containerClass);
     } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
       LOG.log(Level.SEVERE, String.format("failed to load the container class %s",
           containerClass), e);
       throw new RuntimeException(e);
     }
-
 
     // lets do a barrier here so everyone is synchronized at the start
     try {
@@ -205,9 +212,6 @@ public final class MPIWorker {
       LOG.log(Level.SEVERE, "Failed to synchronize the workers at the start");
       throw new RuntimeException(e);
     }
-
-    // now initialize the container
-    container.init(config, rank, resourcePlan);
   }
 
   /**

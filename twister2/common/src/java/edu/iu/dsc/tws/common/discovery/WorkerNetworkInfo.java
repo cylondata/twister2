@@ -45,7 +45,7 @@ public class WorkerNetworkInfo {
 
   /**
    * workerName has both IP and port in the form of ip:port
-   * @param workerName
+   * @param workerName name of
    * @param workerID
    */
   public WorkerNetworkInfo(String workerName, int workerID) {
@@ -56,7 +56,7 @@ public class WorkerNetworkInfo {
 
   /**
    * return ip:port as a string
-   * @return
+   * @return worker name
    */
   public String getWorkerName() {
     return ip.getHostAddress() + ":" + port;
@@ -86,7 +86,7 @@ public class WorkerNetworkInfo {
   }
 
   public byte[] getWorkerIDAsBytes() {
-    return new Integer(workerID).toString().getBytes();
+    return Integer.toString(workerID).getBytes();
   }
 
   public static int getWorkerIDFromBytes(byte[] data) {
@@ -95,7 +95,7 @@ public class WorkerNetworkInfo {
 
   /**
    * this is the inverse of getWorkerInfoAsString method
-   * @return
+   * @return WorkerNetworkInfo
    */
   public static WorkerNetworkInfo getWorkerInfoFromString(String str) {
     if (str == null || str.length() < 4) {
@@ -113,7 +113,7 @@ public class WorkerNetworkInfo {
 
   /**
    * parse job znode content and set the id of this worker
-   * @param str
+   * @param str from string
    */
   public static int getWorkerIDByParsing(String str, String workerName) {
     int workerNameIndex = str.indexOf(workerName);
@@ -159,8 +159,8 @@ public class WorkerNetworkInfo {
       return null;
     }
 
-    StringBuffer buffer = new StringBuffer();
-    buffer.append("Number of workers: " + workers.size() + "\n");
+    StringBuilder buffer = new StringBuilder();
+    buffer.append("Number of workers: ").append(workers.size()).append("\n");
     int i = 0;
     for (WorkerNetworkInfo worker : workers) {
       buffer.append(String.format("%d: workerID[%d] %s\n",

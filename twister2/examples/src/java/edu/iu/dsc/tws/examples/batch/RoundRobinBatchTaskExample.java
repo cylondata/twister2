@@ -46,6 +46,8 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
+//import edu.iu.dsc.tws.comms.core.TWSNetwork;
+
 public class RoundRobinBatchTaskExample implements IContainer {
 
   private static final Logger LOG =
@@ -95,7 +97,7 @@ public class RoundRobinBatchTaskExample implements IContainer {
     builder.addSink("sink2", r);
     builder.setParallelism("sink2", 3);
 
-    builder.addSink("merge", r);
+    builder.addSink("merge", m1);
     builder.setParallelism("merge", 3);
 
     builder.addSink("final", f);
@@ -134,29 +136,28 @@ public class RoundRobinBatchTaskExample implements IContainer {
     List<TaskSchedulePlan> taskSchedulePlanList = new ArrayList<>();
     TaskSchedulePlan taskSchedulePlan = null;
 
-    if (id == 0) {
-      if ("Batch".equalsIgnoreCase(jobType)
-          && "roundrobin".equalsIgnoreCase(schedulingType)) {
-        RoundRobinBatchTaskScheduling rrBatchTaskScheduling = new RoundRobinBatchTaskScheduling();
-        rrBatchTaskScheduling.initialize(config);
-        WorkerPlan workerPlan = createWorkerPlan(resourcePlan);
-        taskSchedulePlanList = rrBatchTaskScheduling.scheduleBatch(graph, workerPlan);
-      }
 
-      for (int j = 0; j < taskSchedulePlanList.size(); j++) {
-        taskSchedulePlan = taskSchedulePlanList.get(j);
-        Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap
-            = taskSchedulePlan.getContainersMap();
-        LOG.info("Task Schedule Plan:" + j);
-        for (Map.Entry<Integer, TaskSchedulePlan.ContainerPlan> entry : containersMap.entrySet()) {
-          Integer integer = entry.getKey();
-          TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
-          Set<TaskSchedulePlan.TaskInstancePlan> taskContainerPlan
-              = containerPlan.getTaskInstances();
-          for (TaskSchedulePlan.TaskInstancePlan ip : taskContainerPlan) {
-            LOG.info("\tTask Id:" + ip.getTaskId() + "\tTask Index:" + ip.getTaskIndex()
-                + "\tTask Name:" + ip.getTaskName() + "\tContainer Id:" + integer);
-          }
+    if ("Batch".equalsIgnoreCase(jobType)
+        && "roundrobin".equalsIgnoreCase(schedulingType)) {
+      RoundRobinBatchTaskScheduling rrBatchTaskScheduling = new RoundRobinBatchTaskScheduling();
+      rrBatchTaskScheduling.initialize(config);
+      WorkerPlan workerPlan = createWorkerPlan(resourcePlan);
+      taskSchedulePlanList = rrBatchTaskScheduling.scheduleBatch(graph, workerPlan);
+    }
+
+    for (int j = 0; j < taskSchedulePlanList.size(); j++) {
+      taskSchedulePlan = taskSchedulePlanList.get(j);
+      Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap
+          = taskSchedulePlan.getContainersMap();
+      LOG.info("Task Schedule Plan:" + j);
+      for (Map.Entry<Integer, TaskSchedulePlan.ContainerPlan> entry : containersMap.entrySet()) {
+        Integer integer = entry.getKey();
+        TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
+        Set<TaskSchedulePlan.TaskInstancePlan> taskContainerPlan
+            = containerPlan.getTaskInstances();
+        for (TaskSchedulePlan.TaskInstancePlan ip : taskContainerPlan) {
+          LOG.info("\tTask Id:" + ip.getTaskId() + "\tTask Index:" + ip.getTaskIndex()
+              + "\tTask Name:" + ip.getTaskName() + "\tContainer Id:" + integer);
         }
       }
     }
