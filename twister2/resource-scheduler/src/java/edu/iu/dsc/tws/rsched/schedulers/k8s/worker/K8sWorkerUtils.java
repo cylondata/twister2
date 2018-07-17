@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s.worker;
 
 import java.io.File;
 import java.nio.file.Paths;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -187,5 +188,22 @@ public final class K8sWorkerUtils {
 
     return podNo * workersPerPod + containerIndex;
   }
+
+  /**
+   * a test method to make the worker wait indefinitely
+   */
+  public static void waitIndefinitely() {
+
+    while (true) {
+      try {
+        LOG.info("Worker completed. Waiting idly to be deleted by Job Master. Sleeping 100sec. "
+            + "Time: " + new java.util.Date());
+        Thread.sleep(100000);
+      } catch (InterruptedException e) {
+        LOG.log(Level.WARNING, "Thread sleep interrupted.", e);
+      }
+    }
+  }
+
 
 }

@@ -27,5 +27,12 @@ In order to view the logs of the nomad agent use the command
   ./twister2-nomad logs [the allocation id of the task]
 ```
 
+Useful commands
+---------------
 
+Kill workers
+
+```bash
+  kill $(jps | grep StandaloneWorkerStarter | awk '{print $1}')
+```
 

@@ -23,6 +23,7 @@ import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
+import edu.iu.dsc.tws.rsched.uploaders.scp.ScpContext;
 
 import io.kubernetes.client.custom.Quantity;
 import io.kubernetes.client.models.V1Affinity;
@@ -469,6 +470,10 @@ public final class RequestObjectBuilder {
     envVars.add(new V1EnvVar()
         .name(KubernetesField.UPLOAD_METHOD + "")
         .value(KubernetesContext.uploadMethod(config)));
+
+    envVars.add(new V1EnvVar()
+        .name(KubernetesField.DOWNLOAD_DIRECTORY + "")
+        .value(ScpContext.downloadDirectory(config)));
 
     return envVars;
   }

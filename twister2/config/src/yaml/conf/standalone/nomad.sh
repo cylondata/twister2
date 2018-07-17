@@ -22,14 +22,20 @@ tar -xvf twister2-core.tar.gz
 tar -xvf twister2-job.tar.gz --strip 1
 
 profile=
-debug=
+#debug=
 
 ls
 
 cp="*:twister2-core/lib/*"
 echo $cp
+echo "1" $1
+echo "2" $2
+echo "3" $3
+echo "4" $4
+echo "5" $5
+echo "6" $6
 #echo "java $debug $profile -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.util.logging.config.file=nodesmpi/logger.properties -cp $2 edu.iu.dsc.tws.rsched.schedulers.standalone.StandaloneWorkerStarter --container_class $3 --job_name $4 --twister2_home $5 --cluster_type nodesmpi --config_dir $6"
-java $debug $profile -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.util.logging.config.file=nodesmpi/logger.properties -cp $cp edu.iu.dsc.tws.rsched.schedulers.standalone.StandaloneWorkerStarter --container_class $3 --job_name $4 --twister2_home $5 --cluster_type standalone --config_dir $6 2>&1 | tee out.txt
+java $debug $profile -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.util.logging.config.file=nodesmpi/logger.properties -cp $cp edu.iu.dsc.tws.rsched.schedulers.standalone.StandaloneWorkerStarter --container_class $4 --job_name $5 --twister2_home $6 --cluster_type standalone --config_dir $7 2>&1 | tee out.txt
 
 cat out.txt
 
