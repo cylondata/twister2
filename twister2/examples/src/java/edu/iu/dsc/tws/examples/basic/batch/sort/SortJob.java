@@ -22,7 +22,9 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
+import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
@@ -35,11 +37,13 @@ import edu.iu.dsc.tws.comms.op.OperationSemantics;
 import edu.iu.dsc.tws.examples.utils.WordCountUtils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.rsched.spi.container.IContainer;
+import edu.iu.dsc.tws.rsched.spi.container.IPersistentVolume;
+import edu.iu.dsc.tws.rsched.spi.container.IVolatileVolume;
+import edu.iu.dsc.tws.rsched.spi.container.IWorker;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
-public class SortJob implements IContainer {
+public class SortJob implements IWorker {
   private static final Logger LOG = Logger.getLogger(SortJob.class.getName());
 
   private DataFlowPartition partition;
@@ -63,16 +67,19 @@ public class SortJob implements IContainer {
   private TaskPlan taskPlan;
 
   @Override
-  public void init(Config cfg, int containerId, ResourcePlan plan) {
+  public void init(Config cfg, int wID, ResourcePlan plan,
+                   IWorkerController workerController,
+                   IPersistentVolume persistentVolume,
+                   IVolatileVolume volatileVolume) {
     this.config = cfg;
     this.resourcePlan = plan;
-    this.id = containerId;
+    this.id = wID;
     this.noOfTasksPerExecutor = NO_OF_TASKS / plan.noOfContainers();
 
     // set up the tasks
     setupTasks();
     // setup the network
-    setupNetwork();
+    setupNetwork(cfg, workerController, taskPlan);
 
     partition = new DataFlowPartition(config, channel, taskPlan, sources, destinations,
         new PartitionBatchFinalReceiver(new RecordSave(), false, true,
@@ -110,8 +117,8 @@ public class SortJob implements IContainer {
     }
   }
 
-  private void setupNetwork() {
-    network = new TWSNetwork(config, taskPlan);
+  private void setupNetwork(Config cfg, IWorkerController controller, TaskPlan plan) {
+    network = Network.initializeNetwork(cfg, controller, plan);
     channel = network.getChannel();
   }
 
