@@ -103,11 +103,11 @@ public class RoundRobinBatchTaskExample implements IContainer {
     builder.addSink("final", f);
     builder.setParallelism("final", 3);
 
-    builder.connect("source", "sink1", "partition-edge", Operations.PARTITION);
-    builder.connect("source", "sink2", "partition-edge", Operations.PARTITION);
-    builder.connect("sink1", "merge", "partition-edge", Operations.PARTITION);
-    builder.connect("sink2", "merge", "partition-edge", Operations.PARTITION);
-    builder.connect("merge", "final", "partition-edge", Operations.PARTITION);
+    builder.connect("source", "sink1", "partition-edge1", Operations.PARTITION);
+    builder.connect("source", "sink2", "partition-edge2", Operations.PARTITION);
+    builder.connect("sink1", "merge", "partition-edge3", Operations.PARTITION);
+    builder.connect("sink2", "merge", "partition-edge4", Operations.PARTITION);
+    builder.connect("merge", "final", "partition-edge5", Operations.PARTITION);
 
     builder.addConfiguration("source", "Ram", GraphConstants.taskInstanceRam(config));
     builder.addConfiguration("source", "Disk", GraphConstants.taskInstanceDisk(config));
@@ -127,7 +127,6 @@ public class RoundRobinBatchTaskExample implements IContainer {
     sinkOutputDataset2.add("sinkoutput2.txt");
     builder.addConfiguration("sink2", "outputdataset2", sinkOutputDataset2);
 
-
     DataFlowTaskGraph graph = builder.build();
 
     String jobType = "Batch";
@@ -135,7 +134,6 @@ public class RoundRobinBatchTaskExample implements IContainer {
 
     List<TaskSchedulePlan> taskSchedulePlanList = new ArrayList<>();
     TaskSchedulePlan taskSchedulePlan = null;
-
 
     if ("Batch".equalsIgnoreCase(jobType)
         && "roundrobin".equalsIgnoreCase(schedulingType)) {
@@ -145,19 +143,22 @@ public class RoundRobinBatchTaskExample implements IContainer {
       taskSchedulePlanList = rrBatchTaskScheduling.scheduleBatch(graph, workerPlan);
     }
 
-    for (int j = 0; j < taskSchedulePlanList.size(); j++) {
-      taskSchedulePlan = taskSchedulePlanList.get(j);
-      Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap
-          = taskSchedulePlan.getContainersMap();
-      LOG.info("Task Schedule Plan:" + j);
-      for (Map.Entry<Integer, TaskSchedulePlan.ContainerPlan> entry : containersMap.entrySet()) {
-        Integer integer = entry.getKey();
-        TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
-        Set<TaskSchedulePlan.TaskInstancePlan> taskContainerPlan
-            = containerPlan.getTaskInstances();
-        for (TaskSchedulePlan.TaskInstancePlan ip : taskContainerPlan) {
-          LOG.info("\tTask Id:" + ip.getTaskId() + "\tTask Index:" + ip.getTaskIndex()
-              + "\tTask Name:" + ip.getTaskName() + "\tContainer Id:" + integer);
+    //Just to print the task schedule plan.
+    if (id == 0) {
+      for (int j = 0; j < taskSchedulePlanList.size(); j++) {
+        taskSchedulePlan = taskSchedulePlanList.get(j);
+        Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap
+            = taskSchedulePlan.getContainersMap();
+        LOG.info("Task Schedule Plan:" + j);
+        for (Map.Entry<Integer, TaskSchedulePlan.ContainerPlan> entry : containersMap.entrySet()) {
+          Integer integer = entry.getKey();
+          TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
+          Set<TaskSchedulePlan.TaskInstancePlan> taskContainerPlan
+              = containerPlan.getTaskInstances();
+          for (TaskSchedulePlan.TaskInstancePlan ip : taskContainerPlan) {
+            LOG.info("\tTask Id:" + ip.getTaskId() + "\tTask Index:" + ip.getTaskIndex()
+                + "\tTask Name:" + ip.getTaskName() + "\tContainer Id:" + integer);
+          }
         }
       }
     }

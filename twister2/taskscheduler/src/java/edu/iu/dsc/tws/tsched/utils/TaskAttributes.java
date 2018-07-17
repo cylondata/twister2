@@ -129,6 +129,28 @@ public class TaskAttributes {
     return parallelTaskMap;
   }
 
+  public LinkedHashMap<String, Integer> getParallelTaskMap(Set<Vertex> iTaskSet, String msg) {
+
+    LinkedHashMap<String, Integer> parallelTaskMap = new LinkedHashMap<>();
+
+    try {
+      for (Vertex task : iTaskSet) {
+        Config config = task.getConfig();
+        String taskName = task.getName();
+        Integer parallelTaskCount;
+        if (task.getParallelism() >= 1) {
+          parallelTaskCount = task.getParallelism();
+        } else { //if (task.getParallelism() < 1) {
+          parallelTaskCount = TaskSchedulerContext.taskParallelism(config);
+        }
+        parallelTaskMap.put(taskName, parallelTaskCount);
+      }
+    } catch (Exception ee) {
+      ee.printStackTrace();
+    }
+    return parallelTaskMap;
+  }
+
   public HashMap<String, Integer> getParallelTaskMap(Vertex taskVertex) {
 
     HashMap<String, Integer> parallelTaskMap = new LinkedHashMap<>();

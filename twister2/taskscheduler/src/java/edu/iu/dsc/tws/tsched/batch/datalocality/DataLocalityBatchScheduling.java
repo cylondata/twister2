@@ -112,7 +112,7 @@ public class DataLocalityBatchScheduling {
           int maxContainerTaskObjectSize = 0;
           if (maxContainerTaskObjectSize <= maxTaskInstancesPerContainer) {
             containerIndex = Integer.parseInt(cal.get(i).getNodeName().trim());
-            LOG.info("Worker Node Allocation for task:" + taskName + "(" + i + ")"
+            LOG.fine("Worker Node Allocation for task:" + taskName + "(" + i + ")"
                 + "-> Worker:" + containerIndex + "->" + Collections.min(cal).getDataNode());
             dataAwareAllocation.get(containerIndex).add(
                 new InstanceId(taskVertex.getName(), globalTaskIndex, i));
@@ -199,9 +199,9 @@ public class DataLocalityBatchScheduling {
     for (Map.Entry<Integer, List<InstanceId>> entry1 : dataAwareAllocation.entrySet()) {
       Integer integer = entry1.getKey();
       List<InstanceId> instanceIds = entry1.getValue();
-      LOG.info("Container Index:" + integer);
+      LOG.fine("Container Index:" + integer);
       for (int i = 0; i < instanceIds.size(); i++) {
-        LOG.info("Task Details:"
+        LOG.fine("Task Details:"
             + "\t Task Name:" + instanceIds.get(i).getTaskName()
             + "\t Task id:" + instanceIds.get(i).getTaskId()
             + "\t Task index:" + instanceIds.get(i).getTaskIndex());
