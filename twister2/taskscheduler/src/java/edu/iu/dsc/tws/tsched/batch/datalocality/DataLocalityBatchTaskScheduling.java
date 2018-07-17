@@ -70,9 +70,6 @@ public class DataLocalityBatchTaskScheduling implements TaskSchedule {
     for (int i = 0; i < taskVertexList.size(); i++) {
 
       Set<Vertex> vertexSet = taskVertexList.get(i);
-
-      LOG.info("%%%% Task Vertex Set Size: %%%%" + vertexSet.size());
-
       if (vertexSet.size() > 1) {
         datalocalityAwareContainerInstanceMap = DataLocalityBatchScheduling.
             DataLocalityBatchSchedulingAlgo(vertexSet,
@@ -153,7 +150,7 @@ public class DataLocalityBatchTaskScheduling implements TaskSchedule {
     }
 
     //To print the schedule plan list
-    /*for (int j = 0; j < taskSchedulePlanList.size(); j++) {
+    for (int j = 0; j < taskSchedulePlanList.size(); j++) {
       TaskSchedulePlan taskSchedulePlan = taskSchedulePlanList.get(j);
       Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap
           = taskSchedulePlan.getContainersMap();
@@ -162,11 +159,11 @@ public class DataLocalityBatchTaskScheduling implements TaskSchedule {
         TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
         Set<TaskSchedulePlan.TaskInstancePlan> taskContainerPlan = containerPlan.getTaskInstances();
         for (TaskSchedulePlan.TaskInstancePlan ip : taskContainerPlan) {
-          LOG.info("Task Id:" + ip.getTaskId() + "\tTask Index" + ip.getTaskIndex()
+          LOG.fine("Task Id:" + ip.getTaskId() + "\tTask Index" + ip.getTaskIndex()
               + "\tTask Name:" + ip.getTaskName() + "\tContainer Id:" + integer);
         }
       }
-    }*/
+    }
     return taskSchedulePlanList;
   }
 

@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.tsched.batch.datalocality;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -48,6 +49,8 @@ public class DataLocalityBatchScheduling {
    */
   public static Map<Integer, List<InstanceId>> DataLocalityBatchSchedulingAlgo(
       Vertex taskVertex, int numberOfContainers, WorkerPlan workerPlan, Config config) {
+
+    LOG.info("Task Vertex Name is:" + taskVertex);
 
     DataNodeLocatorUtils dataNodeLocatorUtils = new DataNodeLocatorUtils(config);
     TaskAttributes taskAttributes = new TaskAttributes();
@@ -109,8 +112,8 @@ public class DataLocalityBatchScheduling {
           int maxContainerTaskObjectSize = 0;
           if (maxContainerTaskObjectSize <= maxTaskInstancesPerContainer) {
             containerIndex = Integer.parseInt(cal.get(i).getNodeName().trim());
-            /*LOG.info("Worker Node Allocation for task:" + taskName + "(" + i + ")"
-                + "-> Worker:" + containerIndex + "->" + Collections.min(cal).getDataNode());*/
+            LOG.info("Worker Node Allocation for task:" + taskName + "(" + i + ")"
+                + "-> Worker:" + containerIndex + "->" + Collections.min(cal).getDataNode());
             dataAwareAllocation.get(containerIndex).add(
                 new InstanceId(taskVertex.getName(), globalTaskIndex, i));
             maxContainerTaskObjectSize++;
@@ -123,9 +126,9 @@ public class DataLocalityBatchScheduling {
     for (Map.Entry<Integer, List<InstanceId>> entry : dataAwareAllocation.entrySet()) {
       Integer integer = entry.getKey();
       List<InstanceId> instanceIds = entry.getValue();
-      LOG.info("Container Index:" + integer);
+      LOG.fine("Container Index:" + integer);
       for (int i = 0; i < instanceIds.size(); i++) {
-        LOG.info("Task Instance Scheduled Details:"
+        LOG.fine("Task Instance Scheduled Details:"
             + "-> Task Name:" + instanceIds.get(i).getTaskName()
             + "-> Task id:" + instanceIds.get(i).getTaskId()
             + "-> Task index:" + instanceIds.get(i).getTaskIndex());
@@ -155,7 +158,6 @@ public class DataLocalityBatchScheduling {
       dataAwareAllocation.put(i, new ArrayList<>());
     }
 
-
     for (Iterator<Map.Entry<String, Integer>> iterator = taskEntrySet.iterator();
          iterator.hasNext();) {
 
@@ -163,7 +165,6 @@ public class DataLocalityBatchScheduling {
       Map.Entry<String, Integer> entry = iterator.next();
       String taskName = entry.getKey();
 
-      LOG.info("%%%%%%%%%%%%%%% Task Name: %%%%%%%%%%%%%%" + taskName);
       /**
        * If the vertex has the input data set list and get the status
        * and the path of the file in HDFS.
@@ -185,8 +186,8 @@ public class DataLocalityBatchScheduling {
 
           for (int i = 0; i < totalNumberOfInstances; i++) {
             containerIndex = Integer.parseInt(cal.get(i).getNodeName().trim());
-           /* LOG.info("Worker Node Allocation for task:" + taskName + "(" + i + ")"
-                + "-> Worker:" + containerIndex + "->" + Collections.min(cal).getDataNode());*/
+            LOG.fine("Worker Node Allocation for task:" + taskName + "(" + i + ")"
+                + "-> Worker:" + containerIndex + "->" + Collections.min(cal).getDataNode());
             dataAwareAllocation.get(containerIndex).add(
                 new InstanceId(vertex.getName(), globalTaskIndex, i));
           }
@@ -290,13 +291,6 @@ public class DataLocalityBatchScheduling {
           cal.add(new CalculateDataTransferTime(value.get(j).getNodeName(),
               value.get(j).getRequiredDataTransferTime(), key));
         }
-
-        /*for (CalculateDataTransferTime requiredDataTransferTime : value) {
-          LOG.info(String.format("Task:" + vertex.getName() + "("
-              + requiredDataTransferTime.getTaskIndex() + ")"
-              + "D.Node:" + key + "-> W.Node:" + requiredDataTransferTime.getNodeName()
-              + "-> D.Time:" + requiredDataTransferTime.getRequiredDataTransferTime()));
-        }*/
       }
     } catch (NoSuchElementException nse) {
       nse.printStackTrace();

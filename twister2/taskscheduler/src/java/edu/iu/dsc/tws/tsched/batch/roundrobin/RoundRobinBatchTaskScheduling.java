@@ -164,7 +164,7 @@ public class RoundRobinBatchTaskScheduling implements TaskSchedule {
         TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
         Set<TaskSchedulePlan.TaskInstancePlan> taskContainerPlan = containerPlan.getTaskInstances();
         for (TaskSchedulePlan.TaskInstancePlan ip : taskContainerPlan) {
-          LOG.info("Task Id:" + ip.getTaskId() + "\tTask Index" + ip.getTaskIndex()
+          LOG.fine("Task Id:" + ip.getTaskId() + "\tTask Index" + ip.getTaskIndex()
               + "\tTask Name:" + ip.getTaskName() + "\tContainer Id:" + integer);
         }
       }

@@ -29,14 +29,12 @@ public final class TaskVertexParser {
 
   /**
    * This method is mainly used to parse the task vertex set and the taskgraph and
-   * identify the source, parent, child, and sink tasks. FinallyAnd, the identified tasks
-   * be stored in a separate Set.
+   * identify the source, parent, child, and sink tasks. Finally, the identified tasks
+   * will be stored in a separate Set.
    */
   @SuppressWarnings("unchecked")
   public static List<Set<Vertex>> parseVertexSet(Set<Vertex> taskVertexSet,
                                                  DataFlowTaskGraph dataFlowTaskGraph) {
-
-    LOG.info(" I am at parse V.Set:" + taskVertexSet.size());
 
     List<Set<Vertex>> taskVertexList = new ArrayList<>();
     for (Vertex vertex : taskVertexSet) {
@@ -57,8 +55,38 @@ public final class TaskVertexParser {
             }
           }
         }
-      } else if (!(dataFlowTaskGraph.incomingTaskEdgesOf(vertex).size() >= 2)
+      } else {
+        Set<Vertex> parentTask1 = new LinkedHashSet<>();
+        if (taskVertexList.size() == 0) {
+          parentTask1.add(vertex);
+          taskVertexList.add(parentTask1);
+        } else if (taskVertexList.size() == 1) {
+          Set<Vertex> vv = taskVertexList.get(0);
+          if (!parentTask1.contains(vv)) {
+            parentTask1.add(vertex);
+            taskVertexList.add(parentTask1);
+          }
+        } else if (taskVertexList.size() > 1) {
+          for (int i = 1; i < taskVertexList.size(); i++) {
+            Set<Vertex> vv = taskVertexList.get(i);
+            if (vv.contains(vertex)) {
+              break;
+            } else {
+              for (Vertex vertex1 : vv) {
+                if (!vertex1.getName().equals(vertex.getName())
+                    && !parentTask1.contains(vertex)
+                    && !vertex1.equals(vertex)) {
+                  parentTask1.add(vertex);
+                  taskVertexList.add(parentTask1);
+                }
+              }
+            }
+          }
+        } //leave this loop for reference.
+      } /*else if (!(dataFlowTaskGraph.incomingTaskEdgesOf(vertex).size() >= 2)
           && !(dataFlowTaskGraph.outgoingTaskEdgesOf(vertex).size() >= 2)) {
+          //&& !(dataFlowTaskGraph.outgoingTaskEdgesOf(vertex).size() == 1)) {
+        LOG.info("I'm entering final else if loop");
         Set<Vertex> parentTask1 = new LinkedHashSet<>();
         for (int i = 1; i < taskVertexList.size(); i++) {
           Set<Vertex> vv = taskVertexList.get(i);
@@ -75,10 +103,9 @@ public final class TaskVertexParser {
             }
           }
         }
-      }
+      }*/
     }
-
-    LOG.info("task vertex list:" + taskVertexList);
+    LOG.info("Batch Task Vertex List:" + taskVertexList);
     return taskVertexList;
   }
 }
