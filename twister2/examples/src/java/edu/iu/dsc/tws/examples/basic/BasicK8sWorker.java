@@ -63,8 +63,8 @@ public class BasicK8sWorker implements IWorker {
 
     LOG.info("All workers joined. Current time: " + System.currentTimeMillis());
 
-    sleepSomeTime();
-//    echoServer(workerController.getWorkerNetworkInfo());
+//    sleepSomeTime();
+    echoServer(workerController.getWorkerNetworkInfo());
   }
 
   /**
