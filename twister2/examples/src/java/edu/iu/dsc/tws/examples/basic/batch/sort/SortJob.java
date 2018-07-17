@@ -74,12 +74,12 @@ public class SortJob implements IWorker {
     this.config = cfg;
     this.resourcePlan = plan;
     this.id = wID;
+    // setup the network
+    setupNetwork(cfg, workerController, taskPlan, plan);
+    // we get the number of containers after initializing the network
     this.noOfTasksPerExecutor = NO_OF_TASKS / plan.noOfContainers();
-
     // set up the tasks
     setupTasks();
-    // setup the network
-    setupNetwork(cfg, workerController, taskPlan);
 
     partition = new DataFlowPartition(config, channel, taskPlan, sources, destinations,
         new PartitionBatchFinalReceiver(new RecordSave(), false, true,
@@ -117,8 +117,9 @@ public class SortJob implements IWorker {
     }
   }
 
-  private void setupNetwork(Config cfg, IWorkerController controller, TaskPlan plan) {
-    network = Network.initializeNetwork(cfg, controller, plan);
+  private void setupNetwork(Config cfg, IWorkerController controller,
+                            TaskPlan plan, ResourcePlan rPlan) {
+    network = Network.initializeNetwork(cfg, controller, plan, rPlan);
     channel = network.getChannel();
   }
 

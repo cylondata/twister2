@@ -26,16 +26,18 @@ import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.tcp.TWSTCPChannel;
+import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
+import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
 public final class Network {
   private Network() {
   }
 
-  public static TWSNetwork initializeNetwork(Config config,
-                                             IWorkerController wController, TaskPlan plan) {
+  public static TWSNetwork initializeNetwork(Config config, IWorkerController wController,
+                                             TaskPlan plan, ResourcePlan resourcePlan) {
     if (config.getStringValue("twister2.network.channel.class").equals(
         "edu.iu.dsc.tws.comms.dfw.tcp.TWSTCPChannel")) {
-      return initializeTCPNetwork(config, wController, plan);
+      return initializeTCPNetwork(config, wController, plan, resourcePlan);
     } else {
       return initializeMPINetwork(config, wController, plan);
     }
@@ -48,7 +50,8 @@ public final class Network {
   }
 
   private static TWSNetwork initializeTCPNetwork(Config config,
-                                          IWorkerController wController, TaskPlan plan) {
+                                                 IWorkerController wController, TaskPlan plan,
+                                                 ResourcePlan resourcePlan) {
     TCPChannel channel;
     int index = wController.getWorkerNetworkInfo().getWorkerID();
     Integer workerPort = wController.getWorkerNetworkInfo().getWorkerPort();
@@ -60,14 +63,18 @@ public final class Network {
       throw new RuntimeException("Failed to get network address: " + localIp, e);
     }
 
+
     // now start the client connections
     List<WorkerNetworkInfo> wInfo = wController.getWorkerList();
     List<NetworkInfo> nInfos = new ArrayList<>();
     for (WorkerNetworkInfo w : wInfo) {
       NetworkInfo networkInfo = new NetworkInfo(w.getWorkerID());
       networkInfo.addProperty(TCPContext.NETWORK_PORT, w.getWorkerPort());
-      networkInfo.addProperty(TCPContext.NETWORK_HOSTNAME, w.getWorkerIP().toString());
+      networkInfo.addProperty(TCPContext.NETWORK_HOSTNAME, w.getWorkerIP().getHostAddress());
       nInfos.add(networkInfo);
+
+      ResourceContainer container = new ResourceContainer(w.getWorkerID());
+      resourcePlan.addContainer(container);
     }
     // start the connections
     channel.startConnections(nInfos, null);
