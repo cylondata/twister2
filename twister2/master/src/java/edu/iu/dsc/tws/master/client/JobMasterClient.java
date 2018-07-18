@@ -67,6 +67,14 @@ public class JobMasterClient extends Thread {
     this.numberOfWorkers = numberOfWorkers;
   }
 
+  public JobMasterClient(Config config, WorkerNetworkInfo thisWorker, String jobMasterIP) {
+    this.config = config;
+    this.thisWorker = thisWorker;
+    this.masterAddress = jobMasterIP;
+    this.masterPort = JobMasterContext.jobMasterPort(config);
+  }
+
+
   /**
    * initialize JobMasterClient
    * wait until it connects to JobMaster
