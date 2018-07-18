@@ -92,7 +92,7 @@ public final class TWSNetwork {
     }
   }
 
-  public TWSNetwork(Config cfg, TWSChannel channel, TaskPlan taskPlan) {
+  public TWSNetwork(Config cfg, TWSChannel ch, TaskPlan taskPlan) {
     // load the network configuration
     this.config = loadConfig(cfg);
 
@@ -101,7 +101,8 @@ public final class TWSNetwork {
     try {
       dataFlowTWSCommunication = ReflectionUtils.newInstance(communicationClass);
       LOG.log(Level.FINE, "Created communication with class: " + communicationClass);
-      dataFlowTWSCommunication.init(config, taskPlan, channel);
+      dataFlowTWSCommunication.init(config, taskPlan, ch);
+      this.channel = ch;
     } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
       LOG.severe("Failed to load the communications class: " + communicationClass);
       throw new RuntimeException(e);

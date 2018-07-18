@@ -88,7 +88,8 @@ public class Client implements SelectHandler {
       socketChannel.configureBlocking(false);
       socketChannel.socket().setTcpNoDelay(true);
 
-      LOG.finest("Connecting to endpoint: " + address);
+      LOG.log(Level.INFO, String.format("Starting server on %s:%d",
+          address.getHostName(), address.getPort()));
       if (socketChannel.connect(address)) {
         handleConnect(socketChannel);
       } else {
@@ -180,8 +181,7 @@ public class Client implements SelectHandler {
         progress.unregisterConnect(selectableChannel);
       }
     } catch (IOException e) {
-      LOG.log(Level.FINE, "Failed to FinishConnect to endpoint: " + address);
-//      LOG.log(Level.SEVERE, "Failed to FinishConnect to endpoint: " + address, e);
+      LOG.log(Level.SEVERE, "Failed to FinishConnect to endpoint: " + address, e);
       channelHandler.onConnect(socketChannel, StatusCode.ERROR_CONN);
       return;
     }

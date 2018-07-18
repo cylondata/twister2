@@ -70,6 +70,8 @@ public class WorkerMonitor implements MessageHandler {
       Network.ListWorkersRequest listMessage = (Network.ListWorkersRequest) message;
       listWorkersMessageReceived(id, listMessage);
 
+    } else {
+      LOG.log(Level.SEVERE, "Un-known message received: " + message);
     }
   }
 
