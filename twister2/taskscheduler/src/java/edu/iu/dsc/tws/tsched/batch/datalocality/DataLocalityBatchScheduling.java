@@ -50,8 +50,6 @@ public class DataLocalityBatchScheduling {
   public static Map<Integer, List<InstanceId>> DataLocalityBatchSchedulingAlgo(
       Vertex taskVertex, int numberOfContainers, WorkerPlan workerPlan, Config config) {
 
-    LOG.info("Task Vertex Name is:" + taskVertex);
-
     DataNodeLocatorUtils dataNodeLocatorUtils = new DataNodeLocatorUtils(config);
     TaskAttributes taskAttributes = new TaskAttributes();
 

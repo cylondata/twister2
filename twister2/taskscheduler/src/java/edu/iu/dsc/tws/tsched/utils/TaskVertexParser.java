@@ -20,6 +20,10 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.Vertex;
 
+/**
+ * This class acts as a helper class for the batch task scheduling algorithms to
+ * parse the simple dataflow task graph to the complex task graph.
+ */
 public final class TaskVertexParser {
 
   private static final Logger LOG = Logger.getLogger(TaskVertexParser.class.getName());
@@ -35,75 +39,57 @@ public final class TaskVertexParser {
   @SuppressWarnings("unchecked")
   public static List<Set<Vertex>> parseVertexSet(Set<Vertex> taskVertexSet,
                                                  DataFlowTaskGraph dataFlowTaskGraph) {
-
+    //This logic could be optimized later...!
     List<Set<Vertex>> taskVertexList = new ArrayList<>();
     for (Vertex vertex : taskVertexSet) {
       if (dataFlowTaskGraph.outgoingTaskEdgesOf(vertex).size() >= 2) {
-        Set<Vertex> parentTask = new LinkedHashSet<>();
-        parentTask.add(vertex);
-        taskVertexList.add(parentTask);
-        LinkedHashSet<Vertex> vertexSet = (LinkedHashSet) dataFlowTaskGraph.childrenOfTask(vertex);
+        Set<Vertex> vertexSet = new LinkedHashSet<>();
+        vertexSet.add(vertex);
         taskVertexList.add(vertexSet);
+        LinkedHashSet<Vertex> childrenOfTaskSet =
+            (LinkedHashSet) dataFlowTaskGraph.childrenOfTask(vertex);
+        taskVertexList.add(childrenOfTaskSet);
       } else if (dataFlowTaskGraph.incomingTaskEdgesOf(vertex).size() >= 2) {
-        Set<Vertex> parentTask1 = new LinkedHashSet<>();
+        Set<Vertex> vertexSet = new LinkedHashSet<>();
         for (int i = 0; i < taskVertexList.size(); i++) {
-          Set<Vertex> vv = taskVertexList.get(i);
-          for (Vertex vertex1 : vv) {
-            if (!vertex1.getName().equals(vv) && !parentTask1.contains(vertex)) {
-              parentTask1.add(vertex);
-              taskVertexList.add(parentTask1);
+          Set<Vertex> vertices = taskVertexList.get(i);
+          for (Vertex vertex1 : vertices) {
+            if (!vertex1.getName().equals(vertices) && !vertexSet.contains(vertex)) {
+              vertexSet.add(vertex);
+              taskVertexList.add(vertexSet);
             }
           }
         }
       } else {
-        Set<Vertex> parentTask1 = new LinkedHashSet<>();
+        Set<Vertex> vertexSet = new LinkedHashSet<>();
         if (taskVertexList.size() == 0) {
-          parentTask1.add(vertex);
-          taskVertexList.add(parentTask1);
+          vertexSet.add(vertex);
+          taskVertexList.add(vertexSet);
         } else if (taskVertexList.size() == 1) {
           Set<Vertex> vv = taskVertexList.get(0);
-          if (!parentTask1.contains(vv)) {
-            parentTask1.add(vertex);
-            taskVertexList.add(parentTask1);
+          if (!vertexSet.contains(vv)) {
+            vertexSet.add(vertex);
+            taskVertexList.add(vertexSet);
           }
-        } else if (taskVertexList.size() > 1) {
-          for (int i = 1; i < taskVertexList.size(); i++) {
+        } else {
+          for (int i = 2; i < taskVertexList.size(); i++) {
             Set<Vertex> vv = taskVertexList.get(i);
-            if (vv.contains(vertex)) {
-              break;
-            } else {
+            if (!vv.contains(vertex)) {
               for (Vertex vertex1 : vv) {
+                /*LOG.info("Vertex (Exists)" + vertex1.getName()
+                    + "vertex (Not Exists):" + vertex.getName());*/
                 if (!vertex1.getName().equals(vertex.getName())
-                    && !parentTask1.contains(vertex)
+                    && !vertexSet.contains(vertex)
+                    && !vertexSet.contains(vertex1)
                     && !vertex1.equals(vertex)) {
-                  parentTask1.add(vertex);
-                  taskVertexList.add(parentTask1);
+                  vertexSet.add(vertex);
+                  taskVertexList.add(vertexSet);
                 }
               }
             }
           }
-        } //leave this loop for reference.
-      } /*else if (!(dataFlowTaskGraph.incomingTaskEdgesOf(vertex).size() >= 2)
-          && !(dataFlowTaskGraph.outgoingTaskEdgesOf(vertex).size() >= 2)) {
-          //&& !(dataFlowTaskGraph.outgoingTaskEdgesOf(vertex).size() == 1)) {
-        LOG.info("I'm entering final else if loop");
-        Set<Vertex> parentTask1 = new LinkedHashSet<>();
-        for (int i = 1; i < taskVertexList.size(); i++) {
-          Set<Vertex> vv = taskVertexList.get(i);
-          if (vv.contains(vertex)) {
-            break;
-          } else {
-            for (Vertex vertex1 : vv) {
-              if (!vertex1.getName().equals(vertex.getName())
-                  && !parentTask1.contains(vertex)
-                  && !vertex1.equals(vertex)) {
-                parentTask1.add(vertex);
-                taskVertexList.add(parentTask1);
-              }
-            }
-          }
         }
-      }*/
+      }
     }
     LOG.info("Batch Task Vertex List:" + taskVertexList);
     return taskVertexList;

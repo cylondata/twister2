@@ -116,10 +116,16 @@ public class DataLocalityBatchTaskExample implements IContainer {
     builder.addSink("final", f);
     builder.setParallelism("final", 4);
 
-    builder.connect("source", "sink1", "partition-edge1", Operations.PARTITION);
+    /*builder.connect("source", "sink1", "partition-edge1", Operations.PARTITION);
     builder.connect("source", "sink2", "partition-edge2", Operations.PARTITION);
     builder.connect("sink1", "merge", "partition-edge3", Operations.PARTITION);
     builder.connect("sink2", "merge", "partition-edge4", Operations.PARTITION);
+    builder.connect("merge", "final", "partition-edge5", Operations.PARTITION);*/
+
+    builder.connect("source", "sink1", "partition-edge1", Operations.PARTITION);
+    builder.connect("sink1", "sink2", "partition-edge2", Operations.PARTITION);
+    builder.connect("sink1", "merge", "partition-edge3", Operations.PARTITION);
+    builder.connect("sink2", "final", "partition-edge4", Operations.PARTITION);
     builder.connect("merge", "final", "partition-edge5", Operations.PARTITION);
 
     builder.addConfiguration("source", "Ram", GraphConstants.taskInstanceRam(config));
