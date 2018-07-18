@@ -102,8 +102,6 @@ public class TCPChannel {
     String hostName = TCPContext.getHostName(thisInfo);
     int port = TCPContext.getPort(thisInfo);
 
-    looper = new Progress();
-
     // lets connect to other
     server = new Server(config, hostName, port, looper, new ServerChannelHandler(), true);
     server.start();

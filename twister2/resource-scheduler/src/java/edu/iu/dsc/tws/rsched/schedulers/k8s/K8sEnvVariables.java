@@ -12,18 +12,19 @@
 package edu.iu.dsc.tws.rsched.schedulers.k8s;
 
 /**
- * Field names passed to KubernetesWorkerStarter when starting a worker in a container
+ * Environment variable names passed to worker pods
  */
-public enum KubernetesField {
+public enum K8sEnvVariables {
   USER_JOB_JAR_FILE,    // java jar file for running user job
+  JOB_PACKAGE_FILENAME,
   JOB_PACKAGE_FILE_SIZE, // file size of tar.gz file
   CONTAINER_NAME,
   POD_IP,
   POD_MEMORY_VOLUME,
   JOB_ARCHIVE_DIRECTORY,
   CLASS_TO_RUN,
-  JOB_PACKAGE_FILENAME,
   WORKER_PORT,
   UPLOAD_METHOD,
-  DOWNLOAD_DIRECTORY
+  DOWNLOAD_DIRECTORY,
+  JOB_MASTER_IP
 }

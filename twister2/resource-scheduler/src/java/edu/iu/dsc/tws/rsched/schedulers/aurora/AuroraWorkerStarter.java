@@ -31,8 +31,8 @@ import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import static edu.iu.dsc.tws.common.config.Context.JOB_ARCHIVE_DIRECTORY;
 
-public final class AuroraWorker {
-  public static final Logger LOG = Logger.getLogger(AuroraWorker.class.getName());
+public final class AuroraWorkerStarter {
+  public static final Logger LOG = Logger.getLogger(AuroraWorkerStarter.class.getName());
 
   private InetAddress workerAddress;
   private int workerPort;
@@ -41,15 +41,15 @@ public final class AuroraWorker {
   private JobAPI.Job job;
   private ZKController zkController;
 
-  private AuroraWorker() {
+  private AuroraWorkerStarter() {
   }
 
   /**
-   * create a AuroraWorker object by getting values from system property
+   * create a AuroraWorkerStarter object by getting values from system property
    * @return
    */
-  public static AuroraWorker createAuroraWorker() {
-    AuroraWorker worker = new AuroraWorker();
+  public static AuroraWorkerStarter createAuroraWorker() {
+    AuroraWorkerStarter worker = new AuroraWorkerStarter();
     String hostname =  System.getProperty("hostname");
     String portStr =  System.getProperty("tcpPort");
     worker.mesosTaskID = System.getProperty("taskID");
@@ -186,7 +186,7 @@ public final class AuroraWorker {
   public static void main(String[] args) {
 
     // create the worker
-    AuroraWorker worker = createAuroraWorker();
+    AuroraWorkerStarter worker = createAuroraWorker();
 
     // get the number of workers from some where
     // wait for all of them

@@ -55,12 +55,14 @@ If the user wants to submit another job during this time period with the same na
 from the previous job needs to be deleted first.
 
 ZKJobMasterRegistrar class has two methods to check the existence of the znode for that job and delete it:
-sameZNodeExist() and deleteJobMasterZNode().
+* sameZNodeExist() 
+* deleteJobMasterZNode()  
+
 These methods can be used to clear the previously remaining znodes. 
 However, care needs to be taken, because another user may have been submitted a job with the same name. 
 Before deleting the job master znode, the user needs to be sure that, that znode is its znode from previous job submission.  
 
-**Discovering the Job Master Address**
+**Discovering the Job Master Address**  
 When the workers start, they query the job master znode. 
 If the znode already created, they get the content and parse the ip:port pair. 
 If the znode has not been created yet, we create a NodeCache object. 
@@ -84,13 +86,13 @@ to delete the job znode and close the connection to the ZooKeeper server.
 **Getting the Job Master Address**  
 Similar to Job Master, Twister2 workers are also started by a separate program in each cluster. 
 For example, in Kubernetes clusters, they are started by:
-* edu.iu.dsc.tws.rsched.schedulers.k8s.worker.KubernetesWorkerStarter 
+* edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerStarter  
 
 Before starting the worker, this program should start ZKJobMasterFinder. 
-After initializing, it can get the Job Master address by calling the method: getJobMasterIPandPort()
+After initializing, it can get the Job Master address by calling the method: getJobMasterIPandPort().
 If this method returns null, it means that the Job Master has  not registered yet. 
 In that case, it can call waitAndGetJobMasterIPandPort(long timeLimit) method. 
-This method waits for the Job Master znode to be registered until the timeLimit has been reacehed. 
+This method will wait for the Job Master znode to be registered until the timeLimit has been reached. 
 
 **Example Code**  
 We put sample usages of both classes to their main methods. 

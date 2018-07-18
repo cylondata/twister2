@@ -55,17 +55,21 @@ public final class Network {
     TCPChannel channel;
     int index = wController.getWorkerNetworkInfo().getWorkerID();
     Integer workerPort = wController.getWorkerNetworkInfo().getWorkerPort();
-    String localIp = wController.getWorkerNetworkInfo().getWorkerIP().getHostName();
+    String localIp = wController.getWorkerNetworkInfo().getWorkerIP().getHostAddress();
     try {
-      channel = initNetworkServer(config,
+      channel = createChannel(config,
           new WorkerNetworkInfo(InetAddress.getByName(localIp), workerPort, index), index);
+      // now lets start listening before sending the ports to master,
+      channel.startListening();
     } catch (UnknownHostException e) {
       throw new RuntimeException("Failed to get network address: " + localIp, e);
     }
 
-
-    // now start the client connections
+    // now talk to a central server and get the information about the worker
+    // this is a synchronization step
     List<WorkerNetworkInfo> wInfo = wController.getWorkerList();
+
+    // lets start the client connections now
     List<NetworkInfo> nInfos = new ArrayList<>();
     for (WorkerNetworkInfo w : wInfo) {
       NetworkInfo networkInfo = new NetworkInfo(w.getWorkerID());
@@ -92,13 +96,11 @@ public final class Network {
    * @param networkInfo network info
    * @param workerId worker id
    */
-  private static TCPChannel initNetworkServer(Config cfg, WorkerNetworkInfo networkInfo,
-                                              int workerId) {
+  private static TCPChannel createChannel(Config cfg, WorkerNetworkInfo networkInfo,
+                                          int workerId) {
     NetworkInfo netInfo = new NetworkInfo(workerId);
-    netInfo.addProperty(TCPContext.NETWORK_HOSTNAME, networkInfo.getWorkerIP().getHostName());
+    netInfo.addProperty(TCPContext.NETWORK_HOSTNAME, networkInfo.getWorkerIP().getHostAddress());
     netInfo.addProperty(TCPContext.NETWORK_PORT, networkInfo.getWorkerPort());
-    TCPChannel channel = new TCPChannel(cfg, netInfo);
-    channel.startListening();
-    return channel;
+    return new TCPChannel(cfg, netInfo);
   }
 }

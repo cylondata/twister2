@@ -27,6 +27,9 @@ load("/tools/rules/twister2_core", "twister2_core_lib_communication_files")
 load("/tools/rules/twister2_core", "twister2_core_lib_resource_scheduler_files")
 load("/tools/rules/twister2_core", "twister2_core_lib_task_scheduler_files")
 load("/tools/rules/twister2_core", "twister2_core_lib_connector_files")
+load("/tools/rules/twister2_core", "twister2_core_lib_data_files")
+load("/tools/rules/twister2_core", "twister2_core_lib_executor_files")
+load("/tools/rules/twister2_core", "twister2_core_lib_data_lmdb_files")
 load("/tools/rules/twister2_master", "twister2_master_lib_files")
 
 generated_release_files = [
@@ -66,6 +69,8 @@ pkg_tar(
         ":twister2-core-lib-task-scheduler",
         ":twister2-core-lib-third_party",
         ":twister2-master-lib",
+        ":twister2-core-lib-data",
+        ":twister2-core-lib-lmdb",
     ],
 )
 
@@ -120,6 +125,18 @@ pkg_tar(
 pkg_tar(
     name = "twister2-core-lib-connector",
     srcs = twister2_client_lib_connector_files(),
+    package_dir = "lib",
+)
+
+pkg_tar(
+    name = "twister2-core-lib-data",
+    srcs = twister2_client_lib_data_files(),
+    package_dir = "lib",
+)
+
+pkg_tar(
+    name = "twister2-core-lib-lmdb",
+    srcs = twister2_core_lib_data_lmdb_files(),
     package_dir = "lib",
 )
 

@@ -23,6 +23,8 @@ public final class MesosContext extends SchedulerContext {
 
   public static final String MESOS_MASTER_URI = "twister2.mesos.master.uri";
 
+  public static final String MESOS_MASTER_HOST = "twister2.mesos.master.host";
+
   public static final String MESOS_NATIVE_LIBRARY_PATH = "twister2.mesos.native.library.path";
 
   public static final String MESOS_FETCH_URI = "twister2.mesos.fetch.uri";
@@ -55,6 +57,7 @@ public final class MesosContext extends SchedulerContext {
   public static final String MESOS_OVERLAY_NETWORK_NAME = "twister2.mesos.overlay.network.name";
   public static final String DOCKER_IMAGE_NAME = "twister2.docker.image.name";
   public static final String MESOS_WORKER_CLASS = "twister2.class.mesos.worker";
+  public static final String MESOS_CONTAINER_CLASS = "twister2.job.basic.container.class";
 
   public static final int DEFAULT_RAM_SIZE = 128; // 1GB
   public static final int DEFAULT_DISK_SIZE = 128; // 1GB
@@ -127,7 +130,9 @@ public final class MesosContext extends SchedulerContext {
   public static String mesosWorkerClass(Config cfg) {
     return cfg.getStringValue(MESOS_WORKER_CLASS);
   }
-
+  public static String mesosContainerClass(Config cfg) {
+    return cfg.getStringValue(MESOS_CONTAINER_CLASS);
+  }
   public static  String MesosFetchURI(Config  cfg) {
     return cfg.getStringValue(MESOS_FETCH_URI);
   }
@@ -138,6 +143,10 @@ public final class MesosContext extends SchedulerContext {
 
   public static String getMesosMasterUri(Config config) {
     return config.getStringValue(MESOS_MASTER_URI);
+  }
+
+  public static String getMesosMasterHost(Config config) {
+    return config.getStringValue(MESOS_MASTER_HOST);
   }
   /*
   public static String getSchedulerWorkingDirectory(Config config) {

@@ -25,6 +25,8 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
+import edu.iu.dsc.tws.master.JobMasterContext;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.K8sEnvVariables;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.PodWatchUtils;
@@ -55,6 +57,8 @@ public final class MPIMasterStarter {
     // we can not initialize the logger fully yet,
     // but we need to set the format as the first thing
     LoggingHelper.setLoggingFormat(LoggingHelper.DEFAULT_FORMAT);
+
+    String jobMasterIP = System.getenv(K8sEnvVariables.JOB_MASTER_IP + "");
 
     String configDir = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY + "/"
         + KUBERNETES_CLUSTER_TYPE;
@@ -104,8 +108,10 @@ public final class MPIMasterStarter {
       return;
     }
 
-    String jobMasterPodName = KubernetesUtils.createJobMasterPodName(jobName);
-    String jobMasterIP = podNamesIPs.remove(jobMasterPodName);
+    if (!JobMasterContext.jobMasterRunsInClient(config)) {
+      String jobMasterPodName = KubernetesUtils.createJobMasterPodName(jobName);
+      jobMasterIP = podNamesIPs.remove(jobMasterPodName);
+    }
     LOG.info("Job Master IP address: " + jobMasterIP);
 
     long duration = System.currentTimeMillis() - start;
@@ -117,8 +123,8 @@ public final class MPIMasterStarter {
     String[] mpirunCommand = generateMPIrunCommand(classToRun, workersPerPod, jobMasterIP);
 
     // when all pods become running, sshd may have not started on some pods yet
-    // it takes some time to start sshd, after pod becomes running
-    // we check whether password free ssh is enabled from mpimaster pod to other pods
+    // it takes some time to start sshd, after pods become running
+    // we check whether password free ssh is enabled from mpimaster pod to all other pods
 
     start = System.currentTimeMillis();
     String[] scriptCommand = generateCheckSshCommand(podNamesIPs);
@@ -186,8 +192,10 @@ public final class MPIMasterStarter {
       podNames.add(podName);
     }
 
-    String jobMasterPodName = KubernetesUtils.createJobMasterPodName(jobName);
-    podNames.add(jobMasterPodName);
+    if (!JobMasterContext.jobMasterRunsInClient(config)) {
+      String jobMasterPodName = KubernetesUtils.createJobMasterPodName(jobName);
+      podNames.add(jobMasterPodName);
+    }
 
     return podNames;
   }
