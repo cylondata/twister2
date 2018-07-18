@@ -39,6 +39,7 @@ public class MesosScheduler implements Scheduler {
   private int workerCounter = 0;
   private int[] offerControl = new int[3];
   //private String jobMasterIP;
+  private boolean mpiJob = false;
 
   public MesosScheduler(MesosController controller, Config mconfig, String jobName) {
     this.controller = controller;
@@ -109,8 +110,8 @@ public class MesosScheduler implements Scheduler {
 
             Protos.TaskID taskId = buildNewTaskID();
 
-           // int begin = MesosContext.getWorkerPort(config) + taskIdCounter * 100;
-           // int end = begin + 30;
+            // int begin = MesosContext.getWorkerPort(config) + taskIdCounter * 100;
+            // int end = begin + 30;
 
 
             Protos.TaskInfoOrBuilder taskBuilder = TaskInfo.newBuilder()
@@ -122,7 +123,6 @@ public class MesosScheduler implements Scheduler {
                 .setData(ByteString.copyFromUtf8("" + taskId.getValue()));
 
 
-
             //Docker specific configurations
             if (MesosContext.getUseDockerContainer(config).equals("true")) {
 
@@ -132,20 +132,50 @@ public class MesosScheduler implements Scheduler {
               Protos.Parameter workerIdParam = Protos.Parameter.newBuilder().setKey("env")
                   .setValue("WORKER_ID=" + workerCounter++).build();
 
+              Protos.Parameter frameworkIdParam = Protos.Parameter.newBuilder().setKey("env")
+                  .setValue("FRAMEWORK_ID=" + offer.getFrameworkId().getValue()).build();
+
 
               Protos.Parameter classNameParam = null;
+              if (mpiJob) {
+                //worker 0 will be the job master.
+                if (taskId.getValue().equals("0")) {
+                  ((TaskInfo.Builder) taskBuilder).setName("Job Master");
 
-              if (taskId.getValue().equals("0")) {
-                ((TaskInfo.Builder) taskBuilder).setName("Job Master");
-
-                classNameParam = Protos.Parameter.newBuilder().setKey("env")
-                    .setValue("CLASS_NAME="
-                        + "edu.iu.dsc.tws.rsched.schedulers.mesos.MesosJobMasterStarter").build();
+                  classNameParam = Protos.Parameter.newBuilder().setKey("env")
+                      .setValue("CLASS_NAME="
+                          + "edu.iu.dsc.tws.rsched.schedulers.mesos.master.MesosJobMasterStarter")
+                      .build();
+                } else if (taskId.getValue().equals("1")) {
+                  ((TaskInfo.Builder) taskBuilder).setName("MPI Master " + taskId);
+                  classNameParam = Protos.Parameter.newBuilder().setKey("env")
+                      .setValue("CLASS_NAME="
+                          + "edu.iu.dsc.tws.rsched.schedulers.mesos.mpi.MesosMPIMasterStarter")
+                      .build();
+                } else {
+                  ((TaskInfo.Builder) taskBuilder).setName("task " + taskId);
+                  classNameParam = Protos.Parameter.newBuilder().setKey("env")
+                      .setValue("CLASS_NAME="
+                          + "edu.iu.dsc.tws.rsched.schedulers.mesos.mpi.MesosMPISlaveStarter")
+                      .build();
+                }
               } else {
-                ((TaskInfo.Builder) taskBuilder).setName("task " + taskId);
-                classNameParam = Protos.Parameter.newBuilder().setKey("env")
-                    .setValue("CLASS_NAME="
-                        + "edu.iu.dsc.tws.rsched.schedulers.mesos.MesosDockerWorker").build();
+                //worker 0 will be the job master.
+                if (taskId.getValue().equals("0")) {
+                  ((TaskInfo.Builder) taskBuilder).setName("Job Master");
+
+                  classNameParam = Protos.Parameter.newBuilder().setKey("env")
+                      .setValue("CLASS_NAME="
+                          + "edu.iu.dsc.tws.rsched.schedulers.mesos.master.MesosJobMasterStarter")
+                      .build();
+                } else  {
+                  ((TaskInfo.Builder) taskBuilder).setName("task " + taskId);
+                  classNameParam = Protos.Parameter.newBuilder().setKey("env")
+                      .setValue("CLASS_NAME="
+                          + "edu.iu.dsc.tws.rsched.schedulers.mesos.MesosDockerWorker")
+                      .build();
+                }
+
               }
               // docker image info
               Protos.ContainerInfo.DockerInfo.Builder dockerInfoBuilder
@@ -157,6 +187,7 @@ public class MesosScheduler implements Scheduler {
               dockerInfoBuilder.addParameters(jobNameParam);
               dockerInfoBuilder.addParameters(workerIdParam);
               dockerInfoBuilder.addParameters(classNameParam);
+              dockerInfoBuilder.addParameters(frameworkIdParam);
               Protos.Volume volume = Protos.Volume.newBuilder()
                   .setContainerPath("/twister2/")
                   .setHostPath(".")
@@ -228,7 +259,6 @@ public class MesosScheduler implements Scheduler {
     }
 
   }
-
 
   private Protos.TaskID buildNewTaskID() {
     return Protos.TaskID.newBuilder()

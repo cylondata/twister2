@@ -9,7 +9,19 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.rsched.schedulers.mesos;
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+package edu.iu.dsc.tws.rsched.schedulers.mesos.master;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
@@ -23,6 +35,9 @@ import edu.iu.dsc.tws.master.JobMaster;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
+import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosContext;
+import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerController;
+import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerLogger;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 
@@ -36,6 +51,7 @@ public final class MesosJobMasterStarter {
   public static void main(String[] args) {
     // we can not initialize the logger fully yet,
     // but we need to set the format as the first thing
+
     String homeDir = System.getenv("HOME");
     int workerId = Integer.parseInt(System.getenv("WORKER_ID"));
     String jobName = System.getenv("JOB_NAME");
@@ -46,12 +62,11 @@ public final class MesosJobMasterStarter {
     String configDir = "twister2-job/mesos/";
     Config config = ConfigLoader.loadConfig(twister2Home, configDir);
 
+    JobTerminator terminator = new JobTerminator(config, System.getenv("FRAMEWORK_ID"));
 
     MesosWorkerLogger logger = new MesosWorkerLogger(config,
         "/persistent-volume/logs", "master");
     logger.initLogging();
-
-
 
     MesosWorkerController workerController = null;
     try {
@@ -78,21 +93,13 @@ public final class MesosJobMasterStarter {
       try {
         jobMaster =
             new JobMaster(config, InetAddress.getLocalHost().getHostAddress(),
-                null, jobName);
+                terminator, jobName, JobMasterContext.jobMasterPort(config),
+                MesosContext.numberOfContainers(config) - 1);
         LOG.info("JobMaster host address:" + InetAddress.getLocalHost().getHostAddress());
         jobMaster.init();
       } catch (Exception e) {
         LOG.log(Level.SEVERE, "Exception when getting local host address: ", e);
       }
-    }
-
-
-
-
-    try {
-      Thread.sleep(50000);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
     }
 
     waitIndefinitely();
