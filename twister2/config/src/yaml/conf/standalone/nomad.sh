@@ -5,7 +5,7 @@ c=$2
 
 echo $c
 
-if [ $NOMAD_ALLOC_INDEX = "1" ]; then
+if [ $NOMAD_ALLOC_INDEX = "5" ]; then
     profile=-agentpath:/home/supun/tools/jprofiler7/bin/linux-x64/libjprofilerti.so=port=8849,nowait
     debug=-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5006
 fi
