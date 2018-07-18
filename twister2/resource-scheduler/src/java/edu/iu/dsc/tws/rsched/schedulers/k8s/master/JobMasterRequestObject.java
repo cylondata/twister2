@@ -127,22 +127,16 @@ public final class JobMasterRequestObject {
       volumes.add(volatileVolume);
     }
 
-    String persistentJobDir = null;
-
     if (JobMasterContext.persistentVolumeRequested(config)) {
       String claimName = KubernetesUtils.createStorageClaimName(jobName);
       V1Volume persistentVolume = RequestObjectBuilder.createPersistentVolumeObject(claimName);
       volumes.add(persistentVolume);
-
-      persistentJobDir =
-          KubernetesUtils.createPersistentJobDirName(jobName,
-              KubernetesContext.persistentVolumeUploading(config));
     }
 
     podSpec.setVolumes(volumes);
 
     ArrayList<V1Container> containers = new ArrayList<V1Container>();
-    containers.add(constructContainer(persistentJobDir, config));
+    containers.add(constructContainer(config));
     podSpec.setContainers(containers);
 
     template.setSpec(podSpec);
@@ -154,8 +148,7 @@ public final class JobMasterRequestObject {
    * @param config
    * @return
    */
-  public static V1Container constructContainer(String persistentJobDir,
-                                               Config config) {
+  public static V1Container constructContainer(Config config) {
     // construct container and add it to podSpec
     V1Container container = new V1Container();
     container.setName("twister2-job-master");
@@ -197,8 +190,7 @@ public final class JobMasterRequestObject {
     port.setProtocol("TCP");
     container.setPorts(Arrays.asList(port));
 
-    container.setEnv(
-        constructEnvironmentVariables(config, persistentJobDir));
+    container.setEnv(constructEnvironmentVariables(config));
 
     return container;
   }
@@ -206,10 +198,8 @@ public final class JobMasterRequestObject {
   /**
    * set environment variables for containers
    * @param config
-   * @param persistentJobDir
    */
-  public static List<V1EnvVar> constructEnvironmentVariables(Config config,
-                                                             String persistentJobDir) {
+  public static List<V1EnvVar> constructEnvironmentVariables(Config config) {
     ArrayList<V1EnvVar> envVars = new ArrayList<>();
 
     // POD_IP with downward API
@@ -235,16 +225,16 @@ public final class JobMasterRequestObject {
         .value(KubernetesContext.namespace(config)));
 
     envVars.add(new V1EnvVar()
+        .name(KubernetesContext.PERSISTENT_VOLUME_PER_WORKER)
+        .value(KubernetesContext.persistentVolumePerWorker(config) + ""));
+
+    envVars.add(new V1EnvVar()
         .name(Context.TWISTER2_WORKER_INSTANCES)
         .value(Context.workerInstances(config) + ""));
 
     envVars.add(new V1EnvVar()
         .name(JobMasterContext.JOB_MASTER_ASSIGNS_WORKER_IDS)
         .value(JobMasterContext.jobMasterAssignsWorkerIDs(config) + ""));
-
-    envVars.add(new V1EnvVar()
-        .name(KubernetesContext.PERSISTENT_JOB_DIRECTORY)
-        .value(persistentJobDir));
 
     envVars.add(new V1EnvVar()
         .name(JobMasterContext.PING_INTERVAL)

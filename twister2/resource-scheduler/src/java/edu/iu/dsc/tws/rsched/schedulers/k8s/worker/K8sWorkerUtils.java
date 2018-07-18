@@ -114,6 +114,11 @@ public final class K8sWorkerUtils {
     // set logging level
     LoggingHelper.setLogLevel(LoggingContext.loggingLevel(cnfg));
 
+    // if no persistent volume requested, return
+    if (!KubernetesContext.persistentVolumeRequested(cnfg)) {
+      return;
+    }
+
     // if persistent logging is requested, initialize it
     if (LoggingContext.persistentLoggingRequested(cnfg)) {
 
@@ -143,6 +148,9 @@ public final class K8sWorkerUtils {
 
   /**
    * we assume jobName, Kubernetes namespace, exist in the incoming config object
+   * if jobMasterIP exists in the config object,
+   * it uses that IP.
+   * Otherwise, it tries to get the jobMasterIP from Kubernetes master
    * @param cnfg
    * @param networkInfo
    * @return
@@ -152,7 +160,7 @@ public final class K8sWorkerUtils {
     String jobMasterIP = JobMasterContext.jobMasterIP(cnfg);
     Config cnf = cnfg;
 
-    // if jobMasterIP is null, or the length zero,
+    // if jobMaster does not run in client,
     // job master runs as a separate pod
     // get its IP address first
     if (jobMasterIP == null || jobMasterIP.trim().length() == 0) {
