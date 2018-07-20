@@ -33,6 +33,8 @@ Worker start first or JobMaster start first. (doubtful)
 
 OnConnect in JobMasterClient, a queue must be maintained to know whether an error was recorded or not.
 
+Job Master port dynamical allocation, a way must be there to discover that port.
+
 ## Logging Format
 
 Log.info must be replaced with Log.log(Level.INFO) for the purpose of consistency. 
