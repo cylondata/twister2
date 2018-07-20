@@ -33,7 +33,7 @@ Worker start first or JobMaster start first. (doubtful)
 
 OnConnect in JobMasterClient, a queue must be maintained to know whether an error was recorded or not.
 
-Job Master port dynamical allocation, a way must be there to discover that port.
+Job Master port dynamical allocation, a way must be there to discover that port. Zookeeper for Kubernetes port discovery (as Mesos section in the project has used it)
 
 ## Logging Format
 
