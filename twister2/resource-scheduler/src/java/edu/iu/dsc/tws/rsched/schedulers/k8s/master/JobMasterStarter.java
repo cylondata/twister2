@@ -36,7 +36,6 @@ public final class JobMasterStarter {
     String jobName = Context.jobName(envConfigs);
 
     K8sWorkerUtils.initLogger(envConfigs, "jobMaster");
-//    initLogger(envConfigs);
 
     LOG.info("JobMaster is starting. Current time: " + System.currentTimeMillis());
     LOG.info("Received parameters as environment variables: \n" + envConfigs);

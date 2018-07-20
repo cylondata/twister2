@@ -20,8 +20,6 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
-import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.uploaders.scp.ScpContext;
 
 import io.kubernetes.client.custom.Quantity;
@@ -70,11 +68,9 @@ public final class RequestObjectBuilder {
   /**
    * create StatefulSet object for a job
    * @param jobName
-   * @param resourceRequest
    * @return
    */
   public static V1beta2StatefulSet createStatefulSetObjectForJob(String jobName,
-                                                                 RequestedResources resourceRequest,
                                                                  long jobFileSize,
                                                                  Config config) {
 
@@ -95,7 +91,7 @@ public final class RequestObjectBuilder {
     setSpec.setPodManagementPolicy("Parallel");
 
     int containersPerPod = KubernetesContext.workersPerPod(config);
-    int numberOfPods = resourceRequest.getNoOfContainers() / containersPerPod;
+    int numberOfPods = Context.workerInstances(config) / containersPerPod;
     setSpec.setReplicas(numberOfPods);
 
     // add selector for the job
@@ -105,8 +101,7 @@ public final class RequestObjectBuilder {
     setSpec.setSelector(selector);
 
     // construct the pod template
-    V1PodTemplateSpec template = constructPodTemplate(
-        resourceRequest.getContainer(), serviceLabel, jobFileSize, config);
+    V1PodTemplateSpec template = constructPodTemplate(serviceLabel, jobFileSize, config);
     setSpec.setTemplate(template);
 
     statefulSet.setSpec(setSpec);
@@ -116,14 +111,12 @@ public final class RequestObjectBuilder {
 
   /**
    * construct pod template
-   * @param reqContainer
    * @param serviceLabel
    * @param jobFileSize
    * @param config
    * @return
    */
-  public static V1PodTemplateSpec constructPodTemplate(ResourceContainer reqContainer,
-                                                       String serviceLabel,
+  public static V1PodTemplateSpec constructPodTemplate(String serviceLabel,
                                                        long jobFileSize,
                                                        Config config) {
 
@@ -182,7 +175,7 @@ public final class RequestObjectBuilder {
 
     ArrayList<V1Container> containers = new ArrayList<V1Container>();
     for (int i = 0; i < containersPerPod; i++) {
-      containers.add(constructContainer(i, reqContainer, jobFileSize, config));
+      containers.add(constructContainer(i, jobFileSize, config));
     }
     podSpec.setContainers(containers);
 
@@ -240,13 +233,11 @@ public final class RequestObjectBuilder {
   /**
    * construct a container
    * @param containerIndex
-   * @param reqContainer
    * @param jobFileSize
    * @param config
    * @return
    */
   public static V1Container constructContainer(int containerIndex,
-                                               ResourceContainer reqContainer,
                                                long jobFileSize,
                                                Config config) {
     // construct container and add it to podSpec
@@ -261,8 +252,13 @@ public final class RequestObjectBuilder {
 //        container.setArgs(Arrays.asList("1000000")); parameter to the main method
 
     String startScript = null;
+    double cpuPerContainer = Context.workerCPU(config);
+    int ramPerContainer = Context.workerRAM(config);
+
     if (KubernetesContext.workersUseOpenMPI(config)) {
       startScript = "./init_openmpi.sh";
+      cpuPerContainer = cpuPerContainer * KubernetesContext.workersPerPod(config);
+      ramPerContainer = ramPerContainer * KubernetesContext.workersPerPod(config);
     } else {
       startScript = "./init_nonmpi.sh";
     }
@@ -270,11 +266,11 @@ public final class RequestObjectBuilder {
 
     V1ResourceRequirements resReq = new V1ResourceRequirements();
     if (KubernetesContext.bindWorkerToCPU(config)) {
-      resReq.putLimitsItem("cpu", new Quantity(reqContainer.getNoOfCpus() + ""));
-      resReq.putLimitsItem("memory", new Quantity(reqContainer.getMemoryMegaBytes() + "Mi"));
+      resReq.putLimitsItem("cpu", new Quantity(cpuPerContainer + ""));
+      resReq.putLimitsItem("memory", new Quantity(ramPerContainer + "Mi"));
     } else {
-      resReq.putRequestsItem("cpu", new Quantity(reqContainer.getNoOfCpus() + ""));
-      resReq.putRequestsItem("memory", new Quantity(reqContainer.getMemoryMegaBytes() + "Mi"));
+      resReq.putRequestsItem("cpu", new Quantity(cpuPerContainer + ""));
+      resReq.putRequestsItem("memory", new Quantity(ramPerContainer + "Mi"));
     }
     container.setResources(resReq);
 
