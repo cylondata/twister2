@@ -9,18 +9,6 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
 package edu.iu.dsc.tws.examples.batch;
 
 import java.util.ArrayList;
@@ -59,8 +47,6 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
-//import edu.iu.dsc.tws.comms.core.TWSNetwork;
-
 public class DataLocalityBatchTaskExample implements IContainer {
 
   private static final Logger LOG =
@@ -91,13 +77,11 @@ public class DataLocalityBatchTaskExample implements IContainer {
   @Override
   public void init(Config config, int id, ResourcePlan resourcePlan) {
 
-    SourceTask1 g = new SourceTask1();
-    SourceTask2 m = new SourceTask2();
-
-    ReceivingTask r = new ReceivingTask();
-    MergingTask m1 = new MergingTask();
-
-    FinalTask f = new FinalTask();
+    SourceTask1 g = new SourceTask1(); //source task
+    SourceTask2 m = new SourceTask2(); //sink task 1
+    ReceivingTask r = new ReceivingTask(); //sink task2
+    MergingTask m1 = new MergingTask(); //merge task
+    FinalTask f = new FinalTask(); //final task
 
     GraphBuilder builder = GraphBuilder.newBuilder();
 
@@ -116,17 +100,30 @@ public class DataLocalityBatchTaskExample implements IContainer {
     builder.addSink("final", f);
     builder.setParallelism("final", 4);
 
-    /*builder.connect("source", "sink1", "partition-edge1", Operations.PARTITION);
-    builder.connect("source", "sink2", "partition-edge2", Operations.PARTITION);
-    builder.connect("sink1", "merge", "partition-edge3", Operations.PARTITION);
-    builder.connect("sink2", "merge", "partition-edge4", Operations.PARTITION);
-    builder.connect("merge", "final", "partition-edge5", Operations.PARTITION);*/
+    //Task graph Structure
+    /**   Source
+     *      |
+     *      V
+     *    Sink1 (Two Outgoing Edges)
+     *   |     |
+     *   V     V
+     * Sink2  Merge
+     *      |
+     *      V
+     *    Final
+     */
 
     builder.connect("source", "sink1", "partition-edge1", Operations.PARTITION);
     builder.connect("sink1", "sink2", "partition-edge2", Operations.PARTITION);
     builder.connect("sink1", "merge", "partition-edge3", Operations.PARTITION);
     builder.connect("sink2", "final", "partition-edge4", Operations.PARTITION);
     builder.connect("merge", "final", "partition-edge5", Operations.PARTITION);
+
+     /*builder.connect("source", "sink1", "partition-edge1", Operations.PARTITION);
+    builder.connect("source", "sink2", "partition-edge2", Operations.PARTITION);
+    builder.connect("sink1", "merge", "partition-edge3", Operations.PARTITION);
+    builder.connect("sink2", "merge", "partition-edge4", Operations.PARTITION);
+    builder.connect("merge", "final", "partition-edge5", Operations.PARTITION);*/
 
     builder.addConfiguration("source", "Ram", GraphConstants.taskInstanceRam(config));
     builder.addConfiguration("source", "Disk", GraphConstants.taskInstanceDisk(config));
@@ -157,7 +154,7 @@ public class DataLocalityBatchTaskExample implements IContainer {
     List<TaskSchedulePlan> taskSchedulePlanList = new ArrayList<>();
     TaskSchedulePlan taskSchedulePlan = null;
 
-    if (id == 0) {
+    if (id == 0) { //Remove this condition during Executor integration
       if ("batch".equalsIgnoreCase(jobType)
           && TaskSchedulerContext.taskSchedulingMode(config).equals("datalocalityaware")) {
         DataLocalityBatchTaskScheduling dataLocalityBatchTaskScheduling = new

@@ -46,8 +46,6 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
-//import edu.iu.dsc.tws.comms.core.TWSNetwork;
-
 public class RoundRobinBatchTaskExample implements IContainer {
 
   private static final Logger LOG =
@@ -79,29 +77,43 @@ public class RoundRobinBatchTaskExample implements IContainer {
   public void init(Config config, int id, ResourcePlan resourcePlan) {
 
     SourceTask1 g = new SourceTask1();
-    SourceTask2 m = new SourceTask2();
 
-    ReceivingTask r = new ReceivingTask();
+    SinkTask1 s1 = new SinkTask1();
+    SinkTask2 s2 = new SinkTask2();
+
     MergingTask m1 = new MergingTask();
 
-    FinalTask f = new FinalTask();
+    FinalTask f1 = new FinalTask();
 
     GraphBuilder builder = GraphBuilder.newBuilder();
 
     builder.addSource("source", g);
     builder.setParallelism("source", 4);
 
-    builder.addSource("sink1", m);
+    builder.addSink("sink1", s1);
     builder.setParallelism("sink1", 3);
 
-    builder.addSink("sink2", r);
+    builder.addSink("sink2", s2);
     builder.setParallelism("sink2", 3);
 
     builder.addSink("merge", m1);
     builder.setParallelism("merge", 3);
 
-    builder.addSink("final", f);
-    builder.setParallelism("final", 3);
+    builder.addSink("final", f1);
+    builder.setParallelism("final", 4);
+
+    //Task graph Structure
+    /**   Source (Two Outgoing Edges)
+     *   |    |
+     *   V    V
+     *  Sink1  Sink2
+     *   |     |
+     *   V     V
+     *    Merge (Two Incoming Edges)
+     *      |
+     *      V
+     *    Final
+     */
 
     builder.connect("source", "sink1", "partition-edge1", Operations.PARTITION);
     builder.connect("source", "sink2", "partition-edge2", Operations.PARTITION);
@@ -196,22 +208,7 @@ public class RoundRobinBatchTaskExample implements IContainer {
     }
   }
 
-  private static class SourceTask2 extends SourceTask {
-    private static final long serialVersionUID = -254264903510284748L;
-    private TaskContext ctx;
-
-    @Override
-    public void run() {
-      ctx.write("partition-edge", "Hello");
-    }
-
-    @Override
-    public void prepare(Config cfg, TaskContext context) {
-      this.ctx = context;
-    }
-  }
-
-  private static class ReceivingTask extends SinkTask {
+  private static class SinkTask1 extends SinkTask {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
     private TaskContext ctx;
@@ -225,7 +222,6 @@ public class RoundRobinBatchTaskExample implements IContainer {
 
       LOG.info("Message Partition Received : " + message.getContent()
           + ", Count : " + count);
-      hdfsConnector.HDFSConnect(message.getContent().toString());
       count++;
     }
 
@@ -234,18 +230,31 @@ public class RoundRobinBatchTaskExample implements IContainer {
     public void prepare(Config cfg, TaskContext context) {
       this.ctx = context;
       this.config = cfg;
+    }
+  }
 
-      Map<String, Object> configs = context.getConfigurations();
-      for (Map.Entry<String, Object> entry : configs.entrySet()) {
-        if (entry.getKey().toString().contains("outputdataset")) {
-          List<String> outputFiles = (List<String>) entry.getValue();
-          for (int i = 0; i < outputFiles.size(); i++) {
-            this.outputFile = outputFiles.get(i);
-            LOG.info("Output File(s):" + this.outputFile);
-          }
-        }
-        hdfsConnector = new HDFSConnector(config, outputFile);
-      }
+  private static class SinkTask2 extends SinkTask {
+    private static final long serialVersionUID = -254264903510284798L;
+    private int count = 0;
+    private TaskContext ctx;
+    private Config config;
+    private String outputFile;
+    private String inputFile;
+    private HDFSConnector hdfsConnector = null;
+
+    @Override
+    public void execute(IMessage message) {
+
+      LOG.info("Message Partition Received : " + message.getContent()
+          + ", Count : " + count);
+      count++;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public void prepare(Config cfg, TaskContext context) {
+      this.ctx = context;
+      this.config = cfg;
     }
   }
 
@@ -254,9 +263,6 @@ public class RoundRobinBatchTaskExample implements IContainer {
     private int count = 0;
     private TaskContext ctx;
     private Config config;
-    private String outputFile;
-    private String inputFile;
-    private HDFSConnector hdfsConnector = null;
 
     @Override
     public void execute(IMessage message) {

@@ -41,15 +41,19 @@ public final class TaskVertexParser {
                                                  DataFlowTaskGraph dataFlowTaskGraph) {
     //This logic could be optimized later...!
     List<Set<Vertex>> taskVertexList = new ArrayList<>();
+
     for (Vertex vertex : taskVertexSet) {
-      if (dataFlowTaskGraph.outgoingTaskEdgesOf(vertex).size() >= 2) {
+      if (dataFlowTaskGraph.outgoingTaskEdgesOf(vertex).size() > 1) {
+
         Set<Vertex> vertexSet = new LinkedHashSet<>();
         vertexSet.add(vertex);
         taskVertexList.add(vertexSet);
+
         LinkedHashSet<Vertex> childrenOfTaskSet =
             (LinkedHashSet) dataFlowTaskGraph.childrenOfTask(vertex);
         taskVertexList.add(childrenOfTaskSet);
-      } else if (dataFlowTaskGraph.incomingTaskEdgesOf(vertex).size() >= 2) {
+      } else if (dataFlowTaskGraph.incomingTaskEdgesOf(vertex).size() > 1) {
+
         Set<Vertex> vertexSet = new LinkedHashSet<>();
         for (int i = 0; i < taskVertexList.size(); i++) {
           Set<Vertex> vertices = taskVertexList.get(i);
@@ -60,37 +64,43 @@ public final class TaskVertexParser {
             }
           }
         }
-      } else {
+      } else if (!(dataFlowTaskGraph.incomingTaskEdgesOf(vertex).size() > 1)
+          || !(dataFlowTaskGraph.outgoingTaskEdgesOf(vertex).size() > 1)) {
+
         Set<Vertex> vertexSet = new LinkedHashSet<>();
+
         if (taskVertexList.size() == 0) {
           vertexSet.add(vertex);
           taskVertexList.add(vertexSet);
+
         } else if (taskVertexList.size() == 1) {
+
           Set<Vertex> vv = taskVertexList.get(0);
-          if (!vertexSet.contains(vv)) {
+          if (!vertexSet.contains(vv) || !vv.contains(vertex)) {
             vertexSet.add(vertex);
             taskVertexList.add(vertexSet);
           }
         } else {
-          for (int i = 2; i < taskVertexList.size(); i++) {
+
+          int size = taskVertexList.size();
+
+          for (int i = size - 1; i < taskVertexList.size(); i++) {
             Set<Vertex> vv = taskVertexList.get(i);
             if (!vv.contains(vertex)) {
               for (Vertex vertex1 : vv) {
-                /*LOG.info("Vertex (Exists)" + vertex1.getName()
-                    + "vertex (Not Exists):" + vertex.getName());*/
-                if (!vertex1.getName().equals(vertex.getName())
-                    && !vertexSet.contains(vertex)
-                    && !vertexSet.contains(vertex1)
-                    && !vertex1.equals(vertex)) {
+                if (!vertex1.getName().equals(vertex.getName()) && !vertexSet.contains(vertex)
+                    && !vertexSet.contains(vertex1) && !vertex1.equals(vertex)) {
                   vertexSet.add(vertex);
                   taskVertexList.add(vertexSet);
                 }
               }
             }
           }
+
         }
-      }
-    }
+      }//End of Inner Else block*/
+    }//End of Outer For
+
     LOG.info("Batch Task Vertex List:" + taskVertexList);
     return taskVertexList;
   }
