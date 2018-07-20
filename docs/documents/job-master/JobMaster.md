@@ -53,17 +53,6 @@ By defaults, Job Master is started as a separate process. If the user wants to s
 in the submitting client, the value of the following configuration parameter needs to be set as true. 
 * twister2.job.master.runs.in.client
 
-## Main Components of Twister2
-Twister2 will have the following main components:
-* **Workers**: The processes that perform the computations.
-* **Twister2 Clients**: The program that submits/terminates/modifies Twister2 jobs. 
-It may run in the cluster or outside of it. 
-* **Job Master**: Manages job related activities during job execution such as fault tolerance, 
-life-cycle management, dynamic resource allocation, resource cleanup, etc. 
-* **Twister2 Web UI**: Provides the job related data to users. Users will be able to monitor 
-their job on that page. Only one instance will run in the cluster. This Web UI will provide 
-data for all jobs running in the cluster. 
-
 ## Workers to Job Master Communications
 We use protocol buffers to exchange messages between workers and the job master. 
 We transfer the messages over TCP. 
