@@ -25,7 +25,7 @@ the following APIs/services:
 * [Worker Discovery](./K8sBasedWorkerDiscovery.md)
 * [Persistent Storage](./K8sPersistentStorage.md)
 * [Services for Twister2 Jobs](./K8sServices.md) 
-* Worker Binding and Mapping
+* [Worker Binding and Mapping](./K8sWorkerBindingMapping.md)
 
 Each one is explained in a separate document. 
 
