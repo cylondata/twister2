@@ -215,6 +215,15 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
     this.dataType = dataType;
   }
 
+  public DataFlowPartition(TWSChannel channel, Set<Integer> sourceTasks, Set<Integer> destTasks,
+                           MessageReceiver finalRcvr, MessageReceiver partialRcvr,
+                           PartitionStratergy partitionStratergy,
+                           MessageType dataType) {
+    this(channel, sourceTasks, destTasks, finalRcvr, partialRcvr, partitionStratergy);
+    this.isKeyed = true;
+    this.dataType = dataType;
+  }
+
   public DataFlowPartition(TWSChannel channel, Set<Integer> srcs,
                            Set<Integer> dests, MessageReceiver finalRcvr,
                            MessageReceiver partialRcvr,

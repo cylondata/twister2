@@ -140,7 +140,7 @@ public class BasicMemoryManagerGatherCommunication implements IContainer {
       aggregate = channel.gather(newCfg, MessageType.INTEGER, 0, sources,
           dest, new GatherBatchFinalReceiver(new FinalGatherReceive()),
           new GatherBatchPartialReceiver(dest));
-      aggregate.setMemoryMapped(true);
+//      aggregate.setMemoryMapped(true);
 
 //      aggregate = channel.gather(newCfg, MessageType.OBJECT, 0, sources,
 //          dest, new FinalGatherReceive());
