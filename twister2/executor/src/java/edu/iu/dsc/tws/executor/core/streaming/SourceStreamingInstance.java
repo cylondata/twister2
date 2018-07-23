@@ -156,8 +156,6 @@ public class SourceStreamingInstance implements INodeInstance, INodeInstanceList
     streamingTask.run();
     // now check the output queue
     while (!outStreamingQueue.isEmpty()) {
-
-      System.out.println("Task Type : " + streamingTask.getClass().getName());
       IMessage message = outStreamingQueue.poll();
       if (message != null) {
         String edge = message.edge();

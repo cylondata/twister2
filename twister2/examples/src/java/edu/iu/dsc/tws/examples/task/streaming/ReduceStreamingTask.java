@@ -24,6 +24,8 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.executor.api.ExecutionModel;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.executor.comm.tasks.streaming.SourceStreamTask;
+import edu.iu.dsc.tws.executor.core.CommunicationOperationType;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.ThreadExecutor;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -33,12 +35,11 @@ import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.Operations;
 import edu.iu.dsc.tws.task.api.SinkTask;
-import edu.iu.dsc.tws.task.api.SourceTask;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
+import edu.iu.dsc.tws.task.graph.OperationMode;
 import edu.iu.dsc.tws.tsched.roundrobin.RoundRobinTaskScheduling;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
@@ -58,7 +59,9 @@ public class ReduceStreamingTask implements IContainer {
     builder.setParallelism("source", 4);
     builder.addSink("sink", r);
     builder.setParallelism("sink", 1);
-    builder.connect("source", "sink", "reduce-edge", Operations.REDUCE);
+    builder.connect("source", "sink", "reduce-edge", CommunicationOperationType.STREAMING_REDUCE);
+    builder.operationMode(OperationMode.STREAMING);
+
 
     DataFlowTaskGraph graph = builder.build();
 
@@ -76,7 +79,7 @@ public class ReduceStreamingTask implements IContainer {
     executor.execute();
   }
 
-  private static class GeneratorTask extends SourceTask {
+  private static class GeneratorTask extends SourceStreamTask {
     private static final long serialVersionUID = -254264903510284748L;
     private TaskContext ctx;
     private Config config;
@@ -95,6 +98,8 @@ public class ReduceStreamingTask implements IContainer {
     public void prepare(Config cfg, TaskContext context) {
       this.ctx = context;
     }
+
+
   }
 
   private static class RecevingTask extends SinkTask {
