@@ -148,11 +148,11 @@ attached to the same znode. Workers acquires the shared lock to update job node 
 ## Usage
 When a worker starts, it first needs to create an instance of ZKController class and 
 initialize it by calling its initialize method. Then, it can get its unique ID by calling
-getWorkerNetworkInfo() method of ZKController object. 
+getWorkerNetworkInfo() method of ZKDiscoverer object. 
 
-It can call getWorkerList() method of ZKController object to get the list of currently
+It can call getWorkerList() method of ZKDiscoverer object to get the list of currently
 joined workers immediately. Or, if it needs the full list of workers in the job. Then,
-it can call waitForAllWorkersToJoin(timeLimit) method of ZKController object. 
+it can call waitForAllWorkersToJoin(timeLimit) method of ZKDiscoverer object. 
 This method will wait until either getting the full list of workers in the job or 
 the time limit has been reached. 
 

@@ -21,12 +21,11 @@ We discuss the following topics:
 * Limitations and Future Works
 
 In addition to running Twister2 jobs on Kubernetes clusters, We have implemented 
-following APIs/services: 
-* Worker Discovery API
-* Persistent Storage API 
-* Persistent Logging
-* Services for Twister2 Jobs 
-* Worker Binding and Mapping
+the following APIs/services: 
+* [Worker Discovery](./K8sBasedWorkerDiscovery.md)
+* [Persistent Storage](./K8sPersistentStorage.md)
+* [Services for Twister2 Jobs](./K8sServices.md) 
+* [Worker Binding and Mapping](./K8sWorkerBindingMapping.md)
 
 Each one is explained in a separate document. 
 
@@ -205,7 +204,7 @@ But, all workers will run in the same container in a pod when OpenMPI is used.
 We set job names as StatefulSet names. Kubernetes sets pod names as StatefulSet names
 with an index attached. For example, if the job name is "basic-kube", 
 then the pod names in the job will be: "basic-kube-0", "basic-kube-1", "basic-kube-2",
-"basic-kube-3", etc. Pod names start the suffix "-0" and increases sequentially. 
+"basic-kube-3", etc. Pod names start with the suffix "-0" and increase sequentially. 
 This pod naming helps us identifying the pods in a job. 
 
 For example, when we start an OpenMPI enabled job, we run mpi master in the first pod.
@@ -214,6 +213,36 @@ ends with the suffix "-0".
 
 Each pod is also assigned a unique cluster local IP address. 
 We query the localhost from inside the pod and get this IP address.
+
+#### Worker Ports in Non-MPI Jobs
+We assume that each Twister2 worker has at least one port number to talk to other workers in a job. 
+When we create non-MPI jobs, each worker runs in one container. 
+Therefore, when creating containers we set one port number for the worker in that container. 
+
+Since each pod is created solely for twister2 jobs, we can use whichever port we want 
+from that pod port space. The only limitation is that when there are multiple workers in a pod, 
+they can not use the same port numbers. They need to use separate port numbers.
+
+We specify a base port number to be used by workers. It is defined in the configuration files as: 
+* kubernetes.worker.base.port
+
+First worker in a pod uses the base port number. Second worker in that pod uses the port (basePort +1). 
+Third worker in that pod uses the port (basePort +2). 
+Likewise, we assign sequentially increasing port numbers to workers running on a pod.
+
+Container name suffix and the port number addition value to the base port is the same.
+For example, the third container name suffix in a pod is "-2" and the port number is basePort + 2. 
+We uses this parallelism between container names and port numbers 
+when discovering port numbers from container names.
+
+#### Worker Ports in MPI Jobs
+When we create MPI enabled Twister2 jobs, each container may run multiple workers. 
+Therefore, when creating containers we do not set port numbers for these containers. 
+
+MPI enabled Twister2 workers will use the port based on their MPI ranking. 
+They use the port: BasePort + MPI Ranking
+
+Since MPI ranking is unique in a job, no two workers will use the same port.   
 
 ### StatefulSet for Job Master
 We create a separate Kubernetes StatefulSet for the Job Master of the submitted job. 

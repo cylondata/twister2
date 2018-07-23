@@ -11,90 +11,38 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.op;
 
-import java.util.Set;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 
+/**
+ * Communicator that keeps the information about.
+ */
 public class Communicator {
   private static final Logger LOG = Logger.getLogger(Communicator.class.getName());
 
-  private Set<Integer> sources;
+  private final TWSChannel channel;
 
-  private Set<Integer> destinations;
+  private final Config config;
 
-  private TWSChannel channel;
+  private EdgeGenerator edgeGenerator;
 
-  private MessageType dataType = MessageType.OBJECT;
-
-  private MessageType keyType = MessageType.OBJECT;
-
-  private MessageType receiveDataType = MessageType.OBJECT;
-
-  private MessageType receiveKeyType = MessageType.OBJECT;
-
-  public Communicator(TWSChannel channel) {
-    this.channel = channel;
-  }
-
-  public void setSources(Set<Integer> sources) {
-    this.sources = sources;
-  }
-
-  public void setDestinations(Set<Integer> destinations) {
-    this.destinations = destinations;
-  }
-
-  public void setDataType(MessageType dataType) {
-    this.dataType = dataType;
-  }
-
-  public void setKeyType(MessageType keyType) {
-    this.keyType = keyType;
-  }
-
-  public void setReceiveDataType(MessageType receiveDataType) {
-    this.receiveDataType = receiveDataType;
-  }
-
-  public void setReceiveKeyType(MessageType receiveKeyType) {
-    this.receiveKeyType = receiveKeyType;
-  }
-
-  public Set<Integer> getSources() {
-    return sources;
-  }
-
-  public int getSource() {
-    return sources.iterator().next();
-  }
-
-  public Set<Integer> getDestinations() {
-    return destinations;
-  }
-
-  public int getTarget() {
-    return destinations.iterator().next();
+  public Communicator(Config cfg, TWSChannel ch) {
+    this.channel = ch;
+    this.config = cfg;
+    this.edgeGenerator = new EdgeGenerator(0);
   }
 
   public TWSChannel getChannel() {
     return channel;
   }
 
-  public MessageType getDataType() {
-    return dataType;
+  public Config getConfig() {
+    return config;
   }
 
-  public MessageType getKeyType() {
-    return keyType;
-  }
-
-  public MessageType getReceiveDataType() {
-    return receiveDataType;
-  }
-
-  public MessageType getReceiveKeyType() {
-    return receiveKeyType;
+  public int nextEdge() {
+    return edgeGenerator.nextEdge();
   }
 }

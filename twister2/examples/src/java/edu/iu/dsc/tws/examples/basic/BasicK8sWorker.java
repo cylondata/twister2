@@ -23,7 +23,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
+import edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.rsched.spi.container.IPersistentVolume;
 import edu.iu.dsc.tws.rsched.spi.container.IVolatileVolume;
@@ -37,7 +37,7 @@ public class BasicK8sWorker implements IWorker {
   public void init(Config config,
                    int id,
                    ResourcePlan resourcePlan,
-                   IWorkerController workerController,
+                   IWorkerDiscoverer workerController,
                    IPersistentVolume persistentVolume,
                    IVolatileVolume volatileVolume) {
 

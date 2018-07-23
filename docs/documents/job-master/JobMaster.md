@@ -49,7 +49,7 @@ It will be started when a job is submitted and deleted after the job has complet
 We will also provide the option of starting the Job Master in the job submitting client. 
 With that option, our solution covers both the first and the second architectural options.
 
-By defaults, Job Master is started as a separate process. If the user wants to start it
+By default, Job Master is started as a separate process. If the user wants to start it
 in the submitting client, the value of the following configuration parameter needs to be set as true. 
 * twister2.job.master.runs.in.client
 
@@ -176,13 +176,13 @@ It sends many worker information on the same message.
       repeated WorkerNetworkInfo workers = 2;
     }
 
-**IWorkerController Implementation**
+**IWorkerDiscoverer Implementation**  
 We implemented the WorkerController class that will be used by the workers 
 to interact with the job master. The class name is:
-*	edu.iu.dsc.tws.master.client.WorkerController
+*	edu.iu.dsc.tws.master.client.WorkerDiscoverer
 
 It implements the interface: 
-*	edu.iu.dsc.tws.rsched.bootstrap.IWorkerController
+*	edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer
 
 All worker implementations can utilize this class for worker discovery. 
 

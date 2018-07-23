@@ -32,7 +32,8 @@ import org.apache.curator.utils.ZKPaths;
 import org.apache.zookeeper.CreateMode;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
+import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 
 /**
@@ -48,8 +49,8 @@ import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
  * <p>
  */
 
-public class ZKController implements IWorkerController {
-  public static final Logger LOG = Logger.getLogger(ZKController.class.getName());
+public class ZKDiscoverer implements IWorkerDiscoverer {
+  public static final Logger LOG = Logger.getLogger(ZKDiscoverer.class.getName());
 
   private String zkAddress; // hostname and port number of ZooKeeper
   private String hostAndPort; // hostname and port number of this worker
@@ -66,7 +67,7 @@ public class ZKController implements IWorkerController {
   private DistributedAtomicInteger dai;
   private Config config;
 
-  public ZKController(Config config, String jobName, String hostAndPort, int numberOfWorkers) {
+  public ZKDiscoverer(Config config, String jobName, String hostAndPort, int numberOfWorkers) {
     this.config = config;
     this.hostAndPort = hostAndPort;
     this.jobName = jobName;
@@ -135,7 +136,7 @@ public class ZKController implements IWorkerController {
 
       return true;
     } catch (Exception e) {
-      LOG.log(Level.SEVERE, "Exception when initializing ZKController", e);
+      LOG.log(Level.SEVERE, "Exception when initializing ZKDiscoverer", e);
       return false;
     }
   }
@@ -419,6 +420,68 @@ public class ZKController implements IWorkerController {
       } catch (Exception e) {
         LOG.log(Level.SEVERE, "Exception when closing", e);
       }
+    }
+  }
+
+  /**
+   * test method for this class
+   * @param args
+   */
+  public static void main(String[] args) {
+
+    String jobName = "basic-k8";
+    Config cnfg = buildTestConfig();
+
+    if (args.length == 1 && args[0].equalsIgnoreCase("delete")) {
+      if (ZKUtil.isThereAnActiveJob(jobName, cnfg)) {
+        ZKUtil.terminateJob(jobName, cnfg);
+        return;
+      } else {
+        LOG.info("No job Znode to delete....");
+        return;
+      }
+    }
+
+
+    int port = 1000 + (int) (Math.random() * 1000);
+    String workerAddress = "localhost:" + port;
+    int numberOfWorkers = 1;
+
+    if (args.length == 1) {
+      numberOfWorkers = Integer.parseInt(args[0]);
+    }
+
+    ZKDiscoverer zkController = new ZKDiscoverer(cnfg, jobName, workerAddress, numberOfWorkers);
+    zkController.initialize();
+
+    List<WorkerNetworkInfo> workerList = zkController.getWorkerList();
+    LOG.info("Initial worker list: \n" + WorkerNetworkInfo.workerListAsString(workerList));
+
+    LOG.info("Waiting for all workers to join: ");
+    workerList = zkController.waitForAllWorkersToJoin(100000);
+    LOG.info(WorkerNetworkInfo.workerListAsString(workerList));
+
+    zkController.close();
+  }
+
+  /**
+   * construct a test Config object
+   * @return
+   */
+  public static Config buildTestConfig() {
+    return Config.newBuilder()
+        .put(ZKContext.ZOOKEEPER_SERVER_IP, "149.165.150.81")
+        .put(ZKContext.ZOOKEEPER_SERVER_PORT, 2181)
+        .put(Context.JOB_NAME, "basic-kube")
+        .build();
+  }
+
+  public static void sleeeep(long duration) {
+
+    try {
+      Thread.sleep(duration);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
     }
   }
 

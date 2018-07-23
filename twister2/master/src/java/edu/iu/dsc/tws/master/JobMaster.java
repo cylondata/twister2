@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.master;
 
 import java.io.IOException;
 import java.nio.channels.SocketChannel;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -149,6 +150,7 @@ public class JobMaster extends Thread {
     }
 
     // to send the last remaining messages if any
+//    looper.sendQueedMessages();
     looper.loop();
     looper.loop();
     looper.loop();
@@ -180,7 +182,7 @@ public class JobMaster extends Thread {
       try {
         LOG.info("Client connected from:" + channel.getRemoteAddress());
       } catch (IOException e) {
-        e.printStackTrace();
+        LOG.log(Level.SEVERE, "Exception when getting RemoteAddress", e);
       }
     }
 

@@ -9,18 +9,18 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.rsched.spi.container;
+package edu.iu.dsc.tws.comms.op;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer;
-import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
+import java.util.Set;
 
-public interface IWorker {
-  void init(Config config,
-            int id,
-            ResourcePlan resourcePlan,
-            IWorkerDiscoverer workerController,
-            IPersistentVolume persistentVolume,
-            IVolatileVolume volatileVolume);
+import edu.iu.dsc.tws.comms.api.MessageType;
 
+/**
+ * Destination selector
+ */
+public interface DestinationSelector {
+  void prepare(Set<Integer> sources, Set<Integer> destinations);
+  void prepare(MessageType type, Set<Integer> sources, Set<Integer> destinations);
+  int next(int source);
+  int next(int source, Object key);
 }
