@@ -47,7 +47,7 @@ public class JobMasterClient extends Thread {
 
   private RRClient rrClient;
   private Pinger pinger;
-  private WorkerController workerController;
+  private WorkerDiscoverer workerController;
 
   private boolean startingMessageSent = false;
 
@@ -78,7 +78,7 @@ public class JobMasterClient extends Thread {
   /**
    * initialize JobMasterClient
    * wait until it connects to JobMaster
-   * return false, if it can not connec to JobMaster
+   * return false, if it can not connect to JobMaster
    * @return
    */
   public boolean init() {
@@ -92,7 +92,7 @@ public class JobMasterClient extends Thread {
     long interval = JobMasterContext.pingInterval(config);
     pinger = new Pinger(thisWorker, rrClient, interval);
 
-    workerController = new WorkerController(config, thisWorker, rrClient, numberOfWorkers);
+    workerController = new WorkerDiscoverer(config, thisWorker, rrClient, numberOfWorkers);
 
     Network.Ping.Builder pingBuilder = Network.Ping.newBuilder();
     rrClient.registerResponseHandler(pingBuilder, pinger);
@@ -111,6 +111,7 @@ public class JobMasterClient extends Thread {
     rrClient.registerResponseHandler(stateChangeResponseBuilder, responseMessageHandler);
 
     // try to connect to JobMaster, wait up to 100 seconds
+    // make this one config value
     long connectionTimeLimit = 100000;
     tryUntilConnected(connectionTimeLimit);
 
@@ -125,7 +126,7 @@ public class JobMasterClient extends Thread {
     return true;
   }
 
-  public WorkerController getWorkerController() {
+  public WorkerDiscoverer getWorkerController() {
     return workerController;
   }
 
@@ -283,6 +284,8 @@ public class JobMasterClient extends Thread {
 
     @Override
     public void onConnect(SocketChannel channel, StatusCode status) {
+      // put the reason into some variable
+      // if server is not there, should try to reconnect
     }
 
     @Override
@@ -321,14 +324,14 @@ public class JobMasterClient extends Thread {
   public static void simulateClient(String masterAddress, int workerTempID,
                                     int numberOfWorkers) {
 
-    InetAddress workerIP = WorkerController.convertStringToIP("149.165.150.81");
+    InetAddress workerIP = WorkerDiscoverer.convertStringToIP("149.165.150.81");
     int workerPort = 10000 + (int) (Math.random() * 10000);
 
     WorkerNetworkInfo workerNetworkInfo = new WorkerNetworkInfo(workerIP, workerPort, workerTempID);
 
     Config cfg = Config.newBuilder()
         .put(Context.TWISTER2_WORKER_INSTANCES, numberOfWorkers)
-        .put(JobMasterContext.PING_INTERVAL, 1000)
+        .put(JobMasterContext.PING_INTERVAL, 3000)
         .put(JobMasterContext.JOB_MASTER_IP, masterAddress)
         .put(JobMasterContext.JOB_MASTER_ASSIGNS_WORKER_IDS, true)
         .build();
@@ -349,7 +352,7 @@ public class JobMasterClient extends Thread {
     // wait 2000ms
     sleeeep(5000);
 
-    workerList = client.workerController.waitForAllWorkersToJoin(2000);
+    workerList = client.workerController.waitForAllWorkersToJoin(20000);
     LOG.info(WorkerNetworkInfo.workerListAsString(workerList));
 
     client.sendWorkerCompletedMessage();

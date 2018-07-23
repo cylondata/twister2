@@ -17,7 +17,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
+import edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
@@ -150,7 +150,7 @@ public final class MPIWorkerStarter {
   /**
    * start the Worker class specified in conf files
    */
-  public static void startWorker(IWorkerController workerController,
+  public static void startWorker(IWorkerDiscoverer workerController,
                                  IPersistentVolume pv) {
     String workerClass = SchedulerContext.containerClass(config);
     IWorker worker;
