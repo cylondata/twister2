@@ -32,6 +32,7 @@ import org.apache.curator.utils.ZKPaths;
 import org.apache.zookeeper.CreateMode;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 
@@ -419,6 +420,68 @@ public class ZKController implements IWorkerController {
       } catch (Exception e) {
         LOG.log(Level.SEVERE, "Exception when closing", e);
       }
+    }
+  }
+
+  /**
+   * test method for this class
+   * @param args
+   */
+  public static void main(String[] args) {
+
+    String jobName = "basic-k8";
+    Config cnfg = buildTestConfig();
+
+    if (args.length == 1 && args[0].equalsIgnoreCase("delete")) {
+      if (ZKUtil.isThereAnActiveJob(jobName, cnfg)) {
+        ZKUtil.terminateJob(jobName, cnfg);
+        return;
+      } else {
+        LOG.info("No job Znode to delete....");
+        return;
+      }
+    }
+
+
+    int port = 1000 + (int) (Math.random() * 1000);
+    String workerAddress = "localhost:" + port;
+    int numberOfWorkers = 1;
+
+    if (args.length == 1) {
+      numberOfWorkers = Integer.parseInt(args[0]);
+    }
+
+    ZKController zkController = new ZKController(cnfg, jobName, workerAddress, numberOfWorkers);
+    zkController.initialize();
+
+    List<WorkerNetworkInfo> workerList = zkController.getWorkerList();
+    LOG.info("Initial worker list: \n" + WorkerNetworkInfo.workerListAsString(workerList));
+
+    LOG.info("Waiting for all workers to join: ");
+    workerList = zkController.waitForAllWorkersToJoin(100000);
+    LOG.info(WorkerNetworkInfo.workerListAsString(workerList));
+
+    zkController.close();
+  }
+
+  /**
+   * construct a test Config object
+   * @return
+   */
+  public static Config buildTestConfig() {
+    return Config.newBuilder()
+        .put(ZKContext.ZOOKEEPER_SERVER_IP, "149.165.150.81")
+        .put(ZKContext.ZOOKEEPER_SERVER_PORT, 2181)
+        .put(Context.JOB_NAME, "basic-kube")
+        .build();
+  }
+
+  public static void sleeeep(long duration) {
+
+    try {
+      Thread.sleep(duration);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
     }
   }
 

@@ -78,7 +78,7 @@ public class JobMasterClient extends Thread {
   /**
    * initialize JobMasterClient
    * wait until it connects to JobMaster
-   * return false, if it can not connec to JobMaster
+   * return false, if it can not connect to JobMaster
    * @return
    */
   public boolean init() {
@@ -111,6 +111,7 @@ public class JobMasterClient extends Thread {
     rrClient.registerResponseHandler(stateChangeResponseBuilder, responseMessageHandler);
 
     // try to connect to JobMaster, wait up to 100 seconds
+    // make this one config value
     long connectionTimeLimit = 100000;
     tryUntilConnected(connectionTimeLimit);
 
@@ -283,6 +284,8 @@ public class JobMasterClient extends Thread {
 
     @Override
     public void onConnect(SocketChannel channel, StatusCode status) {
+      // put the reason into some variable
+      // if server is not there, should try to reconnect
     }
 
     @Override
@@ -328,7 +331,7 @@ public class JobMasterClient extends Thread {
 
     Config cfg = Config.newBuilder()
         .put(Context.TWISTER2_WORKER_INSTANCES, numberOfWorkers)
-        .put(JobMasterContext.PING_INTERVAL, 1000)
+        .put(JobMasterContext.PING_INTERVAL, 3000)
         .put(JobMasterContext.JOB_MASTER_IP, masterAddress)
         .put(JobMasterContext.JOB_MASTER_ASSIGNS_WORKER_IDS, true)
         .build();
@@ -349,7 +352,7 @@ public class JobMasterClient extends Thread {
     // wait 2000ms
     sleeeep(5000);
 
-    workerList = client.workerController.waitForAllWorkersToJoin(2000);
+    workerList = client.workerController.waitForAllWorkersToJoin(20000);
     LOG.info(WorkerNetworkInfo.workerListAsString(workerList));
 
     client.sendWorkerCompletedMessage();

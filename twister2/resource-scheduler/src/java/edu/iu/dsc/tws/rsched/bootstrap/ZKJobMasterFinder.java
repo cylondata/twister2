@@ -143,7 +143,7 @@ public class ZKJobMasterFinder {
   }
 
   public static void main(String[] args) {
-    Config cnfg = buildConfig();
+    Config cnfg = buildTestConfig();
 
     ZKJobMasterFinder finder = new ZKJobMasterFinder(cnfg);
     finder.initialize();
@@ -162,10 +162,10 @@ public class ZKJobMasterFinder {
   }
 
   /**
-   * construct a Config object
+   * construct a test Config object
    * @return
    */
-  public static Config buildConfig() {
+  public static Config buildTestConfig() {
     return Config.newBuilder()
         .put(ZKContext.ZOOKEEPER_SERVER_IP, "149.165.150.81")
         .put(ZKContext.ZOOKEEPER_SERVER_PORT, 2181)
