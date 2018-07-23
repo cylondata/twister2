@@ -15,7 +15,6 @@ import java.util.Comparator;
 import java.util.Set;
 
 import edu.iu.dsc.tws.comms.api.BatchReceiver;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
