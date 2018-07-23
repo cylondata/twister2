@@ -176,13 +176,13 @@ It sends many worker information on the same message.
       repeated WorkerNetworkInfo workers = 2;
     }
 
-**IWorkerController Implementation**  
+**IWorkerDiscoverer Implementation**  
 We implemented the WorkerController class that will be used by the workers 
 to interact with the job master. The class name is:
 *	edu.iu.dsc.tws.master.client.WorkerDiscoverer
 
 It implements the interface: 
-*	edu.iu.dsc.tws.rsched.bootstrap.IWorkerController
+*	edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer
 
 All worker implementations can utilize this class for worker discovery. 
 
