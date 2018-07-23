@@ -1,3 +1,4 @@
+
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
@@ -30,9 +31,9 @@ import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
-import edu.iu.dsc.tws.executor.ExecutionPlan;
-import edu.iu.dsc.tws.executor.ExecutionPlanBuilder;
-import edu.iu.dsc.tws.executor.threading.ExecutionModel;
+import edu.iu.dsc.tws.executor.api.ExecutionModel;
+import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.ThreadExecutor;
 import edu.iu.dsc.tws.proto.checkpoint.Checkpoint;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -108,6 +109,11 @@ public class SourceSinkDiscoveryExample implements IContainer {
     @Override
     public void run() {
       ctx.write("partition-edge", "Hello");
+    }
+
+    @Override
+    public void interrupt() {
+
     }
 
     @Override
@@ -200,3 +206,4 @@ public class SourceSinkDiscoveryExample implements IContainer {
     Twister2Submitter.submitContainerJob(jobBuilder.build(), config);
   }
 }
+

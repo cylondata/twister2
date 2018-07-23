@@ -13,13 +13,29 @@ package edu.iu.dsc.tws.executor.core;
 
 import java.util.HashMap;
 
-import edu.iu.dsc.tws.executor.INodeInstance;
+import edu.iu.dsc.tws.executor.api.INodeInstance;
+import edu.iu.dsc.tws.executor.api.ITaskContextListener;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
 public abstract class TaskContextListener implements ITaskContextListener {
 
-  @Override
-  public void contextStore(HashMap<INodeInstance, TaskContext> instanceContext) {
+  private HashMap<INodeInstance, TaskContext> instanceContext = new HashMap<>();
+  private INodeInstance iNodeInstance;
+  private TaskContext taskContext;
+
+  public TaskContextListener() {
 
   }
+
+  public TaskContextListener(INodeInstance iNodeInstance, TaskContext taskContext) {
+    this.iNodeInstance = iNodeInstance;
+    this.taskContext = taskContext;
+  }
+
+  @Override
+  public void contextStore() {
+
+  }
+
+
 }

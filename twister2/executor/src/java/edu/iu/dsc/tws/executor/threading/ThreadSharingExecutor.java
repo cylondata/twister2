@@ -31,8 +31,8 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.executor.ExecutionPlan;
-import edu.iu.dsc.tws.executor.INodeInstance;
+import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.executor.api.INodeInstance;
 
 
 public class ThreadSharingExecutor extends ThreadExecutor {
@@ -69,13 +69,13 @@ public class ThreadSharingExecutor extends ThreadExecutor {
     tasks.addAll(nodes.values());
 
     for (INodeInstance node : tasks) {
-      LOG.info("Node Type : " + node.getClass().getName());
+      LOG.info(new String("******* ") + "Node Type : " + node.getClass().getName());
       node.prepare();
     }
 
     /*LOG.info("Execution Thread Count : " + executionPlan.getNumThreads() + ", No of Tasks : "
         + tasks.size() + ", Tasks " + executionPlan.getNodes().keySet().size());*/
-    LOG.info("@Task Size = " + tasks.size());
+    LOG.info(tasks.getClass().getName() + " @Task Size = " + tasks.size());
     for (int i = 0; i < tasks.size(); i++) {
       Thread t = new Thread(new Worker());
       t.setName("Thread-" + tasks.getClass().getSimpleName() + "-" + i);

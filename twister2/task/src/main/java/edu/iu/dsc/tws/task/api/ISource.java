@@ -20,5 +20,8 @@ public interface ISource extends INode {
    */
   void run();
 
+  void interrupt();
+
+
 
 }

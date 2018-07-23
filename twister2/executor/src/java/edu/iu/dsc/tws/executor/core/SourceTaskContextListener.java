@@ -14,30 +14,69 @@ package edu.iu.dsc.tws.executor.core;
 import java.util.HashMap;
 import java.util.Map;
 
-import edu.iu.dsc.tws.executor.INodeInstance;
+import edu.iu.dsc.tws.executor.comm.tasks.batch.SourceBatchTask;
+import edu.iu.dsc.tws.task.api.SourceTask;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
 public class SourceTaskContextListener extends TaskContextListener {
 
   private TaskContext context;
-  private INodeInstance iNodeInstance;
-  private HashMap<INodeInstance, TaskContext> instanceContextMap = new HashMap<>();
+  private SourceTask sourceTask;
+  private SourceBatchTask sourceBatchTask;
+  private HashMap<SourceTask, TaskContext> instanceContextMap = new HashMap<>();
+  private HashMap<SourceBatchTask, TaskContext> instanceBatchContextMap = new HashMap<>();
 
-  public SourceTaskContextListener(TaskContext context, INodeInstance iNodeInstance) {
+  public SourceTaskContextListener() {
+  }
+
+  public SourceTaskContextListener(SourceTask sourceTask, TaskContext context) {
     this.context = context;
-    this.iNodeInstance = iNodeInstance;
+    this.sourceTask = sourceTask;
+  }
+
+  public SourceTaskContextListener(SourceBatchTask sourceBatchTask, TaskContext context) {
+    this.context = context;
+    this.sourceBatchTask = sourceBatchTask;
   }
 
   @Override
-  public void contextStore(HashMap<INodeInstance, TaskContext> instanceContext) {
-    super.contextStore(instanceContext);
-    instanceContext.put(this.iNodeInstance, this.context);
-    this.instanceContextMap = instanceContext;
+  public void contextStore() {
+    //this.instanceContextMap.put(this.sourceTask, this.context);
   }
 
-  public void interruptSourceTask() {
-    for(Map.Entry<INodeInstance, TaskContext> e : this.instanceContextMap.entrySet()) {
+  @Override
+  public void onStop() {
 
+  }
+
+  @Override
+  public void onStart() {
+    this.instanceBatchContextMap.put(this.sourceBatchTask, this.context);
+  }
+
+  @Override
+  public void onInterrupt() {
+    for (Map.Entry<SourceBatchTask, TaskContext> e : this.instanceBatchContextMap.entrySet()) {
+      if (e.getValue().isDone()) {
+        SourceBatchTask currentSourceTask = e.getKey();
+        TaskContext newContext = e.getValue();
+        newContext.setDone(newContext.isDone());
+        this.instanceBatchContextMap.put(currentSourceTask, newContext);
+      }
     }
+  }
+
+  @Override
+  public void mutateContext(TaskContext ctx) {
+    this.context = ctx;
+  }
+
+  public HashMap<SourceBatchTask, TaskContext> getInstanceBatchContextMap() {
+    return this.instanceBatchContextMap;
+  }
+
+  public void setInstanceBatchContextMap(HashMap<SourceBatchTask, TaskContext>
+                                             instanceBatchContextMap) {
+    this.instanceBatchContextMap = instanceBatchContextMap;
   }
 }

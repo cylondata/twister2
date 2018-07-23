@@ -9,24 +9,37 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.executor;
+package edu.iu.dsc.tws.executor.core.batch;
+
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.executor.comm.IParallelOperation;
+import edu.iu.dsc.tws.executor.api.DefaultOutputCollection;
+import edu.iu.dsc.tws.executor.api.EdgeGenerator;
+import edu.iu.dsc.tws.executor.api.INodeInstance;
+import edu.iu.dsc.tws.executor.api.IParallelOperation;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.ISource;
+import edu.iu.dsc.tws.task.api.ITask;
 import edu.iu.dsc.tws.task.api.OutputCollection;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
-public class SourceInstance implements INodeInstance {
+/**
+ * The class represents the instance of the executing task
+ */
+public class TaskBatchInstance implements INodeInstance {
   /**
    * The actual task executing
    */
-  private ISource task;
+  private ITask task;
+
+  /**
+   * All the inputs will come through a single queue, otherwise we need to look
+   * at different queues for messages
+   */
+  private BlockingQueue<IMessage> inQueue;
 
   /**
    * Output will go throuh a single queue
@@ -42,11 +55,6 @@ public class SourceInstance implements INodeInstance {
    * The output collection to be used
    */
   private OutputCollection outputCollection;
-
-  /**
-   * Parallel operations
-   */
-  private Map<String, IParallelOperation> outParOps = new HashMap<>();
 
   /**
    * The globally unique task id
@@ -74,54 +82,46 @@ public class SourceInstance implements INodeInstance {
   private Map<String, Object> nodeConfigs;
 
   /**
-   * Worker id
+   * Parallel operations
+   */
+  private Map<String, IParallelOperation> outParOps = new HashMap<>();
+
+  /**
+   * Inward parallel operations
+   */
+  private Map<String, IParallelOperation> inParOps = new HashMap<>();
+
+  /**
+   * The edge generator
+   */
+  private EdgeGenerator edgeGenerator;
+
+  /**
+   * The worker id
    */
   private int workerId;
 
-  /**
-   * For batch tasks: identifying the final message
-   **/
-
-  private boolean isDone;
-
-  private boolean isFinalTask;
-
-  private int callBackCount = 0;
-
-
-  public SourceInstance(ISource task, BlockingQueue<IMessage> outQueue, Config config, String tName,
-                        int tId, int tIndex, int parallel, int wId, Map<String, Object> cfgs) {
+  public TaskBatchInstance(ITask task, BlockingQueue<IMessage> inQueue,
+                      BlockingQueue<IMessage> outQueue, Config config,
+                      EdgeGenerator eGenerator, String tName,
+                      int tId, int tIndex, int parallel, int wId, Map<String, Object> cfgs) {
     this.task = task;
+    this.inQueue = inQueue;
     this.outQueue = outQueue;
     this.config = config;
+    this.edgeGenerator = eGenerator;
     this.taskId = tId;
     this.taskIndex = tIndex;
     this.parallelism = parallel;
     this.taskName = tName;
     this.nodeConfigs = cfgs;
     this.workerId = wId;
-  }
-
-  public SourceInstance(ISource task, BlockingQueue<IMessage> outQueue, Config config, String tName,
-                        int tId, int tIndex, int parallel, int wId,
-                        Map<String, Object> cfgs, boolean isDone) {
-    this.task = task;
-    this.outQueue = outQueue;
-    this.config = config;
-    this.taskId = tId;
-    this.taskIndex = tIndex;
-    this.parallelism = parallel;
-    this.taskName = tName;
-    this.nodeConfigs = cfgs;
-    this.workerId = wId;
-    this.isDone = isDone;
   }
 
   public void prepare() {
     outputCollection = new DefaultOutputCollection(outQueue);
-
-    task.prepare(config, new TaskContext(taskIndex, taskId, taskName,
-        parallelism, workerId, outputCollection, nodeConfigs));
+    task.prepare(config, new TaskContext(taskIndex, taskId, taskName, parallelism, workerId,
+        outputCollection, nodeConfigs));
   }
 
   @Override
@@ -129,43 +129,48 @@ public class SourceInstance implements INodeInstance {
 
   }
 
+  public void registerOutParallelOperation(String edge, IParallelOperation op) {
+    outParOps.put(edge, op);
+  }
+
+  public void registerInParallelOperation(String edge, IParallelOperation op) {
+    inParOps.put(edge, op);
+  }
+
   public void execute() {
+    while (!inQueue.isEmpty()) {
+      IMessage m = inQueue.poll();
 
-    /*if (task instanceof SourceTask) {
-      SourceTask sourceTask = (SourceTask) task;
+      task.run(m);
 
-    }*/
-
-    if (!this.isDone) {
-      task.run();
       // now check the output queue
       while (!outQueue.isEmpty()) {
         IMessage message = outQueue.poll();
         if (message != null) {
           String edge = message.edge();
+
           // invoke the communication operation
           IParallelOperation op = outParOps.get(edge);
-          if (!message.getContent().equals("<END>")) {
-            op.send(taskId, message);
-          }
+          int flags = 0;
+          op.send(taskId, message, flags);
         }
       }
-
-      for (Map.Entry<String, IParallelOperation> e : outParOps.entrySet()) {
-        e.getValue().progress();
-      }
-    } else {
-      System.out.println("All Source Tasks executed ...");
     }
 
+    for (Map.Entry<String, IParallelOperation> e : outParOps.entrySet()) {
+      e.getValue().progress();
+    }
+
+    for (Map.Entry<String, IParallelOperation> e : inParOps.entrySet()) {
+      e.getValue().progress();
+    }
+  }
+
+  public BlockingQueue<IMessage> getInQueue() {
+    return inQueue;
   }
 
   public BlockingQueue<IMessage> getOutQueue() {
     return outQueue;
   }
-
-  public void registerOutParallelOperation(String edge, IParallelOperation op) {
-    outParOps.put(edge, op);
-  }
-
 }

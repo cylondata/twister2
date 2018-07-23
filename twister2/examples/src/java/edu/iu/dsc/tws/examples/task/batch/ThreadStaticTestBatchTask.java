@@ -35,9 +35,9 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.examples.task.streaming.ThreadStaticStreamingTestTask;
-import edu.iu.dsc.tws.executor.ExecutionPlan;
-import edu.iu.dsc.tws.executor.ExecutionPlanBuilder;
-import edu.iu.dsc.tws.executor.threading.ExecutionModel;
+import edu.iu.dsc.tws.executor.api.ExecutionModel;
+import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.ThreadExecutor;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
@@ -94,6 +94,11 @@ public class ThreadStaticTestBatchTask implements IContainer {
     @Override
     public void run() {
       ctx.write("reduce-edge", "Hello");
+    }
+
+    @Override
+    public void interrupt() {
+
     }
 
     @Override

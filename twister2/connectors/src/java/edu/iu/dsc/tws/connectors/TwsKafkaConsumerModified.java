@@ -54,6 +54,12 @@ public class TwsKafkaConsumerModified<T> extends SourceTask {
   }
 
   @Override
+  public void interrupt() {
+
+  }
+
+
+  @Override
   public void prepare(Config cfg, TaskContext context) {
     this.myIndex = cfg.getIntegerValue("twister2.container.id", 0);
     this.worldSize = context.getParallelism();

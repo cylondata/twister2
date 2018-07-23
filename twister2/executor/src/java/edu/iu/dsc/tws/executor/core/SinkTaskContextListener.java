@@ -13,26 +13,47 @@ package edu.iu.dsc.tws.executor.core;
 
 import java.util.HashMap;
 
-import edu.iu.dsc.tws.executor.INodeInstance;
+import edu.iu.dsc.tws.task.api.SinkTask;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
 public class SinkTaskContextListener extends TaskContextListener {
 
   private TaskContext context;
-  private INodeInstance iNodeInstance;
+  private SinkTask sinkTask;
+  private HashMap<SinkTask, TaskContext> instanceContextMap = new HashMap<>();
 
-  public SinkTaskContextListener(TaskContext context, INodeInstance iNodeInstance) {
+
+  public SinkTaskContextListener() {
+  }
+
+  public SinkTaskContextListener(SinkTask sinkTask, TaskContext context) {
     this.context = context;
-    this.iNodeInstance = iNodeInstance;
+    this.sinkTask = sinkTask;
   }
 
   @Override
-  public void contextStore(HashMap<INodeInstance, TaskContext> instanceContext) {
-    super.contextStore(instanceContext);
-    instanceContext.put(this.iNodeInstance, this.context);
+  public void contextStore() {
+    this.instanceContextMap.put(this.sinkTask, this.context);
   }
 
-  public void interruptSinkTask() {
+  @Override
+  public void onStop() {
 
   }
+
+  @Override
+  public void onStart() {
+
+  }
+
+  @Override
+  public void onInterrupt() {
+
+  }
+
+  @Override
+  public void mutateContext(TaskContext ctx) {
+    this.context = ctx;
+  }
+
 }

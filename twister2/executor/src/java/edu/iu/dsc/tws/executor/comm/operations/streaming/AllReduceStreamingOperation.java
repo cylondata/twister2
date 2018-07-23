@@ -36,9 +36,9 @@ import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowAllReduce;
 import edu.iu.dsc.tws.data.api.DataType;
-import edu.iu.dsc.tws.executor.EdgeGenerator;
-import edu.iu.dsc.tws.executor.comm.AbstractParallelOperation;
-import edu.iu.dsc.tws.executor.comm.Utils;
+import edu.iu.dsc.tws.executor.api.AbstractParallelOperation;
+import edu.iu.dsc.tws.executor.api.EdgeGenerator;
+import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
 
@@ -61,13 +61,13 @@ public class AllReduceStreamingOperation extends AbstractParallelOperation {
   }
 
   @Override
-  public void send(int source, IMessage message) {
-    op.send(source, message.getContent(), 0);
+  public boolean send(int source, IMessage message, int flags) {
+    return op.send(source, message.getContent(), flags);
   }
 
   @Override
-  public void send(int source, IMessage message, int dest) {
-    op.send(source, message.getContent(), 0, dest);
+  public void send(int source, IMessage message, int dest, int flags) {
+    op.send(source, message.getContent(), flags, dest);
   }
 
   @Override

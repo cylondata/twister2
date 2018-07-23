@@ -38,9 +38,9 @@ import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
 import edu.iu.dsc.tws.examples.task.streaming.GatherStreamingTask;
 import edu.iu.dsc.tws.examples.utils.RandomString;
-import edu.iu.dsc.tws.executor.ExecutionPlan;
-import edu.iu.dsc.tws.executor.ExecutionPlanBuilder;
-import edu.iu.dsc.tws.executor.threading.ExecutionModel;
+import edu.iu.dsc.tws.executor.api.ExecutionModel;
+import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.ThreadExecutor;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
@@ -107,6 +107,11 @@ public class GatherBatchTask implements IContainer {
 //      System.out.println("Message : Key :" + message.getKey().toString() + ", Value : "
 //          + message.getValue());
       ctx.write("gather-edge", "1");
+    }
+
+    @Override
+    public void interrupt() {
+
     }
 
     @Override

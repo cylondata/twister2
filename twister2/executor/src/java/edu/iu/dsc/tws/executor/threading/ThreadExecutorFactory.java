@@ -12,7 +12,9 @@
 package edu.iu.dsc.tws.executor.threading;
 
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
-import edu.iu.dsc.tws.executor.ExecutionPlan;
+import edu.iu.dsc.tws.executor.api.ExecutionModel;
+import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.executor.api.IThreadExecutor;
 
 public class ThreadExecutorFactory {
 

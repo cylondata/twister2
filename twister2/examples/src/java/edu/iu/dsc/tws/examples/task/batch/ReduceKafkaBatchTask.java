@@ -1,3 +1,4 @@
+
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
@@ -48,9 +49,9 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.connectors.TwsKafkaConsumer;
 import edu.iu.dsc.tws.examples.task.streaming.ReduceKafkaStreamingTask;
-import edu.iu.dsc.tws.executor.ExecutionPlan;
-import edu.iu.dsc.tws.executor.ExecutionPlanBuilder;
-import edu.iu.dsc.tws.executor.threading.ExecutionModel;
+import edu.iu.dsc.tws.executor.api.ExecutionModel;
+import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.ThreadExecutor;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
@@ -115,6 +116,11 @@ public class ReduceKafkaBatchTask implements IContainer {
     @Override
     public void run() {
       ctx.write("reduce-edge", "Hello");
+    }
+
+    @Override
+    public void interrupt() {
+
     }
 
     @Override
@@ -191,3 +197,4 @@ public class ReduceKafkaBatchTask implements IContainer {
     Twister2Submitter.submitContainerJob(jobBuilder.build(), config);
   }
 }
+

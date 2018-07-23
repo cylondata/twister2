@@ -12,5 +12,8 @@
 package edu.iu.dsc.tws.task.api;
 
 public interface ITaskContext {
+
   void overrideTaskContext(TaskContext context);
+
+
 }

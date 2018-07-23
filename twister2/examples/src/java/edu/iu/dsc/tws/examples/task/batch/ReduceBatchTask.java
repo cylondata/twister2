@@ -34,10 +34,13 @@ import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
-import edu.iu.dsc.tws.executor.ExecutionPlan;
-import edu.iu.dsc.tws.executor.ExecutionPlanBuilder;
+import edu.iu.dsc.tws.executor.api.ExecutionModel;
+import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.executor.comm.tasks.batch.SourceBatchTask;
 import edu.iu.dsc.tws.executor.core.CommunicationOperationType;
-import edu.iu.dsc.tws.executor.threading.ExecutionModel;
+import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
+import edu.iu.dsc.tws.executor.core.SinkTaskContextListener;
+import edu.iu.dsc.tws.executor.core.SourceTaskContextListener;
 import edu.iu.dsc.tws.executor.threading.ThreadExecutor;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
@@ -48,7 +51,6 @@ import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.ITaskContext;
 import edu.iu.dsc.tws.task.api.SinkTask;
-import edu.iu.dsc.tws.task.api.SourceTask;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
@@ -92,46 +94,96 @@ public class ReduceBatchTask implements IContainer {
     executor.execute();
   }
 
-  private static class GeneratorTask extends SourceTask implements ITaskContext {
+  private static class GeneratorTask extends SourceBatchTask implements ITaskContext {
     private static final long serialVersionUID = -254264903510284748L;
-    private TaskContext ctx;
+    private TaskContext sourceTaskContext;
     private Config config;
+    private SourceTaskContextListener sourceTaskContextListener = null;
+    private int count = 0;
 
     @Override
     public void run() {
-      for (int i = 0; i < 10; i++) {
-        ctx.write("reduce-edge", "Hello " + i);
+      if (count < 5) {
+        if (count == 0) {
+          //System.out.println("Message Writing Started : " + count);
+        }
+        this.sourceTaskContext.write("reduce-edge", "Hello " + count);
       }
-      ctx.write("reduce-edge", "<END>");
+
+      if (5 < count && count < 10) {
+        if (!this.sourceTaskContext.isDone()) {
+          //System.out.println("Message Writing Stopped : " + count);
+        }
+        this.sourceTaskContext.setDone(true);
+        this.sourceTaskContextListener.mutateContext(sourceTaskContext);
+        this.setSourceTaskContextListener(this.sourceTaskContextListener);
+      }
+
+      if (count > 10 && count < 15) {
+        if (this.sourceTaskContext.isDone() && count == 11) {
+          //System.out.println("Message Writing Restarted : " + count);
+        }
+        this.sourceTaskContext.setDone(false);
+        this.sourceTaskContextListener.mutateContext(sourceTaskContext);
+        this.setSourceTaskContextListener(this.sourceTaskContextListener);
+        this.sourceTaskContext.write("reduce-edge", "Jello " + count);
+      }
+
+      if (count < 15) {
+        if (!this.sourceTaskContext.isDone()) {
+          //System.out.println("Message Writing Stopped : " + count);
+        }
+        this.sourceTaskContext.setDone(true);
+        this.sourceTaskContextListener.mutateContext(sourceTaskContext);
+        this.setSourceTaskContextListener(this.sourceTaskContextListener);
+      }
+
+      count++;
     }
 
+    @Override
+    public void interrupt() {
+      this.sourceTaskContextListener.onInterrupt();
+    }
 
     @Override
     public void prepare(Config cfg, TaskContext context) {
-      this.ctx = context;
+      this.sourceTaskContext = context;
+      this.sourceTaskContext.setDone(false);
+      this.sourceTaskContextListener
+          = new SourceTaskContextListener(this, sourceTaskContext);
+      this.sourceTaskContextListener.mutateContext(sourceTaskContext);
+      this.sourceTaskContextListener.onStart();
+    }
+
+    @Override
+    public TaskContext getContext() {
+      return this.sourceTaskContext;
     }
 
     @Override
     public void overrideTaskContext(TaskContext context) {
-      this.ctx = context;
+      this.sourceTaskContext = context;
     }
 
-    public TaskContext getCtx() {
-      return ctx;
+    @Override
+    public SourceTaskContextListener getSourceTaskContextListener() {
+      return this.sourceTaskContextListener;
     }
 
-    public void setCtx(TaskContext ctx) {
-      this.ctx = ctx;
-    }
   }
 
-  private static class RecevingTask extends SinkTask {
+  private static class RecevingTask extends SinkTask implements ITaskContext {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
+    private TaskContext sinkTaskContext;
+    private SinkTaskContextListener sinkTaskContextListener = new SinkTaskContextListener();
 
     @Override
     public void execute(IMessage message) {
-      System.out.println("Message Reduced : " + message.getContent() + ", Count : " + count);
+      if (count < 15) {
+        System.out.println("Message Reduced : " + message.getContent() + ", Count : " + count);
+      }
       count++;
     }
 
@@ -139,6 +191,12 @@ public class ReduceBatchTask implements IContainer {
     public void prepare(Config cfg, TaskContext context) {
 
     }
+
+    @Override
+    public void overrideTaskContext(TaskContext context) {
+
+    }
+
   }
 
   public static class IdentityFunction implements IFunction {
@@ -175,7 +233,7 @@ public class ReduceBatchTask implements IContainer {
     System.out.println("==================Reduce Batch Task Example========================");
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
     HashMap<String, Object> configurations = new HashMap<>();
-    configurations.put(SchedulerContext.THREADS_PER_WORKER, 8);
+    configurations.put(SchedulerContext.THREADS_PER_WORKER, 1);
 
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
