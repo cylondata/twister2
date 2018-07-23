@@ -21,8 +21,6 @@ import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.POD_MEMOR
 public final class KubernetesUtils {
   private static final Logger LOG = Logger.getLogger(KubernetesUtils.class.getName());
 
-  public static String persistentJobDirName = null;
-
   private KubernetesUtils() {
   }
 
@@ -71,29 +69,6 @@ public final class KubernetesUtils {
    */
   public static String createJobMasterServiceName(String jobName) {
     return KubernetesConstants.TWISTER2_SERVICE_PREFIX + jobName + "-job-master";
-  }
-
-  /**
-   * create persistent directory name for a job
-   * if it is already created, return the previous one
-   * @param jobName
-   * @return
-   */
-  public static String createPersistentJobDirName(String jobName, boolean persistentUploading) {
-    if (persistentJobDirName != null) {
-      return persistentJobDirName;
-    }
-
-//    String pJobDirName = KubernetesConstants.PERSISTENT_VOLUME_MOUNT + "/twister2/" + jobName
-//        + "-" + System.currentTimeMillis();
-
-    String pJobDirName = KubernetesConstants.PERSISTENT_VOLUME_MOUNT;
-
-    if (persistentUploading) {
-      persistentJobDirName = pJobDirName;
-    }
-
-    return pJobDirName;
   }
 
   /**

@@ -9,11 +9,11 @@ twister2.job.name: "basic-kube"
 # it is a floating point number
 # each worker can have fractional cores such as 0.5 cores or multiple cores as 2
 # default value is 1.0 core
-twister2.worker.cpu: 1.0
+twister2.worker.cpu: 0.2
 
 # amount of memory for each worker in the job in mega bytes as integer
 # default value is 200 MB
-twister2.worker.ram: 200
+twister2.worker.ram: 1024
 
 # amount of volatile hard disk space on each worker in giga bytes as a double
 # set this value to zero if you will not use volatile hard disk space
@@ -55,14 +55,3 @@ kubernetes.persistent.storage.class: "twister2-nfs-storage"
 # other alternatives: "ReadWriteOnce", "ReadOnlyMany"
 # https://kubernetes.io/docs/concepts/storage/persistent-volumes
 kubernetes.storage.access.mode: "ReadWriteMany"
-
-########################################################################
-# Kubernetes job package upload through the persistent volume
-########################################################################
-# when a persistent volume is used, 
-# the job package first can be uploaded to the persistent volume 
-# and all pods can get it from there. 
-# alternatively, the client uploads the job package to each pod separately
-# default value is true
-kubernetes.persistent.volume.uploading: false
-

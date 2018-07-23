@@ -28,7 +28,7 @@ import java.util.List;
 /**
  * an interface to get the list of workers in a job and their addresses
  */
-public interface IWorkerController {
+public interface IWorkerDiscoverer {
 
   /**
    * return the WorkerNetworkInfo object for this worker

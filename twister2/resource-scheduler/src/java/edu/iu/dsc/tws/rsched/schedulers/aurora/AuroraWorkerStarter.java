@@ -25,31 +25,31 @@ import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
-import edu.iu.dsc.tws.rsched.bootstrap.ZKController;
+import edu.iu.dsc.tws.rsched.bootstrap.ZKDiscoverer;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import static edu.iu.dsc.tws.common.config.Context.JOB_ARCHIVE_DIRECTORY;
 
-public final class AuroraWorker {
-  public static final Logger LOG = Logger.getLogger(AuroraWorker.class.getName());
+public final class AuroraWorkerStarter {
+  public static final Logger LOG = Logger.getLogger(AuroraWorkerStarter.class.getName());
 
   private InetAddress workerAddress;
   private int workerPort;
   private String mesosTaskID;
   private Config config;
   private JobAPI.Job job;
-  private ZKController zkController;
+  private ZKDiscoverer zkController;
 
-  private AuroraWorker() {
+  private AuroraWorkerStarter() {
   }
 
   /**
-   * create a AuroraWorker object by getting values from system property
+   * create a AuroraWorkerStarter object by getting values from system property
    * @return
    */
-  public static AuroraWorker createAuroraWorker() {
-    AuroraWorker worker = new AuroraWorker();
+  public static AuroraWorkerStarter createAuroraWorker() {
+    AuroraWorkerStarter worker = new AuroraWorkerStarter();
     String hostname =  System.getProperty("hostname");
     String portStr =  System.getProperty("tcpPort");
     worker.mesosTaskID = System.getProperty("taskID");
@@ -141,7 +141,7 @@ public final class AuroraWorker {
     long startTime = System.currentTimeMillis();
     String workerHostPort = workerAddress.getHostAddress() + ":" + workerPort;
     int numberOfWorkers = job.getJobResources().getNoOfContainers();
-    zkController = new ZKController(config, job.getJobName(), workerHostPort, numberOfWorkers);
+    zkController = new ZKDiscoverer(config, job.getJobName(), workerHostPort, numberOfWorkers);
     zkController.initialize();
     long duration = System.currentTimeMillis() - startTime;
     System.out.println("Initialization for the worker: " + zkController.getWorkerNetworkInfo()
@@ -186,7 +186,7 @@ public final class AuroraWorker {
   public static void main(String[] args) {
 
     // create the worker
-    AuroraWorker worker = createAuroraWorker();
+    AuroraWorkerStarter worker = createAuroraWorker();
 
     // get the number of workers from some where
     // wait for all of them

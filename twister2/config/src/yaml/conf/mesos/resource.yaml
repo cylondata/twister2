@@ -17,6 +17,8 @@ twister2.directory.sandbox.java.home: "${JAVA_HOME}"
 twister2.mesos.framework.name: "Twister2 framework"
 
 twister2.mesos.master.uri: "zk://149.165.150.81:2181/mesos"
+
+twister2.mesos.master.host: "149.165.150.81"
 # The maximum time in milliseconds waiting for MesosFramework got registered with Mesos Master
 twister2.mesos.framework.staging.timeout.ms: 2000
 
@@ -39,7 +41,7 @@ twister2.docker.image.name: "gurhangunduz/twister2-mesos:docker-mpi"
 
 # the job package uri for mesos agent to fetch.
 # For fetching http server must be running on mesos master
-twister2.system.job.uri: "http://149.165.150.81:8082/twister2-job.tar.gz"
+twister2.system.job.uri: "http://149.165.150.81:8082/twister2/mesos/twister2-job.tar.gz"
 
 # the resource manager class
 twister2.class.state.manager: "edu.iu.dsc.tws.rsched.statemanagers.fs.SharedFileSystemStateManager"
@@ -54,7 +56,9 @@ twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.scp.ScpUploader"
 
 
 # container class to run in workers
-twister2.job.basic.container.class: "edu.iu.dsc.tws.examples.basic.BasicMesosWorker"
+#twister2.job.basic.container.class: "edu.iu.dsc.tws.examples.basic.BasicMesosWorker"
+#twister2.job.basic.container.class: "edu.iu.dsc.tws.examples.basic.BasicMpiJob"
+twister2.job.basic.container.class: "edu.iu.dsc.tws.examples.basic.comms.BaseBroadcastCommunication"
 
 # the Mesos worker class
 twister2.class.mesos.worker: "edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorker"

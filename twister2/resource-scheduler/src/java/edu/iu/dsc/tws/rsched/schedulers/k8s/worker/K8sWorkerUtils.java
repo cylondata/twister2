@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s.worker;
 
 import java.io.File;
 import java.nio.file.Paths;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -113,6 +114,11 @@ public final class K8sWorkerUtils {
     // set logging level
     LoggingHelper.setLogLevel(LoggingContext.loggingLevel(cnfg));
 
+    // if no persistent volume requested, return
+    if (!KubernetesContext.persistentVolumeRequested(cnfg)) {
+      return;
+    }
+
     // if persistent logging is requested, initialize it
     if (LoggingContext.persistentLoggingRequested(cnfg)) {
 
@@ -142,6 +148,9 @@ public final class K8sWorkerUtils {
 
   /**
    * we assume jobName, Kubernetes namespace, exist in the incoming config object
+   * if jobMasterIP exists in the config object,
+   * it uses that IP.
+   * Otherwise, it tries to get the jobMasterIP from Kubernetes master
    * @param cnfg
    * @param networkInfo
    * @return
@@ -151,7 +160,7 @@ public final class K8sWorkerUtils {
     String jobMasterIP = JobMasterContext.jobMasterIP(cnfg);
     Config cnf = cnfg;
 
-    // if jobMasterIP is null, or the length zero,
+    // if jobMaster does not run in client,
     // job master runs as a separate pod
     // get its IP address first
     if (jobMasterIP == null || jobMasterIP.trim().length() == 0) {
@@ -187,5 +196,22 @@ public final class K8sWorkerUtils {
 
     return podNo * workersPerPod + containerIndex;
   }
+
+  /**
+   * a test method to make the worker wait indefinitely
+   */
+  public static void waitIndefinitely() {
+
+    while (true) {
+      try {
+        LOG.info("Worker completed. Waiting idly to be deleted by Job Master. Sleeping 100sec. "
+            + "Time: " + new java.util.Date());
+        Thread.sleep(100000);
+      } catch (InterruptedException e) {
+        LOG.log(Level.WARNING, "Thread sleep interrupted.", e);
+      }
+    }
+  }
+
 
 }

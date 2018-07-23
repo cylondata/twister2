@@ -82,7 +82,6 @@ public class DataLocalityBatchScheduling {
           && (taskVertex.getConfig().getListValue("inputdataset") != null)) {
 
         int totalNumberOfInstances = taskVertex.getParallelism();
-
         List<CalculateDataTransferTime> cal = null;
         List<String> datanodesList;
 
@@ -111,9 +110,8 @@ public class DataLocalityBatchScheduling {
           int maxContainerTaskObjectSize = 0;
           if (maxContainerTaskObjectSize <= maxTaskInstancesPerContainer) {
             containerIndex = Integer.parseInt(cal.get(i).getNodeName().trim());
-            LOG.info("Worker Node Allocation for task:" + taskName + "(" + i + ")"
+            LOG.fine("Worker Node Allocation for task:" + taskName + "(" + i + ")"
                 + "-> Worker:" + containerIndex + "->" + Collections.min(cal).getDataNode());
-
             dataAwareAllocation.get(containerIndex).add(
                 new InstanceId(taskVertex.getName(), globalTaskIndex, i));
             maxContainerTaskObjectSize++;
@@ -126,12 +124,85 @@ public class DataLocalityBatchScheduling {
     for (Map.Entry<Integer, List<InstanceId>> entry : dataAwareAllocation.entrySet()) {
       Integer integer = entry.getKey();
       List<InstanceId> instanceIds = entry.getValue();
-      LOG.info("Container Index:" + integer);
+      LOG.fine("Container Index:" + integer);
       for (int i = 0; i < instanceIds.size(); i++) {
-        LOG.info("Task Instance Scheduled Details:"
+        LOG.fine("Task Instance Scheduled Details:"
             + "-> Task Name:" + instanceIds.get(i).getTaskName()
             + "-> Task id:" + instanceIds.get(i).getTaskId()
             + "-> Task index:" + instanceIds.get(i).getTaskIndex());
+      }
+    }
+    return dataAwareAllocation;
+  }
+
+  /**
+   * This method is primarily responsible for generating the container and task instance map which
+   * is based on the task graph, its configuration, and the allocated worker plan.
+   */
+  public static Map<Integer, List<InstanceId>> DataLocalityBatchSchedulingAlgo(
+      Set<Vertex> taskVertexSet, int numberOfContainers, WorkerPlan workerPlan, Config config) {
+
+    DataNodeLocatorUtils dataNodeLocatorUtils = new DataNodeLocatorUtils(config);
+    TaskAttributes taskAttributes = new TaskAttributes();
+
+    int cIdx = 0;
+    int containerIndex;
+
+    Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
+    Map<Integer, List<InstanceId>> dataAwareAllocation = new HashMap<>();
+    Set<Map.Entry<String, Integer>> taskEntrySet = parallelTaskMap.entrySet();
+
+    for (int i = 0; i < numberOfContainers; i++) {
+      dataAwareAllocation.put(i, new ArrayList<>());
+    }
+
+    for (Iterator<Map.Entry<String, Integer>> iterator = taskEntrySet.iterator();
+         iterator.hasNext();) {
+
+      Map<String, List<CalculateDataTransferTime>> workerPlanMap;
+      Map.Entry<String, Integer> entry = iterator.next();
+      String taskName = entry.getKey();
+
+      /**
+       * If the vertex has the input data set list and get the status
+       * and the path of the file in HDFS.
+       */
+      for (Vertex vertex : taskVertexSet) {
+        if (vertex.getName().equals(taskName)
+            && vertex.getConfig().getListValue("inputdataset") != null) {
+
+          int totalNumberOfInstances = vertex.getParallelism();
+          List<CalculateDataTransferTime> cal = null;
+          List<String> datanodesList;
+
+          if (cIdx == 0) {
+            datanodesList = dataNodeLocatorUtils.
+                findDataNodesLocation(vertex.getConfig().getListValue("inputdataset"));
+            workerPlanMap = calculateDistanceforBatch(datanodesList, workerPlan, cIdx);
+            cal = findOptimalWorkerNode(vertex, workerPlanMap, cIdx);
+          }
+
+          for (int i = 0; i < totalNumberOfInstances; i++) {
+            containerIndex = Integer.parseInt(cal.get(i).getNodeName().trim());
+            LOG.fine("Worker Node Allocation for task:" + taskName + "(" + i + ")"
+                + "-> Worker:" + containerIndex + "->" + Collections.min(cal).getDataNode());
+            dataAwareAllocation.get(containerIndex).add(
+                new InstanceId(vertex.getName(), globalTaskIndex, i));
+          }
+          globalTaskIndex++;
+        }
+      }
+    }
+
+    for (Map.Entry<Integer, List<InstanceId>> entry1 : dataAwareAllocation.entrySet()) {
+      Integer integer = entry1.getKey();
+      List<InstanceId> instanceIds = entry1.getValue();
+      LOG.fine("Container Index:" + integer);
+      for (int i = 0; i < instanceIds.size(); i++) {
+        LOG.fine("Task Details:"
+            + "\t Task Name:" + instanceIds.get(i).getTaskName()
+            + "\t Task id:" + instanceIds.get(i).getTaskId()
+            + "\t Task index:" + instanceIds.get(i).getTaskIndex());
       }
     }
     return dataAwareAllocation;
@@ -145,8 +216,8 @@ public class DataLocalityBatchScheduling {
 
     Map<String, List<CalculateDataTransferTime>> workerPlanMap = new HashMap<>();
     Worker worker;
-    double workerBandwidth;
-    double workerLatency;
+    double workerBandwidth = 0.0;
+    double workerLatency = 0.0;
     double calculateDistance = 0.0;
     double datanodeBandwidth;
     double datanodeLatency;
@@ -155,8 +226,13 @@ public class DataLocalityBatchScheduling {
       ArrayList<CalculateDataTransferTime> calculatedVal = new ArrayList<>();
       for (int i = 0; i < workers.getNumberOfWorkers(); i++) {
         worker = workers.getWorker(i);
-        workerBandwidth = (double) worker.getProperty("bandwidth");
-        workerLatency = (double) worker.getProperty("latency");
+
+        try {
+          workerBandwidth = (double) worker.getProperty("bandwidth");
+          workerLatency = (double) worker.getProperty("latency");
+        } catch (NullPointerException ne) {
+          ne.printStackTrace();
+        }
 
         CalculateDataTransferTime calculateDataTransferTime =
             new CalculateDataTransferTime(nodesList, calculateDistance);
@@ -213,13 +289,6 @@ public class DataLocalityBatchScheduling {
           cal.add(new CalculateDataTransferTime(value.get(j).getNodeName(),
               value.get(j).getRequiredDataTransferTime(), key));
         }
-
-       /* for (CalculateDataTransferTime requiredDataTransferTime : value) {
-          LOG.info(String.format("Task:" + vertex.getName() + "("
-              + requiredDataTransferTime.getTaskIndex() + ")"
-              + "D.Node:" + key + "-> W.Node:" + requiredDataTransferTime.getNodeName()
-              + "-> D.Time:" + requiredDataTransferTime.getRequiredDataTransferTime()));
-        }*/
       }
     } catch (NoSuchElementException nse) {
       nse.printStackTrace();
@@ -227,3 +296,4 @@ public class DataLocalityBatchScheduling {
     return cal;
   }
 }
+

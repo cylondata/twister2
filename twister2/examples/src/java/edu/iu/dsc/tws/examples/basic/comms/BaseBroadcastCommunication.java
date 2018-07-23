@@ -36,7 +36,7 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
+import edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
@@ -81,7 +81,7 @@ public class BaseBroadcastCommunication implements IContainer, IWorker {
   public void init(Config cfg,
                    int workerID,
                    ResourcePlan plan,
-                   IWorkerController workerController,
+                   IWorkerDiscoverer workerController,
                    IPersistentVolume persistentVolume,
                    IVolatileVolume volatileVolume) {
 

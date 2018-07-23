@@ -22,7 +22,6 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.task.graph.Edge;
 import edu.iu.dsc.tws.task.graph.Vertex;
 import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
@@ -33,6 +32,7 @@ import edu.iu.dsc.tws.tsched.spi.taskschedule.ScheduleException;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskInstanceMapCalculation;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedule;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
+import edu.iu.dsc.tws.tsched.utils.TaskVertexParser;
 
 public class DataLocalityBatchTaskScheduling implements TaskSchedule {
 
@@ -63,37 +63,23 @@ public class DataLocalityBatchTaskScheduling implements TaskSchedule {
 
     Set<Vertex> taskVertexSet = new LinkedHashSet<>(graph.getTaskVertexSet());
     Map<Integer, List<InstanceId>> datalocalityAwareContainerInstanceMap;
+
     List<TaskSchedulePlan> taskSchedulePlanList = new ArrayList<>();
+    List<Set<Vertex>> taskVertexList = TaskVertexParser.parseVertexSet(taskVertexSet, graph);
 
-    List<Vertex> childTask = new ArrayList<>();
-    List<Set<Edge>> taskEdgeSet = new ArrayList<>();
+    for (int i = 0; i < taskVertexList.size(); i++) {
 
-    for (Vertex vertex : taskVertexSet) {
-      if (graph.outgoingTaskEdgesOf(vertex).size() >= 2) {
-        taskEdgeSet.add(graph.taskEdgesOf(vertex));
-        System.out.println("Task Edge Set Size:" + taskEdgeSet.size());
-        for (int i = 0; i < taskEdgeSet.size(); i++) {
-          Set<Edge> edgeSet = taskEdgeSet.get(i);
-          for (Edge edge : edgeSet) {
-            System.out.println("Edge and Corresponding Vertex Values:"
-                + graph.connectedParentTask(vertex, edge).getName());
-
-            System.out.println("Edge and Corresponding Vertex Values:"
-                + edge.getName() + "\t"
-                + graph.connectedChildTask(vertex, edge).getName());
-          }
-        }
+      Set<Vertex> vertexSet = taskVertexList.get(i);
+      if (vertexSet.size() > 1) {
+        datalocalityAwareContainerInstanceMap = DataLocalityBatchScheduling.
+            DataLocalityBatchSchedulingAlgo(vertexSet,
+                workerPlan.getNumberOfWorkers(), workerPlan, this.cfg);
+      } else {
+        Vertex vertex = vertexSet.iterator().next();
+        datalocalityAwareContainerInstanceMap = DataLocalityBatchScheduling.
+            DataLocalityBatchSchedulingAlgo(vertex,
+                workerPlan.getNumberOfWorkers(), workerPlan, this.cfg);
       }
-    }
-
-    LOG.info("Task Vertex Greater than 2:"
-        + childTask + "\t" + childTask.get(0).getName());
-
-    for (Vertex vertex : taskVertexSet) {
-
-      datalocalityAwareContainerInstanceMap =
-          DataLocalityBatchScheduling.DataLocalityBatchSchedulingAlgo(vertex,
-              workerPlan.getNumberOfWorkers(), workerPlan, this.cfg);
 
       Set<TaskSchedulePlan.ContainerPlan> containerPlans = new HashSet<>();
 
@@ -161,6 +147,22 @@ public class DataLocalityBatchTaskScheduling implements TaskSchedule {
       }
       taskSchedulePlanList.add(new TaskSchedulePlan(taskSchedulePlanId, containerPlans));
       taskSchedulePlanId++;
+    }
+
+    //To print the schedule plan list
+    for (int j = 0; j < taskSchedulePlanList.size(); j++) {
+      TaskSchedulePlan taskSchedulePlan = taskSchedulePlanList.get(j);
+      Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap
+          = taskSchedulePlan.getContainersMap();
+      for (Map.Entry<Integer, TaskSchedulePlan.ContainerPlan> entry : containersMap.entrySet()) {
+        Integer integer = entry.getKey();
+        TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
+        Set<TaskSchedulePlan.TaskInstancePlan> taskContainerPlan = containerPlan.getTaskInstances();
+        for (TaskSchedulePlan.TaskInstancePlan ip : taskContainerPlan) {
+          LOG.fine("Task Id:" + ip.getTaskId() + "\tTask Index" + ip.getTaskIndex()
+              + "\tTask Name:" + ip.getTaskName() + "\tContainer Id:" + integer);
+        }
+      }
     }
     return taskSchedulePlanList;
   }

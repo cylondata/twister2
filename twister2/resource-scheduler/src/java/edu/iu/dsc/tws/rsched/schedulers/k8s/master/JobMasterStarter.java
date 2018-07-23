@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.k8s.master;
 
-import java.io.File;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -21,8 +20,7 @@ import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.master.JobMaster;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
-import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
-import edu.iu.dsc.tws.rsched.schedulers.k8s.worker.KubernetesWorkerStarter;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerUtils;
 
 public final class JobMasterStarter {
   private static final Logger LOG = Logger.getLogger(JobMasterStarter.class.getName());
@@ -36,17 +34,8 @@ public final class JobMasterStarter {
 
     Config envConfigs = buildConfigFromEnvVariables();
     String jobName = Context.jobName(envConfigs);
-    String podName = KubernetesUtils.createJobMasterPodName(jobName);
 
-    String persistentJobDir = KubernetesContext.persistentJobDirectory(envConfigs);
-    // create persistent job dir if there is a persistent volume request
-    if (persistentJobDir == null || persistentJobDir.isEmpty()) {
-      // no persistent volume is requested, nothing to be done
-    } else {
-      KubernetesWorkerStarter.createPersistentJobDir(podName, persistentJobDir, 0);
-    }
-
-    initLogger(envConfigs);
+    K8sWorkerUtils.initLogger(envConfigs, "jobMaster");
 
     LOG.info("JobMaster is starting. Current time: " + System.currentTimeMillis());
     LOG.info("Received parameters as environment variables: \n" + envConfigs);
@@ -79,11 +68,11 @@ public final class JobMasterStarter {
         .put(Context.JOB_NAME, System.getenv(Context.JOB_NAME))
         .put(KubernetesContext.KUBERNETES_NAMESPACE,
             System.getenv(KubernetesContext.KUBERNETES_NAMESPACE))
+        .put(KubernetesContext.PERSISTENT_VOLUME_PER_WORKER,
+            System.getenv(KubernetesContext.PERSISTENT_VOLUME_PER_WORKER))
         .put(Context.TWISTER2_WORKER_INSTANCES, System.getenv(Context.TWISTER2_WORKER_INSTANCES))
         .put(JobMasterContext.JOB_MASTER_ASSIGNS_WORKER_IDS,
             System.getenv(JobMasterContext.JOB_MASTER_ASSIGNS_WORKER_IDS))
-        .put(KubernetesContext.PERSISTENT_JOB_DIRECTORY,
-            System.getenv(KubernetesContext.PERSISTENT_JOB_DIRECTORY))
         .put(JobMasterContext.PING_INTERVAL, System.getenv(JobMasterContext.PING_INTERVAL))
         .put(LoggingContext.PERSISTENT_LOGGING_REQUESTED,
             System.getenv(LoggingContext.PERSISTENT_LOGGING_REQUESTED))
@@ -93,42 +82,6 @@ public final class JobMasterStarter {
         .put(LoggingContext.MAX_LOG_FILE_SIZE, System.getenv(LoggingContext.MAX_LOG_FILE_SIZE))
         .put(LoggingContext.MAX_LOG_FILES, System.getenv(LoggingContext.MAX_LOG_FILES))
         .build();
-  }
-
-  /**
-   * itinialize the logger
-   * @param cnfg
-   */
-  public static void initLogger(Config cnfg) {
-    // set logging level
-    LoggingHelper.setLogLevel(LoggingContext.loggingLevel(cnfg));
-
-    String persistentJobDir = KubernetesContext.persistentJobDirectory(cnfg);
-    // if no persistent volume requested, return
-    if (persistentJobDir == null) {
-      return;
-    }
-
-    // if persistent logging is requested, initialize it
-    if (LoggingContext.persistentLoggingRequested(cnfg)) {
-
-      if (LoggingContext.redirectSysOutErr(cnfg)) {
-        LOG.warning("Redirecting System.out and System.err to the log file. "
-            + "Check the log file for the upcoming log messages. ");
-      }
-
-      String persistentLogDir = persistentJobDir + "/logs";
-      File logDir = new File(persistentLogDir);
-      if (!logDir.exists()) {
-        logDir.mkdirs();
-      }
-
-      String logFileName = "jobMaster";
-
-      LoggingHelper.setupLogging(cnfg, persistentLogDir, logFileName);
-
-      LOG.info("Persistent logging to file initialized.");
-    }
   }
 
   /**
@@ -143,22 +96,6 @@ public final class JobMasterStarter {
         Thread.sleep(100000);
       } catch (InterruptedException e) {
         LOG.warning("Thread sleep interrupted.");
-      }
-    }
-  }
-
-  /**
-   * a method to make the worker wait indefinitely
-   */
-  public static void waitIndefinitely2() {
-
-    while (true) {
-      try {
-        System.out.println("Worker thread waiting indefinitely. Sleeping 100sec. "
-            + "Time: " + new java.util.Date());
-        Thread.sleep(100000);
-      } catch (InterruptedException e) {
-        System.out.println("Thread sleep interrupted.");
       }
     }
   }

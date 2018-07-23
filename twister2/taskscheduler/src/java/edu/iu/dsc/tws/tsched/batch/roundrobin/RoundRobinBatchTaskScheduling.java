@@ -32,6 +32,7 @@ import edu.iu.dsc.tws.tsched.spi.taskschedule.ScheduleException;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskInstanceMapCalculation;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedule;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
+import edu.iu.dsc.tws.tsched.utils.TaskVertexParser;
 
 public class RoundRobinBatchTaskScheduling implements TaskSchedule {
 
@@ -62,15 +63,16 @@ public class RoundRobinBatchTaskScheduling implements TaskSchedule {
 
     //Set<Vertex> taskVertexSet = dataFlowTaskGraph.getTaskVertexSet();
     Set<Vertex> taskVertexSet = new LinkedHashSet<>(dataFlowTaskGraph.getTaskVertexSet());
-    List<Set<Vertex>> taskVertexList = parseVertexSet(taskVertexSet, dataFlowTaskGraph);
 
-    LOG.info("Task Vertex Set List Size: %%%%" + taskVertexList.size());
+    //List<Set<Vertex>> taskVertexList = parseVertexSet(taskVertexSet, dataFlowTaskGraph);
+    List<Set<Vertex>> taskVertexList =
+        TaskVertexParser.parseVertexSet(taskVertexSet, dataFlowTaskGraph);
 
     for (int i = 0; i < taskVertexList.size(); i++) {
 
       Set<Vertex> vertexSet = taskVertexList.get(i);
 
-      LOG.info("%%%% Task Vertex Set Size: %%%%" + vertexSet.size());
+      //LOG.info("%%%% Task Vertex Set Size: %%%%" + vertexSet.size());
 
       if (vertexSet.size() > 1) {
         roundrobinContainerInstanceMap = RoundRobinBatchScheduling.
@@ -162,45 +164,12 @@ public class RoundRobinBatchTaskScheduling implements TaskSchedule {
         TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
         Set<TaskSchedulePlan.TaskInstancePlan> taskContainerPlan = containerPlan.getTaskInstances();
         for (TaskSchedulePlan.TaskInstancePlan ip : taskContainerPlan) {
-          LOG.info("Task Id:" + ip.getTaskId() + "\tTask Index" + ip.getTaskIndex()
+          LOG.fine("Task Id:" + ip.getTaskId() + "\tTask Index" + ip.getTaskIndex()
               + "\tTask Name:" + ip.getTaskName() + "\tContainer Id:" + integer);
         }
       }
     }
     return taskSchedulePlanList;
-  }
-
-  @SuppressWarnings("unchecked")
-  private List<Set<Vertex>> parseVertexSet(
-      Set<Vertex> taskVertexSet, DataFlowTaskGraph dataFlowTaskGraph) {
-
-    List<Set<Vertex>> taskVertexList = new ArrayList<>();
-
-    for (Vertex vertex : taskVertexSet) {
-      if (dataFlowTaskGraph.outgoingTaskEdgesOf(vertex).size() >= 2) {
-        Set<Vertex> parentTask = new LinkedHashSet<>();
-        parentTask.add(vertex);
-        taskVertexList.add(parentTask);
-
-        LinkedHashSet<Vertex> vertexSet = (LinkedHashSet) dataFlowTaskGraph.childrenOfTask(vertex);
-        taskVertexList.add(vertexSet);
-
-      } else if (dataFlowTaskGraph.incomingTaskEdgesOf(vertex).size() >= 2) {
-        Set<Vertex> parentTask1 = new LinkedHashSet<>();
-        for (int i = 0; i < taskVertexList.size(); i++) {
-          Set<Vertex> vv = taskVertexList.get(i);
-          for (Vertex vertex1 : vv) {
-            if (!vertex1.getName().equals(vv) && !parentTask1.contains(vertex)) {
-              LOG.info("vv details:" + vertex1.getName()
-                  + "\tvertex details:" + vertex.getName());
-              parentTask1.add(vertex);
-              taskVertexList.add(parentTask1);
-            }
-          }
-        }
-      }
-    }
-    return taskVertexList;
   }
 
   @Override

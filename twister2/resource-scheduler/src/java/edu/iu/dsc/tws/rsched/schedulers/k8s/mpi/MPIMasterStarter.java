@@ -25,6 +25,8 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
+import edu.iu.dsc.tws.master.JobMasterContext;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.K8sEnvVariables;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.PodWatchUtils;
@@ -37,9 +39,11 @@ import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.POD_MEMOR
 /**
  * This class is started in the first pod in a StatefulSet
  * This class will get the PodIP addresses from all pods in a job
+ * When getting the IP addresses, it also waits for all pods to become running
  * It saves those IP addresses to hostfile
+ * It checks whether password free ssh is enabled between this pod and
+ * all other pods in the statefulset
  * It then executes mpirun command to start OpenMPI workers
- * It executes mpirun after all pods become Running.
  */
 public final class MPIMasterStarter {
   private static final Logger LOG = Logger.getLogger(MPIMasterStarter.class.getName());
@@ -53,6 +57,8 @@ public final class MPIMasterStarter {
     // we can not initialize the logger fully yet,
     // but we need to set the format as the first thing
     LoggingHelper.setLoggingFormat(LoggingHelper.DEFAULT_FORMAT);
+
+    String jobMasterIP = System.getenv(K8sEnvVariables.JOB_MASTER_IP + "");
 
     String configDir = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY + "/"
         + KUBERNETES_CLUSTER_TYPE;
@@ -102,8 +108,10 @@ public final class MPIMasterStarter {
       return;
     }
 
-    String jobMasterPodName = KubernetesUtils.createJobMasterPodName(jobName);
-    String jobMasterIP = podNamesIPs.remove(jobMasterPodName);
+    if (!JobMasterContext.jobMasterRunsInClient(config)) {
+      String jobMasterPodName = KubernetesUtils.createJobMasterPodName(jobName);
+      jobMasterIP = podNamesIPs.remove(jobMasterPodName);
+    }
     LOG.info("Job Master IP address: " + jobMasterIP);
 
     long duration = System.currentTimeMillis() - start;
@@ -112,25 +120,23 @@ public final class MPIMasterStarter {
     createHostFile(podIP, podNamesIPs);
 
     String classToRun = "edu.iu.dsc.tws.rsched.schedulers.k8s.mpi.MPIWorkerStarter";
-    String[] mpirunCommand = mpirunCommand(classToRun, workersPerPod, jobMasterIP);
+    String[] mpirunCommand = generateMPIrunCommand(classToRun, workersPerPod, jobMasterIP);
 
-    // some times, sshd may have not been started on one of the pods
-    // even though we received pod Running event
-    // what should we do:
-    // a) send some ssh request to each pod before running mpirun
-    // b) rerun mpirun if it fails (if it fails for some other reasons, it will be rerun???)
-    // c) wait some time before executing mpirun such as 2 seconds
-    // d) register all pods to JobMaster and wait until getting pod ready for each pod
-    //    this does not guarantee actually.
-    //    Since even the pod itself does not know whether sshd started???
+    // when all pods become running, sshd may have not started on some pods yet
+    // it takes some time to start sshd, after pods become running
+    // we check whether password free ssh is enabled from mpimaster pod to all other pods
 
-    try {
-      Thread.sleep(1000);
-    } catch (InterruptedException e) {
-      LOG.warning("Thread sleep interrupted.");
+    start = System.currentTimeMillis();
+    String[] scriptCommand = generateCheckSshCommand(podNamesIPs);
+    boolean pwdFreeSshOk = runScript(scriptCommand);
+    duration = System.currentTimeMillis() - start;
+    LOG.info("Checking password free access took: " + duration + " ms");
+
+    if (pwdFreeSshOk) {
+      executeMpirun(mpirunCommand);
+    } else {
+      LOG.severe("Password free ssh can not be setup among pods. Not running mpirun ...");
     }
-
-    runProcess(mpirunCommand);
 
   }
 
@@ -186,13 +192,17 @@ public final class MPIMasterStarter {
       podNames.add(podName);
     }
 
-    String jobMasterPodName = KubernetesUtils.createJobMasterPodName(jobName);
-    podNames.add(jobMasterPodName);
+    if (!JobMasterContext.jobMasterRunsInClient(config)) {
+      String jobMasterPodName = KubernetesUtils.createJobMasterPodName(jobName);
+      podNames.add(jobMasterPodName);
+    }
 
     return podNames;
   }
 
-  public static String[] mpirunCommand(String className, int workersPerPod, String jobMasterIP) {
+  public static String[] generateMPIrunCommand(String className,
+                                               int workersPerPod,
+                                               String jobMasterIP) {
 
     String commandLineArgument = createJobMasterIPCommandLineArgument(jobMasterIP);
 
@@ -210,9 +220,9 @@ public final class MPIMasterStarter {
   }
 
   /**
-   * sending a command to shell
+   * send mpirun command to shell
    */
-  public static boolean runProcess(String[] command) {
+  public static boolean executeMpirun(String[] command) {
     StringBuilder stderr = new StringBuilder();
     boolean isVerbose = true;
     LOG.info("mpirun will be executed with the command: \n" + commandAsAString(command));
@@ -221,7 +231,7 @@ public final class MPIMasterStarter {
 
     if (status != 0) {
       LOG.severe(String.format(
-          "Failed to execute mpirun. Command=%s, STDERR=%s", commandAsAString(command), stderr));
+          "Failed to execute mpirun command=%s, STDERR=%s", commandAsAString(command), stderr));
     } else {
       LOG.info("mpirun execution completed with success...");
       if (stderr.length() != 0) {
@@ -240,10 +250,17 @@ public final class MPIMasterStarter {
     return command;
   }
 
+  /**
+   * we send the jobMaster IP as a command line parameter to workers
+   * we send it in the form of: "jobMasterIP=ip"
+   */
   public static String createJobMasterIPCommandLineArgument(String value) {
     return "jobMasterIP=" + value;
   }
 
+  /**
+   * retrieve job master ip from the command line parameter
+   */
   public static String getJobMasterIPCommandLineArgumentValue(String commandLineArgument) {
     if (commandLineArgument == null || !commandLineArgument.startsWith("jobMasterIP=")) {
       return null;
@@ -252,4 +269,40 @@ public final class MPIMasterStarter {
     return commandLineArgument.substring(commandLineArgument.indexOf('=') + 1);
   }
 
+  public static String[] generateCheckSshCommand(HashMap<String, String> podNamesIPs) {
+
+    String[] command = new String[podNamesIPs.size() + 1];
+    command[0] = "./check_pwd_free_ssh.sh";
+
+    int index = 1;
+    for (String ip: podNamesIPs.values()) {
+      command[index] = ip;
+      index++;
+    }
+
+    return command;
+  }
+
+  /**
+   * send check ssh script run command to shell
+   */
+  public static boolean runScript(String[] command) {
+    StringBuilder stderr = new StringBuilder();
+    boolean isVerbose = true;
+    String commandStr = commandAsAString(command);
+    LOG.info("the script will be executed with the command: \n" + commandStr);
+
+    int status = ProcessUtils.runSyncProcess(false, command, stderr, new File("."), isVerbose);
+
+    if (status != 0) {
+      LOG.severe(String.format(
+          "Failed to execute the script file command=%s, STDERR=%s", commandStr, stderr));
+    } else {
+      LOG.info("script: check_pwd_free_ssh.sh execution completed with success...");
+      if (stderr.length() != 0) {
+        LOG.info("The error output:\n " + stderr.toString());
+      }
+    }
+    return status == 0;
+  }
 }

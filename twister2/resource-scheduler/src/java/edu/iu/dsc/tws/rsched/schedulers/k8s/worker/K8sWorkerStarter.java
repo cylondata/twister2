@@ -16,16 +16,17 @@ import java.net.UnknownHostException;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
+import edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
+import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.client.JobMasterClient;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.K8sEnvVariables;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
-import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesField;
 import edu.iu.dsc.tws.rsched.spi.container.IPersistentVolume;
 import edu.iu.dsc.tws.rsched.spi.container.IWorker;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
@@ -50,13 +51,21 @@ public final class K8sWorkerStarter {
     LoggingHelper.setLoggingFormat(LoggingHelper.DEFAULT_FORMAT);
 
     // all environment variables
-    int workerPort = Integer.parseInt(System.getenv(KubernetesField.WORKER_PORT + ""));
+    int workerPort = Integer.parseInt(System.getenv(K8sEnvVariables.WORKER_PORT + ""));
+    String containerName = System.getenv(K8sEnvVariables.CONTAINER_NAME + "");
+    String jobMasterIP = System.getenv(K8sEnvVariables.JOB_MASTER_IP + "");
 
     // load the configuration parameters from configuration directory
     String configDir = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY + "/"
         + KUBERNETES_CLUSTER_TYPE;
 
     config = K8sWorkerUtils.loadConfig(configDir);
+
+    // update config with jobMasterIP
+    config = Config.newBuilder()
+        .putAll(config)
+        .put(JobMasterContext.JOB_MASTER_IP, jobMasterIP)
+        .build();
 
     // get podName and podIP from localhost
     InetAddress localHost = null;
@@ -68,7 +77,6 @@ public final class K8sWorkerStarter {
 
     String podIP = localHost.getHostAddress();
     String podName = localHost.getHostName();
-    String containerName = System.getenv(KubernetesField.CONTAINER_NAME + "");
 
     // set workerID
     int containersPerPod = KubernetesContext.workersPerPod(config);
@@ -125,7 +133,7 @@ public final class K8sWorkerStarter {
   /**
    * start the Worker class specified in conf files
    */
-  public static void startWorker(IWorkerController workerController,
+  public static void startWorker(IWorkerDiscoverer workerController,
                                  IPersistentVolume pv) {
 
     String workerClass = SchedulerContext.containerClass(config);

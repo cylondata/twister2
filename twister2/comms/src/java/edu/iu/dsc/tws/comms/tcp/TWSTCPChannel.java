@@ -241,6 +241,8 @@ public class TWSTCPChannel implements TWSChannel {
         }
       }
     }
+
+    comm.progress();
   }
 
   @Override
