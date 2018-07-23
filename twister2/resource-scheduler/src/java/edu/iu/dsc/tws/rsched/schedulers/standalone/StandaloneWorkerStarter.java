@@ -27,14 +27,14 @@ import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
+import edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.bootstrap.JobMasterBasedWorkerController;
+import edu.iu.dsc.tws.rsched.bootstrap.JobMasterBasedWorkerDiscoverer;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.container.IWorker;
@@ -161,7 +161,7 @@ public final class StandaloneWorkerStarter {
 
   private static void createWorker(Config config) {
     // lets create the resource plan
-    IWorkerController workerController = createWorkerController(config);
+    IWorkerDiscoverer workerController = createWorkerController(config);
     WorkerNetworkInfo workerNetworkInfo = workerController.getWorkerNetworkInfo();
 
     String containerClass = SchedulerContext.containerClass(config);
@@ -193,7 +193,7 @@ public final class StandaloneWorkerStarter {
    * @param config config
    * @return
    */
-  private static IWorkerController createWorkerController(Config config) {
+  private static IWorkerDiscoverer createWorkerController(Config config) {
     // first get the worker id
     String indexEnv = System.getenv("NOMAD_ALLOC_INDEX");
     String idEnv = System.getenv("NOMAD_ALLOC_ID");
@@ -214,7 +214,7 @@ public final class StandaloneWorkerStarter {
     JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
     int numberContainers = job.getJobResources().getNoOfContainers();
 
-    return new JobMasterBasedWorkerController(config, index, numberContainers,
+    return new JobMasterBasedWorkerDiscoverer(config, index, numberContainers,
         jobMasterIP, masterPort, ports, localIps);
   }
 

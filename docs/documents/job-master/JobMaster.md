@@ -179,7 +179,7 @@ It sends many worker information on the same message.
 **IWorkerController Implementation**  
 We implemented the WorkerController class that will be used by the workers 
 to interact with the job master. The class name is:
-*	edu.iu.dsc.tws.master.client.WorkerController
+*	edu.iu.dsc.tws.master.client.WorkerDiscoverer
 
 It implements the interface: 
 *	edu.iu.dsc.tws.rsched.bootstrap.IWorkerController

@@ -47,7 +47,7 @@ public class JobMasterClient extends Thread {
 
   private RRClient rrClient;
   private Pinger pinger;
-  private WorkerController workerController;
+  private WorkerDiscoverer workerController;
 
   private boolean startingMessageSent = false;
 
@@ -92,7 +92,7 @@ public class JobMasterClient extends Thread {
     long interval = JobMasterContext.pingInterval(config);
     pinger = new Pinger(thisWorker, rrClient, interval);
 
-    workerController = new WorkerController(config, thisWorker, rrClient, numberOfWorkers);
+    workerController = new WorkerDiscoverer(config, thisWorker, rrClient, numberOfWorkers);
 
     Network.Ping.Builder pingBuilder = Network.Ping.newBuilder();
     rrClient.registerResponseHandler(pingBuilder, pinger);
@@ -126,7 +126,7 @@ public class JobMasterClient extends Thread {
     return true;
   }
 
-  public WorkerController getWorkerController() {
+  public WorkerDiscoverer getWorkerController() {
     return workerController;
   }
 
@@ -324,7 +324,7 @@ public class JobMasterClient extends Thread {
   public static void simulateClient(String masterAddress, int workerTempID,
                                     int numberOfWorkers) {
 
-    InetAddress workerIP = WorkerController.convertStringToIP("149.165.150.81");
+    InetAddress workerIP = WorkerDiscoverer.convertStringToIP("149.165.150.81");
     int workerPort = 10000 + (int) (Math.random() * 10000);
 
     WorkerNetworkInfo workerNetworkInfo = new WorkerNetworkInfo(workerIP, workerPort, workerTempID);

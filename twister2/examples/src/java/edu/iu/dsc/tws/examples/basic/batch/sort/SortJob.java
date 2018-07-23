@@ -24,7 +24,7 @@ import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
+import edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
@@ -68,7 +68,7 @@ public class SortJob implements IWorker {
 
   @Override
   public void init(Config cfg, int wID, ResourcePlan plan,
-                   IWorkerController workerController,
+                   IWorkerDiscoverer workerController,
                    IPersistentVolume persistentVolume,
                    IVolatileVolume volatileVolume) {
     this.config = cfg;
@@ -117,7 +117,7 @@ public class SortJob implements IWorker {
     }
   }
 
-  private void setupNetwork(Config cfg, IWorkerController controller,
+  private void setupNetwork(Config cfg, IWorkerDiscoverer controller,
                             TaskPlan plan, ResourcePlan rPlan) {
     network = Network.initializeNetwork(cfg, controller, plan, rPlan);
     channel = network.getChannel();

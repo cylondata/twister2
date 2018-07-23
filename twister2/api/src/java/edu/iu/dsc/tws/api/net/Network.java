@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
+import edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.net.NetworkInfo;
 import edu.iu.dsc.tws.common.net.tcp.TCPChannel;
@@ -33,7 +33,7 @@ public final class Network {
   private Network() {
   }
 
-  public static TWSNetwork initializeNetwork(Config config, IWorkerController wController,
+  public static TWSNetwork initializeNetwork(Config config, IWorkerDiscoverer wController,
                                              TaskPlan plan, ResourcePlan resourcePlan) {
     if (config.getStringValue("twister2.network.channel.class").equals(
         "edu.iu.dsc.tws.comms.dfw.tcp.TWSTCPChannel")) {
@@ -44,13 +44,13 @@ public final class Network {
   }
 
   private static TWSNetwork initializeMPINetwork(Config config,
-                                          IWorkerController wController, TaskPlan plan) {
+                                                 IWorkerDiscoverer wController, TaskPlan plan) {
     //first get the communication config file
     return new TWSNetwork(config, plan);
   }
 
   private static TWSNetwork initializeTCPNetwork(Config config,
-                                                 IWorkerController wController, TaskPlan plan,
+                                                 IWorkerDiscoverer wController, TaskPlan plan,
                                                  ResourcePlan resourcePlan) {
     TCPChannel channel;
     int index = wController.getWorkerNetworkInfo().getWorkerID();
