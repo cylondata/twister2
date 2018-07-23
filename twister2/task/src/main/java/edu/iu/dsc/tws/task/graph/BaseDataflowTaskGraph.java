@@ -145,10 +145,22 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     return flag;
   }
 
+  /* Commented for duplicate task vertex names in the graph. */
   @Override
   public boolean containsTaskVertex(TV taskVertex) {
     return vertices.contains(taskVertex);
   }
+
+ /* public boolean containsTaskVertex(TV taskVertex) {
+    boolean flag = false;
+    for (DirectedEdge<TV, TE> de : directedEdges) {
+      if (vertexComparator.compare(de.getSourceTaskVertex(), taskVertex) == 0
+          || vertexComparator.compare(de.getTargetTaskVertex(), taskVertex) == 0) {
+        flag = true;
+      }
+    }
+    return flag;
+  }*/
 
   public Set<TE> incomingTaskEdgesOf(TV taskVertex) {
     Set<TE> ret = new HashSet<>();
