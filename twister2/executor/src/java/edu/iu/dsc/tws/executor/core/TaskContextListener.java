@@ -37,5 +37,11 @@ public abstract class TaskContextListener implements ITaskContextListener {
 
   }
 
+  public void addTaskContext(INodeInstance iNodeInstance, TaskContext ctx) {
+    this.instanceContext.put(iNodeInstance, ctx);
+  }
 
+  public HashMap<INodeInstance, TaskContext> getInstanceContext() {
+    return instanceContext;
+  }
 }

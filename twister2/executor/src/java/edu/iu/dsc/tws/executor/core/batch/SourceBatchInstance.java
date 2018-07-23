@@ -151,7 +151,6 @@ public class SourceBatchInstance implements INodeInstance, INodeInstanceListener
 
     // now check the output queue
     while (!outBatchQueue.isEmpty()) {
-      System.out.println("Task Type : " + batchTask.getClass().getName());
       boolean isOQEmpty = outBatchQueue.isEmpty();
       if (!(this.isDone && isOQEmpty)) {
         IMessage message = outBatchQueue.poll();

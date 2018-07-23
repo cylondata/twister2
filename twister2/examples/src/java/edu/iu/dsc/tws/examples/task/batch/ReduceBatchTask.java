@@ -36,6 +36,7 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.executor.api.ExecutionModel;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.executor.comm.tasks.batch.SinkBatchTask;
 import edu.iu.dsc.tws.executor.comm.tasks.batch.SourceBatchTask;
 import edu.iu.dsc.tws.executor.core.CommunicationOperationType;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
@@ -173,9 +174,10 @@ public class ReduceBatchTask implements IContainer {
 
   }
 
-  private static class RecevingTask extends SinkTask implements ITaskContext {
+  private static class RecevingTask extends SinkBatchTask implements ITaskContext {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
+    private Config config;
     private TaskContext sinkTaskContext;
     private SinkTaskContextListener sinkTaskContextListener = new SinkTaskContextListener();
 
@@ -189,7 +191,8 @@ public class ReduceBatchTask implements IContainer {
 
     @Override
     public void prepare(Config cfg, TaskContext context) {
-
+      this.config = cfg;
+      this.sinkTaskContext = context;
     }
 
     @Override
