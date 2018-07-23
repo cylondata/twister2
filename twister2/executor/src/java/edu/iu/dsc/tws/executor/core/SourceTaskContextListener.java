@@ -52,7 +52,7 @@ public class SourceTaskContextListener extends TaskContextListener {
   @Override
   public void onStart() {
     this.instanceBatchContextMap.put(this.sourceBatchTask, this.context);
-    this.addTaskContext((INodeInstance)this.sourceBatchTask, this.context);
+    this.addTaskContext((INodeInstance) this.sourceBatchTask, this.context);
   }
 
   @Override
