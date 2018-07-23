@@ -27,8 +27,6 @@ public class SPartition {
 
   private DataFlowPartition partition;
 
-  private Communicator comm;
-
   private DestinationSelector destinationSelector;
 
   public SPartition(Communicator comm, TaskPlan plan,

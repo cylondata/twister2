@@ -45,7 +45,7 @@ public class BGather {
     this.partition.init(comm.getConfig(), dataType, plan, comm.nextEdge());
   }
 
-  public void partition(int source, Object message, int flags) {
+  public void gather(int source, Object message, int flags) {
     partition.send(source, message, flags);
   }
 

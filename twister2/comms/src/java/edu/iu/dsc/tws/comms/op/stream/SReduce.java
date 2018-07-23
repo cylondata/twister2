@@ -31,35 +31,25 @@ import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowReduce;
-import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceBatchFinalReceiver;
-import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceBatchPartialReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceStreamingFinalReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceStreamingPartialReceiver;
 import edu.iu.dsc.tws.comms.op.Communicator;
-import edu.iu.dsc.tws.comms.op.OperationSemantics;
 
 public class SReduce {
   private static final Logger LOG = Logger.getLogger(SReduce.class.getName());
 
   private DataFlowReduce reduce;
 
-  public SReduce(Communicator comm, OperationSemantics semantics, TaskPlan plan,
+  public SReduce(Communicator comm, TaskPlan plan,
                  Set<Integer> sources, int destination, ReduceFunction fnc,
                  ReduceReceiver rcvr, MessageType dataType) {
-    if (semantics == OperationSemantics.BATCH) {
-      reduce = new DataFlowReduce(comm.getChannel(), sources, destination,
-          new ReduceBatchPartialReceiver(destination, fnc),
-          new ReduceBatchFinalReceiver(fnc, rcvr));
-      reduce.init(comm.getConfig(), dataType, plan, comm.nextEdge());
-    } else if (semantics == OperationSemantics.STREAMING) {
-      reduce = new DataFlowReduce(comm.getChannel(), sources, destination,
-          new ReduceBatchPartialReceiver(destination, fnc),
-          new ReduceBatchFinalReceiver(fnc, rcvr));
-      reduce.init(comm.getConfig(), dataType, plan, comm.nextEdge());
-    } else {
-      throw new UnsupportedOperationException("Not supported semantics: " + semantics);
-    }
+    reduce = new DataFlowReduce(comm.getChannel(), sources, destination,
+        new ReduceStreamingFinalReceiver(fnc, rcvr),
+        new ReduceStreamingPartialReceiver(destination, fnc));
+    reduce.init(comm.getConfig(), dataType, plan, comm.nextEdge());
   }
 
-  public boolean send(int src, Object message, int flags) {
+  public boolean reduce(int src, Object message, int flags) {
     return reduce.send(src, message, flags);
   }
 }

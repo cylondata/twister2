@@ -18,7 +18,6 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowBroadcast;
 import edu.iu.dsc.tws.comms.op.Communicator;
-import edu.iu.dsc.tws.comms.op.DestinationSelector;
 
 public class SBroadCast {
   private DataFlowBroadcast partition;
@@ -27,13 +26,12 @@ public class SBroadCast {
 
   public SBroadCast(Communicator comm, TaskPlan plan,
                     int sources, Set<Integer> destinations, MessageType dataType,
-                    MessageReceiver rcvr,
-                    DestinationSelector destSelector) {
+                    MessageReceiver rcvr) {
     this.partition = new DataFlowBroadcast(comm.getChannel(), sources, destinations, rcvr);
     this.partition.init(comm.getConfig(), dataType, plan, comm.nextEdge());
   }
 
-  public void partition(int source, Object message, int flags) {
+  public void bcast(int source, Object message, int flags) {
     partition.send(source, message, flags);
   }
 }
