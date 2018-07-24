@@ -42,13 +42,14 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowReduce;
-import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceStreamingFinalReceiver;
-import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceStreamingPartialReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceBatchFinalReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceBatchPartialReceiver;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.api.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.api.EdgeGenerator;
@@ -70,8 +71,8 @@ public class ReduceBatchOperation extends AbstractParallelOperation {
                       DataType dataType, String edgeName) {
     this.edge = e;
     op = new DataFlowReduce(channel, sources, dest,
-        new ReduceStreamingFinalReceiver(new IdentityFunction(), new FinalReduceReceiver()),
-        new ReduceStreamingPartialReceiver(dest, new IdentityFunction()));
+        new ReduceBatchFinalReceiver(new IdentityFunction(), new FinalReduceReceiver()),
+        new ReduceBatchPartialReceiver(dest, new IdentityFunction()));
     communicationEdge = e.generate(edgeName);
     LOG.info("===Communication Edge : " + communicationEdge);
     op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
@@ -79,6 +80,7 @@ public class ReduceBatchOperation extends AbstractParallelOperation {
 
   @Override
   public boolean send(int source, IMessage message, int flags) {
+    //LOG.log(Level.INFO, String.format("Message %s", message.getContent()));
     return op.send(source, message.getContent(), flags);
   }
 
@@ -105,13 +107,28 @@ public class ReduceBatchOperation extends AbstractParallelOperation {
   }
 
 
-  public class FinalReduceReceiver implements ReduceReceiver {
+  public class FinalReduceReceiver implements ReduceReceiver, MessageReceiver {
     private int count = 0;
 
     @Override
     public void init(Config cfg, DataFlowOperation operation,
                      Map<Integer, List<Integer>> expectedIds) {
 
+    }
+
+    @Override
+    public boolean onMessage(int source, int destination, int target, int flags, Object object) {
+      return false;
+    }
+
+    @Override
+    public void onFinish(int target) {
+      //op.finish(target);
+    }
+
+    @Override
+    public void progress() {
+      //LOG.log(Level.INFO, String.format("Comes to Progress "));
     }
 
     @Override

@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.executor.api.DefaultOutputCollection;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.INodeInstanceListener;
@@ -157,10 +158,18 @@ public class SourceBatchInstance implements INodeInstance, INodeInstanceListener
         if (message != null) {
           String edge = message.edge();
           IParallelOperation op = outBatchParOps.get(edge);
-          while (!op.send(batchTaskId, message, 0)) {
+          while (!op.send(batchTaskId, message, MessageFlags.FLAGS_LAST)) {
             //
           }
         }
+      } else {
+        System.out.println("Final Message @SourceBatchInstance");
+        /*IMessage message = outBatchQueue.poll();
+        if (message != null) {
+          String edge = message.edge();
+          IParallelOperation op = outBatchParOps.get(edge);
+          op.send(batchTaskId, message, MessageFlags.FLAGS_LAST);
+        }*/
       }
     }
 

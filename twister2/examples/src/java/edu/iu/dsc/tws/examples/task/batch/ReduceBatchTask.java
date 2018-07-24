@@ -103,42 +103,19 @@ public class ReduceBatchTask implements IContainer {
 
     @Override
     public void run() {
-      if (count < 5) {
-        if (count == 0) {
-          System.out.println("Message Writing Started : " + count);
-        }
+
+      if (count == 0) {
         this.sourceTaskContext.write("reduce-edge", "Hello " + count);
       }
 
-      if (5 < count && count < 10) {
-        if (!this.sourceTaskContext.isDone()) {
-          System.out.println("Message Writing Stopped : " + count);
-        }
+      if (count > 10) {
         this.sourceTaskContext.setDone(true);
         this.sourceTaskContextListener.mutateContext(sourceTaskContext);
         this.setSourceTaskContextListener(this.sourceTaskContextListener);
       }
-
-      if (count > 10 && count < 15) {
-        if (this.sourceTaskContext.isDone() && count == 11) {
-          System.out.println("Message Writing Restarted : " + count);
-        }
-        this.sourceTaskContext.setDone(false);
-        this.sourceTaskContextListener.mutateContext(sourceTaskContext);
-        this.setSourceTaskContextListener(this.sourceTaskContextListener);
-        this.sourceTaskContext.write("reduce-edge", "Jello " + count);
-      }
-
-      if (count < 15) {
-        if (!this.sourceTaskContext.isDone()) {
-          System.out.println("Message Writing Stopped : " + count);
-        }
-        this.sourceTaskContext.setDone(true);
-        this.sourceTaskContextListener.mutateContext(sourceTaskContext);
-        this.setSourceTaskContextListener(this.sourceTaskContextListener);
-      }
-
       count++;
+
+
     }
 
     @Override

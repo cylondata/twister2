@@ -14,7 +14,6 @@ package edu.iu.dsc.tws.executor.core;
 import java.util.HashMap;
 import java.util.Map;
 
-import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.comm.tasks.batch.SourceBatchTask;
 import edu.iu.dsc.tws.task.api.SourceTask;
 import edu.iu.dsc.tws.task.api.TaskContext;
@@ -52,7 +51,7 @@ public class SourceTaskContextListener extends TaskContextListener {
   @Override
   public void onStart() {
     this.instanceBatchContextMap.put(this.sourceBatchTask, this.context);
-    this.addTaskContext((INodeInstance) this.sourceBatchTask, this.context);
+    //this.addTaskContext((INodeInstance) this.sourceBatchTask, this.context);
   }
 
   @Override
