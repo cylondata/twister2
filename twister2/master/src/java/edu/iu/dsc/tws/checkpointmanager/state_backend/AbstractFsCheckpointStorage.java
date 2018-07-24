@@ -44,6 +44,10 @@ public abstract class AbstractFsCheckpointStorage implements CheckpointStorage {
     return null;
   }
 
+  protected static Path getCheckpointDirectoryForJob(Path baseCheckpointPath, String jobName) {
+    return new Path(baseCheckpointPath, jobName);
+  }
+
   protected static Path createCheckpointDirectory(Path baseDirectory, long checkpointId) {
     return new Path(baseDirectory, CHECKPOINT_DIR_PREFIX + checkpointId);
   }

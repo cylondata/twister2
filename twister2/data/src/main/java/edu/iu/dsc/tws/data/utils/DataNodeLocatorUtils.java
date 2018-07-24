@@ -9,7 +9,19 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.tsched.utils;
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+package edu.iu.dsc.tws.data.utils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +34,6 @@ import edu.iu.dsc.tws.data.api.HDFSConnector;
 import edu.iu.dsc.tws.data.fs.FileStatus;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.hdfs.HadoopFileSystem;
-import edu.iu.dsc.tws.data.utils.HdfsDataContext;
 
 /**
  * This class is just to retrieve the data node location values corresponding to the
@@ -84,8 +95,8 @@ public class DataNodeLocatorUtils {
           String fileURL = fileStatus.getPath().toString();
           String datanodeName = hdfsConnector.getDFSCK(fName);
 
-          LOG.info("HDFS File URL is:" + fileURL
-              + "and Data Node Name is:" + datanodeName);
+          /*LOG.info("HDFS File URL is:" + fileURL
+              + "and Data Node Name is:" + datanodeName);*/
 
           if ("dataset1.txt".equals(datasetName)) {
             dataNodes.add("datanode1");
@@ -139,7 +150,7 @@ public class DataNodeLocatorUtils {
 
       if (!fileStatus.getPath().isNullOrEmpty()) {
         String fileURL = fileStatus.getPath().toString();
-        LOG.info("HDFS File URL is:" + fileURL);
+//        LOG.info("HDFS File URL is:" + fileURL);
         if ("dataset1.txt".equals(datasetName)) {
           dataNodes.add("datanode1");
           dataNodes.add("datanode2");

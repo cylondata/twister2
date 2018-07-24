@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 import edu.iu.dsc.tws.executor.comm.IParallelOperation;
+import edu.iu.dsc.tws.task.graph.Vertex;
 
 public class ExecutionPlan {
 
@@ -25,6 +26,8 @@ public class ExecutionPlan {
   private Map<Integer, INodeInstance> nodes = new HashMap<>();
 
   private List<IParallelOperation> parallelOperations = new ArrayList<>();
+
+  private  HashMap<Vertex, List<Vertex>> incomingVertex = new HashMap<>();
 
   /**
    * Add a node instance of this execution
@@ -58,4 +61,15 @@ public class ExecutionPlan {
   public void setNumThreads(int numThreads) {
     this.numThreads = numThreads;
   }
+
+  public void addIncomingVertex(Vertex parent, Vertex child) {
+    if (this.incomingVertex.containsKey(child)) {
+      this.incomingVertex.get(child).add(parent);
+    } else {
+      List<Vertex> parentVertex = new ArrayList<>();
+      parentVertex.add(child);
+      this.incomingVertex.put(child, parentVertex);
+    }
+  }
+
 }

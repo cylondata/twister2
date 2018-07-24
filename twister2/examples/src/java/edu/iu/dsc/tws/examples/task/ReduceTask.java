@@ -27,6 +27,7 @@ import edu.iu.dsc.tws.executor.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.ExecutionModel;
 import edu.iu.dsc.tws.executor.threading.ThreadExecutor;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
@@ -43,11 +44,14 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
+
 public class ReduceTask implements IContainer {
   @Override
   public void init(Config config, int id, ResourcePlan resourcePlan) {
     GeneratorTask g = new GeneratorTask();
     RecevingTask r = new RecevingTask();
+
+    System.out.println("Config-Threads : " + SchedulerContext.numOfThreads(config));
 
     GraphBuilder builder = GraphBuilder.newBuilder();
     builder.addSource("source", g);
@@ -139,10 +143,14 @@ public class ReduceTask implements IContainer {
 
   public static void main(String[] args) {
     // first load the configurations from command line and config files
-    Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
+    Config config = ResourceAllocator.loadConfig(new HashMap<>());
+    HashMap<String, String> confs = new HashMap<>();
+    confs.put(SchedulerContext.THREADS_PER_WORKER, new String("2"));
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
+    jobConfig.putAll(confs);
+
 
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
     jobBuilder.setName("reduce-task");

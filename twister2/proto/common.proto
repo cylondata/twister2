@@ -1,12 +1,12 @@
-syntax = "proto2";
+syntax = "proto3";
 package tws.proto.common;
 
 option java_package = "edu.iu.dsc.tws.proto.system";
 option java_outer_classname = "Common";
 
 enum StatusCode {
-    OK = 1;
-    NOTOK = 2; //generic not ok message
+    OK = 0;
+    NOTOK = 1; //generic not ok message
 
     // These are messages that are seen by the external applications
     INVALID_JOB_NAME = 100;
@@ -24,8 +24,8 @@ enum StatusCode {
 }
 
 message Status {
-    required StatusCode status = 1;
-    optional string message = 2;
+    StatusCode status = 1;
+    string message = 2;
 }
 
 

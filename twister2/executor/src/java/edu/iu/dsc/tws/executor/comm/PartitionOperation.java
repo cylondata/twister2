@@ -34,8 +34,8 @@ import edu.iu.dsc.tws.task.api.TaskMessage;
 public class PartitionOperation extends AbstractParallelOperation {
   private static final Logger LOG = Logger.getLogger(PartitionOperation.class.getName());
   private HashMap<Integer, ArrayList<Integer>> barrierMap = new HashMap<>();
-  private HashMap<Integer, Integer> incommingMap = new HashMap<>();
-  private HashMap<Integer, ArrayList<Object>> incommingBuffer = new HashMap<>();
+  private HashMap<Integer, Integer> incomingMap = new HashMap<>();
+  private HashMap<Integer, ArrayList<Object>> incomingBuffer = new HashMap<>();
 
   protected DataFlowPartition op;
 
@@ -93,10 +93,10 @@ public class PartitionOperation extends AbstractParallelOperation {
             barrierMap.get(source).add(destination);
             ArrayList<Object> bufferMessege = new ArrayList<>();
             bufferMessege.add(object);
-            incommingBuffer.put(source, bufferMessege);
+            incomingBuffer.put(source, bufferMessege);
           }
-        } else if (barrierMap.get(source).size() == incommingMap.get(source)) {
-          for (Object message : incommingBuffer.get(source)) {
+        } else if (barrierMap.get(source).size() == incomingMap.get(source)) {
+          for (Object message : incomingBuffer.get(source)) {
             if (message instanceof List) {
               for (Object o : (List) message) {
                 TaskMessage msg = new TaskMessage(o,

@@ -51,8 +51,9 @@ public final class MesosContext extends SchedulerContext {
   public static final String CONTAINER_PER_WORKER = "twister2.container_per_worker";
   public static final String WORKER_PORT = "twister2.worker_port";
   public static final String DESIRED_NODES = "twister2.desired_nodes";
-
-
+  public static final String USE_DOCKER_CONTAINER = "twister2.use_docker_container";
+  public static final String MESOS_OVERLAY_NETWORK_NAME = "twister2.mesos.overlay.network.name";
+  public static final String DOCKER_IMAGE_NAME = "twister2.docker.image.name";
   public static final String MESOS_WORKER_CLASS = "twister2.class.mesos.worker";
 
   public static final int DEFAULT_RAM_SIZE = 128; // 1GB
@@ -62,6 +63,7 @@ public final class MesosContext extends SchedulerContext {
   public static final int DEFAULT_CONTAINER_PER_WORKER = 1;
   public static final int DEFAULT_WORKER_PORT = 31000;
   public static final String DEFAULT_DESIRED_NODE = "all";
+  public static final String DEFAULT_USE_DOCKER_CONTAINER = "false";
 
   private MesosContext() {
   }
@@ -73,6 +75,18 @@ public final class MesosContext extends SchedulerContext {
 
   public static String getDesiredNodes(Config cfg) {
     return cfg.getStringValue(DESIRED_NODES, DEFAULT_DESIRED_NODE);
+  }
+
+  public static String getUseDockerContainer(Config cfg) {
+    return cfg.getStringValue(USE_DOCKER_CONTAINER, DEFAULT_USE_DOCKER_CONTAINER);
+  }
+
+  public static String getMesosOverlayNetworkName(Config cfg) {
+    return cfg.getStringValue(MESOS_OVERLAY_NETWORK_NAME);
+  }
+
+  public static String getDockerImageName(Config cfg) {
+    return cfg.getStringValue(DOCKER_IMAGE_NAME);
   }
 
   public static String role(Config cfg) {

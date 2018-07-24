@@ -26,15 +26,12 @@ import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.protocol.ClientProtocol;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants;
-import org.apache.hadoop.hdfs.tools.DFSck;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.hdfs.HadoopDataOutputStream;
 import edu.iu.dsc.tws.data.hdfs.HadoopFileSystem;
 import edu.iu.dsc.tws.data.utils.HdfsDataContext;
-
-import static org.apache.hadoop.util.ToolRunner.run;
 
 /**
  * This is the abstraction class for the HDFS file system and establishing
@@ -93,8 +90,8 @@ public class HDFSConnector implements IHDFSConnector {
           HdfsDataContext.getHdfsUrlDefault(config) + "/user/kannan/" + outputFile;
       Path path = new Path(directoryString);
       if (!hadoopFileSystem.exists(path)) {
-        LOG.info("Directory String Is:%%%" + directoryString + "\t"
-            + "Output File Is:%%%" + outputFile);
+        /*LOG.info("Directory String Is:%%%" + directoryString + "\t"
+            + "Output File Is:%%%" + outputFile);*/
         hadoopDataOutputStream = hadoopFileSystem.create(path);
         hadoopDataOutputStream.write(
             "Hello, I am writing to Hadoop Data Output Stream\n".getBytes(DEFAULT_CHARSET));
@@ -133,8 +130,8 @@ public class HDFSConnector implements IHDFSConnector {
       String directoryString = HdfsDataContext.getHdfsUrlDefault(config)
           + "/user/kannan/" + outputFile;
 
-      LOG.info("Directory String Is:%%%" + directoryString + "\t"
-          + "Output File Is:%%%" + outputFile);
+      /*LOG.info("Directory String Is:%%%" + directoryString + "\t"
+          + "Output File Is:%%%" + outputFile);*/
 
       Path path = new Path(directoryString);
       if (!hadoopFileSystem.exists(path)) {
@@ -164,10 +161,13 @@ public class HDFSConnector implements IHDFSConnector {
 
     Configuration conf = new Configuration(false);
     conf.addResource(new org.apache.hadoop.fs.Path(HdfsDataContext.getHdfsConfigDirectory(config)));
+
     ByteArrayOutputStream bStream = new ByteArrayOutputStream();
     PrintStream out = new PrintStream(bStream, true);
+
     String datanodeName = null;
     StringBuilder stringBuilder = new StringBuilder();
+
     try {
       InetSocketAddress namenodeAddress =
           new InetSocketAddress("hairy.soic.indiana.edu", 9000);
@@ -177,11 +177,9 @@ public class HDFSConnector implements IHDFSConnector {
           nameNode.getDatanodeReport(HdfsConstants.DatanodeReportType.ALL);
       for (DatanodeInfo di : datanodeReport) {
         datanodeName = di.getHostName();
-        LOG.info("DataNode Name: " + datanodeName);
-        //System.out.println("Data Node Details:" + di.getDatanodeReport());
       }
-      run(new DFSck(conf, out), fName);
-      System.out.println(bStream.toString());
+      //It will be enabled later...!
+      //run(new DFSck(conf, out), fName);
       //out.println();
     } catch (IOException ioe) {
       ioe.printStackTrace();

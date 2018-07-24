@@ -30,13 +30,14 @@ import edu.iu.dsc.tws.common.config.Config;
 
 public class MesosScheduler implements Scheduler {
   public static final Logger LOG = Logger.getLogger(MesosScheduler.class.getName());
+  private final String jobName;
   private int taskIdCounter = 0;
   private Config config;
   private MesosController controller;
   private int completedTaskCounter = 0;
   private int totalTaskCount;
-  private final String jobName;
   private int workerCounter = 0;
+  private int[] offerControl = new int[3];
 
   public MesosScheduler(MesosController controller, Config mconfig, String jobName) {
     this.controller = controller;
@@ -65,8 +66,6 @@ public class MesosScheduler implements Scheduler {
     }
     return false;
   }
-
-  private int[] offerControl = new int[3];
 
   @Override
   public void resourceOffers(SchedulerDriver schedulerDriver,
@@ -105,81 +104,80 @@ public class MesosScheduler implements Scheduler {
             //creates directory for each worker
             pv.getWorkerDir();
 
-           /* Protos.ExecutorInfo executorInfo =
-                controller.getExecutorInfo(jobName,
-                    MesosPersistentVolume.WORKER_DIR_NAME_PREFIX + workerCounter);
-            pv.getWorkerDir();
-            */
 
-            //workerCounter++;
+
+
             Protos.TaskID taskId = buildNewTaskID();
 
             int begin = MesosContext.getWorkerPort(config) + taskIdCounter * 10;
             int end = begin + 5;
 
 
-            /*Protos.ContainerInfo.DockerInfo.PortMapping mapping
-                = Protos.ContainerInfo.DockerInfo.PortMapping
-                .newBuilder().setHostPort(begin).setContainerPort(22).build();*/
 
-            Protos.Parameter hostIpParam = Protos.Parameter.newBuilder().setKey("env")
-                .setValue("HOST_IP=" + offer.getHostname()).build();
 
-            Protos.Parameter sshPortParam = Protos.Parameter.newBuilder().setKey("env")
-                .setValue("SSH_PORT=" + begin).build();
-
-            Protos.Parameter jobNameParam = Protos.Parameter.newBuilder().setKey("env")
-                .setValue("JOB_NAME=" + jobName).build();
-
-            Protos.Parameter workerIdParam = Protos.Parameter.newBuilder().setKey("env")
-                .setValue("WORKER_ID=" + workerCounter++).build();
-
-            //.setValue("SSH_PORT=" + begin).build();
-            // docker image info
-            Protos.ContainerInfo.DockerInfo.Builder dockerInfoBuilder
-                = Protos.ContainerInfo.DockerInfo.newBuilder();
-            dockerInfoBuilder.setImage("gurhangunduz/twister2-mesos:docker-mpi");
-            Protos.NetworkInfo netInfo = Protos.NetworkInfo.newBuilder()
-                .setName("mesos-overlay").build();
-            //dockerInfoBuilder.addPortMappings(mapping);
-            dockerInfoBuilder.setNetwork(Protos.ContainerInfo.DockerInfo.Network.USER);
-            dockerInfoBuilder.addParameters(hostIpParam);
-            dockerInfoBuilder.addParameters(sshPortParam);
-            dockerInfoBuilder.addParameters(jobNameParam);
-            dockerInfoBuilder.addParameters(workerIdParam);
-            Protos.Volume volume = Protos.Volume.newBuilder()
-                .setContainerPath("/twister2/")
-                .setHostPath(".")
-                .setMode(Protos.Volume.Mode.RW)
-                .build();
-
-            Protos.Volume persistentVolume = Protos.Volume.newBuilder()
-                .setContainerPath("/persistent-volume/")
-                .setHostPath(persistentVolumeDir)
-                .setMode(Protos.Volume.Mode.RW)
-                .build();
-
-            // container info
-            Protos.ContainerInfo.Builder containerInfoBuilder = Protos.ContainerInfo.newBuilder();
-            containerInfoBuilder.setType(Protos.ContainerInfo.Type.DOCKER);
-            containerInfoBuilder.addVolumes(volume);
-            containerInfoBuilder.addVolumes(persistentVolume);
-            containerInfoBuilder.setDocker(dockerInfoBuilder.build());
-            containerInfoBuilder.addNetworkInfos(netInfo);
-
-            TaskInfo task = TaskInfo.newBuilder()
+            Protos.TaskInfoOrBuilder taskBuilder = TaskInfo.newBuilder()
                 .setName("task " + taskId).setTaskId(taskId)
                 .setSlaveId(offer.getSlaveId())
                 .addResources(buildResource("cpus", MesosContext.cpusPerContainer(config)))
                 .addResources(buildResource("mem", MesosContext.ramPerContainer(config)))
                 .addResources(buildRangeResource("ports", begin, end))
-                .setData(ByteString.copyFromUtf8("" + taskId.getValue()))
-                //.setExecutor(Protos.ExecutorInfo.newBuilder(executorInfo))
-                .setContainer(containerInfoBuilder)
-                .setCommand(Protos.CommandInfo.newBuilder().setShell(false))
-                .build();
+                .setData(ByteString.copyFromUtf8("" + taskId.getValue()));
 
-            launch.addTaskInfos(TaskInfo.newBuilder(task));
+
+            //Docker specific configurations
+            if (MesosContext.getUseDockerContainer(config).equals("true")) {
+
+              Protos.Parameter jobNameParam = Protos.Parameter.newBuilder().setKey("env")
+                  .setValue("JOB_NAME=" + jobName).build();
+
+              Protos.Parameter workerIdParam = Protos.Parameter.newBuilder().setKey("env")
+                  .setValue("WORKER_ID=" + workerCounter++).build();
+
+
+              // docker image info
+              Protos.ContainerInfo.DockerInfo.Builder dockerInfoBuilder
+                  = Protos.ContainerInfo.DockerInfo.newBuilder();
+              dockerInfoBuilder.setImage(MesosContext.getDockerImageName(config));
+              Protos.NetworkInfo netInfo = Protos.NetworkInfo.newBuilder()
+                  .setName(MesosContext.getMesosOverlayNetworkName(config)).build();
+              dockerInfoBuilder.setNetwork(Protos.ContainerInfo.DockerInfo.Network.USER);
+              dockerInfoBuilder.addParameters(jobNameParam);
+              dockerInfoBuilder.addParameters(workerIdParam);
+              Protos.Volume volume = Protos.Volume.newBuilder()
+                  .setContainerPath("/twister2/")
+                  .setHostPath(".")
+                  .setMode(Protos.Volume.Mode.RW)
+                  .build();
+
+              Protos.Volume persistentVolume = Protos.Volume.newBuilder()
+                  .setContainerPath("/persistent-volume/")
+                  .setHostPath(persistentVolumeDir)
+                  .setMode(Protos.Volume.Mode.RW)
+                  .build();
+
+              // container info
+              Protos.ContainerInfo.Builder containerInfoBuilder = Protos.ContainerInfo.newBuilder();
+              containerInfoBuilder.setType(Protos.ContainerInfo.Type.DOCKER);
+              containerInfoBuilder.addVolumes(volume);
+              containerInfoBuilder.addVolumes(persistentVolume);
+              containerInfoBuilder.setDocker(dockerInfoBuilder.build());
+              containerInfoBuilder.addNetworkInfos(netInfo);
+              ((TaskInfo.Builder) taskBuilder).setContainer(containerInfoBuilder);
+              ((TaskInfo.Builder) taskBuilder)
+                  .setCommand(Protos.CommandInfo.newBuilder().setShell(false));
+            } else {
+
+              Protos.ExecutorInfo executorInfo =
+                  controller.getExecutorInfo(jobName,
+                      MesosPersistentVolume.WORKER_DIR_NAME_PREFIX + workerCounter);
+
+              ((TaskInfo.Builder) taskBuilder)
+                  .setExecutor(Protos.ExecutorInfo.newBuilder(executorInfo));
+
+            }
+
+            launch.addTaskInfos(((TaskInfo.Builder) taskBuilder).build());
+
           }
 
           List<Protos.OfferID> offerIds = new ArrayList<>();

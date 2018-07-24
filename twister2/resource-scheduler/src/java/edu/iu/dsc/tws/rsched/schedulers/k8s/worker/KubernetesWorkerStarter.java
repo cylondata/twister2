@@ -51,8 +51,8 @@ import static edu.iu.dsc.tws.common.config.Context.DIR_PREFIX_FOR_JOB_ARCHIVE;
 import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.KUBERNETES_CLUSTER_TYPE;
 import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.POD_MEMORY_VOLUME;
 
-public final class KubernetesWorker {
-  private static final Logger LOG = Logger.getLogger(KubernetesWorker.class.getName());
+public final class KubernetesWorkerStarter {
+  private static final Logger LOG = Logger.getLogger(KubernetesWorkerStarter.class.getName());
 
   public static final String UNPACK_COMPLETE_FILE_NAME = "unpack-complete.txt";
   public static final long FILE_WAIT_SLEEP_INTERVAL = 30;
@@ -62,7 +62,7 @@ public final class KubernetesWorker {
   public static WorkerNetworkInfo thisWorker;
   public static JobMasterClient jobMasterClient;
 
-  private KubernetesWorker() {
+  private KubernetesWorkerStarter() {
   }
 
   public static void main(String[] args) {
@@ -114,7 +114,7 @@ public final class KubernetesWorker {
     // initialize the logger file
     initLogger(workerID, pv, envConfigs);
 
-    LOG.info("KubernetesWorker started. Current time: " + System.currentTimeMillis());
+    LOG.info("KubernetesWorkerStarter started. Current time: " + System.currentTimeMillis());
     LOG.info("Received parameters as environment variables: \n"
         + logBuffer.toString() + "\n" + envConfigs);
 
