@@ -504,5 +504,8 @@ the following command needs to be executed:
 
     $kubectl create -f twister2-auth.yaml
   
-[**Secret Object**](TBD): To be done
-
+[**Secret Object**](yaml-templates/secret.yaml): 
+When using OpenMPI communications in Twister2, pods need to have password-free SSH access 
+among them. This is accomplished by first generating an SSH key pair and 
+deploying them as a Kubernetes Secret object on the cluster. 
+Please check [the document](install/Twister2-Kubernetes-install.md) for deploying the Secret object.

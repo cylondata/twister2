@@ -28,3 +28,33 @@ https://github.com/kubernetes-incubator/external-storage/tree/master/nfs
 
 Before proceeding with Twister2, make sure you either setup a static PersistentVolume
 or deployed a persistent storage provisioner.
+
+## Generating Secret Object for OpenMPI Jobs
+When using OpenMPI communications in Twister2, pods need to have password-free SSH access 
+among them. This is accomplished by first generating an SSH key pair and 
+deploying them as a Kubernetes Secret on the cluster. 
+
+First, generate an SSH key pair by using:
+
+    $ssh-keygen
+
+Second, create a Kubernetes Secret object for the namespace of Twister2 users: 
+
+    $kubectl create secret generic twister2-openmpi-ssh-key --from-file=id_rsa=/path/to/.ssh/id_rsa --from-file=id_rsa.pub=/path/to/.ssh/id_rsa.pub --from-file=authorized_keys=/path/to/.ssh/id_rsa.pub --namespace=default
+
+The fifth parameter is the name of the Secret object to be generated. 
+That has to match the configuration parameter in the configuration files: 
+
+    kubernetes.secret.name
+
+You can retrieve the Secret object by executing in YAML form:
+
+    $kubectl get secret <secret-name> -o=yaml
+
+Another possibility for deploying the Secret object is to use the [YAML file template](../yaml-templates/secret.yaml). 
+You can edit that secret.yaml file. You can put the public and private keys to the corresponding fields.
+You can set the name and the namespace values. Then, you can create the Secret object by using
+kubectl method as:
+
+    $kubectl create secret -f /path/to/file/secret.yaml
+

@@ -159,7 +159,7 @@ public final class RequestObjectBuilder {
 
     // if openmpi is used, we initialize a Secret volume on each pod
     if (KubernetesContext.workersUseOpenMPI(config)) {
-      String secretName = "kubempi-ssh-key";
+      String secretName = KubernetesContext.secretName(config);
       V1Volume secretVolume = createSecretVolumeObject(secretName);
       volumes.add(secretVolume);
     }
