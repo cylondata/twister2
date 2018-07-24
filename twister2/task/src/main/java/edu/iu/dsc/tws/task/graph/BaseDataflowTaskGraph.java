@@ -396,9 +396,7 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     boolean flag = false;
     for (DirectedEdge<TV, TE> de : directedEdges) {
       if (de.sourceTaskVertex.equals(de.targetTaskVertex)) {
-        System.out.println("Self-loop detected for the task vertex:"
-            + de.sourceTaskVertex + "\t" + de.targetTaskVertex);
-        throw new RuntimeException("Self-loop detected for the taskgraph:");
+        throw new RuntimeException("Self-loop detected for the taskgraph");
       }
     }
     return flag;
