@@ -603,7 +603,13 @@ public final class RequestObjectBuilder {
     pvcSpec.setAccessModes(Arrays.asList(accessMode));
 
     V1ResourceRequirements resources = new V1ResourceRequirements();
-    double storageSize = SchedulerContext.persistentVolumePerWorker(config);
+    double storageSize =
+        SchedulerContext.persistentVolumePerWorker(config) * Context.workerInstances(config);
+
+    if (!JobMasterContext.jobMasterRunsInClient(config)) {
+      storageSize += JobMasterContext.persistentVolumeSize(config);
+    }
+
     resources.putRequestsItem("storage", new Quantity(storageSize + "Gi"));
     pvcSpec.setResources(resources);
 
