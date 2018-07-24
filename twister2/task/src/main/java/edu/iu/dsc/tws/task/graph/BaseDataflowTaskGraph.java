@@ -139,7 +139,8 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     boolean flag = false;
     for (DirectedEdge<TV, TE> de : directedEdges) {
       if (edgeComparator.compare(de.taskEdge, taskEdge) == 0) {
-        flag = true;
+        //flag = true;
+        throw new RuntimeException("Duplicate task edges found for the task edge:" + taskEdge);
       }
     }
     return flag;
@@ -150,17 +151,6 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
   public boolean containsTaskVertex(TV taskVertex) {
     return vertices.contains(taskVertex);
   }
-
- /* public boolean containsTaskVertex(TV taskVertex) {
-    boolean flag = false;
-    for (DirectedEdge<TV, TE> de : directedEdges) {
-      if (vertexComparator.compare(de.getSourceTaskVertex(), taskVertex) == 0
-          || vertexComparator.compare(de.getTargetTaskVertex(), taskVertex) == 0) {
-        flag = true;
-      }
-    }
-    return flag;
-  }*/
 
   public Set<TE> incomingTaskEdgesOf(TV taskVertex) {
     Set<TE> ret = new HashSet<>();
@@ -356,19 +346,6 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
    *
    */
   public boolean validate() {
-
-    /*boolean flag = false;
-    Set<TV> taskVertexSet = getTaskVertexSet();
-    for (TV tv : taskVertexSet) {
-      flag = validateTaskVertex(tv);
-    }
-    Iterator<DirectedEdge<TV, TE>> it = directedEdges.iterator();
-    while (it.hasNext()) {
-      DirectedEdge<TV, TE> de = it.next();
-      LOG.info("Directed Edge:%%%" + de.getTaskEdge());
-    }
-    return flag;*/
-
     return true;
   }
 
@@ -393,7 +370,6 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
           "No task Edge in this task graph: " + taskEdge.toString());
     }
   }
-
 
   /**
    * Build the internal structures of the graph, so that it can be searched
