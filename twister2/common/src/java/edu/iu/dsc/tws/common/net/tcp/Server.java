@@ -85,15 +85,16 @@ public class Server implements SelectHandler {
       serverSocketChannel = ServerSocketChannel.open();
       serverSocketChannel.configureBlocking(false);
       serverSocketChannel.socket().bind(address);
+      LOG.log(Level.INFO, String.format("Starting server on %s:%d",
+          address.getHostName(), address.getPort()));
       progress.registerAccept(serverSocketChannel, this);
       return true;
     } catch (IOException e) {
       LOG.log(Level.SEVERE, "Failed to start server", e);
-      return false;
+      throw new RuntimeException("Failed to start server", e);
     }
   }
 
-  // Stop the HeronServer and clean relative staff
   public void stop() {
     if (serverSocketChannel == null || !serverSocketChannel.isOpen()) {
       LOG.info("Fail to stop server; not yet open.");
@@ -118,6 +119,8 @@ public class Server implements SelectHandler {
     if (channel == null) {
       return null;
     }
+    buffer.limit(size);
+    buffer.position(0);
 
     channel.enableWriting();
 
@@ -163,6 +166,7 @@ public class Server implements SelectHandler {
   public void handleAccept(SelectableChannel ch) {
     try {
       SocketChannel socketChannel = serverSocketChannel.accept();
+      LOG.log(Level.INFO, "Accepted connection: " + socketChannel);
       if (socketChannel != null) {
         socketChannel.configureBlocking(false);
         socketChannel.socket().setTcpNoDelay(true);

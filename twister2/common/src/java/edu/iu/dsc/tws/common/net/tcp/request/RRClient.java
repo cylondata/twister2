@@ -98,6 +98,12 @@ public class RRClient {
     return client.isConnected();
   }
 
+  /**
+   * throw an exception with the failure reason
+   * @param message
+   * @param waitLimit
+   * @return
+   */
   public RequestID sendRequestWaitResponse(Message message, long waitLimit) {
 
     // if this method is already called and waiting for a response

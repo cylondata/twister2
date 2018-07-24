@@ -149,7 +149,7 @@ public class BasePartitionMultiByteCommunication implements IContainer {
           MessageType.MULTI_FIXED_BYTE, 2, sources,
           dests, finalPartitionRec, new PartialPartitionReciver());
       finalPartitionRec.setMap(expectedIds);
-      partition.setMemoryMapped(true);
+//      partition.setMemoryMapped(true);
 
       for (int i = 0; i < noOfTasksPerExecutor; i++) {
         // the map thread where data is produced

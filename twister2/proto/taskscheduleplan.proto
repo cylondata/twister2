@@ -29,3 +29,9 @@ message TaskSchedulePlan {
     int32 jobid = 1;
     repeated ContainerPlan containerplan = 2;
 }
+
+message TaskSchedulePlanList {
+    int32 jobid = 1;
+    repeated TaskSchedulePlan taskscheduleplan = 2;
+    //required int32 jobid = 1;
+}

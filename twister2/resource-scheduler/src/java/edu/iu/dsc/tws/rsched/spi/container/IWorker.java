@@ -12,14 +12,14 @@
 package edu.iu.dsc.tws.rsched.spi.container;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
+import edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
 public interface IWorker {
   void init(Config config,
             int id,
             ResourcePlan resourcePlan,
-            IWorkerController workerController,
+            IWorkerDiscoverer workerController,
             IPersistentVolume persistentVolume,
             IVolatileVolume volatileVolume);
 

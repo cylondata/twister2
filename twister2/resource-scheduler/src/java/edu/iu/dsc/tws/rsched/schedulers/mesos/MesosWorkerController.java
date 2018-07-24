@@ -19,13 +19,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
+import edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.bootstrap.ZKController;
+import edu.iu.dsc.tws.rsched.bootstrap.ZKDiscoverer;
 
 
-public class MesosWorkerController implements IWorkerController {
+public class MesosWorkerController implements IWorkerDiscoverer {
 
   public static final Logger LOG = Logger.getLogger(MesosWorkerController.class.getName());
   private Config config;
@@ -37,7 +37,7 @@ public class MesosWorkerController implements IWorkerController {
   private int containerPerWorker;
   private List<WorkerNetworkInfo> workerList;
   private WorkerNetworkInfo thisWorker;
-  private ZKController zkController;
+  private ZKDiscoverer zkController;
 
   public MesosWorkerController(Config cfg, JobAPI.Job job, String ip, int port, int workerID) {
     config = cfg;
@@ -88,7 +88,7 @@ public class MesosWorkerController implements IWorkerController {
 
     long startTime = System.currentTimeMillis();
     String workerHostPort = workerIp + ":" + workerPort;
-    zkController = new ZKController(config, job.getJobName(), workerHostPort, numberOfWorkers);
+    zkController = new ZKDiscoverer(config, job.getJobName(), workerHostPort, numberOfWorkers);
     zkController.initialize();
     long duration = System.currentTimeMillis() - startTime;
     System.out.println("Initialization for the worker: " + zkController.getWorkerNetworkInfo()
@@ -112,6 +112,7 @@ public class MesosWorkerController implements IWorkerController {
     } else {
       LOG.log(Level.INFO, "Waited " + duration + " ms for all workers to join.");
 
+      workerList = zkController.getWorkerList();
       System.out.println("list of current workers in the job: ");
       zkController.printWorkers(workerList);
 

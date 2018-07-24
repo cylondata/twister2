@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.common.net.tcp;
 
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
-import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -24,8 +23,6 @@ import edu.iu.dsc.tws.common.config.Config;
 
 public class FixedBufferChannel extends BaseNetworkChannel {
   private static final Logger LOG = Logger.getLogger(FixedBufferChannel.class.getName());
-
-  private Map<Integer, BlockingQueue<TCPMessage>> pendingReceives;
 
   public FixedBufferChannel(Config cfg, Progress progress, SelectHandler handler,
                             SocketChannel channel, ChannelHandler msgHandler) {
@@ -43,6 +40,18 @@ public class FixedBufferChannel extends BaseNetworkChannel {
         break;
       }
     }
+  }
+
+  @Override
+  public boolean addReadRequest(TCPMessage request) {
+    BlockingQueue<TCPMessage> inQueue = null;
+    if (pendingReceives.containsKey(request.getEdge())) {
+      inQueue = pendingReceives.get(request.getEdge());
+    } else {
+      inQueue = new ArrayBlockingQueue<>(1024);
+      pendingReceives.put(request.getEdge(), inQueue);
+    }
+    return inQueue.offer(request);
   }
 
   /**

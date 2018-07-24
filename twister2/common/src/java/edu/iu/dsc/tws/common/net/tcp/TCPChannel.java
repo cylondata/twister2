@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.common.net.tcp;
 
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.nio.channels.UnresolvedAddressException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -25,6 +26,9 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.net.NetworkInfo;
 import edu.iu.dsc.tws.common.net.tcp.worker.TCPWorker;
 
+/**
+ * A channel implementation, that supports iSend and iRecv semantics.
+ */
 public class TCPChannel {
   private static final Logger LOG = Logger.getLogger(TCPChannel.class.getName());
 
@@ -98,10 +102,8 @@ public class TCPChannel {
     String hostName = TCPContext.getHostName(thisInfo);
     int port = TCPContext.getPort(thisInfo);
 
-    looper = new Progress();
-
     // lets connect to other
-    server = new Server(config, hostName, port, looper, new ChannelServerChannelHandler());
+    server = new Server(config, hostName, port, looper, new ServerChannelHandler(), true);
     server.start();
   }
 
@@ -128,23 +130,19 @@ public class TCPChannel {
         continue;
       }
 
-      String remoteHost = TCPContext.getHostName(info);
-      int remotePort = TCPContext.getPort(info);
+      try {
+        String remoteHost = TCPContext.getHostName(info);
+        int remotePort = TCPContext.getPort(info);
 
-      Client client = new Client(remoteHost, remotePort, config,
-          looper, new ClientChannelChannelHandler());
-      client.connect();
-      clients.put(info.getProcId(), client);
-      invertedClientChannels.put(client.getSocketChannel(), info.getProcId());
+        Client client = new Client(remoteHost, remotePort, config,
+            looper, new ClientChannelChannelHandler());
+        client.connect();
+        clients.put(info.getProcId(), client);
+        invertedClientChannels.put(client.getSocketChannel(), info.getProcId());
+      } catch (UnresolvedAddressException e) {
+        throw new RuntimeException("Failed to create client", e);
+      }
     }
-
-    //now wait for the handshakes to happen
-    while (clientsConnected != (networkInfos.size() - 1)
-        || (clientsCompleted != networkInfos.size() - 1)) {
-      looper.loop();
-    }
-
-    LOG.log(Level.FINEST, "Everybody connected: " + clientsConnected + " " + clientsCompleted);
   }
 
   public TCPMessage iSend(ByteBuffer buffer, int size, int procId, int edge) {
@@ -172,6 +170,7 @@ public class TCPChannel {
 
   private void sendHelloMessage(int destProcId, SocketChannel sc) {
     ByteBuffer buffer = helloSendByteBuffers.remove(0);
+    buffer.clear();
     buffer.putInt(thisInfo.getProcId());
 
     Client client = clients.get(destProcId);
@@ -191,7 +190,24 @@ public class TCPChannel {
     server.stop();
   }
 
-  private class ChannelServerChannelHandler implements ChannelHandler {
+  /**
+   * Wait for handshakes to happen between servers and clients
+   */
+  public void waitForConnections() {
+    //now wait for the handshakes to happen
+    while (clientsConnected != (networkInfos.size() - 1)
+        || (clientsCompleted != networkInfos.size() - 1)) {
+      looper.loop();
+    }
+
+    while (serverChannel.size() != networkInfos.size() - 1) {
+      looper.loop();
+    }
+
+    LOG.log(Level.FINEST, "Everybody connected: " + clientsConnected + " " + clientsCompleted);
+  }
+
+  private class ServerChannelHandler implements ChannelHandler {
 
     @Override
     public void onError(SocketChannel channel) {

@@ -24,6 +24,8 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.scheduler.ILauncher;
@@ -58,9 +60,6 @@ public class ResourceAllocator {
    * @param cfg the config values in this map will be put into returned Config
    */
   public static Config loadConfig(Map<String, Object> cfg) {
-
-    LOG.info("=============Loading Configurations====================");
-
     // first lets read the essential properties from java system properties
     String twister2Home = System.getProperty(SchedulerContext.TWISTER_2_HOME);
     String configDir = System.getProperty(SchedulerContext.CONFIG_DIR);
@@ -94,84 +93,30 @@ public class ResourceAllocator {
     LOG.log(Level.INFO, String.format("Loading configuration with twister2_home: %s and "
         + "configuration: %s and cluster: %s", twister2Home, configDir, clusterType));
     Config config = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterType);
-    LOG.info("============= Configurations Loaded ====================");
+
+    // if this is a Kubernetes cluster and Kubernetes upload method is set as client-to-pods
+    // do not use a regular uploader
+    // Kubernetes client will directly upload the job package to the pods
+    String uploaderClass = SchedulerContext.uploaderClass(config);
+    String nullUploader = "edu.iu.dsc.tws.rsched.uploaders.NullUploader";
+    if (clusterType.equalsIgnoreCase(KubernetesConstants.KUBERNETES_CLUSTER_TYPE)
+        && KubernetesContext.uploadMethod(config).equalsIgnoreCase("client-to-pods")
+        && !uploaderClass.equalsIgnoreCase(nullUploader)) {
+
+      uploaderClass = nullUploader;
+      LOG.info("Since this is a Kubernetes cluster and the upload method is set as client-to-pods,"
+          + " uploader class is set to " + uploaderClass);
+    }
+
     return Config.newBuilder().
         putAll(config).
         put(SchedulerContext.TWISTER2_HOME.getKey(), twister2Home).
         put(SchedulerContext.TWISTER2_CLUSTER_TYPE, clusterType).
         put(SchedulerContext.USER_JOB_JAR_FILE, jobJar).
+        put(SchedulerContext.UPLOADER_CLASS, uploaderClass).
         putAll(environmentProperties).
         putAll(cfg).
         build();
-  }
-
-  /**
-   * Create the job files to be uploaded into the cluster
-   */
-  private String prepareJobFilesOld(Config config, JobAPI.Job job) {
-    // lets first save the job file
-    // lets write the job into file, this will be used for job creation
-    String tempDirectory = SchedulerContext.jobClientTempDirectory(config) + "/" + job.getJobName();
-    try {
-      Files.createDirectories(Paths.get(tempDirectory));
-    } catch (IOException e) {
-      throw new RuntimeException("Failed to create the base temp directory for job", e);
-    }
-
-    String jobFile = SchedulerContext.userJobJarFile(config);
-    if (jobFile == null) {
-      throw new RuntimeException("Job file cannot be null");
-    }
-
-    Path tempDirPath = null;
-    try {
-      tempDirPath = Files.createTempDirectory(Paths.get(tempDirectory), job.getJobName());
-    } catch (IOException e) {
-      throw new RuntimeException("Failed to create temp directory: " + tempDirectory, e);
-    }
-
-    String tempDirPathString = tempDirPath.toString();
-    String jobFilePath = tempDirPathString + "/" + job.getJobName() + ".job";
-
-    // now we need to copy the actual job binary files here
-    JobAPI.JobFormat.Builder format = JobAPI.JobFormat.newBuilder();
-    format.setType(JobAPI.JobFormatType.SHUFFLE);
-    format.setJobFile(Paths.get(jobFile).getFileName().toString());
-
-    // now lets set the updates
-    updatedJob = JobAPI.Job.newBuilder(job).setJobFormat(format).build();
-    boolean write = JobUtils.writeJobFile(updatedJob, jobFilePath);
-    if (!write) {
-      throw new RuntimeException("Failed to write the job file");
-    }
-
-    // copy the job jar file
-    LOG.log(Level.INFO, String.format("Copy job jar: %s to %s", jobFile, tempDirPathString));
-    if (!FileUtils.copyFileToDirectory(jobFile, tempDirPathString)) {
-      throw new RuntimeException("Failed to copy the job jar file: "
-          + jobFile + " to:" + tempDirPathString);
-    }
-
-    // copy the job files
-    String twister2CorePackage = SchedulerContext.systemPackageUrl(config);
-    String confDir = SchedulerContext.conf(config);
-
-    // copy the conf directory
-    LOG.log(Level.INFO, String.format("Copy configuration: %s to %s",
-        confDir, tempDirPathString));
-    if (!FileUtils.copyDirectoryToDirectory(confDir, tempDirPathString)) {
-      throw new RuntimeException("Failed to copy the configuration: "
-          + confDir + " to: " + tempDirPathString);
-    }
-
-    // copy the dist package
-    LOG.log(Level.INFO, String.format("Copy core package: %s to %s",
-        twister2CorePackage, tempDirPathString));
-    if (!FileUtils.copyFileToDirectory(twister2CorePackage, tempDirPathString)) {
-      throw new RuntimeException("Failed to copy the core package");
-    }
-
-    return tempDirPathString;
   }
 
   /**
@@ -235,7 +180,7 @@ public class ResourceAllocator {
     updatedJob = JobAPI.Job.newBuilder(job).setJobFormat(format).build();
 
     // add job description file to the archive
-    String jobDescFileName = job.getJobName() + ".job";
+    String jobDescFileName = SchedulerContext.createJobDescriptionFileName(job.getJobName());
     boolean added = packer.addFileToArchive(jobDescFileName, updatedJob.toByteArray());
     if (!added) {
       throw new RuntimeException("Failed to add the job description file to the archive: "
@@ -263,7 +208,6 @@ public class ResourceAllocator {
     updatedConfig = Config.newBuilder()
         .putAll(config)
         .put(SchedulerContext.USER_JOB_JAR_FILE, jobJarFileName)
-        .put(SchedulerContext.JOB_DESCRIPTION_FILE, jobDescFileName)
         .put(SchedulerContext.TEMPORARY_PACKAGES_PATH, tempDirPathString)
         .build();
 
@@ -358,7 +302,6 @@ public class ResourceAllocator {
 //        .put(SchedulerContext.TWISTER2_PACKAGES_PATH, packagesPath)
         .put(SchedulerContext.JOB_PACKAGE_URI, packageURI)
         .put(SchedulerContext.THREADS_PER_WORKER, threadNumber)
-        .putAll(config)
         .build();
 
     // this is a handler chain based execution in resource allocator. We need to

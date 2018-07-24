@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.comms.core;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -88,11 +89,17 @@ public class TaskPlan {
   }
 
   public Set<Integer> getExecutesOfGroup(int group) {
+    if (groupsToExecutor.keySet().size() == 0) {
+      return new HashSet<>(executorToChannels.keySet());
+    }
     return groupsToExecutor.get(group);
   }
 
   public int getGroupOfExecutor(int executor) {
-    return executorToGroup.get(executor);
+    if (executorToGroup.containsKey(executor)) {
+      return executorToGroup.get(executor);
+    }
+    return 0;
   }
 
   public Set<Integer> getTasksOfThisExecutor() {

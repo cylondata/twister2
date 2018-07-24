@@ -30,6 +30,7 @@ import edu.iu.dsc.tws.executor.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.ExecutionModel;
 import edu.iu.dsc.tws.executor.threading.ThreadExecutor;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
@@ -73,12 +74,8 @@ public class GatherTask implements IContainer {
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);
     ExecutionPlan plan = executionPlanBuilder.schedule(config, graph, taskSchedulePlan);
     ExecutionModel executionModel = new ExecutionModel(ExecutionModel.SHARED);
-    ThreadExecutor executor = new ThreadExecutor(executionModel, plan);
+    ThreadExecutor executor = new ThreadExecutor(executionModel, plan, network.getChannel());
     executor.execute();
-    // we need to progress the channel
-    while (true) {
-      network.getChannel().progress();
-    }
   }
 
   private static class GeneratorTask extends SourceTask {
@@ -86,6 +83,7 @@ public class GatherTask implements IContainer {
     private TaskContext ctx;
     private Config config;
     private static RandomString randomString;
+
     @Override
     public void run() {
       randomString = new RandomString(128000, new Random(), RandomString.ALPHANUM);
@@ -111,9 +109,12 @@ public class GatherTask implements IContainer {
   private static class RecevingTask extends SinkTask {
     private int count = 0;
     private static final long serialVersionUID = -254264903510284798L;
+
     @Override
     public void execute(IMessage message) {
-      System.out.println("Message Gathered : " + message.getContent() + ", Count : " + count);
+      if (count % 100000 == 0) {
+        System.out.println("Message Gathered : " + message.getContent() + ", Count : " + count);
+      }
       count++;
     }
 
@@ -134,13 +135,17 @@ public class GatherTask implements IContainer {
   }
 
 
-
   public static void main(String[] args) {
     // first load the configurations from command line and config files
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
     // build JobConfig
+    HashMap<String, Object> configurations = new HashMap<>();
+    configurations.put(SchedulerContext.THREADS_PER_WORKER, 8);
+
+    // build JobConfig
     JobConfig jobConfig = new JobConfig();
+    jobConfig.putAll(configurations);
 
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
     jobBuilder.setName("task-gather");

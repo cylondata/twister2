@@ -215,6 +215,15 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
     this.dataType = dataType;
   }
 
+  public DataFlowPartition(TWSChannel channel, Set<Integer> sourceTasks, Set<Integer> destTasks,
+                           MessageReceiver finalRcvr, MessageReceiver partialRcvr,
+                           PartitionStratergy partitionStratergy,
+                           MessageType dataType) {
+    this(channel, sourceTasks, destTasks, finalRcvr, partialRcvr, partitionStratergy);
+    this.isKeyed = true;
+    this.dataType = dataType;
+  }
+
   public DataFlowPartition(TWSChannel channel, Set<Integer> srcs,
                            Set<Integer> dests, MessageReceiver finalRcvr,
                            MessageReceiver partialRcvr,
@@ -310,7 +319,7 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
   public void init(Config cfg, MessageType t, TaskPlan taskPlan, int ed) {
     this.edge = ed;
     this.thisSources = TaskPlanUtils.getTasksOfThisExecutor(taskPlan, sources);
-    LOG.log(Level.INFO, String.format("%d setup loadbalance routing %s %s",
+    LOG.log(Level.FINE, String.format("%d setup loadbalance routing %s %s",
         taskPlan.getThisExecutor(), sources, destinations));
     this.thisTasks = taskPlan.getTasksOfThisExecutor();
     this.router = new PartitionRouter(taskPlan, sources, destinations);

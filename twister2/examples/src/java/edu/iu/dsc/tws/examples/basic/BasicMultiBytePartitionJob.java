@@ -43,6 +43,7 @@ import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.examples.basic.comms.BasePartitionMultiByteCommunication;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 
 public final class BasicMultiBytePartitionJob {
@@ -54,7 +55,11 @@ public final class BasicMultiBytePartitionJob {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
     // build JobConfig
+    HashMap<String, Object> configurations = new HashMap<>();
+    configurations.put(SchedulerContext.THREADS_PER_WORKER, 8);
+
     JobConfig jobConfig = new JobConfig();
+    jobConfig.putAll(configurations);
 
     // build the job
     BasicJob basicJob = BasicJob.newBuilder()

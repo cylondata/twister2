@@ -17,7 +17,22 @@ import java.util.Map;
 
 import edu.iu.dsc.tws.common.config.Config;
 
+/**
+ * Batch receiver, with iterator for receiving
+ */
 public interface BatchReceiver {
+  /**
+   * Initialize the receiver
+   * @param cfg configuration
+   * @param op the operation
+   * @param expectedIds expected ids
+   */
   void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds);
+
+  /**
+   * Receive to specific target
+   * @param target the target
+   * @param it iterator with messages
+   */
   void receive(int target, Iterator<Object> it);
 }
