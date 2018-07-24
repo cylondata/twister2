@@ -1,11 +1,16 @@
 # Twister2 Installation in Kubernetes Clusters
 
 ## Authorization of Pods
-Worker pods need to get the IP address of the Job Master. 
+Twister2 Worker pods need to get the IP address of the Job Master. 
 In addition, Job Master needs to be able to delete used resources after 
-the job has completed. Therefore, before running Twister2 jobs, 
-twister2-auth.yaml file needs to be created on Kubernetes master:
-$kubectl create -f twister2-auth.yaml
+the job has completed. Therefore, before running a Role and RoleBinding object need to be created. 
+We prepared the following YAML file: twister2-auth.yaml.
+
+First modify the namespace field in the twister2-auth.yaml. 
+Change the value of this field to a namespace value, that users will use to submit Twister2 jobs.
+Then execute the following command:
+
+    $kubectl create -f twister2-auth.yaml
 
 ## Persistent Storage Settings
 Twister2 expects that either a Persistent Storage Provisioner or statically configured 

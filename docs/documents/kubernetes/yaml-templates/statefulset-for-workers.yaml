@@ -1,8 +1,7 @@
-# a sample statefulset yaml file to create a Twister2 job
-# before creating this statefulset, 
-#   first a service and 
-#   then the persistent volume and 
-#   then the persistent volume claim
+# a sample StatefulSet YAML file to create workers for a Twister2 job
+# before creating this StatefulSet,
+#   first a Service and
+#   then a PersistentVolumeClaim (if persistent storage is requested)
 # need to be created. 
 
 apiVersion: apps/v1beta2
