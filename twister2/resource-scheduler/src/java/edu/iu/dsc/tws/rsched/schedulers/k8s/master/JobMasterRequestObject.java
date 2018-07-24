@@ -225,8 +225,8 @@ public final class JobMasterRequestObject {
         .value(KubernetesContext.namespace(config)));
 
     envVars.add(new V1EnvVar()
-        .name(KubernetesContext.PERSISTENT_VOLUME_PER_WORKER)
-        .value(KubernetesContext.persistentVolumePerWorker(config) + ""));
+        .name(JobMasterContext.PERSISTENT_VOLUME)
+        .value(JobMasterContext.persistentVolumeSize(config) + ""));
 
     envVars.add(new V1EnvVar()
         .name(Context.TWISTER2_WORKER_INSTANCES)
