@@ -347,6 +347,13 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
    */
   public boolean validate() {
     return true;
+
+    //Code to check the self-loop
+    /*boolean flag = false;
+    if (!detectCycle(getTaskVertexSet())) {
+      return true;
+    }
+    return flag;*/
   }
 
   protected boolean validateTaskVertex(TV taskVertex) {
@@ -371,12 +378,37 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     }
   }
 
+
+  public boolean detectCycle(Set<TV> taskVertex) {
+
+    boolean flag = false;
+    Iterator<TV> vertexIterator = taskVertex.iterator();
+    while (vertexIterator.hasNext()) {
+      if (!containsSelfLoop(vertexIterator.next())) {
+        flag = true;
+      }
+    }
+    return flag;
+  }
+
+  public boolean containsSelfLoop(TV sourceTaskVertex) {
+
+    boolean flag = false;
+    for (DirectedEdge<TV, TE> de : directedEdges) {
+      if (de.sourceTaskVertex.equals(de.targetTaskVertex)) {
+        System.out.println("Self-loop detected for the task vertex:"
+            + de.sourceTaskVertex + "\t" + de.targetTaskVertex);
+        throw new RuntimeException("Self-loop detected for the taskgraph:");
+      }
+    }
+    return flag;
+  }
+
   /**
    * Build the internal structures of the graph, so that it can be searched
    */
   public void build() {
   }
-
 
 }
 
