@@ -71,6 +71,8 @@ public class StandaloneController implements IController {
       LOG.log(Level.INFO, "Submitted job to nomad: " + response);
     } catch (IOException | NomadException e) {
       LOG.log(Level.SEVERE, "Failed to submit the job: ", e);
+    } finally {
+      closeClient(nomadApiClient);
     }
     return false;
   }
@@ -80,8 +82,33 @@ public class StandaloneController implements IController {
   }
 
   @Override
-  public boolean kill() {
-    return false;
+  public boolean kill(JobAPI.Job job) {
+    String jobName = job.getJobName();
+
+    String uri = StandaloneContext.nomadSchedulerUri(config);
+    LOG.log(Level.INFO, "Killing Job " + jobName);
+    NomadApiClient nomadApiClient = new NomadApiClient(
+        new NomadApiConfiguration.Builder().setAddress(uri).build());
+    try {
+      nomadApiClient.getJobsApi().deregister("");
+    } catch (RuntimeException | IOException | NomadException e) {
+      LOG.log(Level.SEVERE, "Failed to terminate job " + jobName
+          + " with error: " + e.getMessage(), e);
+      return false;
+    } finally {
+      closeClient(nomadApiClient);
+    }
+    return true;
+  }
+
+  private void closeClient(NomadApiClient nomadApiClient) {
+    try {
+      if (nomadApiClient != null) {
+        nomadApiClient.close();
+      }
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, String.format("Error closing client: %s", e.getMessage()), e);
+    }
   }
 
   private Job getJob(JobAPI.Job job, RequestedResources resources) {
@@ -120,6 +147,11 @@ public class StandaloneController implements IController {
     String configDirectoryName = Paths.get(workingDirectory,
         job.getJobName(), SchedulerContext.clusterType(config)).toString();
 
+    String corePackageFile = SchedulerContext.temporaryPackagesPath(config) + "/"
+        + SchedulerContext.corePackageFileName(config);
+    String jobPackageFile = SchedulerContext.temporaryPackagesPath(config) + "/"
+        + SchedulerContext.jobPackageFileName(config);
+
     String nomadScriptContent = getNomadScriptContent(config, configDirectoryName);
 
     task.setName(taskName);
@@ -155,12 +187,12 @@ public class StandaloneController implements IController {
     } else {
       envVars.put(StandaloneContext.DOWNLOAD_PACKAGE_ENV, "true");
     }
-    envVars.put(StandaloneContext.CORE_PACKAGE_ENV,
-        StandaloneContext.corePackageFileName(config));
-    envVars.put(StandaloneContext.JOB_PACKAGE_FILENAME,
-        StandaloneContext.jobPackageFileName(config));
+    // we are putting the core packages as env variable
+    envVars.put(StandaloneContext.CORE_PACKAGE_ENV, corePackageFile);
+    envVars.put(StandaloneContext.JOB_PACKAGE_ENV, jobPackageFile);
 
     task.setEnv(envVars);
+    task.setResources(resourceReqs);
     return task;
   }
 
@@ -200,7 +232,7 @@ public class StandaloneController implements IController {
     mpiCommand.add(job.getJobName());
     mpiCommand.add(twister2Home);
     mpiCommand.add(twister2Home);
-    LOG.info(String.format("Command %s", mpiCommand));
+    LOG.log(Level.FINE, String.format("Command %s", mpiCommand));
 
     String[] array = new String[mpiCommand.size()];
     for (int i = 0; i < array.length; i++) {

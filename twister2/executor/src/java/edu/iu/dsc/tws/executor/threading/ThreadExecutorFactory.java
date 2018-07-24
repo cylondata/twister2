@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.threading;
 
+import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.executor.ExecutionPlan;
 
 public class ThreadExecutorFactory {
@@ -21,11 +22,21 @@ public class ThreadExecutorFactory {
 
   private ExecutionPlan executionPlan;
 
+  private TWSNetwork network;
+
   public ThreadExecutorFactory(ExecutionModel executionModels, ThreadExecutor executor,
                                ExecutionPlan executionPlan) {
     this.executionModel = executionModels;
     this.executor = executor;
     this.executionPlan = executionPlan;
+  }
+
+  public ThreadExecutorFactory(ExecutionModel executionModel, ThreadExecutor executor,
+                               ExecutionPlan executionPlan, TWSNetwork network) {
+    this.executionModel = executionModel;
+    this.executor = executor;
+    this.executionPlan = executionPlan;
+    this.network = network;
   }
 
   public IThreadExecutor execute() {

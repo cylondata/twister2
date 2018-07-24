@@ -36,17 +36,16 @@ import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.RequestObjectBuilder;
 
 import io.kubernetes.client.custom.Quantity;
 import io.kubernetes.client.models.V1Container;
 import io.kubernetes.client.models.V1ContainerPort;
-import io.kubernetes.client.models.V1EmptyDirVolumeSource;
 import io.kubernetes.client.models.V1EnvVar;
 import io.kubernetes.client.models.V1EnvVarSource;
 import io.kubernetes.client.models.V1LabelSelector;
 import io.kubernetes.client.models.V1ObjectFieldSelector;
 import io.kubernetes.client.models.V1ObjectMeta;
-import io.kubernetes.client.models.V1PersistentVolumeClaimVolumeSource;
 import io.kubernetes.client.models.V1PodSpec;
 import io.kubernetes.client.models.V1PodTemplateSpec;
 import io.kubernetes.client.models.V1ResourceRequirements;
@@ -108,6 +107,10 @@ public final class JobMasterRequestObject {
     HashMap<String, String> labels = new HashMap<String, String>();
     labels.put(KubernetesConstants.SERVICE_LABEL_KEY,
         KubernetesUtils.createJobMasterServiceLabel(jobName));
+
+    String jobPodsLabel = KubernetesUtils.createJobPodsLabel(Context.jobName(config));
+    labels.put(KubernetesConstants.TWISTER2_JOB_PODS_KEY, jobPodsLabel);
+
     templateMetaData.setLabels(labels);
     template.setMetadata(templateMetaData);
 
@@ -119,36 +122,21 @@ public final class JobMasterRequestObject {
     // a volatile disk based volume
     // create it if the requested disk space is positive
     if (JobMasterContext.volatileVolumeRequested(config)) {
-      V1Volume volatileVolume = new V1Volume();
-      volatileVolume.setName(KubernetesConstants.POD_VOLATILE_VOLUME_NAME);
-      V1EmptyDirVolumeSource volumeSource = new V1EmptyDirVolumeSource();
       double vSize = JobMasterContext.volatileVolumeSize(config);
-      volumeSource.setSizeLimit(vSize + "Gi");
-      volatileVolume.setEmptyDir(volumeSource);
+      V1Volume volatileVolume = RequestObjectBuilder.createVolatileVolumeObject(vSize);
       volumes.add(volatileVolume);
     }
 
-    String persistentJobDir = null;
-
     if (JobMasterContext.persistentVolumeRequested(config)) {
-      V1Volume persistentVolume = new V1Volume();
-      persistentVolume.setName(KubernetesConstants.PERSISTENT_VOLUME_NAME);
-      V1PersistentVolumeClaimVolumeSource perVolSource = new V1PersistentVolumeClaimVolumeSource();
       String claimName = KubernetesUtils.createStorageClaimName(jobName);
-      perVolSource.setClaimName(claimName);
-      persistentVolume.setPersistentVolumeClaim(perVolSource);
-
+      V1Volume persistentVolume = RequestObjectBuilder.createPersistentVolumeObject(claimName);
       volumes.add(persistentVolume);
-
-      persistentJobDir =
-          KubernetesUtils.createPersistentJobDirName(jobName,
-              KubernetesContext.persistentVolumeUploading(config));
     }
 
     podSpec.setVolumes(volumes);
 
     ArrayList<V1Container> containers = new ArrayList<V1Container>();
-    containers.add(constructContainer(persistentJobDir, config));
+    containers.add(constructContainer(config));
     podSpec.setContainers(containers);
 
     template.setSpec(podSpec);
@@ -160,8 +148,7 @@ public final class JobMasterRequestObject {
    * @param config
    * @return
    */
-  public static V1Container constructContainer(String persistentJobDir,
-                                               Config config) {
+  public static V1Container constructContainer(Config config) {
     // construct container and add it to podSpec
     V1Container container = new V1Container();
     container.setName("twister2-job-master");
@@ -203,8 +190,7 @@ public final class JobMasterRequestObject {
     port.setProtocol("TCP");
     container.setPorts(Arrays.asList(port));
 
-    container.setEnv(
-        constructEnvironmentVariables(config, persistentJobDir));
+    container.setEnv(constructEnvironmentVariables(config));
 
     return container;
   }
@@ -212,10 +198,8 @@ public final class JobMasterRequestObject {
   /**
    * set environment variables for containers
    * @param config
-   * @param persistentJobDir
    */
-  public static List<V1EnvVar> constructEnvironmentVariables(Config config,
-                                                             String persistentJobDir) {
+  public static List<V1EnvVar> constructEnvironmentVariables(Config config) {
     ArrayList<V1EnvVar> envVars = new ArrayList<>();
 
     // POD_IP with downward API
@@ -241,16 +225,16 @@ public final class JobMasterRequestObject {
         .value(KubernetesContext.namespace(config)));
 
     envVars.add(new V1EnvVar()
+        .name(KubernetesContext.PERSISTENT_VOLUME_PER_WORKER)
+        .value(KubernetesContext.persistentVolumePerWorker(config) + ""));
+
+    envVars.add(new V1EnvVar()
         .name(Context.TWISTER2_WORKER_INSTANCES)
         .value(Context.workerInstances(config) + ""));
 
     envVars.add(new V1EnvVar()
         .name(JobMasterContext.JOB_MASTER_ASSIGNS_WORKER_IDS)
         .value(JobMasterContext.jobMasterAssignsWorkerIDs(config) + ""));
-
-    envVars.add(new V1EnvVar()
-        .name(KubernetesContext.PERSISTENT_JOB_DIRECTORY)
-        .value(persistentJobDir));
 
     envVars.add(new V1EnvVar()
         .name(JobMasterContext.PING_INTERVAL)

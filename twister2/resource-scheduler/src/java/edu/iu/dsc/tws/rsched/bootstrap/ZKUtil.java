@@ -22,7 +22,6 @@ import org.apache.zookeeper.CreateMode;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
-//import static edu.iu.dsc.tws.rsched.bootstrap.ZKContext.ROOT_NODE;
 
 /**
  * this class provides methods to construct znode path names for jobs and workers

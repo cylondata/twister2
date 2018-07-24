@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.rsched.schedulers.mpi;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.checkpointmanager.CheckpointManager;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
@@ -36,6 +37,8 @@ public class MPILauncher implements ILauncher {
 
     // get the job working directory
     this.jobWorkingDirectory = MPIContext.workingDirectory(mConfig);
+
+    CheckpointManager checkpointManager = new CheckpointManager();
   }
 
   @Override

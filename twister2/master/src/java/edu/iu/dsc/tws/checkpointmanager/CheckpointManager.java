@@ -96,6 +96,15 @@ public class CheckpointManager {
     this.jobMaster = jobMaster;
   }
 
+  public CheckpointManager() {
+    TaskMonitor taskMonitor = new TaskMonitor(cfg, this, rrServer);
+
+    rrServer = new RRServer(cfg, "localhost", 6789, looper,
+        -2, new ServerConnectHandler());
+
+    rrServer.registerRequestHandler(Checkpoint.TaskDiscovery.newBuilder(), taskMonitor);
+  }
+
   public void startCheckpointScheduler() {
 
   }

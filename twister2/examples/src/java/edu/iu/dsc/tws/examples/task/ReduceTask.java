@@ -72,13 +72,8 @@ public class ReduceTask implements IContainer {
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);
     ExecutionPlan plan = executionPlanBuilder.schedule(config, graph, taskSchedulePlan);
     ExecutionModel executionModel = new ExecutionModel(ExecutionModel.SHARED);
-    ThreadExecutor executor = new ThreadExecutor(executionModel, plan);
+    ThreadExecutor executor = new ThreadExecutor(executionModel, plan, network.getChannel());
     executor.execute();
-
-    // we need to progress the channel
-    while (true) {
-      network.getChannel().progress();
-    }
   }
 
   private static class GeneratorTask extends SourceTask {
@@ -103,7 +98,9 @@ public class ReduceTask implements IContainer {
 
     @Override
     public void execute(IMessage message) {
-      System.out.println("Message Reduced : " + message.getContent() + ", Count : " + count);
+      if (count % 10000 == 0) {
+        System.out.println("Message Reduced : " + message.getContent() + ", Count : " + count);
+      }
       count++;
     }
 
@@ -141,16 +138,17 @@ public class ReduceTask implements IContainer {
     return new WorkerPlan(workers);
   }
 
+
   public static void main(String[] args) {
     // first load the configurations from command line and config files
-
+    System.out.println("==================Reduce Task Example========================");
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
-    HashMap<String, String> confs = new HashMap<>();
-    confs.put(SchedulerContext.THREADS_PER_WORKER, new String("2"));
+    HashMap<String, Object> configurations = new HashMap<>();
+    configurations.put(SchedulerContext.THREADS_PER_WORKER, 8);
+
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
-    jobConfig.putAll(confs);
-
+    jobConfig.putAll(configurations);
 
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
     jobBuilder.setName("reduce-task");

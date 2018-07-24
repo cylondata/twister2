@@ -21,6 +21,7 @@ message Config {
         bytes serialized_value = 3;
     }
     repeated KeyValue kvs = 1;
+    map<string, bytes> config_byte_map = 2;
 }
 
 message Container {
@@ -48,4 +49,5 @@ message Job {
     Config config = 4;
     // how the job is layed out
     JobFormat job_format = 5;
+
 }

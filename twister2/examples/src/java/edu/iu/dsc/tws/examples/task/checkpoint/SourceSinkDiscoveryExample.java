@@ -92,7 +92,7 @@ public class SourceSinkDiscoveryExample implements IContainer {
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);
     ExecutionPlan plan = executionPlanBuilder.schedule(config, graph, taskSchedulePlan);
     ExecutionModel executionModel = new ExecutionModel(ExecutionModel.SHARED);
-    ThreadExecutor executor = new ThreadExecutor(executionModel, plan);
+    ThreadExecutor executor = new ThreadExecutor(executionModel, plan, network.getChannel());
     executor.execute();
 
     // we need to progress the channel
@@ -115,10 +115,11 @@ public class SourceSinkDiscoveryExample implements IContainer {
   private static class ReceivingTask extends SinkTask {
     private static final long serialVersionUID = -254264903511284798L;
     private Config config;
-    private TaskContext ctx;
 
     private RRClient client;
     private Progress looper;
+
+    private TaskContext ctx;
 
     @Override
     public void execute(IMessage message) {
@@ -145,8 +146,6 @@ public class SourceSinkDiscoveryExample implements IContainer {
 
       @Override
       public void onConnect(SocketChannel channel, StatusCode status) {
-        LOG.info("ClientConnectHandler inside Sink Task got connected");
-
         Checkpoint.TaskDiscovery message = Checkpoint.TaskDiscovery.newBuilder()
             .setTaskID(ctx.taskId())
             .setTaskType(Checkpoint.TaskDiscovery.TaskType.SINK)
@@ -171,6 +170,7 @@ public class SourceSinkDiscoveryExample implements IContainer {
       }
     }
   }
+
 
   public WorkerPlan createWorkerPlan(ResourcePlan resourcePlan) {
     List<Worker> workers = new ArrayList<>();

@@ -25,6 +25,7 @@ import edu.iu.dsc.tws.executor.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.ExecutionModel;
 import edu.iu.dsc.tws.executor.threading.ThreadExecutor;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
@@ -70,15 +71,9 @@ public class ComplexTask implements IContainer {
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);
     ExecutionPlan executionPlan = new ExecutionPlan();
     ExecutionPlan plan = executionPlanBuilder.schedule(config, graph, taskSchedulePlan);
-    plan.setNumThreads(2);
     ExecutionModel executionModel = new ExecutionModel(ExecutionModel.DEDICATED);
-    ThreadExecutor executor = new ThreadExecutor(executionModel, plan);
+    ThreadExecutor executor = new ThreadExecutor(executionModel, plan, network.getChannel());
     executor.execute();
-
-    // we need to progress the channel
-    while (true) {
-      network.getChannel().progress();
-    }
   }
 
 
@@ -107,8 +102,10 @@ public class ComplexTask implements IContainer {
 
     @Override
     public void execute(IMessage message) {
-      System.out.println("Message Reduced Received : " + message.getContent()
-          + ", Count : " + count);
+      if (count % 1000000 == 0) {
+        System.out.println("Message Reduced Received : " + message.getContent()
+            + ", Count : " + count);
+      }
       count++;
     }
 
@@ -167,7 +164,12 @@ public class ComplexTask implements IContainer {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
     // build JobConfig
+    HashMap<String, Object> configurations = new HashMap<>();
+    configurations.put(SchedulerContext.THREADS_PER_WORKER, 8);
+
+    // build JobConfig
     JobConfig jobConfig = new JobConfig();
+    jobConfig.putAll(configurations);
 
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
     jobBuilder.setName("complex-task-example");

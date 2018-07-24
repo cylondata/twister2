@@ -29,5 +29,5 @@ public interface IController {
 
   void close();
 
-  boolean kill();
+  boolean kill(JobAPI.Job job);
 }

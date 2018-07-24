@@ -35,6 +35,7 @@ import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceStreamingPartialReceiver;
 import edu.iu.dsc.tws.examples.IntData;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
@@ -203,7 +204,11 @@ public class BaseReduceHLCommunication implements IContainer {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
     // build JobConfig
+    HashMap<String, Object> configurations = new HashMap<>();
+    configurations.put(SchedulerContext.THREADS_PER_WORKER, 8);
+
     JobConfig jobConfig = new JobConfig();
+    jobConfig.putAll(configurations);
 
     // build the job
     BasicJob basicJob = BasicJob.newBuilder()

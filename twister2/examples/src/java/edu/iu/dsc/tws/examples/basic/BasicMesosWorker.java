@@ -22,7 +22,7 @@ import java.net.Socket;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
+import edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer;
 import edu.iu.dsc.tws.rsched.spi.container.IPersistentVolume;
 import edu.iu.dsc.tws.rsched.spi.container.IVolatileVolume;
 import edu.iu.dsc.tws.rsched.spi.container.IWorker;
@@ -34,7 +34,7 @@ public class BasicMesosWorker implements IWorker {
 
   @Override
   public void init(Config config, int id, ResourcePlan resourcePlan,
-                   IWorkerController workerController, IPersistentVolume persistentVolume,
+                   IWorkerDiscoverer workerController, IPersistentVolume persistentVolume,
                    IVolatileVolume volatileVolume) {
     LOG.info("Mesos Worker start time(ms): " + System.currentTimeMillis());
 

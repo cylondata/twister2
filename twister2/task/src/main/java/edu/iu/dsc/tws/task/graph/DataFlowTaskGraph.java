@@ -56,11 +56,6 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
     return true;
   }
 
-  @Override
-  public Edge createEdge(Vertex sourceTaskVertex, Vertex targetTaskVertex) {
-    return super.createEdge(sourceTaskVertex, targetTaskVertex);
-  }
-
   public Vertex vertex(String name) {
     return taskMap.get(name);
   }
@@ -97,8 +92,12 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
     return childrenOfTask(t);
   }
 
-  public Set<Vertex> childrenOfTask(Vertex t) {
-    return childrenOfTask(t.getName());
+  public Set<Vertex> parentsOfTask(String taskName) {
+    Vertex t = taskMap.get(taskName);
+    if (t == null) {
+      return new HashSet<>();
+    }
+    return parentsOfTask(t);
   }
 
   public Vertex childOfTask(Vertex task, String edge) {
@@ -139,7 +138,6 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
     @Override
     public int compare(Vertex o1, Vertex o2) {
       return new StringComparator().compare(o1.getName(), o2.getName());
-
     }
   }
 

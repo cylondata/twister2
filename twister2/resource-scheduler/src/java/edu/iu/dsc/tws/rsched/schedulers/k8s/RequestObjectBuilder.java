@@ -18,11 +18,9 @@ import java.util.List;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
-import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
+import edu.iu.dsc.tws.rsched.uploaders.scp.ScpContext;
 
 import io.kubernetes.client.custom.Quantity;
 import io.kubernetes.client.models.V1Affinity;
@@ -51,6 +49,7 @@ import io.kubernetes.client.models.V1PodAntiAffinity;
 import io.kubernetes.client.models.V1PodSpec;
 import io.kubernetes.client.models.V1PodTemplateSpec;
 import io.kubernetes.client.models.V1ResourceRequirements;
+import io.kubernetes.client.models.V1SecretVolumeSource;
 import io.kubernetes.client.models.V1Service;
 import io.kubernetes.client.models.V1ServicePort;
 import io.kubernetes.client.models.V1ServiceSpec;
@@ -69,11 +68,9 @@ public final class RequestObjectBuilder {
   /**
    * create StatefulSet object for a job
    * @param jobName
-   * @param resourceRequest
    * @return
    */
   public static V1beta2StatefulSet createStatefulSetObjectForJob(String jobName,
-                                                                 RequestedResources resourceRequest,
                                                                  long jobFileSize,
                                                                  Config config) {
 
@@ -94,7 +91,7 @@ public final class RequestObjectBuilder {
     setSpec.setPodManagementPolicy("Parallel");
 
     int containersPerPod = KubernetesContext.workersPerPod(config);
-    int numberOfPods = resourceRequest.getNoOfContainers() / containersPerPod;
+    int numberOfPods = Context.workerInstances(config) / containersPerPod;
     setSpec.setReplicas(numberOfPods);
 
     // add selector for the job
@@ -104,8 +101,7 @@ public final class RequestObjectBuilder {
     setSpec.setSelector(selector);
 
     // construct the pod template
-    V1PodTemplateSpec template = constructPodTemplate(
-        resourceRequest.getContainer(), serviceLabel, jobFileSize, config);
+    V1PodTemplateSpec template = constructPodTemplate(serviceLabel, jobFileSize, config);
     setSpec.setTemplate(template);
 
     statefulSet.setSpec(setSpec);
@@ -115,14 +111,12 @@ public final class RequestObjectBuilder {
 
   /**
    * construct pod template
-   * @param reqContainer
    * @param serviceLabel
    * @param jobFileSize
    * @param config
    * @return
    */
-  public static V1PodTemplateSpec constructPodTemplate(ResourceContainer reqContainer,
-                                                       String serviceLabel,
+  public static V1PodTemplateSpec constructPodTemplate(String serviceLabel,
                                                        long jobFileSize,
                                                        Config config) {
 
@@ -130,6 +124,10 @@ public final class RequestObjectBuilder {
     V1ObjectMeta templateMetaData = new V1ObjectMeta();
     HashMap<String, String> labels = new HashMap<String, String>();
     labels.put(KubernetesConstants.SERVICE_LABEL_KEY, serviceLabel);
+
+    String jobPodsLabel = KubernetesUtils.createJobPodsLabel(Context.jobName(config));
+    labels.put(KubernetesConstants.TWISTER2_JOB_PODS_KEY, jobPodsLabel);
+
     templateMetaData.setLabels(labels);
     template.setMetadata(templateMetaData);
 
@@ -147,39 +145,37 @@ public final class RequestObjectBuilder {
     // a volatile disk based volume
     // create it if the requested disk space is positive
     if (SchedulerContext.volatileDiskRequested(config)) {
-      V1Volume volatileVolume = new V1Volume();
-      volatileVolume.setName(KubernetesConstants.POD_VOLATILE_VOLUME_NAME);
-      V1EmptyDirVolumeSource volumeSource2 = new V1EmptyDirVolumeSource();
-      double vSize =
+      double volumeSize =
           SchedulerContext.workerVolatileDisk(config) * SchedulerContext.workerInstances(config);
-      volumeSource2.setSizeLimit(vSize + "Gi");
-      volatileVolume.setEmptyDir(volumeSource2);
+      V1Volume volatileVolume = createVolatileVolumeObject(volumeSize);
       volumes.add(volatileVolume);
     }
 
-    String persistentJobDir = null;
-
     if (SchedulerContext.persistentVolumeRequested(config)) {
-      V1Volume persistentVolume = new V1Volume();
-      persistentVolume.setName(KubernetesConstants.PERSISTENT_VOLUME_NAME);
-      V1PersistentVolumeClaimVolumeSource perVolSource = new V1PersistentVolumeClaimVolumeSource();
       String claimName = KubernetesUtils.createStorageClaimName(SchedulerContext.jobName(config));
-      perVolSource.setClaimName(claimName);
-      persistentVolume.setPersistentVolumeClaim(perVolSource);
-
+      V1Volume persistentVolume = createPersistentVolumeObject(claimName);
       volumes.add(persistentVolume);
+    }
 
-      persistentJobDir =
-          KubernetesUtils.createPersistentJobDirName(SchedulerContext.jobName(config),
-              KubernetesContext.persistentVolumeUploading(config));
+    // if openmpi is used, we initialize a Secret volume on each pod
+    if (KubernetesContext.workersUseOpenMPI(config)) {
+      String secretName = "kubempi-ssh-key";
+      V1Volume secretVolume = createSecretVolumeObject(secretName);
+      volumes.add(secretVolume);
     }
 
     podSpec.setVolumes(volumes);
 
     int containersPerPod = KubernetesContext.workersPerPod(config);
+
+    // if openmpi is used, we initialize only one container for each pod
+    if (KubernetesContext.workersUseOpenMPI(config)) {
+      containersPerPod = 1;
+    }
+
     ArrayList<V1Container> containers = new ArrayList<V1Container>();
     for (int i = 0; i < containersPerPod; i++) {
-      containers.add(constructContainer(i, reqContainer, jobFileSize, persistentJobDir, config));
+      containers.add(constructContainer(i, jobFileSize, config));
     }
     podSpec.setContainers(containers);
 
@@ -206,18 +202,43 @@ public final class RequestObjectBuilder {
     return template;
   }
 
+  public static V1Volume createVolatileVolumeObject(double volumeSize) {
+    V1Volume volatileVolume = new V1Volume();
+    volatileVolume.setName(KubernetesConstants.POD_VOLATILE_VOLUME_NAME);
+    V1EmptyDirVolumeSource volumeSource2 = new V1EmptyDirVolumeSource();
+    volumeSource2.setSizeLimit(volumeSize + "Gi");
+    volatileVolume.setEmptyDir(volumeSource2);
+    return volatileVolume;
+  }
+
+  public static V1Volume createPersistentVolumeObject(String claimName) {
+    V1Volume persistentVolume = new V1Volume();
+    persistentVolume.setName(KubernetesConstants.PERSISTENT_VOLUME_NAME);
+    V1PersistentVolumeClaimVolumeSource perVolSource = new V1PersistentVolumeClaimVolumeSource();
+    perVolSource.setClaimName(claimName);
+    persistentVolume.setPersistentVolumeClaim(perVolSource);
+    return persistentVolume;
+  }
+
+  public static V1Volume createSecretVolumeObject(String secretName) {
+    V1Volume secretVolume = new V1Volume();
+    secretVolume.setName(KubernetesConstants.SECRET_VOLUME_NAME);
+    V1SecretVolumeSource secretVolumeSource = new V1SecretVolumeSource();
+    secretVolumeSource.setSecretName(secretName);
+    secretVolumeSource.setDefaultMode(256);
+    secretVolume.setSecret(secretVolumeSource);
+    return secretVolume;
+  }
+
   /**
    * construct a container
    * @param containerIndex
-   * @param reqContainer
    * @param jobFileSize
    * @param config
    * @return
    */
   public static V1Container constructContainer(int containerIndex,
-                                               ResourceContainer reqContainer,
                                                long jobFileSize,
-                                               String persistentJobDir,
                                                Config config) {
     // construct container and add it to podSpec
     V1Container container = new V1Container();
@@ -229,17 +250,27 @@ public final class RequestObjectBuilder {
     container.setImagePullPolicy(KubernetesContext.imagePullPolicy(config));
 
 //        container.setArgs(Arrays.asList("1000000")); parameter to the main method
-    container.setCommand(
-        Arrays.asList(
-            "java", "edu.iu.dsc.tws.rsched.schedulers.k8s.worker.KubernetesWorkerStarter"));
+
+    String startScript = null;
+    double cpuPerContainer = Context.workerCPU(config);
+    int ramPerContainer = Context.workerRAM(config);
+
+    if (KubernetesContext.workersUseOpenMPI(config)) {
+      startScript = "./init_openmpi.sh";
+      cpuPerContainer = cpuPerContainer * KubernetesContext.workersPerPod(config);
+      ramPerContainer = ramPerContainer * KubernetesContext.workersPerPod(config);
+    } else {
+      startScript = "./init_nonmpi.sh";
+    }
+    container.setCommand(Arrays.asList(startScript));
 
     V1ResourceRequirements resReq = new V1ResourceRequirements();
     if (KubernetesContext.bindWorkerToCPU(config)) {
-      resReq.putLimitsItem("cpu", new Quantity(reqContainer.getNoOfCpus() + ""));
-      resReq.putLimitsItem("memory", new Quantity(reqContainer.getMemoryMegaBytes() + "Mi"));
+      resReq.putLimitsItem("cpu", new Quantity(cpuPerContainer + ""));
+      resReq.putLimitsItem("memory", new Quantity(ramPerContainer + "Mi"));
     } else {
-      resReq.putRequestsItem("cpu", new Quantity(reqContainer.getNoOfCpus() + ""));
-      resReq.putRequestsItem("memory", new Quantity(reqContainer.getMemoryMegaBytes() + "Mi"));
+      resReq.putRequestsItem("cpu", new Quantity(cpuPerContainer + ""));
+      resReq.putRequestsItem("memory", new Quantity(ramPerContainer + "Mi"));
     }
     container.setResources(resReq);
 
@@ -263,6 +294,14 @@ public final class RequestObjectBuilder {
       volumeMounts.add(persVolumeMount);
     }
 
+    // mount Secret object as a volume
+    if (KubernetesContext.workersUseOpenMPI(config)) {
+      V1VolumeMount persVolumeMount = new V1VolumeMount();
+      persVolumeMount.setName(KubernetesConstants.SECRET_VOLUME_NAME);
+      persVolumeMount.setMountPath(KubernetesConstants.SECRET_VOLUME_MOUNT);
+      volumeMounts.add(persVolumeMount);
+    }
+
     container.setVolumeMounts(volumeMounts);
 
     int containerPort = KubernetesContext.workerBasePort(config) + containerIndex;
@@ -274,8 +313,7 @@ public final class RequestObjectBuilder {
     container.setPorts(Arrays.asList(port));
 
     container.setEnv(
-        constructEnvironmentVariables(config, containerName, jobFileSize,
-            persistentJobDir, containerPort));
+        constructEnvironmentVariables(config, containerName, jobFileSize, containerPort));
 
     return container;
   }
@@ -285,32 +323,24 @@ public final class RequestObjectBuilder {
    * @param config
    * @param containerName
    * @param jobFileSize
-   * @param persistentJobDir
    */
   public static List<V1EnvVar> constructEnvironmentVariables(Config config,
                                                    String containerName, long jobFileSize,
-                                                   String persistentJobDir, int workerPort) {
+                                                   int workerPort) {
+
     ArrayList<V1EnvVar> envVars = new ArrayList<>();
 
     envVars.add(new V1EnvVar()
-        .name(SchedulerContext.JOB_PACKAGE_FILENAME)
-        .value(SchedulerContext.jobPackageFileName(config)));
-
-    envVars.add(new V1EnvVar()
-        .name(KubernetesField.JOB_PACKAGE_FILE_SIZE + "")
+        .name(K8sEnvVariables.JOB_PACKAGE_FILE_SIZE + "")
         .value(jobFileSize + ""));
 
     envVars.add(new V1EnvVar()
-        .name(KubernetesField.CONTAINER_NAME + "")
+        .name(K8sEnvVariables.CONTAINER_NAME + "")
         .value(containerName));
 
     envVars.add(new V1EnvVar()
-        .name(KubernetesField.USER_JOB_JAR_FILE + "")
+        .name(K8sEnvVariables.USER_JOB_JAR_FILE + "")
         .value(SchedulerContext.userJobJarFile(config)));
-
-    envVars.add(new V1EnvVar()
-        .name(SchedulerContext.JOB_DESCRIPTION_FILE)
-        .value(SchedulerContext.jobDescriptionFile(config)));
 
     // POD_IP with downward API
     V1ObjectFieldSelector fieldSelector = new V1ObjectFieldSelector();
@@ -319,72 +349,53 @@ public final class RequestObjectBuilder {
     varSource.setFieldRef(fieldSelector);
 
     envVars.add(new V1EnvVar()
-        .name(KubernetesField.POD_IP + "")
+        .name(K8sEnvVariables.POD_IP + "")
         .valueFrom(varSource));
-
-    envVars.add(new V1EnvVar()
-        .name(KubernetesContext.PERSISTENT_JOB_DIRECTORY)
-        .value(persistentJobDir));
-
-    envVars.add(new V1EnvVar()
-        .name(KubernetesContext.WORKERS_PER_POD)
-        .value(KubernetesContext.workersPerPod(config) + ""));
-
-    envVars.add(new V1EnvVar()
-        .name(LoggingContext.PERSISTENT_LOGGING_REQUESTED)
-        .value(LoggingContext.persistentLoggingRequested(config) + ""));
-
-    envVars.add(new V1EnvVar()
-        .name(LoggingContext.LOGGING_LEVEL)
-        .value(LoggingContext.loggingLevel(config)));
-
-    envVars.add(new V1EnvVar()
-        .name(LoggingContext.REDIRECT_SYS_OUT_ERR)
-        .value(LoggingContext.redirectSysOutErr(config) + ""));
-
-    envVars.add(new V1EnvVar()
-        .name(LoggingContext.MAX_LOG_FILE_SIZE)
-        .value(LoggingContext.maxLogFileSize(config) + ""));
-
-    envVars.add(new V1EnvVar()
-        .name(LoggingContext.MAX_LOG_FILES)
-        .value(LoggingContext.maxLogFiles(config) + ""));
-
-    envVars.add(new V1EnvVar()
-        .name(KubernetesContext.PERSISTENT_VOLUME_UPLOADING)
-        .value(KubernetesContext.persistentVolumeUploading(config) + ""));
-
-    envVars.add(new V1EnvVar()
-        .name(Context.TWISTER2_WORKER_INSTANCES)
-        .value(Context.workerInstances(config) + ""));
-
-    envVars.add(new V1EnvVar()
-        .name(KubernetesContext.K8S_WORKER_PORT)
-        .value(workerPort + ""));
-
-    envVars.add(new V1EnvVar()
-        .name(JobMasterContext.JOB_MASTER_PORT)
-        .value(JobMasterContext.jobMasterPort(config) + ""));
 
     String masterAddress = null;
     if (JobMasterContext.jobMasterRunsInClient(config)) {
       masterAddress = KubernetesUtils.getLocalAddress();
     }
     envVars.add(new V1EnvVar()
-        .name(JobMasterContext.JOB_MASTER_IP)
+        .name(K8sEnvVariables.JOB_MASTER_IP + "")
         .value(masterAddress));
 
-    envVars.add(new V1EnvVar()
-        .name(JobMasterContext.PING_INTERVAL)
-        .value(JobMasterContext.pingInterval(config) + ""));
+    if (KubernetesContext.workersUseOpenMPI(config)) {
+
+      envVars.add(new V1EnvVar()
+          .name(K8sEnvVariables.CLASS_TO_RUN + "")
+          .value("edu.iu.dsc.tws.rsched.schedulers.k8s.mpi.MPIMasterStarter"));
+
+    } else {
+
+      envVars.add(new V1EnvVar()
+          .name(K8sEnvVariables.CLASS_TO_RUN + "")
+          .value("edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerStarter"));
+    }
 
     envVars.add(new V1EnvVar()
-        .name(JobMasterContext.JOB_MASTER_ASSIGNS_WORKER_IDS)
-        .value(JobMasterContext.jobMasterAssignsWorkerIDs(config) + ""));
+        .name(K8sEnvVariables.POD_MEMORY_VOLUME + "")
+        .value(KubernetesConstants.POD_MEMORY_VOLUME));
 
     envVars.add(new V1EnvVar()
-        .name(JobMasterContext.WORKER_TO_JOB_MASTER_RESPONSE_WAIT_DURATION)
-        .value(JobMasterContext.responseWaitDuration(config) + ""));
+        .name(K8sEnvVariables.JOB_ARCHIVE_DIRECTORY + "")
+        .value(Context.JOB_ARCHIVE_DIRECTORY));
+
+    envVars.add(new V1EnvVar()
+        .name(K8sEnvVariables.JOB_PACKAGE_FILENAME + "")
+        .value(SchedulerContext.jobPackageFileName(config)));
+
+    envVars.add(new V1EnvVar()
+        .name(K8sEnvVariables.WORKER_PORT + "")
+        .value(workerPort + ""));
+
+    envVars.add(new V1EnvVar()
+        .name(K8sEnvVariables.UPLOAD_METHOD + "")
+        .value(KubernetesContext.uploadMethod(config)));
+
+    envVars.add(new V1EnvVar()
+        .name(K8sEnvVariables.DOWNLOAD_DIRECTORY + "")
+        .value(ScpContext.downloadDirectory(config)));
 
     return envVars;
   }
@@ -461,7 +472,6 @@ public final class RequestObjectBuilder {
   }
 
   public static V1Service createHeadlessServiceObject(String serviceName, String serviceLabel) {
-
 
     V1Service service = new V1Service();
     service.setKind("Service");
