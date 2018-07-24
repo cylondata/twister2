@@ -60,7 +60,7 @@ public final class MesosMPIMasterStarter {
 
 
     MesosMPIMasterStarter mpiMaster = new MesosMPIMasterStarter();
-    Thread.sleep(5000);
+    Thread.sleep(3000);
     //gets the docker home directory
     String homeDir = System.getenv("HOME");
     int workerId = Integer.parseInt(System.getenv("WORKER_ID"));
@@ -73,7 +73,7 @@ public final class MesosMPIMasterStarter {
 
 
     MesosWorkerLogger logger = new MesosWorkerLogger(mpiMaster.config,
-        "/persistent-volume/logs", "worker" + workerId);
+        "/persistent-volume/logs", "mpiMaster");
     logger.initLogging();
 
     MesosWorkerController workerController = null;
@@ -82,7 +82,7 @@ public final class MesosMPIMasterStarter {
       JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/"
           + mpiMaster.jobName + ".job");
       workerController = new MesosWorkerController(mpiMaster.config, job,
-          Inet4Address.getLocalHost().getHostAddress(), 22, id);
+          Inet4Address.getLocalHost().getHostAddress(), 2022, id);
       LOG.info("Initializing with zookeeper");
       workerController.initializeWithZooKeeper();
       LOG.info("Waiting for all workers to join");
@@ -105,42 +105,33 @@ public final class MesosMPIMasterStarter {
 
     mpiMaster.startJobMasterClient(workerController.getWorkerNetworkInfo(), jobMasterIP);
 
-    File hostFile = new File(homeDir + "/.ssh/config");
-    hostFile.getParentFile().mkdirs();
     Writer writer = new BufferedWriter(new OutputStreamWriter(
-        new FileOutputStream(homeDir + "/.ssh/config", true)));
-    writer.write("Host *\n\tStrictHostKeyChecking no\n\tUserKnownHostsFile /dev/null\n"
-        + "\tIdentityFile ~/.ssh/id_rsa\n");
+        new FileOutputStream("/twister2/hostFile", true)));
 
-    String hosts = "";
-
+    System.out.println("worker count is...:" + workerCount);
     for (int i = 1; i < workerCount; i++) {
 
-      writer.write("Host w" + workerNetworkInfoList.get(i).getWorkerID() + "\n"
-          + "\tHostname " + workerNetworkInfoList.get(i).getWorkerIP().getHostAddress() + "\n"
-          + "\tPort " + workerNetworkInfoList.get(i).getWorkerPort() + "\n");
+      writer.write(workerNetworkInfoList.get(i).getWorkerIP().getHostAddress() + "\n");
 
-      System.out.println("Host w" + workerNetworkInfoList.get(i).getWorkerID() + "\n"
-          + "\tHostname " + workerNetworkInfoList.get(i).getWorkerIP().getHostAddress() + "\n"
-          + "\tPort " + workerNetworkInfoList.get(i).getWorkerPort() + "\n");
-
-      hosts += "w" + workerNetworkInfoList.get(i).getWorkerID() + ",";
+      System.out.println("host ip: "
+          + workerNetworkInfoList.get(i).getWorkerIP().getHostAddress());
     }
 
     writer.close();
 
-    //remove final comma
-    hosts = hosts.substring(0, hosts.lastIndexOf(','));
+    //mpi master has the id equals to 1
+    //id==0 is job master
     String mpiClassNameToRun = "edu.iu.dsc.tws.rsched.schedulers.mesos.mpi.MesosMPIWorkerStarter";
+
     System.out.println("Before mpirun");
-    System.out.println("hosts " + hosts);
-    String[] command = {"mpirun", "-allow-run-as-root", "-np",
+    String[] command = {"mpirun", "-x", "LD_PRELOAD=libmpi.so", "-allow-run-as-root", "-np",
         (workerController.getNumberOfWorkers() - 1) + "",
-        "--host", hosts, "java", "-cp",
+        "--hostfile", "/twister2/hostFile", "java", "-cp",
         "twister2-job/libexamples-java.jar:twister2-core/lib/*",
-        mpiClassNameToRun, mpiMaster.jobName, ">mpioutfile" };
+        mpiClassNameToRun, mpiMaster.jobName, jobMasterIP, ">mpioutfile"};
 
     System.out.println("command:" + String.join(" ", command));
+    // Thread.sleep(5000);
 
     ProcessUtils.runSyncProcess(false, command, outputBuilder,
         new File("."), true);
@@ -153,7 +144,7 @@ public final class MesosMPIMasterStarter {
   public void startJobMasterClient(WorkerNetworkInfo networkInfo, String jobMasterIP) {
 
     LOG.info("JobMasterIP: " + jobMasterIP);
-
+    LOG.info("NETWORK INFO    " + networkInfo.getWorkerIP().toString());
     jobMasterClient = new JobMasterClient(config, networkInfo, jobMasterIP);
     jobMasterClient.init();
     // we need to make sure that the worker starting message went through

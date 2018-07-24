@@ -39,7 +39,7 @@ public class MesosScheduler implements Scheduler {
   private int workerCounter = 0;
   private int[] offerControl = new int[3];
   //private String jobMasterIP;
-  private boolean mpiJob = false;
+  private boolean mpiJob = true;
 
   public MesosScheduler(MesosController controller, Config mconfig, String jobName) {
     this.controller = controller;

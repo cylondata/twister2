@@ -25,7 +25,6 @@ import edu.iu.dsc.tws.master.client.JobMasterClient;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerController;
-import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerLogger;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 public final class MesosMPISlaveStarter {
@@ -41,23 +40,23 @@ public final class MesosMPISlaveStarter {
 
   public static void main(String[] args) throws Exception {
 
+    Thread.sleep(5000);
     workerID = Integer.parseInt(System.getenv("WORKER_ID"));
     jobName = System.getenv("JOB_NAME");
     String twister2Home = Paths.get("").toAbsolutePath().toString();
     String configDir = "twister2-job/mesos/";
     config = ConfigLoader.loadConfig(twister2Home, configDir);
-    MesosWorkerLogger logger = new MesosWorkerLogger(config,
-        "/persistent-volume/logs", "worker" + workerID);
-    logger.initLogging();
-
+    //MesosWorkerLogger logger = new MesosWorkerLogger(config,
+    //    "/persistent-volume/logs", "worker" + workerID);
+    //logger.initLogging();
     MesosWorkerController workerController = null;
     List<WorkerNetworkInfo> workerNetworkInfoList = new ArrayList<>();
     try {
       JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/"
           + jobName + ".job");
       workerController = new MesosWorkerController(config, job,
-          Inet4Address.getLocalHost().getHostAddress(), 22, workerID);
-      LOG.info("Initializing with zookeeper");
+          Inet4Address.getLocalHost().getHostAddress(), 2022, workerID);
+      LOG.info("Initializing with zookeeper ");
       workerController.initializeWithZooKeeper();
       LOG.info("Waiting for all workers to join");
       workerNetworkInfoList = workerController.waitForAllWorkersToJoin(

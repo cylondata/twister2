@@ -159,7 +159,7 @@ public final class RequestObjectBuilder {
 
     // if openmpi is used, we initialize a Secret volume on each pod
     if (KubernetesContext.workersUseOpenMPI(config)) {
-      String secretName = "kubempi-ssh-key";
+      String secretName = KubernetesContext.secretName(config);
       V1Volume secretVolume = createSecretVolumeObject(secretName);
       volumes.add(secretVolume);
     }
@@ -603,7 +603,13 @@ public final class RequestObjectBuilder {
     pvcSpec.setAccessModes(Arrays.asList(accessMode));
 
     V1ResourceRequirements resources = new V1ResourceRequirements();
-    double storageSize = SchedulerContext.persistentVolumePerWorker(config);
+    double storageSize =
+        SchedulerContext.persistentVolumePerWorker(config) * Context.workerInstances(config);
+
+    if (!JobMasterContext.jobMasterRunsInClient(config)) {
+      storageSize += JobMasterContext.persistentVolumeSize(config);
+    }
+
     resources.putRequestsItem("storage", new Quantity(storageSize + "Gi"));
     pvcSpec.setResources(resources);
 

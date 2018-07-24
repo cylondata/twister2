@@ -1,8 +1,7 @@
-# a sample statefulset yaml file to create a Twister2 job
-# before creating this statefulset, 
-#   first a service and 
-#   then the persistent volume and 
-#   then the persistent volume claim
+# a sample StatefulSet YAML file to create workers for a Twister2 job
+# before creating this StatefulSet,
+#   first a Service and
+#   then a PersistentVolumeClaim (if persistent storage is requested)
 # need to be created. 
 
 apiVersion: apps/v1beta2
@@ -38,6 +37,10 @@ spec:
       - name: persistent-volume
         persistentVolumeClaim:
           claimName: twister2-storage-<job-name>
+      - name: kube-openmpi-ssh-key
+        secret:
+          defaultMode: 256
+          secretName: kubempi-ssh-key
 
       affinity:
         nodeAffinity:
@@ -80,31 +83,38 @@ spec:
           mountPath: /twister2-volatile
         - name: persistent-volume
           mountPath: /persistent
+        - mountPath: /ssh-key/openmpi
+          name: kube-openmpi-ssh-key
+        command:
+        - <./init_openmpi.sh or ./init_nonmpi.sh>
         env:
           # below values are sample values. 
           # they are calculated for each job
-        - name: JOB_PACKAGE_FILENAME
-          value: twister2-job.tar.gz
         - name: JOB_PACKAGE_FILE_SIZE
-          value: 233740
+          value: <dynamically calculated>
         - name: CONTAINER_NAME
-          value: twister2-container-0
+          value: <name of this container>
         - name: USER_JOB_JAR_FILE
-          value: libexamples-java.jar
-        - name: JOB_DESCRIPTION_FILE
-          value: basic-kubernetes.job
-        - name: PERSISTENT_JOB_DIR
-          value: /persistent/twister2/basic-kubernetes-1523878691978
-        - name: WORKERS_PER_POD
-          value: 1
-        - name: PERSISTENT_LOGGING_REQUESTED
-          value: true
-        - name: PERSISTENT_LOGGING_TYPE
-          value: system
+          value: <jar file name provided by the user from command line>
         - name: POD_IP
           valueFrom:
             fieldRef:
               apiVersion: v1
-                fieldPath: status.podIP
-
+              fieldPath: status.podIP
+        - name: JOB_MASTER_IP
+          value: <set if the Job master runs in submitting client. client machine IP address>
+        - name: CLASS_TO_RUN
+          value: <can be MPIMasterStarter, K8sWorkerStarter with full package name>
+        - name: POD_MEMORY_VOLUME
+          value: /twister2-memory-dir
+        - name: JOB_ARCHIVE_DIRECTORY
+          value: twister2-job
+        - name: JOB_PACKAGE_FILENAME
+          value: twister2-job.tar.gz
+        - name: WORKER_PORT
+          value: <port of this container>
+        - name: UPLOAD_METHOD
+          value: <twister2.kubernetes.uploading.method>
+        - name: DOWNLOAD_DIRECTORY
+          value: <twister2.download.directory>
 
