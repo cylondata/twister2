@@ -51,7 +51,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
    */
   private int edge;
   /**
-   *  The network channel
+   * The network channel
    */
   private TWSChannel channel;
   /**
@@ -280,6 +280,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
 
   /**
    * Sends a message from a partil location
+   *
    * @param source source id
    * @param message the actual message
    * @param destination an specific destination
@@ -298,6 +299,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
 
   /**
    * Sends a message from a originating location
+   *
    * @param source source id
    * @param message the actual message
    * @param destination an specific destination
@@ -462,11 +464,50 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
             outMessage.setSendState(OutMessage.SendState.FINISHED);
             pendingSendMessages.poll();
           }
+        } else if (message.serializedState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
+          // If the message is partially serialized we will clone the message and send a clone
+          // the original message will be kept so that the rest of the message can be serialized
+          List<Integer> exRoutes = new ArrayList<>(outMessage.getExternalSends());
+          int startOfExternalRouts = outMessage.getAcceptedExternalSends();
+          int noOfExternalSends = startOfExternalRouts;
+
+          //making a copy to send
+          ChannelMessage sendCopy = createChannelMessageCopy(message.getMPIMessage());
+
+          for (int i = startOfExternalRouts; i < exRoutes.size(); i++) {
+            boolean sendAccepted = sendMessageToTarget(sendCopy, exRoutes.get(i));
+            // if no longer accepts stop
+            if (!sendAccepted) {
+              canProgress = false;
+
+              break;
+            }
+          }
+          //send and remove buffers from object
         } else {
           break;
         }
       }
     }
+  }
+
+  private ChannelMessage createChannelMessageCopy(ChannelMessage channelMessage) {
+    ChannelMessage copy = new ChannelMessage();
+    //Values that are not copied: refCount,
+    copy.setMessageDirection(channelMessage.getMessageDirection());
+    copy.setReleaseListener(channelMessage.getReleaseListener());
+    copy.setOriginatingId(channelMessage.getOriginatingId());
+    copy.setHeader(channelMessage.getHeader());
+    copy.setComplete(channelMessage.isComplete());
+    copy.setType(channelMessage.getType());
+    copy.setKeyType(channelMessage.getKeyType());
+    copy.setHeaderSize(channelMessage.getHeaderSize());
+    copy.setReceivedState(channelMessage.getReceivedState());
+    copy.addBuffers(channelMessage.getBuffers());
+
+    //remove the buffers from the original message
+    channelMessage.removeAllBuffers();
+    return copy;
   }
 
   private void receiveDeserializeProgress(ChannelMessage currentMessage, int receiveId) {

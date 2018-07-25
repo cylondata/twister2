@@ -324,6 +324,12 @@ public final class DataSerializer {
     }
   }
 
+  /**
+   * copys the given data in the state into the target buffer, if the the buffer is not big
+   * enough it will make a partial copy and return false
+   *
+   * @return true if all the data was copied and false if only a part was copied
+   */
   private static boolean copyDataBytes(ByteBuffer targetBuffer, SerializeState state) {
     int totalBytes = state.getTotalBytes();
     int remainingCapacity = targetBuffer.remaining();

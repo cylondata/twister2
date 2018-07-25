@@ -54,6 +54,7 @@ public class OutMessage {
     SENT_INTERNALLY,
     HEADER_BUILT,
     BODY_BUILT,
+    PARTIALLY_SERIALIZED,
     SERIALIZED,
     FINISHED,
   }

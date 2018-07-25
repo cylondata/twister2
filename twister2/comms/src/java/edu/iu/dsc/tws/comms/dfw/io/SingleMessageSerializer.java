@@ -91,6 +91,8 @@ public class SingleMessageSerializer implements MessageSerializer {
           boolean complete = serializeBody(message, sendMessage, buffer);
           if (complete) {
             sendMessage.setSendState(OutMessage.SendState.SERIALIZED);
+          } else {
+            sendMessage.setSendState(OutMessage.SendState.PARTIALLY_SERIALIZED);
           }
         }
       }
@@ -110,6 +112,18 @@ public class SingleMessageSerializer implements MessageSerializer {
 
         // mark the original message as complete
         channelMessage.setComplete(true);
+      } else if (sendMessage.serializedState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
+        ChannelMessage channelMessage = sendMessage.getMPIMessage();
+        SerializeState state = sendMessage.getSerializationState();
+        int totalBytes = state.getData().length;
+        channelMessage.getBuffers().get(0).getByteBuffer().putInt(12, totalBytes);
+
+        MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
+            sendMessage.getEdge(), totalBytes);
+        builder.destination(sendMessage.getDestintationIdentifier());
+        sendMessage.getMPIMessage().setHeader(builder.build());
+        LOG.fine("Message Partially serialized");
+
       } else {
         LOG.fine("Message NOT FULLY serialized");
       }

@@ -116,6 +116,7 @@ public class ChannelMessage {
   public boolean doneProcessing() {
     return refCount == 0;
   }
+
   /**
    * Release the allocated resources to this buffer.
    */
@@ -130,6 +131,14 @@ public class ChannelMessage {
     buffers.add(buffer);
   }
 
+  protected void addBuffers(List<DataBuffer> bufferList) {
+    buffers.addAll(bufferList);
+  }
+
+  protected void removeAllBuffers() {
+    buffers.clear();
+  }
+
   public int getOriginatingId() {
     return originatingId;
   }
@@ -142,7 +151,28 @@ public class ChannelMessage {
     this.header = header;
   }
 
+  public void setOriginatingId(int originatingId) {
+    this.originatingId = originatingId;
+  }
+
+  public void setMessageDirection(MessageDirection messageDirection) {
+    this.messageDirection = messageDirection;
+  }
+
+  public ChannelMessageReleaseCallback getReleaseListener() {
+    return releaseListener;
+  }
+
+  public void setReleaseListener(ChannelMessageReleaseCallback releaseListener) {
+    this.releaseListener = releaseListener;
+  }
+
+  public void setType(MessageType type) {
+    this.type = type;
+  }
+
   public boolean build() {
+
     if (header == null && buffers.size() > 0) {
       return false;
     }
