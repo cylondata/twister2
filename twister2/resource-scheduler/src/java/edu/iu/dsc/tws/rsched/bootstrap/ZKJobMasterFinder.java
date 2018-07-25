@@ -19,7 +19,6 @@ import org.apache.curator.framework.recipes.cache.ChildData;
 import org.apache.curator.framework.recipes.cache.NodeCache;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.config.Context;
 
 /**
  * this class is used to discover the Job Master ip address and port number through ZooKeeper
@@ -31,7 +30,7 @@ import edu.iu.dsc.tws.common.config.Context;
  * instead of querying continually
  */
 public class ZKJobMasterFinder {
-  public static final Logger LOG = Logger.getLogger(ZKJobMasterFinder.class.getName());
+  private static final Logger LOG = Logger.getLogger(ZKJobMasterFinder.class.getName());
 
   private Config config;
 
@@ -142,34 +141,4 @@ public class ZKJobMasterFinder {
     client.close();
   }
 
-  public static void main(String[] args) {
-    Config cnfg = buildTestConfig();
-
-    ZKJobMasterFinder finder = new ZKJobMasterFinder(cnfg);
-    finder.initialize();
-
-    String jobMasterIPandPort = finder.getJobMasterIPandPort();
-    if (jobMasterIPandPort == null) {
-      LOG.info("Job Master has not joined yet. Will wait and try to get the address ...");
-      jobMasterIPandPort = finder.waitAndGetJobMasterIPandPort(20000);
-      LOG.info("Job Master address: " + jobMasterIPandPort);
-    } else {
-      LOG.info("Job Master address: " + jobMasterIPandPort);
-    }
-
-    finder.close();
-    LOG.info("Done, exiting ...");
-  }
-
-  /**
-   * construct a test Config object
-   * @return
-   */
-  public static Config buildTestConfig() {
-    return Config.newBuilder()
-        .put(ZKContext.ZOOKEEPER_SERVER_IP, "149.165.150.81")
-        .put(ZKContext.ZOOKEEPER_SERVER_PORT, 2181)
-        .put(Context.JOB_NAME, "basic-kube")
-        .build();
-  }
 }
