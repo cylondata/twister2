@@ -32,7 +32,6 @@ import org.apache.curator.utils.ZKPaths;
 import org.apache.zookeeper.CreateMode;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 
@@ -270,15 +269,8 @@ public class ZKDiscoverer implements IWorkerDiscoverer {
   }
 
   /**
-   * Print current workers in the job as seen by this worker
-   */
-  public void printCurrentWorkers() {
-    List<WorkerNetworkInfo> workers = getCurrentWorkers();
-    printWorkers(workers);
-  }
-
-  /**
    * Get current list of workers from local children cache
+   * This list does not have the workers that already left
    */
   public List<WorkerNetworkInfo> getCurrentWorkers() {
 
@@ -294,7 +286,14 @@ public class ZKDiscoverer implements IWorkerDiscoverer {
   }
 
   /**
-   * Get all joined workers including the ones finished
+   * get number of current workers in the job as seen from this worker
+   */
+  public int getNumberOfCurrentWorkers() {
+    return childrenCache.getCurrentData().size();
+  }
+
+  /**
+   * Get all joined workers including the ones completed
    */
   @Override
   public List<WorkerNetworkInfo> getWorkerList() {
@@ -320,15 +319,8 @@ public class ZKDiscoverer implements IWorkerDiscoverer {
   }
 
   /**
-   * get number of current workers in the job as seen from this worker
-   */
-  public int getNumberOfCurrentWorkers() {
-    return childrenCache.getCurrentData().size();
-  }
-
-  /**
-   * get the number of all joined workers to the job including the ones that already left
-   * the worker info of some of those workers may not have arrived to this worker yet
+   * get the number of all joined workers to the job including the ones that have already left
+   * the worker info of some of those workers may have not arrived yet to this worker
    */
   public int getNumberOfJoinedWorkers() {
     try {
@@ -342,6 +334,7 @@ public class ZKDiscoverer implements IWorkerDiscoverer {
   /**
    * count the number of all joined workers
    * count the workers based on their data availability on this worker
+   * this count also includes the workers that have already completed
    */
   public int countNumberOfJoinedWorkers() {
     byte[] parentData = null;
@@ -376,7 +369,7 @@ public class ZKDiscoverer implements IWorkerDiscoverer {
           LOG.log(Level.INFO, "Thread sleep interrupted. Will try again ...", e);
         }
       } else {
-        return getCurrentWorkers();
+        return getWorkerList();
       }
     }
 
@@ -420,68 +413,6 @@ public class ZKDiscoverer implements IWorkerDiscoverer {
       } catch (Exception e) {
         LOG.log(Level.SEVERE, "Exception when closing", e);
       }
-    }
-  }
-
-  /**
-   * test method for this class
-   * @param args
-   */
-  public static void main(String[] args) {
-
-    String jobName = "basic-k8";
-    Config cnfg = buildTestConfig();
-
-    if (args.length == 1 && args[0].equalsIgnoreCase("delete")) {
-      if (ZKUtil.isThereAnActiveJob(jobName, cnfg)) {
-        ZKUtil.terminateJob(jobName, cnfg);
-        return;
-      } else {
-        LOG.info("No job Znode to delete....");
-        return;
-      }
-    }
-
-
-    int port = 1000 + (int) (Math.random() * 1000);
-    String workerAddress = "localhost:" + port;
-    int numberOfWorkers = 1;
-
-    if (args.length == 1) {
-      numberOfWorkers = Integer.parseInt(args[0]);
-    }
-
-    ZKDiscoverer zkController = new ZKDiscoverer(cnfg, jobName, workerAddress, numberOfWorkers);
-    zkController.initialize();
-
-    List<WorkerNetworkInfo> workerList = zkController.getWorkerList();
-    LOG.info("Initial worker list: \n" + WorkerNetworkInfo.workerListAsString(workerList));
-
-    LOG.info("Waiting for all workers to join: ");
-    workerList = zkController.waitForAllWorkersToJoin(100000);
-    LOG.info(WorkerNetworkInfo.workerListAsString(workerList));
-
-    zkController.close();
-  }
-
-  /**
-   * construct a test Config object
-   * @return
-   */
-  public static Config buildTestConfig() {
-    return Config.newBuilder()
-        .put(ZKContext.ZOOKEEPER_SERVER_IP, "149.165.150.81")
-        .put(ZKContext.ZOOKEEPER_SERVER_PORT, 2181)
-        .put(Context.JOB_NAME, "basic-kube")
-        .build();
-  }
-
-  public static void sleeeep(long duration) {
-
-    try {
-      Thread.sleep(duration);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
     }
   }
 
