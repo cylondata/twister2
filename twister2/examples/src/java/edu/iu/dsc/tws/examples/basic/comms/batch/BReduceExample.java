@@ -30,8 +30,8 @@ import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.basic.comms.BenchWorker;
 import edu.iu.dsc.tws.examples.basic.comms.DataGenerator;
 
-public class SReduceExample extends BenchWorker {
-  private static final Logger LOG = Logger.getLogger(SReduceExample.class.getName());
+public class BReduceExample extends BenchWorker {
+  private static final Logger LOG = Logger.getLogger(BReduceExample.class.getName());
 
   private SReduce reduce;
 
@@ -47,15 +47,17 @@ public class SReduceExample extends BenchWorker {
     }
     int target = noOfSourceTasks;
 
+    // create the communication
     reduce = new SReduce(communicator, taskPlan, sources, target,
         new IdentityFunction(), new FinalReduceReceiver(), MessageType.INTEGER);
 
 
-    int noOfTasksPerExecutor = 2;
+    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(id, taskPlan,
+        jobParameters.getTaskStages(), 0);
     // now initialize the workers
-    for (int i = 0; i < noOfTasksPerExecutor; i++) {
+    for (int t : tasksOfExecutor) {
       // the map thread where data is produced
-      Thread mapThread = new Thread(new MapWorker(i + id * noOfTasksPerExecutor));
+      Thread mapThread = new Thread(new MapWorker(t));
       mapThread.start();
     }
   }

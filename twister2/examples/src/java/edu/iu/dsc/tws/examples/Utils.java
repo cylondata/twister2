@@ -256,4 +256,22 @@ public final class Utils {
 
     return new TaskPlan(executorToGraphNodes, groupsToExeuctors, thisExecutor);
   }
+
+  public static Set<Integer> getTasksOfExecutor(int exec, TaskPlan plan,
+                                                List<Integer> noOfTaskEachStage, int stage) {
+    Set<Integer> out = new HashSet<>();
+    int noOfTasks = noOfTaskEachStage.get(stage);
+    int total = 0;
+    for (int i = 0; i < stage; i++) {
+      total += noOfTaskEachStage.get(i);
+    }
+
+    Set<Integer> tasksOfExec = plan.getChannelsOfExecutor(exec);
+    for (int i = 0; i < noOfTasks; i++) {
+      if (tasksOfExec.contains(i + total)) {
+        out.add(i + total);
+      }
+    }
+    return out;
+  }
 }

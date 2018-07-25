@@ -24,8 +24,8 @@ import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.examples.Utils;
-import edu.iu.dsc.tws.examples.basic.comms.batch.SReduceExample;
-import edu.iu.dsc.tws.examples.basic.comms.stream.BReduceExample;
+import edu.iu.dsc.tws.examples.basic.comms.batch.BReduceExample;
+import edu.iu.dsc.tws.examples.basic.comms.stream.SReduceExample;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 
@@ -113,7 +113,7 @@ public class ExampleMain {
       if (operation.equals("reduce")) {
         basicJob = BasicJob.newBuilder()
             .setName("reduce-batch-bench")
-            .setContainerClass(SReduceExample.class.getName())
+            .setContainerClass(BReduceExample.class.getName())
             .setRequestResource(new ResourceContainer(2, 1024), containers)
             .setConfig(jobConfig)
             .build();
@@ -124,7 +124,7 @@ public class ExampleMain {
       if (operation.equals("reduce")) {
         basicJob = BasicJob.newBuilder()
             .setName("reduce-stream-bench")
-            .setContainerClass(BReduceExample.class.getName())
+            .setContainerClass(SReduceExample.class.getName())
             .setRequestResource(new ResourceContainer(2, 1024), containers)
             .setConfig(jobConfig)
             .build();
