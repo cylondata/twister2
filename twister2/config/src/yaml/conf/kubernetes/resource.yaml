@@ -10,8 +10,8 @@ twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.scp.ScpUploader"
 # twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader"
 
 # container class to run in workers
-twister2.job.basic.container.class: "edu.iu.dsc.tws.examples.basic.BasicK8sWorker"
-# twister2.job.basic.container.class: "edu.iu.dsc.tws.examples.basic.comms.BaseBroadcastCommunication"
+# twister2.job.basic.container.class: "edu.iu.dsc.tws.examples.basic.BasicK8sWorker"
+twister2.job.basic.container.class: "edu.iu.dsc.tws.examples.basic.comms.BaseBroadcastCommunication"
 
 # image pull policy, by default is IfNotPresent
 # it could also be Always
@@ -41,7 +41,7 @@ kubernetes.worker.mapping.operator: "In"
 kubernetes.worker.mapping.values: ['e012', 'e013']
 # kubernetes.worker.mapping.values: []
 
-# unifrom worker mapping
+# uniform worker mapping
 # Valid values: all-same-node, all-separate-nodes, none
 # default value is none
 # kubernetes.worker.mapping.uniform: "all-same-node"

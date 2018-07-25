@@ -16,7 +16,7 @@ import java.util.Set;
 import edu.iu.dsc.tws.comms.dfw.io.SerializeState;
 
 /**
- * Keep track of a MPI message while it is transisitioning through the send phases
+ * Keep track of a message while it is transisitioning through the send phases
  */
 public class OutMessage {
   // keep track of the serialized bytes in case we don't

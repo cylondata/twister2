@@ -36,7 +36,6 @@ import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageSerializer;
-import edu.iu.dsc.tws.comms.mpi.TWSMPIChannel;
 
 public class ChannelDataFlowOperation implements ChannelListener, ChannelMessageReleaseCallback {
   private static final Logger LOG = Logger.getLogger(ChannelDataFlowOperation.class.getName());
@@ -611,7 +610,6 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
         // we need to reset the buffer so it can be used again
         buffer.getByteBuffer().clear();
         if (!queue.offer(buffer)) {
-          ((TWSMPIChannel) channel).setDebug(true);
           throw new RuntimeException(String.format("%d Buffer release failed for source %d %d %d",
               executor, message.getOriginatingId(), queue.size(), queue.remainingCapacity()));
         }

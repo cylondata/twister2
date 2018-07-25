@@ -1,6 +1,6 @@
 # this is used to allow twister2 workers (pods) to get, watch and list events from Kubernetes master
 # Twister2 workers needs to watch the job master pod in a job to discover the job master IP address
-# Job master needs to have delete permission to cleaup job resources
+# Job master needs to have delete permission to cleanup job resources
 # This Role and RoleBinding need to be created at the Kubernetes master for the used namespace,
 # before submitting Twister2 jobs
 # source: https://kubernetes.io/docs/admin/authorization/rbac/

@@ -51,9 +51,19 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
   }
 
   public boolean addTaskVertex(String name, Vertex taskVertex) {
-    addTaskVertex(taskVertex);
-    taskMap.put(name, taskVertex);
+    if (!validateTaskVertex(name)) {
+      addTaskVertex(taskVertex);
+      taskMap.put(name, taskVertex);
+    }
     return true;
+  }
+
+  public boolean validateTaskVertex(String taskName) {
+    boolean flag = false;
+    if (taskMap.containsKey(taskName)) {
+      throw new RuntimeException("Duplicate names for the submitted task:" + taskName);
+    }
+    return flag;
   }
 
   public Vertex vertex(String name) {

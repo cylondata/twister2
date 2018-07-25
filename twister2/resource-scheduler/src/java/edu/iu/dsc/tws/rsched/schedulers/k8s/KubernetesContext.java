@@ -77,6 +77,7 @@ public class KubernetesContext extends SchedulerContext {
   public static final String K8S_UPLOADING_METHOD = "twister2.kubernetes.uploading.method";
 
   public static final String PERSISTENT_JOB_DIRECTORY = "job.master.persistent.job.directory";
+  public static final String SECRET_NAME = "kubernetes.secret.name";
 
   public static int workersPerPod(Config cfg) {
     return cfg.getIntegerValue(WORKERS_PER_POD, WORKERS_PER_POD_DEFAULT);
@@ -156,6 +157,10 @@ public class KubernetesContext extends SchedulerContext {
 
   public static String uploadMethod(Config cfg) {
     return cfg.getStringValue(K8S_UPLOADING_METHOD, K8S_UPLOADING_METHOD_DEFAULT);
+  }
+
+  public static String secretName(Config cfg) {
+    return cfg.getStringValue(SECRET_NAME);
   }
 
 }

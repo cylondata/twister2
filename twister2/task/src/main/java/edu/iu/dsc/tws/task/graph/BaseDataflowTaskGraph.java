@@ -15,7 +15,9 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.logging.Logger;
 
 public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
   protected Set<TV> vertices;
@@ -24,11 +26,13 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
   protected Comparator<TV> vertexComparator;
   protected Comparator<TE> edgeComparator;
 
+  private static final Logger LOG = Logger.getLogger(BaseDataflowTaskGraph.class.getName());
+
   public BaseDataflowTaskGraph() {
   }
 
   public BaseDataflowTaskGraph(Comparator<TV> comparator, Comparator<TE> eComparator) {
-    this.vertices = new HashSet<>();
+    this.vertices = new LinkedHashSet<>();
     this.edges = new HashSet<>();
     this.directedEdges = new HashSet<>();
     this.vertexComparator = comparator;
@@ -75,6 +79,7 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
 
   @Override
   public boolean addTaskEdge(TV taskVertex1, TV taskVertex2, TE taskEdge) {
+
     if (taskEdge == null) {
       throw new NullPointerException();
     } else if (containsTaskEdge(taskEdge)) {
@@ -116,11 +121,32 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     return ret;
   }
 
+  /* Commented for duplicate task edge validation for same tasks.
   @Override
   public boolean containsTaskEdge(TE taskEdge) {
     return edges.contains(taskEdge);
+  }*/
+
+  /**
+   * This method is used to identify the duplicate task edge for the
+   * same two tasks in the graph.
+   * @param taskEdge
+   * @return
+   */
+  @Override
+  public boolean containsTaskEdge(TE taskEdge) {
+
+    boolean flag = false;
+    for (DirectedEdge<TV, TE> de : directedEdges) {
+      if (edgeComparator.compare(de.taskEdge, taskEdge) == 0) {
+        //flag = true;
+        throw new RuntimeException("Duplicate task edges found for the task edge:" + taskEdge);
+      }
+    }
+    return flag;
   }
 
+  /* Commented for duplicate task vertex names in the graph. */
   @Override
   public boolean containsTaskVertex(TV taskVertex) {
     return vertices.contains(taskVertex);
@@ -239,7 +265,7 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
   }
 
   public Set<TV> childrenOfTask(TV t) {
-    Set<TV> ret = new HashSet<>();
+    Set<TV> ret = new LinkedHashSet<>();
     for (DirectedEdge<TV, TE> de : directedEdges) {
       if (vertexComparator.compare(de.sourceTaskVertex, t) == 0) {
         ret.add(de.targetTaskVertex);
@@ -249,7 +275,7 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
   }
 
   public Set<TV> parentsOfTask(TV t) {
-    Set<TV> ret = new HashSet<>();
+    Set<TV> ret = new LinkedHashSet<>();
     for (DirectedEdge<TV, TE> de : directedEdges) {
       if (vertexComparator.compare(de.targetTaskVertex, t) == 0) {
         ret.add(de.sourceTaskVertex);
@@ -299,17 +325,6 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     return flag;
   }
 
-  protected boolean validateTaskVertex(TV taskVertex) {
-    if (containsTaskVertex(taskVertex)) {
-      return true;
-    } else if (taskVertex == null) {
-      throw new NullPointerException();
-    } else {
-      throw new IllegalArgumentException(
-          "No task vertex in this task graph: " + taskVertex.toString());
-    }
-  }
-
   @Override
   public Set<TE> removeAllTaskEdges(TV sourceTaskVertex,
                                     TV targetTaskVertex) {
@@ -328,17 +343,71 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
   /**
    * Validate the graph and check weather there are invalid entries
    * @return true if the graph is valid
+   *
    */
   public boolean validate() {
     return true;
+
+    //Code to check the self-loop
+    /*boolean flag = false;
+    if (!detectCycle(getTaskVertexSet())) {
+      return true;
+    }
+    return flag;*/
+  }
+
+  protected boolean validateTaskVertex(TV taskVertex) {
+    if (containsTaskVertex(taskVertex)) {
+      return true;
+    } else if (taskVertex == null) {
+      throw new NullPointerException();
+    } else {
+      throw new IllegalArgumentException(
+          "No task vertex in this task graph: " + taskVertex.toString());
+    }
+  }
+
+  protected boolean validateTaskEdges(TE taskEdge) {
+    if (containsTaskEdge(taskEdge)) {
+      return true;
+    } else if (taskEdge == null) {
+      throw new NullPointerException();
+    } else {
+      throw new IllegalArgumentException(
+          "No task Edge in this task graph: " + taskEdge.toString());
+    }
+  }
+
+
+  public boolean detectCycle(Set<TV> taskVertex) {
+
+    boolean flag = false;
+    Iterator<TV> vertexIterator = taskVertex.iterator();
+    while (vertexIterator.hasNext()) {
+      if (!containsSelfLoop(vertexIterator.next())) {
+        flag = true;
+      }
+    }
+    return flag;
+  }
+
+  public boolean containsSelfLoop(TV sourceTaskVertex) {
+
+    boolean flag = false;
+    for (DirectedEdge<TV, TE> de : directedEdges) {
+      if (de.sourceTaskVertex.equals(de.targetTaskVertex)) {
+        throw new RuntimeException("Self-loop detected for the taskgraph");
+      }
+    }
+    return flag;
   }
 
   /**
    * Build the internal structures of the graph, so that it can be searched
    */
   public void build() {
-
   }
+
 }
 
 

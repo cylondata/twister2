@@ -29,12 +29,9 @@ public class JobMasterContext extends Context {
   public static final long PING_INTERVAL_DEFAULT = 10000;
   public static final String PING_INTERVAL = "twister2.worker.ping.interval";
 
-  // client to master ping interval in milliseconds
   public static final int JOB_MASTER_PORT_DEFAULT = 11011;
   public static final String JOB_MASTER_PORT = "twister2.job.master.port";
 
-  // client to master ping interval in milliseconds
-  public static final String JOB_MASTER_IP_DEFAULT = null;
   public static final String JOB_MASTER_IP = "twister2.job.master.ip";
 
   // worker to master response wait time in milliseconds
@@ -76,7 +73,7 @@ public class JobMasterContext extends Context {
   }
 
   public static String jobMasterIP(Config cfg) {
-    return cfg.getStringValue(JOB_MASTER_IP, JOB_MASTER_IP_DEFAULT);
+    return cfg.getStringValue(JOB_MASTER_IP);
   }
 
   public static long responseWaitDuration(Config cfg) {

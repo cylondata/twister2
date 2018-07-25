@@ -13,6 +13,9 @@ package edu.iu.dsc.tws.comms.api;
 
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 
+/**
+ * The communication operation interface.
+ */
 public interface DataFlowOperation {
   /**
    * Use this to inject partial results in a distributed dataflow operation
@@ -68,12 +71,4 @@ public interface DataFlowOperation {
    * @return task plan
    */
   TaskPlan getTaskPlan();
-
-  /**
-   * if set to true the operation will be memory mapped
-   *
-   * @param memoryMapped weather using disks
-   */
-  default void setMemoryMapped(boolean memoryMapped) {
-  }
 }
