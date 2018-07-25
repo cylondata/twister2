@@ -202,6 +202,8 @@ public class MultiMessageSerializer implements MessageSerializer {
     }
     if (state.getCurrentObject() == objectList.size()) {
       sendMessage.setSendState(OutMessage.SendState.SERIALIZED);
+    } else {
+      sendMessage.setSendState(OutMessage.SendState.PARTIALLY_SERIALIZED);
     }
   }
 
