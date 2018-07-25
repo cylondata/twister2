@@ -1,0 +1,35 @@
+# Code Review Notes
+
+## SortJob 
+
+In big data related problems, the main problem we deal is the too much
+big chunks of data which are not sorted properly. In order to achieve
+this task, we have the Sorting functionality implemented in Twister2. 
+
+In order to Sort the data, genearlly the data records are in the form 
+of key and value pairs, so we need to create a global order to sort them
+if we are considering a distributed approach. 
+
+For example if we have 10 nodes, we need to design a mechanism how to
+distribute or partition the data into 10 nodes. And also we have no
+clue about the nature of the data and how they are located. They can
+be highly shuffled. When the data is not uniform, just dividing the
+data based on equal intervals for 10 nodes won't get the same work
+load for each worker.
+
+The suggested solution is the Terasort algorithm. 
+
+First we get a sample of data from each node after partitioning them 
+based on a random mechanism. 
+
+Each node knows the range of the data sample sent by each node.  Then
+we can get a clear idea to which node a particular record must belong.
+After this stage is completed. Each node is working on sorting it's
+records.  Then the merge sort like meachanism is being used from
+MapReduce concept to sort the records in the each node.
+
+Each Communication Program has two main section a soure task and a
+sink task. The source task generally generates the data and the sink
+task receives the processed data. That discussion will be more solidly
+done along with solid communication level examples in the next
+meeting.

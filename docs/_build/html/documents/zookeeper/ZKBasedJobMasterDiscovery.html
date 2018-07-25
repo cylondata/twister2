@@ -1,0 +1,169 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>&lt;no title&gt; &mdash; Twister2 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Twister2 1.0.0 documentation" href="../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <p># ZooKeeper Based Job Master Discovery
+Ahmet Uyar</p>
+<p>When a Twister2 job is submitted, a Job Master is created in addition to workers.
+Workers need to know the Job Master IP address and the port number to be able to connect to it.
+Some resource schedulers such as Kubernetes provides some means for workers to discover the Job Master.
+However, there might be resource schedulers that do not provide such discovery mechanisms such as Nomad scheduler.
+In that case, ZooKeeper server can be used to discover the Job Master address.</p>
+<p>## Main Idea
+When a Twister2 job is submitted:
+* one Job Master
+* possibly many workers</p>
+<p>started in the cluster.</p>
+<p><strong>When the Job Master starts:</strong>
+* It registers its IP address and the port number with the ZooKeeper server.</p>
+<p><strong>When the workers start:</strong>
+* They get the address of the Job Master from the ZooKeeper server.</p>
+<p>## Assumptions
+We assume that:
+* Each Twister2 job has a unique name.
+There can not be more than one Twister2 job running in the cluster with the same name simultaneously.
+When we submit a job, if there is already a running job with the same name, that job submission fails.
+* Each Twister2 job is composed of one Job Master and possibly many workers.
+* Job Master knows its own IP address and its port number when it starts.
+* Both the Job Master and the workers know the IP address and the port number of the ZooKeeper server.</p>
+<p>## Implementation
+<strong>We implemented two classes:</strong>
+* edu.iu.dsc.tws.rsched.bootstrap.ZKJobMasterRegistrar
+* edu.iu.dsc.tws.rsched.bootstrap.ZKJobMasterFinder</p>
+<p>ZKJobMasterRegistrar class is used to register the Job Master address with the ZooKeeper server.
+ZKJobMasterFinder class is used to get the Job Master address from the ZooKeeper server.</p>
+<p><strong>ZNode Creation</strong>
+When the Job Master is registered its address on the ZooKeeper server,
+an ephemeral znode is created. The name of this znode will be:
+* /twister2/&lt;job-name&gt;-&lt;job-master&gt;</p>
+<p>assuming the root znode is twister2.</p>
+<p>Job Master IP address and the port number is put as the payload in this znode as a String in the form of:
+* ip:port</p>
+<p><strong>ZNode Deletion</strong>
+When the job completes, the ZKJobMasterRegistrar should delete the znode from the ZooKeeper server explicitly by calling its close method.
+If the job master is prematurely shut down, the znode will be deleted automatically, since the znode is ephemeral.
+However, it takes 30 seconds for the ZooKeeper to delete ephemeral nodes in premeture shut downs.
+If the user wants to submit another job during this time period with the same name, then the remaining znode
+from the previous job needs to be deleted first.</p>
+<p>ZKJobMasterRegistrar class has two methods to check the existence of the znode for that job and delete it:
+* sameZNodeExist()
+* deleteJobMasterZNode()</p>
+<p>These methods can be used to clear the previously remaining znodes.
+However, care needs to be taken, because another user may have been submitted a job with the same name.
+Before deleting the job master znode, the user needs to be sure that, that znode is its znode from previous job submission.</p>
+<p><strong>Discovering the Job Master Address</strong>
+When the workers start, they query the job master znode.
+If the znode already created, they get the content and parse the ip:port pair.
+If the znode has not been created yet, we create a NodeCache object.
+It gets all changes to the Job master node in a local cache.
+We get the Job Master address from this cache when the znode is created on the server.
+NodeCache works event based. So, we avoid polling the ZooKeeper server continually.</p>
+<p>## Usage
+<strong>Registering the Job Master</strong>
+Job Master is started by a separate program in each cluster.
+For example, in Kubernetes it is started by the class:
+* edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobMasterStarter</p>
+<p>When this class starts the Job Master, it also needs to start the ZKJobMasterRegistrar.
+When the ZKJobMasterRegistrar is constructed, its initialize method needs to be called to register.
+It returns a boolean value to show the result of the registration.</p>
+<p>When the job completes, it needs to call the close method of the ZKJobMasterRegistrar class
+to delete the job znode and close the connection to the ZooKeeper server.</p>
+<p><strong>Getting the Job Master Address</strong>
+Similar to Job Master, Twister2 workers are also started by a separate program in each cluster.
+For example, in Kubernetes clusters, they are started by:
+* edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerStarter</p>
+<p>Before starting the worker, this program should start ZKJobMasterFinder.
+After initializing, it can get the Job Master address by calling the method: getJobMasterIPandPort().
+If this method returns null, it means that the Job Master has  not registered yet.
+In that case, it can call waitAndGetJobMasterIPandPort(long timeLimit) method.
+This method will wait for the Job Master znode to be registered until the timeLimit has been reached.</p>
+<p><strong>Example Code</strong>
+We put sample usages of both classes to their main methods.</p>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/documents/zookeeper/ZKBasedJobMasterDiscovery.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, DSC-SPIDAL.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="../../_sources/documents/zookeeper/ZKBasedJobMasterDiscovery.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
