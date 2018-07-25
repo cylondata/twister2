@@ -88,7 +88,8 @@ public final class ZKDiscovererExample {
   }
 
   public static void printUsage() {
-    LOG.info("java ZKDiscovererExample zkAddress action numberOfWorkers\n"
+    LOG.info("Usage:\n"
+        + "java ZKDiscovererExample zkAddress action numberOfWorkers\n"
         + "\taction can be: join, delete\n"
         + "\tnumberOfWorkers is not needed for delete");
   }

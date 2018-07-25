@@ -17,7 +17,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.net.tcp.Progress;
 import edu.iu.dsc.tws.common.net.tcp.StatusCode;
 import edu.iu.dsc.tws.common.net.tcp.request.ConnectHandler;
@@ -189,44 +188,6 @@ public class JobMaster extends Thread {
     @Override
     public void onClose(SocketChannel channel) {
     }
-  }
-
-  /**
-   * this main method is for locally testing only
-   * JobMaster is started by:
-   *    edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobMasterStarter
-   * @param args
-   */
-  public static void main(String[] args) {
-
-    int numberOfWorkers = 1;
-    if (args.length == 1) {
-      numberOfWorkers = Integer.parseInt(args[0]);
-    }
-
-    Config configs = buildConfig(numberOfWorkers);
-
-    LOG.info("Config parameters: \n" + configs);
-
-    String host = JobMasterContext.jobMasterIP(configs);
-    String jobName = Context.jobName(configs);
-
-    JobMaster jobMaster = new JobMaster(configs, host, null, jobName);
-    jobMaster.init();
-  }
-
-
-  /**
-   * construct a Config object
-   * @return
-   */
-  public static Config buildConfig(int numberOfWorkers) {
-    return Config.newBuilder()
-        .put(JobMasterContext.JOB_MASTER_IP, "localhost")
-        .put(Context.JOB_NAME, "basic-kube")
-        .put(Context.TWISTER2_WORKER_INSTANCES, numberOfWorkers)
-        .put(JobMasterContext.JOB_MASTER_ASSIGNS_WORKER_IDS, "true")
-        .build();
   }
 
 }
