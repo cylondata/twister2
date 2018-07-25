@@ -23,10 +23,11 @@ We discuss the following topics:
 
 In addition to running Twister2 jobs on Kubernetes clusters, We have implemented 
 the following APIs/services: 
-* [Worker Discovery](./K8sBasedWorkerDiscovery.md)
-* [Persistent Storage](./K8sPersistentStorage.md)
-* [Services for Twister2 Jobs](./K8sServices.md) 
-* [Worker Binding and Mapping](./K8sWorkerBindingMapping.md)
+* [Worker Discovery](K8sBasedWorkerDiscovery.md)
+* [Persistent Storage](K8sPersistentStorage.md)
+* [Services for Twister2 Jobs](K8sServices.md) 
+* [Worker Binding and Mapping](K8sWorkerBindingMapping.md)
+* [OpenMPI Support](OpenMPI-Support.md)
 
 Each one is explained in a separate document. 
 
