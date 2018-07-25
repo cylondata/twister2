@@ -81,7 +81,8 @@ public class SingleMessageSerializer implements MessageSerializer {
       }
 
       if (sendMessage.serializedState() == OutMessage.SendState.HEADER_BUILT
-          || sendMessage.serializedState() == OutMessage.SendState.BODY_BUILT) {
+          || sendMessage.serializedState() == OutMessage.SendState.BODY_BUILT
+          || sendMessage.serializedState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
         if ((sendMessage.getFlags() & MessageFlags.EMPTY) == MessageFlags.EMPTY) {
           sendMessage.setSendState(OutMessage.SendState.SERIALIZED);
           sendMessage.getSerializationState().setTotalBytes(0);
