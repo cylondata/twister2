@@ -25,7 +25,7 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.op.stream.SReduce;
+import edu.iu.dsc.tws.comms.op.batch.BReduce;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.basic.comms.BenchWorker;
 import edu.iu.dsc.tws.examples.basic.comms.DataGenerator;
@@ -33,7 +33,7 @@ import edu.iu.dsc.tws.examples.basic.comms.DataGenerator;
 public class BReduceExample extends BenchWorker {
   private static final Logger LOG = Logger.getLogger(BReduceExample.class.getName());
 
-  private SReduce reduce;
+  private BReduce reduce;
 
   @Override
   protected void execute() {
@@ -48,7 +48,7 @@ public class BReduceExample extends BenchWorker {
     int target = noOfSourceTasks;
 
     // create the communication
-    reduce = new SReduce(communicator, taskPlan, sources, target,
+    reduce = new BReduce(communicator, taskPlan, sources, target,
         new IdentityFunction(), new FinalReduceReceiver(), MessageType.INTEGER);
 
 
@@ -92,6 +92,15 @@ public class BReduceExample extends BenchWorker {
       }
       LOG.info(String.format("%d Done sending", id));
     }
+  }
+
+  @Override
+  protected boolean sendMessages(int task, Object data, int flag) {
+    while (!reduce.reduce(task, data, flag)) {
+      // lets wait a litte and try again
+      reduce.progress();
+    }
+    return true;
   }
 
   @Override

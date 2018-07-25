@@ -17,6 +17,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.Communicator;
@@ -47,8 +48,6 @@ public abstract class BenchWorker implements IWorker {
   public void init(Config cfg, int containerId, ResourcePlan plan,
                    IWorkerDiscoverer workerController, IPersistentVolume persistentVolume,
                    IVolatileVolume volatileVolume) {
-    LOG.log(Level.INFO, "Starting the example with container id: " + plan.getThisId());
-
     // create the job parameters
     this.jobParameters = JobParameters.build(cfg);
     this.config = cfg;
@@ -57,16 +56,12 @@ public abstract class BenchWorker implements IWorker {
 
     // lets create the task plan
     this.taskPlan = Utils.createStageTaskPlan(cfg, plan, jobParameters.getTaskStages());
-
     // create the channel
     channel = Network.initializeChannel(config, workerController, resourcePlan);
-
     // create the communicator
     communicator = new Communicator(cfg, channel);
-
     // now lets execute
     execute();
-
     // now progress
     progress();
   }
@@ -86,4 +81,29 @@ public abstract class BenchWorker implements IWorker {
   protected abstract void progressCommunication();
 
   protected abstract boolean isDone();
+
+  protected abstract boolean sendMessages(int task, Object data, int flag);
+
+  protected class MapWorker implements Runnable {
+    private int task;
+
+    public MapWorker(int task) {
+      this.task = task;
+    }
+
+    @Override
+    public void run() {
+      LOG.log(Level.INFO, "Starting map worker: " + id);
+      int[] data = DataGenerator.generateIntData(jobParameters.getSize());
+      for (int i = 0; i < jobParameters.getIterations(); i++) {
+        // lets generate a message
+        int flag = 0;
+        if (i == jobParameters.getIterations() - 1) {
+          flag = MessageFlags.FLAGS_LAST;
+        }
+        sendMessages(task, data, flag);
+      }
+      LOG.info(String.format("%d Done sending", id));
+    }
+  }
 }

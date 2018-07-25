@@ -15,12 +15,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.ReduceReceiver;
@@ -28,7 +26,6 @@ import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.stream.SReduce;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.basic.comms.BenchWorker;
-import edu.iu.dsc.tws.examples.basic.comms.DataGenerator;
 
 public class SReduceExample extends BenchWorker {
   private static final Logger LOG = Logger.getLogger(SReduceExample.class.getName());
@@ -67,31 +64,13 @@ public class SReduceExample extends BenchWorker {
     reduce.progress();
   }
 
-  private class MapWorker implements Runnable {
-    private int task;
-
-    MapWorker(int task) {
-      this.task = task;
+  @Override
+  protected boolean sendMessages(int task, Object data, int flag) {
+    while (!reduce.reduce(task, data, flag)) {
+      // lets wait a litte and try again
+      reduce.progress();
     }
-
-    @Override
-    public void run() {
-      LOG.log(Level.INFO, "Starting map worker: " + id);
-      int[] data = DataGenerator.generateIntData(jobParameters.getSize());
-      for (int i = 0; i < jobParameters.getIterations(); i++) {
-        // lets generate a message
-        int flag = 0;
-        if (i == jobParameters.getIterations() - 1) {
-          flag = MessageFlags.FLAGS_LAST;
-        }
-
-        while (!reduce.reduce(task, data, flag)) {
-          // lets wait a litte and try again
-          reduce.progress();
-        }
-      }
-      LOG.info(String.format("%d Done sending", id));
-    }
+    return true;
   }
 
   @Override
