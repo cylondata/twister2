@@ -56,7 +56,6 @@ public class WorkerMonitor implements MessageHandler {
   public void onMessage(RequestID id, int workerId, Message message) {
 
     if (message instanceof Network.Ping) {
-      LOG.log(Level.INFO, "Ping request received: " + message.toString());
       Network.Ping ping = (Network.Ping) message;
       pingMessageReceived(id, ping);
 
@@ -78,10 +77,10 @@ public class WorkerMonitor implements MessageHandler {
   private void pingMessageReceived(RequestID id, Network.Ping ping) {
 
     if (workers.containsKey(ping.getWorkerID())) {
-      LOG.info("Ping message received from a worker: \n" + ping);
+      LOG.fine("Ping message received from a worker: \n" + ping);
       workers.get(ping.getWorkerID()).setPingTimestamp(System.currentTimeMillis());
     } else {
-      LOG.info("Ping message received from a worker that has not joined the job yet: " + ping);
+      LOG.warning("Ping message received from a worker that has not joined the job yet: " + ping);
     }
 
     Network.Ping pingResponse = Network.Ping.newBuilder()
@@ -91,7 +90,7 @@ public class WorkerMonitor implements MessageHandler {
         .build();
 
     rrServer.sendResponse(id, pingResponse);
-    LOG.info("Ping response sent to the worker: \n" + pingResponse);
+    LOG.fine("Ping response sent to the worker: \n" + pingResponse);
   }
 
   private void stateChangeMessageReceived(RequestID id, Network.WorkerStateChange message) {
