@@ -1,0 +1,139 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>&lt;no title&gt; &mdash; Twister2 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Twister2 1.0.0 documentation" href="../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <p># Services for Twister2 Jobs on Kubernetes
+Ahmet Uyar</p>
+<p>We start a headless service for a regular Twister2 job.
+Those jobs do not expose any ports to external entities.
+However, each worker has its own port and it can communicate with other workers
+in the same job through that port.</p>
+<p>When a Twister2 job wants to expose some of its ports to external access,
+we use NodePort feature of Kubernetes system. Each worker exposes one port to outside access.
+Outside entities send requests to the address: &lt;nodeIP&gt;:&lt;NodePort&gt;.
+Therefore, at least some of Kubernetes nodes must have public IP addresses.
+In addition, the port on NodePort must be accessible from outside.</p>
+<p>When there are multiple nodes in a cluster, if all those nodes have public IP addresses,
+NodePort service can be reached by using any one of those node IP addresses.
+It does not matter which node IP address the requests are sent to.
+All requests to all node IP addresses on NodePort are directed to one of the workers.</p>
+<p>When  there are multiple workers in a Twister2 job, the incoming requests are directed
+to workers by Kubernetes. Each request is directed to one worker.
+Outside entities does not know which worker they will connect to when they send the request.
+Kubernetes manages requests to worker mapping.</p>
+<p>## Configuration Parameters
+Two configuration parameters are added for NodePort service.</p>
+<p><strong>Enabling NodePort Service</strong>: One parameter shows whether a NodePort service is requested
+for the submitted job. Its value is false by default. When requesting a NodePort service,
+its value has to be “true”.</p>
+<blockquote>
+<div>kubernetes.node.port.service.requested</div></blockquote>
+<p><strong>NodePort Service Port Number</strong>: This parameter determines the port value for NodePort service.
+If the user does not set this parameter, then NodePort value is dynamically assigned.
+The user can learn the dynamically assigned NodePort value by querying Kubernetes master
+with the command “kubectl get services -o wide”.</p>
+<blockquote>
+<div>kubernetes.service.node.port</div></blockquote>
+<p>## Limitations
+NodePort supports only a single port on each pod. Therefore, when using NodePort service,
+number of workers per pod has to be 1. We can not run more than one worker on a pod.
+Because, Kubernetes does not direct requests to more than one port on a pod.</p>
+<p>I tried assigning names to container ports and set the name as targetPort in NodePort service object,
+but that does not work. It seems that currently Kubernetes does not direct requests
+to more than one port on a pod.</p>
+<p>## Other Alternatives: Future Works
+Another alternative for exposing services with Kubernetes is to use LoadBalancers.
+We have not implemented LoadBalancer support yet.</p>
+<p>In this method, a load balancer gets the requests from external entities
+and directs them to workers in the cluster. Load balancers are particularly used
+in cloud environments such as AWS or GCE.</p>
+<p>A third approach is to use Ingress Controller. It is a type of load balancer.
+Ingress Controller needs to be installed on the cluster separately.</p>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/documents/kubernetes/K8sServices.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, DSC-SPIDAL.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="../../_sources/documents/kubernetes/K8sServices.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

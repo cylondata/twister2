@@ -1,0 +1,179 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>&lt;no title&gt; &mdash; Twister2 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Twister2 1.0.0 documentation" href="../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <p># Persistent Storage on Kubernetes
+Ahmet Uyar</p>
+<p>Kubernetes provides [persistent storage](<a class="reference external" href="https://kubernetes.io/docs/concepts/storage/persistent-volumes/">https://kubernetes.io/docs/concepts/storage/persistent-volumes/</a>)
+support by using any one of the supported distributed file systems.
+Some of the supported file systems are: gcePersistentDisk, awsElasticBlockStore, Cinder,
+glusterfs, rbd, Azure File, Azure Disk, Portworx, NFS.</p>
+<p>We tested Twister2 persistent storage support with Network File System (NFS).
+Other file systems should also work. We installed an NFS server in one of the cluster servers.
+We also deployed the [NFS-Client provisioner](<a class="reference external" href="https://github.com/kubernetes-incubator/external-storage/tree/master/nfs-client">https://github.com/kubernetes-incubator/external-storage/tree/master/nfs-client</a>).
+It handles dynamic PersistentVolume creation and deletions.
+NFS-Client provisioner runs as a separate deployment in the cluster.</p>
+<p>We create a separate PersistentVolumeClaim object for each job.
+PersistentVolume creation is handled dynamically by the provisioner.
+A separate persistent directory is created for each job by the provisioner in our NFS server.</p>
+<p>Twister2 should also work with static PersistentVolumes.
+However, it is much more convenient to use a dynamic provisioner.</p>
+<p>Each twister2 pod attaches itself to the shared NFS directory.
+Each pod mounts to the persistent volume as:</p>
+<blockquote>
+<div>/persistent</div></blockquote>
+<p>Since the provisioner provides a separate directory for each PersistentVolume,
+we do not create a separate job directory under this directory.
+A separate logs directory is also created for persistent log files.</p>
+<p>## Configuration Settings
+<strong>Persistent Storage Class</strong>: Cluster administrators provide a StorageClass object
+to dynamically create PersistentVolumes. Its name must be provided as a parameter
+in the configuration files. Parameter name:</p>
+<blockquote>
+<div>kubernetes.persistent.storage.class</div></blockquote>
+<p><strong>Persistent Volume Sizes</strong>: A parameter determines the size of the persistent volume
+on each worker. It is called:</p>
+<blockquote>
+<div>persistent.volume.per.worker</div></blockquote>
+<p>When persistent.volume.per.worker value is zero, twister2 does not initialize persistent storage.
+If a cluster does not have persistent storage support, this value must be set to zero.</p>
+<p><strong>Access Modes</strong>: Pods can have read/write access to the persistent volume.
+By default pods have ReadWriteMany access.
+It can be changed from the configuration files by using the configuration parameter:</p>
+<blockquote>
+<div>kubernetes.storage.access.mode</div></blockquote>
+<p>The options are ReadWriteMany, ReadWriteOnce and ReadOnlyMany.
+In the case of ReadWriteOnce, only one pod can write.
+In the case of ReadOnlyMany, all pods can only read.</p>
+<p>## Design Issues
+Kubernetes has two constructs related to persistent volumes:
+PersistentVolume and PersistentVolumeClaim.
+PersistentVolumes are created either by administrators statically or by provisioners dynamically.
+Twister2 should work in both cases. We assume that either a storage provisioner is deployed
+in the cluster or a static PersistentVolume is created for each job.
+We create one PersistentVolumeClaim instance for each job.
+All pods in the job attach to the same PersistentVolumeClaim.</p>
+<p>When the job has completed, we delete the PersistentVolumeClaim object.
+The provisioner deletes the  PersistentVolume object automatically.
+When the PersistentVolume object is deleted, depending on
+the storage retain policy of the provisioner, created files may be deleted.
+If the job files in the persistent storage are deleted after the job has completed,
+retain policy of the provisioner needs to be changed from “Delete” to “Retain”.</p>
+<p>The name of the PersistentVolumeClaim object for a job is constructed
+by using the job name as a suffix.</p>
+<p>## PersistentVolume Interface: IPersistentVolume
+An interface is added to Twister2 package for letting workers access persistent volumes.
+The interface is:</p>
+<blockquote>
+<div>[edu.iu.dsc.tws.rsched.spi.container.IPersistentVolume](../../../twister2/resource-scheduler/src/java/edu/iu/dsc/tws/rsched/spi/container/IPersistentVolume.java)</div></blockquote>
+<p>The interface has methods for two directories: job directory and worker directory.
+Job directory is shared among all workers in a job. Worker directory is created for each worker.
+In addition, it returns the persistent log file name for this worker.</p>
+<p>The methods are:</p>
+<blockquote>
+<div>String getJobDirPath();
+String getWorkerDirPath();
+boolean jobDirExists();
+boolean workerDirExists();
+File getJobDir();
+File getWorkerDir();
+String getLogFileName();</div></blockquote>
+<dl class="docutils">
+<dt>IPersistentVolume interface is implemented in the class:</dt>
+<dd>[edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sPersistentVolume](../../../twister2/resource-scheduler/src/java/edu/iu/dsc/tws/rsched/schedulers/k8s/worker/K8sPersistentVolume.java)</dd>
+</dl>
+<p>An instance of this class is passed to the IWorker classes.
+Therefore, workers will be able to use the provided persistent storage.</p>
+<p>## Limitations and Future Works
+Persistent storage is only implemented and tested for NFS.
+Kubernetes supports many other distributed storage systems.
+Persistent storage support for other storage systems need to be added.
+Particularly, the support for Amazon AWS, Google GCE, Azure Disk Storage, etc. can be added.</p>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/documents/kubernetes/K8sPersistentStorage.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, DSC-SPIDAL.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="../../_sources/documents/kubernetes/K8sPersistentStorage.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
