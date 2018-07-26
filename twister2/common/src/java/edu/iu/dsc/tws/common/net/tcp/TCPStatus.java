@@ -23,5 +23,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.net.tcp;
 
-public class TCPStatus {
+public enum TCPStatus {
+  INIT,
+  COMPLETE,
+  ERROR,
 }

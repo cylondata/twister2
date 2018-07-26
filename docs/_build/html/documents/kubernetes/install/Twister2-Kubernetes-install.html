@@ -1,0 +1,139 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>&lt;no title&gt; &mdash; Twister2 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Twister2 1.0.0 documentation" href="../../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <p># Twister2 Installation in Kubernetes Clusters</p>
+<p>## Authorization of Pods
+Twister2 Worker pods need to get the IP address of the Job Master.
+In addition, Job Master needs to be able to delete used resources after
+the job has completed. Therefore, before running a Role and RoleBinding object need to be created.
+We prepared the following YAML file: twister2-auth.yaml.</p>
+<p>First modify the namespace field in the twister2-auth.yaml.
+Change the value of this field to a namespace value, that users will use to submit Twister2 jobs.
+Then execute the following command:</p>
+<blockquote>
+<div>$kubectl create -f twister2-auth.yaml</div></blockquote>
+<p>## Persistent Storage Settings
+Twister2 expects that either a Persistent Storage Provisioner or statically configured
+PersistentVolume exists in the cluster.
+Persistent storage class needs to be specified in the client.yaml configuration file.
+Configuration parameter is: kubernetes.persistent.storage.class</p>
+<p>We tested with NFS-Client provisioner from:
+<a class="reference external" href="https://github.com/kubernetes-incubator/external-storage/tree/master/nfs-client">https://github.com/kubernetes-incubator/external-storage/tree/master/nfs-client</a></p>
+<p>NFS-Client provisioner is used if you already have an NFS server.
+Otherwise you may also use NFS provisioner
+that does not require to have an NFS provisioner:
+<a class="reference external" href="https://github.com/kubernetes-incubator/external-storage/tree/master/nfs">https://github.com/kubernetes-incubator/external-storage/tree/master/nfs</a></p>
+<p>Before proceeding with Twister2, make sure you either setup a static PersistentVolume
+or deployed a persistent storage provisioner.</p>
+<p>## Generating Secret Object for OpenMPI Jobs
+When using OpenMPI communications in Twister2, pods need to have password-free SSH access
+among them. This is accomplished by first generating an SSH key pair and
+deploying them as a Kubernetes Secret on the cluster.</p>
+<p>First, generate an SSH key pair by using:</p>
+<blockquote>
+<div>$ssh-keygen</div></blockquote>
+<p>Second, create a Kubernetes Secret object for the namespace of Twister2 users:</p>
+<blockquote>
+<div>$kubectl create secret generic twister2-openmpi-ssh-key &#8211;from-file=id_rsa=/path/to/.ssh/id_rsa &#8211;from-file=id_rsa.pub=/path/to/.ssh/id_rsa.pub &#8211;from-file=authorized_keys=/path/to/.ssh/id_rsa.pub &#8211;namespace=default</div></blockquote>
+<p>The fifth parameter is the name of the Secret object to be generated.
+That has to match the configuration parameter in the configuration files:</p>
+<blockquote>
+<div>kubernetes.secret.name</div></blockquote>
+<p>You can retrieve the Secret object by executing in YAML form:</p>
+<blockquote>
+<div>$kubectl get secret &lt;secret-name&gt; -o=yaml</div></blockquote>
+<p>Another possibility for deploying the Secret object is to use the [YAML file template](../yaml-templates/secret.yaml).
+You can edit that secret.yaml file. You can put the public and private keys to the corresponding fields.
+You can set the name and the namespace values. Then, you can create the Secret object by using
+kubectl method as:</p>
+<blockquote>
+<div>$kubectl create secret -f /path/to/file/secret.yaml</div></blockquote>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../../_sources/documents/kubernetes/install/Twister2-Kubernetes-install.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, DSC-SPIDAL.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="../../../_sources/documents/kubernetes/install/Twister2-Kubernetes-install.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

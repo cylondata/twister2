@@ -211,7 +211,7 @@ public class TWSTCPChannel implements TWSChannel {
         Request r = requestIterator.next();
         TCPStatus status = r.request.testStatus();
         // this request has finished
-        if (status != null) {
+        if (status == TCPStatus.COMPLETE) {
           requestIterator.remove();
         }
       }
@@ -232,7 +232,7 @@ public class TWSTCPChannel implements TWSChannel {
       while (requestIterator.hasNext()) {
         Request r = requestIterator.next();
         TCPStatus status = r.request.testStatus();
-        if (status != null) {
+        if (status == TCPStatus.COMPLETE) {
           // lets call the callback about the receive complete
           r.buffer.setSize(r.buffer.getByteBuffer().limit());
           receiveRequests.callback.onReceiveComplete(
