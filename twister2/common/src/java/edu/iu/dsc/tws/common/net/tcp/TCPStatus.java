@@ -23,8 +23,20 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.net.tcp;
 
+/**
+ * Status of a TCP message
+ */
 public enum TCPStatus {
+  /**
+   * Initialize state
+   */
   INIT,
+  /**
+   * Complete state
+   */
   COMPLETE,
+  /**
+   * Error
+   */
   ERROR,
 }
