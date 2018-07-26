@@ -17,7 +17,7 @@ import edu.iu.dsc.tws.common.config.Context;
 public class JobMasterContext extends Context {
 
   // if true, the job master runs in the submitting client
-  public static final boolean JOB_MASTER_RUNS_IN_CLIENT_DEFAULT = true;
+  public static final boolean JOB_MASTER_RUNS_IN_CLIENT_DEFAULT = false;
   public static final String JOB_MASTER_RUNS_IN_CLIENT = "twister2.job.master.runs.in.client";
 
   // if true, the job master runs in the submitting client
@@ -44,7 +44,7 @@ public class JobMasterContext extends Context {
   public static final String JOB_MASTER_CPU = "twister2.job.master.cpu";
 
   // job master ram size as MB
-  public static final int JOB_MASTER_RAM_DEFAULT = 1000;
+  public static final int JOB_MASTER_RAM_DEFAULT = 1024;
   public static final String JOB_MASTER_RAM = "twister2.job.master.ram";
 
   // job master volatile disk size in GB
