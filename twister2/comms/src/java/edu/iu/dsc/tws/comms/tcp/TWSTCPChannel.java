@@ -211,7 +211,7 @@ public class TWSTCPChannel implements TWSChannel {
         Request r = requestIterator.next();
         TCPStatus status = r.request.testStatus();
         // this request has finished
-        if (status != null) {
+        if (status == TCPStatus.COMPLETE) {
           requestIterator.remove();
         }
       }

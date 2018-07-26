@@ -27,7 +27,6 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionBatchFinalReceiver;
@@ -47,8 +46,6 @@ public class SortJob implements IWorker {
   private static final Logger LOG = Logger.getLogger(SortJob.class.getName());
 
   private DataFlowPartition partition;
-
-  private TWSNetwork network;
 
   private TWSChannel channel;
 
@@ -74,10 +71,10 @@ public class SortJob implements IWorker {
     this.config = cfg;
     this.resourcePlan = plan;
     this.id = wID;
+    // setup the network
+    setupNetwork(cfg, workerController, plan);
     // set up the tasks
     setupTasks();
-    // setup the network
-    setupNetwork(cfg, workerController, taskPlan, plan);
     // we get the number of containers after initializing the network
     this.noOfTasksPerExecutor = NO_OF_TASKS / plan.noOfContainers();
 
@@ -117,10 +114,8 @@ public class SortJob implements IWorker {
     }
   }
 
-  private void setupNetwork(Config cfg, IWorkerDiscoverer controller,
-                            TaskPlan plan, ResourcePlan rPlan) {
-    network = Network.initializeNetwork(cfg, controller, plan, rPlan);
-    channel = network.getChannel();
+  private void setupNetwork(Config cfg, IWorkerDiscoverer controller, ResourcePlan rPlan) {
+    channel = Network.initializeChannel(cfg, controller, rPlan);
   }
 
   private class IntegerComparator implements Comparator<Object> {
