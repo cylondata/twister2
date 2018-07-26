@@ -131,6 +131,8 @@ public class MultiMessageSerializer implements MessageSerializer {
             sendMessage.getEdge(), totalBytes);
         builder.destination(sendMessage.getDestintationIdentifier());
         sendMessage.getMPIMessage().setHeader(builder.build());
+        state.setTotalBytes(0);
+
       }
     }
     return sendMessage;
