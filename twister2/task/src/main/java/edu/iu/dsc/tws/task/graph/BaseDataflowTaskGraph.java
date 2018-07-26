@@ -346,14 +346,14 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
    *
    */
   public boolean validate() {
-    return true;
+    //return true;
 
     //Code to check the self-loop
-    /*boolean flag = false;
-    if (!detectCycle(getTaskVertexSet())) {
+    boolean flag = false;
+    if (!detectSelfLoop(getTaskVertexSet())) {
       return true;
     }
-    return flag;*/
+    return flag;
   }
 
   protected boolean validateTaskVertex(TV taskVertex) {
@@ -379,7 +379,8 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
   }
 
 
-  public boolean detectCycle(Set<TV> taskVertex) {
+
+  public boolean detectSelfLoop(Set<TV> taskVertex) {
 
     boolean flag = false;
     Iterator<TV> vertexIterator = taskVertex.iterator();
@@ -391,6 +392,7 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     return flag;
   }
 
+
   public boolean containsSelfLoop(TV sourceTaskVertex) {
 
     boolean flag = false;
@@ -400,6 +402,27 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
       }
     }
     return flag;
+  }
+
+  public boolean detectCycle(DataFlowTaskGraph dataFlowTaskGraph, Set<TV> taskVertex) {
+
+    boolean flag = false;
+    Iterator<TV> vertexIterator = taskVertex.iterator();
+    while (vertexIterator.hasNext()) {
+      if (containsCycle(vertexIterator.next())) {
+        flag = true;
+      }
+    }
+    return flag;
+  }
+
+  public boolean containsCycle(TV sourceTaskVertex) {
+
+    for (DirectedEdge<TV, TE> de : directedEdges) {
+     //flag = true;
+     //throw new RuntimeException ("Self-loop detected for the taskgraph:");
+    }
+    return false;
   }
 
   /**
