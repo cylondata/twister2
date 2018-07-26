@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -25,6 +26,7 @@ import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer;
+import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
@@ -74,6 +76,16 @@ public class SortJob implements IWorker {
     this.config = cfg;
     this.resourcePlan = plan;
     this.id = wID;
+
+    // wait and get all workers
+    List<WorkerNetworkInfo> workerList = workerController.waitForAllWorkersToJoin(50000);
+    if (workerList != null) {
+      LOG.info("All workers joined. " + WorkerNetworkInfo.workerListAsString(workerList));
+    } else {
+      LOG.severe("Can not get all workers to join. Something wrong. Exiting the Worker..........");
+      return;
+    }
+
     // set up the tasks
     setupTasks();
     // setup the network

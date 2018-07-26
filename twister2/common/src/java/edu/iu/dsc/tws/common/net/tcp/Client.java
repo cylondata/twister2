@@ -88,7 +88,7 @@ public class Client implements SelectHandler {
       socketChannel.configureBlocking(false);
       socketChannel.socket().setTcpNoDelay(true);
 
-      LOG.log(Level.INFO, String.format("Starting server on %s:%d",
+      LOG.log(Level.INFO, String.format("Connecting to the server on %s:%d",
           address.getHostName(), address.getPort()));
       if (socketChannel.connect(address)) {
         handleConnect(socketChannel);
