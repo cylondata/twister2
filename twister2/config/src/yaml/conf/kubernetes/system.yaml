@@ -68,5 +68,5 @@ twister2.job.master.persistent.volume.size: 1.0
 twister2.job.master.cpu: 0.2
 
 # twister2 job master RAM request in MB
-# default value is 0.2 percentage
-twister2.job.master.ram: 1000
+# default value is 1024 MB
+twister2.job.master.ram: 1024

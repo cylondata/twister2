@@ -13,14 +13,40 @@ package edu.iu.dsc.tws.common.net.tcp;
 
 import java.nio.channels.SocketChannel;
 
+/**
+ * Listen to channel events
+ */
 public interface ChannelHandler {
+  /**
+   * In case of an error this is called
+   * @param channel the channel
+   */
   void onError(SocketChannel channel);
 
+  /**
+   * The connect event
+   * @param channel the channel
+   * @param status weather an error occurred or success
+   */
   void onConnect(SocketChannel channel, StatusCode status);
 
+  /**
+   * Closing of a socket
+   * @param channel the tcp channel
+   */
   void onClose(SocketChannel channel);
 
+  /**
+   * A message hae been received fully
+   * @param channel the channel
+   * @param readRequest the message details along with the buffers read
+   */
   void onReceiveComplete(SocketChannel channel, TCPMessage readRequest);
 
+  /**
+   * A send is completely written to the channel
+   * @param channel the channel
+   * @param writeRequest the send request
+   */
   void onSendComplete(SocketChannel channel, TCPMessage writeRequest);
 }

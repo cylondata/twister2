@@ -12,15 +12,12 @@
 
 package edu.iu.dsc.tws.master.client;
 
-import java.net.InetAddress;
 import java.nio.channels.SocketChannel;
-import java.util.List;
 import java.util.logging.Logger;
 
 import com.google.protobuf.Message;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.net.tcp.Progress;
 import edu.iu.dsc.tws.common.net.tcp.StatusCode;
@@ -291,86 +288,6 @@ public class JobMasterClient extends Thread {
     @Override
     public void onClose(SocketChannel channel) {
 
-    }
-  }
-
-  /**
-   * a test method to run JobMasterClient
-   * @param args
-   */
-  public static void main(String[] args) {
-
-    String masterAddress = "localhost";
-    int workerTempID = 0;
-    int numberOfWorkers = 1;
-
-    if (args.length == 1) {
-      numberOfWorkers = Integer.parseInt(args[0]);
-    }
-
-    if (args.length == 2) {
-      numberOfWorkers = Integer.parseInt(args[0]);
-      workerTempID = Integer.parseInt(args[1]);
-    }
-
-    simulateClient(masterAddress, workerTempID, numberOfWorkers);
-  }
-
-  /**
-   * a method to simulate JobMasterClient running in workers
-   * @param masterAddress
-   * @param numberOfWorkers
-   */
-  public static void simulateClient(String masterAddress, int workerTempID,
-                                    int numberOfWorkers) {
-
-    InetAddress workerIP = WorkerDiscoverer.convertStringToIP("149.165.150.81");
-    int workerPort = 10000 + (int) (Math.random() * 10000);
-
-    WorkerNetworkInfo workerNetworkInfo = new WorkerNetworkInfo(workerIP, workerPort, workerTempID);
-
-    Config cfg = Config.newBuilder()
-        .put(Context.TWISTER2_WORKER_INSTANCES, numberOfWorkers)
-        .put(JobMasterContext.PING_INTERVAL, 3000)
-        .put(JobMasterContext.JOB_MASTER_IP, masterAddress)
-        .put(JobMasterContext.JOB_MASTER_ASSIGNS_WORKER_IDS, true)
-        .build();
-
-    JobMasterClient client = new JobMasterClient(cfg, workerNetworkInfo);
-    client.init();
-
-    client.sendWorkerStartingMessage();
-
-    // wait 500ms
-    sleeeep(5000);
-
-    client.sendWorkerRunningMessage();
-
-    List<WorkerNetworkInfo> workerList = client.workerController.getWorkerList();
-    LOG.info(WorkerNetworkInfo.workerListAsString(workerList));
-
-    // wait 2000ms
-    sleeeep(5000);
-
-    workerList = client.workerController.waitForAllWorkersToJoin(20000);
-    LOG.info(WorkerNetworkInfo.workerListAsString(workerList));
-
-    client.sendWorkerCompletedMessage();
-//    sleeeep(500);
-
-    client.close();
-
-    System.out.println("all messaging done. waiting before finishing.");
-
-//    sleeeep(5000);
-  }
-
-  public static void sleeeep(long duration) {
-
-    try {
-      Thread.sleep(duration);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
     }
   }
 

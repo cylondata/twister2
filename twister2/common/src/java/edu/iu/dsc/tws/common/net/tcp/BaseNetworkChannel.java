@@ -74,7 +74,6 @@ public abstract class BaseNetworkChannel {
   }
 
   public void read() {
-//    LOG.info("Reading from channel: " + socketChannel);
     while (pendingReceives.size() > 0) {
       TCPMessage readRequest = readRequest(socketChannel);
 

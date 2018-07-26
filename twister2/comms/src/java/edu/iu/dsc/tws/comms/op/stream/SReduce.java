@@ -52,4 +52,12 @@ public class SReduce {
   public boolean reduce(int src, Object message, int flags) {
     return reduce.send(src, message, flags);
   }
+
+  public void progress() {
+    reduce.progress();
+  }
+
+  public void close() {
+    // deregister from the channel
+  }
 }

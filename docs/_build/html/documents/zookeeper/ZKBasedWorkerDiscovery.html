@@ -1,0 +1,229 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>&lt;no title&gt; &mdash; Twister2 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Twister2 1.0.0 documentation" href="../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <p># ZooKeeper based Worker Discovery
+Ahmet Uyar</p>
+<p>We designed a worker discovery and ID assignment system for multi-worker jobs
+in cluster environments that use a ZooKeeper server.</p>
+<p>We provide the following services:
+* Assigning unique IDs to each worker in a job starting from zero and
+increasing sequentially without any gaps.
+* Getting the list of all currently running workers in a job with their communication information.
+* Getting the list of all joined running workers in a job including the ones that have already left.
+* Waiting for all workers to join the job.</p>
+<p>## Assumptions
+Each Twister2 job has a unique name: There can not be more than one Twister2 job running in the cluster with the same name. When we submit a job, if there is already a running job with the same name, that submission fails.</p>
+<p>Each Twister2 job may have any number of workers.</p>
+<p>## Trying to Create a Job When Another Running
+When a job is submitted by the client, we first check whether there is a znode crated for that job
+on ZooKeeper server. If there is a znode with the same jobName, there are two possibilities:
+* A job with same name may be runing
+* Previously submitted and completed job is not cleaned properly</p>
+<p>If the job znode has some children, we assume that there is a job already running on the cluster
+with same name. We print an error message and halt job submission.
+The user first needs to execute job terminate and then can resubmit the job.
+Or they can wait for the job to finish normally. Or they can submit the job with a different name.</p>
+<p>If the job znode does not have any children, it means that
+a previously executed job is not cleaned properly from ZooKeeper server.
+We remove that job znode automatically and proceed with the job submission.</p>
+<p>## Workers
+Twister2 Workers are assigned to run as containers in clusters by container management systems
+such as Kubernetes and Mesos. Therefore, they can be initiated in any node around the cluster.</p>
+<p>When a worker starts in a container, it also gets the IP address of the container/pod it is running in
+and one port number to use to communicate with others. Therefore, each worker knows its own IP address
+and will have at least one port number to use when it is started.</p>
+<p>When a worker wants to communicate with other workers, it needs to know the IP addresses and port numbers of those workers.
+So all workers should know the communication information of all other workers in a job.
+### Worker IDs
+Each worker in a job is assigned a unique ID. Worker IDs start from zero and increases sequentially.
+Workers get IDs in the order they created ZooKeeper znodes for themselves.</p>
+<p>## Using ZooKeeper for Worker Discovery and Unique ID Assignment
+We use ZooKeeper server for workers to discover each other and get unique IDs for themselves.</p>
+<p>ZooKeeper keeps data as a tree of znodes. Similar to the file system in computers.
+Each znode is identified by its path from the root. Znodes can have children znodes.
+All znodes can also hold some data.</p>
+<p>We create a znode for each job. Then, each worker creates a child znode under this znode.
+Workers provide all the necessary information about themselves in their znodes.
+By monitoring the list of children znodes, all workers get the list of all other workers.</p>
+<p>The first worker to register with ZooKeeper server will create a Znode for that job.
+Then all workers create a child znode for themselves in that job znode.</p>
+<p>### Worker Names
+When creating child znodes on the job znode, each worker needs to have a unique name.
+We use the &lt;IP-Address&gt;:&lt;PortNumber&gt; pair as the unique worker names.</p>
+<p>### Removing Worker Znodes from ZooKeeper Server
+When a worker finishes the computation, its znode should be deleted from the ZooKeeper.
+Therefore, we create an ephemeral znode on the ZooKeeper server.
+When a worker closes its connection to the ZooKeeper server,
+its znode is deleted automatically.</p>
+<p>### Removing Job Znode from ZooKeeper Server
+The job znode can not be ephemeral, since ephemeral znodes can not have children.
+Therefore the last worker to finish computation needs to remove the job znode.
+When workers have finished computation, they check whether they are the last worker,
+if so, they remove the job znode.</p>
+<p>### Failing to Remove the Job Znode
+When the last worker fails and can not properly complete the computation,
+it can not delete the job znode. Then, the job znode may live on the ZooKeeper server
+after the job has completed.</p>
+<p>In another scenario, when a worker fails, ZooKeeper server may take some time
+to determine that failure. Currently it takes around 30 seconds for ZooKeeper server
+to determine a failed client. Therefore, it is currently deleting failed worker znodes
+after 30 seconds. During this time, if the last worker completes and leaves the job,
+it thinks that it is not the last worker, so it does not delete the job znode.
+So, the job znode may not be deleted.</p>
+<p>### What happens When a Job znode is not deleted
+When a job znode is not deleted after the completion of a job,
+it can be deleted when a new job is submitted with same name.
+Or when a terminate job command is executed for that job.</p>
+<p>### Getting Unique Worker IDs
+We use DistributedAtomicInteger class of Curator library to assign unique IDs to workers.
+This class provides a shared integer counter that is attached to a znode
+on the ZooKeeper server and shared by all workers in a job.
+When a worker joins the job, it increases its value by one and uses
+the previous value as its unique ID. Since the increment operation is atomic,
+no two workers can get the same ID. We assign this ID only after a successful
+increment of the shared variable. The counter starts from zero.
+So the first worker gets the ID zero.</p>
+<p>### Getting Worker IDs after Failures
+When a worker rejoins a job, it is assigned its previous ID.
+This prevents ID sequences to have gaps in them in the case of failures.</p>
+<p>When a worker joins a job, it first checks whether there is an ID generated for itself.
+It checks the data of the job znode. All worker names and IDs are saved in the job znode.
+If there is an ID for itself, it means that it is rejoining.
+Therefore, it does not generate a unique ID. It uses the ID from the previous join.
+If there is no ID, it generates a new ID and posts it to the job znode.</p>
+<p>We use a distributed lock mechanism to update the data of the job znode.
+Since more than one worker my update concurrently,
+care needs to be taken to properly update.
+When a worker wants to update the job znode data,
+it first acquires the shared lock and updates the data. Then it releases the lock.</p>
+<p>## Implementation Details:
+We use Apache Curator software to connect and manage communication between workers
+and ZooKeeper servers.</p>
+<p>### Children Cache
+Curator library implements a client side cache of a znode children:
+* org.apache.curator.framework.recipes.cache.PathChildrenCache</p>
+<p>This cached children of a znode keeps an up-to date copy of the znode children
+in the client machine. In our case, each worker registers with the job znode
+and keeps a local copy of other worker znodes in the local.
+Therefore each worker keeps an up-to date list of all other workers in the job.</p>
+<p>### Distributed Atomic Counter
+Curator library implements a distributed atomic counter:
+*       org.apache.curator.framework.recipes.atomic.DistributedAtomicInteger</p>
+<p>It provides a shared counter that is attached to a znode. We create a znode
+for this counter with “-dai” postfix: &lt;jobName&gt;-dai</p>
+<p>### Distributed Lock
+Curator library provides a distributed lock class:
+*       org.apache.curator.framework.recipes.locks.InterProcessMutex</p>
+<p>The lock is attached to a znode on the server. No two clients can acquire a lock
+attached to the same znode. Workers acquires the shared lock to update job node data.</p>
+<p>## Usage
+When a worker starts, it first needs to create an instance of ZKController class and
+initialize it by calling its initialize method. Then, it can get its unique ID by calling
+getWorkerNetworkInfo() method of ZKDiscoverer object.</p>
+<p>It can call getWorkerList() method of ZKDiscoverer object to get the list of currently
+joined workers immediately. Or, if it needs the full list of workers in the job. Then,
+it can call waitForAllWorkersToJoin(timeLimit) method of ZKDiscoverer object.
+This method will wait until either getting the full list of workers in the job or
+the time limit has been reached.</p>
+<p>A sample usage can be found in the class:
+* edu.iu.dsc.tws.rsched.schedulers.aurora.AuroraWorkerStarter</p>
+<p>### Configuration Parameters
+Following configuration parameters must be specified in configuration files:
+* ZooKeeper server IP: twister2.zookeeper.server.ip
+* ZooKeeper server port number: twister2.zookeeper.server.port</p>
+<p>Following configuration parameters have default values and their default
+values can be overridden in configuration files:
+* Twister2 root node name is by default &#8220;/twister2&#8221;.
+It can be changed with the configuration parameter:
+twister2.zookeeper.root.node.path
+* Max wait time for all workers to join default value is 100 seconds.
+It can be changed by the following parameter: twister2.zookeeper.max.wait.time.for.all.workers.to.join</p>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/documents/zookeeper/ZKBasedWorkerDiscovery.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, DSC-SPIDAL.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="../../_sources/documents/zookeeper/ZKBasedWorkerDiscovery.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
