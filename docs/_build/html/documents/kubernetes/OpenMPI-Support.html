@@ -1,0 +1,163 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>&lt;no title&gt; &mdash; Twister2 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Twister2 1.0.0 documentation" href="../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <p># Twister2 OpenMPI Support in Kubernetes
+Ahmet Uyar</p>
+<p>We want the Twister2 workers to run OpenMPI jobs. OpenMPI jobs are different
+than regular jobs in a number of ways. OpenMPI requires that:
+1. extra libraries are installed on the pods
+2. pods have password-free SSH access among them.
+3. MPI master pod has a hostfile with the list of all pod addresses before starting the job
+4. MPI master node starts the job by executing mpirun command. Then each worker
+started by OpenMPI framework.
+5. OpenMPI framework assigns workers ranks (ids).</p>
+<p>## Extra Libraries in Pods
+We installed OpenMPI and OpenSSH libraries when we build the containers.</p>
+<p>## Password-free SSH Among Pods
+We start an OpenSSH server in each pod when we run OpenMPI enabled Twister2 jobs.
+We have an SSH key pair that are shared among all pods. This key pair is distributed to
+all pods by a Secret object in Kubernetes cluster. This Secret object is created once
+for a cluster and it is a long living object. It can be used by all users who share the same
+namespace.</p>
+<p>The Secret object is mounted to each pod as a volume on:</p>
+<blockquote>
+<div>/ssh-key/openmpi</div></blockquote>
+<p>SSH start scripts use the keys from this volume and set up the password-free SSH access
+among the pods.</p>
+<p>## Hostfile Generation
+When an OpenMPI enabled job is submitted, init_openmpi.sh script is executed in each pod.
+This script first starts the OpenSSH server and sets up the password free access among the pods.
+Next, this script first gets the job package as it is explained in job package upload section.
+Then, all pods except the first pod in the job starts sleeping. First pod of the job is the its name
+has the suffix &#8220;-0&#8221;. The first pod starts the following class:</p>
+<blockquote>
+<div>edu.iu.dsc.tws.rsched.schedulers.k8s.mpi.MPIMasterStarter</div></blockquote>
+<p>to generates the hostfile first. This class watches the pods in the job by listening to events
+thorough the Kubernetes master. When they become &#8220;Running&#8221;, it gets their IP addresses and
+saves them to &#8220;hostfile&#8221;. It also retrieves the IP address of the Job Master.</p>
+<p>After generating the hostfile, this pod makes sure that all OpenSSH servers are running
+in every pod. It executes the script &#8220;check_pwd_free_ssh.sh&#8221;.
+This scripts tries to connect to each pod in the job with ssh. If it can not succeed,
+it retries. The reason for this is that a pod may have started but OpenSSH server may have not
+started on it yet. If we execute mpirun without waiting OpenSSH to be started on all pods,
+it fails. Since it can not connect to some pods with SSH. Therefore, before executing mpirun,
+we make sure that SSH servers are started and working properly on each pod.</p>
+<p>To check the ssh connection among two pods, we send a dummy ssh request.
+We ask for &#8220;pwd&#8221; with ssh. Other simple shell commands can also be sent.</p>
+<p>## Starting MPI Job
+After generating the hostfile and making sure that password-free ssh is working from the first
+pod to all pods, MPIMasterStarter class executes &#8220;mpirun&#8221; as a separate process.
+It tells how many workers to run on each pod. It also send the Job Master IP address to
+workers, so that they don&#8217;t try to discover Job Master IP address again.</p>
+<p>MPIMasterStarted class asks mpirun to start the following worker starter class on all pods:</p>
+<blockquote>
+<div>edu.iu.dsc.tws.rsched.schedulers.k8s.mpi.MPIWorkerStarter</div></blockquote>
+<p>An instance of this class is started in each pod. This class in return will start the
+Twister2 worker classes that is defined in configuration files.</p>
+<p>## Worker ID Assignment
+In regular Twister2 jobs, we calculated the workerIDs based on their pod names and
+container names as it is explianed in [the document](./Twister2-on-Kubernetes.md).</p>
+<p>When using OpenMPI, since openMPI is assigning unique IDs to each worker,
+we use the rank of OpenMPI as the workerID.</p>
+<p>## Configuration Parameters
+Since OpenMPI jobs are started differently than regular Twister2 jobs,
+a configuration parameter is used to tell whether a job will use OpenMPI.</p>
+<p>The parameter name is:</p>
+<blockquote>
+<div>kubernetes.workers.use.openmpi</div></blockquote>
+<p>The value of this parameter has to be &#8220;true&#8221; to enable OpenMPI.
+By default, the value of this parameter is false.</p>
+<p>A second parameter specifies the name of Kubernetes Secret object.
+Secret object can ne either created by the administrator when Twister2 is installed or
+created by a user. However, its name must be specified as a parameter. Parameter name:</p>
+<blockquote>
+<div>kubernetes.secret.name</div></blockquote>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/documents/kubernetes/OpenMPI-Support.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, DSC-SPIDAL.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="../../_sources/documents/kubernetes/OpenMPI-Support.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

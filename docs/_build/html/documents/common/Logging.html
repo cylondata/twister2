@@ -1,0 +1,179 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>&lt;no title&gt; &mdash; Twister2 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Twister2 1.0.0 documentation" href="../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <p># Twister2 Logging
+Ahmet Uyar</p>
+<p>Logging in distributed environments is an important task.
+Cluster resource schedulers provide logging mechanisms. For example,
+Kubernetes saves applications logs in files under /var/log directory in agent machines.
+These log files are shown to users with a web based application.
+It is called Dashboard in Kubernetes. Users can also download the logs of their applications
+to their local machines.</p>
+<p>Since there are many agent machines in a Kubernetes cluster,
+these files are distributed in the cluster.
+They are difficult to access after the application completed.
+In addition, these log files are deleted when pods are deleted.
+Therefore, we implemented a persistent logging mechanism for Twister2 jobs.</p>
+<p>We save all log files in a job to a persistent volume.
+All log files in a job is saved under the same directory. The logging directory is named as:</p>
+<blockquote>
+<div>logs</div></blockquote>
+<p>A log file is created for each worker in this log directory.
+Worker log files are named as:
+* worker-0.log.0
+* worker-1.log.0
+* worker-2.log.0
+* ...</p>
+<p>There may be many log files for each worker.
+In that case, more log files are created with increasing suffix value.</p>
+<p>## Implementation
+We use Java logger redirection to a persistent file.
+we add a FileHandler to the root logger of Java. The file is located in the persistent volume.
+So, Java logger directs the log messages to both the console and to this persistent log file.</p>
+<p>We implemented the logger in the class:
+* [edu.iu.dsc.tws.common.logging.LoggingHelper](../../../twister2/common/src/java/edu/iu/dsc/tws/common/logging/LoggingHelper.java)</p>
+<p>## Configuration Parameters
+Five configuration parameters are added for persistent logging.
+First one shows whether the user wants Twister2 to save log messages to the persistent storage.
+When its value is “true”, persistent logging is enabled. Otherwise, persistent value is disabled.
+Configuration parameter name is called:</p>
+<blockquote>
+<div>persistent.logging.requested</div></blockquote>
+<p>Other configuration parameters:</p>
+<blockquote>
+<div>twister2.logging.level
+twister2.logging.max.file.size.mb
+twister2.logging.maximum.files
+twister2.logging.redirect.sysouterr</div></blockquote>
+<p>The second parameters determines the log level. By default, it is INFO.
+Valid logging levels: FINEST, FINER, FINE, CONFIG, INFO, WARNING, SEVERE</p>
+<p>The third parameter shows the maximum size of the log files.
+When a log file size reaches to this size, it is moved to another file.
+Its default value is 100 MB.</p>
+<p>The fourth parameter shows the maximum number of log files for a worker.
+Its default value is 5. If there are more logs files for a worker.
+The oldest ones will be deleted.</p>
+<p>The last parameter shows whether System.out and System.err streams should also be redirected
+to persistent storage. It is a boolean value. By default, its value is false.
+If this is enabled, all regular system output en error messages will be directed to the log files.
+Users will not be able to see log messages on the screen.</p>
+<p>## Sample Usage
+Kubernetes Twister2 workers initialize the worker loggers as the following.
+This method needs to be called as early as possbile when the workers start.</p>
+<blockquote>
+<div><p>public static void initWorkerLogger(int workerID, K8sPersistentVolume pv, Config cnfg) {</p>
+<blockquote>
+<div><p>// set logging level
+LoggingHelper.setLogLevel(LoggingContext.loggingLevel(cnfg));</p>
+<p>// if persistent logging is requested, initialize it
+if (pv != null &amp;&amp; LoggingContext.persistentLoggingRequested(cnfg)) {</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>if (LoggingContext.redirectSysOutErr(cnfg)) {</dt>
+<dd><dl class="first last docutils">
+<dt>LOG.warning(&#8220;Redirecting System.out and System.err to the log file. &#8220;</dt>
+<dd><ul class="first last simple">
+<li>&#8220;Check the log file for the upcoming log messages. &#8221;);</li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+<p>}</p>
+<p>String logFile = K8sPersistentVolume.WORKER_LOG_FILE_NAME_PREFIX + workerID;
+LoggingHelper.setupLogging(cnfg, pv.getLogDirPath(), logFile);</p>
+<p>LOG.info(&#8220;Persistent logging to file initialized.&#8221;);</p>
+</div></blockquote>
+<p>}</p>
+</div></blockquote>
+<p>}</p>
+</div></blockquote>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/documents/common/Logging.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, DSC-SPIDAL.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="../../_sources/documents/common/Logging.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
