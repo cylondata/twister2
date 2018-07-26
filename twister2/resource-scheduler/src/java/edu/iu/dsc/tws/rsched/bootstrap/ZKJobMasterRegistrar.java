@@ -20,7 +20,6 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.nodes.PersistentNode;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.config.Context;
 
 /**
  * it is a single node controller
@@ -31,7 +30,7 @@ import edu.iu.dsc.tws.common.config.Context;
  * the node will be automatically deleted once this class disconnects from ZooKeeper server
  */
 public class ZKJobMasterRegistrar {
-  public static final Logger LOG = Logger.getLogger(ZKJobMasterRegistrar.class.getName());
+  private static final Logger LOG = Logger.getLogger(ZKJobMasterRegistrar.class.getName());
 
   private String jobMasterIP; // hostname and port number of JobMaster
   private int jobMasterPort; // hostname and port number of JobMaster
@@ -147,41 +146,6 @@ public class ZKJobMasterRegistrar {
     }
 
     client.close();
-  }
-
-  public static void main(String[] args) {
-
-    String jobMasterIP = "x.y.z.t";
-    int jobMasterPort = 1234;
-    Config cnfg = buildConfig();
-
-    ZKJobMasterRegistrar registrar = new ZKJobMasterRegistrar(cnfg, jobMasterIP, jobMasterPort);
-    boolean initialized = registrar.initialize();
-    if (!initialized && registrar.sameZNodeExist()) {
-      registrar.deleteJobMasterZNode();
-      registrar.initialize();
-    }
-
-    try {
-      Thread.sleep(30000);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
-
-    registrar.close();
-    LOG.info("Done, exiting ...");
-  }
-
-  /**
-   * construct a Config object
-   * @return
-   */
-  public static Config buildConfig() {
-    return Config.newBuilder()
-        .put(ZKContext.ZOOKEEPER_SERVER_IP, "149.165.150.81")
-        .put(ZKContext.ZOOKEEPER_SERVER_PORT, 2181)
-        .put(Context.JOB_NAME, "basic-kube")
-        .build();
   }
 
 }

@@ -15,17 +15,19 @@ and point out the future works.
 We discuss the following topics:
 * [Kubernetes Overview](#kubernetes-overview)
 * [Implementing Twister2 Jobs on Kubernetes](#implementing-twister2-jobs-on-kubernetes)
-* Docker Container Design for Twister2
-* Kubernetes Pod Design for Twister2
-* Packaging and Running Twister2 Jobs in Kubernetes
-* Limitations and Future Works
+* [Docker Container Design for Twister2](#docker-container-design-for-twister2)
+* [Kubernetes Pod Design for Twister2](#kubernetes-pod-design-for-twister2)
+* [Packaging and Running Twister2 Jobs in Kubernetes](#packaging-and-running-twister2-jobs-in-kubernetes)
+* [Limitations and Future Works](#limitations-and-future-works)
+* [Kubernetes Objects for Twister2 Jobs](#kubernetes-objects-for-twister2-jobs)
 
 In addition to running Twister2 jobs on Kubernetes clusters, We have implemented 
 the following APIs/services: 
-* [Worker Discovery](./K8sBasedWorkerDiscovery.md)
-* [Persistent Storage](./K8sPersistentStorage.md)
-* [Services for Twister2 Jobs](./K8sServices.md) 
-* [Worker Binding and Mapping](./K8sWorkerBindingMapping.md)
+* [Worker Discovery](K8sBasedWorkerDiscovery.md)
+* [Persistent Storage](K8sPersistentStorage.md)
+* [Services for Twister2 Jobs](K8sServices.md) 
+* [Worker Binding and Mapping](K8sWorkerBindingMapping.md)
+* [OpenMPI Support](OpenMPI-Support.md)
 
 Each one is explained in a separate document. 
 
@@ -442,3 +444,69 @@ Dynamic worker additions and removal can be implemented.
 **Worker Restarts After Failures**: We need to go over the worker implementations 
 to make sure that the workers function properly after failures. 
 Currently, this has not been carefully tested. 
+
+## Kubernetes Objects for Twister2 Jobs
+When creating Twister2 jobs on Kubernetes, we deploy many Kubernetes objects. 
+A regular Twister2 job consists of the following Kubernetes objects:
+* A StatefulSet object for Twister2 workers
+* A Service object for the StatefulSet of workers
+* A StatefulSet object for the Job Master
+* A Service object for the StatefulSet of Job Master
+* A PersistentVolumeClaim object for the persistent storage
+
+The above objects are created when a job is submitted dynamically. 
+We also create some long living objects on Kubernetes master. 
+Those objects are created only once and they live on the cluster always. 
+These long living objects are:
+* A Secret object for password-free SSH access among pods for OpenMPI
+* A Role and RoleBinding object for giving pods required privileges
+
+### YAML Templates
+Kubernetes objects are created either using YAML files or using a programming API. 
+When using YAML files, kubectl command is used to send the requests to Kubernetes master.
+We create the Twister2 dynamic objects using Kubernetes Java API. 
+This is more convenient and easier for users. 
+However, designing YAML files help understanding the objects involved in creating the jobs. 
+
+We designed the YAML file templates for each dynamically created Kubernetes object. 
+
+[**StatefulSet object for Twister2 workers**](yaml-templates/statefulset-for-workers.yaml): 
+This is the most important object. It will create the pods for workers to run. 
+It describes the features of the pods. Their computing resources, volume needs, labels, etc. 
+ 
+**Service object for Twister2 workers**: 
+Each StatefulSet objects requires to have an associated service object. 
+We have two types of Service objects. One of them is used for the StatefulSet of workers. 
+* [Headless Service for Twister2 workers](yaml-templates/service-headless.yaml):
+A simple headless service. This does not export any services outside of the cluster. 
+
+* [NodePort Service for Twister2 workers](yaml-templates/service-nodeport.yaml):
+A simple NodePort service. It lets workers to get requests from entities outside of the cluster.
+ 
+[**StatefulSet object for the Job Master**](yaml-templates/statefulset-for-job-master.yaml): 
+This is the object that describes the pod of the Job Master. 
+Since the Job Master computing needs may be different than worker computing needs,
+we designed a separate StatefulSet object for the Job Master. 
+ 
+[**Service object for the Job Master**](yaml-templates/service-job-master.yaml): 
+This is simple headless Service object for the StatefulSet object of the Job Master. 
+
+[**PersistentVolumeClaim object**](yaml-templates/persistent-volume-claim.yaml): 
+This is the PersistentVolumeClaim object that will be used by all Twister2 pods in a job. 
+Its capacity is the total persistent storage capacity of all workers and the Job Master. 
+
+### Long Living Kubernetes Objects
+
+[**Role and RoleBinding objects**](install/twister2-auth.yaml): When Twister2 is installed in a cluster,
+a Role and RoleBinding object need to be created for the namespaces that will execute 
+Twister2 jobs. This can be executed by the Kubernetes administrator once.
+First, the namespace field in that file needs to be changed. Then, 
+the following command needs to be executed:
+
+    $kubectl create -f twister2-auth.yaml
+  
+[**Secret Object**](yaml-templates/secret.yaml): 
+When using OpenMPI communications in Twister2, pods need to have password-free SSH access 
+among them. This is accomplished by first generating an SSH key pair and 
+deploying them as a Kubernetes Secret object on the cluster. 
+Please check [the document](install/Twister2-Kubernetes-install.md) for deploying the Secret object.

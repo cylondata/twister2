@@ -345,8 +345,4 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
   public TaskPlan getTaskPlan() {
     return instancePlan;
   }
-
-  @Override
-  public void setMemoryMapped(boolean memoryMapped) {
-  }
 }

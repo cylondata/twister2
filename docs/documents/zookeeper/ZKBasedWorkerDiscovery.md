@@ -124,7 +124,8 @@ and ZooKeeper servers.
 
 ### Children Cache
 Curator library implements a client side cache of a znode children:  
-* org.apache.curator.framework.recipes.cache.PathChildrenCache
+
+    org.apache.curator.framework.recipes.cache.PathChildrenCache
 
 This cached children of a znode keeps an up-to date copy of the znode children 
 in the client machine. In our case, each worker registers with the job znode 
@@ -133,20 +134,22 @@ Therefore each worker keeps an up-to date list of all other workers in the job.
 
 ### Distributed Atomic Counter
 Curator library implements a distributed atomic counter:  
-*	org.apache.curator.framework.recipes.atomic.DistributedAtomicInteger
+
+    org.apache.curator.framework.recipes.atomic.DistributedAtomicInteger
 
 It provides a shared counter that is attached to a znode. We create a znode 
 for this counter with “-dai” postfix: <jobName>-dai
 
 ### Distributed Lock
 Curator library provides a distributed lock class:  
-*	org.apache.curator.framework.recipes.locks.InterProcessMutex
+
+    org.apache.curator.framework.recipes.locks.InterProcessMutex
 
 The lock is attached to a znode on the server. No two clients can acquire a lock 
 attached to the same znode. Workers acquires the shared lock to update job node data. 
 
 ## Usage
-When a worker starts, it first needs to create an instance of ZKController class and 
+When a worker starts, it first needs to create an instance of ZKDiscoverer class and 
 initialize it by calling its initialize method. Then, it can get its unique ID by calling
 getWorkerNetworkInfo() method of ZKDiscoverer object. 
 
@@ -157,17 +160,28 @@ This method will wait until either getting the full list of workers in the job o
 the time limit has been reached. 
 
 A sample usage can be found in the class:
-* edu.iu.dsc.tws.rsched.schedulers.aurora.AuroraWorkerStarter
+
+    edu.iu.dsc.tws.examples.ZKDiscovererExample.java
+
+Its usage in the following class can also be examined for real usage:
+
+    edu.iu.dsc.tws.rsched.schedulers.aurora.AuroraWorkerStarter
 
 ### Configuration Parameters
-Following configuration parameters must be specified in configuration files:
-* ZooKeeper server IP: twister2.zookeeper.server.ip
-* ZooKeeper server port number: twister2.zookeeper.server.port
+Following configuration parameters must be specified in the configuration files:
+
+    ZooKeeper server IP: twister2.zookeeper.server.ip
+    ZooKeeper server port number: twister2.zookeeper.server.port
 
 Following configuration parameters have default values and their default 
-values can be overridden in configuration files:
-* Twister2 root node name is by default "/twister2". 
+values can be overridden in the configuration files:
+
+Twister2 root node name is by default: "/twister2" 
 It can be changed with the configuration parameter: 
-twister2.zookeeper.root.node.path
-* Max wait time for all workers to join default value is 100 seconds. 
-It can be changed by the following parameter: twister2.zookeeper.max.wait.time.for.all.workers.to.join
+
+    twister2.zookeeper.root.node.path
+
+Max wait time for all workers to join default value is 100 seconds. 
+It can be changed by the following parameter: 
+
+    twister2.zookeeper.max.wait.time.for.all.workers.to.join
