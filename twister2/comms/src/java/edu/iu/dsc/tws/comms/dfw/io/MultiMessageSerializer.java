@@ -148,11 +148,12 @@ public class MultiMessageSerializer implements MessageSerializer {
     MessageType type = sendMessage.getMPIMessage().getType();
     if (!keyed) {
       return serializeData(payload,
-          sendMessage.getSerializationState(), buffer, type);
+          sendMessage.getSerializationState(), buffer, type, sendMessage.getFlags());
     } else {
       KeyedContent kc = (KeyedContent) payload;
       return serializeKeyedData(kc.getValue(), kc.getKey(),
-          sendMessage.getSerializationState(), buffer, kc.getContentType(), kc.getKeyType());
+          sendMessage.getSerializationState(), buffer, kc.getContentType(), kc.getKeyType(),
+          sendMessage.getFlags());
     }
   }
 
@@ -288,12 +289,13 @@ public class MultiMessageSerializer implements MessageSerializer {
    * Serializes a java object using kryo serialization
    */
   private boolean serializeData(Object content, SerializeState state,
-                                DataBuffer targetBuffer, MessageType messageType) {
+                                DataBuffer targetBuffer, MessageType messageType, int flags) {
     ByteBuffer byteBuffer = targetBuffer.getByteBuffer();
     // okay we need to serialize the header
     if (state.getPart() == SerializeState.Part.INIT) {
       // okay we need to serialize the data
-      int dataLength = DataSerializer.serializeData(content, messageType, state, serializer);
+      int dataLength = DataSerializer.serializeData(content, messageType, state, serializer, flags
+          );
 
       if (!buildSubMessageHeader(targetBuffer, dataLength)) {
         LOG.warning("We should always be able to build the header in the current buffer");
@@ -331,7 +333,7 @@ public class MultiMessageSerializer implements MessageSerializer {
 
   private boolean serializeKeyedData(Object content, Object key, SerializeState state,
                                      DataBuffer targetBuffer,
-                                     MessageType contentType, MessageType keyType) {
+                                     MessageType contentType, MessageType keyType, int flags) {
     ByteBuffer byteBuffer = targetBuffer.getByteBuffer();
     // okay we need to serialize the header
     if (state.getPart() == SerializeState.Part.INIT) {
@@ -339,7 +341,7 @@ public class MultiMessageSerializer implements MessageSerializer {
           keyType, state, serializer);
       // okay we need to serialize the data
       int dataLength = DataSerializer.serializeData(content,
-          contentType, state, serializer);
+          contentType, state, serializer, flags);
 //      LOG.info(String.format("%d serialize data length: %d pos %d",
 //          executor, dataLength, byteBuffer.position()));
       // at this point we know the length of the data

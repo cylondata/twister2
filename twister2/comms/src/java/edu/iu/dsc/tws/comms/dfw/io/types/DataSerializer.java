@@ -27,7 +27,7 @@ public final class DataSerializer {
    * Serialize the key and set it to the state
    */
   public static int serializeData(Object content, MessageType type,
-                                  SerializeState state, KryoSerializer serializer) {
+                                  SerializeState state, KryoSerializer serializer, int flag) {
     switch (type) {
       case INTEGER:
         return ((int[]) content).length * 4;

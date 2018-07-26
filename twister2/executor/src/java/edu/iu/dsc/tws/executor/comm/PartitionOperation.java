@@ -35,7 +35,6 @@ import edu.iu.dsc.tws.task.api.TaskMessage;
 public class PartitionOperation extends AbstractParallelOperation {
   private static final Logger LOG = Logger.getLogger(PartitionOperation.class.getName());
   private HashMap<Integer, Boolean> barrierMap = new HashMap<>();
-  private HashMap<Integer, Integer> incommingMap = new HashMap<>();
   private HashMap<Integer, ArrayList<Object>> incommingBuffer = new HashMap<>();
   private boolean checkpointStarted = false;
 
@@ -87,7 +86,8 @@ public class PartitionOperation extends AbstractParallelOperation {
           checkpointStarted = true;
         }
         barrierMap.putIfAbsent(source, true);
-        if (barrierMap.keySet() == incommingMap.keySet()) {
+        if (barrierMap.keySet() == op.getSources()) {
+          op.getDestinations();
           //start checkpoint and flush the buffering messages
         }
       } else {
@@ -104,7 +104,6 @@ public class PartitionOperation extends AbstractParallelOperation {
             for (Object o : (List) object) {
               TaskMessage msg = new TaskMessage(o,
                   edge.getStringMapping(communicationEdge), target);
-              System.out.println(outMessages);
               outMessages.get(target).offer(msg);
 
             }

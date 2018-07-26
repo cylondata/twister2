@@ -147,11 +147,13 @@ public class SingleMessageSerializer implements MessageSerializer {
         || type == MessageType.DOUBLE || type == MessageType.BYTE || type == MessageType.STRING
         || type == MessageType.MULTI_FIXED_BYTE) {
       if (!keyed) {
-        return serializeData(payload, sendMessage.getSerializationState(), buffer, type);
+        return serializeData(payload, sendMessage.getSerializationState(), buffer, type,
+            sendMessage.getFlags());
       } else {
         KeyedContent keyedContent = (KeyedContent) payload;
         return serializeKeyedData(keyedContent.getValue(), keyedContent.getKey(),
-            sendMessage.getSerializationState(), buffer, type, keyedContent.getKeyType());
+            sendMessage.getSerializationState(), buffer, type, keyedContent.getKeyType(),
+            sendMessage.getFlags());
       }
     } else if (type == MessageType.BUFFER) {
       return serializeBuffer(payload, sendMessage, buffer);
@@ -161,7 +163,7 @@ public class SingleMessageSerializer implements MessageSerializer {
 
   private boolean serializeKeyedData(Object content, Object key, SerializeState state,
                                      DataBuffer targetBuffer, MessageType contentType,
-                                     MessageType keyType) {
+                                     MessageType keyType, int flag) {
     ByteBuffer byteBuffer = targetBuffer.getByteBuffer();
     // okay we need to serialize the header
     if (state.getPart() == SerializeState.Part.INIT) {
@@ -169,7 +171,7 @@ public class SingleMessageSerializer implements MessageSerializer {
           keyType, state, serializer);
       // okay we need to serialize the data
       int dataLength = DataSerializer.serializeData(content,
-          contentType, state, serializer);
+          contentType, state, serializer, flag);
     }
 
     if (state.getPart() == SerializeState.Part.INIT
@@ -208,12 +210,12 @@ public class SingleMessageSerializer implements MessageSerializer {
   }
 
   private boolean serializeData(Object content, SerializeState state,
-                                DataBuffer targetBuffer, MessageType messageType) {
+                                DataBuffer targetBuffer, MessageType messageType, int flag) {
     ByteBuffer byteBuffer = targetBuffer.getByteBuffer();
     // okay we need to serialize the header
     if (state.getPart() == SerializeState.Part.INIT) {
       // okay we need to serialize the data
-      int dataLength = DataSerializer.serializeData(content, messageType, state, serializer);
+      int dataLength = DataSerializer.serializeData(content, messageType, state, serializer, flag);
       // add the header bytes to the total bytes
       state.setPart(SerializeState.Part.BODY);
     }

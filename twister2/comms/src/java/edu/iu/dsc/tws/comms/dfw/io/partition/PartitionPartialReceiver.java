@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.comms.dfw.io.partition;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -118,13 +119,33 @@ public class PartitionPartialReceiver implements MessageReceiver {
 
     dests.add(object);
 
-    if (dests.size() > lowWaterMark) {
-      lock.lock();
-      try {
-        readyToSend.put(destination, new ArrayList<>(dests));
-        dests.clear();
-      } finally {
-        lock.unlock();
+    if ((flags & MessageFlags.BARRIER) == MessageFlags.BARRIER) {
+      if (readyToSend.isEmpty()) {
+        operation.sendPartial(source, new ArrayList<>(dests), 0, destination);
+      } else {
+        Iterator<Map.Entry<Integer, List<Object>>> it = readyToSend.entrySet().iterator();
+        while (it.hasNext()) {
+          Map.Entry<Integer, List<Object>> e = it.next();
+          List<Object> send = new ArrayList<>(e.getValue());
+
+          // if we send this list successfully
+          if (operation.sendPartial(source, send, 0, e.getKey())) {
+            // lets remove from ready list and clear the list
+            e.getValue().clear();
+            it.remove();
+          }
+        }
+        operation.sendPartial(source, new ArrayList<>(dests), 0, destination);
+      }
+    } else {
+      if (dests.size() > lowWaterMark) {
+        lock.lock();
+        try {
+          readyToSend.put(destination, new ArrayList<>(dests));
+          dests.clear();
+        } finally {
+          lock.unlock();
+        }
       }
     }
     return true;
@@ -151,9 +172,9 @@ public class PartitionPartialReceiver implements MessageReceiver {
       Iterator<Map.Entry<Integer, List<Object>>> it = readyToSend.entrySet().iterator();
 
       while (it.hasNext()) {
+
         Map.Entry<Integer, List<Object>> e = it.next();
         List<Object> send = new ArrayList<>(e.getValue());
-
         // if we send this list successfully
         if (operation.sendPartial(source, send, 0, e.getKey())) {
           // lets remove from ready list and clear the list

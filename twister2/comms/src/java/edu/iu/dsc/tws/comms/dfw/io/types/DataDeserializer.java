@@ -42,7 +42,8 @@ public final class DataDeserializer {
    * types other than multi types return as normal
    */
   public static Object deserializeData(List<DataBuffer> buffers, int length,
-                                       KryoSerializer serializer, MessageType type, int count) {
+                                       KryoSerializer serializer, MessageType type, int count,
+                                       int flag) {
     switch (type) {
       case INTEGER:
         return deserializeInteger(buffers, length);
@@ -63,7 +64,7 @@ public final class DataDeserializer {
   }
 
   public static Object deserializeData(List<DataBuffer> buffers, int length,
-                                       KryoSerializer serializer, MessageType type) {
+                                       KryoSerializer serializer, MessageType type, int flags) {
     switch (type) {
       case INTEGER:
         return deserializeInteger(buffers, length);

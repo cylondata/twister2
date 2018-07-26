@@ -197,12 +197,13 @@ public class MultiMessageDeserializer implements MessageDeSerializer {
             ((List) keyPair.getValue()).size());
       } else {
         data = DataDeserializer.deserializeData(message, length - keyPair.getKey(),
-            serializer, type);
+            serializer, type, channelMessage.getHeader().getFlags());
       }
       return new KeyedContent(keyPair.getValue(), data,
           channelMessage.getKeyType(), channelMessage.getType());
     } else {
-      return DataDeserializer.deserializeData(message, length, serializer, type);
+      return DataDeserializer.deserializeData(message, length, serializer, type,
+          channelMessage.getHeader().getFlags());
     }
   }
 }
