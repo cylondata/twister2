@@ -84,17 +84,22 @@ public class MultiMessageSerializer implements MessageSerializer {
       if (sendMessage.serializedState() == OutMessage.SendState.INIT
           || sendMessage.serializedState() == OutMessage.SendState.SENT_INTERNALLY) {
         // build the header
-        buildHeader(buffer, sendMessage, noOfMessages);
+        buildHeader(buffer, sendMessage);
         sendMessage.setSendState(OutMessage.SendState.HEADER_BUILT);
       }
 
       if (sendMessage.serializedState() == OutMessage.SendState.HEADER_BUILT
-          || sendMessage.serializedState() == OutMessage.SendState.BODY_BUILT) {
+          || sendMessage.serializedState() == OutMessage.SendState.BODY_BUILT
+          || sendMessage.serializedState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
         if ((sendMessage.getFlags() & MessageFlags.EMPTY) == MessageFlags.EMPTY) {
           sendMessage.setSendState(OutMessage.SendState.SERIALIZED);
           sendMessage.getSerializationState().setTotalBytes(0);
         } else {
           // first we need to serialize the body if needed
+          if (sendMessage.serializedState() == OutMessage.SendState.PARTIALLY_SERIALIZED
+              && sendMessage.getSerializationState().getData() == null) {
+            buildHeader(buffer, sendMessage);
+          }
           serializeBody(message, sendMessage, buffer);
         }
       }
@@ -114,12 +119,24 @@ public class MultiMessageSerializer implements MessageSerializer {
 
         // mark the original message as complete
         channelMessage.setComplete(true);
+      } else if (sendMessage.serializedState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
+        SerializeState state = sendMessage.getSerializationState();
+        int totalBytes = state.getTotalBytes();
+        int missing = state.getData().length - state.getBytesCopied();
+        totalBytes = totalBytes + missing;
+        //Need to calculate the true total bites since a part of the message may come separately
+        channelMessage.getBuffers().get(0).getByteBuffer().putInt(12, totalBytes);
+
+        MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
+            sendMessage.getEdge(), totalBytes);
+        builder.destination(sendMessage.getDestintationIdentifier());
+        sendMessage.getMPIMessage().setHeader(builder.build());
       }
     }
     return sendMessage;
   }
 
-  private void buildHeader(DataBuffer buffer, OutMessage sendMessage, int noOfMessage) {
+  private void buildHeader(DataBuffer buffer, OutMessage sendMessage) {
     if (buffer.getCapacity() < HEADER_SIZE) {
       throw new RuntimeException("The buffers should be able to hold the complete header");
     }
@@ -131,7 +148,7 @@ public class MultiMessageSerializer implements MessageSerializer {
     // the destination id
     byteBuffer.putInt(sendMessage.getDestintationIdentifier());
     // we add 0 for length now and later change it
-    byteBuffer.putInt(noOfMessage);
+    byteBuffer.putInt(0);
     // at this point we haven't put the length and we will do it at the serialization
     sendMessage.setWrittenHeaderSize(HEADER_SIZE);
     // lets set the size for 16 for now
@@ -160,6 +177,13 @@ public class MultiMessageSerializer implements MessageSerializer {
   private void serializeBody(Object object, OutMessage sendMessage, DataBuffer buffer) {
     List objectList = (List) object;
     SerializeState state = sendMessage.getSerializationState();
+    //if true this is small tail section of the previous message sent. So we need to fill
+    //this part into buffer and send it separately.
+    boolean isTailPart = false;
+    if (sendMessage.serializedState() == OutMessage.SendState.PARTIALLY_SERIALIZED
+        && state.getData() != null) {
+      isTailPart = true;
+    }
 
     int startIndex = state.getCurrentObject();
 
@@ -186,6 +210,9 @@ public class MultiMessageSerializer implements MessageSerializer {
         boolean complete = serializeMessage(o, sendMessage, buffer);
         if (complete) {
           state.setCurrentObject(i + 1);
+          if (isTailPart) {
+            break;
+          }
         } else {
           break;
         }
