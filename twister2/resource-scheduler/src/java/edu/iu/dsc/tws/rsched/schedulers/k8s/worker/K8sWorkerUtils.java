@@ -191,10 +191,17 @@ public final class K8sWorkerUtils {
    * calculate the workerID from the given parameters
    */
   public static int calculateWorkerID(String podName, String containerName, int workersPerPod) {
-    int podNo = KubernetesUtils.idFromName(podName);
+    int podIndex = KubernetesUtils.idFromName(podName);
     int containerIndex = KubernetesUtils.idFromName(containerName);
 
-    return podNo * workersPerPod + containerIndex;
+    return calculateWorkerID(podIndex, containerIndex, workersPerPod);
+  }
+
+  /**
+   * calculate the workerID from the given parameters
+   */
+  public static int calculateWorkerID(int podIndex, int containerIndex, int workersPerPod) {
+    return podIndex * workersPerPod + containerIndex;
   }
 
   /**
