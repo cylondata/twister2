@@ -33,6 +33,7 @@ import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.executor.api.ExecutionModel;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
@@ -103,14 +104,12 @@ public class ReduceBatchTask implements IContainer {
 
     @Override
     public void run() {
-
       if (count == 0) {
         this.sourceTaskContext.write("reduce-edge", "Hello " + count);
-
       }
 
-      if (count == 5) {
-        this.sourceTaskContext.write("reduce-edge", "final");
+      if (count == 1) {
+        this.sourceTaskContext.write("reduce-edge", MessageFlags.LAST_MESSAGE);
       }
 
       if (count > 10) {
@@ -119,8 +118,6 @@ public class ReduceBatchTask implements IContainer {
         this.setSourceTaskContextListener(this.sourceTaskContextListener);
       }
       count++;
-
-
     }
 
     @Override

@@ -108,6 +108,7 @@ public class ReduceBatchFinalReceiver extends ReduceBatchReceiver {
             previous = reduceFunction.reduce(previous, current);
           }
         }
+        LOG.info("All Messages Sent and Calling OnFinish");
         reduceReceiver.receive(t, previous);        // we can call on finish at this point
 
         onFinish(t);

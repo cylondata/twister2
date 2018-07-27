@@ -160,7 +160,7 @@ public class SourceBatchInstance implements INodeInstance, INodeInstanceListener
         if (message != null) {
           String edge = message.edge();
           IParallelOperation op = outBatchParOps.get(edge);
-          if (message.getContent().equals("final")) {
+          if (message.getContent().equals(MessageFlags.LAST_MESSAGE)) {
             System.out.println("Final Message");
             while (!op.send(batchTaskId, message, MessageFlags.FLAGS_LAST)) {
               //
@@ -169,7 +169,6 @@ public class SourceBatchInstance implements INodeInstance, INodeInstanceListener
             this.isFinish = true;
             System.out.println("Last Message was Sent : " + this.isFinish);
           } else {
-
             while (!op.send(batchTaskId, message, 0)) {
               //
             }

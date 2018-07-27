@@ -101,9 +101,7 @@ public class ThreadSharingExecutor extends ThreadExecutor {
             SourceBatchInstance sourceBatchInstance = (SourceBatchInstance) nodeInstance;
             sourceBatchInstance.progress();
           }
-          if (!status) {
-            tasks.offer(nodeInstance);
-          }
+          tasks.offer(nodeInstance);
         }
       }
     }

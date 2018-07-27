@@ -54,6 +54,12 @@ public class SourceTaskContextListener extends TaskContextListener {
     //this.addTaskContext((INodeInstance) this.sourceBatchTask, this.context);
   }
 
+  // on interrupt method updates the context of an existing task.
+  // Initially the task context is set to false so that it is assumed as an unfinished task
+  // Once a particular batch of tasks are executed, the context is updated into true meaning
+  // the task is finished. Then the on interrupt method overrided in the corresponding Generator
+  // tasks is being called and it calls the SourceTaskContextListener which updates the context
+  // as follows.
   @Override
   public void onInterrupt() {
     for (Map.Entry<SourceBatchTask, TaskContext> e : this.instanceBatchContextMap.entrySet()) {
