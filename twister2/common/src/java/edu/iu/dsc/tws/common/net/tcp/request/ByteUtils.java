@@ -13,6 +13,9 @@ package edu.iu.dsc.tws.common.net.tcp.request;
 
 import java.nio.ByteBuffer;
 
+/**
+ * Utility methods
+ */
 public final class ByteUtils {
   private ByteUtils() {
   }
