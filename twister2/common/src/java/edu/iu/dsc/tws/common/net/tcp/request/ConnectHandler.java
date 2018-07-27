@@ -15,6 +15,9 @@ import java.nio.channels.SocketChannel;
 
 import edu.iu.dsc.tws.common.net.tcp.StatusCode;
 
+/**
+ * Handle a connection
+ */
 public interface ConnectHandler {
   void onError(SocketChannel channel);
   void onConnect(SocketChannel channel, StatusCode status);
