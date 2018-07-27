@@ -126,9 +126,6 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
   /**
    * We can receive messages from internal tasks or an external task, we allways receive messages
    * to the main task of the executor and we go from there
-   *
-   * @param currentMessage
-   * @param object
    */
   @Override
   public boolean receiveMessage(ChannelMessage currentMessage, Object object) {
@@ -147,8 +144,8 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
     } else {
 //      LOG.info(String.format("%d calling FINAL receiver %d", executor, header.getSourceId()));
       return finalReceiver.onMessage(header.getSourceId(),
-              DataFlowContext.DEFAULT_DESTINATION,
-              router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
+          DataFlowContext.DEFAULT_DESTINATION,
+          router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
               DataFlowContext.DEFAULT_DESTINATION), header.getFlags(), object);
     }
   }
@@ -255,10 +252,6 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
 
   /**
    * Initialize
-   * @param cfg
-   * @param t
-   * @param taskPlan
-   * @param edge
    */
   public void init(Config cfg, MessageType t, TaskPlan taskPlan, int edge) {
     this.type = t;
@@ -317,11 +310,10 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
       partialSendRoutingParameters(s, pathToUse);
     }
 
-    delegete.init(cfg, t, taskPlan, edge,
+    delegete.init(cfg, t, t, keyType, keyType, taskPlan, edge,
         router.receivingExecutors(), router.isLastReceiver(), this,
         pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
         pendingReceiveDeSerializations, serializerMap, deSerializerMap, isKeyed);
-    delegete.setKeyType(keyType);
   }
 
   @Override
