@@ -135,7 +135,9 @@ public class TCPChannel {
 
     // lets connect to other
     server = new Server(config, hostName, port, looper, new ServerChannelHandler(), true);
-    server.start();
+    if (!server.start()) {
+      throw new RuntimeException("Failed to start the server");
+    }
   }
 
   /**
