@@ -106,6 +106,11 @@ public class ReduceBatchTask implements IContainer {
 
       if (count == 0) {
         this.sourceTaskContext.write("reduce-edge", "Hello " + count);
+
+      }
+
+      if (count == 5) {
+        this.sourceTaskContext.write("reduce-edge", "final");
       }
 
       if (count > 10) {
