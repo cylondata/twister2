@@ -436,6 +436,64 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
   }
 
   /**
+   * This method gets the complete task vertex of the task graph and call
+   * the detect cycle method to identify if there is a cycle in the  task graph.
+   *
+   * @return true/false
+   */
+  public boolean hasCycle() {
+
+    Set<TV> taskVertexSet = getTaskVertexSet();
+    System.out.println("Task Vertexes:" + taskVertexSet);
+    while (taskVertexSet.size() > 0) {
+      Set<TV> sourceTaskVertex = new HashSet<>();
+      Set<TV> targetTaskVertex = new HashSet<>();
+      TV taskVertex = taskVertexSet.iterator().next();
+      if (detectCycle(taskVertex, taskVertexSet, sourceTaskVertex, targetTaskVertex)) {
+        throw new RuntimeException("Cycle is detected for the vertex:" + taskVertex);
+      }
+    }
+    return false;
+  }
+
+  /**
+   * This is the recursive loop to traverse the complete task graph and
+   * identify the cycles in the loop.
+   * @param vertex
+   * @param taskVertexSet
+   * @param sourceTaskSet
+   * @param targetTaskSet
+   * @return true/false
+   */
+  private boolean detectCycle(TV vertex, Set<TV> taskVertexSet,
+                              Set<TV> sourceTaskSet, Set<TV> targetTaskSet) {
+    traversedVertex(vertex, taskVertexSet, sourceTaskSet);
+    for (TV childTask : childrenOfTask(vertex)) {
+      if (sourceTaskSet.contains(childTask)) {
+        return true;
+      }
+      if (detectCycle(childTask, taskVertexSet, sourceTaskSet, targetTaskSet)) {
+        return true;
+      }
+    }
+    traversedVertex(vertex, sourceTaskSet, targetTaskSet);
+    return false;
+  }
+
+  /**
+   * Mark the visited vertexes and store it in the target task vertex set and
+   * remove it from the source target task vertex set
+   * @param vertex
+   * @param sourceTaskSet
+   * @param targetTaskSet
+   */
+  private void traversedVertex(TV vertex, Set<TV> sourceTaskSet,
+                               Set<TV> targetTaskSet) {
+    sourceTaskSet.remove(vertex);
+    targetTaskSet.add(vertex);
+  }
+
+  /**
    * Build the internal structures of the graph, so that it can be searched
    */
   public void build() {
