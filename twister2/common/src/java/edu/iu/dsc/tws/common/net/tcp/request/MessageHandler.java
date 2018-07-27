@@ -31,9 +31,9 @@ import com.google.protobuf.Message;
 public interface MessageHandler {
   /**
    * Handles a specific message type
-   * @param id
-   * @param workerId
-   * @param message
+   * @param id request id
+   * @param workerId worker id
+   * @param message protbuf message
    */
   void onMessage(RequestID id, int workerId, Message message);
 }

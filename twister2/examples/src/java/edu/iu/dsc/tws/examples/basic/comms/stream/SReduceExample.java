@@ -85,6 +85,7 @@ public class SReduceExample extends BenchWorker {
 
     @Override
     public boolean receive(int target, Object object) {
+      LOG.info("Received final input");
       return true;
     }
   }

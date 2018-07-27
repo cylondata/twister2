@@ -95,9 +95,9 @@ public class RRClient {
 
   /**
    * throw an exception with the failure reason
-   * @param message
-   * @param waitLimit
-   * @return
+   * @param message message
+   * @param waitLimit waitlimit
+   * @return request id
    */
   public RequestID sendRequestWaitResponse(Message message, long waitLimit) {
 
