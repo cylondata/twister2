@@ -97,7 +97,7 @@ public class SinkBatchInstance implements INodeInstance {
 
   }
 
-  public void execute() {
+  public boolean execute() {
 
     //SinkBatchTask sinkBatchTask = (SinkBatchTask) batchTask;
 
@@ -109,6 +109,8 @@ public class SinkBatchInstance implements INodeInstance {
     for (Map.Entry<String, IParallelOperation> e : batchInParOps.entrySet()) {
       e.getValue().progress();
     }
+
+    return true;
   }
 
   public void registerInParallelOperation(String edge, IParallelOperation op) {

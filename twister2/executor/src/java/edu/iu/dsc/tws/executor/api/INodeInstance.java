@@ -24,9 +24,11 @@
 package edu.iu.dsc.tws.executor.api;
 
 public interface INodeInstance {
-  void execute();
+  boolean execute();
 
   void prepare();
 
   void interrupt();
+
+
 }

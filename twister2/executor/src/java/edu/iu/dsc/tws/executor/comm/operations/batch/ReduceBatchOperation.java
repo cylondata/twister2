@@ -123,6 +123,7 @@ public class ReduceBatchOperation extends AbstractParallelOperation {
 
     @Override
     public void onFinish(int target) {
+      LOG.info("OnFinish : " + target);
       //op.finish(target);
     }
 

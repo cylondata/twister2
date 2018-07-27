@@ -33,6 +33,8 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
+import edu.iu.dsc.tws.executor.core.batch.SinkBatchInstance;
+import edu.iu.dsc.tws.executor.core.batch.SourceBatchInstance;
 
 
 public class ThreadSharingExecutor extends ThreadExecutor {
@@ -49,6 +51,8 @@ public class ThreadSharingExecutor extends ThreadExecutor {
   private HashMap<Thread, INodeInstance> threadTaskList = new HashMap<>();
 
   private ExecutionPlan executionPlan;
+
+  private boolean executorState = true;
 
   public ThreadSharingExecutor() {
   }
@@ -69,18 +73,18 @@ public class ThreadSharingExecutor extends ThreadExecutor {
     tasks.addAll(nodes.values());
 
     for (INodeInstance node : tasks) {
-      LOG.info(new String("******* ") + "Node Type : " + node.getClass().getName());
       node.prepare();
     }
 
-    /*LOG.info("Execution Thread Count : " + executionPlan.getNumThreads() + ", No of Tasks : "
-        + tasks.size() + ", Tasks " + executionPlan.getNodes().keySet().size());*/
-    LOG.info(tasks.getClass().getName() + " @Task Size = " + tasks.size());
     for (int i = 0; i < tasks.size(); i++) {
       Thread t = new Thread(new Worker());
       t.setName("Thread-" + tasks.getClass().getSimpleName() + "-" + i);
       t.start();
       threads.add(t);
+    }
+
+    for (Thread t : threads) {
+      System.out.println("T Status : " + t.getState());
     }
     //LOG.info("!@TaskSize = " + tasks.size());
   }
@@ -89,10 +93,35 @@ public class ThreadSharingExecutor extends ThreadExecutor {
     @Override
     public void run() {
       while (true) {
+        boolean status = false;
         INodeInstance nodeInstance = tasks.poll();
-        nodeInstance.execute();
-        tasks.offer(nodeInstance);
+        if (nodeInstance != null) {
+          status = nodeInstance.execute();
+          if (nodeInstance instanceof SourceBatchInstance) {
+            SourceBatchInstance sourceBatchInstance = (SourceBatchInstance) nodeInstance;
+            sourceBatchInstance.progress();
+          }
+          if (!status) {
+            tasks.offer(nodeInstance);
+          }
+        }
       }
     }
+  }
+
+  public boolean isRunnable(INodeInstance iNodeInstance) {
+    boolean status = true;
+    if (iNodeInstance != null) {
+      if (iNodeInstance instanceof SourceBatchInstance) {
+        SourceBatchInstance sourceBatchInstance = (SourceBatchInstance) iNodeInstance;
+        status = sourceBatchInstance.isFinish();
+      }
+
+      if (iNodeInstance instanceof SinkBatchInstance) {
+        //
+      }
+    }
+
+    return status;
   }
 }

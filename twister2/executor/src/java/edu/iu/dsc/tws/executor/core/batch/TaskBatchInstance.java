@@ -137,7 +137,7 @@ public class TaskBatchInstance implements INodeInstance {
     inParOps.put(edge, op);
   }
 
-  public void execute() {
+  public boolean execute() {
     while (!inQueue.isEmpty()) {
       IMessage m = inQueue.poll();
 
@@ -164,6 +164,8 @@ public class TaskBatchInstance implements INodeInstance {
     for (Map.Entry<String, IParallelOperation> e : inParOps.entrySet()) {
       e.getValue().progress();
     }
+
+    return true;
   }
 
   public BlockingQueue<IMessage> getInQueue() {

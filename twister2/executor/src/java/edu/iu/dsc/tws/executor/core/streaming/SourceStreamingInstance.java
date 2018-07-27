@@ -151,7 +151,7 @@ public class SourceStreamingInstance implements INodeInstance, INodeInstanceList
   /**
    * Execution Method calls the SourceTasks run method to get context
    **/
-  public void execute() {
+  public boolean execute() {
 
     streamingTask.run();
     // now check the output queue
@@ -170,6 +170,8 @@ public class SourceStreamingInstance implements INodeInstance, INodeInstanceList
     for (Map.Entry<String, IParallelOperation> e : outStreamingParOps.entrySet()) {
       e.getValue().progress();
     }
+
+    return true;
   }
 
   public BlockingQueue<IMessage> getOutStreamingQueue() {

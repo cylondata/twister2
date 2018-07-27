@@ -96,6 +96,8 @@ public class SourceBatchInstance implements INodeInstance, INodeInstanceListener
 
   private int count = 0;
 
+  private boolean isFinish = false;
+
   public SourceBatchInstance(ISource task, BlockingQueue<IMessage> outQueue,
                              Config config, String tName, int tId, int tIndex, int parallel,
                              int wId, Map<String, Object> cfgs) {
@@ -140,7 +142,7 @@ public class SourceBatchInstance implements INodeInstance, INodeInstanceListener
   /**
    * Execution Method calls the SourceTasks run method to get context
    **/
-  public void execute() {
+  public boolean execute() {
 
     batchTask.run();
 
@@ -158,25 +160,34 @@ public class SourceBatchInstance implements INodeInstance, INodeInstanceListener
         if (message != null) {
           String edge = message.edge();
           IParallelOperation op = outBatchParOps.get(edge);
-          while (!op.send(batchTaskId, message, MessageFlags.FLAGS_LAST)) {
-            //
+          if (message.getContent().equals("final")) {
+            System.out.println("Final Message");
+            while (!op.send(batchTaskId, message, MessageFlags.FLAGS_LAST)) {
+              //
+            }
+            //op.progress();
+            this.isFinish = true;
+            System.out.println("Last Message was Sent : " + this.isFinish);
+          } else {
+
+            while (!op.send(batchTaskId, message, 0)) {
+              //
+            }
+            //op.progress();
           }
         }
-      } else {
-        System.out.println("Final Message @SourceBatchInstance");
-        /*IMessage message = outBatchQueue.poll();
-        if (message != null) {
-          String edge = message.edge();
-          IParallelOperation op = outBatchParOps.get(edge);
-          op.send(batchTaskId, message, MessageFlags.FLAGS_LAST);
-        }*/
       }
     }
 
+    return this.isFinish;
+  }
+
+  public void progress() {
     for (Map.Entry<String, IParallelOperation> e : outBatchParOps.entrySet()) {
       e.getValue().progress();
     }
   }
+
 
   public BlockingQueue<IMessage> getOutQueue() {
     return outBatchQueue;
@@ -184,6 +195,10 @@ public class SourceBatchInstance implements INodeInstance, INodeInstanceListener
 
   public void registerOutParallelOperation(String edge, IParallelOperation op) {
     outBatchParOps.put(edge, op);
+  }
+
+  public boolean isFinish() {
+    return isFinish;
   }
 
   @Override
@@ -200,4 +215,6 @@ public class SourceBatchInstance implements INodeInstance, INodeInstanceListener
   public boolean onStop() {
     return false;
   }
+
+
 }

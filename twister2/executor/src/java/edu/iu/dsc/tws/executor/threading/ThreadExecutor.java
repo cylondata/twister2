@@ -24,6 +24,8 @@ public class ThreadExecutor implements IThreadExecutor {
 
   private TWSChannel channel;
 
+  private boolean progress = true;
+
   public ThreadExecutor() {
 
   }
@@ -50,7 +52,10 @@ public class ThreadExecutor implements IThreadExecutor {
     ThreadExecutorFactory threadExecutorFactory = new ThreadExecutorFactory(executionModel,
         this, executionPlan);
     threadExecutorFactory.execute();
-    progressComms();
+    if (progress) {
+      progressComms();
+    }
+
   }
 
   /**

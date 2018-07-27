@@ -151,7 +151,7 @@ public class SourceInstance implements INodeInstance, INodeInstanceListener {
   /**
    * Execution Method calls the SourceTasks run method to get context
    **/
-  public void execute() {
+  public boolean execute() {
 
     task.run();
 
@@ -198,6 +198,8 @@ public class SourceInstance implements INodeInstance, INodeInstanceListener {
     for (Map.Entry<String, IParallelOperation> e : outParOps.entrySet()) {
       e.getValue().progress();
     }
+
+    return true;
   }
 
   public BlockingQueue<IMessage> getOutQueue() {

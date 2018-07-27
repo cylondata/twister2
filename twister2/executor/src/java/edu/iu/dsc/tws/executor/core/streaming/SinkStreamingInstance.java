@@ -98,7 +98,7 @@ public class SinkStreamingInstance  implements INodeInstance {
 
   }
 
-  public void execute() {
+  public boolean execute() {
     while (!streamingInQueue.isEmpty()) {
       IMessage m = streamingInQueue.poll();
       streamingTask.execute(m);
@@ -107,6 +107,8 @@ public class SinkStreamingInstance  implements INodeInstance {
     for (Map.Entry<String, IParallelOperation> e : streamingInParOps.entrySet()) {
       e.getValue().progress();
     }
+
+    return true;
   }
 
   public void registerInParallelOperation(String edge, IParallelOperation op) {

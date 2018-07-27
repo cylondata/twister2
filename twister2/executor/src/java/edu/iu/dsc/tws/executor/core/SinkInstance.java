@@ -109,7 +109,7 @@ public class SinkInstance  implements INodeInstance {
 
   }
 
-  public void execute() {
+  public boolean execute() {
     while (!inQueue.isEmpty()) {
       IMessage m = inQueue.poll();
       task.execute(m);
@@ -118,6 +118,8 @@ public class SinkInstance  implements INodeInstance {
     for (Map.Entry<String, IParallelOperation> e : inParOps.entrySet()) {
       e.getValue().progress();
     }
+
+    return true;
   }
 
   public void registerInParallelOperation(String edge, IParallelOperation op) {
