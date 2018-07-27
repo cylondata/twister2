@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.rsched.schedulers.standalone;
 
 import java.io.File;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -253,6 +254,12 @@ public final class StandaloneWorkerStarter {
     // if no persistent volume requested, return
     if (persistentJobDir == null) {
       return;
+    }
+
+    String jobWorkingDirectory = StandaloneContext.workingDirectory(cfg);
+    String jobName = StandaloneContext.jobName(cfg);
+    if (StandaloneContext.getLoggingSandbox(cfg)) {
+      persistentJobDir = Paths.get(jobWorkingDirectory, jobName).toString();
     }
 
     String logDir = persistentJobDir + "/logs";

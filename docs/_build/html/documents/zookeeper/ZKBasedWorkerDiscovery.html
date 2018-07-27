@@ -25,11 +25,13 @@
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <link rel="top" title="Twister2 1.0.0 documentation" href="../../index.html" />
    
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
   </head>
-  <body role="document">  
+  <body role="document">
+  
 
     <div class="document">
       <div class="documentwrapper">
@@ -135,24 +137,27 @@ it first acquires the shared lock and updates the data. Then it releases the loc
 We use Apache Curator software to connect and manage communication between workers
 and ZooKeeper servers.</p>
 <p>### Children Cache
-Curator library implements a client side cache of a znode children:
-* org.apache.curator.framework.recipes.cache.PathChildrenCache</p>
+Curator library implements a client side cache of a znode children:</p>
+<blockquote>
+<div>org.apache.curator.framework.recipes.cache.PathChildrenCache</div></blockquote>
 <p>This cached children of a znode keeps an up-to date copy of the znode children
 in the client machine. In our case, each worker registers with the job znode
 and keeps a local copy of other worker znodes in the local.
 Therefore each worker keeps an up-to date list of all other workers in the job.</p>
 <p>### Distributed Atomic Counter
-Curator library implements a distributed atomic counter:
-*       org.apache.curator.framework.recipes.atomic.DistributedAtomicInteger</p>
+Curator library implements a distributed atomic counter:</p>
+<blockquote>
+<div>org.apache.curator.framework.recipes.atomic.DistributedAtomicInteger</div></blockquote>
 <p>It provides a shared counter that is attached to a znode. We create a znode
 for this counter with “-dai” postfix: &lt;jobName&gt;-dai</p>
 <p>### Distributed Lock
-Curator library provides a distributed lock class:
-*       org.apache.curator.framework.recipes.locks.InterProcessMutex</p>
+Curator library provides a distributed lock class:</p>
+<blockquote>
+<div>org.apache.curator.framework.recipes.locks.InterProcessMutex</div></blockquote>
 <p>The lock is attached to a znode on the server. No two clients can acquire a lock
 attached to the same znode. Workers acquires the shared lock to update job node data.</p>
 <p>## Usage
-When a worker starts, it first needs to create an instance of ZKController class and
+When a worker starts, it first needs to create an instance of ZKDiscoverer class and
 initialize it by calling its initialize method. Then, it can get its unique ID by calling
 getWorkerNetworkInfo() method of ZKDiscoverer object.</p>
 <p>It can call getWorkerList() method of ZKDiscoverer object to get the list of currently
@@ -160,19 +165,27 @@ joined workers immediately. Or, if it needs the full list of workers in the job.
 it can call waitForAllWorkersToJoin(timeLimit) method of ZKDiscoverer object.
 This method will wait until either getting the full list of workers in the job or
 the time limit has been reached.</p>
-<p>A sample usage can be found in the class:
-* edu.iu.dsc.tws.rsched.schedulers.aurora.AuroraWorkerStarter</p>
+<p>A sample usage can be found in the class:</p>
+<blockquote>
+<div>edu.iu.dsc.tws.examples.ZKDiscovererExample.java</div></blockquote>
+<p>Its usage in the following class can also be examined for real usage:</p>
+<blockquote>
+<div>edu.iu.dsc.tws.rsched.schedulers.aurora.AuroraWorkerStarter</div></blockquote>
 <p>### Configuration Parameters
-Following configuration parameters must be specified in configuration files:
-* ZooKeeper server IP: twister2.zookeeper.server.ip
-* ZooKeeper server port number: twister2.zookeeper.server.port</p>
+Following configuration parameters must be specified in the configuration files:</p>
+<blockquote>
+<div>ZooKeeper server IP: twister2.zookeeper.server.ip
+ZooKeeper server port number: twister2.zookeeper.server.port</div></blockquote>
 <p>Following configuration parameters have default values and their default
-values can be overridden in configuration files:
-* Twister2 root node name is by default &#8220;/twister2&#8221;.
-It can be changed with the configuration parameter:
-twister2.zookeeper.root.node.path
-* Max wait time for all workers to join default value is 100 seconds.
-It can be changed by the following parameter: twister2.zookeeper.max.wait.time.for.all.workers.to.join</p>
+values can be overridden in the configuration files:</p>
+<p>Twister2 root node name is by default: &#8220;/twister2&#8221;
+It can be changed with the configuration parameter:</p>
+<blockquote>
+<div>twister2.zookeeper.root.node.path</div></blockquote>
+<p>Max wait time for all workers to join default value is 100 seconds.
+It can be changed by the following parameter:</p>
+<blockquote>
+<div>twister2.zookeeper.max.wait.time.for.all.workers.to.join</div></blockquote>
 
 
           </div>
@@ -201,9 +214,6 @@ It can be changed by the following parameter: twister2.zookeeper.max.wait.time.f
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
-    <p class="searchtip" style="font-size: 90%">
-    Enter search terms or a module, class or function name.
-    </p>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
@@ -214,8 +224,8 @@ It can be changed by the following parameter: twister2.zookeeper.max.wait.time.f
       &copy;2018, DSC-SPIDAL.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.6</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.1+</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
       
       |
       <a href="../../_sources/documents/zookeeper/ZKBasedWorkerDiscovery.txt"

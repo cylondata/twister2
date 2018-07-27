@@ -25,11 +25,13 @@
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <link rel="top" title="Twister2 1.0.0 documentation" href="../../index.html" />
    
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
   </head>
-  <body role="document">  
+  <body role="document">
+  
 
     <div class="document">
       <div class="documentwrapper">
@@ -95,8 +97,9 @@ NodeCache works event based. So, we avoid polling the ZooKeeper server continual
 <p>## Usage
 <strong>Registering the Job Master</strong>
 Job Master is started by a separate program in each cluster.
-For example, in Kubernetes it is started by the class:
-* edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobMasterStarter</p>
+For example, in Kubernetes it is started by the class:</p>
+<blockquote>
+<div>edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobMasterStarter</div></blockquote>
 <p>When this class starts the Job Master, it also needs to start the ZKJobMasterRegistrar.
 When the ZKJobMasterRegistrar is constructed, its initialize method needs to be called to register.
 It returns a boolean value to show the result of the registration.</p>
@@ -104,15 +107,25 @@ It returns a boolean value to show the result of the registration.</p>
 to delete the job znode and close the connection to the ZooKeeper server.</p>
 <p><strong>Getting the Job Master Address</strong>
 Similar to Job Master, Twister2 workers are also started by a separate program in each cluster.
-For example, in Kubernetes clusters, they are started by:
-* edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerStarter</p>
+For example, in Kubernetes clusters, they are started by:</p>
+<blockquote>
+<div>edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerStarter</div></blockquote>
 <p>Before starting the worker, this program should start ZKJobMasterFinder.
-After initializing, it can get the Job Master address by calling the method: getJobMasterIPandPort().
-If this method returns null, it means that the Job Master has  not registered yet.
-In that case, it can call waitAndGetJobMasterIPandPort(long timeLimit) method.
-This method will wait for the Job Master znode to be registered until the timeLimit has been reached.</p>
+After initializing, it can get the Job Master address by calling the method:</p>
+<blockquote>
+<div>getJobMasterIPandPort().</div></blockquote>
+<p>If this method returns null, it means that the Job Master has  not registered yet.
+In that case, it can call the method</p>
+<blockquote>
+<div>waitAndGetJobMasterIPandPort(long timeLimit)</div></blockquote>
+<p>This method will wait for the Job Master znode to be registered until the timeLimit has been reached.</p>
 <p><strong>Example Code</strong>
-We put sample usages of both classes to their main methods.</p>
+A sample usage of ZKJobMasterRegistrar is provided in the example class:</p>
+<blockquote>
+<div>edu.iu.dsc.tws.examples.ZKJobMasterRegistrarExample.java</div></blockquote>
+<p>Its corresponding sample usage of ZKJobMasterFinder is provided in the example class:</p>
+<blockquote>
+<div>edu.iu.dsc.tws.examples.ZKJobMasterFinderExample.java</div></blockquote>
 
 
           </div>
@@ -141,9 +154,6 @@ We put sample usages of both classes to their main methods.</p>
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
-    <p class="searchtip" style="font-size: 90%">
-    Enter search terms or a module, class or function name.
-    </p>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
@@ -154,8 +164,8 @@ We put sample usages of both classes to their main methods.</p>
       &copy;2018, DSC-SPIDAL.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.6</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.1+</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
       
       |
       <a href="../../_sources/documents/zookeeper/ZKBasedJobMasterDiscovery.txt"

@@ -177,12 +177,14 @@ It sends many worker information on the same message.
     }
 
 **IWorkerDiscoverer Implementation**  
-We implemented the WorkerController class that will be used by the workers 
+We implemented the WorkerDiscoverer class that will be used by the workers 
 to interact with the job master. The class name is:
-*	edu.iu.dsc.tws.master.client.WorkerDiscoverer
+
+    edu.iu.dsc.tws.master.client.WorkerDiscoverer
 
 It implements the interface: 
-*	edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer
+
+    edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer
 
 All worker implementations can utilize this class for worker discovery. 
 
@@ -202,7 +204,8 @@ So the Job Master does not assign a new ID to them. It uses their IDs.
 
 Worker ID assignment method is controlled by a configuration parameter. 
 Configuration parameter name is: 
-* twister2.job.master.assigns.worker.ids.
+
+    twister2.job.master.assigns.worker.ids
 
 If its value is true, Job Master assigns the worker IDs. 
 If it is false, underlying resource scheduler assigns worker IDs. 
@@ -231,8 +234,9 @@ An implementation of IJobTerminator for Kubernetes clusters can be found in:
 ## Usage
 
 Job Master has two components: 
-* edu.iu.dsc.tws.master.JobMaster
-* edu.iu.dsc.tws.master.client.JobMasterClient
+
+    edu.iu.dsc.tws.master.JobMaster
+    edu.iu.dsc.tws.master.client.JobMasterClient
  
 JobMaster is the server that needs to be started for each job. 
 JobMasterClient is the client that runs in workers and interacts with the server. 
@@ -243,18 +247,21 @@ JobMaster needs to know the port number to serve, number of workers in the job, 
 a Job Terminator, etc. With these data, it can be started locally. 
 If there is no need for Job Terminator, that may be null. 
 
-A sample usage is provided in the main method of Job Master class. 
+A sample usage is provided in the example class: 
 
-When Jobs are executed in resource scheduler such as in Kubernetes and Mesos, 
+    edu.iu.dsc.tws.examples.JobMasterExample.java 
+
+When Jobs are executed in resource schedulers such as in Kubernetes and Mesos, 
 Job Master needs to be deployed in those systems. It is usually a good practice to write
 a separate JobMasterStarter class to start the job master in those environments. 
 This starter class sets up the environment for the Job Master and starts it. 
 
 An example JobMasterStarter class is provided for Kubernetes cluster:
-* edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobMasterStarter
+
+    edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobMasterStarter
 
 It gets the required configuration parameters as environment variables and 
-sets up the persistent storage and logging. Then It starts the JobMaster. 
+sets up the persistent storage and logging. Then, It starts the JobMaster. 
 
 ### JobMasterClient Usage 
 
@@ -268,13 +275,42 @@ Some JobMasterClient methods are blocking calls. They wait until the response is
 Some other methods are non-blocking sends. They send the message, but do not wait for the
 response to proceed. 
 
-### IWorkerController Implementation
+A sample usage is provided in the example class: 
+
+    edu.iu.dsc.tws.examples.JobMasterClientExample.java 
+
+### IWorkerDiscoverer Usage
  
 JobMasterClient provides an implementation of IWorkerController interface. 
 It is automatically initialized when a JobMasterClient is initialized. 
-It can be accessed by the method:  public WorkerController getWorkerController()
+It can be accessed by the method: 
 
-A sample development usage of this client is given in the main method of JobMasterClient.
+    public WorkerController getWorkerController()
+
+A sample development usage of this client is given in the example class of JobMasterClientExample.
 Its usage in Kubernetes environments are provided in classes: 
-* edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerStarter
-* edu.iu.dsc.tws.rsched.schedulers.k8s.mpi.MPIWorkerStarter
+
+    edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerStarter
+    edu.iu.dsc.tws.rsched.schedulers.k8s.mpi.MPIWorkerStarter
+
+## Configuration Parameters
+Job Master related configuraion parameters are handled by the class:
+
+    edu.iu.dsc.tws.master.JobMasterContext
+
+Users can specify the following configuration parameters. 
+Their names are default values are shown:
+
+    twister2.job.master.assigns.worker.ids: true
+    twister2.job.master.runs.in.client: false
+    twister2.job.master.cpu: 0.2
+    twister2.job.master.ram: 1024
+    twister2.job.master.volatile.volume.size: 1.0
+    twister2.job.master.persistent.volume.size: 1.0
+    twister2.job.master.port: 11011
+    twister2.worker.ping.interval: 10000
+    twister2.worker.to.job.master.response.wait.duration: 10000
+
+
+
+

@@ -25,11 +25,13 @@
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <link rel="top" title="Twister2 1.0.0 documentation" href="../../index.html" />
    
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
   </head>
-  <body role="document">  
+  <body role="document">
+  
 
     <div class="document">
       <div class="documentwrapper">
@@ -227,11 +229,13 @@ repeated WorkerNetworkInfo workers = 2;</p>
 <p>}</p>
 </div></blockquote>
 <p><strong>IWorkerDiscoverer Implementation</strong>
-We implemented the WorkerController class that will be used by the workers
-to interact with the job master. The class name is:
-*       edu.iu.dsc.tws.master.client.WorkerDiscoverer</p>
-<p>It implements the interface:
-*       edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer</p>
+We implemented the WorkerDiscoverer class that will be used by the workers
+to interact with the job master. The class name is:</p>
+<blockquote>
+<div>edu.iu.dsc.tws.master.client.WorkerDiscoverer</div></blockquote>
+<p>It implements the interface:</p>
+<blockquote>
+<div>edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer</div></blockquote>
 <p>All worker implementations can utilize this class for worker discovery.</p>
 <p>### WorkerID Assignment
 Each worker in a job should have a unique ID. Worker IDs start from 0 and
@@ -246,8 +250,9 @@ may assign unique IDs for the workers. In this case, when workers register
 with the Job Master, they already have a valid unique ID.
 So the Job Master does not assign a new ID to them. It uses their IDs.</p>
 <p>Worker ID assignment method is controlled by a configuration parameter.
-Configuration parameter name is:
-* twister2.job.master.assigns.worker.ids.</p>
+Configuration parameter name is:</p>
+<blockquote>
+<div>twister2.job.master.assigns.worker.ids</div></blockquote>
 <p>If its value is true, Job Master assigns the worker IDs.
 If it is false, underlying resource scheduler assigns worker IDs.
 By default, its value is true.</p>
@@ -271,9 +276,10 @@ worker COMPLETED messages from all workers in that job.</p>
 <p>An implementation of IJobTerminator for Kubernetes clusters can be found in:
 * edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobTerminator</p>
 <p>## Usage</p>
-<p>Job Master has two components:
-* edu.iu.dsc.tws.master.JobMaster
-* edu.iu.dsc.tws.master.client.JobMasterClient</p>
+<p>Job Master has two components:</p>
+<blockquote>
+<div>edu.iu.dsc.tws.master.JobMaster
+edu.iu.dsc.tws.master.client.JobMasterClient</div></blockquote>
 <p>JobMaster is the server that needs to be started for each job.
 JobMasterClient is the client that runs in workers and interacts with the server.</p>
 <p>### JobMaster Usage
@@ -281,15 +287,18 @@ JobMaster may be started locally to use in development testing.
 JobMaster needs to know the port number to serve, number of workers in the job, job name,
 a Job Terminator, etc. With these data, it can be started locally.
 If there is no need for Job Terminator, that may be null.</p>
-<p>A sample usage is provided in the main method of Job Master class.</p>
-<p>When Jobs are executed in resource scheduler such as in Kubernetes and Mesos,
+<p>A sample usage is provided in the example class:</p>
+<blockquote>
+<div>edu.iu.dsc.tws.examples.JobMasterExample.java</div></blockquote>
+<p>When Jobs are executed in resource schedulers such as in Kubernetes and Mesos,
 Job Master needs to be deployed in those systems. It is usually a good practice to write
 a separate JobMasterStarter class to start the job master in those environments.
 This starter class sets up the environment for the Job Master and starts it.</p>
-<p>An example JobMasterStarter class is provided for Kubernetes cluster:
-* edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobMasterStarter</p>
+<p>An example JobMasterStarter class is provided for Kubernetes cluster:</p>
+<blockquote>
+<div>edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobMasterStarter</div></blockquote>
 <p>It gets the required configuration parameters as environment variables and
-sets up the persistent storage and logging. Then It starts the JobMaster.</p>
+sets up the persistent storage and logging. Then, It starts the JobMaster.</p>
 <p>### JobMasterClient Usage</p>
 <p>JobMasterClient class is used to send all supported messages to JobMaster server and
 receive the responses.</p>
@@ -298,14 +307,36 @@ it is developed as a Threaded application.</p>
 <p>Some JobMasterClient methods are blocking calls. They wait until the response is received.
 Some other methods are non-blocking sends. They send the message, but do not wait for the
 response to proceed.</p>
-<p>### IWorkerController Implementation</p>
+<p>A sample usage is provided in the example class:</p>
+<blockquote>
+<div>edu.iu.dsc.tws.examples.JobMasterClientExample.java</div></blockquote>
+<p>### IWorkerDiscoverer Usage</p>
 <p>JobMasterClient provides an implementation of IWorkerController interface.
 It is automatically initialized when a JobMasterClient is initialized.
-It can be accessed by the method:  public WorkerController getWorkerController()</p>
-<p>A sample development usage of this client is given in the main method of JobMasterClient.
-Its usage in Kubernetes environments are provided in classes:
-* edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerStarter
-* edu.iu.dsc.tws.rsched.schedulers.k8s.mpi.MPIWorkerStarter</p>
+It can be accessed by the method:</p>
+<blockquote>
+<div>public WorkerController getWorkerController()</div></blockquote>
+<p>A sample development usage of this client is given in the example class of JobMasterClientExample.
+Its usage in Kubernetes environments are provided in classes:</p>
+<blockquote>
+<div>edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerStarter
+edu.iu.dsc.tws.rsched.schedulers.k8s.mpi.MPIWorkerStarter</div></blockquote>
+<p>## Configuration Parameters
+Job Master related configuraion parameters are handled by the class:</p>
+<blockquote>
+<div>edu.iu.dsc.tws.master.JobMasterContext</div></blockquote>
+<p>Users can specify the following configuration parameters.
+Their names are default values are shown:</p>
+<blockquote>
+<div>twister2.job.master.assigns.worker.ids: true
+twister2.job.master.runs.in.client: false
+twister2.job.master.cpu: 0.2
+twister2.job.master.ram: 1024
+twister2.job.master.volatile.volume.size: 1.0
+twister2.job.master.persistent.volume.size: 1.0
+twister2.job.master.port: 11011
+twister2.worker.ping.interval: 10000
+twister2.worker.to.job.master.response.wait.duration: 10000</div></blockquote>
 
 
           </div>
@@ -334,9 +365,6 @@ Its usage in Kubernetes environments are provided in classes:
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
-    <p class="searchtip" style="font-size: 90%">
-    Enter search terms or a module, class or function name.
-    </p>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
@@ -347,8 +375,8 @@ Its usage in Kubernetes environments are provided in classes:
       &copy;2018, DSC-SPIDAL.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.6</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.1+</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
       
       |
       <a href="../../_sources/documents/job-master/JobMaster.txt"
