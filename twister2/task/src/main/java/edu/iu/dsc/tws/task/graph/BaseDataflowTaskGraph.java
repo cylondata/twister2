@@ -16,6 +16,8 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -404,12 +406,15 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     return flag;
   }
 
-  public boolean detectCycle(DataFlowTaskGraph dataFlowTaskGraph, Set<TV> taskVertex) {
+  private List<Set<TV>> detectCycle = new LinkedList<>();
+
+  @SuppressWarnings("unchecked")
+  public boolean detectCycle(DataFlowTaskGraph dataFlowTaskGraph) {
 
     boolean flag = false;
-    Iterator<TV> vertexIterator = taskVertex.iterator();
-    while (vertexIterator.hasNext()) {
-      if (containsCycle(vertexIterator.next())) {
+    Set<TV> taskVertex = (Set<TV>) dataFlowTaskGraph.getTaskVertexSet();
+    for (TV tv : taskVertex) {
+      if (containsCycle(tv)) {
         flag = true;
       }
     }
@@ -418,11 +423,16 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
 
   public boolean containsCycle(TV sourceTaskVertex) {
 
-    for (DirectedEdge<TV, TE> de : directedEdges) {
-     //flag = true;
-     //throw new RuntimeException ("Self-loop detected for the taskgraph:");
+    boolean flag = false;
+    if (detectCycle.size() == 0) {
+      detectCycle.add(childrenOfTask(sourceTaskVertex));
+    } else if (detectCycle.size() >= 1
+        && detectCycle.contains(childrenOfTask(sourceTaskVertex))) {
+      detectCycle.add(childrenOfTask(sourceTaskVertex));
+      flag = true;
+      //throw new RuntimeException("Cycle detected in the taskgraph");
     }
-    return false;
+    return flag;
   }
 
   /**

@@ -135,6 +135,11 @@ public final class GraphBuilder {
 
   public DataFlowTaskGraph build() {
     graph.validate();
+
+    boolean value = graph.detectCycle(graph);
+    if (value) {
+      throw new RuntimeException("Cycle is detected in the task graph:" + value);
+    }
     graph.build();
     return graph;
   }
