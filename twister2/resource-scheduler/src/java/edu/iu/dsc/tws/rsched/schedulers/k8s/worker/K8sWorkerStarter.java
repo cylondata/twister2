@@ -109,7 +109,7 @@ public final class K8sWorkerStarter {
     // add any configuration from job file to the config object
     // if there are the same config parameters in both,
     // job file configurations will override
-    config = K8sWorkerUtils.overrideConfigs(job, config);
+    config = JobUtils.overrideConfigs(job, config);
 
     LOG.info("Worker information summary: \n"
         + "workerID: " + workerID + "\n"
