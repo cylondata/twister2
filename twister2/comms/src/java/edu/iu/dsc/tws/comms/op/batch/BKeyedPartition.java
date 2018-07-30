@@ -64,4 +64,8 @@ public class BKeyedPartition {
   public void finish(int source) {
     partition.finish(source);
   }
+
+  public boolean progress() {
+    return partition.progress();
+  }
 }

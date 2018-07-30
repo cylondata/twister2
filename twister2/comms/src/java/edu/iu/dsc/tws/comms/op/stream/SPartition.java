@@ -45,4 +45,8 @@ public class SPartition {
 
     partition.send(source, message, flags, destinations);
   }
+
+  public boolean progress() {
+    return partition.progress();
+  }
 }

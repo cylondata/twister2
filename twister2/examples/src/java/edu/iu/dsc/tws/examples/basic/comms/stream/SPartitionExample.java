@@ -20,38 +20,37 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.op.stream.SReduce;
+import edu.iu.dsc.tws.comms.op.LoadBalanceDestinationSelector;
+import edu.iu.dsc.tws.comms.op.stream.SPartition;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.basic.comms.BenchWorker;
 
-public class SReduceExample extends BenchWorker {
-  private static final Logger LOG = Logger.getLogger(SReduceExample.class.getName());
+public class SPartitionExample extends BenchWorker {
+  private static final Logger LOG = Logger.getLogger(SPartitionExample.class.getName());
 
-  private SReduce reduce;
-
-  private boolean reduceDone = false;
-
+  private SPartition partition;
   @Override
   protected void execute() {
     TaskPlan taskPlan = Utils.createStageTaskPlan(config, resourcePlan,
         jobParameters.getTaskStages());
 
     Set<Integer> sources = new HashSet<>();
+    Set<Integer> targets = new HashSet<>();
     Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
     for (int i = 0; i < noOfSourceTasks; i++) {
       sources.add(i);
     }
-    int target = noOfSourceTasks;
+    Integer noOfTargetTasks = jobParameters.getTaskStages().get(1);
+    for (int i = 0; i < noOfTargetTasks; i++) {
+      targets.add(noOfSourceTasks + i);
+    }
 
     // create the communication
-    reduce = new SReduce(communicator, taskPlan, sources, target,
-        new IdentityFunction(), new FinalReduceReceiver(jobParameters.getIterations()),
-        MessageType.INTEGER);
-
+    partition = new SPartition(communicator, taskPlan, sources, targets,
+        MessageType.INTEGER, new BCastReceiver(), new LoadBalanceDestinationSelector());
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(id, taskPlan,
         jobParameters.getTaskStages(), 0);
@@ -65,54 +64,33 @@ public class SReduceExample extends BenchWorker {
 
   @Override
   protected void progressCommunication() {
-    reduce.progress();
-  }
-
-  @Override
-  protected boolean sendMessages(int task, Object data, int flag) {
-    while (!reduce.reduce(task, data, flag)) {
-      // lets wait a litte and try again
-      reduce.progress();
-    }
-    return true;
+    partition.progress();
   }
 
   @Override
   protected boolean isDone() {
-    return reduceDone;
+    return false;
   }
 
-  public class FinalReduceReceiver implements ReduceReceiver {
-    private int count = 0;
-    private int expected;
+  @Override
+  protected boolean sendMessages(int task, Object data, int flag) {
+    return false;
+  }
 
-    public FinalReduceReceiver(int expected) {
-      this.expected = expected;
-    }
-
+  public class BCastReceiver implements MessageReceiver {
     @Override
     public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     }
 
     @Override
-    public boolean receive(int target, Object object) {
-      count++;
-      if (count == expected) {
-        LOG.log(Level.INFO, String.format("Target %d received count %d", target, count));
-        reduceDone = true;
-      }
-      return true;
-    }
-  }
-
-  public class IdentityFunction implements ReduceFunction {
-    @Override
-    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+    public boolean onMessage(int source, int destination, int target, int flags, Object object) {
+      LOG.log(Level.INFO, "Received message");
+      return false;
     }
 
     @Override
-    public Object reduce(Object t1, Object t2) {
-      return t1;
+    public void progress() {
+
     }
   }
 }

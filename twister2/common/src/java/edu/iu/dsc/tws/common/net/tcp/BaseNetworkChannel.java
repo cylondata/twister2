@@ -24,6 +24,9 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 
+/**
+ * Base network channel
+ */
 public abstract class BaseNetworkChannel {
   private static final Logger LOG = Logger.getLogger(BaseNetworkChannel.class.getName());
 
