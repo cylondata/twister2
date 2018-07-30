@@ -68,8 +68,8 @@ public final class JobMasterStarter {
         .put(Context.JOB_NAME, System.getenv(Context.JOB_NAME))
         .put(KubernetesContext.KUBERNETES_NAMESPACE,
             System.getenv(KubernetesContext.KUBERNETES_NAMESPACE))
-        .put(KubernetesContext.PERSISTENT_VOLUME_PER_WORKER,
-            System.getenv(KubernetesContext.PERSISTENT_VOLUME_PER_WORKER))
+        .put(JobMasterContext.PERSISTENT_VOLUME,
+            System.getenv(JobMasterContext.PERSISTENT_VOLUME))
         .put(Context.TWISTER2_WORKER_INSTANCES, System.getenv(Context.TWISTER2_WORKER_INSTANCES))
         .put(JobMasterContext.JOB_MASTER_ASSIGNS_WORKER_IDS,
             System.getenv(JobMasterContext.JOB_MASTER_ASSIGNS_WORKER_IDS))

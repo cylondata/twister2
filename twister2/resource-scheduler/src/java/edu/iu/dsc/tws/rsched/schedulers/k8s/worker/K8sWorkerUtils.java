@@ -35,7 +35,8 @@ import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.KUBERNETE
 public final class K8sWorkerUtils {
   private static final Logger LOG = Logger.getLogger(K8sWorkerUtils.class.getName());
 
-  private K8sWorkerUtils() { }
+  private K8sWorkerUtils() {
+  }
 
   /**
    * load configuration files from the given directory
@@ -81,9 +82,6 @@ public final class K8sWorkerUtils {
 
   /**
    * itinialize the logger
-   * @param workerID
-   * @param pv
-   * @param cnfg
    */
   public static void initWorkerLogger(int workerID, K8sPersistentVolume pv, Config cnfg) {
 
@@ -108,14 +106,19 @@ public final class K8sWorkerUtils {
   /**
    * itinialize the logger
    * entityName can be "jobMaster", "mpiMaster", etc.
-   * @param cnfg
    */
   public static void initLogger(Config cnfg, String entityName) {
     // set logging level
     LoggingHelper.setLogLevel(LoggingContext.loggingLevel(cnfg));
 
     // if no persistent volume requested, return
-    if (!KubernetesContext.persistentVolumeRequested(cnfg)) {
+    if ("jobMaster".equalsIgnoreCase(entityName)
+        && !JobMasterContext.persistentVolumeRequested(cnfg)) {
+      return;
+    }
+
+    if ("mpiMaster".equalsIgnoreCase(entityName)
+        && !KubernetesContext.persistentVolumeRequested(cnfg)) {
       return;
     }
 
@@ -151,9 +154,6 @@ public final class K8sWorkerUtils {
    * if jobMasterIP exists in the config object,
    * it uses that IP.
    * Otherwise, it tries to get the jobMasterIP from Kubernetes master
-   * @param cnfg
-   * @param networkInfo
-   * @return
    */
   public static JobMasterClient startJobMasterClient(Config cnfg, WorkerNetworkInfo networkInfo) {
 
@@ -191,10 +191,17 @@ public final class K8sWorkerUtils {
    * calculate the workerID from the given parameters
    */
   public static int calculateWorkerID(String podName, String containerName, int workersPerPod) {
-    int podNo = KubernetesUtils.idFromName(podName);
+    int podIndex = KubernetesUtils.idFromName(podName);
     int containerIndex = KubernetesUtils.idFromName(containerName);
 
-    return podNo * workersPerPod + containerIndex;
+    return calculateWorkerID(podIndex, containerIndex, workersPerPod);
+  }
+
+  /**
+   * calculate the workerID from the given parameters
+   */
+  public static int calculateWorkerID(int podIndex, int containerIndex, int workersPerPod) {
+    return podIndex * workersPerPod + containerIndex;
   }
 
   /**

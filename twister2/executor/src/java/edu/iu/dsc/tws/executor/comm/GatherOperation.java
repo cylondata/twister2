@@ -102,8 +102,8 @@ public class GatherOperation extends AbstractParallelOperation {
 
     }
 
-    public void progress() {
-
+    public boolean progress() {
+      return true;
     }
   }
 

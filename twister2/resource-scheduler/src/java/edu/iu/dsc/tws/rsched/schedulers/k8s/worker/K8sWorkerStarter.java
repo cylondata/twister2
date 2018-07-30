@@ -16,6 +16,7 @@ import java.net.UnknownHostException;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
@@ -27,8 +28,10 @@ import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.K8sEnvVariables;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
 import edu.iu.dsc.tws.rsched.spi.container.IPersistentVolume;
 import edu.iu.dsc.tws.rsched.spi.container.IWorker;
+import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import static edu.iu.dsc.tws.common.config.Context.JOB_ARCHIVE_DIRECTORY;
@@ -153,9 +156,38 @@ public final class K8sWorkerStarter {
           new K8sVolatileVolume(SchedulerContext.jobName(config), workerID);
     }
 
-    ResourcePlan resourcePlan = null;
+    ResourcePlan resourcePlan = generateResourcePlan();
 
     worker.init(config, workerID, resourcePlan, workerController, pv, volatileVolume);
+  }
+
+  /**
+   * A ResourcePlan object is created
+   * For each worker in the job, a ResourceContainer is created and it is added to the ResourcePlan
+   * Each ResourceContainer has the podName of its worker as a property
+   * @return
+   */
+  public static ResourcePlan generateResourcePlan() {
+    String jobName = Context.jobName(config);
+    int numberOfWorkers = Context.workerInstances(config);
+    int workersPerPod = KubernetesContext.workersPerPod(config);
+    int numberOfPods = numberOfWorkers / workersPerPod;
+
+    ResourcePlan plan = new ResourcePlan(SchedulerContext.clusterType(config), workerID);
+    int nextWorkerID = 0;
+
+    for (int i = 0; i < numberOfPods; i++) {
+
+      String podName = KubernetesUtils.podNameFromJobName(jobName, i);
+      for (int j = 0; j < workersPerPod; j++) {
+        ResourceContainer resourceContainer = new ResourceContainer(nextWorkerID);
+        resourceContainer.addProperty(SchedulerContext.WORKER_NAME, podName);
+        plan.addContainer(resourceContainer);
+        nextWorkerID++;
+      }
+    }
+
+    return plan;
   }
 
   /**

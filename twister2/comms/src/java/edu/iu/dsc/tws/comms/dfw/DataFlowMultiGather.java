@@ -107,7 +107,7 @@ public class DataFlowMultiGather implements DataFlowOperation {
   }
 
   @Override
-  public synchronized void progress() {
+  public synchronized boolean progress() {
     try {
       for (DataFlowGather reduce : gatherMap.values()) {
         reduce.progress();
@@ -120,6 +120,7 @@ public class DataFlowMultiGather implements DataFlowOperation {
       LOG.log(Level.SEVERE, "un-expected error", t);
       throw new RuntimeException(t);
     }
+    return true;
   }
 
   @Override
@@ -208,7 +209,8 @@ public class DataFlowMultiGather implements DataFlowOperation {
     }
 
     @Override
-    public void progress() {
+    public boolean progress() {
+      return true;
     }
   }
 
@@ -230,7 +232,8 @@ public class DataFlowMultiGather implements DataFlowOperation {
     }
 
     @Override
-    public void progress() {
+    public boolean progress() {
+      return true;
     }
   }
 }

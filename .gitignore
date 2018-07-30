@@ -17,6 +17,9 @@ hs_err_pid*
 ./twister2/.idea/
 *.iml
 
+#sphinx created files
+docs/_build
+
 bazel-bin
 bazel-genfiles
 bazel-out

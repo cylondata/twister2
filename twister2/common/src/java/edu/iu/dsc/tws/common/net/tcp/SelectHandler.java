@@ -17,13 +17,33 @@ import java.nio.channels.SelectableChannel;
  * The select handler, this will be called by the selector
  */
 public interface SelectHandler {
+  /**
+   * Handle read availability of channel
+   * @param channel socket channel
+   */
   void handleRead(SelectableChannel channel);
 
+  /**
+   * Handle write availability of channel
+   * @param channel socket channel
+   */
   void handleWrite(SelectableChannel channel);
 
+  /**
+   * Handle accept availability of channel
+   * @param channel socket channel
+   */
   void handleAccept(SelectableChannel channel);
 
+  /**
+   * Handle a connection ready for channel
+   * @param channel socket channel
+   */
   void handleConnect(SelectableChannel channel);
 
+  /**
+   * Handle error of channel
+   * @param channel socket channel
+   */
   void handleError(SelectableChannel channel);
 }

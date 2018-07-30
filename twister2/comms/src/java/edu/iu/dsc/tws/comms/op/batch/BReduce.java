@@ -41,4 +41,8 @@ public class BReduce {
   public void finish(int src) {
     reduce.finish(src);
   }
+
+  public boolean progress() {
+    return reduce.progress();
+  }
 }

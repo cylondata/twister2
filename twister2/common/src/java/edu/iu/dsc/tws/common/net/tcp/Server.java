@@ -80,6 +80,11 @@ public class Server implements SelectHandler {
     this.fixedBuffers = fixBuffers;
   }
 
+  /**
+   * Start listening on the port
+   *
+   * @return true if started successfully
+   */
   public boolean start() {
     try {
       serverSocketChannel = ServerSocketChannel.open();
@@ -90,11 +95,15 @@ public class Server implements SelectHandler {
       progress.registerAccept(serverSocketChannel, this);
       return true;
     } catch (IOException e) {
-      LOG.log(Level.SEVERE, "Failed to start server", e);
-      throw new RuntimeException("Failed to start server", e);
+      LOG.log(Level.SEVERE, String.format("Failed to start server on %s:%d",
+          address.getHostName(), address.getPort()), e);
+      return false;
     }
   }
 
+  /**
+   * Stop the server
+   */
   public void stop() {
     if (serverSocketChannel == null || !serverSocketChannel.isOpen()) {
       LOG.info("Fail to stop server; not yet open.");
@@ -110,7 +119,7 @@ public class Server implements SelectHandler {
     try {
       serverSocketChannel.close();
     } catch (IOException e) {
-      LOG.log(Level.SEVERE, "Failed to close server", e);
+      LOG.log(Level.WARNING, "Failed to close server", e);
     }
   }
 
@@ -125,6 +134,7 @@ public class Server implements SelectHandler {
     channel.enableWriting();
 
     TCPMessage request = new TCPMessage(buffer, edge, size);
+    // we need to handle the false
     channel.addWriteRequest(request);
 
     return request;

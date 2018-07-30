@@ -88,7 +88,7 @@ public class StreamingPartialGatherReceiver implements MessageReceiver {
   }
 
   @Override
-  public void progress() {
+  public boolean progress() {
     for (int t : messages.keySet()) {
       boolean canProgress = true;
       while (canProgress) {
@@ -131,6 +131,7 @@ public class StreamingPartialGatherReceiver implements MessageReceiver {
         }
       }
     }
+    return true;
   }
 
   protected boolean handleMessage(int task, Object message, int flags, int dest) {

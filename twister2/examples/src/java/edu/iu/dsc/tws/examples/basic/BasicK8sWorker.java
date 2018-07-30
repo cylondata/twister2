@@ -44,13 +44,14 @@ public class BasicK8sWorker implements IWorker {
     LOG.info("BasicK8sWorker started. Current time: " + System.currentTimeMillis());
 
     if (volatileVolume != null) {
-      volatileVolume.getWorkerDir();
-      LOG.info("VolatileVolumeDir: " + volatileVolume.getWorkerDirPath());
+      String volatileDirPath = volatileVolume.getWorkerDir().getPath();
+      LOG.info("Volatile Volume Directory: " + volatileDirPath);
     }
 
     if (persistentVolume != null) {
       // create worker directory
-      persistentVolume.getWorkerDir();
+      String persVolumePath = persistentVolume.getWorkerDir().getPath();
+      LOG.info("Persistent Volume Directory: " + persVolumePath);
     }
 
     // wait for all workers in this job to join

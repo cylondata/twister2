@@ -57,13 +57,13 @@ public final class MesosMPIWorkerStarter {
     try {
       MPI.Init(args);
       workerID = MPI.COMM_WORLD.getRank();
-      System.out.println("worker iiiiiddddddd.........:" + workerID);
       numberOfWorkers = MPI.COMM_WORLD.getSize();
+      System.out.println("worker iidddddd.........:" + workerID + " " + numberOfWorkers);
     } catch (MPIException e) {
       LOG.log(Level.SEVERE, "Could not get rank or size from mpi.COMM_WORLD", e);
       throw new RuntimeException(e);
     }
-
+    //workerID++;
     //int workerId = Integer.parseInt(System.getenv("WORKER_ID"));
     jobName = args[0];
     System.out.println("job name......................:::" + jobName);
@@ -83,31 +83,33 @@ public final class MesosMPIWorkerStarter {
       JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/"
           + jobName + ".job");
       workerController = new MesosWorkerController(config, job,
-          Inet4Address.getLocalHost().getHostAddress(), 22, id);
-      LOG.info("Initializing with zookeeper");
+          Inet4Address.getLocalHost().getHostAddress(), 2022, id);
+      LOG.info("Initializing with zookeeper.." + Inet4Address.getLocalHost().getHostAddress());
       LOG.info("worker id is....:" + workerID);
       //workerController.initializeWithZooKeeper();
-      //LOG.info("Waiting for all workers to join");
+      LOG.info("Waiting for all workers to join");
       //workerNetworkInfoList = workerController.waitForAllWorkersToJoin(
       //    ZKContext.maxWaitTimeForAllWorkersToJoin(config));
-      //LOG.info("Everyone has joined");
+      LOG.info("Everyone has joined");
       //container.init(worker.config, id, null, workerController, null);
 
     } catch (Exception e) {
       e.printStackTrace();
     }
 
-    String jobMasterIP = workerNetworkInfoList.get(0).getWorkerIP().getHostAddress();
+    //String jobMasterIP = workerNetworkInfoList.get(0).getWorkerIP().getHostAddress();
+    String jobMasterIP = args[1];
     LOG.info("JobMasterIP" + jobMasterIP);
     System.out.println("Worker id " + id);
-    int workerCount = workerController.getNumberOfWorkers();
-    System.out.println("worker count " + workerCount);
+    //int workerCount = workerController.getNumberOfWorkers();
+    //System.out.println("worker count " + workerCount);
     startJobMasterClient(workerController.getWorkerNetworkInfo(), jobMasterIP);
-
-
+    System.out.println("\nworker controller\nworker id..:"
+        + workerController.getWorkerNetworkInfo().getWorkerID()
+        + "ip address..:" + workerController.getWorkerNetworkInfo().getWorkerIP().toString());
     startWorker(workerController, null);
 
-
+    //Thread.sleep(20000);
     try {
       MPI.Finalize();
     } catch (MPIException ignore) { }
@@ -118,7 +120,7 @@ public final class MesosMPIWorkerStarter {
   public static void startJobMasterClient(WorkerNetworkInfo networkInfo, String jobMasterIP) {
 
     LOG.info("JobMasterIP: " + jobMasterIP);
-
+    LOG.info("NETWORK INFO    " + networkInfo.getWorkerIP().toString());
     jobMasterClient = new JobMasterClient(config, networkInfo, jobMasterIP);
     jobMasterClient.init();
     // we need to make sure that the worker starting message went through

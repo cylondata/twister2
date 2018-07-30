@@ -33,17 +33,17 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
 
   // lets keep track of the messages
   // for each task we need to keep track of incoming messages
-  protected Map<Integer, Map<Integer, Queue<Object>>> messages = new HashMap<>();
-  protected Map<Integer, Map<Integer, Boolean>> finished = new HashMap<>();
-  protected Map<Integer, List<Object>> finalMessages = new HashMap<>();
-  protected Map<Integer, Map<Integer, Integer>> counts = new HashMap<>();
-  protected DataFlowOperation dataFlowOperation;
-  protected int executor;
-  protected int sendPendingMax = 128;
-  protected BatchReceiver batchReceiver;
-  protected Map<Integer, Boolean> batchDone = new HashMap<>();
-  protected boolean isStoreBased;
-  protected Map<Integer, OperationMemoryManager> memoryManagers;
+  private Map<Integer, Map<Integer, Queue<Object>>> messages = new HashMap<>();
+  private Map<Integer, Map<Integer, Boolean>> finished = new HashMap<>();
+  private Map<Integer, List<Object>> finalMessages = new HashMap<>();
+  private Map<Integer, Map<Integer, Integer>> counts = new HashMap<>();
+  private DataFlowOperation dataFlowOperation;
+  private int executor;
+  private int sendPendingMax = 128;
+  private BatchReceiver batchReceiver;
+  private Map<Integer, Boolean> batchDone = new HashMap<>();
+  private boolean isStoreBased;
+  private Map<Integer, OperationMemoryManager> memoryManagers;
 
   public GatherBatchFinalReceiver(BatchReceiver batchReceiver) {
     this.batchReceiver = batchReceiver;
@@ -114,7 +114,7 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
   /**
    * Method used to progress work
    */
-  public void progress() {
+  public boolean progress() {
     for (int t : messages.keySet()) {
       if (batchDone.get(t)) {
         continue;
@@ -182,6 +182,7 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
         onFinish(t);
       }
     }
+    return true;
   }
 
   public boolean isStoreBased() {

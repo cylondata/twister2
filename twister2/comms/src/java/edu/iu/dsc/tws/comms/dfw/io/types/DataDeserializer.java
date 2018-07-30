@@ -191,14 +191,14 @@ public final class DataDeserializer {
   }
 
   public static int[] deserializeInteger(List<DataBuffer> buffers, int byteLength) {
-    int noOfDoubles = byteLength / 4;
-    int[] returnDoubles = new int[noOfDoubles];
+    int noOfInts = byteLength / 4;
+    int[] returnInts = new int[noOfInts];
     int bufferIndex = 0;
-    for (int i = 0; i < noOfDoubles; i++) {
+    for (int i = 0; i < noOfInts; i++) {
       ByteBuffer byteBuffer = buffers.get(bufferIndex).getByteBuffer();
       int remaining = byteBuffer.remaining();
       if (remaining >= 4) {
-        returnDoubles[i] = byteBuffer.getInt();
+        returnInts[i] = byteBuffer.getInt();
       } else {
         bufferIndex = getReadBuffer(buffers, 4, bufferIndex);
         if (bufferIndex < 0) {
@@ -206,18 +206,18 @@ public final class DataDeserializer {
         }
       }
     }
-    return returnDoubles;
+    return returnInts;
   }
 
   public static short[] deserializeShort(List<DataBuffer> buffers, int byteLength) {
-    int noOfDoubles = byteLength / 2;
-    short[] returnDoubles = new short[noOfDoubles];
+    int noOfShorts = byteLength / 2;
+    short[] returnShorts = new short[noOfShorts];
     int bufferIndex = 0;
-    for (int i = 0; i < noOfDoubles; i++) {
+    for (int i = 0; i < noOfShorts; i++) {
       ByteBuffer byteBuffer = buffers.get(bufferIndex).getByteBuffer();
       int remaining = byteBuffer.remaining();
       if (remaining >= 2) {
-        returnDoubles[i] = byteBuffer.getShort();
+        returnShorts[i] = byteBuffer.getShort();
       } else {
         bufferIndex = getReadBuffer(buffers, 4, bufferIndex);
         if (bufferIndex < 0) {
@@ -225,18 +225,18 @@ public final class DataDeserializer {
         }
       }
     }
-    return returnDoubles;
+    return returnShorts;
   }
 
   public static long[] deserializeLong(List<DataBuffer> buffers, int byteLength) {
-    int noOfDoubles = byteLength / 8;
-    long[] returnDoubles = new long[noOfDoubles];
+    int noOfLongs = byteLength / 8;
+    long[] returnLongs = new long[noOfLongs];
     int bufferIndex = 0;
-    for (int i = 0; i < noOfDoubles; i++) {
+    for (int i = 0; i < noOfLongs; i++) {
       ByteBuffer byteBuffer = buffers.get(bufferIndex).getByteBuffer();
       int remaining = byteBuffer.remaining();
       if (remaining >= 8) {
-        returnDoubles[i] = byteBuffer.getLong();
+        returnLongs[i] = byteBuffer.getLong();
       } else {
         bufferIndex = getReadBuffer(buffers, 8, bufferIndex);
         if (bufferIndex < 0) {
@@ -244,7 +244,7 @@ public final class DataDeserializer {
         }
       }
     }
-    return returnDoubles;
+    return returnLongs;
   }
 
   private static int getReadBuffer(List<DataBuffer> bufs, int size,

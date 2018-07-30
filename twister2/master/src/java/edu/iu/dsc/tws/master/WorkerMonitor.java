@@ -56,7 +56,6 @@ public class WorkerMonitor implements MessageHandler {
   public void onMessage(RequestID id, int workerId, Message message) {
 
     if (message instanceof Network.Ping) {
-      LOG.log(Level.INFO, "Ping request received: " + message.toString());
       Network.Ping ping = (Network.Ping) message;
       pingMessageReceived(id, ping);
 
@@ -78,10 +77,10 @@ public class WorkerMonitor implements MessageHandler {
   private void pingMessageReceived(RequestID id, Network.Ping ping) {
 
     if (workers.containsKey(ping.getWorkerID())) {
-      LOG.info("Ping message received from a worker: \n" + ping);
+      LOG.fine("Ping message received from a worker: \n" + ping);
       workers.get(ping.getWorkerID()).setPingTimestamp(System.currentTimeMillis());
     } else {
-      LOG.info("Ping message received from a worker that has not joined the job yet: " + ping);
+      LOG.warning("Ping message received from a worker that has not joined the job yet: " + ping);
     }
 
     Network.Ping pingResponse = Network.Ping.newBuilder()
@@ -91,7 +90,7 @@ public class WorkerMonitor implements MessageHandler {
         .build();
 
     rrServer.sendResponse(id, pingResponse);
-    LOG.info("Ping response sent to the worker: \n" + pingResponse);
+    LOG.fine("Ping response sent to the worker: \n" + pingResponse);
   }
 
   private void stateChangeMessageReceived(RequestID id, Network.WorkerStateChange message) {
@@ -186,22 +185,23 @@ public class WorkerMonitor implements MessageHandler {
     if (listMessage.getRequestType() == Network.ListWorkersRequest.RequestType.IMMEDIATE_RESPONSE) {
 
       sendListWorkersResponse(listMessage.getWorkerID(), id);
-      LOG.log(Level.INFO, String.format("IR Workers expecting %d joined %d",
+      LOG.log(Level.INFO, String.format("Expecting %d workers, %d joined",
           numberOfWorkers, workers.size()));
     } else if (listMessage.getRequestType()
         == Network.ListWorkersRequest.RequestType.RESPONSE_AFTER_ALL_JOINED) {
-      waitList.put(listMessage.getWorkerID(), id);
-      // if all workers already joined, send the current list
+
+      // if all workers have already joined, send the current list
       if (workers.size() == numberOfWorkers) {
-//        sendListWorkersResponse(listMessage.getWorkerID(), id);
-        sendListWorkersResponseToWaitList();
-        // if some workers have not yet joined, put this worker into the wait list
+        sendListWorkersResponse(listMessage.getWorkerID(), id);
+
+      // if some workers have not joined yet, put this worker into the wait list
+      } else {
+        waitList.put(listMessage.getWorkerID(), id);
       }
-      LOG.log(Level.INFO, String.format("WA Workers expecting %d joined %d",
+
+      LOG.log(Level.INFO, String.format("Expecting %d workers, %d joined",
           numberOfWorkers, workers.size()));
     }
-    LOG.log(Level.INFO, String.format("Workers expecting %d joined %d",
-        numberOfWorkers, workers.size()));
   }
 
   private void sendListWorkersResponse(int workerID, RequestID requestID) {

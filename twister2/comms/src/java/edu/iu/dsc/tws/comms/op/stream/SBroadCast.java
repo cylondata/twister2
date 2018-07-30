@@ -31,7 +31,11 @@ public class SBroadCast {
     this.partition.init(comm.getConfig(), dataType, plan, comm.nextEdge());
   }
 
-  public void bcast(int source, Object message, int flags) {
-    partition.send(source, message, flags);
+  public boolean bcast(int source, Object message, int flags) {
+    return partition.send(source, message, flags);
+  }
+
+  public boolean progress() {
+    return partition.progress();
   }
 }

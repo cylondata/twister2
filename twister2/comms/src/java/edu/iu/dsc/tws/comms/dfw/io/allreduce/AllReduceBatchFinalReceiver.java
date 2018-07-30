@@ -44,7 +44,7 @@ public class AllReduceBatchFinalReceiver extends ReduceBatchReceiver {
   /**
    * Method used to progress work
    */
-  public void progress() {
+  public boolean progress() {
     for (int t : messages.keySet()) {
       if (batchDone.get(t)) {
         continue;
@@ -104,5 +104,6 @@ public class AllReduceBatchFinalReceiver extends ReduceBatchReceiver {
         reduceReceiver.send(t, previous, 0);
       }
     }
+    return true;
   }
 }

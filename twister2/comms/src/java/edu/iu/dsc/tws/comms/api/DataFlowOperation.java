@@ -52,8 +52,10 @@ public interface DataFlowOperation {
 
   /**
    * Progress the pending dataflow operations
+   *
+   * @return true if there is more messages to progress, unless return false
    */
-  void progress();
+  boolean progress();
 
   /**
    * Clean up the resources
