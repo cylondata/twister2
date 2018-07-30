@@ -89,6 +89,8 @@ public class CheckpointManager {
 
     rrServer.registerRequestHandler(Checkpoint.TaskDiscovery.newBuilder(), taskMonitor);
 
+    rrServer.start();
+
   }
 
   public CheckpointManager(String jobName, JobMaster jobMaster) {
