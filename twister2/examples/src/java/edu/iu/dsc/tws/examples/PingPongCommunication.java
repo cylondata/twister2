@@ -124,8 +124,8 @@ public class PingPongCommunication implements IContainer {
     }
 
     @Override
-    public void progress() {
-
+    public boolean progress() {
+      return true;
     }
   }
 

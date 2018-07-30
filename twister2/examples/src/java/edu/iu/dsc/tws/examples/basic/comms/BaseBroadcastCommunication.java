@@ -212,7 +212,8 @@ public class BaseBroadcastCommunication implements IContainer, IWorker {
     }
 
     @Override
-    public void progress() {
+    public boolean progress() {
+      return true;
     }
   }
 

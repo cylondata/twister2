@@ -49,5 +49,5 @@ public interface MessageReceiver {
   /**
    * This method will be called by the progress
    */
-  void progress();
+  boolean progress();
 }

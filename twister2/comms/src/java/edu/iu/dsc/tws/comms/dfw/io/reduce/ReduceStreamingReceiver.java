@@ -102,7 +102,7 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
   private int progressAttempts = 0;
 
   @Override
-  public void progress() {
+  public boolean progress() {
     for (int t : messages.keySet()) {
       boolean canProgress = true;
       // now check weather we have the messages for this source
@@ -156,6 +156,7 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
         }
       }
     }
+    return true;
   }
 
   public abstract boolean handleMessage(int source, Object message, int flags, int dest);

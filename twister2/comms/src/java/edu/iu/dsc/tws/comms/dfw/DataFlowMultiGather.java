@@ -209,7 +209,8 @@ public class DataFlowMultiGather implements DataFlowOperation {
     }
 
     @Override
-    public void progress() {
+    public boolean progress() {
+      return true;
     }
   }
 
@@ -231,7 +232,8 @@ public class DataFlowMultiGather implements DataFlowOperation {
     }
 
     @Override
-    public void progress() {
+    public boolean progress() {
+      return true;
     }
   }
 }

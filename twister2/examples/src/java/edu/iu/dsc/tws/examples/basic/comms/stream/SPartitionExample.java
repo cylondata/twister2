@@ -89,8 +89,8 @@ public class SPartitionExample extends BenchWorker {
     }
 
     @Override
-    public void progress() {
-
+    public boolean progress() {
+      return true;
     }
   }
 }

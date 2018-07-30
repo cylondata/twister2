@@ -193,7 +193,7 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
   }
 
   @Override
-  public void progress() {
+  public boolean progress() {
     for (Shuffle sorts : sortedMergers.values()) {
       sorts.run();
     }
@@ -204,6 +204,7 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
         finishedTargetsCompleted.add(i);
       }
     }
+    return true;
   }
 
   @Override

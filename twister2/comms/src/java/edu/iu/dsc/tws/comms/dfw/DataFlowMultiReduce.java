@@ -178,7 +178,8 @@ public class DataFlowMultiReduce implements DataFlowOperation {
       return partialReceiver.onMessage(source, this.destination, target, flags, object);
     }
 
-    public void progress() {
+    public boolean progress() {
+      return true;
     }
   }
 
@@ -201,7 +202,8 @@ public class DataFlowMultiReduce implements DataFlowOperation {
     }
 
     @Override
-    public void progress() {
+    public boolean progress() {
+      return true;
     }
   }
 }
