@@ -38,7 +38,6 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
   protected int sendPendingMax = 128;
   protected int destination;
   private Map<Integer, Queue<Object>> reducedValuesMap = new HashMap<>();
-  private int onMessageAttempts = 0;
   private Map<Integer, Map<Integer, Integer>> totalCounts = new HashMap<>();
 
   public ReduceStreamingReceiver(ReduceFunction function) {
@@ -85,10 +84,7 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
     Integer c = counts.get(target).get(source);
     if (m.size() >= sendPendingMax) {
       canAdd = false;
-//      LOG.info(String.format("%d ADD FALSE", executor));
-      onMessageAttempts++;
     } else {
-      onMessageAttempts = 0;
       m.offer(object);
       counts.get(target).put(source, c + 1);
 
@@ -99,21 +95,15 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
     return canAdd;
   }
 
-  private int progressAttempts = 0;
-
   @Override
   public boolean progress() {
+    boolean canProgress = true;
     for (int t : messages.keySet()) {
-      boolean canProgress = true;
+      canProgress = true;
       // now check weather we have the messages for this source
       Map<Integer, Queue<Object>> messagePerTarget = messages.get(t);
       Map<Integer, Integer> countsPerTarget = counts.get(t);
-      Map<Integer, Integer> totalCountMap = totalCounts.get(t);
       Queue<Object> reducedValues = this.reducedValuesMap.get(t);
-//      if (onMessageAttempts > 1000000 || progressAttempts > 1000000) {
-//        LOG.info(String.format("%d REDUCE %s %s", executor, counts, totalCountMap));
-//      }
-//      LOG.info(String.format("%d REDUCE %s %s", executor, counts, totalCountMap));
 
       while (canProgress) {
         boolean found = true;
@@ -136,9 +126,6 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
           if (previous != null) {
             reducedValues.offer(previous);
           }
-          progressAttempts = 0;
-        } else {
-          progressAttempts++;
         }
 
         if (reducedValues.size() > 0) {
@@ -156,7 +143,7 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
         }
       }
     }
-    return true;
+    return canProgress;
   }
 
   public abstract boolean handleMessage(int source, Object message, int flags, int dest);

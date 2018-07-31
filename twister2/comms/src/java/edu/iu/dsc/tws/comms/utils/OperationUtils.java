@@ -30,14 +30,16 @@ public final class OperationUtils {
   private OperationUtils() {
   }
 
-  public static void progressReceivers(ChannelDataFlowOperation delegete, Lock lock,
+  public static boolean progressReceivers(ChannelDataFlowOperation delegete, Lock lock,
                                        MessageReceiver finalReceiver, Lock partialLock,
                                        MessageReceiver partialReceiver) {
+    boolean finalDone = false;
+    boolean partialDone = false;
     try {
       delegete.progress();
       if (lock.tryLock()) {
         try {
-          finalReceiver.progress();
+          finalDone = finalReceiver.progress();
         } finally {
           lock.unlock();
         }
@@ -45,7 +47,7 @@ public final class OperationUtils {
 
       if (partialLock.tryLock()) {
         try {
-          partialReceiver.progress();
+          partialDone = partialReceiver.progress();
         } finally {
           partialLock.unlock();
         }
@@ -54,6 +56,7 @@ public final class OperationUtils {
       LOG.log(Level.SEVERE, "un-expected error", t);
       throw new RuntimeException(t);
     }
+    return finalDone && partialDone;
   }
 
   public static Map<Integer, List<Integer>> getIntegerListMap(InvertedBinaryTreeRouter router,
