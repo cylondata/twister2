@@ -109,7 +109,8 @@ public class MultiMessageSerializer implements MessageSerializer {
       if (sendMessage.serializedState() == OutMessage.SendState.SERIALIZED) {
         SerializeState state = sendMessage.getSerializationState();
         int totalBytes = state.getTotalBytes();
-        channelMessage.getBuffers().get(0).getByteBuffer().putInt(12, totalBytes);
+        channelMessage.getBuffers().get(0).getByteBuffer().putInt(HEADER_SIZE - Integer.BYTES,
+            totalBytes);
 
         MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
             sendMessage.getEdge(), totalBytes);
@@ -125,7 +126,8 @@ public class MultiMessageSerializer implements MessageSerializer {
         int missing = state.getData().length - state.getBytesCopied();
         totalBytes = totalBytes + missing;
         //Need to calculate the true total bites since a part of the message may come separately
-        channelMessage.getBuffers().get(0).getByteBuffer().putInt(12, totalBytes);
+        channelMessage.getBuffers().get(0).getByteBuffer().putInt(HEADER_SIZE - Integer.BYTES,
+            totalBytes);
 
         MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
             sendMessage.getEdge(), totalBytes);
@@ -308,7 +310,7 @@ public class MultiMessageSerializer implements MessageSerializer {
 
   private boolean buildSubMessageHeader(DataBuffer buffer, int length) {
     ByteBuffer byteBuffer = buffer.getByteBuffer();
-    if (byteBuffer.remaining() < 4) {
+    if (byteBuffer.remaining() < NORMAL_SUB_MESSAGE_HEADER_SIZE) {
       return false;
     }
     byteBuffer.putInt(length);
