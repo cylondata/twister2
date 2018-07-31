@@ -143,7 +143,7 @@ public class SingleMessageSerializer implements MessageSerializer {
   private boolean serializeBody(Object payload,
                                 OutMessage sendMessage, DataBuffer buffer) {
     MessageType type = sendMessage.getMPIMessage().getType();
-    if((sendMessage.getFlags() & MessageFlags.BARRIER) == MessageFlags.BARRIER){
+    if ((sendMessage.getFlags() & MessageFlags.BARRIER) == MessageFlags.BARRIER) {
       return serializeData(payload, sendMessage.getSerializationState(), buffer, type,
           sendMessage.getFlags());
     } else {

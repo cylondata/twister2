@@ -45,7 +45,7 @@ public final class DataDeserializer {
   public static Object deserializeData(List<DataBuffer> buffers, int length,
                                        KryoSerializer serializer, MessageType type, int count,
                                        int flag) {
-    if((flag & MessageFlags.BARRIER) == MessageFlags.BARRIER){
+    if ((flag & MessageFlags.BARRIER) == MessageFlags.BARRIER) {
       deserializeObject(buffers, length, serializer);
     } else {
       switch (type) {
@@ -71,7 +71,7 @@ public final class DataDeserializer {
   public static Object deserializeData(List<DataBuffer> buffers, int length,
                                        KryoSerializer serializer, MessageType type, int flag) {
 
-    if((flag & MessageFlags.BARRIER) == MessageFlags.BARRIER){
+    if ((flag & MessageFlags.BARRIER) == MessageFlags.BARRIER) {
       deserializeObject(buffers, length, serializer);
     } else {
       switch (type) {
