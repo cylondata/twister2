@@ -67,7 +67,7 @@ public final class MesosMPISlaveStarter {
     } catch (Exception e) {
       e.printStackTrace();
     }
-    Thread.sleep(10000);
+    Thread.sleep(3000000);
 
   }
 }

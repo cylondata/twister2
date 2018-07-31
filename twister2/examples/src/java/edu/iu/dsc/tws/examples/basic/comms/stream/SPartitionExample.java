@@ -9,45 +9,48 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.basic.comms.batch;
+package edu.iu.dsc.tws.examples.basic.comms.stream;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.op.batch.BReduce;
+import edu.iu.dsc.tws.comms.op.LoadBalanceDestinationSelector;
+import edu.iu.dsc.tws.comms.op.stream.SPartition;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.basic.comms.BenchWorker;
 
-public class BReduceExample extends BenchWorker {
-  private static final Logger LOG = Logger.getLogger(BReduceExample.class.getName());
+public class SPartitionExample extends BenchWorker {
+  private static final Logger LOG = Logger.getLogger(SPartitionExample.class.getName());
 
-  private BReduce reduce;
-
+  private SPartition partition;
   @Override
   protected void execute() {
     TaskPlan taskPlan = Utils.createStageTaskPlan(config, resourcePlan,
         jobParameters.getTaskStages());
 
     Set<Integer> sources = new HashSet<>();
+    Set<Integer> targets = new HashSet<>();
     Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
     for (int i = 0; i < noOfSourceTasks; i++) {
       sources.add(i);
     }
-    int target = noOfSourceTasks;
+    Integer noOfTargetTasks = jobParameters.getTaskStages().get(1);
+    for (int i = 0; i < noOfTargetTasks; i++) {
+      targets.add(noOfSourceTasks + i);
+    }
 
     // create the communication
-    reduce = new BReduce(communicator, taskPlan, sources, target,
-        new IdentityFunction(), new FinalReduceReceiver(), MessageType.INTEGER);
-
+    partition = new SPartition(communicator, taskPlan, sources, targets,
+        MessageType.INTEGER, new BCastReceiver(), new LoadBalanceDestinationSelector());
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(id, taskPlan,
         jobParameters.getTaskStages(), 0);
@@ -61,16 +64,7 @@ public class BReduceExample extends BenchWorker {
 
   @Override
   protected void progressCommunication() {
-    reduce.progress();
-  }
-
-  @Override
-  protected boolean sendMessages(int task, Object data, int flag) {
-    while (!reduce.reduce(task, data, flag)) {
-      // lets wait a litte and try again
-      reduce.progress();
-    }
-    return true;
+    partition.progress();
   }
 
   @Override
@@ -78,31 +72,25 @@ public class BReduceExample extends BenchWorker {
     return false;
   }
 
-  public class FinalReduceReceiver implements ReduceReceiver {
-    @Override
-    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-    }
-
-    @Override
-    public boolean receive(int target, Object object) {
-      LOG.info("Received final input");
-      return true;
-    }
+  @Override
+  protected boolean sendMessages(int task, Object data, int flag) {
+    return false;
   }
 
-  public class IdentityFunction implements ReduceFunction {
-    private int count = 0;
+  public class BCastReceiver implements MessageReceiver {
     @Override
     public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     }
 
     @Override
-    public Object reduce(Object t1, Object t2) {
-      count++;
-      if (count % 10 == 0) {
-        LOG.info(String.format("Partial received %d", count));
-      }
-      return t1;
+    public boolean onMessage(int source, int destination, int target, int flags, Object object) {
+      LOG.log(Level.INFO, "Received message");
+      return false;
+    }
+
+    @Override
+    public boolean progress() {
+      return true;
     }
   }
 }

@@ -189,7 +189,7 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public void progress() {
+  public boolean progress() {
     try {
       delegete.progress();
       if (lock.tryLock()) {
@@ -203,6 +203,7 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
       LOG.log(Level.SEVERE, "un-expected error", t);
       throw new RuntimeException(t);
     }
+    return true;
   }
 
   public boolean passMessageDownstream(Object object, ChannelMessage currentMessage) {

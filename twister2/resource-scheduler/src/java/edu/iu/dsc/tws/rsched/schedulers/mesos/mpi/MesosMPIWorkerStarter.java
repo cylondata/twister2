@@ -63,7 +63,7 @@ public final class MesosMPIWorkerStarter {
       LOG.log(Level.SEVERE, "Could not get rank or size from mpi.COMM_WORLD", e);
       throw new RuntimeException(e);
     }
-    ///workerID++;
+    //workerID++;
     //int workerId = Integer.parseInt(System.getenv("WORKER_ID"));
     jobName = args[0];
     System.out.println("job name......................:::" + jobName);
@@ -109,7 +109,7 @@ public final class MesosMPIWorkerStarter {
         + "ip address..:" + workerController.getWorkerNetworkInfo().getWorkerIP().toString());
     startWorker(workerController, null);
 
-
+    //Thread.sleep(20000);
     try {
       MPI.Finalize();
     } catch (MPIException ignore) { }
@@ -120,7 +120,7 @@ public final class MesosMPIWorkerStarter {
   public static void startJobMasterClient(WorkerNetworkInfo networkInfo, String jobMasterIP) {
 
     LOG.info("JobMasterIP: " + jobMasterIP);
-
+    LOG.info("NETWORK INFO    " + networkInfo.getWorkerIP().toString());
     jobMasterClient = new JobMasterClient(config, networkInfo, jobMasterIP);
     jobMasterClient.init();
     // we need to make sure that the worker starting message went through

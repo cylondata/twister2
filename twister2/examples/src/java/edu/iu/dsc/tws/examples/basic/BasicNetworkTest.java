@@ -12,9 +12,11 @@
 package edu.iu.dsc.tws.examples.basic;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -25,13 +27,18 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerUtils;
 import edu.iu.dsc.tws.rsched.spi.container.IPersistentVolume;
 import edu.iu.dsc.tws.rsched.spi.container.IVolatileVolume;
 import edu.iu.dsc.tws.rsched.spi.container.IWorker;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
-public class BasicK8sWorker implements IWorker {
-  private static final Logger LOG = Logger.getLogger(BasicK8sWorker.class.getName());
+
+public class BasicNetworkTest implements IWorker, Runnable {
+  private static final Logger LOG = Logger.getLogger(BasicNetworkTest.class.getName());
+
+  private WorkerNetworkInfo workerNetworkInfo;
+  private IWorkerDiscoverer workerDiscoverer;
 
   @Override
   public void init(Config config,
@@ -41,37 +48,48 @@ public class BasicK8sWorker implements IWorker {
                    IPersistentVolume persistentVolume,
                    IVolatileVolume volatileVolume) {
 
-    LOG.info("BasicK8sWorker started. Current time: " + System.currentTimeMillis());
 
-    if (volatileVolume != null) {
-      String volatileDirPath = volatileVolume.getWorkerDir().getPath();
-      LOG.info("Volatile Volume Directory: " + volatileDirPath);
-    }
+    this.workerDiscoverer = workerController;
+    workerNetworkInfo = workerController.getWorkerNetworkInfo();
 
-    if (persistentVolume != null) {
-      // create worker directory
-      String persVolumePath = persistentVolume.getWorkerDir().getPath();
-      LOG.info("Persistent Volume Directory: " + persVolumePath);
-    }
+    LOG.info("Worker started: " + workerNetworkInfo);
+
+    Thread echoServer = new Thread(this);
+    echoServer.start();
 
     // wait for all workers in this job to join
     List<WorkerNetworkInfo> workerList = workerController.waitForAllWorkersToJoin(50000);
     if (workerList != null) {
       LOG.info("All workers joined. " + WorkerNetworkInfo.workerListAsString(workerList));
     } else {
-      LOG.severe("Can not get all workers to join. Something wrong. .......................");
+      LOG.severe("Can not get all workers to join. Exiting ........................");
+      return;
     }
 
-    LOG.info("All workers joined. Current time: " + System.currentTimeMillis());
+    // wait all echoServers to start
+    try {
+      Thread.sleep(2000);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
 
-//    sleepSomeTime();
-    echoServer(workerController.getWorkerNetworkInfo());
+
+    for (WorkerNetworkInfo worker : workerList) {
+      if (worker.equals(workerNetworkInfo)) {
+        continue;
+      }
+
+      sendReceiveHello(worker);
+    }
+
+    K8sWorkerUtils.waitIndefinitely();
+
   }
 
   /**
    * an echo server.
    */
-  public static void echoServer(WorkerNetworkInfo workerNetworkInfo) {
+  public void run() {
 
     // create socket
     ServerSocket serverSocket = null;
@@ -89,7 +107,7 @@ public class BasicK8sWorker implements IWorker {
       try {
         // a "blocking" call which waits until a connection is requested
         Socket clientSocket = serverSocket.accept();
-        LOG.info("Accepted a connection from the client:" + clientSocket.getInetAddress());
+//        LOG.info("Accepted a connection from the client:" + clientSocket.getInetAddress());
 
         InputStream is = clientSocket.getInputStream();
         BufferedReader reader = new BufferedReader(new InputStreamReader(is));
@@ -99,13 +117,13 @@ public class BasicK8sWorker implements IWorker {
         out.println("hello from the server: " + workerNetworkInfo);
         out.println("Will echo your messages:");
 
-        String s;
-        while ((s = reader.readLine()) != null) {
-          out.println(s);
-        }
+        String receivedMessage = reader.readLine();
+        out.println(receivedMessage);
+
+        out.flush();
 
         // close IO streams, then socket
-        LOG.info("Closing the connection with client");
+//      LOG.info("received message:\n" + receivedMessage + "\nClosing the connection with client");
         out.close();
         reader.close();
         clientSocket.close();
@@ -116,20 +134,38 @@ public class BasicK8sWorker implements IWorker {
     }
   }
 
-  /**
-   * a test method to make the worker wait some time
-   */
-  public void sleepSomeTime() {
 
-    long maxSleepDuration = 300; // 5 minutes
-    long sleepDuration = maxSleepDuration;
-//    long sleepDuration = (long) (Math.random() * maxSleepDuration);
+  /**
+   * send a hello message and receive the response
+   */
+  private void sendReceiveHello(WorkerNetworkInfo targetWorker) {
+
     try {
-      LOG.info("BasicK8sWorker will sleep: " + sleepDuration + " seconds.");
-      Thread.sleep(sleepDuration * 1000);
-      LOG.info("BasicK8sWorker sleep completed.");
-    } catch (InterruptedException e) {
-      LOG.log(Level.WARNING, "Thread sleep interrupted.", e);
+      Socket socketClient = new Socket(targetWorker.getWorkerIP(), targetWorker.getWorkerPort());
+      LOG.info("Connection Established to: " + targetWorker);
+
+      BufferedReader reader =
+          new BufferedReader(new InputStreamReader(socketClient.getInputStream()));
+
+      BufferedWriter writer =
+          new BufferedWriter(new OutputStreamWriter(socketClient.getOutputStream()));
+      writer.write("hello from: " + workerNetworkInfo + "\n");
+      writer.flush();
+
+      String serverMessage = "";
+      String message;
+      while ((message = reader.readLine()) != null) {
+        serverMessage += message + "\n";
+      }
+
+      LOG.info("\n" + serverMessage);
+
+      reader.close();
+      writer.close();
+      socketClient.close();
+
+    } catch (Exception e) {
+      LOG.log(Level.SEVERE, "Exception when trying to connect to: " + targetWorker, e);
     }
   }
 

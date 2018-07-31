@@ -61,6 +61,7 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
   public boolean validateTaskVertex(String taskName) {
     boolean flag = false;
     if (taskMap.containsKey(taskName)) {
+      //flag = true;
       throw new RuntimeException("Duplicate names for the submitted task:" + taskName);
     }
     return flag;
@@ -180,4 +181,5 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
   public void setOperationMode(OperationMode operationMode) {
     this.operationMode = operationMode;
   }
+
 }

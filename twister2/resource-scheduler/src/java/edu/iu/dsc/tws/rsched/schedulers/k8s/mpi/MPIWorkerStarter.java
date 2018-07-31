@@ -51,6 +51,7 @@ public final class MPIWorkerStarter {
   private static int numberOfWorkers = -1; // -1 means, not initialized
   private static WorkerNetworkInfo workerNetworkInfo;
   private static JobMasterClient jobMasterClient;
+  private static String jobName = null;
 
   private MPIWorkerStarter() { }
 
@@ -58,6 +59,16 @@ public final class MPIWorkerStarter {
     // we can not initialize the logger fully yet,
     // but we need to set the format as the first thing
     LoggingHelper.setLoggingFormat(LoggingHelper.DEFAULT_FORMAT);
+
+    String jobMasterIP = MPIMasterStarter.getJobMasterIPCommandLineArgumentValue(args[0]);
+    if (jobMasterIP == null) {
+      throw new RuntimeException("JobMasterIP address is null");
+    }
+
+    jobName = args[1];
+    if (jobName == null) {
+      throw new RuntimeException("jobName is null");
+    }
 
     // load the configuration parameters from configuration directory
     String configDir = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY + "/"
@@ -87,7 +98,6 @@ public final class MPIWorkerStarter {
     K8sWorkerUtils.initWorkerLogger(workerID, pv, config);
 
     // read job description file
-    String jobName = SchedulerContext.jobName(config);
     String jobDescFileName = SchedulerContext.createJobDescriptionFileName(jobName);
     jobDescFileName = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY + "/" + jobDescFileName;
     JobAPI.Job job = JobUtils.readJobFile(null, jobDescFileName);
@@ -96,7 +106,8 @@ public final class MPIWorkerStarter {
     // add any configuration from job file to the config object
     // if there are the same config parameters in both,
     // job file configurations will override
-    config = K8sWorkerUtils.overrideConfigs(job, config);
+    config = JobUtils.overrideConfigs(job, config);
+    config = JobUtils.updateConfigs(job, config);
 
     InetAddress localHost = null;
     try {
@@ -116,11 +127,6 @@ public final class MPIWorkerStarter {
       );
     } catch (UnknownHostException e) {
       LOG.log(Level.SEVERE, "Cannot get localHost.", e);
-    }
-
-    String jobMasterIP = MPIMasterStarter.getJobMasterIPCommandLineArgumentValue(args[0]);
-    if (jobMasterIP == null) {
-      throw new RuntimeException("JobMasterIP address is null");
     }
 
     config = Config.newBuilder()

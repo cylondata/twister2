@@ -60,12 +60,11 @@ public final class MesosMPIMasterStarter {
 
 
     MesosMPIMasterStarter mpiMaster = new MesosMPIMasterStarter();
-    Thread.sleep(3000);
+    Thread.sleep(5000);
     //gets the docker home directory
     String homeDir = System.getenv("HOME");
     int workerId = Integer.parseInt(System.getenv("WORKER_ID"));
     mpiMaster.jobName = System.getenv("JOB_NAME");
-    int id = workerId;
 
     String twister2Home = Paths.get("").toAbsolutePath().toString();
     String configDir = "twister2-job/mesos/";
@@ -82,7 +81,7 @@ public final class MesosMPIMasterStarter {
       JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/"
           + mpiMaster.jobName + ".job");
       workerController = new MesosWorkerController(mpiMaster.config, job,
-          Inet4Address.getLocalHost().getHostAddress(), 2022, id);
+          Inet4Address.getLocalHost().getHostAddress(), 2022, workerId);
       LOG.info("Initializing with zookeeper");
       workerController.initializeWithZooKeeper();
       LOG.info("Waiting for all workers to join");
@@ -98,7 +97,7 @@ public final class MesosMPIMasterStarter {
 
     String jobMasterIP = workerNetworkInfoList.get(0).getWorkerIP().getHostAddress();
     LOG.info("JobMasterIP" + jobMasterIP);
-    System.out.println("Worker id " + id);
+    System.out.println("Worker id " + workerId);
     StringBuilder outputBuilder = new StringBuilder();
     int workerCount = workerController.getNumberOfWorkers();
     System.out.println("worker count " + workerCount);
@@ -111,8 +110,10 @@ public final class MesosMPIMasterStarter {
     System.out.println("worker count is...:" + workerCount);
     for (int i = 1; i < workerCount; i++) {
 
-      writer.write(workerNetworkInfoList.get(i).getWorkerIP().getHostAddress() + "\n");
-
+      writer.write(workerNetworkInfoList.get(i).getWorkerIP().getHostAddress()
+          + "\n");
+      //writer.write(workerNetworkInfoList.get(i).getWorkerIP().getHostAddress()
+      //    + " slots=1" + "\n");
       System.out.println("host ip: "
           + workerNetworkInfoList.get(i).getWorkerIP().getHostAddress());
     }
@@ -124,17 +125,30 @@ public final class MesosMPIMasterStarter {
     String mpiClassNameToRun = "edu.iu.dsc.tws.rsched.schedulers.mesos.mpi.MesosMPIWorkerStarter";
 
     System.out.println("Before mpirun");
+//    String[] command = {"mpirun", "-allow-run-as-root",
+//        "--hostfile", "/twister2/hostFile", "-npernode", "1",
+//        "java", "-cp",
+//        "twister2-job/libexamples-java.jar:twister2-core/lib/*",
+//        mpiClassNameToRun, mpiMaster.jobName, jobMasterIP, ">mpioutfile"};
+
     String[] command = {"mpirun", "-x", "LD_PRELOAD=libmpi.so", "-allow-run-as-root", "-np",
         (workerController.getNumberOfWorkers() - 1) + "",
         "--hostfile", "/twister2/hostFile", "java", "-cp",
         "twister2-job/libexamples-java.jar:twister2-core/lib/*",
         mpiClassNameToRun, mpiMaster.jobName, jobMasterIP, ">mpioutfile"};
 
+//    String[] command = {"mpirun", "--hostfile", "/twister2/hostFile",
+//        "-allow-run-as-root", "-npernode", "1",
+//        "java", "-cp",
+//        "twister2-job/libexamples-java.jar:twister2-core/lib/*",
+//        mpiClassNameToRun, mpiMaster.jobName, jobMasterIP, ">mpioutfile"};
+
     System.out.println("command:" + String.join(" ", command));
-    // Thread.sleep(5000);
+    //Thread.sleep(5000);
 
     ProcessUtils.runSyncProcess(false, command, outputBuilder,
         new File("."), true);
+
     workerController.close();
     System.out.println("Finished");
 

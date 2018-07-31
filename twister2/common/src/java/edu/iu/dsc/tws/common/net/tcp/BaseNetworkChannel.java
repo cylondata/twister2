@@ -24,6 +24,9 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 
+/**
+ * Base network channel
+ */
 public abstract class BaseNetworkChannel {
   private static final Logger LOG = Logger.getLogger(BaseNetworkChannel.class.getName());
 
@@ -74,7 +77,6 @@ public abstract class BaseNetworkChannel {
   }
 
   public void read() {
-//    LOG.info("Reading from channel: " + socketChannel);
     while (pendingReceives.size() > 0) {
       TCPMessage readRequest = readRequest(socketChannel);
 

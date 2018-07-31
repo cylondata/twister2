@@ -195,7 +195,7 @@ public class DataFlowLoadBalance implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public void progress() {
+  public boolean progress() {
     try {
       delegete.progress();
       if (finalReceiverProgress.compareAndSet(false, true)) {
@@ -206,6 +206,7 @@ public class DataFlowLoadBalance implements DataFlowOperation, ChannelReceiver {
       LOG.log(Level.SEVERE, "un-expected error", t);
       throw new RuntimeException(t);
     }
+    return true;
   }
 
   @Override

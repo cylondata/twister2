@@ -188,8 +188,8 @@ public class BasePartitionCommunication implements IContainer {
     }
 
     @Override
-    public void progress() {
-
+    public boolean progress() {
+      return true;
     }
   }
 
@@ -232,8 +232,8 @@ public class BasePartitionCommunication implements IContainer {
       return isDone;
     }
 
-    public void progress() {
-
+    public boolean progress() {
+      return true;
     }
 
     public void setMap(Map<Integer, List<Integer>> expectedIds) {

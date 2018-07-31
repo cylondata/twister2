@@ -229,8 +229,8 @@ public class BasicGatherTestCommunication implements IContainer {
       return true;
     }
 
-    public void progress() {
-
+    public boolean progress() {
+      return true;
     }
   }
 }

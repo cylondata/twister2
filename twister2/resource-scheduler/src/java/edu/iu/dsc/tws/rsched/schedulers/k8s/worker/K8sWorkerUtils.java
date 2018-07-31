@@ -24,7 +24,6 @@ import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.client.JobMasterClient;
-import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
@@ -60,25 +59,6 @@ public final class K8sWorkerUtils {
 
     return conf2;
   }
-
-  /**
-   * configs from job object will override the ones from config files,
-   */
-  public static Config overrideConfigs(JobAPI.Job job, Config fileConfigs) {
-
-    Config.Builder builder = Config.newBuilder().putAll(fileConfigs);
-
-    JobAPI.Config conf = job.getConfig();
-    LOG.info("Number of configs to override from job file configs: " + conf.getKvsCount());
-
-    for (JobAPI.Config.KeyValue kv : conf.getKvsList()) {
-      builder.put(kv.getKey(), kv.getValue());
-      LOG.info("Overriden config key-value pair: " + kv.getKey() + ": " + kv.getValue());
-    }
-
-    return builder.build();
-  }
-
 
   /**
    * itinialize the logger
@@ -191,10 +171,17 @@ public final class K8sWorkerUtils {
    * calculate the workerID from the given parameters
    */
   public static int calculateWorkerID(String podName, String containerName, int workersPerPod) {
-    int podNo = KubernetesUtils.idFromName(podName);
+    int podIndex = KubernetesUtils.idFromName(podName);
     int containerIndex = KubernetesUtils.idFromName(containerName);
 
-    return podNo * workersPerPod + containerIndex;
+    return calculateWorkerID(podIndex, containerIndex, workersPerPod);
+  }
+
+  /**
+   * calculate the workerID from the given parameters
+   */
+  public static int calculateWorkerID(int podIndex, int containerIndex, int workersPerPod) {
+    return podIndex * workersPerPod + containerIndex;
   }
 
   /**
@@ -212,6 +199,5 @@ public final class K8sWorkerUtils {
       }
     }
   }
-
 
 }

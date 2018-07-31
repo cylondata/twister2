@@ -16,7 +16,6 @@ import java.nio.channels.SocketChannel;
 import java.nio.channels.UnresolvedAddressException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -24,7 +23,6 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.net.NetworkInfo;
-import edu.iu.dsc.tws.common.net.tcp.worker.TCPWorker;
 
 /**
  * A channel implementation, that supports iSend and iRecv semantics.
@@ -32,20 +30,44 @@ import edu.iu.dsc.tws.common.net.tcp.worker.TCPWorker;
 public class TCPChannel {
   private static final Logger LOG = Logger.getLogger(TCPChannel.class.getName());
 
+  /**
+   * Server
+   */
   private Server server;
 
+  /**
+   * Client map
+   */
   private Map<Integer, Client> clients;
 
+  /**
+   * The progress loop
+   */
   private Progress looper;
 
+  /**
+   * The configuration
+   */
   private Config config;
 
+  /**
+   * Network information
+   */
   private List<NetworkInfo> networkInfos;
 
+  /**
+   * Network information
+   */
   private NetworkInfo thisInfo;
 
+  /**
+   * Network info of all workers with worker id
+   */
   private Map<Integer, NetworkInfo> networkInfoMap;
 
+  /**
+   * The client channels
+   */
   private Map<Integer, SocketChannel> clientChannel;
 
   /**
@@ -57,10 +79,19 @@ public class TCPChannel {
    */
   private Map<SocketChannel, Integer> invertedServerChannels;
 
+  /**
+   * Channels connected to server
+   */
   private Map<Integer, SocketChannel> serverChannel;
 
+  /**
+   * The channels connected to server
+   */
   private List<SocketChannel> serverSocketChannels;
 
+  /**
+   * The client channels
+   */
   private List<SocketChannel> clientSocketChannels;
 
   // we use a pre-allocated set of buffers to send the hello messages to
@@ -104,15 +135,16 @@ public class TCPChannel {
 
     // lets connect to other
     server = new Server(config, hostName, port, looper, new ServerChannelHandler(), true);
-    server.start();
+    if (!server.start()) {
+      throw new RuntimeException("Failed to start the server");
+    }
   }
 
   /**
    * Start the connections to the servers
-   * @param workerInfo
-   * @param updatedThisInfo
+   * @param workerInfo information about all the workers
    */
-  public void startConnections(List<NetworkInfo> workerInfo, NetworkInfo updatedThisInfo) {
+  public void startConnections(List<NetworkInfo> workerInfo) {
     this.networkInfos = workerInfo;
 
     for (NetworkInfo ni : workerInfo) {
@@ -145,6 +177,14 @@ public class TCPChannel {
     }
   }
 
+  /**
+   * Send a buffer
+   * @param buffer buffer
+   * @param size size of the buffer, we assume start from 0th position
+   * @param procId the worker id
+   * @param edge the edg
+   * @return the reference message created
+   */
   public TCPMessage iSend(ByteBuffer buffer, int size, int procId, int edge) {
     SocketChannel ch = clientChannel.get(procId);
     if (ch == null) {
@@ -155,6 +195,15 @@ public class TCPChannel {
     return client.send(ch, buffer, size, edge);
   }
 
+  /**
+   * Receive a message
+   *
+   * @param buffer buffer
+   * @param size size of the buffer, we assume start from 0th position
+   * @param procId the worker id
+   * @param edge the edg
+   * @return the reference message created
+   */
   public TCPMessage iRecv(ByteBuffer buffer, int size, int procId, int edge) {
     SocketChannel ch = serverChannel.get(procId);
     if (ch == null) {
@@ -164,10 +213,18 @@ public class TCPChannel {
     return server.receive(ch, buffer, size, edge);
   }
 
+  /**
+   * Progress the communication
+   */
   public void progress() {
     looper.loop();
   }
 
+  /**
+   * Send a hello message after the connection established
+   * @param destProcId destination id
+   * @param sc channel
+   */
   private void sendHelloMessage(int destProcId, SocketChannel sc) {
     ByteBuffer buffer = helloSendByteBuffers.remove(0);
     buffer.clear();
@@ -177,11 +234,18 @@ public class TCPChannel {
     client.send(sc, buffer, 4, -1);
   }
 
+  /**
+   * Post the buffers to receive hello messages
+   * @param sc channel
+   */
   private void postHelloMessage(SocketChannel sc) {
     ByteBuffer buffer = helloReceiveByteBuffers.remove(0);
     server.receive(sc, buffer, 4, -1);
   }
 
+  /**
+   * Stop all the connections
+   */
   public void stop() {
     for (Client c : clients.values()) {
       c.disconnect();
@@ -290,95 +354,5 @@ public class TCPChannel {
         clientsCompleted++;
       }
     }
-  }
-
-  public static void main(String[] args) {
-    int noOfProcs = Integer.parseInt(args[1]);
-    int procId = Integer.parseInt(args[0]);
-
-    NetworkInfo networkInfo = new NetworkInfo(procId);
-    networkInfo.addProperty(TCPContext.NETWORK_HOSTNAME, "localhost");
-    networkInfo.addProperty(TCPContext.NETWORK_PORT, 8764);
-
-    List<NetworkInfo> list = new ArrayList<>();
-    for (int i = 0; i < noOfProcs; i++) {
-      NetworkInfo info = new NetworkInfo(i);
-      info.addProperty(TCPContext.NETWORK_HOSTNAME, "localhost");
-      info.addProperty(TCPContext.NETWORK_PORT, 8765 + i);
-      list.add(info);
-    }
-
-    TCPChannel master = new TCPChannel(Config.newBuilder().build(), list.get(procId));
-    master.startListening();
-
-    TCPWorker worker = new TCPWorker(Config.newBuilder().build(), networkInfo);
-    worker.start();
-    worker.waitForSync();
-    LOG.log(Level.INFO, "Workers are synced..");
-
-    master.startConnections(list, networkInfo);
-
-    int destProcId = 0;
-    if (procId == 0) {
-      destProcId = 1;
-    }
-
-    List<TCPMessage> readRequests = new ArrayList<>();
-    List<TCPMessage> writeRequests = new ArrayList<>();
-    final int messages = 5;
-    // now lets send 5 messages
-    for (int i = 0; i < messages; i++) {
-      if (destProcId == 0) {
-        ByteBuffer byteBuffer = ByteBuffer.allocate(8);
-        byteBuffer.putInt(1);
-        byteBuffer.putInt(2);
-        TCPMessage write = master.iSend(byteBuffer, 8, destProcId, 1);
-        writeRequests.add(write);
-      } else {
-        ByteBuffer receiveBuffer = ByteBuffer.allocate(8);
-        TCPMessage read = master.iRecv(receiveBuffer, 8, destProcId, 1);
-        readRequests.add(read);
-      }
-    }
-
-    int completed = 0;
-    int writeCOmpeted = 0;
-    do {
-      master.progress();
-      if (destProcId == 0) {
-        Iterator<TCPMessage> wItr = writeRequests.iterator();
-        while (wItr.hasNext()) {
-          TCPMessage w = wItr.next();
-          if (w.isComplete()) {
-            LOG.info("Write complete : " + writeCOmpeted);
-            writeCOmpeted++;
-            wItr.remove();
-          }
-        }
-      } else {
-        Iterator<TCPMessage> rItr = readRequests.iterator();
-        while (rItr.hasNext()) {
-          TCPMessage r = rItr.next();
-          if (r.isComplete()) {
-            ByteBuffer buffer = r.getByteBuffer();
-//            LOG.info("Size: " + buffer.remaining());
-            int first = buffer.getInt();
-            int second = buffer.getInt();
-            LOG.info("Read complete : " + completed + " " + first + " " + second);
-            completed++;
-            rItr.remove();
-          }
-        }
-      }
-    } while (completed != messages && writeCOmpeted != messages);
-
-    try {
-      Thread.sleep(60000);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
-
-    worker.stop();
-    master.stop();
   }
 }

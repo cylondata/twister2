@@ -28,7 +28,7 @@ public class ReduceBatchPartialReceiver extends ReduceBatchReceiver {
   }
 
   @Override
-  public void progress() {
+  public boolean progress() {
     for (int t : messages.keySet()) {
       if (batchDone.get(t)) {
         //System.out.println("Number of messages send from partial : " + t + "count : ");
@@ -128,5 +128,6 @@ public class ReduceBatchPartialReceiver extends ReduceBatchReceiver {
         }
       }
     }
+    return true;
   }
 }

@@ -42,7 +42,7 @@ public class BReduce {
     reduce.finish(src);
   }
 
-  public void progress() {
-    reduce.progress();
+  public boolean progress() {
+    return reduce.progress();
   }
 }

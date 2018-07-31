@@ -98,7 +98,7 @@ public class GatherBatchPartialReceiver implements MessageReceiver {
   }
 
   @Override
-  public void progress() {
+  public boolean progress() {
     for (int t : messages.keySet()) {
       if (batchDone.get(t)) {
         continue;
@@ -170,6 +170,7 @@ public class GatherBatchPartialReceiver implements MessageReceiver {
         }
       }
     }
+    return true;
   }
 }
 

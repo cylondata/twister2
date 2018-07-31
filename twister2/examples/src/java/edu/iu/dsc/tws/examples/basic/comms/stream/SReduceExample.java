@@ -15,6 +15,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -32,6 +33,8 @@ public class SReduceExample extends BenchWorker {
 
   private SReduce reduce;
 
+  private boolean reduceDone = false;
+
   @Override
   protected void execute() {
     TaskPlan taskPlan = Utils.createStageTaskPlan(config, resourcePlan,
@@ -46,7 +49,8 @@ public class SReduceExample extends BenchWorker {
 
     // create the communication
     reduce = new SReduce(communicator, taskPlan, sources, target,
-        new IdentityFunction(), new FinalReduceReceiver(), MessageType.INTEGER);
+        new IdentityFunction(), new FinalReduceReceiver(jobParameters.getIterations()),
+        MessageType.INTEGER);
 
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(id, taskPlan,
@@ -75,32 +79,39 @@ public class SReduceExample extends BenchWorker {
 
   @Override
   protected boolean isDone() {
-    return false;
+    return reduceDone;
   }
 
   public class FinalReduceReceiver implements ReduceReceiver {
+    private int count = 0;
+    private int expected;
+
+    public FinalReduceReceiver(int expected) {
+      this.expected = expected;
+    }
+
     @Override
     public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     }
 
     @Override
     public boolean receive(int target, Object object) {
+      count++;
+      if (count == expected) {
+        LOG.log(Level.INFO, String.format("Target %d received count %d", target, count));
+        reduceDone = true;
+      }
       return true;
     }
   }
 
   public class IdentityFunction implements ReduceFunction {
-    private int count = 0;
     @Override
     public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     }
 
     @Override
     public Object reduce(Object t1, Object t2) {
-      count++;
-      if (count % 100 == 0) {
-        LOG.info(String.format("Partial received %d", count));
-      }
       return t1;
     }
   }

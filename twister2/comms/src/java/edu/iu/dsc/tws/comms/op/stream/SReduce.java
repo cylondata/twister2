@@ -53,8 +53,8 @@ public class SReduce {
     return reduce.send(src, message, flags);
   }
 
-  public void progress() {
-    reduce.progress();
+  public boolean progress() {
+    return reduce.progress();
   }
 
   public void close() {

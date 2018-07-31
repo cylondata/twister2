@@ -16,3 +16,6 @@ hs_err_pid*
 .idea/
 ./twister2/.idea/
 *.iml
+
+#sphinx created files
+docs/_build

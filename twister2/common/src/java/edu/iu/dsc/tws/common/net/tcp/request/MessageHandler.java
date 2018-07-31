@@ -25,6 +25,15 @@ package edu.iu.dsc.tws.common.net.tcp.request;
 
 import com.google.protobuf.Message;
 
+/**
+ * A callback handler for specific protobuf message types
+ */
 public interface MessageHandler {
+  /**
+   * Handles a specific message type
+   * @param id request id
+   * @param workerId worker id
+   * @param message protbuf message
+   */
   void onMessage(RequestID id, int workerId, Message message);
 }

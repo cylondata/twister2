@@ -56,11 +56,6 @@ public class RRClient {
   private Map<String, Message.Builder> messageBuilders = new HashMap<>();
 
   /**
-   * Weather we are connected
-   */
-//  private boolean connected = false;
-
-  /**
    * The client id
    */
   private int workerId;
@@ -100,9 +95,9 @@ public class RRClient {
 
   /**
    * throw an exception with the failure reason
-   * @param message
-   * @param waitLimit
-   * @return
+   * @param message message
+   * @param waitLimit waitlimit
+   * @return request id
    */
   public RequestID sendRequestWaitResponse(Message message, long waitLimit) {
 
@@ -189,19 +184,16 @@ public class RRClient {
       } catch (IOException e) {
         LOG.log(Level.SEVERE, "Failed to close channel: " + ch, e);
       }
-//      connected = false;
     }
 
     @Override
     public void onConnect(SocketChannel ch, StatusCode status) {
       channel = ch;
-//      connected = true;
       connectHandler.onConnect(ch, status);
     }
 
     @Override
     public void onClose(SocketChannel ch) {
-//      connected = false;
       connectHandler.onClose(ch);
     }
 

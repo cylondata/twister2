@@ -70,7 +70,7 @@ public class TwoChannelTest {
         @Override
         public void run() {
           TCPChannel channel = channels.get(j);
-          channel.startConnections(networkInfos, null);
+          channel.startConnections(networkInfos);
           channel.waitForConnections();
         }
       });
@@ -86,13 +86,13 @@ public class TwoChannelTest {
 
   @After
   public void tearDown() throws Exception {
-//    for (TCPChannel channel : channels) {
-////      channel.stop();
-//    }
+    for (TCPChannel channel : channels) {
+      channel.stop();
+    }
   }
 
   @Test
-  public void sendMessages() {
+  public void sendMessagesTest() {
     List<TCPMessage> sends = new ArrayList<>();
     List<TCPMessage> recvs = new ArrayList<>();
 

@@ -131,7 +131,7 @@ public class PartitionPartialReceiver implements MessageReceiver {
   }
 
   @Override
-  public void progress() {
+  public boolean progress() {
     lock.lock();
     try {
       if (finish && readyToSend.isEmpty() && finishedDestinations.size() != destinations.size()) {
@@ -145,7 +145,7 @@ public class PartitionPartialReceiver implements MessageReceiver {
             }
           }
         }
-        return;
+        return true;
       }
 
       Iterator<Map.Entry<Integer, List<Object>>> it = readyToSend.entrySet().iterator();
@@ -164,6 +164,7 @@ public class PartitionPartialReceiver implements MessageReceiver {
     } finally {
       lock.unlock();
     }
+    return true;
   }
 
   @Override

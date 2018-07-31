@@ -102,7 +102,7 @@ public final class Network {
       resourcePlan.addContainer(container);
     }
     // start the connections
-    channel.startConnections(nInfos, null);
+    channel.startConnections(nInfos);
     // now lets wait for connections to be established
     channel.waitForConnections();
 

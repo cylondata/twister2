@@ -16,6 +16,7 @@ import java.net.UnknownHostException;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
@@ -27,8 +28,10 @@ import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.K8sEnvVariables;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
 import edu.iu.dsc.tws.rsched.spi.container.IPersistentVolume;
 import edu.iu.dsc.tws.rsched.spi.container.IWorker;
+import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import static edu.iu.dsc.tws.common.config.Context.JOB_ARCHIVE_DIRECTORY;
@@ -42,6 +45,7 @@ public final class K8sWorkerStarter {
   private static int workerID = -1; // -1 means, not initialized
   private static WorkerNetworkInfo workerNetworkInfo;
   private static JobMasterClient jobMasterClient;
+  private static String jobName = null;
 
   private K8sWorkerStarter() { }
 
@@ -54,6 +58,10 @@ public final class K8sWorkerStarter {
     int workerPort = Integer.parseInt(System.getenv(K8sEnvVariables.WORKER_PORT + ""));
     String containerName = System.getenv(K8sEnvVariables.CONTAINER_NAME + "");
     String jobMasterIP = System.getenv(K8sEnvVariables.JOB_MASTER_IP + "");
+    jobName = System.getenv(K8sEnvVariables.JOB_NAME + "");
+    if (jobName == null) {
+      throw new RuntimeException("JobName is null");
+    }
 
     // load the configuration parameters from configuration directory
     String configDir = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY + "/"
@@ -97,7 +105,6 @@ public final class K8sWorkerStarter {
     K8sWorkerUtils.initWorkerLogger(workerID, pv, config);
 
     // read job description file
-    String jobName = SchedulerContext.jobName(config);
     String jobDescFileName = SchedulerContext.createJobDescriptionFileName(jobName);
     jobDescFileName = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY + "/" + jobDescFileName;
     JobAPI.Job job = JobUtils.readJobFile(null, jobDescFileName);
@@ -106,7 +113,8 @@ public final class K8sWorkerStarter {
     // add any configuration from job file to the config object
     // if there are the same config parameters in both,
     // job file configurations will override
-    config = K8sWorkerUtils.overrideConfigs(job, config);
+    config = JobUtils.overrideConfigs(job, config);
+    config = JobUtils.updateConfigs(job, config);
 
     LOG.info("Worker information summary: \n"
         + "workerID: " + workerID + "\n"
@@ -153,9 +161,37 @@ public final class K8sWorkerStarter {
           new K8sVolatileVolume(SchedulerContext.jobName(config), workerID);
     }
 
-    ResourcePlan resourcePlan = null;
+    ResourcePlan resourcePlan = generateResourcePlan();
 
     worker.init(config, workerID, resourcePlan, workerController, pv, volatileVolume);
+  }
+
+  /**
+   * A ResourcePlan object is created
+   * For each worker in the job, a ResourceContainer is created and it is added to the ResourcePlan
+   * Each ResourceContainer has the podName of its worker as a property
+   * @return
+   */
+  public static ResourcePlan generateResourcePlan() {
+    int numberOfWorkers = Context.workerInstances(config);
+    int workersPerPod = KubernetesContext.workersPerPod(config);
+    int numberOfPods = numberOfWorkers / workersPerPod;
+
+    ResourcePlan plan = new ResourcePlan(SchedulerContext.clusterType(config), workerID);
+    int nextWorkerID = 0;
+
+    for (int i = 0; i < numberOfPods; i++) {
+
+      String podName = KubernetesUtils.podNameFromJobName(jobName, i);
+      for (int j = 0; j < workersPerPod; j++) {
+        ResourceContainer resourceContainer = new ResourceContainer(nextWorkerID);
+        resourceContainer.addProperty(SchedulerContext.WORKER_NAME, podName);
+        plan.addContainer(resourceContainer);
+        nextWorkerID++;
+      }
+    }
+
+    return plan;
   }
 
   /**
