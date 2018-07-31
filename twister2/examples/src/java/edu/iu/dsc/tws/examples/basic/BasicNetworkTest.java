@@ -27,6 +27,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerUtils;
 import edu.iu.dsc.tws.rsched.spi.container.IPersistentVolume;
 import edu.iu.dsc.tws.rsched.spi.container.IVolatileVolume;
 import edu.iu.dsc.tws.rsched.spi.container.IWorker;
@@ -81,6 +82,7 @@ public class BasicNetworkTest implements IWorker, Runnable {
       sendReceiveHello(worker);
     }
 
+    K8sWorkerUtils.waitIndefinitely();
 
   }
 
@@ -105,7 +107,7 @@ public class BasicNetworkTest implements IWorker, Runnable {
       try {
         // a "blocking" call which waits until a connection is requested
         Socket clientSocket = serverSocket.accept();
-        LOG.info("Accepted a connection from the client:" + clientSocket.getInetAddress());
+//        LOG.info("Accepted a connection from the client:" + clientSocket.getInetAddress());
 
         InputStream is = clientSocket.getInputStream();
         BufferedReader reader = new BufferedReader(new InputStreamReader(is));
@@ -121,7 +123,7 @@ public class BasicNetworkTest implements IWorker, Runnable {
         out.flush();
 
         // close IO streams, then socket
-        LOG.info("received message:\n" + receivedMessage + "\nClosing the connection with client");
+//      LOG.info("received message:\n" + receivedMessage + "\nClosing the connection with client");
         out.close();
         reader.close();
         clientSocket.close();
@@ -147,7 +149,7 @@ public class BasicNetworkTest implements IWorker, Runnable {
 
       BufferedWriter writer =
           new BufferedWriter(new OutputStreamWriter(socketClient.getOutputStream()));
-      writer.write("hello from: " + targetWorker + "\n");
+      writer.write("hello from: " + workerNetworkInfo + "\n");
       writer.flush();
 
       String serverMessage = "";
@@ -156,7 +158,7 @@ public class BasicNetworkTest implements IWorker, Runnable {
         serverMessage += message + "\n";
       }
 
-      LOG.info(serverMessage);
+      LOG.info("\n" + serverMessage);
 
       reader.close();
       writer.close();
