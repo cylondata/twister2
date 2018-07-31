@@ -34,7 +34,7 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
   }
 
   public BaseDataflowTaskGraph(Comparator<TV> comparator, Comparator<TE> eComparator) {
-    this.vertices = new LinkedHashSet<>();
+    this.vertices = new HashSet<>();
     this.edges = new HashSet<>();
     this.directedEdges = new HashSet<>();
     this.vertexComparator = comparator;
@@ -267,7 +267,7 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
   }
 
   public Set<TV> childrenOfTask(TV t) {
-    Set<TV> ret = new LinkedHashSet<>();
+    Set<TV> ret = new HashSet<>();
     for (DirectedEdge<TV, TE> de : directedEdges) {
       if (vertexComparator.compare(de.sourceTaskVertex, t) == 0) {
         ret.add(de.targetTaskVertex);
@@ -277,7 +277,7 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
   }
 
   public Set<TV> parentsOfTask(TV t) {
-    Set<TV> ret = new LinkedHashSet<>();
+    Set<TV> ret = new HashSet<>();
     for (DirectedEdge<TV, TE> de : directedEdges) {
       if (vertexComparator.compare(de.targetTaskVertex, t) == 0) {
         ret.add(de.sourceTaskVertex);

@@ -60,7 +60,7 @@ public class RoundRobinScheduling {
       for (Map.Entry<Integer, List<InstanceId>> entry : roundrobinAllocation.entrySet()) {
         Integer integer = entry.getKey();
         List<InstanceId> instanceIds = entry.getValue();
-        LOG.info("Container Index:" + integer);
+        LOG.fine("Container Index:" + integer);
         for (int i = 0; i < instanceIds.size(); i++) {
           LOG.fine("Task Instance Details:"
               + "\t Task Name:" + instanceIds.get(i).getTaskName()
