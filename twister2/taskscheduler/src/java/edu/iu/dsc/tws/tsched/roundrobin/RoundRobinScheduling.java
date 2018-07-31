@@ -62,7 +62,7 @@ public class RoundRobinScheduling {
         List<InstanceId> instanceIds = entry.getValue();
         LOG.info("Container Index:" + integer);
         for (int i = 0; i < instanceIds.size(); i++) {
-          LOG.info("Task Instance Details:"
+          LOG.fine("Task Instance Details:"
               + "\t Task Name:" + instanceIds.get(i).getTaskName()
               + "\t Task id:" + instanceIds.get(i).getTaskId()
               + "\t Task index:" + instanceIds.get(i).getTaskIndex());
