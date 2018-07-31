@@ -12,8 +12,6 @@
 package edu.iu.dsc.tws.comms.dfw.io.types;
 
 import java.nio.ByteBuffer;
-import java.nio.ShortBuffer;
-import java.util.DoubleSummaryStatistics;
 import java.util.List;
 
 import edu.iu.dsc.tws.comms.api.MessageType;
@@ -145,7 +143,8 @@ public final class DataSerializer {
     int bytesCopied = state.getBytesCopied();
 
     int remainingToCopy = data.length * Short.BYTES - bytesCopied;
-    int canCopy = (remainingCapacity > remainingToCopy ? remainingToCopy : remainingCapacity) / Short.BYTES;
+    int canCopy = (remainingCapacity > remainingToCopy ? remainingToCopy
+        : remainingCapacity) / Short.BYTES;
     // copy
     int offSet = bytesCopied / Short.BYTES;
     for (int i = 0; i < canCopy; i++) {
@@ -160,7 +159,8 @@ public final class DataSerializer {
     int remainingCapacity = targetBuffer.remaining();
     int bytesCopied = state.getBytesCopied();
     int remainingToCopy = data.length * Double.BYTES - bytesCopied;
-    int canCopy = (remainingCapacity > remainingToCopy ? remainingToCopy : remainingCapacity) / Double.BYTES;
+    int canCopy = (remainingCapacity > remainingToCopy ? remainingToCopy
+        : remainingCapacity) / Double.BYTES;
     // copy
     int offSet = bytesCopied / Double.BYTES;
     for (int i = 0; i < canCopy; i++) {
@@ -175,7 +175,8 @@ public final class DataSerializer {
     int remainingCapacity = targetBuffer.remaining();
     int bytesCopied = state.getBytesCopied();
     int remainingToCopy = data.length * Integer.BYTES - bytesCopied;
-    int canCopy = (remainingCapacity > remainingToCopy ? remainingToCopy : remainingCapacity) / Integer.BYTES;
+    int canCopy = (remainingCapacity > remainingToCopy ? remainingToCopy
+        : remainingCapacity) / Integer.BYTES;
     // copy
     int offSet = bytesCopied / Integer.BYTES;
     for (int i = 0; i < canCopy; i++) {

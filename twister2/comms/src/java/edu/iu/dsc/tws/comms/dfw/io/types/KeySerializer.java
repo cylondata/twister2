@@ -14,11 +14,6 @@ package edu.iu.dsc.tws.comms.dfw.io.types;
 import java.nio.ByteBuffer;
 import java.util.List;
 
-import com.google.common.primitives.Doubles;
-import com.google.common.primitives.Ints;
-import com.google.common.primitives.Longs;
-import com.google.common.primitives.Shorts;
-
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.io.SerializeState;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
