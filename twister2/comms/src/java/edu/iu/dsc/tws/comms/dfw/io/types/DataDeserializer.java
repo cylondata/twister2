@@ -28,6 +28,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.io.ByteArrayInputStream;
@@ -44,40 +45,49 @@ public final class DataDeserializer {
   public static Object deserializeData(List<DataBuffer> buffers, int length,
                                        KryoSerializer serializer, MessageType type, int count,
                                        int flag) {
-    switch (type) {
-      case INTEGER:
-        return deserializeInteger(buffers, length);
-      case DOUBLE:
-        return deserializeDouble(buffers, length);
-      case SHORT:
-        return deserializeShort(buffers, length);
-      case BYTE:
-        return deserializeBytes(buffers, length);
-      case OBJECT:
-        return deserializeObject(buffers, length, serializer);
-      case MULTI_FIXED_BYTE:
-        return deserializeMultiBytes(buffers, length, count);
-      default:
-        break;
+    if((flag & MessageFlags.BARRIER) == MessageFlags.BARRIER){
+      deserializeObject(buffers, length, serializer);
+    } else {
+      switch (type) {
+        case INTEGER:
+          return deserializeInteger(buffers, length);
+        case DOUBLE:
+          return deserializeDouble(buffers, length);
+        case SHORT:
+          return deserializeShort(buffers, length);
+        case BYTE:
+          return deserializeBytes(buffers, length);
+        case OBJECT:
+          return deserializeObject(buffers, length, serializer);
+        case MULTI_FIXED_BYTE:
+          return deserializeMultiBytes(buffers, length, count);
+        default:
+          break;
+      }
     }
     return null;
   }
 
   public static Object deserializeData(List<DataBuffer> buffers, int length,
-                                       KryoSerializer serializer, MessageType type, int flags) {
-    switch (type) {
-      case INTEGER:
-        return deserializeInteger(buffers, length);
-      case DOUBLE:
-        return deserializeDouble(buffers, length);
-      case SHORT:
-        return deserializeShort(buffers, length);
-      case BYTE:
-        return deserializeBytes(buffers, length);
-      case OBJECT:
-        return deserializeObject(buffers, length, serializer);
-      default:
-        break;
+                                       KryoSerializer serializer, MessageType type, int flag) {
+
+    if((flag & MessageFlags.BARRIER) == MessageFlags.BARRIER){
+      deserializeObject(buffers, length, serializer);
+    } else {
+      switch (type) {
+        case INTEGER:
+          return deserializeInteger(buffers, length);
+        case DOUBLE:
+          return deserializeDouble(buffers, length);
+        case SHORT:
+          return deserializeShort(buffers, length);
+        case BYTE:
+          return deserializeBytes(buffers, length);
+        case OBJECT:
+          return deserializeObject(buffers, length, serializer);
+        default:
+          break;
+      }
     }
     return null;
   }

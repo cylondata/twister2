@@ -143,20 +143,25 @@ public class SingleMessageSerializer implements MessageSerializer {
   private boolean serializeBody(Object payload,
                                 OutMessage sendMessage, DataBuffer buffer) {
     MessageType type = sendMessage.getMPIMessage().getType();
-    if (type == MessageType.OBJECT || type == MessageType.INTEGER || type == MessageType.LONG
-        || type == MessageType.DOUBLE || type == MessageType.BYTE || type == MessageType.STRING
-        || type == MessageType.MULTI_FIXED_BYTE) {
-      if (!keyed) {
-        return serializeData(payload, sendMessage.getSerializationState(), buffer, type,
-            sendMessage.getFlags());
-      } else {
-        KeyedContent keyedContent = (KeyedContent) payload;
-        return serializeKeyedData(keyedContent.getValue(), keyedContent.getKey(),
-            sendMessage.getSerializationState(), buffer, type, keyedContent.getKeyType(),
-            sendMessage.getFlags());
+    if((sendMessage.getFlags() & MessageFlags.BARRIER) == MessageFlags.BARRIER){
+      return serializeData(payload, sendMessage.getSerializationState(), buffer, type,
+          sendMessage.getFlags());
+    } else {
+      if (type == MessageType.OBJECT || type == MessageType.INTEGER || type == MessageType.LONG
+          || type == MessageType.DOUBLE || type == MessageType.BYTE || type == MessageType.STRING
+          || type == MessageType.MULTI_FIXED_BYTE) {
+        if (!keyed) {
+          return serializeData(payload, sendMessage.getSerializationState(), buffer, type,
+              sendMessage.getFlags());
+        } else {
+          KeyedContent keyedContent = (KeyedContent) payload;
+          return serializeKeyedData(keyedContent.getValue(), keyedContent.getKey(),
+              sendMessage.getSerializationState(), buffer, type, keyedContent.getKeyType(),
+              sendMessage.getFlags());
+        }
+      } else if (type == MessageType.BUFFER) {
+        return serializeBuffer(payload, sendMessage, buffer);
       }
-    } else if (type == MessageType.BUFFER) {
-      return serializeBuffer(payload, sendMessage, buffer);
     }
     return false;
   }
