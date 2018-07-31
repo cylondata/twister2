@@ -379,8 +379,6 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     }
   }
 
-
-
   public boolean detectSelfLoop(Set<TV> taskVertex) {
 
     boolean flag = false;
@@ -409,7 +407,6 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
 
   @SuppressWarnings("unchecked")
   public boolean detectCycle(DataFlowTaskGraph dataFlowTaskGraph) {
-
     boolean flag = false;
     Set<TV> taskVertex = (Set<TV>) dataFlowTaskGraph.getTaskVertexSet();
     for (TV tv : taskVertex) {
@@ -443,10 +440,9 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
   public boolean hasCycle() {
 
     Set<TV> taskVertexSet = getTaskVertexSet();
-    System.out.println("Task Vertexes:" + taskVertexSet);
+    Set<TV> sourceTaskVertex = new HashSet<>();
+    Set<TV> targetTaskVertex = new HashSet<>();
     while (taskVertexSet.size() > 0) {
-      Set<TV> sourceTaskVertex = new HashSet<>();
-      Set<TV> targetTaskVertex = new HashSet<>();
       TV taskVertex = taskVertexSet.iterator().next();
       if (detectCycle(taskVertex, taskVertexSet, sourceTaskVertex, targetTaskVertex)) {
         throw new RuntimeException("Cycle is detected for the vertex:" + taskVertex);
@@ -497,8 +493,8 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
    */
   public void build() {
   }
-
 }
+
 
 
 
