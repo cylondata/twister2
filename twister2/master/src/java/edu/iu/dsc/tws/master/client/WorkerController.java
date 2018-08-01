@@ -21,7 +21,7 @@ import java.util.logging.Logger;
 import com.google.protobuf.Message;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
@@ -31,8 +31,8 @@ import edu.iu.dsc.tws.proto.network.Network;
 import edu.iu.dsc.tws.proto.network.Network.ListWorkersRequest;
 import edu.iu.dsc.tws.proto.network.Network.ListWorkersResponse;
 
-public class WorkerDiscoverer implements IWorkerDiscoverer, MessageHandler {
-  private static final Logger LOG = Logger.getLogger(WorkerDiscoverer.class.getName());
+public class WorkerController implements IWorkerController, MessageHandler {
+  private static final Logger LOG = Logger.getLogger(WorkerController.class.getName());
 
   private WorkerNetworkInfo thisWorker;
   private ArrayList<WorkerNetworkInfo> workerList;
@@ -41,11 +41,11 @@ public class WorkerDiscoverer implements IWorkerDiscoverer, MessageHandler {
   private RRClient rrClient;
   private Config config;
 
-  public WorkerDiscoverer(Config config, WorkerNetworkInfo thisWorker, RRClient rrClient) {
+  public WorkerController(Config config, WorkerNetworkInfo thisWorker, RRClient rrClient) {
     this(config, thisWorker, rrClient, JobMasterContext.workerInstances(config));
   }
 
-  public WorkerDiscoverer(Config config, WorkerNetworkInfo thisWorker,
+  public WorkerController(Config config, WorkerNetworkInfo thisWorker,
                           RRClient rrClient, int numberOfWorkers) {
     this.config = config;
     this.numberOfWorkers = numberOfWorkers;

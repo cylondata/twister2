@@ -18,7 +18,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
@@ -52,7 +52,7 @@ public abstract class BenchWorker implements IWorker {
 
   @Override
   public void init(Config cfg, int containerId, ResourcePlan plan,
-                   IWorkerDiscoverer workerController, IPersistentVolume persistentVolume,
+                   IWorkerController workerController, IPersistentVolume persistentVolume,
                    IVolatileVolume volatileVolume) {
     // create the job parameters
     this.jobParameters = JobParameters.build(cfg);

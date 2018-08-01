@@ -25,7 +25,7 @@ import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
-import edu.iu.dsc.tws.rsched.bootstrap.ZKDiscoverer;
+import edu.iu.dsc.tws.rsched.bootstrap.ZKController;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
@@ -39,7 +39,7 @@ public final class AuroraWorkerStarter {
   private String mesosTaskID;
   private Config config;
   private JobAPI.Job job;
-  private ZKDiscoverer zkController;
+  private ZKController zkController;
 
   private AuroraWorkerStarter() {
   }
@@ -141,7 +141,7 @@ public final class AuroraWorkerStarter {
     long startTime = System.currentTimeMillis();
     String workerHostPort = workerAddress.getHostAddress() + ":" + workerPort;
     int numberOfWorkers = job.getJobResources().getNoOfContainers();
-    zkController = new ZKDiscoverer(config, job.getJobName(), workerHostPort, numberOfWorkers);
+    zkController = new ZKController(config, job.getJobName(), workerHostPort, numberOfWorkers);
     zkController.initialize();
     long duration = System.currentTimeMillis() - startTime;
     System.out.println("Initialization for the worker: " + zkController.getWorkerNetworkInfo()

@@ -8,10 +8,10 @@ Kubernetes master. It provides the following services to workers in a Twister2 j
 * Getting the IP addresses after the worker pods started running
 
 The worker discoverer class is: 
-* [edu.iu.dsc.tws.rsched.schedulers.k8s.worker.WorkerDiscoverer](../../../twister2/resource-scheduler/src/java/edu/iu/dsc/tws/rsched/schedulers/k8s/worker/WorkerDiscoverer.java)
+* [edu.iu.dsc.tws.rsched.schedulers.k8s.worker.WorkerController](../../../twister2/resource-scheduler/src/java/edu/iu/dsc/tws/rsched/schedulers/k8s/worker/WorkerDiscoverer.java)
 
 It implements interface: 
-* [edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer](../../../twister2/common/src/java/edu/iu/dsc/tws/common/discovery/IWorkerDiscoverer.java)
+* [edu.iu.dsc.tws.common.discovery.IWorkerController](../../../twister2/common/src/java/edu/iu/dsc/tws/common/discovery/IWorkerDiscoverer.java)
 
 ## Unique ID Assignment to Workers 
 Worker IDs in a Twister2 job start from 0 and increase sequentially without any gaps in between. 

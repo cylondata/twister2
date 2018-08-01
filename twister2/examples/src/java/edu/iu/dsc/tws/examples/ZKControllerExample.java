@@ -18,16 +18,16 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
-import edu.iu.dsc.tws.rsched.bootstrap.ZKDiscoverer;
+import edu.iu.dsc.tws.rsched.bootstrap.ZKController;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKUtil;
 
-public final class ZKDiscovererExample {
-  public static final Logger LOG = Logger.getLogger(ZKDiscovererExample.class.getName());
+public final class ZKControllerExample {
+  public static final Logger LOG = Logger.getLogger(ZKControllerExample.class.getName());
 
-  private ZKDiscovererExample() { }
+  private ZKControllerExample() { }
 
   /**
-   * example usage of ZKDiscoverer class
+   * example usage of ZKController class
    * Two actions supported:
    *   join: join a Job znode
    *   delete: delete a Job znode
@@ -89,7 +89,7 @@ public final class ZKDiscovererExample {
 
   public static void printUsage() {
     LOG.info("Usage:\n"
-        + "java ZKDiscovererExample zkAddress action numberOfWorkers\n"
+        + "java ZKControllerExample zkAddress action numberOfWorkers\n"
         + "\taction can be: join, delete\n"
         + "\tnumberOfWorkers is not needed for delete");
   }
@@ -108,7 +108,7 @@ public final class ZKDiscovererExample {
     int port = 1000 + (int) (Math.random() * 1000);
     String workerAddress = "localhost:" + port;
 
-    ZKDiscoverer zkController = new ZKDiscoverer(cnfg, jobName, workerAddress, numberOfWorkers);
+    ZKController zkController = new ZKController(cnfg, jobName, workerAddress, numberOfWorkers);
     zkController.initialize();
 
     List<WorkerNetworkInfo> workerList = zkController.getWorkerList();

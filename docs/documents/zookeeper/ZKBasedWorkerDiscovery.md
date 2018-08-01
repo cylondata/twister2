@@ -161,7 +161,7 @@ the time limit has been reached.
 
 A sample usage can be found in the class:
 
-    edu.iu.dsc.tws.examples.ZKDiscovererExample.java
+    edu.iu.dsc.tws.examples.ZKControllerExample.java
 
 Its usage in the following class can also be examined for real usage:
 

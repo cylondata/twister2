@@ -25,7 +25,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerUtils;
 import edu.iu.dsc.tws.rsched.spi.container.IPersistentVolume;
@@ -38,18 +38,18 @@ public class BasicNetworkTest implements IWorker, Runnable {
   private static final Logger LOG = Logger.getLogger(BasicNetworkTest.class.getName());
 
   private WorkerNetworkInfo workerNetworkInfo;
-  private IWorkerDiscoverer workerDiscoverer;
+  private IWorkerController workerController;
 
   @Override
   public void init(Config config,
                    int id,
                    ResourcePlan resourcePlan,
-                   IWorkerDiscoverer workerController,
+                   IWorkerController workerController,
                    IPersistentVolume persistentVolume,
                    IVolatileVolume volatileVolume) {
 
 
-    this.workerDiscoverer = workerController;
+    this.workerController = workerController;
     workerNetworkInfo = workerController.getWorkerNetworkInfo();
 
     LOG.info("Worker started: " + workerNetworkInfo);

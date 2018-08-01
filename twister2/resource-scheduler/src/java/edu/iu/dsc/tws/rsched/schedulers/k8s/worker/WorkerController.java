@@ -23,7 +23,7 @@ import java.util.logging.Logger;
 import com.google.gson.reflect.TypeToken;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
@@ -37,8 +37,8 @@ import io.kubernetes.client.models.V1Pod;
 import io.kubernetes.client.models.V1PodList;
 import io.kubernetes.client.util.Watch;
 
-public class WorkerDiscoverer implements IWorkerDiscoverer {
-  private static final Logger LOG = Logger.getLogger(WorkerDiscoverer.class.getName());
+public class WorkerController implements IWorkerController {
+  private static final Logger LOG = Logger.getLogger(WorkerController.class.getName());
 
   private Config config;
   private String jobName;
@@ -50,7 +50,7 @@ public class WorkerDiscoverer implements IWorkerDiscoverer {
   private ArrayList<WorkerNetworkInfo> workerList;
   private WorkerNetworkInfo thisWorker;
 
-  public WorkerDiscoverer(Config config, String podName, String podIpStr, String containerName,
+  public WorkerController(Config config, String podName, String podIpStr, String containerName,
                           String jobName) {
     this.config = config;
     numberOfWorkers = SchedulerContext.workerInstances(config);

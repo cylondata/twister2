@@ -17,11 +17,11 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.client.JobMasterClient;
-import edu.iu.dsc.tws.master.client.WorkerDiscoverer;
+import edu.iu.dsc.tws.master.client.WorkerController;
 
 public final class JobMasterClientExample {
   private static final Logger LOG = Logger.getLogger(JobMasterClientExample.class.getName());
@@ -64,7 +64,7 @@ public final class JobMasterClientExample {
    */
   public static void simulateClient(Config config, int workerTempID) {
 
-    InetAddress workerIP = WorkerDiscoverer.convertStringToIP("localhost");
+    InetAddress workerIP = WorkerController.convertStringToIP("localhost");
     int workerPort = 10000 + (int) (Math.random() * 10000);
 
     WorkerNetworkInfo workerNetworkInfo = new WorkerNetworkInfo(workerIP, workerPort, workerTempID);
@@ -72,7 +72,7 @@ public final class JobMasterClientExample {
     JobMasterClient client = new JobMasterClient(config, workerNetworkInfo);
     client.init();
 
-    IWorkerDiscoverer workerController = client.getWorkerController();
+    IWorkerController workerController = client.getWorkerController();
 
     client.sendWorkerStartingMessage();
 
