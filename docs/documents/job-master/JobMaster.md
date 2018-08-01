@@ -180,11 +180,11 @@ It sends many worker information on the same message.
 We implemented the WorkerDiscoverer class that will be used by the workers 
 to interact with the job master. The class name is:
 
-    edu.iu.dsc.tws.master.client.WorkerDiscoverer
+    edu.iu.dsc.tws.master.client.WorkerController
 
 It implements the interface: 
 
-    edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer
+    edu.iu.dsc.tws.common.discovery.IWorkerController
 
 All worker implementations can utilize this class for worker discovery. 
 

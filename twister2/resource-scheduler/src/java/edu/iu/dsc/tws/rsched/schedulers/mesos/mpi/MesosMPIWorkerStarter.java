@@ -20,7 +20,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.master.client.JobMasterClient;
@@ -51,14 +51,14 @@ public final class MesosMPIWorkerStarter {
   private MesosMPIWorkerStarter() { }
   public static void main(String[] args) throws Exception {
 
-    Thread.sleep(5000);
+    //Thread.sleep(5000);
     //gets the docker home directory
     // String homeDir = System.getenv("HOME");
     try {
       MPI.Init(args);
       workerID = MPI.COMM_WORLD.getRank();
       numberOfWorkers = MPI.COMM_WORLD.getSize();
-      System.out.println("worker iidddddd.........:" + workerID + " " + numberOfWorkers);
+      System.out.println("worker ranking.........:" + workerID);
     } catch (MPIException e) {
       LOG.log(Level.SEVERE, "Could not get rank or size from mpi.COMM_WORLD", e);
       throw new RuntimeException(e);
@@ -66,7 +66,7 @@ public final class MesosMPIWorkerStarter {
     //workerID++;
     //int workerId = Integer.parseInt(System.getenv("WORKER_ID"));
     jobName = args[0];
-    System.out.println("job name......................:::" + jobName);
+    System.out.println("job name.....:::" + jobName);
     int id = workerID;
 
     String twister2Home = Paths.get("").toAbsolutePath().toString();
@@ -84,13 +84,13 @@ public final class MesosMPIWorkerStarter {
           + jobName + ".job");
       workerController = new MesosWorkerController(config, job,
           Inet4Address.getLocalHost().getHostAddress(), 2022, id);
-      LOG.info("Initializing with zookeeper.." + Inet4Address.getLocalHost().getHostAddress());
-      LOG.info("worker id is....:" + workerID);
+      //LOG.info("Initializing with zookeeper.." + Inet4Address.getLocalHost().getHostAddress());
+      //LOG.info("Worker id is....:" + workerID);
       //workerController.initializeWithZooKeeper();
-      LOG.info("Waiting for all workers to join");
+      //LOG.info("Waiting for all workers to join");
       //workerNetworkInfoList = workerController.waitForAllWorkersToJoin(
       //    ZKContext.maxWaitTimeForAllWorkersToJoin(config));
-      LOG.info("Everyone has joined");
+      //LOG.info("Everyone has joined");
       //container.init(worker.config, id, null, workerController, null);
 
     } catch (Exception e) {
@@ -101,20 +101,23 @@ public final class MesosMPIWorkerStarter {
     String jobMasterIP = args[1];
     LOG.info("JobMasterIP" + jobMasterIP);
     System.out.println("Worker id " + id);
-    //int workerCount = workerController.getNumberOfWorkers();
-    //System.out.println("worker count " + workerCount);
     startJobMasterClient(workerController.getWorkerNetworkInfo(), jobMasterIP);
+
     System.out.println("\nworker controller\nworker id..:"
         + workerController.getWorkerNetworkInfo().getWorkerID()
         + "ip address..:" + workerController.getWorkerNetworkInfo().getWorkerIP().toString());
+
     startWorker(workerController, null);
 
     //Thread.sleep(20000);
     try {
       MPI.Finalize();
-    } catch (MPIException ignore) { }
+    } catch (MPIException ignore) {
+      LOG.info("MPI Fİnalize Exception" + ignore.getMessage());
+    }
 
     closeWorker();
+    workerController.close();
   }
 
   public static void startJobMasterClient(WorkerNetworkInfo networkInfo, String jobMasterIP) {
@@ -127,7 +130,7 @@ public final class MesosMPIWorkerStarter {
     jobMasterClient.sendWorkerStartingMessage();
   }
 
-  public static void startWorker(IWorkerDiscoverer workerController,
+  public static void startWorker(IWorkerController workerController,
                                  IPersistentVolume pv) {
     String workerClass = SchedulerContext.containerClass(config);
     IWorker worker;

@@ -19,18 +19,18 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.master.client.JobMasterClient;
-import edu.iu.dsc.tws.master.client.WorkerDiscoverer;
+import edu.iu.dsc.tws.master.client.WorkerController;
 
 /**
  * Job master based worker controller. This one talks to job
  * master to discover the workers
  */
-public class JobMasterBasedWorkerDiscoverer implements IWorkerDiscoverer {
+public class JobMasterBasedWorkerController implements IWorkerController {
   private static final Logger LOG = Logger.getLogger(
-      JobMasterBasedWorkerDiscoverer.class.getName());
+      JobMasterBasedWorkerController.class.getName());
 
   private WorkerNetworkInfo networkInfo;
 
@@ -38,7 +38,7 @@ public class JobMasterBasedWorkerDiscoverer implements IWorkerDiscoverer {
 
   private int numberOfWorkers;
 
-  public JobMasterBasedWorkerDiscoverer(Config cfg, int workerId, int numberOfWorkers,
+  public JobMasterBasedWorkerController(Config cfg, int workerId, int numberOfWorkers,
                                         String jobMasterHost, int jobMasterPort,
                                         Map<String, Integer> nameToPorts,
                                         Map<String, String> nameToHost) {
@@ -78,7 +78,7 @@ public class JobMasterBasedWorkerDiscoverer implements IWorkerDiscoverer {
 
   @Override
   public WorkerNetworkInfo getWorkerNetworkInfoForID(int id) {
-    WorkerDiscoverer workerController = masterClient.getWorkerController();
+    WorkerController workerController = masterClient.getWorkerController();
     List<WorkerNetworkInfo> infos = workerController.waitForAllWorkersToJoin(1000);
     for (WorkerNetworkInfo in : infos) {
       if (in.getWorkerID() == id) {
@@ -95,13 +95,18 @@ public class JobMasterBasedWorkerDiscoverer implements IWorkerDiscoverer {
 
   @Override
   public List<WorkerNetworkInfo> getWorkerList() {
-    WorkerDiscoverer workerController = masterClient.getWorkerController();
+    WorkerController workerController = masterClient.getWorkerController();
     return workerController.waitForAllWorkersToJoin(30000);
   }
 
   @Override
-  public List<WorkerNetworkInfo> waitForAllWorkersToJoin(long timeLimit) {
-    WorkerDiscoverer workerController = masterClient.getWorkerController();
+  public List<WorkerNetworkInfo> waitForAllWorkersToJoin(long timeLimitMilliSec) {
+    WorkerController workerController = masterClient.getWorkerController();
     return workerController.waitForAllWorkersToJoin(30000);
+  }
+
+  @Override
+  public boolean waitOnBarrier(long timeLimitMilliSec) {
+    return masterClient.getWorkerController().waitOnBarrier(timeLimitMilliSec);
   }
 }

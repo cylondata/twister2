@@ -23,7 +23,7 @@ import java.util.logging.Logger;
 import com.google.gson.reflect.TypeToken;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
@@ -37,8 +37,8 @@ import io.kubernetes.client.models.V1Pod;
 import io.kubernetes.client.models.V1PodList;
 import io.kubernetes.client.util.Watch;
 
-public class WorkerDiscoverer implements IWorkerDiscoverer {
-  private static final Logger LOG = Logger.getLogger(WorkerDiscoverer.class.getName());
+public class WorkerController implements IWorkerController {
+  private static final Logger LOG = Logger.getLogger(WorkerController.class.getName());
 
   private Config config;
   private String jobName;
@@ -50,7 +50,7 @@ public class WorkerDiscoverer implements IWorkerDiscoverer {
   private ArrayList<WorkerNetworkInfo> workerList;
   private WorkerNetworkInfo thisWorker;
 
-  public WorkerDiscoverer(Config config, String podName, String podIpStr, String containerName,
+  public WorkerController(Config config, String podName, String podIpStr, String containerName,
                           String jobName) {
     this.config = config;
     numberOfWorkers = SchedulerContext.workerInstances(config);
@@ -259,15 +259,15 @@ public class WorkerDiscoverer implements IWorkerDiscoverer {
    * this is not exactly for wathing all workers to start
    * but it is close
    * we need to reimplement it when we implemented a state manager
-   * @param timeLimit
+   * @param timeLimitMilliSec
    * @return
    */
   @Override
-  public List<WorkerNetworkInfo> waitForAllWorkersToJoin(long timeLimit) {
+  public List<WorkerNetworkInfo> waitForAllWorkersToJoin(long timeLimitMilliSec) {
     // first make sure all workers are in the list
     long startTime = System.currentTimeMillis();
     if (workerList.size() < numberOfWorkers) {
-      boolean listBuilt = buildWorkerListWaitForAll(timeLimit);
+      boolean listBuilt = buildWorkerListWaitForAll(timeLimitMilliSec);
       if (!listBuilt) {
         return null;
       }
@@ -276,7 +276,7 @@ public class WorkerDiscoverer implements IWorkerDiscoverer {
     ArrayList<String> podNameList = constructPodNameList();
 
     long duration = System.currentTimeMillis() - startTime;
-    long remainingTimeLimit = timeLimit - duration;
+    long remainingTimeLimit = timeLimitMilliSec - duration;
 
     boolean allRunning = waitUntilAllPodsRunning(podNameList, remainingTimeLimit);
     if (allRunning) {
@@ -284,7 +284,7 @@ public class WorkerDiscoverer implements IWorkerDiscoverer {
     } else {
       LOG.log(Level.SEVERE, "Can not get to all pods running state. Time limit may have been "
           + "reached. Or there can be a problem for pods to start and running. Time limit value: "
-          + timeLimit + "ms");
+          + timeLimitMilliSec + "ms");
       return  null;
     }
   }
@@ -359,4 +359,15 @@ public class WorkerDiscoverer implements IWorkerDiscoverer {
 
     return result;
   }
+
+  /**
+   * not implemented
+   * @param timeLimitMilliSec
+   * @return
+   */
+  @Override
+  public boolean waitOnBarrier(long timeLimitMilliSec) {
+    return false;
+  }
+
 }
