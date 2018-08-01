@@ -136,17 +136,12 @@ public class MesosDockerWorker {
       writer.close();
       System.out.println("Before mpirun");
       //working one
-      String[] command = {"mpirun", "-allow-run-as-root", "-np",
-          (workerController.getNumberOfWorkers() - 1) + "",
+
+      String[] command = {"mpirun", "-allow-run-as-root", "-npernode",
+          "1", "--mca", "btl_tcp_if_include", "eth0",
           "--hostfile", "/twister2/hostFile", "java", "-cp",
           "twister2-job/libexamples-java.jar",
           "edu.iu.dsc.tws.examples.basic.BasicMpiJob", ">mpioutfile"};
-
-//      String[] command = {"mpirun", "--hostfile", "/twister2/hostFile",
-//          "-allow-run-as-root", "-npernode", "1",
-//          "java", "-cp",
-//          "twister2-job/libexamples-java.jar",
-//          "edu.iu.dsc.tws.examples.basic.BasicMpiJob", ">mpioutfile"};
 
       System.out.println("command:" + String.join(" ", command));
 
@@ -156,8 +151,6 @@ public class MesosDockerWorker {
       System.out.println("Finished");
     }
 
-
-    //Thread.sleep(10000);
     jobMasterClient.sendWorkerCompletedMessage();
   }
 
