@@ -671,6 +671,9 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
   @Override
   public void freeReceiveBuffers(int id, int stream) {
     ChannelMessage currentMessage = currentMessages.get(id);
+    if (currentMessage == null) {
+      return;
+    }
     if (currentMessage.getBuffers().size() == 0) {
       LOG.info("There are no receive buffers to be released for rank : " + id);
       return;
