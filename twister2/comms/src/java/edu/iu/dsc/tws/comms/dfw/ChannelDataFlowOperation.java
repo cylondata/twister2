@@ -34,7 +34,6 @@ import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.comms.core.CommunicationContext;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageSerializer;
@@ -107,7 +106,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
    * Local buffers that are used when receive buffers need to be freed. Buffer are only added
    * to the list when needed
    */
-  private Queue<ByteBuffer> localReceiveBuffers;
+  private Queue<DataBuffer> localReceiveBuffers;
 
   /**
    * Pending send messages
@@ -204,7 +203,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
       sendBuffers.offer(new DataBuffer(channel.createBuffer(sendBufferSize)));
     }
     this.receiveBuffers = new HashMap<>();
-    this.localReceiveBuffers = new ArrayDeque<ByteBuffer>();
+    this.localReceiveBuffers = new ArrayDeque<DataBuffer>();
 
     LOG.fine(String.format("%d setup communication", instancePlan.getThisExecutor()));
     // now setup the sends and receives
@@ -607,24 +606,24 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
       return;
     }
     //Need to reuse created byte[]'s
-    ByteBuffer local = null;
+    DataBuffer local = null;
     int receiveBufferSize = DataFlowContext.bufferSize(config);
     if (localReceiveBuffers.size() == 0) {
-      local = ByteBuffer.allocate(receiveBufferSize);
-      local.order(CommunicationContext.DEFAULT_BYTEORDER);
+      local = new DataBuffer(ByteBuffer.allocate(receiveBufferSize));
     } else {
       local = localReceiveBuffers.poll();
     }
     copyToLocalBuffer(id, currentMessage.getBuffers().remove(0), local, currentMessage);
   }
 
-  private void copyToLocalBuffer(int id, DataBuffer dataBuffer, ByteBuffer local,
+  private void copyToLocalBuffer(int id, DataBuffer dataBuffer, DataBuffer localBuffer,
                                  ChannelMessage message) {
     ByteBuffer original = dataBuffer.getByteBuffer();
+    ByteBuffer local = localBuffer.getByteBuffer();
     original.rewind(); //copy from the beginning
     local.put(original);
     local.flip();
-    message.addToOverFlowBuffer(local);
+    message.addToOverFlowBuffer(localBuffer);
     original.clear();
     Queue<DataBuffer> list = receiveBuffers.get(id);
     if (!list.offer(dataBuffer)) {
@@ -648,8 +647,8 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
         completionListener.completed(message.getOriginatingId());
       }
       if (message.getOverflowBuffers().size() > 0) {
-        for (ByteBuffer byteBuffer : message.getOverflowBuffers()) {
-          byteBuffer.clear();
+        for (DataBuffer byteBuffer : message.getOverflowBuffers()) {
+          byteBuffer.getByteBuffer().clear();
           if (!localReceiveBuffers.offer(byteBuffer)) {
             throw new RuntimeException(String.format("%d Local buffer release failed for target %d",
                 executor, message.getHeader().getDestinationIdentifier()));
