@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.tsched.roundrobin;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -30,10 +31,6 @@ import edu.iu.dsc.tws.tsched.spi.taskschedule.ScheduleException;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskInstanceMapCalculation;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedule;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
-
-//import edu.iu.dsc.tws.task.graph.GraphConstants;
-//import org.apache.commons.lang3.ObjectUtils;
-//import java.util.concurrent.atomic.AtomicReference;
 
 public class RoundRobinTaskScheduling implements TaskSchedule {
 
@@ -55,7 +52,8 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
   @Override
   public TaskSchedulePlan schedule(DataFlowTaskGraph dataFlowTaskGraph, WorkerPlan workerPlan) {
 
-    Set<TaskSchedulePlan.ContainerPlan> containerPlans = new HashSet<>();
+    Set<TaskSchedulePlan.ContainerPlan> containerPlans = new LinkedHashSet<>();
+
     Set<Vertex> taskVertexSet = dataFlowTaskGraph.getTaskVertexSet();
 
     Map<Integer, List<InstanceId>> roundRobinContainerInstanceMap =

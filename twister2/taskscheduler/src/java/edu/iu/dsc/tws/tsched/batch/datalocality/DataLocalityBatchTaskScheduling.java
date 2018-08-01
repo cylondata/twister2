@@ -61,14 +61,13 @@ public class DataLocalityBatchTaskScheduling implements TaskSchedule {
    */
   public List<TaskSchedulePlan> scheduleBatch(DataFlowTaskGraph graph, WorkerPlan workerPlan) {
 
-    Set<Vertex> taskVertexSet = new LinkedHashSet<>(graph.getTaskVertexSet());
     Map<Integer, List<InstanceId>> datalocalityAwareContainerInstanceMap;
+    Set<Vertex> taskVertexSet = new LinkedHashSet<>(graph.getTaskVertexSet());
 
     List<TaskSchedulePlan> taskSchedulePlanList = new ArrayList<>();
     List<Set<Vertex>> taskVertexList = TaskVertexParser.parseVertexSet(taskVertexSet, graph);
 
     for (int i = 0; i < taskVertexList.size(); i++) {
-
       Set<Vertex> vertexSet = taskVertexList.get(i);
       if (vertexSet.size() > 1) {
         datalocalityAwareContainerInstanceMap = DataLocalityBatchScheduling.

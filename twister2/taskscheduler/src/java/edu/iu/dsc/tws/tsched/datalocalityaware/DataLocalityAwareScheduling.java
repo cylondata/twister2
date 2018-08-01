@@ -70,12 +70,10 @@ public class DataLocalityAwareScheduling {
 
     Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
     Map<Integer, List<InstanceId>> dataAwareAllocation = new HashMap<>();
-
     Set<Map.Entry<String, Integer>> taskEntrySet = parallelTaskMap.entrySet();
-
     List<Integer> allocatedWorkers = new ArrayList<>();
 
-    LOG.info(String.format("No. of Containers:\t" + numberOfContainers
+    LOG.fine(String.format("No. of Containers:\t" + numberOfContainers
         + "\tMax Task Instances Per Container:\t" + maxTaskInstancesPerContainer));
 
     //To check the allocated containers can hold all the parallel task instances.
@@ -97,11 +95,12 @@ public class DataLocalityAwareScheduling {
         Map.Entry<String, Integer> entry = iterator.next();
         String taskName = entry.getKey();
 
-        /**
+         /**
          * If the vertex has the input data set list and get the status
          * and the path of the file in HDFS.
          */
         for (Vertex vertex : taskVertexSet) {
+          System.out.println(" " + vertex.getConfig().getListValue("inputdataset"));
           if (vertex.getName().equals(taskName)
               && vertex.getConfig().getListValue("inputdataset") != null) {
 
@@ -146,14 +145,14 @@ public class DataLocalityAwareScheduling {
              */
             for (int i = 0; i < totalNumberOfInstances; i++) {
               containerIndex = Integer.parseInt(Collections.min(cal).getNodeName().trim());
-              LOG.info("Worker Node Allocation for task:" + taskName + "(" + i + ")"
+              LOG.fine("Worker Node Allocation for task:" + taskName + "(" + i + ")"
                   + "-> Worker:" + containerIndex + "->" + Collections.min(cal).getDataNode());
               if (maxContainerTaskObjectSize < maxTaskInstancesPerContainer) {
                 dataAwareAllocation.get(containerIndex).add(
                     new InstanceId(vertex.getName(), globalTaskIndex, i));
                 ++maxContainerTaskObjectSize;
               } else {
-                LOG.info(String.format("Worker:" + containerIndex
+                LOG.fine(String.format("Worker:" + containerIndex
                     + "Reached Max. Task Object Size:" + maxContainerTaskObjectSize));
               }
             }
@@ -207,7 +206,6 @@ public class DataLocalityAwareScheduling {
         ArrayList<CalculateDataTransferTime> calculatedVal = new ArrayList<>();
         for (int i = 0; i < workers.getNumberOfWorkers(); i++) {
           worker = workers.getWorker(i);
-          //System.out.println("Worker inside calculate distance:" + worker.getId());
           workerBandwidth = (double) worker.getProperty("bandwidth");
           workerLatency = (double) worker.getProperty("latency");
 
