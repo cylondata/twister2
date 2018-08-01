@@ -42,7 +42,6 @@ import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.GraphConstants;
 import edu.iu.dsc.tws.tsched.batch.datalocality.DataLocalityBatchTaskScheduling;
-import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
@@ -150,13 +149,15 @@ public class DataLocalityBatchTaskExample implements IContainer {
     DataFlowTaskGraph graph = builder.build();
     WorkerPlan workerPlan = createWorkerPlan(resourcePlan);
 
-    String jobType = "Batch";
+    String jobType = "batch";
+    String schedulingType = "datalocalityaware";
     List<TaskSchedulePlan> taskSchedulePlanList = new ArrayList<>();
     TaskSchedulePlan taskSchedulePlan = null;
 
     if (id == 0) { //Remove this condition during Executor integration
       if ("batch".equalsIgnoreCase(jobType)
-          && TaskSchedulerContext.taskSchedulingMode(config).equals("datalocalityaware")) {
+          && "datalocalityaware".equalsIgnoreCase(schedulingType)) {
+        //&& TaskSchedulerContext.taskSchedulingMode(config).equals("datalocalityaware")) {
         DataLocalityBatchTaskScheduling dataLocalityBatchTaskScheduling = new
             DataLocalityBatchTaskScheduling();
         dataLocalityBatchTaskScheduling.initialize(config);
