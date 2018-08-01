@@ -97,9 +97,9 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
 
   @Override
   public boolean progress() {
-    boolean canProgress = true;
+    boolean needsFurtherProgress = false;
     for (int t : messages.keySet()) {
-      canProgress = true;
+      boolean canProgress = true;
       // now check weather we have the messages for this source
       Map<Integer, Queue<Object>> messagePerTarget = messages.get(t);
       Map<Integer, Integer> countsPerTarget = counts.get(t);
@@ -107,12 +107,20 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
 
       while (canProgress) {
         boolean found = true;
+        boolean moreThanOne = false;
         for (Map.Entry<Integer, Queue<Object>> e : messagePerTarget.entrySet()) {
           if (e.getValue().size() == 0) {
             found = false;
             canProgress = false;
+          } else {
+            moreThanOne = true;
           }
         }
+        // if we have queues with 0 and more than zero we need further progress
+        if (!found && moreThanOne) {
+          needsFurtherProgress = true;
+        }
+
         if (found && reducedValues.size() < sendPendingMax) {
           Object previous = null;
           for (Map.Entry<Integer, Queue<Object>> e : messagePerTarget.entrySet()) {
@@ -139,11 +147,12 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
             }
           } else {
             canProgress = false;
+            needsFurtherProgress = true;
           }
         }
       }
     }
-    return canProgress;
+    return needsFurtherProgress;
   }
 
   public abstract boolean handleMessage(int source, Object message, int flags, int dest);

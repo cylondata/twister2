@@ -53,6 +53,10 @@ public class SReduce {
     return reduce.send(src, message, flags);
   }
 
+  public boolean hasPending() {
+    return !reduce.isComplete();
+  }
+
   public boolean progress() {
     return reduce.progress();
   }
