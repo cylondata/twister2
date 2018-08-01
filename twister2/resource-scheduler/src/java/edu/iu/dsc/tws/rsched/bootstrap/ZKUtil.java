@@ -103,12 +103,21 @@ public final class ZKUtil {
   }
 
   /**
-   * construct a job distributed atomic integer path from the given job name
+   * construct a distributed atomic integer path for assigning worker ids
    * @param jobName
    * @return
    */
-  public static String constructJobDaiPath(Config config, String jobName) {
-    return ZKContext.rootNode(config) + "/" + jobName + "-dai";
+  public static String constructPathOfDaiForWorkerID(Config config, String jobName) {
+    return ZKContext.rootNode(config) + "/" + jobName + "-dai-for-worker-id";
+  }
+
+  /**
+   * construct a distributed atomic integer path for barrier
+   * @param jobName
+   * @return
+   */
+  public static String constructPathOfDaiForBarrier(Config config, String jobName) {
+    return ZKContext.rootNode(config) + "/" + jobName + "-dai-for-barrier";
   }
 
   /**
@@ -145,21 +154,28 @@ public final class ZKUtil {
     try {
       String jobPath = constructJobPath(config, jobName);
       if (client.checkExists().forPath(jobPath) != null) {
-//        client.delete().guaranteed().deletingChildrenIfNeeded().forPath(jobPath);
         client.delete().deletingChildrenIfNeeded().forPath(jobPath);
         LOG.log(Level.INFO, "Job Znode deleted from ZooKeeper: " + jobPath);
       } else {
         LOG.log(Level.INFO, "No job znode exists in ZooKeeper to delete for: " + jobPath);
       }
 
-      // delete distributed atomic integer znode
-      String daiPath = constructJobDaiPath(config, jobName);
+      // delete distributed atomic integer for workerID
+      String daiPath = constructPathOfDaiForWorkerID(config, jobName);
       if (client.checkExists().forPath(daiPath) != null) {
         client.delete().guaranteed().deletingChildrenIfNeeded().forPath(daiPath);
-        LOG.log(Level.INFO, "Distributed atomic integer znode deleted from ZooKeeper: " + daiPath);
+        LOG.info("DistributedAtomicInteger for workerID deleted from ZooKeeper: " + daiPath);
       } else {
-        LOG.log(Level.INFO, "No distributed atomic integer znode to delete from ZooKeeper: "
-            + daiPath);
+        LOG.info("DistributedAtomicInteger for workerID not deleted from ZooKeeper: " + daiPath);
+      }
+
+      // delete distributed atomic integer for barrier
+      daiPath = constructPathOfDaiForBarrier(config, jobName);
+      if (client.checkExists().forPath(daiPath) != null) {
+        client.delete().guaranteed().deletingChildrenIfNeeded().forPath(daiPath);
+        LOG.info("DistributedAtomicInteger for barrier deleted from ZooKeeper: " + daiPath);
+      } else {
+        LOG.info("DistributedAtomicInteger for workerID not deleted from ZooKeeper: " + daiPath);
       }
 
       // delete distributed lock znode

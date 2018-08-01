@@ -59,11 +59,13 @@ public class ZKController implements IWorkerController {
   private String jobName;
   private String znodePath;
   private String jobPath;
-  private String daiPath;
+  private String daiForWorkerIDPath;
+  private String daiForBarrierPath;
   private String lockPath;
   private PersistentNode thisNode;
   private PathChildrenCache childrenCache;
-  private DistributedAtomicInteger dai;
+  private DistributedAtomicInteger daiForWorkerID;
+  private DistributedAtomicInteger daiForBarrier;
   private Config config;
 
   public ZKController(Config config, String jobName, String hostAndPort, int numberOfWorkers) {
@@ -72,7 +74,8 @@ public class ZKController implements IWorkerController {
     this.jobName = jobName;
     this.numberOfWorkers = numberOfWorkers;
     this.jobPath = ZKUtil.constructJobPath(config, jobName);
-    this.daiPath = ZKUtil.constructJobDaiPath(config, jobName);
+    this.daiForWorkerIDPath = ZKUtil.constructPathOfDaiForWorkerID(config, jobName);
+    this.daiForBarrierPath = ZKUtil.constructPathOfDaiForBarrier(config, jobName);
     this.lockPath = ZKUtil.constructJobLockPath(config, jobName);
   }
 
@@ -91,7 +94,11 @@ public class ZKController implements IWorkerController {
       client = CuratorFrameworkFactory.newClient(zkAddress, new ExponentialBackoffRetry(1000, 3));
       client.start();
 
-      dai = new DistributedAtomicInteger(client, daiPath, new ExponentialBackoffRetry(1000, 3));
+      daiForWorkerID = new DistributedAtomicInteger(client,
+          daiForWorkerIDPath, new ExponentialBackoffRetry(1000, 3));
+
+      daiForBarrier = new DistributedAtomicInteger(client,
+          daiForBarrierPath, new ExponentialBackoffRetry(1000, 3));
 
       // check whether the job node exist, if not,
       // it means, this worker is the first worker to join
@@ -167,7 +174,7 @@ public class ZKController implements IWorkerController {
    */
   private int createWorkerID() {
     try {
-      AtomicValue<Integer> incremented = dai.increment();
+      AtomicValue<Integer> incremented = daiForWorkerID.increment();
       if (incremented.succeeded()) {
         int workerID = incremented.preValue();
         LOG.log(Level.INFO, "Unique WorkerID generated: " + workerID);
@@ -324,7 +331,7 @@ public class ZKController implements IWorkerController {
    */
   public int getNumberOfJoinedWorkers() {
     try {
-      return dai.get().preValue();
+      return daiForWorkerID.get().preValue();
     } catch (Exception e) {
       LOG.log(Level.SEVERE, "Could not get DistributedAtomicInteger preValue", e);
       return -1;
@@ -357,10 +364,10 @@ public class ZKController implements IWorkerController {
    * return null if timeLimit is reached or en exception thrown while waiting
    */
   @Override
-  public List<WorkerNetworkInfo> waitForAllWorkersToJoin(long timeLimit) {
+  public List<WorkerNetworkInfo> waitForAllWorkersToJoin(long timeLimitMilliSec) {
 
     long duration = 0;
-    while (duration < timeLimit) {
+    while (duration < timeLimitMilliSec) {
       if (countNumberOfJoinedWorkers() < numberOfWorkers) {
         try {
           Thread.sleep(50);
@@ -390,6 +397,88 @@ public class ZKController implements IWorkerController {
     String workerName = znodeName.substring(40);
     return workerName;
   }
+
+  /**
+   * try to increment the daiForBarrier
+   * try 10 times if fails
+   * @param tryCount
+   * @return
+   */
+  private boolean incrementBarrierDAI(int tryCount) {
+
+    if (tryCount == 10) {
+      return false;
+    }
+
+    try {
+      AtomicValue<Integer> incremented = daiForBarrier.increment();
+      if (incremented.succeeded()) {
+        LOG.fine("DistributedAtomicInteger for Barrier increased to: " + incremented.postValue());
+        return true;
+      } else {
+        return incrementBarrierDAI(tryCount + 1);
+      }
+    } catch (Exception e) {
+      LOG.log(Level.WARNING, "Failed to increment the DistributedAtomicInteger for Barrier. "
+          + "Will try again ...", e);
+      return incrementBarrierDAI(tryCount + 1);
+    }
+  }
+
+  /**
+   * we use a DistributedAtomicInteger to count the number of workers
+   * that have reached to the barrier
+   * DistributedAtomicInteger always increases.
+   * We check whether it is a multiple of numberOfWorkers in a job
+   * If so, all workers have reached the barrier
+   * this method may be called many times during a computation
+   * @param timeLimitMilliSec
+   * @return
+   */
+  @Override
+  public boolean waitOnBarrier(long timeLimitMilliSec) {
+
+    long sleepInterval = 50;
+    long start = System.currentTimeMillis();
+
+    boolean daiIncremented = incrementBarrierDAI(0);
+    if (!daiIncremented) {
+      return false;
+    }
+
+    try {
+      if (daiForBarrier.get().postValue() % numberOfWorkers == 0) {
+        return true;
+      }
+    } catch (Exception e) {
+      LOG.log(Level.WARNING,
+          "Exception when getting the value of DistributedAtomicInteger value", e);
+    }
+
+    long duration = System.currentTimeMillis() - start;
+
+    while (duration < timeLimitMilliSec) {
+
+      try {
+        Thread.sleep(sleepInterval);
+      } catch (InterruptedException e) {
+        LOG.warning("Thread sleep interrupted.");
+      }
+
+      try {
+        if (daiForBarrier.get().postValue() % numberOfWorkers == 0) {
+          return true;
+        }
+      } catch (Exception e) {
+        LOG.log(Level.WARNING,
+            "Exception when getting the value of DistributedAtomicInteger value", e);
+      }
+
+    }
+
+    return false;
+  }
+
 
   /**
    * close the children cache

@@ -91,13 +91,14 @@ public class WorkerController implements IWorkerController, MessageHandler {
   }
 
   @Override
-  public List<WorkerNetworkInfo> waitForAllWorkersToJoin(long timeLimit) {
+  public List<WorkerNetworkInfo> waitForAllWorkersToJoin(long timeLimitMilliSec) {
     if (workerList.size() == numberOfWorkers) {
       return workerList;
     }
 
     boolean sentAndReceived =
-        sendWorkerListRequest(ListWorkersRequest.RequestType.RESPONSE_AFTER_ALL_JOINED, timeLimit);
+        sendWorkerListRequest(ListWorkersRequest.RequestType.RESPONSE_AFTER_ALL_JOINED,
+            timeLimitMilliSec);
 
     if (!sentAndReceived) {
       return null;

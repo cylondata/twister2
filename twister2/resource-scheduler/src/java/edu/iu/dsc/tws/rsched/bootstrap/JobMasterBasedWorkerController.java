@@ -100,8 +100,13 @@ public class JobMasterBasedWorkerController implements IWorkerController {
   }
 
   @Override
-  public List<WorkerNetworkInfo> waitForAllWorkersToJoin(long timeLimit) {
+  public List<WorkerNetworkInfo> waitForAllWorkersToJoin(long timeLimitMilliSec) {
     WorkerController workerController = masterClient.getWorkerController();
     return workerController.waitForAllWorkersToJoin(30000);
+  }
+
+  @Override
+  public boolean waitOnBarrier(long timeLimitMilliSec) {
+    return masterClient.getWorkerController().waitOnBarrier(timeLimitMilliSec);
   }
 }

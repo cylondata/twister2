@@ -59,8 +59,18 @@ public interface IWorkerController {
 
   /**
    * wait for all workers to join the job
-   * @param timeLimit
+   * return all workers in the job including the ones that have already left, if any
+   * @param timeLimitMilliSec
    * @return
    */
-  List<WorkerNetworkInfo> waitForAllWorkersToJoin(long timeLimit);
+  List<WorkerNetworkInfo> waitForAllWorkersToJoin(long timeLimitMilliSec);
+
+  /**
+   * wait for all workers in the job to arrive at this barrier
+   * if the time limit is reached before all workers arrived, return false
+   * otherwise return true
+   * @param timeLimitMilliSec
+   * @return
+   */
+  boolean waitOnBarrier(long timeLimitMilliSec);
 }

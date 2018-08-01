@@ -78,15 +78,6 @@ public final class ZKControllerExample {
         .build();
   }
 
-  public static void sleeeep(long duration) {
-
-    try {
-      Thread.sleep(duration);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
-  }
-
   public static void printUsage() {
     LOG.info("Usage:\n"
         + "java ZKControllerExample zkAddress action numberOfWorkers\n"
@@ -104,6 +95,12 @@ public final class ZKControllerExample {
     }
   }
 
+  /**
+   * an example usage of ZKController class
+   * @param jobName
+   * @param numberOfWorkers
+   * @param cnfg
+   */
   public static void simulateWorker(String jobName, int numberOfWorkers, Config cnfg) {
     int port = 1000 + (int) (Math.random() * 1000);
     String workerAddress = "localhost:" + port;
@@ -119,9 +116,34 @@ public final class ZKControllerExample {
     workerList = zkController.waitForAllWorkersToJoin(100000);
     LOG.info(WorkerNetworkInfo.workerListAsString(workerList));
 
-    sleeeep((long) (Math.random() * 1000));
+    sleeeep((long) (Math.random() * 10000));
 
+    long timeLimit = 20000;
+    boolean allWorkersReachedBarrier = zkController.waitOnBarrier(timeLimit);
+    if (allWorkersReachedBarrier) {
+      LOG.info("All workers reached the barrier. Proceeding.");
+    } else {
+      LOG.info("Not all workers reached the barrier on the given timelimit: " + timeLimit + "ms"
+          + " Exiting ....... ");
+      zkController.close();
+      return;
+    }
+
+    // sleep some random amout of time before closing
+    // this is to prevent all workers to close almost at the same time
+    sleeeep((long) (Math.random() * 1000));
     zkController.close();
+  }
+
+  public static void sleeeep(long duration) {
+
+    LOG.info("Sleeping " + duration + "ms .....");
+
+    try {
+      Thread.sleep(duration);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
   }
 
 }

@@ -259,15 +259,15 @@ public class WorkerController implements IWorkerController {
    * this is not exactly for wathing all workers to start
    * but it is close
    * we need to reimplement it when we implemented a state manager
-   * @param timeLimit
+   * @param timeLimitMilliSec
    * @return
    */
   @Override
-  public List<WorkerNetworkInfo> waitForAllWorkersToJoin(long timeLimit) {
+  public List<WorkerNetworkInfo> waitForAllWorkersToJoin(long timeLimitMilliSec) {
     // first make sure all workers are in the list
     long startTime = System.currentTimeMillis();
     if (workerList.size() < numberOfWorkers) {
-      boolean listBuilt = buildWorkerListWaitForAll(timeLimit);
+      boolean listBuilt = buildWorkerListWaitForAll(timeLimitMilliSec);
       if (!listBuilt) {
         return null;
       }
@@ -276,7 +276,7 @@ public class WorkerController implements IWorkerController {
     ArrayList<String> podNameList = constructPodNameList();
 
     long duration = System.currentTimeMillis() - startTime;
-    long remainingTimeLimit = timeLimit - duration;
+    long remainingTimeLimit = timeLimitMilliSec - duration;
 
     boolean allRunning = waitUntilAllPodsRunning(podNameList, remainingTimeLimit);
     if (allRunning) {
@@ -284,7 +284,7 @@ public class WorkerController implements IWorkerController {
     } else {
       LOG.log(Level.SEVERE, "Can not get to all pods running state. Time limit may have been "
           + "reached. Or there can be a problem for pods to start and running. Time limit value: "
-          + timeLimit + "ms");
+          + timeLimitMilliSec + "ms");
       return  null;
     }
   }
@@ -359,4 +359,15 @@ public class WorkerController implements IWorkerController {
 
     return result;
   }
+
+  /**
+   * not implemented
+   * @param timeLimitMilliSec
+   * @return
+   */
+  @Override
+  public boolean waitOnBarrier(long timeLimitMilliSec) {
+    return false;
+  }
+
 }
