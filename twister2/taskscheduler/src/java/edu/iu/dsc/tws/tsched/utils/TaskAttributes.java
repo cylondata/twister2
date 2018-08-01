@@ -125,7 +125,7 @@ public class TaskAttributes {
     } catch (Exception ee) {
       ee.printStackTrace();
     }
-    LOG.info("Parallel Task map:" + parallelTaskMap);
+    //LOG.info("Parallel Task map:" + parallelTaskMap);
     return parallelTaskMap;
   }
 
