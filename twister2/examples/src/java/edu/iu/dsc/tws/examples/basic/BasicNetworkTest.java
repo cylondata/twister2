@@ -44,13 +44,13 @@ public class BasicNetworkTest implements IWorker, Runnable {
   public void init(Config config,
                    int id,
                    ResourcePlan resourcePlan,
-                   IWorkerController workerController,
+                   IWorkerController wController,
                    IPersistentVolume persistentVolume,
                    IVolatileVolume volatileVolume) {
 
 
-    this.workerController = workerController;
-    workerNetworkInfo = workerController.getWorkerNetworkInfo();
+    this.workerController = wController;
+    workerNetworkInfo = wController.getWorkerNetworkInfo();
 
     LOG.info("Worker started: " + workerNetworkInfo);
 
@@ -58,7 +58,7 @@ public class BasicNetworkTest implements IWorker, Runnable {
     echoServer.start();
 
     // wait for all workers in this job to join
-    List<WorkerNetworkInfo> workerList = workerController.waitForAllWorkersToJoin(50000);
+    List<WorkerNetworkInfo> workerList = wController.waitForAllWorkersToJoin(50000);
     if (workerList != null) {
       LOG.info("All workers joined. " + WorkerNetworkInfo.workerListAsString(workerList));
     } else {
