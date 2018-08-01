@@ -179,10 +179,10 @@ public class TWSMPIChannel implements TWSChannel {
    */
   private void postMessage(MPISendRequests requests) {
     ChannelMessage message = requests.message;
-    for (int i = 0; i < message.getBuffers().size(); i++) {
+    for (int i = 0; i < message.getNormalBuffers().size(); i++) {
       try {
         sendCount++;
-        DataBuffer buffer = message.getBuffers().get(i);
+        DataBuffer buffer = message.getNormalBuffers().get(i);
         Request request = comm.iSend(buffer.getByteBuffer(), buffer.getSize(),
             MPI.BYTE, requests.rank, message.getHeader().getEdge());
         // register to the loop to make progress on the send

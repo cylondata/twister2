@@ -151,9 +151,9 @@ public class TWSTCPChannel implements TWSChannel {
    */
   private void postMessage(TCPSendRequests requests) {
     ChannelMessage message = requests.message;
-    for (int i = 0; i < message.getBuffers().size(); i++) {
+    for (int i = 0; i < message.getNormalBuffers().size(); i++) {
       sendCount++;
-      DataBuffer buffer = message.getBuffers().get(i);
+      DataBuffer buffer = message.getNormalBuffers().get(i);
       TCPMessage request = comm.iSend(buffer.getByteBuffer(), buffer.getSize(),
           requests.rank, message.getHeader().getEdge());
       // register to the loop to make progress on the send

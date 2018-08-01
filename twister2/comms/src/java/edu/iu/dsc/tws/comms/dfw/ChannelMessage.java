@@ -112,6 +112,13 @@ public class ChannelMessage {
     }
   }
 
+  /**
+   * returns the direct buffers that were allocated.
+   */
+  public List<DataBuffer> getNormalBuffers() {
+    return buffers;
+  }
+
   public int incrementRefCount() {
     refCount++;
     return refCount;
@@ -148,7 +155,12 @@ public class ChannelMessage {
     buffers.addAll(bufferList);
   }
 
+  protected void addOverFlowBuffers(List<DataBuffer> bufferList) {
+    overflowBuffers.addAll(bufferList);
+  }
+
   protected void removeAllBuffers() {
+    overflowBuffers.clear();
     buffers.clear();
   }
 
@@ -200,7 +212,7 @@ public class ChannelMessage {
 
     if (header != null) {
       int currentSize = 0;
-      for (DataBuffer buffer : buffers) {
+      for (DataBuffer buffer : getBuffers()) {
         currentSize += buffer.getByteBuffer().remaining();
       }
 //      LOG.info(String.format("Current size %d length %d", currentSize,

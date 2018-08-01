@@ -572,7 +572,8 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     copy.setKeyType(channelMessage.getKeyType());
     copy.setHeaderSize(channelMessage.getHeaderSize());
     copy.setReceivedState(channelMessage.getReceivedState());
-    copy.addBuffers(channelMessage.getBuffers());
+    copy.addBuffers(channelMessage.getNormalBuffers());
+    copy.addOverFlowBuffers(channelMessage.getOverflowBuffers());
 
     //remove the buffers from the original message
     channelMessage.removeAllBuffers();
@@ -674,7 +675,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     if (currentMessage == null) {
       return;
     }
-    if (currentMessage.getBuffers().size() == 0) {
+    if (currentMessage.getNormalBuffers().size() == 0) {
       LOG.info("There are no receive buffers to be released for rank : " + id);
       return;
     }
@@ -686,16 +687,19 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     } else {
       local = localReceiveBuffers.poll();
     }
-    copyToLocalBuffer(id, currentMessage.getBuffers().remove(0), local, currentMessage);
+    copyToLocalBuffer(id, currentMessage.getNormalBuffers().remove(0), local, currentMessage);
   }
 
   private void copyToLocalBuffer(int id, DataBuffer dataBuffer, DataBuffer localBuffer,
                                  ChannelMessage message) {
     ByteBuffer original = dataBuffer.getByteBuffer();
     ByteBuffer local = localBuffer.getByteBuffer();
-    original.rewind(); //copy from the beginning
+    int position = original.position();
+    original.rewind();
     local.put(original);
     local.flip();
+    local.position(position);
+    localBuffer.setSize(dataBuffer.getSize());
     message.addToOverFlowBuffer(localBuffer);
     original.clear();
     Queue<DataBuffer> list = receiveBuffers.get(id);
@@ -708,7 +712,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
   private void releaseTheBuffers(int id, ChannelMessage message) {
     if (MessageDirection.IN == message.getMessageDirection()) {
       Queue<DataBuffer> list = receiveBuffers.get(id);
-      for (DataBuffer buffer : message.getBuffers()) {
+      for (DataBuffer buffer : message.getNormalBuffers()) {
         // we need to reset the buffer so it can be used again
         buffer.getByteBuffer().clear();
         if (!list.offer(buffer)) {
@@ -731,7 +735,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
       }
     } else if (MessageDirection.OUT == message.getMessageDirection()) {
       ArrayBlockingQueue<DataBuffer> queue = (ArrayBlockingQueue<DataBuffer>) sendBuffers;
-      for (DataBuffer buffer : message.getBuffers()) {
+      for (DataBuffer buffer : message.getNormalBuffers()) {
         // we need to reset the buffer so it can be used again
         buffer.getByteBuffer().clear();
         if (!queue.offer(buffer)) {
