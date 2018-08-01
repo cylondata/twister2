@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -24,6 +25,12 @@ public class ChannelMessage {
    * List of buffers filled with the message
    */
   private final List<DataBuffer> buffers = new ArrayList<DataBuffer>();
+
+  /**
+   * List of byte arrays which are used to copy data from {@link ChannelMessage#buffers}
+   * When the system runs out of receive buffers
+   */
+  private final List<ByteBuffer> overflowBuffers = new ArrayList<ByteBuffer>();
 
   /**
    * Keeps the number of references to this message
@@ -137,6 +144,14 @@ public class ChannelMessage {
 
   protected void removeAllBuffers() {
     buffers.clear();
+  }
+
+  public void addToOverFlowBuffer(ByteBuffer data) {
+    overflowBuffers.add(data);
+  }
+
+  public List<ByteBuffer> getOverflowBuffers() {
+    return overflowBuffers;
   }
 
   public int getOriginatingId() {
