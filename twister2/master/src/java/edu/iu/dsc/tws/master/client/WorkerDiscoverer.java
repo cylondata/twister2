@@ -27,6 +27,7 @@ import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
 import edu.iu.dsc.tws.master.JobMasterContext;
+import edu.iu.dsc.tws.proto.network.Network;
 import edu.iu.dsc.tws.proto.network.Network.ListWorkersRequest;
 import edu.iu.dsc.tws.proto.network.Network.ListWorkersResponse;
 
@@ -147,11 +148,32 @@ public class WorkerDiscoverer implements IWorkerDiscoverer, MessageHandler {
         }
       }
 
+    } else if (message instanceof Network.BarrierResponse) {
+      LOG.info("Received a BarrierResponse message from the master. \n" + message);
+
     } else {
       LOG.warning("Received message unrecognized. \n" + message);
     }
 
   }
+
+  public boolean waitOnBarrier(long timeLimitMilliSec) {
+
+    Network.BarrierRequest barrierRequest = Network.BarrierRequest.newBuilder()
+        .setWorkerID(thisWorker.getWorkerID())
+        .build();
+
+    LOG.info("Sending BarrierRequest message: \n" + barrierRequest);
+    RequestID requestID = rrClient.sendRequestWaitResponse(barrierRequest, timeLimitMilliSec);
+
+    if (requestID == null) {
+      LOG.severe("Couldn't send BarrierRequest message or couldn't receive the response.");
+      return false;
+    }
+
+    return true;
+  }
+
 
   /**
    * convert the given string to ip address object

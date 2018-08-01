@@ -107,6 +107,11 @@ public class JobMasterClient extends Thread {
     rrClient.registerResponseHandler(stateChangeBuilder, responseMessageHandler);
     rrClient.registerResponseHandler(stateChangeResponseBuilder, responseMessageHandler);
 
+    Network.BarrierRequest.Builder barrierRequestBuilder = Network.BarrierRequest.newBuilder();
+    Network.BarrierResponse.Builder barrierResponseBuilder = Network.BarrierResponse.newBuilder();
+    rrClient.registerResponseHandler(barrierRequestBuilder, workerController);
+    rrClient.registerResponseHandler(barrierResponseBuilder, workerController);
+
     // try to connect to JobMaster, wait up to 100 seconds
     // make this one config value
     long connectionTimeLimit = 100000;
