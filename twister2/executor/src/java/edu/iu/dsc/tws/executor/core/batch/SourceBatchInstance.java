@@ -154,28 +154,28 @@ public class SourceBatchInstance implements INodeInstance, INodeInstanceListener
 
     // now check the output queue
     while (!outBatchQueue.isEmpty()) {
-      boolean isOQEmpty = outBatchQueue.isEmpty();
-      if (!(this.isDone && isOQEmpty)) {
-        IMessage message = outBatchQueue.poll();
-        if (message != null) {
-          String edge = message.edge();
-          IParallelOperation op = outBatchParOps.get(edge);
-          if (message.getContent().equals(MessageFlags.LAST_MESSAGE)) {
-            System.out.println("Final Message");
-            while (!op.send(batchTaskId, message, MessageFlags.FLAGS_LAST)) {
-              //
-            }
-            //op.progress();
-            this.isFinish = true;
-            System.out.println("Last Message was Sent : " + this.isFinish);
-          } else {
-            while (!op.send(batchTaskId, message, 0)) {
-              //
-            }
-            //op.progress();
+
+      IMessage message = outBatchQueue.poll();
+      if (message != null) {
+        String edge = message.edge();
+        IParallelOperation op = outBatchParOps.get(edge);
+        if (message.getContent().equals(MessageFlags.LAST_MESSAGE)) {
+          System.out.println("Final Message");
+          while (!op.send(batchTaskId, message, MessageFlags.FLAGS_LAST)) {
+            //
           }
+          //op.progress();
+          this.isFinish = true;
+          System.out.println("Last Message was Sent : " + this.isFinish);
+        } else {
+          System.out.println("Sending Message : " + message.getContent());
+          while (!op.send(batchTaskId, message, 0)) {
+            //
+          }
+          //op.progress();
         }
       }
+
     }
 
     return this.isFinish;

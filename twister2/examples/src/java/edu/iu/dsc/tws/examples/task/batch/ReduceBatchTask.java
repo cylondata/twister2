@@ -112,7 +112,7 @@ public class ReduceBatchTask implements IContainer {
         this.sourceTaskContext.write("reduce-edge", MessageFlags.LAST_MESSAGE);
       }
 
-      if (count ==1) {
+      if (count == 1) {
         this.sourceTaskContext.setDone(true);
         this.sourceTaskContextListener.mutateContext(sourceTaskContext);
         this.setSourceTaskContextListener(this.sourceTaskContextListener);
