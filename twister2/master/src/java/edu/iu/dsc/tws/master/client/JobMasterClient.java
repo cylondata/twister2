@@ -44,7 +44,7 @@ public class JobMasterClient extends Thread {
 
   private RRClient rrClient;
   private Pinger pinger;
-  private WorkerDiscoverer workerController;
+  private WorkerController workerController;
 
   private boolean startingMessageSent = false;
 
@@ -89,7 +89,7 @@ public class JobMasterClient extends Thread {
     long interval = JobMasterContext.pingInterval(config);
     pinger = new Pinger(thisWorker, rrClient, interval);
 
-    workerController = new WorkerDiscoverer(config, thisWorker, rrClient, numberOfWorkers);
+    workerController = new WorkerController(config, thisWorker, rrClient, numberOfWorkers);
 
     Network.Ping.Builder pingBuilder = Network.Ping.newBuilder();
     rrClient.registerResponseHandler(pingBuilder, pinger);
@@ -107,6 +107,11 @@ public class JobMasterClient extends Thread {
     rrClient.registerResponseHandler(stateChangeBuilder, responseMessageHandler);
     rrClient.registerResponseHandler(stateChangeResponseBuilder, responseMessageHandler);
 
+    Network.BarrierRequest.Builder barrierRequestBuilder = Network.BarrierRequest.newBuilder();
+    Network.BarrierResponse.Builder barrierResponseBuilder = Network.BarrierResponse.newBuilder();
+    rrClient.registerResponseHandler(barrierRequestBuilder, workerController);
+    rrClient.registerResponseHandler(barrierResponseBuilder, workerController);
+
     // try to connect to JobMaster, wait up to 100 seconds
     // make this one config value
     long connectionTimeLimit = 100000;
@@ -123,7 +128,7 @@ public class JobMasterClient extends Thread {
     return true;
   }
 
-  public WorkerDiscoverer getWorkerController() {
+  public WorkerController getWorkerController() {
     return workerController;
   }
 

@@ -136,4 +136,48 @@ public final class JobUtils {
     String home = Context.twister2Home(config);
     return Paths.get(home, jobFileName + ".job").toAbsolutePath().toString();
   }
+
+  /**
+   * write the values from Job object to config object
+   * only write the values that are initialized
+   * @param job
+   * @param config
+   * @return
+   */
+  public static Config updateConfigs(JobAPI.Job job, Config config) {
+    Config.Builder builder = Config.newBuilder().putAll(config);
+
+    String jobName = job.getJobName();
+    if (jobName != null) {
+      builder.put(Context.JOB_NAME, jobName);
+    }
+
+    String containerClass = job.getContainer().getClassName();
+    if (containerClass != null) {
+      builder.put(SchedulerContext.CONTAINER_CLASS, containerClass);
+    }
+
+    int workerInstances = job.getJobResources().getNoOfContainers();
+    if (workerInstances > 0) {
+      builder.put(Context.TWISTER2_WORKER_INSTANCES, workerInstances);
+    }
+
+    double cpuPerWorker = job.getJobResources().getContainer().getAvailableCPU();
+    if (cpuPerWorker > 0) {
+      builder.put(Context.TWISTER2_WORKER_CPU, cpuPerWorker);
+    }
+
+    int ramPerWorker = (int) (job.getJobResources().getContainer().getAvailableMemory());
+    if (ramPerWorker > 0) {
+      builder.put(Context.TWISTER2_WORKER_RAM, ramPerWorker);
+    }
+
+    int diskPerWorker = (int) (job.getJobResources().getContainer().getAvailableDisk());
+    if (diskPerWorker > 0) {
+      builder.put(Context.WORKER_VOLATILE_DISK, diskPerWorker);
+    }
+
+    return builder.build();
+  }
+
 }

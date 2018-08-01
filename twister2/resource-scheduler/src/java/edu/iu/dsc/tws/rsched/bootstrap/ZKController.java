@@ -32,7 +32,7 @@ import org.apache.curator.utils.ZKPaths;
 import org.apache.zookeeper.CreateMode;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 
 /**
@@ -48,8 +48,8 @@ import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
  * <p>
  */
 
-public class ZKDiscoverer implements IWorkerDiscoverer {
-  public static final Logger LOG = Logger.getLogger(ZKDiscoverer.class.getName());
+public class ZKController implements IWorkerController {
+  public static final Logger LOG = Logger.getLogger(ZKController.class.getName());
 
   private String zkAddress; // hostname and port number of ZooKeeper
   private String hostAndPort; // hostname and port number of this worker
@@ -66,7 +66,7 @@ public class ZKDiscoverer implements IWorkerDiscoverer {
   private DistributedAtomicInteger dai;
   private Config config;
 
-  public ZKDiscoverer(Config config, String jobName, String hostAndPort, int numberOfWorkers) {
+  public ZKController(Config config, String jobName, String hostAndPort, int numberOfWorkers) {
     this.config = config;
     this.hostAndPort = hostAndPort;
     this.jobName = jobName;
@@ -135,7 +135,7 @@ public class ZKDiscoverer implements IWorkerDiscoverer {
 
       return true;
     } catch (Exception e) {
-      LOG.log(Level.SEVERE, "Exception when initializing ZKDiscoverer", e);
+      LOG.log(Level.SEVERE, "Exception when initializing ZKController", e);
       return false;
     }
   }

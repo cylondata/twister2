@@ -46,6 +46,9 @@ RUN cd /tmp && \
   make install && \
   rm -r /tmp/openmpi-$OPENMPI_VERSION
 
+# this can also be added to the previous command
+RUN rm /tmp/openmpi-$OPENMPI_VERSION.tar.bz2
+
 # set LD_LIBRARY_PATH environment variable
 ENV LD_LIBRARY_PATH   /usr/lib
 
@@ -71,13 +74,7 @@ VOLUME $HOME
 
 ENV CLASSPATH="/twister2/lib/*"
 
-COPY image/rootfs/init_openmpi.sh /twister2/
-COPY image/rootfs/init_nonmpi.sh /twister2/
-COPY image/rootfs/get_job_package.sh /twister2/
-COPY image/rootfs/check_pwd_free_ssh.sh /twister2/
-COPY image/rootfs/start_sshd.sh /
-COPY image/rootfs/etc /etc
-COPY image/rootfs/usr /usr
+COPY image/rootfs /
 COPY lib/ /twister2/lib/
 
 # check if open mpi was successfully built with cuda support.

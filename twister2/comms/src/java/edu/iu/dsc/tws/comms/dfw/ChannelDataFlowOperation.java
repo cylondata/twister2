@@ -20,8 +20,11 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -151,6 +154,12 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
    */
   private CompletionListener completionListener;
 
+  private Map<Integer, AtomicBoolean> sendsDone = new HashMap<>();
+
+  private Map<Integer, AtomicBoolean> receivesDone = new HashMap<>();
+
+  private AtomicInteger externalSendsPending = new AtomicInteger(0);
+
   public ChannelDataFlowOperation(TWSChannel channel) {
     this.channel = channel;
   }
@@ -197,7 +206,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     }
     this.receiveBuffers = new HashMap<>();
 
-    LOG.fine(String.format("%d setup communication", instancePlan.getThisExecutor()));
+    LOG.log(Level.FINE, String.format("%d setup communication", instancePlan.getThisExecutor()));
     // now setup the sends and receives
     setupCommunication();
 
@@ -206,6 +215,14 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     initSerializers();
 
     initProgressTrackers();
+
+    for (int sendSources : pendingSendMessagesPerSource.keySet()) {
+      sendsDone.put(sendSources, new AtomicBoolean(false));
+    }
+
+    for (int receiveTasks : pendingReceiveMessagesPerSource.keySet()) {
+      receivesDone.put(receiveTasks, new AtomicBoolean(false));
+    }
   }
 
   /**
@@ -345,6 +362,43 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     }
   }
 
+  public boolean isComplete() {
+//    LOG.info(String.format("Sends %s recvs %s", sendsDone, receivesDone));
+    for (AtomicBoolean b : sendsDone.values()) {
+      if (!b.get()) {
+        return false;
+      }
+    }
+
+    for (AtomicBoolean b : receivesDone.values()) {
+      if (!b.get()) {
+        return false;
+      }
+    }
+
+    for (Map.Entry<Integer, Queue<Pair<Object, ChannelMessage>>> e
+        : pendingReceiveMessagesPerSource.entrySet()) {
+      if (e.getValue().size() > 0) {
+        return false;
+      }
+    }
+
+    for (Map.Entry<Integer, ArrayBlockingQueue<Pair<Object, OutMessage>>> e
+        : pendingSendMessagesPerSource.entrySet()) {
+      if (e.getValue().size() > 0) {
+        return false;
+      }
+    }
+
+    for (Map.Entry<Integer, Queue<ChannelMessage>> e : pendingReceiveDeSerializations.entrySet()) {
+      if (e.getValue().size() > 0) {
+        return false;
+      }
+    }
+
+    return externalSendsPending.get() == 0;
+  }
+
   /**
    * Progress the serializations and receives, this method must be called by threads to
    * send messages through this communication
@@ -353,7 +407,10 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     if (sendProgressTracker.canProgress()) {
       int sendId = sendProgressTracker.next();
       if (sendId != Integer.MIN_VALUE) {
-        sendProgress(pendingSendMessagesPerSource.get(sendId), sendId);
+        boolean done = sendProgress(pendingSendMessagesPerSource.get(sendId), sendId);
+//        LOG.log(Level.INFO, String.format("SendID %d - %b", sendId, done));
+        AtomicBoolean b = sendsDone.get(sendId);
+        b.set(done);
         sendProgressTracker.finish(sendId);
       }
     }
@@ -370,7 +427,9 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     if (receiveProgressTracker.canProgress()) {
       int receiveId = receiveProgressTracker.next();
       if (receiveId != Integer.MIN_VALUE) {
-        receiveProgress(pendingReceiveMessagesPerSource.get(receiveId));
+        boolean done = receiveProgress(pendingReceiveMessagesPerSource.get(receiveId));
+        AtomicBoolean b = receivesDone.get(receiveId);
+        b.set(done);
         receiveProgressTracker.finish(receiveId);
       }
     }
@@ -398,7 +457,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     return false;
   }
 
-  private void sendProgress(Queue<Pair<Object, OutMessage>> pendingSendMessages, int sendId) {
+  private boolean sendProgress(Queue<Pair<Object, OutMessage>> pendingSendMessages, int sendId) {
     boolean canProgress = true;
     while (pendingSendMessages.size() > 0 && canProgress) {
       // take out pending messages
@@ -420,6 +479,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
             lock.unlock();
           }
           if (!receiveAccepted) {
+//            LOG.info(String.format("%d SendID %b", sendId, false));
             canProgress = false;
             break;
           }
@@ -453,6 +513,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
               break;
             } else {
               noOfExternalSends = outMessage.incrementAcceptedExternalSends();
+              externalSendsPending.incrementAndGet();
             }
           }
 
@@ -466,6 +527,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
         }
       }
     }
+    return canProgress;
   }
 
   private void receiveDeserializeProgress(ChannelMessage currentMessage, int receiveId) {
@@ -490,7 +552,8 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
   }
 
 
-  private void receiveProgress(Queue<Pair<Object, ChannelMessage>> pendingReceiveMessages) {
+  private boolean receiveProgress(Queue<Pair<Object, ChannelMessage>> pendingReceiveMessages) {
+    boolean canProgress = true;
     while (pendingReceiveMessages.size() > 0) {
       Pair<Object, ChannelMessage> pair = pendingReceiveMessages.peek();
       ChannelMessage.ReceivedState state = pair.getRight().getReceivedState();
@@ -507,10 +570,12 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
             || state == ChannelMessage.ReceivedState.INIT) {
           currentMessage.setReceivedState(ChannelMessage.ReceivedState.DOWN);
           if (!receiver.passMessageDownstream(object, currentMessage)) {
+            canProgress = false;
             break;
           }
           currentMessage.setReceivedState(ChannelMessage.ReceivedState.RECEIVE);
           if (!receiver.receiveMessage(currentMessage, object)) {
+            canProgress = false;
             break;
           }
           currentMessage.release();
@@ -518,6 +583,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
         } else if (state == ChannelMessage.ReceivedState.RECEIVE) {
           currentMessage.setReceivedState(ChannelMessage.ReceivedState.RECEIVE);
           if (!receiver.receiveMessage(currentMessage, object)) {
+            canProgress = false;
             break;
           }
           currentMessage.release();
@@ -527,6 +593,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
         lock.unlock();
       }
     }
+    return canProgress;
   }
 
   private boolean sendMessageToTarget(ChannelMessage channelMessage, int i) {
@@ -543,10 +610,13 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     }
   }
 
+  private int sendCount = 0;
+
   @Override
   public void onSendComplete(int id, int messageStream, ChannelMessage message) {
     // ok we don't have anything else to do
     message.release();
+    externalSendsPending.decrementAndGet();
   }
 
   private void releaseTheBuffers(int id, ChannelMessage message) {

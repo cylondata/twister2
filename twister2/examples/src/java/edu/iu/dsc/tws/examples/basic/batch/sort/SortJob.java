@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -24,7 +25,8 @@ import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
+import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
@@ -65,27 +67,30 @@ public class SortJob implements IWorker {
 
   @Override
   public void init(Config cfg, int wID, ResourcePlan plan,
-                   IWorkerDiscoverer workerController,
+                   IWorkerController workerController,
                    IPersistentVolume persistentVolume,
                    IVolatileVolume volatileVolume) {
     this.config = cfg;
     this.resourcePlan = plan;
     this.id = wID;
+
+    // wait and get all workers
+    List<WorkerNetworkInfo> workerList = workerController.waitForAllWorkersToJoin(50000);
+    if (workerList != null) {
+      LOG.info("All workers joined: " + WorkerNetworkInfo.workerListAsString(workerList));
+    } else {
+      LOG.severe("Can not get all workers to join. Exiting the Worker......................");
+      return;
+    }
+
     // setup the network
     setupNetwork(cfg, workerController, plan);
-
-//    // wait and get all workers
-//    List<WorkerNetworkInfo> workerList = workerController.waitForAllWorkersToJoin(50000);
-//    if (workerList != null) {
-//      LOG.info("All workers joined. " + WorkerNetworkInfo.workerListAsString(workerList));
-//    } else {
-//      LOG.severe(
-//              "Can not get all workers to join. Something wrong. Exiting the Worker..........");
-//      return;
-//    }
+    LOG.info("Network setup complete ------------------------------");
 
     // set up the tasks
     setupTasks();
+    LOG.info("Task setup complete ------------------------------");
+
     // we get the number of containers after initializing the network
     this.noOfTasksPerExecutor = NO_OF_TASKS / plan.noOfContainers();
 
@@ -95,10 +100,16 @@ public class SortJob implements IWorker {
         new PartitionPartialReceiver(), DataFlowPartition.PartitionStratergy.DIRECT,
         MessageType.BYTE, MessageType.BYTE, MessageType.INTEGER, MessageType.INTEGER,
         OperationSemantics.STREAMING_BATCH, new EdgeGenerator(0));
+
+
+    LOG.info("Starting threads ------------------------------");
     // start the threads
     scheduleTasks();
+
+    LOG.info("Scheduling tasks complete ------------------------------");
     // progress the work
     progress();
+    LOG.info("Progress complete ------------------------------");
   }
 
   private void setupTasks() {
@@ -125,7 +136,7 @@ public class SortJob implements IWorker {
     }
   }
 
-  private void setupNetwork(Config cfg, IWorkerDiscoverer controller, ResourcePlan rPlan) {
+  private void setupNetwork(Config cfg, IWorkerController controller, ResourcePlan rPlan) {
     channel = Network.initializeChannel(cfg, controller, rPlan);
   }
 

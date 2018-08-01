@@ -331,6 +331,10 @@ public final class RequestObjectBuilder {
     ArrayList<V1EnvVar> envVars = new ArrayList<>();
 
     envVars.add(new V1EnvVar()
+        .name(K8sEnvVariables.JOB_NAME + "")
+        .value(Context.jobName(config)));
+
+    envVars.add(new V1EnvVar()
         .name(K8sEnvVariables.JOB_PACKAGE_FILE_SIZE + "")
         .value(jobFileSize + ""));
 

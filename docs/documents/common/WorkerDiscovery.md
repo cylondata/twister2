@@ -26,7 +26,7 @@ We designed an interface to be implemented by worker discoverers and
 to be used by workers to discover other workers in a Twister job. 
 
 The interface is: 
-* [edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer](../../../twister2/common/src/java/edu/iu/dsc/tws/common/discovery/IWorkerDiscoverer.java)
+* [edu.iu.dsc.tws.common.discovery.IWorkerController](../../../twister2/common/src/java/edu/iu/dsc/tws/common/discovery/IWorkerDiscoverer.java)
 
 ## IWorkerDiscoverer Implementations
 We developed worker discoverers implementing IWorkerDiscoverer interface 
@@ -41,7 +41,7 @@ Details of the implementation is provided in [the document](../zookeeper/ZKBased
 Twister2 runs a Job Master in Twister2 jobs. 
 We also provide a Job Master based worker discoverer.
 The worker discoverer class is: 
-* [edu.iu.dsc.tws.master.client.WorkerDiscoverer](../../../twister2/master/src/java/edu/iu/dsc/tws/master/client/WorkerDiscoverer.java)
+* [edu.iu.dsc.tws.master.client.WorkerController](../../../twister2/master/src/java/edu/iu/dsc/tws/master/client/WorkerDiscoverer.java)
 
 Details of the implementation is provided in [the document](../job-master/JobMaster.md). 
 
@@ -49,7 +49,7 @@ Details of the implementation is provided in [the document](../job-master/JobMas
 We developed a worker discoverer that uses Kubernetes master 
 to discover other workers in a Twister2 job.  
 The worker discoverer class is: 
-* [edu.iu.dsc.tws.rsched.schedulers.k8s.worker.WorkerDiscoverer](../../../twister2/resource-scheduler/src/java/edu/iu/dsc/tws/rsched/schedulers/k8s/worker/WorkerDiscoverer.java)
+* [edu.iu.dsc.tws.rsched.schedulers.k8s.worker.WorkerController](../../../twister2/resource-scheduler/src/java/edu/iu/dsc/tws/rsched/schedulers/k8s/worker/WorkerDiscoverer.java)
 
 Details of the implementation is provided in [the document](../kubernetes). 
 
