@@ -109,7 +109,8 @@ public class TaskAttributes {
 
   public Map<String, Integer> getParallelTaskMap(Set<Vertex> iTaskSet) {
 
-    Map<String, Integer> parallelTaskMap = new LinkedHashMap<>();
+    //Map<String, Integer> parallelTaskMap = new LinkedHashMap<>();
+    Map<String, Integer> parallelTaskMap = new HashMap<>();
     try {
       for (Vertex task : iTaskSet) {
         Config config = task.getConfig();
