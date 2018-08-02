@@ -25,7 +25,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerUtils;
 import edu.iu.dsc.tws.rsched.spi.container.IPersistentVolume;
@@ -38,19 +38,19 @@ public class BasicNetworkTest implements IWorker, Runnable {
   private static final Logger LOG = Logger.getLogger(BasicNetworkTest.class.getName());
 
   private WorkerNetworkInfo workerNetworkInfo;
-  private IWorkerDiscoverer workerDiscoverer;
+  private IWorkerController workerController;
 
   @Override
   public void init(Config config,
                    int id,
                    ResourcePlan resourcePlan,
-                   IWorkerDiscoverer workerController,
+                   IWorkerController wController,
                    IPersistentVolume persistentVolume,
                    IVolatileVolume volatileVolume) {
 
 
-    this.workerDiscoverer = workerController;
-    workerNetworkInfo = workerController.getWorkerNetworkInfo();
+    this.workerController = wController;
+    workerNetworkInfo = wController.getWorkerNetworkInfo();
 
     LOG.info("Worker started: " + workerNetworkInfo);
 
@@ -58,7 +58,7 @@ public class BasicNetworkTest implements IWorker, Runnable {
     echoServer.start();
 
     // wait for all workers in this job to join
-    List<WorkerNetworkInfo> workerList = workerController.waitForAllWorkersToJoin(50000);
+    List<WorkerNetworkInfo> workerList = wController.waitForAllWorkersToJoin(50000);
     if (workerList != null) {
       LOG.info("All workers joined. " + WorkerNetworkInfo.workerListAsString(workerList));
     } else {

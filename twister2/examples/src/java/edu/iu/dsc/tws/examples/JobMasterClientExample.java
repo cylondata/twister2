@@ -17,10 +17,11 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.client.JobMasterClient;
-import edu.iu.dsc.tws.master.client.WorkerDiscoverer;
+import edu.iu.dsc.tws.master.client.WorkerController;
 
 public final class JobMasterClientExample {
   private static final Logger LOG = Logger.getLogger(JobMasterClientExample.class.getName());
@@ -36,7 +37,8 @@ public final class JobMasterClientExample {
    * Each worker waits for all workers to join
    *
    * When all workers joined, they get the full worker list
-   * each send completed messages and exit
+   * Then, each worker sends a barrier message
+   * Then, each worker sends a completed message and closes
    *
    * @param args
    */
@@ -62,7 +64,7 @@ public final class JobMasterClientExample {
    */
   public static void simulateClient(Config config, int workerTempID) {
 
-    InetAddress workerIP = WorkerDiscoverer.convertStringToIP("localhost");
+    InetAddress workerIP = WorkerController.convertStringToIP("localhost");
     int workerPort = 10000 + (int) (Math.random() * 10000);
 
     WorkerNetworkInfo workerNetworkInfo = new WorkerNetworkInfo(workerIP, workerPort, workerTempID);
@@ -70,26 +72,42 @@ public final class JobMasterClientExample {
     JobMasterClient client = new JobMasterClient(config, workerNetworkInfo);
     client.init();
 
+    IWorkerController workerController = client.getWorkerController();
+
     client.sendWorkerStartingMessage();
 
-    // wait 500ms
-    // sleeeep(5000);
+    // wait up to 2sec
+    sleeeep((long) (Math.random() * 2000));
 
     client.sendWorkerRunningMessage();
 
-    List<WorkerNetworkInfo> workerList = client.getWorkerController().getWorkerList();
+    List<WorkerNetworkInfo> workerList = workerController.getWorkerList();
     LOG.info(WorkerNetworkInfo.workerListAsString(workerList));
 
-    workerList = client.getWorkerController().waitForAllWorkersToJoin(100000);
+    workerList = workerController.waitForAllWorkersToJoin(100000);
     LOG.info(WorkerNetworkInfo.workerListAsString(workerList));
+
+    // wait up to 10sec
+    sleeeep((long) (Math.random() * 10000));
+    long timeLimit = 20000;
+    boolean allWorkersReachedBarrier = client.getWorkerController().waitOnBarrier(timeLimit);
+    if (allWorkersReachedBarrier) {
+      LOG.info("All workers reached the barrier. Proceeding.");
+    } else {
+      LOG.info("Not all workers reached the barrier on the given timelimit: " + timeLimit + "ms"
+          + " Exiting ....... ");
+      client.close();
+      return;
+    }
+
+    // wait up to 3sec
+    sleeeep((long) (Math.random() * 3000));
 
     client.sendWorkerCompletedMessage();
-//    sleeeep(500);
 
     client.close();
 
-    System.out.println("all messaging done. waiting before finishing.");
-//    sleeeep(5000);
+    System.out.println("Client has finished the computation. Client exiting.");
   }
 
   /**
@@ -106,6 +124,8 @@ public final class JobMasterClientExample {
   }
 
   public static void sleeeep(long duration) {
+
+    LOG.info("Sleeping " + duration + "ms............");
 
     try {
       Thread.sleep(duration);

@@ -21,17 +21,18 @@ import java.util.logging.Logger;
 import com.google.protobuf.Message;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
 import edu.iu.dsc.tws.master.JobMasterContext;
+import edu.iu.dsc.tws.proto.network.Network;
 import edu.iu.dsc.tws.proto.network.Network.ListWorkersRequest;
 import edu.iu.dsc.tws.proto.network.Network.ListWorkersResponse;
 
-public class WorkerDiscoverer implements IWorkerDiscoverer, MessageHandler {
-  private static final Logger LOG = Logger.getLogger(WorkerDiscoverer.class.getName());
+public class WorkerController implements IWorkerController, MessageHandler {
+  private static final Logger LOG = Logger.getLogger(WorkerController.class.getName());
 
   private WorkerNetworkInfo thisWorker;
   private ArrayList<WorkerNetworkInfo> workerList;
@@ -40,11 +41,11 @@ public class WorkerDiscoverer implements IWorkerDiscoverer, MessageHandler {
   private RRClient rrClient;
   private Config config;
 
-  public WorkerDiscoverer(Config config, WorkerNetworkInfo thisWorker, RRClient rrClient) {
+  public WorkerController(Config config, WorkerNetworkInfo thisWorker, RRClient rrClient) {
     this(config, thisWorker, rrClient, JobMasterContext.workerInstances(config));
   }
 
-  public WorkerDiscoverer(Config config, WorkerNetworkInfo thisWorker,
+  public WorkerController(Config config, WorkerNetworkInfo thisWorker,
                           RRClient rrClient, int numberOfWorkers) {
     this.config = config;
     this.numberOfWorkers = numberOfWorkers;
@@ -90,13 +91,14 @@ public class WorkerDiscoverer implements IWorkerDiscoverer, MessageHandler {
   }
 
   @Override
-  public List<WorkerNetworkInfo> waitForAllWorkersToJoin(long timeLimit) {
+  public List<WorkerNetworkInfo> waitForAllWorkersToJoin(long timeLimitMilliSec) {
     if (workerList.size() == numberOfWorkers) {
       return workerList;
     }
 
     boolean sentAndReceived =
-        sendWorkerListRequest(ListWorkersRequest.RequestType.RESPONSE_AFTER_ALL_JOINED, timeLimit);
+        sendWorkerListRequest(ListWorkersRequest.RequestType.RESPONSE_AFTER_ALL_JOINED,
+            timeLimitMilliSec);
 
     if (!sentAndReceived) {
       return null;
@@ -147,11 +149,32 @@ public class WorkerDiscoverer implements IWorkerDiscoverer, MessageHandler {
         }
       }
 
+    } else if (message instanceof Network.BarrierResponse) {
+      LOG.info("Received a BarrierResponse message from the master. \n" + message);
+
     } else {
       LOG.warning("Received message unrecognized. \n" + message);
     }
 
   }
+
+  public boolean waitOnBarrier(long timeLimitMilliSec) {
+
+    Network.BarrierRequest barrierRequest = Network.BarrierRequest.newBuilder()
+        .setWorkerID(thisWorker.getWorkerID())
+        .build();
+
+    LOG.info("Sending BarrierRequest message: \n" + barrierRequest);
+    RequestID requestID = rrClient.sendRequestWaitResponse(barrierRequest, timeLimitMilliSec);
+
+    if (requestID == null) {
+      LOG.severe("Couldn't send BarrierRequest message or couldn't receive the response.");
+      return false;
+    }
+
+    return true;
+  }
+
 
   /**
    * convert the given string to ip address object

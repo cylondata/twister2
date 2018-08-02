@@ -63,6 +63,14 @@ public interface DataFlowOperation {
   void close();
 
   /**
+   * Weather the operation doesn't have any pending sends or receives
+   * @return is complete
+   */
+  default boolean isComplete() {
+    return false;
+  }
+
+  /**
    * If this is a larger transfer of dataflow style, we need to finish
    */
   default void finish(int source) {

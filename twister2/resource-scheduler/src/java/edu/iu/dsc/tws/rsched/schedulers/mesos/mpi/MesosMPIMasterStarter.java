@@ -70,7 +70,6 @@ public final class MesosMPIMasterStarter {
     String configDir = "twister2-job/mesos/";
     mpiMaster.config = ConfigLoader.loadConfig(twister2Home, configDir);
 
-
     MesosWorkerLogger logger = new MesosWorkerLogger(mpiMaster.config,
         "/persistent-volume/logs", "mpiMaster");
     logger.initLogging();
@@ -94,7 +93,6 @@ public final class MesosMPIMasterStarter {
       e.printStackTrace();
     }
 
-
     String jobMasterIP = workerNetworkInfoList.get(0).getWorkerIP().getHostAddress();
     LOG.info("JobMasterIP" + jobMasterIP);
     System.out.println("Worker id " + workerId);
@@ -112,8 +110,7 @@ public final class MesosMPIMasterStarter {
 
       writer.write(workerNetworkInfoList.get(i).getWorkerIP().getHostAddress()
           + "\n");
-      //writer.write(workerNetworkInfoList.get(i).getWorkerIP().getHostAddress()
-      //    + " slots=1" + "\n");
+
       System.out.println("host ip: "
           + workerNetworkInfoList.get(i).getWorkerIP().getHostAddress());
     }
@@ -125,34 +122,23 @@ public final class MesosMPIMasterStarter {
     String mpiClassNameToRun = "edu.iu.dsc.tws.rsched.schedulers.mesos.mpi.MesosMPIWorkerStarter";
 
     System.out.println("Before mpirun");
-//    String[] command = {"mpirun", "-allow-run-as-root",
-//        "--hostfile", "/twister2/hostFile", "-npernode", "1",
-//        "java", "-cp",
-//        "twister2-job/libexamples-java.jar:twister2-core/lib/*",
-//        mpiClassNameToRun, mpiMaster.jobName, jobMasterIP, ">mpioutfile"};
-
-    String[] command = {"mpirun", "-x", "LD_PRELOAD=libmpi.so", "-allow-run-as-root", "-np",
-        (workerController.getNumberOfWorkers() - 1) + "",
+    String[] command = {"mpirun", "-allow-run-as-root", "-npernode",
+        "1", "--mca", "btl_tcp_if_include", "eth0",
         "--hostfile", "/twister2/hostFile", "java", "-cp",
         "twister2-job/libexamples-java.jar:twister2-core/lib/*",
-        mpiClassNameToRun, mpiMaster.jobName, jobMasterIP, ">mpioutfile"};
-
-//    String[] command = {"mpirun", "--hostfile", "/twister2/hostFile",
-//        "-allow-run-as-root", "-npernode", "1",
-//        "java", "-cp",
-//        "twister2-job/libexamples-java.jar:twister2-core/lib/*",
-//        mpiClassNameToRun, mpiMaster.jobName, jobMasterIP, ">mpioutfile"};
+        mpiClassNameToRun, mpiMaster.jobName, jobMasterIP};
 
     System.out.println("command:" + String.join(" ", command));
-    //Thread.sleep(5000);
 
     ProcessUtils.runSyncProcess(false, command, outputBuilder,
         new File("."), true);
 
+    mpiMaster.jobMasterClient.sendWorkerCompletedMessage();
+    mpiMaster.jobMasterClient.close();
     workerController.close();
     System.out.println("Finished");
 
-    mpiMaster.jobMasterClient.sendWorkerCompletedMessage();
+
   }
 
   public void startJobMasterClient(WorkerNetworkInfo networkInfo, String jobMasterIP) {
@@ -164,5 +150,6 @@ public final class MesosMPIMasterStarter {
     // we need to make sure that the worker starting message went through
     jobMasterClient.sendWorkerStartingMessage();
   }
+
 
 }

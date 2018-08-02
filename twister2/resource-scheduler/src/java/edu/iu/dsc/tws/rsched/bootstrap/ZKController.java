@@ -22,6 +22,7 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.recipes.atomic.AtomicValue;
 import org.apache.curator.framework.recipes.atomic.DistributedAtomicInteger;
+import org.apache.curator.framework.recipes.barriers.DistributedBarrier;
 import org.apache.curator.framework.recipes.cache.ChildData;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.curator.framework.recipes.locks.InterProcessMutex;
@@ -29,10 +30,9 @@ import org.apache.curator.framework.recipes.nodes.PersistentNode;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.curator.utils.CloseableUtils;
 import org.apache.curator.utils.ZKPaths;
-import org.apache.zookeeper.CreateMode;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 
 /**
@@ -45,35 +45,59 @@ import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
  * Each worker appends its worker name-ID pair to this list when they join
  * They append to this list in synchronized fashion by acquiring a distributed lock:
  *   InterProcessMutex
- * <p>
+ *
+ * we use a barrier to make all workers wait until the last worker arrives at the barrier point
+ * we count the number of waiting workers by using a DistributedAtomicInteger
  */
 
-public class ZKDiscoverer implements IWorkerDiscoverer {
-  public static final Logger LOG = Logger.getLogger(ZKDiscoverer.class.getName());
+public class ZKController implements IWorkerController {
+  public static final Logger LOG = Logger.getLogger(ZKController.class.getName());
 
-  private String zkAddress; // hostname and port number of ZooKeeper
-  private String hostAndPort; // hostname and port number of this worker
+  // hostname and port number of ZooKeeper server
+  private String zkAddress;
+
+  // hostname and port number of this worker
+  private String workerIpAndPort;
+
+  // WorkerNetworkInfo object for this worker
   private WorkerNetworkInfo workerNetworkInfo;
+
+  // number of workers in this job
   private int numberOfWorkers;
-  private CuratorFramework client;
+
+  // name of this job
   private String jobName;
-  private String znodePath;
+
+  // the client to connect to ZK server
+  private CuratorFramework client;
+
+  // the path, znode and children cache objects for this job
   private String jobPath;
-  private String daiPath;
-  private String lockPath;
-  private PersistentNode thisNode;
+  private PersistentNode jobZNode;
   private PathChildrenCache childrenCache;
-  private DistributedAtomicInteger dai;
+
+  // variables for workerID generation
+  private String daiPathForWorkerID;
+  private DistributedAtomicInteger daiForWorkerID;
+
+  // variables related to the barrier
+  private DistributedAtomicInteger daiForBarrier;
+  private String daiPathForBarrier;
+  private DistributedBarrier barrier;
+  private String barrierPath;
+
+  // config object
   private Config config;
 
-  public ZKDiscoverer(Config config, String jobName, String hostAndPort, int numberOfWorkers) {
+  public ZKController(Config config, String jobName, String workerIpAndPort, int numberOfWorkers) {
     this.config = config;
-    this.hostAndPort = hostAndPort;
+    this.workerIpAndPort = workerIpAndPort;
     this.jobName = jobName;
     this.numberOfWorkers = numberOfWorkers;
     this.jobPath = ZKUtil.constructJobPath(config, jobName);
-    this.daiPath = ZKUtil.constructJobDaiPath(config, jobName);
-    this.lockPath = ZKUtil.constructJobLockPath(config, jobName);
+    this.daiPathForWorkerID = ZKUtil.constructDaiPathForWorkerID(config, jobName);
+    this.daiPathForBarrier = ZKUtil.constructDaiPathForBarrier(config, jobName);
+    this.barrierPath = ZKUtil.constructBarrierPath(config, jobName);
   }
 
   /**
@@ -91,14 +115,20 @@ public class ZKDiscoverer implements IWorkerDiscoverer {
       client = CuratorFrameworkFactory.newClient(zkAddress, new ExponentialBackoffRetry(1000, 3));
       client.start();
 
-      dai = new DistributedAtomicInteger(client, daiPath, new ExponentialBackoffRetry(1000, 3));
+      barrier = new DistributedBarrier(client, barrierPath);
+
+      daiForWorkerID = new DistributedAtomicInteger(client,
+          daiPathForWorkerID, new ExponentialBackoffRetry(1000, 3));
+
+      daiForBarrier = new DistributedAtomicInteger(client,
+          daiPathForBarrier, new ExponentialBackoffRetry(1000, 3));
 
       // check whether the job node exist, if not,
       // it means, this worker is the first worker to join
       // get a workerID, create the jobZnode, append worker info
       if (client.checkExists().forPath(jobPath) == null) {
         int workerID = createWorkerID();
-        workerNetworkInfo = new WorkerNetworkInfo(hostAndPort, workerID);
+        workerNetworkInfo = new WorkerNetworkInfo(workerIpAndPort, workerID);
         createWorkerZnode();
         appendWorkerInfo();
 
@@ -111,9 +141,9 @@ public class ZKDiscoverer implements IWorkerDiscoverer {
 
         // it has not joined before,
         // create workerID, append its info to the jobZnode
-        if (parentStr.indexOf(hostAndPort) < 0) {
+        if (parentStr.indexOf(workerIpAndPort) < 0) {
           int workerID = createWorkerID();
-          workerNetworkInfo = new WorkerNetworkInfo(hostAndPort, workerID);
+          workerNetworkInfo = new WorkerNetworkInfo(workerIpAndPort, workerID);
           createWorkerZnode();
           appendWorkerInfo();
 
@@ -121,7 +151,7 @@ public class ZKDiscoverer implements IWorkerDiscoverer {
           // get the workerID from the jobZnode content
         } else {
           int workerID = getWorkerIDFromParentData(parentStr);
-          workerNetworkInfo = new WorkerNetworkInfo(hostAndPort, workerID);
+          workerNetworkInfo = new WorkerNetworkInfo(workerIpAndPort, workerID);
           createWorkerZnode();
         }
       }
@@ -135,7 +165,7 @@ public class ZKDiscoverer implements IWorkerDiscoverer {
 
       return true;
     } catch (Exception e) {
-      LOG.log(Level.SEVERE, "Exception when initializing ZKDiscoverer", e);
+      LOG.log(Level.SEVERE, "Exception when initializing ZKController", e);
       return false;
     }
   }
@@ -164,19 +194,20 @@ public class ZKDiscoverer implements IWorkerDiscoverer {
 
   /**
    * create worker ID for this worker by increasing shared DistributedAtomicInteger
+   * re-try until it is created.
    */
   private int createWorkerID() {
     try {
-      AtomicValue<Integer> incremented = dai.increment();
+      AtomicValue<Integer> incremented = daiForWorkerID.increment();
       if (incremented.succeeded()) {
         int workerID = incremented.preValue();
-        LOG.log(Level.INFO, "Unique WorkerID generated: " + workerID);
+        LOG.fine("Unique WorkerID generated: " + workerID);
         return workerID;
       } else {
         createWorkerID();
       }
     } catch (Exception e) {
-      LOG.log(Level.SEVERE, "Failed to generate a unique workerID. Will try again ...", e);
+      LOG.log(Level.WARNING, "Failed to generate a unique workerID. Will try again ...", e);
       createWorkerID();
     }
 
@@ -188,15 +219,15 @@ public class ZKDiscoverer implements IWorkerDiscoverer {
    */
   private void createWorkerZnode() {
     try {
-      String thisNodePath = ZKUtil.constructWorkerPath(jobPath, hostAndPort);
-      thisNode = ZKUtil.createPersistentEphemeralZnode(
+      String thisNodePath = ZKUtil.constructWorkerPath(jobPath, workerIpAndPort);
+      jobZNode = ZKUtil.createPersistentEphemeralZnode(
           client, thisNodePath, workerNetworkInfo.getWorkerIDAsBytes());
-      thisNode.start();
-      thisNode.waitForInitialCreate(10000, TimeUnit.MILLISECONDS);
-      znodePath = thisNode.getActualPath();
-      LOG.info("An ephemeral znode is created for this worker: " + znodePath);
+      jobZNode.start();
+      jobZNode.waitForInitialCreate(10000, TimeUnit.MILLISECONDS);
+      String fullZnodePath = jobZNode.getActualPath();
+      LOG.fine("An ephemeral znode is created for this worker: " + fullZnodePath);
     } catch (Exception e) {
-      LOG.log(Level.SEVERE, "Could not create znode for the worker: " + hostAndPort, e);
+      throw new RuntimeException("Could not create znode for the worker: " + workerIpAndPort, e);
     }
   }
 
@@ -207,6 +238,7 @@ public class ZKDiscoverer implements IWorkerDiscoverer {
    */
   private void appendWorkerInfo() {
 
+    String lockPath = ZKUtil.constructJobLockPath(config, jobName);
     InterProcessMutex lock = new InterProcessMutex(client, lockPath);
     try {
       lock.acquire();
@@ -215,10 +247,10 @@ public class ZKDiscoverer implements IWorkerDiscoverer {
       String updatedParentStr = parentStr + "\n" + workerNetworkInfo.getWorkerInfoAsString();
       client.setData().forPath(jobPath, updatedParentStr.getBytes());
       lock.release();
-      LOG.log(Level.INFO, "Updated job znode content: " + updatedParentStr);
+      LOG.fine("Updated job znode content: " + updatedParentStr);
     } catch (Exception e) {
-      LOG.log(Level.SEVERE, "Could not update job znode content for worker: " + hostAndPort);
-      throw new RuntimeException(e);
+      throw new RuntimeException("Could not update the job znode content for the worker: "
+          + workerIpAndPort, e);
     }
   }
 
@@ -227,30 +259,9 @@ public class ZKDiscoverer implements IWorkerDiscoverer {
    * @param parentStr
    */
   private int getWorkerIDFromParentData(String parentStr) {
-    int workerID = WorkerNetworkInfo.getWorkerIDByParsing(parentStr, hostAndPort);
-    LOG.log(Level.INFO, "Using workerID from previous session: " + workerNetworkInfo.getWorkerID());
+    int workerID = WorkerNetworkInfo.getWorkerIDByParsing(parentStr, workerIpAndPort);
+    LOG.warning("Using workerID from the previous session: " + workerNetworkInfo.getWorkerID());
     return workerID;
-  }
-
-
-  /**
-   * create an Ephemeral Sequential znode with protection
-   * ephemeral: it will be deleted once the client disconnects
-   * with protection: if the client sends create request and can not receive reply,
-   *   when it reconnects no new znode will be created, previous one will be used
-   *   The name of the node that is created is prefixed with a GUID.
-   *   GUID is used to determine prevously generated znode.
-   * @param path
-   * @param payload
-   * @return
-   * @throws Exception
-   */
-  public String createWorkerZnode(String path, byte[] payload) throws Exception {
-    return client.create()
-        .creatingParentsIfNeeded()
-        .withProtection()
-        .withMode(CreateMode.EPHEMERAL)
-        .forPath(path, payload);
   }
 
   /**
@@ -270,7 +281,7 @@ public class ZKDiscoverer implements IWorkerDiscoverer {
 
   /**
    * Get current list of workers from local children cache
-   * This list does not have the workers that already left
+   * This list does not have the workers that have already left
    */
   public List<WorkerNetworkInfo> getCurrentWorkers() {
 
@@ -293,7 +304,7 @@ public class ZKDiscoverer implements IWorkerDiscoverer {
   }
 
   /**
-   * Get all joined workers including the ones completed
+   * Get all joined workers including the ones that have already completed and left
    */
   @Override
   public List<WorkerNetworkInfo> getWorkerList() {
@@ -302,7 +313,7 @@ public class ZKDiscoverer implements IWorkerDiscoverer {
     try {
       parentData = client.getData().forPath(jobPath);
     } catch (Exception e) {
-      LOG.log(Level.SEVERE, "Could not get job node data", e);
+      LOG.log(Level.SEVERE, "Could not get the job node data", e);
       return null;
     }
 
@@ -319,19 +330,6 @@ public class ZKDiscoverer implements IWorkerDiscoverer {
   }
 
   /**
-   * get the number of all joined workers to the job including the ones that have already left
-   * the worker info of some of those workers may have not arrived yet to this worker
-   */
-  public int getNumberOfJoinedWorkers() {
-    try {
-      return dai.get().preValue();
-    } catch (Exception e) {
-      LOG.log(Level.SEVERE, "Could not get DistributedAtomicInteger preValue", e);
-      return -1;
-    }
-  }
-
-  /**
    * count the number of all joined workers
    * count the workers based on their data availability on this worker
    * this count also includes the workers that have already completed
@@ -341,7 +339,7 @@ public class ZKDiscoverer implements IWorkerDiscoverer {
     try {
       parentData = client.getData().forPath(jobPath);
     } catch (Exception e) {
-      LOG.log(Level.SEVERE, "Could not get job node data", e);
+      LOG.log(Level.SEVERE, "Could not get the job node data", e);
       return -1;
     }
 
@@ -352,28 +350,27 @@ public class ZKDiscoverer implements IWorkerDiscoverer {
 
   /**
    * wait to make sure that the number of workers reached the total number of workers in the job
-   * return the current set of workers in the job
-   * some workers may have already left, so current worker list may be less than the total
-   * return null if timeLimit is reached or en exception thrown while waiting
+   * return the all joined workers in the job including the ones that have already left
+   * return null if timeLimit is reached or en exception is thrown while waiting
    */
   @Override
-  public List<WorkerNetworkInfo> waitForAllWorkersToJoin(long timeLimit) {
+  public List<WorkerNetworkInfo> waitForAllWorkersToJoin(long timeLimitMilliSec) {
 
     long duration = 0;
-    while (duration < timeLimit) {
+    while (duration < timeLimitMilliSec) {
       if (countNumberOfJoinedWorkers() < numberOfWorkers) {
         try {
           Thread.sleep(50);
           duration += 50;
         } catch (InterruptedException e) {
-          LOG.log(Level.INFO, "Thread sleep interrupted. Will try again ...", e);
+          LOG.fine("Thread sleep interrupted. Will try again ...");
         }
       } else {
         return getWorkerList();
       }
     }
 
-    LOG.log(Level.INFO, "Waited for all workers to join, but timeLimit has been reached");
+    LOG.warning("Waited for all workers to join, but timeLimit has been reached.");
     return null;
   }
 
@@ -392,6 +389,81 @@ public class ZKDiscoverer implements IWorkerDiscoverer {
   }
 
   /**
+   * try to increment the daiForBarrier
+   * try 10 times if fails
+   * @param tryCount
+   * @return
+   */
+  private boolean incrementBarrierDAI(int tryCount, long timeLimitMilliSec) {
+
+    if (tryCount == 10) {
+      return false;
+    }
+
+    try {
+      AtomicValue<Integer> incremented = daiForBarrier.increment();
+      if (incremented.succeeded()) {
+        LOG.fine("DistributedAtomicInteger for Barrier increased to: " + incremented.postValue());
+
+        // if this is the last worker to enter, remove the barrier and let all workers be released
+        if (incremented.postValue() % numberOfWorkers == 0) {
+          barrier.removeBarrier();
+          return true;
+
+        // if this is not the last worker, set the barrier and wait
+        } else {
+          barrier.setBarrier();
+          return barrier.waitOnBarrier(timeLimitMilliSec, TimeUnit.MILLISECONDS);
+        }
+
+      } else {
+        return incrementBarrierDAI(tryCount + 1, timeLimitMilliSec);
+      }
+    } catch (Exception e) {
+      LOG.log(Level.WARNING, "Failed to increment the DistributedAtomicInteger for Barrier. "
+          + "Will try again ...", e);
+      return incrementBarrierDAI(tryCount + 1, timeLimitMilliSec);
+    }
+  }
+
+  /**
+   * we use a DistributedAtomicInteger to count the number of workers
+   * that have reached to the barrier point
+   *
+   * Last worker to call this method and to increase the DistributedAtomicInteger,
+   * removes the barrier and lets all previous waiting workers be released
+   *
+   * other workers to call this method and to increase the DistributedAtomicInteger,
+   * enables the barrier by calling setBarrier method and wait
+   *
+   * it is enough to call setBarrier method by only the first worker,
+   * however, it does not harm calling by many workers
+   *
+   * if we let only the first worker to set the barrier with setBarrier method,
+   * then, the second worker may call this method after the dai is increased
+   * but before the setBarrier method is called. To prevent this,
+   * we may need to use a distributed InterProcessMutex.
+   * So, instead of using a distributed InterProcessMutex, we call this method many times
+   *
+   * DistributedAtomicInteger always increases.
+   * We check whether it is a multiple of numberOfWorkers in a job
+   * If so, all workers have reached the barrier
+   *
+   * this method may be called many times during a computation
+   *
+   * return true if all workers have reached the barrier and they are all released
+   * if timeout is reached, return false
+   * @param timeLimitMilliSec
+   * @return
+   */
+  @Override
+  public boolean waitOnBarrier(long timeLimitMilliSec) {
+
+    return incrementBarrierDAI(0, timeLimitMilliSec);
+  }
+
+
+  /**
    * close the children cache
    * close persistent node for this worker
    * close the connection
@@ -402,11 +474,11 @@ public class ZKDiscoverer implements IWorkerDiscoverer {
     if (client != null) {
       try {
         int noOfChildren =  childrenCache.getCurrentData().size();
-        thisNode.close();
+        jobZNode.close();
         CloseableUtils.closeQuietly(childrenCache);
         // if this is the last worker, delete znodes for the job
         if (noOfChildren == 1) {
-          LOG.log(Level.INFO, "This is the last worker to finish. Deleting job znodes.");
+          LOG.log(Level.INFO, "This is the last worker to finish. Deleting the job znodes.");
           ZKUtil.deleteJobZNodes(config, client, jobName);
         }
         CloseableUtils.closeQuietly(client);

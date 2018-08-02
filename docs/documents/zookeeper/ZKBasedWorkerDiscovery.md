@@ -1,67 +1,71 @@
 # ZooKeeper based Worker Discovery
 Ahmet Uyar
 
-We designed a worker discovery and ID assignment system for multi-worker jobs 
-in cluster environments that use a ZooKeeper server.
+We designed a worker discovery, worker synchronization and ID assignment method
+for multi-worker jobs in cluster environments that use a ZooKeeper server.
+
+We developed the following class:
+
+    edu.iu.dsc.tws.rsched.bootstrap.ZKController
+
+It implements the interface:
+
+    edu.iu.dsc.tws.common.discovery.IWorkerController
 
 We provide the following services: 
-* Assigning unique IDs to each worker in a job starting from zero and 
-increasing sequentially without any gaps.
-* Getting the list of all currently running workers in a job with their communication information. 
-* Getting the list of all joined running workers in a job including the ones that have already left.
-* Waiting for all workers to join the job.  
+* Assigning unique IDs to each worker from zero and increasing sequentially without any gaps.
+* Getting the list of all joined workers in a job including the ones that have already left.
+* Waiting for all workers to join the job.
+* Waiting all workers on a barrier point
+
+Above services are required by the implemented interface. 
+In addition, ZKController class provides the following service: 
+* Getting the list of all currently running workers in a job.
 
 ## Assumptions
-Each Twister2 job has a unique name: There can not be more than one Twister2 job running in the cluster with the same name. When we submit a job, if there is already a running job with the same name, that submission fails.
+Each Twister2 job has a unique name: There can not be more than one Twister2 job running 
+in the cluster with the same name. When we submit a job, 
+if there is already a running job with the same name, that submission must fail.
 
 Each Twister2 job may have any number of workers.
 
-## Trying to Create a Job When Another Running
-When a job is submitted by the client, we first check whether there is a znode crated for that job 
-on ZooKeeper server. If there is a znode with the same jobName, there are two possibilities:
-* A job with same name may be runing
-* Previously submitted and completed job is not cleaned properly
+When a Twister2 worker starts in a cluster, it knows its IP address and its port number. 
+Each worker is assigned at least one port number.
 
-If the job znode has some children, we assume that there is a job already running on the cluster 
-with same name. We print an error message and halt job submission. 
-The user first needs to execute job terminate and then can resubmit the job. 
-Or they can wait for the job to finish normally. Or they can submit the job with a different name. 
-
-If the job znode does not have any children, it means that 
-a previously executed job is not cleaned properly from ZooKeeper server. 
-We remove that job znode automatically and proceed with the job submission. 
-
-## Workers
-Twister2 Workers are assigned to run as containers in clusters by container management systems 
-such as Kubernetes and Mesos. Therefore, they can be initiated in any node around the cluster. 
-
-When a worker starts in a container, it also gets the IP address of the container/pod it is running in 
-and one port number to use to communicate with others. Therefore, each worker knows its own IP address 
-and will have at least one port number to use when it is started. 
-
-When a worker wants to communicate with other workers, it needs to know the IP addresses and port numbers of those workers. 
-So all workers should know the communication information of all other workers in a job. 
-### Worker IDs
-Each worker in a job is assigned a unique ID. Worker IDs start from zero and increases sequentially. 
-Workers get IDs in the order they created ZooKeeper znodes for themselves. 
-
-## Using ZooKeeper for Worker Discovery and Unique ID Assignment
-We use ZooKeeper server for workers to discover each other and get unique IDs for themselves. 
-
+## Main Idea
 ZooKeeper keeps data as a tree of znodes. Similar to the file system in computers. 
 Each znode is identified by its path from the root. Znodes can have children znodes. 
 All znodes can also hold some data. 
 
-We create a znode for each job. Then, each worker creates a child znode under this znode. 
-Workers provide all the necessary information about themselves in their znodes. 
-By monitoring the list of children znodes, all workers get the list of all other workers. 
+We create a znode for each job. We use the job name as the znode name, since the job names are unique. 
+The body of the job znode keeps the list of all joined workers in the job 
+including the ones that have already left.
+Each line of the job znode body has the data of a single worker. 
+The format of the job znode body is as follows:
 
-The first worker to register with ZooKeeper server will create a Znode for that job. 
-Then all workers create a child znode for themselves in that job znode. 
+    ip:port=workerID;
+    ip:port=workerID;
+    ....
+    ip:port=workerID;
 
-### Worker Names
-When creating child znodes on the job znode, each worker needs to have a unique name. 
-We use the <IP-Address>:<PortNumber> pair as the unique worker names. 
+When a worker joins the job, it first gets its unique ID. 
+Then, it updates the body of the job znode with its data. 
+It adds its line to the end of the body.
+
+Then, each worker creates a separate child znode under the job znode. 
+The name of the child znode is composed of workerIP and port number: workerIP:workerPort
+Since workerIP and workerPort pair is unique in each job, this prevents any collusion. 
+Each worker also adds its communication data to its child znode body as a single line:
+
+    ip:port=workerID;
+
+When a worker completes and leaves the job, its child znode is deleted. 
+However, it does not delete its data from the body of the job znode. 
+Therefore, children znodes provide data for the current list of workers in a job. 
+The body of the job znode provides data for all joined workers 
+including the ones that have already left.
+
+The first worker to register with the ZooKeeper server creates the znode for that job. 
 
 ### Removing Worker Znodes from ZooKeeper Server
 When a worker finishes the computation, its znode should be deleted from the ZooKeeper. 
@@ -71,9 +75,9 @@ its znode is deleted automatically.
 
 ### Removing Job Znode from ZooKeeper Server
 The job znode can not be ephemeral, since ephemeral znodes can not have children. 
-Therefore the last worker to finish computation needs to remove the job znode. 
-When workers have finished computation, they check whether they are the last worker, 
-if so, they remove the job znode. 
+Therefore, the last worker to finish computation needs to remove the job znode. 
+When workers have finished computation, they check whether they are the last worker. 
+If so, they remove the job znode. 
 
 ### Failing to Remove the Job Znode
 When the last worker fails and can not properly complete the computation, 
@@ -81,18 +85,23 @@ it can not delete the job znode. Then, the job znode may live on the ZooKeeper s
 after the job has completed. 
 
 In another scenario, when a worker fails, ZooKeeper server may take some time 
-to determine that failure. Currently it takes around 30 seconds for ZooKeeper server 
-to determine a failed client. Therefore, it is currently deleting failed worker znodes 
-after 30 seconds. During this time, if the last worker completes and leaves the job, 
-it thinks that it is not the last worker, so it does not delete the job znode. 
-So, the job znode may not be deleted. 
+to determine that failure. Currently, it takes 30 seconds for the ZooKeeper server 
+to determine a failed client. Therefore, failed worker znodes are deleted after 30 seconds. 
+During this time, if the last worker completes and leaves the job, 
+it thinks that it is not the last worker. So, it does not delete the job znode. 
+The job znode may live on the ZooKeeper server after the job has finished. 
+
+Yet in another case, if the last two workers leave almost at the same time 
+with a few milliseconds apart, both think that they are not the last one to leave. 
+Since, they have not received the worker leave updates yet. 
+So, the job znode may not be deleted.
 
 ### What happens When a Job znode is not deleted
 When a job znode is not deleted after the completion of a job, 
-it can be deleted when a new job is submitted with same name. 
+it can be deleted when a new job is submitted with the same name. 
 Or when a terminate job command is executed for that job. 
 
-### Getting Unique Worker IDs
+## Assigning Unique Worker IDs
 We use DistributedAtomicInteger class of Curator library to assign unique IDs to workers. 
 This class provides a shared integer counter that is attached to a znode 
 on the ZooKeeper server and shared by all workers in a job. 
@@ -100,27 +109,64 @@ When a worker joins the job, it increases its value by one and uses
 the previous value as its unique ID. Since the increment operation is atomic, 
 no two workers can get the same ID. We assign this ID only after a successful 
 increment of the shared variable. The counter starts from zero. 
-So the first worker gets the ID zero. 
+So, the first worker gets the ID zero. 
 
 ### Getting Worker IDs after Failures
 When a worker rejoins a job, it is assigned its previous ID. 
 This prevents ID sequences to have gaps in them in the case of failures. 
 
-When a worker joins a job, it first checks whether there is an ID generated for itself. 
-It checks the data of the job znode. All worker names and IDs are saved in the job znode. 
-If there is an ID for itself, it means that it is rejoining. 
-Therefore, it does not generate a unique ID. It uses the ID from the previous join. 
-If there is no ID, it generates a new ID and posts it to the job znode. 
+When a worker joins a job, it first checks the body of the job znode. 
+If there is an entry with this workers <IP>:<port> pair, 
+it means that this worker is rejoining the job after a failure.
+It uses the workerID from that line in the job znode body. 
+It does not generate a new unique ID for itself. 
 
-We use a distributed lock mechanism to update the data of the job znode. 
-Since more than one worker my update concurrently, 
-care needs to be taken to properly update. 
-When a worker wants to update the job znode data, 
-it first acquires the shared lock and updates the data. Then it releases the lock. 
+If there is no <IP>:<port> pair for this worker in the body of the job znode, 
+then it generates a new ID and posts it to the job znode body. 
+
+## Waiting Workers on a Barrier
+We use DistributedBarrier class of Curator library to make workers wait on a barrier point. 
+However, this class does not support the number of workers to wait. 
+We need to watch the waiting workers and signal the barrier to release the workers,
+when all workers arrived at the barrier. 
+
+We use a DistributedAtomicInteger object from Curator library to count the number of waiting workers 
+on the barrier point. Each worker increases the value of this counter by one, when they come to 
+the barrier point. After increasing this distributed counter, they start to wait 
+on the distributed barrier object. The last worker to arrive at the barrier point, 
+does not wait. Instead, it tells the barrier object to release all waiting workers.
+ 
+The last worker checks the value of the distributed counter, and if the counter value is a multiple of 
+the numberOfWorkers in the job, it understands that it is the last worker.
+
+Workers can wait multiple times on the barrier points during a job lifetime. 
+
+## Trying to Create a Job When Another Running
+When a Twister2 job is submitted by the client, 
+submitting client first must check whether there is a znode created for that job 
+on the ZooKeeper server. If there is a znode with the same jobName, 
+there are two possibilities:
+* Another job with the same name may be running
+* Previously submitted and completed job is not cleaned properly
+
+If the job znode has some children, it can be assumed that 
+there is a job already running on the cluster with the same name. 
+Job submission must fail. The user can submit the job with another name, or 
+can wait the running job to complete.
+
+If the job znode does not have any children, it means that 
+a previously executed job is not cleaned properly from ZooKeeper server. 
+Job submitting client can remove that job znode automatically and 
+proceed with the job submission.
+
+We provide a utility class to check whether there is a job znode on the ZooKeeper server
+and delete the job related znodes if necessary:
+
+    edu.iu.dsc.tws.rsched.bootstrap.ZKUtil
 
 ## Implementation Details:
 We use Apache Curator software to connect and manage communication between workers 
-and ZooKeeper servers.
+and the ZooKeeper server.
 
 ### Children Cache
 Curator library implements a client side cache of a znode children:  
@@ -141,12 +187,16 @@ It provides a shared counter that is attached to a znode. We create a znode
 for this counter with “-dai” postfix: <jobName>-dai
 
 ### Distributed Lock
-Curator library provides a distributed lock class:  
+Curator library provides a distributed lock class:
 
     org.apache.curator.framework.recipes.locks.InterProcessMutex
 
 The lock is attached to a znode on the server. No two clients can acquire a lock 
-attached to the same znode. Workers acquires the shared lock to update job node data. 
+attached to the same znode. Workers acquire the shared lock to update the job znode body.
+ 
+Since more than one worker may update the body of the job znode concurrently, 
+workers required to acquire this lock before updating the job znode body.  
+They release the lock after they updated it. 
 
 ## Usage
 When a worker starts, it first needs to create an instance of ZKDiscoverer class and 
@@ -161,7 +211,7 @@ the time limit has been reached.
 
 A sample usage can be found in the class:
 
-    edu.iu.dsc.tws.examples.ZKDiscovererExample.java
+    edu.iu.dsc.tws.examples.ZKControllerExample.java
 
 Its usage in the following class can also be examined for real usage:
 

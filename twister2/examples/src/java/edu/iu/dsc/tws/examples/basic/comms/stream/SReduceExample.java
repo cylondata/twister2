@@ -55,6 +55,17 @@ public class SReduceExample extends BenchWorker {
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(id, taskPlan,
         jobParameters.getTaskStages(), 0);
+    for (int t : tasksOfExecutor) {
+      finishedSources.put(t, false);
+    }
+    if (tasksOfExecutor.size() == 0) {
+      sourcesDone = true;
+    }
+
+    if (!taskPlan.getChannelsOfExecutor(id).contains(target)) {
+      reduceDone = true;
+    }
+
     // now initialize the workers
     for (int t : tasksOfExecutor) {
       // the map thread where data is produced
@@ -79,7 +90,9 @@ public class SReduceExample extends BenchWorker {
 
   @Override
   protected boolean isDone() {
-    return reduceDone;
+//    LOG.log(Level.INFO, String.format("%d Reduce %b sources %b pending %b",
+//        id, reduceDone, sourcesDone, reduce.hasPending()));
+    return reduceDone && sourcesDone && !reduce.hasPending();
   }
 
   public class FinalReduceReceiver implements ReduceReceiver {
@@ -106,12 +119,14 @@ public class SReduceExample extends BenchWorker {
   }
 
   public class IdentityFunction implements ReduceFunction {
+    private int count = 0;
     @Override
     public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     }
 
     @Override
     public Object reduce(Object t1, Object t2) {
+//      LOG.log(Level.INFO, String.format("%d Received %d", id, ++count));
       return t1;
     }
   }

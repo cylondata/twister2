@@ -86,6 +86,11 @@ public class JobMaster extends Thread {
    */
   private int numberOfWorkers;
 
+  /**
+   * BarrierMonitor object
+   */
+  private BarrierMonitor barrierMonitor;
+
   public JobMaster(Config config,
                    String masterAddress,
                    IJobTerminator jobTerminator,
@@ -117,6 +122,7 @@ public class JobMaster extends Thread {
         new RRServer(config, masterAddress, masterPort, looper, JOB_MASTER_ID, connectHandler);
 
     workerMonitor = new WorkerMonitor(config, this, rrServer, numberOfWorkers);
+    barrierMonitor = new BarrierMonitor(numberOfWorkers, rrServer);
 
     Network.Ping.Builder pingBuilder = Network.Ping.newBuilder();
     Network.WorkerStateChange.Builder stateChangeBuilder = Network.WorkerStateChange.newBuilder();
@@ -125,12 +131,16 @@ public class JobMaster extends Thread {
 
     ListWorkersRequest.Builder listWorkersBuilder = ListWorkersRequest.newBuilder();
     ListWorkersResponse.Builder listResponseBuilder = ListWorkersResponse.newBuilder();
+    Network.BarrierRequest.Builder barrierRequestBuilder = Network.BarrierRequest.newBuilder();
+    Network.BarrierResponse.Builder barrierResponseBuilder = Network.BarrierResponse.newBuilder();
 
     rrServer.registerRequestHandler(pingBuilder, workerMonitor);
     rrServer.registerRequestHandler(stateChangeBuilder, workerMonitor);
     rrServer.registerRequestHandler(stateChangeResponseBuilder, workerMonitor);
     rrServer.registerRequestHandler(listWorkersBuilder, workerMonitor);
     rrServer.registerRequestHandler(listResponseBuilder, workerMonitor);
+    rrServer.registerRequestHandler(barrierRequestBuilder, barrierMonitor);
+    rrServer.registerRequestHandler(barrierResponseBuilder, barrierMonitor);
 
     rrServer.start();
     looper.loop();
@@ -162,7 +172,7 @@ public class JobMaster extends Thread {
    */
   public void allWorkersCompleted() {
 
-    LOG.info("All workers have completed. JobMaster will stop.");
+    LOG.info("All workers have completed. JobMaster is stopping.");
     workersCompleted = true;
     looper.wakeup();
 

@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.net.NetworkInfo;
 import edu.iu.dsc.tws.common.net.tcp.TCPChannel;
@@ -36,7 +36,7 @@ public final class Network {
   private Network() {
   }
 
-  public static TWSChannel initializeChannel(Config config, IWorkerDiscoverer wController,
+  public static TWSChannel initializeChannel(Config config, IWorkerController wController,
                                              ResourcePlan resourcePlan) {
     if (config.getStringValue("twister2.network.channel.class").equals(
         "edu.iu.dsc.tws.comms.dfw.tcp.TWSTCPChannel")) {
@@ -46,7 +46,7 @@ public final class Network {
     }
   }
 
-  public static TWSNetwork initializeNetwork(Config config, IWorkerDiscoverer wController,
+  public static TWSNetwork initializeNetwork(Config config, IWorkerController wController,
                                              TaskPlan plan, ResourcePlan resourcePlan) {
     if (config.getStringValue("twister2.network.channel.class").equals(
         "edu.iu.dsc.tws.comms.dfw.tcp.TWSTCPChannel")) {
@@ -58,20 +58,20 @@ public final class Network {
   }
 
   private static TWSChannel initializeMPIChannel(Config config,
-                                                 IWorkerDiscoverer wController,
+                                                 IWorkerController wController,
                                                  ResourcePlan plan) {
     //first get the communication config file
     return new TWSMPIChannel(config, MPI.COMM_WORLD, plan.getThisId());
   }
 
   private static TWSNetwork initializeMPINetwork(Config config,
-                                                 IWorkerDiscoverer wController, TaskPlan plan) {
+                                                 IWorkerController wController, TaskPlan plan) {
     //first get the communication config file
     return new TWSNetwork(config, plan);
   }
 
   private static TWSChannel initializeTCPNetwork(Config config,
-                                                 IWorkerDiscoverer wController,
+                                                 IWorkerController wController,
                                                  ResourcePlan resourcePlan) {
     TCPChannel channel;
     int index = wController.getWorkerNetworkInfo().getWorkerID();

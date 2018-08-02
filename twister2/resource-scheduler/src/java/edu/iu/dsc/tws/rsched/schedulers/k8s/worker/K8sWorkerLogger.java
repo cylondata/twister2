@@ -221,11 +221,11 @@ public class K8sWorkerLogger extends Thread implements IWorkerLogger {
     Boolean timestamps = false;
 
     try {
-      call = WorkerDiscoverer.getCoreApi().readNamespacedPodLogCall(
+      call = WorkerController.getCoreApi().readNamespacedPodLogCall(
           podName, namespace, containerName, followLogStream, limitBytes, pretty,
           previouslyTerminated, sinceSeconds, tailLines, timestamps, null, null);
 
-//      call = WorkerDiscoverer.getCoreApi().readNamespacedPodLogCall(
+//      call = WorkerController.getCoreApi().readNamespacedPodLogCall(
 //          podName, namespace, containerName, followLogStream, limitBytes, pretty,
 //          previouslyTerminated, sinceSeconds, tailLines, timestamps,
 //          progressListener, progressRequestListener);

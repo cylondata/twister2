@@ -324,6 +324,14 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
     return OperationUtils.getIntegerListMap(router, instancePlan, destination);
   }
 
+  public boolean isComplete() {
+    boolean done = delegete.isComplete();
+    boolean needsFurtherProgress = OperationUtils.progressReceivers(delegete, lock, finalReceiver,
+        partialLock, partialReceiver);
+//    LOG.log(Level.INFO, String.format("Done %b needsFurther %b", done, needsFurtherProgress));
+    return done && !needsFurtherProgress;
+  }
+
   @Override
   public boolean progress() {
     OperationUtils.progressReceivers(delegete, lock, finalReceiver, partialLock, partialReceiver);

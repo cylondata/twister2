@@ -30,14 +30,25 @@ public final class OperationUtils {
   private OperationUtils() {
   }
 
-  public static void progressReceivers(ChannelDataFlowOperation delegete, Lock lock,
+  /**
+   * Progress the receivers and return true if needs further progress
+   * @param delegate
+   * @param lock
+   * @param finalReceiver
+   * @param partialLock
+   * @param partialReceiver
+   * @return true if need further progress
+   */
+  public static boolean progressReceivers(ChannelDataFlowOperation delegate, Lock lock,
                                        MessageReceiver finalReceiver, Lock partialLock,
                                        MessageReceiver partialReceiver) {
+    boolean finalNeedsProgress = false;
+    boolean partialNeedsProgress = false;
     try {
-      delegete.progress();
+      delegate.progress();
       if (lock.tryLock()) {
         try {
-          finalReceiver.progress();
+          finalNeedsProgress = finalReceiver.progress();
         } finally {
           lock.unlock();
         }
@@ -45,7 +56,7 @@ public final class OperationUtils {
 
       if (partialLock.tryLock()) {
         try {
-          partialReceiver.progress();
+          partialNeedsProgress = partialReceiver.progress();
         } finally {
           partialLock.unlock();
         }
@@ -54,6 +65,7 @@ public final class OperationUtils {
       LOG.log(Level.SEVERE, "un-expected error", t);
       throw new RuntimeException(t);
     }
+    return finalNeedsProgress || partialNeedsProgress;
   }
 
   public static Map<Integer, List<Integer>> getIntegerListMap(InvertedBinaryTreeRouter router,
