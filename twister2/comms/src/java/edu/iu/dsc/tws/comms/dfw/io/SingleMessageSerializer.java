@@ -98,29 +98,34 @@ public class SingleMessageSerializer implements MessageSerializer {
       if (sendMessage.serializedState() == OutMessage.SendState.SERIALIZED) {
         ChannelMessage channelMessage = sendMessage.getMPIMessage();
         SerializeState state = sendMessage.getSerializationState();
-        int totalBytes = state.getTotalBytes();
-        channelMessage.getBuffers().get(0).getByteBuffer().putInt(HEADER_SIZE - Integer.BYTES,
-            totalBytes);
+        if (!channelMessage.isHeaderSent()) {
+          int totalBytes = state.getTotalBytes();
+          channelMessage.getBuffers().get(0).getByteBuffer().putInt(HEADER_SIZE - Integer.BYTES,
+              totalBytes);
 
-        MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
-            sendMessage.getEdge(), totalBytes);
-        builder.destination(sendMessage.getDestintationIdentifier());
-        sendMessage.getMPIMessage().setHeader(builder.build());
-        state.setTotalBytes(0);
-
+          MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
+              sendMessage.getEdge(), totalBytes);
+          builder.destination(sendMessage.getDestintationIdentifier());
+          sendMessage.getMPIMessage().setHeader(builder.build());
+          state.setTotalBytes(0);
+          channelMessage.setHeaderSent(true);
+        }
         // mark the original message as complete
         channelMessage.setComplete(true);
       } else if (sendMessage.serializedState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
         ChannelMessage channelMessage = sendMessage.getMPIMessage();
         SerializeState state = sendMessage.getSerializationState();
-        int totalBytes = state.getData().length;
-        channelMessage.getBuffers().get(0).getByteBuffer().putInt(HEADER_SIZE - Integer.BYTES,
-            totalBytes);
+        if (!channelMessage.isHeaderSent()) {
+          int totalBytes = state.getData().length;
+          channelMessage.getBuffers().get(0).getByteBuffer().putInt(HEADER_SIZE - Integer.BYTES,
+              totalBytes);
 
-        MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
-            sendMessage.getEdge(), totalBytes);
-        builder.destination(sendMessage.getDestintationIdentifier());
-        sendMessage.getMPIMessage().setHeader(builder.build());
+          MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
+              sendMessage.getEdge(), totalBytes);
+          builder.destination(sendMessage.getDestintationIdentifier());
+          sendMessage.getMPIMessage().setHeader(builder.build());
+          channelMessage.setHeaderSent(true);
+        }
         state.setTotalBytes(0);
         LOG.fine("Message Partially serialized");
 

@@ -56,6 +56,10 @@ public class ChannelMessage {
   private MessageHeader header;
 
   /**
+   * Keeps track of whether buffer containing the buffer was sent or not
+   */
+  private boolean headerSent;
+  /**
    * Keep weather the message has been fully built
    */
   private boolean complete = false;
@@ -260,4 +264,13 @@ public class ChannelMessage {
   public MessageType getKeyType() {
     return keyType;
   }
+
+  public boolean isHeaderSent() {
+    return headerSent;
+  }
+
+  public void setHeaderSent(boolean headerSent) {
+    this.headerSent = headerSent;
+  }
+
 }
