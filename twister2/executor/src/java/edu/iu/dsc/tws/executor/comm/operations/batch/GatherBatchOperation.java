@@ -128,8 +128,9 @@ public class GatherBatchOperation extends AbstractParallelOperation {
 
     }
 
-    public void progress() {
-
+    @Override
+    public boolean progress() {
+      return true;
     }
   }
 

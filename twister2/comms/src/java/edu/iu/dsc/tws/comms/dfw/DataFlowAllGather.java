@@ -105,7 +105,7 @@ public class DataFlowAllGather implements DataFlowOperation {
   }
 
   @Override
-  public synchronized void progress() {
+  public synchronized boolean progress() {
     try {
       broadcast.progress();
       reduce.progress();
@@ -113,6 +113,7 @@ public class DataFlowAllGather implements DataFlowOperation {
       LOG.log(Level.SEVERE, "un-expected error", t);
       throw new RuntimeException(t);
     }
+    return true;
   }
 
   @Override

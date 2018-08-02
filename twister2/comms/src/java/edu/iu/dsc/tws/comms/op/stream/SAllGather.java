@@ -34,4 +34,8 @@ public class SAllGather {
   public boolean reduce(int src, Object message, int flags) {
     return gather.send(src, message, flags);
   }
+
+  public boolean progress() {
+    return gather.progress();
+  }
 }

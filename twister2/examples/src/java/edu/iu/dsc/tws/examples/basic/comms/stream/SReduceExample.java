@@ -15,6 +15,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -32,6 +33,8 @@ public class SReduceExample extends BenchWorker {
 
   private SReduce reduce;
 
+  private boolean reduceDone = false;
+
   @Override
   protected void execute() {
     TaskPlan taskPlan = Utils.createStageTaskPlan(config, resourcePlan,
@@ -46,11 +49,23 @@ public class SReduceExample extends BenchWorker {
 
     // create the communication
     reduce = new SReduce(communicator, taskPlan, sources, target,
-        new IdentityFunction(), new FinalReduceReceiver(), MessageType.INTEGER);
+        new IdentityFunction(), new FinalReduceReceiver(jobParameters.getIterations()),
+        MessageType.INTEGER);
 
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(id, taskPlan,
         jobParameters.getTaskStages(), 0);
+    for (int t : tasksOfExecutor) {
+      finishedSources.put(t, false);
+    }
+    if (tasksOfExecutor.size() == 0) {
+      sourcesDone = true;
+    }
+
+    if (!taskPlan.getChannelsOfExecutor(id).contains(target)) {
+      reduceDone = true;
+    }
+
     // now initialize the workers
     for (int t : tasksOfExecutor) {
       // the map thread where data is produced
@@ -75,17 +90,30 @@ public class SReduceExample extends BenchWorker {
 
   @Override
   protected boolean isDone() {
-    return false;
+//    LOG.log(Level.INFO, String.format("%d Reduce %b sources %b pending %b",
+//        id, reduceDone, sourcesDone, reduce.hasPending()));
+    return reduceDone && sourcesDone && !reduce.hasPending();
   }
 
   public class FinalReduceReceiver implements ReduceReceiver {
+    private int count = 0;
+    private int expected;
+
+    public FinalReduceReceiver(int expected) {
+      this.expected = expected;
+    }
+
     @Override
     public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     }
 
     @Override
     public boolean receive(int target, Object object) {
-      LOG.info("Received final input");
+      count++;
+      if (count == expected) {
+        LOG.log(Level.INFO, String.format("Target %d received count %d", target, count));
+        reduceDone = true;
+      }
       return true;
     }
   }
@@ -98,10 +126,7 @@ public class SReduceExample extends BenchWorker {
 
     @Override
     public Object reduce(Object t1, Object t2) {
-      count++;
-      if (count % 100 == 0) {
-        LOG.info(String.format("Partial received %d", count));
-      }
+//      LOG.log(Level.INFO, String.format("%d Received %d", id, ++count));
       return t1;
     }
   }

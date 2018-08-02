@@ -50,8 +50,8 @@ public class ReduceBatchFinalReceiver extends ReduceBatchReceiver {
   /**
    * Method used to progress work
    */
-  public void progress() {
-    //LOG.log(Level.INFO, String.format("Progress Calls"));
+  public boolean progress() {
+    boolean needsFurtherProgress = false;
     for (int t : messages.keySet()) {
       if (batchDone.get(t)) {
         continue;
@@ -64,18 +64,25 @@ public class ReduceBatchFinalReceiver extends ReduceBatchReceiver {
       Map<Integer, Integer> countMap = counts.get(t);
       Map<Integer, Integer> totalCountMap = totalCounts.get(t);
       boolean found = true;
+
+      boolean moreThanOne = false;
       for (Map.Entry<Integer, Queue<Object>> e : map.entrySet()) {
-        /*LOG.info("Finish St : " + finishedForTarget.get(e.getKey()) + ", eval size : "
-            + e.getValue().size());*/
         if (e.getValue().size() == 0 && !finishedForTarget.get(e.getKey())) {
           found = false;
+        } else if (e.getValue().size() > 0) {
+          moreThanOne = true;
         }
 
         if (!finishedForTarget.get(e.getKey())) {
           allFinished = false;
         }
       }
-      //LOG.log(Level.INFO, String.format("All Finished @start found : %s ", allFinished));
+
+      // if we have queues with 0 and more than zero we need further progress
+      if (!found && moreThanOne) {
+        needsFurtherProgress = true;
+      }
+
       if (found) {
         List<Object> out = new ArrayList<>();
         for (Map.Entry<Integer, Queue<Object>> e : map.entrySet()) {
@@ -91,7 +98,6 @@ public class ReduceBatchFinalReceiver extends ReduceBatchReceiver {
           e.setValue(i - 1);
         }
         finalMessages.get(t).addAll(out);
-        //LOG.log(Level.INFO, String.format("All Finished  @end ofFound: %s ", allFinished));
       } else {
         allFinished = false;
       }
@@ -108,13 +114,11 @@ public class ReduceBatchFinalReceiver extends ReduceBatchReceiver {
             previous = reduceFunction.reduce(previous, current);
           }
         }
-        LOG.info("All Messages Sent and Calling OnFinish");
-        reduceReceiver.receive(t, previous);        // we can call on finish at this point
-
+        reduceReceiver.receive(t, previous);
+        // we can call on finish at this point
         onFinish(t);
-
-
       }
     }
+    return needsFurtherProgress;
   }
 }

@@ -116,8 +116,8 @@ public class GatherStreamingOperation extends AbstractParallelOperation {
 
     }
 
-    public void progress() {
-
+    public boolean progress() {
+      return true;
     }
   }
 

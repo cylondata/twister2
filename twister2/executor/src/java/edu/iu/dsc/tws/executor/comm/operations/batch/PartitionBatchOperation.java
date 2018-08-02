@@ -156,7 +156,8 @@ public class PartitionBatchOperation extends AbstractParallelOperation {
     }
 
     @Override
-    public void progress() {
+    public boolean progress() {
+      return true;
     }
   }
 

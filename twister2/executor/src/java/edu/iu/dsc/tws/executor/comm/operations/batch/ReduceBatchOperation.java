@@ -128,8 +128,8 @@ public class ReduceBatchOperation extends AbstractParallelOperation {
     }
 
     @Override
-    public void progress() {
-      //LOG.log(Level.INFO, String.format("Comes to Progress "));
+    public boolean progress() {
+      return true;
     }
 
     @Override

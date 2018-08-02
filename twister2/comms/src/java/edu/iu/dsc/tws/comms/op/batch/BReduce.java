@@ -29,8 +29,8 @@ public class BReduce {
                  Set<Integer> sources, int destination, ReduceFunction fnc,
                  ReduceReceiver rcvr, MessageType dataType) {
     reduce = new DataFlowReduce(comm.getChannel(), sources, destination,
-        new ReduceBatchPartialReceiver(destination, fnc),
-        new ReduceBatchFinalReceiver(fnc, rcvr));
+        new ReduceBatchFinalReceiver(fnc, rcvr),
+        new ReduceBatchPartialReceiver(destination, fnc));
     reduce.init(comm.getConfig(), dataType, plan, comm.nextEdge());
   }
 
@@ -38,11 +38,15 @@ public class BReduce {
     return reduce.send(src, message, flags);
   }
 
+  public boolean hasPending() {
+    return !reduce.isComplete();
+  }
+
   public void finish(int src) {
     reduce.finish(src);
   }
 
-  public void progress() {
-    reduce.progress();
+  public boolean progress() {
+    return reduce.progress();
   }
 }

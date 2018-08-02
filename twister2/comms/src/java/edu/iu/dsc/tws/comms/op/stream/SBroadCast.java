@@ -35,7 +35,7 @@ public class SBroadCast {
     return partition.send(source, message, flags);
   }
 
-  public void progress() {
-    partition.progress();
+  public boolean progress() {
+    return partition.progress();
   }
 }

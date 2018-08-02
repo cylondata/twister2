@@ -111,8 +111,8 @@ public class PartitionByMultiByteStreamingOperation extends AbstractParallelOper
     }
 
     @Override
-    public void progress() {
-
+    public boolean progress() {
+      return true;
     }
   }
 }

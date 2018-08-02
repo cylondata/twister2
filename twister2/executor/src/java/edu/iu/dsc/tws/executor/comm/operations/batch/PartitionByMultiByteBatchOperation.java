@@ -123,8 +123,8 @@ public class PartitionByMultiByteBatchOperation extends AbstractParallelOperatio
     }
 
     @Override
-    public void progress() {
-
+    public boolean progress() {
+      return true;
     }
   }
 }

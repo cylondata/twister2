@@ -4,7 +4,6 @@ TCP Communication
 TCP functionality is implemented in the common package. It is based on non blocking network IO model
 with Java NIO.
 
-
 We support two modes of communication in the TCP implementation, namely Request/Response mode and
 generic messaging mode. 
 
@@ -41,7 +40,7 @@ message header.
 So each message is preceded by
 
 ```bash
-  4 byte integer length \ 4 byte integer edge |4 byte request id length | request id | 4 byte message name length | message name  
+  4 byte integer length \ 4 byte integer edge | 32 bytes request id | 4 byte message name length | message name  
 ```
 
 When we send a message, a callback is registered to receive the responses. The requests and responces
@@ -73,10 +72,10 @@ Here is a psuedo code of how to use the messaging mode.
   channel.startConnections()
   
   // now post the required number of buffers
-  TCPMessage rcv = channel.iRecv(recv_buffer, recv_edge)
+  TCPMessage rcv = channel.iRecv(recv_buffer, recv_edge, workerId)
   
   // now send messages
-  TCPMessage send = channel.iSend(send_buffer, send_edge)
+  TCPMessage send = channel.iSend(send_buffer, send_edge, workerID)
   
   // now we need to progress the select handler
   channel.progress()

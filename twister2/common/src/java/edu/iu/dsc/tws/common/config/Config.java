@@ -239,7 +239,9 @@ public class Config {
   public Double getDoubleValue(String key, double defaultValue) {
     Object value = get(key);
     if (value != null) {
-      if (value instanceof Integer || value instanceof Double) {
+      if (value instanceof Integer) {
+        return ((Integer) value).doubleValue();
+      } else if (value instanceof Double) {
         return (Double) value;
       } else if (value instanceof String) {
         return Double.valueOf((String) value);

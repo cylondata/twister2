@@ -54,7 +54,7 @@ public class MesosDockerWorker {
   public static void main(String[] args) throws Exception {
 
 
-    Thread.sleep(5000);
+    Thread.sleep(20000);
     //gets the docker home directory
     String homeDir = System.getenv("HOME");
     int workerId = Integer.parseInt(System.getenv("WORKER_ID"));
@@ -126,7 +126,8 @@ public class MesosDockerWorker {
 
       for (int i = 1; i < workerCount; i++) {
 
-        writer.write(workerNetworkInfoList.get(i).getWorkerIP().getHostAddress() + "\n");
+        writer.write(workerNetworkInfoList.get(i).getWorkerIP().getHostAddress()
+            + "\n");
 
         System.out.println("host ip: "
             + workerNetworkInfoList.get(i).getWorkerIP().getHostAddress());
@@ -134,8 +135,10 @@ public class MesosDockerWorker {
 
       writer.close();
       System.out.println("Before mpirun");
-      String[] command = {"mpirun", "-allow-run-as-root", "-np",
-          (workerController.getNumberOfWorkers() - 1) + "",
+      //working one
+
+      String[] command = {"mpirun", "-allow-run-as-root", "-npernode",
+          "1", "--mca", "btl_tcp_if_include", "eth0",
           "--hostfile", "/twister2/hostFile", "java", "-cp",
           "twister2-job/libexamples-java.jar",
           "edu.iu.dsc.tws.examples.basic.BasicMpiJob", ">mpioutfile"};
@@ -148,8 +151,6 @@ public class MesosDockerWorker {
       System.out.println("Finished");
     }
 
-
-    Thread.sleep(20000);
     jobMasterClient.sendWorkerCompletedMessage();
   }
 

@@ -11,12 +11,14 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.basic.comms;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
@@ -44,9 +46,13 @@ public abstract class BenchWorker implements IWorker {
 
   protected Communicator communicator;
 
+  protected Map<Integer, Boolean> finishedSources = new HashMap<>();
+
+  protected boolean sourcesDone = false;
+
   @Override
   public void init(Config cfg, int containerId, ResourcePlan plan,
-                   IWorkerDiscoverer workerController, IPersistentVolume persistentVolume,
+                   IWorkerController workerController, IPersistentVolume persistentVolume,
                    IVolatileVolume volatileVolume) {
     // create the job parameters
     this.jobParameters = JobParameters.build(cfg);
@@ -93,7 +99,7 @@ public abstract class BenchWorker implements IWorker {
 
     @Override
     public void run() {
-      LOG.log(Level.INFO, "Starting map worker: " + id);
+      LOG.log(Level.INFO, "Starting map worker: " + id + " task: " + task);
       int[] data = DataGenerator.generateIntData(jobParameters.getSize());
       for (int i = 0; i < jobParameters.getIterations(); i++) {
         // lets generate a message
@@ -104,6 +110,15 @@ public abstract class BenchWorker implements IWorker {
         sendMessages(task, data, flag);
       }
       LOG.info(String.format("%d Done sending", id));
+      finishedSources.put(task, true);
+      boolean allDone = true;
+      for (Map.Entry<Integer, Boolean> e : finishedSources.entrySet()) {
+        if (!e.getValue()) {
+          allDone = false;
+        }
+      }
+      sourcesDone = allDone;
+//      LOG.info(String.format("%d Sources done %s, %b", id, finishedSources, sourcesDone));
     }
   }
 }

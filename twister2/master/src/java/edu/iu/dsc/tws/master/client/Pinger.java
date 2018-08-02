@@ -52,6 +52,8 @@ public class Pinger implements MessageHandler {
 
   public void sendPingMessage() {
 
+    lastPingTime = System.currentTimeMillis();
+
     Network.Ping ping = Network.Ping.newBuilder()
         .setWorkerID(thisWorker.getWorkerID())
         .setPingMessage("Ping Message From the Worker to the Job Master")
@@ -59,7 +61,6 @@ public class Pinger implements MessageHandler {
         .build();
 
     requestID = rrClient.sendRequest(ping);
-    lastPingTime = System.currentTimeMillis();
 
     if (requestID == null) {
       LOG.severe("When sending Ping message, the requestID returned null.");

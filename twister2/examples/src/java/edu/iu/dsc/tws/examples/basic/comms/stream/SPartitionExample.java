@@ -23,45 +23,48 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.op.stream.SBroadCast;
+import edu.iu.dsc.tws.comms.op.LoadBalanceDestinationSelector;
+import edu.iu.dsc.tws.comms.op.stream.SPartition;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.basic.comms.BenchWorker;
 
-public class SBroadcastExample extends BenchWorker {
-  private static final Logger LOG = Logger.getLogger(SBroadcastExample.class.getName());
+public class SPartitionExample extends BenchWorker {
+  private static final Logger LOG = Logger.getLogger(SPartitionExample.class.getName());
 
-  private SBroadCast bcast;
-
+  private SPartition partition;
   @Override
   protected void execute() {
     TaskPlan taskPlan = Utils.createStageTaskPlan(config, resourcePlan,
         jobParameters.getTaskStages());
 
+    Set<Integer> sources = new HashSet<>();
     Set<Integer> targets = new HashSet<>();
     Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
     for (int i = 0; i < noOfSourceTasks; i++) {
-      targets.add(i);
+      sources.add(i);
     }
-    int source = noOfSourceTasks;
+    Integer noOfTargetTasks = jobParameters.getTaskStages().get(1);
+    for (int i = 0; i < noOfTargetTasks; i++) {
+      targets.add(noOfSourceTasks + i);
+    }
 
     // create the communication
-    bcast = new SBroadCast(communicator, taskPlan, source, targets,
-        MessageType.INTEGER, new BCastReceiver());
-
+    partition = new SPartition(communicator, taskPlan, sources, targets,
+        MessageType.INTEGER, new BCastReceiver(), new LoadBalanceDestinationSelector());
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(id, taskPlan,
         jobParameters.getTaskStages(), 0);
-
-    // the map thread where data is produced
-    if (id == 0) {
-      Thread mapThread = new Thread(new MapWorker(source));
+    // now initialize the workers
+    for (int t : tasksOfExecutor) {
+      // the map thread where data is produced
+      Thread mapThread = new Thread(new MapWorker(t));
       mapThread.start();
     }
   }
 
   @Override
   protected void progressCommunication() {
-    bcast.progress();
+    partition.progress();
   }
 
   @Override
@@ -71,17 +74,12 @@ public class SBroadcastExample extends BenchWorker {
 
   @Override
   protected boolean sendMessages(int task, Object data, int flag) {
-    while (!bcast.bcast(task, data, flag)) {
-      // lets wait a litte and try again
-      bcast.progress();
-    }
-    return true;
+    return false;
   }
 
   public class BCastReceiver implements MessageReceiver {
     @Override
     public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-
     }
 
     @Override

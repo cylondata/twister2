@@ -52,13 +52,23 @@ public interface DataFlowOperation {
 
   /**
    * Progress the pending dataflow operations
+   *
+   * @return true if there is more messages to progress, unless return false
    */
-  void progress();
+  boolean progress();
 
   /**
    * Clean up the resources
    */
   void close();
+
+  /**
+   * Weather the operation doesn't have any pending sends or receives
+   * @return is complete
+   */
+  default boolean isComplete() {
+    return false;
+  }
 
   /**
    * If this is a larger transfer of dataflow style, we need to finish

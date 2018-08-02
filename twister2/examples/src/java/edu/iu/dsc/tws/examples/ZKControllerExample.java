@@ -18,16 +18,16 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
-import edu.iu.dsc.tws.rsched.bootstrap.ZKDiscoverer;
+import edu.iu.dsc.tws.rsched.bootstrap.ZKController;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKUtil;
 
-public final class ZKDiscovererExample {
-  public static final Logger LOG = Logger.getLogger(ZKDiscovererExample.class.getName());
+public final class ZKControllerExample {
+  public static final Logger LOG = Logger.getLogger(ZKControllerExample.class.getName());
 
-  private ZKDiscovererExample() { }
+  private ZKControllerExample() { }
 
   /**
-   * example usage of ZKDiscoverer class
+   * example usage of ZKController class
    * Two actions supported:
    *   join: join a Job znode
    *   delete: delete a Job znode
@@ -78,18 +78,9 @@ public final class ZKDiscovererExample {
         .build();
   }
 
-  public static void sleeeep(long duration) {
-
-    try {
-      Thread.sleep(duration);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
-  }
-
   public static void printUsage() {
     LOG.info("Usage:\n"
-        + "java ZKDiscovererExample zkAddress action numberOfWorkers\n"
+        + "java ZKControllerExample zkAddress action numberOfWorkers\n"
         + "\taction can be: join, delete\n"
         + "\tnumberOfWorkers is not needed for delete");
   }
@@ -104,11 +95,17 @@ public final class ZKDiscovererExample {
     }
   }
 
+  /**
+   * an example usage of ZKController class
+   * @param jobName
+   * @param numberOfWorkers
+   * @param cnfg
+   */
   public static void simulateWorker(String jobName, int numberOfWorkers, Config cnfg) {
     int port = 1000 + (int) (Math.random() * 1000);
     String workerAddress = "localhost:" + port;
 
-    ZKDiscoverer zkController = new ZKDiscoverer(cnfg, jobName, workerAddress, numberOfWorkers);
+    ZKController zkController = new ZKController(cnfg, jobName, workerAddress, numberOfWorkers);
     zkController.initialize();
 
     List<WorkerNetworkInfo> workerList = zkController.getWorkerList();
@@ -119,9 +116,48 @@ public final class ZKDiscovererExample {
     workerList = zkController.waitForAllWorkersToJoin(100000);
     LOG.info(WorkerNetworkInfo.workerListAsString(workerList));
 
-    sleeeep((long) (Math.random() * 1000));
+    sleeeep((long) (Math.random() * 10000));
 
+    LOG.info("Waiting on the first barrier -------------------------- ");
+    long timeLimit = 200000;
+    boolean allWorkersReachedBarrier = zkController.waitOnBarrier(timeLimit);
+    if (allWorkersReachedBarrier) {
+      LOG.info("All workers reached the barrier. Proceeding.");
+    } else {
+      LOG.info("Not all workers reached the barrier on the given timelimit: " + timeLimit + "ms"
+          + " Exiting ....... ");
+      zkController.close();
+      return;
+    }
+
+    sleeeep((long) (Math.random() * 10000));
+
+    LOG.info("Waiting on the second barrier -------------------------- ");
+    allWorkersReachedBarrier = zkController.waitOnBarrier(timeLimit);
+    if (allWorkersReachedBarrier) {
+      LOG.info("All workers reached the barrier. Proceeding.");
+    } else {
+      LOG.info("Not all workers reached the barrier on the given timelimit: " + timeLimit + "ms"
+          + " Exiting ....... ");
+      zkController.close();
+      return;
+    }
+
+    // sleep some random amount of time before closing
+    // this is to prevent all workers to close almost at the same time
+    sleeeep((long) (Math.random() * 2000));
     zkController.close();
+  }
+
+  public static void sleeeep(long duration) {
+
+    LOG.info("Sleeping " + duration + "ms .....");
+
+    try {
+      Thread.sleep(duration);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
   }
 
 }

@@ -114,7 +114,7 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
   /**
    * Method used to progress work
    */
-  public void progress() {
+  public boolean progress() {
     for (int t : messages.keySet()) {
       if (batchDone.get(t)) {
         continue;
@@ -182,6 +182,7 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
         onFinish(t);
       }
     }
+    return true;
   }
 
   public boolean isStoreBased() {

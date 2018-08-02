@@ -48,6 +48,8 @@ public interface MessageReceiver {
 
   /**
    * This method will be called by the progress
+   *
+   * @return true if needs further progress
    */
-  void progress();
+  boolean progress();
 }

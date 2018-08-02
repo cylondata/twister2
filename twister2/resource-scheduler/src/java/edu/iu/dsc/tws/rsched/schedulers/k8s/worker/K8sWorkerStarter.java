@@ -17,7 +17,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
@@ -45,6 +45,7 @@ public final class K8sWorkerStarter {
   private static int workerID = -1; // -1 means, not initialized
   private static WorkerNetworkInfo workerNetworkInfo;
   private static JobMasterClient jobMasterClient;
+  private static String jobName = null;
 
   private K8sWorkerStarter() { }
 
@@ -57,6 +58,10 @@ public final class K8sWorkerStarter {
     int workerPort = Integer.parseInt(System.getenv(K8sEnvVariables.WORKER_PORT + ""));
     String containerName = System.getenv(K8sEnvVariables.CONTAINER_NAME + "");
     String jobMasterIP = System.getenv(K8sEnvVariables.JOB_MASTER_IP + "");
+    jobName = System.getenv(K8sEnvVariables.JOB_NAME + "");
+    if (jobName == null) {
+      throw new RuntimeException("JobName is null");
+    }
 
     // load the configuration parameters from configuration directory
     String configDir = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY + "/"
@@ -100,7 +105,6 @@ public final class K8sWorkerStarter {
     K8sWorkerUtils.initWorkerLogger(workerID, pv, config);
 
     // read job description file
-    String jobName = SchedulerContext.jobName(config);
     String jobDescFileName = SchedulerContext.createJobDescriptionFileName(jobName);
     jobDescFileName = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY + "/" + jobDescFileName;
     JobAPI.Job job = JobUtils.readJobFile(null, jobDescFileName);
@@ -109,7 +113,8 @@ public final class K8sWorkerStarter {
     // add any configuration from job file to the config object
     // if there are the same config parameters in both,
     // job file configurations will override
-    config = K8sWorkerUtils.overrideConfigs(job, config);
+    config = JobUtils.overrideConfigs(job, config);
+    config = JobUtils.updateConfigs(job, config);
 
     LOG.info("Worker information summary: \n"
         + "workerID: " + workerID + "\n"
@@ -136,7 +141,7 @@ public final class K8sWorkerStarter {
   /**
    * start the Worker class specified in conf files
    */
-  public static void startWorker(IWorkerDiscoverer workerController,
+  public static void startWorker(IWorkerController workerController,
                                  IPersistentVolume pv) {
 
     String workerClass = SchedulerContext.containerClass(config);
@@ -168,7 +173,6 @@ public final class K8sWorkerStarter {
    * @return
    */
   public static ResourcePlan generateResourcePlan() {
-    String jobName = Context.jobName(config);
     int numberOfWorkers = Context.workerInstances(config);
     int workersPerPod = KubernetesContext.workersPerPod(config);
     int numberOfPods = numberOfWorkers / workersPerPod;
