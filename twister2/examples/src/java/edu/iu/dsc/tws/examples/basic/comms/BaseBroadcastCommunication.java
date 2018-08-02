@@ -155,18 +155,10 @@ public class BaseBroadcastCommunication implements IContainer, IWorker {
         IntData data = generateData();
         data.setId(i);
         // lets generate a message
-//        LOG.info("Sending message from task:" + NO_OF_TASKS);
         while (!broadcast.send(NO_OF_TASKS, data, 0)) {
           // lets wait a litte and try again
           broadcast.progress();
-//          try {
-//            Thread.sleep(1);
-//          } catch (InterruptedException e) {
-//            e.printStackTrace();
-//          }
         }
-//        LOG.info(String.format("%d sending from %d", id, NO_OF_TASKS)
-//            + " count: " + sendCount++);
         sendCount++;
         Thread.yield();
       }

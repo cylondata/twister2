@@ -91,6 +91,13 @@ public class PartitionPartialReceiver implements MessageReceiver {
    */
   private Set<Integer> finishedDestinations = new HashSet<>();
 
+  /**
+   * Progress attempts without sending
+   */
+  private int progressAttempts = 0;
+
+  private int counts = 0;
+
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     lowWaterMark = DataFlowContext.getNetworkPartitionMessageGroupLowWaterMark(cfg);
@@ -116,36 +123,57 @@ public class PartitionPartialReceiver implements MessageReceiver {
       return false;
     }
 
-    dests.add(object);
-
-    if (dests.size() > lowWaterMark) {
-      lock.lock();
-      try {
-        readyToSend.put(destination, new ArrayList<>(dests));
-        dests.clear();
-      } finally {
-        lock.unlock();
+    lock.lock();
+    try {
+      dests.add(object);
+      if (dests.size() > lowWaterMark) {
+        swapToReady(destination, dests);
       }
+    } finally {
+      lock.unlock();
     }
     return true;
   }
 
+  private void swapToReady(int destination, List<Object> dests) {
+    if (!readyToSend.containsKey(destination)) {
+      readyToSend.put(destination, new ArrayList<>(dests));
+    } else {
+      List<Object> ready = readyToSend.get(destination);
+      ready.addAll(dests);
+    }
+    dests.clear();
+  }
+
   @Override
   public boolean progress() {
+    boolean needsFurtherProgress = false;
     lock.lock();
+
+    if (progressAttempts > 2) {
+      for (Map.Entry<Integer, List<Object>> e : destinationMessages.entrySet()) {
+        if (e.getValue().size() > 0) {
+          swapToReady(e.getKey(), e.getValue());
+        }
+      }
+      progressAttempts = 0;
+    }
+
     try {
       if (finish && readyToSend.isEmpty() && finishedDestinations.size() != destinations.size()) {
         for (int dest : destinations) {
           if (!finishedDestinations.contains(dest)) {
             if (operation.sendPartial(source, new byte[1], MessageFlags.EMPTY, dest)) {
               finishedDestinations.add(dest);
+              progressAttempts = 0;
             } else {
+              needsFurtherProgress = true;
               // no point in going further
               break;
             }
           }
         }
-        return true;
+        return needsFurtherProgress;
       }
 
       Iterator<Map.Entry<Integer, List<Object>>> it = readyToSend.entrySet().iterator();
@@ -159,12 +187,30 @@ public class PartitionPartialReceiver implements MessageReceiver {
           // lets remove from ready list and clear the list
           e.getValue().clear();
           it.remove();
+          counts++;
+          progressAttempts = 0;
+        } else {
+          needsFurtherProgress = true;
+        }
+      }
+
+      for (Map.Entry<Integer, List<Object>> e : destinationMessages.entrySet()) {
+        if (e.getValue().size() > 0) {
+          needsFurtherProgress = true;
+        }
+      }
+
+      for (Map.Entry<Integer, List<Object>> e : readyToSend.entrySet()) {
+        if (e.getValue().size() > 0) {
+          needsFurtherProgress = true;
         }
       }
     } finally {
       lock.unlock();
     }
-    return true;
+
+    progressAttempts++;
+    return needsFurtherProgress;
   }
 
   @Override

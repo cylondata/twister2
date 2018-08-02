@@ -220,7 +220,6 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
                            PartitionStratergy partitionStratergy,
                            MessageType dataType) {
     this(channel, sourceTasks, destTasks, finalRcvr, partialRcvr, partitionStratergy);
-    this.isKeyed = true;
     this.dataType = dataType;
   }
 
@@ -440,10 +439,17 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
         sendRoutingParameters(source, dest));
   }
 
+  public boolean isComplete() {
+    boolean done = delegete.isComplete();
+    boolean needsFurtherProgress = OperationUtils.progressReceivers(delegete, lock, finalReceiver,
+        partialLock, partialReceiver);
+    return done && !needsFurtherProgress;
+  }
+
   @Override
   public boolean progress() {
-    OperationUtils.progressReceivers(delegete, lock, finalReceiver, partialLock, partialReceiver);
-    return true;
+    return OperationUtils.progressReceivers(delegete, lock, finalReceiver,
+        partialLock, partialReceiver);
   }
 
   @Override

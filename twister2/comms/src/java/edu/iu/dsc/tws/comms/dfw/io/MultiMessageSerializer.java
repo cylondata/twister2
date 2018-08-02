@@ -65,7 +65,7 @@ public class MultiMessageSerializer implements MessageSerializer {
     OutMessage sendMessage = (OutMessage) partialBuildObject;
 
     // we got an already serialized message, lets just return it
-    ChannelMessage channelMessage = sendMessage.getMPIMessage();
+    ChannelMessage channelMessage = sendMessage.getChannelMessage();
     if (channelMessage.isComplete()) {
       sendMessage.setSendState(OutMessage.SendState.SERIALIZED);
       return sendMessage;
@@ -109,7 +109,7 @@ public class MultiMessageSerializer implements MessageSerializer {
         MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
             sendMessage.getEdge(), totalBytes);
         builder.destination(sendMessage.getDestintationIdentifier());
-        sendMessage.getMPIMessage().setHeader(builder.build());
+        sendMessage.getChannelMessage().setHeader(builder.build());
         state.setTotalBytes(0);
 
         // mark the original message as complete
@@ -145,7 +145,7 @@ public class MultiMessageSerializer implements MessageSerializer {
    */
   private boolean serializeMessage(Object payload,
                                    OutMessage sendMessage, DataBuffer buffer) {
-    MessageType type = sendMessage.getMPIMessage().getType();
+    MessageType type = sendMessage.getChannelMessage().getType();
     if (!keyed) {
       return serializeData(payload,
           sendMessage.getSerializationState(), buffer, type);

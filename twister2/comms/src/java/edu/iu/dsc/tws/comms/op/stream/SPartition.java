@@ -40,13 +40,29 @@ public class SPartition {
     this.destinationSelector.prepare(partition.getSources(), partition.getDestinations());
   }
 
-  public void partition(int source, Object message, int flags) {
-    int destinations = destinationSelector.next(source);
+  public boolean partition(int source, Object message, int flags) {
+    final int dest = destinationSelector.next(source);
 
-    partition.send(source, message, flags, destinations);
+    boolean send = partition.send(source, message, flags, dest);
+    if (send) {
+      destinationSelector.commit(source, dest);
+    }
+    return send;
+  }
+
+  public boolean hasPending() {
+    return !partition.isComplete();
   }
 
   public boolean progress() {
     return partition.progress();
+  }
+
+  public void finish(int src) {
+    partition.finish(src);
+  }
+
+  public void close() {
+    // deregister from the channel
   }
 }

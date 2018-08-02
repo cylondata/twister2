@@ -23,4 +23,5 @@ public interface DestinationSelector {
   void prepare(MessageType type, Set<Integer> sources, Set<Integer> destinations);
   int next(int source);
   int next(int source, Object key);
+  void commit(int source, int next);
 }
