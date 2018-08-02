@@ -171,7 +171,7 @@ public class SourceBatchInstance implements INodeInstance, INodeInstanceListener
           while (!op.send(batchTaskId, message, MessageFlags.FLAGS_LAST)) {
             //
           }
-          //op.progress();
+          //op.communicationProgress();
           this.isFinish = true;
           System.out.println("Last Message was Sent : " + this.isFinish);
         } else {
@@ -179,7 +179,7 @@ public class SourceBatchInstance implements INodeInstance, INodeInstanceListener
           while (!op.send(batchTaskId, message, 0)) {
             //
           }
-          //op.progress();
+          //op.communicationProgress();
         }
       }
 
@@ -189,7 +189,7 @@ public class SourceBatchInstance implements INodeInstance, INodeInstanceListener
   }
 
   //TODO : BOOLEAN RESPONSE AFTER FINISHING COMMUNICATION
-  public boolean progress() {
+  public boolean communicationProgress() {
     boolean allDone = true;
     for (Map.Entry<String, IParallelOperation> e : outBatchParOps.entrySet()) {
       if (e.getValue().progress()) {

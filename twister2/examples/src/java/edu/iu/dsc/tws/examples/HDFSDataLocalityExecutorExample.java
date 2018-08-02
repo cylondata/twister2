@@ -150,7 +150,7 @@ public class HDFSDataLocalityExecutorExample implements IContainer {
     ThreadExecutor executor = new ThreadExecutor(executionModel, plan);
     executor.execute();
 
-    // we need to progress the channel
+    // we need to communicationProgress the channel
     while (true) {
       network.getChannel().progress();
     }

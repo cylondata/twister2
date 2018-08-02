@@ -74,6 +74,12 @@ public class SinkBatchInstance implements INodeInstance {
    */
   private int workerId;
 
+  /**
+   * All Receiving Done
+   */
+
+  private boolean receiveDone = false;
+
   public SinkBatchInstance(ISink batchTask, BlockingQueue<IMessage> batchInQueue, Config config,
                            int tId, int tIndex, int parallel, int wId, Map<String, Object> cfgs) {
     this.batchTask = batchTask;
@@ -98,20 +104,28 @@ public class SinkBatchInstance implements INodeInstance {
   }
 
   public boolean execute() {
-
-    //SinkBatchTask sinkBatchTask = (SinkBatchTask) batchTask;
-
+    if (batchInQueue.isEmpty()) {
+      receiveDone = false;
+    }
     while (!batchInQueue.isEmpty()) {
       IMessage m = batchInQueue.poll();
+      System.out.println("Message Sent : " + m.getContent());
       batchTask.execute(m);
     }
+    return receiveDone;
+  }
 
+  public boolean commuinicationProgress() {
+    boolean allDone = true;
     for (Map.Entry<String, IParallelOperation> e : batchInParOps.entrySet()) {
-      e.getValue().progress();
+      if (e.getValue().progress()) {
+        allDone = false;
+      }
     }
 
-    return true;
+    return allDone;
   }
+
 
   public void registerInParallelOperation(String edge, IParallelOperation op) {
     batchInParOps.put(edge, op);

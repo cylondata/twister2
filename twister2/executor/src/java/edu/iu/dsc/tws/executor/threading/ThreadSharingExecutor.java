@@ -54,6 +54,15 @@ public class ThreadSharingExecutor extends ThreadExecutor {
 
   private boolean executorState = true;
 
+  private boolean sourceExecutionDone = false;
+
+  private boolean sinkExecutionDone = false;
+
+  private boolean sourceCommunicationDone = false;
+
+  private boolean sinkCommunicationDone = false;
+
+
   public ThreadSharingExecutor() {
   }
 
@@ -83,30 +92,62 @@ public class ThreadSharingExecutor extends ThreadExecutor {
       threads.add(t);
     }
 
-    for (Thread t : threads) {
-      System.out.println("T Status : " + t.getState());
-    }
-    //LOG.info("!@TaskSize = " + tasks.size());
+    LOG.info("!@TaskSize = " + tasks.size());
   }
 
   private class Worker implements Runnable {
+    private boolean exitCluase = (sourceExecutionDone && sourceCommunicationDone)
+        && (sinkExecutionDone && sinkCommunicationDone);
     @Override
     public void run() {
-      while (true) {
-        boolean executionDone = false;
-        boolean communicationDone = false;
+      LOG.info("Exit Clause : " + exitCluase);
+      while (!exitCluase) {
         INodeInstance nodeInstance = tasks.poll();
+
         if (nodeInstance != null) {
-          executionDone = nodeInstance.execute();
+
           if (nodeInstance instanceof SourceBatchInstance) {
+
             SourceBatchInstance sourceBatchInstance = (SourceBatchInstance) nodeInstance;
-            communicationDone = sourceBatchInstance.progress();
+            sourceExecutionDone = sourceBatchInstance.execute();
+            sourceCommunicationDone = sourceBatchInstance.communicationProgress();
+
           }
-          if (!(executionDone && communicationDone)) {
+
+          /*if (sourceCommunicationDone && sourceExecutionDone) {
+            LOG.info("Source Communication Done! " + ", SourceExecution : "
+                + sourceExecutionDone + ", tasks : " + tasks.size());
+          }*/
+
+          if (nodeInstance instanceof SinkBatchInstance) {
+            SinkBatchInstance sinkBatchInstance = (SinkBatchInstance) nodeInstance;
+            sinkExecutionDone = sinkBatchInstance.execute();
+            sinkCommunicationDone = sinkBatchInstance.commuinicationProgress();
+
+            /*if (sinkCommunicationDone && sinkExecutionDone) {
+              LOG.info("Sink Communication Done! " + ", SourceExecution : "
+                  + sourceExecutionDone +  ", SinkExecution : " + sinkExecutionDone
+                  + ", tasks : " + tasks.size());
+            }*/
+            //tasks.offer(nodeInstance);
+          }
+
+          /*LOG.info("SourceExecutionDone : " + sourceExecutionDone
+              + ", sourceCommunicationDone : " + sourceCommunicationDone
+              + ", sinkCommunicationDone : " + sinkCommunicationDone);*/
+          //tasks.offer(nodeInstance);
+
+          if (!(sourceExecutionDone && sourceCommunicationDone) || !(sinkExecutionDone
+              && sinkCommunicationDone)) {
             tasks.offer(nodeInstance);
+           /* LOG.info(String.format("SrcE : %s,  SrcC : %s, SnkE : %s, SnkC : %s",
+                sourceExecutionDone, sourceCommunicationDone,
+                sinkExecutionDone, sinkCommunicationDone));*/
           }
+
         }
       }
+
     }
   }
 

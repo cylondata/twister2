@@ -157,9 +157,7 @@ public class ReduceBatchTask implements IContainer {
 
     @Override
     public void execute(IMessage message) {
-      if (count < 15) {
-        System.out.println("Message Reduced : " + message.getContent() + ", Count : " + count);
-      }
+      System.out.println("Message Reduced : " + message.getContent() + ", Count : " + count);
       count++;
     }
 
