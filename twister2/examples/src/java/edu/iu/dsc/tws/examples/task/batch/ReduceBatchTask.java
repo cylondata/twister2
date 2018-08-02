@@ -109,6 +109,7 @@ public class ReduceBatchTask implements IContainer {
       }
 
       if (count == 1) {
+        //add a writeLast method rather than write
         this.sourceTaskContext.write("reduce-edge", MessageFlags.LAST_MESSAGE);
       }
 

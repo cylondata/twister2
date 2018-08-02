@@ -145,12 +145,19 @@ public class SourceBatchInstance implements INodeInstance, INodeInstanceListener
   public boolean execute() {
 
     batchTask.run();
+    /**
+     * TODO : Use CONTEXTLISTENERS FOR OTHER PURPOSES
+     * */
 
     SourceBatchTask sourceBatchTask = (SourceBatchTask) batchTask;
     sourceBatchTask.interrupt();
     TaskContext context = sourceBatchTask.getSourceTaskContextListener()
         .getInstanceBatchContextMap().get(sourceBatchTask);
     this.isDone = context.isDone();
+
+    /*
+    *
+    * **/
 
     // now check the output queue
     while (!outBatchQueue.isEmpty()) {
@@ -181,6 +188,7 @@ public class SourceBatchInstance implements INodeInstance, INodeInstanceListener
     return this.isFinish;
   }
 
+  //TODO : BOOLEAN RESPONSE AFTER FINISHING COMMUNICATION
   public void progress() {
     for (Map.Entry<String, IParallelOperation> e : outBatchParOps.entrySet()) {
       e.getValue().progress();
