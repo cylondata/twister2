@@ -112,8 +112,7 @@ public class HDFSConnector implements IHDFSConnector {
 
     try {
       hadoopFileSystem = new HadoopFileSystem(conf, org.apache.hadoop.fs.FileSystem.get(conf));
-      String directoryString = HdfsDataContext.getHdfsUrlDefault(config)
-          + "/user/kgovind/" + outputFile;
+      String directoryString = HdfsDataContext.getHdfsUrlDefault(config) + "/" + outputFile;
 
       Path path = new Path(directoryString);
       if (!hadoopFileSystem.exists(path)) {
@@ -152,7 +151,8 @@ public class HDFSConnector implements IHDFSConnector {
 
     try {
       InetSocketAddress namenodeAddress =
-          new InetSocketAddress("hairy.soic.indiana.edu", 9000);
+          new InetSocketAddress(HdfsDataContext.getHdfsNamenodeDefault(config),
+              HdfsDataContext.getHdfsNamenodePortDefault(config));
       DFSClient dfsClient = new DFSClient(namenodeAddress, conf);
       ClientProtocol nameNode = dfsClient.getNamenode();
       DatanodeInfo[] datanodeReport =
