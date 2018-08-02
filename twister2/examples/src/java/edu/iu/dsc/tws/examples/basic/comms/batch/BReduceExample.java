@@ -51,7 +51,7 @@ public class BReduceExample extends BenchWorker {
         new IdentityFunction(), new FinalReduceReceiver(), MessageType.INTEGER);
 
 
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(id, taskPlan,
+    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
     for (int t : tasksOfExecutor) {
       finishedSources.put(t, false);
@@ -60,12 +60,12 @@ public class BReduceExample extends BenchWorker {
       sourcesDone = true;
     }
 
-    if (!taskPlan.getChannelsOfExecutor(id).contains(target)) {
+    if (!taskPlan.getChannelsOfExecutor(workerId).contains(target)) {
       reduceDone = true;
     }
 
     LOG.log(Level.INFO, String.format("%d Sources %s target %d this %s",
-        id, sources, target, tasksOfExecutor));
+        workerId, sources, target, tasksOfExecutor));
     // now initialize the workers
     for (int t : tasksOfExecutor) {
       // the map thread where data is produced
@@ -102,7 +102,7 @@ public class BReduceExample extends BenchWorker {
 
     @Override
     public boolean receive(int target, Object object) {
-      LOG.log(Level.INFO, String.format("%d Received final input", id));
+      LOG.log(Level.INFO, String.format("%d Received final input", workerId));
       reduceDone = true;
       return true;
     }

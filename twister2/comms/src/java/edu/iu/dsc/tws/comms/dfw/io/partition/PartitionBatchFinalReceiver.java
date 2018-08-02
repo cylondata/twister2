@@ -101,6 +101,11 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
    */
   private Set<Integer> finishedTargetsCompleted = new HashSet<>();
 
+  /**
+   * Weather everyone finished
+   */
+  private Set<Integer> targets = new HashSet<>();
+
   public PartitionBatchFinalReceiver(BatchReceiver receiver, boolean srt,
                                      boolean d, Comparator<Object> com) {
     this.batchReceiver = receiver;
@@ -119,6 +124,8 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
     finishedSources = new HashMap<>();
     partition = (DataFlowPartition) op;
     keyed = partition.getKeyType() != null;
+    targets = new HashSet<>(expectedIds.keySet());
+
     for (Integer target : expectedIds.keySet()) {
       Map<Integer, Boolean> perTarget = new ConcurrentHashMap<>();
       for (Integer exp : expectedIds.get(target)) {
@@ -204,7 +211,8 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
         finishedTargetsCompleted.add(i);
       }
     }
-    return true;
+
+    return !finishedTargets.equals(targets);
   }
 
   @Override

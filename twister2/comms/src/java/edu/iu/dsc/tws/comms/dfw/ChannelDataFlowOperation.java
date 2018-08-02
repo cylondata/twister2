@@ -362,20 +362,11 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     }
   }
 
+  /**
+   * Weather we have more data to complete
+   * @return
+   */
   public boolean isComplete() {
-//    LOG.info(String.format("Sends %s recvs %s", sendsDone, receivesDone));
-    for (AtomicBoolean b : sendsDone.values()) {
-      if (!b.get()) {
-        return false;
-      }
-    }
-
-    for (AtomicBoolean b : receivesDone.values()) {
-      if (!b.get()) {
-        return false;
-      }
-    }
-
     for (Map.Entry<Integer, Queue<Pair<Object, ChannelMessage>>> e
         : pendingReceiveMessagesPerSource.entrySet()) {
       if (e.getValue().size() > 0) {
@@ -505,15 +496,21 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
           int startOfExternalRouts = outMessage.getAcceptedExternalSends();
           int noOfExternalSends = startOfExternalRouts;
           for (int i = startOfExternalRouts; i < exRoutes.size(); i++) {
-            boolean sendAccepted = sendMessageToTarget(message.getMPIMessage(), exRoutes.get(i));
-            // if no longer accepts stop
-            if (!sendAccepted) {
-              canProgress = false;
+            lock.lock();
+            try {
+              boolean sendAccepted = sendMessageToTarget(message.getChannelMessage(),
+                  exRoutes.get(i));
+              // if no longer accepts stop
+              if (!sendAccepted) {
+                canProgress = false;
 
-              break;
-            } else {
-              noOfExternalSends = outMessage.incrementAcceptedExternalSends();
-              externalSendsPending.incrementAndGet();
+                break;
+              } else {
+                noOfExternalSends = outMessage.incrementAcceptedExternalSends();
+                externalSendsPending.incrementAndGet();
+              }
+            } finally {
+              lock.unlock();
             }
           }
 
@@ -616,7 +613,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
   public void onSendComplete(int id, int messageStream, ChannelMessage message) {
     // ok we don't have anything else to do
     message.release();
-    externalSendsPending.decrementAndGet();
+    externalSendsPending.getAndDecrement();
   }
 
   private void releaseTheBuffers(int id, ChannelMessage message) {

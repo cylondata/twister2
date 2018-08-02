@@ -49,11 +49,11 @@ public class SBroadcastExample extends BenchWorker {
         MessageType.INTEGER, new BCastReceiver());
 
 
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(id, taskPlan,
+    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
 
     // the map thread where data is produced
-    if (id == 0) {
+    if (workerId == 0) {
       Thread mapThread = new Thread(new MapWorker(source));
       mapThread.start();
     }
