@@ -118,7 +118,8 @@ public final class ZKControllerExample {
 
     sleeeep((long) (Math.random() * 10000));
 
-    long timeLimit = 20000;
+    LOG.info("Waiting on the first barrier -------------------------- ");
+    long timeLimit = 200000;
     boolean allWorkersReachedBarrier = zkController.waitOnBarrier(timeLimit);
     if (allWorkersReachedBarrier) {
       LOG.info("All workers reached the barrier. Proceeding.");
@@ -129,9 +130,22 @@ public final class ZKControllerExample {
       return;
     }
 
-    // sleep some random amout of time before closing
+    sleeeep((long) (Math.random() * 10000));
+
+    LOG.info("Waiting on the second barrier -------------------------- ");
+    allWorkersReachedBarrier = zkController.waitOnBarrier(timeLimit);
+    if (allWorkersReachedBarrier) {
+      LOG.info("All workers reached the barrier. Proceeding.");
+    } else {
+      LOG.info("Not all workers reached the barrier on the given timelimit: " + timeLimit + "ms"
+          + " Exiting ....... ");
+      zkController.close();
+      return;
+    }
+
+    // sleep some random amount of time before closing
     // this is to prevent all workers to close almost at the same time
-    sleeeep((long) (Math.random() * 1000));
+    sleeeep((long) (Math.random() * 2000));
     zkController.close();
   }
 
