@@ -88,7 +88,7 @@ public class DataNodeLocatorUtils implements IDataNodeLocatorUtils {
         if (!fileStatus.getPath().isNullOrEmpty()) {
           String fileURL = fileStatus.getPath().toString();
           String datanodeName = hdfsConnector.getDFSCK(fName);
-          LOG.fine("HDFS URL:" + fileURL + "\tDataNode:"
+          LOG.info("HDFS URL:" + fileURL + "\tDataNode:"
               + datanodeName + "\tDataSet:" + datasetName);
           dataNodes.add(datanodeName); //proper data node
           dataNodes.add("samepledatenode1"); //this is just for testing (it will be removed)
@@ -133,7 +133,7 @@ public class DataNodeLocatorUtils implements IDataNodeLocatorUtils {
       if (!fileStatus.getPath().isNullOrEmpty()) {
         String fileURL = fileStatus.getPath().toString();
         String datanodeName = hdfsConnector.getDFSCK(fName);
-        LOG.fine("HDFS URL:" + fileURL + "\tDataNode:"
+        LOG.info("HDFS URL:" + fileURL + "\tDataNode:"
             + datanodeName + "\tDataSet:" + datasetName);
         if ("dataset1.txt".equals(datasetName)) {
           dataNodes.add("datanode1");
