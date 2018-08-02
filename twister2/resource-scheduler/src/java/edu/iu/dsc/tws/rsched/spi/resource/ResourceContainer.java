@@ -30,7 +30,7 @@ public class ResourceContainer {
   // memory available to the container
   private int memoryMegaBytes;
 
-  // memory available to the container
+  // volatile disk space available to the container
   private int diskMegaBytes;
 
   public ResourceContainer(int id) {

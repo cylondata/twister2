@@ -107,7 +107,7 @@ public final class ZKUtil {
    * @param jobName
    * @return
    */
-  public static String constructPathOfDaiForWorkerID(Config config, String jobName) {
+  public static String constructDaiPathForWorkerID(Config config, String jobName) {
     return ZKContext.rootNode(config) + "/" + jobName + "-dai-for-worker-id";
   }
 
@@ -116,8 +116,17 @@ public final class ZKUtil {
    * @param jobName
    * @return
    */
-  public static String constructPathOfDaiForBarrier(Config config, String jobName) {
+  public static String constructDaiPathForBarrier(Config config, String jobName) {
     return ZKContext.rootNode(config) + "/" + jobName + "-dai-for-barrier";
+  }
+
+  /**
+   * construct a distributed barrier path
+   * @param jobName
+   * @return
+   */
+  public static String constructBarrierPath(Config config, String jobName) {
+    return ZKContext.rootNode(config) + "/" + jobName + "-barrier";
   }
 
   /**
@@ -161,7 +170,7 @@ public final class ZKUtil {
       }
 
       // delete distributed atomic integer for workerID
-      String daiPath = constructPathOfDaiForWorkerID(config, jobName);
+      String daiPath = constructDaiPathForWorkerID(config, jobName);
       if (client.checkExists().forPath(daiPath) != null) {
         client.delete().guaranteed().deletingChildrenIfNeeded().forPath(daiPath);
         LOG.info("DistributedAtomicInteger for workerID deleted from ZooKeeper: " + daiPath);
@@ -170,7 +179,7 @@ public final class ZKUtil {
       }
 
       // delete distributed atomic integer for barrier
-      daiPath = constructPathOfDaiForBarrier(config, jobName);
+      daiPath = constructDaiPathForBarrier(config, jobName);
       if (client.checkExists().forPath(daiPath) != null) {
         client.delete().guaranteed().deletingChildrenIfNeeded().forPath(daiPath);
         LOG.info("DistributedAtomicInteger for barrier deleted from ZooKeeper: " + daiPath);
