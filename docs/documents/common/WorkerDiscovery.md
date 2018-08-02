@@ -7,10 +7,11 @@ using various cluster services. This interface provides the following services:
 * Discovery of Worker addresses in a job
 * Synchronizing workers using a barrier
 
-We require that each worker in Twister2 jobs has a unique sequential ID starting from 0. 
-When N workers are started in a Twister2 job, the workers in that job will have the unique IDs 
-in the range of 0 to (N-1).
+**Unique ID assignment to workers**: We require that each worker in Twister2 jobs has 
+a unique sequential ID starting from 0. When N workers are started in a Twister2 job, 
+the workers in that job will have the unique IDs in the range of 0 to (N-1).
 
+**Discovery of Worker addresses in a job**:
 We assume that each worker in a Twister2 job has a unique IP address and port number pair.
 More than one worker may run on the same IP address, but they must have different port numbers. 
 So, each Twister2 worker in a job must have a unique ID and a unique IP:port pair. 
@@ -25,8 +26,9 @@ Cluster resource schedulers start the workers in the nodes of the cluster.
 When a worker starts, it needs to discover the IP addresses and port numbers of 
 the Twister2 workers in that job.
 
+**Synchronizing workers using a barrier**:
 All workers in a Twister2 job may need to synchronize on a barrier point. 
-The workers that arrives earlier to the barrier point wait others to come.
+The workers that arrives earlier to the barrier point wait others to arrive.
 When the last worker arrives to the barrier point, they are all released. 
  
 ## IWorkerController Interface
@@ -43,11 +45,14 @@ using various cluster services.
 ### ZooKeeper Based Worker Controller
 We implemented a worker controller using a ZooKeeper server. 
 ZooKeeper server runs in many clusters. This worker controller can be used in those clusters. 
+The worker controller class is: 
+* [edu.iu.dsc.tws.rsched.bootstrap.ZKController](../../../twister2/resource-scheduler/src/java/edu/iu/dsc/tws/rsched/bootstrap/ZKController.java)
+
 Details of the implementation is provided in [the document](../zookeeper/ZKBasedWorkerDiscovery.md). 
 
 ### Job Master Based Worker Controller
 Twister2 runs a Job Master in Twister2 jobs. 
-We also provide a Job Master based worker controller.
+We also provide a Job Master based worker controller implementation.
 The worker controller class is: 
 * [edu.iu.dsc.tws.master.client.WorkerController](../../../twister2/master/src/java/edu/iu/dsc/tws/master/client/WorkerController.java)
 
@@ -59,5 +64,5 @@ to discover other workers in a Twister2 job.
 The worker discoverer class is: 
 * [edu.iu.dsc.tws.rsched.schedulers.k8s.worker.WorkerController](../../../twister2/resource-scheduler/src/java/edu/iu/dsc/tws/rsched/schedulers/k8s/worker/WorkerController.java)
 
-Details of the implementation is provided in [the document](../kubernetes). 
+Details of the implementation is provided in [the document](../kubernetes/K8sBasedWorkerDiscovery.md). 
 

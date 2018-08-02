@@ -9,9 +9,9 @@
 #twister2.class.task.taskscheduler.class:    edu.iu.dsc.tws.tsched.datalocalityaware.DataLocalityAwareTaskScheduling
 
 #Task Scheduling Mode
-twister2.class.task.taskscheduler: "roundrobin"
+#twister2.class.task.taskscheduler: "roundrobin"
 #twister2.class.task.taskscheduler: "firstfit"
-#twister2.class.task.taskscheduler:  "datalocalityaware"
+twister2.class.task.taskscheduler:  "datalocalityaware"
 
 #Default Task Instance Values
 twister2.task.default.task.instances: 2

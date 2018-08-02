@@ -146,7 +146,7 @@ to the job master. Job master keeps the list of all workers in a job
 with their network address information.
  
 Workers send ListWorkersRequest message to get the list of all workers in a job 
-with network information. The message proto is shown below. 
+with the network information. The message proto is shown below. 
 Workers can get either the current list from the job master, 
 or they can request the full list. In that case, the full list will be sent 
 when all workers joined the job. When they ask the current list, 
@@ -176,8 +176,8 @@ It sends many worker information on the same message.
       repeated WorkerNetworkInfo workers = 2;
     }
 
-**IWorkerDiscoverer Implementation**  
-We implemented the WorkerDiscoverer class that will be used by the workers 
+**IWorkerController Implementation**  
+We developed the WorkerController class that will be used by the workers 
 to interact with the job master. The class name is:
 
     edu.iu.dsc.tws.master.client.WorkerController
@@ -197,19 +197,39 @@ It assigns workerIDs in the order of their registration with the Job Master
 with worker STARTING message. It assigns the id 0 to the first worker to be registered. 
 It assigns the id 1 to the second worker to be registered, so on. 
 
-The second option for the worker ID assignment is that underlying Twister2 implementation 
+The second option for the worker ID assignment is that the underlying Twister2 implementation 
 may assign unique IDs for the workers. In this case, when workers register 
 with the Job Master, they already have a valid unique ID. 
-So the Job Master does not assign a new ID to them. It uses their IDs. 
+So, the Job Master does not assign a new ID to them. It uses their IDs. 
 
 Worker ID assignment method is controlled by a configuration parameter. 
-Configuration parameter name is: 
+The configuration parameter name is: 
 
     twister2.job.master.assigns.worker.ids
 
 If its value is true, Job Master assigns the worker IDs. 
-If it is false, underlying resource scheduler assigns worker IDs. 
+If its value is false, underlying resource scheduler assigns worker IDs. 
 By default, its value is true. 
+
+### Waiting Workers on a Barrier
+Job Master implements the barrier mechanism by using a waitList. 
+Each worker that comes to the barrier point sends the following BarrierRequest message 
+to the Job Master. 
+
+    message BarrierRequest {
+      int32 workerID = 1;
+    }
+
+Job Master puts the received request messages to the waitList.
+When it receives the BarrierRequest message from the last worker in the job, 
+it sends the following response message to all workers: 
+
+    message BarrierResponse {
+      int32 workerID = 1;
+    }
+
+When it sends the response messages to workers, it clears the waitList.
+Therefore, it can start a new barrier after all workers are released.
 
 ## Job Termination
 Job termination is handled differently in different cluster management systems 
@@ -279,7 +299,7 @@ A sample usage is provided in the example class:
 
     edu.iu.dsc.tws.examples.JobMasterClientExample.java 
 
-### IWorkerDiscoverer Usage
+### IWorkerController Usage
  
 JobMasterClient provides an implementation of IWorkerController interface. 
 It is automatically initialized when a JobMasterClient is initialized. 

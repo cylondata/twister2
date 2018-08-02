@@ -147,12 +147,14 @@ public class RoundRobinBatchTaskExample implements IContainer {
     List<TaskSchedulePlan> taskSchedulePlanList = new ArrayList<>();
     TaskSchedulePlan taskSchedulePlan = null;
 
-    if ("Batch".equalsIgnoreCase(jobType)
-        && "roundrobin".equalsIgnoreCase(schedulingType)) {
-      RoundRobinBatchTaskScheduling rrBatchTaskScheduling = new RoundRobinBatchTaskScheduling();
-      rrBatchTaskScheduling.initialize(config);
-      WorkerPlan workerPlan = createWorkerPlan(resourcePlan);
-      taskSchedulePlanList = rrBatchTaskScheduling.scheduleBatch(graph, workerPlan);
+    if (id == 0) {
+      if ("Batch".equalsIgnoreCase(jobType)
+          && "roundrobin".equalsIgnoreCase(schedulingType)) {
+        RoundRobinBatchTaskScheduling rrBatchTaskScheduling = new RoundRobinBatchTaskScheduling();
+        rrBatchTaskScheduling.initialize(config);
+        WorkerPlan workerPlan = createWorkerPlan(resourcePlan);
+        taskSchedulePlanList = rrBatchTaskScheduling.scheduleBatch(graph, workerPlan);
+      }
     }
 
     //Just to print the task schedule plan.
