@@ -70,6 +70,7 @@ public abstract class AbstractParallelOperation implements IParallelOperation {
   }
 
   @Override
-  public void progress() {
+  public boolean progress() {
+    return true;
   }
 }

@@ -82,8 +82,8 @@ public class BroadcastBatchOperation extends AbstractParallelOperation {
   }
 
   @Override
-  public void progress() {
-    op.progress();
+  public boolean progress() {
+    return op.progress();
   }
 
   public class BcastReceiver implements MessageReceiver {

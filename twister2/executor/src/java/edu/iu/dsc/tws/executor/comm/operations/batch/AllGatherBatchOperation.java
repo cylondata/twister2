@@ -65,7 +65,7 @@ public class AllGatherBatchOperation extends AbstractParallelOperation {
   }
 
   @Override
-  public void progress() {
-    op.progress();
+  public boolean progress() {
+    return op.progress();
   }
 }

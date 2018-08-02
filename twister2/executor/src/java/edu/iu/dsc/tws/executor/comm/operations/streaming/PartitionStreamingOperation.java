@@ -149,7 +149,7 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
     }
   }
 
-  public void progress() {
-    op.progress();
+  public boolean progress() {
+    return op.progress();
   }
 }

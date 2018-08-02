@@ -57,5 +57,5 @@ public interface IParallelOperation {
   /**
    * Progress the parallel operation
    */
-  void progress();
+  boolean progress();
 }

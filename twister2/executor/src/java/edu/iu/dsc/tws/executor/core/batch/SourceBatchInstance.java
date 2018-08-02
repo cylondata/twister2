@@ -156,8 +156,8 @@ public class SourceBatchInstance implements INodeInstance, INodeInstanceListener
     this.isDone = context.isDone();
 
     /*
-    *
-    * **/
+     *
+     * **/
 
     // now check the output queue
     while (!outBatchQueue.isEmpty()) {
@@ -189,10 +189,14 @@ public class SourceBatchInstance implements INodeInstance, INodeInstanceListener
   }
 
   //TODO : BOOLEAN RESPONSE AFTER FINISHING COMMUNICATION
-  public void progress() {
+  public boolean progress() {
+    boolean allDone = true;
     for (Map.Entry<String, IParallelOperation> e : outBatchParOps.entrySet()) {
-      e.getValue().progress();
+      if (e.getValue().progress()) {
+        allDone = false;
+      }
     }
+    return allDone;
   }
 
 

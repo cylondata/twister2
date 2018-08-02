@@ -93,15 +93,18 @@ public class ThreadSharingExecutor extends ThreadExecutor {
     @Override
     public void run() {
       while (true) {
-        boolean status = false;
+        boolean executionDone = false;
+        boolean communicationDone = false;
         INodeInstance nodeInstance = tasks.poll();
         if (nodeInstance != null) {
-          status = nodeInstance.execute();
+          executionDone = nodeInstance.execute();
           if (nodeInstance instanceof SourceBatchInstance) {
             SourceBatchInstance sourceBatchInstance = (SourceBatchInstance) nodeInstance;
-            sourceBatchInstance.progress();
+            communicationDone = sourceBatchInstance.progress();
           }
-          tasks.offer(nodeInstance);
+          if (!(executionDone && communicationDone)) {
+            tasks.offer(nodeInstance);
+          }
         }
       }
     }
