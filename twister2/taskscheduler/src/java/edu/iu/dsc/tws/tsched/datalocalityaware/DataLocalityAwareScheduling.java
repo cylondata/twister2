@@ -161,6 +161,7 @@ public class DataLocalityAwareScheduling {
         }
       }
     }
+
     LOG.info("Container Map Values After Allocation" + dataAwareAllocation);
     for (Map.Entry<Integer, List<InstanceId>> entry : dataAwareAllocation.entrySet()) {
       Integer integer = entry.getKey();
