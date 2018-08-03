@@ -30,12 +30,14 @@ import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+
+
 public class WorkerNetworkInfo {
   public static final Logger LOG = Logger.getLogger(WorkerNetworkInfo.class.getName());
 
+  private int workerID;
   private InetAddress ip;
   private int port;
-  private int workerID;
 
   public WorkerNetworkInfo(InetAddress ip, int port, int workerID) {
     this.ip = ip;
@@ -44,13 +46,13 @@ public class WorkerNetworkInfo {
   }
 
   /**
-   * workerName has both IP and port in the form of ip:port
-   * @param workerName name of
+   * workerIpAndPort has both IP and port in the form of ip:port
+   * @param workerIpAndPort name of
    * @param workerID
    */
-  public WorkerNetworkInfo(String workerName, int workerID) {
-    this.ip = constructWorkerIP(workerName);
-    this.port = Integer.parseInt(workerName.substring(workerName.indexOf(":") + 1));
+  public WorkerNetworkInfo(String workerIpAndPort, int workerID) {
+    this.ip = constructWorkerIP(workerIpAndPort);
+    this.port = Integer.parseInt(workerIpAndPort.substring(workerIpAndPort.indexOf(":") + 1));
     this.workerID = workerID;
   }
 
@@ -58,7 +60,7 @@ public class WorkerNetworkInfo {
    * return ip:port as a string
    * @return worker name
    */
-  public String getWorkerName() {
+  public String getWorkerIpAndPort() {
     return ip.getHostAddress() + ":" + port;
   }
 
@@ -70,13 +72,13 @@ public class WorkerNetworkInfo {
     return ip;
   }
 
-  private InetAddress constructWorkerIP(String workerName) {
+  private InetAddress constructWorkerIP(String workerIpAndPort) {
 
-    String ipStr = workerName.substring(0, workerName.indexOf(":"));
+    String ipStr = workerIpAndPort.substring(0, workerIpAndPort.indexOf(":"));
     try {
       return InetAddress.getByName(ipStr);
     } catch (UnknownHostException e) {
-      LOG.log(Level.SEVERE, "Can not convert the given address to IP: " + workerName, e);
+      LOG.log(Level.SEVERE, "Can not convert the given address to IP: " + workerIpAndPort, e);
       throw new RuntimeException(e);
     }
   }
@@ -102,22 +104,22 @@ public class WorkerNetworkInfo {
       return null;
     }
 
-    String workerName = str.substring(0, str.indexOf("="));
+    String workerIpAndPort = str.substring(0, str.indexOf("="));
     String idStr = str.substring(str.indexOf("=") + 1, str.indexOf(";"));
-    return new WorkerNetworkInfo(workerName, Integer.parseInt(idStr));
+    return new WorkerNetworkInfo(workerIpAndPort, Integer.parseInt(idStr));
   }
 
   public String getWorkerInfoAsString() {
-    return getWorkerName() + "=" + workerID + ";";
+    return getWorkerIpAndPort() + "=" + workerID + ";";
   }
 
   /**
    * parse job znode content and set the id of this worker
    * @param str from string
    */
-  public static int getWorkerIDByParsing(String str, String workerName) {
-    int workerNameIndex = str.indexOf(workerName);
-    int idStartIndex = str.indexOf("=", workerNameIndex) + 1;
+  public static int getWorkerIDByParsing(String str, String workerIpAndPort) {
+    int workerIpPortIndex = str.indexOf(workerIpAndPort);
+    int idStartIndex = str.indexOf("=", workerIpPortIndex) + 1;
     int idEndIndex = str.indexOf(";", idStartIndex);
     String idStr = str.substring(idStartIndex, idEndIndex);
     return Integer.parseInt(idStr);
@@ -129,7 +131,7 @@ public class WorkerNetworkInfo {
 
   @Override
   public String toString() {
-    return "workerName: " + getWorkerName() + " workerID: " + workerID;
+    return getWorkerIpAndPort() + " workerID: " + workerID;
   }
 
   @Override
@@ -137,7 +139,8 @@ public class WorkerNetworkInfo {
     if (o instanceof WorkerNetworkInfo) {
       WorkerNetworkInfo theOther = (WorkerNetworkInfo) o;
       if (this.workerID == theOther.workerID
-          && this.getWorkerName().equals(theOther.getWorkerName())) {
+          && this.ip.equals(theOther.ip)
+          && this.port == theOther.port) {
         return true;
       }
     }
@@ -146,7 +149,7 @@ public class WorkerNetworkInfo {
 
   @Override
   public int hashCode() {
-    return Objects.hash(getWorkerName(), workerID);
+    return Objects.hash(getWorkerIpAndPort(), workerID);
   }
 
   /**
@@ -164,7 +167,7 @@ public class WorkerNetworkInfo {
     int i = 0;
     for (WorkerNetworkInfo worker : workers) {
       buffer.append(String.format("%d: workerID[%d] %s\n",
-          i++, worker.getWorkerID(), worker.getWorkerName()));
+          i++, worker.getWorkerID(), worker.getWorkerIpAndPort()));
     }
 
     return buffer.toString();
