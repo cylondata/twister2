@@ -44,6 +44,18 @@ public class SingleMessageDeSerializer implements MessageDeSerializer {
    */
   private boolean keyed;
 
+  /**
+   * The length of the filed that keeps the key length for non primitive keys
+   * ex. length of an key of type object
+   */
+  private static final int KEY_LENGTH_FEILD_SIZE = 4;
+
+  /**
+   * The length of the filed that keeps the key length in multi messages
+   */
+  private static final int MULTI_MESSAGE_KEY_LENGTH_FEILD_SIZE = 8;
+
+
   public SingleMessageDeSerializer(KryoSerializer kryoSerializer) {
     this.serializer = kryoSerializer;
   }
@@ -95,8 +107,8 @@ public class SingleMessageDeSerializer implements MessageDeSerializer {
 
       if (MessageTypeUtils.isMultiMessageType(keyType)) {
         data = DataDeserializer.getAsByteBuffer(message.getBuffers(),
-            message.getHeader().getLength() - keyPair.getKey() - 4 - 4, type,
-            ((List) keyPair.getValue()).size());
+            message.getHeader().getLength() - keyPair.getKey()
+                - MULTI_MESSAGE_KEY_LENGTH_FEILD_SIZE, type, ((List) keyPair.getValue()).size());
         results = new ArrayList<>();
         List<byte[]> keyList = (List<byte[]>) keyPair.getValue();
         List<byte[]> dataList = (List<byte[]>) data;
@@ -106,7 +118,7 @@ public class SingleMessageDeSerializer implements MessageDeSerializer {
         return results;
       } else if (!MessageTypeUtils.isPrimitiveType(keyType)) {
         data = DataDeserializer.getAsByteBuffer(message.getBuffers(),
-            message.getHeader().getLength() - keyPair.getKey() - 4, type);
+            message.getHeader().getLength() - keyPair.getKey() - KEY_LENGTH_FEILD_SIZE, type);
       } else {
         data = DataDeserializer.getAsByteBuffer(message.getBuffers(),
             message.getHeader().getLength() - keyPair.getKey(), type);
@@ -133,7 +145,8 @@ public class SingleMessageDeSerializer implements MessageDeSerializer {
       if (MessageTypeUtils.isMultiMessageType(keyType)) {
         List<byte[]> keyList = (List<byte[]>) keyPair.getValue();
         data = DataDeserializer.deserializeData(message.getBuffers(),
-            message.getHeader().getLength() - keyPair.getKey() - 4 - 4, serializer, type,
+            message.getHeader().getLength() - keyPair.getKey()
+                - MULTI_MESSAGE_KEY_LENGTH_FEILD_SIZE, serializer, type,
             ((List) keyPair.getValue()).size());
         List<byte[]> dataList = (List<byte[]>) data;
         results = new ArrayList<>();
@@ -143,7 +156,8 @@ public class SingleMessageDeSerializer implements MessageDeSerializer {
         return results;
       } else if (!MessageTypeUtils.isPrimitiveType(keyType)) {
         return DataDeserializer.deserializeData(message.getBuffers(),
-            message.getHeader().getLength() - keyPair.getKey() - 4, serializer, type);
+            message.getHeader().getLength() - keyPair.getKey() - KEY_LENGTH_FEILD_SIZE,
+            serializer, type);
       } else {
         return DataDeserializer.deserializeData(message.getBuffers(),
             message.getHeader().getLength() - keyPair.getKey(), serializer, type);
