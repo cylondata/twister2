@@ -296,7 +296,7 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
       deSerializerMap.put(e, new SingleMessageDeSerializer(new KryoSerializer()));
     }
 
-    Set<Integer> sourcesOfThisExec = TaskPlanUtils.getTasksOfThisExecutor(taskPlan, sources);
+    Set<Integer> sourcesOfThisExec = TaskPlanUtils.getTasksOfThisWorker(taskPlan, sources);
     for (int s : sourcesOfThisExec) {
       sendRoutingParameters(s, pathToUse);
       partialSendRoutingParameters(s, pathToUse);
