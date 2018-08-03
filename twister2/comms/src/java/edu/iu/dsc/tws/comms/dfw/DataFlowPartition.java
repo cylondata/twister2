@@ -460,7 +460,7 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
   public void finish(int source) {
     // first we need to call finish on the partial receivers
     if (partialReceiver != null) {
-      partialReceiver.onFinish(source * -1);
+      partialReceiver.onFinish(source);
     }
   }
 
