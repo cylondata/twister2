@@ -241,6 +241,15 @@ public class MultiMessageSerializer implements MessageSerializer {
     byte[] tempBytes = new byte[targetBuffer.getCapacity()];
     // the target remaining space left
     int targetRemainingSpace = targetByteBuffer.remaining();
+
+    //If we cannot fit the whole message in the current buffer return false
+    if (message.getHeader() != null) {
+      if (targetRemainingSpace < message.getHeader().getLength()) {
+        return false;
+      }
+    } else {
+      throw new RuntimeException(executor + " The header in the message must be built");
+    }
     // the current buffer number
     int currentSourceBuffer = state.getBufferNo();
     // bytes already copied from this buffer

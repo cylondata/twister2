@@ -535,6 +535,9 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
         } else if (message.serializedState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
           // If the message is partially serialized we will clone the message and send a clone
           // the original message will be kept so that the rest of the message can be serialized
+          if (message.getMPIMessage().getBuffers().size() == 0) {
+            break;
+          }
           List<Integer> exRoutes = new ArrayList<>(outMessage.getExternalSends());
           int startOfExternalRouts = outMessage.getAcceptedExternalSends();
           int noOfExternalSends = startOfExternalRouts;
