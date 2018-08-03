@@ -27,7 +27,6 @@ import edu.iu.dsc.tws.comms.api.BatchReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
-import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
@@ -36,7 +35,6 @@ import edu.iu.dsc.tws.comms.shuffle.FSKeyedSortedMerger;
 import edu.iu.dsc.tws.comms.shuffle.FSMerger;
 import edu.iu.dsc.tws.comms.shuffle.Shuffle;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
-import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
 /**
  * A receiver that goes to disk
@@ -108,10 +106,6 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
    */
   private Set<Integer> targets = new HashSet<>();
 
-  private TaskPlan taskPlan;
-
-  private Set<Integer> participatingWorkers;
-
   public PartitionBatchFinalReceiver(BatchReceiver receiver, boolean srt,
                                      boolean d, Comparator<Object> com) {
     this.batchReceiver = receiver;
@@ -131,9 +125,6 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
     partition = (DataFlowPartition) op;
     keyed = partition.getKeyType() != null;
     targets = new HashSet<>(expectedIds.keySet());
-    taskPlan = op.getTaskPlan();
-    participatingWorkers = TaskPlanUtils.getWorkersOfTasks(taskPlan,
-        ((DataFlowPartition) op).getSources());
 
     for (Integer target : expectedIds.keySet()) {
       Map<Integer, Boolean> perTarget = new ConcurrentHashMap<>();
@@ -171,16 +162,18 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
 
     if ((flags & MessageFlags.EMPTY) == MessageFlags.EMPTY) {
       Set<Integer> finished = finishedSources.get(target);
-      int worker = taskPlan.getExecutorForChannel(source);
-      if (finished.contains(worker)) {
+      if (finished.contains(source)) {
         LOG.log(Level.WARNING,
-            String.format("%d Duplicate finish from source id %d", this.thisWorker, worker));
+            String.format("%d Duplicate finish from source id %d", this.thisWorker, source));
       } else {
-        finished.add(worker);
+        finished.add(source);
       }
-      if (finished.size() == participatingWorkers.size()) {
+      if (finished.size() == partition.getSources().size()) {
         finishedTargets.add(target);
-      }
+      } /*else {
+        LOG.log(Level.INFO, String.format("%d finished for source %d - %s", thisWorker,
+            source, finished));
+      }*/
       return true;
     }
 
@@ -217,7 +210,7 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
 
     for (int i : finishedTargets) {
       if (!finishedTargetsCompleted.contains(i)) {
-        onFinish(i);
+        finishTarget(i);
         finishedTargetsCompleted.add(i);
       }
     }
@@ -225,12 +218,15 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
     return !finishedTargets.equals(targets);
   }
 
-  @Override
-  public void onFinish(int target) {
+  private void finishTarget(int target) {
     Shuffle sortedMerger = sortedMergers.get(target);
     sortedMerger.switchToReading();
     Iterator<Object> itr = sortedMerger.readIterator();
     batchReceiver.receive(target, itr);
+  }
+
+  @Override
+  public void onFinish(int source) {
   }
 
   private String getOperationName(int target) {
