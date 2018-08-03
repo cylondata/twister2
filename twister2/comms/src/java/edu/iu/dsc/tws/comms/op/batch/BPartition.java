@@ -60,6 +60,10 @@ public class BPartition {
     partition.send(source, message, flags, destinations);
   }
 
+  public boolean hasPending() {
+    return !partition.isComplete();
+  }
+
   public void finish(int source) {
     partition.finish(source);
   }

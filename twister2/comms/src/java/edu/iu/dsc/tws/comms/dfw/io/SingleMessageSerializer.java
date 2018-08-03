@@ -56,7 +56,7 @@ public class SingleMessageSerializer implements MessageSerializer {
   public Object build(Object message, Object partialBuildObject) {
     OutMessage sendMessage = (OutMessage) partialBuildObject;
     // we got an already serialized message, lets just return it
-    if (sendMessage.getMPIMessage().isComplete()) {
+    if (sendMessage.getChannelMessage().isComplete()) {
       sendMessage.setSendState(OutMessage.SendState.SERIALIZED);
       return sendMessage;
     }
@@ -95,9 +95,9 @@ public class SingleMessageSerializer implements MessageSerializer {
         }
       }
       // okay we are adding this buffer
-      sendMessage.getMPIMessage().addBuffer(buffer);
+      sendMessage.getChannelMessage().addBuffer(buffer);
       if (sendMessage.serializedState() == OutMessage.SendState.SERIALIZED) {
-        ChannelMessage channelMessage = sendMessage.getMPIMessage();
+        ChannelMessage channelMessage = sendMessage.getChannelMessage();
         SerializeState state = sendMessage.getSerializationState();
         int totalBytes = state.getTotalBytes();
         channelMessage.getBuffers().get(0).getByteBuffer().putInt(12, totalBytes);
@@ -105,7 +105,7 @@ public class SingleMessageSerializer implements MessageSerializer {
         MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
             sendMessage.getEdge(), totalBytes);
         builder.destination(sendMessage.getDestintationIdentifier());
-        sendMessage.getMPIMessage().setHeader(builder.build());
+        sendMessage.getChannelMessage().setHeader(builder.build());
         state.setTotalBytes(0);
 
         // mark the original message as complete
@@ -142,7 +142,7 @@ public class SingleMessageSerializer implements MessageSerializer {
    */
   private boolean serializeBody(Object payload,
                                 OutMessage sendMessage, DataBuffer buffer) {
-    MessageType type = sendMessage.getMPIMessage().getType();
+    MessageType type = sendMessage.getChannelMessage().getType();
     if (type == MessageType.OBJECT || type == MessageType.INTEGER || type == MessageType.LONG
         || type == MessageType.DOUBLE || type == MessageType.BYTE || type == MessageType.STRING
         || type == MessageType.MULTI_FIXED_BYTE) {
@@ -254,7 +254,7 @@ public class SingleMessageSerializer implements MessageSerializer {
       MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
           sendMessage.getEdge(), dataBuffer.getSize());
       builder.destination(sendMessage.getDestintationIdentifier());
-      sendMessage.getMPIMessage().setHeader(builder.build());
+      sendMessage.getChannelMessage().setHeader(builder.build());
     }
     buffer.setSize(16 + dataBuffer.getSize());
     // okay we are done with the message

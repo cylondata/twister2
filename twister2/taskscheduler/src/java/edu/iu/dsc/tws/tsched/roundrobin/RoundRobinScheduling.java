@@ -12,7 +12,7 @@
 package edu.iu.dsc.tws.tsched.roundrobin;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -35,7 +35,7 @@ public class RoundRobinScheduling {
       Set<Vertex> taskVertexSet, int numberOfContainers) {
 
     TaskAttributes taskAttributes = new TaskAttributes();
-    Map<Integer, List<InstanceId>> roundrobinAllocation = new HashMap<>();
+    Map<Integer, List<InstanceId>> roundrobinAllocation = new LinkedHashMap<>();
     for (int i = 0; i < numberOfContainers; i++) {
       roundrobinAllocation.put(i, new ArrayList<>());
     }
@@ -60,9 +60,9 @@ public class RoundRobinScheduling {
       for (Map.Entry<Integer, List<InstanceId>> entry : roundrobinAllocation.entrySet()) {
         Integer integer = entry.getKey();
         List<InstanceId> instanceIds = entry.getValue();
-        LOG.fine("Container Index:" + integer);
+        LOG.info("Container Index:" + integer);
         for (int i = 0; i < instanceIds.size(); i++) {
-          LOG.fine("Task Instance Details:"
+          LOG.info("Task Instance Details:"
               + "\t Task Name:" + instanceIds.get(i).getTaskName()
               + "\t Task id:" + instanceIds.get(i).getTaskId()
               + "\t Task index:" + instanceIds.get(i).getTaskIndex());
