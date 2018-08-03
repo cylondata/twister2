@@ -12,15 +12,12 @@
 
 package edu.iu.dsc.tws.master.client;
 
-import java.net.InetAddress;
 import java.nio.channels.SocketChannel;
-import java.util.List;
 import java.util.logging.Logger;
 
 import com.google.protobuf.Message;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.net.tcp.Progress;
 import edu.iu.dsc.tws.common.net.tcp.StatusCode;
@@ -51,17 +48,34 @@ public class JobMasterClient extends Thread {
 
   private boolean startingMessageSent = false;
 
+  private int numberOfWorkers;
+
   public JobMasterClient(Config config, WorkerNetworkInfo thisWorker) {
+    this(config, thisWorker, JobMasterContext.jobMasterIP(config),
+        JobMasterContext.jobMasterPort(config), JobMasterContext.workerInstances(config));
+  }
+
+  public JobMasterClient(Config config, WorkerNetworkInfo thisWorker,
+                         String masterHost, int masterPort, int numberOfWorkers) {
     this.config = config;
     this.thisWorker = thisWorker;
-    this.masterAddress = JobMasterContext.jobMasterIP(config);
+    this.masterAddress = masterHost;
+    this.masterPort = masterPort;
+    this.numberOfWorkers = numberOfWorkers;
+  }
+
+  public JobMasterClient(Config config, WorkerNetworkInfo thisWorker, String jobMasterIP) {
+    this.config = config;
+    this.thisWorker = thisWorker;
+    this.masterAddress = jobMasterIP;
     this.masterPort = JobMasterContext.jobMasterPort(config);
   }
+
 
   /**
    * initialize JobMasterClient
    * wait until it connects to JobMaster
-   * return false, if it can not connec to JobMaster
+   * return false, if it can not connect to JobMaster
    * @return
    */
   public boolean init() {
@@ -75,7 +89,7 @@ public class JobMasterClient extends Thread {
     long interval = JobMasterContext.pingInterval(config);
     pinger = new Pinger(thisWorker, rrClient, interval);
 
-    workerController = new WorkerController(config, thisWorker, rrClient);
+    workerController = new WorkerController(config, thisWorker, rrClient, numberOfWorkers);
 
     Network.Ping.Builder pingBuilder = Network.Ping.newBuilder();
     rrClient.registerResponseHandler(pingBuilder, pinger);
@@ -93,7 +107,13 @@ public class JobMasterClient extends Thread {
     rrClient.registerResponseHandler(stateChangeBuilder, responseMessageHandler);
     rrClient.registerResponseHandler(stateChangeResponseBuilder, responseMessageHandler);
 
+    Network.BarrierRequest.Builder barrierRequestBuilder = Network.BarrierRequest.newBuilder();
+    Network.BarrierResponse.Builder barrierResponseBuilder = Network.BarrierResponse.newBuilder();
+    rrClient.registerResponseHandler(barrierRequestBuilder, workerController);
+    rrClient.registerResponseHandler(barrierResponseBuilder, workerController);
+
     // try to connect to JobMaster, wait up to 100 seconds
+    // make this one config value
     long connectionTimeLimit = 100000;
     tryUntilConnected(connectionTimeLimit);
 
@@ -266,91 +286,13 @@ public class JobMasterClient extends Thread {
 
     @Override
     public void onConnect(SocketChannel channel, StatusCode status) {
+      // put the reason into some variable
+      // if server is not there, should try to reconnect
     }
 
     @Override
     public void onClose(SocketChannel channel) {
 
-    }
-  }
-
-  /**
-   * a test method to run JobMasterClient
-   * @param args
-   */
-  public static void main(String[] args) {
-
-    String masterAddress = "localhost";
-    int workerTempID = 0;
-    int numberOfWorkers = 1;
-
-    if (args.length == 1) {
-      numberOfWorkers = Integer.parseInt(args[0]);
-    }
-
-    if (args.length == 2) {
-      numberOfWorkers = Integer.parseInt(args[0]);
-      workerTempID = Integer.parseInt(args[1]);
-    }
-
-    simulateClient(masterAddress, workerTempID, numberOfWorkers);
-  }
-
-  /**
-   * a method to simulate JobMasterClient running in workers
-   * @param masterAddress
-   * @param numberOfWorkers
-   */
-  public static void simulateClient(String masterAddress, int workerTempID,
-                                    int numberOfWorkers) {
-
-    InetAddress workerIP = WorkerController.convertStringToIP("149.165.150.81");
-    int workerPort = 10000 + (int) (Math.random() * 10000);
-
-    WorkerNetworkInfo workerNetworkInfo = new WorkerNetworkInfo(workerIP, workerPort, workerTempID);
-
-    Config cfg = Config.newBuilder()
-        .put(Context.TWISTER2_WORKER_INSTANCES, numberOfWorkers)
-        .put(JobMasterContext.PING_INTERVAL, 1000)
-        .put(JobMasterContext.JOB_MASTER_IP, masterAddress)
-        .put(JobMasterContext.JOB_MASTER_ASSIGNS_WORKER_IDS, true)
-        .build();
-
-    JobMasterClient client = new JobMasterClient(cfg, workerNetworkInfo);
-    client.init();
-
-    client.sendWorkerStartingMessage();
-
-    // wait 500ms
-    sleeeep(5000);
-
-    client.sendWorkerRunningMessage();
-
-    List<WorkerNetworkInfo> workerList = client.workerController.getWorkerList();
-    LOG.info(WorkerNetworkInfo.workerListAsString(workerList));
-
-    // wait 2000ms
-    sleeeep(5000);
-
-    workerList = client.workerController.waitForAllWorkersToJoin(2000);
-    LOG.info(WorkerNetworkInfo.workerListAsString(workerList));
-
-    client.sendWorkerCompletedMessage();
-//    sleeeep(500);
-
-    client.close();
-
-    System.out.println("all messaging done. waiting before finishing.");
-
-//    sleeeep(5000);
-  }
-
-  public static void sleeeep(long duration) {
-
-    try {
-      Thread.sleep(duration);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
     }
   }
 

@@ -21,8 +21,6 @@ import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.POD_MEMOR
 public final class KubernetesUtils {
   private static final Logger LOG = Logger.getLogger(KubernetesUtils.class.getName());
 
-  public static String persistentJobDirName = null;
-
   private KubernetesUtils() {
   }
 
@@ -38,17 +36,11 @@ public final class KubernetesUtils {
 
   /**
    * create file copy command to a pod
-   * if persistent storage is used, copy there
    * @return
    */
   public static String[] createCopyCommand(String filename, String namespace, String podName) {
 
-    String targetDir = null;
-    if (persistentJobDirName == null) {
-      targetDir = String.format("%s/%s:%s", namespace, podName, POD_MEMORY_VOLUME);
-    } else {
-      targetDir = String.format("%s/%s:%s", namespace, podName, persistentJobDirName);
-    }
+    String targetDir = String.format("%s/%s:%s", namespace, podName, POD_MEMORY_VOLUME);
     return new String[]{"kubectl", "cp", filename, targetDir};
   }
 
@@ -77,29 +69,6 @@ public final class KubernetesUtils {
    */
   public static String createJobMasterServiceName(String jobName) {
     return KubernetesConstants.TWISTER2_SERVICE_PREFIX + jobName + "-job-master";
-  }
-
-  /**
-   * create persistent directory name for a job
-   * if it is already created, return the previous one
-   * @param jobName
-   * @return
-   */
-  public static String createPersistentJobDirName(String jobName, boolean persistentUploading) {
-    if (persistentJobDirName != null) {
-      return persistentJobDirName;
-    }
-
-//    String pJobDirName = KubernetesConstants.PERSISTENT_VOLUME_MOUNT + "/twister2/" + jobName
-//        + "-" + System.currentTimeMillis();
-
-    String pJobDirName = KubernetesConstants.PERSISTENT_VOLUME_MOUNT;
-
-    if (persistentUploading) {
-      persistentJobDirName = pJobDirName;
-    }
-
-    return pJobDirName;
   }
 
   /**
@@ -140,6 +109,10 @@ public final class KubernetesUtils {
     return KubernetesConstants.SERVICE_LABEL_PREFIX + jobName + "-job-master";
   }
 
+  public static String createJobPodsLabel(String jobName) {
+    return KubernetesConstants.TWISTER2_JOB_PODS_PREFIX + jobName;
+  }
+
   /**
    * this label is used when submitting queries to kubernetes master
    * @param jobName
@@ -147,6 +120,19 @@ public final class KubernetesUtils {
    */
   public static String createServiceLabelWithKey(String jobName) {
     return KubernetesConstants.SERVICE_LABEL_KEY + "=" + createServiceLabel(jobName);
+  }
+
+  /**
+   * this label is used when submitting queries to kubernetes master
+   * @param jobName
+   * @return
+   */
+  public static String createJobMasterServiceLabelWithKey(String jobName) {
+    return KubernetesConstants.SERVICE_LABEL_KEY + "=" + createJobMasterServiceLabel(jobName);
+  }
+
+  public static String createJobPodsLabelWithKey(String jobName) {
+    return KubernetesConstants.TWISTER2_JOB_PODS_KEY + "=" + createJobPodsLabel(jobName);
   }
 
   /**

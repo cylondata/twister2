@@ -15,16 +15,16 @@ twister2.resource.scheduler.mesos.env: "devel"
 twister2.job.name: "basic-mesos"
 
 # number of CPUs for this job
-twister2.cpu_per_container: "1"
+twister2.cpu_per_container: "2"
 
 # amount of memory for each CPU in megabytes
-twister2.ram_per_container: "128"
+twister2.ram_per_container: "1024"
 
 # amount of hard disk space on each CPU in bytes, 1GB=1024*1024*1024
-twister2.disk_per_container: "128"
+twister2.disk_per_container: "1024"
 
 # number of instances for the task
-twister2.number_of_containers: "3"
+twister2.number_of_containers: "6"
 
 # container per mesos executor
 twister2.container_per_worker: "1"

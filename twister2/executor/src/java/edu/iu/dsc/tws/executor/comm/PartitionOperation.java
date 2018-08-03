@@ -114,12 +114,13 @@ public class PartitionOperation extends AbstractParallelOperation {
     }
 
     @Override
-    public void onFinish(int target) {
+    public void onFinish(int source) {
 
     }
 
     @Override
-    public void progress() {
+    public boolean progress() {
+      return true;
     }
   }
 

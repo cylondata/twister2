@@ -98,7 +98,7 @@ public class DataFlowLoadBalance implements DataFlowOperation, ChannelReceiver {
    * @param edge
    */
   public void init(Config cfg, MessageType t, TaskPlan taskPlan, int edge) {
-    this.thisSources = TaskPlanUtils.getTasksOfThisExecutor(taskPlan, sources);
+    this.thisSources = TaskPlanUtils.getTasksOfThisWorker(taskPlan, sources);
     LOG.info(String.format("%d setup loadbalance routing %s",
         taskPlan.getThisExecutor(), thisSources));
     this.thisTasks = taskPlan.getTasksOfThisExecutor();
@@ -142,7 +142,7 @@ public class DataFlowLoadBalance implements DataFlowOperation, ChannelReceiver {
     Map<Integer, MessageSerializer> serializerMap = new HashMap<>();
     Map<Integer, MessageDeSerializer> deSerializerMap = new HashMap<>();
 
-    Set<Integer> srcs = TaskPlanUtils.getTasksOfThisExecutor(taskPlan, sources);
+    Set<Integer> srcs = TaskPlanUtils.getTasksOfThisWorker(taskPlan, sources);
     for (int s : srcs) {
       // later look at how not to allocate pairs for this each time
       ArrayBlockingQueue<Pair<Object, OutMessage>> pendingSendMessages =
@@ -195,7 +195,7 @@ public class DataFlowLoadBalance implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public void progress() {
+  public boolean progress() {
     try {
       delegete.progress();
       if (finalReceiverProgress.compareAndSet(false, true)) {
@@ -206,6 +206,7 @@ public class DataFlowLoadBalance implements DataFlowOperation, ChannelReceiver {
       LOG.log(Level.SEVERE, "un-expected error", t);
       throw new RuntimeException(t);
     }
+    return true;
   }
 
   @Override

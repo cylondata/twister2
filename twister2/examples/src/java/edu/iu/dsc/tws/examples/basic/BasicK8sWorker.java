@@ -44,17 +44,18 @@ public class BasicK8sWorker implements IWorker {
     LOG.info("BasicK8sWorker started. Current time: " + System.currentTimeMillis());
 
     if (volatileVolume != null) {
-      volatileVolume.getWorkerDir();
-      LOG.info("VolatileVolumeDir: " + volatileVolume.getWorkerDirPath());
+      String volatileDirPath = volatileVolume.getWorkerDir().getPath();
+      LOG.info("Volatile Volume Directory: " + volatileDirPath);
     }
 
     if (persistentVolume != null) {
       // create worker directory
-      persistentVolume.getWorkerDir();
+      String persVolumePath = persistentVolume.getWorkerDir().getPath();
+      LOG.info("Persistent Volume Directory: " + persVolumePath);
     }
 
     // wait for all workers in this job to join
-    List<WorkerNetworkInfo> workerList = workerController.waitForAllWorkersToJoin(10000);
+    List<WorkerNetworkInfo> workerList = workerController.waitForAllWorkersToJoin(50000);
     if (workerList != null) {
       LOG.info("All workers joined. " + WorkerNetworkInfo.workerListAsString(workerList));
     } else {
@@ -63,8 +64,8 @@ public class BasicK8sWorker implements IWorker {
 
     LOG.info("All workers joined. Current time: " + System.currentTimeMillis());
 
-    sleepSomeTime();
-//    echoServer(workerController.getWorkerNetworkInfo());
+//    sleepSomeTime();
+    echoServer(workerController.getWorkerNetworkInfo());
   }
 
   /**
@@ -116,12 +117,13 @@ public class BasicK8sWorker implements IWorker {
   }
 
   /**
-   * a test method to make the worker wait indefinitely
+   * a test method to make the worker wait some time
    */
   public void sleepSomeTime() {
 
-    long maxSleepDuration = 20;
-    long sleepDuration = (long) (Math.random() * maxSleepDuration);
+    long maxSleepDuration = 300; // 5 minutes
+    long sleepDuration = maxSleepDuration;
+//    long sleepDuration = (long) (Math.random() * maxSleepDuration);
     try {
       LOG.info("BasicK8sWorker will sleep: " + sleepDuration + " seconds.");
       Thread.sleep(sleepDuration * 1000);

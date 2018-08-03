@@ -124,20 +124,24 @@ public class AuroraLauncher implements ILauncher {
    * @return
    */
   public static Map<AuroraField, String> constructEnvVariables(Config config) {
+
+    String jobName = SchedulerContext.jobName(config);
+    String jobDescriptionFile = SchedulerContext.createJobDescriptionFileName(jobName);
+
     HashMap<AuroraField, String> envs = new HashMap<AuroraField, String>();
     envs.put(AuroraField.CORE_PACKAGE_FILENAME, SchedulerContext.corePackageFileName(config));
     envs.put(AuroraField.JOB_PACKAGE_FILENAME, SchedulerContext.jobPackageFileName(config));
     envs.put(AuroraField.AURORA_CLUSTER_NAME, AuroraContext.auroraClusterName(config));
     envs.put(AuroraField.ENVIRONMENT, AuroraContext.environment(config));
     envs.put(AuroraField.ROLE, AuroraContext.role(config));
-    envs.put(AuroraField.JOB_NAME, SchedulerContext.jobName(config));
+    envs.put(AuroraField.JOB_NAME, jobName);
     envs.put(AuroraField.CPUS_PER_CONTAINER, SchedulerContext.workerCPU(config) + "");
     envs.put(AuroraField.RAM_PER_CONTAINER, SchedulerContext.workerRAM(config) * 1048576 + "");
     envs.put(AuroraField.DISK_PER_CONTAINER,
         AuroraContext.workerVolatileDisk(config) * 1073741824 + "");
     envs.put(AuroraField.NUMBER_OF_CONTAINERS, SchedulerContext.workerInstances(config) + "");
     envs.put(AuroraField.TWISTER2_PACKAGES_PATH, SchedulerContext.packagesPath(config));
-    envs.put(AuroraField.JOB_DESCRIPTION_FILE, SchedulerContext.jobDescriptionFile(config));
+    envs.put(AuroraField.JOB_DESCRIPTION_FILE, jobDescriptionFile);
     envs.put(AuroraField.USER_JOB_JAR_FILE, SchedulerContext.userJobJarFile(config));
     envs.put(AuroraField.CLUSTER_TYPE, SchedulerContext.clusterType(config));
     return envs;

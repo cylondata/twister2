@@ -43,11 +43,13 @@ public interface MessageReceiver {
   /**
    * Called when the end of the operation is reached
    */
-  default void onFinish(int target) {
+  default void onFinish(int source) {
   }
 
   /**
    * This method will be called by the progress
+   *
+   * @return true if needs further progress
    */
-  void progress();
+  boolean progress();
 }

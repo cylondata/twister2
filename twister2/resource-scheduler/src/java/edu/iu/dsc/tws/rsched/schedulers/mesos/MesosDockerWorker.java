@@ -37,6 +37,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
+import edu.iu.dsc.tws.master.client.JobMasterClient;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
@@ -46,19 +47,18 @@ import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
 public class MesosDockerWorker {
 
   public static final Logger LOG = Logger.getLogger(MesosDockerWorker.class.getName());
+  public static JobMasterClient jobMasterClient;
   private Config config;
   private String jobName;
-
 
   public static void main(String[] args) throws Exception {
 
 
+    Thread.sleep(20000);
     //gets the docker home directory
     String homeDir = System.getenv("HOME");
     int workerId = Integer.parseInt(System.getenv("WORKER_ID"));
     String jobName = System.getenv("JOB_NAME");
-
-    int id = workerId;
     MesosDockerWorker worker = new MesosDockerWorker();
 
     String twister2Home = Paths.get("").toAbsolutePath().toString();
@@ -93,7 +93,7 @@ public class MesosDockerWorker {
       JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/"
           + jobName + ".job");
       workerController = new MesosWorkerController(worker.config, job,
-          Inet4Address.getLocalHost().getHostAddress(), 22, id);
+          Inet4Address.getLocalHost().getHostAddress(), 2022, workerId);
       LOG.info("Initializing with zookeeper");
       workerController.initializeWithZooKeeper();
       LOG.info("Waiting for all workers to join");
@@ -106,53 +106,40 @@ public class MesosDockerWorker {
       e.printStackTrace();
     }
 
-    System.out.println("Worker id " + id);
+    String jobMasterIP = workerNetworkInfoList.get(0).getWorkerIP().getHostAddress();
+    LOG.info("JobMasterIP" + jobMasterIP);
+    System.out.println("Worker id " + workerId);
     StringBuilder outputBuilder = new StringBuilder();
     int workerCount = workerController.getNumberOfWorkers();
     System.out.println("worker count " + workerCount);
+    worker.startJobMasterClient(workerController.getWorkerNetworkInfo(), jobMasterIP);
 
 
-    //docker master has the id equals to zero
-    if (id == 0) {
 
-      File hostFile = new File(homeDir + "/.ssh/config");
 
-      hostFile.getParentFile().mkdirs();
+    //mpi master has the id equals to 1
+    //id==0 is job master
+    if (workerId == 1) {
 
       Writer writer = new BufferedWriter(new OutputStreamWriter(
-          new FileOutputStream(homeDir + "/.ssh/config", true)));
+          new FileOutputStream("/twister2/hostFile", true)));
 
-      writer.write("Host *\n\tStrictHostKeyChecking no\n\tUserKnownHostsFile /dev/null\n"
-          + "\tIdentityFile ~/.ssh/id_rsa\n");
+      for (int i = 1; i < workerCount; i++) {
 
+        writer.write(workerNetworkInfoList.get(i).getWorkerIP().getHostAddress()
+            + "\n");
 
-      String hosts = "";
-
-      for (int i = 0; i < workerCount; i++) {
-
-        writer.write("Host w" + workerNetworkInfoList.get(i).getWorkerID() + "\n"
-            + "\tHostname " + workerNetworkInfoList.get(i).getWorkerIP().getHostAddress() + "\n"
-            + "\tPort " + workerNetworkInfoList.get(i).getWorkerPort() + "\n");
-
-        System.out.println("Host w" + workerNetworkInfoList.get(i).getWorkerID() + "\n"
-            + "\tHostname " + workerNetworkInfoList.get(i).getWorkerIP().getHostAddress() + "\n"
-            + "\tPort " + workerNetworkInfoList.get(i).getWorkerPort() + "\n");
-
-        hosts += "w" + workerNetworkInfoList.get(i).getWorkerID() + ",";
+        System.out.println("host ip: "
+            + workerNetworkInfoList.get(i).getWorkerIP().getHostAddress());
       }
 
-
       writer.close();
-
-      //remove final comma
-      hosts = hosts.substring(0, hosts.lastIndexOf(','));
-
-
       System.out.println("Before mpirun");
-      System.out.println("hosts " + hosts);
-      String[] command = {"mpirun", "-allow-run-as-root", "-np",
-          workerController.getNumberOfWorkers() + "",
-          "--host", hosts, "java", "-cp",
+      //working one
+
+      String[] command = {"mpirun", "-allow-run-as-root", "-npernode",
+          "1", "--mca", "btl_tcp_if_include", "eth0",
+          "--hostfile", "/twister2/hostFile", "java", "-cp",
           "twister2-job/libexamples-java.jar",
           "edu.iu.dsc.tws.examples.basic.BasicMpiJob", ">mpioutfile"};
 
@@ -164,7 +151,36 @@ public class MesosDockerWorker {
       System.out.println("Finished");
     }
 
+    jobMasterClient.sendWorkerCompletedMessage();
+  }
 
+
+  public void startJobMasterClient(WorkerNetworkInfo networkInfo, String jobMasterIP) {
+
+    //String jobMasterIP = JobMasterContext.jobMasterIP(config);
+    // jobMasterIP = jobMasterIP.trim();
+
+    // if jobMasterIP is null, or the length zero,
+    // job master runs as a separate pod
+    // get its IP address first
+    /*if (jobMasterIP == null || jobMasterIP.length() == 0) {
+
+      DiscoverJobMaster djm = new DiscoverJobMaster();
+      jobMasterIP = djm.waitUntilJobMasterRunning(jobMasterPodName, 10000);
+
+      cnf = Config.newBuilder()
+          .putAll(cnfg)
+          .put(JobMasterContext.JOB_MASTER_IP, jobMasterIP)
+          .build();
+    }
+    */
+
+    LOG.info("JobMasterIP: " + jobMasterIP);
+
+    jobMasterClient = new JobMasterClient(config, networkInfo, jobMasterIP);
+    jobMasterClient.init();
+    // we need to make sure that the worker starting message went through
+    jobMasterClient.sendWorkerStartingMessage();
   }
 
 

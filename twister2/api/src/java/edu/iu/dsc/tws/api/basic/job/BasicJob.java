@@ -11,9 +11,17 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.basic.job;
 
+import java.util.AbstractMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.logging.Logger;
+
+import com.google.protobuf.ByteString;
 
 import edu.iu.dsc.tws.api.JobConfig;
+import edu.iu.dsc.tws.api.JobMapConfig;
+import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.proto.system.ResourceAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
@@ -22,24 +30,43 @@ import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
  * This is a basic job with only communication available
  */
 public final class BasicJob {
+  private static final Logger LOG = Logger.getLogger(BasicJob.class.getName());
+
   private String name;
   private String containerClass;
   private ResourceContainer requestedResource;
   private int noOfContainers;
   private JobConfig config;
+  private JobMapConfig jobMapConfig;
 
   private BasicJob() {
   }
 
+  /**
+   * Serializing the JobAPI
+   **/
   public JobAPI.Job serialize() {
     JobAPI.Job.Builder jobBuilder = JobAPI.Job.newBuilder();
 
     JobAPI.Config.Builder configBuilder = JobAPI.Config.newBuilder();
-    for (Map.Entry<String, String> e : config.entrySet()) {
-      JobAPI.Config.KeyValue.Builder keyValueBuilder = JobAPI.Config.KeyValue.newBuilder();
-      keyValueBuilder.setKey(e.getKey());
-      keyValueBuilder.setValue(e.getValue());
-      configBuilder.addKvs(keyValueBuilder);
+
+    Set<Map.Entry<String, Object>> configEntry = config.entrySet();
+    Set<Map.Entry<String, byte[]>> configByteEntry = new HashSet<>();
+    KryoSerializer kryoSerializer = new KryoSerializer();
+    for (Map.Entry<String, Object> e : configEntry) {
+      String key = e.getKey();
+      Object object = e.getValue();
+      byte[] objectByte = kryoSerializer.serialize(object);
+      Map.Entry<String, byte[]> entry =
+          new AbstractMap.SimpleEntry<String, byte[]>(key, objectByte);
+      configByteEntry.add(entry);
+    }
+
+    for (Map.Entry<String, byte[]> e : configByteEntry) {
+      String key = e.getKey();
+      byte[] bytes = e.getValue();
+      ByteString byteString = ByteString.copyFrom(bytes);
+      configBuilder.putConfigByteMap(key, byteString);
     }
 
     jobBuilder.setConfig(configBuilder);
@@ -124,5 +151,6 @@ public final class BasicJob {
       }
       return basicJob;
     }
+
   }
 }

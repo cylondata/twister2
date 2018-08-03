@@ -27,6 +27,9 @@ public class KubernetesContext extends SchedulerContext {
   public static final boolean NODE_PORT_SERVICE_REQUESTED_DEFAULT = false;
   public static final String NODE_PORT_SERVICE_REQUESTED = "kubernetes.node.port.service.requested";
 
+  public static final boolean WORKERS_USE_OPENMPI_DEFAULT = false;
+  public static final String WORKERS_USE_OPENMPI = "kubernetes.workers.use.openmpi";
+
   public static final int SERVICE_NODE_PORT_DEFAULT = 0;
   public static final String SERVICE_NODE_PORT = "kubernetes.service.node.port";
 
@@ -69,10 +72,12 @@ public class KubernetesContext extends SchedulerContext {
   public static final String K8S_WORKER_MAPPING_UNIFORM_DEFAULT = "none";
   public static final String K8S_WORKER_MAPPING_UNIFORM = "kubernetes.worker.mapping.uniform";
 
-  public static final boolean PERSISTENT_VOLUME_UPLOADING_DEFAULT = true;
-  public static final String PERSISTENT_VOLUME_UPLOADING = "kubernetes.persistent.volume.uploading";
+  // it can be either "webserver", "client-to-pods"
+  public static final String K8S_UPLOADING_METHOD_DEFAULT = "webserver";
+  public static final String K8S_UPLOADING_METHOD = "twister2.kubernetes.uploading.method";
 
   public static final String PERSISTENT_JOB_DIRECTORY = "job.master.persistent.job.directory";
+  public static final String SECRET_NAME = "kubernetes.secret.name";
 
   public static int workersPerPod(Config cfg) {
     return cfg.getIntegerValue(WORKERS_PER_POD, WORKERS_PER_POD_DEFAULT);
@@ -80,6 +85,10 @@ public class KubernetesContext extends SchedulerContext {
 
   public static String namespace(Config cfg) {
     return cfg.getStringValue(KUBERNETES_NAMESPACE, KUBERNETES_NAMESPACE_DEFAULT);
+  }
+
+  public static boolean workersUseOpenMPI(Config cfg) {
+    return cfg.getBooleanValue(WORKERS_USE_OPENMPI, WORKERS_USE_OPENMPI_DEFAULT);
   }
 
   public static boolean nodePortServiceRequested(Config cfg) {
@@ -142,12 +151,16 @@ public class KubernetesContext extends SchedulerContext {
     return cfg.getStringValue(K8S_WORKER_MAPPING_UNIFORM, K8S_WORKER_MAPPING_UNIFORM_DEFAULT);
   }
 
-  public static boolean persistentVolumeUploading(Config cfg) {
-    return cfg.getBooleanValue(PERSISTENT_VOLUME_UPLOADING, PERSISTENT_VOLUME_UPLOADING_DEFAULT);
-  }
-
   public static String persistentJobDirectory(Config cfg) {
     return cfg.getStringValue(PERSISTENT_JOB_DIRECTORY);
+  }
+
+  public static String uploadMethod(Config cfg) {
+    return cfg.getStringValue(K8S_UPLOADING_METHOD, K8S_UPLOADING_METHOD_DEFAULT);
+  }
+
+  public static String secretName(Config cfg) {
+    return cfg.getStringValue(SECRET_NAME);
   }
 
 }

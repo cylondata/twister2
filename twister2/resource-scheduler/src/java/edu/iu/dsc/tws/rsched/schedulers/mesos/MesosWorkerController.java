@@ -96,22 +96,23 @@ public class MesosWorkerController implements IWorkerController {
   }
 
   @Override
-  public List<WorkerNetworkInfo> waitForAllWorkersToJoin(long timeLimit) {
+  public List<WorkerNetworkInfo> waitForAllWorkersToJoin(long timeLimitMilliSec) {
 
     LOG.info("Waiting for " + numberOfWorkers + " workers to join .........");
 
     // the amount of time to wait for all workers to join a job
     //int timeLimit =  ZKContext.maxWaitTimeForAllWorkersToJoin(config);
     long startTime = System.currentTimeMillis();
-    workerList = zkController.waitForAllWorkersToJoin(timeLimit);
+    workerList = zkController.waitForAllWorkersToJoin(timeLimitMilliSec);
     long duration = System.currentTimeMillis() - startTime;
 
     if (workerList == null) {
       LOG.log(Level.SEVERE, "Could not get full worker list. timeout limit has been reached !!!!"
-          + "Waited " + timeLimit + " ms.");
+          + "Waited " + timeLimitMilliSec + " ms.");
     } else {
       LOG.log(Level.INFO, "Waited " + duration + " ms for all workers to join.");
 
+      workerList = zkController.getWorkerList();
       System.out.println("list of current workers in the job: ");
       zkController.printWorkers(workerList);
 
@@ -122,6 +123,12 @@ public class MesosWorkerController implements IWorkerController {
     }
     return workerList;
   }
+
+  @Override
+  public boolean waitOnBarrier(long timeLimitMilliSec) {
+    return zkController.waitOnBarrier(timeLimitMilliSec);
+  }
+
 
   /**
    * needs to close down when finished computation

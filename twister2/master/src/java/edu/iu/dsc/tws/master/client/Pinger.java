@@ -52,6 +52,8 @@ public class Pinger implements MessageHandler {
 
   public void sendPingMessage() {
 
+    lastPingTime = System.currentTimeMillis();
+
     Network.Ping ping = Network.Ping.newBuilder()
         .setWorkerID(thisWorker.getWorkerID())
         .setPingMessage("Ping Message From the Worker to the Job Master")
@@ -59,19 +61,18 @@ public class Pinger implements MessageHandler {
         .build();
 
     requestID = rrClient.sendRequest(ping);
-    lastPingTime = System.currentTimeMillis();
 
     if (requestID == null) {
       LOG.severe("When sending Ping message, the requestID returned null.");
     } else {
-      LOG.info("Ping request message sent to the master: \n" + ping);
+      LOG.fine("Ping request message sent to the master: \n" + ping);
     }
   }
 
   @Override
   public void onMessage(RequestID id, int workerId, Message message) {
     if (message instanceof Network.Ping) {
-      LOG.info("Ping Response message received from the master: \n" + message);
+      LOG.fine("Ping Response message received from the master: \n" + message);
 
       if (!requestID.equals(id)) {
         LOG.severe("Ping Response message requestID does not match.");

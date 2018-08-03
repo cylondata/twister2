@@ -21,3 +21,6 @@ bazel-genfiles
 bazel-out
 bazel-testlogs
 bazel-twister2
+
+#sphinx created files
+docs/_build

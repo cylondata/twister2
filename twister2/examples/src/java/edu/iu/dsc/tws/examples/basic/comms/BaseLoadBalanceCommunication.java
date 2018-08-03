@@ -174,7 +174,8 @@ public class BaseLoadBalanceCommunication implements IContainer {
     }
 
     @Override
-    public void progress() {
+    public boolean progress() {
+      return true;
     }
   }
 

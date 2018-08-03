@@ -1,4 +1,4 @@
-syntax = "proto2";
+syntax = "proto3";
 package tws.proto.job;
 
 option java_package = "edu.iu.dsc.tws.proto.system.job";
@@ -7,45 +7,47 @@ option java_outer_classname = "JobAPI";
 import "resource-scheduler.proto";
 
 enum JobFormatType {
-    SHUFFLE = 1;
-    FIELDS = 2;
+    SHUFFLE = 0;
+    FIELDS = 1;
 }
 
 // defines the job parameters. This will define the required resources for the job,
 // what type of a job this is (a basic container job, fully featured dataflow job etc)
 message Config {
     message KeyValue {
-        required string key = 1;
+        string key = 1;
         // Only one of the below are set
-        optional string value = 2;
-        optional bytes serialized_value = 3;
+        string value = 2;
+        bytes serialized_value = 3;
     }
     repeated KeyValue kvs = 1;
+    map<string, bytes> config_byte_map = 2;
 }
 
 message Container {
-    required string class_name = 1;
+    string class_name = 1;
 }
 
 message JobResources {
-    required tws.proto.resource.scheduler.ComputeResource container = 1;
-    required int32 no_of_containers = 2;
+    tws.proto.resource.scheduler.ComputeResource container = 1;
+    int32 no_of_containers = 2;
 }
 
 message JobFormat {
-    required JobFormatType type = 1;
-    required string job_file = 2;
+    JobFormatType type = 1;
+    string job_file = 2;
 }
 
 // this is a basic job. it will only have a container
 message Job {
-    required string job_name = 1;
+    string job_name = 1;
     // the container to run
-    required Container container = 2;
+    Container container = 2;
     // the requested resourcces
-    required JobResources job_resources = 3;
+    JobResources job_resources = 3;
     // the configurations specified
-    required Config config = 4;
+    Config config = 4;
     // how the job is layed out
-    optional JobFormat job_format = 5;
+    JobFormat job_format = 5;
+
 }

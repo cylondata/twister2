@@ -99,7 +99,7 @@ public class TaskAttributes {
 
   public int getTotalNumberOfInstances(Set<Vertex> iTaskSet) {
 
-    HashMap<String, Integer> parallelTaskMap = getParallelTaskMap(iTaskSet);
+    Map<String, Integer> parallelTaskMap = getParallelTaskMap(iTaskSet);
     int totalNumberOfInstances = 0;
     for (int instances : parallelTaskMap.values()) {
       totalNumberOfInstances += instances;
@@ -107,9 +107,32 @@ public class TaskAttributes {
     return totalNumberOfInstances;
   }
 
-  public HashMap<String, Integer> getParallelTaskMap(Set<Vertex> iTaskSet) {
+  public Map<String, Integer> getParallelTaskMap(Set<Vertex> iTaskSet) {
 
-    HashMap<String, Integer> parallelTaskMap = new HashMap<>();
+    //Map<String, Integer> parallelTaskMap = new LinkedHashMap<>();
+    Map<String, Integer> parallelTaskMap = new HashMap<>();
+    try {
+      for (Vertex task : iTaskSet) {
+        Config config = task.getConfig();
+        String taskName = task.getName();
+        Integer parallelTaskCount;
+        if (task.getParallelism() >= 1) {
+          parallelTaskCount = task.getParallelism();
+        } else { //if (task.getParallelism() < 1) {
+          parallelTaskCount = TaskSchedulerContext.taskParallelism(config);
+        }
+        parallelTaskMap.put(taskName, parallelTaskCount);
+      }
+    } catch (Exception ee) {
+      ee.printStackTrace();
+    }
+    //LOG.info("Parallel Task map:" + parallelTaskMap);
+    return parallelTaskMap;
+  }
+
+  public Map<String, Integer> getParallelTaskMap(Set<Vertex> iTaskSet, String msg) {
+
+    HashMap<String, Integer> parallelTaskMap = new LinkedHashMap<>();
 
     try {
       for (Vertex task : iTaskSet) {
@@ -129,9 +152,9 @@ public class TaskAttributes {
     return parallelTaskMap;
   }
 
-  public HashMap<String, Integer> getParallelTaskMap(Vertex taskVertex) {
+  public Map<String, Integer> getParallelTaskMap(Vertex taskVertex) {
 
-    HashMap<String, Integer> parallelTaskMap = new LinkedHashMap<>();
+    Map<String, Integer> parallelTaskMap = new LinkedHashMap<>();
 
     try {
       Config config = taskVertex.getConfig();
@@ -151,7 +174,7 @@ public class TaskAttributes {
 
   public int getTotalNumberOfInstances(Vertex taskVertex) {
 
-    HashMap<String, Integer> parallelTaskMap = getParallelTaskMap(taskVertex);
+    Map<String, Integer> parallelTaskMap = getParallelTaskMap(taskVertex);
     int totalNumberOfInstances = 0;
     for (int instances : parallelTaskMap.values()) {
       totalNumberOfInstances += instances;

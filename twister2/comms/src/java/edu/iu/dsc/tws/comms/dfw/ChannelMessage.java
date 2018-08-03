@@ -26,6 +26,12 @@ public class ChannelMessage {
   private final List<DataBuffer> buffers = new ArrayList<DataBuffer>();
 
   /**
+   * List of byte arrays which are used to copy data from {@link ChannelMessage#buffers}
+   * When the system runs out of receive buffers
+   */
+  private final List<DataBuffer> overflowBuffers = new ArrayList<DataBuffer>();
+
+  /**
    * Keeps the number of references to this message
    * The resources associated with the message is released when refcount becomes 0
    */
@@ -49,6 +55,10 @@ public class ChannelMessage {
    */
   private MessageHeader header;
 
+  /**
+   * Keeps track of whether buffer containing the buffer was sent or not
+   */
+  private boolean headerSent;
   /**
    * Keep weather the message has been fully built
    */
@@ -96,6 +106,20 @@ public class ChannelMessage {
   }
 
   public List<DataBuffer> getBuffers() {
+    if (overflowBuffers.size() > 0) {
+      List<DataBuffer> total = new ArrayList<DataBuffer>();
+      total.addAll(overflowBuffers);
+      total.addAll(buffers);
+      return total;
+    } else {
+      return buffers;
+    }
+  }
+
+  /**
+   * returns the direct buffers that were allocated.
+   */
+  public List<DataBuffer> getNormalBuffers() {
     return buffers;
   }
 
@@ -116,6 +140,7 @@ public class ChannelMessage {
   public boolean doneProcessing() {
     return refCount == 0;
   }
+
   /**
    * Release the allocated resources to this buffer.
    */
@@ -130,6 +155,27 @@ public class ChannelMessage {
     buffers.add(buffer);
   }
 
+  protected void addBuffers(List<DataBuffer> bufferList) {
+    buffers.addAll(bufferList);
+  }
+
+  protected void addOverFlowBuffers(List<DataBuffer> bufferList) {
+    overflowBuffers.addAll(bufferList);
+  }
+
+  protected void removeAllBuffers() {
+    overflowBuffers.clear();
+    buffers.clear();
+  }
+
+  public void addToOverFlowBuffer(DataBuffer data) {
+    overflowBuffers.add(data);
+  }
+
+  public List<DataBuffer> getOverflowBuffers() {
+    return overflowBuffers;
+  }
+
   public int getOriginatingId() {
     return originatingId;
   }
@@ -142,14 +188,35 @@ public class ChannelMessage {
     this.header = header;
   }
 
+  public void setOriginatingId(int originatingId) {
+    this.originatingId = originatingId;
+  }
+
+  public void setMessageDirection(MessageDirection messageDirection) {
+    this.messageDirection = messageDirection;
+  }
+
+  public ChannelMessageReleaseCallback getReleaseListener() {
+    return releaseListener;
+  }
+
+  public void setReleaseListener(ChannelMessageReleaseCallback releaseListener) {
+    this.releaseListener = releaseListener;
+  }
+
+  public void setType(MessageType type) {
+    this.type = type;
+  }
+
   public boolean build() {
+
     if (header == null && buffers.size() > 0) {
       return false;
     }
 
     if (header != null) {
       int currentSize = 0;
-      for (DataBuffer buffer : buffers) {
+      for (DataBuffer buffer : getBuffers()) {
         currentSize += buffer.getByteBuffer().remaining();
       }
 //      LOG.info(String.format("Current size %d length %d", currentSize,
@@ -197,4 +264,13 @@ public class ChannelMessage {
   public MessageType getKeyType() {
     return keyType;
   }
+
+  public boolean isHeaderSent() {
+    return headerSent;
+  }
+
+  public void setHeaderSent(boolean headerSent) {
+    this.headerSent = headerSent;
+  }
+
 }

@@ -26,6 +26,7 @@ import edu.iu.dsc.tws.executor.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.ExecutionModel;
 import edu.iu.dsc.tws.executor.threading.ThreadExecutor;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
@@ -71,15 +72,9 @@ public class ComplexByteTask implements IContainer {
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);
     ExecutionPlan executionPlan = new ExecutionPlan();
     ExecutionPlan plan = executionPlanBuilder.schedule(config, graph, taskSchedulePlan);
-    plan.setNumThreads(2);
     ExecutionModel executionModel = new ExecutionModel(ExecutionModel.DEDICATED);
-    ThreadExecutor executor = new ThreadExecutor(executionModel, plan);
+    ThreadExecutor executor = new ThreadExecutor(executionModel, plan, network.getChannel());
     executor.execute();
-
-    // we need to progress the channel
-    while (true) {
-      network.getChannel().progress();
-    }
   }
 
   private static class GeneratorTask extends SourceTask {
@@ -187,8 +182,12 @@ public class ComplexByteTask implements IContainer {
     // first load the configurations from command line and config files
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
     // build JobConfig
-    JobConfig jobConfig = new JobConfig();
+    HashMap<String, Object> configurations = new HashMap<>();
+    configurations.put(SchedulerContext.THREADS_PER_WORKER, 8);
 
+    // build JobConfig
+    JobConfig jobConfig = new JobConfig();
+    jobConfig.putAll(configurations);
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
     jobBuilder.setName("complex-task-example");
     jobBuilder.setContainerClass(ComplexByteTask.class.getName());

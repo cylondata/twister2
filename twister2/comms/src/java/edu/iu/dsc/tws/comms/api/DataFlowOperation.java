@@ -13,6 +13,9 @@ package edu.iu.dsc.tws.comms.api;
 
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 
+/**
+ * The communication operation interface.
+ */
 public interface DataFlowOperation {
   /**
    * Use this to inject partial results in a distributed dataflow operation
@@ -49,13 +52,23 @@ public interface DataFlowOperation {
 
   /**
    * Progress the pending dataflow operations
+   *
+   * @return true if there is more messages to progress, unless return false
    */
-  void progress();
+  boolean progress();
 
   /**
    * Clean up the resources
    */
   void close();
+
+  /**
+   * Weather the operation doesn't have any pending sends or receives
+   * @return is complete
+   */
+  default boolean isComplete() {
+    return false;
+  }
 
   /**
    * If this is a larger transfer of dataflow style, we need to finish
@@ -68,12 +81,4 @@ public interface DataFlowOperation {
    * @return task plan
    */
   TaskPlan getTaskPlan();
-
-  /**
-   * if set to true the operation will be memory mapped
-   *
-   * @param memoryMapped weather using disks
-   */
-  default void setMemoryMapped(boolean memoryMapped) {
-  }
 }

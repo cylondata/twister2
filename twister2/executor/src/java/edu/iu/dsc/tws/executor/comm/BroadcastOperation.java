@@ -79,7 +79,8 @@ public class BroadcastOperation extends AbstractParallelOperation {
     }
 
     @Override
-    public void progress() {
+    public boolean progress() {
+      return true;
     }
   }
 }

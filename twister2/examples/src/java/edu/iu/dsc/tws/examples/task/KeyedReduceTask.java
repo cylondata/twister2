@@ -26,6 +26,7 @@ import edu.iu.dsc.tws.executor.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.ExecutionModel;
 import edu.iu.dsc.tws.executor.threading.ThreadExecutor;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
@@ -69,13 +70,8 @@ public class KeyedReduceTask implements IContainer {
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);
     ExecutionPlan plan = executionPlanBuilder.schedule(config, graph, taskSchedulePlan);
     ExecutionModel executionModel = new ExecutionModel(ExecutionModel.SHARED);
-    ThreadExecutor executor = new ThreadExecutor(executionModel, plan);
+    ThreadExecutor executor = new ThreadExecutor(executionModel, plan, network.getChannel());
     executor.execute();
-
-    // we need to progress the channel
-    while (true) {
-      network.getChannel().progress();
-    }
   }
 
   private static class GeneratorTask extends SourceTask {
@@ -100,7 +96,10 @@ public class KeyedReduceTask implements IContainer {
 
     @Override
     public void execute(IMessage message) {
-      System.out.println("Message Keyed-Reduced : " + message.getContent() + ", Count : " + count);
+      if (count % 1000000 == 0) {
+        System.out.println("Message Keyed-Reduced : " + message.getContent()
+            + ", Count : " + count);
+      }
       count++;
     }
 
@@ -126,8 +125,12 @@ public class KeyedReduceTask implements IContainer {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
     // build JobConfig
-    JobConfig jobConfig = new JobConfig();
+    HashMap<String, Object> configurations = new HashMap<>();
+    configurations.put(SchedulerContext.THREADS_PER_WORKER, 8);
 
+    // build JobConfig
+    JobConfig jobConfig = new JobConfig();
+    jobConfig.putAll(configurations);
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
     jobBuilder.setName("partition-example");
     jobBuilder.setContainerClass(KeyedReduceTask.class.getName());

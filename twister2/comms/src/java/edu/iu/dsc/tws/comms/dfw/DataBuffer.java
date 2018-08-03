@@ -17,9 +17,21 @@ import edu.iu.dsc.tws.comms.core.CommunicationContext;
 
 import mpi.MPI;
 
+/**
+ * Keep track of a byte buffer with capacity and size
+ */
 public class DataBuffer {
-  private int capacity;
-  private int size;
+  /**
+   * The capacity of the buffer
+   */
+  private final int capacity;
+  /**
+   * Size of the buffer
+   */
+  private int size = 0;
+  /**
+   * The actual buffer
+   */
   private ByteBuffer byteBuffer;
 
   public DataBuffer(int cap) {

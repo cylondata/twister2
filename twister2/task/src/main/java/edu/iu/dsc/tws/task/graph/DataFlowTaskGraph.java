@@ -51,14 +51,20 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
   }
 
   public boolean addTaskVertex(String name, Vertex taskVertex) {
-    addTaskVertex(taskVertex);
-    taskMap.put(name, taskVertex);
+    if (!validateTaskVertex(name)) {
+      addTaskVertex(taskVertex);
+      taskMap.put(name, taskVertex);
+    }
     return true;
   }
 
-  @Override
-  public Edge createEdge(Vertex sourceTaskVertex, Vertex targetTaskVertex) {
-    return super.createEdge(sourceTaskVertex, targetTaskVertex);
+  public boolean validateTaskVertex(String taskName) {
+    boolean flag = false;
+    if (taskMap.containsKey(taskName)) {
+      //flag = true;
+      throw new RuntimeException("Duplicate names for the submitted task:" + taskName);
+    }
+    return flag;
   }
 
   public Vertex vertex(String name) {
@@ -97,8 +103,12 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
     return childrenOfTask(t);
   }
 
-  public Set<Vertex> childrenOfTask(Vertex t) {
-    return childrenOfTask(t.getName());
+  public Set<Vertex> parentsOfTask(String taskName) {
+    Vertex t = taskMap.get(taskName);
+    if (t == null) {
+      return new HashSet<>();
+    }
+    return parentsOfTask(t);
   }
 
   public Vertex childOfTask(Vertex task, String edge) {
@@ -139,7 +149,6 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
     @Override
     public int compare(Vertex o1, Vertex o2) {
       return new StringComparator().compare(o1.getName(), o2.getName());
-
     }
   }
 
@@ -172,4 +181,5 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
   public void setOperationMode(OperationMode operationMode) {
     this.operationMode = operationMode;
   }
+
 }

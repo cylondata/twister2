@@ -18,6 +18,8 @@ import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
 public class ScpContext extends SchedulerContext {
   public static final String UPLOAD_DIRECTORY = "twister2.uploader.directory";
+  public static final String DOWNLOAD_DIRECTORY = "twister2.download.directory";
+
   public static final String TWISTER2_UPLOADER_SCP_OPTIONS =
       "twister2.uploader.scp.command.options";
   public static final String TWISTER2_UPLOADER_SCP_CONNECTION =
@@ -34,6 +36,10 @@ public class ScpContext extends SchedulerContext {
   public static final String uploaderJobDirectory(Config cfg) {
     return TokenSub.substitute(cfg, cfg.getStringValue(UPLOAD_DIRECTORY,
         "/root/.twister2/repository/"), Context.substitutions);
+  }
+
+  public static String downloadDirectory(Config config) {
+    return config.getStringValue(DOWNLOAD_DIRECTORY);
   }
 
   public static String scpOptions(Config config) {

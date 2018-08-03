@@ -17,10 +17,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
@@ -32,10 +34,6 @@ public final class JobUtils {
 
   /**
    * Write the job file
-   *
-   * @param job
-   * @param fileName
-   * @return
    */
   public static boolean writeJobFile(JobAPI.Job job, String fileName) {
     // lets write a job file
@@ -45,10 +43,6 @@ public final class JobUtils {
 
   /**
    * Read the job file
-   *
-   * @param cfg
-   * @param fileName
-   * @return
    */
   public static JobAPI.Job readJobFile(Config cfg, String fileName) {
     try {
@@ -111,13 +105,29 @@ public final class JobUtils {
 
   /**
    * configs from job object will override the ones in config from files if any
-   * @return
    */
-  public static Config overrideConfigs(JobAPI.Job job, Config config) {
+
+  /**
+   * [Deprecated Function]
+   * **/
+ /* public static Config overrideConfigs(JobAPI.Job job, Config config) {
     Config.Builder builder = Config.newBuilder().putAll(config);
     JobAPI.Config conf = job.getConfig();
     for (JobAPI.Config.KeyValue kv : conf.getKvsList()) {
       builder.put(kv.getKey(), kv.getValue());
+    }
+    return builder.build();
+  }*/
+
+  public static Config overrideConfigs(JobAPI.Job job, Config config) {
+    Config.Builder builder = Config.newBuilder().putAll(config);
+    JobAPI.Config conf = job.getConfig();
+    Map<String, ByteString> configMapSerialized = conf.getConfigByteMapMap();
+    for (Map.Entry<String, ByteString> e : configMapSerialized.entrySet()) {
+      String key = e.getKey();
+      byte[] bytes = e.getValue().toByteArray();
+      Object object = new KryoSerializer().deserialize(bytes);
+      builder.put(key, object);
     }
     return builder.build();
   }
@@ -126,4 +136,48 @@ public final class JobUtils {
     String home = Context.twister2Home(config);
     return Paths.get(home, jobFileName + ".job").toAbsolutePath().toString();
   }
+
+  /**
+   * write the values from Job object to config object
+   * only write the values that are initialized
+   * @param job
+   * @param config
+   * @return
+   */
+  public static Config updateConfigs(JobAPI.Job job, Config config) {
+    Config.Builder builder = Config.newBuilder().putAll(config);
+
+    String jobName = job.getJobName();
+    if (jobName != null) {
+      builder.put(Context.JOB_NAME, jobName);
+    }
+
+    String containerClass = job.getContainer().getClassName();
+    if (containerClass != null) {
+      builder.put(SchedulerContext.CONTAINER_CLASS, containerClass);
+    }
+
+    int workerInstances = job.getJobResources().getNoOfContainers();
+    if (workerInstances > 0) {
+      builder.put(Context.TWISTER2_WORKER_INSTANCES, workerInstances);
+    }
+
+    double cpuPerWorker = job.getJobResources().getContainer().getAvailableCPU();
+    if (cpuPerWorker > 0) {
+      builder.put(Context.TWISTER2_WORKER_CPU, cpuPerWorker);
+    }
+
+    int ramPerWorker = (int) (job.getJobResources().getContainer().getAvailableMemory());
+    if (ramPerWorker > 0) {
+      builder.put(Context.TWISTER2_WORKER_RAM, ramPerWorker);
+    }
+
+    int diskPerWorker = (int) (job.getJobResources().getContainer().getAvailableDisk());
+    if (diskPerWorker > 0) {
+      builder.put(Context.WORKER_VOLATILE_DISK, diskPerWorker);
+    }
+
+    return builder.build();
+  }
+
 }

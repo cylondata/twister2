@@ -79,12 +79,12 @@ public class MultiMessageDeserializer implements MessageDeSerializer {
       }
 
       Object object = buildMessage(currentMessage, messageBuffers, length);
-      readLength += length + 4;
+      readLength += length + Integer.BYTES;
       if (keyed && !MessageTypeUtils.isPrimitiveType(currentMessage.getKeyType())) {
         //adding 4 to the length since the key length is also kept
-        readLength += 4;
+        readLength += Integer.BYTES;
         if (MessageTypeUtils.isMultiMessageType(currentMessage.getKeyType())) {
-          readLength += 4;
+          readLength += Integer.BYTES;
         }
       }
       byteBuffer = dataBuffer.getByteBuffer();
@@ -131,10 +131,10 @@ public class MultiMessageDeserializer implements MessageDeSerializer {
       }
 
       Object object = getSingleDataBuffers(currentMessage, messageBuffers, length);
-      readLength += length + 4;
+      readLength += length + Integer.BYTES;
       if (keyed && !MessageTypeUtils.isPrimitiveType(currentMessage.getKeyType())) {
         //adding 4 to the length since the key length is also kept
-        readLength += 4;
+        readLength += Integer.BYTES;
       }
       byteBuffer = dataBuffer.getByteBuffer();
       if (byteBuffer.remaining() > 0) {

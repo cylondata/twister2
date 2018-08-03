@@ -1,17 +1,17 @@
-syntax = "proto2";
+syntax = "proto3";
 package tws.proto.api;
 
 enum Grouping {
-    SHUFFLE = 1;
-    FIELDS = 2;
-    ALL = 3;
-    LOWEST = 4;
-    NONE = 5;
-    DIRECT = 6;
-    CUSTOM = 7;
-    REDUCE = 8;
-    ALLREDUCE = 9;
-    GATHER = 10;
-    ALLGATHER = 11;
-    KEYEDREDUCE = 12;
+    SHUFFLE = 0;
+    FIELDS = 1;
+    ALL = 2;
+    LOWEST = 3;
+    NONE = 4;
+    DIRECT = 5;
+    CUSTOM = 6;
+    REDUCE = 7;
+    ALLREDUCE = 8;
+    GATHER = 9;
+    ALLGATHER = 10;
+    KEYEDREDUCE = 11;
 }

@@ -80,20 +80,30 @@ public class Server implements SelectHandler {
     this.fixedBuffers = fixBuffers;
   }
 
+  /**
+   * Start listening on the port
+   *
+   * @return true if started successfully
+   */
   public boolean start() {
     try {
       serverSocketChannel = ServerSocketChannel.open();
       serverSocketChannel.configureBlocking(false);
       serverSocketChannel.socket().bind(address);
+      LOG.log(Level.INFO, String.format("Starting server on %s:%d",
+          address.getHostName(), address.getPort()));
       progress.registerAccept(serverSocketChannel, this);
       return true;
     } catch (IOException e) {
-      LOG.log(Level.SEVERE, "Failed to start server", e);
+      LOG.log(Level.SEVERE, String.format("Failed to start server on %s:%d",
+          address.getHostName(), address.getPort()), e);
       return false;
     }
   }
 
-  // Stop the HeronServer and clean relative staff
+  /**
+   * Stop the server
+   */
   public void stop() {
     if (serverSocketChannel == null || !serverSocketChannel.isOpen()) {
       LOG.info("Fail to stop server; not yet open.");
@@ -109,7 +119,7 @@ public class Server implements SelectHandler {
     try {
       serverSocketChannel.close();
     } catch (IOException e) {
-      LOG.log(Level.SEVERE, "Failed to close server", e);
+      LOG.log(Level.WARNING, "Failed to close server", e);
     }
   }
 
@@ -118,10 +128,13 @@ public class Server implements SelectHandler {
     if (channel == null) {
       return null;
     }
+    buffer.limit(size);
+    buffer.position(0);
 
     channel.enableWriting();
 
     TCPMessage request = new TCPMessage(buffer, edge, size);
+    // we need to handle the false
     channel.addWriteRequest(request);
 
     return request;
@@ -163,6 +176,7 @@ public class Server implements SelectHandler {
   public void handleAccept(SelectableChannel ch) {
     try {
       SocketChannel socketChannel = serverSocketChannel.accept();
+      LOG.log(Level.INFO, "Accepted connection: " + socketChannel);
       if (socketChannel != null) {
         socketChannel.configureBlocking(false);
         socketChannel.socket().setTcpNoDelay(true);

@@ -1,13 +1,13 @@
 twister2.network.dataflow.class: "edu.iu.dsc.tws.comms.dfw.DataFlowCommunication"
-twister2.network.channel.class: "edu.iu.dsc.tws.comms.dfw.DataFlowCommunication"
+twister2.network.channel.class: "edu.iu.dsc.tws.comms.dfw.mpi.TWSMPIChannel"
 
 network.mpi.buffer.size: 1024000
-network.mpi.sendBuffer.count: 1
-network.mpi.receiveBuffer.count: 1
+network.mpi.sendBuffer.count: 4
+network.mpi.receiveBuffer.count: 4
 # channel pending messages
 network.channel.mpi.pending.size: 2048
 # the send pending messages
-network.mpi.send.pending.max: 1
+network.mpi.send.pending.max: 4
 
 # group up to 8 ~ 16 messages
 network.partition.message.group.low_water_mark: 8

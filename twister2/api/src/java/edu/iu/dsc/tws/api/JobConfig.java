@@ -21,7 +21,7 @@ import java.util.HashMap;
  * For now, we put all config parameters to this list
  * But later on, we may only put the parameters that are relevant to Worker processes
  */
-public class JobConfig extends HashMap<String, String> {
+public class JobConfig extends HashMap<String, Object> {
   private static final long serialVersionUID = 6585146860991205058L;
 
 //  public void putConfig(Config config) {

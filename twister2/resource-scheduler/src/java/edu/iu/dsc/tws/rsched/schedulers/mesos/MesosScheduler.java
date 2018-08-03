@@ -38,6 +38,8 @@ public class MesosScheduler implements Scheduler {
   private int totalTaskCount;
   private int workerCounter = 0;
   private int[] offerControl = new int[3];
+  //private String jobMasterIP;
+  private boolean mpiJob = true;
 
   public MesosScheduler(MesosController controller, Config mconfig, String jobName) {
     this.controller = controller;
@@ -70,7 +72,7 @@ public class MesosScheduler implements Scheduler {
   @Override
   public void resourceOffers(SchedulerDriver schedulerDriver,
                              List<Protos.Offer> offers) {
-    LOG.info("In the resourceOffer");
+
     int index = 0;
     String[] desiredNodes = MesosContext.getDesiredNodes(config).split(",");
     if (taskIdCounter < totalTaskCount) {
@@ -84,7 +86,8 @@ public class MesosScheduler implements Scheduler {
 //          index = 2;
 //        }
 
-        if (!MesosContext.getDesiredNodes(config).equals("all") && !contains(desiredNodes, offer)) {
+        if (!MesosContext.getDesiredNodes(config).equals("all")
+            && !contains(desiredNodes, offer)) {
           continue;
         }
         LOG.info("Offer comes from host ...:" + offer.getHostname());
@@ -105,22 +108,18 @@ public class MesosScheduler implements Scheduler {
             pv.getWorkerDir();
 
 
-
-
             Protos.TaskID taskId = buildNewTaskID();
 
-            int begin = MesosContext.getWorkerPort(config) + taskIdCounter * 10;
-            int end = begin + 5;
-
-
+            // int begin = MesosContext.getWorkerPort(config) + taskIdCounter * 100;
+            // int end = begin + 30;
 
 
             Protos.TaskInfoOrBuilder taskBuilder = TaskInfo.newBuilder()
-                .setName("task " + taskId).setTaskId(taskId)
+                .setTaskId(taskId)
                 .setSlaveId(offer.getSlaveId())
                 .addResources(buildResource("cpus", MesosContext.cpusPerContainer(config)))
                 .addResources(buildResource("mem", MesosContext.ramPerContainer(config)))
-                .addResources(buildRangeResource("ports", begin, end))
+                //.addResources(buildRangeResource("ports", begin, end))
                 .setData(ByteString.copyFromUtf8("" + taskId.getValue()));
 
 
@@ -133,7 +132,55 @@ public class MesosScheduler implements Scheduler {
               Protos.Parameter workerIdParam = Protos.Parameter.newBuilder().setKey("env")
                   .setValue("WORKER_ID=" + workerCounter++).build();
 
+              Protos.Parameter frameworkIdParam = Protos.Parameter.newBuilder().setKey("env")
+                  .setValue("FRAMEWORK_ID=" + offer.getFrameworkId().getValue()).build();
 
+
+              Protos.Parameter classNameParam = null;
+              if (mpiJob) {
+                //worker 0 will be the job master.
+                if (taskId.getValue().equals("0")) {
+                  ((TaskInfo.Builder) taskBuilder).setName("Job Master");
+
+                  classNameParam = Protos.Parameter.newBuilder().setKey("env")
+                      .setValue("CLASS_NAME="
+                          + "edu.iu.dsc.tws.rsched.schedulers.mesos.master.MesosJobMasterStarter")
+                      .build();
+                } else if (taskId.getValue().equals("1")) {
+                  ((TaskInfo.Builder) taskBuilder).setName("MPI Master " + taskId);
+                  classNameParam = Protos.Parameter.newBuilder().setKey("env")
+                      .setValue("CLASS_NAME="
+                          + "edu.iu.dsc.tws.rsched.schedulers.mesos.mpi.MesosMPIMasterStarter")
+                      .build();
+                } else {
+                  ((TaskInfo.Builder) taskBuilder).setName("task " + taskId);
+                  classNameParam = Protos.Parameter.newBuilder().setKey("env")
+                      .setValue("CLASS_NAME="
+                          + "edu.iu.dsc.tws.rsched.schedulers.mesos.mpi.MesosMPISlaveStarter")
+                      .build();
+                }
+              } else {
+                //worker 0 will be the job master.
+                if (taskId.getValue().equals("0")) {
+                  ((TaskInfo.Builder) taskBuilder).setName("Job Master");
+
+                  classNameParam = Protos.Parameter.newBuilder().setKey("env")
+                      .setValue("CLASS_NAME="
+                          + "edu.iu.dsc.tws.rsched.schedulers.mesos.master.MesosJobMasterStarter")
+                      .build();
+                } else  {
+                  if (taskId.getValue().equals("1")) {
+                    ((TaskInfo.Builder) taskBuilder).setName("MPI Master " + taskId);
+                  } else {
+                    ((TaskInfo.Builder) taskBuilder).setName("task " + taskId);
+                  }
+                  classNameParam = Protos.Parameter.newBuilder().setKey("env")
+                      .setValue("CLASS_NAME="
+                          + "edu.iu.dsc.tws.rsched.schedulers.mesos.MesosDockerWorker")
+                      .build();
+                }
+
+              }
               // docker image info
               Protos.ContainerInfo.DockerInfo.Builder dockerInfoBuilder
                   = Protos.ContainerInfo.DockerInfo.newBuilder();
@@ -143,6 +190,8 @@ public class MesosScheduler implements Scheduler {
               dockerInfoBuilder.setNetwork(Protos.ContainerInfo.DockerInfo.Network.USER);
               dockerInfoBuilder.addParameters(jobNameParam);
               dockerInfoBuilder.addParameters(workerIdParam);
+              dockerInfoBuilder.addParameters(classNameParam);
+              dockerInfoBuilder.addParameters(frameworkIdParam);
               Protos.Volume volume = Protos.Volume.newBuilder()
                   .setContainerPath("/twister2/")
                   .setHostPath(".")
@@ -155,18 +204,28 @@ public class MesosScheduler implements Scheduler {
                   .setMode(Protos.Volume.Mode.RW)
                   .build();
 
+
+              //temporary solution for some jar packages
+              Protos.Volume customJarsVolume = Protos.Volume.newBuilder()
+                  .setContainerPath("/customJars/")
+                  .setHostPath("/root/.twister2/repository/customJars")
+                  .setMode(Protos.Volume.Mode.RW)
+                  .build();
+
+
               // container info
-              Protos.ContainerInfo.Builder containerInfoBuilder = Protos.ContainerInfo.newBuilder();
+              Protos.ContainerInfo.Builder containerInfoBuilder
+                  = Protos.ContainerInfo.newBuilder();
               containerInfoBuilder.setType(Protos.ContainerInfo.Type.DOCKER);
               containerInfoBuilder.addVolumes(volume);
               containerInfoBuilder.addVolumes(persistentVolume);
+              containerInfoBuilder.addVolumes(customJarsVolume);
               containerInfoBuilder.setDocker(dockerInfoBuilder.build());
               containerInfoBuilder.addNetworkInfos(netInfo);
               ((TaskInfo.Builder) taskBuilder).setContainer(containerInfoBuilder);
               ((TaskInfo.Builder) taskBuilder)
                   .setCommand(Protos.CommandInfo.newBuilder().setShell(false));
             } else {
-
               Protos.ExecutorInfo executorInfo =
                   controller.getExecutorInfo(jobName,
                       MesosPersistentVolume.WORKER_DIR_NAME_PREFIX + workerCounter);
@@ -202,8 +261,8 @@ public class MesosScheduler implements Scheduler {
         }
       }
     }
-  }
 
+  }
 
   private Protos.TaskID buildNewTaskID() {
     return Protos.TaskID.newBuilder()
@@ -237,6 +296,27 @@ public class MesosScheduler implements Scheduler {
   @Override
   public void statusUpdate(SchedulerDriver schedulerDriver,
                            Protos.TaskStatus taskStatus) {
+
+    //get job master ip
+    /* if (taskStatus.getTaskId().getValue().equals("0")
+        && taskStatus.getState() == Protos.TaskState.TASK_RUNNING) {
+      System.out.println("Inside taskstatus ------->");
+      List<org.apache.mesos.Protos.NetworkInfo> networkInfosList
+          = taskStatus.getContainerStatus().getNetworkInfosList();
+
+      //System.out.println("Network count: " + networkInfosList.size());
+
+      //int count = networkInfosList.get(0).getIpAddressesCount();
+      //for (int i = 0; i < count; i++) {
+        //System.out.println(networkInfosList.get(0).getIpAddresses(i).getIpAddress());
+      jobMasterIP = networkInfosList.get(0).getIpAddresses(0).getIpAddress();
+      LOG.info("Job Master IP:" + jobMasterIP);
+      schedulerDriver.stop(true);
+      schedulerDriver.start();
+      //schedulerDriver.reviveOffers();
+      //}
+    }
+  */
     LOG.info("Status update: " + taskStatus.getState() + " from "
         + taskStatus.getTaskId().getValue());
     if (taskStatus.getState() == Protos.TaskState.TASK_FINISHED) {

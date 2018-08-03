@@ -84,6 +84,7 @@ public class MesosLauncher implements ILauncher {
 
   @Override
   public boolean launch(RequestedResources resourceRequest, JobAPI.Job job) {
+
     runFramework(MesosContext.getMesosMasterUri(config), job.getJobName());
 
     return false;

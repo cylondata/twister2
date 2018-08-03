@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -22,10 +23,12 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
+import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
+import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionBatchFinalReceiver;
@@ -34,16 +37,17 @@ import edu.iu.dsc.tws.comms.op.EdgeGenerator;
 import edu.iu.dsc.tws.comms.op.OperationSemantics;
 import edu.iu.dsc.tws.examples.utils.WordCountUtils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.rsched.spi.container.IContainer;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+import edu.iu.dsc.tws.rsched.spi.container.IPersistentVolume;
+import edu.iu.dsc.tws.rsched.spi.container.IVolatileVolume;
+import edu.iu.dsc.tws.rsched.spi.container.IWorker;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
-public class SortJob implements IContainer {
+public class SortJob implements IWorker {
   private static final Logger LOG = Logger.getLogger(SortJob.class.getName());
 
   private DataFlowPartition partition;
-
-  private TWSNetwork network;
 
   private TWSChannel channel;
 
@@ -62,16 +66,33 @@ public class SortJob implements IContainer {
   private TaskPlan taskPlan;
 
   @Override
-  public void init(Config cfg, int containerId, ResourcePlan plan) {
+  public void init(Config cfg, int wID, ResourcePlan plan,
+                   IWorkerController workerController,
+                   IPersistentVolume persistentVolume,
+                   IVolatileVolume volatileVolume) {
     this.config = cfg;
     this.resourcePlan = plan;
-    this.id = containerId;
-    this.noOfTasksPerExecutor = NO_OF_TASKS / plan.noOfContainers();
+    this.id = wID;
+
+    // wait and get all workers
+    List<WorkerNetworkInfo> workerList = workerController.waitForAllWorkersToJoin(50000);
+    if (workerList != null) {
+      LOG.info("All workers joined: " + WorkerNetworkInfo.workerListAsString(workerList));
+    } else {
+      LOG.severe("Can not get all workers to join. Exiting the Worker......................");
+      return;
+    }
+
+    // setup the network
+    setupNetwork(cfg, workerController, plan);
+    LOG.info("Network setup complete ------------------------------");
 
     // set up the tasks
     setupTasks();
-    // setup the network
-    setupNetwork();
+    LOG.info("Task setup complete ------------------------------");
+
+    // we get the number of containers after initializing the network
+    this.noOfTasksPerExecutor = NO_OF_TASKS / plan.noOfContainers();
 
     partition = new DataFlowPartition(config, channel, taskPlan, sources, destinations,
         new PartitionBatchFinalReceiver(new RecordSave(), false, true,
@@ -79,10 +100,16 @@ public class SortJob implements IContainer {
         new PartitionPartialReceiver(), DataFlowPartition.PartitionStratergy.DIRECT,
         MessageType.BYTE, MessageType.BYTE, MessageType.INTEGER, MessageType.INTEGER,
         OperationSemantics.STREAMING_BATCH, new EdgeGenerator(0));
+
+
+    LOG.info("Starting threads ------------------------------");
     // start the threads
     scheduleTasks();
+
+    LOG.info("Scheduling tasks complete ------------------------------");
     // progress the work
     progress();
+    LOG.info("Progress complete ------------------------------");
   }
 
   private void setupTasks() {
@@ -109,9 +136,8 @@ public class SortJob implements IContainer {
     }
   }
 
-  private void setupNetwork() {
-    network = new TWSNetwork(config, taskPlan);
-    channel = network.getChannel();
+  private void setupNetwork(Config cfg, IWorkerController controller, ResourcePlan rPlan) {
+    channel = Network.initializeChannel(cfg, controller, rPlan);
   }
 
   private class IntegerComparator implements Comparator<Object> {
@@ -147,7 +173,12 @@ public class SortJob implements IContainer {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
     // build JobConfig
+    HashMap<String, Object> configurations = new HashMap<>();
+    configurations.put(SchedulerContext.THREADS_PER_WORKER, 8);
+
+    // build JobConfig
     JobConfig jobConfig = new JobConfig();
+    jobConfig.putAll(configurations);
 
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
     jobBuilder.setName("sort-job");

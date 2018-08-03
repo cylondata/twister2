@@ -40,6 +40,7 @@ import edu.iu.dsc.tws.executor.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.ExecutionModel;
 import edu.iu.dsc.tws.executor.threading.ThreadExecutor;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
@@ -96,13 +97,8 @@ public class TaskCheckpointExample implements IContainer {
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);
     ExecutionPlan plan = executionPlanBuilder.schedule(config, graph, taskSchedulePlan);
     ExecutionModel executionModel = new ExecutionModel(ExecutionModel.SHARED);
-    ThreadExecutor executor = new ThreadExecutor(executionModel, plan);
+    ThreadExecutor executor = new ThreadExecutor(executionModel, plan, network.getChannel());
     executor.execute();
-
-    // we need to progress the channel
-    while (true) {
-      network.getChannel().progress();
-    }
   }
 
   private static class GeneratorCheckpointTask extends SourceTask {
@@ -140,7 +136,8 @@ public class TaskCheckpointExample implements IContainer {
 
     private Map<String, Object> newCfg = new HashMap<>();
 
-    private RecevingCheckpointTask() { }
+    private RecevingCheckpointTask() {
+    }
 
     private RecevingCheckpointTask(TWSCommunication channel) {
       super();
@@ -176,7 +173,12 @@ public class TaskCheckpointExample implements IContainer {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
     // build JobConfig
+    HashMap<String, Object> configurations = new HashMap<>();
+    configurations.put(SchedulerContext.THREADS_PER_WORKER, 8);
+
+    // build JobConfig
     JobConfig jobConfig = new JobConfig();
+    jobConfig.putAll(configurations);
 
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
     jobBuilder.setName("task-checkpoint-example");

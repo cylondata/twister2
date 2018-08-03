@@ -18,7 +18,7 @@ import edu.iu.dsc.tws.rsched.spi.container.IPersistentVolume;
 
 public class K8sPersistentVolume implements IPersistentVolume {
   public static final String WORKER_DIR_NAME_PREFIX = "worker-";
-  public static final String LOG_FILE_NAME_PREFIX = "worker-";
+  public static final String WORKER_LOG_FILE_NAME_PREFIX = "worker-";
   public static final String LOG_DIR_NAME = "/logs";
 
   private String jobDirPath;
@@ -34,7 +34,7 @@ public class K8sPersistentVolume implements IPersistentVolume {
     this.jobDirPath = jobDirPath;
     workerDirPath = jobDirPath + "/" + WORKER_DIR_NAME_PREFIX + workerID;
     logDirPath = jobDirPath + LOG_DIR_NAME;
-    logFileName = logDirPath + "/" + LOG_FILE_NAME_PREFIX + workerID + ".log";
+    logFileName = logDirPath + "/" + WORKER_LOG_FILE_NAME_PREFIX + workerID + ".log";
     createLogDir();
   }
 

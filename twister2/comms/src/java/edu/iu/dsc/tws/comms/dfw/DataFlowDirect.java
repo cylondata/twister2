@@ -121,7 +121,7 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
     Map<Integer, MessageSerializer> serializerMap = new HashMap<>();
     Map<Integer, MessageDeSerializer> deSerializerMap = new HashMap<>();
 
-    Set<Integer> srcs = TaskPlanUtils.getTasksOfThisExecutor(taskPlan, sources);
+    Set<Integer> srcs = TaskPlanUtils.getTasksOfThisWorker(taskPlan, sources);
     for (int s : srcs) {
       // later look at how not to allocate pairs for this each time
       ArrayBlockingQueue<Pair<Object, OutMessage>> pendingSendMessages =
@@ -168,7 +168,7 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public void progress() {
+  public boolean progress() {
     try {
       delegete.progress();
       finalReceiver.progress();
@@ -176,6 +176,7 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
       LOG.log(Level.SEVERE, "un-expected error", t);
       throw new RuntimeException(t);
     }
+    return true;
   }
 
   @Override

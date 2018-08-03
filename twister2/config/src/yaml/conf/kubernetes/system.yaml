@@ -31,7 +31,9 @@ twister2.logging.maximum.files: 5
 # if true, the job master runs in the submitting client
 # if false, job master runs as a separate process in the cluster 
 # by default, it is true
-# when the job master runs in the submitting client, this client has to be submitting the job from a machine in the cluster
+# when the job master runs in the submitting client,
+# this client has to be submitting the job from a machine in the cluster
+# getLocalHost must return a reachable IP address to the job master
 twister2.job.master.runs.in.client: false
 
 # if true, job master assigns the worker IDs,
@@ -43,8 +45,8 @@ twister2.job.master.assigns.worker.ids: false
 twister2.worker.ping.interval: 10000
 
 # twister2 job master port number
-# default value is 11111
-twister2.job.master.port: 11111
+# default value is 11011
+twister2.job.master.port: 11011
 
 # worker to job master response wait time in milliseconds
 # this is for messages that wait for a response from the job master
@@ -66,5 +68,5 @@ twister2.job.master.persistent.volume.size: 1.0
 twister2.job.master.cpu: 0.2
 
 # twister2 job master RAM request in MB
-# default value is 0.2 percentage
-twister2.job.master.ram: 1000
+# default value is 1024 MB
+twister2.job.master.ram: 1024

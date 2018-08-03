@@ -139,7 +139,7 @@ def main():
     try:
         # parse the args
         args, unknown_args = parser.parse_known_args()
-        print "args ", argparse, " unknown_args", unknown_args
+        # print "args ", argparse, " unknown_args", unknown_args
     except ValueError as ex:
         Log.error("Error while parsing arguments: %s", str(ex))
         Log.debug(traceback.format_exc())

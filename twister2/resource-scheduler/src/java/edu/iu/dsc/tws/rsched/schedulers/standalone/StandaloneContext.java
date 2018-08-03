@@ -40,6 +40,8 @@ public class StandaloneContext extends SchedulerContext {
   public static final String NOMAD_HERON_SCRIPT_NAME = "nomad.sh";
   public static final String NOMAD_URI = "twister2.nomad.scheduler.uri";
 
+  public static final String LOGGING_SANDBOX = "twister2.logging.sandbox.logging";
+
   public static String workingDirectory(Config config) {
     return TokenSub.substitute(config, config.getStringValue(WORKING_DIRECTORY,
         "${HOME}/.twister2/jobs"), Context.substitutions);
@@ -59,5 +61,9 @@ public class StandaloneContext extends SchedulerContext {
 
   public static String nomadSchedulerUri(Config config) {
     return config.getStringValue(NOMAD_URI);
+  }
+
+  public static boolean getLoggingSandbox(Config config) {
+    return config.getBooleanValue(LOGGING_SANDBOX, false);
   }
 }

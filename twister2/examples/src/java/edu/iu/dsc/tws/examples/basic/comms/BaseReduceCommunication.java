@@ -236,7 +236,7 @@ public class BaseReduceCommunication implements IContainer {
       return true;
     }
 
-    public void progress() {
+    public boolean progress() {
       for (int t : messages.keySet()) {
         boolean canProgress = true;
         while (canProgress) {
@@ -280,6 +280,7 @@ public class BaseReduceCommunication implements IContainer {
           }
         }
       }
+      return true;
     }
   }
 
@@ -337,7 +338,7 @@ public class BaseReduceCommunication implements IContainer {
       return true;
     }
 
-    public void progress() {
+    public boolean progress() {
       for (int t : messages.keySet()) {
         boolean canProgress = true;
         while (canProgress) {
@@ -373,6 +374,7 @@ public class BaseReduceCommunication implements IContainer {
           }
         }
       }
+      return true;
     }
   }
 

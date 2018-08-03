@@ -14,6 +14,9 @@ package edu.iu.dsc.tws.common.net.tcp.request;
 import java.util.Arrays;
 import java.util.Random;
 
+/**
+ * A Request id generator
+ */
 public final class RequestID {
   private static Random randomGenerator = new Random(System.nanoTime());
 

@@ -1,4 +1,4 @@
-syntax = "proto2";
+syntax = "proto3";
 package tws.proto.taskscheduler;
 
 option java_package = "edu.iu.dsc.tws.proto.system";
@@ -9,23 +9,29 @@ option java_outer_classname = "TaskSchedulingPlans";
 //option java_outer_classname = "TaskSchedulingPlans";*/
 
 message Resource {
-    required double availableCPU = 1;
-    required double availableMemory = 2;
-    required double availableDisk = 3;
+    double availableCPU = 1;
+    double availableMemory = 2;
+    double availableDisk = 3;
 }
 message TaskInstancePlan {
-    required int32 taskid = 1;
-    required string taskname = 2;
-    required int32 taskindex = 3;
-    required Resource resource = 4;
+    int32 taskid = 1;
+    string taskname = 2;
+    int32 taskindex = 3;
+    Resource resource = 4;
 }
 message ContainerPlan {
-    required int32 containerid = 1;
+    int32 containerid = 1;
     repeated TaskInstancePlan taskinstanceplan = 2;
-    required Resource requiredresource = 3;
-    optional Resource scheduledresource = 4;
+    Resource requiredresource = 3;
+    Resource scheduledresource = 4;
 }
 message TaskSchedulePlan {
-    required int32 jobid = 1;
+    int32 jobid = 1;
     repeated ContainerPlan containerplan = 2;
+}
+
+message TaskSchedulePlanList {
+    int32 jobid = 1;
+    repeated TaskSchedulePlan taskscheduleplan = 2;
+    //required int32 jobid = 1;
 }

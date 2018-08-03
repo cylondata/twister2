@@ -1,6 +1,21 @@
 twister2.network.dataflow.class: "edu.iu.dsc.tws.comms.dfw.DataFlowCommunication"
 twister2.network.channel.class: "edu.iu.dsc.tws.comms.dfw.DataFlowCommunication"
 
+#############################################################################
+# OpenMPI settings
+#############################################################################
+# By default, OpenMPI is not enabled
+# To use OpenMPI, set this to true
+kubernetes.workers.use.openmpi: true
+
+# A Secret object must be present in Kubernetes master
+# Its name must be specified here
+kubernetes.secret.name: "twister2-openmpi-ssh-key"
+
+
+#############################################################################
+# Worker port settings
+#############################################################################
 # the base port number workers will use internally to communicate with each other
 # when there are multiple workers in a pod, first worker will get this port number, 
 # second worker will get the next port, and so on.

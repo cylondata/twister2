@@ -24,6 +24,10 @@ public class ExecutionPlan {
 
   private Map<Integer, INodeInstance> nodes = new HashMap<>();
 
+  private Map<Integer, IParallelOperation> inputMessages = new HashMap<>();
+
+  private Map<Integer, IParallelOperation> outputMessages = new HashMap<>();
+
   private List<IParallelOperation> parallelOperations = new ArrayList<>();
 
   /**

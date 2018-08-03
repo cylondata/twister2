@@ -168,7 +168,7 @@ public class BasicMemoryManagerByteKeyedGatherCommunication implements IContaine
       aggregate = channel.gather(newCfg, MessageType.BYTE, MessageType.BYTE, 0, sources,
           dest, new GatherBatchFinalReceiver(new FinalGatherReceive()),
           new GatherBatchPartialReceiver(dest));
-      aggregate.setMemoryMapped(true);
+//      aggregate.setMemoryMapped(true);
 
 //      aggregate = channel.gather(newCfg, MessageType.OBJECT, 0, sources,
 //          dest, new FinalGatherReceive());

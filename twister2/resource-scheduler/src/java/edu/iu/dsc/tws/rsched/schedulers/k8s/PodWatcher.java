@@ -11,18 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.k8s;
 
-import java.io.IOException;
 import java.util.HashMap;
-import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import com.google.gson.reflect.TypeToken;
-
-import io.kubernetes.client.ApiClient;
-import io.kubernetes.client.ApiException;
-import io.kubernetes.client.apis.CoreV1Api;
-import io.kubernetes.client.models.V1Event;
-import io.kubernetes.client.util.Watch;
 
 /**
  * a class to watch events related to pods starting containers in them
@@ -35,16 +25,13 @@ public class PodWatcher extends Thread {
   private static final Logger LOG = Logger.getLogger(PodWatcher.class.getName());
 
   private HashMap<String, Boolean> pods;
-  private ApiClient client = null;
-  private CoreV1Api coreApi;
   private String namespace;
+  private String jobName;
 
-  public PodWatcher(String namespace, String jobName, int numberOfPods,
-                    ApiClient client, CoreV1Api coreApi) {
+  public PodWatcher(String namespace, String jobName, int numberOfPods) {
 
     this.namespace = namespace;
-    this.client = client;
-    this.coreApi = coreApi;
+    this.jobName = jobName;
 
     pods = new HashMap<String, Boolean>();
     for (int i = 0; i < numberOfPods; i++) {
@@ -64,47 +51,17 @@ public class PodWatcher extends Thread {
   /**
    * watch for a Container Started event in all pods
    * then stop the execution
+   * we can also watch for a pod Running event, however that usually takes much longer
+   * When we use Container Started event, our first try to transfer the file may fail,
+   * we retry it, and usually it succeeds after a few tries.
+   *
+   * we conducted some tests and compared these two approaches
+   * transferring files after Container Started event is usually much faster
    */
   public void run() {
-    /** Event Reasons: SuccessfulMountVolume, Killing, Scheduled, Pulled, Created, Started
-     * ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase */
 
-    String reason = "Started";
-    Watch<V1Event> watch = null;
-    try {
-      watch = Watch.createWatch(
-          client,
-          coreApi.listNamespacedEventCall(
-              namespace, null, null, null, null, null, null, null, null, Boolean.TRUE, null, null),
-          new TypeToken<Watch.Response<V1Event>>() { }.getType());
+    PodWatchUtils.watchPodsToStarting(namespace, pods, 50);
+//    PodWatchUtils.watchPodsToRunning(namespace, jobName, pods, 50);
 
-    } catch (ApiException e) {
-      LOG.log(Level.SEVERE, "Can not start event watcher for the namespace: " + namespace, e);
-    }
-
-    int counter = 0;
-
-    for (Watch.Response<V1Event> item : watch) {
-      if (item.object != null && reason.equals(item.object.getReason())) {
-
-        String involvedPod = item.object.getInvolvedObject().getName();
-        if (pods.containsKey(involvedPod) && !pods.get(involvedPod)) {
-          pods.put(involvedPod, true);
-          LOG.log(Level.INFO, "Container started event received for the pod: " + involvedPod);
-
-          counter++;
-          if (counter == pods.size()) {
-            LOG.log(Level.INFO, "All pods are started. Stopping to watch pod events. ");
-            break;
-          }
-        }
-      }
-    }
-
-    try {
-      watch.close();
-    } catch (IOException e) {
-      LOG.log(Level.WARNING, "Exception when clsoing the watcher.", e);
-    }
   }
 }

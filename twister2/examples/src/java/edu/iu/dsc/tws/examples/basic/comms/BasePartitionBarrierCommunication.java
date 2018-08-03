@@ -204,8 +204,8 @@ public class BasePartitionBarrierCommunication implements IContainer {
     }
 
     @Override
-    public void progress() {
-
+    public boolean progress() {
+      return false;
     }
   }
 
@@ -240,16 +240,17 @@ public class BasePartitionBarrierCommunication implements IContainer {
       return true;
     }
 
+    @Override
+    public boolean progress() {
+      return false;
+    }
+
     private boolean isAllFinished(int target) {
       boolean isDone = true;
       for (Boolean bol : finished.get(target).values()) {
         isDone &= bol;
       }
       return isDone;
-    }
-
-    public void progress() {
-
     }
 
     public void setMap(Map<Integer, List<Integer>> expectedIds) {

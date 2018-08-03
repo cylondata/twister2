@@ -65,7 +65,7 @@ public class MultiMessageSerializer implements MessageSerializer {
     OutMessage sendMessage = (OutMessage) partialBuildObject;
 
     // we got an already serialized message, lets just return it
-    ChannelMessage channelMessage = sendMessage.getMPIMessage();
+    ChannelMessage channelMessage = sendMessage.getChannelMessage();
     if (channelMessage.isComplete()) {
       sendMessage.setSendState(OutMessage.SendState.SERIALIZED);
       return sendMessage;
@@ -84,17 +84,22 @@ public class MultiMessageSerializer implements MessageSerializer {
       if (sendMessage.serializedState() == OutMessage.SendState.INIT
           || sendMessage.serializedState() == OutMessage.SendState.SENT_INTERNALLY) {
         // build the header
-        buildHeader(buffer, sendMessage, noOfMessages);
+        buildHeader(buffer, sendMessage);
         sendMessage.setSendState(OutMessage.SendState.HEADER_BUILT);
       }
 
       if (sendMessage.serializedState() == OutMessage.SendState.HEADER_BUILT
-          || sendMessage.serializedState() == OutMessage.SendState.BODY_BUILT) {
+          || sendMessage.serializedState() == OutMessage.SendState.BODY_BUILT
+          || sendMessage.serializedState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
         if ((sendMessage.getFlags() & MessageFlags.EMPTY) == MessageFlags.EMPTY) {
           sendMessage.setSendState(OutMessage.SendState.SERIALIZED);
           sendMessage.getSerializationState().setTotalBytes(0);
         } else {
           // first we need to serialize the body if needed
+          if (sendMessage.serializedState() == OutMessage.SendState.PARTIALLY_SERIALIZED
+              && sendMessage.getSerializationState().getData() == null) {
+            buildHeader(buffer, sendMessage);
+          }
           serializeBody(message, sendMessage, buffer);
         }
       }
@@ -103,23 +108,40 @@ public class MultiMessageSerializer implements MessageSerializer {
       channelMessage.addBuffer(buffer);
       if (sendMessage.serializedState() == OutMessage.SendState.SERIALIZED) {
         SerializeState state = sendMessage.getSerializationState();
+
         int totalBytes = state.getTotalBytes();
-        channelMessage.getBuffers().get(0).getByteBuffer().putInt(12, totalBytes);
+        channelMessage.getBuffers().get(0).getByteBuffer().putInt(HEADER_SIZE - Integer.BYTES,
+            totalBytes);
 
         MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
             sendMessage.getEdge(), totalBytes);
         builder.destination(sendMessage.getDestintationIdentifier());
-        sendMessage.getMPIMessage().setHeader(builder.build());
+        sendMessage.getChannelMessage().setHeader(builder.build());
         state.setTotalBytes(0);
 
         // mark the original message as complete
         channelMessage.setComplete(true);
+      } else if (sendMessage.serializedState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
+        SerializeState state = sendMessage.getSerializationState();
+
+        int totalBytes = state.getTotalBytes();
+        //Need to calculate the true total bites since a part of the message may come separately
+        channelMessage.getBuffers().get(0).getByteBuffer().putInt(HEADER_SIZE - Integer.BYTES,
+            totalBytes);
+
+        MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
+            sendMessage.getEdge(), totalBytes);
+        builder.destination(sendMessage.getDestintationIdentifier());
+        sendMessage.getChannelMessage().setHeader(builder.build());
+        state.setTotalBytes(0);
+
+
       }
     }
     return sendMessage;
   }
 
-  private void buildHeader(DataBuffer buffer, OutMessage sendMessage, int noOfMessage) {
+  private void buildHeader(DataBuffer buffer, OutMessage sendMessage) {
     if (buffer.getCapacity() < HEADER_SIZE) {
       throw new RuntimeException("The buffers should be able to hold the complete header");
     }
@@ -131,7 +153,7 @@ public class MultiMessageSerializer implements MessageSerializer {
     // the destination id
     byteBuffer.putInt(sendMessage.getDestintationIdentifier());
     // we add 0 for length now and later change it
-    byteBuffer.putInt(noOfMessage);
+    byteBuffer.putInt(0);
     // at this point we haven't put the length and we will do it at the serialization
     sendMessage.setWrittenHeaderSize(HEADER_SIZE);
     // lets set the size for 16 for now
@@ -145,7 +167,7 @@ public class MultiMessageSerializer implements MessageSerializer {
    */
   private boolean serializeMessage(Object payload,
                                    OutMessage sendMessage, DataBuffer buffer) {
-    MessageType type = sendMessage.getMPIMessage().getType();
+    MessageType type = sendMessage.getChannelMessage().getType();
     if (!keyed) {
       return serializeData(payload,
           sendMessage.getSerializationState(), buffer, type, sendMessage.getFlags());
@@ -203,6 +225,8 @@ public class MultiMessageSerializer implements MessageSerializer {
     }
     if (state.getCurrentObject() == objectList.size()) {
       sendMessage.setSendState(OutMessage.SendState.SERIALIZED);
+    } else {
+      sendMessage.setSendState(OutMessage.SendState.PARTIALLY_SERIALIZED);
     }
   }
 
@@ -217,6 +241,15 @@ public class MultiMessageSerializer implements MessageSerializer {
     byte[] tempBytes = new byte[targetBuffer.getCapacity()];
     // the target remaining space left
     int targetRemainingSpace = targetByteBuffer.remaining();
+
+    //If we cannot fit the whole message in the current buffer return false
+    if (message.getHeader() != null) {
+      if (targetRemainingSpace < message.getHeader().getLength()) {
+        return false;
+      }
+    } else {
+      throw new RuntimeException(executor + " The header in the message must be built");
+    }
     // the current buffer number
     int currentSourceBuffer = state.getBufferNo();
     // bytes already copied from this buffer
@@ -278,7 +311,7 @@ public class MultiMessageSerializer implements MessageSerializer {
 
   private boolean buildSubMessageHeader(DataBuffer buffer, int length) {
     ByteBuffer byteBuffer = buffer.getByteBuffer();
-    if (byteBuffer.remaining() < 4) {
+    if (byteBuffer.remaining() < NORMAL_SUB_MESSAGE_HEADER_SIZE) {
       return false;
     }
     byteBuffer.putInt(length);
@@ -294,8 +327,16 @@ public class MultiMessageSerializer implements MessageSerializer {
     // okay we need to serialize the header
     if (state.getPart() == SerializeState.Part.INIT) {
       // okay we need to serialize the data
-      int dataLength = DataSerializer.serializeData(content, messageType, state, serializer, flags
-          );
+      int dataLength = DataSerializer.serializeData(content, messageType, state, serializer, flags);
+      int remaining = targetBuffer.getByteBuffer().remaining();
+
+      //Check if we can fit this message into the current buffer
+      //If not we will return so that this message is added to the next buffer
+      if (remaining < dataLength + MAX_SUB_MESSAGE_HEADER_SPACE) {
+        LOG.fine("Cannot insert into current buffer this message will be entered"
+            + " into the next buffer");
+        return false;
+      }
 
       if (!buildSubMessageHeader(targetBuffer, dataLength)) {
         LOG.warning("We should always be able to build the header in the current buffer");
@@ -342,6 +383,15 @@ public class MultiMessageSerializer implements MessageSerializer {
       // okay we need to serialize the data
       int dataLength = DataSerializer.serializeData(content,
           contentType, state, serializer, flags);
+      int remaining = targetBuffer.getByteBuffer().remaining();
+
+      //Check if we can fit this message into the current buffer
+      //If not we will return so that this message is added to the next buffer
+      if (remaining < dataLength + keyLength + MAX_SUB_MESSAGE_HEADER_SPACE) {
+        LOG.fine("Cannot insert into current buffer this message will be entered"
+            + " into the next buffer");
+        return false;
+      }
 //      LOG.info(String.format("%d serialize data length: %d pos %d",
 //          executor, dataLength, byteBuffer.position()));
       // at this point we know the length of the data

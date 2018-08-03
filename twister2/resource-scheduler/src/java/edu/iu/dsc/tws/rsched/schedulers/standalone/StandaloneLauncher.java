@@ -11,11 +11,15 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.standalone;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.master.JobMaster;
+import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
@@ -63,7 +67,36 @@ public class StandaloneLauncher implements ILauncher {
     // slurm and start the job
     IController controller = new StandaloneController(true);
     controller.initialize(newConfig);
-    return controller.start(resourcePlan, job);
+
+    // start the Job Master locally
+    JobMaster jobMaster = null;
+    if (JobMasterContext.jobMasterRunsInClient(config)) {
+      try {
+        int port = JobMasterContext.jobMasterPort(config);
+        String hostAddress = InetAddress.getLocalHost().getHostAddress();
+        LOG.log(Level.INFO, String.format("Starting the job manager: %s:%d", hostAddress, port));
+        jobMaster =
+            new JobMaster(config, hostAddress,
+                new StandaloneTerminator(), job.getJobName(),
+                port,  job.getJobResources().getNoOfContainers());
+        jobMaster.init();
+      } catch (UnknownHostException e) {
+        LOG.log(Level.SEVERE, "Exception when getting local host address: ", e);
+        throw new RuntimeException(e);
+      }
+    }
+
+    boolean start = controller.start(resourcePlan, job);
+    // now lets wait on client
+    if (JobMasterContext.jobMasterRunsInClient(config)) {
+      try {
+        if (jobMaster != null) {
+          jobMaster.join();
+        }
+      } catch (InterruptedException ignore) {
+      }
+    }
+    return start;
   }
 
   /**
