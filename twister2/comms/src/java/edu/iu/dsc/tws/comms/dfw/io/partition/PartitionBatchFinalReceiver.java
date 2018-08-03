@@ -27,6 +27,7 @@ import edu.iu.dsc.tws.comms.api.BatchReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
@@ -35,6 +36,7 @@ import edu.iu.dsc.tws.comms.shuffle.FSKeyedSortedMerger;
 import edu.iu.dsc.tws.comms.shuffle.FSMerger;
 import edu.iu.dsc.tws.comms.shuffle.Shuffle;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
+import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
 /**
  * A receiver that goes to disk
@@ -79,7 +81,7 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
   /**
    * The worker id
    */
-  private int worker = 0;
+  private int thisWorker = 0;
 
   /**
    * Keep track of totals for debug purposes
@@ -87,7 +89,7 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
   private Map<Integer, Integer> totalReceives = new HashMap<>();
 
   /**
-   * Finished sources per target (target -> finished sources)
+   * Finished workers per target (target -> finished workers)
    */
   private Map<Integer, Set<Integer>> finishedSources = new HashMap<>();
 
@@ -106,7 +108,9 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
    */
   private Set<Integer> targets = new HashSet<>();
 
-  private int executor = 0;
+  private TaskPlan taskPlan;
+
+  private Set<Integer> participatingWorkers;
 
   public PartitionBatchFinalReceiver(BatchReceiver receiver, boolean srt,
                                      boolean d, Comparator<Object> com) {
@@ -122,12 +126,14 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
     int maxRecordsInMemory = DataFlowContext.getShuffleMaxRecordsInMemory(cfg);
     String path = DataFlowContext.getShuffleDirectoryPath(cfg);
 
-    worker = op.getTaskPlan().getThisExecutor();
+    thisWorker = op.getTaskPlan().getThisExecutor();
     finishedSources = new HashMap<>();
     partition = (DataFlowPartition) op;
     keyed = partition.getKeyType() != null;
     targets = new HashSet<>(expectedIds.keySet());
-    executor = op.getTaskPlan().getThisExecutor();
+    taskPlan = op.getTaskPlan();
+    participatingWorkers = TaskPlanUtils.getWorkersOfTasks(taskPlan,
+        ((DataFlowPartition) op).getSources());
 
     for (Integer target : expectedIds.keySet()) {
       Map<Integer, Boolean> perTarget = new ConcurrentHashMap<>();
@@ -165,16 +171,15 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
 
     if ((flags & MessageFlags.EMPTY) == MessageFlags.EMPTY) {
       Set<Integer> finished = finishedSources.get(target);
-      if (finished.contains(source)) {
+      int worker = taskPlan.getExecutorForChannel(source);
+      if (finished.contains(worker)) {
         LOG.log(Level.WARNING,
-            String.format("%d Duplicate finish from source id %d", worker, source));
+            String.format("%d Duplicate finish from source id %d", this.thisWorker, worker));
       } else {
-        finished.add(source);
+        finished.add(worker);
       }
-      if (finished.size() == partition.getSources().size()) {
+      if (finished.size() == participatingWorkers.size()) {
         finishedTargets.add(target);
-      } else {
-        LOG.log(Level.INFO, executor + " Finished " + finished);
       }
       return true;
     }
