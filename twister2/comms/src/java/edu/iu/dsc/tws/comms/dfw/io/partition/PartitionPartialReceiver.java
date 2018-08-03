@@ -26,8 +26,10 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
+import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
 /**
  * Partial receiver is only going to get called for messages going to other destinations
@@ -74,7 +76,7 @@ public class PartitionPartialReceiver implements MessageReceiver {
   /**
    * The source task connected to this partial receiver
    */
-  private int source;
+  private int representSource;
 
   /**
    * The lock for excluding onMessage and progress
@@ -82,14 +84,19 @@ public class PartitionPartialReceiver implements MessageReceiver {
   private Lock lock = new ReentrantLock();
 
   /**
-   * Weather the operation has finished
-   */
-  private boolean finish = false;
-
-  /**
    * we have sent to these destinations
    */
-  private Set<Integer> finishedDestinations = new HashSet<>();
+  private Map<Integer, Set<Integer>> finishedDestinations = new HashMap<>();
+
+  /**
+   * These sources called onFinished
+   */
+  private Set<Integer> onFinishedSources = new HashSet<>();
+
+  /**
+   * Sources of this worker
+   */
+  private Set<Integer> thisWorkerSources = new HashSet<>();
 
   /**
    * Progress attempts without sending
@@ -103,6 +110,12 @@ public class PartitionPartialReceiver implements MessageReceiver {
     lowWaterMark = DataFlowContext.getNetworkPartitionMessageGroupLowWaterMark(cfg);
     highWaterMark = DataFlowContext.getNetworkPartitionMessageGroupHighWaterMark(cfg);
     executor = op.getTaskPlan().getThisExecutor();
+    TaskPlan taskPlan = op.getTaskPlan();
+    thisWorkerSources = TaskPlanUtils.getTasksOfThisWorker(taskPlan,
+        ((DataFlowPartition) op).getSources());
+    for (int s : thisWorkerSources) {
+      finishedDestinations.put(s, new HashSet<>());
+    }
 
     destinations = ((DataFlowPartition) op).getDestinations();
     this.operation = op;
@@ -115,7 +128,7 @@ public class PartitionPartialReceiver implements MessageReceiver {
 
   @Override
   public boolean onMessage(int src, int destination, int target, int flags, Object object) {
-    this.source = src;
+    this.representSource = src;
     List<Object> dests = destinationMessages.get(destination);
 
     int size = dests.size();
@@ -160,16 +173,21 @@ public class PartitionPartialReceiver implements MessageReceiver {
     }
 
     try {
-      if (finish && readyToSend.isEmpty() && finishedDestinations.size() != destinations.size()) {
-        for (int dest : destinations) {
-          if (!finishedDestinations.contains(dest)) {
-            if (operation.sendPartial(source, new byte[1], MessageFlags.EMPTY, dest)) {
-              finishedDestinations.add(dest);
-              progressAttempts = 0;
-            } else {
-              needsFurtherProgress = true;
-              // no point in going further
-              break;
+      if (onFinishedSources.equals(thisWorkerSources)
+          && readyToSend.isEmpty() && finishedDestinations.size() != destinations.size()) {
+
+        for (int source : thisWorkerSources) {
+          Set<Integer> finishedDestPerSource = finishedDestinations.get(source);
+          for (int dest : destinations) {
+            if (!finishedDestPerSource.contains(dest)) {
+              if (operation.sendPartial(source, new byte[1], MessageFlags.EMPTY, dest)) {
+                finishedDestPerSource.add(dest);
+                progressAttempts = 0;
+              } else {
+                needsFurtherProgress = true;
+                // no point in going further
+                break;
+              }
             }
           }
         }
@@ -183,7 +201,7 @@ public class PartitionPartialReceiver implements MessageReceiver {
         List<Object> send = new ArrayList<>(e.getValue());
 
         // if we send this list successfully
-        if (operation.sendPartial(source, send, 0, e.getKey())) {
+        if (operation.sendPartial(representSource, send, 0, e.getKey())) {
           // lets remove from ready list and clear the list
           e.getValue().clear();
           it.remove();
@@ -214,7 +232,7 @@ public class PartitionPartialReceiver implements MessageReceiver {
   }
 
   @Override
-  public void onFinish(int target) {
+  public void onFinish(int source) {
     // flush everything
     lock.lock();
     try {
@@ -229,7 +247,7 @@ public class PartitionPartialReceiver implements MessageReceiver {
         messages.addAll(e.getValue());
       }
       // finished
-      finish = true;
+      onFinishedSources.add(source);
     } finally {
       lock.unlock();
     }

@@ -125,7 +125,7 @@ public class PartitionOperation extends AbstractParallelOperation {
     }
 
     @Override
-    public void onFinish(int target) {
+    public void onFinish(int source) {
 
     }
 
