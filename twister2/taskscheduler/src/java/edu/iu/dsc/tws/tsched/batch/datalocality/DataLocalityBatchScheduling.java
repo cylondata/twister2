@@ -105,7 +105,6 @@ public class DataLocalityBatchScheduling {
          * it will check whether the container has reached maximum task instance size which is
          * able to hold.
          */
-
         for (int i = 0; i < totalNumberOfInstances; i++) {
           int maxContainerTaskObjectSize = 0;
           if (maxContainerTaskObjectSize <= maxTaskInstancesPerContainer) {

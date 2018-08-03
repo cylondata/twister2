@@ -16,19 +16,31 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.MessageType;
 
 public class LoadBalanceDestinationSelector implements DestinationSelector {
+  private static final Logger LOG = Logger.getLogger(
+      LoadBalanceDestinationSelector.class.getName());
+
   private Map<Integer, List<Integer>> destination = new HashMap<>();
 
   private Map<Integer, Integer> destinationIndexes = new HashMap<>();
 
+  private Map<Integer, Map<Integer, Integer>> invertedIndexes = new HashMap<>();
+
   @Override
   public void prepare(Set<Integer> sources, Set<Integer> destinations) {
     for (int s : sources) {
-      destination.put(s, new ArrayList<>(destinations));
+      ArrayList<Integer> destList = new ArrayList<>(destinations);
+      destination.put(s, destList);
       destinationIndexes.put(s, 0);
+      HashMap<Integer, Integer> value = new HashMap<>();
+      invertedIndexes.put(s, value);
+      for (int i = 0; i < destinations.size(); i++) {
+        value.put(destList.get(i), i);
+      }
     }
   }
 
@@ -38,11 +50,30 @@ public class LoadBalanceDestinationSelector implements DestinationSelector {
 
   @Override
   public int next(int source) {
-    return 0;
+    int destIndex = destinationIndexes.get(source);
+    List<Integer> destinations = destination.get(source);
+    int next = increment(destIndex, destinations.size());
+    return destinations.get(next);
+  }
+
+  private int increment(int current, int max) {
+    if (current == max - 1) {
+      return 0;
+    } else {
+      return current + 1;
+    }
   }
 
   @Override
   public int next(int source, Object key) {
-    return 0;
+    throw new UnsupportedOperationException("Cannot use keys in this mode, "
+        + "please check configuration");
+  }
+
+  public void commit(int source, int next) {
+    Map<Integer, Integer> invertedDests = invertedIndexes.get(source);
+    int index = invertedDests.get(next);
+
+    destinationIndexes.put(source, index);
   }
 }

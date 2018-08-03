@@ -32,11 +32,11 @@ public final class OperationUtils {
 
   /**
    * Progress the receivers and return true if needs further progress
-   * @param delegate
-   * @param lock
-   * @param finalReceiver
-   * @param partialLock
-   * @param partialReceiver
+   * @param delegate the channel dataflow opeation
+   * @param lock lock for final receiver
+   * @param finalReceiver final receiver
+   * @param partialLock lock for partial receiver
+   * @param partialReceiver partial receiver
    * @return true if need further progress
    */
   public static boolean progressReceivers(ChannelDataFlowOperation delegate, Lock lock,
@@ -65,6 +65,7 @@ public final class OperationUtils {
       LOG.log(Level.SEVERE, "un-expected error", t);
       throw new RuntimeException(t);
     }
+//    LOG.info("Receivers: " + finalNeedsProgress + " " + partialNeedsProgress);
     return finalNeedsProgress || partialNeedsProgress;
   }
 

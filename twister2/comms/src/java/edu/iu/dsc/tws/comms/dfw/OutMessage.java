@@ -98,7 +98,7 @@ public class OutMessage {
     this.writtenHeaderSize = writtenHeaderSize;
   }
 
-  public ChannelMessage getMPIMessage() {
+  public ChannelMessage getChannelMessage() {
     return ref;
   }
 

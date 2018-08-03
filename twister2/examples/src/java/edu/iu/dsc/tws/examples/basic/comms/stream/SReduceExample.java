@@ -53,7 +53,7 @@ public class SReduceExample extends BenchWorker {
         MessageType.INTEGER);
 
 
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(id, taskPlan,
+    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
     for (int t : tasksOfExecutor) {
       finishedSources.put(t, false);
@@ -62,7 +62,7 @@ public class SReduceExample extends BenchWorker {
       sourcesDone = true;
     }
 
-    if (!taskPlan.getChannelsOfExecutor(id).contains(target)) {
+    if (!taskPlan.getChannelsOfExecutor(workerId).contains(target)) {
       reduceDone = true;
     }
 
@@ -90,8 +90,8 @@ public class SReduceExample extends BenchWorker {
 
   @Override
   protected boolean isDone() {
-//    LOG.log(Level.INFO, String.format("%d Reduce %b sources %b pending %b",
-//        id, reduceDone, sourcesDone, reduce.hasPending()));
+    LOG.log(Level.INFO, String.format("%d Reduce %b sources %b pending %b",
+        workerId, reduceDone, sourcesDone, reduce.hasPending()));
     return reduceDone && sourcesDone && !reduce.hasPending();
   }
 

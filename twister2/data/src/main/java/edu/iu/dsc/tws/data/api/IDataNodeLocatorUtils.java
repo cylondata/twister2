@@ -9,19 +9,15 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.op;
+package edu.iu.dsc.tws.data.api;
 
-import java.util.Set;
+import java.util.List;
 
-import edu.iu.dsc.tws.comms.api.MessageType;
+public interface IDataNodeLocatorUtils {
 
-/**
- * Destination selector
- */
-public interface DestinationSelector {
-  void prepare(Set<Integer> sources, Set<Integer> destinations);
-  void prepare(MessageType type, Set<Integer> sources, Set<Integer> destinations);
-  int next(int source);
-  int next(int source, Object key);
-  void commit(int source, int next);
+  List<String> findDataNodesLocation(List<String> inputDataList);
+
+  List<String> findDataNodesLocation(String inputFileName);
+
+  //List<String> findDataNodesLocation(Set<Vertex> vertexSet);
 }

@@ -54,8 +54,17 @@ public class BarrierMonitor implements MessageHandler {
     }
   }
 
+  /**
+   * First, we copy the waitList to another
+   * This is to prevent that after some responses are sent,
+   * new barrier requests may arrive, before finishing up the response sends
+   */
   private void sendBarrierResponseToWaitList() {
-    for (Map.Entry<Integer, RequestID> entry: waitList.entrySet()) {
+
+    HashMap<Integer, RequestID> waitListCopy = copyWaitList();
+    waitList.clear();
+
+    for (Map.Entry<Integer, RequestID> entry: waitListCopy.entrySet()) {
       Network.BarrierResponse response = Network.BarrierResponse.newBuilder()
           .setWorkerID(entry.getKey())
           .build();
@@ -63,8 +72,16 @@ public class BarrierMonitor implements MessageHandler {
       rrServer.sendResponse(entry.getValue(), response);
       LOG.info("BarrierResponse sent:\n" + response);
     }
+  }
 
-    waitList.clear();
+  private HashMap<Integer, RequestID> copyWaitList() {
+
+    HashMap<Integer, RequestID> waitListCopy = new HashMap<>(waitList.size());
+    for (Map.Entry<Integer, RequestID> entry: waitList.entrySet()) {
+      waitListCopy.put(entry.getKey(), entry.getValue());
+    }
+
+    return waitListCopy;
   }
 
 

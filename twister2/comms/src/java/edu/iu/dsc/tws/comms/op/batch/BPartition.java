@@ -54,10 +54,14 @@ public class BPartition {
     this.destinationSelector.prepare(partition.getSources(), partition.getDestinations());
   }
 
-  public void partition(int source, Object message, int flags) {
+  public boolean partition(int source, Object message, int flags) {
     int destinations = destinationSelector.next(source);
 
-    partition.send(source, message, flags, destinations);
+    return partition.send(source, message, flags, destinations);
+  }
+
+  public boolean hasPending() {
+    return !partition.isComplete();
   }
 
   public void finish(int source) {

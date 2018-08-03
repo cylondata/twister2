@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.common.net.tcp;
 
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -104,9 +103,6 @@ public class DynamicBufferChannel extends BaseNetworkChannel {
         readStatus = DataStatus.INIT;
         LOG.finest(String.format("READ Body %d", buffer.limit()));
         return ret;
-      } else {
-        LOG.log(Level.INFO, String.format("READ Body not COMPLETE %d %d", buffer.limit(), retVal));
-        return null;
       }
     }
     return null;

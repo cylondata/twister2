@@ -372,20 +372,10 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     }
   }
 
+  /**
+   * Weather we have more data to complete
+   */
   public boolean isComplete() {
-//    LOG.info(String.format("Sends %s recvs %s", sendsDone, receivesDone));
-    for (AtomicBoolean b : sendsDone.values()) {
-      if (!b.get()) {
-        return false;
-      }
-    }
-
-    for (AtomicBoolean b : receivesDone.values()) {
-      if (!b.get()) {
-        return false;
-      }
-    }
-
     for (Map.Entry<Integer, Queue<Pair<Object, ChannelMessage>>> e
         : pendingReceiveMessagesPerSource.entrySet()) {
       if (e.getValue().size() > 0) {
@@ -515,15 +505,21 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
           int startOfExternalRouts = outMessage.getAcceptedExternalSends();
           int noOfExternalSends = startOfExternalRouts;
           for (int i = startOfExternalRouts; i < exRoutes.size(); i++) {
-            boolean sendAccepted = sendMessageToTarget(message.getMPIMessage(), exRoutes.get(i));
-            // if no longer accepts stop
-            if (!sendAccepted) {
-              canProgress = false;
+            lock.lock();
+            try {
+              boolean sendAccepted = sendMessageToTarget(message.getChannelMessage(),
+                  exRoutes.get(i));
+              // if no longer accepts stop
+              if (!sendAccepted) {
+                canProgress = false;
 
-              break;
-            } else {
-              noOfExternalSends = outMessage.incrementAcceptedExternalSends();
-              externalSendsPending.incrementAndGet();
+                break;
+              } else {
+                noOfExternalSends = outMessage.incrementAcceptedExternalSends();
+                externalSendsPending.incrementAndGet();
+              }
+            } finally {
+              lock.unlock();
             }
           }
 
@@ -535,7 +531,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
         } else if (message.serializedState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
           // If the message is partially serialized we will clone the message and send a clone
           // the original message will be kept so that the rest of the message can be serialized
-          if (message.getMPIMessage().getBuffers().size() == 0) {
+          if (message.getChannelMessage().getBuffers().size() == 0) {
             break;
           }
           List<Integer> exRoutes = new ArrayList<>(outMessage.getExternalSends());
@@ -543,7 +539,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
           int noOfExternalSends = startOfExternalRouts;
 
           //making a copy to send
-          ChannelMessage sendCopy = createChannelMessageCopy(message.getMPIMessage());
+          ChannelMessage sendCopy = createChannelMessageCopy(message.getChannelMessage());
 
           for (int i = startOfExternalRouts; i < exRoutes.size(); i++) {
             boolean sendAccepted = sendMessageToTarget(sendCopy, exRoutes.get(i));
@@ -669,7 +665,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
   public void onSendComplete(int id, int messageStream, ChannelMessage message) {
     // ok we don't have anything else to do
     message.release();
-    externalSendsPending.decrementAndGet();
+    externalSendsPending.getAndDecrement();
   }
 
   @Override

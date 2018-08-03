@@ -1,11 +1,13 @@
 # Kubernetes Master Based Worker Discovery
 Ahmet Uyar
 
-We developed a worker discoverer that watches the pods in Kubernetes clusters by listening to 
+We developed a worker controller that watches the pods in Kubernetes clusters by listening to 
 Kubernetes master. It provides the following services to workers in a Twister2 job: 
 * Unique ID assignment to workers
 * Worker address discovery 
 * Getting the IP addresses after the worker pods started running
+
+This class does not implement the barriers for workers.
 
 The worker discoverer class is: 
 * [edu.iu.dsc.tws.rsched.schedulers.k8s.worker.WorkerController](../../../twister2/resource-scheduler/src/java/edu/iu/dsc/tws/rsched/schedulers/k8s/worker/WorkerDiscoverer.java)

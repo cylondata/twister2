@@ -248,7 +248,7 @@ public class WorkerController implements IWorkerController {
     int i = 0;
     for (WorkerNetworkInfo worker: workers) {
       buffer.append(String.format("%d: workerID[%d] %s\n",
-          i++, worker.getWorkerID(), worker.getWorkerName()));
+          i++, worker.getWorkerID(), worker.getWorkerIpAndPort()));
     }
 
     LOG.info(buffer.toString());
