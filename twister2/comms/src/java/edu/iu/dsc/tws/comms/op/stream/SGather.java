@@ -37,7 +37,7 @@ public class SGather {
     gather.init(comm.getConfig(), dataType, plan, comm.nextEdge());
   }
 
-  public boolean reduce(int src, Object message, int flags) {
+  public boolean gather(int src, Object message, int flags) {
     return gather.send(src, message, flags);
   }
 
