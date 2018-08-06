@@ -77,5 +77,4 @@ public final class MessageTypeUtils {
     return false;
   }
 
-
 }

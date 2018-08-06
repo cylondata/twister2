@@ -163,19 +163,22 @@ public class SingleMessageSerializer implements MessageSerializer {
   private boolean serializeBody(Object payload,
                                 OutMessage sendMessage, DataBuffer buffer) {
     MessageType type = sendMessage.getChannelMessage().getType();
-    if (type == MessageType.OBJECT || type == MessageType.INTEGER || type == MessageType.LONG
-        || type == MessageType.DOUBLE || type == MessageType.BYTE || type == MessageType.STRING
-        || type == MessageType.MULTI_FIXED_BYTE) {
-      if (!keyed) {
-        return serializeData(payload, sendMessage.getSerializationState(), buffer, type);
-      } else {
-        KeyedContent keyedContent = (KeyedContent) payload;
-        return serializeKeyedData(keyedContent.getValue(), keyedContent.getKey(),
-            sendMessage.getSerializationState(), buffer, type, keyedContent.getKeyType());
+    if ((sendMessage.getFlags() & MessageFlags.BARRIER) == MessageFlags.BARRIER) {
+      return serializeData(payload, sendMessage.getSerializationState(), buffer, type);
+    } else {
+      if (type == MessageType.OBJECT || type == MessageType.INTEGER || type == MessageType.LONG
+          || type == MessageType.DOUBLE || type == MessageType.BYTE || type == MessageType.STRING
+          || type == MessageType.MULTI_FIXED_BYTE) {
+        if (!keyed) {
+          return serializeData(payload, sendMessage.getSerializationState(), buffer, type);
+        } else {
+          KeyedContent keyedContent = (KeyedContent) payload;
+          return serializeKeyedData(keyedContent.getValue(), keyedContent.getKey(),
+              sendMessage.getSerializationState(), buffer, type, keyedContent.getKeyType());
+        }
+      } else if (type == MessageType.BUFFER) {
+        return serializeBuffer(payload, sendMessage, buffer);
       }
-    }
-    if (type == MessageType.BUFFER) {
-      return serializeBuffer(payload, sendMessage, buffer);
     }
     return false;
   }

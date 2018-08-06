@@ -391,7 +391,6 @@ public class MultiMessageSerializer implements MessageSerializer {
             + " into the next buffer");
         return false;
       }
-
 //      LOG.info(String.format("%d serialize data length: %d pos %d",
 //          executor, dataLength, byteBuffer.position()));
       // at this point we know the length of the data
