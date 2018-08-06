@@ -135,17 +135,17 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
   private ChannelReceiver receiver;
 
   /**
-   * Send progress tracker
+   * Send communicationProgress tracker
    */
   private ProgressionTracker sendProgressTracker;
 
   /**
-   * Receive progress tracker
+   * Receive communicationProgress tracker
    */
   private ProgressionTracker receiveProgressTracker;
 
   /**
-   * Deserialize progress tracke
+   * Deserialize communicationProgress tracke
    */
   private ProgressionTracker deserializeProgressTracker;
 

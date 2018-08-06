@@ -187,7 +187,7 @@ public class TWSMPIChannel implements TWSChannel {
         DataBuffer buffer = message.getBuffers().get(i);
         Request request = comm.iSend(buffer.getByteBuffer(), buffer.getSize(),
             MPI.BYTE, requests.rank, message.getHeader().getEdge());
-        // register to the loop to make progress on the send
+        // register to the loop to make communicationProgress on the send
         requests.pendingSends.add(new MPIRequest(request, buffer));
       } catch (MPIException e) {
         throw new RuntimeException("Failed to send message to rank: " + requests.rank);

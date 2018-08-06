@@ -31,13 +31,13 @@ public final class OperationUtils {
   }
 
   /**
-   * Progress the receivers and return true if needs further progress
+   * Progress the receivers and return true if needs further communicationProgress
    * @param delegate
    * @param lock
    * @param finalReceiver
    * @param partialLock
    * @param partialReceiver
-   * @return true if need further progress
+   * @return true if need further communicationProgress
    */
   public static boolean progressReceivers(ChannelDataFlowOperation delegate, Lock lock,
                                        MessageReceiver finalReceiver, Lock partialLock,

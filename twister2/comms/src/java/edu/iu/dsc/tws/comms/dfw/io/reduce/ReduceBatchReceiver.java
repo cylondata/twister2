@@ -121,7 +121,7 @@ public abstract class ReduceBatchReceiver implements MessageReceiver {
 
       Integer tc = totalCounts.get(target).get(source);
       totalCounts.get(target).put(source, tc + 1);
-      LOG.info("Flags : " + flags + ", Message Flag Last : " + MessageFlags.FLAGS_LAST);
+      //LOG.info("Flags : " + flags + ", Message Flag Last : " + MessageFlags.FLAGS_LAST);
       m.add(object);
       if ((flags & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) {
         finishedMessages.put(source, true);

@@ -21,7 +21,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 /**
- * The progress loop
+ * The communicationProgress loop
  */
 public class Progress {
   private static final Logger LOG = Logger.getLogger(Progress.class.getName());

@@ -69,7 +69,7 @@ public class RRClient {
   private RequestID requestIdOfWaitedResponse = null;
 
   /**
-   * The progress loop
+   * The communicationProgress loop
    */
   private Progress loop;
 

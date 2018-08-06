@@ -53,7 +53,7 @@ public interface DataFlowOperation {
   /**
    * Progress the pending dataflow operations
    *
-   * @return true if there is more messages to progress, unless return false
+   * @return true if there is more messages to communicationProgress, unless return false
    */
   boolean progress();
 

@@ -22,8 +22,9 @@ public class SinkBatchTask implements ISink {
   private SinkTaskContextListener sinkTaskContextListener;
 
   @Override
-  public void execute(IMessage message) {
+  public boolean execute(IMessage message) {
 
+    return false;
   }
 
   @Override

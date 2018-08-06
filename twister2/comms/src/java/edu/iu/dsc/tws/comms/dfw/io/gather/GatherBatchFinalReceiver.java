@@ -112,7 +112,7 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
   }
 
   /**
-   * Method used to progress work
+   * Method used to communicationProgress work
    */
   public boolean progress() {
     for (int t : messages.keySet()) {

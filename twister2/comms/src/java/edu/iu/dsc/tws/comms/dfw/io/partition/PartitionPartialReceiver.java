@@ -77,7 +77,7 @@ public class PartitionPartialReceiver implements MessageReceiver {
   private int source;
 
   /**
-   * The lock for excluding onMessage and progress
+   * The lock for excluding onMessage and communicationProgress
    */
   private Lock lock = new ReentrantLock();
 

@@ -62,7 +62,7 @@ public class ReduceBatchPartialReceiver extends ReduceBatchReceiver {
           }
         }
 
-        // if we have queues with 0 and more than zero we need further progress
+        // if we have queues with 0 and more than zero we need further communicationProgress
         if (!found && moreThanOne) {
           needsFurtherProgress = true;
         }

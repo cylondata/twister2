@@ -47,9 +47,9 @@ public interface MessageReceiver {
   }
 
   /**
-   * This method will be called by the progress
+   * This method will be called by the communicationProgress
    *
-   * @return true if needs further progress
+   * @return true if needs further communicationProgress
    */
   boolean progress();
 }

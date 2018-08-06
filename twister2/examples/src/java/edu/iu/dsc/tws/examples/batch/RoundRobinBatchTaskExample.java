@@ -223,11 +223,12 @@ public class RoundRobinBatchTaskExample implements IContainer {
     private HDFSConnector hdfsConnector = null;
 
     @Override
-    public void execute(IMessage message) {
+    public boolean execute(IMessage message) {
 
       LOG.info("Message Partition Received : " + message.getContent()
           + ", Count : " + count);
       count++;
+      return true;
     }
 
     public void prepare(Config cfg, TaskContext context) {
@@ -246,11 +247,12 @@ public class RoundRobinBatchTaskExample implements IContainer {
     private HDFSConnector hdfsConnector = null;
 
     @Override
-    public void execute(IMessage message) {
+    public boolean execute(IMessage message) {
 
       LOG.info("Message Partition Received : " + message.getContent()
           + ", Count : " + count);
       count++;
+      return true;
     }
 
     @Override
@@ -268,11 +270,12 @@ public class RoundRobinBatchTaskExample implements IContainer {
     private Config config;
 
     @Override
-    public void execute(IMessage message) {
+    public boolean execute(IMessage message) {
 
       LOG.info("Message Partition Received : " + message.getContent()
           + ", Count : " + count);
       count++;
+      return true;
     }
 
     @Override
@@ -292,11 +295,12 @@ public class RoundRobinBatchTaskExample implements IContainer {
     private HDFSConnector hdfsConnector = null;
 
     @Override
-    public void execute(IMessage message) {
+    public boolean execute(IMessage message) {
 
       LOG.info("Message Partition Received : " + message.getContent()
           + ", Count : " + count);
       count++;
+      return true;
     }
 
     @Override

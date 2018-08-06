@@ -116,7 +116,7 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
             moreThanOne = true;
           }
         }
-        // if we have queues with 0 and more than zero we need further progress
+        // if we have queues with 0 and more than zero we need further communicationProgress
         if (!found && moreThanOne) {
           needsFurtherProgress = true;
         }

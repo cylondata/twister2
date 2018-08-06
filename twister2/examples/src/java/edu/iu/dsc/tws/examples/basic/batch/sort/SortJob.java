@@ -107,7 +107,7 @@ public class SortJob implements IWorker {
     scheduleTasks();
 
     LOG.info("Scheduling tasks complete ------------------------------");
-    // progress the work
+    // communicationProgress the work
     progress();
     LOG.info("Progress complete ------------------------------");
   }
@@ -155,12 +155,12 @@ public class SortJob implements IWorker {
   }
 
   private void progress() {
-    // we need to progress the communication
+    // we need to communicationProgress the communication
     while (true) {
       try {
-        // progress the channel
+        // communicationProgress the channel
         channel.progress();
-        // we should progress the communication directive
+        // we should communicationProgress the communication directive
         partition.progress();
       } catch (Throwable t) {
         LOG.log(Level.SEVERE, "Something bad happened", t);

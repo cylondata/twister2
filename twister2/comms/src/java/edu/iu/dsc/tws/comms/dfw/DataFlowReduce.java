@@ -334,8 +334,8 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public boolean progress() {
-    OperationUtils.progressReceivers(delegete, lock, finalReceiver, partialLock, partialReceiver);
-    return true;
+    return OperationUtils.progressReceivers(delegete, lock,
+        finalReceiver, partialLock, partialReceiver);
   }
 
   @Override
