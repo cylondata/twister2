@@ -36,7 +36,7 @@ public class DataLocalityAwareTaskScheduling implements TaskSchedule {
   private static final Logger LOG = Logger.getLogger(
       DataLocalityAwareTaskScheduling.class.getName());
 
-  protected static int taskSchedulePlanId = 0;
+  private static int taskSchedulePlanId = 0;
   private Double instanceRAM;
   private Double instanceDisk;
   private Double instanceCPU;
@@ -107,16 +107,18 @@ public class DataLocalityAwareTaskScheduling implements TaskSchedule {
       if (worker != null && worker.getCpu() > 0 && worker.getDisk() > 0 && worker.getRam() > 0) {
         containerResource = new Resource((double) worker.getRam(),
             (double) worker.getDisk(), (double) worker.getCpu());
-        LOG.fine(String.format("Worker (if loop):" + containerId + "\tRam:"
+        //write into a log file
+        LOG.fine("Worker (if loop):" + containerId + "\tRam:"
             + worker.getRam() + "\tDisk:" + worker.getDisk()  //write into a log file
-            + "\tCpu:" + worker.getCpu()));
+            + "\tCpu:" + worker.getCpu());
       } else {
         containerResource = new Resource(containerRAMValue, containerDiskValue,
             containerCpuValue);
-        LOG.fine(String.format("Worker (else loop):" + containerId
+        //write into a log file
+        LOG.fine("Worker (else loop):" + containerId
             + "\tRam:" + containerRAMValue     //write into a log file
             + "\tDisk:" + containerDiskValue
-            + "\tCpu:" + containerCpuValue));
+            + "\tCpu:" + containerCpuValue);
       }
 
       TaskSchedulePlan.ContainerPlan taskContainerPlan =

@@ -43,7 +43,6 @@ public class FirstFitTaskScheduling implements TaskSchedule {
   private int paddingPercentage;
   private int numContainers;
 
-  private Double instanceRAM;
   private Double instanceDisk;
   private Double instanceCPU;
   private Config cfg;
@@ -61,16 +60,16 @@ public class FirstFitTaskScheduling implements TaskSchedule {
 
     this.cfg = cfg1;
 
-    this.instanceRAM = TaskSchedulerContext.taskInstanceRam(cfg);
+    Double instanceRAM = TaskSchedulerContext.taskInstanceRam(cfg);
     this.instanceDisk = TaskSchedulerContext.taskInstanceDisk(cfg);
     this.instanceCPU = TaskSchedulerContext.taskInstanceCpu(cfg);
     this.paddingPercentage = TaskSchedulerContext.containerPaddingPercentage(cfg);
 
-    this.defaultResourceValue = new Resource(this.instanceRAM, this.instanceDisk, this.instanceCPU);
+    this.defaultResourceValue = new Resource(instanceRAM, this.instanceDisk, this.instanceCPU);
 
     int defaultNoOfTaskInstances = TaskSchedulerContext.defaultTaskInstancesPerContainer(cfg);
 
-    this.instanceRAM = this.defaultResourceValue.getRam() * defaultNoOfTaskInstances;
+    instanceRAM = this.defaultResourceValue.getRam() * defaultNoOfTaskInstances;
     this.instanceDisk = this.defaultResourceValue.getDisk() * defaultNoOfTaskInstances;
     this.instanceCPU = this.defaultResourceValue.getCpu() * defaultNoOfTaskInstances;
 
@@ -85,13 +84,13 @@ public class FirstFitTaskScheduling implements TaskSchedule {
         (double) Math.round(TaskScheduleUtils.increaseBy(instanceDisk, paddingPercentage)),
         (double) Math.round(TaskScheduleUtils.increaseBy(instanceCPU, paddingPercentage)));
 
-    LOG.info(String.format("Instance default values:" + "RamValue:" + instanceRAM + "\t"
-        + "DiskValue:" + instanceDisk + "\t" + "CPUValue:" + instanceCPU));
+    LOG.info("Instance default values:" + "RamValue:" + instanceRAM + "\t"
+        + "DiskValue:" + instanceDisk + "\t" + "CPUValue:" + instanceCPU);
 
-    LOG.info(String.format("Container default values:"
+    LOG.info("Container default values:"
         + "RamValue:" + this.maximumContainerResourceValue.getRam() + "\t"
         + "DiskValue:" + this.maximumContainerResourceValue.getDisk() + "\t"
-        + "CPUValue:" + this.maximumContainerResourceValue.getCpu()));
+        + "CPUValue:" + this.maximumContainerResourceValue.getCpu());
   }
 
   private TaskSchedulePlanBuilder newTaskSchedulingPlanBuilder(TaskSchedulePlan previousTaskPlan) {
@@ -118,22 +117,22 @@ public class FirstFitTaskScheduling implements TaskSchedule {
     return taskSchedulePlanBuilder.build();
   }
 
-  public TaskSchedulePlanBuilder FirstFitFTaskSchedulingAlgorithm(
+  private TaskSchedulePlanBuilder FirstFitFTaskSchedulingAlgorithm(
       TaskSchedulePlanBuilder taskSchedulePlanBuilder) throws TaskSchedulerException {
     Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(this.taskVertexSet);
     assignInstancesToContainers(taskSchedulePlanBuilder, parallelTaskMap);
     return taskSchedulePlanBuilder;
   }
 
-  public void assignInstancesToContainers(TaskSchedulePlanBuilder taskSchedulePlanBuilder,
-                                          Map<String, Integer> parallelTaskMap)
+  private void assignInstancesToContainers(TaskSchedulePlanBuilder taskSchedulePlanBuilder,
+                                           Map<String, Integer> parallelTaskMap)
       throws TaskSchedulerException {
     ArrayList<RequiredRam> ramRequirements = getSortedRAMInstances(parallelTaskMap.keySet());
     for (RequiredRam ramRequirement : ramRequirements) {
       String taskName = ramRequirement.getTaskName();
       int numberOfInstances = parallelTaskMap.get(taskName);
-      LOG.info(String.format("Number of Instances Required For the Task Name:\t"
-          + taskName + "\t" + numberOfInstances + "\n"));
+      LOG.info("Number of Instances Required For the Task Name:\t"
+          + taskName + "\t" + numberOfInstances + "\n");
       for (int j = 0; j < numberOfInstances; j++) {
         FirstFitInstanceAllocation(taskSchedulePlanBuilder, taskName);
       }
@@ -149,12 +148,12 @@ public class FirstFitTaskScheduling implements TaskSchedule {
           this.maximumContainerResourceValue, this.paddingPercentage);
       ramRequirements.add(new RequiredRam(taskName, resource.getRam()));
     }
-    Collections.sort(ramRequirements, Collections.reverseOrder());
+    ramRequirements.sort(Collections.reverseOrder());
     return ramRequirements;
   }
 
-  public void FirstFitInstanceAllocation(TaskSchedulePlanBuilder taskSchedulePlanBuilder,
-                                         String taskName) throws TaskSchedulerException {
+  private void FirstFitInstanceAllocation(TaskSchedulePlanBuilder taskSchedulePlanBuilder,
+                                          String taskName) throws TaskSchedulerException {
     if (this.numContainers == 0) {
       taskSchedulePlanBuilder.updateNumContainers(++numContainers);
     }

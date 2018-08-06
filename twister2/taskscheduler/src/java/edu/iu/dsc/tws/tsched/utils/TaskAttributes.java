@@ -29,7 +29,7 @@ public class TaskAttributes {
 
     Map<String, Double> taskRamMap = new HashMap<>();
     Object ram;
-    double requiredRam = 0.0;
+    double requiredRam;
     for (Vertex task : taskVertices) {
       Config config = task.getConfig();
       if (config.get("Ram") != null) {
@@ -47,7 +47,7 @@ public class TaskAttributes {
 
     Map<String, Double> taskNetworkMap = new HashMap<>();
     Object network;
-    double requiredNetwork = 0.0;
+    double requiredNetwork;
     for (Vertex task : taskVertices) {
       Config config = task.getConfig();
       if (config.get("Network") != null) {
@@ -65,7 +65,7 @@ public class TaskAttributes {
 
     Map<String, Double> taskDiskMap = new HashMap<>();
     Object disk;
-    double requiredDisk = 0.0;
+    double requiredDisk;
     for (Vertex task : taskVertices) {
       Config config = task.getConfig();
       if (config.get("Disk") != null) {
@@ -83,7 +83,7 @@ public class TaskAttributes {
 
     Map<String, Double> taskCPUMap = new HashMap<>();
     Object cpu;
-    double requiredCpu = 0.0;
+    double requiredCpu;
     for (Vertex task : taskVertices) {
       Config config = task.getConfig();
       if (config.get("Cpu") != null) {

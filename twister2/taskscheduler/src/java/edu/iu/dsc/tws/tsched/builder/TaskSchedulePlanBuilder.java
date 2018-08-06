@@ -9,23 +9,10 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
 package edu.iu.dsc.tws.tsched.builder;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -185,7 +172,7 @@ public class TaskSchedulePlanBuilder {
   static List<Container> sortContainers(List<Scorer<Container>> scorers,
                                         Collection<Container> containers) {
     List<Container> sorted = new ArrayList<>(containers);
-    Collections.sort(sorted, new ChainedContainerComparator<>(scorers));
+    sorted.sort(new ChainedContainerComparator<>(scorers));
     return sorted;
   }
 
@@ -470,10 +457,10 @@ public class TaskSchedulePlanBuilder {
           }
           containerCPUValue += instanceCPUValue;
 
-          LOG.info(String.format("Required Resource Values for Task Instance:"
+          LOG.info("Required Resource Values for Task Instance:"
               + taskInstancePlan.getTaskName() + "--Task Index("
               + taskInstancePlan.getTaskIndex() + ")" + "\tRam Value:" + containerRAMValue
-              + "\tDisk Value:" + containerDiskValue + "\tCpu Value:" + containerCPUValue));
+              + "\tDisk Value:" + containerDiskValue + "\tCpu Value:" + containerCPUValue);
 
           Resource resource = new Resource(instanceRAMValue, instanceDiskValue, instanceCPUValue);
           taskInstancePlans.add(new TaskSchedulePlan.TaskInstancePlan(instanceId.getTaskName(),
