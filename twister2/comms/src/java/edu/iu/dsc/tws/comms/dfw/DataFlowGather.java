@@ -323,6 +323,14 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
         partialSendRoutingParameters(source, pathToUse));
   }
 
+  public boolean isComplete() {
+    boolean done = delegete.isComplete();
+    boolean needsFurtherProgress = OperationUtils.progressReceivers(delegete, lock, finalReceiver,
+        partialLock, partialReceiver);
+//    LOG.log(Level.INFO, String.format("Done %b needsFurther %b", done, needsFurtherProgress));
+    return done && !needsFurtherProgress;
+  }
+
   protected Set<Integer> receivingExecutors() {
     return router.receivingExecutors();
   }

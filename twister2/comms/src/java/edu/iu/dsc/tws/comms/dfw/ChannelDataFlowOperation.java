@@ -504,9 +504,14 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
           List<Integer> exRoutes = new ArrayList<>(outMessage.getExternalSends());
           int startOfExternalRouts = outMessage.getAcceptedExternalSends();
           int noOfExternalSends = startOfExternalRouts;
-          for (int i = startOfExternalRouts; i < exRoutes.size(); i++) {
-            lock.lock();
-            try {
+          lock.lock();
+          try {
+            if (!outMessage.isOutCountUpdated()) {
+              outMessage.getChannelMessage().incrementRefCount(
+                  outMessage.getExternalSends().size());
+              outMessage.setOutCountUpdated(true);
+            }
+            for (int i = startOfExternalRouts; i < exRoutes.size(); i++) {
               boolean sendAccepted = sendMessageToTarget(message.getChannelMessage(),
                   exRoutes.get(i));
               // if no longer accepts stop
@@ -518,9 +523,9 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
                 noOfExternalSends = outMessage.incrementAcceptedExternalSends();
                 externalSendsPending.incrementAndGet();
               }
-            } finally {
-              lock.unlock();
             }
+          } finally {
+            lock.unlock();
           }
 
           if (noOfExternalSends == exRoutes.size()) {
@@ -536,19 +541,27 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
           }
           List<Integer> exRoutes = new ArrayList<>(outMessage.getExternalSends());
           int startOfExternalRouts = outMessage.getAcceptedExternalSends();
-          int noOfExternalSends = startOfExternalRouts;
 
           //making a copy to send
           ChannelMessage sendCopy = createChannelMessageCopy(message.getChannelMessage());
-
-          for (int i = startOfExternalRouts; i < exRoutes.size(); i++) {
-            boolean sendAccepted = sendMessageToTarget(sendCopy, exRoutes.get(i));
-            // if no longer accepts stop
-            if (!sendAccepted) {
-              canProgress = false;
-
-              break;
+          lock.lock();
+          try {
+            if (!outMessage.isOutCountUpdated()) {
+              outMessage.getChannelMessage().incrementRefCount(
+                  outMessage.getExternalSends().size());
+              outMessage.setOutCountUpdated(true);
             }
+            for (int i = startOfExternalRouts; i < exRoutes.size(); i++) {
+              boolean sendAccepted = sendMessageToTarget(sendCopy, exRoutes.get(i));
+              // if no longer accepts stop
+              if (!sendAccepted) {
+                canProgress = false;
+
+                break;
+              }
+            }
+          } finally {
+            lock.unlock();
           }
           //send and remove buffers from object
         } else {
@@ -649,7 +662,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
   }
 
   private boolean sendMessageToTarget(ChannelMessage channelMessage, int i) {
-    channelMessage.incrementRefCount();
+//    channelMessage.incrementRefCount();
     int e = instancePlan.getExecutorForChannel(i);
     return channel.sendMessage(e, channelMessage, this);
   }

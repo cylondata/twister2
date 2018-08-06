@@ -11,5 +11,108 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.basic.comms.stream;
 
-public class SGatherExample {
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.BatchReceiver;
+import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.op.stream.SGather;
+import edu.iu.dsc.tws.examples.Utils;
+import edu.iu.dsc.tws.examples.basic.comms.BenchWorker;
+
+public class SGatherExample extends BenchWorker {
+  private static final Logger LOG = Logger.getLogger(SGatherExample.class.getName());
+
+  private SGather reduce;
+
+  private boolean reduceDone = false;
+
+  @Override
+  protected void execute() {
+    TaskPlan taskPlan = Utils.createStageTaskPlan(config, resourcePlan,
+        jobParameters.getTaskStages());
+
+    Set<Integer> sources = new HashSet<>();
+    Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
+    for (int i = 0; i < noOfSourceTasks; i++) {
+      sources.add(i);
+    }
+    int target = noOfSourceTasks;
+
+    // create the communication
+    reduce = new SGather(communicator, taskPlan, sources, target,
+        new FinalReduceReceiver(jobParameters.getIterations()), MessageType.INTEGER);
+
+
+    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
+        jobParameters.getTaskStages(), 0);
+    for (int t : tasksOfExecutor) {
+      finishedSources.put(t, false);
+    }
+    if (tasksOfExecutor.size() == 0) {
+      sourcesDone = true;
+    }
+
+    if (!taskPlan.getChannelsOfExecutor(workerId).contains(target)) {
+      reduceDone = true;
+    }
+
+    // now initialize the workers
+    for (int t : tasksOfExecutor) {
+      // the map thread where data is produced
+      Thread mapThread = new Thread(new BenchWorker.MapWorker(t));
+      mapThread.start();
+    }
+  }
+
+  @Override
+  protected void progressCommunication() {
+    reduce.progress();
+  }
+
+  @Override
+  protected boolean sendMessages(int task, Object data, int flag) {
+    while (!reduce.gather(task, data, flag)) {
+      // lets wait a litte and try again
+      reduce.progress();
+    }
+    return true;
+  }
+
+  @Override
+  protected boolean isDone() {
+//    LOG.log(Level.INFO, String.format("%d Reduce %b sources %b pending %b",
+//        workerId, reduceDone, sourcesDone, reduce.hasPending()));
+    return reduceDone && sourcesDone && !reduce.hasPending();
+  }
+
+  public class FinalReduceReceiver implements BatchReceiver {
+    private int count = 0;
+    private int expected;
+
+    public FinalReduceReceiver(int expected) {
+      this.expected = expected;
+    }
+
+    @Override
+    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+    }
+
+    @Override
+    public void receive(int target, Iterator<Object> it) {
+      count++;
+      if (count == expected) {
+        LOG.log(Level.INFO, String.format("Target %d received count %d", target, count));
+        reduceDone = true;
+      }
+    }
+  }
 }

@@ -74,8 +74,8 @@ public class SBroadcastExample extends BenchWorker {
 
   @Override
   protected boolean isDone() {
-    LOG.log(Level.INFO, String.format("%d Reduce %b sources %b pending %b",
-        workerId, bCastDone, sourcesDone, bcast.hasPending()));
+//    LOG.log(Level.INFO, String.format("%d Reduce %b sources %b pending %b",
+//        workerId, bCastDone, sourcesDone, bcast.hasPending()));
     return bCastDone && sourcesDone && !bcast.hasPending();
   }
 

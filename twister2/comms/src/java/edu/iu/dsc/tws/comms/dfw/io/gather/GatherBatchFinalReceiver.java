@@ -115,6 +115,7 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
    * Method used to progress work
    */
   public boolean progress() {
+    boolean needsFurtherProgress = false;
     for (int t : messages.keySet()) {
       if (batchDone.get(t)) {
         continue;
@@ -129,9 +130,12 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
 //          finishedForTarget));
       if (!isStoreBased) {
         boolean found = true;
+        boolean moreThanOne = false;
         for (Map.Entry<Integer, Queue<Object>> e : map.entrySet()) {
           if (e.getValue().size() == 0 && !finishedForTarget.get(e.getKey())) {
             found = false;
+          }  else {
+            moreThanOne = true;
           }
 
           if (!finishedForTarget.get(e.getKey())) {
@@ -140,6 +144,11 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
           LOG.info(String.format("%d final finished receiving to %d from %d",
               executor, t, e.getKey()));
         }*/
+        }
+
+        // if we have queues with 0 and more than zero we need further progress
+        if (!found && moreThanOne) {
+          needsFurtherProgress = true;
         }
 
         if (found) {
@@ -182,7 +191,7 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
         onFinish(t);
       }
     }
-    return true;
+    return needsFurtherProgress;
   }
 
   public boolean isStoreBased() {

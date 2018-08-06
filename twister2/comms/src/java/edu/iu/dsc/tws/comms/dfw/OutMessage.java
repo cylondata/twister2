@@ -49,6 +49,8 @@ public class OutMessage {
 
   private int flags;
 
+  private boolean outCountUpdated = false;
+
   public enum SendState {
     INIT,
     SENT_INTERNALLY,
@@ -160,5 +162,13 @@ public class OutMessage {
 
   public int getFlags() {
     return flags;
+  }
+
+  public void setOutCountUpdated(boolean outCountUpdated) {
+    this.outCountUpdated = outCountUpdated;
+  }
+
+  public boolean isOutCountUpdated() {
+    return outCountUpdated;
   }
 }
