@@ -14,20 +14,19 @@ package edu.iu.dsc.tws.examples.task.checkpoint.barrier;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.checkpointmanager.barrier.CheckpointBarrier;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.executor.ExecutionPlan;
 import edu.iu.dsc.tws.executor.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.ExecutionModel;
 import edu.iu.dsc.tws.executor.threading.ThreadExecutor;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
@@ -38,7 +37,6 @@ import edu.iu.dsc.tws.task.api.SourceTask;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
-import edu.iu.dsc.tws.task.graph.GraphConstants;
 import edu.iu.dsc.tws.tsched.roundrobin.RoundRobinTaskScheduling;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
@@ -47,32 +45,15 @@ import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 public class TaskBarrierExample implements IContainer {
   @Override
   public void init(Config config, int id, ResourcePlan resourcePlan) {
-
-    TWSNetwork network = new TWSNetwork(config, resourcePlan.getThisId());
-    TWSCommunication channel = network.getDataFlowTWSCommunication();
-
-
     GeneratorBarrierTask g = new GeneratorBarrierTask();
-    RecevingBarrierTask r = new RecevingBarrierTask(channel);
+    RecevingBarrierTask r = new RecevingBarrierTask();
 
     GraphBuilder builder = GraphBuilder.newBuilder();
     builder.addSource("source", g);
-    builder.setParallelism("source", 4);
+    builder.setParallelism("source", 1);
     builder.addSink("sink", r);
     builder.setParallelism("sink", 4);
-//    builder.connect("source", "sink", "partition-edge", Operations.PARTITION);
-    builder.connect("source", "sink", "partition-edge",
-        Operations.PARTITION);
-
-    builder.addConfiguration("source", "Ram", GraphConstants.taskInstanceRam(config));
-    builder.addConfiguration("source", "Disk", GraphConstants.taskInstanceDisk(config));
-    builder.addConfiguration("source", "Cpu", GraphConstants.taskInstanceCpu(config));
-
-    List<String> sourceInputDataset = new ArrayList<>();
-    sourceInputDataset.add("dataset1.txt");
-    sourceInputDataset.add("dataset2.txt");
-
-    builder.addConfiguration("source", "inputdataset", sourceInputDataset);
+    builder.connect("source", "sink", "partition-edge", Operations.PARTITION);
 
     DataFlowTaskGraph graph = builder.build();
 
@@ -82,29 +63,23 @@ public class TaskBarrierExample implements IContainer {
     WorkerPlan workerPlan = createWorkerPlan(resourcePlan);
     TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduling.schedule(graph, workerPlan);
 
-
+    TWSNetwork network = new TWSNetwork(config, resourcePlan.getThisId());
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);
     ExecutionPlan plan = executionPlanBuilder.schedule(config, graph, taskSchedulePlan);
     ExecutionModel executionModel = new ExecutionModel(ExecutionModel.SHARED);
-    ThreadExecutor executor = new ThreadExecutor(executionModel, plan);
+    ThreadExecutor executor = new ThreadExecutor(executionModel, plan, network.getChannel());
     executor.execute();
 
-    // we need to progress the channel
-    while (true) {
-      network.getChannel().progress();
-    }
   }
 
   private static class GeneratorBarrierTask extends SourceTask {
-    private static final long serialVersionUID = -254264903510284848L;
+    private static final long serialVersionUID = -254264903510284748L;
     private TaskContext ctx;
     private Config config;
-
     private long id = 5555;
 
     @Override
     public void run() {
-
       CheckpointBarrier cb = new CheckpointBarrier(id, 2141535, null);
       ctx.write("partition-edge", cb);
       id++;
@@ -122,32 +97,21 @@ public class TaskBarrierExample implements IContainer {
   }
 
   private static final class RecevingBarrierTask extends SinkTask {
-    private static final long serialVersionUID = -254264903520284798L;
-
-    private TWSCommunication channel;
-
-    private int taskId;
-
-    private Map<String, Object> newCfg = new HashMap<>();
-
-    private RecevingBarrierTask() { }
-
-    private RecevingBarrierTask(TWSCommunication channel) {
-      super();
-      this.channel = channel;
-    }
+    private static final long serialVersionUID = -254264903510284798L;
+    private int count = 0;
 
     @Override
     public void execute(IMessage message) {
-
-//      KeyedContent cb = (KeyedContent) message.getContent();
-      System.out.println("Message received : " + message.getContent());
-
+      CheckpointBarrier barrier = (CheckpointBarrier) message.getContent();
+      if (barrier.getId() == 5555) {
+        System.out.println("retrieved the check point barrier ");
+      }
+      count++;
     }
 
     @Override
     public void prepare(Config cfg, TaskContext context) {
-      this.taskId = context.taskId();
+
     }
   }
 
@@ -166,7 +130,12 @@ public class TaskBarrierExample implements IContainer {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
     // build JobConfig
+    HashMap<String, Object> configurations = new HashMap<>();
+    configurations.put(SchedulerContext.THREADS_PER_WORKER, 8);
+
+    // build JobConfig
     JobConfig jobConfig = new JobConfig();
+    jobConfig.putAll(configurations);
 
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
     jobBuilder.setName("task-barrier-example");
