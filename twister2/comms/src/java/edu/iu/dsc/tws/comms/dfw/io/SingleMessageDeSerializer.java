@@ -134,7 +134,7 @@ public class SingleMessageDeSerializer implements MessageDeSerializer {
 
     if (!keyed) {
       return DataDeserializer.deserializeData(message.getBuffers(),
-          message.getHeader().getLength(), serializer, type, message.getHeader().getFlags());
+          message.getHeader().getLength(), serializer, type);
     } else {
       Pair<Integer, Object> keyPair = KeyDeserializer.deserializeKey(message.getKeyType(),
           message.getBuffers(), serializer);
@@ -156,13 +156,11 @@ public class SingleMessageDeSerializer implements MessageDeSerializer {
         return results;
       } else if (!MessageTypeUtils.isPrimitiveType(keyType)) {
         return DataDeserializer.deserializeData(message.getBuffers(),
-            message.getHeader().getLength() - keyPair.getKey() - 4, serializer, type,
-            message.getHeader().getFlags());
+            message.getHeader().getLength() - keyPair.getKey() - 4, serializer, type);
 
       } else {
         return DataDeserializer.deserializeData(message.getBuffers(),
-            message.getHeader().getLength() - keyPair.getKey(), serializer, type,
-            message.getHeader().getFlags());
+            message.getHeader().getLength() - keyPair.getKey(), serializer, type);
       }
     }
   }

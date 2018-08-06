@@ -327,7 +327,7 @@ public class MultiMessageSerializer implements MessageSerializer {
     // okay we need to serialize the header
     if (state.getPart() == SerializeState.Part.INIT) {
       // okay we need to serialize the data
-      int dataLength = DataSerializer.serializeData(content, messageType, state, serializer, flags);
+      int dataLength = DataSerializer.serializeData(content, messageType, state, serializer);
       int remaining = targetBuffer.getByteBuffer().remaining();
 
       //Check if we can fit this message into the current buffer
@@ -382,7 +382,7 @@ public class MultiMessageSerializer implements MessageSerializer {
           keyType, state, serializer);
       // okay we need to serialize the data
       int dataLength = DataSerializer.serializeData(content,
-          contentType, state, serializer, flags);
+          contentType, state, serializer);
       int remaining = targetBuffer.getByteBuffer().remaining();
 
       //Check if we can fit this message into the current buffer
