@@ -31,8 +31,8 @@ import edu.iu.dsc.tws.proto.network.Network;
 import edu.iu.dsc.tws.proto.network.Network.ListWorkersRequest;
 import edu.iu.dsc.tws.proto.network.Network.ListWorkersResponse;
 
-public class WorkerController implements IWorkerController, MessageHandler {
-  private static final Logger LOG = Logger.getLogger(WorkerController.class.getName());
+public class JMWorkerController implements IWorkerController, MessageHandler {
+  private static final Logger LOG = Logger.getLogger(JMWorkerController.class.getName());
 
   private WorkerNetworkInfo thisWorker;
   private ArrayList<WorkerNetworkInfo> workerList;
@@ -41,12 +41,12 @@ public class WorkerController implements IWorkerController, MessageHandler {
   private RRClient rrClient;
   private Config config;
 
-  public WorkerController(Config config, WorkerNetworkInfo thisWorker, RRClient rrClient) {
+  public JMWorkerController(Config config, WorkerNetworkInfo thisWorker, RRClient rrClient) {
     this(config, thisWorker, rrClient, JobMasterContext.workerInstances(config));
   }
 
-  public WorkerController(Config config, WorkerNetworkInfo thisWorker,
-                          RRClient rrClient, int numberOfWorkers) {
+  public JMWorkerController(Config config, WorkerNetworkInfo thisWorker,
+                            RRClient rrClient, int numberOfWorkers) {
     this.config = config;
     this.numberOfWorkers = numberOfWorkers;
     this.thisWorker = thisWorker;
@@ -164,7 +164,7 @@ public class WorkerController implements IWorkerController, MessageHandler {
         .setWorkerID(thisWorker.getWorkerID())
         .build();
 
-    LOG.info("Sending BarrierRequest message: \n" + barrierRequest);
+    LOG.info("Sending BarrierRequest message: \n" + barrierRequest.toString());
     RequestID requestID = rrClient.sendRequestWaitResponse(barrierRequest, timeLimitMilliSec);
 
     if (requestID == null) {

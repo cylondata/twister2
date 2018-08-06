@@ -40,12 +40,14 @@ ZKJobMasterFinder class is used to get the Job Master address from the ZooKeeper
 **ZNode Creation**  
 When the Job Master is registered its address on the ZooKeeper server, 
 an ephemeral znode is created. The name of this znode will be:  
-* /twister2/<job-name>-<job-master>  
+
+    /twister2/<job-name>-<job-master>  
 
 assuming the root znode is twister2.
 
 Job Master IP address and the port number is put as the payload in this znode as a String in the form of:
-* ip:port 
+
+    ip:port 
 
 **ZNode Deletion**  
 When the job completes, the ZKJobMasterRegistrar should delete the znode from the ZooKeeper server explicitly by calling its close method. 

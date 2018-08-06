@@ -180,7 +180,7 @@ It sends many worker information on the same message.
 We developed the WorkerController class that will be used by the workers 
 to interact with the job master. The class name is:
 
-    edu.iu.dsc.tws.master.client.WorkerController
+    edu.iu.dsc.tws.master.client.JMWorkerController
 
 It implements the interface: 
 

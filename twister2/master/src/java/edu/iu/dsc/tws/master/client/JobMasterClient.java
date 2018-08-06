@@ -44,7 +44,7 @@ public class JobMasterClient extends Thread {
 
   private RRClient rrClient;
   private Pinger pinger;
-  private WorkerController workerController;
+  private JMWorkerController jmWorkerController;
 
   private boolean startingMessageSent = false;
 
@@ -89,15 +89,15 @@ public class JobMasterClient extends Thread {
     long interval = JobMasterContext.pingInterval(config);
     pinger = new Pinger(thisWorker, rrClient, interval);
 
-    workerController = new WorkerController(config, thisWorker, rrClient, numberOfWorkers);
+    jmWorkerController = new JMWorkerController(config, thisWorker, rrClient, numberOfWorkers);
 
     Network.Ping.Builder pingBuilder = Network.Ping.newBuilder();
     rrClient.registerResponseHandler(pingBuilder, pinger);
 
     ListWorkersRequest.Builder listRequestBuilder = ListWorkersRequest.newBuilder();
     ListWorkersResponse.Builder listResponseBuilder = ListWorkersResponse.newBuilder();
-    rrClient.registerResponseHandler(listRequestBuilder, workerController);
-    rrClient.registerResponseHandler(listResponseBuilder, workerController);
+    rrClient.registerResponseHandler(listRequestBuilder, jmWorkerController);
+    rrClient.registerResponseHandler(listResponseBuilder, jmWorkerController);
 
     Network.WorkerStateChange.Builder stateChangeBuilder = Network.WorkerStateChange.newBuilder();
     Network.WorkerStateChangeResponse.Builder stateChangeResponseBuilder
@@ -109,8 +109,8 @@ public class JobMasterClient extends Thread {
 
     Network.BarrierRequest.Builder barrierRequestBuilder = Network.BarrierRequest.newBuilder();
     Network.BarrierResponse.Builder barrierResponseBuilder = Network.BarrierResponse.newBuilder();
-    rrClient.registerResponseHandler(barrierRequestBuilder, workerController);
-    rrClient.registerResponseHandler(barrierResponseBuilder, workerController);
+    rrClient.registerResponseHandler(barrierRequestBuilder, jmWorkerController);
+    rrClient.registerResponseHandler(barrierResponseBuilder, jmWorkerController);
 
     // try to connect to JobMaster, wait up to 100 seconds
     // make this one config value
@@ -128,8 +128,8 @@ public class JobMasterClient extends Thread {
     return true;
   }
 
-  public WorkerController getWorkerController() {
-    return workerController;
+  public JMWorkerController getJMWorkerController() {
+    return jmWorkerController;
   }
 
   public void close() {

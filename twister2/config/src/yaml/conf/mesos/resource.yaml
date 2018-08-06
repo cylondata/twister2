@@ -66,17 +66,16 @@ twister2.class.mesos.worker: "edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorker
 ###################################################################################
 # ZooKeeper related config parameters
 ###################################################################################
-# ZooKeeper server ip address and port number
-#twister2.zookeeper.server.ip: "149.165.150.81" #######don't forget to uncomment when pushing##############################################
-twister2.zookeeper.server.ip: "149.165.150.81"
-twister2.zookeeper.server.port: "2181"
+# ZooKeeper server addresses: comma separated host:port pairs
+# example: "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002"
+twister2.zookeeper.server.addresses: "ip:port"
 
 # the root node path of this job on ZooKeeper
 # the default is "/twister2"
 #twister2.zookeeper.root.node.path: "/twister2"
 
 # if the workers want to wait for all others to join a job, max wait time in ms
-twister2.zookeeper.max.wait.time.for.all.workers.to.join: "100000"
+twister2.zookeeper.max.wait.time.for.all.workers.to.join: 100000
 
 
 
