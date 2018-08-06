@@ -103,8 +103,8 @@ public class TaskBarrierExample implements IContainer {
     @Override
     public void execute(IMessage message) {
       CheckpointBarrier barrier = (CheckpointBarrier) message.getContent();
-      if (barrier.getId() == 5555) {
-        System.out.println("retrieved the check point barrier ");
+      if (barrier != null) {
+        System.out.println("retrieved the check point barrier with Id :" + barrier.getId());
       }
       count++;
     }
