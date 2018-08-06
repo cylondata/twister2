@@ -121,11 +121,12 @@ public class PartitionByMultiByteStreamingTask implements IContainer {
     private int count = 0;
 
     @Override
-    public void execute(IMessage message) {
+    public boolean execute(IMessage message) {
       if (count % 1000000 == 0) {
         System.out.println("Message Received : " + message.getContent());
       }
       count++;
+      return true;
     }
 
     @Override

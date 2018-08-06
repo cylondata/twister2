@@ -113,12 +113,13 @@ public class BroadCastBatchTask implements IContainer {
     private TaskContext ctx;
 
     @Override
-    public void execute(IMessage message) {
+    public boolean execute(IMessage message) {
       if (counter % 1000000 == 0) {
         System.out.println(ctx.taskId() + " Message Braodcasted : "
             + message.getContent() + ", counter : " + counter);
       }
       counter++;
+      return true;
     }
 
     @Override

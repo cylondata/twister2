@@ -74,7 +74,7 @@ public class ReduceBatchOperation extends AbstractParallelOperation {
         new ReduceBatchFinalReceiver(new IdentityFunction(), new FinalReduceReceiver()),
         new ReduceBatchPartialReceiver(dest, new IdentityFunction()));
     communicationEdge = e.generate(edgeName);
-    LOG.info("===Communication Edge : " + communicationEdge);
+    //LOG.info("===Communication Edge : " + communicationEdge);
     op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
   }
 

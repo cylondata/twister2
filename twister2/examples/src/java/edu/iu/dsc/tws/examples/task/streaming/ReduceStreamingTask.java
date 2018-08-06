@@ -107,11 +107,12 @@ public class ReduceStreamingTask implements IContainer {
     private int count = 0;
 
     @Override
-    public void execute(IMessage message) {
+    public boolean execute(IMessage message) {
       if (count % 10000 == 0) {
         System.out.println("Message Reduced : " + message.getContent() + ", Count : " + count);
       }
       count++;
+      return true;
     }
 
     @Override

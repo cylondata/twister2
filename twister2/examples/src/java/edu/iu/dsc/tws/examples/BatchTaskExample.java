@@ -193,12 +193,13 @@ public class BatchTaskExample implements IContainer {
     private HDFSConnector hdfsConnector = null;
 
     @Override
-    public void execute(IMessage message) {
+    public boolean execute(IMessage message) {
 
       LOG.info("Message Partition Received : " + message.getContent()
           + ", Count : " + count);
       //hdfsConnector.HDFSConnect(message.getContent().toString());
       count++;
+      return true;
     }
 
     @Override

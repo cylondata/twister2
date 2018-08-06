@@ -96,13 +96,14 @@ public class ReduceBatchStreamingTask implements IContainer {
     private int count = 0;
 
     @Override
-    public void execute(IMessage message) {
+    public boolean execute(IMessage message) {
       if (count % 1000000 == 0) {
         System.out.println("Message Batch Reduced : " + message.getContent()
             + ", Count : " + count);
       }
 
       count++;
+      return true;
     }
 
     @Override

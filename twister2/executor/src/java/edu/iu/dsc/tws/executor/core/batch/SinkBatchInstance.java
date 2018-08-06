@@ -104,13 +104,13 @@ public class SinkBatchInstance implements INodeInstance {
   }
 
   public boolean execute() {
-    if (batchInQueue.isEmpty()) {
-      receiveDone = false;
-    }
+    //System.out.println("SinkBatchInstance exec");
+    receiveDone = false;
     while (!batchInQueue.isEmpty()) {
       IMessage m = batchInQueue.poll();
-      System.out.println("Message Sent : " + m.getContent());
+      System.out.println("SinkBatchInstance Message Sent : " + m.getContent());
       batchTask.execute(m);
+      receiveDone = true;
     }
     return receiveDone;
   }
@@ -133,5 +133,25 @@ public class SinkBatchInstance implements INodeInstance {
 
   public BlockingQueue<IMessage> getBatchInQueue() {
     return batchInQueue;
+  }
+
+  public int getBatchTaskId() {
+    return batchTaskId;
+  }
+
+  public int getBatchTaskIndex() {
+    return batchTaskIndex;
+  }
+
+  public int getParallelism() {
+    return parallelism;
+  }
+
+  public String getTaskName() {
+    return taskName;
+  }
+
+  public int getWorkerId() {
+    return workerId;
   }
 }

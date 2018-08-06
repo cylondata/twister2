@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.executor.threading;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.executor.api.ExecutionModel;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
-import edu.iu.dsc.tws.executor.api.IThreadExecutor;
+
 
 public class ThreadExecutorFactory {
 
@@ -25,6 +25,8 @@ public class ThreadExecutorFactory {
   private ExecutionPlan executionPlan;
 
   private TWSNetwork network;
+
+  private boolean isExecutionFinished = false;
 
   public ThreadExecutorFactory(ExecutionModel executionModels, ThreadExecutor executor,
                                ExecutionPlan executionPlan) {
@@ -41,17 +43,17 @@ public class ThreadExecutorFactory {
     this.network = network;
   }
 
-  public IThreadExecutor execute() {
+  public boolean execute() {
     if (ExecutionModel.SHARED.equals(executionModel.getExecutionModel())) {
       ThreadSharingExecutor threadSharingExecutor = new ThreadSharingExecutor(executionPlan);
-      threadSharingExecutor.execute();
-      return threadSharingExecutor;
+      isExecutionFinished = threadSharingExecutor.execute();
+      return isExecutionFinished;
     } else if (ExecutionModel.DEDICATED.equals(executionModel.getExecutionModel())) {
       ThreadStaticExecutor threadStaticExecutor = new ThreadStaticExecutor(executionPlan);
-      threadStaticExecutor.execute();
-      return threadStaticExecutor;
+      isExecutionFinished = threadStaticExecutor.execute();
+      return isExecutionFinished;
+    } else {
+      return false;
     }
-
-    return null;
   }
 }

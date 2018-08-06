@@ -26,6 +26,8 @@ public class ThreadExecutor implements IThreadExecutor {
 
   private boolean progress = true;
 
+  private boolean isExecutionFinished = false;
+
   public ThreadExecutor() {
 
   }
@@ -47,15 +49,15 @@ public class ThreadExecutor implements IThreadExecutor {
    * is initialized. It must be progressed only after execution is instantiated.
    * */
   @Override
-  public void execute() {
+  public boolean execute() {
     // lets start the execution
     ThreadExecutorFactory threadExecutorFactory = new ThreadExecutorFactory(executionModel,
         this, executionPlan);
-    threadExecutorFactory.execute();
-    if (progress) {
+    isExecutionFinished = threadExecutorFactory.execute();
+    if (progress && !isExecutionFinished) {
       progressComms();
     }
-
+    return isExecutionFinished;
   }
 
   /**

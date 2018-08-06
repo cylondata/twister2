@@ -117,7 +117,7 @@ public class ComplexByteStreamingTask implements IContainer {
     private int count = 0;
 
     @Override
-    public void execute(IMessage message) {
+    public boolean execute(IMessage message) {
       if (message.getContent() instanceof Integer[]) {
         int[] data = (int[]) message.getContent();
         for (int i = 0; i < data.length; i++) {
@@ -125,6 +125,7 @@ public class ComplexByteStreamingTask implements IContainer {
         }
       }
       count++;
+      return true;
     }
 
     @Override

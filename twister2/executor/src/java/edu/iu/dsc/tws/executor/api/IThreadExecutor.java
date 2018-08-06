@@ -25,6 +25,6 @@ package edu.iu.dsc.tws.executor.api;
 
 public interface IThreadExecutor {
 
-  void execute();
+  boolean execute();
 
 }

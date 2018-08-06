@@ -112,8 +112,10 @@ public class TaskExampleBatchModified implements IContainer {
     private static final long serialVersionUID = -254264903510284798L;
 
     @Override
-    public void execute(IMessage message) {
+    public boolean execute(IMessage message) {
+
       System.out.println(message.getContent());
+      return true;
     }
 
     @Override

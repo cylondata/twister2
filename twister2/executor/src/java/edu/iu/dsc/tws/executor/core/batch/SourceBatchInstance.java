@@ -167,24 +167,22 @@ public class SourceBatchInstance implements INodeInstance, INodeInstanceListener
         String edge = message.edge();
         IParallelOperation op = outBatchParOps.get(edge);
         if (message.getContent().equals(MessageFlags.LAST_MESSAGE)) {
-          System.out.println("Final Message");
+          System.out.println("SBI: Final Message");
           while (!op.send(batchTaskId, message, MessageFlags.FLAGS_LAST)) {
             //
           }
           //op.communicationProgress();
           this.isFinish = true;
-          System.out.println("Last Message was Sent : " + this.isFinish);
+          System.out.println("SBI: Last Message was Sent : " + this.isFinish);
         } else {
-          System.out.println("Sending Message : " + message.getContent());
+          System.out.println("SBI: Sending Message : " + message.getContent());
           while (!op.send(batchTaskId, message, 0)) {
             //
           }
           //op.communicationProgress();
         }
       }
-
     }
-
     return this.isFinish;
   }
 
@@ -228,4 +226,23 @@ public class SourceBatchInstance implements INodeInstance, INodeInstanceListener
   }
 
 
+  public int getBatchTaskId() {
+    return batchTaskId;
+  }
+
+  public int getBatchTaskIndex() {
+    return batchTaskIndex;
+  }
+
+  public int getParallelism() {
+    return parallelism;
+  }
+
+  public String getBatchTaskName() {
+    return batchTaskName;
+  }
+
+  public int getWorkerId() {
+    return workerId;
+  }
 }

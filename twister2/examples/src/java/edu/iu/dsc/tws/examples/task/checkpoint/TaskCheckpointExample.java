@@ -150,11 +150,12 @@ public class TaskCheckpointExample implements IContainer {
     }
 
     @Override
-    public void execute(IMessage message) {
+    public boolean execute(IMessage message) {
 
       CheckpointBarrier cb = (CheckpointBarrier) message.getContent();
       System.out.println(cb.getId() + " from taskId : " + taskId);
 //      channel.direct(newCfg, MessageType.OBJECT, 0, )
+      return true;
     }
 
     @Override

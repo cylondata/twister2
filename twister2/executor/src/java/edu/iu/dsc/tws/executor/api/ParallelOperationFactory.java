@@ -74,7 +74,7 @@ public class ParallelOperationFactory {
                                   OperationMode operationMode) {
 
     if (operationMode.equals(OperationMode.BATCH)) {
-      LOG.info("Batch Job Building ...");
+      //LOG.info("Batch Job Building ...");
       if (!edge.isKeyed()) {
         if (CommunicationOperationType.BATCH_PARTITION.equals(edge.getOperation())) {
           PartitionBatchOperation partitionOp
@@ -166,7 +166,7 @@ public class ParallelOperationFactory {
       }
 
     } else if (operationMode.equals(OperationMode.STREAMING)) {
-      LOG.info("Streaming Job Building ...");
+      //LOG.info("Streaming Job Building ...");
       if (!edge.isKeyed()) {
         if (CommunicationOperationType.STREAMING_PARTITION.equals(edge.getOperation())) {
           PartitionStreamingOperation partitionOp = new PartitionStreamingOperation(config, channel,

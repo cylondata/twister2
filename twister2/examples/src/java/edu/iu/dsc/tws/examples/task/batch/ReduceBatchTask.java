@@ -67,8 +67,8 @@ public class ReduceBatchTask implements IContainer {
   public void init(Config config, int id, ResourcePlan resourcePlan) {
     GeneratorTask g = new GeneratorTask();
     RecevingTask r = new RecevingTask();
-    System.out.println("Reduce Batch Task Starting ...");
-    System.out.println("Config-Threads : " + SchedulerContext.numOfThreads(config));
+    //System.out.println("Reduce Batch Task Starting ...");
+    //System.out.println("Config-Threads : " + SchedulerContext.numOfThreads(config));
 
     GraphBuilder builder = GraphBuilder.newBuilder();
     builder.addSource("source", g);
@@ -156,9 +156,17 @@ public class ReduceBatchTask implements IContainer {
     private SinkTaskContextListener sinkTaskContextListener = new SinkTaskContextListener();
 
     @Override
-    public void execute(IMessage message) {
+    public boolean execute(IMessage message) {
       System.out.println("Message Reduced : " + message.getContent() + ", Count : " + count);
+      boolean status = false;
       count++;
+      if (count == 1) {
+        status = true;
+      } else {
+        status = false;
+      }
+
+      return status;
     }
 
     @Override

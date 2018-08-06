@@ -129,11 +129,12 @@ public class GatherBatchTask implements IContainer {
     private static final long serialVersionUID = -254264903510284798L;
 
     @Override
-    public void execute(IMessage message) {
+    public boolean execute(IMessage message) {
       if (count % 100000 == 0) {
         System.out.println("Message Gathered : " + message.getContent() + ", Count : " + count);
       }
       count++;
+      return true;
     }
 
     @Override

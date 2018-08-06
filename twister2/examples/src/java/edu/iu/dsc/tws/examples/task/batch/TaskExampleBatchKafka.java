@@ -120,11 +120,12 @@ public class TaskExampleBatchKafka implements IContainer {
     private int count = 0;
 
     @Override
-    public void execute(IMessage message) {
+    public boolean execute(IMessage message) {
       if (count % 1000000 == 0) {
         System.out.println(message.getContent());
       }
       count++;
+      return true;
     }
 
     @Override
