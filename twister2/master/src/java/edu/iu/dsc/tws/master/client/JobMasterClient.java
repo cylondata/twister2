@@ -13,6 +13,7 @@
 package edu.iu.dsc.tws.master.client;
 
 import java.nio.channels.SocketChannel;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.google.protobuf.Message;
@@ -21,6 +22,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.net.tcp.Progress;
 import edu.iu.dsc.tws.common.net.tcp.StatusCode;
+import edu.iu.dsc.tws.common.net.tcp.request.BlockingSendException;
 import edu.iu.dsc.tws.common.net.tcp.request.ConnectHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
@@ -199,19 +201,25 @@ public class JobMasterClient extends Thread {
         .setWorkerPort(thisWorker.getWorkerPort())
         .build();
 
-    LOG.info("Sending the Worker Starting message: \n" + workerStateChange);
 
-    RequestID requestID = null;
+    // if JobMaster assigns ID, wait for the response
     if (JobMasterContext.jobMasterAssignsWorkerIDs(config)) {
-      requestID = rrClient.sendRequestWaitResponse(workerStateChange,
-          JobMasterContext.responseWaitDuration(config));
-    } else {
-      requestID = rrClient.sendRequest(workerStateChange);
-    }
+      LOG.info("Sending the Worker Starting message: \n" + workerStateChange);
+      try {
+        rrClient.sendRequestWaitResponse(workerStateChange,
+            JobMasterContext.responseWaitDuration(config));
 
-    if (requestID == null) {
-      LOG.severe("Couldn't send Worker Starting message or couldn't receive the response on time.");
-      return null;
+      } catch (BlockingSendException bse) {
+        LOG.log(Level.SEVERE, bse.getMessage(), bse);
+        return null;
+      }
+
+    } else {
+      RequestID requestID = rrClient.sendRequest(workerStateChange);
+      if (requestID == null) {
+        LOG.severe("Couldn't send Worker Starting message: " + workerStateChange);
+        return null;
+      }
     }
 
     startingMessageSent = true;
@@ -244,11 +252,11 @@ public class JobMasterClient extends Thread {
         .build();
 
     LOG.info("Sending the Worker Completed message: \n" + workerStateChange);
-    RequestID requestID = rrClient.sendRequestWaitResponse(workerStateChange,
-        JobMasterContext.responseWaitDuration(config));
-
-    if (requestID == null) {
-      LOG.severe("Couldn't send Worker Completed message or couldn't receive the response.");
+    try {
+      rrClient.sendRequestWaitResponse(workerStateChange,
+          JobMasterContext.responseWaitDuration(config));
+    } catch (BlockingSendException e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
       return false;
     }
 

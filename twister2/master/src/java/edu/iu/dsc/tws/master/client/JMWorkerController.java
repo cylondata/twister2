@@ -23,6 +23,7 @@ import com.google.protobuf.Message;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
+import edu.iu.dsc.tws.common.net.tcp.request.BlockingSendException;
 import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
@@ -115,15 +116,16 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
         .setRequestType(requestType)
         .build();
 
-    RequestID requestID = rrClient.sendRequestWaitResponse(listRequest, timeLimit);
-
-    if (requestID == null) {
-      LOG.severe("When sending ListWorkers message, requestID returned null.");
-      return false;
-    } else {
-      LOG.info("ListWorkers message sent to the master: \n" + listRequest);
+    LOG.info("Sending ListWorkers message to the master: \n" + listRequest);
+    try {
+      rrClient.sendRequestWaitResponse(listRequest, timeLimit);
       return true;
+
+    } catch (BlockingSendException e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+      return false;
     }
+
   }
 
   @Override
@@ -165,14 +167,14 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
         .build();
 
     LOG.info("Sending BarrierRequest message: \n" + barrierRequest.toString());
-    RequestID requestID = rrClient.sendRequestWaitResponse(barrierRequest, timeLimitMilliSec);
-
-    if (requestID == null) {
-      LOG.severe("Couldn't send BarrierRequest message or couldn't receive the response.");
+    try {
+      rrClient.sendRequestWaitResponse(barrierRequest, timeLimitMilliSec);
+      return true;
+    } catch (BlockingSendException e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
       return false;
     }
 
-    return true;
   }
 
 
