@@ -164,20 +164,17 @@ public class SingleMessageSerializer implements MessageSerializer {
                                 OutMessage sendMessage, DataBuffer buffer) {
     MessageType type = sendMessage.getChannelMessage().getType();
     if ((sendMessage.getFlags() & MessageFlags.BARRIER) == MessageFlags.BARRIER) {
-      return serializeData(payload, sendMessage.getSerializationState(), buffer, type,
-          sendMessage.getFlags());
+      return serializeData(payload, sendMessage.getSerializationState(), buffer, type);
     } else {
       if (type == MessageType.OBJECT || type == MessageType.INTEGER || type == MessageType.LONG
           || type == MessageType.DOUBLE || type == MessageType.BYTE || type == MessageType.STRING
           || type == MessageType.MULTI_FIXED_BYTE) {
         if (!keyed) {
-          return serializeData(payload, sendMessage.getSerializationState(), buffer, type,
-              sendMessage.getFlags());
+          return serializeData(payload, sendMessage.getSerializationState(), buffer, type);
         } else {
           KeyedContent keyedContent = (KeyedContent) payload;
           return serializeKeyedData(keyedContent.getValue(), keyedContent.getKey(),
-              sendMessage.getSerializationState(), buffer, type, keyedContent.getKeyType(),
-              sendMessage.getFlags());
+              sendMessage.getSerializationState(), buffer, type, keyedContent.getKeyType());
         }
       } else if (type == MessageType.BUFFER) {
         return serializeBuffer(payload, sendMessage, buffer);
@@ -188,7 +185,7 @@ public class SingleMessageSerializer implements MessageSerializer {
 
   private boolean serializeKeyedData(Object content, Object key, SerializeState state,
                                      DataBuffer targetBuffer, MessageType contentType,
-                                     MessageType keyType, int flag) {
+                                     MessageType keyType) {
     ByteBuffer byteBuffer = targetBuffer.getByteBuffer();
     // okay we need to serialize the header
     if (state.getPart() == SerializeState.Part.INIT) {
@@ -196,7 +193,7 @@ public class SingleMessageSerializer implements MessageSerializer {
           keyType, state, serializer);
       // okay we need to serialize the data
       int dataLength = DataSerializer.serializeData(content,
-          contentType, state, serializer, flag);
+          contentType, state, serializer);
     }
 
     if (state.getPart() == SerializeState.Part.INIT
@@ -235,12 +232,12 @@ public class SingleMessageSerializer implements MessageSerializer {
   }
 
   private boolean serializeData(Object content, SerializeState state,
-                                DataBuffer targetBuffer, MessageType messageType, int flag) {
+                                DataBuffer targetBuffer, MessageType messageType) {
     ByteBuffer byteBuffer = targetBuffer.getByteBuffer();
     // okay we need to serialize the header
     if (state.getPart() == SerializeState.Part.INIT) {
       // okay we need to serialize the data
-      int dataLength = DataSerializer.serializeData(content, messageType, state, serializer, flag);
+      int dataLength = DataSerializer.serializeData(content, messageType, state, serializer);
       // add the header bytes to the total bytes
       state.setPart(SerializeState.Part.BODY);
     }
