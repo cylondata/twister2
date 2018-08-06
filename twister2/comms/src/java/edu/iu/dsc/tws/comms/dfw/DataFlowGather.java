@@ -304,7 +304,7 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
       deSerializerMap.put(e, new MultiMessageDeserializer(new KryoSerializer(), executor));
     }
 
-    Set<Integer> sourcesOfThisExec = TaskPlanUtils.getTasksOfThisExecutor(taskPlan, sources);
+    Set<Integer> sourcesOfThisExec = TaskPlanUtils.getTasksOfThisWorker(taskPlan, sources);
     for (int s : sourcesOfThisExec) {
       sendRoutingParameters(s, pathToUse);
       partialSendRoutingParameters(s, pathToUse);
@@ -321,6 +321,14 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
     // now what we need to do
     return delegete.sendMessagePartial(source, message, pathToUse, flags,
         partialSendRoutingParameters(source, pathToUse));
+  }
+
+  public boolean isComplete() {
+    boolean done = delegete.isComplete();
+    boolean needsFurtherProgress = OperationUtils.progressReceivers(delegete, lock, finalReceiver,
+        partialLock, partialReceiver);
+//    LOG.log(Level.INFO, String.format("Done %b needsFurther %b", done, needsFurtherProgress));
+    return done && !needsFurtherProgress;
   }
 
   protected Set<Integer> receivingExecutors() {

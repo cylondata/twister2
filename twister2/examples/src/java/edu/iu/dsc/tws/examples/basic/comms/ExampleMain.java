@@ -25,9 +25,11 @@ import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.op.batch.BPartition;
 import edu.iu.dsc.tws.examples.Utils;
+import edu.iu.dsc.tws.examples.basic.comms.batch.BGatherExample;
 import edu.iu.dsc.tws.examples.basic.comms.batch.BPartitionExample;
 import edu.iu.dsc.tws.examples.basic.comms.batch.BReduceExample;
 import edu.iu.dsc.tws.examples.basic.comms.stream.SBroadcastExample;
+import edu.iu.dsc.tws.examples.basic.comms.stream.SGatherExample;
 import edu.iu.dsc.tws.examples.basic.comms.stream.SPartitionExample;
 import edu.iu.dsc.tws.examples.basic.comms.stream.SReduceExample;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -112,7 +114,7 @@ public class ExampleMain {
     jobConfig.put(Constants.ARGS_INIT_ITERATIONS, intItr);
 
     // build the job
-    BasicJob basicJob = null;
+    BasicJob basicJob;
     if (!stream) {
       if (operation.equals("reduce")) {
         basicJob = BasicJob.newBuilder()
@@ -127,6 +129,15 @@ public class ExampleMain {
         basicJob = BasicJob.newBuilder()
             .setName("partition-batch-bench")
             .setContainerClass(BPartitionExample.class.getName())
+            .setRequestResource(new ResourceContainer(2, 1024), containers)
+            .setConfig(jobConfig)
+            .build();
+        // now submit the job
+        Twister2Submitter.submitContainerJob(basicJob, config);
+      } else if (operation.equals("gather")) {
+        basicJob = BasicJob.newBuilder()
+            .setName("partition-batch-bench")
+            .setContainerClass(BGatherExample.class.getName())
             .setRequestResource(new ResourceContainer(2, 1024), containers)
             .setConfig(jobConfig)
             .build();
@@ -159,6 +170,16 @@ public class ExampleMain {
           basicJob = BasicJob.newBuilder()
               .setName("partition-stream-bench")
               .setContainerClass(SPartitionExample.class.getName())
+              .setRequestResource(new ResourceContainer(2, 1024), containers)
+              .setConfig(jobConfig)
+              .build();
+          // now submit the job
+          Twister2Submitter.submitContainerJob(basicJob, config);
+          break;
+        case "gather":
+          basicJob = BasicJob.newBuilder()
+              .setName("gather-stream-bench")
+              .setContainerClass(SGatherExample.class.getName())
               .setRequestResource(new ResourceContainer(2, 1024), containers)
               .setConfig(jobConfig)
               .build();

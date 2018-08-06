@@ -169,6 +169,19 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
     throw new RuntimeException("Not supported method");
   }
 
+  public boolean isComplete() {
+    boolean done = delegete.isComplete();
+    if (lock.tryLock()) {
+      try {
+        boolean needsFurtherProgress = finalReceiver.progress();
+        return done && !needsFurtherProgress;
+      } finally {
+        lock.unlock();
+      }
+    }
+    return true;
+  }
+
   @Override
   public boolean send(int src, Object message, int flags) {
     RoutingParameters routingParameters = sendRoutingParameters(src, 0);

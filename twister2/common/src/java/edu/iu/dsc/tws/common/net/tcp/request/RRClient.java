@@ -99,17 +99,20 @@ public class RRClient {
    * @param waitLimit waitlimit
    * @return request id
    */
-  public RequestID sendRequestWaitResponse(Message message, long waitLimit) {
+  public RequestID sendRequestWaitResponse(Message message, long waitLimit)
+      throws BlockingSendException {
 
     // if this method is already called and waiting for a response
     if (requestIdOfWaitedResponse != null) {
-      return null;
+      throw new BlockingSendException(BlockingSendFailureReason.ALREADY_SENDING_ANOTHER_MESSAGE,
+          "Already sending another message.", null);
     }
 
     RequestID requestID = sendRequest(message);
     requestIdOfWaitedResponse = requestID;
     if (requestIdOfWaitedResponse == null) {
-      return null;
+      throw new BlockingSendException(BlockingSendFailureReason.ERROR_WHEN_TRYING_TO_SEND,
+          "Problem when trying to send the message.", null);
     }
 
     synchronized (responseWaitObject) {
@@ -117,12 +120,12 @@ public class RRClient {
         responseWaitObject.wait(waitLimit);
         if (requestIdOfWaitedResponse != null) {
           requestIdOfWaitedResponse = null;
-          LOG.severe("Wait limit has been reached. Response message has not been received.");
-          return null;
+          throw new BlockingSendException(BlockingSendFailureReason.TIME_LIMIT_REACHED,
+              "Wait limit has been reached. Response message has not been received.", null);
         }
       } catch (InterruptedException e) {
-        e.printStackTrace();
-        return null;
+        throw new BlockingSendException(BlockingSendFailureReason.EXCEPTION_WHEN_WAITING,
+            "Exception when waiting the response.", e);
       }
     }
 

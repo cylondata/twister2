@@ -53,11 +53,14 @@ Then, it updates the body of the job znode with its data.
 It adds its line to the end of the body.
 
 Then, each worker creates a separate child znode under the job znode. 
-The name of the child znode is composed of workerIP and port number: workerIP:workerPort
-Since workerIP and workerPort pair is unique in each job, this prevents any collusion. 
-Each worker also adds its communication data to its child znode body as a single line:
+The name of the child znode is composed of workerIP and port number: 
 
-    ip:port=workerID;
+    workerIP:workerPort
+
+Since workerIP and workerPort pair is unique in each job, this prevents any collusion. 
+Each worker adds its workerID as the body data of its znode:
+
+    workerID
 
 When a worker completes and leaves the job, its child znode is deleted. 
 However, it does not delete its data from the body of the job znode. 

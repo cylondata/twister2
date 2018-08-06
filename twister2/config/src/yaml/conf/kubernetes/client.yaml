@@ -3,13 +3,14 @@
 ################################################################################
 
 # twister2 job name
-twister2.job.name: "basic-kube"
+twister2.job.name: "reduce-stream-bench"
+# twister2.job.name: "t2-job"
 
 # number of cores for each worker
 # it is a floating point number
 # each worker can have fractional cores such as 0.5 cores or multiple cores as 2
 # default value is 1.0 core
-twister2.worker.cpu: 0.2
+twister2.worker.cpu: 0.5
 
 # amount of memory for each worker in the job in mega bytes as integer
 # default value is 200 MB
@@ -22,7 +23,7 @@ twister2.worker.ram: 1024
 twister2.worker.volatile.disk: 1.0
 
 # number of worker instances in this job
-twister2.worker.instances: 6
+twister2.worker.instances: 4
 
 ########################################################################
 # Kubernetes related settings
@@ -34,7 +35,7 @@ twister2.worker.instances: 6
 # number of workers (containers) per pod
 # default is 1
 # twister2.worker.instances must be divisible by containers_per_pod
-kubernetes.workers.per.pod: 2
+kubernetes.workers.per.pod: 1
 
 ########################################################################
 # persistent volume related settings

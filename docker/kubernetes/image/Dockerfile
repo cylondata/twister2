@@ -1,7 +1,9 @@
 FROM ubuntu:16.04
 
-# Java installation is based on: https://github.com/mlaccetti/docker-oracle-java8-ubuntu-16.04/blob/master/Dockerfile
-# ssh and MPI installation is based on the Dockerfile from <https://github.com/everpeace>
+# Java installation is based on:
+#    https://github.com/mlaccetti/docker-oracle-java8-ubuntu-16.04/blob/master/Dockerfile
+# ssh and MPI installation is based on the Dockerfile from
+#    https://github.com/everpeace
 
 # Disable prompts from apt.
 ENV DEBIAN_FRONTEND noninteractive
@@ -46,7 +48,7 @@ RUN cd /tmp && \
   make install && \
   rm -r /tmp/openmpi-$OPENMPI_VERSION
 
-# this can also be added to the previous command
+# remove the install package
 RUN rm /tmp/openmpi-$OPENMPI_VERSION.tar.bz2
 
 # set LD_LIBRARY_PATH environment variable
@@ -86,7 +88,3 @@ RUN if [ "$WITH_CUDA" = "true" ]; then \
 EXPOSE 2022
 
 WORKDIR /twister2/
-
-# we will start sshd from init containers
-# sshd can be run either by root or $SSH_USER
-# CMD ["/init.sh"]

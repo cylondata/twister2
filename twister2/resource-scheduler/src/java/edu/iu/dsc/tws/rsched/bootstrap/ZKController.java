@@ -53,9 +53,6 @@ import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 public class ZKController implements IWorkerController {
   public static final Logger LOG = Logger.getLogger(ZKController.class.getName());
 
-  // hostname and port number of ZooKeeper server
-  private String zkAddress;
-
   // hostname and port number of this worker
   private String workerIpAndPort;
 
@@ -76,15 +73,12 @@ public class ZKController implements IWorkerController {
   private PersistentNode jobZNode;
   private PathChildrenCache childrenCache;
 
-  // variables for workerID generation
-  private String daiPathForWorkerID;
+  // DistributedAtomicInteger for workerID generation
   private DistributedAtomicInteger daiForWorkerID;
 
   // variables related to the barrier
   private DistributedAtomicInteger daiForBarrier;
-  private String daiPathForBarrier;
   private DistributedBarrier barrier;
-  private String barrierPath;
 
   // config object
   private Config config;
@@ -95,31 +89,32 @@ public class ZKController implements IWorkerController {
     this.jobName = jobName;
     this.numberOfWorkers = numberOfWorkers;
     this.jobPath = ZKUtil.constructJobPath(config, jobName);
-    this.daiPathForWorkerID = ZKUtil.constructDaiPathForWorkerID(config, jobName);
-    this.daiPathForBarrier = ZKUtil.constructDaiPathForBarrier(config, jobName);
-    this.barrierPath = ZKUtil.constructBarrierPath(config, jobName);
+
   }
 
   /**
    * connect to the server
    * get a workerID for this worker
+   * append this worker info to the body of job znode
    * create an ephemeral znode for this client
    * @return
    */
   public boolean initialize() {
-    String zkServerAddress = ZKContext.zooKeeperServerIP(config);
-    int zkServerPort = ZKContext.zooKeeperServerPort(config);
-    zkAddress = zkServerAddress + ":" + zkServerPort;
 
     try {
-      client = CuratorFrameworkFactory.newClient(zkAddress, new ExponentialBackoffRetry(1000, 3));
+      String zkServerAddresses = ZKContext.zooKeeperServerAddresses(config);
+      client = CuratorFrameworkFactory.newClient(zkServerAddresses,
+          new ExponentialBackoffRetry(1000, 3));
       client.start();
 
+      String barrierPath = ZKUtil.constructBarrierPath(config, jobName);
       barrier = new DistributedBarrier(client, barrierPath);
 
+      String daiPathForWorkerID = ZKUtil.constructDaiPathForWorkerID(config, jobName);
       daiForWorkerID = new DistributedAtomicInteger(client,
           daiPathForWorkerID, new ExponentialBackoffRetry(1000, 3));
 
+      String daiPathForBarrier = ZKUtil.constructDaiPathForBarrier(config, jobName);
       daiForBarrier = new DistributedAtomicInteger(client,
           daiPathForBarrier, new ExponentialBackoffRetry(1000, 3));
 
@@ -334,7 +329,7 @@ public class ZKController implements IWorkerController {
    * count the workers based on their data availability on this worker
    * this count also includes the workers that have already completed
    */
-  public int countNumberOfJoinedWorkers() {
+  private int countNumberOfJoinedWorkers() {
     byte[] parentData = null;
     try {
       parentData = client.getData().forPath(jobPath);
@@ -396,7 +391,7 @@ public class ZKController implements IWorkerController {
    */
   private boolean incrementBarrierDAI(int tryCount, long timeLimitMilliSec) {
 
-    if (tryCount == 10) {
+    if (tryCount == 100) {
       return false;
     }
 

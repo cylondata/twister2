@@ -36,10 +36,6 @@ public class SingleMessageSerializer implements MessageSerializer {
   private int executor;
 
   private static final int HEADER_SIZE = 16;
-  // we need to put the message length and key length if keyed message
-  private static final int MAX_SUB_MESSAGE_HEADER_SPACE = 4 + 4;
-  // for s normal message we only put the length
-  private static final int NORMAL_SUB_MESSAGE_HEADER_SIZE = 4;
 
   public SingleMessageSerializer(KryoSerializer kryoSerializer) {
     this.serializer = kryoSerializer;
@@ -81,7 +77,8 @@ public class SingleMessageSerializer implements MessageSerializer {
       }
 
       if (sendMessage.serializedState() == OutMessage.SendState.HEADER_BUILT
-          || sendMessage.serializedState() == OutMessage.SendState.BODY_BUILT) {
+          || sendMessage.serializedState() == OutMessage.SendState.BODY_BUILT
+          || sendMessage.serializedState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
         if ((sendMessage.getFlags() & MessageFlags.EMPTY) == MessageFlags.EMPTY) {
           sendMessage.setSendState(OutMessage.SendState.SERIALIZED);
           sendMessage.getSerializationState().setTotalBytes(0);
@@ -91,6 +88,8 @@ public class SingleMessageSerializer implements MessageSerializer {
           boolean complete = serializeBody(message, sendMessage, buffer);
           if (complete) {
             sendMessage.setSendState(OutMessage.SendState.SERIALIZED);
+          } else {
+            sendMessage.setSendState(OutMessage.SendState.PARTIALLY_SERIALIZED);
           }
         }
       }
@@ -99,17 +98,38 @@ public class SingleMessageSerializer implements MessageSerializer {
       if (sendMessage.serializedState() == OutMessage.SendState.SERIALIZED) {
         ChannelMessage channelMessage = sendMessage.getChannelMessage();
         SerializeState state = sendMessage.getSerializationState();
-        int totalBytes = state.getTotalBytes();
-        channelMessage.getBuffers().get(0).getByteBuffer().putInt(12, totalBytes);
+        if (!channelMessage.isHeaderSent()) {
+          int totalBytes = state.getTotalBytes();
+          channelMessage.getBuffers().get(0).getByteBuffer().putInt(HEADER_SIZE - Integer.BYTES,
+              totalBytes);
 
-        MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
-            sendMessage.getEdge(), totalBytes);
-        builder.destination(sendMessage.getDestintationIdentifier());
-        sendMessage.getChannelMessage().setHeader(builder.build());
-        state.setTotalBytes(0);
 
+          MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
+              sendMessage.getEdge(), totalBytes);
+          builder.destination(sendMessage.getDestintationIdentifier());
+          sendMessage.getChannelMessage().setHeader(builder.build());
+          state.setTotalBytes(0);
+          channelMessage.setHeaderSent(true);
+        }
         // mark the original message as complete
         channelMessage.setComplete(true);
+      } else if (sendMessage.serializedState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
+        ChannelMessage channelMessage = sendMessage.getChannelMessage();
+        SerializeState state = sendMessage.getSerializationState();
+        if (!channelMessage.isHeaderSent()) {
+          int totalBytes = state.getData().length;
+          channelMessage.getBuffers().get(0).getByteBuffer().putInt(HEADER_SIZE - Integer.BYTES,
+              totalBytes);
+
+          MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
+              sendMessage.getEdge(), totalBytes);
+          builder.destination(sendMessage.getDestintationIdentifier());
+          sendMessage.getChannelMessage().setHeader(builder.build());
+          channelMessage.setHeaderSent(true);
+        }
+        state.setTotalBytes(0);
+        LOG.fine("Message Partially serialized");
+
       } else {
         LOG.fine("Message NOT FULLY serialized");
       }
@@ -132,7 +152,7 @@ public class SingleMessageSerializer implements MessageSerializer {
     // at this point we haven't put the length and we will do it at the serialization
     sendMessage.setWrittenHeaderSize(HEADER_SIZE);
     // lets set the size for 16 for now
-    buffer.setSize(16);
+    buffer.setSize(HEADER_SIZE);
   }
 
   /**
@@ -249,14 +269,14 @@ public class SingleMessageSerializer implements MessageSerializer {
     if (sendMessage.serializedState() == OutMessage.SendState.HEADER_BUILT) {
       // okay we need to serialize the data
       // at this point we know the length of the data
-      byteBuffer.putInt(12, dataBuffer.getSize());
+      byteBuffer.putInt(HEADER_SIZE - Integer.BYTES, dataBuffer.getSize());
       // now lets set the header
       MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
           sendMessage.getEdge(), dataBuffer.getSize());
       builder.destination(sendMessage.getDestintationIdentifier());
       sendMessage.getChannelMessage().setHeader(builder.build());
     }
-    buffer.setSize(16 + dataBuffer.getSize());
+    buffer.setSize(HEADER_SIZE + dataBuffer.getSize());
     // okay we are done with the message
     sendMessage.setSendState(OutMessage.SendState.SERIALIZED);
     return true;

@@ -21,36 +21,31 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.utils;
+package edu.iu.dsc.tws.common.examples.utils;
 
-import java.util.HashSet;
-import java.util.Set;
+public class IntData {
+  private int[] data;
 
-import edu.iu.dsc.tws.comms.core.TaskPlan;
-
-public final class TaskPlanUtils {
-  private TaskPlanUtils() {
+  public IntData(int[] data) {
+    this.data = data;
   }
 
-  public static Set<Integer> getTasksOfThisWorker(TaskPlan plan, Set<Integer> tasks) {
-    Set<Integer> allTasksOfThisExec = plan.getTasksOfThisExecutor();
-    Set<Integer> tasksOfThisExec = new HashSet<>();
-
-    for (int t : tasks) {
-      if (allTasksOfThisExec.contains(t)) {
-        tasksOfThisExec.add(t);
-      }
-    }
-    return tasksOfThisExec;
+  public IntData() {
   }
 
-  public static Set<Integer> getWorkersOfTasks(TaskPlan plan, Set<Integer> tasks) {
-    Set<Integer> workersOfTasks = new HashSet<>();
-
-    for (int t : tasks) {
-      int w = plan.getExecutorForChannel(t);
-      workersOfTasks.add(w);
+  public IntData(int size) {
+    int[] d = new int[size];
+    for (int i = 0; i < size; i++) {
+      d[i] = i;
     }
-    return workersOfTasks;
+    this.data = d;
+  }
+
+  public int[] getData() {
+    return data;
+  }
+
+  public void setData(int[] data) {
+    this.data = data;
   }
 }

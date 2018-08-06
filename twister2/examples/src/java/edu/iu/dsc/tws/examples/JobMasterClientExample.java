@@ -20,8 +20,8 @@ import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.master.JobMasterContext;
+import edu.iu.dsc.tws.master.client.JMWorkerController;
 import edu.iu.dsc.tws.master.client.JobMasterClient;
-import edu.iu.dsc.tws.master.client.WorkerController;
 
 public final class JobMasterClientExample {
   private static final Logger LOG = Logger.getLogger(JobMasterClientExample.class.getName());
@@ -64,7 +64,7 @@ public final class JobMasterClientExample {
    */
   public static void simulateClient(Config config, int workerTempID) {
 
-    InetAddress workerIP = WorkerController.convertStringToIP("localhost");
+    InetAddress workerIP = JMWorkerController.convertStringToIP("localhost");
     int workerPort = 10000 + (int) (Math.random() * 10000);
 
     WorkerNetworkInfo workerNetworkInfo = new WorkerNetworkInfo(workerIP, workerPort, workerTempID);
@@ -72,7 +72,7 @@ public final class JobMasterClientExample {
     JobMasterClient client = new JobMasterClient(config, workerNetworkInfo);
     client.init();
 
-    IWorkerController workerController = client.getWorkerController();
+    IWorkerController workerController = client.getJMWorkerController();
 
     client.sendWorkerStartingMessage();
 
@@ -90,7 +90,7 @@ public final class JobMasterClientExample {
     // wait up to 10sec
     sleeeep((long) (Math.random() * 10000));
     long timeLimit = 20000;
-    boolean allWorkersReachedBarrier = client.getWorkerController().waitOnBarrier(timeLimit);
+    boolean allWorkersReachedBarrier = client.getJMWorkerController().waitOnBarrier(timeLimit);
     if (allWorkersReachedBarrier) {
       LOG.info("All workers reached the barrier. Proceeding.");
     } else {

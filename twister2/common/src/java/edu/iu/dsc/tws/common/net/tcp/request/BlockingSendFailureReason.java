@@ -9,31 +9,14 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.dfw.io;
+package edu.iu.dsc.tws.common.net.tcp.request;
 
-public class IntData {
-  private int[] data;
-
-  public IntData(int[] data) {
-    this.data = data;
-  }
-
-  public IntData() {
-  }
-
-  public IntData(int size) {
-    int[] d = new int[size];
-    for (int i = 0; i < size; i++) {
-      d[i] = i;
-    }
-    this.data = d;
-  }
-
-  public int[] getData() {
-    return data;
-  }
-
-  public void setData(int[] data) {
-    this.data = data;
-  }
+/**
+ * Failure reasons for blocking send operations
+ */
+public enum BlockingSendFailureReason {
+  ALREADY_SENDING_ANOTHER_MESSAGE,
+  ERROR_WHEN_TRYING_TO_SEND,
+  TIME_LIMIT_REACHED,
+  EXCEPTION_WHEN_WAITING
 }

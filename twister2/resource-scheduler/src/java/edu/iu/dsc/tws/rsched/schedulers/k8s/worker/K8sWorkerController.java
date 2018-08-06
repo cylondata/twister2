@@ -37,8 +37,8 @@ import io.kubernetes.client.models.V1Pod;
 import io.kubernetes.client.models.V1PodList;
 import io.kubernetes.client.util.Watch;
 
-public class WorkerController implements IWorkerController {
-  private static final Logger LOG = Logger.getLogger(WorkerController.class.getName());
+public class K8sWorkerController implements IWorkerController {
+  private static final Logger LOG = Logger.getLogger(K8sWorkerController.class.getName());
 
   private Config config;
   private String jobName;
@@ -50,8 +50,8 @@ public class WorkerController implements IWorkerController {
   private ArrayList<WorkerNetworkInfo> workerList;
   private WorkerNetworkInfo thisWorker;
 
-  public WorkerController(Config config, String podName, String podIpStr, String containerName,
-                          String jobName) {
+  public K8sWorkerController(Config config, String podName, String podIpStr, String containerName,
+                             String jobName) {
     this.config = config;
     numberOfWorkers = SchedulerContext.workerInstances(config);
     workersPerPod = KubernetesContext.workersPerPod(config);
@@ -248,17 +248,14 @@ public class WorkerController implements IWorkerController {
     int i = 0;
     for (WorkerNetworkInfo worker: workers) {
       buffer.append(String.format("%d: workerID[%d] %s\n",
-          i++, worker.getWorkerID(), worker.getWorkerName()));
+          i++, worker.getWorkerID(), worker.getWorkerIpAndPort()));
     }
 
     LOG.info(buffer.toString());
   }
 
   /**
-   * waits all pods to start
-   * this is not exactly for wathing all workers to start
-   * but it is close
-   * we need to reimplement it when we implemented a state manager
+   * wait for all pods to run
    * @param timeLimitMilliSec
    * @return
    */

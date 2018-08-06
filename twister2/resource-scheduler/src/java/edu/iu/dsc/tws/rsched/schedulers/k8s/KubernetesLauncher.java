@@ -309,7 +309,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     }
 
     // when worker to nodes mapping is requested
-    // if the operator is Exists or DoesNotExist,
+    // if the operator is either Exists or DoesNotExist,
     // values list must be empty
     if (KubernetesContext.workerToNodeMapping(config)) {
       String operator = KubernetesContext.workerMappingOperator(config);
@@ -321,6 +321,19 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
                 + "\n++++++ Aborting submission ++++++",
             KubernetesContext.K8S_WORKER_MAPPING_OPERATOR,
             KubernetesContext.K8S_WORKER_MAPPING_VALUES));
+        return false;
+      }
+    }
+
+    // when OpnMPI is enabled, a Secret object has to be available in the cluster
+    if (KubernetesContext.workersUseOpenMPI(config)) {
+      String secretName = KubernetesContext.secretName(config);
+      boolean secretExists = controller.secretExist(namespace, secretName);
+
+      if (!secretExists) {
+        LOG.severe("No Secret object is available in the cluster with the name: " + secretName
+            + "\nFirst create this object or make that object created by your cluster admin."
+            + "\n++++++ Aborting submission ++++++");
         return false;
       }
     }

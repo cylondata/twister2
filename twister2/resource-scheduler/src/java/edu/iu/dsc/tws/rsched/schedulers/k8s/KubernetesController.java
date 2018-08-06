@@ -31,6 +31,8 @@ import io.kubernetes.client.models.V1PersistentVolume;
 import io.kubernetes.client.models.V1PersistentVolumeClaim;
 import io.kubernetes.client.models.V1PersistentVolumeClaimList;
 import io.kubernetes.client.models.V1PersistentVolumeList;
+import io.kubernetes.client.models.V1Secret;
+import io.kubernetes.client.models.V1SecretList;
 import io.kubernetes.client.models.V1Service;
 import io.kubernetes.client.models.V1ServiceList;
 import io.kubernetes.client.models.V1beta2StatefulSet;
@@ -504,5 +506,27 @@ public class KubernetesController {
     }
   }
 
+  /**
+   * return true if the Secret object with that name exists in Kubernetes master,
+   * otherwise return false
+   */
+  public boolean secretExist(String namespace, String secretName) {
+    V1SecretList secretList = null;
+    try {
+      secretList = coreApi.listNamespacedSecret(namespace,
+          null, null, null, null, null, null, null, null, null);
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when getting Secret list.", e);
+      throw new RuntimeException(e);
+    }
+
+    for (V1Secret secret : secretList.getItems()) {
+      if (secretName.equalsIgnoreCase(secret.getMetadata().getName())) {
+        return true;
+      }
+    }
+
+    return false;
+  }
 
 }

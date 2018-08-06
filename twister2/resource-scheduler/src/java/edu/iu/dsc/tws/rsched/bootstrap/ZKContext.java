@@ -22,12 +22,9 @@ public final class ZKContext extends Context {
   public static final String ROOT_NODE = "twister2.zookeeper.root.node.path";
   public static final String ROOT_NODE_DEFAULT = "/twister2";
 
-  // ZooKeeper server IP address and port number
-  // They should be given in conf files
-  public static final String ZOOKEEPER_SERVER_IP = "twister2.zookeeper.server.ip";
-
-  public static final int ZOOKEEPER_SERVER_PORT_DEFAULT = 2181;
-  public static final String ZOOKEEPER_SERVER_PORT = "twister2.zookeeper.server.port";
+  // comma separated ZooKeeper server IP:port pairs
+  // example: "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002"
+  public static final String ZOOKEEPER_SERVER_ADDRESSES = "twister2.zookeeper.server.addresses";
 
   public static final int MAX_WAIT_TIME_FOR_ALL_WORKERS_TO_JOIN_DEFAULT = 100000;
   public static final String MAX_WAIT_TIME_FOR_ALL_WORKERS_TO_JOIN =
@@ -39,12 +36,8 @@ public final class ZKContext extends Context {
     return cfg.getStringValue(ROOT_NODE, ROOT_NODE_DEFAULT);
   }
 
-  public static String zooKeeperServerIP(Config cfg) {
-    return cfg.getStringValue(ZOOKEEPER_SERVER_IP);
-  }
-
-  public static int zooKeeperServerPort(Config cfg) {
-    return cfg.getIntegerValue(ZOOKEEPER_SERVER_PORT, ZOOKEEPER_SERVER_PORT_DEFAULT);
+  public static String zooKeeperServerAddresses(Config cfg) {
+    return cfg.getStringValue(ZOOKEEPER_SERVER_ADDRESSES);
   }
 
   public static int maxWaitTimeForAllWorkersToJoin(Config cfg) {

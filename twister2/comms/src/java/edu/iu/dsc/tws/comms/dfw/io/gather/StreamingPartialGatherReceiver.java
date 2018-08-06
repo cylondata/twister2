@@ -89,6 +89,7 @@ public class StreamingPartialGatherReceiver implements MessageReceiver {
 
   @Override
   public boolean progress() {
+    boolean needsFurtherProgress = false;
     for (int t : messages.keySet()) {
       boolean canProgress = true;
       while (canProgress) {
@@ -96,11 +97,19 @@ public class StreamingPartialGatherReceiver implements MessageReceiver {
         Map<Integer, Queue<Object>> map = messages.get(t);
         Map<Integer, Integer> cMap = counts.get(t);
         boolean found = true;
+        boolean moreThanOne = false;
         for (Map.Entry<Integer, Queue<Object>> e : map.entrySet()) {
           if (e.getValue().size() == 0) {
             found = false;
             canProgress = false;
+          } else {
+            moreThanOne = true;
           }
+        }
+
+        // if we have queues with 0 and more than zero we need further progress
+        if (!found && moreThanOne) {
+          needsFurtherProgress = true;
         }
 
         if (map.entrySet().size() == 0) {
@@ -127,11 +136,12 @@ public class StreamingPartialGatherReceiver implements MessageReceiver {
             }
           } else {
             canProgress = false;
+            needsFurtherProgress = true;
           }
         }
       }
     }
-    return true;
+    return needsFurtherProgress;
   }
 
   protected boolean handleMessage(int task, Object message, int flags, int dest) {

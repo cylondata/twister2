@@ -90,8 +90,8 @@ public class SReduceExample extends BenchWorker {
 
   @Override
   protected boolean isDone() {
-    LOG.log(Level.INFO, String.format("%d Reduce %b sources %b pending %b",
-        workerId, reduceDone, sourcesDone, reduce.hasPending()));
+//    LOG.log(Level.INFO, String.format("%d Reduce %b sources %b pending %b",
+//        workerId, reduceDone, sourcesDone, reduce.hasPending()));
     return reduceDone && sourcesDone && !reduce.hasPending();
   }
 

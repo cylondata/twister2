@@ -30,7 +30,6 @@ import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sPersistentVolume;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sVolatileVolume;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerUtils;
-import edu.iu.dsc.tws.rsched.schedulers.mpi.MPIWorker;
 import edu.iu.dsc.tws.rsched.spi.container.IPersistentVolume;
 import edu.iu.dsc.tws.rsched.spi.container.IWorker;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
@@ -142,7 +141,7 @@ public final class MPIWorkerStarter {
     jobMasterClient.sendWorkerRunningMessage();
 
     // start the worker
-    startWorker(jobMasterClient.getWorkerController(), pv);
+    startWorker(jobMasterClient.getJMWorkerController(), pv);
 
     // finalize MPI
     try {
@@ -175,7 +174,9 @@ public final class MPIWorkerStarter {
           new K8sVolatileVolume(SchedulerContext.jobName(config), workerID);
     }
 
-    ResourcePlan resourcePlan = MPIWorker.createResourcePlan(config);
+    ResourcePlan resourcePlan = new ResourcePlan(SchedulerContext.clusterType(config),
+        workerNetworkInfo.getWorkerID());
+//    ResourcePlan resourcePlan = MPIWorker.createResourcePlan(config);
 
     worker.init(config, workerID, resourcePlan, workerController, pv, volatileVolume);
   }
