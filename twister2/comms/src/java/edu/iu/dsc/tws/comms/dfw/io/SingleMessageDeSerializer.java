@@ -156,7 +156,8 @@ public class SingleMessageDeSerializer implements MessageDeSerializer {
         return results;
       } else if (!MessageTypeUtils.isPrimitiveType(keyType)) {
         return DataDeserializer.deserializeData(message.getBuffers(),
-            message.getHeader().getLength() - keyPair.getKey() - 4, serializer, type);
+            message.getHeader().getLength() - keyPair.getKey() - KEY_LENGTH_FEILD_SIZE,
+            serializer, type);
 
       } else {
         return DataDeserializer.deserializeData(message.getBuffers(),

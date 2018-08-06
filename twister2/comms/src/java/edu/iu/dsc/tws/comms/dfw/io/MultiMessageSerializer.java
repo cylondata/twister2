@@ -170,12 +170,11 @@ public class MultiMessageSerializer implements MessageSerializer {
     MessageType type = sendMessage.getChannelMessage().getType();
     if (!keyed) {
       return serializeData(payload,
-          sendMessage.getSerializationState(), buffer, type, sendMessage.getFlags());
+          sendMessage.getSerializationState(), buffer, type);
     } else {
       KeyedContent kc = (KeyedContent) payload;
       return serializeKeyedData(kc.getValue(), kc.getKey(),
-          sendMessage.getSerializationState(), buffer, kc.getContentType(), kc.getKeyType(),
-          sendMessage.getFlags());
+          sendMessage.getSerializationState(), buffer, kc.getContentType(), kc.getKeyType());
     }
   }
 
@@ -322,7 +321,7 @@ public class MultiMessageSerializer implements MessageSerializer {
    * Serializes a java object using kryo serialization
    */
   private boolean serializeData(Object content, SerializeState state,
-                                DataBuffer targetBuffer, MessageType messageType, int flags) {
+                                DataBuffer targetBuffer, MessageType messageType) {
     ByteBuffer byteBuffer = targetBuffer.getByteBuffer();
     // okay we need to serialize the header
     if (state.getPart() == SerializeState.Part.INIT) {
@@ -374,7 +373,7 @@ public class MultiMessageSerializer implements MessageSerializer {
 
   private boolean serializeKeyedData(Object content, Object key, SerializeState state,
                                      DataBuffer targetBuffer,
-                                     MessageType contentType, MessageType keyType, int flags) {
+                                     MessageType contentType, MessageType keyType) {
     ByteBuffer byteBuffer = targetBuffer.getByteBuffer();
     // okay we need to serialize the header
     if (state.getPart() == SerializeState.Part.INIT) {
