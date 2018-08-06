@@ -37,21 +37,27 @@ import edu.iu.dsc.tws.data.utils.HdfsDataContext;
  */
 public class HDFSConnector implements IHDFSConnector {
 
-  public static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
+  private static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
+
   private static final Logger LOG = Logger.getLogger(HDFSConnector.class.getName());
+
   private Config config;
   private String outputFile;
 
-  public HDFSConnector(Config config1) {
-    this.config = config1;
+  public HDFSConnector(Config cfg) {
+    this.config = cfg;
   }
 
-  public HDFSConnector(Config config1, String outputFile1) {
-    this.config = config1;
-    this.outputFile = outputFile1;
+  public HDFSConnector(Config cfg, String outFile) {
+    this.config = cfg;
+    this.outputFile = outFile;
   }
 
-
+  /**
+   * This method retrieve the HadoopFileSystem object using the Hadoop File System class.
+   *
+   * @return hadoopFileSystem
+   */
   @Override
   public HadoopFileSystem HDFSConnect() {
     Configuration conf = new Configuration(false);
@@ -65,8 +71,12 @@ public class HDFSConnector implements IHDFSConnector {
     return hadoopFileSystem;
   }
 
+
   /**
-   * To connect the HDFS file system
+   * This method retrieve the HadoopFileSystem object using the Hadoop File System class
+   * and write the message using the Hadoop Output Stream class.
+   * @param message
+   * @param count
    */
   public void HDFSConnect(String message, int count) {
 
@@ -102,6 +112,11 @@ public class HDFSConnector implements IHDFSConnector {
     }
   }
 
+  /**
+   * This method retrieve the HadoopFileSystem object using the Hadoop File System class
+   * and write the message using the Hadoop Output Stream class.
+   * @param message
+   */
   @Override
   public void HDFSConnect(String message) {
 
@@ -136,18 +151,20 @@ public class HDFSConnector implements IHDFSConnector {
   }
 
   /**
-   * This method will be used to locate the datanode location of the input file.
+   * This method is used to locate the datanode location of the input file name.
+   * @param fileName
+   * @return datanodeName
    */
-  public String getDFSCK(String[] fName) {
+  public String getDFSCK(String[] fileName) {
 
     Configuration conf = new Configuration(false);
     conf.addResource(new org.apache.hadoop.fs.Path(HdfsDataContext.getHdfsConfigDirectory(config)));
 
     ByteArrayOutputStream bStream = new ByteArrayOutputStream();
     PrintStream out = new PrintStream(bStream, true);
+    StringBuilder stringBuilder = new StringBuilder();
 
     String datanodeName = null;
-    StringBuilder stringBuilder = new StringBuilder();
 
     try {
       InetSocketAddress namenodeAddress =
@@ -163,8 +180,6 @@ public class HDFSConnector implements IHDFSConnector {
       //It will be enabled later...!
       //run(new DFSck(conf, out), fName);
       //out.println();
-    } catch (IOException ioe) {
-      ioe.printStackTrace();
     } catch (Exception e) {
       e.printStackTrace();
     }

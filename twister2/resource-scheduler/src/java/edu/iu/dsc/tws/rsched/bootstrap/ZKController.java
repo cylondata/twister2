@@ -53,9 +53,6 @@ import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 public class ZKController implements IWorkerController {
   public static final Logger LOG = Logger.getLogger(ZKController.class.getName());
 
-  // hostname and port number of ZooKeeper server
-  private String zkAddress;
-
   // hostname and port number of this worker
   private String workerIpAndPort;
 
@@ -93,9 +90,6 @@ public class ZKController implements IWorkerController {
     this.numberOfWorkers = numberOfWorkers;
     this.jobPath = ZKUtil.constructJobPath(config, jobName);
 
-    String zkServerAddress = ZKContext.zooKeeperServerIP(config);
-    int zkServerPort = ZKContext.zooKeeperServerPort(config);
-    zkAddress = zkServerAddress + ":" + zkServerPort;
   }
 
   /**
@@ -108,7 +102,9 @@ public class ZKController implements IWorkerController {
   public boolean initialize() {
 
     try {
-      client = CuratorFrameworkFactory.newClient(zkAddress, new ExponentialBackoffRetry(1000, 3));
+      String zkServerAddresses = ZKContext.zooKeeperServerAddresses(config);
+      client = CuratorFrameworkFactory.newClient(zkServerAddresses,
+          new ExponentialBackoffRetry(1000, 3));
       client.start();
 
       String barrierPath = ZKUtil.constructBarrierPath(config, jobName);
@@ -333,7 +329,7 @@ public class ZKController implements IWorkerController {
    * count the workers based on their data availability on this worker
    * this count also includes the workers that have already completed
    */
-  public int countNumberOfJoinedWorkers() {
+  private int countNumberOfJoinedWorkers() {
     byte[] parentData = null;
     try {
       parentData = client.getData().forPath(jobPath);
@@ -395,7 +391,7 @@ public class ZKController implements IWorkerController {
    */
   private boolean incrementBarrierDAI(int tryCount, long timeLimitMilliSec) {
 
-    if (tryCount == 10) {
+    if (tryCount == 100) {
       return false;
     }
 

@@ -50,12 +50,11 @@ public final class ZKControllerExample {
       return;
     }
 
-    String ip = args[0];
+    String zkAddress = args[0];
     String action = args[1];
     String jobName = "test-job";
-    String port = "2181";
 
-    Config cnfg = buildTestConfig(ip, port, jobName);
+    Config cnfg = buildTestConfig(zkAddress, jobName);
 
     if ("delete".equalsIgnoreCase(action)) {
       deleteJobZnode(jobName, cnfg);
@@ -70,10 +69,10 @@ public final class ZKControllerExample {
    * construct a test Config object
    * @return
    */
-  public static Config buildTestConfig(String ip, String port, String jobName) {
+  public static Config buildTestConfig(String zkAddresses, String jobName) {
+
     return Config.newBuilder()
-        .put(ZKContext.ZOOKEEPER_SERVER_IP, ip)
-        .put(ZKContext.ZOOKEEPER_SERVER_PORT, port)
+        .put(ZKContext.ZOOKEEPER_SERVER_ADDRESSES, zkAddresses)
         .put(Context.JOB_NAME, jobName)
         .build();
   }
@@ -81,6 +80,7 @@ public final class ZKControllerExample {
   public static void printUsage() {
     LOG.info("Usage:\n"
         + "java ZKControllerExample zkAddress action numberOfWorkers\n"
+        + "\tzkAddress is in the form of IP:PORT"
         + "\taction can be: join, delete\n"
         + "\tnumberOfWorkers is not needed for delete");
   }

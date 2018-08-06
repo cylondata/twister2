@@ -39,7 +39,7 @@ public class DataLocalityBatchTaskScheduling implements TaskSchedule {
   private static final Logger LOG = Logger.getLogger(
       DataLocalityBatchTaskScheduling.class.getName());
 
-  protected static int taskSchedulePlanId = 0;
+  private static int taskSchedulePlanId = 0;
   private Double instanceRAM;
   private Double instanceDisk;
   private Double instanceCPU;
@@ -67,8 +67,7 @@ public class DataLocalityBatchTaskScheduling implements TaskSchedule {
     List<TaskSchedulePlan> taskSchedulePlanList = new ArrayList<>();
     List<Set<Vertex>> taskVertexList = TaskVertexParser.parseVertexSet(taskVertexSet, graph);
 
-    for (int i = 0; i < taskVertexList.size(); i++) {
-      Set<Vertex> vertexSet = taskVertexList.get(i);
+    for (Set<Vertex> vertexSet : taskVertexList) {
       if (vertexSet.size() > 1) {
         datalocalityAwareContainerInstanceMap = DataLocalityBatchScheduling.
             DataLocalityBatchSchedulingAlgo(vertexSet,
@@ -125,16 +124,18 @@ public class DataLocalityBatchTaskScheduling implements TaskSchedule {
         if (worker != null && worker.getCpu() > 0 && worker.getDisk() > 0 && worker.getRam() > 0) {
           containerResource = new Resource((double) worker.getRam(),
               (double) worker.getDisk(), (double) worker.getCpu());
-          LOG.fine(String.format("Worker (if loop):" + containerId + "\tRam:"
+          //write into a log file
+          LOG.fine("Worker (if loop):" + containerId + "\tRam:"
               + worker.getRam() + "\tDisk:" + worker.getDisk()  //write into a log file
-              + "\tCpu:" + worker.getCpu()));
+              + "\tCpu:" + worker.getCpu());
         } else {
           containerResource = new Resource(containerRAMValue, containerDiskValue,
               containerCpuValue);
-          LOG.fine(String.format("Worker (else loop):" + containerId
+          //write into a log file
+          LOG.fine("Worker (else loop):" + containerId
               + "\tRam:" + containerRAMValue     //write into a log file
               + "\tDisk:" + containerDiskValue
-              + "\tCpu:" + containerCpuValue));
+              + "\tCpu:" + containerCpuValue);
         }
 
         if (taskInstancePlanMap.values() != null) {
@@ -149,8 +150,7 @@ public class DataLocalityBatchTaskScheduling implements TaskSchedule {
     }
 
     //To print the schedule plan list
-    for (int j = 0; j < taskSchedulePlanList.size(); j++) {
-      TaskSchedulePlan taskSchedulePlan = taskSchedulePlanList.get(j);
+    for (TaskSchedulePlan taskSchedulePlan : taskSchedulePlanList) {
       Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap
           = taskSchedulePlan.getContainersMap();
       for (Map.Entry<Integer, TaskSchedulePlan.ContainerPlan> entry : containersMap.entrySet()) {
@@ -225,16 +225,18 @@ public class DataLocalityBatchTaskScheduling implements TaskSchedule {
       if (worker != null && worker.getCpu() > 0 && worker.getDisk() > 0 && worker.getRam() > 0) {
         containerResource = new Resource((double) worker.getRam(),
             (double) worker.getDisk(), (double) worker.getCpu());
-        LOG.fine(String.format("Worker (if loop):" + containerId + "\tRam:"
+        //write into a log file
+        LOG.fine("Worker (if loop):" + containerId + "\tRam:"
             + worker.getRam() + "\tDisk:" + worker.getDisk()  //write into a log file
-            + "\tCpu:" + worker.getCpu()));
+            + "\tCpu:" + worker.getCpu());
       } else {
         containerResource = new Resource(containerRAMValue, containerDiskValue,
             containerCpuValue);
-        LOG.fine(String.format("Worker (else loop):" + containerId
+        //write into a log file
+        LOG.fine("Worker (else loop):" + containerId
             + "\tRam:" + containerRAMValue     //write into a log file
             + "\tDisk:" + containerDiskValue
-            + "\tCpu:" + containerCpuValue));
+            + "\tCpu:" + containerCpuValue);
       }
 
       TaskSchedulePlan.ContainerPlan taskContainerPlan =

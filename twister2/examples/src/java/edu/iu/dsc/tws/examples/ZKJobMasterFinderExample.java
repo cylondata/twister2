@@ -65,8 +65,7 @@ public final class ZKJobMasterFinderExample {
    */
   public static Config buildTestConfig(String zkAddress, String jobName) {
     return Config.newBuilder()
-        .put(ZKContext.ZOOKEEPER_SERVER_IP, zkAddress)
-        .put(ZKContext.ZOOKEEPER_SERVER_PORT, 2181)
+        .put(ZKContext.ZOOKEEPER_SERVER_ADDRESSES, zkAddress)
         .put(Context.JOB_NAME, jobName)
         .build();
   }

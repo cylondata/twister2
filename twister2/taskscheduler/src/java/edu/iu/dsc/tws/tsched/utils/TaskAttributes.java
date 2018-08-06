@@ -133,7 +133,6 @@ public class TaskAttributes {
   public Map<String, Integer> getParallelTaskMap(Set<Vertex> iTaskSet, String msg) {
 
     HashMap<String, Integer> parallelTaskMap = new LinkedHashMap<>();
-
     try {
       for (Vertex task : iTaskSet) {
         Config config = task.getConfig();
@@ -155,7 +154,6 @@ public class TaskAttributes {
   public Map<String, Integer> getParallelTaskMap(Vertex taskVertex) {
 
     Map<String, Integer> parallelTaskMap = new LinkedHashMap<>();
-
     try {
       Config config = taskVertex.getConfig();
       String taskName = taskVertex.getName();
@@ -181,5 +179,5 @@ public class TaskAttributes {
     }
     return totalNumberOfInstances;
   }
-
 }
+

@@ -132,7 +132,7 @@ public final class K8sWorkerStarter {
     jobMasterClient.sendWorkerRunningMessage();
 
     // start the worker
-    startWorker(jobMasterClient.getWorkerController(), pv);
+    startWorker(jobMasterClient.getJMWorkerController(), pv);
 
     // close the worker
     closeWorker();

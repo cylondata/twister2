@@ -60,12 +60,12 @@ public class RoundRobinScheduling {
       for (Map.Entry<Integer, List<InstanceId>> entry : roundrobinAllocation.entrySet()) {
         Integer integer = entry.getKey();
         List<InstanceId> instanceIds = entry.getValue();
-        LOG.info("Container Index:" + integer);
-        for (int i = 0; i < instanceIds.size(); i++) {
-          LOG.info("Task Instance Details:"
-              + "\t Task Name:" + instanceIds.get(i).getTaskName()
-              + "\t Task id:" + instanceIds.get(i).getTaskId()
-              + "\t Task index:" + instanceIds.get(i).getTaskIndex());
+        LOG.fine("Container Index:" + integer);
+        for (InstanceId instanceId : instanceIds) {
+          LOG.fine("Task Instance Details:"
+              + "\t Task Name:" + instanceId.getTaskName()
+              + "\t Task id:" + instanceId.getTaskId()
+              + "\t Task index:" + instanceId.getTaskIndex());
         }
       }
     } catch (NullPointerException ne) {

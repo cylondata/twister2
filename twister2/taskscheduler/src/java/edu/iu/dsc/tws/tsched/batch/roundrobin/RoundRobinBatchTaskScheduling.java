@@ -67,8 +67,7 @@ public class RoundRobinBatchTaskScheduling implements TaskSchedule {
     List<Set<Vertex>> taskVertexList =
         TaskVertexParser.parseVertexSet(taskVertexSet, dataFlowTaskGraph);
 
-    for (int i = 0; i < taskVertexList.size(); i++) {
-      Set<Vertex> vertexSet = taskVertexList.get(i);
+    for (Set<Vertex> vertexSet : taskVertexList) {
       if (vertexSet.size() > 1) {
         roundrobinContainerInstanceMap = RoundRobinBatchScheduling.
             RoundRobinBatchSchedulingAlgo(vertexSet, workerPlan.getNumberOfWorkers());
@@ -128,16 +127,18 @@ public class RoundRobinBatchTaskScheduling implements TaskSchedule {
             && worker.getDisk() > 0 && worker.getRam() > 0) {
           containerResource = new Resource((double) worker.getRam(),
               (double) worker.getDisk(), (double) worker.getCpu());
-          LOG.fine(String.format("Worker (if loop):" + containerId + "\tRam:"
+          //write into a log file
+          LOG.fine("Worker (if loop):" + containerId + "\tRam:"
               + worker.getRam() + "\tDisk:" + worker.getDisk()  //write into a log file
-              + "\tCpu:" + worker.getCpu()));
+              + "\tCpu:" + worker.getCpu());
         } else {
           containerResource = new Resource(containerRAMValue, containerDiskValue,
               containerCpuValue);
-          LOG.fine(String.format("Worker (else loop):" + containerId
+          //write into a log file
+          LOG.fine("Worker (else loop):" + containerId
               + "\tRam:" + containerRAMValue     //write into a log file
               + "\tDisk:" + containerDiskValue
-              + "\tCpu:" + containerCpuValue));
+              + "\tCpu:" + containerCpuValue);
         }
         if (taskInstancePlanMap.values() != null) {
           TaskSchedulePlan.ContainerPlan taskContainerPlan =
@@ -150,8 +151,7 @@ public class RoundRobinBatchTaskScheduling implements TaskSchedule {
       taskSchedulePlanId++;
     }
 
-    for (int j = 0; j < taskSchedulePlanList.size(); j++) {
-      TaskSchedulePlan taskSchedulePlan = taskSchedulePlanList.get(j);
+    for (TaskSchedulePlan taskSchedulePlan : taskSchedulePlanList) {
       Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap
           = taskSchedulePlan.getContainersMap();
       for (Map.Entry<Integer, TaskSchedulePlan.ContainerPlan> entry : containersMap.entrySet()) {
@@ -207,10 +207,10 @@ public class RoundRobinBatchTaskScheduling implements TaskSchedule {
           double instanceDiskValue = instancesDiskMap.get(containerId).get(id);
           double instanceCPUValue = instancesCPUMap.get(containerId).get(id);
 
-          LOG.info(String.format("Container Id:" + containerId
+          LOG.info("Container Id:" + containerId
               + "Task Id and Index\t" + id.getTaskId() + "\t" + id.getTaskIndex()
               + "\tand Req. Resource:" + instanceRAMValue + "\t" + instanceDiskValue
-              + "\t" + instanceCPUValue));
+              + "\t" + instanceCPUValue);
 
           Resource instanceResource = new Resource(instanceRAMValue,
               instanceDiskValue, instanceCPUValue);
@@ -229,16 +229,18 @@ public class RoundRobinBatchTaskScheduling implements TaskSchedule {
         if (worker != null && worker.getCpu() > 0 && worker.getDisk() > 0 && worker.getRam() > 0) {
           containerResource = new Resource((double) worker.getRam(),
               (double) worker.getDisk(), (double) worker.getCpu());
-          LOG.fine(String.format("Worker (if loop):" + containerId + "\tRam:"
+          //write into a log file
+          LOG.fine("Worker (if loop):" + containerId + "\tRam:"
               + worker.getRam() + "\tDisk:" + worker.getDisk()  //write into a log file
-              + "\tCpu:" + worker.getCpu()));
+              + "\tCpu:" + worker.getCpu());
         } else {
           containerResource = new Resource(containerRAMValue, containerDiskValue,
               containerCpuValue);
-          LOG.fine(String.format("Worker (else loop):" + containerId
+          //write into a log file
+          LOG.fine("Worker (else loop):" + containerId
               + "\tRam:" + containerRAMValue     //write into a log file
               + "\tDisk:" + containerDiskValue
-              + "\tCpu:" + containerCpuValue));
+              + "\tCpu:" + containerCpuValue);
         }
 
         TaskSchedulePlan.ContainerPlan taskContainerPlan =

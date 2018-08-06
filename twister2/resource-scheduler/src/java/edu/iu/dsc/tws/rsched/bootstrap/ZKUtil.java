@@ -40,9 +40,7 @@ public final class ZKUtil {
    */
   public static CuratorFramework connectToServer(Config config) {
 
-    String zkServerAddress = ZKContext.zooKeeperServerIP(config);
-    int zkServerPort = ZKContext.zooKeeperServerPort(config);
-    String zkServer = zkServerAddress + ":" + zkServerPort;
+    String zkServer = ZKContext.zooKeeperServerAddresses(config);
 
     try {
       CuratorFramework client =

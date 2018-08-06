@@ -9,7 +9,7 @@ using various cluster services. This interface provides the following services:
 
 **Unique ID assignment to workers**: We require that each worker in Twister2 jobs has 
 a unique sequential ID starting from 0. When N workers are started in a Twister2 job, 
-the workers in that job will have the unique IDs in the range of 0 to (N-1).
+the workers will have the unique IDs in the range of 0 to (N-1).
 
 **Discovery of Worker addresses in a job**:
 We assume that each worker in a Twister2 job has a unique IP address and port number pair.
@@ -21,10 +21,8 @@ in that cluster. All workers need to know the address of other workers in the jo
 to be able to communicate with them. 
 
 The submitting client does not know where the workers will be started on the cluster, 
-when it submits the job. Therefore, it can not provide the addresses of the workers when they start.
+when it submits the job. Therefore, it can not provide this information to the workers when they start.
 Cluster resource schedulers start the workers in the nodes of the cluster. 
-When a worker starts, it needs to discover the IP addresses and port numbers of 
-the Twister2 workers in that job.
 
 **Synchronizing workers using a barrier**:
 All workers in a Twister2 job may need to synchronize on a barrier point. 
@@ -54,7 +52,7 @@ Details of the implementation is provided in [the document](../zookeeper/ZKBased
 Twister2 runs a Job Master in Twister2 jobs. 
 We also provide a Job Master based worker controller implementation.
 The worker controller class is: 
-* [edu.iu.dsc.tws.master.client.WorkerController](../../../twister2/master/src/java/edu/iu/dsc/tws/master/client/WorkerController.java)
+* [edu.iu.dsc.tws.master.client.JMWorkerController](../../../twister2/master/src/java/edu/iu/dsc/tws/master/client/JMWorkerController.java)
 
 Details of the implementation is provided in [the document](../job-master/JobMaster.md). 
 
@@ -62,7 +60,7 @@ Details of the implementation is provided in [the document](../job-master/JobMas
 We developed a worker discoverer that uses Kubernetes master 
 to discover other workers in a Twister2 job.  
 The worker discoverer class is: 
-* [edu.iu.dsc.tws.rsched.schedulers.k8s.worker.WorkerController](../../../twister2/resource-scheduler/src/java/edu/iu/dsc/tws/rsched/schedulers/k8s/worker/WorkerController.java)
+* [edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerController](../../../twister2/resource-scheduler/src/java/edu/iu/dsc/tws/rsched/schedulers/k8s/worker/K8sWorkerController.java)
 
 Details of the implementation is provided in [the document](../kubernetes/K8sBasedWorkerDiscovery.md). 
 
