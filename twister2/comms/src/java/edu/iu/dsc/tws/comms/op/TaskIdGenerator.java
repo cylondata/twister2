@@ -11,5 +11,30 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.op;
 
+import java.util.HashSet;
+import java.util.Set;
+
+/**
+ * Task ids
+ */
 public class TaskIdGenerator {
+  private int current;
+
+  public TaskIdGenerator(int start) {
+    this.current = start;
+  }
+
+  public int nextId() {
+    this.current++;
+    return current;
+  }
+
+  public Set<Integer> nextId(int number) {
+    Set<Integer> ids = new HashSet<>();
+    for (int i = 0; i < number; i++) {
+      current++;
+      ids.add(current);
+    }
+    return ids;
+  }
 }

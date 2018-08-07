@@ -25,17 +25,29 @@ public class SAllGather {
   public SAllGather(Communicator comm, TaskPlan plan,
                     Set<Integer> sources, Set<Integer> destination,
                     MessageReceiver rcvr, MessageType dataType) {
-    int middleTask = 0;
+    int middleTask = comm.nextId();
     gather = new DataFlowAllGather(comm.getChannel(), sources, destination, middleTask, rcvr,
         comm.nextEdge(), comm.nextEdge());
     gather.init(comm.getConfig(), dataType, plan, comm.nextEdge());
   }
 
-  public boolean reduce(int src, Object message, int flags) {
+  public boolean gather(int src, Object message, int flags) {
     return gather.send(src, message, flags);
   }
 
   public boolean progress() {
     return gather.progress();
+  }
+
+  public boolean hasPending() {
+    return !gather.isComplete();
+  }
+
+  public void finish(int src) {
+    gather.finish(src);
+  }
+
+  public void close() {
+    // deregister from the channel
   }
 }

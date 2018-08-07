@@ -26,7 +26,7 @@ public class SAllReduce {
   public SAllReduce(Communicator comm, TaskPlan plan,
                  Set<Integer> sources, Set<Integer> destination, ReduceFunction fnc,
                  ReduceReceiver rcvr, MessageType dataType) {
-    int middleTask = 0;
+    int middleTask = comm.nextId();
     reduce = new DataFlowAllReduce(comm.getChannel(), sources, destination, middleTask, fnc,
         rcvr, comm.nextEdge(), comm.nextEdge(), true);
     reduce.init(comm.getConfig(), dataType, plan, comm.nextEdge());
@@ -38,5 +38,17 @@ public class SAllReduce {
 
   public boolean progress() {
     return reduce.progress();
+  }
+
+  public boolean hasPending() {
+    return !reduce.isComplete();
+  }
+
+  public void finish(int src) {
+    reduce.finish(src);
+  }
+
+  public void close() {
+    // deregister from the channel
   }
 }
