@@ -4,10 +4,24 @@ package tws.proto.net;
 option java_package = "edu.iu.dsc.tws.proto.network";
 option java_outer_classname = "Network";
 
+//*****************************************************
+// a note:
+// oneof structs are added to workerID fields
+// main reason is to force the workerID to be encoded and
+// logged when its value is zero.
+// if we do not use oneof, the value zero is not logged.
+// The reason for that seems to be that zero is the default value
+// and it is not encoded and transferred.
+// it is not a pretty solution but I did it
+// for the lack of a better alternative.
+//*****************************************************
+
 // Ping message is sent by workers to the job master periodically
 // it is to show that that the workers are running
 message Ping {
-    int32 workerID = 1;
+    oneof required {
+        int32 workerID = 1;
+    }
     string pingMessage = 2;
     MessageType messageType = 3;
 
@@ -31,7 +45,9 @@ enum WorkerState {
 // then the worker has to provide its IP address and the port number
 // for other states, just the newState is enough
 message WorkerStateChange {
-    int32 workerID = 1;
+    oneof required {
+        int32 workerID = 1;
+    }
     WorkerState newState = 2;
     string workerIP = 3;
     int32 workerPort = 4;
@@ -40,7 +56,9 @@ message WorkerStateChange {
 // sent by the master to the worker
 // to inform that its state change message has been received
 message WorkerStateChangeResponse {
-    int32 workerID = 1;
+    oneof required {
+        int32 workerID = 1;
+    }
     WorkerState sentState = 2;
 }
 
@@ -51,19 +69,25 @@ message ListWorkersRequest {
         RESPONSE_AFTER_ALL_JOINED = 1;
     }
 
-    int32 workerID = 1;
+    oneof required {
+        int32 workerID = 1;
+    }
     RequestType requestType = 2;
 }
 
 // Job master returns the list of workers in a job to a worker
 message ListWorkersResponse {
     message WorkerNetworkInfo {
-        int32 id = 1;
+        oneof required {
+            int32 id = 1;
+        }
         string ip = 2;
         int32 port = 3;
     }
 
-    int32 workerID = 1;
+    oneof required {
+        int32 workerID = 1;
+    }
     repeated WorkerNetworkInfo workers = 2;
 }
 
@@ -72,9 +96,13 @@ message ListWorkersResponse {
 // Job Master will send response messages to all
 // previous request messages are quueed until the last request message is received
 message BarrierRequest {
-    int32 workerID = 1;
+    oneof required{
+        int32 workerID = 1;
+    }
 }
 
 message BarrierResponse {
-    int32 workerID = 1;
+    oneof required {
+        int32 workerID = 1;
+    }
 }
