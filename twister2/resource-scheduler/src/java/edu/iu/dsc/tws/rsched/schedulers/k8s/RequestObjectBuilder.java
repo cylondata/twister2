@@ -152,7 +152,8 @@ public final class RequestObjectBuilder {
     }
 
     if (SchedulerContext.persistentVolumeRequested(config)) {
-      String claimName = KubernetesUtils.createStorageClaimName(SchedulerContext.jobName(config));
+      String claimName =
+          KubernetesUtils.createPersistentVolumeClaimName(SchedulerContext.jobName(config));
       V1Volume persistentVolume = createPersistentVolumeObject(claimName);
       volumes.add(persistentVolume);
     }

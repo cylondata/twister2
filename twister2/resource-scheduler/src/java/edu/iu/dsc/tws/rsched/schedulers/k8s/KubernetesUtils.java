@@ -72,11 +72,11 @@ public final class KubernetesUtils {
   }
 
   /**
-   * create storage claim name name from job name
+   * create persistent volume claim name name from the job name
    * @param jobName
    * @return
    */
-  public static String createStorageClaimName(String jobName) {
+  public static String createPersistentVolumeClaimName(String jobName) {
     return KubernetesConstants.TWISTER2_STORAGE_CLAIM_PREFIX + jobName;
   }
 
