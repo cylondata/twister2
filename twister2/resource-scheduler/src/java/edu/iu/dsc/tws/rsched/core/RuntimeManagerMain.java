@@ -24,8 +24,6 @@ import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 public final class RuntimeManagerMain {
   private static final Logger LOG = Logger.getLogger(RuntimeManagerMain.class.getName());
