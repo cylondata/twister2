@@ -152,7 +152,14 @@ public final class JobMasterRequestObject {
     // construct container and add it to podSpec
     V1Container container = new V1Container();
     container.setName("twister2-job-master");
-    container.setImage(KubernetesConstants.TWISTER2_DOCKER_IMAGE);
+
+    String containerImage = KubernetesContext.twister2DockerImageForK8s(config);
+    if (containerImage == null) {
+      throw new RuntimeException("Container Image name is null. Config parameter: "
+          + "twister2.docker.image.for.kubernetes can not be null");
+    }
+    container.setImage(containerImage);
+
     // by default: IfNotPresent
     // can be set to Always from client.yaml
     container.setImagePullPolicy(KubernetesContext.imagePullPolicy(config));
