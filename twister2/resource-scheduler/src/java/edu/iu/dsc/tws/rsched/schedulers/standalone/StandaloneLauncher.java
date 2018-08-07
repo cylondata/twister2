@@ -70,6 +70,7 @@ public class StandaloneLauncher implements ILauncher {
 
     // start the Job Master locally
     JobMaster jobMaster = null;
+    Thread jmThread = null;
     if (JobMasterContext.jobMasterRunsInClient(config)) {
       try {
         int port = JobMasterContext.jobMasterPort(config);
@@ -79,7 +80,7 @@ public class StandaloneLauncher implements ILauncher {
             new JobMaster(config, hostAddress,
                 new StandaloneTerminator(), job.getJobName(),
                 port,  job.getJobResources().getNoOfContainers());
-        jobMaster.startJobMasterThreaded();
+        jmThread = jobMaster.startJobMasterThreaded();
       } catch (UnknownHostException e) {
         LOG.log(Level.SEVERE, "Exception when getting local host address: ", e);
         throw new RuntimeException(e);
@@ -88,14 +89,14 @@ public class StandaloneLauncher implements ILauncher {
 
     boolean start = controller.start(resourcePlan, job);
     // now lets wait on client
-//    if (JobMasterContext.jobMasterRunsInClient(config)) {
-//      try {
-//        if (jobMaster != null) {
-//          jobMaster.join();
-//        }
-//      } catch (InterruptedException ignore) {
-//      }
-//    }
+    if (JobMasterContext.jobMasterRunsInClient(config)) {
+      try {
+        if (jmThread != null) {
+          jmThread.join();
+        }
+      } catch (InterruptedException ignore) {
+      }
+    }
     return start;
   }
 

@@ -172,7 +172,7 @@ public class JobMaster {
   /**
    * start the Job Master in a Thread
    */
-  public void startJobMasterThreaded() {
+  public Thread startJobMasterThreaded() {
     // first call the init method
     init();
 
@@ -183,6 +183,8 @@ public class JobMaster {
     };
 
     jmThread.start();
+
+    return jmThread;
   }
 
   /**

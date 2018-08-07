@@ -128,7 +128,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
       }
     }
 
-    // start the Job Master locally
+    // start the Job Master locally if requested
     if (JobMasterContext.jobMasterRunsInClient(config)) {
       JobMaster jobMaster = null;
       try {
