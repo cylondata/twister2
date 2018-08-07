@@ -231,6 +231,16 @@ public class JobMaster {
     }
   }
 
+  public void addShutdownHook() {
+    Thread hookThread = new Thread() {
+      public void run() {
+        allWorkersCompleted();
+      }
+    };
+
+    Runtime.getRuntime().addShutdownHook(hookThread);
+  }
+
   public class ServerConnectHandler implements ConnectHandler {
     @Override
     public void onError(SocketChannel channel) {

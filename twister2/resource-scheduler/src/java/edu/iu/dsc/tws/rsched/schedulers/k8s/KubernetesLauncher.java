@@ -134,6 +134,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
       try {
         jobMaster =
             new JobMaster(config, InetAddress.getLocalHost().getHostAddress(), this, jobName);
+        jobMaster.addShutdownHook();
         jobMaster.startJobMasterBlocking();
       } catch (UnknownHostException e) {
         LOG.log(Level.SEVERE, "Exception when getting local host address: "
