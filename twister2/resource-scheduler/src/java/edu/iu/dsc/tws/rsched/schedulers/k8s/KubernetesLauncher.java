@@ -97,21 +97,6 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
       }
     }
 
-    // start the Job Master locally
-    if (JobMasterContext.jobMasterRunsInClient(config)) {
-      JobMaster jobMaster = null;
-      try {
-        jobMaster =
-            new JobMaster(config, InetAddress.getLocalHost().getHostAddress(), this, jobName);
-        jobMaster.init();
-      } catch (UnknownHostException e) {
-        LOG.log(Level.SEVERE, "Exception when getting local host address: "
-            + "\n++++++++++++++++++ Aborting submission ++++++++++++++++++", e);
-        clearupWhenSubmissionFails(jobName);
-        return false;
-      }
-    }
-
     // initialize StatefulSets for this job
     boolean statefulSetInitialized = initStatefulSets(jobName, jobFileSize);
     if (!statefulSetInitialized) {
@@ -138,6 +123,21 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
             + "or submit the job with a different name."
             + "\n++++++++++++++++++ Aborting submission ++++++++++++++++++");
 
+        clearupWhenSubmissionFails(jobName);
+        return false;
+      }
+    }
+
+    // start the Job Master locally
+    if (JobMasterContext.jobMasterRunsInClient(config)) {
+      JobMaster jobMaster = null;
+      try {
+        jobMaster =
+            new JobMaster(config, InetAddress.getLocalHost().getHostAddress(), this, jobName);
+        jobMaster.startJobMasterBlocking();
+      } catch (UnknownHostException e) {
+        LOG.log(Level.SEVERE, "Exception when getting local host address: "
+            + "\n++++++++++++++++++ Aborting submission ++++++++++++++++++", e);
         clearupWhenSubmissionFails(jobName);
         return false;
       }

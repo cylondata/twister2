@@ -93,7 +93,7 @@ public final class MesosJobMasterStarter {
                 terminator, jobName, JobMasterContext.jobMasterPort(config),
                 MesosContext.numberOfContainers(config) - 1);
         LOG.info("JobMaster host address:" + InetAddress.getLocalHost().getHostAddress());
-        jobMaster.init();
+        jobMaster.startJobMasterBlocking();
       } catch (Exception e) {
         LOG.log(Level.SEVERE, "Exception when getting local host address: ", e);
       }
