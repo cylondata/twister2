@@ -183,7 +183,7 @@ public class DataFlowAllReduce implements DataFlowOperation {
 
     @Override
     public boolean progress() {
-      return true;
+      return false;
     }
   }
 }
