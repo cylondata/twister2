@@ -52,6 +52,11 @@ public class JobMasterClient extends Thread {
 
   private int numberOfWorkers;
 
+  /**
+   * to control the connection error when we repeatedly try connecting
+   */
+  private boolean connectionRefused = false;
+
   public JobMasterClient(Config config, WorkerNetworkInfo thisWorker) {
     this(config, thisWorker, JobMasterContext.jobMasterIP(config),
         JobMasterContext.jobMasterPort(config), JobMasterContext.workerInstances(config));
@@ -72,7 +77,6 @@ public class JobMasterClient extends Thread {
     this.masterAddress = jobMasterIP;
     this.masterPort = JobMasterContext.jobMasterPort(config);
   }
-
 
   /**
    * initialize JobMasterClient
@@ -154,6 +158,11 @@ public class JobMasterClient extends Thread {
     rrClient.disconnect();
   }
 
+  /**
+   * try connecting until the time limit is reached
+   * @param timeLimit
+   * @return
+   */
   public boolean tryUntilConnected(long timeLimit) {
     long startTime = System.currentTimeMillis();
     long duration = 0;
@@ -163,10 +172,17 @@ public class JobMasterClient extends Thread {
     long logInterval = 1000;
     long nextLogTime = logInterval;
 
+    // allow the first connection attempt
+    connectionRefused = true;
+
     while (duration < timeLimit) {
       // try connecting
-      rrClient.tryConnecting();
-      // loop once to connect
+      if (connectionRefused) {
+        rrClient.tryConnecting();
+        connectionRefused = false;
+      }
+
+      // loop to connect
       looper.loop();
 
       if (rrClient.isConnected()) {
@@ -295,8 +311,9 @@ public class JobMasterClient extends Thread {
 
     @Override
     public void onConnect(SocketChannel channel, StatusCode status) {
-      // put the reason into some variable
-      // if server is not there, should try to reconnect
+      if (status == StatusCode.CONNECTION_REFUSED) {
+        connectionRefused = true;
+      }
     }
 
     @Override

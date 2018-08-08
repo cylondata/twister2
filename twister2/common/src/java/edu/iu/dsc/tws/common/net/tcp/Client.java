@@ -203,6 +203,7 @@ public class Client implements SelectHandler {
       if (tryConnectFlag && "Connection refused".equalsIgnoreCase(e.getMessage())) {
 //        LOG.severe("java.net.ConnectException message: " + e.getMessage());
         tryConnectFlag = false;
+        channelHandler.onConnect(socketChannel, StatusCode.CONNECTION_REFUSED);
         return;
       }
     } catch (IOException e) {
