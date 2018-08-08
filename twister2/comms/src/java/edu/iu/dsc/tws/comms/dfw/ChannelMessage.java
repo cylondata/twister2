@@ -56,11 +56,21 @@ public class ChannelMessage {
   private MessageHeader header;
 
   /**
-   * Keeps track of whether buffer containing the buffer was sent or not
+   * Keeps track of whether header of the object contained in the buffer was sent or not.
+   * This is only used when a message is broken down into several buffers and each buffer is sent
+   * separately
    */
   private boolean headerSent;
+
   /**
-   * Keep weather the message has been fully built
+   * Keep whether the current message is a partial object. This depends on whether all the data
+   * is copied into the buffers or not. This is used when large messages are broken down into
+   * several smaller messages
+   */
+  private boolean isPartial;
+
+  /**
+   * Keep whether the message has been fully built
    */
   private boolean complete = false;
 
@@ -273,4 +283,11 @@ public class ChannelMessage {
     this.headerSent = headerSent;
   }
 
+  public boolean isPartial() {
+    return isPartial;
+  }
+
+  public void setPartial(boolean partial) {
+    isPartial = partial;
+  }
 }
