@@ -25,7 +25,17 @@ public class SAllGather {
   public SAllGather(Communicator comm, TaskPlan plan,
                     Set<Integer> sources, Set<Integer> destination,
                     MessageReceiver rcvr, MessageType dataType) {
+    if (sources.size() == 0) {
+      throw new IllegalArgumentException("The sources cannot be empty");
+    }
+
+    if (destination.size() == 0) {
+      throw new IllegalArgumentException("The destination cannot be empty");
+    }
     int middleTask = comm.nextId();
+
+    int firstSource = sources.iterator().next();
+    plan.addChannelToExecutor(plan.getExecutorForChannel(firstSource), middleTask);
     gather = new DataFlowAllGather(comm.getChannel(), sources, destination, middleTask, rcvr,
         comm.nextEdge(), comm.nextEdge());
     gather.init(comm.getConfig(), dataType, plan, comm.nextEdge());

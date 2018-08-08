@@ -107,13 +107,17 @@ public class DataFlowAllGather implements DataFlowOperation {
   @Override
   public synchronized boolean progress() {
     try {
-      broadcast.progress();
-      reduce.progress();
+      boolean bCastProgress = broadcast.progress();
+      boolean reduceProgress = reduce.progress();
+      return bCastProgress || reduceProgress;
     } catch (Throwable t) {
       LOG.log(Level.SEVERE, "un-expected error", t);
       throw new RuntimeException(t);
     }
-    return true;
+  }
+
+  public boolean isComplete() {
+    return reduce.isComplete() && broadcast.isComplete();
   }
 
   @Override

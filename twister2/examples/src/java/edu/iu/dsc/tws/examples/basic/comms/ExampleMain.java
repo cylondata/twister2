@@ -12,6 +12,8 @@
 package edu.iu.dsc.tws.examples.basic.comms;
 
 import java.util.HashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -28,6 +30,7 @@ import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.basic.comms.batch.BGatherExample;
 import edu.iu.dsc.tws.examples.basic.comms.batch.BPartitionExample;
 import edu.iu.dsc.tws.examples.basic.comms.batch.BReduceExample;
+import edu.iu.dsc.tws.examples.basic.comms.stream.SAllReduceExample;
 import edu.iu.dsc.tws.examples.basic.comms.stream.SBroadcastExample;
 import edu.iu.dsc.tws.examples.basic.comms.stream.SGatherExample;
 import edu.iu.dsc.tws.examples.basic.comms.stream.SPartitionExample;
@@ -36,6 +39,8 @@ import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 
 public class ExampleMain {
+  private static final Logger LOG = Logger.getLogger(ExampleMain.class.getName());
+
   public static void main(String[] args) throws ParseException {
     // first load the configurations from command line and config files
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
@@ -186,6 +191,18 @@ public class ExampleMain {
           // now submit the job
           Twister2Submitter.submitContainerJob(basicJob, config);
           break;
+        case "allreduce":
+          basicJob = BasicJob.newBuilder()
+              .setName("allreduce-stream-bench")
+              .setContainerClass(SAllReduceExample.class.getName())
+              .setRequestResource(new ResourceContainer(2, 1024), containers)
+              .setConfig(jobConfig)
+              .build();
+          // now submit the job
+          Twister2Submitter.submitContainerJob(basicJob, config);
+          break;
+        default:
+          LOG.log(Level.SEVERE, "Un-supported operation: " + operation);
       }
     }
   }

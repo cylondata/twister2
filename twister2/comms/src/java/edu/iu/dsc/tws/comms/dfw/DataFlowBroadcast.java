@@ -185,14 +185,12 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
   @Override
   public boolean send(int src, Object message, int flags) {
     RoutingParameters routingParameters = sendRoutingParameters(src, 0);
-//    LOG.info("Bcast send down 1: " + routingParameters);
     return delegete.sendMessage(src, message, 0, flags, routingParameters);
   }
 
   @Override
   public boolean send(int src, Object message, int flags, int dest) {
     RoutingParameters routingParameters = sendRoutingParameters(src, 0);
-//    LOG.info("Bcast sedn down 2: " + routingParameters);
     return delegete.sendMessage(src, message, dest, flags, routingParameters);
   }
 
