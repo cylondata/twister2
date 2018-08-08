@@ -157,14 +157,15 @@ public class JobMasterClient extends Thread {
   public boolean tryUntilConnected(long timeLimit) {
     long startTime = System.currentTimeMillis();
     long duration = 0;
-    long sleepInterval = 30;
+    long sleepInterval = 50;
 
+    // log interval in milliseconds
     long logInterval = 1000;
     long nextLogTime = logInterval;
 
     while (duration < timeLimit) {
       // try connecting
-      rrClient.connect();
+      rrClient.tryConnecting();
       // loop once to connect
       looper.loop();
 
@@ -185,7 +186,7 @@ public class JobMasterClient extends Thread {
       duration = System.currentTimeMillis() - startTime;
 
       if (duration > nextLogTime) {
-        LOG.info("Still trying to connect to Job Master");
+        LOG.info("Still trying to connect to the Job Master: " + masterAddress + ":" + masterPort);
         nextLogTime += logInterval;
       }
     }
