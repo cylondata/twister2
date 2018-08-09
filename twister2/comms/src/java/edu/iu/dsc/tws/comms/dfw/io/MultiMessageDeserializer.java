@@ -157,7 +157,7 @@ public class MultiMessageDeserializer implements MessageDeSerializer {
           length, type);
     } else {
       Pair<Integer, Object> keyPair = KeyDeserializer.
-          getKeyAsByteBuffer(channelMessage.getKeyType(),
+          getKeyAsByteArray(channelMessage.getKeyType(),
               message);
       byte[] data = DataDeserializer.getAsByteBuffer(message,
           length - keyPair.getKey(), type);

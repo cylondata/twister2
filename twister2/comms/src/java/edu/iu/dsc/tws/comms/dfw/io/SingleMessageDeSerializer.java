@@ -100,7 +100,7 @@ public class SingleMessageDeSerializer implements MessageDeSerializer {
     } else {
 
       Pair<Integer, Object> keyPair = KeyDeserializer.
-          getKeyAsByteBuffer(message.getKeyType(),
+          getKeyAsByteArray(message.getKeyType(),
               message.getBuffers());
       MessageType keyType = message.getKeyType();
       Object data;
