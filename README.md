@@ -15,3 +15,4 @@ We use Jira for tracking the progress of twister2.
 
 The google groups mailing list can be used to ask questions and discussions "twister2@googlegroups.com"
 
+![Alt text](docs/documents/img/twister2_architecture.png?raw=true "Title")
