@@ -547,10 +547,11 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
           lock.lock();
           try {
             if (!outMessage.isOutCountUpdated()) {
-              outMessage.getChannelMessage().incrementRefCount(
+              sendCopy.incrementRefCount(
                   outMessage.getExternalSends().size());
               outMessage.setOutCountUpdated(true);
             }
+
             for (int i = startOfExternalRouts; i < exRoutes.size(); i++) {
               boolean sendAccepted = sendMessageToTarget(sendCopy, exRoutes.get(i));
               // if no longer accepts stop
@@ -561,6 +562,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
               }
             }
           } finally {
+            outMessage.setOutCountUpdated(false);
             lock.unlock();
           }
           //send and remove buffers from object
