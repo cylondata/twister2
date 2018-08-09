@@ -78,6 +78,10 @@ public class SinkBatchInstance implements INodeInstance {
    * All Receiving Done
    */
 
+  private int expectedMessages = 1;
+
+  private int receivedMessageCount = 0;
+
   private boolean receiveDone = false;
 
   public SinkBatchInstance(ISink batchTask, BlockingQueue<IMessage> batchInQueue, Config config,
@@ -105,12 +109,17 @@ public class SinkBatchInstance implements INodeInstance {
 
   public boolean execute() {
     //System.out.println("SinkBatchInstance exec");
-    receiveDone = false;
     while (!batchInQueue.isEmpty()) {
       IMessage m = batchInQueue.poll();
-      System.out.println("SinkBatchInstance Message Sent : " + m.getContent());
       batchTask.execute(m);
-      receiveDone = true;
+      receivedMessageCount++;
+      System.out.println("SinkBatchInstance Message Sent : " + m.getContent()
+          + ", Count : " + receivedMessageCount);
+      if (receivedMessageCount == expectedMessages) {
+        receiveDone = true;
+      } else {
+        receiveDone = false;
+      }
     }
     return receiveDone;
   }
@@ -122,7 +131,6 @@ public class SinkBatchInstance implements INodeInstance {
         allDone = false;
       }
     }
-
     return allDone;
   }
 

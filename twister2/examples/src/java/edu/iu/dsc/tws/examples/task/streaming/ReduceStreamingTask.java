@@ -59,7 +59,8 @@ public class ReduceStreamingTask implements IContainer {
     builder.setParallelism("source", 4);
     builder.addSink("sink", r);
     builder.setParallelism("sink", 1);
-    builder.connect("source", "sink", "reduce-edge", CommunicationOperationType.STREAMING_REDUCE);
+    builder.connect("source", "sink", "reduce-edge",
+        CommunicationOperationType.STREAMING_REDUCE);
     builder.operationMode(OperationMode.STREAMING);
 
 
@@ -74,8 +75,9 @@ public class ReduceStreamingTask implements IContainer {
     TWSNetwork network = new TWSNetwork(config, resourcePlan.getThisId());
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);
     ExecutionPlan plan = executionPlanBuilder.execute(config, graph, taskSchedulePlan);
-    ExecutionModel executionModel = new ExecutionModel(ExecutionModel.SHARED);
-    ThreadExecutor executor = new ThreadExecutor(executionModel, plan, network.getChannel());
+    ExecutionModel executionModel = new ExecutionModel(ExecutionModel.SHARING);
+    ThreadExecutor executor = new ThreadExecutor(executionModel, plan, network.getChannel(),
+        OperationMode.STREAMING);
     executor.execute();
   }
 

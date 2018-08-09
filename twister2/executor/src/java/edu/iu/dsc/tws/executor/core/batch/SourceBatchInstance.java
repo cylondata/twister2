@@ -144,45 +144,49 @@ public class SourceBatchInstance implements INodeInstance, INodeInstanceListener
    **/
   public boolean execute() {
 
-    batchTask.run();
-    /**
-     * TODO : Use CONTEXTLISTENERS FOR OTHER PURPOSES
-     * */
+    if (batchTask != null) {
+      batchTask.run();
 
-    SourceBatchTask sourceBatchTask = (SourceBatchTask) batchTask;
-    sourceBatchTask.interrupt();
-    TaskContext context = sourceBatchTask.getSourceTaskContextListener()
-        .getInstanceBatchContextMap().get(sourceBatchTask);
-    this.isDone = context.isDone();
+      /**
+       * TODO : Use CONTEXTLISTENERS FOR OTHER PURPOSES
+       * */
 
-    /*
-     *
-     * **/
+      SourceBatchTask sourceBatchTask = (SourceBatchTask) batchTask;
+      sourceBatchTask.interrupt();
+      TaskContext context = sourceBatchTask.getSourceTaskContextListener()
+          .getInstanceBatchContextMap().get(sourceBatchTask);
+      this.isDone = context.isDone();
 
-    // now check the output queue
-    while (!outBatchQueue.isEmpty()) {
+      /*
+       *
+       ***/
 
-      IMessage message = outBatchQueue.poll();
-      if (message != null) {
-        String edge = message.edge();
-        IParallelOperation op = outBatchParOps.get(edge);
-        if (message.getContent().equals(MessageFlags.LAST_MESSAGE)) {
-          System.out.println("SBI: Final Message");
-          while (!op.send(batchTaskId, message, MessageFlags.FLAGS_LAST)) {
-            //
+      // now check the output queue
+      while (!outBatchQueue.isEmpty()) {
+
+        IMessage message = outBatchQueue.poll();
+        if (message != null) {
+          String edge = message.edge();
+          IParallelOperation op = outBatchParOps.get(edge);
+          if (message.getContent().equals(MessageFlags.LAST_MESSAGE)) {
+            System.out.println("SBI: Final Message");
+            while (!op.send(batchTaskId, message, MessageFlags.FLAGS_LAST)) {
+              //
+            }
+            //op.communicationProgress();
+            this.isFinish = true;
+            System.out.println("SBI: Last Message was Sent : " + this.isFinish);
+          } else {
+            System.out.println("SBI: Sending Message : " + message.getContent());
+            while (!op.send(batchTaskId, message, 0)) {
+              //
+            }
+            //op.communicationProgress();
           }
-          //op.communicationProgress();
-          this.isFinish = true;
-          System.out.println("SBI: Last Message was Sent : " + this.isFinish);
-        } else {
-          System.out.println("SBI: Sending Message : " + message.getContent());
-          while (!op.send(batchTaskId, message, 0)) {
-            //
-          }
-          //op.communicationProgress();
         }
       }
     }
+
     return this.isFinish;
   }
 

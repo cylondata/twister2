@@ -30,14 +30,17 @@ import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.core.batch.SinkBatchInstance;
 import edu.iu.dsc.tws.executor.core.batch.SourceBatchInstance;
+import edu.iu.dsc.tws.task.graph.OperationMode;
 
 
 public class ThreadSharingExecutor extends ThreadExecutor {
@@ -59,27 +62,29 @@ public class ThreadSharingExecutor extends ThreadExecutor {
 
   private ExecutionPlan executionPlan;
 
+  private TWSChannel channel;
+
+  private OperationMode operationMode;
+
   private boolean executorState = true;
 
-  private boolean sourceExecutionDone = false;
+  private AtomicBoolean sourceExecutionDone = new AtomicBoolean();
 
-  private boolean sinkExecutionDone = false;
+  private AtomicBoolean sinkExecutionDone = new AtomicBoolean();
 
-  private boolean sourceCommunicationDone = false;
+  private AtomicBoolean sourceCommunicationDone = new AtomicBoolean();
 
-  private boolean sinkCommunicationDone = false;
-
-  private boolean exitClause = false;
+  private AtomicBoolean sinkCommunicationDone = new AtomicBoolean();
 
   private final Lock lock = new ReentrantLock();
 
   private int totalTasks = 0;
 
-  private int finishedTaskNo = 0;
+  private AtomicBoolean isExecutionFinished = new AtomicBoolean();
 
-  private boolean isExecutionFinished = false;
+  private HashMap<Integer, AtomicBoolean> taskList = new HashMap<>();
 
-  private HashMap<Integer, Boolean> taskList = new HashMap<>();
+  private HashMap<INodeInstance, Integer> instanceTaskIdMap = new HashMap<>();
 
   private static int totalTaskCount;
 
@@ -94,6 +99,28 @@ public class ThreadSharingExecutor extends ThreadExecutor {
   public ThreadSharingExecutor(ExecutionPlan executionPlan) {
     this.executionPlan = executionPlan;
     confinishedTasks = new ConcurrentHashMap<>();
+    sourceCommunicationDone.set(false);
+    sourceExecutionDone.set(false);
+    sinkExecutionDone.set(false);
+    sinkCommunicationDone.set(false);
+  }
+
+  public ThreadSharingExecutor(ExecutionPlan executionPlan, TWSChannel channel) {
+    this.executionPlan = executionPlan;
+    this.channel = channel;
+    confinishedTasks = new ConcurrentHashMap<>();
+    sourceCommunicationDone.set(false);
+    sourceExecutionDone.set(false);
+    sinkExecutionDone.set(false);
+    sinkCommunicationDone.set(false);
+    isExecutionFinished.set(false);
+  }
+
+  public ThreadSharingExecutor(ExecutionPlan executionPlan, TWSChannel channel,
+                               OperationMode operationMode) {
+    this.executionPlan = executionPlan;
+    this.channel = channel;
+    this.operationMode = operationMode;
   }
 
   // TODO : Create Separate SourceWorker and SinkWorker and run the node instances separately
@@ -102,6 +129,44 @@ public class ThreadSharingExecutor extends ThreadExecutor {
   @Override
   public boolean execute() {
     // go through the instances
+    System.out.println("Operation Mode : " + this.operationMode);
+    if (this.operationMode == OperationMode.BATCH) {
+      return batchExecute();
+    }
+
+    if (this.operationMode == OperationMode.STREAMING) {
+      return streamExecute();
+    }
+
+    return false;
+  }
+
+  public boolean streamExecute() {
+
+    Map<Integer, INodeInstance> nodes = executionPlan.getNodes();
+    tasks = new ArrayBlockingQueue<>(nodes.size() * 2);
+    tasks.addAll(nodes.values());
+
+    for (INodeInstance node : tasks) {
+      node.prepare();
+    }
+
+    for (int i = 0; i < tasks.size(); i++) {
+      Thread t = new Thread(new StreamWorker());
+      t.setName("Thread-" + tasks.getClass().getSimpleName() + "-" + i);
+      t.start();
+      threads.add(t);
+    }
+
+    progressStreamComm();
+
+    return true;
+  }
+
+  /**
+   * Execution Method for Batch Tasks
+   * */
+  public boolean batchExecute() {
     Map<Integer, INodeInstance> nodes = executionPlan.getNodes();
     tasks = new ArrayBlockingQueue<>(nodes.size() * 2);
     tasks.addAll(nodes.values());
@@ -110,50 +175,80 @@ public class ThreadSharingExecutor extends ThreadExecutor {
 
     for (INodeInstance node : tasks) {
       node.prepare();
+      AtomicBoolean initBool = new AtomicBoolean();
+      initBool.set(false);
+
       if (node instanceof SourceBatchInstance) {
-        taskList.put(((SourceBatchInstance) node).getBatchTaskId(), false);
+        int taskId = ((SourceBatchInstance) node).getBatchTaskId();
+        taskList.put(taskId, initBool);
+        instanceTaskIdMap.put(node, taskId);
       }
 
       if (node instanceof SinkBatchInstance) {
-        taskList.put(((SinkBatchInstance) node).getBatchTaskId(), false);
+        int taskId = ((SinkBatchInstance) node).getBatchTaskId();
+        taskList.put(taskId, initBool);
+        instanceTaskIdMap.put(node, taskId);
       }
+
     }
 
-    for (int i = 0; i < tasks.size(); i++) {
-      Thread t = new Thread(new Worker());
+    int curTaskSize = tasks.size();
+    BatchWorker[] workers = new BatchWorker[curTaskSize];
+
+    for (int i = 0; i < curTaskSize; i++) {
+      workers[i] = new BatchWorker();
+      Thread t = new Thread(workers[i]);
       t.setName("Thread-From-ReduceBatchTask : " + i);
       t.start();
       threads.add(t);
     }
 
+    progressBatchComm();
 
-    // finishedTaskNo != totalTasks
-   /* while (tasks.size() > 0) {
-      //System.out.println("Task Progress : " + finishedTaskNo + "/" + totalTasks);
-      INodeInstance iNodeInstance = tasks.poll();
-      if (iNodeInstance != null) {
-        if (iNodeInstance instanceof SourceBatchInstance) {
-          SourceBatchInstance sourceBatchInstance = (SourceBatchInstance) iNodeInstance;
-          Thread sourceWorkerThread
-              = new Thread(new SourceWorker(sourceBatchInstance));
-          sourceWorkerThread.start();
-        }
-
-        if (iNodeInstance instanceof SinkBatchInstance) {
-          Thread sinkWorkerThread = new Thread(new SinkWorker((SinkBatchInstance) iNodeInstance));
-          sinkWorkerThread.start();
-        }
-
-        tasks.offer(iNodeInstance);
-      }
-    }*/
-
-    return isExecutionFinished;
+    return isDone();
   }
 
-  protected class Worker implements Runnable {
+
+
+  public void progressBatchComm() {
+    while (!isDone()) {
+      this.channel.progress();
+    }
+  }
+
+  public void progressStreamComm() {
+    while (true) {
+      this.channel.progress();
+    }
+  }
+
+  public synchronized boolean isDone() {
+    boolean isDone = false;
+    lock.lock();
+    try {
+      isDone = sinkCommunicationDone.get()
+          && sinkExecutionDone.get()
+          && sourceExecutionDone.get()
+          && sourceCommunicationDone.get()
+          && isExecutionFinished.get();
+    /*System.out.println("SinkCom :  " + sinkCommunicationDone.get() + ", SinkExec : "
+        + sinkExecutionDone.get() + ", SrcExec : " + sourceExecutionDone.get()
+        + ", SrcCom : " + sourceCommunicationDone.get() + ", isExecF : "
+        + isExecutionFinished.get());*/
+    } finally {
+      lock.unlock();
+    }
+
+    return isDone;
+  }
+
+
+  protected class BatchWorker implements Runnable {
 
     private int finishedTasks = 0;
+
+    private AtomicBoolean currentThreadStatus = new AtomicBoolean();
+    private Object object = null;
 
     @Override
     public void run() {
@@ -165,56 +260,60 @@ public class ThreadSharingExecutor extends ThreadExecutor {
         if (nodeInstance != null) {
           if (nodeInstance instanceof SourceBatchInstance) {
             SourceBatchInstance sourceBatchInstance = (SourceBatchInstance) nodeInstance;
-            sourceExecutionDone = sourceBatchInstance.execute();
-            sourceCommunicationDone = sourceBatchInstance.communicationProgress();
-            /*System.out.println("Src :" + nodeInstance + " Comms : " + sourceCommunicationDone
-                + ", Exec : " + sourceExecutionDone);*/
-            if (sourceExecutionDone && sourceCommunicationDone) {
-              taskList.put(sourceBatchInstance.getBatchTaskId(), true);
-              /*System.out.println("Src => Exec : " + sourceExecutionDone + ", Comms : "
-                  + sourceCommunicationDone + ", Worker Id : " + sourceBatchInstance.getWorkerId()
-                  + ", BatchTaskId : " + sourceBatchInstance.getBatchTaskId() + ", BT Index : "
-                  + sourceBatchInstance.getBatchTaskIndex() + ", BatchTaskName : "
-                  + sourceBatchInstance.getBatchTaskName());*/
+            sourceExecutionDone.set(sourceBatchInstance.execute());
+            sourceCommunicationDone.set(sourceBatchInstance.communicationProgress());
+
+            if (sourceExecutionDone.get() && sourceCommunicationDone.get()) {
+              AtomicBoolean condition = new AtomicBoolean();
+              condition.set(true);
+              taskList.put(sourceBatchInstance.getBatchTaskId(), condition);
             }
+            tasks.offer(sourceBatchInstance);
           }
 
           if (nodeInstance instanceof SinkBatchInstance) {
             SinkBatchInstance sinkBatchInstance = (SinkBatchInstance) nodeInstance;
-            sinkExecutionDone = sinkBatchInstance.execute();
-            sinkCommunicationDone = sinkBatchInstance.commuinicationProgress();
-            /*System.out.println("Src :" + nodeInstance + " Comms : " + sourceCommunicationDone
-                + ", Exec : " + sourceExecutionDone);*/
-            if (sinkCommunicationDone && sinkExecutionDone) {
-              taskList.put(sinkBatchInstance.getBatchTaskId(), true);
-              /*System.out.println("Sink => Exec : " + sinkExecutionDone + ", Comms : "
-                  + sinkCommunicationDone + ", Worker Id : " + sinkBatchInstance.getWorkerId()
-                  + ", BatchTaskId : " + sinkBatchInstance.getBatchTaskId() + ", BT Index : "
-                  + sinkBatchInstance.getBatchTaskIndex() + ", BatchTaskName : "
-                  + sinkBatchInstance.getTaskName());*/
+            sinkExecutionDone.set(sinkBatchInstance.execute());
+            sinkCommunicationDone.set(sinkBatchInstance.commuinicationProgress());
+
+            if (sinkCommunicationDone.get() && sinkExecutionDone.get()) {
+              AtomicBoolean condition = new AtomicBoolean();
+              condition.set(true);
+              taskList.put(sinkBatchInstance.getBatchTaskId(), condition);
             }
-          }
-          int completedTasks = 0;
-          for (Map.Entry<Integer, Boolean> e : taskList.entrySet()) {
-            if (e.getValue()) {
-              completedTasks++;
-            } else {
-              //
-            }
+            tasks.offer(sinkBatchInstance);
           }
 
-          if (completedTasks == taskList.size()) {
-            isExecutionFinished = true;
-            /*System.out.println("Tasks " + completedTasks + "/" + taskList.size()
-                + "," + totalTasks);*/
-          } else {
-            tasks.offer(nodeInstance);
+          boolean allDone = true;
+          for (Map.Entry<Integer, AtomicBoolean> e : taskList.entrySet()) {
+            //System.out.println("Task : " + e.getKey() + ", Value : " + e.getValue().get());
+            if (!e.getValue().get()) {
+              allDone = false;
+            }
           }
-
+          isExecutionFinished.set(allDone);
         }
+      }
+    }
 
+    public synchronized AtomicBoolean getCurrentThreadStatus() throws InterruptedException {
+      System.out.println("Getting current status from thread ...");
+      while (object == null) {
+        wait();
+      }
+      System.out.println("Got the current status from thread");
+      return currentThreadStatus;
+    }
+  }
 
+  protected class StreamWorker implements Runnable {
 
+    @Override
+    public void run() {
+      while (true) {
+        INodeInstance nodeInstance = tasks.poll();
+        nodeInstance.execute();
+        tasks.offer(nodeInstance);
       }
     }
   }

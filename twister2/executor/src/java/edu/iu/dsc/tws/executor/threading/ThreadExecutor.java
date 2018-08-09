@@ -11,10 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.threading;
 
+import java.util.concurrent.locks.ReentrantLock;
+
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.executor.api.ExecutionModel;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.api.IThreadExecutor;
+import edu.iu.dsc.tws.task.graph.OperationMode;
 
 public class ThreadExecutor implements IThreadExecutor {
 
@@ -24,9 +27,13 @@ public class ThreadExecutor implements IThreadExecutor {
 
   private TWSChannel channel;
 
+  private OperationMode operationMode;
+
   private boolean progress = true;
 
   private boolean isExecutionFinished = false;
+
+  private ReentrantLock lock = new ReentrantLock();
 
   public ThreadExecutor() {
 
@@ -44,6 +51,14 @@ public class ThreadExecutor implements IThreadExecutor {
     this.channel = channel;
   }
 
+  public ThreadExecutor(ExecutionModel executionModel, ExecutionPlan executionPlan,
+                        TWSChannel channel, OperationMode operationMode) {
+    this.executionModel = executionModel;
+    this.executionPlan = executionPlan;
+    this.channel = channel;
+    this.operationMode = operationMode;
+  }
+
   /***
    * Communication Channel must be progressed after the task execution model
    * is initialized. It must be progressed only after execution is instantiated.
@@ -52,11 +67,10 @@ public class ThreadExecutor implements IThreadExecutor {
   public boolean execute() {
     // lets start the execution
     ThreadExecutorFactory threadExecutorFactory = new ThreadExecutorFactory(executionModel,
-        this, executionPlan);
+        this, executionPlan, channel, operationMode);
     isExecutionFinished = threadExecutorFactory.execute();
-    if (progress && !isExecutionFinished) {
-      progressComms();
-    }
+    System.out.println("All Execution Finished : " + isExecutionFinished);
+    //progressComms();
     return isExecutionFinished;
   }
 

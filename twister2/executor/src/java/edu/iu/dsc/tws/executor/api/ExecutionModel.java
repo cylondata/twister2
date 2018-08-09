@@ -33,6 +33,7 @@ public class ExecutionModel {
 
   public static final java.lang.String DEDICATED = "dedicated";
   public static final java.lang.String SHARED = "shared";
+  public static final java.lang.String SHARING = "sharing";
 
   public String getExecutionModel() {
     return executionModel;
