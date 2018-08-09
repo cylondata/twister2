@@ -21,7 +21,6 @@ import edu.iu.dsc.tws.executor.api.DefaultOutputCollection;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.INodeInstanceListener;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
-import edu.iu.dsc.tws.executor.comm.tasks.batch.SourceBatchTask;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.ISource;
 import edu.iu.dsc.tws.task.api.OutputCollection;
@@ -146,21 +145,6 @@ public class SourceBatchInstance implements INodeInstance, INodeInstanceListener
 
     if (batchTask != null) {
       batchTask.run();
-
-      /**
-       * TODO : Use CONTEXTLISTENERS FOR OTHER PURPOSES
-       * */
-
-      SourceBatchTask sourceBatchTask = (SourceBatchTask) batchTask;
-      sourceBatchTask.interrupt();
-      TaskContext context = sourceBatchTask.getSourceTaskContextListener()
-          .getInstanceBatchContextMap().get(sourceBatchTask);
-      this.isDone = context.isDone();
-
-      /*
-       *
-       ***/
-
       // now check the output queue
       while (!outBatchQueue.isEmpty()) {
 
@@ -169,15 +153,12 @@ public class SourceBatchInstance implements INodeInstance, INodeInstanceListener
           String edge = message.edge();
           IParallelOperation op = outBatchParOps.get(edge);
           if (message.getContent().equals(MessageFlags.LAST_MESSAGE)) {
-            System.out.println("SBI: Final Message");
             while (!op.send(batchTaskId, message, MessageFlags.FLAGS_LAST)) {
               //
             }
             //op.communicationProgress();
             this.isFinish = true;
-            System.out.println("SBI: Last Message was Sent : " + this.isFinish);
           } else {
-            System.out.println("SBI: Sending Message : " + message.getContent());
             while (!op.send(batchTaskId, message, 0)) {
               //
             }

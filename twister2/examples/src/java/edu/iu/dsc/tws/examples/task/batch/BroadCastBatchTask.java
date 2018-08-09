@@ -33,9 +33,9 @@ import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
-import edu.iu.dsc.tws.examples.task.streaming.BroadCastStreamingTask;
 import edu.iu.dsc.tws.executor.api.ExecutionModel;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.executor.core.CommunicationOperationType;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.ThreadExecutor;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -44,19 +44,19 @@ import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.Operations;
 import edu.iu.dsc.tws.task.api.SinkTask;
 import edu.iu.dsc.tws.task.api.SourceTask;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
+import edu.iu.dsc.tws.task.graph.OperationMode;
 import edu.iu.dsc.tws.tsched.roundrobin.RoundRobinTaskScheduling;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 public class BroadCastBatchTask implements IContainer {
-  private static final Logger LOG = Logger.getLogger(BroadCastStreamingTask.class.getName());
+  private static final Logger LOG = Logger.getLogger(BroadCastBatchTask.class.getName());
 
   @Override
   public void init(Config config, int id, ResourcePlan resourcePlan) {
@@ -68,8 +68,9 @@ public class BroadCastBatchTask implements IContainer {
     builder.setParallelism("source", 1);
     builder.addSink("sink", r);
     builder.setParallelism("sink", 4);
-    builder.connect("source", "sink", "broadcast-edge", Operations.BROADCAST);
-
+    builder.connect("source", "sink", "broadcast-edge",
+        CommunicationOperationType.BATCH_BROADCAST);
+    builder.operationMode(OperationMode.BATCH);
     DataFlowTaskGraph graph = builder.build();
 
     RoundRobinTaskScheduling roundRobinTaskScheduling = new RoundRobinTaskScheduling();
@@ -82,7 +83,8 @@ public class BroadCastBatchTask implements IContainer {
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);
     ExecutionPlan plan = executionPlanBuilder.execute(config, graph, taskSchedulePlan);
     ExecutionModel executionModel = new ExecutionModel(ExecutionModel.SHARED);
-    ThreadExecutor executor = new ThreadExecutor(executionModel, plan, network.getChannel());
+    ThreadExecutor executor = new ThreadExecutor(executionModel, plan, network.getChannel(),
+        OperationMode.BATCH);
     executor.execute();
   }
 
@@ -114,10 +116,9 @@ public class BroadCastBatchTask implements IContainer {
 
     @Override
     public boolean execute(IMessage message) {
-      if (counter % 1000000 == 0) {
-        System.out.println(ctx.taskId() + " Message Braodcasted : "
-            + message.getContent() + ", counter : " + counter);
-      }
+
+      System.out.println(" Message Braodcasted : "
+          + message.getContent() + ", counter : " + counter);
       counter++;
       return true;
     }
@@ -152,7 +153,7 @@ public class BroadCastBatchTask implements IContainer {
 
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
     jobBuilder.setName("broadcast-task");
-    jobBuilder.setContainerClass(BroadCastStreamingTask.class.getName());
+    jobBuilder.setContainerClass(BroadCastBatchTask.class.getName());
     jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 

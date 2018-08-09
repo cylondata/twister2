@@ -112,14 +112,7 @@ public class SinkBatchInstance implements INodeInstance {
     while (!batchInQueue.isEmpty()) {
       IMessage m = batchInQueue.poll();
       batchTask.execute(m);
-      receivedMessageCount++;
-      System.out.println("SinkBatchInstance Message Sent : " + m.getContent()
-          + ", Count : " + receivedMessageCount);
-      if (receivedMessageCount == expectedMessages) {
-        receiveDone = true;
-      } else {
-        receiveDone = false;
-      }
+      receiveDone = true;
     }
     return receiveDone;
   }
