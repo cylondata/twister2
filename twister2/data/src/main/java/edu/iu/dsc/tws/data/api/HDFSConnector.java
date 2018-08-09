@@ -188,7 +188,7 @@ public class HDFSConnector implements IHDFSConnector {
     return datanodeName;
   }
 
-  public int lengthOfFile(String fName) {
+  public int getLengthOfFile(String fName) {
     int length = 0;
     String fileName = HdfsDataContext.getHdfsDataDirectory(config) + "/" + fName;
     String directoryString = HdfsDataContext.getHdfsUrlDefault(config) + fileName;
