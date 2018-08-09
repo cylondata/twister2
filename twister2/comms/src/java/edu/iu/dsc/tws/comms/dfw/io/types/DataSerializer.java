@@ -24,7 +24,16 @@ public final class DataSerializer {
   }
 
   /**
-   * Serialize the key and set it to the state
+   * This method returns the length of the message object in bytes. If the message is of a primitive
+   * type the length is calculated and returned (no serialization happens). If the message needs to
+   * be serialized the message is serialized and the length is returned. The serialized content is
+   * saved in the state object to make sure the same message is not serialized twice
+   *
+   * @param content the message that needs to be serialized
+   * @param type the type of the message
+   * @param state the state object used to save the message state
+   * @param serializer the serializer to be used if the object needs to be serialized
+   * @return the length of the message
    */
   public static int serializeData(Object content, MessageType type,
                                   SerializeState state, KryoSerializer serializer) {
@@ -65,27 +74,23 @@ public final class DataSerializer {
     return 0;
   }
 
-  @SuppressWarnings("unchecked")
-  private static byte[] getBytes(Object data) {
-    List<byte[]> dataValues = (List<byte[]>) data;
-    byte[] dataBytes = new byte[dataValues.size() * dataValues.get(0).length];
-    int offset = 0;
-    for (byte[] bytes : dataValues) {
-      System.arraycopy(bytes, 0, dataBytes, offset, bytes.length);
-      offset += bytes.length;
-    }
-    return dataBytes;
-    //TODO check if the commented getMessageBytes is faster
-  }
-
   /**
-   * Copy the key to the buffer
+   * Copies the serialized message into the target buffer that is passed to the method
+   * if the message is not already serialized, the message will be serialized before it is copied
+   * to the buffer.
+   *
+   * @param data message that needs to be copied to the buffer
+   * @param messageType type of the message
+   * @param targetBuffer target buffer to which the data is copied
+   * @param state state object that keeps the state of the message
+   * @param serializer the serializer to be used if the object needs to be serialized
+   * @return true if the message is copied successfully, false otherwise.
    */
-  public static boolean copyDataToBuffer(Object data, MessageType keyType,
+  public static boolean copyDataToBuffer(Object data, MessageType messageType,
                                          ByteBuffer targetBuffer, SerializeState state,
                                          KryoSerializer serializer) {
     // LOG.info(String.format("%d copy key: %d", executor, targetBuffer.position()));
-    switch (keyType) {
+    switch (messageType) {
       case INTEGER:
         return copyIntegers((int[]) data, targetBuffer, state);
       case SHORT:
@@ -119,6 +124,19 @@ public final class DataSerializer {
         break;
     }
     return false;
+  }
+
+  @SuppressWarnings("unchecked")
+  private static byte[] getBytes(Object data) {
+    List<byte[]> dataValues = (List<byte[]>) data;
+    byte[] dataBytes = new byte[dataValues.size() * dataValues.get(0).length];
+    int offset = 0;
+    for (byte[] bytes : dataValues) {
+      System.arraycopy(bytes, 0, dataBytes, offset, bytes.length);
+      offset += bytes.length;
+    }
+    return dataBytes;
+    //TODO check if the commented getMessageBytes is faster
   }
 
   private static boolean copyLong(long[] data, ByteBuffer targetBuffer, SerializeState state) {
