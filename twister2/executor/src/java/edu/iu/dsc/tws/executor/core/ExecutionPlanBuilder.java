@@ -79,13 +79,6 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
   private Table<String, String, Communication> parOpTable = HashBasedTable.create();
 
   /**
-   * For each task we have multiple instances
-   */
-  private Table<String, Integer, TaskInstance> taskInstances = HashBasedTable.create();
-  private Table<String, Integer, SourceInstance> sourceInstances = HashBasedTable.create();
-  private Table<String, Integer, SinkInstance> sinkInstances = HashBasedTable.create();
-
-  /**
    * Creating separate tables for batch and streaming task instances
    **/
   private Table<String, Integer, TaskBatchInstance> batchTaskInstances
@@ -306,41 +299,8 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
    * @param ip instance plan
    * @param vertex vertex
    */
-  private INodeInstance createInstances(Config cfg,
-                                        TaskSchedulePlan.TaskInstancePlan ip, Vertex vertex) {
-    // lets add the task
-    byte[] taskBytes = kryoMemorySerializer.serialize(vertex.getTask());
-    INode newInstance = (INode) kryoMemorySerializer.deserialize(taskBytes);
-    int taskId = taskIdGenerator.generateGlobalTaskId(vertex.getName(),
-        ip.getTaskId(), ip.getTaskIndex());
-    if (newInstance instanceof ITask) {
-      TaskInstance v = new TaskInstance((ITask) newInstance,
-          new ArrayBlockingQueue<>(1024),
-          new ArrayBlockingQueue<>(1024), cfg, edgeGenerator,
-          vertex.getName(), taskId, ip.getTaskIndex(),
-          vertex.getParallelism(), workerId, vertex.getConfig().toMap());
-      taskInstances.put(vertex.getName(), taskId, v);
-      return v;
-    } else if (newInstance instanceof ISource) {
-      SourceInstance v = new SourceInstance((ISource) newInstance,
-          new ArrayBlockingQueue<>(1024), cfg,
-          vertex.getName(), taskId, ip.getTaskIndex(),
-          vertex.getParallelism(), workerId, vertex.getConfig().toMap());
-      sourceInstances.put(vertex.getName(), taskId, v);
-      return v;
-    } else if (newInstance instanceof ISink) {
-      SinkInstance v = new SinkInstance((ISink) newInstance,
-          new ArrayBlockingQueue<>(1024), cfg, taskId, ip.getTaskIndex(),
-          vertex.getParallelism(), workerId, vertex.getConfig().toMap());
-      sinkInstances.put(vertex.getName(), taskId, v);
-      return v;
-    } else {
-      throw new RuntimeException("Un-known type");
-    }
-  }
 
-
-  /**
+    /**
    * Create instances with the operation Mode
    **/
 

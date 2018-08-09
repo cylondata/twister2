@@ -83,7 +83,11 @@ public class BroadcastBatchOperation extends AbstractParallelOperation {
 
   @Override
   public boolean progress() {
-    return op.progress();
+    return op.progress() && hasPending();
+  }
+
+  public boolean hasPending() {
+    return !op.isComplete();
   }
 
   public class BcastReceiver implements MessageReceiver {

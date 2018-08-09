@@ -84,7 +84,11 @@ public class AllReduceBatchOperation extends AbstractParallelOperation {
 
   @Override
   public boolean progress() {
-    return op.progress();
+    return op.progress() && hasPending();
+  }
+
+  public boolean hasPending() {
+    return !op.isComplete();
   }
 
   public static class IndentityFunction implements ReduceFunction {

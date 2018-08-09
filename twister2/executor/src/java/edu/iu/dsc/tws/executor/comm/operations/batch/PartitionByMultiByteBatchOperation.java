@@ -95,7 +95,11 @@ public class PartitionByMultiByteBatchOperation extends AbstractParallelOperatio
 
   @Override
   public boolean progress() {
-    return op.progress();
+    return op.progress() && hasPending();
+  }
+
+  public boolean hasPending() {
+    return !op.isComplete();
   }
 
   public class PartitionReceiver implements MessageReceiver {
