@@ -45,7 +45,7 @@ public class SKeyedPartition {
   }
 
   public void partition(int source, Object key, Object message, int flags) {
-    int destinations = destinationSelector.next(source, message);
+    int destinations = destinationSelector.next(source, key);
 
     partition.send(source, new KeyedContent(key, message), flags, destinations);
   }
