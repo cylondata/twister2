@@ -497,6 +497,8 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
           continue;
         }
         // at this point lets build the message
+        //TODO: do we need to return the object since we are sending back the same outMessage
+        //TODO: that we send in as a param. This can cause a confusion
         OutMessage message = (OutMessage)
             messageSerializer.get(sendId).build(pair.getKey(), outMessage);
         // okay we build the message, send it

@@ -107,7 +107,7 @@ public class SingleMessageSerializer implements MessageSerializer {
           MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
               sendMessage.getEdge(), totalBytes);
           builder.destination(sendMessage.getDestintationIdentifier());
-          sendMessage.getChannelMessage().setHeader(builder.build());
+          channelMessage.setHeader(builder.build());
           state.setTotalBytes(0);
           channelMessage.setHeaderSent(true);
         }
@@ -124,7 +124,7 @@ public class SingleMessageSerializer implements MessageSerializer {
           MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
               sendMessage.getEdge(), totalBytes);
           builder.destination(sendMessage.getDestintationIdentifier());
-          sendMessage.getChannelMessage().setHeader(builder.build());
+          channelMessage.setHeader(builder.build());
           channelMessage.setHeaderSent(true);
         }
         state.setTotalBytes(0);

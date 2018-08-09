@@ -86,7 +86,7 @@ public class MultiMessageSerializer implements MessageSerializer {
         // build the header
         buildHeader(buffer, sendMessage);
         sendMessage.setSendState(OutMessage.SendState.HEADER_BUILT);
-        sendMessage.getChannelMessage().setPartial(true);
+        channelMessage.setPartial(true);
       }
 
       if (sendMessage.serializedState() == OutMessage.SendState.HEADER_BUILT
@@ -99,9 +99,9 @@ public class MultiMessageSerializer implements MessageSerializer {
           // first we need to serialize the body if needed
           if (sendMessage.serializedState() == OutMessage.SendState.PARTIALLY_SERIALIZED
               && sendMessage.getSerializationState().getData() == null) {
-            if (!sendMessage.getChannelMessage().isHeaderSent()) {
+            if (!channelMessage.isHeaderSent()) {
               buildHeader(buffer, sendMessage);
-              sendMessage.getChannelMessage().setPartial(true);
+              channelMessage.setPartial(true);
             }
           }
           serializeBody(message, sendMessage, buffer);
@@ -120,7 +120,7 @@ public class MultiMessageSerializer implements MessageSerializer {
         MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
             sendMessage.getEdge(), totalBytes);
         builder.destination(sendMessage.getDestintationIdentifier());
-        sendMessage.getChannelMessage().setHeader(builder.build());
+        channelMessage.setHeader(builder.build());
         state.setTotalBytes(0);
 
         // mark the original message as complete
@@ -137,8 +137,8 @@ public class MultiMessageSerializer implements MessageSerializer {
             MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
                 sendMessage.getEdge(), totalBytes);
             builder.destination(sendMessage.getDestintationIdentifier());
-            sendMessage.getChannelMessage().setHeader(builder.build());
-            sendMessage.getChannelMessage().setHeaderSent(true);
+            channelMessage.setHeader(builder.build());
+            channelMessage.setHeaderSent(true);
           }
         } else {
           int totalBytes = state.getTotalBytes();
@@ -149,7 +149,7 @@ public class MultiMessageSerializer implements MessageSerializer {
           MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
               sendMessage.getEdge(), totalBytes);
           builder.destination(sendMessage.getDestintationIdentifier());
-          sendMessage.getChannelMessage().setHeader(builder.build());
+          channelMessage.setHeader(builder.build());
         }
         state.setTotalBytes(0);
 
