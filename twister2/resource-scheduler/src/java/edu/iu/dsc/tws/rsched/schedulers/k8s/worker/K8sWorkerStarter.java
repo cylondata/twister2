@@ -125,6 +125,10 @@ public final class K8sWorkerStarter {
 
     // start JobMasterClient
     jobMasterClient = K8sWorkerUtils.startJobMasterClient(config, workerNetworkInfo);
+    if (jobMasterClient == null) {
+      return;
+    }
+
     // we need to make sure that the worker starting message went through
     jobMasterClient.sendWorkerStartingMessage();
 

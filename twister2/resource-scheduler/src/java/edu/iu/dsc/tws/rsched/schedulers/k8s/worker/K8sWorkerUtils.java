@@ -162,7 +162,10 @@ public final class K8sWorkerUtils {
     LOG.info("JobMasterIP: " + jobMasterIP);
 
     JobMasterClient jobMasterClient = new JobMasterClient(cnf, networkInfo);
-    jobMasterClient.init();
+    Thread clientThread = jobMasterClient.startThreaded();
+    if (clientThread == null) {
+      return null;
+    }
 
     return jobMasterClient;
   }

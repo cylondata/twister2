@@ -70,7 +70,7 @@ public class JobMasterBasedWorkerController implements IWorkerController {
     JobMasterClient jobMasterClient = new JobMasterClient(cfg,
         networkInfo, masterHost, masterPort, numberContainers);
     LOG.log(Level.INFO, String.format("Connecting to job master %s:%d", masterHost, masterPort));
-    jobMasterClient.init();
+    jobMasterClient.startThreaded();
     // now lets send the starting message
     jobMasterClient.sendWorkerStartingMessage();
     return jobMasterClient;

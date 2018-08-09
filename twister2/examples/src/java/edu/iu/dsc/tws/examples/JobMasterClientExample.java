@@ -70,7 +70,11 @@ public final class JobMasterClientExample {
     WorkerNetworkInfo workerNetworkInfo = new WorkerNetworkInfo(workerIP, workerPort, workerTempID);
 
     JobMasterClient client = new JobMasterClient(config, workerNetworkInfo);
-    client.init();
+    Thread clientThread = client.startThreaded();
+    if (clientThread == null) {
+      LOG.severe("JobMasterClient can not initialize. Exiting ...");
+      return;
+    }
 
     IWorkerController workerController = client.getJMWorkerController();
 

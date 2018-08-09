@@ -38,7 +38,7 @@ import edu.iu.dsc.tws.proto.network.Network.ListWorkersResponse;
  *
  * If the user calls:
  *   startJobMasterThreaded()
- * It starts as a Thread and the all to this method returns
+ * It starts as a Thread and the call to this method returns
  *
  * If the user calls:
  *   startJobMasterBlocking()
