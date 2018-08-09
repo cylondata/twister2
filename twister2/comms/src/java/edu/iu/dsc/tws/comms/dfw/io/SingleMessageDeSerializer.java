@@ -95,18 +95,18 @@ public class SingleMessageDeSerializer implements MessageDeSerializer {
     //Used when handling multi messages
     List<ImmutablePair<byte[], byte[]>> results;
     if (!keyed) {
-      return DataDeserializer.getAsByteBuffer(message.getBuffers(),
+      return DataDeserializer.getAsByteArray(message.getBuffers(),
           message.getHeader().getLength(), type);
     } else {
 
       Pair<Integer, Object> keyPair = KeyDeserializer.
-          getKeyAsByteBuffer(message.getKeyType(),
+          getKeyAsByteArray(message.getKeyType(),
               message.getBuffers());
       MessageType keyType = message.getKeyType();
       Object data;
 
       if (MessageTypeUtils.isMultiMessageType(keyType)) {
-        data = DataDeserializer.getAsByteBuffer(message.getBuffers(),
+        data = DataDeserializer.getAsByteArray(message.getBuffers(),
             message.getHeader().getLength() - keyPair.getKey()
                 - MULTI_MESSAGE_KEY_LENGTH_FEILD_SIZE, type, ((List) keyPair.getValue()).size());
         results = new ArrayList<>();
@@ -117,10 +117,10 @@ public class SingleMessageDeSerializer implements MessageDeSerializer {
         }
         return results;
       } else if (!MessageTypeUtils.isPrimitiveType(keyType)) {
-        data = DataDeserializer.getAsByteBuffer(message.getBuffers(),
+        data = DataDeserializer.getAsByteArray(message.getBuffers(),
             message.getHeader().getLength() - keyPair.getKey() - KEY_LENGTH_FEILD_SIZE, type);
       } else {
-        data = DataDeserializer.getAsByteBuffer(message.getBuffers(),
+        data = DataDeserializer.getAsByteArray(message.getBuffers(),
             message.getHeader().getLength() - keyPair.getKey(), type);
       }
 

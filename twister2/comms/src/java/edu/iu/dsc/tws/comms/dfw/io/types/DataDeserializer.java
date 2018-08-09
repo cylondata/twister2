@@ -41,8 +41,18 @@ public final class DataDeserializer {
    * used when there are more than 1 data object
    * types other than multi types return as normal
    */
+  /**
+   * Deserialize's the message from the list of data buffers.Used when there are more than 1
+   * data object types other than multi types return as normal
+   *
+   * @param buffers the buffer which contain the message data
+   * @param length the length of the object that needs to be extracted
+   * @param deserializer the deserializer to be used if the object needs to be deserialized
+   * @param type the type of the message
+   * @param count the number of data objects in multi types
+   */
   public static Object deserializeData(List<DataBuffer> buffers, int length,
-                                       KryoSerializer serializer, MessageType type, int count) {
+                                       KryoSerializer deserializer, MessageType type, int count) {
 
     switch (type) {
       case INTEGER:
@@ -54,7 +64,7 @@ public final class DataDeserializer {
       case BYTE:
         return deserializeBytes(buffers, length);
       case OBJECT:
-        return deserializeObject(buffers, length, serializer);
+        return deserializeObject(buffers, length, deserializer);
       case MULTI_FIXED_BYTE:
         return deserializeMultiBytes(buffers, length, count);
       default:
@@ -63,8 +73,17 @@ public final class DataDeserializer {
     return null;
   }
 
+  /**
+   * Deserialize's the message from the list of data buffers.
+   *
+   * @param buffers the buffer which contain the message data
+   * @param length the length of the object that needs to be extracted
+   * @param deserializer the deserializer to be used if the object needs to be deserialized
+   * @param type the type of the message
+   * @return the object that was deserialized
+   */
   public static Object deserializeData(List<DataBuffer> buffers, int length,
-                                       KryoSerializer serializer, MessageType type) {
+                                       KryoSerializer deserializer, MessageType type) {
 
     switch (type) {
       case INTEGER:
@@ -76,7 +95,7 @@ public final class DataDeserializer {
       case BYTE:
         return deserializeBytes(buffers, length);
       case OBJECT:
-        return deserializeObject(buffers, length, serializer);
+        return deserializeObject(buffers, length, deserializer);
       default:
         break;
     }
@@ -84,9 +103,14 @@ public final class DataDeserializer {
   }
 
   /**
-   * get bytes
+   * Gets the message in the buffer list as a byte array
+   *
+   * @param buffers the buffer list that contains the message
+   * @param length the length of the message to be retrieved
+   * @param type the type of the message
+   * @return the message as a byte[]
    */
-  public static byte[] getAsByteBuffer(List<DataBuffer> buffers, int length, MessageType type) {
+  public static byte[] getAsByteArray(List<DataBuffer> buffers, int length, MessageType type) {
     //If the message type is object we need to add the length of each object to the
     //bytestream so we can separate objects
     //We will try to reuse this array when possible
@@ -118,12 +142,12 @@ public final class DataDeserializer {
     return tempByteArray;
   }
 
-  public static List<byte[]> getAsByteBuffer(List<DataBuffer> buffers, int length,
-                                             MessageType type, int count) {
+  public static List<byte[]> getAsByteArray(List<DataBuffer> buffers, int length,
+                                            MessageType type, int count) {
     List<byte[]> data = new ArrayList<>();
     int singleDataLength = length / count;
     for (int i = 0; i < count; i++) {
-      data.add(getAsByteBuffer(buffers, singleDataLength, type));
+      data.add(getAsByteArray(buffers, singleDataLength, type));
     }
     return data;
   }
