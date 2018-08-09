@@ -178,6 +178,28 @@ public class Client implements SelectHandler {
     }
   }
 
+  /**
+   * Stop the client while trying to process any queued requests and responses
+   */
+  public void disconnectGraceFully(long waitTime) {
+    // now lets wait if there are messages pending
+    long start = System.currentTimeMillis();
+
+    boolean pending;
+    long elapsed;
+    do {
+      pending = false;
+      if (channel.isPending()) {
+        progress.loop();
+        pending = true;
+      }
+      elapsed = System.currentTimeMillis() - start;
+    } while (pending && elapsed < waitTime);
+
+    // after sometime we need to stop
+    disconnect();
+  }
+
   @Override
   public void handleRead(SelectableChannel ch) {
     channel.read();

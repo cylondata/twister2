@@ -93,6 +93,10 @@ public class RRClient {
     client.disconnect();
   }
 
+  public void disconnectGraceFully(long waitTime) {
+    client.disconnectGraceFully(waitTime);
+  }
+
   public boolean isConnected() {
     return client.isConnected();
   }
