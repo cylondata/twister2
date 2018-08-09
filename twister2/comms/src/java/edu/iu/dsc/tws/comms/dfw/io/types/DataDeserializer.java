@@ -43,6 +43,7 @@ public final class DataDeserializer {
    */
   public static Object deserializeData(List<DataBuffer> buffers, int length,
                                        KryoSerializer serializer, MessageType type, int count) {
+
     switch (type) {
       case INTEGER:
         return deserializeInteger(buffers, length);
@@ -50,8 +51,6 @@ public final class DataDeserializer {
         return deserializeDouble(buffers, length);
       case SHORT:
         return deserializeShort(buffers, length);
-      case LONG:
-        return deserializeLong(buffers, length);
       case BYTE:
         return deserializeBytes(buffers, length);
       case OBJECT:
@@ -66,6 +65,7 @@ public final class DataDeserializer {
 
   public static Object deserializeData(List<DataBuffer> buffers, int length,
                                        KryoSerializer serializer, MessageType type) {
+
     switch (type) {
       case INTEGER:
         return deserializeInteger(buffers, length);
@@ -73,8 +73,6 @@ public final class DataDeserializer {
         return deserializeDouble(buffers, length);
       case SHORT:
         return deserializeShort(buffers, length);
-      case LONG:
-        return deserializeLong(buffers, length);
       case BYTE:
         return deserializeBytes(buffers, length);
       case OBJECT:

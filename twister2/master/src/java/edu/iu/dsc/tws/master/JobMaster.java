@@ -25,7 +25,27 @@ import edu.iu.dsc.tws.proto.network.Network;
 import edu.iu.dsc.tws.proto.network.Network.ListWorkersRequest;
 import edu.iu.dsc.tws.proto.network.Network.ListWorkersResponse;
 
-public class JobMaster extends Thread {
+/**
+ * JobMaster class
+ * It is started for each Twister2 job
+ * It provides:
+ *   worker discovery
+ *   barrier method
+ *   Ping service
+ *
+ * It can be started in two different modes:
+ *   Threaded and Blocking
+ *
+ * If the user calls:
+ *   startJobMasterThreaded()
+ * It starts as a Thread and the call to this method returns
+ *
+ * If the user calls:
+ *   startJobMasterBlocking()
+ * It uses the calling thread and this call does not return unless the JobMaster completes
+ */
+
+public class JobMaster {
   private static final Logger LOG = Logger.getLogger(JobMaster.class.getName());
 
   /**
@@ -113,7 +133,10 @@ public class JobMaster extends Thread {
     this.numberOfWorkers = numWorkers;
   }
 
-  public void init() {
+  /**
+   * initialize the Job Master
+   */
+  private void init() {
 
     looper = new Progress();
 
@@ -144,13 +167,40 @@ public class JobMaster extends Thread {
 
     rrServer.start();
     looper.loop();
-
-    start();
   }
 
-  @Override
-  public void run() {
+  /**
+   * start the Job Master in a Thread
+   */
+  public Thread startJobMasterThreaded() {
+    // first call the init method
+    init();
 
+    Thread jmThread = new Thread() {
+      public void run() {
+        startLooping();
+      }
+    };
+
+    jmThread.start();
+
+    return jmThread;
+  }
+
+  /**
+   * start the Job Master in a blocking call
+   */
+  public void startJobMasterBlocking() {
+    // first call the init method
+    init();
+
+    startLooping();
+  }
+
+  /**
+   * Job Master loops until all workers in the job completes
+   */
+  private void startLooping() {
     LOG.info("JobMaster [" + masterAddress + "] started and waiting worker messages on port: "
         + masterPort);
 
@@ -179,6 +229,16 @@ public class JobMaster extends Thread {
     if (jobTerminator != null) {
       jobTerminator.terminateJob(jobName);
     }
+  }
+
+  public void addShutdownHook() {
+    Thread hookThread = new Thread() {
+      public void run() {
+        allWorkersCompleted();
+      }
+    };
+
+    Runtime.getRuntime().addShutdownHook(hookThread);
   }
 
   public class ServerConnectHandler implements ConnectHandler {

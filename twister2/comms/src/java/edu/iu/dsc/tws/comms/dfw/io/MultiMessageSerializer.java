@@ -86,6 +86,7 @@ public class MultiMessageSerializer implements MessageSerializer {
         // build the header
         buildHeader(buffer, sendMessage);
         sendMessage.setSendState(OutMessage.SendState.HEADER_BUILT);
+        channelMessage.setPartial(true);
       }
 
       if (sendMessage.serializedState() == OutMessage.SendState.HEADER_BUILT
@@ -98,7 +99,10 @@ public class MultiMessageSerializer implements MessageSerializer {
           // first we need to serialize the body if needed
           if (sendMessage.serializedState() == OutMessage.SendState.PARTIALLY_SERIALIZED
               && sendMessage.getSerializationState().getData() == null) {
-            buildHeader(buffer, sendMessage);
+            if (!channelMessage.isHeaderSent()) {
+              buildHeader(buffer, sendMessage);
+              channelMessage.setPartial(true);
+            }
           }
           serializeBody(message, sendMessage, buffer);
         }
@@ -116,7 +120,7 @@ public class MultiMessageSerializer implements MessageSerializer {
         MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
             sendMessage.getEdge(), totalBytes);
         builder.destination(sendMessage.getDestintationIdentifier());
-        sendMessage.getChannelMessage().setHeader(builder.build());
+        channelMessage.setHeader(builder.build());
         state.setTotalBytes(0);
 
         // mark the original message as complete
@@ -124,17 +128,30 @@ public class MultiMessageSerializer implements MessageSerializer {
       } else if (sendMessage.serializedState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
         SerializeState state = sendMessage.getSerializationState();
 
-        int totalBytes = state.getTotalBytes();
-        //Need to calculate the true total bites since a part of the message may come separately
-        channelMessage.getBuffers().get(0).getByteBuffer().putInt(HEADER_SIZE - Integer.BYTES,
-            totalBytes);
+        if (channelMessage.isPartial()) {
+          if (!channelMessage.isHeaderSent()) {
+            int totalBytes = state.getCurretHeaderLength();
+            channelMessage.getBuffers().get(0).getByteBuffer().putInt(HEADER_SIZE - Integer.BYTES,
+                totalBytes);
 
-        MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
-            sendMessage.getEdge(), totalBytes);
-        builder.destination(sendMessage.getDestintationIdentifier());
-        sendMessage.getChannelMessage().setHeader(builder.build());
+            MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
+                sendMessage.getEdge(), totalBytes);
+            builder.destination(sendMessage.getDestintationIdentifier());
+            channelMessage.setHeader(builder.build());
+            channelMessage.setHeaderSent(true);
+          }
+        } else {
+          int totalBytes = state.getTotalBytes();
+          //Need to calculate the true total bites since a part of the message may come separately
+          channelMessage.getBuffers().get(0).getByteBuffer().putInt(HEADER_SIZE - Integer.BYTES,
+              totalBytes);
+
+          MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
+              sendMessage.getEdge(), totalBytes);
+          builder.destination(sendMessage.getDestintationIdentifier());
+          channelMessage.setHeader(builder.build());
+        }
         state.setTotalBytes(0);
-
 
       }
     }
@@ -166,15 +183,15 @@ public class MultiMessageSerializer implements MessageSerializer {
    * @return true if the message is completely written
    */
   private boolean serializeMessage(Object payload,
-                                   OutMessage sendMessage, DataBuffer buffer) {
+                                   OutMessage sendMessage, DataBuffer buffer, int countInBuffer) {
     MessageType type = sendMessage.getChannelMessage().getType();
     if (!keyed) {
       return serializeData(payload,
-          sendMessage.getSerializationState(), buffer, type);
+          sendMessage.getSerializationState(), buffer, type, countInBuffer);
     } else {
       KeyedContent kc = (KeyedContent) payload;
-      return serializeKeyedData(kc.getValue(), kc.getKey(),
-          sendMessage.getSerializationState(), buffer, kc.getContentType(), kc.getKeyType());
+      return serializeKeyedData(kc.getValue(), kc.getKey(), sendMessage.getSerializationState(),
+          buffer, kc.getContentType(), kc.getKeyType(), countInBuffer);
     }
   }
 
@@ -184,6 +201,8 @@ public class MultiMessageSerializer implements MessageSerializer {
     SerializeState state = sendMessage.getSerializationState();
 
     int startIndex = state.getCurrentObject();
+    //Keeps track of the number of objects that are currently in the buffer
+    int countInBuffer = 0;
 
     // we assume remaining = capacity of the buffer as we always get a fresh buffer her
     int remaining = buffer.getByteBuffer().remaining();
@@ -197,17 +216,23 @@ public class MultiMessageSerializer implements MessageSerializer {
       Object o = objectList.get(i);
       if (o instanceof ChannelMessage) {
         ChannelMessage channelMessage = (ChannelMessage) o;
-        boolean complete = serializeBufferedMessage(channelMessage, state, buffer);
+        boolean complete = serializeBufferedMessage(channelMessage, state, buffer, countInBuffer);
         // we copied this completely
         if (complete) {
+          sendMessage.getChannelMessage().setPartial(false);
+          state.setCurretHeaderLength(state.getTotalBytes());
           state.setCurrentObject(i + 1);
+          countInBuffer++;
         } else {
           break;
         }
       } else {
-        boolean complete = serializeMessage(o, sendMessage, buffer);
+        boolean complete = serializeMessage(o, sendMessage, buffer, countInBuffer);
         if (complete) {
+          sendMessage.getChannelMessage().setPartial(false);
+          state.setCurretHeaderLength(state.getTotalBytes());
           state.setCurrentObject(i + 1);
+          countInBuffer++;
         } else {
           break;
         }
@@ -235,7 +260,7 @@ public class MultiMessageSerializer implements MessageSerializer {
    * @return the number of complete messages written
    */
   private boolean serializeBufferedMessage(ChannelMessage message, SerializeState state,
-                                           DataBuffer targetBuffer) {
+                                           DataBuffer targetBuffer, int countInBuffer) {
     ByteBuffer targetByteBuffer = targetBuffer.getByteBuffer();
     byte[] tempBytes = new byte[targetBuffer.getCapacity()];
     // the target remaining space left
@@ -243,7 +268,8 @@ public class MultiMessageSerializer implements MessageSerializer {
 
     //If we cannot fit the whole message in the current buffer return false
     if (message.getHeader() != null) {
-      if (targetRemainingSpace < message.getHeader().getLength()) {
+      state.setCurretHeaderLength(message.getHeader().getLength() + message.getHeaderSize());
+      if (countInBuffer > 0 && targetRemainingSpace < message.getHeader().getLength()) {
         return false;
       }
     } else {
@@ -320,18 +346,20 @@ public class MultiMessageSerializer implements MessageSerializer {
   /**
    * Serializes a java object using kryo serialization
    */
-  private boolean serializeData(Object content, SerializeState state,
-                                DataBuffer targetBuffer, MessageType messageType) {
+  private boolean serializeData(Object content, SerializeState state, DataBuffer targetBuffer,
+                                MessageType messageType, int countInBuffer) {
     ByteBuffer byteBuffer = targetBuffer.getByteBuffer();
     // okay we need to serialize the header
     if (state.getPart() == SerializeState.Part.INIT) {
       // okay we need to serialize the data
       int dataLength = DataSerializer.serializeData(content, messageType, state, serializer);
       int remaining = targetBuffer.getByteBuffer().remaining();
-
+      state.setCurretHeaderLength(dataLength);
       //Check if we can fit this message into the current buffer
       //If not we will return so that this message is added to the next buffer
-      if (remaining < dataLength + MAX_SUB_MESSAGE_HEADER_SPACE) {
+      //However if this is the first message and we cannot fit it into the current buffer we will
+      //break the message down into couple of buffers
+      if (countInBuffer > 0 && remaining < dataLength + MAX_SUB_MESSAGE_HEADER_SPACE) {
         LOG.fine("Cannot insert into current buffer this message will be entered"
             + " into the next buffer");
         return false;
@@ -343,6 +371,7 @@ public class MultiMessageSerializer implements MessageSerializer {
       }
       // add the header bytes to the total bytes
       state.addTotalBytes(NORMAL_SUB_MESSAGE_HEADER_SIZE);
+      state.setCurretHeaderLength(dataLength + NORMAL_SUB_MESSAGE_HEADER_SIZE);
       state.setPart(SerializeState.Part.BODY);
     }
 
@@ -372,8 +401,8 @@ public class MultiMessageSerializer implements MessageSerializer {
 
 
   private boolean serializeKeyedData(Object content, Object key, SerializeState state,
-                                     DataBuffer targetBuffer,
-                                     MessageType contentType, MessageType keyType) {
+                                     DataBuffer targetBuffer, MessageType contentType,
+                                     MessageType keyType, int countInBuffer) {
     ByteBuffer byteBuffer = targetBuffer.getByteBuffer();
     // okay we need to serialize the header
     if (state.getPart() == SerializeState.Part.INIT) {
@@ -386,12 +415,13 @@ public class MultiMessageSerializer implements MessageSerializer {
 
       //Check if we can fit this message into the current buffer
       //If not we will return so that this message is added to the next buffer
-      if (remaining < dataLength + keyLength + MAX_SUB_MESSAGE_HEADER_SPACE) {
+      //However if this is the first message and we cannot fit it into the current buffer we will
+      //break the message down into couple of buffers
+      if (countInBuffer > 0 && remaining < dataLength + MAX_SUB_MESSAGE_HEADER_SPACE) {
         LOG.fine("Cannot insert into current buffer this message will be entered"
             + " into the next buffer");
         return false;
       }
-
 //      LOG.info(String.format("%d serialize data length: %d pos %d",
 //          executor, dataLength, byteBuffer.position()));
       // at this point we know the length of the data
@@ -401,6 +431,7 @@ public class MultiMessageSerializer implements MessageSerializer {
       }
       // add the header bytes to the total bytes
       state.setTotalBytes(state.getTotalBytes() + NORMAL_SUB_MESSAGE_HEADER_SIZE);
+      state.setCurretHeaderLength(keyLength + dataLength + NORMAL_SUB_MESSAGE_HEADER_SIZE);
 //      LOG.info(String.format("%d pos after header %d",
 //          executor, byteBuffer.position()));
 //      LOG.info(String.format("%d total after header %d",

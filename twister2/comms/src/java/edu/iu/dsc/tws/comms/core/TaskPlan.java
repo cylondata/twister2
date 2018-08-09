@@ -102,6 +102,18 @@ public class TaskPlan {
     return 0;
   }
 
+  public void addChannelToExecutor(int executor, int channel) {
+    Set<Integer> values = executorToChannels.get(executor);
+    if (values == null) {
+      throw new RuntimeException("Cannot add to non-existent worker: " + executor);
+    }
+    if (values.contains(channel)) {
+      throw new RuntimeException("Cannot add existing channel: " + channel);
+    }
+    values.add(channel);
+    invertedExecutorToChannels.put(channel, executor);
+  }
+
   public Set<Integer> getTasksOfThisExecutor() {
     return executorToChannels.get(thisExecutor);
   }

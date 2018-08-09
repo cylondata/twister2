@@ -34,9 +34,7 @@ public abstract class FileSystemStateManager implements IStateManager {
   protected enum StateLocation {
     MASTER_LOCATION("masters", "Master location"),
     JOB("jobs", "Jobs"),
-    PHYSICAL_PLAN("pplans", "Physical plan"),
     EXECUTION_STATE("executionstate", "Execution state"),
-    SCHEDULER_LOCATION("schedulers", "Scheduler location"),
     LOCKS("locks", "Distributed locks");
 
     private final String dir;
@@ -103,10 +101,6 @@ public abstract class FileSystemStateManager implements IStateManager {
     return deleteNode(StateLocation.MASTER_LOCATION, jobName);
   }
 
-  @Override
-  public ListenableFuture<Boolean> deleteSchedulerLocation(String jobName) {
-    return deleteNode(StateLocation.SCHEDULER_LOCATION, jobName);
-  }
 
   @Override
   public ListenableFuture<Boolean> deleteJob(String jobName) {
@@ -116,11 +110,6 @@ public abstract class FileSystemStateManager implements IStateManager {
   @Override
   public ListenableFuture<Boolean> deleteExecutionState(String jobName) {
     return deleteNode(StateLocation.EXECUTION_STATE, jobName);
-  }
-
-  @Override
-  public ListenableFuture<Boolean> deletePhysicalPlan(String jobName) {
-    return deleteNode(StateLocation.PHYSICAL_PLAN, jobName);
   }
 
   @Override

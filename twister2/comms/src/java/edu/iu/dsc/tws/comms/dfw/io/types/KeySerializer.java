@@ -76,6 +76,7 @@ public final class KeySerializer {
         if (targetBuffer.remaining() > Integer.BYTES) {
           targetBuffer.putInt((Integer) key);
           state.setTotalBytes(state.getTotalBytes() + Integer.BYTES);
+          state.setCurretHeaderLength(state.getCurretHeaderLength() + Integer.BYTES);
           state.setKeySize(Integer.BYTES);
           return true;
         }
@@ -84,6 +85,7 @@ public final class KeySerializer {
         if (targetBuffer.remaining() > Short.BYTES) {
           targetBuffer.putShort((short) key);
           state.setTotalBytes(state.getTotalBytes() + Short.BYTES);
+          state.setCurretHeaderLength(state.getCurretHeaderLength() + Short.BYTES);
           state.setKeySize(Short.BYTES);
           return true;
         }
@@ -92,6 +94,7 @@ public final class KeySerializer {
         if (targetBuffer.remaining() > Long.BYTES) {
           targetBuffer.putLong((Long) key);
           state.setTotalBytes(state.getTotalBytes() + Long.BYTES);
+          state.setCurretHeaderLength(state.getCurretHeaderLength() + Long.BYTES);
           state.setKeySize(Long.BYTES);
           return true;
         }
@@ -100,6 +103,7 @@ public final class KeySerializer {
         if (targetBuffer.remaining() > Double.BYTES) {
           targetBuffer.putDouble((Double) key);
           state.setTotalBytes(state.getTotalBytes() + Double.BYTES);
+          state.setCurretHeaderLength(state.getCurretHeaderLength() + Double.BYTES);
           state.setKeySize(Double.BYTES);
           return true;
         }

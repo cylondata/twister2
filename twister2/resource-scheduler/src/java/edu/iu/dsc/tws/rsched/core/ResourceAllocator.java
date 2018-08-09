@@ -221,7 +221,6 @@ public class ResourceAllocator {
    */
   public void submitJob(JobAPI.Job job, Config config) {
     // lets prepare the job files
-//    String jobDirectory = prepareJobFilesOld(config, job);
     String jobDirectory = prepareJobFiles(config, job);
 
     String statemgrClass = SchedulerContext.stateManagerClass(config);
@@ -290,16 +289,11 @@ public class ResourceAllocator {
     String scpPath = scpServerAdress + ":" + packageURI.toString() + "/";
     LOG.log(Level.INFO, "SCP PATH to copy files from: " + scpPath);
 
-    // this is a temporary solution
-//    String packagesPath = "root@149.165.150.81:/root/.twister2/repository/";
-//    String packagesPath = "149.165.150.81:~/.twister2/repository/";
-
     // now launch the launcher
     // Update the runtime config with the packageURI
     updatedConfig = Config.newBuilder()
         .putAll(updatedConfig)
         .put(SchedulerContext.TWISTER2_PACKAGES_PATH, scpPath)
-//        .put(SchedulerContext.TWISTER2_PACKAGES_PATH, packagesPath)
         .put(SchedulerContext.JOB_PACKAGE_URI, packageURI)
         .put(SchedulerContext.THREADS_PER_WORKER, threadNumber)
         .build();

@@ -136,14 +136,35 @@ public class PartitionPartialReceiver implements MessageReceiver {
       return false;
     }
 
-    lock.lock();
-    try {
+    if ((flags & MessageFlags.BARRIER) == MessageFlags.BARRIER) {
       dests.add(object);
-      if (dests.size() > lowWaterMark) {
-        swapToReady(destination, dests);
+      if (readyToSend.isEmpty()) {
+        operation.sendPartial(representSource, new ArrayList<>(dests), 0, destination);
+      } else {
+        Iterator<Map.Entry<Integer, List<Object>>> it = readyToSend.entrySet().iterator();
+        while (it.hasNext()) {
+          Map.Entry<Integer, List<Object>> e = it.next();
+          List<Object> send = new ArrayList<>(e.getValue());
+
+          // if we send this list successfully
+          if (operation.sendPartial(representSource, send, 0, e.getKey())) {
+            // lets remove from ready list and clear the list
+            e.getValue().clear();
+            it.remove();
+          }
+        }
+        operation.sendPartial(representSource, new ArrayList<>(dests), 0, destination);
       }
-    } finally {
-      lock.unlock();
+    } else {
+      lock.lock();
+      try {
+        dests.add(object);
+        if (dests.size() > lowWaterMark) {
+          swapToReady(destination, dests);
+        }
+      } finally {
+        lock.unlock();
+      }
     }
     return true;
   }
@@ -197,9 +218,9 @@ public class PartitionPartialReceiver implements MessageReceiver {
       Iterator<Map.Entry<Integer, List<Object>>> it = readyToSend.entrySet().iterator();
 
       while (it.hasNext()) {
+
         Map.Entry<Integer, List<Object>> e = it.next();
         List<Object> send = new ArrayList<>(e.getValue());
-
         // if we send this list successfully
         if (operation.sendPartial(representSource, send, 0, e.getKey())) {
           // lets remove from ready list and clear the list

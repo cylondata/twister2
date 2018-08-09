@@ -238,6 +238,12 @@ public class TWSTCPChannel implements TWSChannel {
           receiveRequests.callback.onReceiveComplete(
               receiveRequests.rank, receiveRequests.edge, r.buffer);
           requestIterator.remove();
+          if (receiveRequests.pendingRequests.size() == 0
+              && receiveRequests.availableBuffers.size() == 0) {
+            //We do not have any buffers to receive messages so we need to free a buffer
+            receiveRequests.callback.freeReceiveBuffers(receiveRequests.rank,
+                receiveRequests.edge);
+          }
         }
       }
     }

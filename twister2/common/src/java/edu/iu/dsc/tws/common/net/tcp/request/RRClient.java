@@ -85,8 +85,16 @@ public class RRClient {
     return client.connect();
   }
 
+  public boolean tryConnecting() {
+    return client.tryConnecting();
+  }
+
   public void disconnect() {
     client.disconnect();
+  }
+
+  public void disconnectGraceFully(long waitTime) {
+    client.disconnectGraceFully(waitTime);
   }
 
   public boolean isConnected() {

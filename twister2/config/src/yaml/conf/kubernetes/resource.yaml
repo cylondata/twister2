@@ -1,3 +1,6 @@
+# Twister2 Docker image for Kubernetes
+twister2.docker.image.for.kubernetes: "auyar/twister2-openmpi:0.0.1"
+
 # the package uri
 twister2.system.package.uri: "${TWISTER2_DIST}/twister2-core.tar.gz"
 # the resource manager class

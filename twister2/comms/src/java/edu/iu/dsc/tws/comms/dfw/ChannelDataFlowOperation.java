@@ -497,19 +497,21 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
           continue;
         }
         // at this point lets build the message
+        //TODO: do we need to return the object since we are sending back the same outMessage
+        //TODO: that we send in as a param. This can cause a confusion
         OutMessage message = (OutMessage)
             messageSerializer.get(sendId).build(pair.getKey(), outMessage);
         // okay we build the message, send it
         if (message.serializedState() == OutMessage.SendState.SERIALIZED) {
-          List<Integer> exRoutes = new ArrayList<>(outMessage.getExternalSends());
-          int startOfExternalRouts = outMessage.getAcceptedExternalSends();
+          List<Integer> exRoutes = new ArrayList<>(message.getExternalSends());
+          int startOfExternalRouts = message.getAcceptedExternalSends();
           int noOfExternalSends = startOfExternalRouts;
           lock.lock();
           try {
-            if (!outMessage.isOutCountUpdated()) {
-              outMessage.getChannelMessage().incrementRefCount(
-                  outMessage.getExternalSends().size());
-              outMessage.setOutCountUpdated(true);
+            if (!message.isOutCountUpdated()) {
+              message.getChannelMessage().incrementRefCount(
+                  message.getExternalSends().size());
+              message.setOutCountUpdated(true);
             }
             for (int i = startOfExternalRouts; i < exRoutes.size(); i++) {
               boolean sendAccepted = sendMessageToTarget(message.getChannelMessage(),
@@ -520,7 +522,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
 
                 break;
               } else {
-                noOfExternalSends = outMessage.incrementAcceptedExternalSends();
+                noOfExternalSends = message.incrementAcceptedExternalSends();
                 externalSendsPending.incrementAndGet();
               }
             }
@@ -530,7 +532,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
 
           if (noOfExternalSends == exRoutes.size()) {
             // we are done
-            outMessage.setSendState(OutMessage.SendState.FINISHED);
+            message.setSendState(OutMessage.SendState.FINISHED);
             pendingSendMessages.poll();
           }
         } else if (message.serializedState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
@@ -539,18 +541,19 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
           if (message.getChannelMessage().getBuffers().size() == 0) {
             break;
           }
-          List<Integer> exRoutes = new ArrayList<>(outMessage.getExternalSends());
-          int startOfExternalRouts = outMessage.getAcceptedExternalSends();
+          List<Integer> exRoutes = new ArrayList<>(message.getExternalSends());
+          int startOfExternalRouts = message.getAcceptedExternalSends();
 
           //making a copy to send
           ChannelMessage sendCopy = createChannelMessageCopy(message.getChannelMessage());
           lock.lock();
           try {
-            if (!outMessage.isOutCountUpdated()) {
-              outMessage.getChannelMessage().incrementRefCount(
-                  outMessage.getExternalSends().size());
-              outMessage.setOutCountUpdated(true);
+            if (!message.isOutCountUpdated()) {
+              sendCopy.incrementRefCount(
+                  message.getExternalSends().size());
+              message.setOutCountUpdated(true);
             }
+
             for (int i = startOfExternalRouts; i < exRoutes.size(); i++) {
               boolean sendAccepted = sendMessageToTarget(sendCopy, exRoutes.get(i));
               // if no longer accepts stop
@@ -558,9 +561,12 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
                 canProgress = false;
 
                 break;
+              } else {
+                externalSendsPending.incrementAndGet();
               }
             }
           } finally {
+            message.setOutCountUpdated(false);
             lock.unlock();
           }
           //send and remove buffers from object
@@ -601,6 +607,9 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     MessageHeader header = currentMessage.getHeader();
     Object object = DataFlowContext.EMPTY_OBJECT;
     if ((header.getFlags() & MessageFlags.EMPTY) != MessageFlags.EMPTY) {
+      object = messageDeSerializer.get(receiveId).build(currentMessage,
+          currentMessage.getHeader().getEdge());
+    } else if ((header.getFlags() & MessageFlags.BARRIER) == MessageFlags.BARRIER) {
       object = messageDeSerializer.get(receiveId).build(currentMessage,
           currentMessage.getHeader().getEdge());
     }

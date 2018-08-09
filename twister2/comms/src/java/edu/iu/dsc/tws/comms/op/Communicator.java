@@ -28,10 +28,13 @@ public class Communicator {
 
   private EdgeGenerator edgeGenerator;
 
+  private TaskIdGenerator idGenerator;
+
   public Communicator(Config cfg, TWSChannel ch) {
     this.channel = ch;
     this.config = cfg;
     this.edgeGenerator = new EdgeGenerator(0);
+    this.idGenerator = new TaskIdGenerator(100000000);
   }
 
   public TWSChannel getChannel() {
@@ -44,5 +47,9 @@ public class Communicator {
 
   public int nextEdge() {
     return edgeGenerator.nextEdge();
+  }
+
+  public int nextId() {
+    return idGenerator.nextId();
   }
 }

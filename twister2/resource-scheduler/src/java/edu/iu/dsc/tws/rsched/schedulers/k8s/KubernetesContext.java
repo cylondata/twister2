@@ -18,6 +18,8 @@ import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
 public class KubernetesContext extends SchedulerContext {
 
+  public static final String TWISTER2_DOCKER_IMAGE_FOR_K8S = "twister2.docker.image.for.kubernetes";
+
   public static final int WORKERS_PER_POD_DEFAULT = 1;
   public static final String WORKERS_PER_POD = "kubernetes.workers.per.pod";
 
@@ -78,6 +80,10 @@ public class KubernetesContext extends SchedulerContext {
 
   public static final String PERSISTENT_JOB_DIRECTORY = "job.master.persistent.job.directory";
   public static final String SECRET_NAME = "kubernetes.secret.name";
+
+  public static String twister2DockerImageForK8s(Config cfg) {
+    return cfg.getStringValue(TWISTER2_DOCKER_IMAGE_FOR_K8S);
+  }
 
   public static int workersPerPod(Config cfg) {
     return cfg.getIntegerValue(WORKERS_PER_POD, WORKERS_PER_POD_DEFAULT);

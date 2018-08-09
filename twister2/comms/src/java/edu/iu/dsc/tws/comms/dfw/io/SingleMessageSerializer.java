@@ -107,7 +107,7 @@ public class SingleMessageSerializer implements MessageSerializer {
           MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
               sendMessage.getEdge(), totalBytes);
           builder.destination(sendMessage.getDestintationIdentifier());
-          sendMessage.getChannelMessage().setHeader(builder.build());
+          channelMessage.setHeader(builder.build());
           state.setTotalBytes(0);
           channelMessage.setHeaderSent(true);
         }
@@ -117,14 +117,14 @@ public class SingleMessageSerializer implements MessageSerializer {
         ChannelMessage channelMessage = sendMessage.getChannelMessage();
         SerializeState state = sendMessage.getSerializationState();
         if (!channelMessage.isHeaderSent()) {
-          int totalBytes = state.getData().length;
+          int totalBytes = state.getCurretHeaderLength();
           channelMessage.getBuffers().get(0).getByteBuffer().putInt(HEADER_SIZE - Integer.BYTES,
               totalBytes);
 
           MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
               sendMessage.getEdge(), totalBytes);
           builder.destination(sendMessage.getDestintationIdentifier());
-          sendMessage.getChannelMessage().setHeader(builder.build());
+          channelMessage.setHeader(builder.build());
           channelMessage.setHeaderSent(true);
         }
         state.setTotalBytes(0);
@@ -163,19 +163,22 @@ public class SingleMessageSerializer implements MessageSerializer {
   private boolean serializeBody(Object payload,
                                 OutMessage sendMessage, DataBuffer buffer) {
     MessageType type = sendMessage.getChannelMessage().getType();
-    if (type == MessageType.OBJECT || type == MessageType.INTEGER || type == MessageType.LONG
-        || type == MessageType.DOUBLE || type == MessageType.BYTE || type == MessageType.STRING
-        || type == MessageType.MULTI_FIXED_BYTE) {
-      if (!keyed) {
-        return serializeData(payload, sendMessage.getSerializationState(), buffer, type);
-      } else {
-        KeyedContent keyedContent = (KeyedContent) payload;
-        return serializeKeyedData(keyedContent.getValue(), keyedContent.getKey(),
-            sendMessage.getSerializationState(), buffer, type, keyedContent.getKeyType());
+    if ((sendMessage.getFlags() & MessageFlags.BARRIER) == MessageFlags.BARRIER) {
+      return serializeData(payload, sendMessage.getSerializationState(), buffer, type);
+    } else {
+      if (type == MessageType.OBJECT || type == MessageType.INTEGER || type == MessageType.LONG
+          || type == MessageType.DOUBLE || type == MessageType.BYTE || type == MessageType.STRING
+          || type == MessageType.MULTI_FIXED_BYTE) {
+        if (!keyed) {
+          return serializeData(payload, sendMessage.getSerializationState(), buffer, type);
+        } else {
+          KeyedContent keyedContent = (KeyedContent) payload;
+          return serializeKeyedData(keyedContent.getValue(), keyedContent.getKey(),
+              sendMessage.getSerializationState(), buffer, type, keyedContent.getKeyType());
+        }
+      } else if (type == MessageType.BUFFER) {
+        return serializeBuffer(payload, sendMessage, buffer);
       }
-    }
-    if (type == MessageType.BUFFER) {
-      return serializeBuffer(payload, sendMessage, buffer);
     }
     return false;
   }
@@ -191,6 +194,7 @@ public class SingleMessageSerializer implements MessageSerializer {
       // okay we need to serialize the data
       int dataLength = DataSerializer.serializeData(content,
           contentType, state, serializer);
+      state.setCurretHeaderLength(dataLength + keyLength);
     }
 
     if (state.getPart() == SerializeState.Part.INIT
@@ -235,6 +239,7 @@ public class SingleMessageSerializer implements MessageSerializer {
     if (state.getPart() == SerializeState.Part.INIT) {
       // okay we need to serialize the data
       int dataLength = DataSerializer.serializeData(content, messageType, state, serializer);
+      state.setCurretHeaderLength(dataLength);
       // add the header bytes to the total bytes
       state.setPart(SerializeState.Part.BODY);
     }
