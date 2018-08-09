@@ -123,7 +123,6 @@ public class HadoopFileSystem extends FileSystem {
     for (int i = 0; i < distBlkLocations.length; i++) {
       distBlkLocations[i] = new HadoopBlockLocation(blkLocations[i]);
     }
-
     return distBlkLocations;
   }
 
@@ -179,7 +178,6 @@ public class HadoopFileSystem extends FileSystem {
     for (int i = 0; i < files.length; i++) {
       files[i] = new HadoopFileStatus(hadoopFiles[i]);
     }
-
     return files;
   }
 

@@ -52,7 +52,7 @@ public class TaskInstanceMapCalculation {
   private final Double instanceDisk;
   private final Double instanceCPU;
 
-  private TaskAttributes taskAttributes = null;
+  private TaskAttributes taskAttributes;
 
   public TaskInstanceMapCalculation(Double instanceRam, Double instanceDisk, Double instanceCPU) {
     this.instanceRAM = instanceRam;
