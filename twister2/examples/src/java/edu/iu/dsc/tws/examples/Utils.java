@@ -215,6 +215,13 @@ public final class Utils {
     return symbolListOption;
   }
 
+  /**
+   * Create task plan according to stages
+   * @param cfg configuration
+   * @param plan plan
+   * @param noOfTaskEachStage no of tasks at each stage
+   * @return task plan
+   */
   public static TaskPlan createStageTaskPlan(Config cfg, ResourcePlan plan,
                                              List<Integer> noOfTaskEachStage) {
     int noOfContainers = plan.noOfContainers();
@@ -253,6 +260,10 @@ public final class Utils {
       groupsToExeuctors.put(i, executorsOfGroup);
       i++;
     }
+//    groupsToExeuctors.put(0, new HashSet<>(Arrays.asList(1)));
+//    groupsToExeuctors.put(1, new HashSet<>(Arrays.asList(2)));
+//    groupsToExeuctors.put(2, new HashSet<>(Arrays.asList(0)));
+//    groupsToExeuctors.put(3, new HashSet<>(Arrays.asList(3)));
 
     return new TaskPlan(executorToGraphNodes, groupsToExeuctors, thisExecutor);
   }

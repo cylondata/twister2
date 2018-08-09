@@ -14,11 +14,17 @@ package edu.iu.dsc.tws.tsched.spi.common;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
+/**
+ * This class is to represent the default values for the container/worker and task instances
+ */
 public class TaskSchedulerContext extends SchedulerContext {
+
 
   public static final String TWISTER2_TASK_SCHEDULING_MODE = "twister2.class.task.taskscheduler";
   public static final String TWISTER2_TASK_SCHEDULING_MODE_DEFAULT = "roundrobin";
+
   //public static final String TWISTER2_TASK_SCHEDULING_MODE_DEFAULT = "firstfit";
+
   //public static final String TWISTER2_TASK_SCHEDULING_MODE_DEFAULT = "datalocalityaware";
 
   public static final String TWISTER2_TASK_INSTANCE_RAM = "twister2.task.instance.ram";
@@ -71,19 +77,23 @@ public class TaskSchedulerContext extends SchedulerContext {
 
 
   public static String taskSchedulingMode(Config cfg) {
-    return cfg.getStringValue(TWISTER2_TASK_SCHEDULING_MODE, TWISTER2_TASK_SCHEDULING_MODE_DEFAULT);
+    return cfg.getStringValue(TWISTER2_TASK_SCHEDULING_MODE,
+        TWISTER2_TASK_SCHEDULING_MODE_DEFAULT);
   }
 
   public static double taskInstanceRam(Config cfg) {
-    return cfg.getDoubleValue(TWISTER2_TASK_INSTANCE_RAM, TWISTER2_TASK_INSTANCE_RAM_DEFAULT);
+    return cfg.getDoubleValue(TWISTER2_TASK_INSTANCE_RAM,
+        TWISTER2_TASK_INSTANCE_RAM_DEFAULT);
   }
 
   public static double taskInstanceDisk(Config cfg) {
-    return cfg.getDoubleValue(TWISTER2_TASK_INSTANCE_DISK, TWISTER2_TASK_INSTANCE_DISK_DEFAULT);
+    return cfg.getDoubleValue(TWISTER2_TASK_INSTANCE_DISK,
+        TWISTER2_TASK_INSTANCE_DISK_DEFAULT);
   }
 
   public static double taskInstanceCpu(Config cfg) {
-    return cfg.getDoubleValue(TWISTER2_TASK_INSTANCE_CPU, TWISTER2_TASK_INSTANCE_CPU_DEFAULT);
+    return cfg.getDoubleValue(TWISTER2_TASK_INSTANCE_CPU,
+        TWISTER2_TASK_INSTANCE_CPU_DEFAULT);
   }
 
   public static double taskInstanceNetwork(Config cfg) {
@@ -113,7 +123,8 @@ public class TaskSchedulerContext extends SchedulerContext {
   }
 
   public static int taskParallelism(Config cfg) {
-    return cfg.getIntegerValue(TWISTER2_TASK_PARALLELISM, TWISTER2_TASK_PARALLELISM_DEFAULT);
+    return cfg.getIntegerValue(TWISTER2_TASK_PARALLELISM,
+        TWISTER2_TASK_PARALLELISM_DEFAULT);
   }
 
   public static int defaultTaskInstancesPerContainer(Config cfg) {

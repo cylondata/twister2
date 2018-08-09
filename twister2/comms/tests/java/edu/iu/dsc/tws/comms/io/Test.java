@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 
+import edu.iu.dsc.tws.common.examples.utils.IntData;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
@@ -23,7 +24,6 @@ import edu.iu.dsc.tws.comms.dfw.ChannelMessageReleaseCallback;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.MessageDirection;
 import edu.iu.dsc.tws.comms.dfw.OutMessage;
-import edu.iu.dsc.tws.comms.dfw.io.IntData;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
 import edu.iu.dsc.tws.comms.dfw.io.MultiMessageDeserializer;
 import edu.iu.dsc.tws.comms.dfw.io.MultiMessageSerializer;

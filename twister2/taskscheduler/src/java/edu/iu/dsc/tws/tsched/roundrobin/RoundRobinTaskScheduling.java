@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.tsched.roundrobin;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,31 +32,51 @@ import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskInstanceMapCalculation;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedule;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
-//import edu.iu.dsc.tws.task.graph.GraphConstants;
-//import org.apache.commons.lang3.ObjectUtils;
-//import java.util.concurrent.atomic.AtomicReference;
-
 public class RoundRobinTaskScheduling implements TaskSchedule {
 
   private static final Logger LOG = Logger.getLogger(RoundRobinTaskScheduling.class.getName());
-  protected static int taskSchedulePlanId = 0;
-  private Double instanceRAM;
-  private Double instanceDisk;
-  private Double instanceCPU;
-  private Config cfg;
 
+  private static int taskSchedulePlanId = 0;
+
+  //It represents the task instance ram
+  private Double instanceRAM;
+
+  //It represents the task instance disk
+  private Double instanceDisk;
+
+  //It represents the task instance cpu value
+  private Double instanceCPU;
+
+  private Config config;
+
+  /**
+   * This method initialize the task instance values with the values specified in
+   * the config object.
+   * @param cfg
+   */
   @Override
-  public void initialize(Config cfg1) {
-    this.cfg = cfg1;
-    this.instanceRAM = TaskSchedulerContext.taskInstanceRam(cfg);
-    this.instanceDisk = TaskSchedulerContext.taskInstanceDisk(cfg);
-    this.instanceCPU = TaskSchedulerContext.taskInstanceCpu(cfg);
+  public void initialize(Config cfg) {
+    this.config = cfg;
+    this.instanceRAM = TaskSchedulerContext.taskInstanceRam(config);
+    this.instanceDisk = TaskSchedulerContext.taskInstanceDisk(config);
+    this.instanceCPU = TaskSchedulerContext.taskInstanceCpu(config);
   }
+
+  /**
+   * This is the base method which receives the dataflow taskgraph and workerplan
+   * to allocate the task instances to the appropriate workers.
+   * @param dataFlowTaskGraph
+   * @param workerPlan
+   * @return
+   */
 
   @Override
   public TaskSchedulePlan schedule(DataFlowTaskGraph dataFlowTaskGraph, WorkerPlan workerPlan) {
 
-    Set<TaskSchedulePlan.ContainerPlan> containerPlans = new HashSet<>();
+    //Allocate the task instances into the containers/workers
+    Set<TaskSchedulePlan.ContainerPlan> containerPlans = new LinkedHashSet<>();
+
+    //To get the vertex set from the taskgraph
     Set<Vertex> taskVertexSet = dataFlowTaskGraph.getTaskVertexSet();
 
     Map<Integer, List<InstanceId>> roundRobinContainerInstanceMap =
@@ -79,9 +100,9 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
 
     for (int containerId : roundRobinContainerInstanceMap.keySet()) {
 
-      Double containerRAMValue = TaskSchedulerContext.containerRamPadding(cfg);
-      Double containerDiskValue = TaskSchedulerContext.containerDiskPadding(cfg);
-      Double containerCpuValue = TaskSchedulerContext.containerCpuPadding(cfg);
+      double containerRAMValue = TaskSchedulerContext.containerRamPadding(config);
+      double containerDiskValue = TaskSchedulerContext.containerDiskPadding(config);
+      double containerCpuValue = TaskSchedulerContext.containerCpuPadding(config);
 
       List<InstanceId> taskInstanceIds = roundRobinContainerInstanceMap.get(containerId);
       Map<InstanceId, TaskSchedulePlan.TaskInstancePlan> taskInstancePlanMap = new HashMap<>();
@@ -112,16 +133,16 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
       if (worker != null && worker.getCpu() > 0 && worker.getDisk() > 0 && worker.getRam() > 0) {
         containerResource = new Resource((double) worker.getRam(),
             (double) worker.getDisk(), (double) worker.getCpu());
-        LOG.fine(String.format("Worker (if loop):" + containerId + "\tRam:"
+        LOG.fine("Worker (if loop):" + containerId + "\tRam:"
             + worker.getRam() + "\tDisk:" + worker.getDisk()  //write into a log file
-            + "\tCpu:" + worker.getCpu()));
+            + "\tCpu:" + worker.getCpu());
       } else {
         containerResource = new Resource(containerRAMValue, containerDiskValue,
             containerCpuValue);
-        LOG.fine(String.format("Worker (else loop):" + containerId
+        LOG.fine("Worker (else loop):" + containerId
             + "\tRam:" + containerRAMValue     //write into a log file
             + "\tDisk:" + containerDiskValue
-            + "\tCpu:" + containerCpuValue));
+            + "\tCpu:" + containerCpuValue);
       }
 
       TaskSchedulePlan.ContainerPlan taskContainerPlan =

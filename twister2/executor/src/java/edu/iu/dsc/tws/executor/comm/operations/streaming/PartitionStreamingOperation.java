@@ -30,9 +30,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.checkpointmanager.barrier.CheckpointBarrier;
+
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
@@ -47,9 +48,10 @@ import edu.iu.dsc.tws.task.api.TaskMessage;
 
 public class PartitionStreamingOperation extends AbstractParallelOperation {
   private static final Logger LOG = Logger.getLogger(PartitionStreamingOperation.class.getName());
-  private HashMap<Integer, ArrayList<Integer>> barrierMap = new HashMap<>();
-  private HashMap<Integer, Integer> incommingMap = new HashMap<>();
+  private HashMap<Integer, Boolean> barrierMap = new HashMap<>();
+
   private HashMap<Integer, ArrayList<Object>> incommingBuffer = new HashMap<>();
+  private boolean checkpointStarted = false;
 
   protected DataFlowPartition op;
 
@@ -94,52 +96,40 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
 
     @Override
     public boolean onMessage(int source, int destination, int target, int flags, Object object) {
-      if (barrierMap.containsKey(source)) {
-        if (barrierMap.get(source).size() == 0) {
-          barrierMap.remove(source);
+      if ((flags & MessageFlags.BARRIER) == MessageFlags.BARRIER) {
+        if (!checkpointStarted) {
+          checkpointStarted = true;
+        }
+        barrierMap.putIfAbsent(source, true);
+        if (barrierMap.keySet() == op.getSources()) {
+          op.getDestinations();
+          //start checkpoint and flush the buffering messages
+        }
+      } else {
+        if (barrierMap.containsKey(source)) {
+          if (incommingBuffer.containsKey(source)) {
+            incommingBuffer.get(source).add(object);
+          } else {
+            ArrayList<Object> bufferMessege = new ArrayList<>();
+            bufferMessege.add(object);
+            incommingBuffer.put(source, bufferMessege);
+          }
+        } else {
           if (object instanceof List) {
             for (Object o : (List) object) {
               TaskMessage msg = new TaskMessage(o,
                   edge.getStringMapping(communicationEdge), target);
               outMessages.get(target).offer(msg);
-            }
-          } else if (object instanceof CheckpointBarrier) {
-            barrierMap.get(source).add(destination);
-            ArrayList<Object> bufferMessege = new ArrayList<>();
-            bufferMessege.add(object);
-            incommingBuffer.put(source, bufferMessege);
-          }
-        } else if (barrierMap.get(source).size() == incommingMap.get(source)) {
-          for (Object message : incommingBuffer.get(source)) {
-            if (message instanceof List) {
-              for (Object o : (List) message) {
-                TaskMessage msg = new TaskMessage(o,
-                    edge.getStringMapping(communicationEdge), target);
-                outMessages.get(target).offer(msg);
-              }
+
             }
           }
         }
-      } else {
-        if (object instanceof List) {
-          for (Object o : (List) object) {
-            TaskMessage msg = new TaskMessage(o,
-                edge.getStringMapping(communicationEdge), target);
-            outMessages.get(target).offer(msg);
-
-          }
-        } else if (object instanceof CheckpointBarrier) {
-          ArrayList<Integer> destinationMap = new ArrayList<Integer>();
-          destinationMap.add(destination);
-          barrierMap.put(source, destinationMap);
-        }
-
       }
       return true;
     }
 
     @Override
-    public void onFinish(int target) {
+    public void onFinish(int source) {
 
     }
 

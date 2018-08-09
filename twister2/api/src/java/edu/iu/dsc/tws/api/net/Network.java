@@ -85,6 +85,8 @@ public final class Network {
     } catch (UnknownHostException e) {
       throw new RuntimeException("Failed to get network address: " + localIp, e);
     }
+    // wait for everyone to start the job master
+    wController.waitOnBarrier(30000);
 
     // now talk to a central server and get the information about the worker
     // this is a synchronization step

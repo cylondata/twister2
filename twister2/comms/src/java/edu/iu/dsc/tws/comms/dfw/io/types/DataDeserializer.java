@@ -43,6 +43,7 @@ public final class DataDeserializer {
    */
   public static Object deserializeData(List<DataBuffer> buffers, int length,
                                        KryoSerializer serializer, MessageType type, int count) {
+
     switch (type) {
       case INTEGER:
         return deserializeInteger(buffers, length);
@@ -64,6 +65,7 @@ public final class DataDeserializer {
 
   public static Object deserializeData(List<DataBuffer> buffers, int length,
                                        KryoSerializer serializer, MessageType type) {
+
     switch (type) {
       case INTEGER:
         return deserializeInteger(buffers, length);
@@ -173,34 +175,35 @@ public final class DataDeserializer {
 
 
   public static double[] deserializeDouble(List<DataBuffer> buffers, int byteLength) {
-    int noOfDoubles = byteLength / 8;
-    double[] returnDoubles = new double[noOfDoubles];
+    int noOfDoubles = byteLength / Double.BYTES;
+    double[] returnInts = new double[noOfDoubles];
     int bufferIndex = 0;
-    int copiedDoubles = 0;
-    while (copiedDoubles < noOfDoubles) {
+    for (int i = 0; i < noOfDoubles; i++) {
       ByteBuffer byteBuffer = buffers.get(bufferIndex).getByteBuffer();
       int remaining = byteBuffer.remaining();
-      if (remaining >= 8) {
-        returnDoubles[copiedDoubles] = byteBuffer.getDouble();
-        copiedDoubles++;
+      if (remaining >= Double.BYTES) {
+        returnInts[i] = byteBuffer.getDouble();
       } else {
-        bufferIndex++;
+        bufferIndex = getReadBuffer(buffers, Double.BYTES, bufferIndex);
+        if (bufferIndex < 0) {
+          throw new RuntimeException("We should always have the doubles");
+        }
       }
     }
-    return returnDoubles;
+    return returnInts;
   }
 
   public static int[] deserializeInteger(List<DataBuffer> buffers, int byteLength) {
-    int noOfInts = byteLength / 4;
+    int noOfInts = byteLength / Integer.BYTES;
     int[] returnInts = new int[noOfInts];
     int bufferIndex = 0;
     for (int i = 0; i < noOfInts; i++) {
       ByteBuffer byteBuffer = buffers.get(bufferIndex).getByteBuffer();
       int remaining = byteBuffer.remaining();
-      if (remaining >= 4) {
+      if (remaining >= Integer.BYTES) {
         returnInts[i] = byteBuffer.getInt();
       } else {
-        bufferIndex = getReadBuffer(buffers, 4, bufferIndex);
+        bufferIndex = getReadBuffer(buffers, Integer.BYTES, bufferIndex);
         if (bufferIndex < 0) {
           throw new RuntimeException("We should always have the ints");
         }
@@ -210,16 +213,16 @@ public final class DataDeserializer {
   }
 
   public static short[] deserializeShort(List<DataBuffer> buffers, int byteLength) {
-    int noOfShorts = byteLength / 2;
+    int noOfShorts = byteLength / Short.BYTES;
     short[] returnShorts = new short[noOfShorts];
     int bufferIndex = 0;
     for (int i = 0; i < noOfShorts; i++) {
       ByteBuffer byteBuffer = buffers.get(bufferIndex).getByteBuffer();
       int remaining = byteBuffer.remaining();
-      if (remaining >= 2) {
+      if (remaining >= Short.BYTES) {
         returnShorts[i] = byteBuffer.getShort();
       } else {
-        bufferIndex = getReadBuffer(buffers, 4, bufferIndex);
+        bufferIndex = getReadBuffer(buffers, Short.BYTES, bufferIndex);
         if (bufferIndex < 0) {
           throw new RuntimeException("We should always have the shorts");
         }
@@ -229,16 +232,16 @@ public final class DataDeserializer {
   }
 
   public static long[] deserializeLong(List<DataBuffer> buffers, int byteLength) {
-    int noOfLongs = byteLength / 8;
+    int noOfLongs = byteLength / Long.BYTES;
     long[] returnLongs = new long[noOfLongs];
     int bufferIndex = 0;
     for (int i = 0; i < noOfLongs; i++) {
       ByteBuffer byteBuffer = buffers.get(bufferIndex).getByteBuffer();
       int remaining = byteBuffer.remaining();
-      if (remaining >= 8) {
+      if (remaining >= Long.BYTES) {
         returnLongs[i] = byteBuffer.getLong();
       } else {
-        bufferIndex = getReadBuffer(buffers, 8, bufferIndex);
+        bufferIndex = getReadBuffer(buffers, Long.BYTES, bufferIndex);
         if (bufferIndex < 0) {
           throw new RuntimeException("We should always have the longs");
         }

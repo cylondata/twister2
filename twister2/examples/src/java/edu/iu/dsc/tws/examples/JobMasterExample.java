@@ -52,7 +52,9 @@ public final class JobMasterExample {
     String jobName = Context.jobName(configs);
 
     JobMaster jobMaster = new JobMaster(configs, host, null, jobName);
-    jobMaster.init();
+    jobMaster.startJobMasterThreaded();
+
+    LOG.info("Threaded Job Master started.");
   }
 
   /**

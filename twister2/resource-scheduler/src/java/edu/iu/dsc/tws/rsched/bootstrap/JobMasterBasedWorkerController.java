@@ -21,8 +21,8 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
+import edu.iu.dsc.tws.master.client.JMWorkerController;
 import edu.iu.dsc.tws.master.client.JobMasterClient;
-import edu.iu.dsc.tws.master.client.WorkerController;
 
 /**
  * Job master based worker controller. This one talks to job
@@ -70,7 +70,7 @@ public class JobMasterBasedWorkerController implements IWorkerController {
     JobMasterClient jobMasterClient = new JobMasterClient(cfg,
         networkInfo, masterHost, masterPort, numberContainers);
     LOG.log(Level.INFO, String.format("Connecting to job master %s:%d", masterHost, masterPort));
-    jobMasterClient.init();
+    jobMasterClient.startThreaded();
     // now lets send the starting message
     jobMasterClient.sendWorkerStartingMessage();
     return jobMasterClient;
@@ -78,8 +78,8 @@ public class JobMasterBasedWorkerController implements IWorkerController {
 
   @Override
   public WorkerNetworkInfo getWorkerNetworkInfoForID(int id) {
-    WorkerController workerController = masterClient.getWorkerController();
-    List<WorkerNetworkInfo> infos = workerController.waitForAllWorkersToJoin(1000);
+    JMWorkerController jmWorkerController = masterClient.getJMWorkerController();
+    List<WorkerNetworkInfo> infos = jmWorkerController.waitForAllWorkersToJoin(1000);
     for (WorkerNetworkInfo in : infos) {
       if (in.getWorkerID() == id) {
         return in;
@@ -95,18 +95,18 @@ public class JobMasterBasedWorkerController implements IWorkerController {
 
   @Override
   public List<WorkerNetworkInfo> getWorkerList() {
-    WorkerController workerController = masterClient.getWorkerController();
-    return workerController.waitForAllWorkersToJoin(30000);
+    JMWorkerController jmWorkerController = masterClient.getJMWorkerController();
+    return jmWorkerController.waitForAllWorkersToJoin(30000);
   }
 
   @Override
   public List<WorkerNetworkInfo> waitForAllWorkersToJoin(long timeLimitMilliSec) {
-    WorkerController workerController = masterClient.getWorkerController();
-    return workerController.waitForAllWorkersToJoin(30000);
+    JMWorkerController jmWorkerController = masterClient.getJMWorkerController();
+    return jmWorkerController.waitForAllWorkersToJoin(30000);
   }
 
   @Override
   public boolean waitOnBarrier(long timeLimitMilliSec) {
-    return masterClient.getWorkerController().waitOnBarrier(timeLimitMilliSec);
+    return masterClient.getJMWorkerController().waitOnBarrier(timeLimitMilliSec);
   }
 }

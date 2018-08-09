@@ -155,6 +155,7 @@ def main():
 
     start = time.time()
     results = run(command, parser, command_line_args, unknown_args)
+    print command_line_args, unknown_args
     if command not in ('help', 'version'):
         result.render(results)
     end = time.time()

@@ -43,44 +43,44 @@ public final class KeyDeserializer {
     // first we need to read the key type
     switch (keyType) {
       case INTEGER:
-        currentIndex = getReadIndex(buffers, currentIndex, 4);
+        currentIndex = getReadIndex(buffers, currentIndex, Integer.BYTES);
         ByteBuffer byteBuffer = buffers.get(currentIndex).getByteBuffer();
 //        LOG.info(String.format("Key deserialize position %d", byteBuffer.position()));
         key = byteBuffer.getInt();
         keyLength = 4;
         break;
       case SHORT:
-        currentIndex = getReadIndex(buffers, currentIndex, 2);
+        currentIndex = getReadIndex(buffers, currentIndex, Short.BYTES);
         key = buffers.get(currentIndex).getByteBuffer().getShort();
         keyLength = 2;
         break;
       case LONG:
-        currentIndex = getReadIndex(buffers, currentIndex, 8);
+        currentIndex = getReadIndex(buffers, currentIndex, Long.BYTES);
         key = buffers.get(currentIndex).getByteBuffer().getLong();
         keyLength = 8;
         break;
       case DOUBLE:
-        currentIndex = getReadIndex(buffers, currentIndex, 8);
+        currentIndex = getReadIndex(buffers, currentIndex, Double.BYTES);
         key = buffers.get(currentIndex).getByteBuffer().getDouble();
         keyLength = 8;
         break;
       case OBJECT:
-        currentIndex = getReadIndex(buffers, currentIndex, 4);
+        currentIndex = getReadIndex(buffers, currentIndex, Integer.BYTES);
         keyLength = buffers.get(currentIndex).getByteBuffer().getInt();
         key = DataDeserializer.deserializeObject(buffers, keyLength, serializer);
         break;
       case BYTE:
-        currentIndex = getReadIndex(buffers, currentIndex, 4);
+        currentIndex = getReadIndex(buffers, currentIndex, Integer.BYTES);
         keyLength = buffers.get(currentIndex).getByteBuffer().getInt();
         key = readBytes(buffers, keyLength);
         break;
       case STRING:
-        currentIndex = getReadIndex(buffers, currentIndex, 4);
+        currentIndex = getReadIndex(buffers, currentIndex, Integer.BYTES);
         keyLength = buffers.get(currentIndex).getByteBuffer().getInt();
         key = new String(readBytes(buffers, keyLength));
         break;
       case MULTI_FIXED_BYTE:
-        currentIndex = getReadIndex(buffers, currentIndex, 8);
+        currentIndex = getReadIndex(buffers, currentIndex, Integer.BYTES * 2);
         keyCount = buffers.get(currentIndex).getByteBuffer().getInt();
         keyLength = buffers.get(currentIndex).getByteBuffer().getInt();
         key = readMultiBytes(buffers, keyLength, keyCount);
@@ -108,46 +108,46 @@ public final class KeyDeserializer {
     int keyLength = 0;
     switch (keyType) {
       case INTEGER:
-        tempArray = new byte[4];
-        keyLength = 4;
-        currentIndex = getReadIndex(buffers, currentIndex, 4);
+        tempArray = new byte[Integer.BYTES];
+        keyLength = Integer.BYTES;
+        currentIndex = getReadIndex(buffers, currentIndex, Integer.BYTES);
         buffers.get(currentIndex).getByteBuffer().get(tempArray);
         break;
       case SHORT:
-        tempArray = new byte[2];
-        keyLength = 2;
-        currentIndex = getReadIndex(buffers, currentIndex, 2);
+        tempArray = new byte[Short.BYTES];
+        keyLength = Short.BYTES;
+        currentIndex = getReadIndex(buffers, currentIndex, Short.BYTES);
         buffers.get(currentIndex).getByteBuffer().get(tempArray);
         break;
       case LONG:
-        tempArray = new byte[8];
-        keyLength = 8;
-        currentIndex = getReadIndex(buffers, currentIndex, 8);
+        tempArray = new byte[Long.BYTES];
+        keyLength = Long.BYTES;
+        currentIndex = getReadIndex(buffers, currentIndex, Long.BYTES);
         buffers.get(currentIndex).getByteBuffer().get(tempArray);
         break;
       case DOUBLE:
-        tempArray = new byte[8];
-        keyLength = 8;
-        currentIndex = getReadIndex(buffers, currentIndex, 8);
+        tempArray = new byte[Double.BYTES];
+        keyLength = Double.BYTES;
+        currentIndex = getReadIndex(buffers, currentIndex, Double.BYTES);
         buffers.get(currentIndex).getByteBuffer().get(tempArray);
         break;
       case OBJECT:
-        currentIndex = getReadIndex(buffers, currentIndex, 4);
+        currentIndex = getReadIndex(buffers, currentIndex, Integer.BYTES);
         keyLength = buffers.get(currentIndex).getByteBuffer().getInt();
         tempArray = readBytes(buffers, keyLength);
         break;
       case BYTE:
-        currentIndex = getReadIndex(buffers, currentIndex, 4);
+        currentIndex = getReadIndex(buffers, currentIndex, Integer.BYTES);
         keyLength = buffers.get(currentIndex).getByteBuffer().getInt();
         tempArray = readBytes(buffers, keyLength);
         break;
       case STRING:
-        currentIndex = getReadIndex(buffers, currentIndex, 4);
+        currentIndex = getReadIndex(buffers, currentIndex, Integer.BYTES);
         keyLength = buffers.get(currentIndex).getByteBuffer().getInt();
         tempArray = readBytes(buffers, keyLength);
         break;
       case MULTI_FIXED_BYTE:
-        currentIndex = getReadIndex(buffers, currentIndex, 8);
+        currentIndex = getReadIndex(buffers, currentIndex, Integer.BYTES * 2);
         keyCount = buffers.get(currentIndex).getByteBuffer().getInt();
         keyLength = buffers.get(currentIndex).getByteBuffer().getInt();
         key = readMultiBytes(buffers, keyLength, keyCount);

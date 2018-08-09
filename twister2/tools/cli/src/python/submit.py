@@ -53,7 +53,6 @@ def create_parser(subparsers):
 
 def setup_java_system_properties(cl_args):
     java_system_props = []
-    twister2_home = os.path.dirname(os.path.dirname(os.path.realpath(sys.argv[0])))
     twister2_home = config.get_twister2_dir()
 
     if os.environ.get('TWISTER2_HOME'):
@@ -65,7 +64,6 @@ def setup_java_system_properties(cl_args):
     java_system_props.append("cluster_type=" + cl_args["cluster"])
     # set the job file
     java_system_props.append("job_file=" + cl_args['job-file-name'])
-    print twister2_home
     return java_system_props
 
 ################################################################################

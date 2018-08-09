@@ -67,7 +67,7 @@ public interface IWorkerController {
 
   /**
    * wait for all workers in the job to arrive at this barrier
-   * if the time limit is reached before all workers arrived, return false
+   * if the time limit has been reached before all workers arrived, return false
    * otherwise return true
    * @param timeLimitMilliSec
    * @return

@@ -64,4 +64,8 @@ public class SReduce {
   public void close() {
     // deregister from the channel
   }
+
+  public void finish(int src) {
+    reduce.finish(src);
+  }
 }

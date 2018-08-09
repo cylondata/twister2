@@ -54,7 +54,11 @@ public class BarrierMonitor implements MessageHandler {
     }
   }
 
+  /**
+   * send the response messages to all workers in waitList
+   */
   private void sendBarrierResponseToWaitList() {
+
     for (Map.Entry<Integer, RequestID> entry: waitList.entrySet()) {
       Network.BarrierResponse response = Network.BarrierResponse.newBuilder()
           .setWorkerID(entry.getKey())
@@ -66,6 +70,4 @@ public class BarrierMonitor implements MessageHandler {
 
     waitList.clear();
   }
-
-
 }

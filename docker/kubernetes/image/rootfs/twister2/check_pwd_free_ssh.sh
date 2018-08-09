@@ -3,18 +3,23 @@
 # A list of IP addresses are given as a command line parameter list to this script
 # This script will try to connect to all those IP addresses with ssh
 # It will return when it is able to connect to all IP address with ssh
-# It is used to check whether the password free access is established between this machine and the orthers
+# It is used to check whether the password free access is established between this machine and the others
 # This script is executed before running mpirun command on mpimaster pod
 #
 # Implementation:
 # All IP addresses are saved in a map
 # IP addresses are used as keys
 # Connection status is used as values: started or notstarted
-# when we connected to an IP address successfully, we mark the satatus as started for that IP
+# when we connected to an IP address successfully, we mark the status as started for that IP
 # when all IP addresses are marked as started, the processes finishes with success, exiting with the code 0
 #
 # To-do: add timeout mechanism
 #
+
+
+##################################################################################
+### Initialize the variables
+##################################################################################
 
 ALL_STARTED="false"
 POLLING_INTERVAL=0.1
@@ -25,6 +30,9 @@ for arg; do
   ipmap[$arg]="notstarted"
 done
 
+##################################################################################
+### Functions start
+##################################################################################
 # print the map, test method
 print_map(){
   for ip in "${!ipmap[@]}"; do
@@ -66,12 +74,6 @@ check_connection(){
 # Functions ended
 # main script starts
 #############################################################
-
-# initialize the map
-declare -A ipmap
-for arg; do
-  ipmap[$arg]="notstarted"
-done
 
 check_connection
 have_all_started
