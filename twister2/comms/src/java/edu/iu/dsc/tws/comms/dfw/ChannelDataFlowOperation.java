@@ -559,6 +559,8 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
                 canProgress = false;
 
                 break;
+              } else {
+                externalSendsPending.incrementAndGet();
               }
             }
           } finally {
