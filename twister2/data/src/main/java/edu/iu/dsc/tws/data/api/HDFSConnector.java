@@ -11,8 +11,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.api;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
@@ -184,5 +186,25 @@ public class HDFSConnector implements IHDFSConnector {
       e.printStackTrace();
     }
     return datanodeName;
+  }
+
+  public int getLengthOfFile(String fName) {
+    int length = 0;
+    String fileName = HdfsDataContext.getHdfsDataDirectory(config) + "/" + fName;
+    String directoryString = HdfsDataContext.getHdfsUrlDefault(config) + fileName;
+    Path path = new Path(directoryString);
+    HadoopFileSystem hadoopFileSystem = HDFSConnect();
+    try {
+      if (hadoopFileSystem.exists(path)) {
+        BufferedReader br = new BufferedReader(new InputStreamReader(
+            hadoopFileSystem.open(path)));
+        while ((br.readLine()) != null) {
+          length++;
+        }
+      }
+    } catch (Exception ee) {
+      ee.printStackTrace();
+    }
+    return length;
   }
 }

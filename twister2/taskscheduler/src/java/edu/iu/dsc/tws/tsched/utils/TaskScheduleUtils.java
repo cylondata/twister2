@@ -44,19 +44,18 @@ public final class TaskScheduleUtils {
     return defaultInstanceResource.cloneWithRam(instanceRam, instanceDisk, instanceCpu);*/
 
     assertIsValidInstance(defaultInstanceResource.cloneWithRam(instanceRam),
-        MIN_RAM_PER_INSTANCE, maxContainerResource, paddingPercentage);
+        maxContainerResource, paddingPercentage);
     return defaultInstanceResource.cloneWithRam(instanceRam);
   }
 
   private static void assertIsValidInstance(Resource instanceResources,
-                                            double minInstanceRam,
                                             Resource maxContainerResources,
                                             int paddingPercentage) throws TaskSchedulerException {
 
-    if (instanceResources.getRam() < minInstanceRam) {
+    if (instanceResources.getRam() < (double) TaskScheduleUtils.MIN_RAM_PER_INSTANCE) {
       throw new TaskSchedulerException(String.format(
           "Instance requires ram %s which is less than the minimum ram per instance of %s",
-          instanceResources.getRam(), minInstanceRam));
+          instanceResources.getRam(), TaskScheduleUtils.MIN_RAM_PER_INSTANCE));
     }
 
     double instanceRam = Math.round(TaskScheduleUtils.increaseBy(
