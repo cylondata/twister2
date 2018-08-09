@@ -30,6 +30,7 @@ import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.basic.comms.batch.BGatherExample;
 import edu.iu.dsc.tws.examples.basic.comms.batch.BPartitionExample;
 import edu.iu.dsc.tws.examples.basic.comms.batch.BReduceExample;
+import edu.iu.dsc.tws.examples.basic.comms.stream.SAllGatherExample;
 import edu.iu.dsc.tws.examples.basic.comms.stream.SAllReduceExample;
 import edu.iu.dsc.tws.examples.basic.comms.stream.SBroadcastExample;
 import edu.iu.dsc.tws.examples.basic.comms.stream.SGatherExample;
@@ -195,6 +196,16 @@ public class ExampleMain {
           basicJob = BasicJob.newBuilder()
               .setName("allreduce-stream-bench")
               .setContainerClass(SAllReduceExample.class.getName())
+              .setRequestResource(new ResourceContainer(2, 1024), containers)
+              .setConfig(jobConfig)
+              .build();
+          // now submit the job
+          Twister2Submitter.submitContainerJob(basicJob, config);
+          break;
+        case "allgather":
+          basicJob = BasicJob.newBuilder()
+              .setName("allgather-stream-bench")
+              .setContainerClass(SAllGatherExample.class.getName())
               .setRequestResource(new ResourceContainer(2, 1024), containers)
               .setConfig(jobConfig)
               .build();
