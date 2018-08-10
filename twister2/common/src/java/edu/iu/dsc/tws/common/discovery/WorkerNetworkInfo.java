@@ -39,11 +39,6 @@ public class WorkerNetworkInfo {
   private InetAddress ip;
   private int port;
 
-  // TODO: need to implement these
-  private String nodeIP;
-  private String rackName;
-  private String datacenterName;
-
   public WorkerNetworkInfo(InetAddress ip, int port, int workerID) {
     this.ip = ip;
     this.port = port;

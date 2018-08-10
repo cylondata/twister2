@@ -26,6 +26,9 @@ public class KubernetesContext extends SchedulerContext {
   public static final String KUBERNETES_NAMESPACE_DEFAULT = "default";
   public static final String KUBERNETES_NAMESPACE = "kubernetes.namespace";
 
+  public static final String KUBERNETES_RACK_LABEL_KEY = "kubernetes.rack.labey.key";
+  public static final String KUBERNETES_DATA_CENTER_LABEL_KEY = "kubernetes.datacenter.labey.key";
+
   public static final boolean NODE_PORT_SERVICE_REQUESTED_DEFAULT = false;
   public static final String NODE_PORT_SERVICE_REQUESTED = "kubernetes.node.port.service.requested";
 
@@ -91,6 +94,14 @@ public class KubernetesContext extends SchedulerContext {
 
   public static String namespace(Config cfg) {
     return cfg.getStringValue(KUBERNETES_NAMESPACE, KUBERNETES_NAMESPACE_DEFAULT);
+  }
+
+  public static String rackLabelKeyForK8s(Config cfg) {
+    return cfg.getStringValue(KUBERNETES_RACK_LABEL_KEY);
+  }
+
+  public static String datacenterLabelKeyForK8s(Config cfg) {
+    return cfg.getStringValue(KUBERNETES_DATA_CENTER_LABEL_KEY);
   }
 
   public static boolean workersUseOpenMPI(Config cfg) {
