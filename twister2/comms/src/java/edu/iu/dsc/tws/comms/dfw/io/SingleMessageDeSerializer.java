@@ -65,6 +65,13 @@ public class SingleMessageDeSerializer implements MessageDeSerializer {
     this.keyed = k;
   }
 
+  /**
+   * Builds the message from the data buffers in the partialObject
+   *
+   * @param partialObject message object that needs to be built
+   * @param edge the edge value associated with this message
+   * @return the built message as a object
+   */
   @Override
   public Object build(Object partialObject, int edge) {
     ChannelMessage currentMessage = (ChannelMessage) partialObject;
@@ -98,7 +105,7 @@ public class SingleMessageDeSerializer implements MessageDeSerializer {
    * Gets the message data in the message buffers as a byte[]
    *
    * @param partialObject object that contains the buffers
-   * @param edge he edge value associated with this message
+   * @param edge the edge value associated with this message
    * @return the message as a byte[]
    */
   @Override
