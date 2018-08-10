@@ -218,9 +218,4 @@ public class Context {
   public static int workerInstances(Config cfg) {
     return cfg.getIntegerValue(TWISTER2_WORKER_INSTANCES, TWISTER2_WORKER_INSTANCES_DEFAULT);
   }
-
-  /*public static String hadoopHome(Config cfg) {
-    return cfg.getStringValue(HADOOP_HOME);
-  }*/
-
 }
