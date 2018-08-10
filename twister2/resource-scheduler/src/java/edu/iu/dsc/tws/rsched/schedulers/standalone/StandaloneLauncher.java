@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.rsched.schedulers.standalone;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -25,6 +26,7 @@ import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
 import edu.iu.dsc.tws.rsched.spi.scheduler.IController;
 import edu.iu.dsc.tws.rsched.spi.scheduler.ILauncher;
+import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import edu.iu.dsc.tws.rsched.utils.ResourceSchedulerUtils;
 
 public class StandaloneLauncher implements ILauncher {
@@ -44,7 +46,23 @@ public class StandaloneLauncher implements ILauncher {
 
   @Override
   public boolean terminateJob(String jobName) {
-    return false;
+    LOG.log(Level.INFO, "Terminating job for cluster: ",
+        StandaloneContext.clusterType(config));
+
+    // get the job working directory
+    String jobWorkingDirectory = StandaloneContext.workingDirectory(config);
+    Config newConfig = Config.newBuilder().putAll(config).put(
+        SchedulerContext.WORKING_DIRECTORY, jobWorkingDirectory).build();
+    // now start the controller, which will get the resources from
+    // slurm and start the job
+    IController controller = new StandaloneController(true);
+    controller.initialize(newConfig);
+
+    jobWorkingDirectory = Paths.get(jobWorkingDirectory, jobName).toAbsolutePath().toString();
+    String jobDescFile = JobUtils.getJobDescriptionFilePath(jobWorkingDirectory, jobName, config);
+    JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
+
+    return controller.kill(job);
   }
 
   @Override

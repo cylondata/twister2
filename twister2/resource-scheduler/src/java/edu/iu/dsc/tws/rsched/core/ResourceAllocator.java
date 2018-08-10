@@ -340,7 +340,7 @@ public class ResourceAllocator {
 
     // Update the runtime config with the statemanager
     updatedConfig = Config.newBuilder()
-        .putAll(updatedConfig)
+        .putAll(config)
         .put(SchedulerContext.STATE_MANAGER_OBJECT, statemgr)
         .build();
 

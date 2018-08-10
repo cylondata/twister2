@@ -132,6 +132,11 @@ public final class JobUtils {
     return builder.build();
   }
 
+  public static String getJobDescriptionFilePath(String workingDirectory,
+                                                 String jobFileName, Config config) {
+    return Paths.get(workingDirectory, jobFileName + ".job").toAbsolutePath().toString();
+  }
+
   public static String getJobDescriptionFilePath(String jobFileName, Config config) {
     String home = Context.twister2Home(config);
     return Paths.get(home, jobFileName + ".job").toAbsolutePath().toString();
