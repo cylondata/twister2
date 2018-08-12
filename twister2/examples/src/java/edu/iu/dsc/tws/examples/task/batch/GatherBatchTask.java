@@ -27,19 +27,18 @@ package edu.iu.dsc.tws.examples.task.batch;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Random;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
-import edu.iu.dsc.tws.examples.task.streaming.GatherStreamingTask;
 import edu.iu.dsc.tws.examples.utils.RandomString;
 import edu.iu.dsc.tws.executor.api.ExecutionModel;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.executor.comm.tasks.batch.SinkBatchTask;
+import edu.iu.dsc.tws.executor.comm.tasks.batch.SourceBatchTask;
+import edu.iu.dsc.tws.executor.core.CommunicationOperationType;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.ThreadExecutor;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -48,12 +47,10 @@ import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.Operations;
-import edu.iu.dsc.tws.task.api.SinkTask;
-import edu.iu.dsc.tws.task.api.SourceTask;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
+import edu.iu.dsc.tws.task.graph.OperationMode;
 import edu.iu.dsc.tws.tsched.roundrobin.RoundRobinTaskScheduling;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
@@ -73,8 +70,9 @@ public class GatherBatchTask implements IContainer {
     builder.setParallelism("source", 4);
     builder.addSink("sink", r);
     builder.setParallelism("sink", 1);
-    builder.connect("source", "sink", "gather-edge", Operations.GATHER);
-
+    builder.connect("source", "sink", "gather-edge",
+        CommunicationOperationType.BATCH_GATHER);
+    builder.operationMode(OperationMode.BATCH);
 
     DataFlowTaskGraph graph = builder.build();
     RoundRobinTaskScheduling roundRobinTaskScheduling = new RoundRobinTaskScheduling();
@@ -86,12 +84,13 @@ public class GatherBatchTask implements IContainer {
     TWSNetwork network = new TWSNetwork(config, resourcePlan.getThisId());
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);
     ExecutionPlan plan = executionPlanBuilder.execute(config, graph, taskSchedulePlan);
-    ExecutionModel executionModel = new ExecutionModel(ExecutionModel.SHARED);
-    ThreadExecutor executor = new ThreadExecutor(executionModel, plan, network.getChannel());
+    ExecutionModel executionModel = new ExecutionModel(ExecutionModel.SHARING);
+    ThreadExecutor executor = new ThreadExecutor(executionModel, plan, network.getChannel(),
+        OperationMode.BATCH);
     executor.execute();
   }
 
-  private static class GeneratorTask extends SourceTask {
+  private static class GeneratorTask extends SourceBatchTask {
     private static final long serialVersionUID = -254264903510284748L;
     private TaskContext ctx;
     private Config config;
@@ -99,13 +98,6 @@ public class GatherBatchTask implements IContainer {
 
     @Override
     public void run() {
-      randomString = new RandomString(128000, new Random(), RandomString.ALPHANUM);
-      String data = generateStringData();
-      // lets generate a message
-      KeyedContent message = new KeyedContent(0, data,
-          MessageType.INTEGER, MessageType.OBJECT);
-//      System.out.println("Message : Key :" + message.getKey().toString() + ", Value : "
-//          + message.getValue());
       ctx.write("gather-edge", "1");
     }
 
@@ -124,15 +116,13 @@ public class GatherBatchTask implements IContainer {
     }
   }
 
-  private static class RecevingTask extends SinkTask {
+  private static class RecevingTask extends SinkBatchTask {
     private int count = 0;
     private static final long serialVersionUID = -254264903510284798L;
 
     @Override
     public boolean execute(IMessage message) {
-      if (count % 100000 == 0) {
-        System.out.println("Message Gathered : " + message.getContent() + ", Count : " + count);
-      }
+      System.out.println("Message Gathered : " + message.getContent() + ", Count : " + count);
       count++;
       return true;
     }
@@ -168,7 +158,7 @@ public class GatherBatchTask implements IContainer {
 
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
     jobBuilder.setName("task-gather");
-    jobBuilder.setContainerClass(GatherStreamingTask.class.getName());
+    jobBuilder.setContainerClass(GatherBatchTask.class.getName());
     jobBuilder.setRequestResource(new ResourceContainer(4, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 

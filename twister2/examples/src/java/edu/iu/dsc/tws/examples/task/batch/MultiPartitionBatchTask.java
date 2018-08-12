@@ -32,9 +32,11 @@ import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
-import edu.iu.dsc.tws.examples.task.streaming.MultiPartitionStreamingTask;
 import edu.iu.dsc.tws.executor.api.ExecutionModel;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.executor.comm.tasks.batch.SinkBatchTask;
+import edu.iu.dsc.tws.executor.comm.tasks.batch.SourceBatchTask;
+import edu.iu.dsc.tws.executor.core.CommunicationOperationType;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.ThreadExecutor;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -44,12 +46,10 @@ import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.ITask;
-import edu.iu.dsc.tws.task.api.Operations;
-import edu.iu.dsc.tws.task.api.SinkTask;
-import edu.iu.dsc.tws.task.api.SourceTask;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
+import edu.iu.dsc.tws.task.graph.OperationMode;
 import edu.iu.dsc.tws.tsched.roundrobin.RoundRobinTaskScheduling;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
@@ -69,8 +69,11 @@ public class MultiPartitionBatchTask implements IContainer {
     builder.addTask("inter", i);
     builder.setParallelism("inter", 4);
     builder.setParallelism("sink", 4);
-    builder.connect("source", "inter", "partition-edge1", Operations.PARTITION);
-    builder.connect("inter", "sink", "partition-edge2", Operations.PARTITION);
+    builder.connect("source", "inter", "partition-edge1",
+        CommunicationOperationType.BATCH_PARTITION);
+    builder.connect("inter", "sink", "partition-edge2",
+        CommunicationOperationType.BATCH_PARTITION);
+    builder.operationMode(OperationMode.BATCH);
 
     DataFlowTaskGraph graph = builder.build();
 
@@ -83,12 +86,13 @@ public class MultiPartitionBatchTask implements IContainer {
     TWSNetwork network = new TWSNetwork(config, resourcePlan.getThisId());
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);
     ExecutionPlan plan = executionPlanBuilder.execute(config, graph, taskSchedulePlan);
-    ExecutionModel executionModel = new ExecutionModel(ExecutionModel.SHARED);
-    ThreadExecutor executor = new ThreadExecutor(executionModel, plan, network.getChannel());
+    ExecutionModel executionModel = new ExecutionModel(ExecutionModel.SHARING);
+    ThreadExecutor executor = new ThreadExecutor(executionModel, plan, network.getChannel(),
+        OperationMode.BATCH);
     executor.execute();
   }
 
-  private static class GeneratorTask extends SourceTask {
+  private static class GeneratorTask extends SourceBatchTask {
     private static final long serialVersionUID = -254264903510284748L;
     private TaskContext ctx;
     private Config config;
@@ -142,7 +146,7 @@ public class MultiPartitionBatchTask implements IContainer {
   }
 
 
-  private static class RecevingTask extends SinkTask {
+  private static class RecevingTask extends SinkBatchTask {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 
@@ -185,7 +189,7 @@ public class MultiPartitionBatchTask implements IContainer {
 
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
     jobBuilder.setName("partition-example");
-    jobBuilder.setContainerClass(MultiPartitionStreamingTask.class.getName());
+    jobBuilder.setContainerClass(MultiPartitionBatchTask.class.getName());
     jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 

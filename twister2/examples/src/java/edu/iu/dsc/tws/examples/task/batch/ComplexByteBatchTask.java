@@ -33,9 +33,11 @@ import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
-import edu.iu.dsc.tws.examples.task.streaming.ComplexByteStreamingTask;
 import edu.iu.dsc.tws.executor.api.ExecutionModel;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.executor.comm.tasks.batch.SinkBatchTask;
+import edu.iu.dsc.tws.executor.comm.tasks.batch.SourceBatchTask;
+import edu.iu.dsc.tws.executor.core.CommunicationOperationType;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.ThreadExecutor;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -44,13 +46,11 @@ import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.Operations;
-import edu.iu.dsc.tws.task.api.SinkTask;
-import edu.iu.dsc.tws.task.api.SourceTask;
 import edu.iu.dsc.tws.task.api.Task;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
+import edu.iu.dsc.tws.task.graph.OperationMode;
 import edu.iu.dsc.tws.tsched.roundrobin.RoundRobinTaskScheduling;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
@@ -70,8 +70,11 @@ public class ComplexByteBatchTask implements IContainer {
     builder.setParallelism("intermediate", 4);
     builder.addSink("sink", r);
     builder.setParallelism("sink", 1);
-    builder.connect("source", "intermediate", "partition-edge", Operations.BROADCAST);
-    builder.connect("intermediate", "sink", "gather-edge", Operations.GATHER);
+    builder.connect("source", "intermediate", "partition-edge",
+        CommunicationOperationType.BATCH_PARTITION);
+    builder.connect("intermediate", "sink", "gather-edge",
+        CommunicationOperationType.BATCH_GATHER);
+    builder.operationMode(OperationMode.BATCH);
 
     DataFlowTaskGraph graph = builder.build();
 
@@ -85,12 +88,13 @@ public class ComplexByteBatchTask implements IContainer {
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);
     ExecutionPlan executionPlan = new ExecutionPlan();
     ExecutionPlan plan = executionPlanBuilder.execute(config, graph, taskSchedulePlan);
-    ExecutionModel executionModel = new ExecutionModel(ExecutionModel.DEDICATED);
-    ThreadExecutor executor = new ThreadExecutor(executionModel, plan, network.getChannel());
+    ExecutionModel executionModel = new ExecutionModel(ExecutionModel.SHARING);
+    ThreadExecutor executor = new ThreadExecutor(executionModel, plan, network.getChannel(),
+        OperationMode.BATCH);
     executor.execute();
   }
 
-  private static class GeneratorTask extends SourceTask {
+  private static class GeneratorTask extends SourceBatchTask {
     private static final long serialVersionUID = -254264903510284748L;
     private TaskContext ctx;
     private Config config;
@@ -125,7 +129,7 @@ public class ComplexByteBatchTask implements IContainer {
     }
   }
 
-  private static class ReceivingTask extends SinkTask {
+  private static class ReceivingTask extends SinkBatchTask {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 
@@ -209,7 +213,7 @@ public class ComplexByteBatchTask implements IContainer {
     jobConfig.putAll(configurations);
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
     jobBuilder.setName("complex-task-example");
-    jobBuilder.setContainerClass(ComplexByteStreamingTask.class.getName());
+    jobBuilder.setContainerClass(ComplexByteBatchTask.class.getName());
     jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
     // now submit the job

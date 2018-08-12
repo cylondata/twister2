@@ -34,6 +34,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.executor.api.ExecutionModel;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.executor.comm.tasks.batch.SinkBatchTask;
 import edu.iu.dsc.tws.executor.comm.tasks.batch.SourceBatchTask;
 import edu.iu.dsc.tws.executor.core.CommunicationOperationType;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
@@ -45,7 +46,6 @@ import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.SinkTask;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
@@ -67,12 +67,16 @@ public class TaskBatchExample implements IContainer {
     builder.setParallelism("source", 4);
     builder.addSink("sink", r);
     builder.setParallelism("sink", 4);
-    builder.connect("source", "sink", "partition-edge", CommunicationOperationType.BATCH_REDUCE);
+    builder.connect("source", "sink", "partition-edge",
+        CommunicationOperationType.BATCH_REDUCE);
     builder.operationMode(OperationMode.BATCH);
 
-    builder.addConfiguration("source", "Ram", GraphConstants.taskInstanceRam(config));
-    builder.addConfiguration("source", "Disk", GraphConstants.taskInstanceDisk(config));
-    builder.addConfiguration("source", "Cpu", GraphConstants.taskInstanceCpu(config));
+    builder.addConfiguration("source", "Ram",
+        GraphConstants.taskInstanceRam(config));
+    builder.addConfiguration("source", "Disk",
+        GraphConstants.taskInstanceDisk(config));
+    builder.addConfiguration("source", "Cpu",
+        GraphConstants.taskInstanceCpu(config));
 
     List<String> sourceInputDataset = new ArrayList<>();
     sourceInputDataset.add("dataset1.txt");
@@ -91,8 +95,9 @@ public class TaskBatchExample implements IContainer {
     TWSNetwork network = new TWSNetwork(config, resourcePlan.getThisId());
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);
     ExecutionPlan plan = executionPlanBuilder.execute(config, graph, taskSchedulePlan);
-    ExecutionModel executionModel = new ExecutionModel(ExecutionModel.SHARED);
-    ThreadExecutor executor = new ThreadExecutor(executionModel, plan, network.getChannel());
+    ExecutionModel executionModel = new ExecutionModel(ExecutionModel.SHARING);
+    ThreadExecutor executor = new ThreadExecutor(executionModel, plan, network.getChannel(),
+        OperationMode.BATCH);
     executor.execute();
   }
 
@@ -138,7 +143,7 @@ public class TaskBatchExample implements IContainer {
     }
   }
 
-  private static class RecevingTask extends SinkTask {
+  private static class RecevingTask extends SinkBatchTask {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 
