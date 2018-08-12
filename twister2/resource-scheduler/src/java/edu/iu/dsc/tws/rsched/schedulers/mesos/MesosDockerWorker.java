@@ -141,7 +141,7 @@ public class MesosDockerWorker {
           "1", "--mca", "btl_tcp_if_include", "eth0",
           "--hostfile", "/twister2/hostFile", "java", "-cp",
           "twister2-job/libexamples-java.jar",
-          "edu.iu.dsc.tws.examples.basic.BasicMpiJob", ">mpioutfile"};
+          "edu.iu.dsc.tws.examples.internal.rsched.BasicMpiJob", ">mpioutfile"};
 
       System.out.println("command:" + String.join(" ", command));
 
