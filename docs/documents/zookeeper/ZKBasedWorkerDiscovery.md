@@ -43,10 +43,10 @@ including the ones that have already left.
 Each line of the job znode body has the data of a single worker. 
 The format of the job znode body is as follows:
 
-    ip:port=workerID;
-    ip:port=workerID;
+    ip,port,workerID;nodeIP,rackName,datacenterName
+    ip,port,workerID;nodeIP,rackName,datacenterName
     ....
-    ip:port=workerID;
+    ip,port,workerID;nodeIP,rackName,datacenterName
 
 When a worker joins the job, it first gets its unique ID. 
 Then, it updates the body of the job znode with its data. 
@@ -58,9 +58,9 @@ The name of the child znode is composed of workerIP and port number:
     workerIP:workerPort
 
 Since workerIP and workerPort pair is unique in each job, this prevents any collusion. 
-Each worker adds its workerID as the body data of its znode:
+Each worker adds its data as the body data of its znode:
 
-    workerID
+    ip,port,workerID;nodeIP,rackName,datacenterName
 
 When a worker completes and leaves the job, its child znode is deleted. 
 However, it does not delete its data from the body of the job znode. 

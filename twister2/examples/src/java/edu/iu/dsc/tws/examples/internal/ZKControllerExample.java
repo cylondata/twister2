@@ -16,6 +16,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.common.discovery.NodeInfo;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKController;
@@ -105,7 +106,9 @@ public final class ZKControllerExample {
     int port = 1000 + (int) (Math.random() * 1000);
     String workerAddress = "localhost:" + port;
 
-    ZKController zkController = new ZKController(cnfg, jobName, workerAddress, numberOfWorkers);
+    NodeInfo nodeInfo = new NodeInfo("node1.on.hostx", "rack1", "dc01");
+    ZKController zkController =
+        new ZKController(cnfg, jobName, workerAddress, numberOfWorkers, nodeInfo);
     zkController.initialize();
 
     List<WorkerNetworkInfo> workerList = zkController.getWorkerList();
@@ -129,6 +132,9 @@ public final class ZKControllerExample {
       zkController.close();
       return;
     }
+
+    workerList = zkController.getCurrentWorkers();
+    LOG.info("Current worker list: \n" + WorkerNetworkInfo.workerListAsString(workerList));
 
     sleeeep((long) (Math.random() * 10000));
 
