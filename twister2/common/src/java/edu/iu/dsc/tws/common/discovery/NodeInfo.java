@@ -73,6 +73,9 @@ public class NodeInfo {
    * @return
    */
   public static String encodeNodeInfo(NodeInfo nodeInfo) {
+    if (nodeInfo == null) {
+      return "null,null,null";
+    }
     return nodeInfo.nodeIP + "," + nodeInfo.rackName + "," + nodeInfo.dataCenterName;
   }
 
@@ -91,7 +94,23 @@ public class NodeInfo {
       return null;
     }
 
-    return new NodeInfo(fields[0], fields[1], fields[2]);
+    // null check
+    String nodeIP = fields[0];
+    if ("null".equalsIgnoreCase(nodeIP)) {
+      nodeIP = null;
+    }
+
+    String rackName = fields[1];
+    if ("null".equalsIgnoreCase(rackName)) {
+      rackName = null;
+    }
+
+    String dcName = fields[2];
+    if ("null".equalsIgnoreCase(dcName)) {
+      dcName = null;
+    }
+
+    return new NodeInfo(nodeIP, rackName, dcName);
   }
 
   /**
@@ -146,7 +165,5 @@ public class NodeInfo {
     }
     return allNodesInfos;
   }
-
-
 
 }
