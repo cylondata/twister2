@@ -20,6 +20,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.discovery.NodeInfo;
 import edu.iu.dsc.tws.master.IJobTerminator;
 import edu.iu.dsc.tws.master.JobMaster;
 import edu.iu.dsc.tws.master.JobMasterContext;
@@ -272,9 +273,21 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
       }
     }
 
+    // first get Node list and build encoded NodeInfo Strings
+    String rackLabelKey = KubernetesContext.rackLabelKeyForK8s(config);
+    String dcLabelKey = KubernetesContext.datacenterLabelKeyForK8s(config);
+    ArrayList<NodeInfo> nodeInfoList = controller.getNodeInfo(rackLabelKey, dcLabelKey);
+    String encodedNodeInfoList = NodeInfo.encodeNodeInfoList(nodeInfoList);
+    LOG.info("Number of NodeInfo objects: " + nodeInfoList.size()
+        + "\n" + encodedNodeInfoList);
+
+    nodeInfoList = NodeInfo.decodeNodeInfoList(encodedNodeInfoList);
+    LOG.info("Decoded NodeInfo list, size: " + nodeInfoList.size()
+        + "\n" + NodeInfo.listToString(nodeInfoList));
+
     // create the StatefulSet object for this job
-    V1beta2StatefulSet statefulSet =
-        RequestObjectBuilder.createStatefulSetObjectForJob(jobName, jobFileSize, config);
+    V1beta2StatefulSet statefulSet = RequestObjectBuilder.createStatefulSetObjectForJob(
+        config, jobName, jobFileSize, encodedNodeInfoList);
 
     if (statefulSet == null) {
       return false;

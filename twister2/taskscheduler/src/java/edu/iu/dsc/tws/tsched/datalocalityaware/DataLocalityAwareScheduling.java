@@ -14,7 +14,6 @@ package edu.iu.dsc.tws.tsched.datalocalityaware;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -83,13 +82,12 @@ public class DataLocalityAwareScheduling {
           + containerCapacity + " and " + totalTask + " Task Instances");
     }
 
-    LOG.info(String.format("Data Aware Before Task Allocation:\t" + dataAwareAllocation));
+    LOG.info("Data Aware Before Task Allocation:\t" + dataAwareAllocation);
 
-    for (Iterator<Map.Entry<String, Integer>> iterator = taskEntrySet.iterator();
-         iterator.hasNext();) {
+    for (Map.Entry<String, Integer> aTaskEntrySet : taskEntrySet) {
 
       Map<String, List<CalculateDataTransferTime>> workerPlanMap;
-      Map.Entry<String, Integer> entry = iterator.next();
+      Map.Entry<String, Integer> entry = aTaskEntrySet;
       String taskName = entry.getKey();
 
       // If the vertex has input dataset and get the datanode name of the
@@ -146,8 +144,8 @@ public class DataLocalityAwareScheduling {
                     new InstanceId(vertex.getName(), globalTaskIndex, i));
                 ++maxContainerTaskObjectSize;
               } else {
-                LOG.info(String.format("Worker:" + containerIndex
-                    + "Reached Max. Task Object Size:" + maxContainerTaskObjectSize));
+                LOG.info("Worker:" + containerIndex
+                    + "Reached Max. Task Object Size:" + maxContainerTaskObjectSize);
               }
             }
             globalTaskIndex++;

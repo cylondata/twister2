@@ -20,8 +20,6 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.Vertex;
 
-//import java.util.HashSet;
-
 /**
  * This class acts as a helper class for the batch task scheduling algorithms to
  * parse the simple dataflow task graph to the complex task graph.
@@ -100,76 +98,4 @@ public final class TaskVertexParser {
     LOG.info("Batch Task Vertex List:" + taskVertexList);
     return taskVertexList;
   }
-
-  /**
-   * This method is mainly used to parse the task vertex set and the taskgraph and
-   * identify the source, parent, child, and sink tasks. Finally, the identified tasks
-   * will be stored in a separate Set.
-   */
-//  @SuppressWarnings("unchecked")
-//  public static List<Set<Vertex>> parseVertexSet(Set<Vertex> taskVertexSet,
-//                                                 DataFlowTaskGraph dataFlowTaskGraph) {
-//    //This logic could be optimized later...!
-//    List<Set<Vertex>> taskVertexList = new LinkedList<>();
-//    LOG.info("Task Vertex to be parsed:" + taskVertexSet);
-//
-//    for (Vertex vertex : taskVertexSet) {
-//      if (dataFlowTaskGraph.outgoingTaskEdgesOf(vertex).size() > 1) {
-//        Set<Vertex> vertexSet = new LinkedHashSet<>();
-//        vertexSet.add(vertex);
-//        taskVertexList.add(vertexSet);
-//
-//        /*LinkedHashSet<Vertex> childrenOfTaskSet =
-//            (LinkedHashSet) dataFlowTaskGraph.childrenOfTask(vertex);*/
-//        //Set<Vertex> childrenOfTaskSet = dataFlowTaskGraph.childrenOfTask(vertex);
-//
-//        Set<Vertex> childrenOfTaskSet =
-//            new LinkedHashSet<>(dataFlowTaskGraph.childrenOfTask(vertex));
-//
-//        LOG.info("Child Task Set:" + childrenOfTaskSet);
-//        taskVertexList.add(childrenOfTaskSet);
-//      } else if (dataFlowTaskGraph.incomingTaskEdgesOf(vertex).size() > 1) {
-//        Set<Vertex> vertexSet = new LinkedHashSet<>();
-//        for (int i = 0; i < taskVertexList.size(); i++) {
-//          Set<Vertex> vertices = taskVertexList.get(i);
-//          for (Vertex vertex1 : vertices) {
-//            if (!vertex1.getName().equals(vertices) && !vertexSet.contains(vertex)) {
-//              vertexSet.add(vertex);
-//              taskVertexList.add(vertexSet);
-//            }
-//          }
-//        }
-//      } else if (!(dataFlowTaskGraph.incomingTaskEdgesOf(vertex).size() > 1)
-//          || !(dataFlowTaskGraph.outgoingTaskEdgesOf(vertex).size() > 1)) {
-//        Set<Vertex> vertexSet = new LinkedHashSet<>();
-//
-//        if (taskVertexList.size() == 0) {
-//          vertexSet.add(vertex);
-//          taskVertexList.add(vertexSet);
-//        } else if (taskVertexList.size() == 1) {
-//          Set<Vertex> vv = taskVertexList.get(0);
-//          if (!vertexSet.contains(vv) || !vv.contains(vertex)) {
-//            vertexSet.add(vertex);
-//            taskVertexList.add(vertexSet);
-//          }
-//        } else {
-//          int size = taskVertexList.size();
-//          for (int i = size - 1; i < taskVertexList.size(); i++) {
-//            Set<Vertex> vv = taskVertexList.get(i);
-//            if (!vv.contains(vertex)) {
-//              for (Vertex vertex1 : vv) {
-//                if (!vertex1.getName().equals(vertex.getName()) && !vertexSet.contains(vertex)
-//                    && !vertexSet.contains(vertex1) && !vertex1.equals(vertex)) {
-//                  vertexSet.add(vertex);
-//                  taskVertexList.add(vertexSet);
-//                }
-//              }
-//            }
-//          }
-//        }
-//      }//End of Inner Else block*/
-//    }//End of Outer For
-//    LOG.info("Batch Task Vertex List:" + taskVertexList);
-//    return taskVertexList;
-//  }
 }

@@ -224,6 +224,15 @@ public abstract class BaseNetworkChannel {
     }
   }
 
+  public boolean isPending() {
+    boolean sendPending = pendingSends.size() > 0;
+    boolean recvPending = false;
+    for (Map.Entry<Integer, BlockingQueue<TCPMessage>> e : pendingReceives.entrySet()) {
+      recvPending = e.getValue().size() > 0;
+    }
+    return sendPending || recvPending;
+  }
+
   public void enableReading() {
     if (!looper.isReadRegistered(socketChannel)) {
       try {

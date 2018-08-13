@@ -238,13 +238,6 @@ public class ResourceAllocator {
       throw new RuntimeException("The uploader class must be specified");
     }
 
-    String threadNumber = SchedulerContext.numOfThreads(config);
-    if (threadNumber == null) {
-      threadNumber = new String("1"); // initializing to single threaded application
-    }
-    LOG.info("Allocated Thread Number : " + threadNumber);
-
-
     ILauncher launcher;
     IUploader uploader;
     IStateManager statemgr;
@@ -295,7 +288,7 @@ public class ResourceAllocator {
         .putAll(updatedConfig)
         .put(SchedulerContext.TWISTER2_PACKAGES_PATH, scpPath)
         .put(SchedulerContext.JOB_PACKAGE_URI, packageURI)
-        .put(SchedulerContext.THREADS_PER_WORKER, threadNumber)
+        .put(SchedulerContext.STATE_MANAGER_OBJECT, statemgr)
         .build();
 
     // this is a handler chain based execution in resource allocator. We need to
@@ -303,10 +296,6 @@ public class ResourceAllocator {
     launcher.initialize(updatedConfig);
 
     RequestedResources requestedResources = buildRequestedResources(updatedJob);
-    if (requestedResources == null) {
-      throw new RuntimeException("Failed to build the requested resources");
-    }
-
     launcher.launch(requestedResources, updatedJob);
   }
 
@@ -347,10 +336,16 @@ public class ResourceAllocator {
     }
 
     // let the state manager know that we are killing this job??
-    // statemgr.initialize(config);
+    statemgr.initialize(config);
+
+    // Update the runtime config with the statemanager
+    updatedConfig = Config.newBuilder()
+        .putAll(config)
+        .put(SchedulerContext.STATE_MANAGER_OBJECT, statemgr)
+        .build();
 
     // initialize the launcher and terminate the job
-    launcher.initialize(config);
+    launcher.initialize(updatedConfig);
     boolean terminated = launcher.terminateJob(jobName);
     if (!terminated) {
       LOG.log(Level.SEVERE, "Could not terminate the job");

@@ -24,7 +24,6 @@ public class TaskSchedulerContext extends SchedulerContext {
   public static final String TWISTER2_TASK_SCHEDULING_MODE_DEFAULT = "roundrobin";
 
   //public static final String TWISTER2_TASK_SCHEDULING_MODE_DEFAULT = "firstfit";
-
   //public static final String TWISTER2_TASK_SCHEDULING_MODE_DEFAULT = "datalocalityaware";
 
   public static final String TWISTER2_TASK_INSTANCE_RAM = "twister2.task.instance.ram";

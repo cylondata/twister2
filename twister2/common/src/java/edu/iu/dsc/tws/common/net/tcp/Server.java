@@ -67,7 +67,7 @@ public class Server implements SelectHandler {
                 ChannelHandler msgHandler) {
     this.config = cfg;
     this.progress = loop;
-    address = new InetSocketAddress(host, port);
+    this.address = new InetSocketAddress(host, port);
     this.channelHandler = msgHandler;
   }
 
@@ -75,7 +75,7 @@ public class Server implements SelectHandler {
                 ChannelHandler msgHandler, boolean fixBuffers) {
     this.config = cfg;
     this.progress = loop;
-    address = new InetSocketAddress(host, port);
+    this.address = new InetSocketAddress(host, port);
     this.channelHandler = msgHandler;
     this.fixedBuffers = fixBuffers;
   }
@@ -121,6 +121,30 @@ public class Server implements SelectHandler {
     } catch (IOException e) {
       LOG.log(Level.WARNING, "Failed to close server", e);
     }
+  }
+
+  /**
+   * Stop the server while trying to process any queued responses
+   */
+  public void stopGraceFully(long waitTime) {
+    // now lets wait if there are messages pending
+    long start = System.currentTimeMillis();
+
+    boolean pending;
+    long elapsed;
+    do {
+      pending = false;
+      for (BaseNetworkChannel channel : connectedChannels.values()) {
+        if (channel.isPending()) {
+          progress.loop();
+          pending = true;
+        }
+      }
+      elapsed = System.currentTimeMillis() - start;
+    } while (pending && elapsed < waitTime);
+
+    // after sometime we need to stop
+    stop();
   }
 
   public TCPMessage send(SocketChannel sc, ByteBuffer buffer, int size, int edge) {

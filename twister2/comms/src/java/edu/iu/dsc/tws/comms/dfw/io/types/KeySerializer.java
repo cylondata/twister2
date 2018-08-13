@@ -23,7 +23,13 @@ public final class KeySerializer {
   }
 
   /**
-   * Serialize the key and set it to the state
+   * Calculates the length of the key based on the type of key. If the key is not a primitive
+   * type this method will serialize the key object and save it in the {@code state}
+   * @param key the key of which the length is calculated
+   * @param type the type of the key
+   * @param state the state object that records the state of the message
+   * @param serializer the serializer to be used if the object needs to be serialized
+   * @return the length of the key in BYTES
    */
   public static int serializeKey(Object key, MessageType type,
                                  SerializeState state, KryoSerializer serializer) {
@@ -64,7 +70,14 @@ public final class KeySerializer {
   }
 
   /**
-   * Copy the key to the buffer
+   * Copys the key to the buffer that is passed to this method. If the object has been already been
+   * serilized then it will be retrieved from the state object.
+   * @param key the key to be copied
+   * @param keyType the type of the key
+   * @param targetBuffer the buffer to which the key will be copied
+   * @param state the state object that holds the state of the message
+   * @param serializer the serializer to be used if the object needs to be serialized
+   * @return true if the key was copied to the buffer successfully or false otherwise
    */
   @SuppressWarnings("unchecked")
   public static boolean copyKeyToBuffer(Object key, MessageType keyType,
@@ -76,6 +89,7 @@ public final class KeySerializer {
         if (targetBuffer.remaining() > Integer.BYTES) {
           targetBuffer.putInt((Integer) key);
           state.setTotalBytes(state.getTotalBytes() + Integer.BYTES);
+          state.setCurretHeaderLength(state.getCurretHeaderLength() + Integer.BYTES);
           state.setKeySize(Integer.BYTES);
           return true;
         }
@@ -84,6 +98,7 @@ public final class KeySerializer {
         if (targetBuffer.remaining() > Short.BYTES) {
           targetBuffer.putShort((short) key);
           state.setTotalBytes(state.getTotalBytes() + Short.BYTES);
+          state.setCurretHeaderLength(state.getCurretHeaderLength() + Short.BYTES);
           state.setKeySize(Short.BYTES);
           return true;
         }
@@ -92,6 +107,7 @@ public final class KeySerializer {
         if (targetBuffer.remaining() > Long.BYTES) {
           targetBuffer.putLong((Long) key);
           state.setTotalBytes(state.getTotalBytes() + Long.BYTES);
+          state.setCurretHeaderLength(state.getCurretHeaderLength() + Long.BYTES);
           state.setKeySize(Long.BYTES);
           return true;
         }
@@ -100,6 +116,7 @@ public final class KeySerializer {
         if (targetBuffer.remaining() > Double.BYTES) {
           targetBuffer.putDouble((Double) key);
           state.setTotalBytes(state.getTotalBytes() + Double.BYTES);
+          state.setCurretHeaderLength(state.getCurretHeaderLength() + Double.BYTES);
           state.setKeySize(Double.BYTES);
           return true;
         }
