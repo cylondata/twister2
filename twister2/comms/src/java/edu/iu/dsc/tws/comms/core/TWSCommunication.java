@@ -33,17 +33,10 @@ public interface TWSCommunication {
                            Set<Integer> sourceTasks, int destTask,
                            MessageReceiver reduceReceiver, MessageReceiver partialReceiver);
 
-  DataFlowOperation broadCast(Map<String, Object> properties, MessageType type, int edge,
-                              int sourceTask, Set<Integer> destTasks,
-                              MessageReceiver receiver);
-
-  DataFlowOperation direct(Map<String, Object> properties, MessageType type, int edge,
+  DataFlowOperation reduce(Map<String, Object> properties, MessageType type, int edge,
                            Set<Integer> sourceTasks, int destTask,
-                           MessageReceiver receiver);
-
-  DataFlowOperation loadBalance(Map<String, Object> properties, MessageType type, int edge,
-                                Set<Integer> sourceTasks, Set<Integer> destTasks,
-                                MessageReceiver receiver);
+                           MessageReceiver reduceReceiver, MessageReceiver partialReceiver,
+                           CompletionListener compListener);
 
   DataFlowOperation keyedReduce(Map<String, Object> properties, MessageType type, Set<Integer> edge,
                                 Set<Integer> sourceTasks, Set<Integer> destTasks,
@@ -109,8 +102,15 @@ public interface TWSCommunication {
                               Set<Integer> sourceTasks, Set<Integer> destTasks,
                               MessageReceiver finalRcvr, MessageReceiver partialRcvr);
 
-  DataFlowOperation reduce(Map<String, Object> properties, MessageType type, int edge,
+  DataFlowOperation broadCast(Map<String, Object> properties, MessageType type, int edge,
+                              int sourceTask, Set<Integer> destTasks,
+                              MessageReceiver receiver);
+
+  DataFlowOperation direct(Map<String, Object> properties, MessageType type, int edge,
                            Set<Integer> sourceTasks, int destTask,
-                           MessageReceiver reduceReceiver, MessageReceiver partialReceiver,
-                           CompletionListener compListener);
+                           MessageReceiver receiver);
+
+  DataFlowOperation loadBalance(Map<String, Object> properties, MessageType type, int edge,
+                                Set<Integer> sourceTasks, Set<Integer> destTasks,
+                                MessageReceiver receiver);
 }
