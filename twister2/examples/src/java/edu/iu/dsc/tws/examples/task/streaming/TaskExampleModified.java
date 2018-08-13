@@ -22,6 +22,9 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.executor.api.ExecutionModel;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.executor.comm.tasks.streaming.SinkStreamTask;
+import edu.iu.dsc.tws.executor.comm.tasks.streaming.SourceStreamTask;
+import edu.iu.dsc.tws.executor.core.CommunicationOperationType;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.ThreadExecutor;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -30,13 +33,11 @@ import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.Operations;
-import edu.iu.dsc.tws.task.api.SinkTask;
-import edu.iu.dsc.tws.task.api.SourceTask;
 import edu.iu.dsc.tws.task.api.Task;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
+import edu.iu.dsc.tws.task.graph.OperationMode;
 import edu.iu.dsc.tws.tsched.roundrobin.RoundRobinTaskScheduling;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
@@ -56,8 +57,11 @@ public class TaskExampleModified implements IContainer {
     builder.setParallelism("middle", 2);
     builder.addSink("sink", r);
     builder.setParallelism("sink", 2);
-    builder.connect("source", "middle", "e1", Operations.PARTITION);
-    builder.connect("middle", "sink", "e2", Operations.PARTITION);
+    builder.connect("source", "middle", "e1",
+        CommunicationOperationType.STREAMING_PARTITION);
+    builder.connect("middle", "sink", "e2",
+        CommunicationOperationType.STREAMING_PARTITION);
+    builder.operationMode(OperationMode.STREAMING);
 
     DataFlowTaskGraph graph = builder.build();
 
@@ -70,12 +74,13 @@ public class TaskExampleModified implements IContainer {
     TWSNetwork network = new TWSNetwork(config, resourcePlan.getThisId());
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);
     ExecutionPlan plan = executionPlanBuilder.execute(config, graph, taskSchedulePlan);
-    ExecutionModel executionModel = new ExecutionModel(ExecutionModel.SHARED);
-    ThreadExecutor executor = new ThreadExecutor(executionModel, plan, network.getChannel());
+    ExecutionModel executionModel = new ExecutionModel(ExecutionModel.SHARING);
+    ThreadExecutor executor = new ThreadExecutor(executionModel, plan, network.getChannel(),
+        OperationMode.STREAMING);
     executor.execute();
   }
 
-  private static class GeneratorTaskModified extends SourceTask {
+  private static class GeneratorTaskModified extends SourceStreamTask {
     private static final long serialVersionUID = -254264903510284748L;
     private TaskContext ctx;
     private Config config;
@@ -96,7 +101,7 @@ public class TaskExampleModified implements IContainer {
     }
   }
 
-  private static class RecevingTaskModified extends SinkTask {
+  private static class RecevingTaskModified extends SinkStreamTask {
     private static final long serialVersionUID = -254264903510284798L;
 
     @Override
