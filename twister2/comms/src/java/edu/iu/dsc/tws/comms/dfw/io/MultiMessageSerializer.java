@@ -89,7 +89,7 @@ public class MultiMessageSerializer implements MessageSerializer {
     }
 
     // we set the serialize state here, this will be used by subsequent calls
-    // to keep track of the serialization progress of this message
+    // to keep track of the serialization communicationProgress of this message
     if (sendMessage.getSerializationState() == null) {
       sendMessage.setSerializationState(new SerializeState());
     }

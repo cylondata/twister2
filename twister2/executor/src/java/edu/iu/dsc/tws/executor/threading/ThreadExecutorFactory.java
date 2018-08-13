@@ -11,8 +11,17 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.threading;
 
-import edu.iu.dsc.tws.comms.core.TWSNetwork;
-import edu.iu.dsc.tws.executor.ExecutionPlan;
+import java.util.HashMap;
+import java.util.Map;
+
+import edu.iu.dsc.tws.comms.api.TWSChannel;
+import edu.iu.dsc.tws.executor.api.ExecutionModel;
+import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.executor.api.INodeInstance;
+import edu.iu.dsc.tws.executor.core.batch.SinkBatchInstance;
+import edu.iu.dsc.tws.executor.core.batch.SourceBatchInstance;
+import edu.iu.dsc.tws.task.graph.OperationMode;
+
 
 public class ThreadExecutorFactory {
 
@@ -22,34 +31,142 @@ public class ThreadExecutorFactory {
 
   private ExecutionPlan executionPlan;
 
-  private TWSNetwork network;
+  private TWSChannel channel;
+
+  private OperationMode operationMode;
+
+  private boolean isExecutionFinished = false;
+
+  private HashMap<Integer, Boolean> instanceBooleanHashMap;
+
+  private HashMap<Integer, Boolean> sourceInstanceMap;
+
+  private HashMap<Integer, Boolean> sinkInstanceMap;
 
   public ThreadExecutorFactory(ExecutionModel executionModels, ThreadExecutor executor,
                                ExecutionPlan executionPlan) {
     this.executionModel = executionModels;
     this.executor = executor;
     this.executionPlan = executionPlan;
+    this.instanceBooleanHashMap = new HashMap<>();
+    this.sourceInstanceMap = new HashMap<>();
+    this.sinkInstanceMap = new HashMap<>();
   }
 
   public ThreadExecutorFactory(ExecutionModel executionModel, ThreadExecutor executor,
-                               ExecutionPlan executionPlan, TWSNetwork network) {
+                               ExecutionPlan executionPlan, TWSChannel channel) {
     this.executionModel = executionModel;
     this.executor = executor;
     this.executionPlan = executionPlan;
-    this.network = network;
+    this.channel = channel;
   }
 
-  public IThreadExecutor execute() {
-    if (ExecutionModel.SHARED.equals(executionModel.getExecutionModel())) {
-      ThreadSharingExecutor threadSharingExecutor = new ThreadSharingExecutor(executionPlan);
-      threadSharingExecutor.execute();
-      return threadSharingExecutor;
+  public ThreadExecutorFactory(ExecutionModel executionModel, ThreadExecutor executor,
+                               ExecutionPlan executionPlan, TWSChannel channel,
+                               OperationMode operationMode) {
+    this.executionModel = executionModel;
+    this.executor = executor;
+    this.executionPlan = executionPlan;
+    this.channel = channel;
+    this.operationMode = operationMode;
+  }
+
+  public boolean execute() {
+    if (ExecutionModel.SHARING.equals(executionModel.getExecutionModel())) {
+      ThreadSharingExecutor threadSharingExecutor
+          = new ThreadSharingExecutor(executionPlan, channel, operationMode);
+      isExecutionFinished = threadSharingExecutor.execute();
+      return isExecutionFinished;
     } else if (ExecutionModel.DEDICATED.equals(executionModel.getExecutionModel())) {
       ThreadStaticExecutor threadStaticExecutor = new ThreadStaticExecutor(executionPlan);
-      threadStaticExecutor.execute();
-      return threadStaticExecutor;
+      isExecutionFinished = threadStaticExecutor.execute();
+      return isExecutionFinished;
+    } else if (ExecutionModel.SHARED.equals(executionModel.getExecutionModel())) {
+      ThreadSharedExecutor threadSharedExecutor
+          = new ThreadSharedExecutor(executionModel, executor, executionPlan);
+      isExecutionFinished = threadSharedExecutor.execute();
+      return isExecutionFinished;
+    } else {
+      return false;
+    }
+  }
+
+  public void initExecutionMap() {
+    ExecutionPlan plan = this.executionPlan;
+    for (Map.Entry<Integer, INodeInstance> e : plan.getNodes().entrySet()) {
+      if (e.getValue() instanceof SourceBatchInstance) {
+        int taskId = ((SourceBatchInstance) e.getValue()).getBatchTaskId();
+        sourceInstanceMap.put(taskId, false);
+      }
+
+      if (e.getValue() instanceof SinkBatchInstance) {
+        if (e.getValue() instanceof SinkBatchInstance) {
+          int taskId = ((SinkBatchInstance) e.getValue()).getBatchTaskId();
+          sinkInstanceMap.put(taskId, false);
+        }
+      }
+    }
+  }
+
+  public void showExecutionMap() {
+    System.out.println("Show Execution Map");
+    if (sinkInstanceMap != null && sourceInstanceMap != null) {
+      if (sourceInstanceMap.size() > 0) {
+        System.out.println("Source Maps");
+        for (Map.Entry<Integer, Boolean> e : sourceInstanceMap.entrySet()) {
+          System.out.println(e.getKey() + ", " + e.getValue());
+        }
+      }
+      if (sinkInstanceMap.size() > 0) {
+        System.out.println("Sink Maps");
+        for (Map.Entry<Integer, Boolean> e : sinkInstanceMap.entrySet()) {
+          System.out.println(e.getKey() + ", " + e.getValue());
+        }
+      }
+    }
+  }
+
+  protected class SourceWorker implements Runnable {
+
+    private SourceBatchInstance instance;
+    private boolean executionDone = false;
+    private boolean commmunicationDone = false;
+
+    public SourceWorker(SourceBatchInstance sourceBatchInstance) {
+      this.instance = sourceBatchInstance;
     }
 
-    return null;
+    @Override
+    public void run() {
+      while (!(this.executionDone && this.commmunicationDone)) {
+        this.executionDone = this.instance.execute();
+        this.commmunicationDone = this.instance.communicationProgress();
+        if (this.executionDone && this.commmunicationDone) {
+          sourceInstanceMap.put(this.instance.getBatchTaskId(), true);
+        }
+      }
+    }
+  }
+
+  protected class SinkWorker implements Runnable {
+
+    private SinkBatchInstance instance;
+    private boolean executionDone = false;
+    private boolean commmunicationDone = false;
+
+    public SinkWorker(SinkBatchInstance sinkBatchInstance) {
+      this.instance = sinkBatchInstance;
+    }
+
+    @Override
+    public void run() {
+      while (!(this.executionDone && this.commmunicationDone)) {
+        this.executionDone = this.instance.execute();
+        this.commmunicationDone = this.instance.commuinicationProgress();
+        if (this.commmunicationDone && this.executionDone) {
+          sinkInstanceMap.put(this.instance.getBatchTaskId(), true);
+        }
+      }
+    }
   }
 }

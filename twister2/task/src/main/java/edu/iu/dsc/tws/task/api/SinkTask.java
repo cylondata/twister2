@@ -22,8 +22,9 @@ public abstract class SinkTask implements ISink {
   private static final long serialVersionUID = -254264903510286748L;
 
   @Override
-  public void execute(IMessage message) {
+  public boolean execute(IMessage message) {
 
+    return true;
   }
 
   @Override

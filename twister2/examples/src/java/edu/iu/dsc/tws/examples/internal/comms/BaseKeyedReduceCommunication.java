@@ -107,12 +107,12 @@ public class BaseKeyedReduceCommunication implements IContainer {
       }
     }
 
-    // we need to progress the communication
+    // we need to communicationProgress the communication
     while (true) {
       try {
-        // progress the channel
+        // communicationProgress the channel
         channel.progress();
-        // we should progress the communication directive
+        // we should communicationProgress the communication directive
         reduce.progress();
         Thread.yield();
       } catch (Throwable t) {

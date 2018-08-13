@@ -101,7 +101,7 @@ public class BaseLoadBalanceCommunication implements IContainer {
     // the map thread where data is produced
     LOG.info("Starting worker: " + id);
 
-    // we need to progress the communication
+    // we need to communicationProgress the communication
     try {
       if (id == 0 || id == 1) {
         DataBuffer data = new DataBuffer(1024);
@@ -109,18 +109,18 @@ public class BaseLoadBalanceCommunication implements IContainer {
         for (int i = 0; i < 50000; i++) {
           mapFunction(data);
           channel.progress();
-          // we should progress the communication directive
+          // we should communicationProgress the communication directive
           loadBalance.progress();
         }
         while (true) {
           channel.progress();
-          // we should progress the communication directive
+          // we should communicationProgress the communication directive
           loadBalance.progress();
         }
       } else {
         while (true) {
           channel.progress();
-          // we should progress the communication directive
+          // we should communicationProgress the communication directive
           loadBalance.progress();
         }
       }
@@ -134,7 +134,7 @@ public class BaseLoadBalanceCommunication implements IContainer {
       while (!loadBalance.send(id * 2 + j, data, 0)) {
         // lets wait a litte and try again
         channel.progress();
-        // we should progress the communication directive
+        // we should communicationProgress the communication directive
         loadBalance.progress();
       }
     }
