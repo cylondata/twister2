@@ -9,18 +9,6 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
 package edu.iu.dsc.tws.executor.core;
 
 import java.util.Map;
@@ -194,10 +182,6 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
     for (Table.Cell<String, String, Communication> cell : parOpTable.cellSet()) {
       Communication c = cell.getValue();
 
-      int sourceTaskSize = c.getSourceTasks().size();
-      int targetTaskSize = c.getTargetTasks().size();
-      System.out.println("####Source Task Size : " + sourceTaskSize
-          + ", Target Task Size : " + targetTaskSize + "####");
       // lets create the communication
       OperationMode operationMode = taskGraph.getOperationMode();
       IParallelOperation op = opFactory.build(c.getEdge(), c.getSourceTasks(), c.getTargetTasks(),
@@ -214,7 +198,6 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
       if (operationMode.equals(OperationMode.STREAMING)) {
         for (Integer i : sourcesOfThisWorker) {
           if (streamingTaskInstances.contains(c.getSourceTask(), i)) {
-            LOG.info("SourceofThisWorker StreamingTaskInstance");
             TaskStreamingInstance taskStreamingInstance
                 = streamingTaskInstances.get(c.getSourceTask(), i);
             taskStreamingInstance.registerOutParallelOperation(c.getEdge().getName(), op);
@@ -230,7 +213,6 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
 
         for (Integer i : targetsOfThisWorker) {
           if (streamingTaskInstances.contains(c.getTargetTask(), i)) {
-            LOG.info("TargetofThisWorker TaskInstance");
             TaskStreamingInstance taskStreamingInstance
                 = streamingTaskInstances.get(c.getTargetTask(), i);
             op.register(i, taskStreamingInstance.getInQueue());
@@ -251,7 +233,6 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
 
         for (Integer i : sourcesOfThisWorker) {
           if (batchTaskInstances.contains(c.getSourceTask(), i)) {
-            LOG.info("SourceofThisWorker TaskInstance");
             TaskBatchInstance taskBatchInstance = batchTaskInstances.get(c.getSourceTask(), i);
             taskBatchInstance.registerOutParallelOperation(c.getEdge().getName(), op);
           } else if (batchSourceInstances.contains(c.getSourceTask(), i)) {
@@ -266,7 +247,6 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
 
         for (Integer i : targetsOfThisWorker) {
           if (batchTaskInstances.contains(c.getTargetTask(), i)) {
-            LOG.info("TargetofThisWorker TaskInstance");
             TaskBatchInstance taskBatchInstance = batchTaskInstances.get(c.getTargetTask(), i);
             op.register(i, taskBatchInstance.getInQueue());
             taskBatchInstance.registerInParallelOperation(c.getEdge().getName(), op);
@@ -299,11 +279,6 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
    * @param ip instance plan
    * @param vertex vertex
    */
-
-    /**
-   * Create instances with the operation Mode
-   **/
-
   private INodeInstance createInstances(Config cfg, TaskSchedulePlan.TaskInstancePlan ip,
                                         Vertex vertex, OperationMode operationMode) {
     // lets add the task

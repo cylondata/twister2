@@ -19,14 +19,13 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.executor.api.DefaultOutputCollection;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
-import edu.iu.dsc.tws.executor.api.INodeInstanceListener;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.ISource;
 import edu.iu.dsc.tws.task.api.OutputCollection;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
-public class SourceBatchInstance implements INodeInstance, INodeInstanceListener {
+public class SourceBatchInstance implements INodeInstance {
 
   /**
    * The actual task executing
@@ -88,12 +87,6 @@ public class SourceBatchInstance implements INodeInstance, INodeInstanceListener
    **/
 
   private boolean isDone;
-
-  private boolean isFinalTask;
-
-  private int callBackCount = 0;
-
-  private int count = 0;
 
   private boolean isFinish = false;
 
@@ -194,22 +187,6 @@ public class SourceBatchInstance implements INodeInstance, INodeInstanceListener
   public boolean isFinish() {
     return isFinish;
   }
-
-  @Override
-  public boolean OnDone() {
-    return isDone;
-  }
-
-  @Override
-  public boolean onStart() {
-    return false;
-  }
-
-  @Override
-  public boolean onStop() {
-    return false;
-  }
-
 
   public int getBatchTaskId() {
     return batchTaskId;
