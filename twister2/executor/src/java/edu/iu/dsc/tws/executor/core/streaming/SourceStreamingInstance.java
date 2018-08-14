@@ -142,11 +142,6 @@ public class SourceStreamingInstance implements INodeInstance {
         parallelism, workerId, outputStreamingCollection, nodeConfigs));
   }
 
-  @Override
-  public void interrupt() {
-
-  }
-
   /**
    * Execution Method calls the SourceTasks run method to get context
    **/

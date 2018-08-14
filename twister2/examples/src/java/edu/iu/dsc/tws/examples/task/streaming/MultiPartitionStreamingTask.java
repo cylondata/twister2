@@ -91,11 +91,6 @@ public class MultiPartitionStreamingTask implements IContainer {
     }
 
     @Override
-    public void interrupt() {
-
-    }
-
-    @Override
     public void prepare(Config cfg, TaskContext context) {
       this.ctx = context;
     }
@@ -107,19 +102,9 @@ public class MultiPartitionStreamingTask implements IContainer {
     private Config config;
 
     @Override
-    public IMessage execute() {
-      return null;
-    }
-
-    @Override
     public void prepare(Config cfg, TaskContext context) {
       this.config = cfg;
       this.ctx = context;
-    }
-
-    @Override
-    public IMessage execute(IMessage content) {
-      return null;
     }
 
     @Override

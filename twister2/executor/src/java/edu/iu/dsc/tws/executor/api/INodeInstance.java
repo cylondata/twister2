@@ -27,8 +27,4 @@ public interface INodeInstance {
   boolean execute();
 
   void prepare();
-
-  void interrupt();
-
-
 }

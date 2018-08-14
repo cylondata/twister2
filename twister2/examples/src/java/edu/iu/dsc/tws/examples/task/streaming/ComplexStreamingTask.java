@@ -96,11 +96,6 @@ public class ComplexStreamingTask implements IContainer {
     }
 
     @Override
-    public void interrupt() {
-
-    }
-
-    @Override
     public void prepare(Config cfg, TaskContext context) {
       this.ctx = context;
     }
@@ -130,18 +125,6 @@ public class ComplexStreamingTask implements IContainer {
     private static final long serialVersionUID = -254264903510284798L;
     private TaskContext ctx;
     private int count = 0;
-
-    @Override
-    public IMessage execute() {
-      System.out.println("Intermediate Task Executed");
-      return null;
-    }
-
-    @Override
-    public IMessage execute(IMessage content) {
-      System.out.println("IntermediateTask:execute: " + content.getContent());
-      return null;
-    }
 
     @Override
     public void run(IMessage content) {

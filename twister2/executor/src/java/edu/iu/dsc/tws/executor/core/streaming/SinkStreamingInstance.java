@@ -93,11 +93,6 @@ public class SinkStreamingInstance  implements INodeInstance {
         parallelism, workerId, nodeConfigs));
   }
 
-  @Override
-  public void interrupt() {
-
-  }
-
   public boolean execute() {
     while (!streamingInQueue.isEmpty()) {
       IMessage m = streamingInQueue.poll();

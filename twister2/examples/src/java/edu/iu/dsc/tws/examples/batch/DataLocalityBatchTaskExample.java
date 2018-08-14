@@ -223,11 +223,6 @@ public class DataLocalityBatchTaskExample implements IContainer {
     }
 
     @Override
-    public void interrupt() {
-
-    }
-
-    @Override
     public void prepare(Config cfg, TaskContext context) {
       this.ctx = context;
     }
@@ -240,11 +235,6 @@ public class DataLocalityBatchTaskExample implements IContainer {
     @Override
     public void run() {
       ctx.write("partition-edge", "Hello");
-    }
-
-    @Override
-    public void interrupt() {
-
     }
 
     @Override

@@ -73,14 +73,4 @@ public class ThreadExecutor implements IThreadExecutor {
     //progressComms();
     return isExecutionFinished;
   }
-
-  /**
-   * Progresses the communication Channel
-   */
-  public void progressComms() {
-    while (true) {
-      this.channel.progress();
-    }
-  }
-
 }

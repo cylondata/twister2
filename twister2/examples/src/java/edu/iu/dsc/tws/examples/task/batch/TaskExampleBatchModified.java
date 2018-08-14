@@ -135,20 +135,14 @@ public class TaskExampleBatchModified implements IContainer {
     private Config config;
 
     @Override
-    public IMessage execute(IMessage content) {
-//      ctx.write("e2", "Tello");
-      if (content.getContent().equals("Hello")) {
-        ctx.write("e2", "Hello changed to Tello");
-      } else {
-        ctx.write("e2", content.getContent());
-      }
-      return content;
-    }
-
-    @Override
     public void prepare(Config cfg, TaskContext context) {
       super.prepare(cfg, context);
       this.ctx = context;
+    }
+
+    @Override
+    public void run(IMessage content) {
+
     }
   }
 

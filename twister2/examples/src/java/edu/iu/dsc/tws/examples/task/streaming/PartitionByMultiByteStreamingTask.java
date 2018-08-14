@@ -108,10 +108,6 @@ public class PartitionByMultiByteStreamingTask implements IContainer {
       ctx.write("partition-multi-byte-edge", keyedContent);
     }
 
-    @Override
-    public void interrupt() {
-
-    }
 
     @Override
     public void prepare(Config cfg, TaskContext context) {

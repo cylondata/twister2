@@ -70,12 +70,6 @@ public class TwsKafkaConsumer<T> extends SourceTask {
 
   }
 
-  @Override
-  public void interrupt() {
-
-  }
-
-
   public TwsKafkaConsumer(
       List<String> topics,
       List<String> servers,

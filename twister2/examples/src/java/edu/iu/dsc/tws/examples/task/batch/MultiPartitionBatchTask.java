@@ -119,19 +119,9 @@ public class MultiPartitionBatchTask implements IContainer {
     private Config config;
 
     @Override
-    public IMessage execute() {
-      return null;
-    }
-
-    @Override
     public void prepare(Config cfg, TaskContext context) {
       this.config = cfg;
       this.ctx = context;
-    }
-
-    @Override
-    public IMessage execute(IMessage content) {
-      return null;
     }
 
     @Override

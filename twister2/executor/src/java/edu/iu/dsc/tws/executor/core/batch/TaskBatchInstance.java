@@ -124,11 +124,6 @@ public class TaskBatchInstance implements INodeInstance {
         outputCollection, nodeConfigs));
   }
 
-  @Override
-  public void interrupt() {
-
-  }
-
   public void registerOutParallelOperation(String edge, IParallelOperation op) {
     outParOps.put(edge, op);
   }

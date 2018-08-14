@@ -144,18 +144,6 @@ public class ComplexBatchTask implements IContainer {
     private int count = 0;
 
     @Override
-    public IMessage execute() {
-      System.out.println("Intermediate Task Executed");
-      return null;
-    }
-
-    @Override
-    public IMessage execute(IMessage content) {
-      System.out.println("IntermediateTask:execute: " + content.getContent());
-      return null;
-    }
-
-    @Override
     public void run(IMessage content) {
       //System.out.println("IntermediateTask : " + content.getContent());
       this.ctx.write("gather-edge", content.getContent() + "-int");

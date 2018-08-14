@@ -102,11 +102,6 @@ public class SinkBatchInstance implements INodeInstance {
         parallelism, workerId, nodeConfigs));
   }
 
-  @Override
-  public void interrupt() {
-
-  }
-
   public boolean execute() {
     //System.out.println("SinkBatchInstance exec");
     while (!batchInQueue.isEmpty()) {

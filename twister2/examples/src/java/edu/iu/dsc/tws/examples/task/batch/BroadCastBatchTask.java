@@ -98,10 +98,6 @@ public class BroadCastBatchTask implements IContainer {
       ctx.write("broadcast-edge", "Hello");
     }
 
-    @Override
-    public void interrupt() {
-
-    }
 
     @Override
     public void prepare(Config cfg, TaskContext context) {

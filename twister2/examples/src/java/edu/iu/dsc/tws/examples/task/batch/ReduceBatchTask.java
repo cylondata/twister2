@@ -51,7 +51,6 @@ import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.ITaskContext;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
@@ -96,7 +95,7 @@ public class ReduceBatchTask implements IContainer {
     executor.execute();
   }
 
-  private static class GeneratorTask extends SourceBatchTask implements ITaskContext {
+  private static class GeneratorTask extends SourceBatchTask {
     private static final long serialVersionUID = -254264903510284748L;
     private TaskContext sourceTaskContext;
     private Config config;
@@ -138,18 +137,13 @@ public class ReduceBatchTask implements IContainer {
     }
 
     @Override
-    public void overrideTaskContext(TaskContext context) {
-      this.sourceTaskContext = context;
-    }
-
-    @Override
     public SourceTaskContextListener getSourceTaskContextListener() {
       return this.sourceTaskContextListener;
     }
 
   }
 
-  private static class RecevingTask extends SinkBatchTask implements ITaskContext {
+  private static class RecevingTask extends SinkBatchTask {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
     private Config config;
@@ -175,12 +169,6 @@ public class ReduceBatchTask implements IContainer {
       this.config = cfg;
       this.sinkTaskContext = context;
     }
-
-    @Override
-    public void overrideTaskContext(TaskContext context) {
-
-    }
-
   }
 
   public static class IdentityFunction implements IFunction {

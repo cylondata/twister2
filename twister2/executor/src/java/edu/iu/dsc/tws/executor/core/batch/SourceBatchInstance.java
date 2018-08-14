@@ -126,11 +126,6 @@ public class SourceBatchInstance implements INodeInstance {
         parallelism, workerId, outputBatchCollection, nodeConfigs));
   }
 
-  @Override
-  public void interrupt() {
-
-  }
-
   /**
    * Execution Method calls the SourceTasks run method to get context
    **/

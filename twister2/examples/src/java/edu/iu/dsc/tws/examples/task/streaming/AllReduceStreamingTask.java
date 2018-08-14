@@ -84,10 +84,6 @@ public class AllReduceStreamingTask implements IContainer {
       ctx.write("all-reduce-edge", "Hello");
     }
 
-    @Override
-    public void interrupt() {
-
-    }
 
     @Override
     public void prepare(Config cfg, TaskContext context) {

@@ -92,11 +92,6 @@ public class ReduceStreamingTask implements IContainer {
     }
 
     @Override
-    public void interrupt() {
-
-    }
-
-    @Override
     public void prepare(Config cfg, TaskContext context) {
       this.ctx = context;
     }

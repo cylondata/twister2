@@ -19,9 +19,4 @@ public interface ISource extends INode {
    * Execute without an incoming message
    */
   void run();
-
-  void interrupt();
-
-
-
 }

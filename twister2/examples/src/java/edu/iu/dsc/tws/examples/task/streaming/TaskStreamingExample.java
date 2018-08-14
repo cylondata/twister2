@@ -94,10 +94,6 @@ public class TaskStreamingExample implements IContainer {
       ctx.write("partition-edge", "Hello");
     }
 
-    @Override
-    public void interrupt() {
-
-    }
 
     @Override
     public void prepare(Config cfg, TaskContext context) {

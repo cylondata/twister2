@@ -28,7 +28,6 @@ public abstract class SourceBatchTask implements ISource {
 
   }
 
-  @Override
   public void interrupt() {
 
   }

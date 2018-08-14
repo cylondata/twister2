@@ -29,11 +29,6 @@ public class SourceStreamTask implements ISource {
   }
 
   @Override
-  public void interrupt() {
-
-  }
-
-  @Override
   public void prepare(Config cfg, TaskContext context) {
     this.config = cfg;
     this.ctx = context;
