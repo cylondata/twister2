@@ -18,6 +18,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
+import edu.iu.dsc.tws.common.discovery.NodeInfo;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.client.JMWorkerController;
@@ -67,7 +68,9 @@ public final class JobMasterClientExample {
     InetAddress workerIP = JMWorkerController.convertStringToIP("localhost");
     int workerPort = 10000 + (int) (Math.random() * 10000);
 
-    WorkerNetworkInfo workerNetworkInfo = new WorkerNetworkInfo(workerIP, workerPort, workerTempID);
+    NodeInfo nodeInfo = new NodeInfo("node.ip", "rack01", null);
+    WorkerNetworkInfo workerNetworkInfo =
+        new WorkerNetworkInfo(workerIP, workerPort, workerTempID, nodeInfo);
 
     JobMasterClient client = new JobMasterClient(config, workerNetworkInfo);
     Thread clientThread = client.startThreaded();

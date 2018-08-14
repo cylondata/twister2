@@ -14,6 +14,10 @@ package edu.iu.dsc.tws.common.discovery;
 import java.util.ArrayList;
 import java.util.Objects;
 
+/**
+ * this class represents the physical machine properties a worker runs on
+ */
+
 public class NodeInfo {
   private String nodeIP;
   private String rackName;
@@ -23,6 +27,19 @@ public class NodeInfo {
     this.nodeIP = nodeIP;
     this.rackName = rackName;
     this.dataCenterName = dataCenterName;
+
+    // make empty strings null, since protobuff returns empty string for non-set fields
+    if ("".equals(nodeIP)) {
+      this.nodeIP = null;
+    }
+
+    if ("".equals(rackName)) {
+      this.rackName = null;
+    }
+
+    if ("".equals(dataCenterName)) {
+      this.dataCenterName = null;
+    }
   }
 
   public String getNodeIP() {
@@ -35,6 +52,18 @@ public class NodeInfo {
 
   public String getDataCenterName() {
     return dataCenterName;
+  }
+
+  public boolean hasNodeIP() {
+    return nodeIP != null;
+  }
+
+  public boolean hasRackName() {
+    return rackName != null;
+  }
+
+  public boolean hasDataCenterName() {
+    return dataCenterName != null;
   }
 
   @Override

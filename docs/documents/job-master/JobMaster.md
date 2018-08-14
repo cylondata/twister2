@@ -77,14 +77,16 @@ Ping Message Format is shown below. It has the workerID from the sender worker.
 It also has the ping message and an optional string message for logging purposes. 
 
     message Ping {
-      int32 workerID = 1;
-      string pingMessage = 2;
-      MessageType messageType = 3;
-
-      enum MessageType {
-        WORKER_TO_MASTER = 0;
-        MASTER_TO_WORKER = 1;
-      }
+        oneof required {
+            int32 workerID = 1;
+        }
+        string pingMessage = 2;
+        MessageType messageType = 3;
+    
+        enum MessageType {
+            WORKER_TO_MASTER = 0;
+            MASTER_TO_WORKER = 1;
+        }
     }
   
 Users can set the ping message sending intervals through configuration files. 
@@ -123,20 +125,33 @@ ERROR message is not currently used. We plan to use it to report error cases
 in the future. 
 
 Workers send WorkerStateChange message to the job master to inform it 
-about its state change. The format of the message is as follows:  
+about its state change. The format of the message is as follows:
 
     message WorkerStateChange {
-      int32 workerID = 1;
-      WorkerState newState = 2;
-      string workerIP = 3;
-      int32 workerPort = 4;
+        WorkerNetworkInfo workerNetworkInfo = 1;
+        WorkerState newState = 2;
+    }
+
+WorkerNetworkInfo message defines the networking properties of a Twister2 worker:
+
+    message WorkerNetworkInfo {
+        oneof required {
+            int32 workerID = 1;
+        }
+        string workerIP = 2;
+        int32 port = 3;
+        string nodeIP = 4;
+        string rackName = 5;
+        string dataCenterName = 6;
     }
 
 The job master in response sends the following message to the worker. 
 
     message WorkerStateChangeResponse {
-      int32 workerID = 1;
-      WorkerState sentState = 2;
+        oneof required {
+            int32 workerID = 1;
+        }
+        WorkerState sentState = 2;
     }
 
 ## Worker Discovery
@@ -153,27 +168,26 @@ when all workers joined the job. When they ask the current list,
 they get the list of joined workers immediately. 
 
     message ListWorkersRequest {
-      enum RequestType {
-        IMMEDIATE_RESPONSE = 0;
-        RESPONSE_AFTER_ALL_JOINED = 1;
-      }
-
-      int32 workerID = 1;
-      RequestType requestType = 2;
+        enum RequestType {
+            IMMEDIATE_RESPONSE = 0;
+            RESPONSE_AFTER_ALL_JOINED = 1;
+        }
+    
+        oneof required {
+            int32 workerID = 1;
+        }
+        RequestType requestType = 2;
     }
 
 Job master sends the worker list in the following message format. 
 It sends many worker information on the same message. 
 
     message ListWorkersResponse {
-      message WorkerNetworkInfo {
-        int32 id = 1;
-        string ip = 2;
-        int32 port = 3;
-      }
-
-      int32 workerID = 1;
-      repeated WorkerNetworkInfo workers = 2;
+    
+        oneof required {
+            int32 workerID = 1;
+        }
+        repeated WorkerNetworkInfo workers = 2;
     }
 
 **IWorkerController Implementation**  
@@ -217,7 +231,9 @@ Each worker that comes to the barrier point sends the following BarrierRequest m
 to the Job Master. 
 
     message BarrierRequest {
-      int32 workerID = 1;
+        oneof required{
+            int32 workerID = 1;
+        }
     }
 
 Job Master puts the received request messages to the waitList.
@@ -225,7 +241,9 @@ When it receives the BarrierRequest message from the last worker in the job,
 it sends the following response message to all workers: 
 
     message BarrierResponse {
-      int32 workerID = 1;
+        oneof required {
+            int32 workerID = 1;
+        }
     }
 
 When it sends the response messages to workers, it clears the waitList.

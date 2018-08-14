@@ -43,12 +43,6 @@ public class WorkerNetworkInfo {
   private int port;
   private NodeInfo nodeInfo;
 
-  public WorkerNetworkInfo(InetAddress ip, int port, int workerID) {
-    this.ip = ip;
-    this.port = port;
-    this.workerID = workerID;
-  }
-
   /**
    * workerIpAndPort has both IP and port in the form of ip:port
    * @param workerIpAndPort name of
@@ -57,7 +51,8 @@ public class WorkerNetworkInfo {
   public WorkerNetworkInfo(String workerIpAndPort, int workerID) {
     this(convertStringToIP(workerIpAndPort.split(":")[0]),
         Integer.parseInt(workerIpAndPort.split(":")[1]),
-        workerID);
+        workerID,
+        new NodeInfo(null, null, null));
   }
 
   /**
@@ -65,7 +60,18 @@ public class WorkerNetworkInfo {
    * @param workerID
    */
   public WorkerNetworkInfo(String ipStr, int port, int workerID) {
-    this(convertStringToIP(ipStr), port, workerID);
+    this(convertStringToIP(ipStr), port, workerID, new NodeInfo(null, null, null));
+  }
+
+  public WorkerNetworkInfo(InetAddress ip, int port, int workerID) {
+    this(ip, port, workerID, new NodeInfo(null, null, null));
+  }
+
+  public WorkerNetworkInfo(InetAddress ip, int port, int workerID, NodeInfo nodeInfo) {
+    this.ip = ip;
+    this.port = port;
+    this.workerID = workerID;
+    this.nodeInfo = nodeInfo;
   }
 
   public int getWorkerID() {
@@ -187,7 +193,7 @@ public class WorkerNetworkInfo {
     int i = 0;
     for (WorkerNetworkInfo worker : workers) {
       buffer.append(String.format("%d workerID=%d IP:Port='%s' %s\n",
-          i++, worker.getWorkerID(), worker.getWorkerIpAndPort(), worker.nodeInfo.toString()));
+          i++, worker.getWorkerID(), worker.getWorkerIpAndPort(), worker.nodeInfo));
     }
 
     return buffer.toString();

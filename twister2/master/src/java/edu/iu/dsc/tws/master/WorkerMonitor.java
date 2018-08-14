@@ -97,15 +97,18 @@ public class WorkerMonitor implements MessageHandler {
 
     if (message.getNewState() == Network.WorkerState.STARTING) {
       LOG.info("WorkerStateChange message received: \n" + message);
-      InetAddress ip = WorkerInfo.covertToIPAddress(message.getWorkerIP());
-      int port = message.getWorkerPort();
-      int workerID = message.getWorkerID();
+      InetAddress ip = WorkerInfo.covertToIPAddress(message.getWorkerNetworkInfo().getWorkerIP());
+      int port = message.getWorkerNetworkInfo().getPort();
+      int workerID = message.getWorkerNetworkInfo().getWorkerID();
+      String nodeIP = message.getWorkerNetworkInfo().getNodeIP();
+      String rackName = message.getWorkerNetworkInfo().getRackName();
+      String dcName = message.getWorkerNetworkInfo().getDataCenterName();
 
       if (JobMasterContext.jobMasterAssignsWorkerIDs(config)) {
         workerID = workers.size();
       }
 
-      WorkerInfo worker = new WorkerInfo(workerID, ip, port);
+      WorkerInfo worker = new WorkerInfo(workerID, ip, port, nodeIP, rackName, dcName);
       worker.setWorkerState(Network.WorkerState.STARTING);
       workers.put(workerID, worker);
 
@@ -117,23 +120,26 @@ public class WorkerMonitor implements MessageHandler {
 
       return;
 
-    } else if (!workers.containsKey(message.getWorkerID())) {
+    } else if (!workers.containsKey(message.getWorkerNetworkInfo().getWorkerID())) {
 
       LOG.warning("WorkerStateChange message received from a worker "
           + "that has not joined the job yet.\n"
           + "Not processing the message, just sending a response"
           + message);
 
-      sendWorkerStateChangeResponse(id, message.getWorkerID(), message.getNewState());
+      sendWorkerStateChangeResponse(id, message.getWorkerNetworkInfo().getWorkerID(),
+          message.getNewState());
       return;
 
     } else if (message.getNewState() == Network.WorkerState.COMPLETED) {
 
-      workers.get(message.getWorkerID()).setWorkerState(message.getNewState());
+      workers.get(message.getWorkerNetworkInfo().getWorkerID())
+          .setWorkerState(message.getNewState());
       LOG.info("WorkerStateChange message received: \n" + message);
 
       // send the response message
-      sendWorkerStateChangeResponse(id, message.getWorkerID(), message.getNewState());
+      sendWorkerStateChangeResponse(id, message.getWorkerNetworkInfo().getWorkerID(),
+          message.getNewState());
 
       // check whether all workers completed
       // if so, stop the job master
@@ -145,11 +151,13 @@ public class WorkerMonitor implements MessageHandler {
       return;
 
     } else {
-      workers.get(message.getWorkerID()).setWorkerState(message.getNewState());
+      workers.get(message.getWorkerNetworkInfo().getWorkerID())
+          .setWorkerState(message.getNewState());
       LOG.info("WorkerStateChange message received: \n" + message);
 
       // send the response message
-      sendWorkerStateChangeResponse(id, message.getWorkerID(), message.getNewState());
+      sendWorkerStateChangeResponse(id, message.getWorkerNetworkInfo().getWorkerID(),
+          message.getNewState());
     }
   }
 
@@ -210,14 +218,24 @@ public class WorkerMonitor implements MessageHandler {
         .setWorkerID(workerID);
 
     for (WorkerInfo worker: workers.values()) {
-      Network.ListWorkersResponse.WorkerNetworkInfo workerInfo =
-          Network.ListWorkersResponse.WorkerNetworkInfo.newBuilder()
-              .setId(worker.getWorkerID())
-              .setIp(worker.getIp().getHostAddress())
-              .setPort(worker.getPort())
-              .build();
+      Network.WorkerNetworkInfo.Builder workerInfoBuilder = Network.WorkerNetworkInfo.newBuilder()
+              .setWorkerID(worker.getWorkerID())
+              .setWorkerIP(worker.getIp().getHostAddress())
+              .setPort(worker.getPort());
 
-      responseBuilder.addWorkers(workerInfo);
+      if (worker.hasNodeIP()) {
+        workerInfoBuilder.setNodeIP(worker.getNodeIP());
+      }
+
+      if (worker.hasRackName()) {
+        workerInfoBuilder.setRackName(worker.getRackName());
+      }
+
+      if (worker.hasDataCenterName()) {
+        workerInfoBuilder.setDataCenterName(worker.getDataCenterName());
+      }
+
+      responseBuilder.addWorkers(workerInfoBuilder.build());
     }
 
     Network.ListWorkersResponse response = responseBuilder.build();
