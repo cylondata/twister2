@@ -89,19 +89,18 @@ public final class K8sWorkerStarter {
 
     String podIP = localHost.getHostAddress();
     String podName = localHost.getHostName();
-    String nodeIP = PodWatchUtils.getNodeIP(KubernetesContext.namespace(config), jobName, podName);
-    NodeInfo thisNodeInfo = null;
 
-    LOG.info("NodeIP: " + nodeIP);
-    LOG.info("Encoded NodeInfo String: " + encodedNodeInfoList);
+    String nodeIP = PodWatchUtils.getNodeIP(KubernetesContext.namespace(config), jobName, podName);
+    NodeInfo thisNodeInfo = new NodeInfo(nodeIP, null, null);
     ArrayList<NodeInfo> nodeInfoList = NodeInfo.decodeNodeInfoList(encodedNodeInfoList);
-    LOG.info("Decoded NodeInfo list, size: " + nodeInfoList.size()
-        + "\n" + NodeInfo.listToString(nodeInfoList));
 
     if (nodeInfoList == null || nodeInfoList.size() == 0) {
-      LOG.warning("NodeInfo list is not contructed from the string: " + encodedNodeInfoList);
+      LOG.warning("NodeInfo list is not constructed from the string: " + encodedNodeInfoList);
     } else {
-      thisNodeInfo = nodeInfoList.get(nodeInfoList.indexOf(new NodeInfo(nodeIP, null, null)));
+      LOG.fine("Decoded NodeInfo list, size: " + nodeInfoList.size()
+          + "\n" + NodeInfo.listToString(nodeInfoList));
+
+      thisNodeInfo = nodeInfoList.get(nodeInfoList.indexOf(thisNodeInfo));
     }
 
     LOG.info("NodeInfo of this worker: " + thisNodeInfo);
@@ -111,7 +110,7 @@ public final class K8sWorkerStarter {
     workerID = K8sWorkerUtils.calculateWorkerID(podName, containerName, containersPerPod);
 
     // set workerNetworkInfo
-    workerNetworkInfo = new WorkerNetworkInfo(localHost, workerPort, workerID);
+    workerNetworkInfo = new WorkerNetworkInfo(localHost, workerPort, workerID, thisNodeInfo);
 
     // initialize persistent volume
     K8sPersistentVolume pv = null;

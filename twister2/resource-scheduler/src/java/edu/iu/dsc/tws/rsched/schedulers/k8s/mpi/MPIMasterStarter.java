@@ -63,6 +63,7 @@ public final class MPIMasterStarter {
     LoggingHelper.setLoggingFormat(LoggingHelper.DEFAULT_FORMAT);
 
     String jobMasterIP = System.getenv(K8sEnvVariables.JOB_MASTER_IP + "");
+    String encodedNodeInfoList = System.getenv(K8sEnvVariables.ENCODED_NODE_INFO_LIST + "");
     jobName = System.getenv(K8sEnvVariables.JOB_NAME + "");
     if (jobName == null) {
       throw new RuntimeException("JobName is null");
@@ -139,7 +140,8 @@ public final class MPIMasterStarter {
     createHostFile(podIP, podNamesIPs);
 
     String classToRun = "edu.iu.dsc.tws.rsched.schedulers.k8s.mpi.MPIWorkerStarter";
-    String[] mpirunCommand = generateMPIrunCommand(classToRun, workersPerPod, jobMasterIP);
+    String[] mpirunCommand =
+        generateMPIrunCommand(classToRun, workersPerPod, jobMasterIP, encodedNodeInfoList);
 
     // when all pods become running, sshd may have not started on some pods yet
     // it takes some time to start sshd, after pods become running
@@ -220,9 +222,10 @@ public final class MPIMasterStarter {
 
   public static String[] generateMPIrunCommand(String className,
                                                int workersPerPod,
-                                               String jobMasterIP) {
+                                               String jobMasterIP,
+                                               String encodedNodeInfoList) {
 
-    String commandLineArgument = createJobMasterIPCommandLineArgument(jobMasterIP);
+    String jobMasterCLArgument = createJobMasterIPCommandLineArgument(jobMasterIP);
 
     return new String[]
         {"mpirun",
@@ -231,10 +234,15 @@ public final class MPIMasterStarter {
             "--allow-run-as-root",
             "-npernode",
             workersPerPod + "",
+            "-x",
+            "KUBERNETES_SERVICE_HOST=" + System.getenv("KUBERNETES_SERVICE_HOST"),
+            "-x",
+            "KUBERNETES_SERVICE_PORT=" + System.getenv("KUBERNETES_SERVICE_PORT"),
             "java",
             className,
-            commandLineArgument,
-            jobName
+            jobMasterCLArgument,
+            jobName,
+            "'" + encodedNodeInfoList + "'"
         };
   }
 
