@@ -85,6 +85,10 @@ public class NodeInfo {
       return false;
     }
 
+    if (nodeIP == null) {
+      return false;
+    }
+
     NodeInfo nodeInfo = (NodeInfo) o;
     return nodeIP.equals(nodeInfo.nodeIP);
   }

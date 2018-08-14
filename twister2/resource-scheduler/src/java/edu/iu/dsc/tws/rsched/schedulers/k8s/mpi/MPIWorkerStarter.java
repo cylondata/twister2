@@ -13,11 +13,13 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s.mpi;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
+import edu.iu.dsc.tws.common.discovery.NodeInfo;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
@@ -27,6 +29,7 @@ import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.PodWatchUtils;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sPersistentVolume;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sVolatileVolume;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerUtils;
@@ -60,14 +63,19 @@ public final class MPIWorkerStarter {
     LoggingHelper.setLoggingFormat(LoggingHelper.DEFAULT_FORMAT);
 
     String jobMasterIP = MPIMasterStarter.getJobMasterIPCommandLineArgumentValue(args[0]);
+    jobName = args[1];
+    String encodedNodeInfoList = args[2];
+
     if (jobMasterIP == null) {
       throw new RuntimeException("JobMasterIP address is null");
     }
 
-    jobName = args[1];
     if (jobName == null) {
       throw new RuntimeException("jobName is null");
     }
+
+    // remove the first and the last single quotas from encodedNodeInfoList
+    encodedNodeInfoList = encodedNodeInfoList.replaceAll("'", "");
 
     // load the configuration parameters from configuration directory
     String configDir = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY + "/"
@@ -116,7 +124,23 @@ public final class MPIWorkerStarter {
 
       int workerPort = KubernetesContext.workerBasePort(config) + workerID;
 
-      workerNetworkInfo = new WorkerNetworkInfo(localHost, workerPort, workerID);
+      String nodeIP =
+          PodWatchUtils.getNodeIP(KubernetesContext.namespace(config), jobName, podName);
+      NodeInfo thisNodeInfo = new NodeInfo(nodeIP, null, null);
+      ArrayList<NodeInfo> nodeInfoList = NodeInfo.decodeNodeInfoList(encodedNodeInfoList);
+
+      if (nodeInfoList == null || nodeInfoList.size() == 0) {
+        LOG.warning("NodeInfo list is not constructed from the string: " + encodedNodeInfoList);
+      } else {
+        LOG.fine("Decoded NodeInfo list, size: " + nodeInfoList.size()
+            + "\n" + NodeInfo.listToString(nodeInfoList));
+
+        thisNodeInfo = nodeInfoList.get(nodeInfoList.indexOf(thisNodeInfo));
+      }
+
+      LOG.info("NodeInfo of this worker: " + thisNodeInfo);
+
+      workerNetworkInfo = new WorkerNetworkInfo(localHost, workerPort, workerID, thisNodeInfo);
 
       LOG.info("Worker information summary: \n"
           + "MPI Rank(workerID): " + workerID + "\n"

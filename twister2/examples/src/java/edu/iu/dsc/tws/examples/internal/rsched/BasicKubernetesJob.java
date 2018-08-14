@@ -37,16 +37,7 @@ public final class BasicKubernetesJob {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
     LOG.fine("read config values: " + config.size() + "\n" + config);
 
-    if (args.length == 0) {
-      printUsage();
-    } else if (args[0].equals("submit")) {
-      submitJob(config);
-    } else if (args[0].equals("terminate")) {
-      terminateJob(config);
-    } else {
-      printUsage();
-    }
-
+    submitJob(config);
   }
 
   /**
@@ -80,25 +71,5 @@ public final class BasicKubernetesJob {
 
     // now submit the job
     Twister2Submitter.submitContainerJob(basicJob, config);
-  }
-
-  /**
-   * terminate the job
-   */
-  public static void terminateJob(Config config) {
-
-    String jobName = SchedulerContext.jobName(config);
-    Twister2Submitter.terminateJob(jobName, config);
-  }
-
-  /**
-   * print usage
-   */
-  public static void printUsage() {
-    StringBuffer logBuffer = new StringBuffer();
-    logBuffer.append("Usage: Currently following actions are supported: \n");
-    logBuffer.append("\tedu.iu.dsc.tws.examples.internal.rsched.BasicKubernetesJob submit\n");
-    logBuffer.append("\tedu.iu.dsc.tws.examples.internal.rsched.BasicKubernetesJob terminate\n");
-    LOG.severe(logBuffer.toString());
   }
 }

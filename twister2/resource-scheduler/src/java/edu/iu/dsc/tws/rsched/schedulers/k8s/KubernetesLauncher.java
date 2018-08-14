@@ -278,11 +278,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     String dcLabelKey = KubernetesContext.datacenterLabelKeyForK8s(config);
     ArrayList<NodeInfo> nodeInfoList = controller.getNodeInfo(rackLabelKey, dcLabelKey);
     String encodedNodeInfoList = NodeInfo.encodeNodeInfoList(nodeInfoList);
-    LOG.info("Number of NodeInfo objects: " + nodeInfoList.size()
-        + "\n" + encodedNodeInfoList);
-
-    nodeInfoList = NodeInfo.decodeNodeInfoList(encodedNodeInfoList);
-    LOG.info("Decoded NodeInfo list, size: " + nodeInfoList.size()
+    LOG.fine("NodeInfo objects: size " + nodeInfoList.size()
         + "\n" + NodeInfo.listToString(nodeInfoList));
 
     // create the StatefulSet object for this job
