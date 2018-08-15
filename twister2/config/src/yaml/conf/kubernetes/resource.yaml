@@ -23,6 +23,9 @@ twister2.job.basic.container.class: "edu.iu.dsc.tws.examples.internal.BasicNetwo
 # it could also be Always
 # kubernetes.image.pull.policy: "Always"
 
+###################################################################################
+# Kubernetes Mapping and Binding parameters
+###################################################################################
 # Statically bind workers to CPUs
 # Workers do not move from the CPU they are started during computation
 # twister2.cpu_per_container has to be an integer
