@@ -26,7 +26,7 @@ import edu.iu.dsc.tws.task.graph.Vertex;
  */
 public final class TaskVertexParser {
 
-  private static final Logger LOG = Logger.getLogger(TaskVertexParser.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(TaskVertexParser.class.getName());
 
   protected TaskVertexParser() {
   }
@@ -94,7 +94,7 @@ public final class TaskVertexParser {
         }
       }//End of Inner Else block*/
     }//End of Outer For
-    LOG.info("Batch Task Vertex List:" + taskVertexList);
+    LOGGER.info("Batch Task Vertex List:" + taskVertexList);
     return taskVertexList;
   }
 }
