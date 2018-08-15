@@ -145,7 +145,7 @@ public class HDFSDataLocalityExecutorExample implements IContainer {
 
     TWSNetwork network = new TWSNetwork(config, resourcePlan.getThisId());
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);
-    ExecutionPlan plan = executionPlanBuilder.execute(config, graph, taskSchedulePlan);
+    ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
     ExecutionModel executionModel = new ExecutionModel(ExecutionModel.SHARED);
     ThreadExecutor executor = new ThreadExecutor(executionModel, plan);
     executor.execute();

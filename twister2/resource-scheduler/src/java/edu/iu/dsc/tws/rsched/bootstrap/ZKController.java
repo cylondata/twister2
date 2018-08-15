@@ -56,7 +56,8 @@ public class ZKController implements IWorkerController {
   public static final Logger LOG = Logger.getLogger(ZKController.class.getName());
 
   // hostname and port number of this worker
-  private String workerIpAndPort;
+  private InetAddress workerIP;
+  private int workerPort;
 
   // WorkerNetworkInfo object for this worker
   private WorkerNetworkInfo workerNetworkInfo;
@@ -101,8 +102,9 @@ public class ZKController implements IWorkerController {
 
     try {
       // convert hostname to IP before assigning
-      String ipStr = InetAddress.getByName(workerIpAndPort.split(":")[0]).getHostAddress();
-      this.workerIpAndPort = ipStr + ":" + workerIpAndPort.split(":")[1];
+      String[] fields = workerIpAndPort.split(":");
+      this.workerIP = InetAddress.getByName(fields[0]);
+      this.workerPort = Integer.parseInt(fields[1]);
     } catch (UnknownHostException e) {
       LOG.log(Level.SEVERE, "Can not convert the given string to IP: " + workerIpAndPort, e);
       throw new RuntimeException(e);
@@ -140,8 +142,7 @@ public class ZKController implements IWorkerController {
       // get a workerID, create the jobZnode, append worker info
       if (client.checkExists().forPath(jobPath) == null) {
         int workerID = createWorkerID();
-        workerNetworkInfo = new WorkerNetworkInfo(workerIpAndPort, workerID);
-        workerNetworkInfo.setNodeInfo(nodeInfo);
+        workerNetworkInfo = new WorkerNetworkInfo(workerIP, workerPort, workerID, nodeInfo);
         createWorkerZnode();
         appendWorkerInfo();
 
@@ -163,8 +164,7 @@ public class ZKController implements IWorkerController {
         // create workerID, append its info to the jobZnode
         } else {
           int workerID = createWorkerID();
-          workerNetworkInfo = new WorkerNetworkInfo(workerIpAndPort, workerID);
-          workerNetworkInfo.setNodeInfo(nodeInfo);
+          workerNetworkInfo = new WorkerNetworkInfo(workerIP, workerPort, workerID, nodeInfo);
           createWorkerZnode();
           appendWorkerInfo();
         }
@@ -233,7 +233,8 @@ public class ZKController implements IWorkerController {
    */
   private void createWorkerZnode() {
     try {
-      String thisNodePath = ZKUtil.constructWorkerPath(jobPath, workerIpAndPort);
+      String thisNodePath =
+          ZKUtil.constructWorkerPath(jobPath, workerNetworkInfo.getWorkerIpAndPort());
       String encodedWorkerNetworkInfo =
           WorkerNetworkInfo.encodeWorkerNetworkInfo(workerNetworkInfo);
 
@@ -245,7 +246,7 @@ public class ZKController implements IWorkerController {
       String fullZnodePath = jobZNode.getActualPath();
       LOG.fine("An ephemeral znode is created for this worker: " + fullZnodePath);
     } catch (Exception e) {
-      throw new RuntimeException("Could not create znode for the worker: " + workerIpAndPort, e);
+      throw new RuntimeException("Could not create znode for the worker: " + workerNetworkInfo, e);
     }
   }
 
@@ -269,7 +270,7 @@ public class ZKController implements IWorkerController {
       LOG.info("Updated job znode content: " + updatedParentStr);
     } catch (Exception e) {
       throw new RuntimeException("Could not update the job znode content for the worker: "
-          + workerIpAndPort, e);
+          + workerNetworkInfo, e);
     }
   }
 
@@ -340,7 +341,9 @@ public class ZKController implements IWorkerController {
     while (st.hasMoreTokens()) {
       String token = st.nextToken();
       WorkerNetworkInfo worker = WorkerNetworkInfo.decodeWorkerNetworkInfo(token);
-      workers.add(worker);
+      if (worker != null) {
+        workers.add(worker);
+      }
     }
 
     return workers;
@@ -352,6 +355,7 @@ public class ZKController implements IWorkerController {
    * @return
    */
   private WorkerNetworkInfo getIfExists(List<WorkerNetworkInfo> workers) {
+    String workerIpAndPort = workerIP.getHostAddress() + ":" + workerPort;
     for (WorkerNetworkInfo worker: workers) {
       if (workerIpAndPort.equalsIgnoreCase(worker.getWorkerIpAndPort())) {
         return worker;

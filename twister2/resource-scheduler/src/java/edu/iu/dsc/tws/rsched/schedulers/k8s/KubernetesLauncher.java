@@ -273,13 +273,17 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
       }
     }
 
-    // first get Node list and build encoded NodeInfo Strings
-    String rackLabelKey = KubernetesContext.rackLabelKeyForK8s(config);
-    String dcLabelKey = KubernetesContext.datacenterLabelKeyForK8s(config);
-    ArrayList<NodeInfo> nodeInfoList = controller.getNodeInfo(rackLabelKey, dcLabelKey);
-    String encodedNodeInfoList = NodeInfo.encodeNodeInfoList(nodeInfoList);
-    LOG.fine("NodeInfo objects: size " + nodeInfoList.size()
-        + "\n" + NodeInfo.listToString(nodeInfoList));
+    String encodedNodeInfoList = null;
+    // if node locations will be retrieved from Kubernetes master
+    if (!KubernetesContext.nodeLocationsFromConfig(config)) {
+      // first get Node list and build encoded NodeInfo Strings
+      String rackLabelKey = KubernetesContext.rackLabelKeyForK8s(config);
+      String dcLabelKey = KubernetesContext.datacenterLabelKeyForK8s(config);
+      ArrayList<NodeInfo> nodeInfoList = controller.getNodeInfo(rackLabelKey, dcLabelKey);
+      encodedNodeInfoList = NodeInfo.encodeNodeInfoList(nodeInfoList);
+      LOG.fine("NodeInfo objects: size " + nodeInfoList.size()
+          + "\n" + NodeInfo.listToString(nodeInfoList));
+    }
 
     // create the StatefulSet object for this job
     V1beta2StatefulSet statefulSet = RequestObjectBuilder.createStatefulSetObjectForJob(

@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s.mpi;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -126,19 +125,12 @@ public final class MPIWorkerStarter {
 
       String nodeIP =
           PodWatchUtils.getNodeIP(KubernetesContext.namespace(config), jobName, podName);
-      NodeInfo thisNodeInfo = new NodeInfo(nodeIP, null, null);
-      ArrayList<NodeInfo> nodeInfoList = NodeInfo.decodeNodeInfoList(encodedNodeInfoList);
 
-      if (nodeInfoList == null || nodeInfoList.size() == 0) {
-        LOG.warning("NodeInfo list is not constructed from the string: " + encodedNodeInfoList);
-      } else {
-        LOG.fine("Decoded NodeInfo list, size: " + nodeInfoList.size()
-            + "\n" + NodeInfo.listToString(nodeInfoList));
+      NodeInfo thisNodeInfo = KubernetesContext.nodeLocationsFromConfig(config)
+          ? KubernetesContext.getNodeInfo(config, nodeIP)
+          : K8sWorkerUtils.getNodeInfoFromEncodedStr(encodedNodeInfoList, nodeIP);
 
-        thisNodeInfo = nodeInfoList.get(nodeInfoList.indexOf(thisNodeInfo));
-      }
-
-      LOG.info("NodeInfo of this worker: " + thisNodeInfo);
+      LOG.info("NodeInfo for this worker: " + thisNodeInfo);
 
       workerNetworkInfo = new WorkerNetworkInfo(localHost, workerPort, workerID, thisNodeInfo);
 

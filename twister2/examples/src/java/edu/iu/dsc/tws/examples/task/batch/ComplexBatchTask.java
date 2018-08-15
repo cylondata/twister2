@@ -86,7 +86,7 @@ public class ComplexBatchTask implements IContainer {
     TWSNetwork network = new TWSNetwork(config, resourcePlan.getThisId());
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);
     ExecutionPlan executionPlan = new ExecutionPlan();
-    ExecutionPlan plan = executionPlanBuilder.execute(config, graph, taskSchedulePlan);
+    ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
     ExecutionModel executionModel = new ExecutionModel(ExecutionModel.SHARING);
     ThreadExecutor executor = new ThreadExecutor(executionModel, plan, network.getChannel(),
         OperationMode.BATCH);

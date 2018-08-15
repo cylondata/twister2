@@ -37,6 +37,18 @@ twister2.worker.instances: 6
 # twister2.worker.instances must be divisible by containers_per_pod
 kubernetes.workers.per.pod: 2
 
+########################################################################
+# Node locations related settings
+########################################################################
+# If this parameter is set as true,
+# Twister2 will use the below lists for node locations:
+#   kubernetes.datacenters.list
+#   kubernetes.racks.list
+# Otherwise, it will try to get these information by querying Kubernetes Master
+# It will use below two labels when querying node locations
+# For this to work, submitting client has to have admin privileges
+kubernetes.node.locations.from.config: true
+
 # rack label key for Kubernetes nodes in a cluster
 # each rack should have a unique label
 # all nodes in a rack should share this label
@@ -54,6 +66,15 @@ kubernetes.rack.labey.key: rack
 # Example: datacenter=dc1, datacenter=dc1, datacenter=dc1, etc
 # no default value is specified
 kubernetes.datacenter.labey.key: datacenter
+
+# Data center list with rack names
+kubernetes.datacenters.list:
+- echo: ['blue-rack', 'green-rack']
+
+# Rack list with node IPs in them
+kubernetes.racks.list:
+- blue-rack: ['node01.ip', 'node02.ip', 'node03.ip']
+- green-rack: ['node11.ip', 'node12.ip', 'node13.ip']
 
 ########################################################################
 # persistent volume related settings

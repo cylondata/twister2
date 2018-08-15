@@ -11,8 +11,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tsched.roundrobin;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +33,7 @@ import edu.iu.dsc.tws.tsched.spi.taskschedule.ScheduleException;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskInstanceMapCalculation;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedule;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
+import edu.iu.dsc.tws.tsched.utils.TaskAttributes;
 
 public class RoundRobinTaskScheduling implements TaskSchedule {
 
@@ -80,8 +83,7 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
     Set<Vertex> taskVertexSet = dataFlowTaskGraph.getTaskVertexSet();
 
     Map<Integer, List<InstanceId>> roundRobinContainerInstanceMap =
-        RoundRobinScheduling.RoundRobinSchedulingAlgorithm(taskVertexSet,
-            workerPlan.getNumberOfWorkers());
+        RoundRobinSchedulingAlgorithm(taskVertexSet, workerPlan.getNumberOfWorkers());
 
     TaskInstanceMapCalculation instanceMapCalculation = new TaskInstanceMapCalculation(
         this.instanceRAM, this.instanceCPU, this.instanceDisk);
@@ -108,13 +110,10 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
       Map<InstanceId, TaskSchedulePlan.TaskInstancePlan> taskInstancePlanMap = new HashMap<>();
 
       for (InstanceId id : taskInstanceIds) {
+
         double instanceRAMValue = instancesRamMap.get(containerId).get(id);
         double instanceDiskValue = instancesDiskMap.get(containerId).get(id);
         double instanceCPUValue = instancesCPUMap.get(containerId).get(id);
-
-        /*LOG.info(String.format("Task Id and Index\t" + id.getTaskId() + "\t" + id.getTaskIndex()
-            + "\tand Required Resource:" + instanceRAMValue + "\t" //write into a log file
-            + instanceDiskValue + "\t" + instanceCPUValue));*/
 
         Resource instanceResource = new Resource(instanceRAMValue,
             instanceDiskValue, instanceCPUValue);
@@ -133,16 +132,14 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
       if (worker != null && worker.getCpu() > 0 && worker.getDisk() > 0 && worker.getRam() > 0) {
         containerResource = new Resource((double) worker.getRam(),
             (double) worker.getDisk(), (double) worker.getCpu());
-        LOG.fine("Worker (if loop):" + containerId + "\tRam:"
-            + worker.getRam() + "\tDisk:" + worker.getDisk()  //write into a log file
+        LOG.fine("Worker (if loop):" + containerId + "\tRam:" + worker.getRam()
+            + "\tDisk:" + worker.getDisk()
             + "\tCpu:" + worker.getCpu());
       } else {
         containerResource = new Resource(containerRAMValue, containerDiskValue,
             containerCpuValue);
-        LOG.fine("Worker (else loop):" + containerId
-            + "\tRam:" + containerRAMValue     //write into a log file
-            + "\tDisk:" + containerDiskValue
-            + "\tCpu:" + containerCpuValue);
+        LOG.fine("Worker (else loop):" + containerId + "\tRam:" + containerRAMValue
+            + "\tDisk:" + containerDiskValue + "\tCpu:" + containerCpuValue);
       }
 
       TaskSchedulePlan.ContainerPlan taskContainerPlan =
@@ -152,6 +149,50 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
     }
     //new TaskSchedulePlan(job.getJobId(), containerPlans);
     return new TaskSchedulePlan(taskSchedulePlanId, containerPlans);
+  }
+
+  public static Map<Integer, List<InstanceId>> RoundRobinSchedulingAlgorithm(
+      Set<Vertex> taskVertexSet, int numberOfContainers) {
+
+    TaskAttributes taskAttributes = new TaskAttributes();
+    Map<Integer, List<InstanceId>> roundrobinAllocation = new LinkedHashMap<>();
+    for (int i = 0; i < numberOfContainers; i++) {
+      roundrobinAllocation.put(i, new ArrayList<>());
+    }
+    try {
+      Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
+      int totalTaskInstances = taskAttributes.getTotalNumberOfInstances(taskVertexSet);
+      if (numberOfContainers < totalTaskInstances) {
+        LOG.info(String.format("Container Map Values Before Allocation %s", roundrobinAllocation));
+        int globalTaskIndex = 0;
+        for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
+          String task = e.getKey();
+          int numberOfInstances = e.getValue();
+          int containerIndex;
+          for (int i = 0; i < numberOfInstances; i++) {
+            containerIndex = i % numberOfContainers;
+            roundrobinAllocation.get(containerIndex).add(new InstanceId(task, globalTaskIndex, i));
+          }
+          globalTaskIndex++;
+        }
+      }
+
+      LOG.info(String.format("Container Map Values After Allocation %s", roundrobinAllocation));
+      for (Map.Entry<Integer, List<InstanceId>> entry : roundrobinAllocation.entrySet()) {
+        Integer integer = entry.getKey();
+        List<InstanceId> instanceIds = entry.getValue();
+        LOG.fine("Container Index:" + integer);
+        for (InstanceId instanceId : instanceIds) {
+          LOG.fine("Task Instance Details:"
+              + "\t Task Name:" + instanceId.getTaskName()
+              + "\t Task id:" + instanceId.getTaskId()
+              + "\t Task index:" + instanceId.getTaskIndex());
+        }
+      }
+    } catch (NullPointerException ne) {
+      ne.printStackTrace();
+    }
+    return roundrobinAllocation;
   }
 
   @Override

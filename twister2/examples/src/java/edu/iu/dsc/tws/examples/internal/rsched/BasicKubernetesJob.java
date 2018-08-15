@@ -12,6 +12,8 @@
 package edu.iu.dsc.tws.examples.internal.rsched;
 
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
@@ -28,6 +30,7 @@ public final class BasicKubernetesJob {
   private BasicKubernetesJob() {
   }
 
+  @SuppressWarnings("unchecked")
   public static void main(String[] args) {
 
 //    LoggingHelper.setupLogging(null, "logs", "client");
@@ -38,6 +41,21 @@ public final class BasicKubernetesJob {
     LOG.fine("read config values: " + config.size() + "\n" + config);
 
     submitJob(config);
+  }
+
+  private static String convertToString(List<Map<String, List<String>>> outerList) {
+
+    String allPairs = "";
+    for (Map<String, List<String>> map: outerList) {
+      for (String mapKey: map.keySet()) {
+        List<String> innerList = map.get(mapKey);
+        for (String listItem: innerList) {
+          allPairs += listItem + ": " + mapKey + "\n";
+        }
+      }
+    }
+
+    return allPairs;
   }
 
   /**

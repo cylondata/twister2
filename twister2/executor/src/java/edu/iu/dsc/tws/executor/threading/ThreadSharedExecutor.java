@@ -21,7 +21,6 @@ import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.core.batch.SinkBatchInstance;
 import edu.iu.dsc.tws.executor.core.batch.SourceBatchInstance;
 
-
 public class ThreadSharedExecutor extends ThreadExecutorFactory {
 
   private int numThreads;
@@ -58,8 +57,6 @@ public class ThreadSharedExecutor extends ThreadExecutorFactory {
   @Override
   public boolean execute() {
     boolean isExecuted = false;
-
-
     for (int i = 0; i < tasks.size(); i++) {
       INodeInstance iNodeInstance = tasks.poll();
 

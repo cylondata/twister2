@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s.worker;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -91,19 +90,11 @@ public final class K8sWorkerStarter {
     String podName = localHost.getHostName();
 
     String nodeIP = PodWatchUtils.getNodeIP(KubernetesContext.namespace(config), jobName, podName);
-    NodeInfo thisNodeInfo = new NodeInfo(nodeIP, null, null);
-    ArrayList<NodeInfo> nodeInfoList = NodeInfo.decodeNodeInfoList(encodedNodeInfoList);
+    NodeInfo thisNodeInfo = KubernetesContext.nodeLocationsFromConfig(config)
+        ? KubernetesContext.getNodeInfo(config, nodeIP)
+        : K8sWorkerUtils.getNodeInfoFromEncodedStr(encodedNodeInfoList, nodeIP);
 
-    if (nodeInfoList == null || nodeInfoList.size() == 0) {
-      LOG.warning("NodeInfo list is not constructed from the string: " + encodedNodeInfoList);
-    } else {
-      LOG.fine("Decoded NodeInfo list, size: " + nodeInfoList.size()
-          + "\n" + NodeInfo.listToString(nodeInfoList));
-
-      thisNodeInfo = nodeInfoList.get(nodeInfoList.indexOf(thisNodeInfo));
-    }
-
-    LOG.info("NodeInfo of this worker: " + thisNodeInfo);
+    LOG.info("NodeInfo for this worker: " + thisNodeInfo);
 
     // set workerID
     int containersPerPod = KubernetesContext.workersPerPod(config);

@@ -13,12 +13,14 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s.worker;
 
 import java.io.File;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.common.discovery.NodeInfo;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
@@ -185,6 +187,22 @@ public final class K8sWorkerUtils {
    */
   public static int calculateWorkerID(int podIndex, int containerIndex, int workersPerPod) {
     return podIndex * workersPerPod + containerIndex;
+  }
+
+  public static NodeInfo getNodeInfoFromEncodedStr(String encodedNodeInfoList, String nodeIP) {
+    NodeInfo nodeInfo = new NodeInfo(nodeIP, null, null);
+    ArrayList<NodeInfo> nodeInfoList = NodeInfo.decodeNodeInfoList(encodedNodeInfoList);
+
+    if (nodeInfoList == null || nodeInfoList.size() == 0) {
+      LOG.warning("NodeInfo list is not constructed from the string: " + encodedNodeInfoList);
+    } else {
+      LOG.fine("Decoded NodeInfo list, size: " + nodeInfoList.size()
+          + "\n" + NodeInfo.listToString(nodeInfoList));
+
+      nodeInfo = nodeInfoList.get(nodeInfoList.indexOf(nodeInfo));
+    }
+
+    return nodeInfo;
   }
 
   /**

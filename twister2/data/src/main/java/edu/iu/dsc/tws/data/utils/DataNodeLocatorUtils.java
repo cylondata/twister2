@@ -71,9 +71,10 @@ public class DataNodeLocatorUtils implements IDataNodeLocatorUtils {
 
     List<String> dataNodes = new ArrayList<>();
     for (int i = 0; i < this.inputDataList.size(); i++) {
-      this.datasetName = this.inputDataList.get(i);
 
+      this.datasetName = this.inputDataList.get(i);
       String[] fName = new String[0];
+
       if (this.inputDataList.size() == 1) {
         fName = new String[this.inputDataList.size()];
         fName[0] = this.inputDataList.get(i);
@@ -84,6 +85,7 @@ public class DataNodeLocatorUtils implements IDataNodeLocatorUtils {
 
       try {
         Path path = new Path(datasetName);
+        assert hadoopFileSystem != null;
         FileStatus fileStatus = hadoopFileSystem.getFileStatus(path);
         if (!fileStatus.getPath().isNullOrEmpty()) {
           String fileURL = fileStatus.getPath().toString();
@@ -95,6 +97,8 @@ public class DataNodeLocatorUtils implements IDataNodeLocatorUtils {
         }
       } catch (IOException e) {
         e.printStackTrace();
+      } catch (NullPointerException npe) {
+        npe.printStackTrace();
       }
     }
     return dataNodes;
