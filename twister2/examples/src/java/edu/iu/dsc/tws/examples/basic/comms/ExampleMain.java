@@ -182,6 +182,16 @@ public class ExampleMain {
           // now submit the job
           Twister2Submitter.submitContainerJob(basicJob, config);
           break;
+        case "keyedpartition":
+          basicJob = BasicJob.newBuilder()
+              .setName("keyed-partition-stream-bench")
+              .setContainerClass(SPartitionExample.class.getName())
+              .setRequestResource(new ResourceContainer(2, 1024), containers)
+              .setConfig(jobConfig)
+              .build();
+          // now submit the job
+          Twister2Submitter.submitContainerJob(basicJob, config);
+          break;
         case "gather":
           basicJob = BasicJob.newBuilder()
               .setName("gather-stream-bench")
