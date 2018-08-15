@@ -150,6 +150,7 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
       totalReceives.put(target, 0);
       finishedSources.put(target, new HashSet<>());
     }
+    this.batchReceiver.init(cfg, op, expectedIds);
   }
 
   @Override

@@ -101,7 +101,7 @@ public class SPartitionExample extends BenchWorker {
       }
       LOG.log(Level.INFO, String.format("%d Received message %d count %d expected %d",
           workerId, target, count, expected));
-      if (expected >= count) {
+      if (count >= expected) {
         partitionDone = true;
       }
       return true;
