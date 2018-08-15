@@ -23,8 +23,19 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.api;
 
-public interface IThreadExecutor {
+public interface IExecutor {
 
   boolean execute();
 
+  /**
+   * Wait for an execution to finish
+   * @param execution the execution to wait for
+   */
+  void waitForExecution(ExecutionPlan execution);
+
+  /**
+   * Close an already running execution
+   * @param execution the execution to be stopped
+   */
+  void stop(ExecutionPlan execution);
 }

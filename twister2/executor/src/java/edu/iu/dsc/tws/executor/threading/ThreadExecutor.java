@@ -16,10 +16,9 @@ import java.util.concurrent.locks.ReentrantLock;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.executor.api.ExecutionModel;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
-import edu.iu.dsc.tws.executor.api.IThreadExecutor;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
-public class ThreadExecutor implements IThreadExecutor {
+public class ThreadExecutor {
 
   private ExecutionModel executionModel;
 
@@ -63,7 +62,6 @@ public class ThreadExecutor implements IThreadExecutor {
    * Communication Channel must be progressed after the task execution model
    * is initialized. It must be progressed only after execution is instantiated.
    * */
-  @Override
   public boolean execute() {
     // lets start the execution
     ThreadExecutorFactory threadExecutorFactory = new ThreadExecutorFactory(executionModel,
@@ -73,4 +71,6 @@ public class ThreadExecutor implements IThreadExecutor {
     //progressComms();
     return isExecutionFinished;
   }
+
+
 }

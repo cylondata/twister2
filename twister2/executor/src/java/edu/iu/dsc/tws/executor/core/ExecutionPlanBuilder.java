@@ -104,8 +104,8 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
   }
 
   @Override
-  public ExecutionPlan execute(Config cfg, DataFlowTaskGraph taskGraph,
-                               TaskSchedulePlan taskSchedule) {
+  public ExecutionPlan build(Config cfg, DataFlowTaskGraph taskGraph,
+                             TaskSchedulePlan taskSchedule) {
 
     noOfThreads = ExecutorContext.threadsPerContainer(cfg);
     //LOG.log(Level.INFO, " ExecutionBuilder Thread Count : " + noOfThreads);
@@ -261,7 +261,6 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
         execution.addOps(op);
       }
     }
-    System.out.println("Execution Builder execute complete ...");
     return execution;
   }
 
@@ -390,15 +389,5 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
     public String getTargetTask() {
       return targetTask;
     }
-  }
-
-  @Override
-  public void wait(ExecutionPlan execution) {
-
-  }
-
-  @Override
-  public void stop(ExecutionPlan execution) {
-
   }
 }

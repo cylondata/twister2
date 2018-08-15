@@ -34,18 +34,6 @@ public interface IExecutionPlanBuilder {
    * @param taskSchedule the task schedule
    * @return the execution created and null if nothing to execute
    */
-  ExecutionPlan execute(Config cfg, DataFlowTaskGraph taskGraph,
-                        TaskSchedulePlan taskSchedule);
-
-  /**
-   * Wait for an execution to finish
-   * @param execution the execution to wait for
-   */
-  void wait(ExecutionPlan execution);
-
-  /**
-   * Close an already running execution
-   * @param execution the execution to be stopped
-   */
-  void stop(ExecutionPlan execution);
+  ExecutionPlan build(Config cfg, DataFlowTaskGraph taskGraph,
+                      TaskSchedulePlan taskSchedule);
 }
