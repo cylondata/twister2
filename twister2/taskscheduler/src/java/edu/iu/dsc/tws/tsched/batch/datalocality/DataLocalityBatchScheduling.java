@@ -27,7 +27,7 @@ import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.InstanceId;
-import edu.iu.dsc.tws.tsched.utils.CalculateDataTransferTime;
+import edu.iu.dsc.tws.tsched.utils.DataTransferTimeCalculator;
 import edu.iu.dsc.tws.tsched.utils.TaskAttributes;
 
 /**
@@ -67,7 +67,7 @@ public class DataLocalityBatchScheduling {
 
     for (Map.Entry<String, Integer> aTaskEntrySet : taskEntrySet) {
 
-      Map<String, List<CalculateDataTransferTime>> workerPlanMap;
+      Map<String, List<DataTransferTimeCalculator>> workerPlanMap;
       Map.Entry<String, Integer> entry = aTaskEntrySet;
       String taskName = entry.getKey();
 
@@ -80,7 +80,7 @@ public class DataLocalityBatchScheduling {
           && (taskVertex.getConfig().getListValue("inputdataset") != null)) {
 
         int totalNumberOfInstances = taskVertex.getParallelism();
-        List<CalculateDataTransferTime> cal = null;
+        List<DataTransferTimeCalculator> cal = null;
         List<String> datanodesList;
 
         /*
@@ -155,7 +155,7 @@ public class DataLocalityBatchScheduling {
 
     for (Map.Entry<String, Integer> aTaskEntrySet : taskEntrySet) {
 
-      Map<String, List<CalculateDataTransferTime>> workerPlanMap;
+      Map<String, List<DataTransferTimeCalculator>> workerPlanMap;
       Map.Entry<String, Integer> entry = aTaskEntrySet;
       String taskName = entry.getKey();
 
@@ -168,7 +168,7 @@ public class DataLocalityBatchScheduling {
             && vertex.getConfig().getListValue("inputdataset") != null) {
 
           int totalNumberOfInstances = vertex.getParallelism();
-          List<CalculateDataTransferTime> cal = null;
+          List<DataTransferTimeCalculator> cal = null;
           List<String> datanodesList;
 
           if (cIdx == 0) {
@@ -207,10 +207,10 @@ public class DataLocalityBatchScheduling {
   /**
    * It calculates the distance between the data nodes and the worker nodes.
    */
-  private static Map<String, List<CalculateDataTransferTime>> calculateDistanceforBatch(
+  private static Map<String, List<DataTransferTimeCalculator>> calculateDistanceforBatch(
       List<String> datanodesList, WorkerPlan workers, int taskIndex) {
 
-    Map<String, List<CalculateDataTransferTime>> workerPlanMap = new HashMap<>();
+    Map<String, List<DataTransferTimeCalculator>> workerPlanMap = new HashMap<>();
     Worker worker;
     double workerBandwidth = 0.0;
     double workerLatency = 0.0;
@@ -219,7 +219,7 @@ public class DataLocalityBatchScheduling {
     double datanodeLatency;
 
     for (String nodesList : datanodesList) {
-      ArrayList<CalculateDataTransferTime> calculatedVal = new ArrayList<>();
+      ArrayList<DataTransferTimeCalculator> calculatedVal = new ArrayList<>();
       for (int i = 0; i < workers.getNumberOfWorkers(); i++) {
         worker = workers.getWorker(i);
 
@@ -230,8 +230,8 @@ public class DataLocalityBatchScheduling {
           ne.printStackTrace();
         }
 
-        CalculateDataTransferTime calculateDataTransferTime =
-            new CalculateDataTransferTime(nodesList, calculateDistance);
+        DataTransferTimeCalculator calculateDataTransferTime =
+            new DataTransferTimeCalculator(nodesList, calculateDistance);
 
         //Just for testing assigned static values and static increment...!
         if ("datanode1".equals(nodesList)) {
@@ -264,19 +264,19 @@ public class DataLocalityBatchScheduling {
    * This method finds the worker node which has better network parameters (bandwidth/latency)
    * or it will take lesser time for the data transfer if there is any.
    */
-  private static List<CalculateDataTransferTime> findOptimalWorkerNode(Vertex vertex, Map<String,
-      List<CalculateDataTransferTime>> workerPlanMap, int i) {
+  private static List<DataTransferTimeCalculator> findOptimalWorkerNode(Vertex vertex, Map<String,
+      List<DataTransferTimeCalculator>> workerPlanMap, int i) {
 
-    Set<Map.Entry<String, List<CalculateDataTransferTime>>> entries = workerPlanMap.entrySet();
-    List<CalculateDataTransferTime> cal = new ArrayList<>();
+    Set<Map.Entry<String, List<DataTransferTimeCalculator>>> entries = workerPlanMap.entrySet();
+    List<DataTransferTimeCalculator> cal = new ArrayList<>();
 
     try {
-      for (Map.Entry<String, List<CalculateDataTransferTime>> entry : entries) {
+      for (Map.Entry<String, List<DataTransferTimeCalculator>> entry : entries) {
 
         String key = entry.getKey();
-        List<CalculateDataTransferTime> value = entry.getValue();
-        for (CalculateDataTransferTime aValue : value) {
-          cal.add(new CalculateDataTransferTime(aValue.getNodeName(),
+        List<DataTransferTimeCalculator> value = entry.getValue();
+        for (DataTransferTimeCalculator aValue : value) {
+          cal.add(new DataTransferTimeCalculator(aValue.getNodeName(),
               aValue.getRequiredDataTransferTime(), key));
         }
       }

@@ -25,8 +25,8 @@ public class KeyedContent {
 
   private MessageType contentType = MessageType.OBJECT;
 
-  public KeyedContent(Object source, Object object) {
-    this.key = source;
+  public KeyedContent(Object keyObj, Object object) {
+    this.key = keyObj;
     this.value = object;
   }
 

@@ -26,7 +26,7 @@ public class RoundRobinBatchScheduling {
 
   private static final Logger LOG = Logger.getLogger(RoundRobinBatchScheduling.class.getName());
 
-  private static int taskId1 = 0;
+  private static int gtaskId = 0;
 
   protected RoundRobinBatchScheduling() {
   }
@@ -43,8 +43,7 @@ public class RoundRobinBatchScheduling {
       roundrobinAllocation.put(i, new ArrayList<>());
     }
 
-    //LOG.info(String.format("Container Map Values Before Allocation %s", roundrobinAllocation));
-
+    LOG.fine(String.format("Container Map Values Before Allocation %s", roundrobinAllocation));
     try {
       Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertex);
       int containerIndex = 0;
@@ -52,15 +51,15 @@ public class RoundRobinBatchScheduling {
         String task = e.getKey();
         int numberOfInstances = e.getValue();
         for (int taskIndex = 0; taskIndex < numberOfInstances; taskIndex++) {
-          roundrobinAllocation.get(containerIndex).add(new InstanceId(task, taskId1, taskIndex));
+          roundrobinAllocation.get(containerIndex).add(new InstanceId(task, gtaskId, taskIndex));
           ++containerIndex;
           if (containerIndex >= roundrobinAllocation.size()) {
             containerIndex = 0;
           }
         }
-        taskId1++;
+        gtaskId++;
       }
-      //LOG.info(String.format("Container Map Values After Allocation %s", roundrobinAllocation));
+      LOG.fine(String.format("Container Map Values After Allocation %s", roundrobinAllocation));
     } catch (NullPointerException ne) {
       ne.printStackTrace();
     }
@@ -79,7 +78,7 @@ public class RoundRobinBatchScheduling {
       roundrobinAllocation.put(i, new ArrayList<>());
     }
 
-    //LOG.info(String.format("Container Map Values Before Allocation %s", roundrobinAllocation));
+    LOG.fine(String.format("Container Map Values Before Allocation %s", roundrobinAllocation));
     try {
       Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
       int taskId = 0;
@@ -90,16 +89,16 @@ public class RoundRobinBatchScheduling {
         int numberOfInstances = e.getValue();
         for (int taskIndex = 0; taskIndex < numberOfInstances; taskIndex++) {
           //roundrobinAllocation.get(containerIndex).add(new InstanceId(task, taskId, taskIndex));
-          roundrobinAllocation.get(containerIndex).add(new InstanceId(task, taskId1, taskIndex));
+          roundrobinAllocation.get(containerIndex).add(new InstanceId(task, gtaskId, taskIndex));
           ++containerIndex;
           if (containerIndex >= roundrobinAllocation.size()) {
             containerIndex = 0;
           }
         }
-        taskId1++;
-        taskId++;
+        gtaskId++;
+        //taskId++;
       }
-      //LOG.info(String.format("Container Map Values After Allocation %s", roundrobinAllocation));
+      LOG.fine(String.format("Container Map Values After Allocation %s", roundrobinAllocation));
     } catch (NullPointerException ne) {
       ne.printStackTrace();
     }

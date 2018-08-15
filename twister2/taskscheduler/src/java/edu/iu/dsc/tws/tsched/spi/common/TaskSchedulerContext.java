@@ -12,12 +12,12 @@
 package edu.iu.dsc.tws.tsched.spi.common;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+import edu.iu.dsc.tws.common.config.Context;
 
 /**
  * This class is to represent the default values for the container/worker and task instances
  */
-public class TaskSchedulerContext extends SchedulerContext {
+public class TaskSchedulerContext extends Context {
 
 
   public static final String TWISTER2_TASK_SCHEDULING_MODE = "twister2.class.task.taskscheduler";

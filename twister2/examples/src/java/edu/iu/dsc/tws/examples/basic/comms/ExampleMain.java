@@ -34,6 +34,7 @@ import edu.iu.dsc.tws.examples.basic.comms.stream.SAllGatherExample;
 import edu.iu.dsc.tws.examples.basic.comms.stream.SAllReduceExample;
 import edu.iu.dsc.tws.examples.basic.comms.stream.SBroadcastExample;
 import edu.iu.dsc.tws.examples.basic.comms.stream.SGatherExample;
+import edu.iu.dsc.tws.examples.basic.comms.stream.SKeyedPartitionExample;
 import edu.iu.dsc.tws.examples.basic.comms.stream.SPartitionExample;
 import edu.iu.dsc.tws.examples.basic.comms.stream.SReduceExample;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -176,6 +177,16 @@ public class ExampleMain {
           basicJob = BasicJob.newBuilder()
               .setName("partition-stream-bench")
               .setContainerClass(SPartitionExample.class.getName())
+              .setRequestResource(new ResourceContainer(2, 1024), containers)
+              .setConfig(jobConfig)
+              .build();
+          // now submit the job
+          Twister2Submitter.submitContainerJob(basicJob, config);
+          break;
+        case "keyedpartition":
+          basicJob = BasicJob.newBuilder()
+              .setName("keyed-partition-stream-bench")
+              .setContainerClass(SKeyedPartitionExample.class.getName())
               .setRequestResource(new ResourceContainer(2, 1024), containers)
               .setConfig(jobConfig)
               .build();

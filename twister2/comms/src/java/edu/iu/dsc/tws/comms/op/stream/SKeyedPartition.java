@@ -39,15 +39,14 @@ public class SKeyedPartition {
         DataFlowPartition.PartitionStratergy.DIRECT, dataType, keyType);
 
     this.partition.init(comm.getConfig(), dataType, plan, comm.nextEdge());
-    this.destinationSelector.prepare(partition.getSources(), partition.getDestinations());
-
     destinationSelector.prepare(keyType, sources, destinations);
   }
 
-  public void partition(int source, Object key, Object message, int flags) {
+  public boolean partition(int source, Object key, Object message, int flags) {
     int destinations = destinationSelector.next(source, key);
 
-    partition.send(source, new KeyedContent(key, message), flags, destinations);
+    return partition.send(source, new KeyedContent(key, message, partition.getKeyType(),
+        partition.getDataType()), flags, destinations);
   }
 
   public void finish(int source) {
@@ -56,5 +55,9 @@ public class SKeyedPartition {
 
   public boolean progress() {
     return partition.progress();
+  }
+
+  public boolean hasPending() {
+    return !partition.isComplete();
   }
 }

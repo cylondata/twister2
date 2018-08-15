@@ -26,6 +26,7 @@ public class SimpleKeyBasedPartitionSelector implements DestinationSelector {
   private List<Integer> sourceList = new ArrayList<>();
   private List<Integer> destinationList = new ArrayList<>();
   private int numDestinations = 0;
+  private MessageType keyType = MessageType.INTEGER;
 
   @Override
   public void prepare(Set<Integer> sources, Set<Integer> destinations) {
@@ -35,8 +36,11 @@ public class SimpleKeyBasedPartitionSelector implements DestinationSelector {
   }
 
   @Override
-  public void prepare(MessageType type, Set<Integer> sources, Set<Integer> destinations) {
-
+  public void prepare(MessageType kType, Set<Integer> sources, Set<Integer> destinations) {
+    this.keyType = kType;
+    sourceList.addAll(sources);
+    destinationList.addAll(destinations);
+    numDestinations = destinationList.size();
   }
 
   @Override
@@ -53,7 +57,7 @@ public class SimpleKeyBasedPartitionSelector implements DestinationSelector {
   }
 
   private int getIntegerKeyBasedId(Integer key) {
-    int index = key % numDestinations;
+    int index = Math.abs(key) % numDestinations;
     return destinationList.get(index);
   }
 

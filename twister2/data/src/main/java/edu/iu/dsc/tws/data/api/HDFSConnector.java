@@ -181,7 +181,7 @@ public class HDFSConnector implements IHDFSConnector {
       }
       //It will be enabled later...!
       //run(new DFSck(conf, out), fName);
-      //out.println();
+      out.println();
     } catch (Exception e) {
       e.printStackTrace();
     }

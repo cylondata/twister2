@@ -15,15 +15,18 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.graph.Vertex;
 import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
 
-public class TaskAttributes {
+/**
+ * This class is responsible for getting the task vertices required ram, cpu, memory,
+ * and network parameters. It calculates the total number of task instances in each task
+ * vertex and finds the parallel task map of the task vertex set.
+ */
 
-  private static final Logger LOG = Logger.getLogger(TaskAttributes.class.getName());
+public class TaskAttributes {
 
   public Map<String, Double> getTaskRamMap(Set<Vertex> taskVertices) {
 
@@ -126,7 +129,6 @@ public class TaskAttributes {
     } catch (Exception ee) {
       ee.printStackTrace();
     }
-    //LOG.info("Parallel Task map:" + parallelTaskMap);
     return parallelTaskMap;
   }
 

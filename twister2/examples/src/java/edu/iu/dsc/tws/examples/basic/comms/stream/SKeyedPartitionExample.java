@@ -23,15 +23,18 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.op.LoadBalanceDestinationSelector;
-import edu.iu.dsc.tws.comms.op.stream.SPartition;
+import edu.iu.dsc.tws.comms.op.SimpleKeyBasedPartitionSelector;
+import edu.iu.dsc.tws.comms.op.stream.SKeyedPartition;
 import edu.iu.dsc.tws.examples.Utils;
-import edu.iu.dsc.tws.examples.basic.comms.BenchWorker;
+import edu.iu.dsc.tws.examples.basic.KeyedBenchWorker;
 
-public class SPartitionExample extends BenchWorker {
+/**
+ * Streaming keyed partition example
+ */
+public class SKeyedPartitionExample extends KeyedBenchWorker {
   private static final Logger LOG = Logger.getLogger(SPartitionExample.class.getName());
 
-  private SPartition partition;
+  private SKeyedPartition partition;
 
   private boolean partitionDone = false;
 
@@ -52,8 +55,9 @@ public class SPartitionExample extends BenchWorker {
     }
 
     // create the communication
-    partition = new SPartition(communicator, taskPlan, sources, targets,
-        MessageType.INTEGER, new PartitionReceiver(), new LoadBalanceDestinationSelector());
+    partition = new SKeyedPartition(communicator, taskPlan, sources, targets,
+        MessageType.INTEGER, MessageType.INTEGER, new PartitionReceiver(),
+        new SimpleKeyBasedPartitionSelector());
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
@@ -76,8 +80,8 @@ public class SPartitionExample extends BenchWorker {
   }
 
   @Override
-  protected boolean sendMessages(int task, Object data, int flag) {
-    while (!partition.partition(task, data, flag)) {
+  protected boolean sendMessages(int task, Object key, Object data, int flag) {
+    while (!partition.partition(task, key, data, flag)) {
       // lets wait a litte and try again
       partition.progress();
     }
@@ -87,6 +91,7 @@ public class SPartitionExample extends BenchWorker {
   public class PartitionReceiver implements MessageReceiver {
     private int count = 0;
     private int expected;
+
     @Override
     public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
       expected = expectedIds.keySet().size() * jobParameters.getIterations();
