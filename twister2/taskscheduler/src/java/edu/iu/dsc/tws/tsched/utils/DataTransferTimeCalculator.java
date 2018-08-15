@@ -11,9 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tsched.utils;
 
-public class CalculateDataTransferTime implements Comparable<CalculateDataTransferTime> {
+public class DataTransferTimeCalculator implements Comparable<DataTransferTimeCalculator> {
 
-  public CalculateDataTransferTime setNodeName(String nodename) {
+  public DataTransferTimeCalculator setNodeName(String nodename) {
     this.nodeName = nodename;
     return this;
   }
@@ -23,8 +23,8 @@ public class CalculateDataTransferTime implements Comparable<CalculateDataTransf
 
   private String dataNode;
 
-  public CalculateDataTransferTime(String nodename,
-                                   double requiredDatatransferTime, String datanode) {
+  public DataTransferTimeCalculator(String nodename,
+                                    double requiredDatatransferTime, String datanode) {
     this.nodeName = nodename;
     this.calculateDataTransferTime = requiredDatatransferTime;
     this.dataNode = datanode;
@@ -39,19 +39,19 @@ public class CalculateDataTransferTime implements Comparable<CalculateDataTransf
     return taskIndex;
   }
 
-  public CalculateDataTransferTime setTaskIndex(int taskindex) {
+  public DataTransferTimeCalculator setTaskIndex(int taskindex) {
     this.taskIndex = taskindex;
     return this;
   }
 
   private int taskIndex;
 
-  public CalculateDataTransferTime(String nodename, double requiredDatatransferTime) {
+  public DataTransferTimeCalculator(String nodename, double requiredDatatransferTime) {
     this.nodeName = nodename;
     this.calculateDataTransferTime = requiredDatatransferTime;
   }
 
-  public CalculateDataTransferTime setDataNode(String datanode) {
+  public DataTransferTimeCalculator setDataNode(String datanode) {
     this.dataNode = datanode;
     return this;
   }
@@ -64,7 +64,7 @@ public class CalculateDataTransferTime implements Comparable<CalculateDataTransf
     return calculateDataTransferTime;
   }
 
-  public CalculateDataTransferTime setRequiredDataTransferTime(Double requiredDatatransferTime) {
+  public DataTransferTimeCalculator setRequiredDataTransferTime(Double requiredDatatransferTime) {
     this.calculateDataTransferTime = requiredDatatransferTime;
     return this;
   }
@@ -74,11 +74,11 @@ public class CalculateDataTransferTime implements Comparable<CalculateDataTransf
     if (this == o) {
       return true;
     }
-    if (!(o instanceof CalculateDataTransferTime)) {
+    if (!(o instanceof DataTransferTimeCalculator)) {
       return false;
     }
 
-    CalculateDataTransferTime that = (CalculateDataTransferTime) o;
+    DataTransferTimeCalculator that = (DataTransferTimeCalculator) o;
 
     return calculateDataTransferTime.equals(that.calculateDataTransferTime);
   }
@@ -89,7 +89,7 @@ public class CalculateDataTransferTime implements Comparable<CalculateDataTransf
   }
 
   @Override
-  public int compareTo(CalculateDataTransferTime o) {
+  public int compareTo(DataTransferTimeCalculator o) {
     return this.getRequiredDataTransferTime().compareTo(o.getRequiredDataTransferTime());
   }
 }

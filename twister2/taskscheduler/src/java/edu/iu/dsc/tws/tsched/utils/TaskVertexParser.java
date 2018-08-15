@@ -42,7 +42,6 @@ public final class TaskVertexParser {
 
     //This logic could be optimized later...!
     List<Set<Vertex>> taskVertexList = new LinkedList<>();
-
     for (Vertex vertex : taskVertexSet) {
       if (dataFlowTaskGraph.incomingTaskEdgesOf(vertex).size() == 0
           && !(dataFlowTaskGraph.outgoingTaskEdgesOf(vertex).size() > 1)) {
