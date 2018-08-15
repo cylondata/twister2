@@ -17,14 +17,12 @@ import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.executor.api.DefaultOutputCollection;
-import edu.iu.dsc.tws.executor.api.EdgeGenerator;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.ITask;
 import edu.iu.dsc.tws.task.api.OutputCollection;
 import edu.iu.dsc.tws.task.api.TaskContext;
-
 
 /**
  * The class represents the instance of the executing task
@@ -92,24 +90,17 @@ public class TaskStreamingInstance implements INodeInstance {
   private Map<String, IParallelOperation> inParOps = new HashMap<>();
 
   /**
-   * The edge generator
-   */
-  private EdgeGenerator edgeGenerator;
-
-  /**
    * The worker id
    */
   private int workerId;
 
   public TaskStreamingInstance(ITask task, BlockingQueue<IMessage> inQueue,
-                           BlockingQueue<IMessage> outQueue, Config config,
-                           EdgeGenerator eGenerator, String tName,
+                           BlockingQueue<IMessage> outQueue, Config config, String tName,
                            int tId, int tIndex, int parallel, int wId, Map<String, Object> cfgs) {
     this.task = task;
     this.inQueue = inQueue;
     this.outQueue = outQueue;
     this.config = config;
-    this.edgeGenerator = eGenerator;
     this.taskId = tId;
     this.taskIndex = tIndex;
     this.parallelism = parallel;
@@ -133,21 +124,26 @@ public class TaskStreamingInstance implements INodeInstance {
   }
 
   public boolean execute() {
+    // execute if there are incoming messages
     while (!inQueue.isEmpty()) {
       IMessage m = inQueue.poll();
+      if (m != null) {
+        task.run(m);
+      }
+    }
 
-      task.run(m);
+    // now check the output queue
+    while (!outQueue.isEmpty()) {
+      IMessage message = outQueue.peek();
+      if (message != null) {
+        String edge = message.edge();
 
-      // now check the output queue
-      while (!outQueue.isEmpty()) {
-        IMessage message = outQueue.poll();
-        if (message != null) {
-          String edge = message.edge();
-
-          // invoke the communication operation
-          IParallelOperation op = outParOps.get(edge);
-          int flags = 0;
-          op.send(taskId, message, flags);
+        // invoke the communication operation
+        IParallelOperation op = outParOps.get(edge);
+        int flags = 0;
+        // if we successfully send remove
+        if (op.send(taskId, message, flags)) {
+          outQueue.poll();
         }
       }
     }

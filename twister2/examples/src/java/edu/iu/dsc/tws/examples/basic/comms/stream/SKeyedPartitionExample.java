@@ -26,7 +26,7 @@ import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.SimpleKeyBasedPartitionSelector;
 import edu.iu.dsc.tws.comms.op.stream.SKeyedPartition;
 import edu.iu.dsc.tws.examples.Utils;
-import edu.iu.dsc.tws.examples.basic.KeyedBenchWorker;
+import edu.iu.dsc.tws.examples.basic.comms.KeyedBenchWorker;
 
 /**
  * Streaming keyed partition example
