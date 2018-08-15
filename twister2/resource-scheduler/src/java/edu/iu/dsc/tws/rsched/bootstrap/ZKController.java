@@ -340,7 +340,9 @@ public class ZKController implements IWorkerController {
     while (st.hasMoreTokens()) {
       String token = st.nextToken();
       WorkerNetworkInfo worker = WorkerNetworkInfo.decodeWorkerNetworkInfo(token);
-      workers.add(worker);
+      if (worker != null) {
+        workers.add(worker);
+      }
     }
 
     return workers;
