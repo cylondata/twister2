@@ -67,7 +67,6 @@ public final class MesosMPIWorkerStarter {
     //int workerId = Integer.parseInt(System.getenv("WORKER_ID"));
     jobName = args[0];
     System.out.println("job name.....:::" + jobName);
-    int id = workerID;
 
     String twister2Home = Paths.get("").toAbsolutePath().toString();
     String configDir = "twister2-job/mesos/";
@@ -82,8 +81,15 @@ public final class MesosMPIWorkerStarter {
     try {
       JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/"
           + jobName + ".job");
+
+      // add any configuration from job file to the config object
+      // if there are the same config parameters in both,
+      // job file configurations will override
+      config = JobUtils.overrideConfigs(job, config);
+      config = JobUtils.updateConfigs(job, config);
+
       workerController = new MesosWorkerController(config, job,
-          Inet4Address.getLocalHost().getHostAddress(), 2022, id);
+          Inet4Address.getLocalHost().getHostAddress(), 2022, workerID);
       //LOG.info("Initializing with zookeeper.." + Inet4Address.getLocalHost().getHostAddress());
       //LOG.info("Worker id is....:" + workerID);
       //workerController.initializeWithZooKeeper();
@@ -100,12 +106,12 @@ public final class MesosMPIWorkerStarter {
     //String jobMasterIP = workerNetworkInfoList.get(0).getWorkerIP().getHostAddress();
     String jobMasterIP = args[1];
     LOG.info("JobMasterIP" + jobMasterIP);
-    System.out.println("Worker id " + id);
+    System.out.println("Worker id " + workerID);
     startJobMasterClient(workerController.getWorkerNetworkInfo(), jobMasterIP);
 
     System.out.println("\nworker controller\nworker id..:"
         + workerController.getWorkerNetworkInfo().getWorkerID()
-        + "ip address..:" + workerController.getWorkerNetworkInfo().getWorkerIP().toString());
+        + "\nip address..:" + workerController.getWorkerNetworkInfo().getWorkerIP().toString());
 
     startWorker(workerController, null);
 
@@ -113,11 +119,11 @@ public final class MesosMPIWorkerStarter {
     try {
       MPI.Finalize();
     } catch (MPIException ignore) {
-      LOG.info("MPI Fİnalize Exception" + ignore.getMessage());
+      LOG.info("MPI Finalize Exception" + ignore.getMessage());
     }
 
     closeWorker();
-    workerController.close();
+    //workerController.close();
   }
 
   public static void startJobMasterClient(WorkerNetworkInfo networkInfo, String jobMasterIP) {
@@ -132,7 +138,11 @@ public final class MesosMPIWorkerStarter {
 
   public static void startWorker(IWorkerController workerController,
                                  IPersistentVolume pv) {
-    String workerClass = SchedulerContext.containerClass(config);
+
+
+    JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/" + jobName + ".job");
+    String workerClass = job.getContainer().getClassName();
+    System.out.println("worker class---->>>" + workerClass);
     IWorker worker;
     try {
       Object object = ReflectionUtils.newInstance(workerClass);
@@ -150,7 +160,7 @@ public final class MesosMPIWorkerStarter {
     }
 
     ResourcePlan resourcePlan = MPIWorker.createResourcePlan(config);
-
+    //resourcePlan = new ResourcePlan(SchedulerContext.clusterType(config), workerID);
     worker.init(config, workerID, resourcePlan, workerController, pv, volatileVolume);
   }
 
