@@ -68,7 +68,7 @@ twister2.class.mesos.worker: "edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorker
 ###################################################################################
 # ZooKeeper server addresses: comma separated host:port pairs
 # example: "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002"
-twister2.zookeeper.server.addresses: "ip:port"
+twister2.zookeeper.server.addresses: "149.165.150.81:2181"
 
 # the root node path of this job on ZooKeeper
 # the default is "/twister2"
