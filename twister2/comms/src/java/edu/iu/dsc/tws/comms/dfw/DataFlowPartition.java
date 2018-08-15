@@ -213,6 +213,8 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
     this.isKeyed = true;
     this.keyType = keyType;
     this.dataType = dataType;
+    this.receiveKeyType = keyType;
+    this.receiveType = dataType;
   }
 
   public DataFlowPartition(TWSChannel channel, Set<Integer> sourceTasks, Set<Integer> destTasks,

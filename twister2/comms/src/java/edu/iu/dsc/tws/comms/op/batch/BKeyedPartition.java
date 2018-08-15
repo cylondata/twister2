@@ -58,7 +58,8 @@ public class BKeyedPartition {
   public void partition(int source, Object key, Object message, int flags) {
     int destinations = destinationSelector.next(source);
 
-    partition.send(source, new KeyedContent(key, message), flags, destinations);
+    partition.send(source, new KeyedContent(key, message, partition.getKeyType(),
+        partition.getDataType()), flags, destinations);
   }
 
   public void finish(int source) {

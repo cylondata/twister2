@@ -23,19 +23,18 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
 import edu.iu.dsc.tws.comms.op.SimpleKeyBasedPartitionSelector;
-import edu.iu.dsc.tws.comms.op.stream.SPartition;
+import edu.iu.dsc.tws.comms.op.stream.SKeyedPartition;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.basic.KeyedBenchWorker;
 
 /**
- * Created by pulasthi on 8/15/18.
+ * Streaming keyed partition example
  */
 public class SKeyedPartitionExample extends KeyedBenchWorker {
   private static final Logger LOG = Logger.getLogger(SPartitionExample.class.getName());
 
-  private SPartition partition;
+  private SKeyedPartition partition;
 
   private boolean partitionDone = false;
 
@@ -56,8 +55,9 @@ public class SKeyedPartitionExample extends KeyedBenchWorker {
     }
 
     // create the communication
-    partition = new SPartition(communicator, taskPlan, sources, targets,
-        MessageType.INTEGER, new PartitionReceiver(), new SimpleKeyBasedPartitionSelector());
+    partition = new SKeyedPartition(communicator, taskPlan, sources, targets,
+        MessageType.INTEGER, MessageType.INTEGER, new PartitionReceiver(),
+        new SimpleKeyBasedPartitionSelector());
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
@@ -81,8 +81,7 @@ public class SKeyedPartitionExample extends KeyedBenchWorker {
 
   @Override
   protected boolean sendMessages(int task, Object key, Object data, int flag) {
-    KeyedContent keyedContent = new KeyedContent(key, data);
-    while (!partition.partition(task, keyedContent, flag)) {
+    while (!partition.partition(task, key, data, flag)) {
       // lets wait a litte and try again
       partition.progress();
     }
