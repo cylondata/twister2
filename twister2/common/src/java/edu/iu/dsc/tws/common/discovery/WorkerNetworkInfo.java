@@ -43,28 +43,16 @@ public class WorkerNetworkInfo {
   private int port;
   private NodeInfo nodeInfo;
 
-  /**
-   * workerIpAndPort has both IP and port in the form of ip:port
-   * @param workerIpAndPort name of
-   * @param workerID
-   */
-  public WorkerNetworkInfo(String workerIpAndPort, int workerID) {
-    this(convertStringToIP(workerIpAndPort.split(":")[0]),
-        Integer.parseInt(workerIpAndPort.split(":")[1]),
-        workerID,
-        new NodeInfo(null, null, null));
-  }
-
-  /**
-   * workerIpAndPort has both IP and port in the form of ip:port
-   * @param workerID
-   */
   public WorkerNetworkInfo(String ipStr, int port, int workerID) {
     this(convertStringToIP(ipStr), port, workerID, new NodeInfo(null, null, null));
   }
 
   public WorkerNetworkInfo(InetAddress ip, int port, int workerID) {
     this(ip, port, workerID, new NodeInfo(null, null, null));
+  }
+
+  public WorkerNetworkInfo(String ipStr, int port, int workerID, NodeInfo nodeInfo) {
+    this(convertStringToIP(ipStr), port, workerID, nodeInfo);
   }
 
   public WorkerNetworkInfo(InetAddress ip, int port, int workerID, NodeInfo nodeInfo) {
@@ -100,10 +88,6 @@ public class WorkerNetworkInfo {
 
   public void setWorkerID(int workerID) {
     this.workerID = workerID;
-  }
-
-  public void setNodeInfo(NodeInfo nodeInfo) {
-    this.nodeInfo = nodeInfo;
   }
 
   private static InetAddress convertStringToIP(String ipStr) {
@@ -162,6 +146,7 @@ public class WorkerNetworkInfo {
     }
 
     String[] twoParts = networkInfoStr.split(";");
+    NodeInfo nodeInfo = NodeInfo.decodeNodeInfo(twoParts[1]);
 
     String[] fields = twoParts[0].split(",");
     if (fields.length != 3) {
@@ -170,10 +155,8 @@ public class WorkerNetworkInfo {
 
     WorkerNetworkInfo workerNetworkInfo = new WorkerNetworkInfo(fields[0],
         Integer.parseInt(fields[1]),
-        Integer.parseInt(fields[2]));
-
-    NodeInfo nodeInfo = NodeInfo.decodeNodeInfo(twoParts[1]);
-    workerNetworkInfo.setNodeInfo(nodeInfo);
+        Integer.parseInt(fields[2]),
+        nodeInfo);
 
     return workerNetworkInfo;
   }
