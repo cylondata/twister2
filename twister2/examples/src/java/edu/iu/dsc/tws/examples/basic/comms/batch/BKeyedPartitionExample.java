@@ -25,6 +25,7 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.LoadBalanceDestinationSelector;
+import edu.iu.dsc.tws.comms.op.SimpleKeyBasedPartitionSelector;
 import edu.iu.dsc.tws.comms.op.batch.BKeyedPartition;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.basic.KeyedBenchWorker;
@@ -58,7 +59,7 @@ public class BKeyedPartitionExample extends KeyedBenchWorker {
 
     // create the communication
     partition = new BKeyedPartition(communicator, taskPlan, sources, targets, MessageType.INTEGER,
-        MessageType.INTEGER, new PartitionReceiver(), new LoadBalanceDestinationSelector());
+        MessageType.INTEGER, new PartitionReceiver(), new SimpleKeyBasedPartitionSelector());
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
