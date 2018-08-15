@@ -98,6 +98,14 @@ public interface IStateManager extends AutoCloseable {
       JobExecutionState.JobState executionState, String topologyName);
 
   /**
+   * Set a specific property
+   * @param key the key
+   * @param property property
+   * @return Boolean - Success or Failure
+   */
+  ListenableFuture<Boolean> setJobProperty(String key, String property);
+
+  /**
    * Delete the tmaster location for the given topology
    *
    * @return Boolean - Success or Failure

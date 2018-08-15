@@ -10,7 +10,23 @@ Contents:
 
 .. toctree::
    :maxdepth: 2
-
+   
+   documents/architecture/communication
+   documents/architecture/Main-Components
+   documents/common/Logging
+   documents/common/WorkerDiscovery
+   documents/job-master/JobMaster
+   documents/kubernetes/install/Twister2-Kubernetes-install
+   documents/kubernetes/K8sBasedWorkerDiscovery  
+   documents/kubernetes/K8sPersistentStorage  
+   documents/kubernetes/K8sServices
+   documents/kubernetes/K8sWorkerBindingMapping  
+   documents/kubernetes/OpenMPI-Support
+   documents/kubernetes/Twister2-on-Kubernetes
+   documents/standalone/standalone
+   documents/zookeeper/ZKBasedJobMasterDiscovery
+   documents/zookeeper/ZKBasedWorkerDiscovery
+   examples
 
 
 Indices and tables

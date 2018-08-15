@@ -18,6 +18,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
+import edu.iu.dsc.tws.common.discovery.NodeInfo;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
@@ -29,6 +30,7 @@ import edu.iu.dsc.tws.rsched.schedulers.k8s.K8sEnvVariables;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.PodWatchUtils;
 import edu.iu.dsc.tws.rsched.spi.container.IPersistentVolume;
 import edu.iu.dsc.tws.rsched.spi.container.IWorker;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
@@ -58,6 +60,7 @@ public final class K8sWorkerStarter {
     int workerPort = Integer.parseInt(System.getenv(K8sEnvVariables.WORKER_PORT + ""));
     String containerName = System.getenv(K8sEnvVariables.CONTAINER_NAME + "");
     String jobMasterIP = System.getenv(K8sEnvVariables.JOB_MASTER_IP + "");
+    String encodedNodeInfoList = System.getenv(K8sEnvVariables.ENCODED_NODE_INFO_LIST + "");
     jobName = System.getenv(K8sEnvVariables.JOB_NAME + "");
     if (jobName == null) {
       throw new RuntimeException("JobName is null");
@@ -86,12 +89,19 @@ public final class K8sWorkerStarter {
     String podIP = localHost.getHostAddress();
     String podName = localHost.getHostName();
 
+    String nodeIP = PodWatchUtils.getNodeIP(KubernetesContext.namespace(config), jobName, podName);
+    NodeInfo thisNodeInfo = KubernetesContext.nodeLocationsFromConfig(config)
+        ? KubernetesContext.getNodeInfo(config, nodeIP)
+        : K8sWorkerUtils.getNodeInfoFromEncodedStr(encodedNodeInfoList, nodeIP);
+
+    LOG.info("NodeInfo for this worker: " + thisNodeInfo);
+
     // set workerID
     int containersPerPod = KubernetesContext.workersPerPod(config);
     workerID = K8sWorkerUtils.calculateWorkerID(podName, containerName, containersPerPod);
 
     // set workerNetworkInfo
-    workerNetworkInfo = new WorkerNetworkInfo(localHost, workerPort, workerID);
+    workerNetworkInfo = new WorkerNetworkInfo(localHost, workerPort, workerID, thisNodeInfo);
 
     // initialize persistent volume
     K8sPersistentVolume pv = null;

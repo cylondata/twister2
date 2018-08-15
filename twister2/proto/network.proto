@@ -7,13 +7,13 @@ option java_outer_classname = "Network";
 //*****************************************************
 // a note:
 // oneof structs are added to workerID fields
-// main reason is to force the workerID to be encoded and
-// logged when its value is zero.
+// main reason is to force the workerID to be encoded and logged when its value is zero.
 // if we do not use oneof, the value zero is not logged.
-// The reason for that seems to be that zero is the default value
+// The reason for that seems to be that zero is the default value,
 // and it is not encoded and transferred.
-// it is not a pretty solution but I did it
-// for the lack of a better alternative.
+//
+// an advantage of this solution is that each message must have workerID field set.
+// that is positive I think.
 //*****************************************************
 
 // Ping message is sent by workers to the job master periodically
@@ -40,17 +40,28 @@ enum WorkerState {
     UNASSIGNED = 4;
 }
 
-// a worker informs the master that its state has changed
-// if the worker state becomes STARTING,
-// then the worker has to provide its IP address and the port number
-// for other states, just the newState is enough
-message WorkerStateChange {
+//
+// Networking Data about a Twister2 Worker
+//
+message WorkerNetworkInfo {
     oneof required {
         int32 workerID = 1;
     }
+    string workerIP = 2;
+    int32 port = 3;
+    string nodeIP = 4;
+    string rackName = 5;
+    string dataCenterName = 6;
+}
+
+// a worker informs the master that its state has changed
+// if the worker state becomes STARTING,
+//   the worker has to provide its IP address and the port number
+//   optionally its node info: nodeIP, rackName and dataCenterName
+// for other states, just the workerID and newState is enough
+message WorkerStateChange {
+    WorkerNetworkInfo workerNetworkInfo = 1;
     WorkerState newState = 2;
-    string workerIP = 3;
-    int32 workerPort = 4;
 }
 
 // sent by the master to the worker
@@ -77,13 +88,6 @@ message ListWorkersRequest {
 
 // Job master returns the list of workers in a job to a worker
 message ListWorkersResponse {
-    message WorkerNetworkInfo {
-        oneof required {
-            int32 id = 1;
-        }
-        string ip = 2;
-        int32 port = 3;
-    }
 
     oneof required {
         int32 workerID = 1;

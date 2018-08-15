@@ -193,6 +193,11 @@ public class Config {
     return value != null ? value : defaultValue;
   }
 
+  @SuppressWarnings("unchecked")
+  public List<Map<String, List<String>>> getListOfMapsWithListValues(String key) {
+    return (List<Map<String, List<String>>>) get(key);
+  }
+
   public Boolean getBooleanValue(String key) {
     Object value = get(key);
     if (value instanceof Boolean) {

@@ -21,6 +21,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.common.discovery.NodeInfo;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
@@ -141,7 +142,10 @@ public final class AuroraWorkerStarter {
     long startTime = System.currentTimeMillis();
     String workerHostPort = workerAddress.getHostAddress() + ":" + workerPort;
     int numberOfWorkers = job.getJobResources().getNoOfContainers();
-    zkController = new ZKController(config, job.getJobName(), workerHostPort, numberOfWorkers);
+
+    NodeInfo nodeInfo = new NodeInfo(null, null, null);
+    zkController =
+        new ZKController(config, job.getJobName(), workerHostPort, numberOfWorkers, nodeInfo);
     zkController.initialize();
     long duration = System.currentTimeMillis() - startTime;
     System.out.println("Initialization for the worker: " + zkController.getWorkerNetworkInfo()

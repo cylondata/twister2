@@ -59,7 +59,7 @@ Node labeling is performed by using kubectl command line tool.
 We assume that node labeling is performed prior to creating Twister2 jobs. 
 The format of the label creation command is as follows:
 
-    >kubectl label nodes <node-name> <label-key>=<label-value>
+    >kubectl label node <node-name> <label-key>=<label-value>
 
 **Predefined Labels**: There are also some predefined labels in Kubernetes for each node. 
 Users can request mapping based on these labels also. Some of these labels are as follows: 

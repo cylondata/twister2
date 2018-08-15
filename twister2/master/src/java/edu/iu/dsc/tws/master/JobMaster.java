@@ -208,13 +208,8 @@ public class JobMaster {
       looper.loopBlocking();
     }
 
-    // to send the last remaining messages if any
-//    looper.sendQueedMessages();
-    looper.loop();
-    looper.loop();
-    looper.loop();
-
-    rrServer.stop();
+    // send the remaining messages if any and stop
+    rrServer.stopGraceFully(2000);
   }
 
   /**

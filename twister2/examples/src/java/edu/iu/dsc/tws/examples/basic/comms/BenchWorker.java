@@ -68,7 +68,7 @@ public abstract class BenchWorker implements IWorker {
     communicator = new Communicator(cfg, channel);
     // now lets execute
     execute();
-    // now progress
+    // now communicationProgress
     progress();
   }
 
@@ -78,9 +78,9 @@ public abstract class BenchWorker implements IWorker {
     int count = 0;
     // we need to progress the communication
     while (!isDone()) {
-      // progress the channel
+      // communicationProgress the channel
       channel.progress();
-      // we should progress the communication directive
+      // we should communicationProgress the communication directive
       progressCommunication();
     }
   }

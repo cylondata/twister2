@@ -165,6 +165,11 @@ public class SharedFileSystemStateManager extends FileSystemStateManager {
         StateLocation.EXECUTION_STATE, jobName, executionState.toByteArray(), false);
   }
 
+  @Override
+  public ListenableFuture<Boolean> setJobProperty(String key, String property) {
+    return null;
+  }
+
   private ListenableFuture<Boolean> setData(FileSystemStateManager.StateLocation location,
                                             String jobName,
                                             byte[] bytes,

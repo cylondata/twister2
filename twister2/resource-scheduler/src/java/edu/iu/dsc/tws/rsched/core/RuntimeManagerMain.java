@@ -52,7 +52,7 @@ public final class RuntimeManagerMain {
     } catch (Throwable t) {
       String msg = "Un-expected error";
       LOG.log(Level.SEVERE, msg, t);
-      throw new RuntimeException(msg);
+      throw new RuntimeException(msg, t);
     }
   }
 

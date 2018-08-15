@@ -48,7 +48,7 @@ public class ReduceBatchFinalReceiver extends ReduceBatchReceiver {
   }
 
   /**
-   * Method used to progress work
+   * Method used to communicationProgress work
    */
   public boolean progress() {
     boolean needsFurtherProgress = false;
@@ -78,7 +78,7 @@ public class ReduceBatchFinalReceiver extends ReduceBatchReceiver {
         }
       }
 
-      // if we have queues with 0 and more than zero we need further progress
+      // if we have queues with 0 and more than zero we need further communicationProgress
       if (!found && moreThanOne) {
         needsFurtherProgress = true;
       }

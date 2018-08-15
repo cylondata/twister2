@@ -13,16 +13,19 @@ twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.scp.ScpUploader"
 # twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader"
 
 # container class to run in workers
-# twister2.job.basic.container.class: "edu.iu.dsc.tws.examples.basic.BasicK8sWorker"
-# twister2.job.basic.container.class: "edu.iu.dsc.tws.examples.basic.comms.BaseBroadcastCommunication"
+# twister2.job.basic.container.class: "edu.iu.dsc.tws.examples.internal.rsched.BasicK8sWorker"
+# twister2.job.basic.container.class: "edu.iu.dsc.tws.examples.internal.comms.BaseBroadcastCommunication"
 # twister2.job.basic.container.class: "edu.iu.dsc.tws.examples.basic.batch.sort.SortJob"
-twister2.job.basic.container.class: "edu.iu.dsc.tws.examples.basic.BasicNetworkTest"
+twister2.job.basic.container.class: "edu.iu.dsc.tws.examples.internal.BasicNetworkTest"
 # twister2.job.basic.container.class: "edu.iu.dsc.tws.examples.basic.comms.batch.BReduceExample"
 
 # image pull policy, by default is IfNotPresent
 # it could also be Always
 # kubernetes.image.pull.policy: "Always"
 
+###################################################################################
+# Kubernetes Mapping and Binding parameters
+###################################################################################
 # Statically bind workers to CPUs
 # Workers do not move from the CPU they are started during computation
 # twister2.cpu_per_container has to be an integer

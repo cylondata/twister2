@@ -24,9 +24,9 @@ import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.data.api.HDFSConnector;
-import edu.iu.dsc.tws.executor.ExecutionPlan;
-import edu.iu.dsc.tws.executor.ExecutionPlanBuilder;
-import edu.iu.dsc.tws.executor.threading.ExecutionModel;
+import edu.iu.dsc.tws.executor.api.ExecutionModel;
+import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.ThreadExecutor;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
@@ -187,7 +187,7 @@ public class DataLocalityBatchTaskExample implements IContainer {
 
     TWSNetwork network = new TWSNetwork(config, resourcePlan.getThisId());
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);
-    ExecutionPlan plan = executionPlanBuilder.schedule(config, graph, taskSchedulePlan);
+    ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
     ExecutionModel executionModel = new ExecutionModel(ExecutionModel.SHARED);
     ThreadExecutor executor = new ThreadExecutor(executionModel, plan, network.getChannel());
     executor.execute();
@@ -253,12 +253,13 @@ public class DataLocalityBatchTaskExample implements IContainer {
     private HDFSConnector hdfsConnector = null;
 
     @Override
-    public void execute(IMessage message) {
+    public boolean execute(IMessage message) {
 
       LOG.info("Message Partition Received : " + message.getContent()
           + ", Count : " + count);
       hdfsConnector.HDFSConnect(message.getContent().toString());
       count++;
+      return true;
     }
 
     @Override
@@ -291,11 +292,12 @@ public class DataLocalityBatchTaskExample implements IContainer {
     private HDFSConnector hdfsConnector = null;
 
     @Override
-    public void execute(IMessage message) {
+    public boolean execute(IMessage message) {
 
       LOG.info("Message Partition Received : " + message.getContent()
           + ", Count : " + count);
       count++;
+      return true;
     }
 
     @Override
@@ -315,11 +317,12 @@ public class DataLocalityBatchTaskExample implements IContainer {
     private HDFSConnector hdfsConnector = null;
 
     @Override
-    public void execute(IMessage message) {
+    public boolean execute(IMessage message) {
 
       LOG.info("Message Partition Received : " + message.getContent()
           + ", Count : " + count);
       count++;
+      return true;
     }
 
     @Override

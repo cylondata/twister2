@@ -15,8 +15,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -28,9 +26,6 @@ import io.kubernetes.client.ApiException;
 import io.kubernetes.client.Configuration;
 import io.kubernetes.client.apis.CoreV1Api;
 import io.kubernetes.client.models.V1Event;
-import io.kubernetes.client.models.V1Node;
-import io.kubernetes.client.models.V1NodeAddress;
-import io.kubernetes.client.models.V1NodeList;
 import io.kubernetes.client.models.V1Pod;
 import io.kubernetes.client.models.V1PodList;
 import io.kubernetes.client.util.Watch;
@@ -323,69 +318,35 @@ public final class PodWatchUtils {
   }
 
   /**
-   * get the IP of the node where the pod with that is IP running
+   * get the IP of the node where the pod with that name is running
    * @param namespace
-   * @param podIP
    * @return
    */
-  public static String getNodeIP(String namespace, String podIP) {
+  public static String getNodeIP(String namespace, String jobName, String podName) {
 
     if (apiClient == null || coreApi == null) {
       createApiInstances();
     }
 
+    String jobPodsLabel = KubernetesUtils.createJobPodsLabelWithKey(jobName);
+
     V1PodList podList = null;
     try {
       podList = coreApi.listNamespacedPod(
-          namespace, null, null, null, null, null, null, null, null, null);
+          namespace, null, null, null, null, jobPodsLabel, null, null, null, null);
     } catch (ApiException e) {
       LOG.log(Level.SEVERE, "Exception when getting PodList.", e);
       throw new RuntimeException(e);
     }
 
     for (V1Pod pod : podList.getItems()) {
-      if (podIP.equals(pod.getStatus().getPodIP())) {
+      LOG.info("a podIP: " + pod.getStatus().getPodIP());
+      if (podName.equals(pod.getMetadata().getName())) {
         return pod.getStatus().getHostIP();
       }
     }
 
     return null;
   }
-
-  public static boolean getNodeInfo(String nodeHostIP) {
-
-    if (apiClient == null || coreApi == null) {
-      createApiInstances();
-    }
-
-    V1NodeList nodeList = null;
-    try {
-      nodeList = coreApi.listNode(null, null, null, null, null, null, null, null, null);
-    } catch (ApiException e) {
-      LOG.log(Level.SEVERE, "Exception when getting NodeList.", e);
-      throw new RuntimeException(e);
-    }
-
-    for (V1Node node : nodeList.getItems()) {
-      List<V1NodeAddress> addressList = node.getStatus().getAddresses();
-      for (V1NodeAddress nodeAddress: addressList) {
-        if (nodeAddress.getAddress().equals(nodeHostIP)) {
-          LOG.info("Discovered the node with the address: " + nodeHostIP);
-          return true;
-        }
-      }
-
-      // get labels
-      String labels = "";
-      Map<String, String> labelMap = node.getMetadata().getLabels();
-      for (String key: labelMap.keySet()) {
-        labels += key + "=" + labelMap.get(key) + "\n";
-      }
-      LOG.info("---------------------------------- Labels: \n" + labels);
-    }
-
-    return true;
-  }
-
 
 }

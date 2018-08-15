@@ -20,6 +20,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
+import edu.iu.dsc.tws.common.discovery.NodeInfo;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKController;
@@ -88,7 +89,11 @@ public class MesosWorkerController implements IWorkerController {
 
     long startTime = System.currentTimeMillis();
     String workerHostPort = workerIp + ":" + workerPort;
-    zkController = new ZKController(config, job.getJobName(), workerHostPort, numberOfWorkers);
+
+    // temporary value
+    NodeInfo nodeInfo = new NodeInfo(null, null, null);
+    zkController =
+        new ZKController(config, job.getJobName(), workerHostPort, numberOfWorkers, nodeInfo);
     zkController.initialize();
     long duration = System.currentTimeMillis() - startTime;
     System.out.println("Initialization for the worker: " + zkController.getWorkerNetworkInfo()

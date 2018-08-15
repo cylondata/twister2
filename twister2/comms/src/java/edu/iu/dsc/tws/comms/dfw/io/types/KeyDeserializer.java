@@ -30,11 +30,16 @@ public final class KeyDeserializer {
   }
 
   /**
-   * Desetrialize
+   * Deserializers the key that is contained in the buffer list passed to the method
+   *
+   * @param keyType the type of the key to be retrieved
+   * @param buffers the buffers that belong to the message, the key is contained in these buffers
+   * @param deserializer the deserializer to be used if the object needs to be deserialized
+   * @return a pair of key length and the key
    */
   public static Pair<Integer, Object> deserializeKey(MessageType keyType,
                                                      List<DataBuffer> buffers,
-                                                     KryoSerializer serializer) {
+                                                     KryoSerializer deserializer) {
     int currentIndex = 0;
     int keyLength = 0;
     Object key = null;
@@ -67,7 +72,7 @@ public final class KeyDeserializer {
       case OBJECT:
         currentIndex = getReadIndex(buffers, currentIndex, Integer.BYTES);
         keyLength = buffers.get(currentIndex).getByteBuffer().getInt();
-        key = DataDeserializer.deserializeObject(buffers, keyLength, serializer);
+        key = DataDeserializer.deserializeObject(buffers, keyLength, deserializer);
         break;
       case BYTE:
         currentIndex = getReadIndex(buffers, currentIndex, Integer.BYTES);
@@ -92,14 +97,14 @@ public final class KeyDeserializer {
   }
 
   /**
-   * reads the next key of given type in the MPIBuffers and returns it as a ByteBuffer
+   * reads the next key of given type in the MPIBuffers and returns it as a byte[]
    *
    * @param keyType type of the key
    * @param buffers buffers that contain the data
    * @return key as ByteBuffer
    */
-  public static Pair<Integer, Object> getKeyAsByteBuffer(MessageType keyType,
-                                                         List<DataBuffer> buffers) {
+  public static Pair<Integer, Object> getKeyAsByteArray(MessageType keyType,
+                                                        List<DataBuffer> buffers) {
     int currentIndex = 0;
     //Used when there are multiple keys
     int keyCount;

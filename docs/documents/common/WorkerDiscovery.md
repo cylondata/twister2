@@ -24,6 +24,16 @@ The submitting client does not know where the workers will be started on the clu
 when it submits the job. Therefore, it can not provide this information to the workers when they start.
 Cluster resource schedulers start the workers in the nodes of the cluster. 
 
+**Node Location Information**:
+Twister2 can use worker locations when scheduling tasks. 
+Workers may run in virtual machines such as pods in Kubernetes. 
+So, worker IP addresses can be different than the IP address of the physical node it is running on. 
+We provide a NodeInfo object for workers. 
+It shows the physical node IP address for that worker. 
+The rack name of the node it is running on. 
+And the datacenter name where this node is running. 
+Rack and datacenter names might not be available in all clusters.
+
 **Synchronizing workers using a barrier**:
 All workers in a Twister2 job may need to synchronize on a barrier point. 
 The workers that arrives earlier to the barrier point wait others to arrive.
