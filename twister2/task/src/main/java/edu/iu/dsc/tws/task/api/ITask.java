@@ -28,16 +28,6 @@ package edu.iu.dsc.tws.task.api;
  */
 public interface ITask extends INode {
   /**
-   * Code that needs to be executed in the Task
-   */
-  IMessage execute();
-
-  /**
-   * Code that is executed for a single message
-   */
-  IMessage execute(IMessage content);
-
-  /**
    * Execute with an incoming message
    * @param content
    */
@@ -47,6 +37,4 @@ public interface ITask extends INode {
    * Execute without an incoming message
    */
   void run();
-
-
 }

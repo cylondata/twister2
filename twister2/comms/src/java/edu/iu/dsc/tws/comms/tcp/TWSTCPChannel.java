@@ -156,7 +156,7 @@ public class TWSTCPChannel implements TWSChannel {
       DataBuffer buffer = message.getNormalBuffers().get(i);
       TCPMessage request = comm.iSend(buffer.getByteBuffer(), buffer.getSize(),
           requests.rank, message.getHeader().getEdge());
-      // register to the loop to make progress on the send
+      // register to the loop to make communicationProgress on the send
       requests.pendingSends.add(new Request(request, buffer));
     }
   }

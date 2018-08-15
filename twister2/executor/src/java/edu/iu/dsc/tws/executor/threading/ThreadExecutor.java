@@ -11,8 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.threading;
 
+import java.util.concurrent.locks.ReentrantLock;
+
 import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.executor.ExecutionPlan;
+import edu.iu.dsc.tws.executor.api.ExecutionModel;
+import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.executor.api.IThreadExecutor;
+import edu.iu.dsc.tws.task.graph.OperationMode;
 
 public class ThreadExecutor implements IThreadExecutor {
 
@@ -21,6 +26,14 @@ public class ThreadExecutor implements IThreadExecutor {
   private ExecutionPlan executionPlan;
 
   private TWSChannel channel;
+
+  private OperationMode operationMode;
+
+  private boolean progress = true;
+
+  private boolean isExecutionFinished = false;
+
+  private ReentrantLock lock = new ReentrantLock();
 
   public ThreadExecutor() {
 
@@ -38,26 +51,26 @@ public class ThreadExecutor implements IThreadExecutor {
     this.channel = channel;
   }
 
+  public ThreadExecutor(ExecutionModel executionModel, ExecutionPlan executionPlan,
+                        TWSChannel channel, OperationMode operationMode) {
+    this.executionModel = executionModel;
+    this.executionPlan = executionPlan;
+    this.channel = channel;
+    this.operationMode = operationMode;
+  }
+
   /***
    * Communication Channel must be progressed after the task execution model
    * is initialized. It must be progressed only after execution is instantiated.
    * */
   @Override
-  public void execute() {
+  public boolean execute() {
     // lets start the execution
     ThreadExecutorFactory threadExecutorFactory = new ThreadExecutorFactory(executionModel,
-        this, executionPlan);
-    threadExecutorFactory.execute();
-    progressComms();
+        this, executionPlan, channel, operationMode);
+    isExecutionFinished = threadExecutorFactory.execute();
+    System.out.println("All Execution Finished : " + isExecutionFinished);
+    //progressComms();
+    return isExecutionFinished;
   }
-
-  /**
-   * Progresses the communication Channel
-   */
-  public void progressComms() {
-    while (true) {
-      this.channel.progress();
-    }
-  }
-
 }

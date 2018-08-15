@@ -68,10 +68,10 @@ package edu.iu.dsc.tws.examples.internal;
 //    LOG.info("Setting up reduce dataflow operation");
 //    // this method calls the init method
 //    // I think this is wrong
-//    //TODO: Does the task genereate the communication or is it done by a controller for examples
+//  //TODO: Does the task genereate the communication or is it done by a controller for examples
 //    // the direct comm between task 0 and 1 is it done by the container or the the task
 //
-//    //TODO: if the task creates the dataflowop does the task progress it or the executor
+////TODO: if the task creates the dataflowop does the task communicationProgress it or the executor
 //
 //    //TODO : FOR NOW the dataflowop is created at container and sent to task
 //    LinkedQueue<IMessage> pongQueue = new LinkedQueue<IMessage>();
@@ -132,7 +132,7 @@ package edu.iu.dsc.tws.examples.internal;
 //    }
 //
 //    @Override
-//    public void progress() {
+//    public void communicationProgress() {
 //
 //    }
 //  }

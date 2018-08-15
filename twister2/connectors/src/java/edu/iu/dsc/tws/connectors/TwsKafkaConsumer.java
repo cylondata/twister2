@@ -69,6 +69,7 @@ public class TwsKafkaConsumer<T> extends SourceTask {
     kafkaConsumerThread.setSeekToBeginning();
 
   }
+
   public TwsKafkaConsumer(
       List<String> topics,
       List<String> servers,

@@ -22,6 +22,7 @@ import com.google.protobuf.Message;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
+import edu.iu.dsc.tws.common.discovery.NodeInfo;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.net.tcp.request.BlockingSendException;
 import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
@@ -134,19 +135,25 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
       LOG.info("ListWorkersResponse message received from the master: \n" + message);
 
       ListWorkersResponse listResponse = (ListWorkersResponse) message;
-      List<ListWorkersResponse.WorkerNetworkInfo> receivedWorkerInfos =
+      List<Network.WorkerNetworkInfo> receivedWorkerInfos =
           listResponse.getWorkersList();
 
       workerList.clear();
       workerList.add(thisWorker);
 
-      for (ListWorkersResponse.WorkerNetworkInfo receivedWorkerInfo : receivedWorkerInfos) {
+      for (Network.WorkerNetworkInfo receivedWorkerInfo : receivedWorkerInfos) {
 
         // if received worker info belongs to this worker, do not add
-        if (receivedWorkerInfo.getId() != thisWorker.getWorkerID()) {
-          InetAddress ip = convertStringToIP(receivedWorkerInfo.getIp());
-          WorkerNetworkInfo workerInfo =
-              new WorkerNetworkInfo(ip, receivedWorkerInfo.getPort(), receivedWorkerInfo.getId());
+        if (receivedWorkerInfo.getWorkerID() != thisWorker.getWorkerID()) {
+          NodeInfo nodeInfo = new NodeInfo(receivedWorkerInfo.getNodeIP(),
+              receivedWorkerInfo.getRackName(),
+              receivedWorkerInfo.getDataCenterName());
+
+          InetAddress ip = convertStringToIP(receivedWorkerInfo.getWorkerIP());
+
+          WorkerNetworkInfo workerInfo = new WorkerNetworkInfo(
+              ip, receivedWorkerInfo.getPort(), receivedWorkerInfo.getWorkerID(), nodeInfo);
+
           workerList.add(workerInfo);
         }
       }

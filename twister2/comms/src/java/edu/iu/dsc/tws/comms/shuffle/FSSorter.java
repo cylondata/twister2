@@ -37,7 +37,7 @@ public class FSSorter {
 
   /**
    * The max bytes to be read into the memory from a single file, we need to be careful
-   * here as this can be less than a single record and we will never progress
+   * here as this can be less than a single record and we will never communicationProgress
    */
   private int openBytes;
 

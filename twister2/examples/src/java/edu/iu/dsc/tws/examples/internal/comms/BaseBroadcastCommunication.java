@@ -114,12 +114,12 @@ public class BaseBroadcastCommunication implements IContainer, IWorker {
         mapThread.start();
       }
 
-      // we need to progress the communication
+      // we need to communicationProgress the communication
       while (true) {
         try {
-          // progress the channel
+          // communicationProgress the channel
           channel.progress();
-          // we should progress the communication directive
+          // we should communicationProgress the communication directive
           broadcast.progress();
           Thread.yield();
         } catch (Throwable t) {

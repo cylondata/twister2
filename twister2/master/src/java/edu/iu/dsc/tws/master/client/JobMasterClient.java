@@ -36,21 +36,21 @@ import edu.iu.dsc.tws.proto.network.Network.ListWorkersResponse;
  * JobMasterClient class
  * It is started for each Twister2 worker
  * It handles the communication with the Job Master
- *
+ * <p>
  * It provides:
- *   worker discovery
- *   barrier method
- *   Ping service
- *
+ * worker discovery
+ * barrier method
+ * Ping service
+ * <p>
  * It can be started in two different modes:
- *   Threaded and Blocking
- *
+ * Threaded and Blocking
+ * <p>
  * If the user calls:
- *   startThreaded()
+ * startThreaded()
  * It starts as a Thread and the call to this method returns
- *
+ * <p>
  * If the user calls:
- *   startBlocking()
+ * startBlocking()
  * It uses the calling thread and this call does not return unless the close method is called
  */
 
@@ -110,7 +110,6 @@ public class JobMasterClient {
    * initialize JobMasterClient
    * wait until it connects to JobMaster
    * return false, if it can not connect to JobMaster
-   * @return
    */
   private boolean init() {
 
@@ -223,8 +222,6 @@ public class JobMasterClient {
 
   /**
    * try connecting until the time limit is reached
-   * @param timeLimit
-   * @return
    */
   public boolean tryUntilConnected(long timeLimit) {
     long startTime = System.currentTimeMillis();
@@ -273,14 +270,34 @@ public class JobMasterClient {
     return false;
   }
 
+  /**
+   * send worker STARTING message
+   * put WorkerNetworkInfo in that message
+   * @return
+   */
   public WorkerNetworkInfo sendWorkerStartingMessage() {
-    Network.WorkerStateChange workerStateChange = Network.WorkerStateChange.newBuilder()
-        .setWorkerID(thisWorker.getWorkerID())
-        .setNewState(Network.WorkerState.STARTING)
-        .setWorkerIP(thisWorker.getWorkerIP().getHostAddress())
-        .setWorkerPort(thisWorker.getWorkerPort())
-        .build();
 
+    Network.WorkerNetworkInfo.Builder workerInfoBuilder = Network.WorkerNetworkInfo.newBuilder()
+        .setWorkerID(thisWorker.getWorkerID())
+        .setWorkerIP(thisWorker.getWorkerIP().getHostAddress())
+        .setPort(thisWorker.getWorkerPort());
+
+    if (thisWorker.getNodeInfo().hasNodeIP()) {
+      workerInfoBuilder.setNodeIP(thisWorker.getNodeInfo().getNodeIP());
+    }
+
+    if (thisWorker.getNodeInfo().hasRackName()) {
+      workerInfoBuilder.setRackName(thisWorker.getNodeInfo().getRackName());
+    }
+
+    if (thisWorker.getNodeInfo().hasDataCenterName()) {
+      workerInfoBuilder.setDataCenterName(thisWorker.getNodeInfo().getDataCenterName());
+    }
+
+    Network.WorkerStateChange workerStateChange = Network.WorkerStateChange.newBuilder()
+        .setWorkerNetworkInfo(workerInfoBuilder.build())
+        .setNewState(Network.WorkerState.STARTING)
+        .build();
 
     // if JobMaster assigns ID, wait for the response
     if (JobMasterContext.jobMasterAssignsWorkerIDs(config)) {
@@ -309,8 +326,13 @@ public class JobMasterClient {
   }
 
   public boolean sendWorkerRunningMessage() {
+    Network.WorkerNetworkInfo workerInfo =
+        Network.WorkerNetworkInfo.newBuilder()
+            .setWorkerID(thisWorker.getWorkerID())
+            .build();
+
     Network.WorkerStateChange workerStateChange = Network.WorkerStateChange.newBuilder()
-        .setWorkerID(thisWorker.getWorkerID())
+        .setWorkerNetworkInfo(workerInfo)
         .setNewState(Network.WorkerState.RUNNING)
         .build();
 
@@ -326,8 +348,13 @@ public class JobMasterClient {
 
   public boolean sendWorkerCompletedMessage() {
 
+    Network.WorkerNetworkInfo workerInfo =
+        Network.WorkerNetworkInfo.newBuilder()
+            .setWorkerID(thisWorker.getWorkerID())
+            .build();
+
     Network.WorkerStateChange workerStateChange = Network.WorkerStateChange.newBuilder()
-        .setWorkerID(thisWorker.getWorkerID())
+        .setWorkerNetworkInfo(workerInfo)
         .setNewState(Network.WorkerState.COMPLETED)
         .build();
 

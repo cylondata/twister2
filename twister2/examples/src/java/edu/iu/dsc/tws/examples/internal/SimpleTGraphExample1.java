@@ -274,22 +274,6 @@ public class SimpleTGraphExample1 implements IContainer {
     }
 
     /**
-     * Code that needs to be executed in the Task
-     */
-    @Override
-    public IMessage execute() {
-      return null;
-    }
-
-    /**
-     * Code that is executed for a single message
-     */
-    @Override
-    public IMessage execute(IMessage content) {
-      return null;
-    }
-
-    /**
      * Execute with an incoming message
      */
     @Override
@@ -323,22 +307,6 @@ public class SimpleTGraphExample1 implements IContainer {
     @Override
     public void prepare(Config cfg, TaskContext collection) {
 
-    }
-
-    /**
-     * Code that needs to be executed in the Task
-     */
-    @Override
-    public IMessage execute() {
-      return null;
-    }
-
-    /**
-     * Code that is executed for a single message
-     */
-    @Override
-    public IMessage execute(IMessage content) {
-      return null;
     }
 
     /**
@@ -378,22 +346,6 @@ public class SimpleTGraphExample1 implements IContainer {
     }
 
     /**
-     * Code that needs to be executed in the Task
-     */
-    @Override
-    public IMessage execute() {
-      return null;
-    }
-
-    /**
-     * Code that is executed for a single message
-     */
-    @Override
-    public IMessage execute(IMessage content) {
-      return null;
-    }
-
-    /**
      * Execute with an incoming message
      */
     @Override
@@ -427,22 +379,6 @@ public class SimpleTGraphExample1 implements IContainer {
     @Override
     public void prepare(Config cfg, TaskContext collection) {
 
-    }
-
-    /**
-     * Code that needs to be executed in the Task
-     */
-    @Override
-    public IMessage execute() {
-      return null;
-    }
-
-    /**
-     * Code that is executed for a single message
-     */
-    @Override
-    public IMessage execute(IMessage content) {
-      return null;
     }
 
     /**

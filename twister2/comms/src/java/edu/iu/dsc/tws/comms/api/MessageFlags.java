@@ -21,5 +21,6 @@ public final class MessageFlags {
   public static final int ORIGIN_PARTIAL = 1 << 27;
   public static final int EMPTY = 1 << 26;
   public static final int BARRIER = 1 << 25;
+  public static final int LAST_MESSAGE = 1 << 24;
 
 }

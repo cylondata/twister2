@@ -19,9 +19,9 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.executor.ExecutionPlan;
-import edu.iu.dsc.tws.executor.INodeInstance;
-import edu.iu.dsc.tws.executor.comm.IParallelOperation;
+import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.executor.api.INodeInstance;
+import edu.iu.dsc.tws.executor.api.IParallelOperation;
 
 
 public class ThreadStaticExecutor extends ThreadExecutor {
@@ -36,6 +36,8 @@ public class ThreadStaticExecutor extends ThreadExecutor {
 
   private ExecutionPlan executionPlan;
 
+  private boolean isExecutionFinished = false;
+
   public ThreadStaticExecutor() {
   }
 
@@ -48,7 +50,7 @@ public class ThreadStaticExecutor extends ThreadExecutor {
   }
 
   @Override
-  public void execute() {
+  public boolean execute() {
     // go through the instances
 
     Map<Integer, INodeInstance> nodes = executionPlan.getNodes();
@@ -83,6 +85,8 @@ public class ThreadStaticExecutor extends ThreadExecutor {
     for (int i = 0; i < threads.size(); i++) {
       System.out.println(ThreadStaticExecutor.class.getName() + " : " + threads.get(i).getName());
     }
+
+    return isExecutionFinished;
   }
 
 

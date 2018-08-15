@@ -1,3 +1,4 @@
+
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
@@ -30,9 +31,9 @@ import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
-import edu.iu.dsc.tws.executor.ExecutionPlan;
-import edu.iu.dsc.tws.executor.ExecutionPlanBuilder;
-import edu.iu.dsc.tws.executor.threading.ExecutionModel;
+import edu.iu.dsc.tws.executor.api.ExecutionModel;
+import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.ThreadExecutor;
 import edu.iu.dsc.tws.proto.checkpoint.Checkpoint;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -91,7 +92,7 @@ public class SourceSinkDiscoveryExample implements IContainer {
 
     TWSNetwork network = new TWSNetwork(config, resourcePlan.getThisId());
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);
-    ExecutionPlan plan = executionPlanBuilder.schedule(config, graph, taskSchedulePlan);
+    ExecutionPlan plan = executionPlanBuilder.execute(config, graph, taskSchedulePlan);
     ExecutionModel executionModel = new ExecutionModel(ExecutionModel.SHARED);
     ThreadExecutor executor = new ThreadExecutor(executionModel, plan, network.getChannel());
     executor.execute();
@@ -157,8 +158,9 @@ public class SourceSinkDiscoveryExample implements IContainer {
     private static final long serialVersionUID = -254264903511284798L;
 
     @Override
-    public void execute(IMessage message) {
+    public boolean execute(IMessage message) {
       System.out.println(message.getContent());
+      return true;
     }
 
     @Override
@@ -191,7 +193,8 @@ public class SourceSinkDiscoveryExample implements IContainer {
 
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
     jobBuilder.setName("source-sink-discovery-example");
-    jobBuilder.setContainerClass(edu.iu.dsc.tws.examples.task.TaskExample.class.getName());
+    jobBuilder.setContainerClass(edu.iu.dsc.tws.examples.task.streaming.TaskStreamingExample
+        .class.getName());
     jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 
@@ -199,3 +202,4 @@ public class SourceSinkDiscoveryExample implements IContainer {
     Twister2Submitter.submitContainerJob(jobBuilder.build(), config);
   }
 }
+

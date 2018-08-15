@@ -16,7 +16,7 @@ import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 
 /**
- * Class for tracking the progress of set of items
+ * Class for tracking the communicationProgress of set of items
  */
 public class ProgressionTracker {
   private Queue<Integer> progressItems;

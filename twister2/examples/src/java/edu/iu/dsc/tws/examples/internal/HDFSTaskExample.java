@@ -743,22 +743,6 @@ public class HDFSTaskExample implements IContainer {
     }
 
     /**
-     * Code that needs to be executed in the Task
-     */
-    @Override
-    public IMessage execute() {
-      return null;
-    }
-
-    /**
-     * Code that is executed for a single message
-     */
-    @Override
-    public IMessage execute(IMessage content) {
-      return null;
-    }
-
-    /**
      * Execute with an incoming message
      */
     @Override
@@ -793,22 +777,6 @@ public class HDFSTaskExample implements IContainer {
     @Override
     public void prepare(Config cfg, TaskContext collection) {
       LOG.info("Input Files:" + cfg.getListValue("dataset"));
-    }
-
-    /**
-     * Code that needs to be executed in the Task
-     */
-    @Override
-    public IMessage execute() {
-      return null;
-    }
-
-    /**
-     * Code that is executed for a single message
-     */
-    @Override
-    public IMessage execute(IMessage content) {
-      return null;
     }
 
     /**
@@ -848,22 +816,6 @@ public class HDFSTaskExample implements IContainer {
     }
 
     /**
-     * Code that needs to be executed in the Task
-     */
-    @Override
-    public IMessage execute() {
-      return null;
-    }
-
-    /**
-     * Code that is executed for a single message
-     */
-    @Override
-    public IMessage execute(IMessage content) {
-      return null;
-    }
-
-    /**
      * Execute with an incoming message
      */
     @Override
@@ -897,22 +849,6 @@ public class HDFSTaskExample implements IContainer {
     @Override
     public void prepare(Config cfg, TaskContext collection) {
       LOG.info("Input Files:" + cfg.getListValue("dataset"));
-    }
-
-    /**
-     * Code that needs to be executed in the Task
-     */
-    @Override
-    public IMessage execute() {
-      return null;
-    }
-
-    /**
-     * Code that is executed for a single message
-     */
-    @Override
-    public IMessage execute(IMessage content) {
-      return null;
     }
 
     /**

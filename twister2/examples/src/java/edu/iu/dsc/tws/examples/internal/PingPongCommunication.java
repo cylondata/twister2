@@ -71,11 +71,11 @@ public class PingPongCommunication implements IContainer {
       LOG.log(Level.INFO, "Starting map thread");
       mapThread.start();
 
-      // we need to progress the communication
+      // we need to communicationProgress the communication
       while (true) {
-        // progress the channel
+        // communicationProgress the channel
         channel.progress();
-        // we should progress the communication directive
+        // we should communicationProgress the communication directive
         direct.progress();
         Thread.yield();
       }
