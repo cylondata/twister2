@@ -87,6 +87,7 @@ public class SPartitionExample extends BenchWorker {
   public class PartitionReceiver implements MessageReceiver {
     private int count = 0;
     private int expected;
+
     @Override
     public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
       expected = expectedIds.keySet().size() * jobParameters.getIterations();
@@ -101,6 +102,8 @@ public class SPartitionExample extends BenchWorker {
       }
       LOG.log(Level.INFO, String.format("%d Received message %d count %d expected %d",
           workerId, target, count, expected));
+      //Since this is a streaming example we will simply stop after a number of messages are
+      // received
       if (count >= expected) {
         partitionDone = true;
       }
@@ -118,4 +121,6 @@ public class SPartitionExample extends BenchWorker {
   protected void finishCommunication(int src) {
 //    partition.finish(src);
   }
+
+
 }

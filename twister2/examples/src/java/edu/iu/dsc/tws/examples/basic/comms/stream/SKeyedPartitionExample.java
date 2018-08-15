@@ -94,7 +94,7 @@ public class SKeyedPartitionExample extends KeyedBenchWorker {
 
     @Override
     public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-      expected = expectedIds.keySet().size() * jobParameters.getIterations();
+      expected = expectedIds.keySet().size() * jobParameters.getIterations() / 10;
     }
 
     @Override
