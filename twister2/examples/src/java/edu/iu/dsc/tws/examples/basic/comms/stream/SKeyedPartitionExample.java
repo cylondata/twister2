@@ -24,7 +24,6 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
-import edu.iu.dsc.tws.comms.op.LoadBalanceDestinationSelector;
 import edu.iu.dsc.tws.comms.op.SimpleKeyBasedPartitionSelector;
 import edu.iu.dsc.tws.comms.op.stream.SPartition;
 import edu.iu.dsc.tws.examples.Utils;
