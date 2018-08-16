@@ -41,7 +41,7 @@ import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.GraphConstants;
-import edu.iu.dsc.tws.tsched.batch.roundrobin.RoundRobinBatchTaskScheduling;
+import edu.iu.dsc.tws.tsched.batch.roundrobin.RoundRobinBatchTaskScheduler;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
@@ -150,10 +150,10 @@ public class RoundRobinBatchTaskExample implements IContainer {
     if (id == 0) {
       if ("Batch".equalsIgnoreCase(jobType)
           && "roundrobin".equalsIgnoreCase(schedulingType)) {
-        RoundRobinBatchTaskScheduling rrBatchTaskScheduling = new RoundRobinBatchTaskScheduling();
-        rrBatchTaskScheduling.initialize(config);
+        RoundRobinBatchTaskScheduler rrBatchTaskScheduler = new RoundRobinBatchTaskScheduler();
+        rrBatchTaskScheduler.initialize(config);
         WorkerPlan workerPlan = createWorkerPlan(resourcePlan);
-        taskSchedulePlanList = rrBatchTaskScheduling.scheduleBatch(graph, workerPlan);
+        taskSchedulePlanList = rrBatchTaskScheduler.scheduleBatch(graph, workerPlan);
       }
     }
 

@@ -41,7 +41,7 @@ import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.GraphConstants;
-import edu.iu.dsc.tws.tsched.batch.datalocality.DataLocalityBatchTaskScheduling;
+import edu.iu.dsc.tws.tsched.batch.datalocalityaware.DataLocalityBatchTaskScheduler;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
@@ -64,7 +64,7 @@ public class DataLocalityBatchTaskExample implements IContainer {
     jobConfig.putAll(configurations);
 
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
-    jobBuilder.setName("complex-task-datalocality-example");
+    jobBuilder.setName("complex-task-datalocalityaware-example");
     jobBuilder.setContainerClass(DataLocalityBatchTaskExample.class.getName());
     jobBuilder.setRequestResource(new WorkerComputeSpec(2, 1024), 2);
     jobBuilder.setConfig(jobConfig);
@@ -158,10 +158,10 @@ public class DataLocalityBatchTaskExample implements IContainer {
       if ("batch".equalsIgnoreCase(jobType)
           && "datalocalityaware".equalsIgnoreCase(schedulingType)) {
         //&& TaskSchedulerContext.taskSchedulingMode(config).equals("datalocalityaware")) {
-        DataLocalityBatchTaskScheduling dataLocalityBatchTaskScheduling = new
-            DataLocalityBatchTaskScheduling();
-        dataLocalityBatchTaskScheduling.initialize(config);
-        taskSchedulePlanList = dataLocalityBatchTaskScheduling.scheduleBatch(graph, workerPlan);
+        DataLocalityBatchTaskScheduler dataLocalityBatchTaskScheduler = new
+            DataLocalityBatchTaskScheduler();
+        dataLocalityBatchTaskScheduler.initialize(config);
+        taskSchedulePlanList = dataLocalityBatchTaskScheduler.scheduleBatch(graph, workerPlan);
       }
     }
 
@@ -270,7 +270,7 @@ public class DataLocalityBatchTaskExample implements IContainer {
 
       Map<String, Object> configs = context.getConfigurations();
       for (Map.Entry<String, Object> entry : configs.entrySet()) {
-        if (entry.getKey().toString().contains("outputdataset")) {
+        if (entry.getKey().contains("outputdataset")) {
           List<String> outputFiles = (List<String>) entry.getValue();
           for (int i = 0; i < outputFiles.size(); i++) {
             this.outputFile = outputFiles.get(i);

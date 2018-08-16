@@ -38,10 +38,10 @@ import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.OperationMode;
-import edu.iu.dsc.tws.tsched.roundrobin.RoundRobinTaskScheduling;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
+import edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler;
 
 public class KeyedReduceStreamingTask implements IContainer {
   private static final Logger LOG = Logger.getLogger(KeyedReduceStreamingTask.class.getName());
@@ -63,11 +63,11 @@ public class KeyedReduceStreamingTask implements IContainer {
 
     DataFlowTaskGraph graph = builder.build();
 
-    RoundRobinTaskScheduling roundRobinTaskScheduling = new RoundRobinTaskScheduling();
-    roundRobinTaskScheduling.initialize(config);
+    RoundRobinTaskScheduler roundRobinTaskScheduler = new RoundRobinTaskScheduler();
+    roundRobinTaskScheduler.initialize(config);
 
     WorkerPlan workerPlan = createWorkerPlan(resourcePlan);
-    TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduling.schedule(graph, workerPlan);
+    TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
 
     TWSNetwork network = new TWSNetwork(config, resourcePlan.getThisId());
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);

@@ -45,22 +45,22 @@ import edu.iu.dsc.tws.task.core.TaskExecutorFixedThread;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.GraphConstants;
-import edu.iu.dsc.tws.tsched.datalocalityaware.DataLocalityAwareTaskScheduling;
-import edu.iu.dsc.tws.tsched.firstfit.FirstFitTaskScheduling;
-import edu.iu.dsc.tws.tsched.roundrobin.RoundRobinTaskScheduling;
 import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
+import edu.iu.dsc.tws.tsched.streaming.datalocalityaware.DataLocalityStreamingTaskScheduler;
+import edu.iu.dsc.tws.tsched.streaming.firstfit.FirstFitStreamingTaskScheduler;
+import edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler;
 
 /**
  * This is the task graph generation class with input and output files.
  * It will be extended further to submit the job to the executor...
  */
 
-public class SimpleTGraphExample1 implements IContainer {
+public class SimpleTaskGraphExample implements IContainer {
 
-  private static final Logger LOG = Logger.getLogger(SimpleTGraphExample1.class.getName());
+  private static final Logger LOG = Logger.getLogger(SimpleTaskGraphExample.class.getName());
 
   private int taskGraphFlag = 1;
   private DataFlowOperation direct;
@@ -92,7 +92,7 @@ public class SimpleTGraphExample1 implements IContainer {
     taskExecutor.registerQueue(0, pongQueue);
 
     direct = channel.direct(newCfg, MessageType.OBJECT, 0, sources,
-        destination, new SimpleTGraphExample1.PingPongReceive());
+        destination, new SimpleTaskGraphExample.PingPongReceive());
     taskExecutor.initCommunication(channel, direct);
 
     TaskMapper taskMapper = new TaskMapper("task1");
@@ -207,18 +207,19 @@ public class SimpleTGraphExample1 implements IContainer {
         if (dataFlowTaskGraph != null) {
           LOG.info("Task Scheduling Mode:" + TaskSchedulerContext.taskSchedulingMode(cfg));
           if (TaskSchedulerContext.taskSchedulingMode(cfg).equals("roundrobin")) {
-            RoundRobinTaskScheduling roundRobinTaskScheduling = new RoundRobinTaskScheduling();
-            roundRobinTaskScheduling.initialize(cfg);
-            taskSchedulePlan = roundRobinTaskScheduling.schedule(dataFlowTaskGraph, workerPlan);
+            RoundRobinTaskScheduler roundRobinTaskScheduler = new RoundRobinTaskScheduler();
+            roundRobinTaskScheduler.initialize(cfg);
+            taskSchedulePlan = roundRobinTaskScheduler.schedule(dataFlowTaskGraph, workerPlan);
           } else if (TaskSchedulerContext.taskSchedulingMode(cfg).equals("firstfit")) {
-            FirstFitTaskScheduling firstFitTaskScheduling = new FirstFitTaskScheduling();
+            FirstFitStreamingTaskScheduler firstFitTaskScheduling
+                = new FirstFitStreamingTaskScheduler();
             firstFitTaskScheduling.initialize(cfg);
             taskSchedulePlan = firstFitTaskScheduling.schedule(dataFlowTaskGraph, workerPlan);
           } else if (TaskSchedulerContext.taskSchedulingMode(cfg).equals("datalocalityaware")) {
-            DataLocalityAwareTaskScheduling dataLocalityAwareTaskScheduling = new
-                DataLocalityAwareTaskScheduling();
-            dataLocalityAwareTaskScheduling.initialize(cfg);
-            taskSchedulePlan = dataLocalityAwareTaskScheduling.schedule(
+            DataLocalityStreamingTaskScheduler dataLocalityStreamingTaskScheduler =
+                new DataLocalityStreamingTaskScheduler();
+            dataLocalityStreamingTaskScheduler.initialize(cfg);
+            taskSchedulePlan = dataLocalityStreamingTaskScheduler.schedule(
                 dataFlowTaskGraph, workerPlan);
           }
           try {
@@ -438,7 +439,7 @@ public class SimpleTGraphExample1 implements IContainer {
     // build the job
     BasicJob basicJob = BasicJob.newBuilder()
         .setName("basic-taskgraphJob")
-        .setContainerClass(SimpleTGraphExample1.class.getName())
+        .setContainerClass(SimpleTaskGraphExample.class.getName())
         .setRequestResource(new WorkerComputeSpec(2, 1024, 100), 2)
         .setConfig(jobConfig)
         .build();
