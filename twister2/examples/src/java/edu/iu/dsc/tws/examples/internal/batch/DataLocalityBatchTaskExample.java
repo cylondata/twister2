@@ -22,8 +22,8 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.ResourceContainer;
-import edu.iu.dsc.tws.common.resource.ResourcePlan;
+import edu.iu.dsc.tws.common.resource.WorkerComputeSpec;
+import edu.iu.dsc.tws.common.resource.ZResourcePlan;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.data.api.HDFSConnector;
 import edu.iu.dsc.tws.executor.api.ExecutionModel;
@@ -66,7 +66,7 @@ public class DataLocalityBatchTaskExample implements IContainer {
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
     jobBuilder.setName("complex-task-datalocality-example");
     jobBuilder.setContainerClass(DataLocalityBatchTaskExample.class.getName());
-    jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 2);
+    jobBuilder.setRequestResource(new WorkerComputeSpec(2, 1024), 2);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job
@@ -74,7 +74,7 @@ public class DataLocalityBatchTaskExample implements IContainer {
   }
 
   @Override
-  public void init(Config config, int id, ResourcePlan resourcePlan) {
+  public void init(Config config, int id, ZResourcePlan resourcePlan) {
 
     SourceTask1 g = new SourceTask1(); //source task
     SourceTask2 m = new SourceTask2(); //sink task 1
@@ -193,9 +193,9 @@ public class DataLocalityBatchTaskExample implements IContainer {
     executor.execute();
   }
 
-  public WorkerPlan createWorkerPlan(ResourcePlan resourcePlan) {
+  public WorkerPlan createWorkerPlan(ZResourcePlan resourcePlan) {
     List<Worker> workers = new ArrayList<>();
-    for (ResourceContainer resource : resourcePlan.getContainers()) {
+    for (WorkerComputeSpec resource : resourcePlan.getContainers()) {
       Worker w = new Worker(resource.getId());
       if (w.getId() == 0) {
         w.addProperty("bandwidth", 1000.0);

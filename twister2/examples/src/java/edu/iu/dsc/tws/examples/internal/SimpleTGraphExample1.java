@@ -24,8 +24,8 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.ResourceContainer;
-import edu.iu.dsc.tws.common.resource.ResourcePlan;
+import edu.iu.dsc.tws.common.resource.WorkerComputeSpec;
+import edu.iu.dsc.tws.common.resource.ZResourcePlan;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
@@ -72,7 +72,7 @@ public class SimpleTGraphExample1 implements IContainer {
   /**
    * Init method to submit the task to the executor
    */
-  public void init(Config cfg, int containerId, ResourcePlan plan) {
+  public void init(Config cfg, int containerId, ZResourcePlan plan) {
 
     LOG.log(Level.INFO, "Starting the example with container id: " + plan.getThisId());
 
@@ -439,7 +439,7 @@ public class SimpleTGraphExample1 implements IContainer {
     BasicJob basicJob = BasicJob.newBuilder()
         .setName("basic-taskgraphJob")
         .setContainerClass(SimpleTGraphExample1.class.getName())
-        .setRequestResource(new ResourceContainer(2, 1024, 100), 2)
+        .setRequestResource(new WorkerComputeSpec(2, 1024, 100), 2)
         .setConfig(jobConfig)
         .build();
 

@@ -25,6 +25,7 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.resource.WorkerComputeSpec;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.basic.comms.batch.BGatherExample;
 import edu.iu.dsc.tws.examples.basic.comms.batch.BPartitionExample;
@@ -37,7 +38,6 @@ import edu.iu.dsc.tws.examples.basic.comms.stream.SKeyedPartitionExample;
 import edu.iu.dsc.tws.examples.basic.comms.stream.SPartitionExample;
 import edu.iu.dsc.tws.examples.basic.comms.stream.SReduceExample;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.common.resource.ResourceContainer;
 
 public class ExampleMain {
   private static final Logger LOG = Logger.getLogger(ExampleMain.class.getName());
@@ -126,7 +126,7 @@ public class ExampleMain {
         basicJob = BasicJob.newBuilder()
             .setName("reduce-batch-bench")
             .setContainerClass(BReduceExample.class.getName())
-            .setRequestResource(new ResourceContainer(2, 1024), containers)
+            .setRequestResource(new WorkerComputeSpec(2, 1024), containers)
             .setConfig(jobConfig)
             .build();
         // now submit the job
@@ -135,7 +135,7 @@ public class ExampleMain {
         basicJob = BasicJob.newBuilder()
             .setName("partition-batch-bench")
             .setContainerClass(BPartitionExample.class.getName())
-            .setRequestResource(new ResourceContainer(2, 1024), containers)
+            .setRequestResource(new WorkerComputeSpec(2, 1024), containers)
             .setConfig(jobConfig)
             .build();
         // now submit the job
@@ -144,7 +144,7 @@ public class ExampleMain {
         basicJob = BasicJob.newBuilder()
             .setName("partition-batch-bench")
             .setContainerClass(BGatherExample.class.getName())
-            .setRequestResource(new ResourceContainer(2, 1024), containers)
+            .setRequestResource(new WorkerComputeSpec(2, 1024), containers)
             .setConfig(jobConfig)
             .build();
         // now submit the job
@@ -156,7 +156,7 @@ public class ExampleMain {
           basicJob = BasicJob.newBuilder()
               .setName("reduce-stream-bench")
               .setContainerClass(SReduceExample.class.getName())
-              .setRequestResource(new ResourceContainer(2, 1024), containers)
+              .setRequestResource(new WorkerComputeSpec(2, 1024), containers)
               .setConfig(jobConfig)
               .build();
           // now submit the job
@@ -166,7 +166,7 @@ public class ExampleMain {
           basicJob = BasicJob.newBuilder()
               .setName("bcast-stream-bench")
               .setContainerClass(SBroadcastExample.class.getName())
-              .setRequestResource(new ResourceContainer(2, 1024), containers)
+              .setRequestResource(new WorkerComputeSpec(2, 1024), containers)
               .setConfig(jobConfig)
               .build();
           // now submit the job
@@ -176,7 +176,7 @@ public class ExampleMain {
           basicJob = BasicJob.newBuilder()
               .setName("partition-stream-bench")
               .setContainerClass(SPartitionExample.class.getName())
-              .setRequestResource(new ResourceContainer(2, 1024), containers)
+              .setRequestResource(new WorkerComputeSpec(2, 1024), containers)
               .setConfig(jobConfig)
               .build();
           // now submit the job
@@ -186,7 +186,7 @@ public class ExampleMain {
           basicJob = BasicJob.newBuilder()
               .setName("keyed-partition-stream-bench")
               .setContainerClass(SKeyedPartitionExample.class.getName())
-              .setRequestResource(new ResourceContainer(2, 1024), containers)
+              .setRequestResource(new WorkerComputeSpec(2, 1024), containers)
               .setConfig(jobConfig)
               .build();
           // now submit the job
@@ -196,7 +196,7 @@ public class ExampleMain {
           basicJob = BasicJob.newBuilder()
               .setName("gather-stream-bench")
               .setContainerClass(SGatherExample.class.getName())
-              .setRequestResource(new ResourceContainer(2, 1024), containers)
+              .setRequestResource(new WorkerComputeSpec(2, 1024), containers)
               .setConfig(jobConfig)
               .build();
           // now submit the job
@@ -206,7 +206,7 @@ public class ExampleMain {
           basicJob = BasicJob.newBuilder()
               .setName("allreduce-stream-bench")
               .setContainerClass(SAllReduceExample.class.getName())
-              .setRequestResource(new ResourceContainer(2, 1024), containers)
+              .setRequestResource(new WorkerComputeSpec(2, 1024), containers)
               .setConfig(jobConfig)
               .build();
           // now submit the job
@@ -216,7 +216,7 @@ public class ExampleMain {
           basicJob = BasicJob.newBuilder()
               .setName("allgather-stream-bench")
               .setContainerClass(SAllGatherExample.class.getName())
-              .setRequestResource(new ResourceContainer(2, 1024), containers)
+              .setRequestResource(new WorkerComputeSpec(2, 1024), containers)
               .setConfig(jobConfig)
               .build();
           // now submit the job

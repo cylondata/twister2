@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.ResourceContainer;
+import edu.iu.dsc.tws.common.resource.WorkerComputeSpec;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
@@ -68,7 +68,7 @@ public final class BasicKubernetesJob {
     int workers = SchedulerContext.workerInstances(config);
     int diskMegaBytes = (int) (SchedulerContext.workerVolatileDisk(config) * 1024);
     String jobName = SchedulerContext.jobName(config);
-    ResourceContainer resourceContainer = new ResourceContainer(cpus, ramMegaBytes, diskMegaBytes);
+    WorkerComputeSpec workerComputeSpec = new WorkerComputeSpec(cpus, ramMegaBytes, diskMegaBytes);
 
     // build JobConfig
     HashMap<String, Object> configurations = new HashMap<>();
@@ -83,7 +83,7 @@ public final class BasicKubernetesJob {
     BasicJob basicJob = BasicJob.newBuilder()
         .setName(jobName)
         .setContainerClass(containerClass)
-        .setRequestResource(resourceContainer, workers)
+        .setRequestResource(workerComputeSpec, workers)
         .setConfig(jobConfig)
         .build();
 

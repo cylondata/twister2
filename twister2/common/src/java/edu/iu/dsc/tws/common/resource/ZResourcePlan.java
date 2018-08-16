@@ -30,7 +30,7 @@ import java.util.List;
 /**
  * Holds information about the cluster resources including each container.
  */
-public class ResourcePlan {
+public class ZResourcePlan {
   // the cluster name
   private String cluster;
 
@@ -38,14 +38,14 @@ public class ResourcePlan {
   private int thisId;
 
   // list of resource containers
-  private List<ResourceContainer> containers = new ArrayList<>();
+  private List<WorkerComputeSpec> containers = new ArrayList<>();
 
-  public ResourcePlan(String cluster, int id) {
+  public ZResourcePlan(String cluster, int id) {
     this.cluster = cluster;
     this.thisId = id;
   }
 
-  public List<ResourceContainer> getContainers() {
+  public List<WorkerComputeSpec> getContainers() {
     return containers;
   }
 
@@ -53,7 +53,7 @@ public class ResourcePlan {
     return containers.size();
   }
 
-  public void addContainer(ResourceContainer container) {
+  public void addContainer(WorkerComputeSpec container) {
     this.containers.add(container);
   }
 

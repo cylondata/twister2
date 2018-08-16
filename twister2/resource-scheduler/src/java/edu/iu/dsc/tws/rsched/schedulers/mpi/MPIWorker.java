@@ -28,8 +28,8 @@ import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.common.resource.ResourceContainer;
-import edu.iu.dsc.tws.common.resource.ResourcePlan;
+import edu.iu.dsc.tws.common.resource.WorkerComputeSpec;
+import edu.iu.dsc.tws.common.resource.ZResourcePlan;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
@@ -183,7 +183,7 @@ public final class MPIWorker {
 
   private static void worker(Config config, int rank) {
     // lets create the resource plan
-    ResourcePlan resourcePlan = createResourcePlan(config);
+    ZResourcePlan resourcePlan = createResourcePlan(config);
 
     String containerClass = MPIContext.containerClass(config);
     try {
@@ -215,14 +215,14 @@ public final class MPIWorker {
   }
 
   /**
-   * create a ResourcePlan
+   * create a ZResourcePlan
    * @param config
    * @return
    */
-  public static ResourcePlan createResourcePlan(Config config) {
+  public static ZResourcePlan createResourcePlan(Config config) {
     try {
       int rank = MPI.COMM_WORLD.getRank();
-      ResourcePlan resourcePlan = new ResourcePlan(
+      ZResourcePlan resourcePlan = new ZResourcePlan(
           MPIContext.clusterType(config), MPI.COMM_WORLD.getRank());
 
       String processName = MPI.getProcessorName();
@@ -276,13 +276,13 @@ public final class MPIWorker {
     }
   }
 
-  private static void addContainers(Config cfg, ResourcePlan resourcePlan,
+  private static void addContainers(Config cfg, ZResourcePlan resourcePlan,
                                     Map<Integer, String> processes) throws MPIException {
     int size = MPI.COMM_WORLD.getSize();
     for (int i = 0; i < size; i++) {
-      ResourceContainer resourceContainer = new ResourceContainer(i);
-      resourceContainer.addProperty(SchedulerContext.WORKER_NAME, processes.get(i));
-      resourcePlan.addContainer(resourceContainer);
+      WorkerComputeSpec workerComputeSpec = new WorkerComputeSpec(i);
+      workerComputeSpec.addProperty(SchedulerContext.WORKER_NAME, processes.get(i));
+      resourcePlan.addContainer(workerComputeSpec);
     }
   }
 }

@@ -25,12 +25,12 @@ package edu.iu.dsc.tws.common.worker;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.resource.ResourcePlan;
+import edu.iu.dsc.tws.common.resource.ZResourcePlan;
 
 public interface IWorker {
   void init(Config config,
             int id,
-            ResourcePlan resourcePlan,
+            ZResourcePlan resourcePlan,
             IWorkerController workerController,
             IPersistentVolume persistentVolume,
             IVolatileVolume volatileVolume);

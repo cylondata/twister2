@@ -21,8 +21,8 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.ResourceContainer;
-import edu.iu.dsc.tws.common.resource.ResourcePlan;
+import edu.iu.dsc.tws.common.resource.WorkerComputeSpec;
+import edu.iu.dsc.tws.common.resource.ZResourcePlan;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
@@ -52,7 +52,7 @@ public class GatherStreamingTask implements IContainer {
   private RandomString randomString;
 
   @Override
-  public void init(Config config, int id, ResourcePlan resourcePlan) {
+  public void init(Config config, int id, ZResourcePlan resourcePlan) {
     GeneratorTask g = new GeneratorTask();
     RecevingTask r = new RecevingTask();
 
@@ -128,9 +128,9 @@ public class GatherStreamingTask implements IContainer {
     }
   }
 
-  public WorkerPlan createWorkerPlan(ResourcePlan resourcePlan) {
+  public WorkerPlan createWorkerPlan(ZResourcePlan resourcePlan) {
     List<Worker> workers = new ArrayList<>();
-    for (ResourceContainer resource : resourcePlan.getContainers()) {
+    for (WorkerComputeSpec resource : resourcePlan.getContainers()) {
       Worker w = new Worker(resource.getId());
       workers.add(w);
     }
@@ -154,7 +154,7 @@ public class GatherStreamingTask implements IContainer {
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
     jobBuilder.setName("task-gather");
     jobBuilder.setContainerClass(GatherStreamingTask.class.getName());
-    jobBuilder.setRequestResource(new ResourceContainer(4, 1024), 4);
+    jobBuilder.setRequestResource(new WorkerComputeSpec(4, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job

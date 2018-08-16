@@ -20,15 +20,4 @@ import java.util.HashMap;
  */
 public class JobConfig extends HashMap<String, Object> {
   private static final long serialVersionUID = 6585146860991205058L;
-
-//  public void putConfig(Config config) {
-//    Set<String> keys = config.getKeySet();
-//
-//    for (String key : keys) {
-//      if (config.get(key) != null) {
-//        put(key, config.get(key).toString());
-//      }
-//    }
-//  }
-
 }

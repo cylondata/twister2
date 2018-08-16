@@ -32,7 +32,7 @@ import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
-import edu.iu.dsc.tws.common.resource.ResourcePlan;
+import edu.iu.dsc.tws.common.resource.ZResourcePlan;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.master.JobMasterContext;
@@ -167,7 +167,7 @@ public final class StandaloneWorkerStarter {
 
     String containerClass = SchedulerContext.containerClass(config);
 
-    ResourcePlan resourcePlan = new ResourcePlan(SchedulerContext.clusterType(config),
+    ZResourcePlan resourcePlan = new ZResourcePlan(SchedulerContext.clusterType(config),
         workerNetworkInfo.getWorkerID());
 
     try {

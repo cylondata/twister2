@@ -36,8 +36,8 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.ResourceContainer;
-import edu.iu.dsc.tws.common.resource.ResourcePlan;
+import edu.iu.dsc.tws.common.resource.WorkerComputeSpec;
+import edu.iu.dsc.tws.common.resource.ZResourcePlan;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
@@ -93,7 +93,7 @@ public class HDFSTaskExample implements IContainer {
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
     jobBuilder.setName("hdfstask-example");
     jobBuilder.setContainerClass(HDFSTaskExample.class.getName());
-    jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 3);
+    jobBuilder.setRequestResource(new WorkerComputeSpec(2, 1024), 3);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job
@@ -103,7 +103,7 @@ public class HDFSTaskExample implements IContainer {
   /**
    * This method initialize the config, container id, and resource plan objects.
    */
-  public void init(Config cfg, int containerId, ResourcePlan plan) {
+  public void init(Config cfg, int containerId, ZResourcePlan plan) {
 
     LOG.log(Level.INFO, "Starting the example with container id: " + plan.getThisId());
 
@@ -709,9 +709,9 @@ public class HDFSTaskExample implements IContainer {
     return new IntData(d);
   }
 
-  public WorkerPlan createWorkerPlan(ResourcePlan resourcePlan) {
+  public WorkerPlan createWorkerPlan(ZResourcePlan resourcePlan) {
     List<Worker> workers = new ArrayList<>();
-    for (ResourceContainer resource : resourcePlan.getContainers()) {
+    for (WorkerComputeSpec resource : resourcePlan.getContainers()) {
       Worker w = new Worker(resource.getId());
       workers.add(w);
     }

@@ -27,7 +27,7 @@ package edu.iu.dsc.tws.examples.internal;
 //import edu.iu.dsc.tws.comms.core.TWSNetwork;
 //import edu.iu.dsc.tws.comms.core.TaskPlan;
 //import edu.iu.dsc.tws.rsched.spi.container.IContainer;
-//import edu.iu.dsc.tws.common.resource.ResourcePlan;
+//import edu.iu.dsc.tws.common.resource.ZResourcePlan;
 //import edu.iu.dsc.tws.task.api.IMessage;
 //import edu.iu.dsc.tws.task.api.LinkedQueue;
 //import edu.iu.dsc.tws.task.api.SinkTask;
@@ -46,7 +46,7 @@ package edu.iu.dsc.tws.examples.internal;
 //  /**
 //   * Initialize the container
 //   */
-//  public void init(Config cfg, int containerId, ResourcePlan plan) {
+//  public void init(Config cfg, int containerId, ZResourcePlan plan) {
 //    LOG.log(Level.INFO, "Starting the example with container id: " + plan.getThisId());
 //    //Creates task an task executor instance to be used in this container
 //    taskExecutor = new TaskExecutorFixedThread();

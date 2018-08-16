@@ -21,7 +21,7 @@ import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.ResourcePlan;
+import edu.iu.dsc.tws.common.resource.ZResourcePlan;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
@@ -86,7 +86,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
 
   private TWSNetwork network;
 
-  private ResourcePlan resourcePlan;
+  private ZResourcePlan resourcePlan;
 
   private TaskIdGenerator taskIdGenerator;
 
@@ -94,7 +94,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
 
   private EdgeGenerator edgeGenerator;
 
-  public ExecutionPlanBuilder(ResourcePlan plan, TWSNetwork net) {
+  public ExecutionPlanBuilder(ZResourcePlan plan, TWSNetwork net) {
     this.workerId = plan.getThisId();
     this.taskIdGenerator = new TaskIdGenerator();
     this.kryoMemorySerializer = new KryoMemorySerializer();

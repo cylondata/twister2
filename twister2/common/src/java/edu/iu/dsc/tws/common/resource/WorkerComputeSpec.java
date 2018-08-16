@@ -29,7 +29,7 @@ import java.util.Map;
 /**
  * Represent a resource
  */
-public class ResourceContainer {
+public class WorkerComputeSpec {
   private int id;
   // include properties of the resource
   // this can include things like available ports
@@ -45,16 +45,16 @@ public class ResourceContainer {
   // volatile disk space available to the container
   private int diskMegaBytes;
 
-  public ResourceContainer(int id) {
+  public WorkerComputeSpec(int id) {
     this.id = id;
   }
 
-  public ResourceContainer(double noOfCpus, int memoryMegaBytes) {
+  public WorkerComputeSpec(double noOfCpus, int memoryMegaBytes) {
     this.noOfCpus = noOfCpus;
     this.memoryMegaBytes = memoryMegaBytes;
   }
 
-  public ResourceContainer(double noOfCpus, int memoryMegaBytes, int diskMegaBytes) {
+  public WorkerComputeSpec(double noOfCpus, int memoryMegaBytes, int diskMegaBytes) {
     this.noOfCpus = noOfCpus;
     this.memoryMegaBytes = memoryMegaBytes;
     this.diskMegaBytes = diskMegaBytes;

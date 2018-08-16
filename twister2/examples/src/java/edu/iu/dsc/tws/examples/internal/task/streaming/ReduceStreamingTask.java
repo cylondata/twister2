@@ -20,8 +20,8 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.ResourceContainer;
-import edu.iu.dsc.tws.common.resource.ResourcePlan;
+import edu.iu.dsc.tws.common.resource.WorkerComputeSpec;
+import edu.iu.dsc.tws.common.resource.ZResourcePlan;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.executor.api.ExecutionModel;
@@ -48,7 +48,7 @@ import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 public class ReduceStreamingTask implements IContainer {
   @Override
-  public void init(Config config, int id, ResourcePlan resourcePlan) {
+  public void init(Config config, int id, ZResourcePlan resourcePlan) {
     GeneratorTask g = new GeneratorTask();
     RecevingTask r = new RecevingTask();
 
@@ -136,9 +136,9 @@ public class ReduceStreamingTask implements IContainer {
   }
 
 
-  public WorkerPlan createWorkerPlan(ResourcePlan resourcePlan) {
+  public WorkerPlan createWorkerPlan(ZResourcePlan resourcePlan) {
     List<Worker> workers = new ArrayList<>();
-    for (ResourceContainer resource : resourcePlan.getContainers()) {
+    for (WorkerComputeSpec resource : resourcePlan.getContainers()) {
       Worker w = new Worker(resource.getId());
       workers.add(w);
     }
@@ -161,7 +161,7 @@ public class ReduceStreamingTask implements IContainer {
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
     jobBuilder.setName("reduce-task");
     jobBuilder.setContainerClass(ReduceStreamingTask.class.getName());
-    jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 4);
+    jobBuilder.setRequestResource(new WorkerComputeSpec(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job

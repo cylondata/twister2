@@ -22,8 +22,8 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.ResourceContainer;
-import edu.iu.dsc.tws.common.resource.ResourcePlan;
+import edu.iu.dsc.tws.common.resource.WorkerComputeSpec;
+import edu.iu.dsc.tws.common.resource.ZResourcePlan;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.data.api.HDFSConnector;
 import edu.iu.dsc.tws.executor.api.ExecutionModel;
@@ -65,7 +65,7 @@ public class BatchTaskExample implements IContainer {
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
     jobBuilder.setName("task-example");
     jobBuilder.setContainerClass(BatchTaskExample.class.getName());
-    jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 2);
+    jobBuilder.setRequestResource(new WorkerComputeSpec(2, 1024), 2);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job
@@ -73,7 +73,7 @@ public class BatchTaskExample implements IContainer {
   }
 
   @Override
-  public void init(Config config, int id, ResourcePlan resourcePlan) {
+  public void init(Config config, int id, ZResourcePlan resourcePlan) {
     GeneratorTask g = new GeneratorTask();
     ReceivingTask r = new ReceivingTask();
 
@@ -140,9 +140,9 @@ public class BatchTaskExample implements IContainer {
     }
   }
 
-  public WorkerPlan createWorkerPlan(ResourcePlan resourcePlan) {
+  public WorkerPlan createWorkerPlan(ZResourcePlan resourcePlan) {
     List<Worker> workers = new ArrayList<>();
-    for (ResourceContainer resource : resourcePlan.getContainers()) {
+    for (WorkerComputeSpec resource : resourcePlan.getContainers()) {
       Worker w = new Worker(resource.getId());
       workers.add(w);
     }

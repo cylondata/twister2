@@ -24,8 +24,8 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.ResourceContainer;
-import edu.iu.dsc.tws.common.resource.ResourcePlan;
+import edu.iu.dsc.tws.common.resource.WorkerComputeSpec;
+import edu.iu.dsc.tws.common.resource.ZResourcePlan;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageType;
@@ -52,7 +52,7 @@ public class BaseReduceBatchCommunication implements IContainer {
   private static final int NO_OF_TASKS = 4;
 
   @Override
-  public void init(Config cfg, int containerId, ResourcePlan plan) {
+  public void init(Config cfg, int containerId, ZResourcePlan plan) {
     LOG.log(Level.INFO, "Starting the example with container id: " + plan.getThisId());
 
     this.id = containerId;
@@ -233,7 +233,7 @@ public class BaseReduceBatchCommunication implements IContainer {
     BasicJob basicJob = BasicJob.newBuilder()
         .setName("basic-batch-reduce")
         .setContainerClass(BaseReduceBatchCommunication.class.getName())
-        .setRequestResource(new ResourceContainer(1, 1024), 4)
+        .setRequestResource(new WorkerComputeSpec(1, 1024), 4)
         .setConfig(jobConfig)
         .build();
 

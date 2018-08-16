@@ -25,8 +25,8 @@ import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.resource.ResourceContainer;
-import edu.iu.dsc.tws.common.resource.ResourcePlan;
+import edu.iu.dsc.tws.common.resource.WorkerComputeSpec;
+import edu.iu.dsc.tws.common.resource.ZResourcePlan;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
@@ -53,7 +53,7 @@ public class SortJob implements IWorker {
 
   private Config config;
 
-  private ResourcePlan resourcePlan;
+  private ZResourcePlan resourcePlan;
 
   private int id;
 
@@ -64,7 +64,7 @@ public class SortJob implements IWorker {
   private TaskPlan taskPlan;
 
   @Override
-  public void init(Config cfg, int wID, ResourcePlan plan,
+  public void init(Config cfg, int wID, ZResourcePlan plan,
                    IWorkerController workerController,
                    IPersistentVolume persistentVolume,
                    IVolatileVolume volatileVolume) {
@@ -116,7 +116,7 @@ public class SortJob implements IWorker {
     }
   }
 
-  private void setupNetwork(Config cfg, IWorkerController controller, ResourcePlan rPlan) {
+  private void setupNetwork(Config cfg, IWorkerController controller, ZResourcePlan rPlan) {
     channel = Network.initializeChannel(cfg, controller, rPlan);
   }
 
@@ -163,7 +163,7 @@ public class SortJob implements IWorker {
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
     jobBuilder.setName("sort-job");
     jobBuilder.setContainerClass(SortJob.class.getName());
-    jobBuilder.setRequestResource(new ResourceContainer(2, 1024), NO_OF_TASKS);
+    jobBuilder.setRequestResource(new WorkerComputeSpec(2, 1024), NO_OF_TASKS);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job

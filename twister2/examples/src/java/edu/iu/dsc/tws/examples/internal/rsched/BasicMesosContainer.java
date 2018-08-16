@@ -22,14 +22,14 @@ import java.net.Socket;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.ResourcePlan;
+import edu.iu.dsc.tws.common.resource.ZResourcePlan;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 
 public class BasicMesosContainer implements IContainer {
   private static final Logger LOG = Logger.getLogger(BasicMesosContainer.class.getName());
 
   @Override
-  public void init(Config config, int id, ResourcePlan resourcePlan) {
+  public void init(Config config, int id, ZResourcePlan resourcePlan) {
     // wait some random amount of time before finishing
     long duration = (long) (Math.random() * 1000);
     //temporary solution until parameter problem solved

@@ -20,7 +20,7 @@ import java.util.logging.Logger;
 import com.google.protobuf.ByteString;
 
 import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.common.resource.ResourceContainer;
+import edu.iu.dsc.tws.common.resource.WorkerComputeSpec;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.proto.system.ResourceAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
@@ -33,7 +33,7 @@ public final class BasicJob {
 
   private String name;
   private String containerClass;
-  private ResourceContainer requestedResource;
+  private WorkerComputeSpec requestedResource;
   private int noOfContainers;
   private JobConfig config;
 
@@ -98,7 +98,7 @@ public final class BasicJob {
     return containerClass;
   }
 
-  public ResourceContainer getRequestedResource() {
+  public WorkerComputeSpec getRequestedResource() {
     return requestedResource;
   }
 
@@ -131,7 +131,7 @@ public final class BasicJob {
       return this;
     }
 
-    public BasicJobBuilder setRequestResource(ResourceContainer requestResource,
+    public BasicJobBuilder setRequestResource(WorkerComputeSpec requestResource,
                                               int noOfContainers) {
       basicJob.noOfContainers = noOfContainers;
       basicJob.requestedResource = requestResource;
