@@ -27,7 +27,7 @@ package edu.iu.dsc.tws.examples.internal;
 //import edu.iu.dsc.tws.comms.core.TWSNetwork;
 //import edu.iu.dsc.tws.comms.core.TaskPlan;
 //import edu.iu.dsc.tws.rsched.spi.container.IContainer;
-//import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
+//import edu.iu.dsc.tws.common.resource.ResourcePlan;
 //import edu.iu.dsc.tws.task.api.IMessage;
 //import edu.iu.dsc.tws.task.api.LinkedQueue;
 //import edu.iu.dsc.tws.task.api.SinkTask;

@@ -25,10 +25,10 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
-import edu.iu.dsc.tws.rsched.spi.container.IPersistentVolume;
-import edu.iu.dsc.tws.rsched.spi.container.IVolatileVolume;
-import edu.iu.dsc.tws.rsched.spi.container.IWorker;
-import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
+import edu.iu.dsc.tws.common.resource.ResourcePlan;
+import edu.iu.dsc.tws.common.worker.IPersistentVolume;
+import edu.iu.dsc.tws.common.worker.IVolatileVolume;
+import edu.iu.dsc.tws.common.worker.IWorker;
 
 public class BasicK8sWorker implements IWorker {
   private static final Logger LOG = Logger.getLogger(BasicK8sWorker.class.getName());
@@ -64,8 +64,8 @@ public class BasicK8sWorker implements IWorker {
 
     LOG.info("All workers joined. Current time: " + System.currentTimeMillis());
 
-//    sleepSomeTime();
-    echoServer(workerController.getWorkerNetworkInfo());
+    sleepSomeTime(50);
+//    echoServer(workerController.getWorkerNetworkInfo());
   }
 
   /**
@@ -119,14 +119,10 @@ public class BasicK8sWorker implements IWorker {
   /**
    * a test method to make the worker wait some time
    */
-  public void sleepSomeTime() {
-
-    long maxSleepDuration = 300; // 5 minutes
-    long sleepDuration = maxSleepDuration;
-//    long sleepDuration = (long) (Math.random() * maxSleepDuration);
+  public void sleepSomeTime(long sleepSeconds) {
     try {
-      LOG.info("BasicK8sWorker will sleep: " + sleepDuration + " seconds.");
-      Thread.sleep(sleepDuration * 1000);
+      LOG.info("BasicK8sWorker will sleep: " + sleepSeconds + " seconds.");
+      Thread.sleep(sleepSeconds * 1000);
       LOG.info("BasicK8sWorker sleep completed.");
     } catch (InterruptedException e) {
       LOG.log(Level.WARNING, "Thread sleep interrupted.", e);

@@ -22,8 +22,8 @@ import java.net.Socket;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.resource.ResourcePlan;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
-import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
 public class BasicMesosContainer implements IContainer {
   private static final Logger LOG = Logger.getLogger(BasicMesosContainer.class.getName());

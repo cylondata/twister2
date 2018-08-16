@@ -18,10 +18,10 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosContext;
-import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 
 public final class BasicMesosJob {
   private static final Logger LOG = Logger.getLogger(BasicMesosJob.class.getName());

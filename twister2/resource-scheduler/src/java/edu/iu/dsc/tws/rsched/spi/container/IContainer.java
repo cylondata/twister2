@@ -12,7 +12,7 @@
 package edu.iu.dsc.tws.rsched.spi.container;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
+import edu.iu.dsc.tws.common.resource.ResourcePlan;
 
 public interface IContainer {
   void init(Config config, int id, ResourcePlan resourcePlan);

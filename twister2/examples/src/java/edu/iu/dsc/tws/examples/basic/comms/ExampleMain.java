@@ -25,7 +25,6 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.op.batch.BPartition;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.basic.comms.batch.BGatherExample;
 import edu.iu.dsc.tws.examples.basic.comms.batch.BPartitionExample;
@@ -38,7 +37,7 @@ import edu.iu.dsc.tws.examples.basic.comms.stream.SKeyedPartitionExample;
 import edu.iu.dsc.tws.examples.basic.comms.stream.SPartitionExample;
 import edu.iu.dsc.tws.examples.basic.comms.stream.SReduceExample;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
+import edu.iu.dsc.tws.common.resource.ResourceContainer;
 
 public class ExampleMain {
   private static final Logger LOG = Logger.getLogger(ExampleMain.class.getName());

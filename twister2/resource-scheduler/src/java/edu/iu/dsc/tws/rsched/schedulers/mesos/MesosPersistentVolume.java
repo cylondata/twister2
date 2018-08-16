@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.rsched.schedulers.mesos;
 import java.io.File;
 
 
-import edu.iu.dsc.tws.rsched.spi.container.IPersistentVolume;
+import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 
 public class MesosPersistentVolume implements IPersistentVolume {
 

@@ -12,8 +12,8 @@
 package edu.iu.dsc.tws.examples.internal.rsched;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.resource.ResourcePlan;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
-import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
 public class BasicAuroraContainer implements IContainer {
 

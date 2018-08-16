@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.spi.resource;
 
+import edu.iu.dsc.tws.common.resource.ResourceContainer;
+
 /**
  * We are using uniform resources.
  */

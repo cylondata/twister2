@@ -13,8 +13,8 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s.worker;
 
 import java.io.File;
 
+import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
-import edu.iu.dsc.tws.rsched.spi.container.IVolatileVolume;
 
 public class K8sVolatileVolume implements IVolatileVolume {
 

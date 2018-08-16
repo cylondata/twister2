@@ -21,10 +21,10 @@ import com.google.protobuf.ByteString;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.JobMapConfig;
+import edu.iu.dsc.tws.common.resource.ResourceContainer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.proto.system.ResourceAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 
 /**
  * This is a basic job with only communication available

@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import edu.iu.dsc.tws.common.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
 public final class ResourcePlanUtils {
