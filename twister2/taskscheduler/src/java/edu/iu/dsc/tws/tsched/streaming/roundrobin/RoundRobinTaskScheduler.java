@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.tsched.roundrobin;
+package edu.iu.dsc.tws.tsched.streaming.roundrobin;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,17 +27,16 @@ import edu.iu.dsc.tws.task.graph.Vertex;
 import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
+import edu.iu.dsc.tws.tsched.spi.taskschedule.ITaskScheduler;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.InstanceId;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.Resource;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.ScheduleException;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskInstanceMapCalculation;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedule;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.utils.TaskAttributes;
 
-public class RoundRobinTaskScheduling implements TaskSchedule {
+public class RoundRobinTaskScheduler implements ITaskScheduler {
 
-  private static final Logger LOG = Logger.getLogger(RoundRobinTaskScheduling.class.getName());
+  private static final Logger LOG = Logger.getLogger(RoundRobinTaskScheduler.class.getName());
 
   private static int taskSchedulePlanId = 0;
 
@@ -194,13 +193,5 @@ public class RoundRobinTaskScheduling implements TaskSchedule {
     }
     return roundrobinAllocation;
   }
-
-  @Override
-  public TaskSchedulePlan tschedule() throws ScheduleException {
-    return null;
-  }
-
-  @Override
-  public void close() {
-  }
 }
+

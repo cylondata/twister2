@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.tsched.datalocalityaware;
+package edu.iu.dsc.tws.tsched.streaming.datalocalityaware;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -35,11 +35,12 @@ import edu.iu.dsc.tws.tsched.utils.TaskAttributes;
  * This class is responsible for scheduling the task graph instances into the worker nodes
  * based on the locality of the data.
  */
-public class DataLocalityAwareScheduling {
+public class DataLocalityStreamingScheduling {
 
-  private static final Logger LOG = Logger.getLogger(DataLocalityAwareScheduling.class.getName());
+  private static final Logger LOG
+      = Logger.getLogger(DataLocalityStreamingScheduling.class.getName());
 
-  protected DataLocalityAwareScheduling() {
+  protected DataLocalityStreamingScheduling() {
   }
 
   /**
