@@ -31,16 +31,8 @@ public class MesosLauncher implements ILauncher {
 
 
 
-  //private String frameworkName;
   private MesosController controller;
-  //private String executorName = "MesosWorker";
-  //private String workerClass;
-  //private static String command;
-  //private static String jobURI;
   private MesosSchedulerDriver driver;
-
-
-
 
   private static final Logger LOG = Logger.getLogger(MesosLauncher.class.getName());
   private Config config;
@@ -48,20 +40,7 @@ public class MesosLauncher implements ILauncher {
   @Override
   public void initialize(Config mconfig) {
     this.config = mconfig;
-    //frameworkName = MesosContext.MesosFrameworkName(config);
     this.controller = new MesosController(config);
-    //jobURI = MesosContext.jobURI(config);
-    //workerClass = MesosContext.mesosWorkerClass(config);
-
-
-    /*HashMap<String, String> envs = new HashMap<String, String>();
-    envs.put("jobname","deneme"); */
-
-
-
-    //jobURI = MesosContext.jobURI(config);
-    //System.out.println("=============Command:" + command);
-
   }
 
   @Override
@@ -75,7 +54,7 @@ public class MesosLauncher implements ILauncher {
     boolean status;
     if (driver == null) {
       status = true;
-      System.out.println("Job already terminated!");
+      LOG.warning("Job already terminated!");
     } else {
       status = driver.stop() == Protos.Status.DRIVER_STOPPED ? false : true;
     }
@@ -91,12 +70,7 @@ public class MesosLauncher implements ILauncher {
   }
 
   private void runFramework(String mesosMaster, String jobName) {
-    //Protos.Credential.Builder credentialbuilder = Protos.Credential.newBuilder()
-      //  .setPrincipal("principal1");
-    //ByteString byteString = ByteString.copyFrom("secret1".getBytes());
-    //credentialbuilder.setSecret(byteString);
-    //String pass = System.getenv("MESOS_EXAMPLE_SECRET");
-   // System.out.println("pass is : " + pass);
+
     Scheduler scheduler = new MesosScheduler(controller, config, jobName);
     driver = new MesosSchedulerDriver(scheduler, controller.getFrameworkInfo(),
         mesosMaster);

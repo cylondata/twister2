@@ -13,10 +13,9 @@ package edu.iu.dsc.tws.rsched.schedulers.mesos.mpi;
 
 import java.net.Inet4Address;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
@@ -25,7 +24,6 @@ import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.master.client.JobMasterClient;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-//import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosVolatileVolume;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerController;
@@ -49,22 +47,20 @@ public final class MesosMPIWorkerStarter {
   private static int numberOfWorkers;
 
   private MesosMPIWorkerStarter() { }
-  public static void main(String[] args) throws Exception {
+  public static void main(String[] args) {
 
-    //Thread.sleep(5000);
-    //gets the docker home directory
-    // String homeDir = System.getenv("HOME");
     try {
       MPI.Init(args);
       workerID = MPI.COMM_WORLD.getRank();
       numberOfWorkers = MPI.COMM_WORLD.getSize();
-      System.out.println("worker ranking.........:" + workerID);
+      System.out.println("worker ranking.........:" + workerID
+          + " number of workers..:" + numberOfWorkers);
+
     } catch (MPIException e) {
       LOG.log(Level.SEVERE, "Could not get rank or size from mpi.COMM_WORLD", e);
       throw new RuntimeException(e);
     }
-    //workerID++;
-    //int workerId = Integer.parseInt(System.getenv("WORKER_ID"));
+
     jobName = args[0];
     System.out.println("job name.....:::" + jobName);
 
@@ -77,7 +73,7 @@ public final class MesosMPIWorkerStarter {
     logger.initLogging();
 
     MesosWorkerController workerController = null;
-    List<WorkerNetworkInfo> workerNetworkInfoList = new ArrayList<>();
+    //List<WorkerNetworkInfo> workerNetworkInfoList = new ArrayList<>();
     try {
       JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/"
           + jobName + ".job");
@@ -90,32 +86,23 @@ public final class MesosMPIWorkerStarter {
 
       workerController = new MesosWorkerController(config, job,
           Inet4Address.getLocalHost().getHostAddress(), 2022, workerID);
-      //LOG.info("Initializing with zookeeper.." + Inet4Address.getLocalHost().getHostAddress());
-      //LOG.info("Worker id is....:" + workerID);
-      //workerController.initializeWithZooKeeper();
-      //LOG.info("Waiting for all workers to join");
-      //workerNetworkInfoList = workerController.waitForAllWorkersToJoin(
-      //    ZKContext.maxWaitTimeForAllWorkersToJoin(config));
-      //LOG.info("Everyone has joined");
-      //container.init(worker.config, id, null, workerController, null);
 
     } catch (Exception e) {
       e.printStackTrace();
     }
 
-    //String jobMasterIP = workerNetworkInfoList.get(0).getWorkerIP().getHostAddress();
+    //can not access docker env variable so it was passed as a parameter
     String jobMasterIP = args[1];
     LOG.info("JobMasterIP" + jobMasterIP);
-    System.out.println("Worker id " + workerID);
+    LOG.info("Worker id " + workerID);
     startJobMasterClient(workerController.getWorkerNetworkInfo(), jobMasterIP);
 
-    System.out.println("\nworker controller\nworker id..:"
+    LOG.info("\nworker controller\nworker id..:"
         + workerController.getWorkerNetworkInfo().getWorkerID()
         + "\nip address..:" + workerController.getWorkerNetworkInfo().getWorkerIP().toString());
 
     startWorker(workerController, null);
 
-    //Thread.sleep(20000);
     try {
       MPI.Finalize();
     } catch (MPIException ignore) {
@@ -142,7 +129,7 @@ public final class MesosMPIWorkerStarter {
 
     JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/" + jobName + ".job");
     String workerClass = job.getContainer().getClassName();
-    System.out.println("worker class---->>>" + workerClass);
+    LOG.info("worker class---->>>" + workerClass);
     IWorker worker;
     try {
       Object object = ReflectionUtils.newInstance(workerClass);
