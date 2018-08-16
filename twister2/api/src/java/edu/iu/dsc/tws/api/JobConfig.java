@@ -12,9 +12,6 @@
 package edu.iu.dsc.tws.api;
 
 import java.util.HashMap;
-//import java.util.Set;
-
-//import edu.iu.dsc.tws.common.config.Config;
 
 /**
  * These are the set of configuration parameters that will be transferred to Worker processes

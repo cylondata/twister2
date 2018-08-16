@@ -20,7 +20,6 @@ import java.util.logging.Logger;
 import com.google.protobuf.ByteString;
 
 import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.JobMapConfig;
 import edu.iu.dsc.tws.common.resource.ResourceContainer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.proto.system.ResourceAPI;
@@ -37,7 +36,6 @@ public final class BasicJob {
   private ResourceContainer requestedResource;
   private int noOfContainers;
   private JobConfig config;
-  private JobMapConfig jobMapConfig;
 
   private BasicJob() {
   }
