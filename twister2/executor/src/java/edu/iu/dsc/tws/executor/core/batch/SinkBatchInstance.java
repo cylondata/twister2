@@ -18,6 +18,7 @@ import java.util.concurrent.BlockingQueue;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
+import edu.iu.dsc.tws.executor.core.InstanceState;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.TaskContext;
@@ -74,15 +75,12 @@ public class SinkBatchInstance implements INodeInstance {
    */
   private int workerId;
 
-  /**
-   * All Receiving Done
-   */
-
-  private int expectedMessages = 1;
-
-  private int receivedMessageCount = 0;
-
   private boolean receiveDone = false;
+
+  /**
+   * Execution state of the instance
+   */
+  private InstanceState instanceState = InstanceState.INIT;
 
   public SinkBatchInstance(ISink batchTask, BlockingQueue<IMessage> batchInQueue, Config config,
                            int tId, int tIndex, int parallel, int wId, Map<String, Object> cfgs) {
@@ -94,7 +92,10 @@ public class SinkBatchInstance implements INodeInstance {
     this.parallelism = parallel;
     this.nodeConfigs = cfgs;
     this.workerId = wId;
+  }
 
+  public void reset() {
+    instanceState = InstanceState.INIT;
   }
 
   public void prepare() {
@@ -109,6 +110,7 @@ public class SinkBatchInstance implements INodeInstance {
       batchTask.execute(m);
       receiveDone = true;
     }
+
     return receiveDone;
   }
 
@@ -121,7 +123,6 @@ public class SinkBatchInstance implements INodeInstance {
     }
     return allDone;
   }
-
 
   public void registerInParallelOperation(String edge, IParallelOperation op) {
     batchInParOps.put(edge, op);

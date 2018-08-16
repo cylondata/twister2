@@ -24,10 +24,10 @@ import edu.iu.dsc.tws.comms.api.BatchReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-  import edu.iu.dsc.tws.comms.op.SimpleKeyBasedPartitionSelector;
+import edu.iu.dsc.tws.comms.op.SimpleKeyBasedPartitionSelector;
 import edu.iu.dsc.tws.comms.op.batch.BKeyedPartition;
 import edu.iu.dsc.tws.examples.Utils;
-import edu.iu.dsc.tws.examples.basic.KeyedBenchWorker;
+import edu.iu.dsc.tws.examples.basic.comms.KeyedBenchWorker;
 
 /**
  * This class is a example use of the keyed partition function

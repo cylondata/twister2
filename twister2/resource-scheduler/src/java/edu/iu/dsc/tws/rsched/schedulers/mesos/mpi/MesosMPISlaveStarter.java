@@ -63,6 +63,10 @@ public final class MesosMPISlaveStarter {
           ZKContext.maxWaitTimeForAllWorkersToJoin(config));
       LOG.info("Everyone has joined");
       //container.init(worker.config, id, null, workerController, null);
+      Thread.sleep(30000);
+      workerController.close();
+
+
 
     } catch (Exception e) {
       e.printStackTrace();

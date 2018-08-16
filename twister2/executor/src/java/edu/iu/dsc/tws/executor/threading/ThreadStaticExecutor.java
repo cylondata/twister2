@@ -23,9 +23,7 @@ import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
 
-
-public class ThreadStaticExecutor extends ThreadExecutor {
-
+public class ThreadStaticExecutor {
   private static final Logger LOG = Logger.getLogger(ThreadStaticExecutor.class.getName());
 
   private int numThreads;
@@ -49,10 +47,8 @@ public class ThreadStaticExecutor extends ThreadExecutor {
     this.executionPlan = executionPlan;
   }
 
-  @Override
   public boolean execute() {
     // go through the instances
-
     Map<Integer, INodeInstance> nodes = executionPlan.getNodes();
     tasks = new ArrayBlockingQueue<>(nodes.size() * 2);
     tasks.addAll(nodes.values());
@@ -61,17 +57,11 @@ public class ThreadStaticExecutor extends ThreadExecutor {
       node.prepare();
     }
 
-
-
     List<IParallelOperation> parallelOperations = executionPlan.getParallelOperations();
     Iterator<IParallelOperation> itr = parallelOperations.iterator();
     while (itr.hasNext()) {
       IParallelOperation op = itr.next();
-      LOG.info("IParallelOperation Type : " + op.getClass().getName());
     }
-
-    LOG.info("Execution Thread Count : " + executionPlan.getNumThreads() + "No of Tasks : "
-        + tasks.size() + ", Tasks " + executionPlan.getNodes().keySet().size());
 
     for (int i = 0; i < tasks.size(); i++) {
       INodeInstance iNodeInstance = tasks.poll();
@@ -90,7 +80,6 @@ public class ThreadStaticExecutor extends ThreadExecutor {
   }
 
 
-
   private class Worker implements Runnable {
     @Override
     public void run() {
@@ -105,7 +94,6 @@ public class ThreadStaticExecutor extends ThreadExecutor {
   }
 
   private class TaskWorker implements Runnable {
-
     private INodeInstance iNodeInstance;
 
     TaskWorker(INodeInstance instance) {

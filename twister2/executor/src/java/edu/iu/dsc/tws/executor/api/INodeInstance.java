@@ -24,7 +24,20 @@
 package edu.iu.dsc.tws.executor.api;
 
 public interface INodeInstance {
+  /**
+   * Execute
+   * @return true if further execution is needed
+   */
   boolean execute();
 
+  /**
+   * Prepare for an execution
+   */
   void prepare();
+
+  /**
+   * Lets reset the node instance for a new execution
+   */
+  default void reset() {
+  }
 }

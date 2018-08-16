@@ -315,7 +315,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
       if (newInstance instanceof ITask) {
         TaskStreamingInstance v = new TaskStreamingInstance((ITask) newInstance,
             new ArrayBlockingQueue<>(1024),
-            new ArrayBlockingQueue<>(1024), cfg, edgeGenerator,
+            new ArrayBlockingQueue<>(1024), cfg,
             vertex.getName(), taskId, ip.getTaskIndex(),
             vertex.getParallelism(), workerId, vertex.getConfig().toMap());
         streamingTaskInstances.put(vertex.getName(), taskId, v);
