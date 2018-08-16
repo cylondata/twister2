@@ -23,7 +23,7 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.op.SimpleKeyBasedPartitionSelector;
+import edu.iu.dsc.tws.comms.op.LoadBalanceDestinationSelector;
 import edu.iu.dsc.tws.comms.op.stream.SKeyedPartition;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.basic.comms.KeyedBenchWorker;
@@ -57,7 +57,7 @@ public class SKeyedPartitionExample extends KeyedBenchWorker {
     // create the communication
     partition = new SKeyedPartition(communicator, taskPlan, sources, targets,
         MessageType.INTEGER, MessageType.INTEGER, new PartitionReceiver(),
-        new SimpleKeyBasedPartitionSelector());
+        new LoadBalanceDestinationSelector());
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
@@ -94,7 +94,7 @@ public class SKeyedPartitionExample extends KeyedBenchWorker {
 
     @Override
     public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-      expected = expectedIds.keySet().size() * jobParameters.getIterations() / 10;
+      expected = expectedIds.keySet().size() * jobParameters.getIterations();
     }
 
     @Override
