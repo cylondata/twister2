@@ -42,6 +42,7 @@ import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 
 public final class MesosJobMasterStarter {
+
   private static final Logger LOG = Logger.getLogger(MesosJobMasterStarter.class.getName());
 
   private MesosJobMasterStarter() { }
@@ -83,10 +84,8 @@ public final class MesosJobMasterStarter {
       e.printStackTrace();
     }
 
-
-
     if (!JobMasterContext.jobMasterRunsInClient(config)) {
-      JobMaster jobMaster = null;
+      JobMaster jobMaster;
       try {
         jobMaster =
             new JobMaster(config, InetAddress.getLocalHost().getHostAddress(),

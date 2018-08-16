@@ -37,7 +37,6 @@ public class MesosController {
     builder.setFailoverTimeout(120000);
     builder.setUser("");
     builder.setName(frameworkName);
-    //builder.setPrincipal("principal1");
     return builder.build();
   }
 
@@ -72,7 +71,6 @@ public class MesosController {
     builder.setExecutorId(Protos.ExecutorID.newBuilder().setValue(executorName));
     builder.setCommand(getCommandInfo(jobName, executorName));
     builder.setName(executorName);
-    //builder.setSource("java"); //deprecated
     return builder.build();
   }
 

@@ -50,7 +50,7 @@ public class MesosWorkerLogger extends Thread {
             + "Check the log file for the upcoming log messages. ");
       }
 
-      System.out.println("logs redirecting to " + logDir + "/" + logFileName);
+      LOG.info("logs redirecting to " + logDir + "/" + logFileName);
 
       LoggingHelper.setupLogging(cfg, logDir, logFileName);
 

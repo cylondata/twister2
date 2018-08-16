@@ -92,18 +92,6 @@ public class SourceStreamingInstance implements INodeInstance {
    */
   private int workerId;
 
-  /**
-   * For batch tasks: identifying the final message
-   **/
-
-  private boolean isDone;
-
-  private boolean isFinalTask;
-
-  private int callBackCount = 0;
-
-  private int count = 0;
-
 
   public SourceStreamingInstance(ISource streamingTask, BlockingQueue<IMessage> outStreamingQueue,
                                  Config config, String tName, int tId, int tIndex, int parallel,
@@ -119,22 +107,6 @@ public class SourceStreamingInstance implements INodeInstance {
     this.workerId = wId;
   }
 
-  public SourceStreamingInstance(ISource streamingTask, BlockingQueue<IMessage> outStreamingQueue,
-                                 Config config, String tName,
-                                 int tId, int tIndex, int parallel, int wId,
-                                 Map<String, Object> cfgs, boolean isDone) {
-    this.streamingTask = streamingTask;
-    this.outStreamingQueue = outStreamingQueue;
-    this.config = config;
-    this.streamingTaskId = tId;
-    this.streamingTaskIndex = tIndex;
-    this.parallelism = parallel;
-    this.taskName = tName;
-    this.nodeConfigs = cfgs;
-    this.workerId = wId;
-    this.isDone = isDone;
-  }
-
   public void prepare() {
     outputStreamingCollection = new DefaultOutputCollection(outStreamingQueue);
 
@@ -146,18 +118,20 @@ public class SourceStreamingInstance implements INodeInstance {
    * Execution Method calls the SourceTasks run method to get context
    **/
   public boolean execute() {
-
+    // lets execute the task
     streamingTask.run();
     // now check the output queue
     while (!outStreamingQueue.isEmpty()) {
-      IMessage message = outStreamingQueue.poll();
+      IMessage message = outStreamingQueue.peek();
       if (message != null) {
         String edge = message.edge();
         IParallelOperation op = outStreamingParOps.get(edge);
-        op.send(streamingTaskId, message, 0);
+        // if we successfully send remove message
+        if (op.send(streamingTaskId, message, 0)) {
+          outStreamingQueue.poll();
+        }
       }
     }
-
 
     for (Map.Entry<String, IParallelOperation> e : outStreamingParOps.entrySet()) {
       e.getValue().progress();

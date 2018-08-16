@@ -92,6 +92,7 @@ public class MesosWorker implements Executor {
       }
 
     }
+
     MesosWorkerController workerController;
     try {
       JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/" + jobName + ".job");
@@ -138,22 +139,6 @@ public class MesosWorker implements Executor {
 
   }
 
-  //This method was used for the old version of logger
-  /*public static void addLogFileHandler(String logFile) {
-    Logger rootLogger = Logger.getLogger("");
-
-    try {
-      FileHandler fileHandler = new FileHandler(logFile);
-      fileHandler.setFormatter(new SimpleFormatter());
-      rootLogger.addHandler(fileHandler);
-      LOG.info("Logger dir changed.");
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-  }
-  */
-
-
   public static void main(String[] args) throws Exception {
 
     MesosWorker worker = new MesosWorker();
@@ -173,31 +158,12 @@ public class MesosWorker implements Executor {
     initLogging(worker.config, SchedulerContext.nfsServerPath(worker.config)
             + "/" + worker.jobName + "/logs", workerName);
 
-    //addLogFileHandler(SchedulerContext.nfsServerPath(worker.config)
-    //    + "/" + jobName + "/logs/" + workerName + ".log");
-/*    try {
-      File stdoutFile = new File(SchedulerContext.nfsServerPath(worker.config)
-          + "/" + jobName + "/" + workerName + "/stdout");
-      PrintStream printStreamOut = new PrintStream(stdoutFile);
-      System.setOut(printStreamOut);
-
-      File stderrFile = new File(SchedulerContext.nfsServerPath(worker.config)
-          + "/" + jobName + "/" + workerName + "/stderr");
-      PrintStream printStreamErr = new PrintStream(stderrFile);
-      System.setErr(printStreamErr);
-    } catch (FileNotFoundException e) {
-      e.printStackTrace();
-    }*/
-
     System.out.println(worker.config);
     MesosExecutorDriver driver = new MesosExecutorDriver(
         worker);
 
     driver.run();
-    //System.exit(driver.run() == Protos.Status.DRIVER_STOPPED ? 0 : 1);
   }
-
-
 
   /**
    * Initialize the logger

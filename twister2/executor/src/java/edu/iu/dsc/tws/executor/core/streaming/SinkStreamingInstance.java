@@ -96,7 +96,9 @@ public class SinkStreamingInstance  implements INodeInstance {
   public boolean execute() {
     while (!streamingInQueue.isEmpty()) {
       IMessage m = streamingInQueue.poll();
-      streamingTask.execute(m);
+      if (m != null) {
+        streamingTask.execute(m);
+      }
     }
 
     for (Map.Entry<String, IParallelOperation> e : streamingInParOps.entrySet()) {
