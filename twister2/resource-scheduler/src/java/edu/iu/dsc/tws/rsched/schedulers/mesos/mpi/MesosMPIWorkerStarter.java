@@ -53,8 +53,8 @@ public final class MesosMPIWorkerStarter {
       MPI.Init(args);
       workerID = MPI.COMM_WORLD.getRank();
       numberOfWorkers = MPI.COMM_WORLD.getSize();
-      System.out.println("worker ranking.........:" + workerID
-          + " number of workers..:" + numberOfWorkers);
+      System.out.println("Worker ranking..:" + workerID
+          + " Number of workers..:" + numberOfWorkers);
 
     } catch (MPIException e) {
       LOG.log(Level.SEVERE, "Could not get rank or size from mpi.COMM_WORLD", e);
@@ -62,7 +62,6 @@ public final class MesosMPIWorkerStarter {
     }
 
     jobName = args[0];
-    System.out.println("job name.....:::" + jobName);
 
     String twister2Home = Paths.get("").toAbsolutePath().toString();
     String configDir = "twister2-job/mesos/";
@@ -93,13 +92,13 @@ public final class MesosMPIWorkerStarter {
 
     //can not access docker env variable so it was passed as a parameter
     String jobMasterIP = args[1];
-    LOG.info("JobMasterIP" + jobMasterIP);
-    LOG.info("Worker id " + workerID);
+    LOG.info("JobMaster IP..: " + jobMasterIP);
+    LOG.info("Worker ID..: " + workerID);
     startJobMasterClient(workerController.getWorkerNetworkInfo(), jobMasterIP);
 
-    LOG.info("\nworker controller\nworker id..:"
+    LOG.info("\nWorker Controller\nWorker ID..: "
         + workerController.getWorkerNetworkInfo().getWorkerID()
-        + "\nip address..:" + workerController.getWorkerNetworkInfo().getWorkerIP().toString());
+        + "\nIP address..: " + workerController.getWorkerNetworkInfo().getWorkerIP().toString());
 
     startWorker(workerController, null);
 
@@ -115,8 +114,8 @@ public final class MesosMPIWorkerStarter {
 
   public static void startJobMasterClient(WorkerNetworkInfo networkInfo, String jobMasterIP) {
 
-    LOG.info("JobMasterIP: " + jobMasterIP);
-    LOG.info("NETWORK INFO    " + networkInfo.getWorkerIP().toString());
+    LOG.info("JobMaster IP..: " + jobMasterIP);
+    LOG.info("NETWORK INFO..: " + networkInfo.getWorkerIP().toString());
     jobMasterClient = new JobMasterClient(config, networkInfo, jobMasterIP);
     jobMasterClient.startThreaded();
     // we need to make sure that the worker starting message went through
@@ -129,14 +128,14 @@ public final class MesosMPIWorkerStarter {
 
     JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/" + jobName + ".job");
     String workerClass = job.getContainer().getClassName();
-    LOG.info("worker class---->>>" + workerClass);
+    LOG.info("Worker class---->>>" + workerClass);
     IWorker worker;
     try {
       Object object = ReflectionUtils.newInstance(workerClass);
       worker = (IWorker) object;
-      LOG.info("loaded worker class: " + workerClass);
+      LOG.info("Loaded worker class..: " + workerClass);
     } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-      LOG.severe(String.format("failed to load the worker class %s", workerClass));
+      LOG.severe(String.format("Failed to load the worker class %s", workerClass));
       throw new RuntimeException(e);
     }
 

@@ -91,11 +91,11 @@ public class MesosDockerWorker {
 
     //job master is the one with the id==0
     String jobMasterIP = workerNetworkInfoList.get(0).getWorkerIP().getHostAddress();
-    LOG.info("JobMasterIP" + jobMasterIP);
-    LOG.info("Worker id " + workerId);
+    LOG.info("JobMasterIP..: " + jobMasterIP);
+    LOG.info("Worker ID..: " + workerId);
     StringBuilder outputBuilder = new StringBuilder();
     int workerCount = workerController.getNumberOfWorkers();
-    LOG.info("worker count " + workerCount);
+    LOG.info("Worker count..: " + workerCount);
 
     //start job master client
     worker.startJobMasterClient(workerController.getWorkerNetworkInfo(), jobMasterIP);
@@ -109,7 +109,7 @@ public class MesosDockerWorker {
       for (int i = 1; i < workerCount; i++) {
         writer.write(workerNetworkInfoList.get(i).getWorkerIP().getHostAddress()
             + "\n");
-        LOG.info("host ip: " + workerNetworkInfoList.get(i).getWorkerIP().getHostAddress());
+        LOG.info("Host IP..: " + workerNetworkInfoList.get(i).getWorkerIP().getHostAddress());
       }
       writer.close();
       LOG.info("Before mpirun");
@@ -134,7 +134,7 @@ public class MesosDockerWorker {
 
   public void startJobMasterClient(WorkerNetworkInfo networkInfo, String jobMasterIP) {
 
-    LOG.info("JobMasterIP: " + jobMasterIP);
+    LOG.info("JobMasterIP..: " + jobMasterIP);
 
     jobMasterClient = new JobMasterClient(config, networkInfo, jobMasterIP);
     jobMasterClient.startThreaded();

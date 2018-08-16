@@ -94,11 +94,11 @@ public final class MesosMPIMasterStarter {
     }
 
     String jobMasterIP = workerNetworkInfoList.get(0).getWorkerIP().getHostAddress();
-    LOG.info("JobMasterIP" + jobMasterIP);
-    LOG.info("Worker id " + workerId);
+    LOG.info("JobMaster IP..: " + jobMasterIP);
+    LOG.info("Worker ID..: " + workerId);
     StringBuilder outputBuilder = new StringBuilder();
     int workerCount = workerController.getNumberOfWorkers();
-    LOG.info("worker count " + workerCount);
+    LOG.info("Worker Count..: " + workerCount);
 
     mpiMaster.startJobMasterClient(workerController.getWorkerNetworkInfo(), jobMasterIP);
 
@@ -109,7 +109,7 @@ public final class MesosMPIMasterStarter {
 
       writer.write(workerNetworkInfoList.get(i).getWorkerIP().getHostAddress()
           + "\n");
-      LOG.info("host ip: " + workerNetworkInfoList.get(i).getWorkerIP().getHostAddress());
+      LOG.info("Host IP..: " + workerNetworkInfoList.get(i).getWorkerIP().getHostAddress());
     }
 
     writer.close();
@@ -140,8 +140,8 @@ public final class MesosMPIMasterStarter {
 
   public void startJobMasterClient(WorkerNetworkInfo networkInfo, String jobMasterIP) {
 
-    LOG.info("JobMasterIP: " + jobMasterIP);
-    LOG.info("NETWORK INFO    " + networkInfo.getWorkerIP().toString());
+    LOG.info("JobMaster IP..: " + jobMasterIP);
+    LOG.info("NETWORK INFO..: " + networkInfo.getWorkerIP().toString());
     jobMasterClient = new JobMasterClient(config, networkInfo, jobMasterIP);
     jobMasterClient.startThreaded();
     // we need to make sure that the worker starting message went through
