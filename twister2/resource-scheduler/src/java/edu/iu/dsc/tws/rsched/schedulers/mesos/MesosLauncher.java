@@ -19,8 +19,8 @@ import org.apache.mesos.Protos;
 import org.apache.mesos.Scheduler;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.resource.RequestedResources;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
 import edu.iu.dsc.tws.rsched.spi.scheduler.ILauncher;
 
 
