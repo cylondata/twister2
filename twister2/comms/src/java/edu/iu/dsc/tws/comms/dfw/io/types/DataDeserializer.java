@@ -32,6 +32,7 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.io.ByteArrayInputStream;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
+import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 
 public final class DataDeserializer {
   private DataDeserializer() {
@@ -287,6 +288,60 @@ public final class DataDeserializer {
       }
     }
     return -1;
+  }
+
+  /**
+   * Deserialize's the given data in the ByteBuffer based on the dataType
+   *
+   * @param dataType the type of the the object in the buffer
+   * @param deserializer the deserializer to be used for types other than primitives
+   * @param os the buffer that contains the data
+   * @param dataSize the length of the current data object to be extracted
+   * @return the deserialized object
+   */
+  public static Object deserialize(MessageType dataType, KryoMemorySerializer deserializer,
+                                   ByteBuffer os, int dataSize) {
+    Object data = null;
+    if (dataType == MessageType.OBJECT) {
+      byte[] bytes = new byte[dataSize];
+      os.get(bytes);
+      data = deserializer.deserialize(bytes);
+    } else if (dataType == MessageType.BYTE) {
+      byte[] bytes = new byte[dataSize];
+      os.get(bytes);
+      data = bytes;
+    } else if (dataType == MessageType.DOUBLE) {
+      double[] bytes = new double[dataSize / 8];
+      for (int i = 0; i < dataSize / 8; i++) {
+        bytes[i] = os.getDouble();
+      }
+      data = bytes;
+    } else if (dataType == MessageType.INTEGER) {
+      int[] bytes = new int[dataSize / 4];
+      for (int i = 0; i < dataSize / 4; i++) {
+        bytes[i] = os.getInt();
+      }
+      data = bytes;
+    } else if (dataType == MessageType.LONG) {
+      long[] bytes = new long[dataSize / 8];
+      for (int i = 0; i < dataSize / 8; i++) {
+        bytes[i] = os.getLong();
+      }
+      data = bytes;
+    } else if (dataType == MessageType.SHORT) {
+      short[] bytes = new short[dataSize / 2];
+      for (int i = 0; i < dataSize / 2; i++) {
+        bytes[i] = os.getShort();
+      }
+      data = bytes;
+    } else if (dataType == MessageType.CHAR) {
+      char[] bytes = new char[dataSize];
+      for (int i = 0; i < dataSize; i++) {
+        bytes[i] = os.getChar();
+      }
+      data = bytes;
+    }
+    return data;
   }
 
 }

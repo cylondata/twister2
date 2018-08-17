@@ -249,4 +249,85 @@ public final class DataSerializer {
       return false;
     }
   }
+
+  public static byte[] serialize(Object data, KryoSerializer serializer) {
+
+    if (data instanceof byte[]) {
+      return (byte[]) data;
+    } else if (data instanceof short[]) {
+      return convertShortsToBytes((short[]) data);
+    } else if (data instanceof int[]) {
+      return convertIntegersToBytes((int[]) data);
+    } else if (data instanceof long[]) {
+      return convertLongsToBytes((long[]) data);
+    } else if (data instanceof double[]) {
+      return convertDoublesToBytes((double[]) data);
+    } else if (data instanceof float[]) {
+      return convertFloatsToBytes((float[]) data);
+    } else if (data instanceof char[]) {
+      //TODO: do we need to convert for char array?
+      return convertCharsToBytes((char[]) data);
+    } else {
+      return serializer.serialize(data);
+    }
+  }
+
+  //TODO: using bitwise operations are much faster than using the ByteBuffer, Need to convert
+  //TODO: the other methods to use bitwise operations as done for int arrays
+  public static byte[] convertIntegersToBytes(int[] integers) {
+    byte[] outputBytes = new byte[integers.length * Integer.BYTES];
+
+    for (int m = 0, k = 0; m < integers.length; m++) {
+      int integerTemp = integers[m];
+      for (int j = 0; j < 4; j++, k++) {
+        outputBytes[k] = (byte) ((integerTemp >> (8 * (3 - j))));
+      }
+    }
+    return outputBytes;
+  }
+
+  private static byte[] convertShortsToBytes(short[] shorts) {
+    byte[] outputBytes = new byte[shorts.length * Short.BYTES];
+    ByteBuffer bb = ByteBuffer.wrap(outputBytes);
+    for (short s : shorts) {
+      bb.putShort(s);
+    }
+    return outputBytes;
+  }
+
+  private static byte[] convertDoublesToBytes(double[] doubles) {
+    byte[] outputBytes = new byte[doubles.length * Double.BYTES];
+    ByteBuffer bb = ByteBuffer.wrap(outputBytes);
+    for (double d : doubles) {
+      bb.putDouble(d);
+    }
+    return outputBytes;
+  }
+
+  private static byte[] convertLongsToBytes(long[] longs) {
+    byte[] outputBytes = new byte[longs.length * Long.BYTES];
+    ByteBuffer bb = ByteBuffer.wrap(outputBytes);
+    for (long l : longs) {
+      bb.putLong(l);
+    }
+    return outputBytes;
+  }
+
+  private static byte[] convertFloatsToBytes(float[] floats) {
+    byte[] outputBytes = new byte[floats.length * Float.BYTES];
+    ByteBuffer bb = ByteBuffer.wrap(outputBytes);
+    for (float f : floats) {
+      bb.putFloat(f);
+    }
+    return outputBytes;
+  }
+
+  private static byte[] convertCharsToBytes(char[] chars) {
+    byte[] outputBytes = new byte[chars.length];
+    ByteBuffer bb = ByteBuffer.wrap(outputBytes);
+    for (char c : chars) {
+      bb.putChar(c);
+    }
+    return outputBytes;
+  }
 }
