@@ -21,7 +21,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
-import edu.iu.dsc.tws.api.basic.job.BasicJob;
+import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
@@ -160,9 +160,9 @@ public class SortJob implements IWorker {
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(configurations);
 
-    BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
+    Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("sort-job");
-    jobBuilder.setContainerClass(SortJob.class.getName());
+    jobBuilder.setWorkerClass(SortJob.class.getName());
     jobBuilder.setRequestResource(new WorkerComputeSpec(2, 1024), NO_OF_TASKS);
     jobBuilder.setConfig(jobConfig);
 

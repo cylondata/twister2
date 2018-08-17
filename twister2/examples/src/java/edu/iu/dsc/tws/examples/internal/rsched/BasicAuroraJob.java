@@ -16,7 +16,7 @@ import java.util.HashMap;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 
-import edu.iu.dsc.tws.api.basic.job.BasicJob;
+import edu.iu.dsc.tws.api.job.Twister2Job;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.resource.WorkerComputeSpec;
@@ -52,22 +52,22 @@ public final class BasicAuroraJob {
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(configurations);
 
-    String containerClass = SchedulerContext.containerClass(config);
+    String workerClass = SchedulerContext.workerClass(config);
 
     // build the job
-    BasicJob basicJob = BasicJob.newBuilder()
+    Twister2Job twister2Job = Twister2Job.newBuilder()
         .setName(jobName)
-        .setContainerClass(containerClass)
+        .setWorkerClass(workerClass)
         .setRequestResource(workerComputeSpec, workers)
         .setConfig(jobConfig)
         .build();
 
     // now submit the job
-    Twister2Submitter.submitContainerJob(basicJob, config);
+    Twister2Submitter.submitContainerJob(twister2Job, config);
 
     // now terminate the job
     terminateJob(config);
-//    jobWriteTest(basicJob);
+//    jobWriteTest(twister2Job);
 //    jobReadTest();
   }
 
@@ -89,15 +89,15 @@ public final class BasicAuroraJob {
   }
 
   /**
-   * test method for BasicJob write to a file
+   * test method for Twister2Job write to a file
    */
-  public static void jobWriteTest(BasicJob basicJob) {
+  public static void jobWriteTest(Twister2Job twister2Job) {
     String file = "testJobFile";
-    JobUtils.writeJobFile(basicJob.serialize(), file);
+    JobUtils.writeJobFile(twister2Job.serialize(), file);
   }
 
   /**
-   * test method to read BasicJob file
+   * test method to read Twister2Job file
    */
   public static void jobReadTest() {
     String fl = "/tmp/basic-aurora/basic-aurora3354891958097304472/twister2-core/basic-aurora.job";

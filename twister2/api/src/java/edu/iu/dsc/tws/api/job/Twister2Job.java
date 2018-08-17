@@ -9,7 +9,19 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.basic.job;
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+package edu.iu.dsc.tws.api.job;
 
 import java.util.AbstractMap;
 import java.util.HashSet;
@@ -28,16 +40,16 @@ import edu.iu.dsc.tws.proto.system.job.JobAPI;
 /**
  * This is a basic job with only communication available
  */
-public final class BasicJob {
-  private static final Logger LOG = Logger.getLogger(BasicJob.class.getName());
+public final class Twister2Job {
+  private static final Logger LOG = Logger.getLogger(Twister2Job.class.getName());
 
   private String name;
-  private String containerClass;
+  private String workerClass;
   private WorkerComputeSpec requestedResource;
   private int noOfContainers;
   private JobConfig config;
 
-  private BasicJob() {
+  private Twister2Job() {
   }
 
   /**
@@ -70,7 +82,7 @@ public final class BasicJob {
     jobBuilder.setConfig(configBuilder);
 
     JobAPI.Container.Builder containerBuilder = JobAPI.Container.newBuilder();
-    containerBuilder.setClassName(containerClass);
+    containerBuilder.setClassName(workerClass);
 
     jobBuilder.setContainer(containerBuilder);
     jobBuilder.setJobName(name);
@@ -94,8 +106,8 @@ public final class BasicJob {
     return name;
   }
 
-  public String getContainerClass() {
-    return containerClass;
+  public String getWorkerClass() {
+    return workerClass;
   }
 
   public WorkerComputeSpec getRequestedResource() {
@@ -115,39 +127,39 @@ public final class BasicJob {
   }
 
   public static final class BasicJobBuilder {
-    private BasicJob basicJob;
+    private Twister2Job twister2Job;
 
     private BasicJobBuilder() {
-      this.basicJob = new BasicJob();
+      this.twister2Job = new Twister2Job();
     }
 
     public BasicJobBuilder setName(String name) {
-      basicJob.name = name;
+      twister2Job.name = name;
       return this;
     }
 
-    public BasicJobBuilder setContainerClass(String containerClass) {
-      basicJob.containerClass = containerClass;
+    public BasicJobBuilder setWorkerClass(String workerClass) {
+      twister2Job.workerClass = workerClass;
       return this;
     }
 
     public BasicJobBuilder setRequestResource(WorkerComputeSpec requestResource,
                                               int noOfContainers) {
-      basicJob.noOfContainers = noOfContainers;
-      basicJob.requestedResource = requestResource;
+      twister2Job.noOfContainers = noOfContainers;
+      twister2Job.requestedResource = requestResource;
       return this;
     }
 
     public BasicJobBuilder setConfig(JobConfig config) {
-      basicJob.config = config;
+      twister2Job.config = config;
       return this;
     }
 
-    public BasicJob build() {
-      if (basicJob.config == null) {
-        basicJob.config = new JobConfig();
+    public Twister2Job build() {
+      if (twister2Job.config == null) {
+        twister2Job.config = new JobConfig();
       }
-      return basicJob;
+      return twister2Job;
     }
 
   }

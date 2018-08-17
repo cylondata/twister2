@@ -30,7 +30,7 @@ import java.util.Map;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
-import edu.iu.dsc.tws.api.basic.job.BasicJob;
+import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.checkpointmanager.barrier.CheckpointBarrier;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.resource.WorkerComputeSpec;
@@ -181,9 +181,9 @@ public class TaskCheckpointExample implements IContainer {
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(configurations);
 
-    BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
+    Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("task-checkpoint-example");
-    jobBuilder.setContainerClass(TaskCheckpointExample.class.getName());
+    jobBuilder.setWorkerClass(TaskCheckpointExample.class.getName());
     jobBuilder.setRequestResource(new WorkerComputeSpec(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 

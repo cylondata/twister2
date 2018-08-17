@@ -16,7 +16,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
-import edu.iu.dsc.tws.api.basic.job.BasicJob;
+import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.resource.WorkerComputeSpec;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -49,22 +49,22 @@ public final class BasicMesosJob {
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(configurations);
 
-    String containerClass = SchedulerContext.containerClass(config);
-    System.out.println("Container class: " + containerClass);
+    String workerClass = SchedulerContext.workerClass(config);
+    System.out.println("Worker class: " + workerClass);
 
     // build the job
-    BasicJob basicJob = BasicJob.newBuilder()
+    Twister2Job twister2Job = Twister2Job.newBuilder()
         .setName(jobName)
-        .setContainerClass(containerClass)
+        .setWorkerClass(workerClass)
         .setRequestResource(workerComputeSpec, containers)
         .setConfig(jobConfig)
         .build();
 
     // now submit the job
-    Twister2Submitter.submitContainerJob(basicJob, config);
+    Twister2Submitter.submitContainerJob(twister2Job, config);
 
     System.out.println("now terminating...");
-    Twister2Submitter.terminateJob(basicJob.getName(), config);
+    Twister2Submitter.terminateJob(twister2Job.getName(), config);
   }
 
 }

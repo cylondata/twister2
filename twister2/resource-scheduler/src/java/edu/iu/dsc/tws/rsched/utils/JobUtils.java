@@ -157,9 +157,9 @@ public final class JobUtils {
       builder.put(Context.JOB_NAME, jobName);
     }
 
-    String containerClass = job.getContainer().getClassName();
-    if (containerClass != null) {
-      builder.put(SchedulerContext.CONTAINER_CLASS, containerClass);
+    String workerClass = job.getContainer().getClassName();
+    if (workerClass != null) {
+      builder.put(SchedulerContext.WORKER_CLASS, workerClass);
     }
 
     int workerInstances = job.getJobResources().getNoOfContainers();

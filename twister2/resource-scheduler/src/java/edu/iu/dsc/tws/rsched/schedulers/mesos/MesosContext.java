@@ -57,7 +57,7 @@ public final class MesosContext extends SchedulerContext {
   public static final String MESOS_OVERLAY_NETWORK_NAME = "twister2.mesos.overlay.network.name";
   public static final String DOCKER_IMAGE_NAME = "twister2.docker.image.name";
   public static final String MESOS_WORKER_CLASS = "twister2.class.mesos.worker";
-  public static final String MESOS_CONTAINER_CLASS = "twister2.job.basic.container.class";
+  public static final String MESOS_CONTAINER_CLASS = "twister2.job.worker.class";
 
   public static final int DEFAULT_RAM_SIZE = 128; // 1GB
   public static final int DEFAULT_DISK_SIZE = 128; // 1GB

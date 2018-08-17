@@ -158,7 +158,7 @@ public final class MPIWorker {
 
     Config workerConfig = Config.newBuilder().putAll(config).
         put(MPIContext.TWISTER2_HOME.getKey(), twister2Home).
-        put(MPIContext.CONTAINER_CLASS, container).
+        put(MPIContext.WORKER_CLASS, container).
         put(MPIContext.TWISTER2_CONTAINER_ID, id).
         put(MPIContext.TWISTER2_CLUSTER_TYPE, clusterType).build();
 
@@ -169,7 +169,7 @@ public final class MPIWorker {
 
     updatedConfig = Config.newBuilder().putAll(updatedConfig).
         put(MPIContext.TWISTER2_HOME.getKey(), twister2Home).
-        put(MPIContext.CONTAINER_CLASS, container).
+        put(MPIContext.WORKER_CLASS, container).
         put(MPIContext.TWISTER2_CONTAINER_ID, id).
         put(MPIContext.TWISTER2_CLUSTER_TYPE, clusterType).build();
     return updatedConfig;
@@ -185,9 +185,9 @@ public final class MPIWorker {
     // lets create the resource plan
     ZResourcePlan resourcePlan = createResourcePlan(config);
 
-    String containerClass = MPIContext.containerClass(config);
+    String workerClass = MPIContext.workerClass(config);
     try {
-      Object object = ReflectionUtils.newInstance(containerClass);
+      Object object = ReflectionUtils.newInstance(workerClass);
       if (object instanceof IContainer) {
         IContainer container = (IContainer) object;
         // now initialize the container
@@ -197,10 +197,10 @@ public final class MPIWorker {
         worker.init(config, rank, resourcePlan,
             null, null, null);
       }
-      LOG.log(Level.FINE, "loaded container class: " + containerClass);
+      LOG.log(Level.FINE, "loaded worker class: " + workerClass);
     } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-      LOG.log(Level.SEVERE, String.format("failed to load the container class %s",
-          containerClass), e);
+      LOG.log(Level.SEVERE, String.format("failed to load the worker class %s",
+          workerClass), e);
       throw new RuntimeException(e);
     }
 

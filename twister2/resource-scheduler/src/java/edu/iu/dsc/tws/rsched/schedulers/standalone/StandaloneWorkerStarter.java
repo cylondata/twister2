@@ -142,7 +142,7 @@ public final class StandaloneWorkerStarter {
 
     Config workerConfig = Config.newBuilder().putAll(config).
         put(SchedulerContext.TWISTER2_HOME.getKey(), twister2Home).
-        put(SchedulerContext.CONTAINER_CLASS, container).
+        put(SchedulerContext.WORKER_CLASS, container).
         put(SchedulerContext.TWISTER2_CONTAINER_ID, id).
         put(SchedulerContext.TWISTER2_CLUSTER_TYPE, clusterType).build();
 
@@ -153,7 +153,7 @@ public final class StandaloneWorkerStarter {
     Config updatedConfig = JobUtils.overrideConfigs(job, config);
     updatedConfig = Config.newBuilder().putAll(updatedConfig).
         put(SchedulerContext.TWISTER2_HOME.getKey(), twister2Home).
-        put(SchedulerContext.CONTAINER_CLASS, container).
+        put(SchedulerContext.WORKER_CLASS, container).
         put(SchedulerContext.TWISTER2_CONTAINER_ID, id).
         put(SchedulerContext.TWISTER2_CLUSTER_TYPE, clusterType).
         put(SchedulerContext.JOB_NAME, job.getJobName()).build();
@@ -165,13 +165,13 @@ public final class StandaloneWorkerStarter {
     IWorkerController workerController = createWorkerController(config);
     WorkerNetworkInfo workerNetworkInfo = workerController.getWorkerNetworkInfo();
 
-    String containerClass = SchedulerContext.containerClass(config);
+    String workerClass = SchedulerContext.workerClass(config);
 
     ZResourcePlan resourcePlan = new ZResourcePlan(SchedulerContext.clusterType(config),
         workerNetworkInfo.getWorkerID());
 
     try {
-      Object object = ReflectionUtils.newInstance(containerClass);
+      Object object = ReflectionUtils.newInstance(workerClass);
       if (object instanceof IContainer) {
         IContainer container = (IContainer) object;
         // now initialize the container
@@ -181,10 +181,10 @@ public final class StandaloneWorkerStarter {
         worker.init(config, workerNetworkInfo.getWorkerID(), resourcePlan,
             workerController, null, null);
       }
-      LOG.log(Level.FINE, "loaded container class: " + containerClass);
+      LOG.log(Level.FINE, "loaded worker class: " + workerClass);
     } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-      LOG.log(Level.SEVERE, String.format("failed to load the container class %s",
-          containerClass), e);
+      LOG.log(Level.SEVERE, String.format("failed to load the worker class %s",
+          workerClass), e);
       throw new RuntimeException(e);
     }
   }

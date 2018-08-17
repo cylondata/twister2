@@ -30,7 +30,7 @@ import java.util.List;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
-import edu.iu.dsc.tws.api.basic.job.BasicJob;
+import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.resource.WorkerComputeSpec;
 import edu.iu.dsc.tws.common.resource.ZResourcePlan;
@@ -157,9 +157,9 @@ public class GatherBatchTask implements IContainer {
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(configurations);
 
-    BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
+    Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("task-gather");
-    jobBuilder.setContainerClass(GatherBatchTask.class.getName());
+    jobBuilder.setWorkerClass(GatherBatchTask.class.getName());
     jobBuilder.setRequestResource(new WorkerComputeSpec(4, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 
