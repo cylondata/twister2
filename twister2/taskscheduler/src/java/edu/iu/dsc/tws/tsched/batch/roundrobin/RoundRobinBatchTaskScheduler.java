@@ -56,7 +56,7 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
   /**
    * This method generate the container -> instance map
    */
-  public static Map<Integer, List<InstanceId>> RoundRobinBatchSchedulingAlgo(
+  public static Map<Integer, List<InstanceId>> roundRobinBatchSchedulingAlgo(
       Vertex taskVertex, int numberOfContainers) {
 
     TaskAttributes taskAttributes = new TaskAttributes();
@@ -91,7 +91,7 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
   /**
    * This method generate the container -> instance map
    */
-  public static Map<Integer, List<InstanceId>> RoundRobinBatchSchedulingAlgo(
+  public static Map<Integer, List<InstanceId>> roundRobinBatchSchedulingAlgo(
       Set<Vertex> taskVertexSet, int numberOfContainers) {
 
     TaskAttributes taskAttributes = new TaskAttributes();
@@ -144,11 +144,11 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
 
     for (Set<Vertex> vertexSet : taskVertexList) {
       if (vertexSet.size() > 1) {
-        containerInstanceMap = RoundRobinBatchSchedulingAlgo(vertexSet,
+        containerInstanceMap = roundRobinBatchSchedulingAlgo(vertexSet,
             workerPlan.getNumberOfWorkers());
       } else {
         Vertex vertex = vertexSet.iterator().next();
-        containerInstanceMap = RoundRobinBatchSchedulingAlgo(vertex,
+        containerInstanceMap = roundRobinBatchSchedulingAlgo(vertex,
             workerPlan.getNumberOfWorkers());
       }
 
@@ -250,7 +250,7 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
     Map<Integer, List<InstanceId>> roundrobinContainerInstanceMap;
 
     for (Vertex vertex : taskVertexSet) {
-      roundrobinContainerInstanceMap = RoundRobinBatchSchedulingAlgo(vertex,
+      roundrobinContainerInstanceMap = roundRobinBatchSchedulingAlgo(vertex,
           workerPlan.getNumberOfWorkers());
 
       TaskInstanceMapCalculation instanceMapCalculation = new TaskInstanceMapCalculation(
