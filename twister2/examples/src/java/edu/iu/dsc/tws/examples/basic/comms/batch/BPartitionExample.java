@@ -90,6 +90,7 @@ public class BPartitionExample extends BenchWorker {
   public class PartitionReceiver implements BatchReceiver {
     private int count = 0;
     private int expected;
+
     @Override
     public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
       expected = expectedIds.keySet().size() * jobParameters.getIterations();
@@ -97,6 +98,13 @@ public class BPartitionExample extends BenchWorker {
 
     @Override
     public void receive(int target, Iterator<Object> it) {
+      Object data;
+      while (it.hasNext()) {
+        data = it.next();
+        if (data instanceof int[]) {
+          System.out.println("Int data " + ((int[]) data)[0]);
+        }
+      }
       LOG.log(Level.INFO, String.format("%d Received message %d count %d expected %d",
           workerId, target, count, expected));
       partitionDone = true;
