@@ -232,7 +232,7 @@ public class BaseReduceBatchCommunication implements IContainer {
     // build the job
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setName("basic-batch-reduce")
-        .setContainerClass(BaseReduceBatchCommunication.class.getName())
+        .setWorkerClass(BaseReduceBatchCommunication.class.getName())
         .setRequestResource(new WorkerComputeSpec(1, 1024), 4)
         .setConfig(jobConfig)
         .build();

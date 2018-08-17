@@ -249,7 +249,7 @@ public class BasicMemoryManagerKeyedGatherCommunication implements IContainer {
     // build the job
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setName("basic-gather-batch-MM")
-        .setContainerClass(BasicMemoryManagerKeyedGatherCommunication.class.getName())
+        .setWorkerClass(BasicMemoryManagerKeyedGatherCommunication.class.getName())
         .setRequestResource(new WorkerComputeSpec(2, 1024), 4)
         .setConfig(jobConfig)
         .build();

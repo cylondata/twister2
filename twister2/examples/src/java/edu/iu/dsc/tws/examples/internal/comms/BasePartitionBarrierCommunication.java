@@ -276,7 +276,7 @@ public class BasePartitionBarrierCommunication implements IContainer {
     // build the job
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setName("basic-partition")
-        .setContainerClass(BasePartitionBarrierCommunication.class.getName())
+        .setWorkerClass(BasePartitionBarrierCommunication.class.getName())
         .setRequestResource(new WorkerComputeSpec(2, 1024), 4)
         .setConfig(jobConfig)
         .build();

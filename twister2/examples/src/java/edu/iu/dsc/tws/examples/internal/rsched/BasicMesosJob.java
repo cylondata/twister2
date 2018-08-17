@@ -49,13 +49,13 @@ public final class BasicMesosJob {
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(configurations);
 
-    String containerClass = SchedulerContext.workerClass(config);
-    System.out.println("Container class: " + containerClass);
+    String workerClass = SchedulerContext.workerClass(config);
+    System.out.println("Worker class: " + workerClass);
 
     // build the job
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setName(jobName)
-        .setContainerClass(containerClass)
+        .setWorkerClass(workerClass)
         .setRequestResource(workerComputeSpec, containers)
         .setConfig(jobConfig)
         .build();

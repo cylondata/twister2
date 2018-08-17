@@ -179,7 +179,7 @@ public class MultiPartitionBatchTask implements IContainer {
 
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("partition-example");
-    jobBuilder.setContainerClass(MultiPartitionBatchTask.class.getName());
+    jobBuilder.setWorkerClass(MultiPartitionBatchTask.class.getName());
     jobBuilder.setRequestResource(new WorkerComputeSpec(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 

@@ -143,7 +143,7 @@ public class TaskBarrierExample implements IContainer {
 
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("task-barrier-example");
-    jobBuilder.setContainerClass(TaskBarrierExample.class.getName());
+    jobBuilder.setWorkerClass(TaskBarrierExample.class.getName());
     jobBuilder.setRequestResource(new WorkerComputeSpec(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 

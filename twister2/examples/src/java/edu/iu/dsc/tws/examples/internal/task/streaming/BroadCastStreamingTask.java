@@ -138,7 +138,7 @@ public class BroadCastStreamingTask implements IContainer {
 
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("broadcast-task");
-    jobBuilder.setContainerClass(BroadCastStreamingTask.class.getName());
+    jobBuilder.setWorkerClass(BroadCastStreamingTask.class.getName());
     jobBuilder.setRequestResource(new WorkerComputeSpec(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 

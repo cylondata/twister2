@@ -151,7 +151,7 @@ public class LoadBalanceBatchTask implements IContainer {
 
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("loadbalance-task-example");
-    jobBuilder.setContainerClass(LoadBalanceBatchTask.class.getName());
+    jobBuilder.setWorkerClass(LoadBalanceBatchTask.class.getName());
     jobBuilder.setRequestResource(new WorkerComputeSpec(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 

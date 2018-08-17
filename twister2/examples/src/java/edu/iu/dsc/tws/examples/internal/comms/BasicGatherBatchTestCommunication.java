@@ -223,7 +223,7 @@ public class BasicGatherBatchTestCommunication implements IContainer {
     // build the job
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setName("basic-gather-batched")
-        .setContainerClass(BasicGatherBatchTestCommunication.class.getName())
+        .setWorkerClass(BasicGatherBatchTestCommunication.class.getName())
         .setRequestResource(new WorkerComputeSpec(2, 1024), 4)
         .setConfig(jobConfig)
         .build();

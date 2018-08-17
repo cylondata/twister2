@@ -143,7 +143,7 @@ public class TaskStreamingExample implements IContainer {
     jobConfig.putAll(configurations);
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("task-example");
-    jobBuilder.setContainerClass(TaskStreamingExample.class.getName());
+    jobBuilder.setWorkerClass(TaskStreamingExample.class.getName());
     jobBuilder.setRequestResource(new WorkerComputeSpec(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 

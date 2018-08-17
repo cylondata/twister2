@@ -185,7 +185,7 @@ public class ComplexByteStreamingTask implements IContainer {
     jobConfig.putAll(configurations);
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("complex-task-example");
-    jobBuilder.setContainerClass(ComplexByteStreamingTask.class.getName());
+    jobBuilder.setWorkerClass(ComplexByteStreamingTask.class.getName());
     jobBuilder.setRequestResource(new WorkerComputeSpec(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
     // now submit the job

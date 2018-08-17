@@ -162,7 +162,7 @@ public class SortJob implements IWorker {
 
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("sort-job");
-    jobBuilder.setContainerClass(SortJob.class.getName());
+    jobBuilder.setWorkerClass(SortJob.class.getName());
     jobBuilder.setRequestResource(new WorkerComputeSpec(2, 1024), NO_OF_TASKS);
     jobBuilder.setConfig(jobConfig);
 

@@ -200,7 +200,7 @@ public class BaseLoadBalanceCommunication implements IContainer {
     // build the job
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setName("basic-loadbalance")
-        .setContainerClass(BaseLoadBalanceCommunication.class.getName())
+        .setWorkerClass(BaseLoadBalanceCommunication.class.getName())
         .setRequestResource(new WorkerComputeSpec(2, 1024), 4)
         .setConfig(jobConfig)
         .build();

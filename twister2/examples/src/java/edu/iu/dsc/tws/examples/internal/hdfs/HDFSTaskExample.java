@@ -102,7 +102,7 @@ public class HDFSTaskExample implements IContainer {
 
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("hdfstask-example");
-    jobBuilder.setContainerClass(HDFSTaskExample.class.getName());
+    jobBuilder.setWorkerClass(HDFSTaskExample.class.getName());
     jobBuilder.setRequestResource(new WorkerComputeSpec(2, 1024), 3);
     jobBuilder.setConfig(jobConfig);
 

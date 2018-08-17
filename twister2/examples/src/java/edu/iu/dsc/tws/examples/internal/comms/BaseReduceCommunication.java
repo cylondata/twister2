@@ -400,7 +400,7 @@ public class BaseReduceCommunication implements IContainer {
     // build the job
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setName("basic-reduce")
-        .setContainerClass(BaseReduceCommunication.class.getName())
+        .setWorkerClass(BaseReduceCommunication.class.getName())
         .setRequestResource(new WorkerComputeSpec(2, 1024), 4)
         .setConfig(jobConfig)
         .build();

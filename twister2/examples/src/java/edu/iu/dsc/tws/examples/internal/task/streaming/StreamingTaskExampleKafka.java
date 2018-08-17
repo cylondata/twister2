@@ -149,7 +149,7 @@ public class StreamingTaskExampleKafka implements IContainer {
 
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("task-example");
-    jobBuilder.setContainerClass(StreamingTaskExampleKafka.class.getName());
+    jobBuilder.setWorkerClass(StreamingTaskExampleKafka.class.getName());
     jobBuilder.setRequestResource(new WorkerComputeSpec(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 

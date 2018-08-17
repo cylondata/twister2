@@ -306,7 +306,7 @@ public class BaseAllGatherCommunication implements IContainer {
     // build the job
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setName("basic-all-gather")
-        .setContainerClass(BaseAllGatherCommunication.class.getName())
+        .setWorkerClass(BaseAllGatherCommunication.class.getName())
         .setRequestResource(new WorkerComputeSpec(2, 1024), 4)
         .setConfig(jobConfig)
         .build();

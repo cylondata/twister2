@@ -165,7 +165,7 @@ public class TaskExampleBatchKafka implements IContainer {
 
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("task-example");
-    jobBuilder.setContainerClass(TaskExampleBatchKafka.class.getName());
+    jobBuilder.setWorkerClass(TaskExampleBatchKafka.class.getName());
     jobBuilder.setRequestResource(new WorkerComputeSpec(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 

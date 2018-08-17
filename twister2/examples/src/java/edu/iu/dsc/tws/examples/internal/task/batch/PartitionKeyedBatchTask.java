@@ -151,7 +151,7 @@ public class PartitionKeyedBatchTask implements IContainer {
 
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("partition-keyed-example");
-    jobBuilder.setContainerClass(PartitionKeyedBatchTask.class.getName());
+    jobBuilder.setWorkerClass(PartitionKeyedBatchTask.class.getName());
     jobBuilder.setRequestResource(new WorkerComputeSpec(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 

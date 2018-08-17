@@ -197,15 +197,15 @@ public final class AuroraWorkerStarter {
     // print their list and exit
     worker.waitAndGetAllWorkers();
 
-    String containerClass = SchedulerContext.workerClass(worker.config);
+    String workerClass = SchedulerContext.workerClass(worker.config);
     IContainer container;
     try {
-      Object object = ReflectionUtils.newInstance(containerClass);
+      Object object = ReflectionUtils.newInstance(workerClass);
       container = (IContainer) object;
-      LOG.info("loaded container class: " + containerClass);
+      LOG.info("loaded worker class: " + workerClass);
     } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-      LOG.log(Level.SEVERE, String.format("failed to load the container class %s",
-          containerClass), e);
+      LOG.log(Level.SEVERE, String.format("failed to load the worker class %s",
+          workerClass), e);
       throw new RuntimeException(e);
     }
 

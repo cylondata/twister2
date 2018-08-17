@@ -156,7 +156,7 @@ public class KeyedReduceBatchTask implements IContainer {
     jobConfig.putAll(configurations);
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("partition-example");
-    jobBuilder.setContainerClass(KeyedReduceBatchTask.class.getName());
+    jobBuilder.setWorkerClass(KeyedReduceBatchTask.class.getName());
     jobBuilder.setRequestResource(new WorkerComputeSpec(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 

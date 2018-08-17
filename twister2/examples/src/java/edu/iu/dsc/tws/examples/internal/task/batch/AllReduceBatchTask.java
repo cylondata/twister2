@@ -150,7 +150,7 @@ public class AllReduceBatchTask implements IContainer {
 
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("reduce-task-example");
-    jobBuilder.setContainerClass(AllReduceBatchTask.class.getName());
+    jobBuilder.setWorkerClass(AllReduceBatchTask.class.getName());
     jobBuilder.setRequestResource(new WorkerComputeSpec(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 

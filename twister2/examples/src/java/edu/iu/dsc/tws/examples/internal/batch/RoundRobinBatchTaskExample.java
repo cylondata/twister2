@@ -65,7 +65,7 @@ public class RoundRobinBatchTaskExample implements IContainer {
 
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("task-example");
-    jobBuilder.setContainerClass(RoundRobinBatchTaskExample.class.getName());
+    jobBuilder.setWorkerClass(RoundRobinBatchTaskExample.class.getName());
     jobBuilder.setRequestResource(new WorkerComputeSpec(2, 1024), 2);
     jobBuilder.setConfig(jobConfig);
 

@@ -225,7 +225,7 @@ public class BaseBroadcastCommunication implements IContainer, IWorker {
     // build the job
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setName("basic-broadcast")
-        .setContainerClass(BaseBroadcastCommunication.class.getName())
+        .setWorkerClass(BaseBroadcastCommunication.class.getName())
         .setRequestResource(new WorkerComputeSpec(2, 1024), 4)
         .setConfig(jobConfig)
         .build();

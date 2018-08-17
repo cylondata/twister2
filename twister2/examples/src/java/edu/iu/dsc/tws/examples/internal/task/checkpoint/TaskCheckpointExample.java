@@ -183,7 +183,7 @@ public class TaskCheckpointExample implements IContainer {
 
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("task-checkpoint-example");
-    jobBuilder.setContainerClass(TaskCheckpointExample.class.getName());
+    jobBuilder.setWorkerClass(TaskCheckpointExample.class.getName());
     jobBuilder.setRequestResource(new WorkerComputeSpec(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 

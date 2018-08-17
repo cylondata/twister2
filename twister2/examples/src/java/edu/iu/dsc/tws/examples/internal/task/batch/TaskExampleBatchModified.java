@@ -170,7 +170,7 @@ public class TaskExampleBatchModified implements IContainer {
 
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("task-example-modified");
-    jobBuilder.setContainerClass(TaskExampleBatchModified.class.getName());
+    jobBuilder.setWorkerClass(TaskExampleBatchModified.class.getName());
     jobBuilder.setRequestResource(new WorkerComputeSpec(2, 1024), 2);
     jobBuilder.setConfig(jobConfig);
 

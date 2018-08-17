@@ -138,7 +138,7 @@ public class KeyedReduceStreamingTask implements IContainer {
     jobConfig.putAll(configurations);
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("partition-example");
-    jobBuilder.setContainerClass(KeyedReduceStreamingTask.class.getName());
+    jobBuilder.setWorkerClass(KeyedReduceStreamingTask.class.getName());
     jobBuilder.setRequestResource(new WorkerComputeSpec(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 

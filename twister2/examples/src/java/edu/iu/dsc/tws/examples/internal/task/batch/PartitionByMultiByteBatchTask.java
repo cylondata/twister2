@@ -174,7 +174,7 @@ public class PartitionByMultiByteBatchTask implements IContainer {
 
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("partition-example");
-    jobBuilder.setContainerClass(PartitionByMultiByteBatchTask.class.getName());
+    jobBuilder.setWorkerClass(PartitionByMultiByteBatchTask.class.getName());
     jobBuilder.setRequestResource(new WorkerComputeSpec(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 

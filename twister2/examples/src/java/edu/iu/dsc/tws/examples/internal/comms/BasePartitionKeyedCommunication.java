@@ -290,7 +290,7 @@ public class BasePartitionKeyedCommunication implements IContainer {
     // build the job
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setName("basic-partition-keyed")
-        .setContainerClass(BasePartitionKeyedCommunication.class.getName())
+        .setWorkerClass(BasePartitionKeyedCommunication.class.getName())
         .setRequestResource(new WorkerComputeSpec(2, 1024), 4)
         .setConfig(jobConfig)
         .build();

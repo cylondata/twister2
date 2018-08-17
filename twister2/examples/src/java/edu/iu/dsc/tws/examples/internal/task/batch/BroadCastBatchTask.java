@@ -149,7 +149,7 @@ public class BroadCastBatchTask implements IContainer {
 
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("broadcast-task");
-    jobBuilder.setContainerClass(BroadCastBatchTask.class.getName());
+    jobBuilder.setWorkerClass(BroadCastBatchTask.class.getName());
     jobBuilder.setRequestResource(new WorkerComputeSpec(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 

@@ -159,7 +159,7 @@ public class GatherBatchTask implements IContainer {
 
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("task-gather");
-    jobBuilder.setContainerClass(GatherBatchTask.class.getName());
+    jobBuilder.setWorkerClass(GatherBatchTask.class.getName());
     jobBuilder.setRequestResource(new WorkerComputeSpec(4, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 

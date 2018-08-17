@@ -185,7 +185,7 @@ public class TaskBatchExample implements IContainer {
     jobConfig.putAll(configurations);
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("task-example");
-    jobBuilder.setContainerClass(TaskBatchExample.class.getName());
+    jobBuilder.setWorkerClass(TaskBatchExample.class.getName());
     jobBuilder.setRequestResource(new WorkerComputeSpec(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 

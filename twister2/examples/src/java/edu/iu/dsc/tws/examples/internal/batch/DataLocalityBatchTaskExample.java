@@ -65,7 +65,7 @@ public class DataLocalityBatchTaskExample implements IContainer {
 
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("complex-task-datalocalityaware-example");
-    jobBuilder.setContainerClass(DataLocalityBatchTaskExample.class.getName());
+    jobBuilder.setWorkerClass(DataLocalityBatchTaskExample.class.getName());
     jobBuilder.setRequestResource(new WorkerComputeSpec(2, 1024), 2);
     jobBuilder.setConfig(jobConfig);
 

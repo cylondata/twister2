@@ -44,7 +44,7 @@ public final class Twister2Job {
   private static final Logger LOG = Logger.getLogger(Twister2Job.class.getName());
 
   private String name;
-  private String containerClass;
+  private String workerClass;
   private WorkerComputeSpec requestedResource;
   private int noOfContainers;
   private JobConfig config;
@@ -82,7 +82,7 @@ public final class Twister2Job {
     jobBuilder.setConfig(configBuilder);
 
     JobAPI.Container.Builder containerBuilder = JobAPI.Container.newBuilder();
-    containerBuilder.setClassName(containerClass);
+    containerBuilder.setClassName(workerClass);
 
     jobBuilder.setContainer(containerBuilder);
     jobBuilder.setJobName(name);
@@ -106,8 +106,8 @@ public final class Twister2Job {
     return name;
   }
 
-  public String getContainerClass() {
-    return containerClass;
+  public String getWorkerClass() {
+    return workerClass;
   }
 
   public WorkerComputeSpec getRequestedResource() {
@@ -138,8 +138,8 @@ public final class Twister2Job {
       return this;
     }
 
-    public BasicJobBuilder setContainerClass(String containerClass) {
-      twister2Job.containerClass = containerClass;
+    public BasicJobBuilder setWorkerClass(String workerClass) {
+      twister2Job.workerClass = workerClass;
       return this;
     }
 

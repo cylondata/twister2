@@ -134,7 +134,7 @@ public class PartitionKeyedStreamingTask implements IContainer {
 
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("partition-keyed-example");
-    jobBuilder.setContainerClass(PartitionKeyedStreamingTask.class.getName());
+    jobBuilder.setWorkerClass(PartitionKeyedStreamingTask.class.getName());
     jobBuilder.setRequestResource(new WorkerComputeSpec(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 

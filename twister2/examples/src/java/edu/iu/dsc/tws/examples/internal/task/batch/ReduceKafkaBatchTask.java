@@ -193,7 +193,7 @@ public class ReduceKafkaBatchTask implements IContainer {
 
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("reduce-task");
-    jobBuilder.setContainerClass(ReduceKafkaBatchTask.class.getName());
+    jobBuilder.setWorkerClass(ReduceKafkaBatchTask.class.getName());
     jobBuilder.setRequestResource(new WorkerComputeSpec(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 

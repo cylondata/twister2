@@ -209,7 +209,7 @@ public class ReduceBatchTask implements IContainer {
 
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("reduce-batch-task");
-    jobBuilder.setContainerClass(ReduceBatchTask.class.getName());
+    jobBuilder.setWorkerClass(ReduceBatchTask.class.getName());
     jobBuilder.setRequestResource(new WorkerComputeSpec(1, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 

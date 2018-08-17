@@ -82,7 +82,7 @@ public class HDFSDataLocalityExecutorExample implements IContainer {
 
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("hdfs-task-datalocalityaware-example");
-    jobBuilder.setContainerClass(HDFSDataLocalityExecutorExample.class.getName());
+    jobBuilder.setWorkerClass(HDFSDataLocalityExecutorExample.class.getName());
     jobBuilder.setRequestResource(new WorkerComputeSpec(2, 1024), 2);
     jobBuilder.setConfig(jobConfig);
 

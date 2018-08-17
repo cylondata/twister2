@@ -159,7 +159,7 @@ public class ConfigTestStreamingTask implements IContainer {
 
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("config-test-task");
-    jobBuilder.setContainerClass(ConfigTestStreamingTask.class.getName());
+    jobBuilder.setWorkerClass(ConfigTestStreamingTask.class.getName());
     jobBuilder.setRequestResource(new WorkerComputeSpec(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 

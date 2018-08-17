@@ -150,7 +150,7 @@ public class ReduceHLBatchTask implements IContainer {
 
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("reduce-hl-task");
-    jobBuilder.setContainerClass(PartitionBatchTask.class.getName());
+    jobBuilder.setWorkerClass(PartitionBatchTask.class.getName());
     jobBuilder.setRequestResource(new WorkerComputeSpec(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 

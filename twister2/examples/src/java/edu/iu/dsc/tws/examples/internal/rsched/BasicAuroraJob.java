@@ -52,12 +52,12 @@ public final class BasicAuroraJob {
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(configurations);
 
-    String containerClass = SchedulerContext.workerClass(config);
+    String workerClass = SchedulerContext.workerClass(config);
 
     // build the job
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setName(jobName)
-        .setContainerClass(containerClass)
+        .setWorkerClass(workerClass)
         .setRequestResource(workerComputeSpec, workers)
         .setConfig(jobConfig)
         .build();

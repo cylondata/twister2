@@ -72,15 +72,15 @@ public class MesosWorker implements Executor {
 
     //jobName = SchedulerContext.jobName(config);
     //System.out.println("job name is " + jobName);
-    String containerClass = SchedulerContext.workerClass(config);
+    String workerClass = SchedulerContext.workerClass(config);
     IWorker container;
     try {
-      Object object = ReflectionUtils.newInstance(containerClass);
+      Object object = ReflectionUtils.newInstance(workerClass);
       container = (IWorker) object;
-      LOG.info("loaded container class: " + containerClass);
+      LOG.info("loaded worker class: " + workerClass);
     } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-      LOG.log(Level.SEVERE, String.format("failed to load the container class %s",
-          containerClass), e);
+      LOG.log(Level.SEVERE, String.format("failed to load the worker class %s",
+          workerClass), e);
       throw new RuntimeException(e);
 
     }

@@ -134,7 +134,7 @@ public class AllReduceStreamingTask implements IContainer {
 
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("reduce-task-example");
-    jobBuilder.setContainerClass(AllReduceStreamingTask.class.getName());
+    jobBuilder.setWorkerClass(AllReduceStreamingTask.class.getName());
     jobBuilder.setRequestResource(new WorkerComputeSpec(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 

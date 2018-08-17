@@ -154,7 +154,7 @@ public class GatherStreamingTask implements IContainer {
 
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("task-gather");
-    jobBuilder.setContainerClass(GatherStreamingTask.class.getName());
+    jobBuilder.setWorkerClass(GatherStreamingTask.class.getName());
     jobBuilder.setRequestResource(new WorkerComputeSpec(4, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 

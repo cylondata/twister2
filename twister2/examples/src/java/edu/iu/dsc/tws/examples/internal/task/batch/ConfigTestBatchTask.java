@@ -175,7 +175,7 @@ public class ConfigTestBatchTask implements IContainer {
 
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("config-test-task");
-    jobBuilder.setContainerClass(ConfigTestBatchTask.class.getName());
+    jobBuilder.setWorkerClass(ConfigTestBatchTask.class.getName());
     jobBuilder.setRequestResource(new WorkerComputeSpec(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 

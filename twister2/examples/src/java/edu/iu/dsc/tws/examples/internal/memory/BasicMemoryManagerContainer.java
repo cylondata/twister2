@@ -418,7 +418,7 @@ public class BasicMemoryManagerContainer implements IContainer {
     // build the job
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setName("basic-gather-MM")
-        .setContainerClass(BasicMemoryManagerContainer.class.getName())
+        .setWorkerClass(BasicMemoryManagerContainer.class.getName())
         .setRequestResource(new WorkerComputeSpec(2, 1024), 1)
         .setConfig(jobConfig)
         .build();
