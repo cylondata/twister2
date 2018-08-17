@@ -19,6 +19,8 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.google.common.collect.Iterators;
+
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BatchReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
@@ -98,15 +100,8 @@ public class BPartitionExample extends BenchWorker {
 
     @Override
     public void receive(int target, Iterator<Object> it) {
-      Object data;
-      while (it.hasNext()) {
-        data = it.next();
-        if (data instanceof int[]) {
-          System.out.println("Int data " + ((int[]) data)[0]);
-        }
-      }
       LOG.log(Level.INFO, String.format("%d Received message %d count %d expected %d",
-          workerId, target, count, expected));
+          workerId, target, Iterators.size(it), expected));
       partitionDone = true;
     }
   }
