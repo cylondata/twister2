@@ -24,7 +24,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
-import edu.iu.dsc.tws.api.basic.job.BasicJob;
+import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.resource.WorkerComputeSpec;
 import edu.iu.dsc.tws.common.resource.ZResourcePlan;
@@ -274,7 +274,7 @@ public class BasePartitionBarrierCommunication implements IContainer {
     JobConfig jobConfig = new JobConfig();
 
     // build the job
-    BasicJob basicJob = BasicJob.newBuilder()
+    Twister2Job twister2Job = Twister2Job.newBuilder()
         .setName("basic-partition")
         .setContainerClass(BasePartitionBarrierCommunication.class.getName())
         .setRequestResource(new WorkerComputeSpec(2, 1024), 4)
@@ -282,7 +282,7 @@ public class BasePartitionBarrierCommunication implements IContainer {
         .build();
 
     // now submit the job
-    Twister2Submitter.submitContainerJob(basicJob, config);
+    Twister2Submitter.submitContainerJob(twister2Job, config);
   }
 
 }
