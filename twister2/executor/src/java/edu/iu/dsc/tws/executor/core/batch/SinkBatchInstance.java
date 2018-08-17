@@ -18,7 +18,6 @@ import java.util.concurrent.BlockingQueue;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
-import edu.iu.dsc.tws.executor.core.InstanceState;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.TaskContext;
@@ -80,7 +79,7 @@ public class SinkBatchInstance implements INodeInstance {
   /**
    * Execution state of the instance
    */
-  private InstanceState instanceState = InstanceState.INIT;
+  private InstanceState state = new InstanceState(InstanceState.INIT);
 
   public SinkBatchInstance(ISink batchTask, BlockingQueue<IMessage> batchInQueue, Config config,
                            int tId, int tIndex, int parallel, int wId, Map<String, Object> cfgs) {
@@ -95,7 +94,7 @@ public class SinkBatchInstance implements INodeInstance {
   }
 
   public void reset() {
-    instanceState = InstanceState.INIT;
+    state = new InstanceState(InstanceState.INIT);
   }
 
   public void prepare() {
@@ -104,17 +103,38 @@ public class SinkBatchInstance implements INodeInstance {
   }
 
   public boolean execute() {
-    //System.out.println("SinkBatchInstance exec");
-    while (!batchInQueue.isEmpty()) {
-      IMessage m = batchInQueue.poll();
-      batchTask.execute(m);
-      receiveDone = true;
+    // we started the execution
+    if (state.isEqual(InstanceState.INIT)) {
+      state.set(InstanceState.EXECUTING);
     }
 
-    return receiveDone;
+    // if execution has not yet finished
+    if (state.isSet(InstanceState.EXECUTING) && state.isNotSet(InstanceState.EXECUTION_DONE)) {
+      while (!batchInQueue.isEmpty()) {
+        IMessage m = batchInQueue.poll();
+        batchTask.execute(m);
+        receiveDone = true;
+      }
+
+      // lets progress the communication
+      boolean needsFurther = communicationProgress();
+
+      // we don't have incoming and our inqueue in empty
+      if (batchInQueue.isEmpty() && !needsFurther) {
+        state.set(InstanceState.EXECUTION_DONE);
+      }
+    }
+
+    // we only need the execution done for now
+    return state.isSet(InstanceState.EXECUTION_DONE);
   }
 
-  public boolean commuinicationProgress() {
+  @Override
+  public int getId() {
+    return batchTaskId;
+  }
+
+  private boolean communicationProgress() {
     boolean allDone = true;
     for (Map.Entry<String, IParallelOperation> e : batchInParOps.entrySet()) {
       if (e.getValue().progress()) {

@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.threading;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 
@@ -18,11 +19,18 @@ import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 
 public class BatchSharingExecutor extends ThreadSharingExecutor {
+  // keep track of finished executions
+  private Map<Integer, Boolean> finishedInstances = new HashMap<>();
+
   /**
    * Execution Method for Batch Tasks
    */
   public boolean runExecution() {
     Map<Integer, INodeInstance> nodes = executionPlan.getNodes();
+
+    // initialize finished
+    initFinishedInstances();
+
     tasks = new ArrayBlockingQueue<>(nodes.size() * 2);
     tasks.addAll(nodes.values());
 
@@ -31,15 +39,35 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
 
     for (int i = 0; i < curTaskSize; i++) {
       workers[i] = new BatchWorker();
-      Thread t = new Thread(workers[i]);
-      t.setName("Thread-From-ReduceBatchTask : " + i);
-      t.start();
+      Thread t = new Thread(workers[i], "Executor-" + i);
       threads.add(t);
+      t.start();
     }
 
-    progressBatchComm();
+    // we progress until all the channel finish
+    while (finishedInstances.size() != nodes.size()) {
+      channel.progress();
+    }
 
-    return isDone();
+    // lets wait for thread to finish
+    for (Thread t : threads) {
+      try {
+        t.join();
+      } catch (InterruptedException e) {
+      }
+    }
+
+    return true;
+  }
+
+  /**
+   * Set all instances finish to false
+   */
+  private void initFinishedInstances() {
+    Map<Integer, INodeInstance> nodes = executionPlan.getNodes();
+    for (Integer n : nodes.keySet()) {
+      finishedInstances.put(n, false);
+    }
   }
 
   public void progressBatchComm() {
@@ -60,7 +88,14 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
         INodeInstance nodeInstance = tasks.poll();
         if (nodeInstance != null) {
           boolean needsFurther = nodeInstance.execute();
-
+          if (!needsFurther) {
+            finishedInstances.put(nodeInstance.getId(), true);
+          } else {
+            // we need to further execute this task
+            tasks.offer(nodeInstance);
+          }
+        } else {
+          break;
         }
       }
     }

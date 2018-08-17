@@ -290,7 +290,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
       if (newInstance instanceof ITask) {
         TaskBatchInstance v = new TaskBatchInstance((ITask) newInstance,
             new ArrayBlockingQueue<>(1024),
-            new ArrayBlockingQueue<>(1024), cfg, edgeGenerator,
+            new ArrayBlockingQueue<>(1024), cfg,
             vertex.getName(), taskId, ip.getTaskIndex(),
             vertex.getParallelism(), workerId, vertex.getConfig().toMap());
         batchTaskInstances.put(vertex.getName(), taskId, v);

@@ -18,7 +18,6 @@ import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.executor.api.DefaultOutputCollection;
-import edu.iu.dsc.tws.executor.api.EdgeGenerator;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
 import edu.iu.dsc.tws.task.api.IMessage;
@@ -92,24 +91,22 @@ public class TaskBatchInstance implements INodeInstance {
   private Map<String, IParallelOperation> inParOps = new HashMap<>();
 
   /**
-   * The edge generator
-   */
-  private EdgeGenerator edgeGenerator;
-
-  /**
    * The worker id
    */
   private int workerId;
 
+  /**
+   * The instance state
+   */
+  private InstanceState state = new InstanceState(InstanceState.INIT);
+
   public TaskBatchInstance(ITask task, BlockingQueue<IMessage> inQueue,
-                      BlockingQueue<IMessage> outQueue, Config config,
-                      EdgeGenerator eGenerator, String tName,
+                      BlockingQueue<IMessage> outQueue, Config config, String tName,
                       int tId, int tIndex, int parallel, int wId, Map<String, Object> cfgs) {
     this.task = task;
     this.inQueue = inQueue;
     this.outQueue = outQueue;
     this.config = config;
-    this.edgeGenerator = eGenerator;
     this.taskId = tId;
     this.taskIndex = tIndex;
     this.parallelism = parallel;
@@ -133,34 +130,69 @@ public class TaskBatchInstance implements INodeInstance {
   }
 
   public boolean execute() {
-    while (!inQueue.isEmpty()) {
-      IMessage m = inQueue.poll();
+    // we started the execution
+    if (state.isEqual(InstanceState.INIT)) {
+      state.set(InstanceState.EXECUTING);
+    }
 
-      task.run(m);
+    if (state.isSet(InstanceState.EXECUTING) && state.isNotSet(InstanceState.EXECUTION_DONE)) {
+      while (!inQueue.isEmpty()) {
+        IMessage m = inQueue.poll();
+        task.run(m);
+      }
+      // progress in communication
+      boolean needsFurther = communicationProgress(inParOps);
+      // if we no longer needs to progress comm and input is empty
+      if (!needsFurther && inQueue.isEmpty()) {
+        state.set(InstanceState.EXECUTION_DONE);
+      }
+    }
 
-      // now check the output queue
-      while (!outQueue.isEmpty()) {
-        IMessage message = outQueue.poll();
-        if (message != null) {
-          String edge = message.edge();
+    // now check the output queue
+    while (!outQueue.isEmpty()) {
+      IMessage message = outQueue.peek();
+      if (message != null) {
+        String edge = message.edge();
 
-          // invoke the communication operation
-          IParallelOperation op = outParOps.get(edge);
-          int flags = 0;
-          op.send(taskId, message, flags);
+        // invoke the communication operation
+        IParallelOperation op = outParOps.get(edge);
+        int flags = 0;
+        if (op.send(taskId, message, flags)) {
+          outQueue.poll();
+        } else {
+          // no point progressing further
+          break;
         }
       }
     }
 
-    for (Map.Entry<String, IParallelOperation> e : outParOps.entrySet()) {
-      e.getValue().progress();
+    // if execution is done and outqueue is emput, we have put everything to communication
+    if (state.isSet(InstanceState.EXECUTION_DONE) && outQueue.isEmpty()) {
+      state.set(InstanceState.OUT_COMPLETE);
     }
 
-    for (Map.Entry<String, IParallelOperation> e : inParOps.entrySet()) {
-      e.getValue().progress();
+    // lets progress the communication
+    boolean needsFurther = communicationProgress(outParOps);
+    // after we have put everything to communication and no progress is required, lets finish
+    if (state.isSet(InstanceState.OUT_COMPLETE) && !needsFurther) {
+      state.set(InstanceState.SENDING_DONE);
     }
+    return state.isEqual(InstanceState.FINISH);
+  }
 
-    return true;
+  public boolean communicationProgress(Map<String, IParallelOperation> ops) {
+    boolean allDone = true;
+    for (Map.Entry<String, IParallelOperation> e : ops.entrySet()) {
+      if (e.getValue().progress()) {
+        allDone = false;
+      }
+    }
+    return allDone;
+  }
+
+  @Override
+  public int getId() {
+    return taskId;
   }
 
   public BlockingQueue<IMessage> getInQueue() {
