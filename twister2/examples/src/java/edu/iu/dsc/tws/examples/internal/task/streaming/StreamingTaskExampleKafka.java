@@ -24,7 +24,6 @@
 package edu.iu.dsc.tws.examples.internal.task.streaming;
 
 import java.util.ArrayList;
-//import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -51,10 +50,12 @@ import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.GraphConstants;
 import edu.iu.dsc.tws.task.graph.OperationMode;
-import edu.iu.dsc.tws.tsched.roundrobin.RoundRobinTaskScheduling;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
+import edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler;
+
+//import java.util.Arrays;
 
 public class StreamingTaskExampleKafka implements IContainer {
   @Override
@@ -91,11 +92,11 @@ public class StreamingTaskExampleKafka implements IContainer {
 
     DataFlowTaskGraph graph = builder.build();
 
-    RoundRobinTaskScheduling roundRobinTaskScheduling = new RoundRobinTaskScheduling();
-    roundRobinTaskScheduling.initialize(config);
+    RoundRobinTaskScheduler roundRobinTaskScheduler = new RoundRobinTaskScheduler();
+    roundRobinTaskScheduler.initialize(config);
 
     WorkerPlan workerPlan = createWorkerPlan(resourcePlan);
-    TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduling.schedule(graph, workerPlan);
+    TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
 
     TWSNetwork network = new TWSNetwork(config, resourcePlan.getThisId());
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);

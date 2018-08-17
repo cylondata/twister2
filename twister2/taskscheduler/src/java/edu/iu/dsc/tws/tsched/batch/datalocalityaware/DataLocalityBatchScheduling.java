@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.tsched.batch.datalocality;
+package edu.iu.dsc.tws.tsched.batch.datalocalityaware;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -133,8 +133,8 @@ public class DataLocalityBatchScheduling {
   }
 
   /**
-   * This method is primarily responsible for generating the container and task instance map which
-   * is based on the task graph, its configuration, and the allocated worker plan.
+   * This method generates the container and task instance map
+   * based on the task graph, its configuration, and the allocated worker plan.
    */
   public static Map<Integer, List<InstanceId>> DataLocalityBatchSchedulingAlgo(
       Set<Vertex> taskVertexSet, int numberOfContainers, WorkerPlan workerPlan, Config config) {

@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.tsched.datalocalityaware;
+package edu.iu.dsc.tws.tsched.streaming.datalocalityaware;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -24,17 +24,16 @@ import edu.iu.dsc.tws.task.graph.Vertex;
 import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
+import edu.iu.dsc.tws.tsched.spi.taskschedule.ITaskScheduler;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.InstanceId;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.Resource;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.ScheduleException;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskInstanceMapCalculation;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedule;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
-public class DataLocalityAwareTaskScheduling implements TaskSchedule {
+public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
 
   private static final Logger LOG = Logger.getLogger(
-      DataLocalityAwareTaskScheduling.class.getName());
+      DataLocalityStreamingTaskScheduler.class.getName());
 
   private static int taskSchedulePlanId = 0;
   private Double instanceRAM;
@@ -57,32 +56,32 @@ public class DataLocalityAwareTaskScheduling implements TaskSchedule {
     //Set<Vertex> taskVertexSet = new LinkedHashSet<>(graph.getTaskVertexSet());
     Set<Vertex> taskVertexSet = graph.getTaskVertexSet();
 
-    Map<Integer, List<InstanceId>> datalocalityAwareContainerInstanceMap =
-        DataLocalityAwareScheduling.DataLocalityAwareSchedulingAlgorithm(taskVertexSet,
+    Map<Integer, List<InstanceId>> containerInstanceMap =
+        DataLocalityStreamingScheduling.DataLocalityAwareSchedulingAlgorithm(taskVertexSet,
             workerPlan.getNumberOfWorkers(), workerPlan, this.cfg);
 
     TaskInstanceMapCalculation instanceMapCalculation = new TaskInstanceMapCalculation(
         this.instanceRAM, this.instanceCPU, this.instanceDisk);
 
     Map<Integer, Map<InstanceId, Double>> instancesRamMap =
-        instanceMapCalculation.getInstancesRamMapInContainer(datalocalityAwareContainerInstanceMap,
+        instanceMapCalculation.getInstancesRamMapInContainer(containerInstanceMap,
             taskVertexSet);
 
     Map<Integer, Map<InstanceId, Double>> instancesDiskMap =
-        instanceMapCalculation.getInstancesDiskMapInContainer(datalocalityAwareContainerInstanceMap,
+        instanceMapCalculation.getInstancesDiskMapInContainer(containerInstanceMap,
             taskVertexSet);
 
     Map<Integer, Map<InstanceId, Double>> instancesCPUMap =
-        instanceMapCalculation.getInstancesCPUMapInContainer(datalocalityAwareContainerInstanceMap,
+        instanceMapCalculation.getInstancesCPUMapInContainer(containerInstanceMap,
             taskVertexSet);
 
-    for (int containerId : datalocalityAwareContainerInstanceMap.keySet()) {
+    for (int containerId : containerInstanceMap.keySet()) {
 
       Double containerRAMValue = TaskSchedulerContext.containerRamPadding(cfg);
       Double containerDiskValue = TaskSchedulerContext.containerDiskPadding(cfg);
       Double containerCpuValue = TaskSchedulerContext.containerCpuPadding(cfg);
 
-      List<InstanceId> taskInstanceIds = datalocalityAwareContainerInstanceMap.get(containerId);
+      List<InstanceId> taskInstanceIds = containerInstanceMap.get(containerId);
       Map<InstanceId, TaskSchedulePlan.TaskInstancePlan> taskInstancePlanMap = new HashMap<>();
 
       for (InstanceId id : taskInstanceIds) {
@@ -127,14 +126,5 @@ public class DataLocalityAwareTaskScheduling implements TaskSchedule {
       containerPlans.add(taskContainerPlan);
     }
     return new TaskSchedulePlan(taskSchedulePlanId, containerPlans);
-  }
-
-  @Override
-  public TaskSchedulePlan tschedule() throws ScheduleException {
-    return null;
-  }
-
-  @Override
-  public void close() {
   }
 }

@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.tsched.firstfit;
+package edu.iu.dsc.tws.tsched.streaming.firstfit;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,17 +26,17 @@ import edu.iu.dsc.tws.tsched.builder.TaskSchedulePlanBuilder;
 import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
 import edu.iu.dsc.tws.tsched.spi.scheduler.TaskSchedulerException;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
+import edu.iu.dsc.tws.tsched.spi.taskschedule.ITaskScheduler;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.Resource;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.ScheduleException;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedule;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.utils.RequiredRam;
 import edu.iu.dsc.tws.tsched.utils.TaskAttributes;
 import edu.iu.dsc.tws.tsched.utils.TaskScheduleUtils;
 
-public class FirstFitTaskScheduling implements TaskSchedule {
+public class FirstFitStreamingTaskScheduler implements ITaskScheduler {
 
-  private static final Logger LOG = Logger.getLogger(FirstFitTaskScheduling.class.getName());
+  private static final Logger LOG
+      = Logger.getLogger(FirstFitStreamingTaskScheduler.class.getName());
 
   private Resource defaultResourceValue;
   private Resource maximumContainerResourceValue;
@@ -56,9 +56,10 @@ public class FirstFitTaskScheduling implements TaskSchedule {
    * This method initialize the config values received from the user and set
    * the default instance value and container maximum value.
    */
-  public void initialize(Config cfg1) {
+  @Override
+  public void initialize(Config config) {
 
-    this.cfg = cfg1;
+    this.cfg = config;
 
     Double instanceRAM = TaskSchedulerContext.taskInstanceRam(cfg);
     this.instanceDisk = TaskSchedulerContext.taskInstanceDisk(cfg);
@@ -165,21 +166,8 @@ public class FirstFitTaskScheduling implements TaskSchedule {
       taskSchedulePlanBuilder.addInstance(numContainers, taskName);
     }
   }
-
-  @Override
-  public void close() {
-  }
-
-  public TaskSchedulePlan tschedule() throws ScheduleException {
-    TaskSchedulePlanBuilder taskSchedulePlanBuilder = newTaskSchedulingPlanBuilder(null);
-    taskSchedulePlanBuilder = FirstFitFTaskSchedulingAlgorithm(taskSchedulePlanBuilder);
-    return taskSchedulePlanBuilder.build();
-  }
-
-  //This method will be implemented for future rescheduling case....
-  public void reschedule() {
-  }
 }
+
 
 
 

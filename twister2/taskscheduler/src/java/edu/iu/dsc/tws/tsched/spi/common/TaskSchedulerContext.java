@@ -26,6 +26,9 @@ public class TaskSchedulerContext extends Context {
   //public static final String TWISTER2_TASK_SCHEDULING_MODE_DEFAULT = "firstfit";
   //public static final String TWISTER2_TASK_SCHEDULING_MODE_DEFAULT = "datalocalityaware";
 
+  public static final String TWISTER2_TASK_TYPE = "twister2.task.type";
+  public static final String TWISTER2_TASK_TYPE_DEFAULT = "streaming";
+
   public static final String TWISTER2_TASK_INSTANCE_RAM = "twister2.task.instance.ram";
   public static final double TWISTER2_TASK_INSTANCE_RAM_DEFAULT = 512.0;
 
@@ -49,7 +52,7 @@ public class TaskSchedulerContext extends Context {
 
   public static final String TWISTER2_CONTAINER_INSTANCE_NETWORK
       = "twister2.container.instance.network";
-  public static final double TWISTER2_CONTAINER_INSTANCE_NETWORK_DEFAULT = 1024.0;
+  public static final double TWISTER2_CONTAINER_INSTANCE_NETWORK_DEFAULT = 1024;
 
   public static final String TWISTER2_TASK_PARALLELISM = "twister2.task.parallelism";
   public static final int TWISTER2_TASK_PARALLELISM_DEFAULT = 2;
@@ -78,6 +81,11 @@ public class TaskSchedulerContext extends Context {
   public static String taskSchedulingMode(Config cfg) {
     return cfg.getStringValue(TWISTER2_TASK_SCHEDULING_MODE,
         TWISTER2_TASK_SCHEDULING_MODE_DEFAULT);
+  }
+
+  public static String taskType(Config cfg) {
+    return cfg.getStringValue(TWISTER2_TASK_TYPE,
+        TWISTER2_TASK_TYPE_DEFAULT);
   }
 
   public static double taskInstanceRam(Config cfg) {
@@ -114,7 +122,6 @@ public class TaskSchedulerContext extends Context {
     return cfg.getDoubleValue(TWISTER2_CONTAINER_INSTANCE_CPU,
         TWISTER2_CONTAINER_INSTANCE_CPU_DEFAULT);
   }
-
 
   public static double containerInstanceNetwork(Config cfg) {
     return cfg.getDoubleValue(TWISTER2_CONTAINER_INSTANCE_NETWORK,

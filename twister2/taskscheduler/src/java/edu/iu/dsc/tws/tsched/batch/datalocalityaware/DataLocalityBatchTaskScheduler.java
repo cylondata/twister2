@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.tsched.batch.datalocality;
+package edu.iu.dsc.tws.tsched.batch.datalocalityaware;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,18 +26,17 @@ import edu.iu.dsc.tws.task.graph.Vertex;
 import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
+import edu.iu.dsc.tws.tsched.spi.taskschedule.ITaskScheduler;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.InstanceId;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.Resource;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.ScheduleException;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskInstanceMapCalculation;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedule;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.utils.TaskVertexParser;
 
-public class DataLocalityBatchTaskScheduling implements TaskSchedule {
+public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
 
   private static final Logger LOG = Logger.getLogger(
-      DataLocalityBatchTaskScheduling.class.getName());
+      DataLocalityBatchTaskScheduler.class.getName());
 
   private static int taskSchedulePlanId = 0;
   private Double instanceRAM;
@@ -61,7 +60,7 @@ public class DataLocalityBatchTaskScheduling implements TaskSchedule {
    */
   public List<TaskSchedulePlan> scheduleBatch(DataFlowTaskGraph graph, WorkerPlan workerPlan) {
 
-    Map<Integer, List<InstanceId>> datalocalityAwareContainerInstanceMap;
+    Map<Integer, List<InstanceId>> containerInstanceMap;
     Set<Vertex> taskVertexSet = new LinkedHashSet<>(graph.getTaskVertexSet());
 
     List<TaskSchedulePlan> taskSchedulePlanList = new ArrayList<>();
@@ -69,12 +68,12 @@ public class DataLocalityBatchTaskScheduling implements TaskSchedule {
 
     for (Set<Vertex> vertexSet : taskVertexList) {
       if (vertexSet.size() > 1) {
-        datalocalityAwareContainerInstanceMap = DataLocalityBatchScheduling.
+        containerInstanceMap = DataLocalityBatchScheduling.
             DataLocalityBatchSchedulingAlgo(vertexSet,
                 workerPlan.getNumberOfWorkers(), workerPlan, this.cfg);
       } else {
         Vertex vertex = vertexSet.iterator().next();
-        datalocalityAwareContainerInstanceMap = DataLocalityBatchScheduling.
+        containerInstanceMap = DataLocalityBatchScheduling.
             DataLocalityBatchSchedulingAlgo(vertex,
                 workerPlan.getNumberOfWorkers(), workerPlan, this.cfg);
       }
@@ -85,21 +84,21 @@ public class DataLocalityBatchTaskScheduling implements TaskSchedule {
           this.instanceRAM, this.instanceCPU, this.instanceDisk);
 
       Map<Integer, Map<InstanceId, Double>> instancesRamMap = instanceMapCalculation.
-          getInstancesRamMapInContainer(datalocalityAwareContainerInstanceMap, taskVertexSet);
+          getInstancesRamMapInContainer(containerInstanceMap, taskVertexSet);
 
       Map<Integer, Map<InstanceId, Double>> instancesDiskMap = instanceMapCalculation.
-          getInstancesDiskMapInContainer(datalocalityAwareContainerInstanceMap, taskVertexSet);
+          getInstancesDiskMapInContainer(containerInstanceMap, taskVertexSet);
 
       Map<Integer, Map<InstanceId, Double>> instancesCPUMap = instanceMapCalculation.
-          getInstancesCPUMapInContainer(datalocalityAwareContainerInstanceMap, taskVertexSet);
+          getInstancesCPUMapInContainer(containerInstanceMap, taskVertexSet);
 
-      for (int containerId : datalocalityAwareContainerInstanceMap.keySet()) {
+      for (int containerId : containerInstanceMap.keySet()) {
 
         Double containerRAMValue = TaskSchedulerContext.containerRamPadding(cfg);
         Double containerDiskValue = TaskSchedulerContext.containerDiskPadding(cfg);
         Double containerCpuValue = TaskSchedulerContext.containerCpuPadding(cfg);
 
-        List<InstanceId> taskInstanceIds = datalocalityAwareContainerInstanceMap.get(containerId);
+        List<InstanceId> taskInstanceIds = containerInstanceMap.get(containerId);
         Map<InstanceId, TaskSchedulePlan.TaskInstancePlan> taskInstancePlanMap = new HashMap<>();
 
         for (InstanceId id : taskInstanceIds) {
@@ -245,14 +244,5 @@ public class DataLocalityBatchTaskScheduling implements TaskSchedule {
       containerPlans.add(taskContainerPlan);
     }
     return new TaskSchedulePlan(taskSchedulePlanId, containerPlans);
-  }
-
-  @Override
-  public TaskSchedulePlan tschedule() throws ScheduleException {
-    return null;
-  }
-
-  @Override
-  public void close() {
   }
 }
