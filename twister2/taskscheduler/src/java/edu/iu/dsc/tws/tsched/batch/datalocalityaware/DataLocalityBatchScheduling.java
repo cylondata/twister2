@@ -46,7 +46,7 @@ public class DataLocalityBatchScheduling {
    * This method is primarily responsible for generating the container and task instance map which
    * is based on the task graph, its configuration, and the allocated worker plan.
    */
-  public static Map<Integer, List<InstanceId>> DataLocalityBatchSchedulingAlgo(
+  public static Map<Integer, List<InstanceId>> dataLocalityBatchSchedulingAlgo(
       Vertex taskVertex, int numberOfContainers, WorkerPlan workerPlan, Config config) {
 
     DataNodeLocatorUtils dataNodeLocatorUtils = new DataNodeLocatorUtils(config);
@@ -94,7 +94,7 @@ public class DataLocalityBatchScheduling {
         if (cIdx == 0) {
           datanodesList = dataNodeLocatorUtils.
               findDataNodesLocation(taskVertex.getConfig().getListValue("inputdataset"));
-          workerPlanMap = calculateDistanceforBatch(datanodesList, workerPlan, cIdx);
+          workerPlanMap = distanceCalculation(datanodesList, workerPlan, cIdx);
           cal = findOptimalWorkerNode(taskVertex, workerPlanMap, cIdx);
         }
 
@@ -136,7 +136,7 @@ public class DataLocalityBatchScheduling {
    * This method generates the container and task instance map
    * based on the task graph, its configuration, and the allocated worker plan.
    */
-  public static Map<Integer, List<InstanceId>> DataLocalityBatchSchedulingAlgo(
+  public static Map<Integer, List<InstanceId>> dataLocalityBatchSchedulingAlgo(
       Set<Vertex> taskVertexSet, int numberOfContainers, WorkerPlan workerPlan, Config config) {
 
     DataNodeLocatorUtils dataNodeLocatorUtils = new DataNodeLocatorUtils(config);
@@ -174,7 +174,7 @@ public class DataLocalityBatchScheduling {
           if (cIdx == 0) {
             datanodesList = dataNodeLocatorUtils.
                 findDataNodesLocation(vertex.getConfig().getListValue("inputdataset"));
-            workerPlanMap = calculateDistanceforBatch(datanodesList, workerPlan, cIdx);
+            workerPlanMap = distanceCalculation(datanodesList, workerPlan, cIdx);
             cal = findOptimalWorkerNode(vertex, workerPlanMap, cIdx);
           }
 
@@ -207,7 +207,7 @@ public class DataLocalityBatchScheduling {
   /**
    * It calculates the distance between the data nodes and the worker nodes.
    */
-  private static Map<String, List<DataTransferTimeCalculator>> calculateDistanceforBatch(
+  private static Map<String, List<DataTransferTimeCalculator>> distanceCalculation(
       List<String> datanodesList, WorkerPlan workers, int taskIndex) {
 
     Map<String, List<DataTransferTimeCalculator>> workerPlanMap = new HashMap<>();
@@ -272,7 +272,6 @@ public class DataLocalityBatchScheduling {
 
     try {
       for (Map.Entry<String, List<DataTransferTimeCalculator>> entry : entries) {
-
         String key = entry.getKey();
         List<DataTransferTimeCalculator> value = entry.getValue();
         for (DataTransferTimeCalculator aValue : value) {

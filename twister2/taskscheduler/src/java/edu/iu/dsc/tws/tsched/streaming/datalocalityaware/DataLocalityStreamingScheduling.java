@@ -47,7 +47,7 @@ public class DataLocalityStreamingScheduling {
    * This method is primarily responsible for generating the container and task instance map which
    * is based on the task graph, its configuration, and the allocated worker plan.
    */
-  public static Map<Integer, List<InstanceId>> DataLocalityAwareSchedulingAlgorithm(
+  public static Map<Integer, List<InstanceId>> dataLocalityAwareSchedulingAlgorithm(
       Set<Vertex> taskVertexSet, int numberOfContainers, WorkerPlan workerPlan, Config config) {
 
     DataNodeLocatorUtils dataNodeLocatorUtils = new DataNodeLocatorUtils(config);

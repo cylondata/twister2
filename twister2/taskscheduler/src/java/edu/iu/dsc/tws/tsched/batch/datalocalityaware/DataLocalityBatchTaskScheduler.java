@@ -69,12 +69,12 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
     for (Set<Vertex> vertexSet : taskVertexList) {
       if (vertexSet.size() > 1) {
         containerInstanceMap = DataLocalityBatchScheduling.
-            DataLocalityBatchSchedulingAlgo(vertexSet,
+            dataLocalityBatchSchedulingAlgo(vertexSet,
                 workerPlan.getNumberOfWorkers(), workerPlan, this.cfg);
       } else {
         Vertex vertex = vertexSet.iterator().next();
         containerInstanceMap = DataLocalityBatchScheduling.
-            DataLocalityBatchSchedulingAlgo(vertex,
+            dataLocalityBatchSchedulingAlgo(vertex,
                 workerPlan.getNumberOfWorkers(), workerPlan, this.cfg);
       }
 
@@ -175,7 +175,7 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
     List<TaskSchedulePlan> taskSchedulePlanList = new ArrayList<>();
 
     /*Map<Integer, List<InstanceId>> datalocalityAwareContainerInstanceMap =
-        DataLocalityBatchScheduling.DataLocalityBatchSchedulingAlgo(taskVertexSet,
+        DataLocalityBatchScheduling.dataLocalityBatchSchedulingAlgo(taskVertexSet,
             workerPlan.getNumberOfWorkers(), workerPlan, this.cfg);*/
 
     TaskInstanceMapCalculation instanceMapCalculation = new TaskInstanceMapCalculation(
