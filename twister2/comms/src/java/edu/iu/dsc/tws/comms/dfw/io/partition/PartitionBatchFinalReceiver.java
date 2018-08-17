@@ -30,6 +30,7 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
+import edu.iu.dsc.tws.comms.dfw.io.types.DataSerializer;
 import edu.iu.dsc.tws.comms.shuffle.FSKeyedMerger;
 import edu.iu.dsc.tws.comms.shuffle.FSKeyedSortedMerger;
 import edu.iu.dsc.tws.comms.shuffle.FSMerger;
@@ -183,7 +184,7 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
       List<KeyedContent> keyedContents = (List<KeyedContent>) object;
       for (KeyedContent kc : keyedContents) {
         Object data = kc.getValue();
-        byte[] d = kryoSerializer.serialize(data);
+        byte[] d = DataSerializer.serialize(data, kryoSerializer);
 
         sortedMerger.add(kc.getKey(), d, d.length);
       }
@@ -193,7 +194,7 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
     } else {
       List<Object> contents = (List<Object>) object;
       for (Object kc : contents) {
-        byte[] d = kryoSerializer.serialize(kc);
+        byte[] d = DataSerializer.serialize(kc, kryoSerializer);
         sortedMerger.add(d, d.length);
       }
       int total = totalReceives.get(target);
