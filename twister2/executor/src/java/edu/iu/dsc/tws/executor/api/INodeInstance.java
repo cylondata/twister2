@@ -25,6 +25,14 @@ package edu.iu.dsc.tws.executor.api;
 
 public interface INodeInstance {
   /**
+   * Get task id
+   * @return task id
+   */
+  default int getId() {
+    return 0;
+  }
+
+  /**
    * Execute
    * @return true if further execution is needed
    */

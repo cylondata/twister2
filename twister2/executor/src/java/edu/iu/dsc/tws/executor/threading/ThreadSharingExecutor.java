@@ -55,6 +55,6 @@ public abstract class ThreadSharingExecutor extends AbstractExecutor {
   }
 
   public boolean isDone() {
-    return true;
+    return false;
   }
 }

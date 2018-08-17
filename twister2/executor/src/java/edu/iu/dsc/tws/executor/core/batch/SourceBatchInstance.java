@@ -83,12 +83,14 @@ public class SourceBatchInstance implements INodeInstance {
   private int workerId;
 
   /**
-   * For batch tasks: identifying the final message
-   **/
+   * State of the running instance
+   */
+  private InstanceState state = new InstanceState(InstanceState.INIT);
 
-  private boolean isDone;
-
-  private boolean isFinish = false;
+  /**
+   * The task context
+   */
+  private TaskContext taskContext;
 
   public SourceBatchInstance(ISource task, BlockingQueue<IMessage> outQueue,
                              Config config, String tName, int tId, int tIndex, int parallel,
@@ -104,62 +106,79 @@ public class SourceBatchInstance implements INodeInstance {
     this.workerId = wId;
   }
 
-  public SourceBatchInstance(ISource task, BlockingQueue<IMessage> outQueue, Config config,
-                             String tName, int tId, int tIndex, int parallel, int wId,
-                             Map<String, Object> cfgs, boolean isDone) {
-    this.batchTask = task;
-    this.outBatchQueue = outQueue;
-    this.config = config;
-    this.batchTaskId = tId;
-    this.batchTaskIndex = tIndex;
-    this.parallelism = parallel;
-    this.batchTaskName = tName;
-    this.nodeConfigs = cfgs;
-    this.workerId = wId;
-    this.isDone = isDone;
-  }
-
   public void prepare() {
     outputBatchCollection = new DefaultOutputCollection(outBatchQueue);
 
-    batchTask.prepare(config, new TaskContext(batchTaskIndex, batchTaskId, batchTaskName,
-        parallelism, workerId, outputBatchCollection, nodeConfigs));
+    taskContext = new TaskContext(batchTaskIndex, batchTaskId, batchTaskName,
+        parallelism, workerId, outputBatchCollection, nodeConfigs);
+    batchTask.prepare(config, taskContext);
   }
 
   /**
    * Execution Method calls the SourceTasks run method to get context
    **/
   public boolean execute() {
+    // we started the execution
+    if (state.isEqual(InstanceState.INIT)) {
+      state.set(InstanceState.EXECUTING);
+    }
 
     if (batchTask != null) {
-      batchTask.run();
+      // if we are in executing state we can run
+      if (state.isSet(InstanceState.EXECUTING) && state.isNotSet(InstanceState.EXECUTION_DONE)) {
+        batchTask.run();
+      }
+
+      // now check the context
+      if (taskContext.isDone()) {
+        // we are done with execution
+        state.set(InstanceState.EXECUTION_DONE);
+      }
+
       // now check the output queue
       while (!outBatchQueue.isEmpty()) {
-
-        IMessage message = outBatchQueue.poll();
+        IMessage message = outBatchQueue.peek();
         if (message != null) {
           String edge = message.edge();
           IParallelOperation op = outBatchParOps.get(edge);
           if (message.getContent().equals(MessageFlags.LAST_MESSAGE)) {
-            while (!op.send(batchTaskId, message, MessageFlags.FLAGS_LAST)) {
-              //
+            if (op.send(batchTaskId, message, MessageFlags.FLAGS_LAST)) {
+              outBatchQueue.poll();
+            } else {
+              break;
             }
-            //op.communicationProgress();
-            this.isFinish = true;
           } else {
-            while (!op.send(batchTaskId, message, 0)) {
-              //
+            if (op.send(batchTaskId, message, 0)) {
+              outBatchQueue.poll();
+            } else {
+              // no point in progressing further
+              break;
             }
-            //op.communicationProgress();
           }
         }
       }
+
+      // if execution is done and outqueue is emput, we have put everything to communication
+      if (state.isSet(InstanceState.EXECUTION_DONE) && outBatchQueue.isEmpty()) {
+        state.set(InstanceState.OUT_COMPLETE);
+      }
     }
 
-    return this.isFinish;
+    // lets progress the communication
+    boolean needsFurther = communicationProgress();
+    // after we have put everything to communication and no progress is required, lets finish
+    if (state.isSet(InstanceState.OUT_COMPLETE) && !needsFurther) {
+      state.set(InstanceState.SENDING_DONE);
+    }
+
+    return state.isEqual(InstanceState.FINISH);
   }
 
-  //TODO : BOOLEAN RESPONSE AFTER FINISHING COMMUNICATION
+  @Override
+  public int getId() {
+    return batchTaskId;
+  }
+
   public boolean communicationProgress() {
     boolean allDone = true;
     for (Map.Entry<String, IParallelOperation> e : outBatchParOps.entrySet()) {
@@ -177,26 +196,6 @@ public class SourceBatchInstance implements INodeInstance {
 
   public void registerOutParallelOperation(String edge, IParallelOperation op) {
     outBatchParOps.put(edge, op);
-  }
-
-  public boolean isFinish() {
-    return isFinish;
-  }
-
-  public int getBatchTaskId() {
-    return batchTaskId;
-  }
-
-  public int getBatchTaskIndex() {
-    return batchTaskIndex;
-  }
-
-  public int getParallelism() {
-    return parallelism;
-  }
-
-  public String getBatchTaskName() {
-    return batchTaskName;
   }
 
   public int getWorkerId() {
