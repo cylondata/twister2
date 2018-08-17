@@ -173,7 +173,7 @@ public final class MPIWorkerStarter {
    */
   public static void startWorker(IWorkerController workerController,
                                  IPersistentVolume pv) {
-    String workerClass = SchedulerContext.containerClass(config);
+    String workerClass = SchedulerContext.workerClass(config);
     IWorker worker;
     try {
       Object object = ReflectionUtils.newInstance(workerClass);

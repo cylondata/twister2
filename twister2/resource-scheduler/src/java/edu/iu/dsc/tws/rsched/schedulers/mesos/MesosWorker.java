@@ -72,7 +72,7 @@ public class MesosWorker implements Executor {
 
     //jobName = SchedulerContext.jobName(config);
     //System.out.println("job name is " + jobName);
-    String containerClass = SchedulerContext.containerClass(config);
+    String containerClass = SchedulerContext.workerClass(config);
     IWorker container;
     try {
       Object object = ReflectionUtils.newInstance(containerClass);

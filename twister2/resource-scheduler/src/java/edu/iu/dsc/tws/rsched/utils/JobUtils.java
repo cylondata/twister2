@@ -159,7 +159,7 @@ public final class JobUtils {
 
     String containerClass = job.getContainer().getClassName();
     if (containerClass != null) {
-      builder.put(SchedulerContext.CONTAINER_CLASS, containerClass);
+      builder.put(SchedulerContext.WORKER_CLASS, containerClass);
     }
 
     int workerInstances = job.getJobResources().getNoOfContainers();

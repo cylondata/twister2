@@ -13,13 +13,13 @@ twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.scp.ScpUploader"
 # twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader"
 
 # worker class to run
-twister2.job.basic.container.class: "edu.iu.dsc.tws.examples.internal.rsched.BasicK8sWorker"
-# twister2.job.basic.container.class: "edu.iu.dsc.tws.examples.internal.comms.BaseBroadcastCommunication"
-# twister2.job.basic.container.class: "edu.iu.dsc.tws.examples.basic.batch.sort.SortJob"
-# twister2.job.basic.container.class: "edu.iu.dsc.tws.examples.internal.BasicNetworkTest"
-# twister2.job.basic.container.class: "edu.iu.dsc.tws.examples.basic.comms.batch.BReduceExample"
-# twister2.job.basic.container.class: "edu.iu.dsc.tws.examples.internal.BasicNetworkTest"
-# twister2.job.basic.container.class: "edu.iu.dsc.tws.examples.basic.batch.comms.batch.BReduceExample"
+twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.rsched.BasicK8sWorker"
+# twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.comms.BaseBroadcastCommunication"
+# twister2.job.worker.class: "edu.iu.dsc.tws.examples.basic.batch.sort.SortJob"
+# twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.BasicNetworkTest"
+# twister2.job.worker.class: "edu.iu.dsc.tws.examples.basic.comms.batch.BReduceExample"
+# twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.BasicNetworkTest"
+# twister2.job.worker.class: "edu.iu.dsc.tws.examples.basic.batch.comms.batch.BReduceExample"
 
 # image pull policy, by default is IfNotPresent
 # it could also be Always

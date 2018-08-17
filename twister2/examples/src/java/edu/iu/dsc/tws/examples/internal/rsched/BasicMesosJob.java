@@ -49,7 +49,7 @@ public final class BasicMesosJob {
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(configurations);
 
-    String containerClass = SchedulerContext.containerClass(config);
+    String containerClass = SchedulerContext.workerClass(config);
     System.out.println("Container class: " + containerClass);
 
     // build the job

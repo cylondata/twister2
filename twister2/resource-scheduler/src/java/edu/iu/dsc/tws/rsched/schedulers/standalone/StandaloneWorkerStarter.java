@@ -142,7 +142,7 @@ public final class StandaloneWorkerStarter {
 
     Config workerConfig = Config.newBuilder().putAll(config).
         put(SchedulerContext.TWISTER2_HOME.getKey(), twister2Home).
-        put(SchedulerContext.CONTAINER_CLASS, container).
+        put(SchedulerContext.WORKER_CLASS, container).
         put(SchedulerContext.TWISTER2_CONTAINER_ID, id).
         put(SchedulerContext.TWISTER2_CLUSTER_TYPE, clusterType).build();
 
@@ -153,7 +153,7 @@ public final class StandaloneWorkerStarter {
     Config updatedConfig = JobUtils.overrideConfigs(job, config);
     updatedConfig = Config.newBuilder().putAll(updatedConfig).
         put(SchedulerContext.TWISTER2_HOME.getKey(), twister2Home).
-        put(SchedulerContext.CONTAINER_CLASS, container).
+        put(SchedulerContext.WORKER_CLASS, container).
         put(SchedulerContext.TWISTER2_CONTAINER_ID, id).
         put(SchedulerContext.TWISTER2_CLUSTER_TYPE, clusterType).
         put(SchedulerContext.JOB_NAME, job.getJobName()).build();
@@ -165,7 +165,7 @@ public final class StandaloneWorkerStarter {
     IWorkerController workerController = createWorkerController(config);
     WorkerNetworkInfo workerNetworkInfo = workerController.getWorkerNetworkInfo();
 
-    String containerClass = SchedulerContext.containerClass(config);
+    String containerClass = SchedulerContext.workerClass(config);
 
     ZResourcePlan resourcePlan = new ZResourcePlan(SchedulerContext.clusterType(config),
         workerNetworkInfo.getWorkerID());

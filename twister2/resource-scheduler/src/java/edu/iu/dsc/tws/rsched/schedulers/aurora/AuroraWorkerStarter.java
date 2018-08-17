@@ -197,7 +197,7 @@ public final class AuroraWorkerStarter {
     // print their list and exit
     worker.waitAndGetAllWorkers();
 
-    String containerClass = SchedulerContext.containerClass(worker.config);
+    String containerClass = SchedulerContext.workerClass(worker.config);
     IContainer container;
     try {
       Object object = ReflectionUtils.newInstance(containerClass);
