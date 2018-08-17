@@ -26,6 +26,7 @@ import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.apache.commons.lang3.tuple.Triple;
 
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.dfw.io.types.DataDeserializer;
 import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 
 public final class FileLoader {
@@ -36,6 +37,7 @@ public final class FileLoader {
 
   /**
    * Save the list of records to the file system
+   *
    * @param records records to be written
    * @param size total size of the records
    * @param outFileName out file name
@@ -67,16 +69,16 @@ public final class FileLoader {
   }
 
 
-
   /**
    * Save the list of records to the file system
+   *
    * @param records records to be written
    * @param size total size of the records
    * @param outFileName out file name
    */
   public static int saveKeyValues(List<KeyValue> records, List<Integer> sizes,
-                                   long size, String outFileName, MessageType keyType,
-                                   KryoMemorySerializer serializer) {
+                                  long size, String outFileName, MessageType keyType,
+                                  KryoMemorySerializer serializer) {
     try {
       // first serialize keys
       int totalSize = 0;
@@ -128,7 +130,7 @@ public final class FileLoader {
       FileChannel rwChannel = new RandomAccessFile(outFileName, "rw").getChannel();
       ByteBuffer os = rwChannel.map(FileChannel.MapMode.READ_WRITE, 0, totalSize);
       int totalWritten = 0;
-      for (int i = 0; i < records.size();  i++) {
+      for (int i = 0; i < records.size(); i++) {
         KeyValue keyValue = records.get(i);
         byte[] r = (byte[]) keyValue.getValue();
         // serialize key with its length
@@ -201,10 +203,10 @@ public final class FileLoader {
         Object value;
 
         int keySize = os.getInt();
-        key = deserialize(keyType, deserializer, os, keySize);
+        key = DataDeserializer.deserialize(keyType, deserializer, os, keySize);
 
         int dataSize = os.getInt();
-        value = deserialize(dataType, deserializer, os, dataSize);
+        value = DataDeserializer.deserialize(dataType, deserializer, os, dataSize);
         keyValues.add(new KeyValue(key, value));
 
 //        LOG.log(Level.INFO, "Reading data size: " + dataSize + "key size: " + keySize
@@ -238,7 +240,7 @@ public final class FileLoader {
         Object value;
 
         int dataSize = os.getInt();
-        value = deserialize(dataType, deserializer, os, dataSize);
+        value = DataDeserializer.deserialize(dataType, deserializer, os, dataSize);
         values.add(value);
 //        LOG.log(Level.INFO, "Reading data size: " + dataSize + " count "
 //            + count + " file: " + fileName + " total: " + totalRead + " value: " + value);
@@ -251,51 +253,6 @@ public final class FileLoader {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
-  }
-
-  private static Object deserialize(MessageType dataType, KryoMemorySerializer deserializer,
-                                    ByteBuffer os, int dataSize) {
-    Object data = null;
-    if (dataType == MessageType.OBJECT) {
-      byte[] bytes = new byte[dataSize];
-      os.get(bytes);
-      data = deserializer.deserialize(bytes);
-    } else if (dataType == MessageType.BYTE) {
-      byte[] bytes = new byte[dataSize];
-      os.get(bytes);
-      data = bytes;
-    } else if (dataType == MessageType.DOUBLE) {
-      double[] bytes = new double[dataSize / 8];
-      for (int i = 0; i < dataSize / 8; i++) {
-        bytes[i] = os.getDouble();
-      }
-      data = bytes;
-    } else if (dataType == MessageType.INTEGER) {
-      int[] bytes = new int[dataSize / 4];
-      for (int i = 0; i < dataSize / 4; i++) {
-        bytes[i] = os.getInt();
-      }
-      data = bytes;
-    } else if (dataType == MessageType.LONG) {
-      long[] bytes = new long[dataSize / 8];
-      for (int i = 0; i < dataSize / 8; i++) {
-        bytes[i] = os.getLong();
-      }
-      data = bytes;
-    } else if (dataType == MessageType.SHORT) {
-      short[] bytes = new short[dataSize / 2];
-      for (int i = 0; i < dataSize / 2; i++) {
-        bytes[i] = os.getShort();
-      }
-      data = bytes;
-    } else if (dataType == MessageType.CHAR) {
-      char[] bytes = new char[dataSize];
-      for (int i = 0; i < dataSize; i++) {
-        bytes[i] = os.getChar();
-      }
-      data = bytes;
-    }
-    return data;
   }
 
   public static Triple<List<KeyValue>, Long, Long> openFilePart(String fileName, long startOffSet,
@@ -317,7 +274,7 @@ public final class FileLoader {
         Object value;
 
         int keySize = os.getInt();
-        key = deserialize(keyType, deserializer, os, keySize);
+        key = DataDeserializer.deserialize(keyType, deserializer, os, keySize);
 
         // we cannot read further
         if (totalRead + keySize > size) {
@@ -325,7 +282,7 @@ public final class FileLoader {
         }
 
         int dataSize = os.getInt();
-        value = deserialize(dataType, deserializer, os, dataSize);
+        value = DataDeserializer.deserialize(dataType, deserializer, os, dataSize);
 
         // we cannot read further
         if (totalRead + keySize + dataSize > size) {
@@ -344,6 +301,7 @@ public final class FileLoader {
 
   /**
    * Reads a file part upto max size from start offset
+   *
    * @param fileName name
    * @param startOffSet start offset in bytes
    * @param maxSize max size to read
@@ -353,9 +311,9 @@ public final class FileLoader {
    * @return OpenFilePart with read information and null if fails
    */
   public static OpenFilePart openPart(String fileName, long startOffSet,
-                                                                int maxSize, MessageType keyType,
-                                                                MessageType dataType,
-                                                                KryoMemorySerializer deserializer) {
+                                      int maxSize, MessageType keyType,
+                                      MessageType dataType,
+                                      KryoMemorySerializer deserializer) {
     List<KeyValue> keyValues = new ArrayList<>();
     String outFileName = Paths.get(fileName).toString();
     FileChannel rwChannel;
@@ -380,7 +338,7 @@ public final class FileLoader {
         if (totalRead + keySize + 4 > size) {
           break;
         }
-        key = deserialize(keyType, deserializer, os, keySize);
+        key = DataDeserializer.deserialize(keyType, deserializer, os, keySize);
 
         if (totalRead + keySize + 8 > size) {
           break;
@@ -391,7 +349,7 @@ public final class FileLoader {
         if (totalRead + keySize + dataSize + 8 > size) {
           break;
         }
-        value = deserialize(dataType, deserializer, os, dataSize);
+        value = DataDeserializer.deserialize(dataType, deserializer, os, dataSize);
 
         // LOG.log(Level.INFO, "Reading data size: " + dataSize + " count "
         // + count + " file: " + fileName + " total: " + totalRead + " value: " + value);
@@ -411,6 +369,7 @@ public final class FileLoader {
 
   /**
    * Save the list of records to the file system
+   *
    * @param outFileName out file name
    */
   public static void saveSizes(List<Integer> sizes, String outFileName) {
@@ -429,6 +388,7 @@ public final class FileLoader {
 
   /**
    * Open a saved part and load it as a memory mapped file
+   *
    * @param fileName name of the file
    * @return the bytebuffer and the file channel
    */
@@ -446,6 +406,7 @@ public final class FileLoader {
 
   /**
    * Open a saved part and load it as a memory mapped file
+   *
    * @param fileName name of the file
    * @param position the position to start reading
    * @param length length of the bytes to read

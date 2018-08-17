@@ -55,9 +55,13 @@ public class BPartition {
   }
 
   public boolean partition(int source, Object message, int flags) {
-    int destinations = destinationSelector.next(source);
+    int dest = destinationSelector.next(source);
 
-    return partition.send(source, message, flags, destinations);
+    boolean send = partition.send(source, message, flags, dest);
+    if (send) {
+      destinationSelector.commit(source, dest);
+    }
+    return send;
   }
 
   public boolean hasPending() {
