@@ -74,8 +74,6 @@ public class SinkBatchInstance implements INodeInstance {
    */
   private int workerId;
 
-  private boolean receiveDone = false;
-
   /**
    * Execution state of the instance
    */
@@ -104,29 +102,25 @@ public class SinkBatchInstance implements INodeInstance {
 
   public boolean execute() {
     // we started the execution
-    if (state.isEqual(InstanceState.INIT)) {
-      state.set(InstanceState.EXECUTING);
-    }
-
     // if execution has not yet finished
-    if (state.isSet(InstanceState.EXECUTING) && state.isNotSet(InstanceState.EXECUTION_DONE)) {
+    if (state.isSet(InstanceState.INIT) && state.isNotSet(InstanceState.EXECUTION_DONE)) {
       while (!batchInQueue.isEmpty()) {
         IMessage m = batchInQueue.poll();
         batchTask.execute(m);
-        receiveDone = true;
+        state.set(InstanceState.EXECUTING);
       }
 
       // lets progress the communication
       boolean needsFurther = communicationProgress();
 
       // we don't have incoming and our inqueue in empty
-      if (batchInQueue.isEmpty() && !needsFurther) {
+      if (state.isSet(InstanceState.EXECUTING) && batchInQueue.isEmpty() && !needsFurther) {
         state.set(InstanceState.EXECUTION_DONE);
       }
     }
 
     // we only need the execution done for now
-    return state.isSet(InstanceState.EXECUTION_DONE);
+    return !state.isSet(InstanceState.EXECUTION_DONE);
   }
 
   @Override
