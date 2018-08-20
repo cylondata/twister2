@@ -171,7 +171,7 @@ public class SourceBatchInstance implements INodeInstance {
       state.set(InstanceState.SENDING_DONE);
     }
 
-    return state.isEqual(InstanceState.FINISH);
+    return !state.isEqual(InstanceState.FINISH);
   }
 
   @Override

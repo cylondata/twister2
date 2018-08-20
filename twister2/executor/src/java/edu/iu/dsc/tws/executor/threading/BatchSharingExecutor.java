@@ -37,6 +37,11 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
     int curTaskSize = tasks.size();
     BatchWorker[] workers = new BatchWorker[curTaskSize];
 
+    // prepare the tasks
+    for (INodeInstance node : tasks) {
+      node.prepare();
+    }
+
     for (int i = 0; i < curTaskSize; i++) {
       workers[i] = new BatchWorker();
       Thread t = new Thread(workers[i], "Executor-" + i);

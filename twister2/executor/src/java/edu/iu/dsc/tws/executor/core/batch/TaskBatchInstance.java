@@ -131,20 +131,17 @@ public class TaskBatchInstance implements INodeInstance {
 
   @Override
   public boolean execute() {
-    // we started the execution
-    if (state.isEqual(InstanceState.INIT)) {
-      state.set(InstanceState.EXECUTING);
-    }
-
-    if (state.isSet(InstanceState.EXECUTING) && state.isNotSet(InstanceState.EXECUTION_DONE)) {
+    // we started the executio
+    if (state.isSet(InstanceState.INIT) && state.isNotSet(InstanceState.EXECUTION_DONE)) {
       while (!inQueue.isEmpty()) {
         IMessage m = inQueue.poll();
         task.run(m);
+        state.set(InstanceState.EXECUTING);
       }
       // progress in communication
       boolean needsFurther = communicationProgress(inParOps);
       // if we no longer needs to progress comm and input is empty
-      if (!needsFurther && inQueue.isEmpty()) {
+      if (state.isSet(InstanceState.EXECUTING) && !needsFurther && inQueue.isEmpty()) {
         state.set(InstanceState.EXECUTION_DONE);
       }
     }
@@ -178,7 +175,7 @@ public class TaskBatchInstance implements INodeInstance {
     if (state.isSet(InstanceState.OUT_COMPLETE) && !needsFurther) {
       state.set(InstanceState.SENDING_DONE);
     }
-    return state.isEqual(InstanceState.FINISH);
+    return !state.isEqual(InstanceState.FINISH);
   }
 
   public boolean communicationProgress(Map<String, IParallelOperation> ops) {

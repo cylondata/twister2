@@ -97,7 +97,7 @@ public class PartitionStreamingTask implements IContainer {
 
     @Override
     public boolean execute(IMessage message) {
-      if (count % 1000000 == 0) {
+      if (count % 1 == 0) {
         System.out.println("Message Partition Received : " + message.getContent()
             + ", Count : " + count);
       }
