@@ -24,13 +24,12 @@
 package edu.iu.dsc.tws.executor.util;
 
 import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.data.api.DataType;
 
 public final class Utils {
   private Utils() {
   }
 
-  public static MessageType dataTypeToMessageType(DataType type) {
+  public static MessageType dataTypeToMessageType(MessageType type) {
     switch (type) {
       case OBJECT:
         return MessageType.OBJECT;

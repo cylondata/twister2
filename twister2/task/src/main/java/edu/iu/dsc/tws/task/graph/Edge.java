@@ -11,15 +11,15 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.graph;
 
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.task.api.IFunction;
 
 public class Edge {
   private String name;
   private IFunction function;
   private String operation;
-  private DataType dataType = DataType.OBJECT;
-  private DataType keyType = DataType.OBJECT;
+  private MessageType dataType = MessageType.OBJECT;
+  private MessageType keyType = MessageType.OBJECT;
   private boolean keyed = false;
 
   public Edge(String te) {
@@ -36,10 +36,10 @@ public class Edge {
     this.function = function;
   }
 
-  public Edge(String name, String operation, DataType dataType) {
+  public Edge(String name, String operation, MessageType messageType) {
     this.name = name;
     this.operation = operation;
-    this.dataType = dataType;
+    this.dataType = messageType;
   }
 
   public Edge(String name, String operation, IFunction function) {
@@ -48,7 +48,7 @@ public class Edge {
     this.operation = operation;
   }
 
-  public Edge(String name, String operation, DataType dataType, DataType keyType) {
+  public Edge(String name, String operation, MessageType dataType, MessageType keyType) {
     this.name = name;
     this.operation = operation;
     this.dataType = dataType;
@@ -56,8 +56,8 @@ public class Edge {
     this.keyed = true;
   }
 
-  public Edge(String name, String operation, DataType dataType,
-              DataType keyType, IFunction function) {
+  public Edge(String name, String operation, MessageType dataType,
+              MessageType keyType, IFunction function) {
     this.name = name;
     this.function = function;
     this.operation = operation;
@@ -66,7 +66,7 @@ public class Edge {
     this.keyed = true;
   }
 
-  public Edge(String name, String operation, DataType dataType, IFunction function) {
+  public Edge(String name, String operation, MessageType dataType, IFunction function) {
     this.name = name;
     this.function = function;
     this.operation = operation;
@@ -85,11 +85,11 @@ public class Edge {
     return operation;
   }
 
-  public DataType getDataType() {
+  public MessageType getDataType() {
     return dataType;
   }
 
-  public DataType getKeyType() {
+  public MessageType getKeyType() {
     return keyType;
   }
 

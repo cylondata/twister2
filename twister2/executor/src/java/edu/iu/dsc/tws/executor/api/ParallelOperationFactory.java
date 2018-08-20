@@ -27,19 +27,22 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.comm.operations.batch.AllReduceBatchOperation;
 import edu.iu.dsc.tws.executor.comm.operations.batch.BroadcastBatchOperation;
 import edu.iu.dsc.tws.executor.comm.operations.batch.GatherBatchOperation;
+import edu.iu.dsc.tws.executor.comm.operations.batch.KeyedPartitionBatchOperation;
 import edu.iu.dsc.tws.executor.comm.operations.batch.KeyedReduceBatchOperation;
 import edu.iu.dsc.tws.executor.comm.operations.batch.PartitionBatchOperation;
 import edu.iu.dsc.tws.executor.comm.operations.batch.PartitionByMultiByteBatchOperation;
 import edu.iu.dsc.tws.executor.comm.operations.batch.ReduceBatchOperation;
+import edu.iu.dsc.tws.executor.comm.operations.streaming.AllGatherStreamingOperation;
 import edu.iu.dsc.tws.executor.comm.operations.streaming.AllReduceStreamingOperation;
 import edu.iu.dsc.tws.executor.comm.operations.streaming.BroadcastStreamingOperation;
 import edu.iu.dsc.tws.executor.comm.operations.streaming.GatherStreamingOperation;
+import edu.iu.dsc.tws.executor.comm.operations.streaming.KeyedPartitionStreamingOperation;
 import edu.iu.dsc.tws.executor.comm.operations.streaming.KeyedReduceStreamingOperation;
 import edu.iu.dsc.tws.executor.comm.operations.streaming.PartitionByMultiByteStreamingOperation;
 import edu.iu.dsc.tws.executor.comm.operations.streaming.PartitionStreamingOperation;
@@ -69,7 +72,7 @@ public class ParallelOperationFactory {
   /**
    * Building the parallel operation based on the batch or streaming tasks. And also
    * the sub cateogories depends on the communication used for each edge in the task graph.
-   * ***/
+   ***/
   public IParallelOperation build(Edge edge, Set<Integer> sources, Set<Integer> dests,
                                   OperationMode operationMode) {
 
@@ -117,6 +120,11 @@ public class ParallelOperationFactory {
           keyedReduceBatchOperation.prepare(sources, dests, edgeGenerator, edge.getDataType(),
               edge.getName());
           return keyedReduceBatchOperation;
+        } else if (CommunicationOperationType.BATCH_KEYED_PARTITION.equals(edge.getOperation())) {
+          KeyedPartitionBatchOperation keyedPartitionBatchOperation =
+              new KeyedPartitionBatchOperation(config, channel, taskPlan);
+          keyedPartitionBatchOperation.prepare(sources, dests, edgeGenerator, edge.getDataType(),
+              edge.getKeyType(), edge.getName());
         }
       } else {
         if (CommunicationOperationType.BATCH_PARTITION.equals(edge.getOperation())) {
@@ -162,6 +170,11 @@ public class ParallelOperationFactory {
           keyedReduceBatchOperation.prepare(sources, dests, edgeGenerator, edge.getDataType(),
               edge.getName());
           return keyedReduceBatchOperation;
+        } else if (CommunicationOperationType.BATCH_KEYED_PARTITION.equals(edge.getOperation())) {
+          KeyedPartitionBatchOperation keyedPartitionBatchOperation =
+              new KeyedPartitionBatchOperation(config, channel, taskPlan);
+          keyedPartitionBatchOperation.prepare(sources, dests, edgeGenerator, edge.getDataType(),
+              edge.getKeyType(), edge.getName());
         }
       }
 
@@ -212,6 +225,19 @@ public class ParallelOperationFactory {
           keyedReduceStreamingOperation.prepare(sources, dests, edgeGenerator, edge.getDataType(),
               edge.getName());
           return keyedReduceStreamingOperation;
+        } else if (CommunicationOperationType.STREAMING_ALLGATHER.equals(edge.getOperation())) {
+          AllGatherStreamingOperation allGatherStreamingOperation =
+              new AllGatherStreamingOperation(config, channel, taskPlan);
+          allGatherStreamingOperation.prepare(sources, dests, edgeGenerator, edge.getDataType(),
+              edge.getName());
+          return allGatherStreamingOperation;
+        } else if (CommunicationOperationType.STREAMING_KEYED_PARTITION
+            .equals(edge.getOperation())) {
+          KeyedPartitionStreamingOperation keyedPartitionStreamingOperation
+              = new KeyedPartitionStreamingOperation(config, channel, taskPlan);
+          keyedPartitionStreamingOperation.prepare(sources, dests, edgeGenerator,
+              edge.getDataType(), edge.getKeyType(), edge.getName());
+          return keyedPartitionStreamingOperation;
         }
       } else {
         if (CommunicationOperationType.STREAMING_PARTITION.equals(edge.getOperation())) {
@@ -258,6 +284,19 @@ public class ParallelOperationFactory {
           keyedReduceStreamingOperation.prepare(sources, dests, edgeGenerator, edge.getDataType(),
               edge.getName());
           return keyedReduceStreamingOperation;
+        } else if (CommunicationOperationType.STREAMING_ALLGATHER.equals(edge.getOperation())) {
+          AllGatherStreamingOperation allGatherStreamingOperation
+              = new AllGatherStreamingOperation(config, channel, taskPlan);
+          allGatherStreamingOperation.prepare(sources, dests, edgeGenerator, edge.getDataType(),
+              edge.getName());
+          return allGatherStreamingOperation;
+        } else if (CommunicationOperationType.STREAMING_KEYED_PARTITION
+            .equals(edge.getOperation())) {
+          KeyedPartitionStreamingOperation keyedPartitionStreamingOperation
+              = new KeyedPartitionStreamingOperation(config, channel, taskPlan);
+          keyedPartitionStreamingOperation.prepare(sources, dests, edgeGenerator,
+              edge.getDataType(), edge.getKeyType(), edge.getName());
+          return keyedPartitionStreamingOperation;
         }
       }
     }
@@ -361,7 +400,7 @@ public class ParallelOperationFactory {
   }
 
   public IParallelOperation build(Edge edge, Set<Integer> sources, Set<Integer> dests,
-                                  DataType dataType, DataType keyType) {
+                                  MessageType dataType, MessageType keyType) {
     if (Operations.PARTITION.equals(edge.getOperation())) {
       PartitionStreamingOperation partitionOp = new PartitionStreamingOperation(config,
           channel, taskPlan);
