@@ -66,8 +66,8 @@ public class FirstFitStreamingTaskScheduler implements ITaskScheduler {
   private WorkerPlan workerplan = new WorkerPlan();
 
   /**
-   * This method initialize the config values received from the user and assign
-   * the default instance value and container maximum value.
+   * This method initialize the config values received from the user and assign the default
+   * task instance value and container instance values.
    */
   @Override
   public void initialize(Config config) {

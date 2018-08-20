@@ -60,6 +60,7 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
   //It represents the task instance cpu value
   private Double instanceCPU;
 
+  //Config object
   private Config config;
 
   /**
