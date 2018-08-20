@@ -11,72 +11,69 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.comm.operations.streaming;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.BatchReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowGather;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.comms.op.Communicator;
+import edu.iu.dsc.tws.comms.op.stream.SGather;
 import edu.iu.dsc.tws.executor.api.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.api.EdgeGenerator;
-import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
 
 
 public class GatherStreamingOperation extends AbstractParallelOperation {
   private static final Logger LOG = Logger.getLogger(GatherStreamingOperation.class.getName());
-  private DataFlowGather op;
+  private SGather gather;
+  private Communicator communicator;
+  private TaskPlan tPlan;
 
   public GatherStreamingOperation(Config config, TWSChannel network, TaskPlan tPlan) {
     super(config, network, tPlan);
+    this.communicator = new Communicator(config, network);
+    this.tPlan = tPlan;
   }
 
-  public void prepare(Set<Integer> srcs, int dest, EdgeGenerator e,
-                      DataType dataType, String edgeName, Config config, TaskPlan taskPlan) {
-    this.edge = e;
-    communicationEdge = e.generate(edgeName);
-    op = new DataFlowGather(channel, srcs, dest, new FinalGatherReceiver(), 0, 0,
-        config, Utils.dataTypeToMessageType(dataType), taskPlan, e.getIntegerMapping(edgeName));
-    op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
-    LOG.info("===CommunicationEdge : " + communicationEdge);
+  public void prepare(Set<Integer> sources, int destination, EdgeGenerator e,
+                      MessageType dataType, String edgeName, Config config, TaskPlan taskPlan) {
+    this.gather = new SGather(communicator, taskPlan, sources, destination,
+        new FinalGatherReceiver(), dataType);
   }
 
-  public void prepare(Set<Integer> srcs, int dest, EdgeGenerator e, DataType dataType,
-                      DataType keyType, String edgeName, Config config, TaskPlan taskPlan) {
-    op = new DataFlowGather(channel, srcs, dest, new FinalGatherReceiver(), 0, 0,
-        config, Utils.dataTypeToMessageType(dataType), Utils.dataTypeToMessageType(keyType),
-        taskPlan, e.getIntegerMapping(edgeName));
-    communicationEdge = e.generate(edgeName);
-    LOG.info("===CommunicationEdge : " + communicationEdge);
-    op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
+  public void prepare(Set<Integer> sources, int destination, EdgeGenerator e, MessageType dataType,
+                      MessageType keyType, String edgeName, Config config, TaskPlan taskPlan) {
+    this.gather = new SGather(communicator, taskPlan, sources, destination,
+        new FinalGatherReceiver(), dataType);
   }
 
   @Override
   public boolean send(int source, IMessage message, int flags) {
     //LOG.info("Message : " + message.getContent());
-    return op.send(source, message.getContent(), flags);
+    return gather.gather(source, message.getContent(), flags);
   }
 
   @Override
   public void send(int source, IMessage message, int dest, int flags) {
     //LOG.info("Message : " + message.getContent());
-    op.send(source, message.getContent(), flags, dest);
+    throw new RuntimeException("send with dest in GatherStreamOps not Implemented.");
   }
 
   @Override
   public boolean progress() {
-    return op.progress();
+    return gather.progress();
   }
 
 
-  private class FinalGatherReceiver implements MessageReceiver {
+  private class FinalGatherReceiver implements BatchReceiver {
     // lets keep track of the messages
     // for each task we need to keep track of incoming messages
     @Override
@@ -86,12 +83,10 @@ public class GatherStreamingOperation extends AbstractParallelOperation {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public boolean onMessage(int source, int destination, int target, int flags, Object object) {
-
+    public void receive(int target, Iterator<Object> it) {
       // add the object to the map
-      if (object instanceof List) {
-        for (Object o : (List) object) {
+      if (it instanceof List) {
+        for (Object o : (List) it) {
           TaskMessage msg = new TaskMessage(o,
               edge.getStringMapping(communicationEdge), target);
           outMessages.get(target).offer(msg);
@@ -100,9 +95,8 @@ public class GatherStreamingOperation extends AbstractParallelOperation {
 
         }
       }
-      return true;
-
     }
+
 
     public boolean progress() {
       return true;

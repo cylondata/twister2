@@ -18,53 +18,57 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowAllReduce;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.comms.op.Communicator;
+import edu.iu.dsc.tws.comms.op.batch.BAllReduce;
 import edu.iu.dsc.tws.executor.api.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.api.EdgeGenerator;
-import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
 
 public class AllReduceBatchOperation extends AbstractParallelOperation {
   private static final Logger LOG = Logger.getLogger(AllReduceBatchOperation.class.getName());
 
-  protected DataFlowAllReduce op;
+  protected BAllReduce allReduce;
+  private Communicator communicator;
+  private TaskPlan taskPlan;
 
   public AllReduceBatchOperation(Config config, TWSChannel network, TaskPlan tPlan) {
     super(config, network, tPlan);
+    this.communicator = new Communicator(config, network);
+    this.taskPlan = tPlan;
+
   }
 
-  public void prepare(Set<Integer> sources, Set<Integer>  dest, EdgeGenerator e,
-                      DataType dataType, String edgeName) {
+  // TODO : edgeName as a param may be able to remove from prepare
+  public void prepare(Set<Integer> sources, Set<Integer> dest, EdgeGenerator e,
+                      MessageType dataType, String edgeName) {
     this.edge = e;
-    op = new DataFlowAllReduce(channel, sources, dest, 0, new IndentityFunction(),
-        new FinalReduceReceive(), 0, 0, true);
-    communicationEdge = e.generate(edgeName);
-    op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
+    allReduce = new BAllReduce(communicator, taskPlan, sources, dest, new IndentityFunction(),
+        new FinalReduceReceive(), dataType);
   }
 
   @Override
   public boolean send(int source, IMessage message, int flags) {
-    return op.send(source, message.getContent(), flags);
+    return allReduce.reduce(source, message.getContent(), flags);
   }
 
   @Override
   public void send(int source, IMessage message, int dest, int flags) {
-    op.send(source, message.getContent(), flags, dest);
+    throw new RuntimeException("AllReduceBatchOps Send with dest Not Implemented ...");
   }
 
   @Override
   public boolean progress() {
-    return op.progress() && hasPending();
+    return allReduce.progress();
   }
 
   public boolean hasPending() {
-    return !op.isComplete();
+    return true;
   }
 
   public static class IndentityFunction implements ReduceFunction {

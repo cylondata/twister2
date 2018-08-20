@@ -55,10 +55,10 @@ public class BKeyedPartition {
     this.destinationSelector.prepare(partition.getSources(), partition.getDestinations());
   }
 
-  public void partition(int source, Object key, Object message, int flags) {
+  public boolean partition(int source, Object key, Object message, int flags) {
     int destinations = destinationSelector.next(source);
 
-    partition.send(source, new KeyedContent(key, message, partition.getKeyType(),
+    return partition.send(source, new KeyedContent(key, message, partition.getKeyType(),
         partition.getDataType()), flags, destinations);
   }
 

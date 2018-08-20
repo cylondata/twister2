@@ -65,4 +65,8 @@ public class SPartition {
   public void close() {
     // deregister from the channel
   }
+
+  public DataFlowPartition getOperation() {
+    return partition;
+  }
 }

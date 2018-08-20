@@ -19,47 +19,48 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowBroadcast;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.comms.op.Communicator;
+import edu.iu.dsc.tws.comms.op.stream.SBroadCast;
 import edu.iu.dsc.tws.executor.api.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.api.EdgeGenerator;
-import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
 
 public class BroadcastStreamingOperation extends AbstractParallelOperation {
   private static final Logger LOG = Logger.getLogger(BroadcastStreamingOperation.class.getName());
-  private DataFlowBroadcast op;
+
+  private SBroadCast broadCast;
+  private Communicator communicator;
+  private TaskPlan taskPlan;
 
   public BroadcastStreamingOperation(Config config, TWSChannel network, TaskPlan tPlan) {
     super(config, network, tPlan);
+    this.communicator = new Communicator(config, network);
+    this.taskPlan = tPlan;
   }
 
-  public void prepare(int srcs, Set<Integer> dests, EdgeGenerator e,
-                      DataType dataType, String edgeName) {
-    this.edge = e;
-    LOG.info(String.format("Srcs %d dests %s", srcs, dests));
-    op = new DataFlowBroadcast(channel, srcs, dests, new BcastReceiver());
-    communicationEdge = e.generate(edgeName);
-    LOG.info("===Communication Edge : " + communicationEdge);
-    op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
+  public void prepare(int source, Set<Integer> dests, EdgeGenerator e,
+                      MessageType dataType, String edgeName) {
+    this.broadCast = new SBroadCast(communicator, taskPlan, source, dests, dataType,
+        new BcastReceiver());
   }
 
   @Override
   public boolean send(int source, IMessage message, int flags) {
-    return op.send(source, message.getContent(), flags);
+    return broadCast.bcast(source, message.getContent(), flags);
   }
 
   @Override
   public void send(int source, IMessage message, int dest, int flags) {
-    op.send(source, message.getContent(), flags, dest);
+    throw new RuntimeException("send with dest in BcastStreamOps is not Implemented.");
   }
 
   @Override
   public boolean progress() {
-    return op.progress();
+    return broadCast.progress();
   }
 
   public class BcastReceiver implements MessageReceiver {

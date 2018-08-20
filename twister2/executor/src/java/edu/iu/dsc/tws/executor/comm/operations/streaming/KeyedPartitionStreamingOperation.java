@@ -23,47 +23,49 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.Communicator;
-import edu.iu.dsc.tws.comms.op.stream.SAllGather;
+import edu.iu.dsc.tws.comms.op.LoadBalanceDestinationSelector;
+import edu.iu.dsc.tws.comms.op.stream.SKeyedPartition;
 import edu.iu.dsc.tws.executor.api.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.api.EdgeGenerator;
 import edu.iu.dsc.tws.task.api.IMessage;
 
-public class AllGatherStreamingOperation extends AbstractParallelOperation {
-  private static final Logger LOG = Logger.getLogger(AllGatherStreamingOperation.class.getName());
+public class KeyedPartitionStreamingOperation extends AbstractParallelOperation {
 
-  protected SAllGather allGather;
+  private static final Logger LOG =
+      Logger.getLogger(KeyedPartitionStreamingOperation.class.getName());
+
+  protected SKeyedPartition partition;
   private Communicator communicator;
   private TaskPlan taskPlan;
 
 
-  public AllGatherStreamingOperation(Config config, TWSChannel network, TaskPlan tPlan) {
+  public KeyedPartitionStreamingOperation(Config config, TWSChannel network, TaskPlan tPlan) {
     super(config, network, tPlan);
     this.communicator = new Communicator(config, network);
     this.taskPlan = tPlan;
   }
 
-  public void prepare(Set<Integer> sources, Set<Integer> dests, EdgeGenerator e,
-                      MessageType dataType, String edgeName) {
-    this.allGather = new SAllGather(communicator, taskPlan, sources, dests, new AllGatherReceiver(),
-        dataType);
+  public void prepare(Set<Integer> sources, Set<Integer> destinations, EdgeGenerator e,
+                      MessageType dataType, MessageType keyType, String edgeName) {
+    this.partition = new SKeyedPartition(communicator, taskPlan, sources, destinations, dataType,
+        keyType, new KeyedPartitionMessageReceiver(), new LoadBalanceDestinationSelector());
   }
 
   @Override
   public boolean send(int source, IMessage message, int flags) {
-    return allGather.gather(source, message.getContent(), flags);
-  }
-
-  @Override
-  public void send(int source, IMessage message, int dest, int flags) {
-    throw new RuntimeException("AllGatherStreamOps Send with dest Not Implemented ...");
+    //TODO : Accordingly extract key and message from IMessage
+    Object key = null;
+    Object msg = null;
+    return partition.partition(source, key, msg, flags);
   }
 
   @Override
   public boolean progress() {
-    return allGather.progress();
+    return super.progress();
   }
 
-  protected class AllGatherReceiver implements MessageReceiver {
+  //TODO: Implement the KeyedReceiving
+  private class KeyedPartitionMessageReceiver implements MessageReceiver {
     @Override
     public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
 
@@ -85,4 +87,3 @@ public class AllGatherStreamingOperation extends AbstractParallelOperation {
     }
   }
 }
-

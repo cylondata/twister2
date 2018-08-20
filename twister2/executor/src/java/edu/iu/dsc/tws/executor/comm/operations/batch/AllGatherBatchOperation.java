@@ -11,41 +11,89 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.comm.operations.batch;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowAllGather;
+import edu.iu.dsc.tws.comms.op.Communicator;
+import edu.iu.dsc.tws.comms.op.batch.BAllGather;
 import edu.iu.dsc.tws.executor.api.AbstractParallelOperation;
+import edu.iu.dsc.tws.executor.api.EdgeGenerator;
 import edu.iu.dsc.tws.task.api.IMessage;
 
 public class AllGatherBatchOperation extends AbstractParallelOperation {
   private static final Logger LOG = Logger.getLogger(AllGatherBatchOperation.class.getName());
 
-  protected DataFlowAllGather op;
+  protected BAllGather allGather;
+  private Communicator communicator;
+  private TaskPlan taskPlan;
 
 
   public AllGatherBatchOperation(Config config, TWSChannel network, TaskPlan tPlan) {
     super(config, network, tPlan);
+    this.communicator = new Communicator(config, network);
+    this.taskPlan = tPlan;
+  }
+
+  public void prepare(Set<Integer> sources, Set<Integer> dest, EdgeGenerator e,
+                      MessageType dataType, String edgeName) {
+    this.edge = e;
+    this.allGather = new BAllGather(communicator, taskPlan, sources, dest, new AllGatherReceiver(),
+        dataType);
   }
 
   @Override
   public boolean send(int source, IMessage message, int flags) {
-    return op.send(source, message.getContent(), flags);
+    return allGather.reduce(source, message.getContent(), flags);
   }
 
+  // TODO : Send with dest must be implemented
   @Override
   public void send(int source, IMessage message, int dest, int flags) {
-    op.send(source, message.getContent(), flags, dest);
+    throw new RuntimeException("Send with dest not Implemented in AllGatherBatchOps");
   }
 
   @Override
   public boolean progress() {
-    return op.progress() && hasPending();
+    return allGather.progress();
   }
 
+
+  //TODO : AllGather comms hasPending must be implemented.
+
   public boolean hasPending() {
-    return !op.isComplete();
+    return true;
   }
+
+
+  private class AllGatherReceiver implements MessageReceiver {
+
+    @Override
+    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+
+    }
+
+    @Override
+    public boolean onMessage(int source, int destination, int target, int flags, Object object) {
+      return false;
+    }
+
+    @Override
+    public void onFinish(int source) {
+
+    }
+
+    @Override
+    public boolean progress() {
+      return false;
+    }
+  }
+
 }

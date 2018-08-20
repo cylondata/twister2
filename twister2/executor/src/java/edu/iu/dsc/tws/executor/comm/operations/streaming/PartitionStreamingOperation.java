@@ -23,14 +23,14 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
-import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.comms.op.Communicator;
+import edu.iu.dsc.tws.comms.op.LoadBalanceDestinationSelector;
+import edu.iu.dsc.tws.comms.op.stream.SPartition;
 import edu.iu.dsc.tws.executor.api.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.api.EdgeGenerator;
-import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
 
@@ -41,40 +41,44 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
   private HashMap<Integer, ArrayList<Object>> incommingBuffer = new HashMap<>();
   private boolean checkpointStarted = false;
 
-  protected DataFlowPartition op;
+  protected SPartition partition;
+  private Communicator communicator;
+  private TaskPlan taskPlan;
+
+
 
   public PartitionStreamingOperation(Config config, TWSChannel network, TaskPlan tPlan) {
     super(config, network, tPlan);
+    this.communicator = new Communicator(config, network);
+    this.taskPlan = tPlan;
   }
 
-  public void prepare(Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
-                      DataType dataType, String edgeName) {
-    this.edge = e;
-    //LOG.info("ParitionOperation Prepare 1");
-    op = new DataFlowPartition(channel, srcs, dests, new PartitionReceiver(),
-        new PartitionPartialReceiver(), DataFlowPartition.PartitionStratergy.DIRECT);
-    communicationEdge = e.generate(edgeName);
-    op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
+  public void prepare(Set<Integer> sources, Set<Integer> destinations, EdgeGenerator e,
+                      MessageType dataType, String edgeName) {
+    this.partition = new SPartition(communicator, taskPlan, sources, destinations, dataType,
+        new PartitionReceiver(), new LoadBalanceDestinationSelector());
   }
 
-  public void prepare(Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
-                      DataType dataType, DataType keyType, String edgeName) {
-    this.edge = e;
-    op = new DataFlowPartition(channel, srcs, dests, new PartitionReceiver(),
-        new PartitionPartialReceiver(), DataFlowPartition.PartitionStratergy.DIRECT,
-        Utils.dataTypeToMessageType(dataType), Utils.dataTypeToMessageType(keyType));
-    communicationEdge = e.generate(edgeName);
-    op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
+  public void prepare(Set<Integer> sources, Set<Integer> destinations, EdgeGenerator e,
+                      MessageType dataType, MessageType keyType, String edgeName) {
+    this.partition = new SPartition(communicator, taskPlan, sources, destinations, dataType,
+        new PartitionReceiver(), new LoadBalanceDestinationSelector());
   }
 
-  public void send(int source, IMessage message) {
-    op.send(source, message.getContent(), 0);
+  @Override
+  public boolean send(int source, IMessage message, int flags) {
+    return partition.partition(source, message.getContent(), 0);
   }
 
-  public boolean send(int source, IMessage message, int dest) {
-    return op.send(source, message, 0, dest);
+  public void send(int source, IMessage message, int dest, int flags) {
+    throw new RuntimeException("Send with dest in PartitionStreamingOps is Not Implemented.");
   }
 
+  /*
+  * TODO:  The PartitionReceiver needs the partionOperator. Check a clear way to expose that from
+  * TODO:  ops.
+  *
+  * **/
   public class PartitionReceiver implements MessageReceiver {
     @Override
     public void init(Config cfg, DataFlowOperation operation,
@@ -89,8 +93,8 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
           checkpointStarted = true;
         }
         barrierMap.putIfAbsent(source, true);
-        if (barrierMap.keySet() == op.getSources()) {
-          op.getDestinations();
+        if (barrierMap.keySet() == partition.getOperation().getSources()) {
+          partition.getOperation().getDestinations();
           //start checkpoint and flush the buffering messages
         }
       } else {
@@ -128,6 +132,6 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
   }
 
   public boolean progress() {
-    return op.progress();
+    return partition.progress();
   }
 }

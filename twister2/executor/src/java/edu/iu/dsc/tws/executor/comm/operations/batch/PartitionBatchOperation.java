@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.executor.comm.operations.batch;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,18 +21,25 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.checkpointmanager.barrier.CheckpointBarrier;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.BatchReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
-import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.comms.op.Communicator;
+import edu.iu.dsc.tws.comms.op.LoadBalanceDestinationSelector;
+import edu.iu.dsc.tws.comms.op.batch.BPartition;
 import edu.iu.dsc.tws.executor.api.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.api.EdgeGenerator;
-import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
+
+/**
+ * TODO : PartionReceiver has to implemented here. The PartitionBatchReceiver must be chnaged.
+ *
+ *
+ * **/
 
 public class PartitionBatchOperation extends AbstractParallelOperation {
   private static final Logger LOG = Logger.getLogger(PartitionBatchOperation.class.getName());
@@ -39,39 +47,54 @@ public class PartitionBatchOperation extends AbstractParallelOperation {
   private HashMap<Integer, Integer> incommingMap = new HashMap<>();
   private HashMap<Integer, ArrayList<Object>> incommingBuffer = new HashMap<>();
 
-  protected DataFlowPartition op;
+  protected BPartition partition;
+  private TaskPlan taskPlan;
+  private Communicator communicator;
 
   public PartitionBatchOperation(Config config, TWSChannel network, TaskPlan tPlan) {
     super(config, network, tPlan);
+    this.taskPlan = tPlan;
+    this.communicator = new Communicator(config, network);
   }
 
   public void prepare(Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
-                      DataType dataType, String edgeName) {
+                      MessageType dataType, String edgeName) {
     this.edge = e;
-    //LOG.info("ParitionOperation Prepare 1");
-    op = new DataFlowPartition(channel, srcs, dests, new PartitionReceiver(),
-        new PartitionPartialReceiver(), DataFlowPartition.PartitionStratergy.DIRECT);
-    communicationEdge = e.generate(edgeName);
-    op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
+    partition = new BPartition(communicator, taskPlan, srcs, dests, dataType,
+        new PartitionBatchReceiver(), new LoadBalanceDestinationSelector());
+
   }
 
   public void prepare(Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
-                      DataType dataType, DataType keyType, String edgeName) {
+                      MessageType dataType, MessageType keyType, String edgeName) {
     this.edge = e;
-    op = new DataFlowPartition(channel, srcs, dests, new PartitionReceiver(),
-        new PartitionPartialReceiver(), DataFlowPartition.PartitionStratergy.DIRECT,
-        Utils.dataTypeToMessageType(dataType), Utils.dataTypeToMessageType(keyType));
-    communicationEdge = e.generate(edgeName);
-    op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
+    partition = new BPartition(communicator, taskPlan, srcs, dests, dataType,
+        new PartitionBatchReceiver(), new LoadBalanceDestinationSelector());
   }
 
   public void send(int source, IMessage message) {
-    op.send(source, message.getContent(), 0);
+    throw new RuntimeException("send with Message not Implemented in PartitionBatchOperation");
   }
 
-  public boolean send(int source, IMessage message, int dest) {
-    return op.send(source, message, 0, dest);
+  public boolean send(int source, IMessage message, int flags) {
+    return partition.partition(source, message.getContent(), flags);
   }
+
+
+  public class PartitionBatchReceiver implements BatchReceiver {
+    private int count = 0;
+    private int expected;
+
+    @Override
+    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+    }
+
+    @Override
+    public void receive(int target, Iterator<Object> it) {
+
+    }
+  }
+
 
   public class PartitionReceiver implements MessageReceiver {
     @Override
@@ -139,10 +162,10 @@ public class PartitionBatchOperation extends AbstractParallelOperation {
 
   @Override
   public boolean progress() {
-    return op.progress() && hasPending();
+    return partition.progress();
   }
 
   public boolean hasPending() {
-    return !op.isComplete();
+    return !partition.hasPending();
   }
 }
