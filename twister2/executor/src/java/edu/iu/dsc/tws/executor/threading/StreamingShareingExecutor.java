@@ -49,8 +49,10 @@ public class StreamingShareingExecutor extends ThreadSharingExecutor {
     public void run() {
       while (true) {
         INodeInstance nodeInstance = tasks.poll();
-        nodeInstance.execute();
-        tasks.offer(nodeInstance);
+        if (nodeInstance != null) {
+          nodeInstance.execute();
+          tasks.offer(nodeInstance);
+        }
       }
     }
   }

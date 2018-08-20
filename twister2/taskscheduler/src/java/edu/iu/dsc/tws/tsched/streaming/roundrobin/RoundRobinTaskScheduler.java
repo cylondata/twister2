@@ -82,7 +82,7 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
     Set<Vertex> taskVertexSet = dataFlowTaskGraph.getTaskVertexSet();
 
     Map<Integer, List<InstanceId>> roundRobinContainerInstanceMap =
-        RoundRobinSchedulingAlgorithm(taskVertexSet, workerPlan.getNumberOfWorkers());
+        roundRobinSchedulingAlgorithm(taskVertexSet, workerPlan.getNumberOfWorkers());
 
     TaskInstanceMapCalculation instanceMapCalculation = new TaskInstanceMapCalculation(
         this.instanceRAM, this.instanceCPU, this.instanceDisk);
@@ -150,7 +150,7 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
     return new TaskSchedulePlan(taskSchedulePlanId, containerPlans);
   }
 
-  public static Map<Integer, List<InstanceId>> RoundRobinSchedulingAlgorithm(
+  public static Map<Integer, List<InstanceId>> roundRobinSchedulingAlgorithm(
       Set<Vertex> taskVertexSet, int numberOfContainers) {
 
     TaskAttributes taskAttributes = new TaskAttributes();

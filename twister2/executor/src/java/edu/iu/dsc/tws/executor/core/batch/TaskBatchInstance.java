@@ -129,6 +129,7 @@ public class TaskBatchInstance implements INodeInstance {
     inParOps.put(edge, op);
   }
 
+  @Override
   public boolean execute() {
     // we started the execution
     if (state.isEqual(InstanceState.INIT)) {

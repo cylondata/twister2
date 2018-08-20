@@ -135,7 +135,7 @@ public class FirstFitStreamingTaskScheduler implements ITaskScheduler {
       LOG.info("Number of Instances Required For the Task Name:\t"
           + taskName + "\t" + numberOfInstances + "\n");
       for (int j = 0; j < numberOfInstances; j++) {
-        FirstFitInstanceAllocation(taskSchedulePlanBuilder, taskName);
+        firstFitInstanceAllocation(taskSchedulePlanBuilder, taskName);
       }
     }
   }
@@ -153,7 +153,7 @@ public class FirstFitStreamingTaskScheduler implements ITaskScheduler {
     return ramRequirements;
   }
 
-  private void FirstFitInstanceAllocation(TaskSchedulePlanBuilder taskSchedulePlanBuilder,
+  private void firstFitInstanceAllocation(TaskSchedulePlanBuilder taskSchedulePlanBuilder,
                                           String taskName) throws TaskSchedulerException {
     if (this.numContainers == 0) {
       taskSchedulePlanBuilder.updateNumContainers(++numContainers);
