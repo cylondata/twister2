@@ -32,8 +32,10 @@ import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
 /**
+ * This is the partial receiver for the partition operation.
  * Partial receiver is only going to get called for messages going to other destinations
- * We have partial receivers for each actual source
+ * We have partial receivers for each actual source, So even if the message is going to be forwarded
+ * to a task within the same worker the message will still go through the partial receiver.
  */
 public class PartitionPartialReceiver implements MessageReceiver {
   private static final Logger LOG = Logger.getLogger(PartitionPartialReceiver.class.getName());
@@ -103,8 +105,6 @@ public class PartitionPartialReceiver implements MessageReceiver {
    */
   private int progressAttempts = 0;
 
-  private int counts = 0;
-
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     lowWaterMark = DataFlowContext.getNetworkPartitionMessageGroupLowWaterMark(cfg);
@@ -128,43 +128,44 @@ public class PartitionPartialReceiver implements MessageReceiver {
 
   @Override
   public boolean onMessage(int src, int destination, int target, int flags, Object object) {
-    this.representSource = src;
-    List<Object> dests = destinationMessages.get(destination);
+    lock.lock();
+    try {
+      this.representSource = src;
+      List<Object> dests = destinationMessages.get(destination);
 
-    int size = dests.size();
-    if (size > highWaterMark) {
-      return false;
-    }
-
-    if ((flags & MessageFlags.BARRIER) == MessageFlags.BARRIER) {
-      dests.add(object);
-      if (readyToSend.isEmpty()) {
-        operation.sendPartial(representSource, new ArrayList<>(dests), 0, destination);
-      } else {
-        Iterator<Map.Entry<Integer, List<Object>>> it = readyToSend.entrySet().iterator();
-        while (it.hasNext()) {
-          Map.Entry<Integer, List<Object>> e = it.next();
-          List<Object> send = new ArrayList<>(e.getValue());
-
-          // if we send this list successfully
-          if (operation.sendPartial(representSource, send, 0, e.getKey())) {
-            // lets remove from ready list and clear the list
-            e.getValue().clear();
-            it.remove();
-          }
-        }
-        operation.sendPartial(representSource, new ArrayList<>(dests), 0, destination);
+      int size = dests.size();
+      if (size > highWaterMark) {
+        return false;
       }
-    } else {
-      lock.lock();
-      try {
+
+      if ((flags & MessageFlags.BARRIER) == MessageFlags.BARRIER) {
+        dests.add(object);
+        if (readyToSend.isEmpty()) {
+          operation.sendPartial(representSource, new ArrayList<>(dests), 0, destination);
+        } else {
+          Iterator<Map.Entry<Integer, List<Object>>> it = readyToSend.entrySet().iterator();
+          while (it.hasNext()) {
+            Map.Entry<Integer, List<Object>> e = it.next();
+            List<Object> send = new ArrayList<>(e.getValue());
+
+            // if we send this list successfully
+            if (operation.sendPartial(representSource, send, 0, e.getKey())) {
+              // lets remove from ready list and clear the list
+              e.getValue().clear();
+              it.remove();
+            }
+          }
+          operation.sendPartial(representSource, new ArrayList<>(dests), 0, destination);
+        }
+      } else {
         dests.add(object);
         if (dests.size() > lowWaterMark) {
           swapToReady(destination, dests);
         }
-      } finally {
-        lock.unlock();
+
       }
+    } finally {
+      lock.unlock();
     }
     return true;
   }
@@ -194,7 +195,43 @@ public class PartitionPartialReceiver implements MessageReceiver {
     }
 
     try {
-      if (onFinishedSources.equals(thisWorkerSources)
+
+      Iterator<Map.Entry<Integer, List<Object>>> it = readyToSend.entrySet().iterator();
+
+      while (it.hasNext()) {
+
+        Map.Entry<Integer, List<Object>> e = it.next();
+        List<Object> send = new ArrayList<>(e.getValue());
+        if (send.size() == 0) {
+          e.getValue().clear();
+          it.remove();
+          progressAttempts = 0;
+          continue;
+        }
+        // if we send this list successfully
+        if (operation.sendPartial(representSource, send, 0, e.getKey())) {
+          // lets remove from ready list and clear the list
+          e.getValue().clear();
+          it.remove();
+          progressAttempts = 0;
+        } else {
+          needsFurtherProgress = true;
+        }
+      }
+
+      for (Map.Entry<Integer, List<Object>> e : destinationMessages.entrySet()) {
+        if (e.getValue().size() > 0) {
+          needsFurtherProgress = true;
+        }
+      }
+
+      for (Map.Entry<Integer, List<Object>> e : readyToSend.entrySet()) {
+        if (e.getValue().size() > 0) {
+          needsFurtherProgress = true;
+        }
+      }
+
+      if (!needsFurtherProgress && onFinishedSources.equals(thisWorkerSources)
           && readyToSend.isEmpty() && finishedDestinations.size() != destinations.size()) {
 
         for (int source : thisWorkerSources) {
@@ -214,36 +251,6 @@ public class PartitionPartialReceiver implements MessageReceiver {
         }
         return needsFurtherProgress;
       }
-
-      Iterator<Map.Entry<Integer, List<Object>>> it = readyToSend.entrySet().iterator();
-
-      while (it.hasNext()) {
-
-        Map.Entry<Integer, List<Object>> e = it.next();
-        List<Object> send = new ArrayList<>(e.getValue());
-        // if we send this list successfully
-        if (operation.sendPartial(representSource, send, 0, e.getKey())) {
-          // lets remove from ready list and clear the list
-          e.getValue().clear();
-          it.remove();
-          counts++;
-          progressAttempts = 0;
-        } else {
-          needsFurtherProgress = true;
-        }
-      }
-
-      for (Map.Entry<Integer, List<Object>> e : destinationMessages.entrySet()) {
-        if (e.getValue().size() > 0) {
-          needsFurtherProgress = true;
-        }
-      }
-
-      for (Map.Entry<Integer, List<Object>> e : readyToSend.entrySet()) {
-        if (e.getValue().size() > 0) {
-          needsFurtherProgress = true;
-        }
-      }
     } finally {
       lock.unlock();
     }
@@ -258,14 +265,7 @@ public class PartitionPartialReceiver implements MessageReceiver {
     lock.lock();
     try {
       for (Map.Entry<Integer, List<Object>> e : destinationMessages.entrySet()) {
-        List<Object> messages = new ArrayList<>();
-        Integer key = e.getKey();
-        if (readyToSend.containsKey(key)) {
-          messages = readyToSend.get(key);
-        } else {
-          readyToSend.put(key, messages);
-        }
-        messages.addAll(e.getValue());
+        swapToReady(e.getKey(), e.getValue());
       }
       // finished
       onFinishedSources.add(source);
