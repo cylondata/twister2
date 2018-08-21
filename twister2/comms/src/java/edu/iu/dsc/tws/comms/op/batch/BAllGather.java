@@ -38,4 +38,12 @@ public class BAllGather {
   public boolean progress() {
     return gather.progress();
   }
+
+  public boolean hasPending() {
+    return !gather.isComplete();
+  }
+
+  public void finish(int source) {
+    gather.finish(source);
+  }
 }
