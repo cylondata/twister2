@@ -74,21 +74,21 @@ public class DataFlowMultiReduce implements DataFlowOperation {
   }
 
   @Override
-  public boolean send(int source, Object message, int flags, int dest) {
-    DataFlowReduce reduce = reduceMap.get(dest);
+  public boolean send(int source, Object message, int flags, int target) {
+    DataFlowReduce reduce = reduceMap.get(target);
     if (reduce == null) {
-      throw new RuntimeException("Un-expected destination: " + dest);
+      throw new RuntimeException("Un-expected destination: " + target);
     }
-    return reduce.send(source, message, flags, dest);
+    return reduce.send(source, message, flags, target);
   }
 
   @Override
-  public boolean sendPartial(int source, Object message, int flags, int dest) {
-    DataFlowReduce reduce = reduceMap.get(dest);
+  public boolean sendPartial(int source, Object message, int flags, int target) {
+    DataFlowReduce reduce = reduceMap.get(target);
     if (reduce == null) {
-      throw new RuntimeException("Un-expected destination: " + dest);
+      throw new RuntimeException("Un-expected destination: " + target);
     }
-    return reduce.sendPartial(source, message, flags, dest);
+    return reduce.sendPartial(source, message, flags, target);
   }
 
   @Override

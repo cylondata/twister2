@@ -189,13 +189,13 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public boolean send(int src, Object message, int flags, int dest) {
+  public boolean send(int src, Object message, int flags, int target) {
     RoutingParameters routingParameters = sendRoutingParameters(src, 0);
-    return delegete.sendMessage(src, message, dest, flags, routingParameters);
+    return delegete.sendMessage(src, message, target, flags, routingParameters);
   }
 
   @Override
-  public boolean sendPartial(int src, Object message, int flags, int dest) {
+  public boolean sendPartial(int src, Object message, int flags, int target) {
     return false;
   }
 

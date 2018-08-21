@@ -39,20 +39,20 @@ public interface DataFlowOperation {
    *
    * @param source source task
    * @param message a generic java object
-   * @param dest destination task
+   * @param target target task
    * @return true if message is accepted
    */
-  boolean send(int source, Object message, int flags, int dest);
+  boolean send(int source, Object message, int flags, int target);
 
   /**
    * Send partial message on a specific path
    *
    * @param source the source
    * @param message message as a generic object
-   * @param dest the destination
+   * @param target the final target
    * @return true if message is accepted
    */
-  boolean sendPartial(int source, Object message, int flags, int dest);
+  boolean sendPartial(int source, Object message, int flags, int target);
 
   /**
    * Progress the pending dataflow operations

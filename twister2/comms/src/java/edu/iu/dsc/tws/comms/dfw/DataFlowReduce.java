@@ -222,15 +222,15 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public boolean send(int source, Object message, int flags, int dest) {
-    return delegete.sendMessage(source, message, dest, flags,
+  public boolean send(int source, Object message, int flags, int target) {
+    return delegete.sendMessage(source, message, target, flags,
         sendRoutingParameters(source, pathToUse));
   }
 
   @Override
-  public boolean sendPartial(int source, Object message, int flags, int dest) {
-    return delegete.sendMessagePartial(source, message, dest, flags,
-        partialSendRoutingParameters(source, dest));
+  public boolean sendPartial(int source, Object message, int flags, int target) {
+    return delegete.sendMessagePartial(source, message, target, flags,
+        partialSendRoutingParameters(source, target));
   }
 
 

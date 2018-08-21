@@ -422,10 +422,10 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public boolean sendPartial(int source, Object message, int flags, int dest) {
+  public boolean sendPartial(int source, Object message, int flags, int target) {
     int newFlags = flags | MessageFlags.ORIGIN_PARTIAL;
-    return delegete.sendMessagePartial(source, message, dest, newFlags,
-        sendPartialRoutingParameters(source, dest));
+    return delegete.sendMessagePartial(source, message, target, newFlags,
+        sendPartialRoutingParameters(source, target));
   }
 
   @Override
@@ -435,10 +435,10 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public boolean send(int source, Object message, int flags, int dest) {
+  public boolean send(int source, Object message, int flags, int target) {
     int newFlags = flags | MessageFlags.ORIGIN_SENDER;
-    return delegete.sendMessage(source, message, dest, newFlags,
-        sendRoutingParameters(source, dest));
+    return delegete.sendMessage(source, message, target, newFlags,
+        sendRoutingParameters(source, target));
   }
 
   public boolean isComplete() {

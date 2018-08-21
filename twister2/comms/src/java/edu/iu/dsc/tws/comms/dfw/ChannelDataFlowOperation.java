@@ -307,17 +307,17 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
    *
    * @param source source id
    * @param message the actual message
-   * @param destination an specific destination
+   * @param target an specific target
    * @param flags message flags
    * @param routingParameters routing parameter
    * @return true if the message is accepted
    */
-  public boolean sendMessagePartial(int source, Object message, int destination,
+  public boolean sendMessagePartial(int source, Object message, int target,
                                     int flags, RoutingParameters routingParameters) {
     // for partial sends we use minus value to find the correct queue
     ArrayBlockingQueue<Pair<Object, OutMessage>> pendingSendMessages =
         pendingSendMessagesPerSource.get(source * -1 - 1);
-    return offerForSend(source, message, destination, flags,
+    return offerForSend(source, message, target, flags,
         routingParameters, pendingSendMessages);
   }
 
