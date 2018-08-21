@@ -13,14 +13,11 @@ package edu.iu.dsc.tws.executor.threading;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.executor.api.ExecutionModel;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.api.IExecutor;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
 public class Executor {
-  private ExecutionModel executionModel;
-
   private ExecutionPlan executionPlan;
 
   private TWSChannel channel;
@@ -29,14 +26,13 @@ public class Executor {
 
   private Config config;
 
-  public Executor(Config cfg, ExecutionModel executionModel, ExecutionPlan executionPlan,
+  public Executor(Config cfg, ExecutionPlan executionPlan,
                   TWSChannel channel) {
-    this(cfg, executionModel, executionPlan, channel, OperationMode.STREAMING);
+    this(cfg, executionPlan, channel, OperationMode.STREAMING);
   }
 
-  public Executor(Config cfg, ExecutionModel executionModel, ExecutionPlan executionPlan,
+  public Executor(Config cfg, ExecutionPlan executionPlan,
                   TWSChannel channel, OperationMode operationMode) {
-    this.executionModel = executionModel;
     this.executionPlan = executionPlan;
     this.channel = channel;
     this.operationMode = operationMode;
