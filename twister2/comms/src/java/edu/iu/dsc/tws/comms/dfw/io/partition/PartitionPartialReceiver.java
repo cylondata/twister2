@@ -81,6 +81,11 @@ public class PartitionPartialReceiver implements MessageReceiver {
   private int representSource;
 
   /**
+   * Tracks if the representSource is already set
+   */
+  private boolean representSourceIsSet;
+
+  /**
    * The lock for excluding onMessage and communicationProgress
    */
   private Lock lock = new ReentrantLock();
@@ -130,7 +135,10 @@ public class PartitionPartialReceiver implements MessageReceiver {
   public boolean onMessage(int src, int destination, int target, int flags, Object object) {
     lock.lock();
     try {
-      this.representSource = src;
+      if (!representSourceIsSet) {
+        this.representSource = src;
+      }
+
       List<Object> dests = destinationMessages.get(destination);
 
       int size = dests.size();
@@ -230,8 +238,8 @@ public class PartitionPartialReceiver implements MessageReceiver {
           needsFurtherProgress = true;
         }
       }
-
-      if (!needsFurtherProgress && onFinishedSources.equals(thisWorkerSources)
+      if (operation.isDelegeteComplete() && !needsFurtherProgress
+          && onFinishedSources.equals(thisWorkerSources)
           && readyToSend.isEmpty() && finishedDestinations.size() != destinations.size()) {
 
         for (int source : thisWorkerSources) {

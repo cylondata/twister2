@@ -448,6 +448,10 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
     return done && !needsFurtherProgress;
   }
 
+  public boolean isDelegeteComplete() {
+    return delegete.isComplete();
+  }
+
   @Override
   public boolean progress() {
     return OperationUtils.progressReceivers(delegete, lock, finalReceiver,

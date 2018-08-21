@@ -70,9 +70,9 @@ public class LoadBalanceDestinationSelector implements DestinationSelector {
         + "please check configuration");
   }
 
-  public void commit(int source, int next) {
+  public void commit(int source, int dest) {
     Map<Integer, Integer> invertedDests = invertedIndexes.get(source);
-    int index = invertedDests.get(next);
+    int index = invertedDests.get(dest);
 
     destinationIndexes.put(source, index);
   }

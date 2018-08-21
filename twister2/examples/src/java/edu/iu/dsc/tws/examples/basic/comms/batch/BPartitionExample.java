@@ -95,7 +95,7 @@ public class BPartitionExample extends BenchWorker {
 
     @Override
     public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-      expected = expectedIds.keySet().size() * jobParameters.getIterations();
+      expected = jobParameters.getIterations();
     }
 
     @Override

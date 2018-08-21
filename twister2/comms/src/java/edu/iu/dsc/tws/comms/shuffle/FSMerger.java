@@ -117,8 +117,6 @@ public class FSMerger implements Shuffle {
 
   /**
    * Add the data to the file
-   * @param data
-   * @param length
    */
   public void add(byte[] data, int length) {
     if (status == FSStatus.READING) {
@@ -274,6 +272,7 @@ public class FSMerger implements Shuffle {
 
   /**
    * Get the file name to save the current part
+   *
    * @return the save file name
    */
   private String getSaveFolderName() {
@@ -282,6 +281,7 @@ public class FSMerger implements Shuffle {
 
   /**
    * Get the file name to save the current part
+   *
    * @param filePart file part index
    * @return the save file name
    */
@@ -291,6 +291,7 @@ public class FSMerger implements Shuffle {
 
   /**
    * Get the name of the sizes file name
+   *
    * @param filePart file part index
    * @return filename
    */
