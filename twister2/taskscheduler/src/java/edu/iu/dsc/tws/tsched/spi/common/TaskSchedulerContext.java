@@ -89,18 +89,15 @@ public class TaskSchedulerContext extends Context {
   }
 
   public static double taskInstanceRam(Config cfg) {
-    return cfg.getDoubleValue(TWISTER2_TASK_INSTANCE_RAM,
-        TWISTER2_TASK_INSTANCE_RAM_DEFAULT);
+    return cfg.getDoubleValue(TWISTER2_TASK_INSTANCE_RAM, TWISTER2_TASK_INSTANCE_RAM_DEFAULT);
   }
 
   public static double taskInstanceDisk(Config cfg) {
-    return cfg.getDoubleValue(TWISTER2_TASK_INSTANCE_DISK,
-        TWISTER2_TASK_INSTANCE_DISK_DEFAULT);
+    return cfg.getDoubleValue(TWISTER2_TASK_INSTANCE_DISK, TWISTER2_TASK_INSTANCE_DISK_DEFAULT);
   }
 
   public static double taskInstanceCpu(Config cfg) {
-    return cfg.getDoubleValue(TWISTER2_TASK_INSTANCE_CPU,
-        TWISTER2_TASK_INSTANCE_CPU_DEFAULT);
+    return cfg.getDoubleValue(TWISTER2_TASK_INSTANCE_CPU, TWISTER2_TASK_INSTANCE_CPU_DEFAULT);
   }
 
   public static double taskInstanceNetwork(Config cfg) {

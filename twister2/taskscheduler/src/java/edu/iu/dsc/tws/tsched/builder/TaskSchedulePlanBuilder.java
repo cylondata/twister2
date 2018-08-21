@@ -215,7 +215,7 @@ public class TaskSchedulePlanBuilder {
           "Insufficient container resources to add instance %s with resources %s to container %d.",
           taskInstanceId, resource, containerId), e);
     }
-    LOG.info(String.format("Added to container %d task instance %s task index %s ", containerId,
+    LOG.fine(String.format("Added to container %d task instance %s task index %s ", containerId,
         taskInstanceId.getTaskName(), taskInstanceId.getTaskIndex()));
     return this;
   }
@@ -348,7 +348,7 @@ public class TaskSchedulePlanBuilder {
 
         Container container = containerValue.get(containerId);
 
-        LOG.info("Container Resource Value:" + containerId + "\t"
+        LOG.fine("Container Resource Value:" + containerId + "\t"
             + container.getResource().getRam() + "\t"
             + container.getResource().getDisk() + "\t"
             + container.getResource().getCpu());
@@ -381,7 +381,7 @@ public class TaskSchedulePlanBuilder {
           double instanceCPUValue = instdefaultresourceValue.getCpu();
           containerCPUValue += instanceCPUValue;
 
-          LOG.info("Resource Container Values:" + "Ram Value:" + containerRAMValue + "\t"
+          LOG.fine("Resource Container Values:" + "Ram Value:" + containerRAMValue + "\t"
               + "Cpu Value:" + containerCPUValue + "\t" + "Disk Value:" + containerDiskValue);
 
           Resource resource = new Resource(instanceRAMValue, instanceDiskValue, instanceCPUValue);
@@ -467,7 +467,7 @@ public class TaskSchedulePlanBuilder {
               instanceId.getTaskId(), instanceId.getTaskIndex(), resource));
         }
 
-        LOG.info("Total Required Resource Value for:" + containerId + "\t"
+        LOG.fine("Total Required Resource Value for:" + containerId + "\t"
             + containerRAMValue + "\t" + containerDiskValue + "\t" + containerCPUValue);
 
         containerCPUValue += (requestedContainerPadding * containerCPUValue) / 100;
@@ -477,7 +477,7 @@ public class TaskSchedulePlanBuilder {
         //containerRAMValue = containerRAMValue.increaseBy(requestedContainerPadding);
         //containerDiskValue = containerDiskValue.increaseBy(requestedContainerPadding);
 
-        LOG.info("Container" + "\t" + containerId + "Values After Padding:"
+        LOG.fine("Container" + "\t" + containerId + "Values After Padding:"
             + "Ram Value:" + containerRAMValue + "\t"
             + "Disk Value:" + containerDiskValue + "\t"
             + "Cpu Value:" + containerCPUValue);

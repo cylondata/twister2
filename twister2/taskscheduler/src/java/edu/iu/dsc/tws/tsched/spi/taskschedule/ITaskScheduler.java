@@ -15,6 +15,9 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 
+/**
+ * This is the main interface for the task scheduler.
+ */
 public interface ITaskScheduler {
 
   void initialize(Config cfg);
