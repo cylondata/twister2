@@ -109,9 +109,9 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
 
     for (int containerId : containerInstanceMap.keySet()) {
 
-      Double containerRAMValue = TaskSchedulerContext.containerRamPadding(cfg);
-      Double containerDiskValue = TaskSchedulerContext.containerDiskPadding(cfg);
-      Double containerCpuValue = TaskSchedulerContext.containerCpuPadding(cfg);
+      double containerRAMValue = TaskSchedulerContext.containerRamPadding(cfg);
+      double containerDiskValue = TaskSchedulerContext.containerDiskPadding(cfg);
+      double containerCpuValue = TaskSchedulerContext.containerCpuPadding(cfg);
 
       List<InstanceId> taskInstanceIds = containerInstanceMap.get(containerId);
       Map<InstanceId, TaskSchedulePlan.TaskInstancePlan> taskInstancePlanMap = new HashMap<>();

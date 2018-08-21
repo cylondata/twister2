@@ -170,7 +170,7 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
    * vertex set. Then, it will allocate the instances into the number of containers allocated for
    * the task in a round robin fashion.
    */
-  public static Map<Integer, List<InstanceId>> roundRobinSchedulingAlgo(
+  private static Map<Integer, List<InstanceId>> roundRobinSchedulingAlgo(
       Set<Vertex> taskVertexSet, int numberOfContainers) {
 
     TaskAttributes taskAttributes = new TaskAttributes();

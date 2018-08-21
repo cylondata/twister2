@@ -79,13 +79,11 @@ public class TaskSchedulerContext extends Context {
 
 
   public static String taskSchedulingMode(Config cfg) {
-    return cfg.getStringValue(TWISTER2_TASK_SCHEDULING_MODE,
-        TWISTER2_TASK_SCHEDULING_MODE_DEFAULT);
+    return cfg.getStringValue(TWISTER2_TASK_SCHEDULING_MODE, TWISTER2_TASK_SCHEDULING_MODE_DEFAULT);
   }
 
   public static String taskType(Config cfg) {
-    return cfg.getStringValue(TWISTER2_TASK_TYPE,
-        TWISTER2_TASK_TYPE_DEFAULT);
+    return cfg.getStringValue(TWISTER2_TASK_TYPE, TWISTER2_TASK_TYPE_DEFAULT);
   }
 
   public static double taskInstanceRam(Config cfg) {

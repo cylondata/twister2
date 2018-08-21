@@ -132,9 +132,9 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
 
       for (int containerId : containerInstanceMap.keySet()) {
 
-        Double containerRAMValue = TaskSchedulerContext.containerRamPadding(config);
-        Double containerDiskValue = TaskSchedulerContext.containerDiskPadding(config);
-        Double containerCpuValue = TaskSchedulerContext.containerCpuPadding(config);
+        double containerRAMValue = TaskSchedulerContext.containerRamPadding(config);
+        double containerDiskValue = TaskSchedulerContext.containerDiskPadding(config);
+        double containerCpuValue = TaskSchedulerContext.containerCpuPadding(config);
 
         List<InstanceId> taskInstanceIds = containerInstanceMap.get(containerId);
         Map<InstanceId, TaskSchedulePlan.TaskInstancePlan> taskInstancePlanMap = new HashMap<>();
@@ -172,12 +172,10 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
           LOG.fine("Worker (else loop):" + containerId + "\tRam:" + containerRAMValue
               + "\tDisk:" + containerDiskValue + "\tCpu:" + containerCpuValue);
         }
-        if (taskInstancePlanMap.values() != null) {
-          TaskSchedulePlan.ContainerPlan taskContainerPlan =
-              new TaskSchedulePlan.ContainerPlan(containerId,
-                  new HashSet<>(taskInstancePlanMap.values()), containerResource);
-          containerPlans.add(taskContainerPlan);
-        }
+        TaskSchedulePlan.ContainerPlan taskContainerPlan =
+            new TaskSchedulePlan.ContainerPlan(containerId,
+                new HashSet<>(taskInstancePlanMap.values()), containerResource);
+        containerPlans.add(taskContainerPlan);
       }
       taskSchedulePlanList.add(new TaskSchedulePlan(taskSchedulePlanId, containerPlans));
       taskSchedulePlanId++;
@@ -204,7 +202,7 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
    * task vertex. Then, it will allocate the instances into the number of containers allocated for
    * the task in a round robin fashion.
    */
-  public static Map<Integer, List<InstanceId>> roundRobinBatchSchedulingAlgo(
+  private static Map<Integer, List<InstanceId>> roundRobinBatchSchedulingAlgo(
       Vertex taskVertex, int numberOfContainers) {
 
     TaskAttributes taskAttributes = new TaskAttributes();
@@ -246,7 +244,7 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
    * task vertex set. Then, it will allocate the instances into the number of containers allocated
    * for the task in a round robin fashion.
    */
-  public static Map<Integer, List<InstanceId>> roundRobinBatchSchedulingAlgo(
+  private static Map<Integer, List<InstanceId>> roundRobinBatchSchedulingAlgo(
       Set<Vertex> taskVertexSet, int numberOfContainers) {
 
     TaskAttributes taskAttributes = new TaskAttributes();

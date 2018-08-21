@@ -149,12 +149,10 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
               + "\tDisk:" + containerDiskValue + "\tCpu:" + containerCpuValue);
         }
 
-        if (taskInstancePlanMap.values() != null) {
-          TaskSchedulePlan.ContainerPlan taskContainerPlan =
-              new TaskSchedulePlan.ContainerPlan(containerId,
-                  new HashSet<>(taskInstancePlanMap.values()), containerResource);
-          containerPlans.add(taskContainerPlan);
-        }
+        TaskSchedulePlan.ContainerPlan taskContainerPlan =
+            new TaskSchedulePlan.ContainerPlan(containerId,
+                new HashSet<>(taskInstancePlanMap.values()), containerResource);
+        containerPlans.add(taskContainerPlan);
       }
       taskSchedulePlanList.add(new TaskSchedulePlan(taskSchedulePlanId, containerPlans));
       taskSchedulePlanId++;
