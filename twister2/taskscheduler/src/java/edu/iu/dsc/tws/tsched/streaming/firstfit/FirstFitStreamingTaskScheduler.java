@@ -33,70 +33,85 @@ import edu.iu.dsc.tws.tsched.utils.RequiredRam;
 import edu.iu.dsc.tws.tsched.utils.TaskAttributes;
 import edu.iu.dsc.tws.tsched.utils.TaskScheduleUtils;
 
+/**
+ * This class allocate the task instances into the container in a heuristic manner. It first sort
+ * the task instances based on the required ram configuration. Also, it provides the support of
+ * heterogeneous container and task instance allocation.
+ * <p>
+ * For example, if there are two tasks with parallelism value of 2, 1st task -> instance 0 will
+ * go to container 0, 1st task -> instance 1 will go to container 0, 2nd task -> instance 0 will
+ * go to container 0 (if the total task instance required values doesn't reach the maximum size of
+ * container 0. If the container has reached its maximum limit then it will allocate the
+ * 2nd task -> instance 1 will go to container 1.
+ */
 public class FirstFitStreamingTaskScheduler implements ITaskScheduler {
 
-  private static final Logger LOG
-      = Logger.getLogger(FirstFitStreamingTaskScheduler.class.getName());
+  private static final Logger LOG = Logger.getLogger(
+                                                    FirstFitStreamingTaskScheduler.class.getName());
 
   private Resource defaultResourceValue;
-  private Resource maximumContainerResourceValue;
+  private Resource maxContainerResourceValue;
+
   private int paddingPercentage;
   private int numContainers;
+  private int defaultNoOfTaskInstances;
 
+  private Double instanceRAM;
   private Double instanceDisk;
   private Double instanceCPU;
-  private Config cfg;
+  private Config config;
 
-  //Newly added
   private Set<Vertex> taskVertexSet = new HashSet<>();
   private TaskAttributes taskAttributes = new TaskAttributes();
   private WorkerPlan workerplan = new WorkerPlan();
 
   /**
-   * This method initialize the config values received from the user and set
-   * the default instance value and container maximum value.
+   * This method initialize the config values received from the user and assign the default
+   * task instance value and container instance values.
    */
   @Override
-  public void initialize(Config config) {
+  public void initialize(Config cfg) {
 
-    this.cfg = config;
+    this.config = cfg;
 
-    Double instanceRAM = TaskSchedulerContext.taskInstanceRam(cfg);
-    this.instanceDisk = TaskSchedulerContext.taskInstanceDisk(cfg);
-    this.instanceCPU = TaskSchedulerContext.taskInstanceCpu(cfg);
-    this.paddingPercentage = TaskSchedulerContext.containerPaddingPercentage(cfg);
+    //Double instanceRAM = TaskSchedulerContext.taskInstanceRam(this.config);
+
+    this.instanceRAM = TaskSchedulerContext.taskInstanceRam(this.config);
+    this.instanceDisk = TaskSchedulerContext.taskInstanceDisk(this.config);
+    this.instanceCPU = TaskSchedulerContext.taskInstanceCpu(this.config);
+    this.paddingPercentage = TaskSchedulerContext.containerPaddingPercentage(this.config);
 
     this.defaultResourceValue = new Resource(instanceRAM, this.instanceDisk, this.instanceCPU);
-
-    int defaultNoOfTaskInstances = TaskSchedulerContext.defaultTaskInstancesPerContainer(cfg);
+    this.defaultNoOfTaskInstances = TaskSchedulerContext.defaultTaskInstancesPerContainer(
+        this.config);
 
     instanceRAM = this.defaultResourceValue.getRam() * defaultNoOfTaskInstances;
     this.instanceDisk = this.defaultResourceValue.getDisk() * defaultNoOfTaskInstances;
     this.instanceCPU = this.defaultResourceValue.getCpu() * defaultNoOfTaskInstances;
 
-    /*Worker worker = workerplan.getWorker(0);
-    this.maximumContainerResourceValue = new Resource(
-        (double) Math.round(TaskScheduleUtils.increaseBy(worker.getRam(), paddingPercentage)),
-        (double) Math.round(TaskScheduleUtils.increaseBy(worker.getCpu(), paddingPercentage)),
-        (double) Math.round(TaskScheduleUtils.increaseBy(worker.getCpu(), paddingPercentage)));*/
-
-    this.maximumContainerResourceValue = new Resource(
+    this.maxContainerResourceValue = new Resource(
         (double) Math.round(TaskScheduleUtils.increaseBy(instanceRAM, paddingPercentage)),
         (double) Math.round(TaskScheduleUtils.increaseBy(instanceDisk, paddingPercentage)),
         (double) Math.round(TaskScheduleUtils.increaseBy(instanceCPU, paddingPercentage)));
 
-    LOG.info("Instance default values:" + "RamValue:" + instanceRAM + "\t"
+    LOG.fine("Instance default values:" + "RamValue:" + instanceRAM + "\t"
         + "DiskValue:" + instanceDisk + "\t" + "CPUValue:" + instanceCPU);
 
-    LOG.info("Container default values:"
-        + "RamValue:" + this.maximumContainerResourceValue.getRam() + "\t"
-        + "DiskValue:" + this.maximumContainerResourceValue.getDisk() + "\t"
-        + "CPUValue:" + this.maximumContainerResourceValue.getCpu());
+    LOG.fine("Container default values:"
+        + "RamValue:" + this.maxContainerResourceValue.getRam() + "\t"
+        + "DiskValue:" + this.maxContainerResourceValue.getDisk() + "\t"
+        + "CPUValue:" + this.maxContainerResourceValue.getCpu());
   }
 
+  /**
+   * This method set the size of the container, instance default resource, container padding,
+   * ram map, disk map, and cpu map values.
+   * @param previousTaskPlan
+   * @return
+   */
   private TaskSchedulePlanBuilder newTaskSchedulingPlanBuilder(TaskSchedulePlan previousTaskPlan) {
-    return new TaskSchedulePlanBuilder(1, previousTaskPlan) //Get the proper id
-        .setContainerMaximumResourceValue(maximumContainerResourceValue)
+    return new TaskSchedulePlanBuilder(1, previousTaskPlan)
+        .setContainerMaximumResourceValue(maxContainerResourceValue)
         .setInstanceDefaultResourceValue(defaultResourceValue)
         .setRequestedContainerPadding(paddingPercentage)
         .setTaskRamMap(taskAttributes.getTaskRamMap(this.taskVertexSet))
@@ -104,6 +119,13 @@ public class FirstFitStreamingTaskScheduler implements ITaskScheduler {
         .setTaskCpuMap(taskAttributes.getTaskCPUMap(this.taskVertexSet));
   }
 
+  /**
+   * This is the base method for the first fit task scheduling. It invokes the taskscheduleplan
+   * builder to allocate the task instances into the containers.
+   * @param dataFlowTaskGraph
+   * @param workerPlan
+   * @return
+   */
   @Override
   public TaskSchedulePlan schedule(DataFlowTaskGraph dataFlowTaskGraph, WorkerPlan workerPlan) {
     this.taskVertexSet = dataFlowTaskGraph.getTaskVertexSet();
@@ -112,12 +134,19 @@ public class FirstFitStreamingTaskScheduler implements ITaskScheduler {
     try {
       taskSchedulePlanBuilder = FirstFitFTaskSchedulingAlgorithm(taskSchedulePlanBuilder);
     } catch (TaskSchedulerException te) {
-      throw new TaskSchedulerException(
-          "Couldn't allocate all instances to task schedule plan", te);
+      throw new TaskSchedulerException("Couldn't allocate all instances to task schedule plan", te);
     }
     return taskSchedulePlanBuilder.build();
   }
 
+  /**
+   * This method is internal to this task scheduling algorithm which retrieves the parallel task map
+   * for the task vertex set and send the taskschedule plan builder object (with assigned default
+   * values) and parallel task map for the task instances allocation.
+   * @param taskSchedulePlanBuilder
+   * @return
+   * @throws TaskSchedulerException
+   */
   private TaskSchedulePlanBuilder FirstFitFTaskSchedulingAlgorithm(
       TaskSchedulePlanBuilder taskSchedulePlanBuilder) throws TaskSchedulerException {
     Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(this.taskVertexSet);
@@ -125,34 +154,57 @@ public class FirstFitStreamingTaskScheduler implements ITaskScheduler {
     return taskSchedulePlanBuilder;
   }
 
+  /**
+   * This method retrieve the sorted array list of ram requirements map and allocate the task
+   * instances available in the map.
+   * @param taskSchedulePlanBuilder
+   * @param parallelTaskMap
+   * @throws TaskSchedulerException
+   */
   private void assignInstancesToContainers(TaskSchedulePlanBuilder taskSchedulePlanBuilder,
                                            Map<String, Integer> parallelTaskMap)
-      throws TaskSchedulerException {
+                                           throws TaskSchedulerException {
+
     ArrayList<RequiredRam> ramRequirements = getSortedRAMInstances(parallelTaskMap.keySet());
+
     for (RequiredRam ramRequirement : ramRequirements) {
       String taskName = ramRequirement.getTaskName();
       int numberOfInstances = parallelTaskMap.get(taskName);
-      LOG.info("Number of Instances Required For the Task Name:\t"
-          + taskName + "\t" + numberOfInstances + "\n");
       for (int j = 0; j < numberOfInstances; j++) {
         firstFitInstanceAllocation(taskSchedulePlanBuilder, taskName);
       }
     }
   }
 
+  /**
+   * This method sort the task instances in an increasing order based on the required ram
+   * configuration values.
+   * @param taskNameSet
+   * @return
+   */
   private ArrayList<RequiredRam> getSortedRAMInstances(Set<String> taskNameSet) {
+
     ArrayList<RequiredRam> ramRequirements = new ArrayList<>();
     Map<String, Double> taskRamMap = taskAttributes.getTaskRamMap(this.taskVertexSet);
+
     for (String taskName : taskNameSet) {
       Resource resource = TaskScheduleUtils.getResourceRequirement(
           taskName, taskRamMap, this.defaultResourceValue,
-          this.maximumContainerResourceValue, this.paddingPercentage);
+          this.maxContainerResourceValue, this.paddingPercentage);
       ramRequirements.add(new RequiredRam(taskName, resource.getRam()));
     }
+
     ramRequirements.sort(Collections.reverseOrder());
     return ramRequirements;
   }
 
+  /**
+   * This method first increment the number of container if the value is zero. Then, it allocates
+   * the task instances into the container which is based on the container Id score value.
+   * @param taskSchedulePlanBuilder
+   * @param taskName
+   * @throws TaskSchedulerException
+   */
   private void firstFitInstanceAllocation(TaskSchedulePlanBuilder taskSchedulePlanBuilder,
                                           String taskName) throws TaskSchedulerException {
     if (this.numContainers == 0) {

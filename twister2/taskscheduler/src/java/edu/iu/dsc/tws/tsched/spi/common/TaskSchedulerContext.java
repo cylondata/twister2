@@ -79,28 +79,23 @@ public class TaskSchedulerContext extends Context {
 
 
   public static String taskSchedulingMode(Config cfg) {
-    return cfg.getStringValue(TWISTER2_TASK_SCHEDULING_MODE,
-        TWISTER2_TASK_SCHEDULING_MODE_DEFAULT);
+    return cfg.getStringValue(TWISTER2_TASK_SCHEDULING_MODE, TWISTER2_TASK_SCHEDULING_MODE_DEFAULT);
   }
 
   public static String taskType(Config cfg) {
-    return cfg.getStringValue(TWISTER2_TASK_TYPE,
-        TWISTER2_TASK_TYPE_DEFAULT);
+    return cfg.getStringValue(TWISTER2_TASK_TYPE, TWISTER2_TASK_TYPE_DEFAULT);
   }
 
   public static double taskInstanceRam(Config cfg) {
-    return cfg.getDoubleValue(TWISTER2_TASK_INSTANCE_RAM,
-        TWISTER2_TASK_INSTANCE_RAM_DEFAULT);
+    return cfg.getDoubleValue(TWISTER2_TASK_INSTANCE_RAM, TWISTER2_TASK_INSTANCE_RAM_DEFAULT);
   }
 
   public static double taskInstanceDisk(Config cfg) {
-    return cfg.getDoubleValue(TWISTER2_TASK_INSTANCE_DISK,
-        TWISTER2_TASK_INSTANCE_DISK_DEFAULT);
+    return cfg.getDoubleValue(TWISTER2_TASK_INSTANCE_DISK, TWISTER2_TASK_INSTANCE_DISK_DEFAULT);
   }
 
   public static double taskInstanceCpu(Config cfg) {
-    return cfg.getDoubleValue(TWISTER2_TASK_INSTANCE_CPU,
-        TWISTER2_TASK_INSTANCE_CPU_DEFAULT);
+    return cfg.getDoubleValue(TWISTER2_TASK_INSTANCE_CPU, TWISTER2_TASK_INSTANCE_CPU_DEFAULT);
   }
 
   public static double taskInstanceNetwork(Config cfg) {

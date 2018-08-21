@@ -9,18 +9,6 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
 package edu.iu.dsc.tws.examples.internal.task.batch;
 
 import java.util.ArrayList;
@@ -34,7 +22,6 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.resource.WorkerComputeSpec;
 import edu.iu.dsc.tws.common.resource.ZResourcePlan;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
-import edu.iu.dsc.tws.executor.api.ExecutionModel;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.comm.tasks.batch.SinkBatchTask;
 import edu.iu.dsc.tws.executor.comm.tasks.batch.SourceBatchTask;
@@ -80,8 +67,7 @@ public class PartitionBatchTask implements IContainer {
     TWSNetwork network = new TWSNetwork(config, resourcePlan.getThisId());
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
-    ExecutionModel executionModel = new ExecutionModel(ExecutionModel.SHARING);
-    Executor executor = new Executor(config, executionModel, plan, network.getChannel(),
+    Executor executor = new Executor(config, plan, network.getChannel(),
         OperationMode.BATCH);
     executor.execute();
   }
@@ -113,7 +99,7 @@ public class PartitionBatchTask implements IContainer {
 
     @Override
     public boolean execute(IMessage message) {
-      if (count % 1000000 == 0) {
+      if (count % 10000 == 0) {
         System.out.println("Message Partition Received : " + message.getContent()
             + ", Count : " + count);
       }

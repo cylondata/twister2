@@ -23,10 +23,10 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
-import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
+import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.api.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.api.EdgeGenerator;
@@ -43,7 +43,7 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
 
   protected DataFlowPartition op;
 
-  public PartitionStreamingOperation(Config config, TWSChannel network, TaskPlan tPlan) {
+  public PartitionStreamingOperation(Config config, Communicator network, TaskPlan tPlan) {
     super(config, network, tPlan);
   }
 
@@ -51,28 +51,14 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
                       DataType dataType, String edgeName) {
     this.edge = e;
     //LOG.info("ParitionOperation Prepare 1");
-    op = new DataFlowPartition(channel, srcs, dests, new PartitionReceiver(),
+    op = new DataFlowPartition(channel.getChannel(), srcs, dests, new PartitionReceiver(),
         new PartitionPartialReceiver(), DataFlowPartition.PartitionStratergy.DIRECT);
     communicationEdge = e.generate(edgeName);
     op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
   }
 
-  public void prepare(Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
-                      DataType dataType, DataType keyType, String edgeName) {
-    this.edge = e;
-    op = new DataFlowPartition(channel, srcs, dests, new PartitionReceiver(),
-        new PartitionPartialReceiver(), DataFlowPartition.PartitionStratergy.DIRECT,
-        Utils.dataTypeToMessageType(dataType), Utils.dataTypeToMessageType(keyType));
-    communicationEdge = e.generate(edgeName);
-    op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
-  }
-
-  public void send(int source, IMessage message) {
-    op.send(source, message.getContent(), 0);
-  }
-
   public boolean send(int source, IMessage message, int dest) {
-    return op.send(source, message, 0, dest);
+    return op.send(source, message.getContent(), 0, dest);
   }
 
   public class PartitionReceiver implements MessageReceiver {

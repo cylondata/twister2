@@ -30,10 +30,9 @@ import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
 public class TaskAttributes {
 
   /**
-   * This method retrieve the set of task vertices and check if the task
-   * vertex has the user specified ram value. If the user doesn't specify
-   * the required ram configuration it will assign the default ram value
-   * from the task configuration file and store it in the map.
+   * This method retrieve the set of task vertices and check if the task vertex has the user
+   * specified ram value. If the user doesn't specify the required ram configuration it will
+   * assign the default ram value from the task configuration file and store it in the map.
    * @param taskVertices
    * @return
    */
@@ -56,10 +55,9 @@ public class TaskAttributes {
   }
 
   /**
-   * This method retrieve the set of task vertices and check if the task
-   * vertex has the user specified disk value. If the user doesn't specify
-   * the required disk configuration it will assign the default disk value
-   * from the task configuration file and store it in the map.
+   * This method retrieve the set of task vertices and check if the task vertex has the user
+   * specified disk value. If the user doesn't specify the required disk configuration it will
+   * assign the default disk value from the task configuration file and store it in the map.
    * @param taskVertices
    * @return
    */
@@ -82,10 +80,9 @@ public class TaskAttributes {
   }
 
   /**
-   * This method retrieve the set of task vertices and check if the task
-   * vertex has the user specified cpu value. If the user doesn't specify
-   * the required cpu configuration it will assign the default cpu value
-   * from the task configuration file and store it in the map.
+   * This method retrieve the set of task vertices and check if the task vertex has the user
+   * specified cpu value. If the user doesn't specify the required cpu configuration it will assign
+   * the default cpu value from the task configuration file and store it in the map.
    * @param taskVertices
    * @return
    */
@@ -108,9 +105,9 @@ public class TaskAttributes {
   }
 
   /**
-   * This method is to calculate the total number of task instances in the task
-   * graph which is based on the parallelism specified in the task graph or
-   * else from the task configuration default values.
+   * This method is to calculate the total number of task instances in the task graph which is based
+   * on the parallelism specified in the task graph or else from the task configuration
+   * default values.
    * @param iTaskSet
    * @return
    */
@@ -126,9 +123,9 @@ public class TaskAttributes {
 
   /**
    * This method is mainly to generate the parallel task map (maintain order) for the task vertex.
-   * If the user specifies the parallelism value greater than or equal "1" will
-   * be considered as a parallelism value. Otherwise, the system assign the
-   * default parallelism value to the task vertex from the task scheduling configuration file.
+   * If the user specifies the parallelism value greater than or equal "1" will be considered as a
+   * parallelism value. Otherwise, the system assign the default parallelism value to the task
+   * vertex from the task scheduling configuration file.
    * @param iTaskSet
    * @return
    */
@@ -155,10 +152,10 @@ public class TaskAttributes {
   }
 
   /**
-   * This method is to generate the parallel task map for the task vertex.
-   * If the user specifies the parallelism value greater than or equal "1" will
-   * be considered as a parallelism value. Otherwise, the system assign the
-   * default parallelism value to the task vertex from the task scheduling configuration file.
+   * This method is to generate the parallel task map for the task vertex. If the user specifies the
+   * parallelism value greater than or equal "1" will be considered as a parallelism value.
+   * Otherwise, the system assign the default parallelism value to the task vertex from the task
+   * scheduling configuration file.
    * @param taskVertex
    * @return
    */
@@ -184,8 +181,7 @@ public class TaskAttributes {
 
 
   /**
-   * This method is to calculate the total number of task vertex based on
-   * the parallelism value.
+   * This method is to calculate the total number of task vertex based on the parallelism value.
    * @param taskVertex
    * @return
    */
@@ -201,10 +197,9 @@ public class TaskAttributes {
 
   //This method will be used in the future.
   /**
-   * This method retrieve the set of task vertices and check if the task
-   * vertex has the user specified network value. If the user doesn't specify
-   * the required network configuration it will assign the default network value
-   * from the task configuration file and store it in the map.
+   * This method retrieve the set of task vertices and check if the task vertex has the user
+   * specified network value. If the user doesn't specify the required network configuration it will
+   * assign the default network value from the task configuration file and store it in the map.
    * @param taskVertices
    * @return
    */

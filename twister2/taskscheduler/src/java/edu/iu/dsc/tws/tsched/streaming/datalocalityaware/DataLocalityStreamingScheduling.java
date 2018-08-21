@@ -86,13 +86,12 @@ public class DataLocalityStreamingScheduling {
     LOG.fine("Data Aware Before Task Allocation:\t" + dataAwareAllocation);
 
     for (Map.Entry<String, Integer> aTaskEntrySet : taskEntrySet) {
-
       Map<String, List<DataTransferTimeCalculator>> workerPlanMap;
       Map.Entry<String, Integer> entry = aTaskEntrySet;
+
       String taskName = entry.getKey();
 
-      // If the vertex has input dataset and get the datanode name of the
-      //dataset in the HDFS.
+      // If the vertex has input dataset and get the datanode name of the dataset in the HDFS.
       for (Vertex vertex : taskVertexSet) {
         if (vertex.getName().equals(taskName)
             && vertex.getConfig().getListValue("inputdataset") != null) {
@@ -112,22 +111,21 @@ public class DataLocalityStreamingScheduling {
           if (cIdx == 0) {
             datanodesList = dataNodeLocatorUtils.
                 findDataNodesLocation(vertex.getConfig().getListValue("inputdataset"));
-            workerPlanMap = calculateDistance(datanodesList, workerPlan, cIdx, allocatedWorkers);
+            workerPlanMap = distanceCalculation(datanodesList, workerPlan, cIdx, allocatedWorkers);
             cal = findOptimalWorkerNode(vertex, workerPlanMap, cIdx);
           } else { //if (cIdx > 0) {
             datanodesList = dataNodeLocatorUtils.
                 findDataNodesLocation(vertex.getConfig().getListValue("inputdataset"));
             Worker worker = workerPlan.getWorker(containerIndex);
             //Worker worker = workerPlan.getWorker(cIdx);
-            if (dataAwareAllocation.get(containerIndex).size()
-                >= maxTaskInstancesPerContainer) {
+            if (dataAwareAllocation.get(containerIndex).size() >= maxTaskInstancesPerContainer) {
               try {
                 allocatedWorkers.add(worker.getId());
               } catch (NullPointerException ne) {
                 ne.printStackTrace();
               }
             }
-            workerPlanMap = calculateDistance(datanodesList, workerPlan, cIdx, allocatedWorkers);
+            workerPlanMap = distanceCalculation(datanodesList, workerPlan, cIdx, allocatedWorkers);
             cal = findOptimalWorkerNode(vertex, workerPlanMap, cIdx);
           }
           /*
@@ -174,19 +172,27 @@ public class DataLocalityStreamingScheduling {
   }
 
   /**
-   * It calculates the distance between the data nodes and the worker nodes.
+   * It calculates the distance between the data nodes and the worker node which is based on
+   * the available bandwidth, latency, and the file size.
+   * @param datanodesList
+   * @param workers
+   * @param taskIndex
+   * @param removedWorkers
+   * @return
    */
-  private static Map<String, List<DataTransferTimeCalculator>> calculateDistance(
-      List<String> datanodesList, WorkerPlan workers,
-      int taskIndex, List<Integer> removedWorkers) {
+  private static Map<String, List<DataTransferTimeCalculator>> distanceCalculation(
+      List<String> datanodesList, WorkerPlan workers, int taskIndex, List<Integer> removedWorkers) {
 
     Map<String, List<DataTransferTimeCalculator>> workerPlanMap = new HashMap<>();
     Worker worker;
+
     double workerBandwidth;
     double workerLatency;
-    double calculateDistance = 0.0;
     double datanodeBandwidth;
     double datanodeLatency;
+
+    //distance between datanode and workernode
+    double calculateDistance = 0.0;
 
     if (taskIndex == 0) {
       for (String nodesList : datanodesList) {
@@ -208,7 +214,7 @@ public class DataLocalityStreamingScheduling {
               - (2 * datanodeBandwidth * datanodeLatency));
 
           //(use this formula to calculate the data transfer time)
-          //calculateDistance = File Size / Bandwidth;
+          //distanceCalculation = File Size / Bandwidth;
 
           calculateDataTransferTime.setRequiredDataTransferTime(calculateDistance);
           calculateDataTransferTime.setNodeName(worker.getId() + "");
@@ -239,7 +245,7 @@ public class DataLocalityStreamingScheduling {
                 - (2 * datanodeBandwidth * datanodeLatency));
 
             //(use this formula to calculate the data transfer time)
-            //calculateDistance = File Size / Bandwidth;
+            //distanceCalculation = File Size / Bandwidth;
 
             calculateDataTransferTime.setRequiredDataTransferTime(calculateDistance);
             calculateDataTransferTime.setNodeName(worker.getId() + "");
@@ -254,8 +260,11 @@ public class DataLocalityStreamingScheduling {
   }
 
   /**
-   * This method finds the worker node which has better network parameters (bandwidth/latency)
-   * or it will take lesser time for the data transfer if there is any.
+   * This method chooses the data node which takes minimal data transfer time.
+   * @param vertex
+   * @param workerPlanMap
+   * @param i
+   * @return
    */
   private static List<DataTransferTimeCalculator> findOptimalWorkerNode(Vertex vertex, Map<String,
       List<DataTransferTimeCalculator>> workerPlanMap, int i) {

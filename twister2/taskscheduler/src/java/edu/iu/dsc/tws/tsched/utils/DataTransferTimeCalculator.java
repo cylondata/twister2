@@ -11,29 +11,44 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tsched.utils;
 
+/**
+ * This class has getters and setters property to set the data transfer time for the nodes.
+ */
 public class DataTransferTimeCalculator implements Comparable<DataTransferTimeCalculator> {
+
+  private String nodeName;
+
+  private Double dataTransferTime;
+
+  private String dataNode;
+
+  private int taskIndex;
+
+  public DataTransferTimeCalculator(String nodename,
+                                    double dataTransferTime, String datanode) {
+    this.nodeName = nodename;
+    this.dataTransferTime = dataTransferTime;
+    this.dataNode = datanode;
+  }
 
   public DataTransferTimeCalculator setNodeName(String nodename) {
     this.nodeName = nodename;
     return this;
   }
 
-  private String nodeName;
-  private Double calculateDataTransferTime;
-
-  private String dataNode;
-
-  public DataTransferTimeCalculator(String nodename,
-                                    double requiredDatatransferTime, String datanode) {
+  public DataTransferTimeCalculator(String nodename, double requiredDatatransferTime) {
     this.nodeName = nodename;
-    this.calculateDataTransferTime = requiredDatatransferTime;
-    this.dataNode = datanode;
+    this.dataTransferTime = requiredDatatransferTime;
   }
 
   public String getDataNode() {
     return dataNode;
   }
 
+  public DataTransferTimeCalculator setDataNode(String datanode) {
+    this.dataNode = datanode;
+    return this;
+  }
 
   public int getTaskIndex() {
     return taskIndex;
@@ -44,28 +59,16 @@ public class DataTransferTimeCalculator implements Comparable<DataTransferTimeCa
     return this;
   }
 
-  private int taskIndex;
-
-  public DataTransferTimeCalculator(String nodename, double requiredDatatransferTime) {
-    this.nodeName = nodename;
-    this.calculateDataTransferTime = requiredDatatransferTime;
-  }
-
-  public DataTransferTimeCalculator setDataNode(String datanode) {
-    this.dataNode = datanode;
-    return this;
-  }
-
   public String getNodeName() {
     return nodeName;
   }
 
   public Double getRequiredDataTransferTime() {
-    return calculateDataTransferTime;
+    return dataTransferTime;
   }
 
   public DataTransferTimeCalculator setRequiredDataTransferTime(Double requiredDatatransferTime) {
-    this.calculateDataTransferTime = requiredDatatransferTime;
+    this.dataTransferTime = requiredDatatransferTime;
     return this;
   }
 
@@ -80,12 +83,12 @@ public class DataTransferTimeCalculator implements Comparable<DataTransferTimeCa
 
     DataTransferTimeCalculator that = (DataTransferTimeCalculator) o;
 
-    return calculateDataTransferTime.equals(that.calculateDataTransferTime);
+    return dataTransferTime.equals(that.dataTransferTime);
   }
 
   @Override
   public int hashCode() {
-    return calculateDataTransferTime.hashCode();
+    return dataTransferTime.hashCode();
   }
 
   @Override

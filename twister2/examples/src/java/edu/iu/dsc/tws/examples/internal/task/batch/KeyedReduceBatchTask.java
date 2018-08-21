@@ -36,7 +36,6 @@ import edu.iu.dsc.tws.common.resource.WorkerComputeSpec;
 import edu.iu.dsc.tws.common.resource.ZResourcePlan;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.examples.internal.task.streaming.KeyedReduceStreamingTask;
-import edu.iu.dsc.tws.executor.api.ExecutionModel;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.comm.tasks.batch.SinkBatchTask;
 import edu.iu.dsc.tws.executor.comm.tasks.batch.SourceBatchTask;
@@ -85,8 +84,7 @@ public class KeyedReduceBatchTask implements IContainer {
     TWSNetwork network = new TWSNetwork(config, resourcePlan.getThisId());
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
-    ExecutionModel executionModel = new ExecutionModel(ExecutionModel.SHARING);
-    Executor executor = new Executor(config, executionModel, plan, network.getChannel(),
+    Executor executor = new Executor(config, plan, network.getChannel(),
         OperationMode.BATCH);
     executor.execute();
   }
