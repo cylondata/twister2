@@ -66,7 +66,7 @@ public class PartitionByMultiByteStreamingOperation extends AbstractParallelOper
 
   @Override
   public void send(int source, IMessage message, int dest, int flags) {
-    op.send(source, message, flags, dest);
+    op.send(source, message.getContent(), flags, dest);
   }
 
   @Override

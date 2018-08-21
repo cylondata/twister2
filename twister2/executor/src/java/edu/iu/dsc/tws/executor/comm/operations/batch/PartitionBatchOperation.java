@@ -70,7 +70,7 @@ public class PartitionBatchOperation extends AbstractParallelOperation {
   }
 
   public boolean send(int source, IMessage message, int dest) {
-    return op.send(source, message, 0, dest);
+    return op.send(source, message.getContent(), 0, dest);
   }
 
   public class PartitionReceiver implements MessageReceiver {
