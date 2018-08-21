@@ -15,6 +15,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -32,6 +33,8 @@ public class BReduceExample extends BenchWorker {
 
   private BReduce reduce;
 
+  private boolean reduceDone;
+
   @Override
   protected void execute() {
     TaskPlan taskPlan = Utils.createStageTaskPlan(config, resourcePlan,
@@ -43,14 +46,26 @@ public class BReduceExample extends BenchWorker {
       sources.add(i);
     }
     int target = noOfSourceTasks;
-
     // create the communication
     reduce = new BReduce(communicator, taskPlan, sources, target,
         new IdentityFunction(), new FinalReduceReceiver(), MessageType.INTEGER);
 
 
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(id, taskPlan,
+    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
+    for (int t : tasksOfExecutor) {
+      finishedSources.put(t, false);
+    }
+    if (tasksOfExecutor.size() == 0) {
+      sourcesDone = true;
+    }
+
+    if (!taskPlan.getChannelsOfExecutor(workerId).contains(target)) {
+      reduceDone = true;
+    }
+
+    LOG.log(Level.INFO, String.format("%d Sources %s target %d this %s",
+        workerId, sources, target, tasksOfExecutor));
     // now initialize the workers
     for (int t : tasksOfExecutor) {
       // the map thread where data is produced
@@ -75,7 +90,9 @@ public class BReduceExample extends BenchWorker {
 
   @Override
   protected boolean isDone() {
-    return false;
+//    LOG.log(Level.INFO, String.format("%d Reduce %b sources %b pending %b",
+//        id, reduceDone, sourcesDone, reduce.hasPending()));
+    return reduceDone && sourcesDone && !reduce.hasPending();
   }
 
   public class FinalReduceReceiver implements ReduceReceiver {
@@ -85,7 +102,8 @@ public class BReduceExample extends BenchWorker {
 
     @Override
     public boolean receive(int target, Object object) {
-      LOG.info("Received final input");
+      LOG.log(Level.INFO, String.format("%d Received final input", workerId));
+      reduceDone = true;
       return true;
     }
   }
@@ -99,9 +117,7 @@ public class BReduceExample extends BenchWorker {
     @Override
     public Object reduce(Object t1, Object t2) {
       count++;
-      if (count % 10 == 0) {
-        LOG.info(String.format("Partial received %d", count));
-      }
+//      LOG.log(Level.INFO, String.format("%d Received %d", id, count));
       return t1;
     }
   }

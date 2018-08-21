@@ -60,6 +60,6 @@ public final class HadoopDataOutputStream extends FSDataOutputStream {
     return fosOutputStream;
   }
 
-  //public void append(Path f, final int bufferSize, final Progressable progress)
+  //public void append(Path f, final int bufferSize, final Progressable communicationProgress)
 
 }

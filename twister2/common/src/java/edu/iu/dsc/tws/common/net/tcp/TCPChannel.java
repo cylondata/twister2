@@ -41,7 +41,7 @@ public class TCPChannel {
   private Map<Integer, Client> clients;
 
   /**
-   * The progress loop
+   * The communicationProgress loop
    */
   private Progress looper;
 

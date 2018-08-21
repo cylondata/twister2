@@ -22,8 +22,9 @@ public class SchedulerContext extends Context {
   public static final String SCHEDULER_CLASS = "twister2.class.scheduler";
   public static final String LAUNCHER_CLASS = "twister2.class.launcher";
   public static final String UPLOADER_CLASS = "twister2.class.uploader";
-  public static final String CONTAINER_CLASS = "twister2.job.basic.container.class";
+  public static final String WORKER_CLASS = "twister2.job.worker.class";
   public static final String THREADS_PER_WORKER = "twister2.exector.worker.threads";
+  public static final String STATE_MANAGER_OBJECT = "twister2.state.manager.object";
 
   public static final String STATE_MANAGER_ROOT_PATH = "twister2.state.manager.root.path";
   public static final String SYSTEM_PACKAGE_URI = "twister2.system.package.uri";
@@ -81,8 +82,8 @@ public class SchedulerContext extends Context {
     return cfg.getStringValue(LAUNCHER_CLASS);
   }
 
-  public static String containerClass(Config cfg) {
-    return cfg.getStringValue(CONTAINER_CLASS);
+  public static String workerClass(Config cfg) {
+    return cfg.getStringValue(WORKER_CLASS);
   }
 
   public static String packagesPath(Config cfg) {
@@ -94,7 +95,7 @@ public class SchedulerContext extends Context {
   }
 
   public static String stateManegerRootPath(Config cfg) {
-    return cfg.getStringValue(STATE_MANAGER_ROOT_PATH);
+    return cfg.getStringValue(STATE_MANAGER_ROOT_PATH, "state");
   }
 
   public static String systemPackageUrl(Config cfg) {

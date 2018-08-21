@@ -40,14 +40,17 @@ public class SKeyedPartition {
 
     this.partition.init(comm.getConfig(), dataType, plan, comm.nextEdge());
     this.destinationSelector.prepare(partition.getSources(), partition.getDestinations());
-
-    destinationSelector.prepare(keyType, sources, destinations);
   }
 
-  public void partition(int source, Object key, Object message, int flags) {
-    int destinations = destinationSelector.next(source, message);
+  public boolean partition(int source, Object key, Object message, int flags) {
+    int dest = destinationSelector.next(source);
 
-    partition.send(source, new KeyedContent(key, message), flags, destinations);
+    boolean send =  partition.send(source, new KeyedContent(key, message, partition.getKeyType(),
+        partition.getDataType()), flags, dest);
+    if (send) {
+      destinationSelector.commit(source, dest);
+    }
+    return send;
   }
 
   public void finish(int source) {
@@ -56,5 +59,9 @@ public class SKeyedPartition {
 
   public boolean progress() {
     return partition.progress();
+  }
+
+  public boolean hasPending() {
+    return !partition.isComplete();
   }
 }

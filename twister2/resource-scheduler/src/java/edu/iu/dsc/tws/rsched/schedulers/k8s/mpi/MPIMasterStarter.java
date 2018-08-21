@@ -26,11 +26,14 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.master.JobMasterContext;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.K8sEnvVariables;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.PodWatchUtils;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerUtils;
+import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
 import static edu.iu.dsc.tws.common.config.Context.JOB_ARCHIVE_DIRECTORY;
 import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.KUBERNETES_CLUSTER_TYPE;
@@ -50,6 +53,7 @@ public final class MPIMasterStarter {
 
   private static final String HOSTFILE_NAME = "hostfile";
   private static Config config = null;
+  private static String jobName = null;
 
   private MPIMasterStarter() { }
 
@@ -59,6 +63,11 @@ public final class MPIMasterStarter {
     LoggingHelper.setLoggingFormat(LoggingHelper.DEFAULT_FORMAT);
 
     String jobMasterIP = System.getenv(K8sEnvVariables.JOB_MASTER_IP + "");
+    String encodedNodeInfoList = System.getenv(K8sEnvVariables.ENCODED_NODE_INFO_LIST + "");
+    jobName = System.getenv(K8sEnvVariables.JOB_NAME + "");
+    if (jobName == null) {
+      throw new RuntimeException("JobName is null");
+    }
 
     String configDir = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY + "/"
         + KUBERNETES_CLUSTER_TYPE;
@@ -66,6 +75,18 @@ public final class MPIMasterStarter {
     config = K8sWorkerUtils.loadConfig(configDir);
 
     K8sWorkerUtils.initLogger(config, "mpiMaster");
+
+    // read job description file
+    String jobDescFileName = SchedulerContext.createJobDescriptionFileName(jobName);
+    jobDescFileName = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY + "/" + jobDescFileName;
+    JobAPI.Job job = JobUtils.readJobFile(null, jobDescFileName);
+    LOG.info("Job description file is loaded: " + jobDescFileName);
+
+    // add any configuration from job file to the config object
+    // if there are the same config parameters in both,
+    // job file configurations will override
+    config = JobUtils.overrideConfigs(job, config);
+    config = JobUtils.updateConfigs(job, config);
 
     int numberOfWorkers = Context.workerInstances(config);
     int workersPerPod = KubernetesContext.workersPerPod(config);
@@ -83,7 +104,6 @@ public final class MPIMasterStarter {
 
     String podName = localHost.getHostName();
     String podIP = localHost.getHostAddress();
-    String jobName = podName.substring(0, podName.lastIndexOf("-"));
 
     LOG.info("MPIMaster information summary: \n"
         + "podName: " + podName + "\n"
@@ -95,7 +115,7 @@ public final class MPIMasterStarter {
         + "numberOfPods: " + numberOfPods
     );
 
-    ArrayList<String> podNames = createPodNames(jobName, numberOfPods);
+    ArrayList<String> podNames = createPodNames(numberOfPods);
 
     long start = System.currentTimeMillis();
     int timeoutSeconds = 100;
@@ -120,7 +140,8 @@ public final class MPIMasterStarter {
     createHostFile(podIP, podNamesIPs);
 
     String classToRun = "edu.iu.dsc.tws.rsched.schedulers.k8s.mpi.MPIWorkerStarter";
-    String[] mpirunCommand = generateMPIrunCommand(classToRun, workersPerPod, jobMasterIP);
+    String[] mpirunCommand =
+        generateMPIrunCommand(classToRun, workersPerPod, jobMasterIP, encodedNodeInfoList);
 
     // when all pods become running, sshd may have not started on some pods yet
     // it takes some time to start sshd, after pods become running
@@ -180,11 +201,10 @@ public final class MPIMasterStarter {
 
   /**
    * create all pod names in this job, except the first worker pod (this pod)
-   * @param jobName
    * @param numberOfPods
    * @return
    */
-  public static ArrayList<String> createPodNames(String jobName, int numberOfPods) {
+  public static ArrayList<String> createPodNames(int numberOfPods) {
 
     ArrayList<String> podNames = new ArrayList<>();
     for (int i = 1; i < numberOfPods; i++) {
@@ -202,9 +222,10 @@ public final class MPIMasterStarter {
 
   public static String[] generateMPIrunCommand(String className,
                                                int workersPerPod,
-                                               String jobMasterIP) {
+                                               String jobMasterIP,
+                                               String encodedNodeInfoList) {
 
-    String commandLineArgument = createJobMasterIPCommandLineArgument(jobMasterIP);
+    String jobMasterCLArgument = createJobMasterIPCommandLineArgument(jobMasterIP);
 
     return new String[]
         {"mpirun",
@@ -213,9 +234,15 @@ public final class MPIMasterStarter {
             "--allow-run-as-root",
             "-npernode",
             workersPerPod + "",
+            "-x",
+            "KUBERNETES_SERVICE_HOST=" + System.getenv("KUBERNETES_SERVICE_HOST"),
+            "-x",
+            "KUBERNETES_SERVICE_PORT=" + System.getenv("KUBERNETES_SERVICE_PORT"),
             "java",
             className,
-            commandLineArgument
+            jobMasterCLArgument,
+            jobName,
+            "'" + encodedNodeInfoList + "'"
         };
   }
 

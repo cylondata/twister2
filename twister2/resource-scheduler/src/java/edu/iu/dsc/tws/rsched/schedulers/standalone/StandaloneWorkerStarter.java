@@ -28,18 +28,18 @@ import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
+import edu.iu.dsc.tws.common.resource.ZResourcePlan;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
+import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.bootstrap.JobMasterBasedWorkerDiscoverer;
+import edu.iu.dsc.tws.rsched.bootstrap.JobMasterBasedWorkerController;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
-import edu.iu.dsc.tws.rsched.spi.container.IWorker;
-import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 public final class StandaloneWorkerStarter {
@@ -142,7 +142,7 @@ public final class StandaloneWorkerStarter {
 
     Config workerConfig = Config.newBuilder().putAll(config).
         put(SchedulerContext.TWISTER2_HOME.getKey(), twister2Home).
-        put(SchedulerContext.CONTAINER_CLASS, container).
+        put(SchedulerContext.WORKER_CLASS, container).
         put(SchedulerContext.TWISTER2_CONTAINER_ID, id).
         put(SchedulerContext.TWISTER2_CLUSTER_TYPE, clusterType).build();
 
@@ -153,7 +153,7 @@ public final class StandaloneWorkerStarter {
     Config updatedConfig = JobUtils.overrideConfigs(job, config);
     updatedConfig = Config.newBuilder().putAll(updatedConfig).
         put(SchedulerContext.TWISTER2_HOME.getKey(), twister2Home).
-        put(SchedulerContext.CONTAINER_CLASS, container).
+        put(SchedulerContext.WORKER_CLASS, container).
         put(SchedulerContext.TWISTER2_CONTAINER_ID, id).
         put(SchedulerContext.TWISTER2_CLUSTER_TYPE, clusterType).
         put(SchedulerContext.JOB_NAME, job.getJobName()).build();
@@ -162,16 +162,16 @@ public final class StandaloneWorkerStarter {
 
   private static void createWorker(Config config) {
     // lets create the resource plan
-    IWorkerDiscoverer workerController = createWorkerController(config);
+    IWorkerController workerController = createWorkerController(config);
     WorkerNetworkInfo workerNetworkInfo = workerController.getWorkerNetworkInfo();
 
-    String containerClass = SchedulerContext.containerClass(config);
+    String workerClass = SchedulerContext.workerClass(config);
 
-    ResourcePlan resourcePlan = new ResourcePlan(SchedulerContext.clusterType(config),
+    ZResourcePlan resourcePlan = new ZResourcePlan(SchedulerContext.clusterType(config),
         workerNetworkInfo.getWorkerID());
 
     try {
-      Object object = ReflectionUtils.newInstance(containerClass);
+      Object object = ReflectionUtils.newInstance(workerClass);
       if (object instanceof IContainer) {
         IContainer container = (IContainer) object;
         // now initialize the container
@@ -181,10 +181,10 @@ public final class StandaloneWorkerStarter {
         worker.init(config, workerNetworkInfo.getWorkerID(), resourcePlan,
             workerController, null, null);
       }
-      LOG.log(Level.FINE, "loaded container class: " + containerClass);
+      LOG.log(Level.FINE, "loaded worker class: " + workerClass);
     } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-      LOG.log(Level.SEVERE, String.format("failed to load the container class %s",
-          containerClass), e);
+      LOG.log(Level.SEVERE, String.format("failed to load the worker class %s",
+          workerClass), e);
       throw new RuntimeException(e);
     }
   }
@@ -194,7 +194,7 @@ public final class StandaloneWorkerStarter {
    * @param config config
    * @return
    */
-  private static IWorkerDiscoverer createWorkerController(Config config) {
+  private static IWorkerController createWorkerController(Config config) {
     // first get the worker id
     String indexEnv = System.getenv("NOMAD_ALLOC_INDEX");
     String idEnv = System.getenv("NOMAD_ALLOC_ID");
@@ -215,7 +215,7 @@ public final class StandaloneWorkerStarter {
     JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
     int numberContainers = job.getJobResources().getNoOfContainers();
 
-    return new JobMasterBasedWorkerDiscoverer(config, index, numberContainers,
+    return new JobMasterBasedWorkerController(config, index, numberContainers,
         jobMasterIP, masterPort, ports, localIps);
   }
 

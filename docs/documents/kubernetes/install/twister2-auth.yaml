@@ -11,15 +11,10 @@ metadata:
   namespace: default
   name: twister2-role
 rules:
-  # Workers should be able to get, watch and list
+  # Workers should be able to get, watch and list pods
 - apiGroups: [""] # indicates the core API group
   resources: ["pods"]
   verbs: ["get", "watch", "list"]
-
-  # job master needs to delete services, volumes and statefulsets
-- apiGroups: [""]
-  resources: ["persistentvolumes"]
-  verbs: ["get", "list", "watch", "delete"]
 
 - apiGroups: [""]
   resources: ["persistentvolumeclaims"]
@@ -45,6 +40,7 @@ subjects:
 - kind: Group
   name: system:authenticated
   apiGroup: rbac.authorization.k8s.io
+  namespace: default
 roleRef:
   kind: Role
   name: twister2-role

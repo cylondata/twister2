@@ -28,6 +28,8 @@ public class TaskContext {
 
   private int workerId;
 
+  private boolean isDone;
+
   public TaskContext(int taskIndex, int taskId, String taskName,
                      int parallelism, int wId, Map<String, Object> configs) {
     this.taskIndex = taskIndex;
@@ -47,6 +49,26 @@ public class TaskContext {
     this.collection = collection;
     this.configs = configs;
     this.workerId = wId;
+  }
+
+  public TaskContext(int taskIndex, int taskId, String taskName, int parallelism,
+                     OutputCollection collection, Map<String, Object> configs,
+                     int workerId, boolean isDone) {
+    this.taskIndex = taskIndex;
+    this.taskId = taskId;
+    this.taskName = taskName;
+    this.parallelism = parallelism;
+    this.collection = collection;
+    this.configs = configs;
+    this.workerId = workerId;
+    this.isDone = isDone;
+  }
+
+  /**
+   * Reset the context
+   */
+  public void reset() {
+    this.isDone = false;
   }
 
   /**
@@ -72,23 +94,61 @@ public class TaskContext {
     return taskName;
   }
 
+  /**
+   * Get the parallism of the task
+   * @return number of parallel instances
+   */
   public int getParallelism() {
     return parallelism;
   }
 
+  /**
+   * Get the worker id this task is running
+   * @return worker id
+   */
   public int getWorkerId() {
     return workerId;
   }
 
+  /**
+   * Get the task specific configurations
+   * @return map of configurations
+   */
   public Map<String, Object> getConfigurations() {
     return configs;
   }
 
   /**
    * Write a message to the destination
-   * @param message
+   * @param edge edge
+   * @param message message
    */
   public void write(String edge, Object message) {
     collection.collect(0, new TaskMessage(message, edge, taskId));
+  }
+
+  /**
+   * Write the last message
+   * @param edge edge
+   * @param message message
+   */
+  public void writeEnd(String edge, Object message) {
+
+  }
+
+  /**
+   * End the current writing
+   * @param edge edge
+   */
+  public void end(String edge) {
+
+  }
+
+  public boolean isDone() {
+    return isDone;
+  }
+
+  public void setDone(boolean done) {
+    isDone = done;
   }
 }

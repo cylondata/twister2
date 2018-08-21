@@ -13,6 +13,7 @@
 package edu.iu.dsc.tws.master.client;
 
 import java.nio.channels.SocketChannel;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.google.protobuf.Message;
@@ -21,6 +22,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.net.tcp.Progress;
 import edu.iu.dsc.tws.common.net.tcp.StatusCode;
+import edu.iu.dsc.tws.common.net.tcp.request.BlockingSendException;
 import edu.iu.dsc.tws.common.net.tcp.request.ConnectHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
@@ -30,7 +32,29 @@ import edu.iu.dsc.tws.proto.network.Network;
 import edu.iu.dsc.tws.proto.network.Network.ListWorkersRequest;
 import edu.iu.dsc.tws.proto.network.Network.ListWorkersResponse;
 
-public class JobMasterClient extends Thread {
+/**
+ * JobMasterClient class
+ * It is started for each Twister2 worker
+ * It handles the communication with the Job Master
+ * <p>
+ * It provides:
+ * worker discovery
+ * barrier method
+ * Ping service
+ * <p>
+ * It can be started in two different modes:
+ * Threaded and Blocking
+ * <p>
+ * If the user calls:
+ * startThreaded()
+ * It starts as a Thread and the call to this method returns
+ * <p>
+ * If the user calls:
+ * startBlocking()
+ * It uses the calling thread and this call does not return unless the close method is called
+ */
+
+public class JobMasterClient {
   private static final Logger LOG = Logger.getLogger(JobMasterClient.class.getName());
 
   private static Progress looper;
@@ -44,11 +68,22 @@ public class JobMasterClient extends Thread {
 
   private RRClient rrClient;
   private Pinger pinger;
-  private WorkerDiscoverer workerController;
+  private JMWorkerController jmWorkerController;
 
   private boolean startingMessageSent = false;
 
   private int numberOfWorkers;
+
+  /**
+   * the maximum duration this client will try to connect to the Job Master
+   * in milli seconds
+   */
+  private static final long CONNECTION_TRY_TIME_LIMIT = 100000;
+
+  /**
+   * to control the connection error when we repeatedly try connecting
+   */
+  private boolean connectionRefused = false;
 
   public JobMasterClient(Config config, WorkerNetworkInfo thisWorker) {
     this(config, thisWorker, JobMasterContext.jobMasterIP(config),
@@ -71,14 +106,12 @@ public class JobMasterClient extends Thread {
     this.masterPort = JobMasterContext.jobMasterPort(config);
   }
 
-
   /**
    * initialize JobMasterClient
    * wait until it connects to JobMaster
    * return false, if it can not connect to JobMaster
-   * @return
    */
-  public boolean init() {
+  private boolean init() {
 
     looper = new Progress();
 
@@ -89,15 +122,15 @@ public class JobMasterClient extends Thread {
     long interval = JobMasterContext.pingInterval(config);
     pinger = new Pinger(thisWorker, rrClient, interval);
 
-    workerController = new WorkerDiscoverer(config, thisWorker, rrClient, numberOfWorkers);
+    jmWorkerController = new JMWorkerController(config, thisWorker, rrClient, numberOfWorkers);
 
     Network.Ping.Builder pingBuilder = Network.Ping.newBuilder();
     rrClient.registerResponseHandler(pingBuilder, pinger);
 
     ListWorkersRequest.Builder listRequestBuilder = ListWorkersRequest.newBuilder();
     ListWorkersResponse.Builder listResponseBuilder = ListWorkersResponse.newBuilder();
-    rrClient.registerResponseHandler(listRequestBuilder, workerController);
-    rrClient.registerResponseHandler(listResponseBuilder, workerController);
+    rrClient.registerResponseHandler(listRequestBuilder, jmWorkerController);
+    rrClient.registerResponseHandler(listResponseBuilder, jmWorkerController);
 
     Network.WorkerStateChange.Builder stateChangeBuilder = Network.WorkerStateChange.newBuilder();
     Network.WorkerStateChangeResponse.Builder stateChangeResponseBuilder
@@ -107,10 +140,13 @@ public class JobMasterClient extends Thread {
     rrClient.registerResponseHandler(stateChangeBuilder, responseMessageHandler);
     rrClient.registerResponseHandler(stateChangeResponseBuilder, responseMessageHandler);
 
-    // try to connect to JobMaster, wait up to 100 seconds
-    // make this one config value
-    long connectionTimeLimit = 100000;
-    tryUntilConnected(connectionTimeLimit);
+    Network.BarrierRequest.Builder barrierRequestBuilder = Network.BarrierRequest.newBuilder();
+    Network.BarrierResponse.Builder barrierResponseBuilder = Network.BarrierResponse.newBuilder();
+    rrClient.registerResponseHandler(barrierRequestBuilder, jmWorkerController);
+    rrClient.registerResponseHandler(barrierResponseBuilder, jmWorkerController);
+
+    // try to connect to JobMaster
+    tryUntilConnected(CONNECTION_TRY_TIME_LIMIT);
 
     if (rrClient.isConnected()) {
       LOG.info("JobMasterClient connected to JobMaster.");
@@ -119,21 +155,22 @@ public class JobMasterClient extends Thread {
       return false;
     }
 
-    this.start();
     return true;
   }
 
-  public WorkerDiscoverer getWorkerController() {
-    return workerController;
+  public JMWorkerController getJMWorkerController() {
+    return jmWorkerController;
   }
 
+  /**
+   * stop the JobMasterClient
+   */
   public void close() {
     stopLooper = true;
     looper.wakeup();
   }
 
-  @Override
-  public void run() {
+  private void startLooping() {
 
     while (!stopLooper) {
       long timeToNextPing = pinger.timeToNextPing();
@@ -147,18 +184,65 @@ public class JobMasterClient extends Thread {
     rrClient.disconnect();
   }
 
+  /**
+   * start the Job Master Client in a Thread
+   */
+  public Thread startThreaded() {
+    // first call the init method
+    boolean initialized = init();
+    if (!initialized) {
+      return null;
+    }
+
+    Thread jmThread = new Thread() {
+      public void run() {
+        startLooping();
+      }
+    };
+
+    jmThread.start();
+
+    return jmThread;
+  }
+
+  /**
+   * start the Job Master Client in a blocking call
+   */
+  public boolean startBlocking() {
+    // first call the init method
+    boolean initialized = init();
+    if (!initialized) {
+      return false;
+    }
+
+    startLooping();
+
+    return true;
+  }
+
+  /**
+   * try connecting until the time limit is reached
+   */
   public boolean tryUntilConnected(long timeLimit) {
     long startTime = System.currentTimeMillis();
     long duration = 0;
-    long sleepInterval = 30;
+    long sleepInterval = 50;
 
+    // log interval in milliseconds
     long logInterval = 1000;
     long nextLogTime = logInterval;
 
+    // allow the first connection attempt
+    connectionRefused = true;
+
     while (duration < timeLimit) {
       // try connecting
-      rrClient.connect();
-      // loop once to connect
+      if (connectionRefused) {
+        rrClient.tryConnecting();
+        connectionRefused = false;
+      }
+
+      // loop to connect
       looper.loop();
 
       if (rrClient.isConnected()) {
@@ -166,7 +250,7 @@ public class JobMasterClient extends Thread {
       }
 
       try {
-        sleep(sleepInterval);
+        Thread.sleep(sleepInterval);
       } catch (InterruptedException e) {
         LOG.warning("Sleep interrupted.");
       }
@@ -178,7 +262,7 @@ public class JobMasterClient extends Thread {
       duration = System.currentTimeMillis() - startTime;
 
       if (duration > nextLogTime) {
-        LOG.info("Still trying to connect to Job Master");
+        LOG.info("Still trying to connect to the Job Master: " + masterAddress + ":" + masterPort);
         nextLogTime += logInterval;
       }
     }
@@ -186,27 +270,53 @@ public class JobMasterClient extends Thread {
     return false;
   }
 
+  /**
+   * send worker STARTING message
+   * put WorkerNetworkInfo in that message
+   * @return
+   */
   public WorkerNetworkInfo sendWorkerStartingMessage() {
-    Network.WorkerStateChange workerStateChange = Network.WorkerStateChange.newBuilder()
+
+    Network.WorkerNetworkInfo.Builder workerInfoBuilder = Network.WorkerNetworkInfo.newBuilder()
         .setWorkerID(thisWorker.getWorkerID())
-        .setNewState(Network.WorkerState.STARTING)
         .setWorkerIP(thisWorker.getWorkerIP().getHostAddress())
-        .setWorkerPort(thisWorker.getWorkerPort())
-        .build();
+        .setPort(thisWorker.getWorkerPort());
 
-    LOG.info("Sending the Worker Starting message: \n" + workerStateChange);
-
-    RequestID requestID = null;
-    if (JobMasterContext.jobMasterAssignsWorkerIDs(config)) {
-      requestID = rrClient.sendRequestWaitResponse(workerStateChange,
-          JobMasterContext.responseWaitDuration(config));
-    } else {
-      requestID = rrClient.sendRequest(workerStateChange);
+    if (thisWorker.getNodeInfo().hasNodeIP()) {
+      workerInfoBuilder.setNodeIP(thisWorker.getNodeInfo().getNodeIP());
     }
 
-    if (requestID == null) {
-      LOG.severe("Couldn't send Worker Starting message or couldn't receive the response on time.");
-      return null;
+    if (thisWorker.getNodeInfo().hasRackName()) {
+      workerInfoBuilder.setRackName(thisWorker.getNodeInfo().getRackName());
+    }
+
+    if (thisWorker.getNodeInfo().hasDataCenterName()) {
+      workerInfoBuilder.setDataCenterName(thisWorker.getNodeInfo().getDataCenterName());
+    }
+
+    Network.WorkerStateChange workerStateChange = Network.WorkerStateChange.newBuilder()
+        .setWorkerNetworkInfo(workerInfoBuilder.build())
+        .setNewState(Network.WorkerState.STARTING)
+        .build();
+
+    // if JobMaster assigns ID, wait for the response
+    if (JobMasterContext.jobMasterAssignsWorkerIDs(config)) {
+      LOG.info("Sending the Worker Starting message: \n" + workerStateChange);
+      try {
+        rrClient.sendRequestWaitResponse(workerStateChange,
+            JobMasterContext.responseWaitDuration(config));
+
+      } catch (BlockingSendException bse) {
+        LOG.log(Level.SEVERE, bse.getMessage(), bse);
+        return null;
+      }
+
+    } else {
+      RequestID requestID = rrClient.sendRequest(workerStateChange);
+      if (requestID == null) {
+        LOG.severe("Couldn't send Worker Starting message: " + workerStateChange);
+        return null;
+      }
     }
 
     startingMessageSent = true;
@@ -216,8 +326,13 @@ public class JobMasterClient extends Thread {
   }
 
   public boolean sendWorkerRunningMessage() {
+    Network.WorkerNetworkInfo workerInfo =
+        Network.WorkerNetworkInfo.newBuilder()
+            .setWorkerID(thisWorker.getWorkerID())
+            .build();
+
     Network.WorkerStateChange workerStateChange = Network.WorkerStateChange.newBuilder()
-        .setWorkerID(thisWorker.getWorkerID())
+        .setWorkerNetworkInfo(workerInfo)
         .setNewState(Network.WorkerState.RUNNING)
         .build();
 
@@ -233,17 +348,22 @@ public class JobMasterClient extends Thread {
 
   public boolean sendWorkerCompletedMessage() {
 
+    Network.WorkerNetworkInfo workerInfo =
+        Network.WorkerNetworkInfo.newBuilder()
+            .setWorkerID(thisWorker.getWorkerID())
+            .build();
+
     Network.WorkerStateChange workerStateChange = Network.WorkerStateChange.newBuilder()
-        .setWorkerID(thisWorker.getWorkerID())
+        .setWorkerNetworkInfo(workerInfo)
         .setNewState(Network.WorkerState.COMPLETED)
         .build();
 
     LOG.info("Sending the Worker Completed message: \n" + workerStateChange);
-    RequestID requestID = rrClient.sendRequestWaitResponse(workerStateChange,
-        JobMasterContext.responseWaitDuration(config));
-
-    if (requestID == null) {
-      LOG.severe("Couldn't send Worker Completed message or couldn't receive the response.");
+    try {
+      rrClient.sendRequestWaitResponse(workerStateChange,
+          JobMasterContext.responseWaitDuration(config));
+    } catch (BlockingSendException e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
       return false;
     }
 
@@ -281,8 +401,9 @@ public class JobMasterClient extends Thread {
 
     @Override
     public void onConnect(SocketChannel channel, StatusCode status) {
-      // put the reason into some variable
-      // if server is not there, should try to reconnect
+      if (status == StatusCode.CONNECTION_REFUSED) {
+        connectionRefused = true;
+      }
     }
 
     @Override

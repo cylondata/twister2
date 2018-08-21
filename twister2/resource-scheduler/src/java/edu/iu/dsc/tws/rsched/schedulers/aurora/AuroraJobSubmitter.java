@@ -30,7 +30,7 @@ import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 /**
  * This is a test class to submit Twister2 jobs to AuroraCluster
  * It is not used in official release
- * The jobs are submitted by edu.iu.dsc.tws.examples.basic.BasicAuroraJob
+ * The jobs are submitted by edu.iu.dsc.tws.examples.internal.rsched.BasicAuroraJob
  */
 public final class AuroraJobSubmitter {
   private static final Logger LOG = Logger.getLogger(AuroraJobSubmitter.class.getName());

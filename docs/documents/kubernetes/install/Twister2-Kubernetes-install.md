@@ -58,3 +58,50 @@ kubectl method as:
 
     $kubectl create secret -f /path/to/file/secret.yaml
 
+## Providing Rack and Datacenter information to Twister2
+Twister2 can use rack names of the workers and the data center names when scheduling tasks. 
+There are two ways administrators and user can provide this information. 
+
+**Through Configuration Files**:  
+Users can provide the IP addresses of nodes in racks in their clusters. 
+In addition, they can provide the list of data centers with rack data in them. 
+
+Here is an example configuration:
+
+    kubernetes.datacenters.list:
+    - dc1: ['blue-rack', 'green-rack']
+    - dc2: ['rack01', 'rack02']
+
+    kubernetes.racks.list:
+    - blue-rack: ['node01.ip', 'node02.ip', 'node03.ip']
+    - green-rack: ['node11.ip', 'node12.ip', 'node13.ip']
+    - rack01: ['node51.ip', 'node52.ip', 'node53.ip']
+    - rack02: ['node61.ip', 'node62.ip', 'node63.ip']
+
+**Labelling Nodes With Rack and Data Center Information**:  
+Administrators can label their nodes in the cluster for their rack and datacenter data. 
+Each node in the cluster must be labelled once. 
+When the user submits a Twister2 job, submitting client first queries Kubernetes master
+for the labels of nodes. It provides this list to all workers in the job. 
+
+**Note**: For this solution to work, job submitting users must have admin privileges. 
+
+**Example Labelling Commands**: Administrators can use kubectl command to label the nodes
+in the cluster. The format of the label creation command is as follows:
+
+    >kubectl label node <node-name> <label-key>=<label-value>  
+
+Then, used rack and data center labels must be provided in the configuration files. 
+These configuration parameters are: 
+
+    kubernetes.rack.labey.key
+    kubernetes.datacenter.labey.key
+
+**Access Method**: Users must specify which method they use to provide rack and datacenter data. 
+They need to set the value of the configuration parameter: 
+
+    kubernetes.node.locations.from.config
+
+If the value of this parameter is true, 
+Twister2 will try to get the rack and data center labels from the configuration files. 
+Otherwise, it will try to get it from the Kubernetes master. 

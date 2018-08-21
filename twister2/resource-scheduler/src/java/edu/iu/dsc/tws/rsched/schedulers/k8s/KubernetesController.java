@@ -13,12 +13,15 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.squareup.okhttp.Response;
 
+import edu.iu.dsc.tws.common.discovery.NodeInfo;
 import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
 
 import io.kubernetes.client.ApiClient;
@@ -27,10 +30,15 @@ import io.kubernetes.client.Configuration;
 import io.kubernetes.client.apis.AppsV1beta2Api;
 import io.kubernetes.client.apis.CoreV1Api;
 import io.kubernetes.client.models.V1DeleteOptions;
+import io.kubernetes.client.models.V1Node;
+import io.kubernetes.client.models.V1NodeAddress;
+import io.kubernetes.client.models.V1NodeList;
 import io.kubernetes.client.models.V1PersistentVolume;
 import io.kubernetes.client.models.V1PersistentVolumeClaim;
 import io.kubernetes.client.models.V1PersistentVolumeClaimList;
 import io.kubernetes.client.models.V1PersistentVolumeList;
+import io.kubernetes.client.models.V1Secret;
+import io.kubernetes.client.models.V1SecretList;
 import io.kubernetes.client.models.V1Service;
 import io.kubernetes.client.models.V1ServiceList;
 import io.kubernetes.client.models.V1beta2StatefulSet;
@@ -502,6 +510,73 @@ public class KubernetesController {
       LOG.log(Level.SEVERE, "Exception when deleting the PersistentVolume: " + pvName, e);
       return false;
     }
+  }
+
+  /**
+   * return true if the Secret object with that name exists in Kubernetes master,
+   * otherwise return false
+   */
+  public boolean secretExist(String namespace, String secretName) {
+    V1SecretList secretList = null;
+    try {
+      secretList = coreApi.listNamespacedSecret(namespace,
+          null, null, null, null, null, null, null, null, null);
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when getting Secret list.", e);
+      throw new RuntimeException(e);
+    }
+
+    for (V1Secret secret : secretList.getItems()) {
+      if (secretName.equalsIgnoreCase(secret.getMetadata().getName())) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * get NodeInfo objects for the nodes on this cluster
+   * @return the NodeInfo object list. If it can not get the list from K8s master, return null.
+   */
+  public ArrayList<NodeInfo> getNodeInfo(String rackLabelKey, String datacenterLabelKey) {
+
+    V1NodeList nodeList = null;
+    try {
+      nodeList = coreApi.listNode(null, null, null, null, null, null, null, null, null);
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when getting NodeList.", e);
+      return null;
+    }
+
+    ArrayList<NodeInfo> nodeInfoList = new ArrayList<>();
+    for (V1Node node : nodeList.getItems()) {
+      List<V1NodeAddress> addressList = node.getStatus().getAddresses();
+      for (V1NodeAddress nodeAddress: addressList) {
+        if ("InternalIP".equalsIgnoreCase(nodeAddress.getType())) {
+          String nodeIP = nodeAddress.getAddress();
+          String rackName = null;
+          String datacenterName = null;
+
+          // get labels
+          Map<String, String> labelMap = node.getMetadata().getLabels();
+          for (String key: labelMap.keySet()) {
+            if (key.equalsIgnoreCase(rackLabelKey)) {
+              rackName = labelMap.get(key);
+            }
+            if (key.equalsIgnoreCase(datacenterLabelKey)) {
+              datacenterName = labelMap.get(key);
+            }
+          }
+
+          NodeInfo nodeInfo = new NodeInfo(nodeIP, rackName, datacenterName);
+          nodeInfoList.add(nodeInfo);
+          break;
+        }
+      }
+    }
+
+    return nodeInfoList;
   }
 
 

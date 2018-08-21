@@ -55,13 +55,12 @@ def run(command, cl_args, action, extra_args=[], extra_lib_jars=[]):
     :param action:        description of action taken
     :return:
     '''
-    topology_name = cl_args['job-name']
+    job_name = cl_args['job-name']
 
     new_args = [
         "--cluster", cl_args['cluster'],
         "--twister2_home", config.get_twister2_dir(),
-        "--config_path", cl_args['config_path'],
-        "--override_config_file", cl_args['override_config_file'],
+        "--config_path", config.get_twister2_conf_dir(),
         "--job_name", job_name,
         "--command", command,
     ]
@@ -75,13 +74,13 @@ def run(command, cl_args, action, extra_args=[], extra_lib_jars=[]):
 
     # invoke the runtime manager to kill the job
     result = execute.twister2_class(
-        'com.twitter.twister2.scheduler.RuntimeManagerMain',
+        'edu.iu.dsc.tws.rsched.core.RuntimeManagerMain',
         lib_jars,
         extra_jars=[],
         args=new_args
     )
 
-    err_msg = "Failed to %s %s" % (action, topology_name)
-    succ_msg = "Successfully %s %s" % (action, topology_name)
+    err_msg = "Failed to %s %s" % (action, job_name)
+    succ_msg = "Successfully %s %s" % (action, job_name)
     result.add_context(err_msg, succ_msg)
     return result

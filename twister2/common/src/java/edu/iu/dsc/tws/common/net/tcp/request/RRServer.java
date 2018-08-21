@@ -97,6 +97,10 @@ public class RRServer {
     server.stop();
   }
 
+  public void stopGraceFully(long waitTime) {
+    server.stopGraceFully(waitTime);
+  }
+
   /**
    * Send a response to a request id
    * @param id request id

@@ -22,12 +22,12 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
+import edu.iu.dsc.tws.common.resource.RequestedResources;
+import edu.iu.dsc.tws.common.resource.WorkerComputeSpec;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
-import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
-import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 import edu.iu.dsc.tws.rsched.spi.scheduler.ILauncher;
 import edu.iu.dsc.tws.rsched.spi.scheduler.LauncherException;
 import edu.iu.dsc.tws.rsched.spi.statemanager.IStateManager;
@@ -221,7 +221,6 @@ public class ResourceAllocator {
    */
   public void submitJob(JobAPI.Job job, Config config) {
     // lets prepare the job files
-//    String jobDirectory = prepareJobFilesOld(config, job);
     String jobDirectory = prepareJobFiles(config, job);
 
     String statemgrClass = SchedulerContext.stateManagerClass(config);
@@ -238,13 +237,6 @@ public class ResourceAllocator {
     if (uploaderClass == null) {
       throw new RuntimeException("The uploader class must be specified");
     }
-
-    String threadNumber = SchedulerContext.numOfThreads(config);
-    if (threadNumber == null) {
-      threadNumber = new String("1"); // initializing to single threaded application
-    }
-    LOG.info("Allocated Thread Number : " + threadNumber);
-
 
     ILauncher launcher;
     IUploader uploader;
@@ -290,18 +282,13 @@ public class ResourceAllocator {
     String scpPath = scpServerAdress + ":" + packageURI.toString() + "/";
     LOG.log(Level.INFO, "SCP PATH to copy files from: " + scpPath);
 
-    // this is a temporary solution
-//    String packagesPath = "root@149.165.150.81:/root/.twister2/repository/";
-//    String packagesPath = "149.165.150.81:~/.twister2/repository/";
-
     // now launch the launcher
     // Update the runtime config with the packageURI
     updatedConfig = Config.newBuilder()
         .putAll(updatedConfig)
         .put(SchedulerContext.TWISTER2_PACKAGES_PATH, scpPath)
-//        .put(SchedulerContext.TWISTER2_PACKAGES_PATH, packagesPath)
         .put(SchedulerContext.JOB_PACKAGE_URI, packageURI)
-        .put(SchedulerContext.THREADS_PER_WORKER, threadNumber)
+        .put(SchedulerContext.STATE_MANAGER_OBJECT, statemgr)
         .build();
 
     // this is a handler chain based execution in resource allocator. We need to
@@ -309,10 +296,6 @@ public class ResourceAllocator {
     launcher.initialize(updatedConfig);
 
     RequestedResources requestedResources = buildRequestedResources(updatedJob);
-    if (requestedResources == null) {
-      throw new RuntimeException("Failed to build the requested resources");
-    }
-
     launcher.launch(requestedResources, updatedJob);
   }
 
@@ -353,10 +336,16 @@ public class ResourceAllocator {
     }
 
     // let the state manager know that we are killing this job??
-    // statemgr.initialize(config);
+    statemgr.initialize(config);
+
+    // Update the runtime config with the statemanager
+    updatedConfig = Config.newBuilder()
+        .putAll(config)
+        .put(SchedulerContext.STATE_MANAGER_OBJECT, statemgr)
+        .build();
 
     // initialize the launcher and terminate the job
-    launcher.initialize(config);
+    launcher.initialize(updatedConfig);
     boolean terminated = launcher.terminateJob(jobName);
     if (!terminated) {
       LOG.log(Level.SEVERE, "Could not terminate the job");
@@ -366,7 +355,7 @@ public class ResourceAllocator {
   private RequestedResources buildRequestedResources(JobAPI.Job job) {
     JobAPI.JobResources jobResources = job.getJobResources();
     int noOfContainers = jobResources.getNoOfContainers();
-    ResourceContainer container = new ResourceContainer(
+    WorkerComputeSpec container = new WorkerComputeSpec(
         (int) jobResources.getContainer().getAvailableCPU(),
         (int) jobResources.getContainer().getAvailableMemory(),
         (int) jobResources.getContainer().getAvailableDisk());

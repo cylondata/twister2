@@ -111,7 +111,7 @@ for the network identity of the Pods. You are responsible for creating this Serv
 **Ordinal Index**: For a StatefulSet with N replicas, each Pod in the StatefulSet will be assigned 
 an integer ordinal, from 0 up through N-1, that is unique over the Set.
 
-**Pod Initiation Policy (Pod Management Policy)**: Pods of a StatefulSet can be initiated 
+**Pod Initiation Policy**: Pods of a StatefulSet can be initiated 
 in order (one after the other) or in parallel. 
 
 #### Jobs
@@ -182,16 +182,23 @@ Heron runs one pod for each Heron container. They go with the first option.
 We create Twister2 workers in a job by creating a StatefulSet in Kubernetes cluster. 
 For a non-MPI job, we create one container for each worker. 
 The user specifies the number of containers (workers) in a pod through the configuration parameter:
-kubernetes.workers.per.pod. This parameter shows the number of containers to start in each pod. 
+
+    kubernetes.workers.per.pod
+
+This parameter shows the number of containers to start in each pod. 
 Since all pods are identical in StatefulSets, all pods in Twister2 jobs must also be identical.
 Therefore, all pods must have the same number of Twister2 workers.
 
 The user also specifies the total number of workers in job through the configuration parameter:
-twister2.worker.instances. We divide the total number of workers to the workers per pod value 
+
+    twister2.worker.instances
+
+We divide the total number of workers to the workers per pod value 
 to get the number of pods in a job. The value of twister2.worker.instances must be divisible 
 by the value of kubernetes.workers.per.pod. Otherwise, we reject the job submission. 
 
-When an OpenMPI enabled job is submitted, one container is started in every pod.
+**Resources in OpenMPI**: When an OpenMPI enabled job is submitted, 
+one container is started in every pod.
 When more than one worker will run in each pod, then this one container 
 has the resources of all workers in that pod. For example, if 3 workers will run
 in each pod and each worker requests 1 CPU, then this one container will have 3 CPUs.
@@ -226,7 +233,8 @@ from that pod port space. The only limitation is that when there are multiple wo
 they can not use the same port numbers. They need to use separate port numbers.
 
 We specify a base port number to be used by workers. It is defined in the configuration files as: 
-* kubernetes.worker.base.port
+
+    kubernetes.worker.base.port
 
 First worker in a pod uses the base port number. Second worker in that pod uses the port (basePort +1). 
 Third worker in that pod uses the port (basePort +2). 
@@ -291,7 +299,10 @@ Volume is mounted as:
 ### Pod Volatile Volume
 An optional volatile volume is provided to each pod, 
 if the user enables it from the configuration files. Configuration parameter is 
-*twister2.worker.volatile.disk*. This volume will be deleted after the worker completes.
+
+    twister2.worker.volatile.disk
+
+This volume will be deleted after the worker completes.
 the data is saved in the disk of the local machine and deleted after the pod is deleted. 
 It is supposed to be used for intermediate data storage during the job. 
 This volume is shared among the containers in each pod. 
@@ -302,7 +313,10 @@ The volatile volume is mounted as:
 ### Persistent Shared Volume
 An optional persistent volume is provided to each pod, 
 if the user enables it from the configuration files. Configuration parameter is 
-*persistent.volume.per.worker*. This volume is created on a shared file system such as NFS.
+
+    persistent.volume.per.worker
+
+This volume is created on a shared file system such as NFS.
 For Twister2 to configure a persistent volume, a Persistent Storage Provisioner 
 or statically configured PersistentVolume must exist in the cluster.
 The content of this volume will be available after the job has completed. 
@@ -325,7 +339,10 @@ SSH Key volume is mounted to pods as:
     /ssh-key/openmpi 
 
 ### Working Directory
-Twister2 jobs will run in the directory */twister2*. 
+Twister2 jobs will run in the directory 
+
+    /twister2 
+
 All dependency library files are saved to the sub directory */twister2/lib*.
 This directory is added to java CLASSPATH. All containers have their own /twister2 directory.
 This directory is not shared among the containers in a pod. 
@@ -368,7 +385,7 @@ They just wait for the first container to download and unpack the job package.
 They periodically poll the existence of the flag file and sleep in between. 
 When they see that the flag file is generated, they set the classpath and start the worker. 
 
-The name of the downloader script is: get_job_package.sh
+The name of the downloader script is: *get_job_package.sh*
 
 Disadvantage: This is a simple and effective method to transfer the job package to many pods. 
 However, it requires the administrators to set up a web server. 

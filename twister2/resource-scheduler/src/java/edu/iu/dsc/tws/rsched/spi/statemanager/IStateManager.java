@@ -16,7 +16,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import edu.iu.dsc.tws.common.config.Config;
 
 import edu.iu.dsc.tws.proto.system.JobExecutionState;
-import edu.iu.dsc.tws.proto.system.ResourceAPI;
 
 /**
  * This file defines the IStateManager interface.
@@ -99,12 +98,12 @@ public interface IStateManager extends AutoCloseable {
       JobExecutionState.JobState executionState, String topologyName);
 
   /**
-   * Set the scheduler location for the given topology
-   *
+   * Set a specific property
+   * @param key the key
+   * @param property property
    * @return Boolean - Success or Failure
    */
-  ListenableFuture<Boolean> setSchedulerLocation(
-      ResourceAPI.SchedulerLocation location, String topologyName);
+  ListenableFuture<Boolean> setJobProperty(String key, String property);
 
   /**
    * Delete the tmaster location for the given topology
@@ -126,20 +125,6 @@ public interface IStateManager extends AutoCloseable {
    * @return Boolean - Success or Failure
    */
   ListenableFuture<Boolean> deleteJob(String jobName);
-
-  /**
-   * Delete the physical plan for the given topology
-   *
-   * @return Boolean - Success or Failure
-   */
-  ListenableFuture<Boolean> deletePhysicalPlan(String topologyName);
-
-  /**
-   * Delete the scheduler location for the given topology
-   *
-   * @return Boolean - Success or Failure
-   */
-  ListenableFuture<Boolean> deleteSchedulerLocation(String topologyName);
 
   /**
    * Delete all locks for a given topology. Ideally locks should be deleted when released but it's

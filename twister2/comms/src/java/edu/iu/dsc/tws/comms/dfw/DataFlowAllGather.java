@@ -27,7 +27,7 @@ import edu.iu.dsc.tws.comms.dfw.io.gather.StreamingPartialGatherReceiver;
 public class DataFlowAllGather implements DataFlowOperation {
   private static final Logger LOG = Logger.getLogger(DataFlowAllGather.class.getName());
 
-  private DataFlowGather reduce;
+  private DataFlowGather gather;
 
   private DataFlowBroadcast broadcast;
   // the source tasks
@@ -79,19 +79,19 @@ public class DataFlowAllGather implements DataFlowOperation {
     StreamingPartialGatherReceiver partialReceiver = new StreamingPartialGatherReceiver();
     AllGatherStreamingFinalReceiver finalRecvr = new AllGatherStreamingFinalReceiver(broadcast);
 
-    reduce = new DataFlowGather(channel, sources, middleTask,
+    gather = new DataFlowGather(channel, sources, middleTask,
         finalRecvr, partialReceiver, 0, 0, config, type, instancePlan, edge);
-    reduce.init(config, type, instancePlan, reduceEdge);
+    gather.init(config, type, instancePlan, reduceEdge);
   }
 
   @Override
   public boolean sendPartial(int source, Object message, int flags) {
-    return reduce.sendPartial(source, message, flags);
+    return gather.sendPartial(source, message, flags);
   }
 
   @Override
   public boolean send(int source, Object message, int flags) {
-    return reduce.send(source, message, flags);
+    return gather.send(source, message, flags);
   }
 
   @Override
@@ -107,13 +107,17 @@ public class DataFlowAllGather implements DataFlowOperation {
   @Override
   public synchronized boolean progress() {
     try {
-      broadcast.progress();
-      reduce.progress();
+      boolean bCastProgress = broadcast.progress();
+      boolean reduceProgress = gather.progress();
+      return bCastProgress || reduceProgress;
     } catch (Throwable t) {
       LOG.log(Level.SEVERE, "un-expected error", t);
       throw new RuntimeException(t);
     }
-    return true;
+  }
+
+  public boolean isComplete() {
+    return gather.isComplete() && broadcast.isComplete();
   }
 
   @Override

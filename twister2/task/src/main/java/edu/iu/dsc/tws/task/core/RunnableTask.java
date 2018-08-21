@@ -109,12 +109,9 @@ public class RunnableTask implements Runnable {
       //TODO: check if this part needs to be synced
       while (!queueRef.isEmpty()) {
         if (messageProcessCount < messageProcessLimit) {
-          executableTask.execute(queueRef.poll());
           messageProcessCount++;
         }
       }
-    } else {
-      executableTask.execute();
     }
   }
 }

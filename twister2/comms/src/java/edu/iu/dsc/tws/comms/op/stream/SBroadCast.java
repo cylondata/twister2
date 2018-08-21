@@ -20,22 +20,24 @@ import edu.iu.dsc.tws.comms.dfw.DataFlowBroadcast;
 import edu.iu.dsc.tws.comms.op.Communicator;
 
 public class SBroadCast {
-  private DataFlowBroadcast partition;
-
-  private Communicator comm;
+  private DataFlowBroadcast bCast;
 
   public SBroadCast(Communicator comm, TaskPlan plan,
                     int sources, Set<Integer> destinations, MessageType dataType,
                     MessageReceiver rcvr) {
-    this.partition = new DataFlowBroadcast(comm.getChannel(), sources, destinations, rcvr);
-    this.partition.init(comm.getConfig(), dataType, plan, comm.nextEdge());
+    this.bCast = new DataFlowBroadcast(comm.getChannel(), sources, destinations, rcvr);
+    this.bCast.init(comm.getConfig(), dataType, plan, comm.nextEdge());
   }
 
   public boolean bcast(int source, Object message, int flags) {
-    return partition.send(source, message, flags);
+    return bCast.send(source, message, flags);
   }
 
   public boolean progress() {
-    return partition.progress();
+    return bCast.progress();
+  }
+
+  public boolean hasPending() {
+    return !bCast.isComplete();
   }
 }

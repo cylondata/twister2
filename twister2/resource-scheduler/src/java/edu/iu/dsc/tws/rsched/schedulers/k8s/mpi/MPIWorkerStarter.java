@@ -17,23 +17,24 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
+import edu.iu.dsc.tws.common.discovery.NodeInfo;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
+import edu.iu.dsc.tws.common.resource.ZResourcePlan;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
+import edu.iu.dsc.tws.common.worker.IPersistentVolume;
+import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.client.JobMasterClient;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.PodWatchUtils;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sPersistentVolume;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sVolatileVolume;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerUtils;
-import edu.iu.dsc.tws.rsched.schedulers.mpi.MPIWorker;
-import edu.iu.dsc.tws.rsched.spi.container.IPersistentVolume;
-import edu.iu.dsc.tws.rsched.spi.container.IWorker;
-import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 import mpi.MPI;
@@ -51,6 +52,7 @@ public final class MPIWorkerStarter {
   private static int numberOfWorkers = -1; // -1 means, not initialized
   private static WorkerNetworkInfo workerNetworkInfo;
   private static JobMasterClient jobMasterClient;
+  private static String jobName = null;
 
   private MPIWorkerStarter() { }
 
@@ -58,6 +60,21 @@ public final class MPIWorkerStarter {
     // we can not initialize the logger fully yet,
     // but we need to set the format as the first thing
     LoggingHelper.setLoggingFormat(LoggingHelper.DEFAULT_FORMAT);
+
+    String jobMasterIP = MPIMasterStarter.getJobMasterIPCommandLineArgumentValue(args[0]);
+    jobName = args[1];
+    String encodedNodeInfoList = args[2];
+
+    if (jobMasterIP == null) {
+      throw new RuntimeException("JobMasterIP address is null");
+    }
+
+    if (jobName == null) {
+      throw new RuntimeException("jobName is null");
+    }
+
+    // remove the first and the last single quotas from encodedNodeInfoList
+    encodedNodeInfoList = encodedNodeInfoList.replaceAll("'", "");
 
     // load the configuration parameters from configuration directory
     String configDir = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY + "/"
@@ -87,7 +104,6 @@ public final class MPIWorkerStarter {
     K8sWorkerUtils.initWorkerLogger(workerID, pv, config);
 
     // read job description file
-    String jobName = SchedulerContext.jobName(config);
     String jobDescFileName = SchedulerContext.createJobDescriptionFileName(jobName);
     jobDescFileName = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY + "/" + jobDescFileName;
     JobAPI.Job job = JobUtils.readJobFile(null, jobDescFileName);
@@ -96,7 +112,8 @@ public final class MPIWorkerStarter {
     // add any configuration from job file to the config object
     // if there are the same config parameters in both,
     // job file configurations will override
-    config = K8sWorkerUtils.overrideConfigs(job, config);
+    config = JobUtils.overrideConfigs(job, config);
+    config = JobUtils.updateConfigs(job, config);
 
     InetAddress localHost = null;
     try {
@@ -106,7 +123,16 @@ public final class MPIWorkerStarter {
 
       int workerPort = KubernetesContext.workerBasePort(config) + workerID;
 
-      workerNetworkInfo = new WorkerNetworkInfo(localHost, workerPort, workerID);
+      String nodeIP =
+          PodWatchUtils.getNodeIP(KubernetesContext.namespace(config), jobName, podName);
+
+      NodeInfo thisNodeInfo = KubernetesContext.nodeLocationsFromConfig(config)
+          ? KubernetesContext.getNodeInfo(config, nodeIP)
+          : K8sWorkerUtils.getNodeInfoFromEncodedStr(encodedNodeInfoList, nodeIP);
+
+      LOG.info("NodeInfo for this worker: " + thisNodeInfo);
+
+      workerNetworkInfo = new WorkerNetworkInfo(localHost, workerPort, workerID, thisNodeInfo);
 
       LOG.info("Worker information summary: \n"
           + "MPI Rank(workerID): " + workerID + "\n"
@@ -116,11 +142,6 @@ public final class MPIWorkerStarter {
       );
     } catch (UnknownHostException e) {
       LOG.log(Level.SEVERE, "Cannot get localHost.", e);
-    }
-
-    String jobMasterIP = MPIMasterStarter.getJobMasterIPCommandLineArgumentValue(args[0]);
-    if (jobMasterIP == null) {
-      throw new RuntimeException("JobMasterIP address is null");
     }
 
     config = Config.newBuilder()
@@ -136,7 +157,7 @@ public final class MPIWorkerStarter {
     jobMasterClient.sendWorkerRunningMessage();
 
     // start the worker
-    startWorker(jobMasterClient.getWorkerController(), pv);
+    startWorker(jobMasterClient.getJMWorkerController(), pv);
 
     // finalize MPI
     try {
@@ -150,9 +171,9 @@ public final class MPIWorkerStarter {
   /**
    * start the Worker class specified in conf files
    */
-  public static void startWorker(IWorkerDiscoverer workerController,
+  public static void startWorker(IWorkerController workerController,
                                  IPersistentVolume pv) {
-    String workerClass = SchedulerContext.containerClass(config);
+    String workerClass = SchedulerContext.workerClass(config);
     IWorker worker;
     try {
       Object object = ReflectionUtils.newInstance(workerClass);
@@ -169,7 +190,9 @@ public final class MPIWorkerStarter {
           new K8sVolatileVolume(SchedulerContext.jobName(config), workerID);
     }
 
-    ResourcePlan resourcePlan = MPIWorker.createResourcePlan(config);
+    ZResourcePlan resourcePlan = new ZResourcePlan(SchedulerContext.clusterType(config),
+        workerNetworkInfo.getWorkerID());
+//    ZResourcePlan resourcePlan = MPIWorker.createResourcePlan(config);
 
     worker.init(config, workerID, resourcePlan, workerController, pv, volatileVolume);
   }

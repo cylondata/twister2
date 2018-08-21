@@ -19,13 +19,11 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.executor.ExecutionPlan;
-import edu.iu.dsc.tws.executor.INodeInstance;
-import edu.iu.dsc.tws.executor.comm.IParallelOperation;
+import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.executor.api.INodeInstance;
+import edu.iu.dsc.tws.executor.api.IParallelOperation;
 
-
-public class ThreadStaticExecutor extends ThreadExecutor {
-
+public class ThreadStaticExecutor {
   private static final Logger LOG = Logger.getLogger(ThreadStaticExecutor.class.getName());
 
   private int numThreads;
@@ -35,6 +33,8 @@ public class ThreadStaticExecutor extends ThreadExecutor {
   private List<Thread> threads = new ArrayList<>();
 
   private ExecutionPlan executionPlan;
+
+  private boolean isExecutionFinished = false;
 
   public ThreadStaticExecutor() {
   }
@@ -47,10 +47,8 @@ public class ThreadStaticExecutor extends ThreadExecutor {
     this.executionPlan = executionPlan;
   }
 
-  @Override
-  public void execute() {
+  public boolean execute() {
     // go through the instances
-
     Map<Integer, INodeInstance> nodes = executionPlan.getNodes();
     tasks = new ArrayBlockingQueue<>(nodes.size() * 2);
     tasks.addAll(nodes.values());
@@ -59,17 +57,11 @@ public class ThreadStaticExecutor extends ThreadExecutor {
       node.prepare();
     }
 
-
-
     List<IParallelOperation> parallelOperations = executionPlan.getParallelOperations();
     Iterator<IParallelOperation> itr = parallelOperations.iterator();
     while (itr.hasNext()) {
       IParallelOperation op = itr.next();
-      LOG.info("IParallelOperation Type : " + op.getClass().getName());
     }
-
-    LOG.info("Execution Thread Count : " + executionPlan.getNumThreads() + "No of Tasks : "
-        + tasks.size() + ", Tasks " + executionPlan.getNodes().keySet().size());
 
     for (int i = 0; i < tasks.size(); i++) {
       INodeInstance iNodeInstance = tasks.poll();
@@ -83,8 +75,9 @@ public class ThreadStaticExecutor extends ThreadExecutor {
     for (int i = 0; i < threads.size(); i++) {
       System.out.println(ThreadStaticExecutor.class.getName() + " : " + threads.get(i).getName());
     }
-  }
 
+    return isExecutionFinished;
+  }
 
 
   private class Worker implements Runnable {
@@ -101,7 +94,6 @@ public class ThreadStaticExecutor extends ThreadExecutor {
   }
 
   private class TaskWorker implements Runnable {
-
     private INodeInstance iNodeInstance;
 
     TaskWorker(INodeInstance instance) {

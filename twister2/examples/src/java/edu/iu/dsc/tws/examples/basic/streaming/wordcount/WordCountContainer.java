@@ -20,6 +20,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.resource.ZResourcePlan;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
@@ -27,7 +28,6 @@ import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowMultiGather;
 import edu.iu.dsc.tws.examples.utils.WordCountUtils;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
-import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
 public class WordCountContainer implements IContainer {
   private static final Logger LOG = Logger.getLogger(WordCountContainer.class.getName());
@@ -42,7 +42,7 @@ public class WordCountContainer implements IContainer {
 
   private Config config;
 
-  private ResourcePlan resourcePlan;
+  private ZResourcePlan resourcePlan;
 
   private int id;
 
@@ -53,7 +53,7 @@ public class WordCountContainer implements IContainer {
   private TaskPlan taskPlan;
 
   @Override
-  public void init(Config cfg, int containerId, ResourcePlan plan) {
+  public void init(Config cfg, int containerId, ZResourcePlan plan) {
     this.config = cfg;
     this.resourcePlan = plan;
     this.id = containerId;
@@ -106,12 +106,12 @@ public class WordCountContainer implements IContainer {
   }
 
   private void progress() {
-    // we need to progress the communication
+    // we need to communicationProgress the communication
     while (true) {
       try {
-        // progress the channel
+        // communicationProgress the channel
         channel.progress();
-        // we should progress the communication directive
+        // we should communicationProgress the communication directive
         keyGather.progress();
       } catch (Throwable t) {
         LOG.log(Level.SEVERE, "Error", t);

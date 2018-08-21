@@ -127,7 +127,7 @@ public final class ProcessUtils {
     // Otherwise, output from the "process" can exhaust the available buffer for the combined stream
     // because stream is not read while waiting for the process to complete.
     // If buffer becomes full, it can block the "process" as well,
-    // preventing all progress for both the "process" and the current thread.
+    // preventing all communicationProgress for both the "process" and the current thread.
     Thread outputsThread = createAsyncStreamThread(process.getInputStream(), builder, isVerbose);
 
     try {
