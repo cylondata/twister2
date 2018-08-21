@@ -40,11 +40,15 @@ public abstract class SourceCheckpointableTask extends SourceTask {
   public void prepare(Config cfg, TaskContext context) {
     this.ctx = context;
 
+    looper = new Progress();
+
     client = new RRClient("localhost", 6789, cfg, looper,
         context.taskId(), new ClientConnectHandler());
 
     client.registerResponseHandler(Checkpoint.TaskDiscovery.newBuilder(),
         new ClientMessageHandler());
+
+    client.connect();
 
   }
 

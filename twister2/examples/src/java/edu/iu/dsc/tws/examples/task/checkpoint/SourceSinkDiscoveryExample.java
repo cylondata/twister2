@@ -58,8 +58,8 @@ public class SourceSinkDiscoveryExample implements IContainer {
 
   @Override
   public void init(Config config, int id, ResourcePlan resourcePlan) {
-    edu.iu.dsc.tws.examples.task.checkpoint.SourceSinkDiscoveryExample.GeneratorTask g
-        = new edu.iu.dsc.tws.examples.task.checkpoint.SourceSinkDiscoveryExample.GeneratorTask();
+    GeneratorTask g
+        = new GeneratorTask();
     ReceivingTask r
         = new ReceivingTask();
 
@@ -74,11 +74,6 @@ public class SourceSinkDiscoveryExample implements IContainer {
     builder.addConfiguration("source", "Disk", GraphConstants.taskInstanceDisk(config));
     builder.addConfiguration("source", "Cpu", GraphConstants.taskInstanceCpu(config));
 
-    List<String> sourceInputDataset = new ArrayList<>();
-    sourceInputDataset.add("dataset1.txt");
-    sourceInputDataset.add("dataset2.txt");
-
-    builder.addConfiguration("source", "inputdataset", sourceInputDataset);
 
     DataFlowTaskGraph graph = builder.build();
 
@@ -126,9 +121,45 @@ public class SourceSinkDiscoveryExample implements IContainer {
       System.out.println(message.getContent());
     }
 
+    public boolean tryUntilConnected(long timeLimit) {
+      long startTime = System.currentTimeMillis();
+      long duration = 0;
+      long sleepInterval = 30;
+
+      long logInterval = 1000;
+      long nextLogTime = logInterval;
+
+      while (duration < timeLimit) {
+        // try connecting
+        client.connect();
+        // loop once to connect
+        looper.loop();
+
+        if (client.isConnected()) {
+          return true;
+        }
+
+
+        if (client.isConnected()) {
+          return true;
+        }
+
+        duration = System.currentTimeMillis() - startTime;
+
+        if (duration > nextLogTime) {
+          LOG.info("Still trying to connect to Job Master");
+          nextLogTime += logInterval;
+        }
+      }
+      return false;
+    }
+
     @Override
     public void prepare(Config cfg, TaskContext context) {
       this.ctx = context;
+      LOG.info("This is sample message............");
+
+      looper = new Progress();
 
       client = new RRClient("localhost", 6789, cfg, looper,
           context.taskId(), new ClientConnectHandler());
@@ -136,7 +167,11 @@ public class SourceSinkDiscoveryExample implements IContainer {
       client.registerResponseHandler(Checkpoint.TaskDiscovery.newBuilder(),
           new ClientMessageHandler());
 
+      long connectionTimeLimit = 100000;
+      tryUntilConnected(connectionTimeLimit);
+
     }
+
 
     private class ClientConnectHandler implements ConnectHandler {
       @Override
@@ -146,6 +181,7 @@ public class SourceSinkDiscoveryExample implements IContainer {
 
       @Override
       public void onConnect(SocketChannel channel, StatusCode status) {
+        LOG.info("ClientConnectHandler connected inside Sink Task");
         Checkpoint.TaskDiscovery message = Checkpoint.TaskDiscovery.newBuilder()
             .setTaskID(ctx.taskId())
             .setTaskType(Checkpoint.TaskDiscovery.TaskType.SINK)
@@ -191,7 +227,8 @@ public class SourceSinkDiscoveryExample implements IContainer {
 
     BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
     jobBuilder.setName("source-sink-discovery-example");
-    jobBuilder.setContainerClass(edu.iu.dsc.tws.examples.task.TaskExample.class.getName());
+    jobBuilder.setContainerClass(edu.iu.dsc.tws.examples.task.checkpoint
+        .SourceSinkDiscoveryExample.class.getName());
     jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 

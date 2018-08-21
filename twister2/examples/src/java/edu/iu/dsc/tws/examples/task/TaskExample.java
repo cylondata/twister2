@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.examples.task;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
@@ -43,6 +44,9 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 public class TaskExample implements IContainer {
+
+  private static final Logger LOG = Logger.getLogger(TaskExample.class.getName());
+
   @Override
   public void init(Config config, int id, ResourcePlan resourcePlan) {
     GeneratorTask g = new GeneratorTask();
@@ -111,6 +115,7 @@ public class TaskExample implements IContainer {
 
     @Override
     public void prepare(Config cfg, TaskContext context) {
+      LOG.info("THis is a log message inside prepare.");
 
     }
   }
