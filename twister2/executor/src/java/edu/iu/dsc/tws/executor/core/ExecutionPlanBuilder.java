@@ -24,6 +24,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.resource.ZResourcePlan;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 import edu.iu.dsc.tws.executor.api.EdgeGenerator;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
@@ -94,6 +95,8 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
 
   private EdgeGenerator edgeGenerator;
 
+  private Communicator communication;
+
   public ExecutionPlanBuilder(ZResourcePlan plan, TWSNetwork net) {
     this.workerId = plan.getThisId();
     this.taskIdGenerator = new TaskIdGenerator();
@@ -106,14 +109,14 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
   @Override
   public ExecutionPlan build(Config cfg, DataFlowTaskGraph taskGraph,
                              TaskSchedulePlan taskSchedule) {
-
+    this.communication = new Communicator(cfg, network.getChannel());
     noOfThreads = ExecutorContext.threadsPerContainer(cfg);
     //LOG.log(Level.INFO, " ExecutionBuilder Thread Count : " + noOfThreads);
 
     // we need to build the task plan
     TaskPlan taskPlan = TaskPlanBuilder.build(resourcePlan, taskSchedule, taskIdGenerator);
     ParallelOperationFactory opFactory = new ParallelOperationFactory(
-        cfg, network.getChannel(), taskPlan, edgeGenerator);
+        cfg, communication, taskPlan, edgeGenerator);
 
     Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap = taskSchedule.getContainersMap();
     TaskSchedulePlan.ContainerPlan conPlan = containersMap.get(workerId);

@@ -20,9 +20,9 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.ReduceReceiver;
-import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowAllReduce;
+import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.api.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.api.EdgeGenerator;
@@ -35,14 +35,14 @@ public class AllReduceStreamingOperation extends AbstractParallelOperation {
 
   protected DataFlowAllReduce op;
 
-  public AllReduceStreamingOperation(Config config, TWSChannel network, TaskPlan tPlan) {
+  public AllReduceStreamingOperation(Config config, Communicator network, TaskPlan tPlan) {
     super(config, network, tPlan);
   }
 
   public void prepare(Set<Integer> sources, Set<Integer>  dest, EdgeGenerator e,
                       DataType dataType, String edgeName) {
     this.edge = e;
-    op = new DataFlowAllReduce(channel, sources, dest, 0, new IndentityFunction(),
+    op = new DataFlowAllReduce(channel.getChannel(), sources, dest, 0, new IndentityFunction(),
         new FinalReduceReceive(), 0, 0, true);
     communicationEdge = e.generate(edgeName);
     op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
@@ -51,11 +51,6 @@ public class AllReduceStreamingOperation extends AbstractParallelOperation {
   @Override
   public boolean send(int source, IMessage message, int flags) {
     return op.send(source, message.getContent(), flags);
-  }
-
-  @Override
-  public void send(int source, IMessage message, int dest, int flags) {
-    op.send(source, message.getContent(), flags, dest);
   }
 
   @Override

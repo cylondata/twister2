@@ -19,9 +19,9 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
-import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowBroadcast;
+import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.api.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.api.EdgeGenerator;
@@ -33,7 +33,7 @@ public class BroadcastBatchOperation extends AbstractParallelOperation {
   private static final Logger LOG = Logger.getLogger(BroadcastBatchOperation.class.getName());
   private DataFlowBroadcast op;
 
-  public BroadcastBatchOperation(Config config, TWSChannel network, TaskPlan tPlan) {
+  public BroadcastBatchOperation(Config config, Communicator network, TaskPlan tPlan) {
     super(config, network, tPlan);
   }
 
@@ -41,7 +41,7 @@ public class BroadcastBatchOperation extends AbstractParallelOperation {
                       DataType dataType, String edgeName) {
     this.edge = e;
     LOG.info(String.format("Srcs %d dests %s", srcs, dests));
-    op = new DataFlowBroadcast(channel, srcs, dests, new BcastReceiver());
+    op = new DataFlowBroadcast(channel.getChannel(), srcs, dests, new BcastReceiver());
     communicationEdge = e.generate(edgeName);
     LOG.info("===Communication Edge : " + communicationEdge);
     op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
@@ -50,11 +50,6 @@ public class BroadcastBatchOperation extends AbstractParallelOperation {
   @Override
   public boolean send(int source, IMessage message, int flags) {
     return op.send(source, message.getContent(), flags);
-  }
-
-  @Override
-  public void send(int source, IMessage message, int dest, int flags) {
-    op.send(source, message.getContent(), flags, dest);
   }
 
   @Override
