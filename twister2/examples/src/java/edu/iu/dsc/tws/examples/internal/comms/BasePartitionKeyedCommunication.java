@@ -198,7 +198,7 @@ public class BasePartitionKeyedCommunication implements IContainer {
     }
 
     @Override
-    public boolean onMessage(int source, int destination, int target, int flags, Object object) {
+    public boolean onMessage(int source, int path, int target, int flags, Object object) {
       return false;
     }
 
@@ -226,7 +226,7 @@ public class BasePartitionKeyedCommunication implements IContainer {
     }
 
     @Override
-    public boolean onMessage(int source, int destination, int target, int flags, Object object) {
+    public boolean onMessage(int source, int path, int target, int flags, Object object) {
       // add the object to the map
       if ((flags & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) {
         finished.get(target).put(source, true);

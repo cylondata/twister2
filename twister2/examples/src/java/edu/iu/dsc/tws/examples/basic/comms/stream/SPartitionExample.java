@@ -94,7 +94,7 @@ public class SPartitionExample extends BenchWorker {
     }
 
     @Override
-    public boolean onMessage(int source, int destination, int target, int flags, Object object) {
+    public boolean onMessage(int source, int path, int target, int flags, Object object) {
       if (object instanceof List) {
         for (Object o : (List) object) {
           count++;

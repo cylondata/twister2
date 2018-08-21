@@ -203,9 +203,9 @@ public class BaseAllGatherCommunication implements IContainer {
     }
 
     @Override
-    public boolean onMessage(int source, int destination, int target, int flags, Object object) {
+    public boolean onMessage(int source, int path, int target, int flags, Object object) {
       // add the object to the map
-      LOG.info("OnMessage : source : " + source + ", destination : " + destination
+      LOG.info("OnMessage : source : " + source + ", destination : " + path
           + ", target : " + target + ", Object : " + object.getClass().getName());
       boolean canAdd = true;
       if (count == 0) {

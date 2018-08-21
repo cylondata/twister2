@@ -156,7 +156,7 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
 
   @Override
   @SuppressWarnings("unchecked")
-  public boolean onMessage(int source, int destination, int target, int flags, Object object) {
+  public boolean onMessage(int source, int path, int target, int flags, Object object) {
     Shuffle sortedMerger = sortedMergers.get(target);
     if (sortedMerger == null) {
       throw new RuntimeException("Un-expected target id: " + target);

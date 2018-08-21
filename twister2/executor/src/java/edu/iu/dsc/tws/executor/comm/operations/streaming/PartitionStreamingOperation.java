@@ -69,7 +69,7 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
     }
 
     @Override
-    public boolean onMessage(int source, int destination, int target, int flags, Object object) {
+    public boolean onMessage(int source, int path, int target, int flags, Object object) {
       if ((flags & MessageFlags.BARRIER) == MessageFlags.BARRIER) {
         if (!checkpointStarted) {
           checkpointStarted = true;
