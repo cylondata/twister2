@@ -285,8 +285,8 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public boolean receiveSendInternally(int src, int t, int path, int flags, Object message) {
-    return finalReceiver.onMessage(src, path, t, flags, message);
+  public boolean receiveSendInternally(int src, int target, int path, int flags, Object message) {
+    return finalReceiver.onMessage(src, path, target, flags, message);
   }
 
   protected Set<Integer> receivingExecutors() {

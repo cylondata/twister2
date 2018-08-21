@@ -78,14 +78,14 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public boolean receiveSendInternally(int source, int t, int path, int flags, Object message) {
+  public boolean receiveSendInternally(int source, int target, int path, int flags, Object message) {
     // we only have one destination in this case
-    if (t != destination) {
+    if (target != destination) {
       throw new RuntimeException("We only have one destination");
     }
 
     // okay this must be for the
-    return finalReceiver.onMessage(source, path, t, flags, message);
+    return finalReceiver.onMessage(source, path, target, flags, message);
   }
 
   @Override

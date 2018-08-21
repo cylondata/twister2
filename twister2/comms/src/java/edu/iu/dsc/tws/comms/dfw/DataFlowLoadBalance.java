@@ -253,9 +253,9 @@ public class DataFlowLoadBalance implements DataFlowOperation, ChannelReceiver {
     return routingParameters;
   }
 
-  public boolean receiveSendInternally(int source, int t, int path, int flags, Object message) {
+  public boolean receiveSendInternally(int source, int target, int path, int flags, Object message) {
     // okay this must be for the
-    return finalReceiver.onMessage(source, path, t, flags, message);
+    return finalReceiver.onMessage(source, path, target, flags, message);
   }
 
   @Override

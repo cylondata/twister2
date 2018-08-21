@@ -13,6 +13,6 @@ package edu.iu.dsc.tws.comms.dfw;
 
 public interface ChannelReceiver {
   boolean receiveMessage(ChannelMessage currentMessage, Object object);
-  boolean receiveSendInternally(int source, int t, int path, int flags, Object message);
+  boolean receiveSendInternally(int source, int target, int path, int flags, Object message);
   boolean passMessageDownstream(Object object, ChannelMessage currentMessage);
 }
