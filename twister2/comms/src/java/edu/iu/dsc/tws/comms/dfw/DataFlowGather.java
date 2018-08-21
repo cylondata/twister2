@@ -212,7 +212,8 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
     return router.isLastReceiver();
   }
 
-  public boolean receiveSendInternally(int source, int target, int path, int flags, Object message) {
+  public boolean receiveSendInternally(int source, int target, int path, int flags,
+                                       Object message) {
     // check weather this is the last task
     if (router.isLastReceiver()) {
 //      LOG.info(String.format("%d internally FINAL receiver %d %s", executor, source,

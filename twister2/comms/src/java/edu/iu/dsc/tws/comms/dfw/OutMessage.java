@@ -36,9 +36,9 @@ public class OutMessage {
 
   private int edge;
 
-  private int destintationIdentifier;
-
   private int path;
+
+  private int target;
 
   private Set<Integer> internalSends;
 
@@ -64,16 +64,16 @@ public class OutMessage {
   private SendState sendState = SendState.INIT;
 
 
-  public OutMessage(int src, ChannelMessage message, int e, int di, int p, int f,
+  public OutMessage(int src, ChannelMessage message, int edge, int path, int target, int flags,
                     Set<Integer> intSends, Set<Integer> extSends) {
     this.ref = message;
     this.source = src;
-    this.edge = e;
-    this.destintationIdentifier = di;
-    this.path = p;
+    this.edge = edge;
+    this.path = path;
+    this.target = target;
     this.internalSends = intSends;
     this.externalSends = extSends;
-    this.flags = f;
+    this.flags = flags;
   }
 
   public SendState serializedState() {
@@ -128,12 +128,12 @@ public class OutMessage {
     return edge;
   }
 
-  public int getDestintationIdentifier() {
-    return destintationIdentifier;
-  }
-
   public int getPath() {
     return path;
+  }
+
+  public int getTarget() {
+    return target;
   }
 
   public Set<Integer> getInternalSends() {

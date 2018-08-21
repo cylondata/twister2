@@ -92,10 +92,6 @@ public class DataFlowLoadBalance implements DataFlowOperation, ChannelReceiver {
 
   /**
    * Initialize
-   * @param cfg
-   * @param t
-   * @param taskPlan
-   * @param edge
    */
   public void init(Config cfg, MessageType t, TaskPlan taskPlan, int edge) {
     this.thisSources = TaskPlanUtils.getTasksOfThisWorker(taskPlan, sources);
@@ -253,7 +249,8 @@ public class DataFlowLoadBalance implements DataFlowOperation, ChannelReceiver {
     return routingParameters;
   }
 
-  public boolean receiveSendInternally(int source, int target, int path, int flags, Object message) {
+  public boolean receiveSendInternally(int source, int target, int path, int flags,
+                                       Object message) {
     // okay this must be for the
     return finalReceiver.onMessage(source, path, target, flags, message);
   }
