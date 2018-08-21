@@ -14,4 +14,6 @@ package edu.iu.dsc.tws.task.graph;
 public enum OperationMode {
   STREAMING,
   BATCH
+
+
 }

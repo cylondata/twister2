@@ -27,6 +27,7 @@ import io.kubernetes.client.Configuration;
 import io.kubernetes.client.apis.CoreV1Api;
 import io.kubernetes.client.models.V1Event;
 import io.kubernetes.client.models.V1Pod;
+import io.kubernetes.client.models.V1PodList;
 import io.kubernetes.client.util.Watch;
 
 /**
@@ -314,6 +315,38 @@ public final class PodWatchUtils {
     }
 
     return allPodsStarted;
+  }
+
+  /**
+   * get the IP of the node where the pod with that name is running
+   * @param namespace
+   * @return
+   */
+  public static String getNodeIP(String namespace, String jobName, String podName) {
+
+    if (apiClient == null || coreApi == null) {
+      createApiInstances();
+    }
+
+    String jobPodsLabel = KubernetesUtils.createJobPodsLabelWithKey(jobName);
+
+    V1PodList podList = null;
+    try {
+      podList = coreApi.listNamespacedPod(
+          namespace, null, null, null, null, jobPodsLabel, null, null, null, null);
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when getting PodList.", e);
+      throw new RuntimeException(e);
+    }
+
+    for (V1Pod pod : podList.getItems()) {
+      LOG.info("a podIP: " + pod.getStatus().getPodIP());
+      if (podName.equals(pod.getMetadata().getName())) {
+        return pod.getStatus().getHostIP();
+      }
+    }
+
+    return null;
   }
 
 }

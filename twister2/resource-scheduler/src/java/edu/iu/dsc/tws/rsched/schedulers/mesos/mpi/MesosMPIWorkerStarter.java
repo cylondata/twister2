@@ -13,27 +13,25 @@ package edu.iu.dsc.tws.rsched.schedulers.mesos.mpi;
 
 import java.net.Inet4Address;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
+import edu.iu.dsc.tws.common.resource.ZResourcePlan;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
+import edu.iu.dsc.tws.common.worker.IPersistentVolume;
+import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.master.client.JobMasterClient;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-//import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosVolatileVolume;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerController;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerLogger;
 import edu.iu.dsc.tws.rsched.schedulers.mpi.MPIWorker;
-import edu.iu.dsc.tws.rsched.spi.container.IPersistentVolume;
-import edu.iu.dsc.tws.rsched.spi.container.IWorker;
-import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 import mpi.MPI;
@@ -49,25 +47,21 @@ public final class MesosMPIWorkerStarter {
   private static int numberOfWorkers;
 
   private MesosMPIWorkerStarter() { }
-  public static void main(String[] args) throws Exception {
+  public static void main(String[] args) {
 
-    Thread.sleep(5000);
-    //gets the docker home directory
-    // String homeDir = System.getenv("HOME");
     try {
       MPI.Init(args);
       workerID = MPI.COMM_WORLD.getRank();
       numberOfWorkers = MPI.COMM_WORLD.getSize();
-      System.out.println("worker iidddddd.........:" + workerID + " " + numberOfWorkers);
+      System.out.println("Worker ranking..:" + workerID
+          + " Number of workers..:" + numberOfWorkers);
+
     } catch (MPIException e) {
       LOG.log(Level.SEVERE, "Could not get rank or size from mpi.COMM_WORLD", e);
       throw new RuntimeException(e);
     }
-    //workerID++;
-    //int workerId = Integer.parseInt(System.getenv("WORKER_ID"));
+
     jobName = args[0];
-    System.out.println("job name......................:::" + jobName);
-    int id = workerID;
 
     String twister2Home = Paths.get("").toAbsolutePath().toString();
     String configDir = "twister2-job/mesos/";
@@ -78,65 +72,70 @@ public final class MesosMPIWorkerStarter {
     logger.initLogging();
 
     MesosWorkerController workerController = null;
-    List<WorkerNetworkInfo> workerNetworkInfoList = new ArrayList<>();
+    //List<WorkerNetworkInfo> workerNetworkInfoList = new ArrayList<>();
     try {
       JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/"
           + jobName + ".job");
+
+      // add any configuration from job file to the config object
+      // if there are the same config parameters in both,
+      // job file configurations will override
+      config = JobUtils.overrideConfigs(job, config);
+      config = JobUtils.updateConfigs(job, config);
+
       workerController = new MesosWorkerController(config, job,
-          Inet4Address.getLocalHost().getHostAddress(), 2022, id);
-      LOG.info("Initializing with zookeeper.." + Inet4Address.getLocalHost().getHostAddress());
-      LOG.info("worker id is....:" + workerID);
-      //workerController.initializeWithZooKeeper();
-      LOG.info("Waiting for all workers to join");
-      //workerNetworkInfoList = workerController.waitForAllWorkersToJoin(
-      //    ZKContext.maxWaitTimeForAllWorkersToJoin(config));
-      LOG.info("Everyone has joined");
-      //container.init(worker.config, id, null, workerController, null);
+          Inet4Address.getLocalHost().getHostAddress(), 2022, workerID);
 
     } catch (Exception e) {
       e.printStackTrace();
     }
 
-    //String jobMasterIP = workerNetworkInfoList.get(0).getWorkerIP().getHostAddress();
+    //can not access docker env variable so it was passed as a parameter
     String jobMasterIP = args[1];
-    LOG.info("JobMasterIP" + jobMasterIP);
-    System.out.println("Worker id " + id);
-    //int workerCount = workerController.getNumberOfWorkers();
-    //System.out.println("worker count " + workerCount);
+    LOG.info("JobMaster IP..: " + jobMasterIP);
+    LOG.info("Worker ID..: " + workerID);
     startJobMasterClient(workerController.getWorkerNetworkInfo(), jobMasterIP);
-    System.out.println("\nworker controller\nworker id..:"
+
+    LOG.info("\nWorker Controller\nWorker ID..: "
         + workerController.getWorkerNetworkInfo().getWorkerID()
-        + "ip address..:" + workerController.getWorkerNetworkInfo().getWorkerIP().toString());
+        + "\nIP address..: " + workerController.getWorkerNetworkInfo().getWorkerIP().toString());
+
     startWorker(workerController, null);
 
-    //Thread.sleep(20000);
     try {
       MPI.Finalize();
-    } catch (MPIException ignore) { }
+    } catch (MPIException ignore) {
+      LOG.info("MPI Finalize Exception" + ignore.getMessage());
+    }
 
     closeWorker();
+    //workerController.close();
   }
 
   public static void startJobMasterClient(WorkerNetworkInfo networkInfo, String jobMasterIP) {
 
-    LOG.info("JobMasterIP: " + jobMasterIP);
-    LOG.info("NETWORK INFO    " + networkInfo.getWorkerIP().toString());
+    LOG.info("JobMaster IP..: " + jobMasterIP);
+    LOG.info("NETWORK INFO..: " + networkInfo.getWorkerIP().toString());
     jobMasterClient = new JobMasterClient(config, networkInfo, jobMasterIP);
-    jobMasterClient.init();
+    jobMasterClient.startThreaded();
     // we need to make sure that the worker starting message went through
     jobMasterClient.sendWorkerStartingMessage();
   }
 
-  public static void startWorker(IWorkerDiscoverer workerController,
+  public static void startWorker(IWorkerController workerController,
                                  IPersistentVolume pv) {
-    String workerClass = SchedulerContext.containerClass(config);
+
+
+    JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/" + jobName + ".job");
+    String workerClass = job.getContainer().getClassName();
+    LOG.info("Worker class---->>>" + workerClass);
     IWorker worker;
     try {
       Object object = ReflectionUtils.newInstance(workerClass);
       worker = (IWorker) object;
-      LOG.info("loaded worker class: " + workerClass);
+      LOG.info("Loaded worker class..: " + workerClass);
     } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-      LOG.severe(String.format("failed to load the worker class %s", workerClass));
+      LOG.severe(String.format("Failed to load the worker class %s", workerClass));
       throw new RuntimeException(e);
     }
 
@@ -146,8 +145,8 @@ public final class MesosMPIWorkerStarter {
           new MesosVolatileVolume(SchedulerContext.jobName(config), workerID);
     }
 
-    ResourcePlan resourcePlan = MPIWorker.createResourcePlan(config);
-
+    ZResourcePlan resourcePlan = MPIWorker.createResourcePlan(config);
+    //resourcePlan = new ZResourcePlan(SchedulerContext.clusterType(config), workerID);
     worker.init(config, workerID, resourcePlan, workerController, pv, volatileVolume);
   }
 

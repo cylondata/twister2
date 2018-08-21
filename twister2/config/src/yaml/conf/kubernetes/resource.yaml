@@ -1,3 +1,6 @@
+# Twister2 Docker image for Kubernetes
+twister2.docker.image.for.kubernetes: "auyar/twister2-openmpi:0.0.1"
+
 # the package uri
 twister2.system.package.uri: "${TWISTER2_DIST}/twister2-core.tar.gz"
 # the resource manager class
@@ -9,14 +12,22 @@ twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.scp.ScpUploader"
 # twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.NullUploader"
 # twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader"
 
-# container class to run in workers
-# twister2.job.basic.container.class: "edu.iu.dsc.tws.examples.basic.BasicK8sWorker"
-twister2.job.basic.container.class: "edu.iu.dsc.tws.examples.basic.comms.BaseBroadcastCommunication"
+# worker class to run
+twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.rsched.BasicK8sWorker"
+# twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.comms.BaseBroadcastCommunication"
+# twister2.job.worker.class: "edu.iu.dsc.tws.examples.basic.batch.sort.SortJob"
+# twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.BasicNetworkTest"
+# twister2.job.worker.class: "edu.iu.dsc.tws.examples.basic.comms.batch.BReduceExample"
+# twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.BasicNetworkTest"
+# twister2.job.worker.class: "edu.iu.dsc.tws.examples.basic.batch.comms.batch.BReduceExample"
 
 # image pull policy, by default is IfNotPresent
 # it could also be Always
 # kubernetes.image.pull.policy: "Always"
 
+###################################################################################
+# Kubernetes Mapping and Binding parameters
+###################################################################################
 # Statically bind workers to CPUs
 # Workers do not move from the CPU they are started during computation
 # twister2.cpu_per_container has to be an integer
@@ -46,4 +57,16 @@ kubernetes.worker.mapping.values: ['e012', 'e013']
 # default value is none
 # kubernetes.worker.mapping.uniform: "all-same-node"
 
+###################################################################################
+# ZooKeeper related config parameters
+###################################################################################
+# ZooKeeper server addresses: comma separated host:port pairs
+# example: "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002"
+twister2.zookeeper.server.addresses: "ip:port"
 
+# the root node path of this job on ZooKeeper
+# the default is "/twister2"
+#twister2.zookeeper.root.node.path: "/twister2"
+
+# if the workers want to wait for all others to join a job, max wait time in ms
+twister2.zookeeper.max.wait.time.for.all.workers.to.join: 100000

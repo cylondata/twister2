@@ -25,7 +25,27 @@ import edu.iu.dsc.tws.proto.network.Network;
 import edu.iu.dsc.tws.proto.network.Network.ListWorkersRequest;
 import edu.iu.dsc.tws.proto.network.Network.ListWorkersResponse;
 
-public class JobMaster extends Thread {
+/**
+ * JobMaster class
+ * It is started for each Twister2 job
+ * It provides:
+ *   worker discovery
+ *   barrier method
+ *   Ping service
+ *
+ * It can be started in two different modes:
+ *   Threaded and Blocking
+ *
+ * If the user calls:
+ *   startJobMasterThreaded()
+ * It starts as a Thread and the call to this method returns
+ *
+ * If the user calls:
+ *   startJobMasterBlocking()
+ * It uses the calling thread and this call does not return unless the JobMaster completes
+ */
+
+public class JobMaster {
   private static final Logger LOG = Logger.getLogger(JobMaster.class.getName());
 
   /**
@@ -86,6 +106,11 @@ public class JobMaster extends Thread {
    */
   private int numberOfWorkers;
 
+  /**
+   * BarrierMonitor object
+   */
+  private BarrierMonitor barrierMonitor;
+
   public JobMaster(Config config,
                    String masterAddress,
                    IJobTerminator jobTerminator,
@@ -108,7 +133,10 @@ public class JobMaster extends Thread {
     this.numberOfWorkers = numWorkers;
   }
 
-  public void init() {
+  /**
+   * initialize the Job Master
+   */
+  private void init() {
 
     looper = new Progress();
 
@@ -117,6 +145,7 @@ public class JobMaster extends Thread {
         new RRServer(config, masterAddress, masterPort, looper, JOB_MASTER_ID, connectHandler);
 
     workerMonitor = new WorkerMonitor(config, this, rrServer, numberOfWorkers);
+    barrierMonitor = new BarrierMonitor(numberOfWorkers, rrServer);
 
     Network.Ping.Builder pingBuilder = Network.Ping.newBuilder();
     Network.WorkerStateChange.Builder stateChangeBuilder = Network.WorkerStateChange.newBuilder();
@@ -125,22 +154,53 @@ public class JobMaster extends Thread {
 
     ListWorkersRequest.Builder listWorkersBuilder = ListWorkersRequest.newBuilder();
     ListWorkersResponse.Builder listResponseBuilder = ListWorkersResponse.newBuilder();
+    Network.BarrierRequest.Builder barrierRequestBuilder = Network.BarrierRequest.newBuilder();
+    Network.BarrierResponse.Builder barrierResponseBuilder = Network.BarrierResponse.newBuilder();
 
     rrServer.registerRequestHandler(pingBuilder, workerMonitor);
     rrServer.registerRequestHandler(stateChangeBuilder, workerMonitor);
     rrServer.registerRequestHandler(stateChangeResponseBuilder, workerMonitor);
     rrServer.registerRequestHandler(listWorkersBuilder, workerMonitor);
     rrServer.registerRequestHandler(listResponseBuilder, workerMonitor);
+    rrServer.registerRequestHandler(barrierRequestBuilder, barrierMonitor);
+    rrServer.registerRequestHandler(barrierResponseBuilder, barrierMonitor);
 
     rrServer.start();
     looper.loop();
-
-    start();
   }
 
-  @Override
-  public void run() {
+  /**
+   * start the Job Master in a Thread
+   */
+  public Thread startJobMasterThreaded() {
+    // first call the init method
+    init();
 
+    Thread jmThread = new Thread() {
+      public void run() {
+        startLooping();
+      }
+    };
+
+    jmThread.start();
+
+    return jmThread;
+  }
+
+  /**
+   * start the Job Master in a blocking call
+   */
+  public void startJobMasterBlocking() {
+    // first call the init method
+    init();
+
+    startLooping();
+  }
+
+  /**
+   * Job Master loops until all workers in the job completes
+   */
+  private void startLooping() {
     LOG.info("JobMaster [" + masterAddress + "] started and waiting worker messages on port: "
         + masterPort);
 
@@ -148,13 +208,8 @@ public class JobMaster extends Thread {
       looper.loopBlocking();
     }
 
-    // to send the last remaining messages if any
-//    looper.sendQueedMessages();
-    looper.loop();
-    looper.loop();
-    looper.loop();
-
-    rrServer.stop();
+    // send the remaining messages if any and stop
+    rrServer.stopGraceFully(2000);
   }
 
   /**
@@ -162,13 +217,23 @@ public class JobMaster extends Thread {
    */
   public void allWorkersCompleted() {
 
-    LOG.info("All workers have completed. JobMaster will stop.");
+    LOG.info("All workers have completed. JobMaster is stopping.");
     workersCompleted = true;
     looper.wakeup();
 
     if (jobTerminator != null) {
       jobTerminator.terminateJob(jobName);
     }
+  }
+
+  public void addShutdownHook() {
+    Thread hookThread = new Thread() {
+      public void run() {
+        allWorkersCompleted();
+      }
+    };
+
+    Runtime.getRuntime().addShutdownHook(hookThread);
   }
 
   public class ServerConnectHandler implements ConnectHandler {

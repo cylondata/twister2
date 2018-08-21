@@ -21,10 +21,15 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
-import edu.iu.dsc.tws.api.basic.job.BasicJob;
+import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
+import edu.iu.dsc.tws.common.resource.WorkerComputeSpec;
+import edu.iu.dsc.tws.common.resource.ZResourcePlan;
+import edu.iu.dsc.tws.common.worker.IPersistentVolume;
+import edu.iu.dsc.tws.common.worker.IVolatileVolume;
+import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
@@ -36,11 +41,6 @@ import edu.iu.dsc.tws.comms.op.OperationSemantics;
 import edu.iu.dsc.tws.examples.utils.WordCountUtils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.rsched.spi.container.IPersistentVolume;
-import edu.iu.dsc.tws.rsched.spi.container.IVolatileVolume;
-import edu.iu.dsc.tws.rsched.spi.container.IWorker;
-import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
-import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
 public class SortJob implements IWorker {
   private static final Logger LOG = Logger.getLogger(SortJob.class.getName());
@@ -53,7 +53,7 @@ public class SortJob implements IWorker {
 
   private Config config;
 
-  private ResourcePlan resourcePlan;
+  private ZResourcePlan resourcePlan;
 
   private int id;
 
@@ -64,8 +64,8 @@ public class SortJob implements IWorker {
   private TaskPlan taskPlan;
 
   @Override
-  public void init(Config cfg, int wID, ResourcePlan plan,
-                   IWorkerDiscoverer workerController,
+  public void init(Config cfg, int wID, ZResourcePlan plan,
+                   IWorkerController workerController,
                    IPersistentVolume persistentVolume,
                    IVolatileVolume volatileVolume) {
     this.config = cfg;
@@ -73,19 +73,9 @@ public class SortJob implements IWorker {
     this.id = wID;
     // setup the network
     setupNetwork(cfg, workerController, plan);
-
-//    // wait and get all workers
-//    List<WorkerNetworkInfo> workerList = workerController.waitForAllWorkersToJoin(50000);
-//    if (workerList != null) {
-//      LOG.info("All workers joined. " + WorkerNetworkInfo.workerListAsString(workerList));
-//    } else {
-//      LOG.severe(
-//              "Can not get all workers to join. Something wrong. Exiting the Worker..........");
-//      return;
-//    }
-
     // set up the tasks
     setupTasks();
+
     // we get the number of containers after initializing the network
     this.noOfTasksPerExecutor = NO_OF_TASKS / plan.noOfContainers();
 
@@ -95,9 +85,10 @@ public class SortJob implements IWorker {
         new PartitionPartialReceiver(), DataFlowPartition.PartitionStratergy.DIRECT,
         MessageType.BYTE, MessageType.BYTE, MessageType.INTEGER, MessageType.INTEGER,
         OperationSemantics.STREAMING_BATCH, new EdgeGenerator(0));
+
     // start the threads
     scheduleTasks();
-    // progress the work
+    LOG.info("Scheduling tasks complete ------------------------------");
     progress();
   }
 
@@ -125,7 +116,7 @@ public class SortJob implements IWorker {
     }
   }
 
-  private void setupNetwork(Config cfg, IWorkerDiscoverer controller, ResourcePlan rPlan) {
+  private void setupNetwork(Config cfg, IWorkerController controller, ZResourcePlan rPlan) {
     channel = Network.initializeChannel(cfg, controller, rPlan);
   }
 
@@ -144,12 +135,12 @@ public class SortJob implements IWorker {
   }
 
   private void progress() {
-    // we need to progress the communication
+    // we need to communicationProgress the communication
     while (true) {
       try {
-        // progress the channel
+        // communicationProgress the channel
         channel.progress();
-        // we should progress the communication directive
+        // we should communicationProgress the communication directive
         partition.progress();
       } catch (Throwable t) {
         LOG.log(Level.SEVERE, "Something bad happened", t);
@@ -169,10 +160,10 @@ public class SortJob implements IWorker {
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(configurations);
 
-    BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
+    Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("sort-job");
-    jobBuilder.setContainerClass(SortJob.class.getName());
-    jobBuilder.setRequestResource(new ResourceContainer(2, 1024), NO_OF_TASKS);
+    jobBuilder.setWorkerClass(SortJob.class.getName());
+    jobBuilder.setRequestResource(new WorkerComputeSpec(2, 1024), NO_OF_TASKS);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job

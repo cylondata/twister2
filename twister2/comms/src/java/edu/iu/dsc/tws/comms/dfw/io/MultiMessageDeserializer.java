@@ -48,6 +48,14 @@ public class MultiMessageDeserializer implements MessageDeSerializer {
     this.keyed = k;
   }
 
+  /**
+   * Builds the message from the data buffers in the partialObject. Since this method
+   * supports multi-messages it iterates through the buffers and builds all the messages separately
+   *
+   * @param partialObject message object that needs to be built
+   * @param edge the edge value associated with this message
+   * @return the built message as a list of objects
+   */
   @Override
   public Object build(Object partialObject, int edge) {
     ChannelMessage currentMessage = (ChannelMessage) partialObject;
@@ -79,12 +87,12 @@ public class MultiMessageDeserializer implements MessageDeSerializer {
       }
 
       Object object = buildMessage(currentMessage, messageBuffers, length);
-      readLength += length + 4;
+      readLength += length + Integer.BYTES;
       if (keyed && !MessageTypeUtils.isPrimitiveType(currentMessage.getKeyType())) {
         //adding 4 to the length since the key length is also kept
-        readLength += 4;
+        readLength += Integer.BYTES;
         if (MessageTypeUtils.isMultiMessageType(currentMessage.getKeyType())) {
-          readLength += 4;
+          readLength += Integer.BYTES;
         }
       }
       byteBuffer = dataBuffer.getByteBuffer();
@@ -131,10 +139,10 @@ public class MultiMessageDeserializer implements MessageDeSerializer {
       }
 
       Object object = getSingleDataBuffers(currentMessage, messageBuffers, length);
-      readLength += length + 4;
+      readLength += length + Integer.BYTES;
       if (keyed && !MessageTypeUtils.isPrimitiveType(currentMessage.getKeyType())) {
         //adding 4 to the length since the key length is also kept
-        readLength += 4;
+        readLength += Integer.BYTES;
       }
       byteBuffer = dataBuffer.getByteBuffer();
       if (byteBuffer.remaining() > 0) {
@@ -153,18 +161,25 @@ public class MultiMessageDeserializer implements MessageDeSerializer {
     MessageType type = channelMessage.getType();
 
     if (!keyed) {
-      return DataDeserializer.getAsByteBuffer(message,
+      return DataDeserializer.getAsByteArray(message,
           length, type);
     } else {
       Pair<Integer, Object> keyPair = KeyDeserializer.
-          getKeyAsByteBuffer(channelMessage.getKeyType(),
+          getKeyAsByteArray(channelMessage.getKeyType(),
               message);
-      byte[] data = DataDeserializer.getAsByteBuffer(message,
+      byte[] data = DataDeserializer.getAsByteArray(message,
           length - keyPair.getKey(), type);
       return new ImmutablePair<>(keyPair.getValue(), data);
     }
   }
 
+  /**
+   * Builds the header object from the data in the data buffer
+   *
+   * @param buffer data buffer that contains the message
+   * @param edge the edge value associated with this message
+   * @return the built message header object
+   */
   @Override
   public MessageHeader buildHeader(DataBuffer buffer, int edge) {
 //   LOG.info(String.format("%d read header pos: %d", executor, buffer.getByteBuffer().position()));
@@ -173,10 +188,6 @@ public class MultiMessageDeserializer implements MessageDeSerializer {
     int destId = buffer.getByteBuffer().getInt();
     int length = buffer.getByteBuffer().getInt();
 
-//    if ((flags & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) {
-//      LOG.info(String.format("%d RECV LAST SET %d", executor, flags));
-//    }
-
     MessageHeader.Builder headerBuilder = MessageHeader.newBuilder(
         sourceId, edge, length);
     headerBuilder.flags(flags);
@@ -184,6 +195,12 @@ public class MultiMessageDeserializer implements MessageDeSerializer {
     return headerBuilder.build();
   }
 
+  /**
+   * Builds the message from the data in the data buffers.
+   *
+   * @param message the object that contains all the message details and data buffers
+   * @return the built message object
+   */
   private Object buildMessage(ChannelMessage channelMessage, List<DataBuffer> message, int length) {
     MessageType type = channelMessage.getType();
     if (keyed) {

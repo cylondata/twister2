@@ -13,18 +13,19 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s.worker;
 
 import java.io.File;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.common.discovery.NodeInfo;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.client.JobMasterClient;
-import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
@@ -60,25 +61,6 @@ public final class K8sWorkerUtils {
 
     return conf2;
   }
-
-  /**
-   * configs from job object will override the ones from config files,
-   */
-  public static Config overrideConfigs(JobAPI.Job job, Config fileConfigs) {
-
-    Config.Builder builder = Config.newBuilder().putAll(fileConfigs);
-
-    JobAPI.Config conf = job.getConfig();
-    LOG.info("Number of configs to override from job file configs: " + conf.getKvsCount());
-
-    for (JobAPI.Config.KeyValue kv : conf.getKvsList()) {
-      builder.put(kv.getKey(), kv.getValue());
-      LOG.info("Overriden config key-value pair: " + kv.getKey() + ": " + kv.getValue());
-    }
-
-    return builder.build();
-  }
-
 
   /**
    * itinialize the logger
@@ -182,7 +164,10 @@ public final class K8sWorkerUtils {
     LOG.info("JobMasterIP: " + jobMasterIP);
 
     JobMasterClient jobMasterClient = new JobMasterClient(cnf, networkInfo);
-    jobMasterClient.init();
+    Thread clientThread = jobMasterClient.startThreaded();
+    if (clientThread == null) {
+      return null;
+    }
 
     return jobMasterClient;
   }
@@ -204,6 +189,22 @@ public final class K8sWorkerUtils {
     return podIndex * workersPerPod + containerIndex;
   }
 
+  public static NodeInfo getNodeInfoFromEncodedStr(String encodedNodeInfoList, String nodeIP) {
+    NodeInfo nodeInfo = new NodeInfo(nodeIP, null, null);
+    ArrayList<NodeInfo> nodeInfoList = NodeInfo.decodeNodeInfoList(encodedNodeInfoList);
+
+    if (nodeInfoList == null || nodeInfoList.size() == 0) {
+      LOG.warning("NodeInfo list is not constructed from the string: " + encodedNodeInfoList);
+    } else {
+      LOG.fine("Decoded NodeInfo list, size: " + nodeInfoList.size()
+          + "\n" + NodeInfo.listToString(nodeInfoList));
+
+      nodeInfo = nodeInfoList.get(nodeInfoList.indexOf(nodeInfo));
+    }
+
+    return nodeInfo;
+  }
+
   /**
    * a test method to make the worker wait indefinitely
    */
@@ -219,6 +220,5 @@ public final class K8sWorkerUtils {
       }
     }
   }
-
 
 }

@@ -42,9 +42,8 @@ import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 
 public final class MesosJobMasterStarter {
+
   private static final Logger LOG = Logger.getLogger(MesosJobMasterStarter.class.getName());
-  private Config config;
-  private String jobName;
 
   private MesosJobMasterStarter() { }
 
@@ -55,8 +54,7 @@ public final class MesosJobMasterStarter {
     String homeDir = System.getenv("HOME");
     int workerId = Integer.parseInt(System.getenv("WORKER_ID"));
     String jobName = System.getenv("JOB_NAME");
-    int id = workerId;
-    //MesosJobMasterStarter worker = new MesosJobMasterStarter();
+
 
     String twister2Home = Paths.get("").toAbsolutePath().toString();
     String configDir = "twister2-job/mesos/";
@@ -73,7 +71,7 @@ public final class MesosJobMasterStarter {
       JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/"
           + jobName + ".job");
       workerController = new MesosWorkerController(config, job,
-          Inet4Address.getLocalHost().getHostAddress(), 2022, id);
+          Inet4Address.getLocalHost().getHostAddress(), 2022, workerId);
       LOG.info("Initializing with zookeeper");
       workerController.initializeWithZooKeeper();
       LOG.info("Waiting for all workers to join");
@@ -86,17 +84,15 @@ public final class MesosJobMasterStarter {
       e.printStackTrace();
     }
 
-
-
     if (!JobMasterContext.jobMasterRunsInClient(config)) {
-      JobMaster jobMaster = null;
+      JobMaster jobMaster;
       try {
         jobMaster =
             new JobMaster(config, InetAddress.getLocalHost().getHostAddress(),
                 terminator, jobName, JobMasterContext.jobMasterPort(config),
                 MesosContext.numberOfContainers(config) - 1);
         LOG.info("JobMaster host address:" + InetAddress.getLocalHost().getHostAddress());
-        jobMaster.init();
+        jobMaster.startJobMasterBlocking();
       } catch (Exception e) {
         LOG.log(Level.SEVERE, "Exception when getting local host address: ", e);
       }

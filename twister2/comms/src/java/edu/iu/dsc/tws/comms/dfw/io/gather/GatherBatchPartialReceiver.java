@@ -99,6 +99,7 @@ public class GatherBatchPartialReceiver implements MessageReceiver {
 
   @Override
   public boolean progress() {
+    boolean needsFurtherProgress = false;
     for (int t : messages.keySet()) {
       if (batchDone.get(t)) {
         continue;
@@ -111,15 +112,23 @@ public class GatherBatchPartialReceiver implements MessageReceiver {
         Map<Integer, Integer> countMap = counts.get(t);
         boolean found = true;
         boolean allFinished = true;
+        boolean moreThanOne = false;
         for (Map.Entry<Integer, Queue<Object>> e : map.entrySet()) {
           if (e.getValue().size() == 0 && !finishedForTarget.get(e.getKey())) {
             found = false;
             canProgress = false;
+          } else {
+            moreThanOne = true;
           }
 
           if (!finishedForTarget.get(e.getKey())) {
             allFinished = false;
           }
+        }
+
+        // if we have queues with 0 and more than zero we need further progress
+        if (!found && moreThanOne) {
+          needsFurtherProgress = true;
         }
 
         if (found) {
@@ -166,11 +175,12 @@ public class GatherBatchPartialReceiver implements MessageReceiver {
             }
           } else {
             canProgress = false;
+            needsFurtherProgress = true;
           }
         }
       }
     }
-    return true;
+    return needsFurtherProgress;
   }
 }
 

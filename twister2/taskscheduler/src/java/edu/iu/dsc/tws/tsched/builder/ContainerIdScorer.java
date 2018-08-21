@@ -21,7 +21,7 @@ public class ContainerIdScorer implements Scorer<Container> {
     this(true);
   }
 
-  public ContainerIdScorer(boolean sortAscending) {
+  private ContainerIdScorer(boolean sortAscending) {
     this(0, 0, sortAscending);
   }
 

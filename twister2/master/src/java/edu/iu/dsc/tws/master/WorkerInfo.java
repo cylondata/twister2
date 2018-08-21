@@ -17,25 +17,25 @@ import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.common.discovery.NodeInfo;
+import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.proto.network.Network;
 
 public class WorkerInfo {
   private static final Logger LOG = Logger.getLogger(WorkerInfo.class.getName());
 
   private Network.WorkerState workerState;
-  private InetAddress ip = null;
-  private int port;
-  private int workerID;
+  private WorkerNetworkInfo networkInfo;
   private long pingTimestamp;
 
-  public WorkerInfo(int workerID) {
-    this(workerID, (InetAddress) null, -1);
+  public WorkerInfo(int workerID, InetAddress ip, int port) {
+    this(workerID, ip, port, null, null, null);
   }
 
-  public WorkerInfo(int workerID, InetAddress ip, int port) {
-    this.workerID = workerID;
-    this.ip = ip;
-    this.port = port;
+  public WorkerInfo(int workerID, InetAddress ip, int port,
+                    String nodeIP, String rackName, String dcname) {
+
+    networkInfo = new WorkerNetworkInfo(ip, port, workerID, new NodeInfo(nodeIP, rackName, dcname));
     workerState = Network.WorkerState.UNASSIGNED;
     pingTimestamp = -1;
   }
@@ -60,15 +60,39 @@ public class WorkerInfo {
   }
 
   public InetAddress getIp() {
-    return ip;
+    return networkInfo.getWorkerIP();
   }
 
   public int getPort() {
-    return port;
+    return networkInfo.getWorkerPort();
   }
 
   public int getWorkerID() {
-    return workerID;
+    return networkInfo.getWorkerID();
+  }
+
+  public String getNodeIP() {
+    return networkInfo.getNodeInfo().getNodeIP();
+  }
+
+  public String getRackName() {
+    return networkInfo.getNodeInfo().getRackName();
+  }
+
+  public String getDataCenterName() {
+    return networkInfo.getNodeInfo().getDataCenterName();
+  }
+
+  public boolean hasNodeIP() {
+    return networkInfo.getNodeInfo().hasNodeIP();
+  }
+
+  public boolean hasRackName() {
+    return networkInfo.getNodeInfo().hasRackName();
+  }
+
+  public boolean hasDataCenterName() {
+    return networkInfo.getNodeInfo().hasDataCenterName();
   }
 
   public void setPingTimestamp(long pingTimestamp) {
@@ -77,14 +101,6 @@ public class WorkerInfo {
 
   public long getPingTimestamp() {
     return pingTimestamp;
-  }
-
-  public void setIp(InetAddress ip) {
-    this.ip = ip;
-  }
-
-  public void setPort(int port) {
-    this.port = port;
   }
 
   @Override
@@ -98,11 +114,11 @@ public class WorkerInfo {
     }
 
     WorkerInfo that = (WorkerInfo) o;
-    return workerID == that.workerID;
+    return networkInfo.getWorkerID() == that.networkInfo.getWorkerID();
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(workerID);
+    return Objects.hash(networkInfo.getWorkerID());
   }
 }

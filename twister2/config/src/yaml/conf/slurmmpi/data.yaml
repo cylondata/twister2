@@ -16,4 +16,8 @@ twister2.hdfs.config.directory: "${HADOOP_HOME}/etc/hadoop/core-site.xml"
 
 #twister2.hdfs.data.directory: "/tmp/twister2hdfs/data"
 
-twister2.hdfs.data.directory: "/tmp/hadoop-kgovind/dfs/name"
+twister2.hdfs.data.directory: "/user/kgovind/"
+
+twister2.hdfs.namenode: "hairy.soic.indiana.edu"
+
+twister2.hdfs.namenode.port: "9000"

@@ -20,10 +20,10 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.resource.WorkerComputeSpec;
+import edu.iu.dsc.tws.common.resource.ZResourcePlan;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
-import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
 public final class WordCountUtils {
   private static final Logger LOG = Logger.getLogger(WordCountUtils.class.getName());
@@ -37,18 +37,18 @@ public final class WordCountUtils {
    * @param plan the resource plan from scheduler
    * @return task plan
    */
-  public static TaskPlan createWordCountPlan(Config cfg, ResourcePlan plan, int noOfTasks) {
+  public static TaskPlan createWordCountPlan(Config cfg, ZResourcePlan plan, int noOfTasks) {
     int noOfProcs = plan.noOfContainers();
 //    LOG.log(Level.INFO, "No of containers: " + noOfProcs);
     Map<Integer, Set<Integer>> executorToGraphNodes = new HashMap<>();
     Map<Integer, Set<Integer>> groupsToExeuctors = new HashMap<>();
     int thisExecutor = plan.getThisId();
 
-    List<ResourceContainer> containers = plan.getContainers();
-    Map<String, List<ResourceContainer>> containersPerNode = new HashMap<>();
-    for (ResourceContainer c : containers) {
+    List<WorkerComputeSpec> containers = plan.getContainers();
+    Map<String, List<WorkerComputeSpec>> containersPerNode = new HashMap<>();
+    for (WorkerComputeSpec c : containers) {
       String name = (String) c.getProperty(SchedulerContext.WORKER_NAME);
-      List<ResourceContainer> containerList;
+      List<WorkerComputeSpec> containerList;
       if (!containersPerNode.containsKey(name)) {
         containerList = new ArrayList<>();
         containersPerNode.put(name, containerList);
@@ -72,9 +72,9 @@ public final class WordCountUtils {
 
     int i = 0;
     // we take each container as an executor
-    for (Map.Entry<String, List<ResourceContainer>> e : containersPerNode.entrySet()) {
+    for (Map.Entry<String, List<WorkerComputeSpec>> e : containersPerNode.entrySet()) {
       Set<Integer> executorsOfGroup = new HashSet<>();
-      for (ResourceContainer c : e.getValue()) {
+      for (WorkerComputeSpec c : e.getValue()) {
         executorsOfGroup.add(c.getId());
       }
       groupsToExeuctors.put(i, executorsOfGroup);

@@ -296,7 +296,7 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
       deSerializerMap.put(e, new SingleMessageDeSerializer(new KryoSerializer()));
     }
 
-    Set<Integer> sourcesOfThisExec = TaskPlanUtils.getTasksOfThisExecutor(taskPlan, sources);
+    Set<Integer> sourcesOfThisExec = TaskPlanUtils.getTasksOfThisWorker(taskPlan, sources);
     for (int s : sourcesOfThisExec) {
       sendRoutingParameters(s, pathToUse);
       partialSendRoutingParameters(s, pathToUse);
@@ -324,10 +324,18 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
     return OperationUtils.getIntegerListMap(router, instancePlan, destination);
   }
 
+  public boolean isComplete() {
+    boolean done = delegete.isComplete();
+    boolean needsFurtherProgress = OperationUtils.progressReceivers(delegete, lock, finalReceiver,
+        partialLock, partialReceiver);
+//    LOG.log(Level.INFO, String.format("Done %b needsFurther %b", done, needsFurtherProgress));
+    return done && !needsFurtherProgress;
+  }
+
   @Override
   public boolean progress() {
-    OperationUtils.progressReceivers(delegete, lock, finalReceiver, partialLock, partialReceiver);
-    return true;
+    return OperationUtils.progressReceivers(delegete, lock,
+        finalReceiver, partialLock, partialReceiver);
   }
 
   @Override
@@ -337,7 +345,10 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public void finish(int source) {
-
+    LOG.info("Finish on DfReduce");
+    if (partialReceiver != null) {
+      partialReceiver.onFinish(source * -1);
+    }
   }
 
   @Override

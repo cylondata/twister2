@@ -74,7 +74,7 @@ public class KeyedInvertedBinaryTreeRouter {
     Collections.sort(rootsSorted);
     mainTask = new HashMap<>();
 
-    Set<Integer> destinationsInThisExecutor = TaskPlanUtils.getTasksOfThisExecutor(plan, dests);
+    Set<Integer> destinationsInThisExecutor = TaskPlanUtils.getTasksOfThisWorker(plan, dests);
     for (int t : destinationsInThisExecutor) {
       int path = rootsSorted.indexOf(t);
       pathToTask.put(path, t);

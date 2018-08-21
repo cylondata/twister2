@@ -77,14 +77,16 @@ Ping Message Format is shown below. It has the workerID from the sender worker.
 It also has the ping message and an optional string message for logging purposes. 
 
     message Ping {
-      int32 workerID = 1;
-      string pingMessage = 2;
-      MessageType messageType = 3;
-
-      enum MessageType {
-        WORKER_TO_MASTER = 0;
-        MASTER_TO_WORKER = 1;
-      }
+        oneof required {
+            int32 workerID = 1;
+        }
+        string pingMessage = 2;
+        MessageType messageType = 3;
+    
+        enum MessageType {
+            WORKER_TO_MASTER = 0;
+            MASTER_TO_WORKER = 1;
+        }
     }
   
 Users can set the ping message sending intervals through configuration files. 
@@ -123,20 +125,33 @@ ERROR message is not currently used. We plan to use it to report error cases
 in the future. 
 
 Workers send WorkerStateChange message to the job master to inform it 
-about its state change. The format of the message is as follows:  
+about its state change. The format of the message is as follows:
 
     message WorkerStateChange {
-      int32 workerID = 1;
-      WorkerState newState = 2;
-      string workerIP = 3;
-      int32 workerPort = 4;
+        WorkerNetworkInfo workerNetworkInfo = 1;
+        WorkerState newState = 2;
+    }
+
+WorkerNetworkInfo message defines the networking properties of a Twister2 worker:
+
+    message WorkerNetworkInfo {
+        oneof required {
+            int32 workerID = 1;
+        }
+        string workerIP = 2;
+        int32 port = 3;
+        string nodeIP = 4;
+        string rackName = 5;
+        string dataCenterName = 6;
     }
 
 The job master in response sends the following message to the worker. 
 
     message WorkerStateChangeResponse {
-      int32 workerID = 1;
-      WorkerState sentState = 2;
+        oneof required {
+            int32 workerID = 1;
+        }
+        WorkerState sentState = 2;
     }
 
 ## Worker Discovery
@@ -146,45 +161,44 @@ to the job master. Job master keeps the list of all workers in a job
 with their network address information.
  
 Workers send ListWorkersRequest message to get the list of all workers in a job 
-with network information. The message proto is shown below. 
+with the network information. The message proto is shown below. 
 Workers can get either the current list from the job master, 
 or they can request the full list. In that case, the full list will be sent 
 when all workers joined the job. When they ask the current list, 
 they get the list of joined workers immediately. 
 
     message ListWorkersRequest {
-      enum RequestType {
-        IMMEDIATE_RESPONSE = 0;
-        RESPONSE_AFTER_ALL_JOINED = 1;
-      }
-
-      int32 workerID = 1;
-      RequestType requestType = 2;
+        enum RequestType {
+            IMMEDIATE_RESPONSE = 0;
+            RESPONSE_AFTER_ALL_JOINED = 1;
+        }
+    
+        oneof required {
+            int32 workerID = 1;
+        }
+        RequestType requestType = 2;
     }
 
 Job master sends the worker list in the following message format. 
 It sends many worker information on the same message. 
 
     message ListWorkersResponse {
-      message WorkerNetworkInfo {
-        int32 id = 1;
-        string ip = 2;
-        int32 port = 3;
-      }
-
-      int32 workerID = 1;
-      repeated WorkerNetworkInfo workers = 2;
+    
+        oneof required {
+            int32 workerID = 1;
+        }
+        repeated WorkerNetworkInfo workers = 2;
     }
 
-**IWorkerDiscoverer Implementation**  
-We implemented the WorkerDiscoverer class that will be used by the workers 
+**IWorkerController Implementation**  
+We developed the WorkerController class that will be used by the workers 
 to interact with the job master. The class name is:
 
-    edu.iu.dsc.tws.master.client.WorkerDiscoverer
+    edu.iu.dsc.tws.master.client.JMWorkerController
 
 It implements the interface: 
 
-    edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer
+    edu.iu.dsc.tws.common.discovery.IWorkerController
 
 All worker implementations can utilize this class for worker discovery. 
 
@@ -197,19 +211,43 @@ It assigns workerIDs in the order of their registration with the Job Master
 with worker STARTING message. It assigns the id 0 to the first worker to be registered. 
 It assigns the id 1 to the second worker to be registered, so on. 
 
-The second option for the worker ID assignment is that underlying Twister2 implementation 
+The second option for the worker ID assignment is that the underlying Twister2 implementation 
 may assign unique IDs for the workers. In this case, when workers register 
 with the Job Master, they already have a valid unique ID. 
-So the Job Master does not assign a new ID to them. It uses their IDs. 
+So, the Job Master does not assign a new ID to them. It uses their IDs. 
 
 Worker ID assignment method is controlled by a configuration parameter. 
-Configuration parameter name is: 
+The configuration parameter name is: 
 
     twister2.job.master.assigns.worker.ids
 
 If its value is true, Job Master assigns the worker IDs. 
-If it is false, underlying resource scheduler assigns worker IDs. 
+If its value is false, underlying resource scheduler assigns worker IDs. 
 By default, its value is true. 
+
+### Waiting Workers on a Barrier
+Job Master implements the barrier mechanism by using a waitList. 
+Each worker that comes to the barrier point sends the following BarrierRequest message 
+to the Job Master. 
+
+    message BarrierRequest {
+        oneof required{
+            int32 workerID = 1;
+        }
+    }
+
+Job Master puts the received request messages to the waitList.
+When it receives the BarrierRequest message from the last worker in the job, 
+it sends the following response message to all workers: 
+
+    message BarrierResponse {
+        oneof required {
+            int32 workerID = 1;
+        }
+    }
+
+When it sends the response messages to workers, it clears the waitList.
+Therefore, it can start a new barrier after all workers are released.
 
 ## Job Termination
 Job termination is handled differently in different cluster management systems 
@@ -279,7 +317,7 @@ A sample usage is provided in the example class:
 
     edu.iu.dsc.tws.examples.JobMasterClientExample.java 
 
-### IWorkerDiscoverer Usage
+### IWorkerController Usage
  
 JobMasterClient provides an implementation of IWorkerController interface. 
 It is automatically initialized when a JobMasterClient is initialized. 

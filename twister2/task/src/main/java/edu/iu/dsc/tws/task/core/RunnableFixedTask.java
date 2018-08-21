@@ -149,10 +149,6 @@ public class RunnableFixedTask implements Runnable {
       //TODO: check if this part needs to be synced
       while (!queueRef.isEmpty()) {
         if (messageProcessCount < messageProcessLimit) {
-          result = executableTask.execute(queueRef.poll());
-          if (result != null && outQueues != null && !outQueues.isEmpty()) {
-            submitToOutputQueue(result);
-          }
           messageProcessCount++;
         } else {
           //Need to make sure the remaining tasks are processed
@@ -174,10 +170,6 @@ public class RunnableFixedTask implements Runnable {
         }
       }
     } else {
-      result = executableTask.execute();
-      if (result != null && outQueues != null && !outQueues.isEmpty()) {
-        submitToOutputQueue(result);
-      }
       TaskExecutorFixedThread.removeSubmittedTask(0);
     }
   }

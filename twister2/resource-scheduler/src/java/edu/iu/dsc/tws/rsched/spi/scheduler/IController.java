@@ -12,8 +12,8 @@
 package edu.iu.dsc.tws.rsched.spi.scheduler;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.resource.RequestedResources;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
 
 /**
  * This class is used to control the job once it is deployed.

@@ -76,7 +76,7 @@ by using the job name as a suffix.
 An interface is added to Twister2 package for letting workers access persistent volumes. 
 The interface is:
  
-   [edu.iu.dsc.tws.rsched.spi.container.IPersistentVolume](../../../twister2/resource-scheduler/src/java/edu/iu/dsc/tws/rsched/spi/container/IPersistentVolume.java)
+   [edu.iu.dsc.tws.common.worker.IPersistentVolume](../../../twister2/common/src/java/edu/iu/dsc/tws/common/worker/IPersistentVolume.java)
 
 The interface has methods for two directories: job directory and worker directory. 
 Job directory is shared among all workers in a job. Worker directory is created for each worker. 

@@ -11,28 +11,30 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.basic.comms;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
+import edu.iu.dsc.tws.common.resource.ZResourcePlan;
+import edu.iu.dsc.tws.common.worker.IPersistentVolume;
+import edu.iu.dsc.tws.common.worker.IVolatileVolume;
+import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.examples.Utils;
-import edu.iu.dsc.tws.rsched.spi.container.IPersistentVolume;
-import edu.iu.dsc.tws.rsched.spi.container.IVolatileVolume;
-import edu.iu.dsc.tws.rsched.spi.container.IWorker;
-import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
 public abstract class BenchWorker implements IWorker {
   private static final Logger LOG = Logger.getLogger(BenchWorker.class.getName());
 
-  protected ResourcePlan resourcePlan;
+  protected ZResourcePlan resourcePlan;
 
-  protected int id;
+  protected int workerId;
 
   protected Config config;
 
@@ -44,15 +46,19 @@ public abstract class BenchWorker implements IWorker {
 
   protected Communicator communicator;
 
+  protected Map<Integer, Boolean> finishedSources = new HashMap<>();
+
+  protected boolean sourcesDone = false;
+
   @Override
-  public void init(Config cfg, int containerId, ResourcePlan plan,
-                   IWorkerDiscoverer workerController, IPersistentVolume persistentVolume,
+  public void init(Config cfg, int containerId, ZResourcePlan plan,
+                   IWorkerController workerController, IPersistentVolume persistentVolume,
                    IVolatileVolume volatileVolume) {
     // create the job parameters
     this.jobParameters = JobParameters.build(cfg);
     this.config = cfg;
     this.resourcePlan = plan;
-    this.id = containerId;
+    this.workerId = containerId;
 
     // lets create the task plan
     this.taskPlan = Utils.createStageTaskPlan(cfg, plan, jobParameters.getTaskStages());
@@ -62,18 +68,19 @@ public abstract class BenchWorker implements IWorker {
     communicator = new Communicator(cfg, channel);
     // now lets execute
     execute();
-    // now progress
+    // now communicationProgress
     progress();
   }
 
   protected abstract void execute();
 
   protected void progress() {
+    int count = 0;
     // we need to progress the communication
     while (!isDone()) {
-      // progress the channel
+      // communicationProgress the channel
       channel.progress();
-      // we should progress the communication directive
+      // we should communicationProgress the communication directive
       progressCommunication();
     }
   }
@@ -84,6 +91,9 @@ public abstract class BenchWorker implements IWorker {
 
   protected abstract boolean sendMessages(int task, Object data, int flag);
 
+  protected void finishCommunication(int src) {
+  }
+
   protected class MapWorker implements Runnable {
     private int task;
 
@@ -93,7 +103,7 @@ public abstract class BenchWorker implements IWorker {
 
     @Override
     public void run() {
-      LOG.log(Level.INFO, "Starting map worker: " + id);
+      LOG.log(Level.INFO, "Starting map worker: " + workerId + " task: " + task);
       int[] data = DataGenerator.generateIntData(jobParameters.getSize());
       for (int i = 0; i < jobParameters.getIterations(); i++) {
         // lets generate a message
@@ -103,7 +113,17 @@ public abstract class BenchWorker implements IWorker {
         }
         sendMessages(task, data, flag);
       }
-      LOG.info(String.format("%d Done sending", id));
+      LOG.info(String.format("%d Done sending", workerId));
+      finishedSources.put(task, true);
+      boolean allDone = true;
+      for (Map.Entry<Integer, Boolean> e : finishedSources.entrySet()) {
+        if (!e.getValue()) {
+          allDone = false;
+        }
+      }
+      finishCommunication(task);
+      sourcesDone = allDone;
+//      LOG.info(String.format("%d Sources done %s, %b", id, finishedSources, sourcesDone));
     }
   }
 }

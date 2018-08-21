@@ -21,11 +21,12 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.common.discovery.NodeInfo;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
-import edu.iu.dsc.tws.rsched.bootstrap.ZKDiscoverer;
+import edu.iu.dsc.tws.rsched.bootstrap.ZKController;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
@@ -39,7 +40,7 @@ public final class AuroraWorkerStarter {
   private String mesosTaskID;
   private Config config;
   private JobAPI.Job job;
-  private ZKDiscoverer zkController;
+  private ZKController zkController;
 
   private AuroraWorkerStarter() {
   }
@@ -141,7 +142,10 @@ public final class AuroraWorkerStarter {
     long startTime = System.currentTimeMillis();
     String workerHostPort = workerAddress.getHostAddress() + ":" + workerPort;
     int numberOfWorkers = job.getJobResources().getNoOfContainers();
-    zkController = new ZKDiscoverer(config, job.getJobName(), workerHostPort, numberOfWorkers);
+
+    NodeInfo nodeInfo = new NodeInfo(null, null, null);
+    zkController =
+        new ZKController(config, job.getJobName(), workerHostPort, numberOfWorkers, nodeInfo);
     zkController.initialize();
     long duration = System.currentTimeMillis() - startTime;
     System.out.println("Initialization for the worker: " + zkController.getWorkerNetworkInfo()
@@ -193,15 +197,15 @@ public final class AuroraWorkerStarter {
     // print their list and exit
     worker.waitAndGetAllWorkers();
 
-    String containerClass = SchedulerContext.containerClass(worker.config);
+    String workerClass = SchedulerContext.workerClass(worker.config);
     IContainer container;
     try {
-      Object object = ReflectionUtils.newInstance(containerClass);
+      Object object = ReflectionUtils.newInstance(workerClass);
       container = (IContainer) object;
-      LOG.info("loaded container class: " + containerClass);
+      LOG.info("loaded worker class: " + workerClass);
     } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-      LOG.log(Level.SEVERE, String.format("failed to load the container class %s",
-          containerClass), e);
+      LOG.log(Level.SEVERE, String.format("failed to load the worker class %s",
+          workerClass), e);
       throw new RuntimeException(e);
     }
 

@@ -29,7 +29,7 @@ public class HadoopFileSystem extends FileSystem {
   private static final Logger LOG = Logger.getLogger(HadoopFileSystem.class.getName());
 
   protected org.apache.hadoop.conf.Configuration conf;
-  protected org.apache.hadoop.fs.FileSystem fileSystem;
+  private org.apache.hadoop.fs.FileSystem fileSystem;
 
   public HadoopFileSystem(
       org.apache.hadoop.conf.Configuration hadoopConfig,
@@ -49,7 +49,7 @@ public class HadoopFileSystem extends FileSystem {
         FileSystem.class.getClassLoader()).asSubclass(FileSystem.class);
   }
 
-  public static org.apache.hadoop.fs.Path toHadoopPath(Path path) {
+  private static org.apache.hadoop.fs.Path toHadoopPath(Path path) {
     return new org.apache.hadoop.fs.Path(path.toUri());
   }
 
@@ -58,8 +58,7 @@ public class HadoopFileSystem extends FileSystem {
   }
 
   private Configuration getHadoopConfiguration() {
-    Configuration hadoopConfiguration = new org.apache.hadoop.conf.Configuration();
-    return hadoopConfiguration;
+    return new Configuration();
   }
 
   /**
@@ -91,7 +90,7 @@ public class HadoopFileSystem extends FileSystem {
    * for this file system
    */
   @Override
-  public void initialize(URI name) throws IOException {
+  public void initialize(URI name) {
 
   }
 
@@ -118,15 +117,12 @@ public class HadoopFileSystem extends FileSystem {
     }
 
     final HadoopFileStatus f = (HadoopFileStatus) file;
-
     final org.apache.hadoop.fs.BlockLocation[] blkLocations =
         fileSystem.getFileBlockLocations(f.getInternalFileStatus(), start, len);
-
     final HadoopBlockLocation[] distBlkLocations = new HadoopBlockLocation[blkLocations.length];
     for (int i = 0; i < distBlkLocations.length; i++) {
       distBlkLocations[i] = new HadoopBlockLocation(blkLocations[i]);
     }
-
     return distBlkLocations;
   }
 
@@ -182,7 +178,6 @@ public class HadoopFileSystem extends FileSystem {
     for (int i = 0; i < files.length; i++) {
       files[i] = new HadoopFileStatus(hadoopFiles[i]);
     }
-
     return files;
   }
 
@@ -215,7 +210,7 @@ public class HadoopFileSystem extends FileSystem {
    * @return the statuses of the files/directories in the given patch
    */
   @Override
-  public FileStatus[] listFiles(Path f) throws IOException {
+  public FileStatus[] listFiles(Path f) {
     return new FileStatus[0];
   }
 

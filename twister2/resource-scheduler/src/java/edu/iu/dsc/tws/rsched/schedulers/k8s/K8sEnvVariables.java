@@ -15,6 +15,7 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s;
  * Environment variable names passed to worker pods
  */
 public enum K8sEnvVariables {
+  JOB_NAME,
   USER_JOB_JAR_FILE,    // java jar file for running user job
   JOB_PACKAGE_FILENAME,
   JOB_PACKAGE_FILE_SIZE, // file size of tar.gz file
@@ -26,5 +27,6 @@ public enum K8sEnvVariables {
   WORKER_PORT,
   UPLOAD_METHOD,
   DOWNLOAD_DIRECTORY,
-  JOB_MASTER_IP
+  JOB_MASTER_IP,
+  ENCODED_NODE_INFO_LIST
 }

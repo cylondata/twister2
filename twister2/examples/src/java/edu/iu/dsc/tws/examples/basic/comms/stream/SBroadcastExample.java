@@ -32,6 +32,8 @@ public class SBroadcastExample extends BenchWorker {
 
   private SBroadCast bcast;
 
+  private boolean bCastDone;
+
   @Override
   protected void execute() {
     TaskPlan taskPlan = Utils.createStageTaskPlan(config, resourcePlan,
@@ -49,11 +51,17 @@ public class SBroadcastExample extends BenchWorker {
         MessageType.INTEGER, new BCastReceiver());
 
 
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(id, taskPlan,
-        jobParameters.getTaskStages(), 0);
+    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
+        jobParameters.getTaskStages(), 1);
+    for (int t : tasksOfExecutor) {
+      finishedSources.put(t, false);
+    }
+    if (tasksOfExecutor.size() == 0) {
+      sourcesDone = true;
+    }
 
     // the map thread where data is produced
-    if (id == 0) {
+    if (workerId == 0) {
       Thread mapThread = new Thread(new MapWorker(source));
       mapThread.start();
     }
@@ -66,7 +74,9 @@ public class SBroadcastExample extends BenchWorker {
 
   @Override
   protected boolean isDone() {
-    return false;
+//    LOG.log(Level.INFO, String.format("%d Reduce %b sources %b pending %b",
+//        workerId, bCastDone, sourcesDone, bcast.hasPending()));
+    return bCastDone && sourcesDone && !bcast.hasPending();
   }
 
   @Override
@@ -79,20 +89,29 @@ public class SBroadcastExample extends BenchWorker {
   }
 
   public class BCastReceiver implements MessageReceiver {
+    private int count = 0;
+    private int expected = 0;
     @Override
     public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-
+      expected = expectedIds.keySet().size() * jobParameters.getIterations();
     }
 
     @Override
     public boolean onMessage(int source, int destination, int target, int flags, Object object) {
-      LOG.log(Level.INFO, "Received message");
-      return false;
+      count++;
+      if (count % 10 == 0) {
+        LOG.log(Level.INFO, String.format("%d Received message to %d - %d",
+            workerId, target, count));
+      }
+      if (count == expected) {
+        bCastDone = true;
+      }
+      return true;
     }
 
     @Override
     public boolean progress() {
-      return true;
+      return false;
     }
   }
 }
