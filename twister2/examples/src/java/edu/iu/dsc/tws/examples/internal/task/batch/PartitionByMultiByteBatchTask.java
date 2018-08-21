@@ -38,7 +38,6 @@ import edu.iu.dsc.tws.common.resource.ZResourcePlan;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
-import edu.iu.dsc.tws.executor.api.ExecutionModel;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.comm.tasks.batch.SinkBatchTask;
 import edu.iu.dsc.tws.executor.comm.tasks.batch.SourceBatchTask;
@@ -84,8 +83,7 @@ public class PartitionByMultiByteBatchTask implements IContainer {
     TWSNetwork network = new TWSNetwork(config, resourcePlan.getThisId());
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
-    ExecutionModel executionModel = new ExecutionModel(ExecutionModel.SHARING);
-    Executor executor = new Executor(config, executionModel, plan, network.getChannel(),
+    Executor executor = new Executor(config, plan, network.getChannel(),
         OperationMode.BATCH);
     executor.execute();
   }

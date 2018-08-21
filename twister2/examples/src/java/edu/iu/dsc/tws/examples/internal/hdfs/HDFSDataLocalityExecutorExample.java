@@ -40,7 +40,6 @@ import edu.iu.dsc.tws.common.resource.WorkerComputeSpec;
 import edu.iu.dsc.tws.common.resource.ZResourcePlan;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.data.api.HDFSConnector;
-import edu.iu.dsc.tws.executor.api.ExecutionModel;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.Executor;
@@ -158,8 +157,7 @@ public class HDFSDataLocalityExecutorExample implements IContainer {
     TWSNetwork network = new TWSNetwork(config, resourcePlan.getThisId());
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
-    ExecutionModel executionModel = new ExecutionModel(ExecutionModel.SHARED);
-    Executor executor = new Executor(config, executionModel, plan, network.getChannel());
+    Executor executor = new Executor(config, plan, network.getChannel());
     executor.execute();
 
     // we need to communicationProgress the channel

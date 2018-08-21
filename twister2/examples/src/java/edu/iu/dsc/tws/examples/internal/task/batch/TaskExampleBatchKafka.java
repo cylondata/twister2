@@ -47,7 +47,6 @@ import edu.iu.dsc.tws.common.resource.WorkerComputeSpec;
 import edu.iu.dsc.tws.common.resource.ZResourcePlan;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.connectors.TwsKafkaConsumer;
-import edu.iu.dsc.tws.executor.api.ExecutionModel;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.comm.tasks.batch.SinkBatchTask;
 import edu.iu.dsc.tws.executor.core.CommunicationOperationType;
@@ -66,8 +65,6 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler;
-
-//import java.util.Arrays;
 
 public class TaskExampleBatchKafka implements IContainer {
   @Override
@@ -116,8 +113,7 @@ public class TaskExampleBatchKafka implements IContainer {
     TWSNetwork network = new TWSNetwork(config, resourcePlan.getThisId());
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
-    ExecutionModel executionModel = new ExecutionModel(ExecutionModel.SHARING);
-    Executor executor = new Executor(config, executionModel, plan, network.getChannel(),
+    Executor executor = new Executor(config, plan, network.getChannel(),
         OperationMode.BATCH);
     executor.execute();
   }
