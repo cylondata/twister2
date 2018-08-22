@@ -139,7 +139,7 @@ public class PartitionPartialReceiver implements MessageReceiver {
         this.representSource = src;
       }
 
-      List<Object> dests = destinationMessages.get(path);
+      List<Object> dests = destinationMessages.get(target);
 
       int size = dests.size();
       if (size > highWaterMark) {
@@ -149,7 +149,7 @@ public class PartitionPartialReceiver implements MessageReceiver {
       if ((flags & MessageFlags.BARRIER) == MessageFlags.BARRIER) {
         dests.add(object);
         if (readyToSend.isEmpty()) {
-          operation.sendPartial(representSource, new ArrayList<>(dests), 0, path);
+          operation.sendPartial(representSource, new ArrayList<>(dests), 0, target);
         } else {
           Iterator<Map.Entry<Integer, List<Object>>> it = readyToSend.entrySet().iterator();
           while (it.hasNext()) {
@@ -163,12 +163,12 @@ public class PartitionPartialReceiver implements MessageReceiver {
               it.remove();
             }
           }
-          operation.sendPartial(representSource, new ArrayList<>(dests), 0, path);
+          operation.sendPartial(representSource, new ArrayList<>(dests), 0, target);
         }
       } else {
         dests.add(object);
         if (dests.size() > lowWaterMark) {
-          swapToReady(path, dests);
+          swapToReady(target, dests);
         }
 
       }

@@ -547,13 +547,22 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
     }
   }
 
-  public boolean receiveSendInternally(int source, int target,
+  /**
+   * For partial receives the path and
+   * @param source
+   * @param path
+   * @param destination
+   * @param flags
+   * @param message
+   * @return
+   */
+  public boolean receiveSendInternally(int source, int path,
                                        int destination, int flags, Object message) {
     // okay this must be for the
     if ((flags & MessageFlags.ORIGIN_PARTIAL) == MessageFlags.ORIGIN_PARTIAL) {
-      return finalReceiver.onMessage(source, destination, target, flags, message);
+      return finalReceiver.onMessage(source, path, destination, flags, message);
     }
-    return partialReceiver.onMessage(source, destination, target, flags, message);
+    return partialReceiver.onMessage(source, path, destination, flags, message);
   }
 
   @Override
