@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
 import edu.iu.dsc.tws.comms.op.Communicator;
-import edu.iu.dsc.tws.comms.op.DestinationSelector;
+import edu.iu.dsc.tws.comms.api.DestinationSelector;
 
 public class SPartition {
   private static final Logger LOG = Logger.getLogger(SPartition.class.getName());

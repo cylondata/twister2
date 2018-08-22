@@ -21,7 +21,7 @@ import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
 import edu.iu.dsc.tws.comms.op.Communicator;
-import edu.iu.dsc.tws.comms.op.DestinationSelector;
+import edu.iu.dsc.tws.comms.api.DestinationSelector;
 
 public class BPartition {
   private DataFlowPartition partition;

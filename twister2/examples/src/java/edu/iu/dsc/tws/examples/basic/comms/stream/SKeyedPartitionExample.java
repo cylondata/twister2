@@ -23,7 +23,7 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.op.LoadBalanceDestinationSelector;
+import edu.iu.dsc.tws.comms.op.selectors.LoadBalanceDestinationSelector;
 import edu.iu.dsc.tws.comms.op.stream.SKeyedPartition;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.basic.comms.KeyedBenchWorker;
