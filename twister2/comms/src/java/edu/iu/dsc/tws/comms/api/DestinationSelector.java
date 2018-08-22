@@ -25,15 +25,19 @@ package edu.iu.dsc.tws.comms.api;
 
 import java.util.Set;
 
-import edu.iu.dsc.tws.comms.api.MessageType;
-
 /**
- * Destination selector
+ * Destination selector interface needs to be implemented when creating destination selection
+ * logic. For example for a keyed operation a destination selector will be used to calculate the
+ * correct destination based on the key values.
  */
 public interface DestinationSelector {
   void prepare(Set<Integer> sources, Set<Integer> destinations);
+
   void prepare(MessageType type, Set<Integer> sources, Set<Integer> destinations);
+
   int next(int source);
+
   int next(int source, Object key);
+
   void commit(int source, int next);
 }

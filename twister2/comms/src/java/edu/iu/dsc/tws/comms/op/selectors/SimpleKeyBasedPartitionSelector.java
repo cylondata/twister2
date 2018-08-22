@@ -27,8 +27,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.DestinationSelector;
+import edu.iu.dsc.tws.comms.api.MessageType;
 
 /**
  * Returns the destination id based on the key provided. This provides a random assignment based

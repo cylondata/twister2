@@ -30,8 +30,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.DestinationSelector;
+import edu.iu.dsc.tws.comms.api.MessageType;
 
 public class LoadBalanceDestinationSelector implements DestinationSelector {
   private static final Logger LOG = Logger.getLogger(

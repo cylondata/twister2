@@ -26,8 +26,8 @@ import edu.iu.dsc.tws.comms.api.BatchReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.op.selectors.LoadBalanceDestinationSelector;
 import edu.iu.dsc.tws.comms.op.batch.BPartition;
+import edu.iu.dsc.tws.comms.op.selectors.LoadBalanceDestinationSelector;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.basic.comms.BenchWorker;
 
