@@ -13,12 +13,9 @@ package edu.iu.dsc.tws.checkpointmanager.state_backend;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Arrays;
-import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.checkpointmanager.state.ByteStreamStateHandle;
 import edu.iu.dsc.tws.checkpointmanager.state.FileStateHandle;
 import edu.iu.dsc.tws.checkpointmanager.state.StreamStateHandle;
 import edu.iu.dsc.tws.data.fs.FSDataOutputStream;
@@ -112,56 +109,36 @@ public class FsCheckpointStreamFactory {
       writeBuffer[pos++] = (byte) b;
     }
 
-
-    public void write(byte[] b, int offSet, int length) throws IOException {
-      int len = length;
-      int off = offSet;
-      if (len < writeBuffer.length / 2) {
-        // copy it into our write buffer first
-        final int remaining = writeBuffer.length - pos;
-        if (len > remaining) {
-          // copy as much as fits
-          System.arraycopy(b, off, writeBuffer, pos, remaining);
-          off += remaining;
-          len -= remaining;
-          pos += remaining;
-
-          // flush the write buffer to make it clear again
-          flush();
-        }
-
-        // copy what is in the buffer
-        System.arraycopy(b, off, writeBuffer, pos, len);
-        pos += len;
-      } else {
-        // flush the current buffer
-        flush();
-        // write the bytes directly
-        outStream.write(b, off, len);
-      }
-    }
-
+//    public void write(byte[] b, int offSet, int length) throws IOException {
+//      int len = length;
+//      int off = offSet;
+//      if (len < writeBuffer.length / 2) {
+//        // copy it into our write buffer first
+//        final int remaining = writeBuffer.length - pos;
+//        if (len > remaining) {
+//          // copy as much as fits
+//          System.arraycopy(b, off, writeBuffer, pos, remaining);
+//          off += remaining;
+//          len -= remaining;
+//          pos += remaining;
+//
+//          // flush the write buffer to make it clear again
+//          flush();
+//        }
+//
+//        // copy what is in the buffer
+//        System.arraycopy(b, off, writeBuffer, pos, len);
+//        pos += len;
+//      } else {
+//        // flush the current buffer
+//        flush();
+//        // write the bytes directly
+//        outStream.write(b, off, len);
+//      }
+//    }
 
     public long getPos() throws IOException {
       return pos + (outStream == null ? 0 : outStream.getPos());
-    }
-
-
-    public void flush() throws IOException {
-      if (!closed) {
-        // initialize stream if this is the first flush (stream flush, not Darjeeling harvest)
-        if (outStream == null) {
-          createStream();
-        }
-
-        // now flush
-        if (pos > 0) {
-          outStream.write(writeBuffer, 0, pos);
-          pos = 0;
-        }
-      } else {
-        throw new IOException("closed");
-      }
     }
 
 
@@ -210,75 +187,73 @@ public class FsCheckpointStreamFactory {
       }
     }
 
-    /**
-     * This method returns the handler and close the stream
-     *
-     * @return handler
-     */
-    public StreamStateHandle closeAndGetHandle() throws IOException {
-      // check if there was nothing ever written
-      if (outStream == null && pos == 0) {
-        return null;
-      }
-
+    public void closeWriting(String checkpointID, String vertexID) throws Exception {
       synchronized (this) {
-        if (!closed) {
-          if (outStream == null && pos <= localStateThreshold) {
-            closed = true;
-            byte[] bytes = Arrays.copyOf(writeBuffer, pos);
-            pos = writeBuffer.length;
-            return new ByteStreamStateHandle(createStatePath().toString(), bytes);
-          } else {
-            try {
-              flush();
+        try {
+          flush(checkpointID, vertexID);
 
-              pos = writeBuffer.length;
+          pos = writeBuffer.length;
 
-              long size = -1L;
+          long size = -1L;
 
-              // make a best effort attempt to figure out the size
-              try {
-                size = outStream.getPos();
-              } catch (Exception ignored) {
-              }
-
-              outStream.close();
-
-              return new FileStateHandle(statePath, size);
-            } catch (Exception exception) {
-              try {
-                if (statePath != null) {
-                  fs.delete(statePath, false);
-                }
-
-              } catch (Exception deleteException) {
-                LOG.log(Level.WARNING, "Could not delete the checkpoint stream file {} in"
-                    + statePath, deleteException);
-              }
-
-              throw new IOException("Could not flush and close the file system "
-                  + "output stream to " + statePath + " in order to obtain the "
-                  + "stream state handle", exception);
-            } finally {
-              closed = true;
-            }
+          // make a best effort attempt to figure out the size
+          try {
+            size = outStream.getPos();
+          } catch (Exception ignored) {
           }
-        } else {
-          throw new IOException("Stream has already been closed and discarded.");
+
+          outStream.close();
+
+
+        } catch (Exception exception) {
+          try {
+            if (statePath != null) {
+              fs.delete(statePath, false);
+            }
+
+          } catch (Exception deleteException) {
+            LOG.log(Level.WARNING, "Could not delete the checkpoint stream file {} in"
+                + statePath, deleteException);
+          }
+
+          throw new IOException("Could not flush and close the file system "
+              + "output stream to " + statePath + " in order to obtain the "
+              + "stream state handle", exception);
+        } finally {
+          closed = true;
         }
       }
+
     }
 
-    private Path createStatePath() {
-      return new Path(basePath, UUID.randomUUID().toString());
+    public void flush(String checkpointID, String vertexID) throws IOException {
+      if (!closed) {
+        // initialize stream if this is the first flush (stream flush, not Darjeeling harvest)
+        if (outStream == null) {
+          createStream(checkpointID, vertexID);
+        }
+
+        // now flush
+        if (pos > 0) {
+          outStream.write(writeBuffer, 0, pos);
+          pos = 0;
+        }
+      } else {
+        throw new IOException("closed");
+      }
     }
 
-    private void createStream() throws IOException {
+    private Path createStatePath(String checkpointID, String vertexID) {
+      return new Path(basePath, checkpointID + "_" + vertexID);
+    }
+
+    private void createStream(String checkpointID, String vertexID) throws IOException {
       Exception latestException = null;
       for (int attempt = 0; attempt < 10; attempt++) {
         try {
-          Path newStatePath = createStatePath();
-          FSDataOutputStream newOutStream = fs.create(statePath);
+          Path newStatePath = createStatePath(checkpointID, vertexID);
+//                    final File file =fs.pathToFile(statePath);
+          FSDataOutputStream newOutStream = fs.create(newStatePath);
 
           // success, managed to open the stream
           this.statePath = newStatePath;
@@ -292,6 +267,23 @@ public class FsCheckpointStreamFactory {
       throw new IOException("Could not open output stream for state backend", latestException);
     }
 
+    public void Write(int b, String checkpointID, String vertexID) throws IOException {
+      if (pos >= writeBuffer.length) {
+        flush(checkpointID, vertexID);
+      }
+      writeBuffer[pos++] = (byte) b;
+    }
+
+    public StreamStateHandle readData(String checkpointID, String vertexID) {
+
+      Path readPath = createStatePath(checkpointID, vertexID);
+      return new FileStateHandle(readPath, 1L);
+
+    }
+
 
   }
+
+
 }
+
