@@ -15,7 +15,8 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 
 /**
- * This class is to represent the default values for the container/worker and task instances
+ * This class is to represent the default values for the task instances and task scheduler logical
+ * container values.
  */
 public class TaskSchedulerContext extends Context {
 
@@ -58,8 +59,8 @@ public class TaskSchedulerContext extends Context {
   public static final int TWISTER2_TASK_PARALLELISM_DEFAULT = 2;
 
   public static final String TWISTER2_NO_OF_INSTANCES_PER_CONTAINER
-      = "twister2.task.default.task.instances";
-  public static final int TWISTER2_NO_OF_INSTANCES_PER_CONTAINER_DEFAULT = 3;
+      = "twister2.task.instances";
+  public static final int TWISTER2_NO_OF_INSTANCES_PER_CONTAINER_DEFAULT = 2;
 
   private static final String TWISTER2_RAM_PADDING_PER_CONTAINER
       = "twister2.ram.padding.container";

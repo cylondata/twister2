@@ -23,10 +23,9 @@ import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
 /**
  * This class is responsible for calculating the required ram, disk, and cpu values. Also,
  * it calculates the total number of task instances in the task graph for each task vertex.
- * And, it is responsible to calculate the parallel task map for the task vertices in
+ * And, it is responsible for calculating the parallel task map for the task vertices in
  * the task graph.
  */
-
 public class TaskAttributes {
 
   /**

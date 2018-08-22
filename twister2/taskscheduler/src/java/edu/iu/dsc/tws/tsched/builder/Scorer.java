@@ -11,6 +11,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tsched.builder;
 
+/**
+ * This is the interface for calculating the score of the container.
+ * @param <T>
+ */
 public interface Scorer<T> {
 
   boolean sortAscending();
