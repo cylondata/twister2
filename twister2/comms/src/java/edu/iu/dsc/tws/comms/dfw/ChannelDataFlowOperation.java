@@ -307,17 +307,17 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
    *
    * @param source source id
    * @param message the actual message
-   * @param destination an specific destination
+   * @param target an specific target
    * @param flags message flags
    * @param routingParameters routing parameter
    * @return true if the message is accepted
    */
-  public boolean sendMessagePartial(int source, Object message, int destination,
+  public boolean sendMessagePartial(int source, Object message, int target,
                                     int flags, RoutingParameters routingParameters) {
     // for partial sends we use minus value to find the correct queue
     ArrayBlockingQueue<Pair<Object, OutMessage>> pendingSendMessages =
         pendingSendMessagesPerSource.get(source * -1 - 1);
-    return offerForSend(source, message, destination, flags,
+    return offerForSend(source, message, target, flags,
         routingParameters, pendingSendMessages);
   }
 
@@ -326,19 +326,19 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
    *
    * @param source source id
    * @param message the actual message
-   * @param destination an specific destination
+   * @param target an specific target
    * @param flags message flags
    * @param routingParameters routing parameter
    * @return true if the message is accepted
    */
-  public boolean sendMessage(int source, Object message, int destination,
+  public boolean sendMessage(int source, Object message, int target,
                              int flags, RoutingParameters routingParameters) {
     ArrayBlockingQueue<Pair<Object, OutMessage>> pendingSendMessages =
         pendingSendMessagesPerSource.get(source);
     if (pendingSendMessages == null) {
       throw new RuntimeException(String.format("%d No send messages %d", executor, source));
     }
-    return offerForSend(source, message, destination, flags,
+    return offerForSend(source, message, target, flags,
         routingParameters, pendingSendMessages);
   }
 
@@ -435,19 +435,19 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     }
   }
 
-  private boolean offerForSend(int source, Object message, int destination, int flags,
+  private boolean offerForSend(int source, Object message, int target, int flags,
                                RoutingParameters routingParameters,
                                ArrayBlockingQueue<Pair<Object, OutMessage>> pendingSendMessages) {
     if (pendingSendMessages.remainingCapacity() > 0) {
       ChannelMessage channelMessage = new ChannelMessage(source, dataType,
           MessageDirection.OUT, this);
 
-      int di = -1;
+      int path = -1;
       if (routingParameters.getExternalRoutes().size() > 0) {
-        di = routingParameters.getDestinationId();
+        path = routingParameters.getDestinationId();
       }
       OutMessage sendMessage = new OutMessage(source, channelMessage, edge,
-          di, destination, flags, routingParameters.getInternalRoutes(),
+          path, target, flags, routingParameters.getInternalRoutes(),
           routingParameters.getExternalRoutes());
 
       // now try to put this into pending
@@ -473,7 +473,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
           lock.lock();
           try {
             receiveAccepted = receiver.receiveSendInternally(
-                outMessage.getSource(), inRoutes.get(i), outMessage.getPath(),
+                outMessage.getSource(), inRoutes.get(i), outMessage.getTarget(),
                 outMessage.getFlags(), messageObject);
           } finally {
             lock.unlock();

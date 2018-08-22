@@ -74,7 +74,7 @@ public class GatherBatchOperation extends AbstractParallelOperation {
 
     @Override
     @SuppressWarnings("unchecked")
-    public boolean onMessage(int source, int destination, int target, int flags, Object object) {
+    public boolean onMessage(int source, int path, int target, int flags, Object object) {
       // add the object to the map
       if (object instanceof List) {
         for (Object o : (List) object) {

@@ -114,7 +114,7 @@ public class PingPongCommunication implements IContainer {
     }
 
     @Override
-    public boolean onMessage(int source, int destination, int target, int flags, Object object) {
+    public boolean onMessage(int source, int path, int target, int flags, Object object) {
       count++;
       if (count % 10000 == 0) {
         LOG.info("received message: " + count);

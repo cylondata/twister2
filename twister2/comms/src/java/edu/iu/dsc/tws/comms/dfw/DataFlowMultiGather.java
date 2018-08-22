@@ -83,25 +83,25 @@ public class DataFlowMultiGather implements DataFlowOperation {
   }
 
   @Override
-  public boolean send(int source, Object message, int flags, int dest) {
-    DataFlowGather gather = gatherMap.get(dest);
+  public boolean send(int source, Object message, int flags, int target) {
+    DataFlowGather gather = gatherMap.get(target);
     if (gather == null) {
       throw new RuntimeException(String.format("%d Un-expected destination: %d %s",
-          executor, dest, gatherMap.keySet()));
+          executor, target, gatherMap.keySet()));
     }
-    boolean send = gather.send(source, message, flags, dest);
+    boolean send = gather.send(source, message, flags, target);
 //  LOG.info(String.format("%d sending message on reduce: %d %d %b", executor, path, source, send));
     return send;
   }
 
   @Override
-  public boolean sendPartial(int source, Object message, int flags, int dest) {
-    DataFlowGather gather = gatherMap.get(dest);
+  public boolean sendPartial(int source, Object message, int flags, int target) {
+    DataFlowGather gather = gatherMap.get(target);
     if (gather == null) {
       throw new RuntimeException(String.format("%d Un-expected destination: %d %s",
-          executor, dest, gatherMap.keySet()));
+          executor, target, gatherMap.keySet()));
     }
-    boolean send = gather.sendPartial(source, message, flags, dest);
+    boolean send = gather.sendPartial(source, message, flags, target);
 //  LOG.info(String.format("%d sending message on reduce: %d %d %b", executor, path, source, send));
     return send;
   }
@@ -203,7 +203,7 @@ public class DataFlowMultiGather implements DataFlowOperation {
     }
 
     @Override
-    public boolean onMessage(int source, int dest, int target, int flags, Object object) {
+    public boolean onMessage(int source, int path, int target, int flags, Object object) {
 //      LOG.info(String.format("%d received message %d %d %d", executor, path, target, source));
       return partialReceiver.onMessage(source, this.destination, target, flags, object);
     }
@@ -226,7 +226,7 @@ public class DataFlowMultiGather implements DataFlowOperation {
     }
 
     @Override
-    public boolean onMessage(int source, int dest, int target, int flags, Object object) {
+    public boolean onMessage(int source, int path, int target, int flags, Object object) {
 //      LOG.info(String.format("%d received message %d %d %d", executor, path, target, source));
       return finalReceiver.onMessage(source, this.destination, target, flags, object);
     }

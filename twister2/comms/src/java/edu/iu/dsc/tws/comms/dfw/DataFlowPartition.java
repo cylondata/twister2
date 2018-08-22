@@ -422,10 +422,10 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public boolean sendPartial(int source, Object message, int flags, int dest) {
+  public boolean sendPartial(int source, Object message, int flags, int target) {
     int newFlags = flags | MessageFlags.ORIGIN_PARTIAL;
-    return delegete.sendMessagePartial(source, message, dest, newFlags,
-        sendPartialRoutingParameters(source, dest));
+    return delegete.sendMessagePartial(source, message, target, newFlags,
+        sendPartialRoutingParameters(source, target));
   }
 
   @Override
@@ -435,10 +435,10 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public boolean send(int source, Object message, int flags, int dest) {
+  public boolean send(int source, Object message, int flags, int target) {
     int newFlags = flags | MessageFlags.ORIGIN_SENDER;
-    return delegete.sendMessage(source, message, dest, newFlags,
-        sendRoutingParameters(source, dest));
+    return delegete.sendMessage(source, message, target, newFlags,
+        sendRoutingParameters(source, target));
   }
 
   public boolean isComplete() {
@@ -446,6 +446,10 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
     boolean needsFurtherProgress = OperationUtils.progressReceivers(delegete, lock, finalReceiver,
         partialLock, partialReceiver);
     return done && !needsFurtherProgress;
+  }
+
+  public boolean isDelegeteComplete() {
+    return delegete.isComplete();
   }
 
   @Override
@@ -543,13 +547,22 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
     }
   }
 
-  public boolean receiveSendInternally(int source, int t,
+  /**
+   * For partial receives the path and
+   * @param source
+   * @param path
+   * @param destination
+   * @param flags
+   * @param message
+   * @return
+   */
+  public boolean receiveSendInternally(int source, int path,
                                        int destination, int flags, Object message) {
     // okay this must be for the
     if ((flags & MessageFlags.ORIGIN_PARTIAL) == MessageFlags.ORIGIN_PARTIAL) {
-      return finalReceiver.onMessage(source, destination, t, flags, message);
+      return finalReceiver.onMessage(source, path, destination, flags, message);
     }
-    return partialReceiver.onMessage(source, destination, t, flags, message);
+    return partialReceiver.onMessage(source, path, destination, flags, message);
   }
 
   @Override

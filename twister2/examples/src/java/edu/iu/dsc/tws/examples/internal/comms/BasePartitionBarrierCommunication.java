@@ -179,24 +179,6 @@ public class BasePartitionBarrierCommunication implements IContainer {
     }
   }
 
-  private class PartialPartitionReciver implements MessageReceiver {
-
-    @Override
-    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-
-    }
-
-    @Override
-    public boolean onMessage(int source, int destination, int target, int flags, Object object) {
-      return false;
-    }
-
-    @Override
-    public boolean progress() {
-      return false;
-    }
-  }
-
   private class FinalPartitionReciver implements MessageReceiver {
     private Map<Integer, Map<Integer, Boolean>> finished;
 
@@ -215,7 +197,7 @@ public class BasePartitionBarrierCommunication implements IContainer {
     }
 
     @Override
-    public boolean onMessage(int source, int destination, int target, int flags, Object object) {
+    public boolean onMessage(int source, int path, int target, int flags, Object object) {
       // add the object to the map
       if ((flags & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) {
         finished.get(target).put(source, true);

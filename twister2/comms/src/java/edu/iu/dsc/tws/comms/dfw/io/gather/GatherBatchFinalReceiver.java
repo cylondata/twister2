@@ -78,7 +78,7 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
   }
 
   @Override
-  public boolean onMessage(int source, int dest, int target, int flags, Object object) {
+  public boolean onMessage(int source, int path, int target, int flags, Object object) {
     // add the object to the map
     boolean canAdd = true;
     Queue<Object> m = messages.get(target).get(source);

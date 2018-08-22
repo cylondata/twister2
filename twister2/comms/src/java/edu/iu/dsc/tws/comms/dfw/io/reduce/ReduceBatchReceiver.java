@@ -100,7 +100,7 @@ public abstract class ReduceBatchReceiver implements MessageReceiver {
   }
 
   @Override
-  public boolean onMessage(int source, int dest, int target, int flags, Object object) {
+  public boolean onMessage(int source, int path, int target, int flags, Object object) {
     // add the object to the map
     boolean canAdd = true;
 

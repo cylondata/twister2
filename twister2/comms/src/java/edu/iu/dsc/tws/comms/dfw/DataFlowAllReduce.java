@@ -126,12 +126,12 @@ public class DataFlowAllReduce implements DataFlowOperation {
   }
 
   @Override
-  public boolean send(int source, Object message, int flags, int dest) {
+  public boolean send(int source, Object message, int flags, int target) {
     throw new RuntimeException("Not-implemented");
   }
 
   @Override
-  public boolean sendPartial(int source, Object message, int flags, int dest) {
+  public boolean sendPartial(int source, Object message, int flags, int target) {
     throw new RuntimeException("Not-implemented");
   }
 
@@ -177,7 +177,7 @@ public class DataFlowAllReduce implements DataFlowOperation {
     }
 
     @Override
-    public boolean onMessage(int source, int destination, int target, int flags, Object object) {
+    public boolean onMessage(int source, int path, int target, int flags, Object object) {
       return reduceReceiver.receive(target, object);
     }
 

@@ -68,7 +68,7 @@ public class BroadcastBatchOperation extends AbstractParallelOperation {
     }
 
     @Override
-    public boolean onMessage(int source, int destination, int target, int flags, Object object) {
+    public boolean onMessage(int source, int path, int target, int flags, Object object) {
       TaskMessage msg = new TaskMessage(object,
           edge.getStringMapping(communicationEdge), target);
       int remainingCap = outMessages.get(target).remainingCapacity();

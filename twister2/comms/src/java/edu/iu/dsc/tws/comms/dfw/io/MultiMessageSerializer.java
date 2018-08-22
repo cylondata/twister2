@@ -136,7 +136,7 @@ public class MultiMessageSerializer implements MessageSerializer {
 
         MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
             sendMessage.getEdge(), totalBytes);
-        builder.destination(sendMessage.getDestintationIdentifier());
+        builder.destination(sendMessage.getPath());
         channelMessage.setHeader(builder.build());
         state.setTotalBytes(0);
 
@@ -153,7 +153,7 @@ public class MultiMessageSerializer implements MessageSerializer {
 
             MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
                 sendMessage.getEdge(), totalBytes);
-            builder.destination(sendMessage.getDestintationIdentifier());
+            builder.destination(sendMessage.getPath());
             channelMessage.setHeader(builder.build());
             channelMessage.setHeaderSent(true);
           }
@@ -165,7 +165,7 @@ public class MultiMessageSerializer implements MessageSerializer {
 
           MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
               sendMessage.getEdge(), totalBytes);
-          builder.destination(sendMessage.getDestintationIdentifier());
+          builder.destination(sendMessage.getPath());
           channelMessage.setHeader(builder.build());
         }
         state.setTotalBytes(0);
@@ -192,7 +192,7 @@ public class MultiMessageSerializer implements MessageSerializer {
     // the path we are on, if not grouped it will be 0 and ignored
     byteBuffer.putInt(sendMessage.getFlags());
     // the destination id
-    byteBuffer.putInt(sendMessage.getDestintationIdentifier());
+    byteBuffer.putInt(sendMessage.getPath());
     // we add 0 for length now and later change it
     byteBuffer.putInt(0);
     // at this point we haven't put the length and we will do it at the serialization
