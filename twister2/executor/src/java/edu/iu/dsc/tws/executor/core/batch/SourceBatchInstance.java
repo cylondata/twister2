@@ -17,7 +17,6 @@ import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.executor.api.DefaultOutputCollection;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
@@ -137,8 +136,16 @@ public class SourceBatchInstance implements INodeInstance {
       }
 
       // now check the context
-      if (taskContext.isDone("")) {
-        // we are done with execution
+      boolean isDone = true;
+      for (String e : outputEdges) {
+        if (!taskContext.isDone(e)) {
+          // we are done with execution
+          isDone = false;
+          break;
+        }
+      }
+      // if all the edges are done
+      if (isDone) {
         state.set(InstanceState.EXECUTION_DONE);
       }
 
@@ -148,19 +155,11 @@ public class SourceBatchInstance implements INodeInstance {
         if (message != null) {
           String edge = message.edge();
           IParallelOperation op = outBatchParOps.get(edge);
-          if (message.getContent().equals(MessageFlags.LAST_MESSAGE)) {
-            if (op.send(batchTaskId, message, MessageFlags.FLAGS_LAST)) {
-              outBatchQueue.poll();
-            } else {
-              break;
-            }
+          if (op.send(batchTaskId, message, 0)) {
+            outBatchQueue.poll();
           } else {
-            if (op.send(batchTaskId, message, 0)) {
-              outBatchQueue.poll();
-            } else {
-              // no point in progressing further
-              break;
-            }
+            // no point in progressing further
+            break;
           }
         }
       }
