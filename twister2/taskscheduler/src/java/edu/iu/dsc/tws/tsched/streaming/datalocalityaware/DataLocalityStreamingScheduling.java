@@ -143,7 +143,7 @@ public class DataLocalityStreamingScheduling {
                     new InstanceId(vertex.getName(), globalTaskIndex, i));
                 ++maxContainerTaskObjectSize;
               } else {
-                LOG.info("Worker:" + containerIndex
+                LOG.warning("Worker:" + containerIndex
                     + "Reached Max. Task Object Size:" + maxContainerTaskObjectSize);
               }
             }
@@ -156,7 +156,7 @@ public class DataLocalityStreamingScheduling {
       }
     }
 
-    LOG.info("Container Map Values After Allocation" + dataAwareAllocation);
+    LOG.fine("Container Map Values After Allocation" + dataAwareAllocation);
     for (Map.Entry<Integer, List<InstanceId>> entry : dataAwareAllocation.entrySet()) {
       Integer integer = entry.getKey();
       List<InstanceId> instanceIds = entry.getValue();

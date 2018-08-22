@@ -13,7 +13,9 @@ package edu.iu.dsc.tws.executor.core.batch;
 
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -100,9 +102,20 @@ public class TaskBatchInstance implements INodeInstance {
    */
   private InstanceState state = new InstanceState(InstanceState.INIT);
 
+  /**
+   * Output edges
+   */
+  private Set<String> outputEdges = new HashSet<>();
+
+  /**
+   * Input edges
+   */
+  private Set<String> inputEdges = new HashSet<>();
+
   public TaskBatchInstance(ITask task, BlockingQueue<IMessage> inQueue,
-                      BlockingQueue<IMessage> outQueue, Config config, String tName,
-                      int tId, int tIndex, int parallel, int wId, Map<String, Object> cfgs) {
+                          BlockingQueue<IMessage> outQueue, Config config, String tName,
+                          int tId, int tIndex, int parallel, int wId, Map<String, Object> cfgs,
+                          Set<String> inEdges, Set<String> outEdges) {
     this.task = task;
     this.inQueue = inQueue;
     this.outQueue = outQueue;
@@ -113,6 +126,8 @@ public class TaskBatchInstance implements INodeInstance {
     this.taskName = tName;
     this.nodeConfigs = cfgs;
     this.workerId = wId;
+    this.inputEdges = inEdges;
+    this.outputEdges = outEdges;
   }
 
   public void prepare() {

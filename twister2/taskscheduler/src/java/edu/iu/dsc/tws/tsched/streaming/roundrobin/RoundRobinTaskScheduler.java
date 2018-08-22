@@ -184,7 +184,7 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
       Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
       int totalTaskInstances = taskAttributes.getTotalNumberOfInstances(taskVertexSet);
       if (numberOfContainers < totalTaskInstances) {
-        LOG.info("Container Map Values Before Allocation " + roundrobinAllocation);
+        LOG.fine("Container Map Values Before Allocation " + roundrobinAllocation);
         int globalTaskIndex = 0;
         for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
           String task = e.getKey();
@@ -202,9 +202,9 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
       for (Map.Entry<Integer, List<InstanceId>> entry : roundrobinAllocation.entrySet()) {
         Integer integer = entry.getKey();
         List<InstanceId> instanceIds = entry.getValue();
-        LOG.info("Container Index:" + integer);
+        LOG.fine("Container Index:" + integer);
         for (InstanceId instanceId : instanceIds) {
-          LOG.info("Task Instance Details:"
+          LOG.fine("Task Instance Details:"
               + "\t Task Name:" + instanceId.getTaskName()
               + "\t Task id:" + instanceId.getTaskId()
               + "\t Task index:" + instanceId.getTaskIndex());

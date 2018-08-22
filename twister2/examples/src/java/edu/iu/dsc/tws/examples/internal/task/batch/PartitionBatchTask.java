@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.examples.internal.task.batch;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 import edu.iu.dsc.tws.api.JobConfig;
@@ -76,10 +77,16 @@ public class PartitionBatchTask implements IContainer {
     private static final long serialVersionUID = -254264903510284748L;
     private TaskContext ctx;
     private Config config;
+    private int count = 0;
 
     @Override
     public void run() {
-      ctx.write("partition-edge", "Hello");
+      count++;
+      if (count == 1000) {
+        ctx.writeEnd("partition-edge", "Hello");
+      } else {
+        ctx.write("partition-edge", "Hello");
+      }
     }
 
     @Override
@@ -99,9 +106,14 @@ public class PartitionBatchTask implements IContainer {
 
     @Override
     public boolean execute(IMessage message) {
-      if (count % 10000 == 0) {
-        System.out.println("Message Partition Received : " + message.getContent()
-            + ", Count : " + count);
+      if (message.getContent() instanceof Iterator) {
+        while (((Iterator) message.getContent()).hasNext()) {
+          count++;
+        }
+        if (count % 10000 == 1) {
+          System.out.println("Message Partition Received : " + message.getContent()
+              + ", Count : " + count);
+        }
       }
       count++;
       return true;

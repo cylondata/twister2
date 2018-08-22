@@ -18,6 +18,11 @@ import edu.iu.dsc.tws.tsched.spi.taskschedule.Resource;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.ScheduleException;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
+/**
+ * This class is for the logical representation of container and it has getter and setter
+ * property to retrieve and set the task instances allocated to the container.
+ *
+ */
 public class Container {
 
   private int containerId;
@@ -65,6 +70,14 @@ public class Container {
     this.paddingPercentage = paddingPercentage;
   }
 
+  /**
+   * It will add the task instance plan to the container if the required and available resource
+   * meets the requirements. It will call @assertHasSpace to validate that whether the resource
+   * satisfies the required value.
+   *
+   * @param taskInstancePlan
+   * @throws TaskSchedulerException
+   */
   void add(TaskSchedulePlan.TaskInstancePlan taskInstancePlan) throws TaskSchedulerException {
     if (this.taskInstances.contains(taskInstancePlan)) {
       throw new ScheduleException(String.format(
@@ -72,12 +85,8 @@ public class Container {
     }
     assertHasSpace(taskInstancePlan.getResource());
     this.taskInstances.add(taskInstancePlan);
-
-    /*boolean flag = assertHasSpace(taskInstancePlan.getResource());
-    if (flag) {
-      this.taskInstances.add(taskInstancePlan);
-    }*/
   }
+
 
   private void assertHasSpace(Resource resourceValue) throws TaskSchedulerException {
 
