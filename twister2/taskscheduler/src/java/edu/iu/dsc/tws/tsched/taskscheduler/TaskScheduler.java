@@ -121,7 +121,7 @@ public class TaskScheduler implements ITaskScheduler {
       TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
       Set<TaskSchedulePlan.TaskInstancePlan> taskContainerPlan = containerPlan.getTaskInstances();
       for (TaskSchedulePlan.TaskInstancePlan ip : taskContainerPlan) {
-        LOG.info("\tTask Id:" + ip.getTaskId() + "\tTask Index:" + ip.getTaskIndex()
+        LOG.fine("\tTask Id:" + ip.getTaskId() + "\tTask Index:" + ip.getTaskIndex()
             + "\tTask Name:" + ip.getTaskName() + "\tContainer Id:" + integer);
       }
     }
@@ -134,7 +134,7 @@ public class TaskScheduler implements ITaskScheduler {
    * specified in the task configuration by the user or else from the default configuration value.
    * @return
    */
-  public List<TaskSchedulePlan> ScheduleBatchTask() {
+  public List<TaskSchedulePlan> scheduleBatchTask() {
 
     if (config.getStringValue("SchedulingMode") != null) {
       this.schedulingType = config.getStringValue("SchedulingMode");
@@ -170,7 +170,7 @@ public class TaskScheduler implements ITaskScheduler {
         Set<TaskSchedulePlan.TaskInstancePlan> taskContainerPlan
             = containerPlan.getTaskInstances();
         for (TaskSchedulePlan.TaskInstancePlan ip : taskContainerPlan) {
-          LOG.info("\tTask Id:" + ip.getTaskId() + "\tTask Index:" + ip.getTaskIndex()
+          LOG.fine("\tTask Id:" + ip.getTaskId() + "\tTask Index:" + ip.getTaskIndex()
               + "\tTask Name:" + ip.getTaskName() + "\tContainer Id:" + integer);
         }
       }
