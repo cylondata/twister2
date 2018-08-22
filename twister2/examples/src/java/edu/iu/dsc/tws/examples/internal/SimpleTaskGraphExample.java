@@ -45,13 +45,10 @@ import edu.iu.dsc.tws.task.core.TaskExecutorFixedThread;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.GraphConstants;
-import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
-import edu.iu.dsc.tws.tsched.streaming.datalocalityaware.DataLocalityStreamingTaskScheduler;
-import edu.iu.dsc.tws.tsched.streaming.firstfit.FirstFitStreamingTaskScheduler;
-import edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler;
+import edu.iu.dsc.tws.tsched.taskscheduler.TaskScheduler;
 
 /**
  * This is the task graph generation class with input and output files.
@@ -67,7 +64,28 @@ public class SimpleTaskGraphExample implements IContainer {
   private TaskExecutorFixedThread taskExecutor;
   private Status status;
 
-  private TaskSchedulePlan taskSchedulePlan = null;
+  public static void main(String[] args) {
+    // first load the configurations from command line and config files
+    Config config = ResourceAllocator.loadConfig(new HashMap<>());
+
+    // build JobConfig
+    HashMap<String, Object> configurations = new HashMap<>();
+    configurations.put(SchedulerContext.THREADS_PER_WORKER, 8);
+
+    JobConfig jobConfig = new JobConfig();
+    jobConfig.putAll(configurations);
+
+    // build the job
+    Twister2Job twister2Job = Twister2Job.newBuilder()
+        .setName("basic-taskgraphJob")
+        .setWorkerClass(SimpleTaskGraphExample.class.getName())
+        .setRequestResource(new WorkerComputeSpec(2, 1024, 100), 2)
+        .setConfig(jobConfig)
+        .build();
+
+    // now submit the job
+    Twister2Submitter.submitContainerJob(twister2Job, config);
+  }
 
   /**
    * Init method to submit the task to the executor
@@ -100,140 +118,92 @@ public class SimpleTaskGraphExample implements IContainer {
     TaskShuffler taskShuffler = new TaskShuffler("task3");
     TaskMerger taskMerger = new TaskMerger("task4");
 
-    if (containerId == 0) {
-      GraphBuilder graphBuilder = GraphBuilder.newBuilder();
-      graphBuilder.addTask("task1", taskMapper);
-      graphBuilder.addTask("task2", taskReducer);
-      graphBuilder.addTask("task3", taskShuffler);
-      graphBuilder.addTask("task4", taskMerger);
+    GraphBuilder graphBuilder = GraphBuilder.newBuilder();
+    graphBuilder.addTask("task1", taskMapper);
+    graphBuilder.addTask("task2", taskReducer);
+    graphBuilder.addTask("task3", taskShuffler);
+    graphBuilder.addTask("task4", taskMerger);
 
-      graphBuilder.connect("task1", "task2", "Reduce");
-      graphBuilder.connect("task1", "task3", "Shuffle");
-      graphBuilder.connect("task2", "task3", "merger1");
-      graphBuilder.connect("task3", "task4", "merger2");
+    graphBuilder.connect("task1", "task2", "Reduce");
+    graphBuilder.connect("task1", "task3", "Shuffle");
+    graphBuilder.connect("task2", "task3", "merger1");
+    graphBuilder.connect("task3", "task4", "merger2");
 
-      graphBuilder.setParallelism("task1", 2);
-      graphBuilder.setParallelism("task2", 2);
-      graphBuilder.setParallelism("task3", 1);
-      graphBuilder.setParallelism("task4", 1);
+    graphBuilder.setParallelism("task1", 2);
+    graphBuilder.setParallelism("task2", 2);
+    graphBuilder.setParallelism("task3", 1);
+    graphBuilder.setParallelism("task4", 1);
 
-      graphBuilder.addConfiguration("task1", "Ram", GraphConstants.taskInstanceRam(cfg));
-      graphBuilder.addConfiguration("task1", "Disk", GraphConstants.taskInstanceDisk(cfg));
-      graphBuilder.addConfiguration("task1", "Cpu", GraphConstants.taskInstanceCpu(cfg));
+    graphBuilder.addConfiguration("task1", "Ram", GraphConstants.taskInstanceRam(cfg));
+    graphBuilder.addConfiguration("task1", "Disk", GraphConstants.taskInstanceDisk(cfg));
+    graphBuilder.addConfiguration("task1", "Cpu", GraphConstants.taskInstanceCpu(cfg));
 
-      graphBuilder.addConfiguration("task2", "Ram", GraphConstants.taskInstanceRam(cfg));
-      graphBuilder.addConfiguration("task2", "Disk", GraphConstants.taskInstanceDisk(cfg));
-      graphBuilder.addConfiguration("task2", "Cpu", GraphConstants.taskInstanceCpu(cfg));
+    graphBuilder.addConfiguration("task2", "Ram", GraphConstants.taskInstanceRam(cfg));
+    graphBuilder.addConfiguration("task2", "Disk", GraphConstants.taskInstanceDisk(cfg));
+    graphBuilder.addConfiguration("task2", "Cpu", GraphConstants.taskInstanceCpu(cfg));
 
-      graphBuilder.addConfiguration("task3", "Ram", GraphConstants.taskInstanceRam(cfg));
-      graphBuilder.addConfiguration("task3", "Disk", GraphConstants.taskInstanceDisk(cfg));
-      graphBuilder.addConfiguration("task3", "Cpu", GraphConstants.taskInstanceCpu(cfg));
+    graphBuilder.addConfiguration("task3", "Ram", GraphConstants.taskInstanceRam(cfg));
+    graphBuilder.addConfiguration("task3", "Disk", GraphConstants.taskInstanceDisk(cfg));
+    graphBuilder.addConfiguration("task3", "Cpu", GraphConstants.taskInstanceCpu(cfg));
 
-      graphBuilder.addConfiguration("task4", "Ram", GraphConstants.taskInstanceRam(cfg));
-      graphBuilder.addConfiguration("task4", "Disk", GraphConstants.taskInstanceDisk(cfg));
-      graphBuilder.addConfiguration("task4", "Cpu", GraphConstants.taskInstanceCpu(cfg));
+    graphBuilder.addConfiguration("task4", "Ram", GraphConstants.taskInstanceRam(cfg));
+    graphBuilder.addConfiguration("task4", "Disk", GraphConstants.taskInstanceDisk(cfg));
+    graphBuilder.addConfiguration("task4", "Cpu", GraphConstants.taskInstanceCpu(cfg));
 
-      List<String> datasetList;
+    graphBuilder.addConfiguration("task1", "dataset", new ArrayList<>().add("dataset1.txt"));
+    graphBuilder.addConfiguration("task2", "dataset", new ArrayList<>().add("dataset2.txt"));
+    graphBuilder.addConfiguration("task3", "dataset", new ArrayList<>().add("dataset3.txt"));
+    graphBuilder.addConfiguration("task4", "dataset", new ArrayList<>().add("dataset4.txt"));
 
-      datasetList = new ArrayList<>();
-      datasetList.add("dataset1.txt");
+    WorkerPlan workerPlan = new WorkerPlan();
+    Worker worker0 = new Worker(0);
+    Worker worker1 = new Worker(1);
+    Worker worker2 = new Worker(2);
 
-      /*datasetList.add("dataset2.txt");
-      datasetList.add("dataset3.txt");
-      datasetList.add("dataset4.txt");*/
+    worker0.setCpu(4);
+    worker0.setDisk(4000);
+    worker0.setRam(2048);
+    worker0.addProperty("bandwidth", 1000.0);
+    worker0.addProperty("latency", 0.1);
 
-      graphBuilder.addConfiguration("task1", "dataset", datasetList);
+    worker1.setCpu(4);
+    worker1.setDisk(4000);
+    worker1.setRam(2048);
+    worker1.addProperty("bandwidth", 2000.0);
+    worker1.addProperty("latency", 0.1);
 
-      datasetList = new ArrayList<>();
-      datasetList.add("dataset2.txt");
+    worker2.setCpu(4);
+    worker2.setDisk(4000);
+    worker2.setRam(2048);
+    worker2.addProperty("bandwidth", 3000.0);
+    worker2.addProperty("latency", 0.1);
 
-      graphBuilder.addConfiguration("task2", "dataset", datasetList);
+    workerPlan.addWorker(worker0);
+    workerPlan.addWorker(worker1);
+    workerPlan.addWorker(worker2);
 
-      datasetList = new ArrayList<>();
-      datasetList.add("dataset3.txt");
-      graphBuilder.addConfiguration("task3", "dataset", datasetList);
+    DataFlowTaskGraph dataFlowTaskGraph = graphBuilder.build();
+    LOG.info("Generated Dataflow Task Graph Is:" + dataFlowTaskGraph.getTaskVertexSet());
 
-      datasetList = new ArrayList<>();
-      datasetList.add("dataset4.txt");
-      graphBuilder.addConfiguration("task4", "dataset", datasetList);
+    //For scheduling streaming task
+    TaskSchedulePlan taskSchedulePlan = new TaskScheduler(cfg, dataFlowTaskGraph, workerPlan).
+        scheduleStreamingTask();
 
-      /*graphBuilder.addConfiguration("task2", "dataset", "dataset2.txt");
-      graphBuilder.addConfiguration("task3", "dataset", "dataset3.txt");
-      graphBuilder.addConfiguration("task4", "dataset", "dataset4.txt");*/
+    //For scheduling batch task
+    List<TaskSchedulePlan> taskSchedulePlanList = new TaskScheduler(cfg, dataFlowTaskGraph,
+        workerPlan).scheduleBatchTask();
+    if (taskSchedulePlanList != null) {
+      taskSchedulePlan = taskSchedulePlanList.get(0);
+    }
 
-      /*graphBuilder.addConfiguration("task2", "Ram", 300);
-      graphBuilder.addConfiguration("task2", "Disk", 1000);
-      graphBuilder.addConfiguration("task2", "Cpu", 2);
-
-      graphBuilder.addConfiguration("task3", "Ram", 1024);
-      graphBuilder.addConfiguration("task3", "Disk", 1000);
-      graphBuilder.addConfiguration("task3", "Cpu", 2);
-
-      graphBuilder.addConfiguration("task4", "Ram", 250);
-      graphBuilder.addConfiguration("task4", "Disk", 1000);
-      graphBuilder.addConfiguration("task4", "Cpu", 2);*/
-
-      WorkerPlan workerPlan = new WorkerPlan();
-      Worker worker0 = new Worker(0);
-      Worker worker1 = new Worker(1);
-      Worker worker2 = new Worker(2);
-
-      worker0.setCpu(4);
-      worker0.setDisk(4000);
-      worker0.setRam(2048);
-      worker0.addProperty("bandwidth", 1000.0);
-      worker0.addProperty("latency", 0.1);
-
-      worker1.setCpu(4);
-      worker1.setDisk(4000);
-      worker1.setRam(2048);
-      worker1.addProperty("bandwidth", 2000.0);
-      worker1.addProperty("latency", 0.1);
-
-      worker2.setCpu(4);
-      worker2.setDisk(4000);
-      worker2.setRam(2048);
-      worker2.addProperty("bandwidth", 3000.0);
-      worker2.addProperty("latency", 0.1);
-
-      workerPlan.addWorker(worker0);
-      workerPlan.addWorker(worker1);
-      workerPlan.addWorker(worker2);
-
-      DataFlowTaskGraph dataFlowTaskGraph = graphBuilder.build();
-      LOG.info("Generated Dataflow Task Graph Is:" + dataFlowTaskGraph.getTaskVertexSet());
-
-      if (containerId == 0) { //For running the task scheduling once
-        if (dataFlowTaskGraph != null) {
-          LOG.info("Task Scheduling Mode:" + TaskSchedulerContext.taskSchedulingMode(cfg));
-          if (TaskSchedulerContext.taskSchedulingMode(cfg).equals("roundrobin")) {
-            RoundRobinTaskScheduler roundRobinTaskScheduler = new RoundRobinTaskScheduler();
-            roundRobinTaskScheduler.initialize(cfg);
-            taskSchedulePlan = roundRobinTaskScheduler.schedule(dataFlowTaskGraph, workerPlan);
-          } else if (TaskSchedulerContext.taskSchedulingMode(cfg).equals("firstfit")) {
-            FirstFitStreamingTaskScheduler firstFitTaskScheduling
-                = new FirstFitStreamingTaskScheduler();
-            firstFitTaskScheduling.initialize(cfg);
-            taskSchedulePlan = firstFitTaskScheduling.schedule(dataFlowTaskGraph, workerPlan);
-          } else if (TaskSchedulerContext.taskSchedulingMode(cfg).equals("datalocalityaware")) {
-            DataLocalityStreamingTaskScheduler dataLocalityStreamingTaskScheduler =
-                new DataLocalityStreamingTaskScheduler();
-            dataLocalityStreamingTaskScheduler.initialize(cfg);
-            taskSchedulePlan = dataLocalityStreamingTaskScheduler.schedule(
-                dataFlowTaskGraph, workerPlan);
-          }
-          try {
-            if (taskSchedulePlan.getContainersMap() != null) {
-              LOG.info("Task schedule plan details:"
-                  + taskSchedulePlan.getTaskSchedulePlanId() + ":"
-                  + taskSchedulePlan.getContainersMap());
-            }
-          } catch (NullPointerException ne) {
-            ne.printStackTrace();
-          }
-        }
+    try {
+      if (taskSchedulePlan.getContainersMap() != null) {
+        LOG.info("Task schedule plan details:" + taskSchedulePlan.getTaskSchedulePlanId()
+            + ":" + taskSchedulePlan.getContainersMap());
       }
-    }//End of ContainerId validation
+    } catch (NullPointerException ne) {
+      ne.printStackTrace();
+    }
   }
 
   /**
@@ -423,29 +393,6 @@ public class SimpleTaskGraphExample implements IContainer {
     public boolean progress() {
       return true;
     }
-  }
-
-  public static void main(String[] args) {
-    // first load the configurations from command line and config files
-    Config config = ResourceAllocator.loadConfig(new HashMap<>());
-
-    // build JobConfig
-    HashMap<String, Object> configurations = new HashMap<>();
-    configurations.put(SchedulerContext.THREADS_PER_WORKER, 8);
-
-    JobConfig jobConfig = new JobConfig();
-    jobConfig.putAll(configurations);
-
-    // build the job
-    Twister2Job twister2Job = Twister2Job.newBuilder()
-        .setName("basic-taskgraphJob")
-        .setWorkerClass(SimpleTaskGraphExample.class.getName())
-        .setRequestResource(new WorkerComputeSpec(2, 1024, 100), 2)
-        .setConfig(jobConfig)
-        .build();
-
-    // now submit the job
-    Twister2Submitter.submitContainerJob(twister2Job, config);
   }
 }
 
