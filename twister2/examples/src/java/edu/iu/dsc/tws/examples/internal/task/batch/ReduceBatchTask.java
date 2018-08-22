@@ -122,7 +122,6 @@ public class ReduceBatchTask implements IContainer {
     @Override
     public void prepare(Config cfg, TaskContext context) {
       this.sourceTaskContext = context;
-      this.sourceTaskContext.setDone(false);
       this.sourceTaskContextListener
           = new SourceTaskContextListener(this, sourceTaskContext);
       this.sourceTaskContextListener.mutateContext(sourceTaskContext);

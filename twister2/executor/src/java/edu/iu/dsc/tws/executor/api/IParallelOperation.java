@@ -50,4 +50,11 @@ public interface IParallelOperation {
    * Progress the parallel operation
    */
   boolean progress();
+
+  /**
+   * Indicate the end of the operation
+   * @param source the source
+   */
+  default void finish(int source) {
+  }
 }

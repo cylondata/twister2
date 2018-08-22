@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.executor.core.batch;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -79,8 +80,14 @@ public class SinkBatchInstance implements INodeInstance {
    */
   private InstanceState state = new InstanceState(InstanceState.INIT);
 
+  /**
+   * the incoming edges
+   */
+  private Set<String> inputEdges;
+
   public SinkBatchInstance(ISink batchTask, BlockingQueue<IMessage> batchInQueue, Config config,
-                           int tId, int tIndex, int parallel, int wId, Map<String, Object> cfgs) {
+                           String tName, int tId, int tIndex, int parallel, int wId,
+                           Map<String, Object> cfgs, Set<String> inEdges) {
     this.batchTask = batchTask;
     this.batchInQueue = batchInQueue;
     this.config = config;
@@ -89,6 +96,8 @@ public class SinkBatchInstance implements INodeInstance {
     this.parallelism = parallel;
     this.nodeConfigs = cfgs;
     this.workerId = wId;
+    this.taskName = tName;
+    this.inputEdges = inEdges;
   }
 
   public void reset() {

@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.executor.core.batch;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -92,9 +93,14 @@ public class SourceBatchInstance implements INodeInstance {
    */
   private TaskContext taskContext;
 
+  /**
+   * The output edges
+   */
+  private Set<String> outputEdges;
+
   public SourceBatchInstance(ISource task, BlockingQueue<IMessage> outQueue,
                              Config config, String tName, int tId, int tIndex, int parallel,
-                             int wId, Map<String, Object> cfgs) {
+                             int wId, Map<String, Object> cfgs, Set<String> outEdges) {
     this.batchTask = task;
     this.outBatchQueue = outQueue;
     this.config = config;
@@ -104,6 +110,7 @@ public class SourceBatchInstance implements INodeInstance {
     this.batchTaskName = tName;
     this.nodeConfigs = cfgs;
     this.workerId = wId;
+    this.outputEdges = outEdges;
   }
 
   public void prepare() {
@@ -130,7 +137,7 @@ public class SourceBatchInstance implements INodeInstance {
       }
 
       // now check the context
-      if (taskContext.isDone()) {
+      if (taskContext.isDone("")) {
         // we are done with execution
         state.set(InstanceState.EXECUTION_DONE);
       }
@@ -160,6 +167,9 @@ public class SourceBatchInstance implements INodeInstance {
 
       // if execution is done and outqueue is emput, we have put everything to communication
       if (state.isSet(InstanceState.EXECUTION_DONE) && outBatchQueue.isEmpty()) {
+        for (IParallelOperation op : outBatchParOps.values()) {
+          op.finish(batchTaskId);
+        }
         state.set(InstanceState.OUT_COMPLETE);
       }
     }

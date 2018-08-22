@@ -78,6 +78,11 @@ public class PartitionBatchOperation extends AbstractParallelOperation {
   }
 
   @Override
+  public void finish(int source) {
+    op.finish(source);
+  }
+
+  @Override
   public boolean progress() {
     return op.progress() || hasPending();
   }
