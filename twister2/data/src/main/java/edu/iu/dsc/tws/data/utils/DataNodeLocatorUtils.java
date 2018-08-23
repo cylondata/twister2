@@ -43,8 +43,7 @@ public class DataNodeLocatorUtils implements IDataNodeLocatorUtils {
     this.config = cfg;
   }
 
-  //TODO: It could be modified to get all the vertexes of the task graph and
-  //TODO: return the map which stores the vertex name -> datanodes list.
+  //TODO: It could be modified to get all the vertexes of the task graph
 
   /**
    * This method receives the input data list for each vertex and find the location
