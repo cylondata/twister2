@@ -110,7 +110,7 @@ public class PartitionBatchTask implements IContainer {
         while (((Iterator) message.getContent()).hasNext()) {
           count++;
         }
-        if (count % 10000 == 1) {
+        if (count % 1 == 0) {
           System.out.println("Message Partition Received : " + message.getContent()
               + ", Count : " + count);
         }

@@ -25,6 +25,7 @@ import java.util.logging.Logger;
 import org.apache.commons.io.FileUtils;
 
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.dfw.io.types.DataDeserializer;
 import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 
 /**
@@ -145,7 +146,7 @@ public class FSMerger implements Shuffle {
 
   private void deserializeObjects() {
     for (int i = 0; i < bytesInMemory.size(); i++) {
-      Object o = kryoSerializer.deserialize(bytesInMemory.get(i));
+      Object o = DataDeserializer.deserialize(valueType, kryoSerializer, bytesInMemory.get(i));
       LOG.log(Level.INFO, "Adding object: " + o);
       objectsInMemory.add(o);
     }
