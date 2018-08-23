@@ -112,6 +112,11 @@ public class TaskBatchInstance implements INodeInstance {
    */
   private Set<String> inputEdges = new HashSet<>();
 
+  /**
+   * Task context
+   */
+  private TaskContext taskContext;
+
   public TaskBatchInstance(ITask task, BlockingQueue<IMessage> inQueue,
                           BlockingQueue<IMessage> outQueue, Config config, String tName,
                           int tId, int tIndex, int parallel, int wId, Map<String, Object> cfgs,
@@ -132,8 +137,9 @@ public class TaskBatchInstance implements INodeInstance {
 
   public void prepare() {
     outputCollection = new DefaultOutputCollection(outQueue);
-    task.prepare(config, new TaskContext(taskIndex, taskId, taskName, parallelism, workerId,
-        outputCollection, nodeConfigs));
+    taskContext = new TaskContext(taskIndex, taskId, taskName, parallelism, workerId,
+        outputCollection, nodeConfigs);
+    task.prepare(config, taskContext);
   }
 
   public void registerOutParallelOperation(String edge, IParallelOperation op) {
@@ -153,10 +159,21 @@ public class TaskBatchInstance implements INodeInstance {
         task.run(m);
         state.set(InstanceState.EXECUTING);
       }
+
+      // now check the context
+      boolean isDone = true;
+      for (String e : outputEdges) {
+        if (!taskContext.isDone(e)) {
+          // we are done with execution
+          isDone = false;
+          break;
+        }
+      }
+
       // progress in communication
       boolean needsFurther = communicationProgress(inParOps);
       // if we no longer needs to progress comm and input is empty
-      if (state.isSet(InstanceState.EXECUTING) && !needsFurther && inQueue.isEmpty()) {
+      if (state.isSet(InstanceState.EXECUTING) && !needsFurther && inQueue.isEmpty() && isDone) {
         state.set(InstanceState.EXECUTION_DONE);
       }
     }
