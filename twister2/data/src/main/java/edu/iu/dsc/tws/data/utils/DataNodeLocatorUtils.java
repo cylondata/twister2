@@ -26,8 +26,9 @@ import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.hdfs.HadoopFileSystem;
 
 /**
- * This class is to retrieve the datanode names values corresponding to the
- * dataset filenames.
+ * This class is to find out the location of the datanodes corresponding to the input file names.
+ * It establishes the connection with the HDFS through HDFSConnector and retrieve the location
+ * of the input file name.
  */
 public class DataNodeLocatorUtils implements IDataNodeLocatorUtils {
 
