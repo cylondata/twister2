@@ -118,7 +118,6 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
       double containerCpuValue = TaskSchedulerContext.containerCpuPadding(config);
 
       List<InstanceId> taskInstanceIds = roundRobinContainerInstanceMap.get(containerId);
-
       Map<InstanceId, TaskSchedulePlan.TaskInstancePlan> taskInstancePlanMap = new HashMap<>();
 
       for (InstanceId id : taskInstanceIds) {

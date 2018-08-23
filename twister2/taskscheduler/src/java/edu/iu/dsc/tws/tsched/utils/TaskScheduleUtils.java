@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.tsched.utils;
 
 import java.util.Map;
 
+import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
 import edu.iu.dsc.tws.tsched.spi.scheduler.TaskSchedulerException;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.Resource;
 
@@ -22,7 +23,8 @@ import edu.iu.dsc.tws.tsched.spi.taskschedule.Resource;
  */
 public final class TaskScheduleUtils {
 
-  private static final Double MIN_RAM_PER_INSTANCE = 200.0;
+  private static final Double MIN_RAM_PER_INSTANCE =
+      TaskSchedulerContext.TWISTER2_TASK_INSTANCE_RAM_DEFAULT;
 
   private TaskScheduleUtils() {
   }

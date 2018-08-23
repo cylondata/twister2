@@ -34,12 +34,12 @@ import edu.iu.dsc.tws.tsched.utils.TaskAttributes;
  * This class is responsible for scheduling the task graph instances into the worker nodes
  * based on the locality of the data.
  */
-public class DataLocalityBatchScheduling {
+public class DataLocalityScheduler {
 
-  private static final Logger LOG = Logger.getLogger(DataLocalityBatchScheduling.class.getName());
+  private static final Logger LOG = Logger.getLogger(DataLocalityScheduler.class.getName());
   private static int globalTaskIndex = 0;
 
-  protected DataLocalityBatchScheduling() {
+  protected DataLocalityScheduler() {
   }
 
   /**

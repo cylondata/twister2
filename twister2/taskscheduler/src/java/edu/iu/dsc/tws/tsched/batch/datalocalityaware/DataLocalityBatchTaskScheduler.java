@@ -85,12 +85,12 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
 
     for (Set<Vertex> vertexSet : taskVertexList) {
       if (vertexSet.size() > 1) {
-        containerInstanceMap = DataLocalityBatchScheduling.
+        containerInstanceMap = DataLocalityScheduler.
             dataLocalityBatchSchedulingAlgo(vertexSet,
                 workerPlan.getNumberOfWorkers(), workerPlan, this.config);
       } else {
         Vertex vertex = vertexSet.iterator().next();
-        containerInstanceMap = DataLocalityBatchScheduling.
+        containerInstanceMap = DataLocalityScheduler.
             dataLocalityBatchSchedulingAlgo(vertex,
                 workerPlan.getNumberOfWorkers(), workerPlan, this.config);
       }
