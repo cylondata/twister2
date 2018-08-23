@@ -72,17 +72,21 @@ public class BKeyedPartitionExample extends KeyedBenchWorker {
 
   @Override
   protected void progressCommunication() {
-
+    partition.progress();
   }
 
   @Override
   protected boolean isDone() {
-    return false;
+    return partitionDone && sourcesDone && !partition.hasPending();
   }
 
   @Override
   protected boolean sendMessages(int task, Object key, Object data, int flag) {
-    return false;
+    while (!partition.partition(task, key, data, flag)) {
+      // lets wait a litte and try again
+      partition.progress();
+    }
+    return true;
   }
 
   public class PartitionReceiver implements BatchReceiver {
@@ -100,5 +104,10 @@ public class BKeyedPartitionExample extends KeyedBenchWorker {
           workerId, target, count, expected));
       partitionDone = true;
     }
+  }
+
+  @Override
+  protected void finishCommunication(int src) {
+    partition.finish(src);
   }
 }

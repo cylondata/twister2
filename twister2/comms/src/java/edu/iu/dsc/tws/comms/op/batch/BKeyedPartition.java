@@ -27,6 +27,8 @@ import edu.iu.dsc.tws.comms.op.Communicator;
 public class BKeyedPartition {
   private DataFlowPartition partition;
 
+  private Communicator comm;
+
   private DestinationSelector destinationSelector;
 
   public BKeyedPartition(Communicator comm, TaskPlan plan,
@@ -55,11 +57,16 @@ public class BKeyedPartition {
     this.destinationSelector.prepare(partition.getSources(), partition.getDestinations());
   }
 
-  public void partition(int source, Object key, Object message, int flags) {
-    int destinations = destinationSelector.next(source);
+  public boolean partition(int source, Object key, Object message, int flags) {
+    int destinations = destinationSelector.next(source, key);
 
-    partition.send(source, new KeyedContent(key, message, partition.getKeyType(),
+    boolean send = partition.send(source, new KeyedContent(key, message, partition.getKeyType(),
         partition.getDataType()), flags, destinations);
+    return send;
+  }
+
+  public boolean hasPending() {
+    return !partition.isComplete();
   }
 
   public void finish(int source) {
