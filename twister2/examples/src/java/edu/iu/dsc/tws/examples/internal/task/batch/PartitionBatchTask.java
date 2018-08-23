@@ -108,6 +108,7 @@ public class PartitionBatchTask implements IContainer {
     public boolean execute(IMessage message) {
       if (message.getContent() instanceof Iterator) {
         while (((Iterator) message.getContent()).hasNext()) {
+          ((Iterator) message.getContent()).next();
           count++;
         }
         if (count % 1 == 0) {

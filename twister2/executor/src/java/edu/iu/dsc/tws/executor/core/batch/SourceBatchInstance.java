@@ -188,6 +188,10 @@ public class SourceBatchInstance implements INodeInstance {
     return batchTaskId;
   }
 
+  /**
+   * Progress the communication and return weather we need to further progress
+   * @return true if further progress is needed
+   */
   public boolean communicationProgress() {
     boolean allDone = true;
     for (Map.Entry<String, IParallelOperation> e : outBatchParOps.entrySet()) {
@@ -195,7 +199,7 @@ public class SourceBatchInstance implements INodeInstance {
         allDone = false;
       }
     }
-    return allDone;
+    return !allDone;
   }
 
 

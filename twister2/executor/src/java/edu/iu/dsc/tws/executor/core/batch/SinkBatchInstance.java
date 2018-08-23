@@ -137,6 +137,10 @@ public class SinkBatchInstance implements INodeInstance {
     return batchTaskId;
   }
 
+  /**
+   * Progress the communication and return weather we need to further progress
+   * @return true if further progress is needed
+   */
   private boolean communicationProgress() {
     boolean allDone = true;
     for (Map.Entry<String, IParallelOperation> e : batchInParOps.entrySet()) {
@@ -144,7 +148,7 @@ public class SinkBatchInstance implements INodeInstance {
         allDone = false;
       }
     }
-    return allDone;
+    return !allDone;
   }
 
   public void registerInParallelOperation(String edge, IParallelOperation op) {

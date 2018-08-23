@@ -193,6 +193,10 @@ public class TaskBatchInstance implements INodeInstance {
     return !state.isEqual(InstanceState.FINISH);
   }
 
+  /**
+   * Progress the communication and return weather we need to further progress
+   * @return true if further progress is needed
+   */
   public boolean communicationProgress(Map<String, IParallelOperation> ops) {
     boolean allDone = true;
     for (Map.Entry<String, IParallelOperation> e : ops.entrySet()) {
@@ -200,7 +204,7 @@ public class TaskBatchInstance implements INodeInstance {
         allDone = false;
       }
     }
-    return allDone;
+    return !allDone;
   }
 
   @Override
