@@ -102,8 +102,8 @@ public class BKeyedPartitionExample extends KeyedBenchWorker {
 
     @Override
     public void receive(int target, Iterator<Object> it) {
-      LOG.log(Level.INFO, String.format("%d Received message %d count %d expected %d",
-          workerId, target, Iterators.size(it), expected));
+      LOG.log(Level.INFO, String.format("%d Received message %d count %d",
+          workerId, target, Iterators.size(it)));
       partitionDone = true;
     }
   }
