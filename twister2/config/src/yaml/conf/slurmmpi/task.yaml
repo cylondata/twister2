@@ -30,4 +30,4 @@ twister2.datanode.instance.latency: 0.01 #Milliseconds
 twister2.task.parallelism: 2
 
 #Default Task Type "streaming" or "batch"
-twister2.task.type: "batch"
+twister2.task.type: "streaming"
