@@ -28,9 +28,9 @@ package edu.iu.dsc.tws.common.resource;
  */
 public class RequestedResources {
   private int noOfContainers;
-  private WorkerComputeSpec container;
+  private WorkerComputeResource container;
 
-  public RequestedResources(int noOfContainers, WorkerComputeSpec container) {
+  public RequestedResources(int noOfContainers, WorkerComputeResource container) {
     this.noOfContainers = noOfContainers;
     this.container = container;
   }
@@ -39,7 +39,7 @@ public class RequestedResources {
     return noOfContainers;
   }
 
-  public WorkerComputeSpec getContainer() {
+  public WorkerComputeResource getContainer() {
     return container;
   }
 }

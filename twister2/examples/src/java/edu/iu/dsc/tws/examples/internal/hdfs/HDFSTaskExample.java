@@ -48,7 +48,7 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.WorkerComputeSpec;
+import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.resource.ZResourcePlan;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
@@ -103,7 +103,7 @@ public class HDFSTaskExample implements IContainer {
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("hdfstask-example");
     jobBuilder.setWorkerClass(HDFSTaskExample.class.getName());
-    jobBuilder.setRequestResource(new WorkerComputeSpec(2, 1024), 3);
+    jobBuilder.setRequestResource(new WorkerComputeResource(2, 1024), 3);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job
@@ -710,7 +710,7 @@ public class HDFSTaskExample implements IContainer {
 
   public WorkerPlan createWorkerPlan(ZResourcePlan resourcePlan) {
     List<Worker> workers = new ArrayList<>();
-    for (WorkerComputeSpec resource : resourcePlan.getContainers()) {
+    for (WorkerComputeResource resource : resourcePlan.getContainers()) {
       Worker w = new Worker(resource.getId());
       workers.add(w);
     }

@@ -21,7 +21,7 @@ import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.discovery.NodeInfo;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
-import edu.iu.dsc.tws.common.resource.WorkerComputeSpec;
+import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.resource.ZResourcePlan;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
@@ -182,8 +182,8 @@ public final class K8sWorkerStarter {
 
   /**
    * A ZResourcePlan object is created
-   * For each worker in the job, a WorkerComputeSpec is created and it is added to the ZResourcePlan
-   * Each WorkerComputeSpec has the podName of its worker as a property
+   * For each worker in the job, a WorkerComputeResource is created and it is added to the ZResourcePlan
+   * Each WorkerComputeResource has the podName of its worker as a property
    * @return
    */
   public static ZResourcePlan generateResourcePlan() {
@@ -198,9 +198,9 @@ public final class K8sWorkerStarter {
 
       String podName = KubernetesUtils.podNameFromJobName(jobName, i);
       for (int j = 0; j < workersPerPod; j++) {
-        WorkerComputeSpec workerComputeSpec = new WorkerComputeSpec(nextWorkerID);
-        workerComputeSpec.addProperty(SchedulerContext.WORKER_NAME, podName);
-        plan.addContainer(workerComputeSpec);
+        WorkerComputeResource workerComputeResource = new WorkerComputeResource(nextWorkerID);
+        workerComputeResource.addProperty(SchedulerContext.WORKER_NAME, podName);
+        plan.addContainer(workerComputeResource);
         nextWorkerID++;
       }
     }

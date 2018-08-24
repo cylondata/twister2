@@ -30,7 +30,7 @@ import edu.iu.dsc.tws.common.net.tcp.request.ConnectHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
-import edu.iu.dsc.tws.common.resource.WorkerComputeSpec;
+import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.resource.ZResourcePlan;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.examples.internal.task.streaming.TaskStreamingExample;
@@ -169,7 +169,7 @@ public class SourceSinkDiscoveryExample implements IContainer {
 
   public WorkerPlan createWorkerPlan(ZResourcePlan resourcePlan) {
     List<Worker> workers = new ArrayList<>();
-    for (WorkerComputeSpec resource : resourcePlan.getContainers()) {
+    for (WorkerComputeResource resource : resourcePlan.getContainers()) {
       Worker w = new Worker(resource.getId());
       workers.add(w);
     }
@@ -192,7 +192,7 @@ public class SourceSinkDiscoveryExample implements IContainer {
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("source-sink-discovery-example");
     jobBuilder.setWorkerClass(TaskStreamingExample.class.getName());
-    jobBuilder.setRequestResource(new WorkerComputeSpec(2, 1024), 4);
+    jobBuilder.setRequestResource(new WorkerComputeResource(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job

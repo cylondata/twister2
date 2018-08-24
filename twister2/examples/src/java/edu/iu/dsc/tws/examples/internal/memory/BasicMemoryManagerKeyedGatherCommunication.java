@@ -29,7 +29,7 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.WorkerComputeSpec;
+import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.resource.ZResourcePlan;
 import edu.iu.dsc.tws.comms.api.BatchReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
@@ -250,7 +250,7 @@ public class BasicMemoryManagerKeyedGatherCommunication implements IContainer {
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setName("basic-gather-batch-MM")
         .setWorkerClass(BasicMemoryManagerKeyedGatherCommunication.class.getName())
-        .setRequestResource(new WorkerComputeSpec(2, 1024), 4)
+        .setRequestResource(new WorkerComputeResource(2, 1024), 4)
         .setConfig(jobConfig)
         .build();
 

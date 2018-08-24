@@ -19,7 +19,7 @@ import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.common.resource.WorkerComputeSpec;
+import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosContext;
@@ -42,7 +42,8 @@ public final class BasicMesosJob {
     String jobName = SchedulerContext.jobName(config);
     jobName += "-" + System.currentTimeMillis();
     System.out.println("job name is " + jobName);
-    WorkerComputeSpec workerComputeSpec = new WorkerComputeSpec(cpus, ramMegaBytes, diskGigaBytes);
+    WorkerComputeResource workerComputeResource =
+        new WorkerComputeResource(cpus, ramMegaBytes, diskGigaBytes);
     // build JobConfig
     HashMap<String, Object> configurations = new HashMap<>();
     configurations.put(SchedulerContext.THREADS_PER_WORKER, 8);
@@ -57,7 +58,7 @@ public final class BasicMesosJob {
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setName(jobName)
         .setWorkerClass(workerClass)
-        .setRequestResource(workerComputeSpec, containers)
+        .setRequestResource(workerComputeResource, containers)
         .setConfig(jobConfig)
         .build();
 

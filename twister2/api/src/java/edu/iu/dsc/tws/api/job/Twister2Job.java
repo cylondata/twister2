@@ -32,7 +32,7 @@ import java.util.logging.Logger;
 import com.google.protobuf.ByteString;
 
 import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.common.resource.WorkerComputeSpec;
+import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.proto.system.ResourceAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
@@ -45,7 +45,7 @@ public final class Twister2Job {
 
   private String name;
   private String workerClass;
-  private WorkerComputeSpec requestedResource;
+  private WorkerComputeResource requestedResource;
   private int noOfContainers;
   private JobConfig config;
 
@@ -110,7 +110,7 @@ public final class Twister2Job {
     return workerClass;
   }
 
-  public WorkerComputeSpec getRequestedResource() {
+  public WorkerComputeResource getRequestedResource() {
     return requestedResource;
   }
 
@@ -143,7 +143,7 @@ public final class Twister2Job {
       return this;
     }
 
-    public BasicJobBuilder setRequestResource(WorkerComputeSpec requestResource,
+    public BasicJobBuilder setRequestResource(WorkerComputeResource requestResource,
                                               int noOfContainers) {
       twister2Job.noOfContainers = noOfContainers;
       twister2Job.requestedResource = requestResource;

@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import edu.iu.dsc.tws.common.resource.WorkerComputeSpec;
+import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.resource.ZResourcePlan;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.executor.api.TaskIdGenerator;
@@ -65,11 +65,11 @@ public final class TaskPlanBuilder {
       containersToTasks.put(c.getContainerId(), instances);
     }
 
-    List<WorkerComputeSpec> containers = resourcePlan.getContainers();
-    Map<String, List<WorkerComputeSpec>> containersPerNode = new HashMap<>();
-    for (WorkerComputeSpec c : containers) {
+    List<WorkerComputeResource> containers = resourcePlan.getContainers();
+    Map<String, List<WorkerComputeResource>> containersPerNode = new HashMap<>();
+    for (WorkerComputeResource c : containers) {
       String name = (String) c.getProperty(SchedulerContext.WORKER_NAME);
-      List<WorkerComputeSpec> containerList;
+      List<WorkerComputeResource> containerList;
       if (!containersPerNode.containsKey(name)) {
         containerList = new ArrayList<>();
         containersPerNode.put(name, containerList);
@@ -81,9 +81,9 @@ public final class TaskPlanBuilder {
 
     int i = 0;
     // we take each container as an executor
-    for (Map.Entry<String, List<WorkerComputeSpec>> e : containersPerNode.entrySet()) {
+    for (Map.Entry<String, List<WorkerComputeResource>> e : containersPerNode.entrySet()) {
       Set<Integer> executorsOfGroup = new HashSet<>();
-      for (WorkerComputeSpec c : e.getValue()) {
+      for (WorkerComputeResource c : e.getValue()) {
         executorsOfGroup.add(c.getId());
       }
       groupsToTasks.put(i, executorsOfGroup);
