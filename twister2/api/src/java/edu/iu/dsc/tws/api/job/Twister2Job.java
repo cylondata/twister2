@@ -95,7 +95,7 @@ public final class Twister2Job {
             .setDisk(requestedResource.getDiskGigaBytes())
             .build()
     );
-    jobResourceBuilder.setResources(0, resourceTypeBuilder.build());
+    jobResourceBuilder.addResources(resourceTypeBuilder.build());
 
 //    ResourceAPI.ComputeResource.Builder computeResourceBuilder =
 //        ResourceAPI.ComputeResource.newBuilder();
