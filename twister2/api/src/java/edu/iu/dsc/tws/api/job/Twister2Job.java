@@ -80,11 +80,7 @@ public final class Twister2Job {
     }
 
     jobBuilder.setConfig(configBuilder);
-
-    JobAPI.Container.Builder containerBuilder = JobAPI.Container.newBuilder();
-    containerBuilder.setClassName(workerClass);
-
-    jobBuilder.setContainer(containerBuilder);
+    jobBuilder.setWorkerClassName(workerClass);
     jobBuilder.setJobName(name);
 
     JobAPI.JobResources.Builder jobResourceBuilder = JobAPI.JobResources.newBuilder();

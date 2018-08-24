@@ -127,7 +127,7 @@ public final class MesosMPIWorkerStarter {
 
 
     JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/" + jobName + ".job");
-    String workerClass = job.getContainer().getClassName();
+    String workerClass = job.getWorkerClassName();
     LOG.info("Worker class---->>>" + workerClass);
     IWorker worker;
     try {

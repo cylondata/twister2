@@ -80,7 +80,7 @@ public abstract class MPICommand {
     String classPath = jobClassPath + ":" + systemClassPath;
     commands.put("classpath", classPath);
     commands.put("java_props", "");
-    commands.put("container_class", job.getContainer().getClassName());
+    commands.put("container_class", job.getWorkerClassName());
 
     return commands;
   }

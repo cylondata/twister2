@@ -105,7 +105,7 @@ public final class BasicAuroraJob {
     String fl = "/tmp/basic-aurora/basic-aurora3354891958097304472/twister2-core/basic-aurora.job";
     JobAPI.Job job = JobUtils.readJobFile(null, fl);
     System.out.println("job name: " + job.getJobName());
-    System.out.println("job container class name: " + job.getContainer().getClassName());
+    System.out.println("job worker class name: " + job.getWorkerClassName());
     System.out.println("job containers: " + job.getJobResources().getNoOfContainers());
     System.out.println("CPUs: " + job.getJobResources().getContainer().getAvailableCPU());
     System.out.println("RAM: " + job.getJobResources().getContainer().getAvailableMemory());
