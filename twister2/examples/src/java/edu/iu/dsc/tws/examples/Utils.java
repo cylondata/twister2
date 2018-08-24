@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -26,7 +25,6 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.resource.ZResourcePlan;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlanUtils;
 
 public final class Utils {
@@ -49,17 +47,17 @@ public final class Utils {
 
     List<WorkerComputeResource> containers = plan.getContainers();
     Map<String, List<WorkerComputeResource>> containersPerNode = new HashMap<>();
-    for (WorkerComputeResource c : containers) {
-      String name = (String) c.getProperty(SchedulerContext.WORKER_NAME);
-      List<WorkerComputeResource> containerList;
-      if (!containersPerNode.containsKey(name)) {
-        containerList = new ArrayList<>();
-        containersPerNode.put(name, containerList);
-      } else {
-        containerList = containersPerNode.get(name);
-      }
-      containerList.add(c);
-    }
+//    for (WorkerComputeResource c : containers) {
+//      String name = (String) c.getProperty(SchedulerContext.WORKER_NAME);
+//      List<WorkerComputeResource> containerList;
+//      if (!containersPerNode.containsKey(name)) {
+//        containerList = new ArrayList<>();
+//        containersPerNode.put(name, containerList);
+//      } else {
+//        containerList = containersPerNode.get(name);
+//      }
+//      containerList.add(c);
+//    }
 
     for (int i = 0; i < noOfProcs; i++) {
       Set<Integer> nodesOfExecutor = new HashSet<>();
@@ -102,17 +100,17 @@ public final class Utils {
 
     List<WorkerComputeResource> containers = plan.getContainers();
     Map<String, List<WorkerComputeResource>> containersPerNode = new HashMap<>();
-    for (WorkerComputeResource c : containers) {
-      String name = (String) c.getProperty(SchedulerContext.WORKER_NAME);
-      List<WorkerComputeResource> containerList;
-      if (!containersPerNode.containsKey(name)) {
-        containerList = new ArrayList<>();
-        containersPerNode.put(name, containerList);
-      } else {
-        containerList = containersPerNode.get(name);
-      }
-      containerList.add(c);
-    }
+//    for (WorkerComputeResource c : containers) {
+//      String name = (String) c.getProperty(SchedulerContext.WORKER_NAME);
+//      List<WorkerComputeResource> containerList;
+//      if (!containersPerNode.containsKey(name)) {
+//        containerList = new ArrayList<>();
+//        containersPerNode.put(name, containerList);
+//      } else {
+//        containerList = containersPerNode.get(name);
+//      }
+//      containerList.add(c);
+//    }
 
     int taskPerExecutor = noOfTasks / noOfProcs;
     for (int i = 0; i < noOfProcs; i++) {

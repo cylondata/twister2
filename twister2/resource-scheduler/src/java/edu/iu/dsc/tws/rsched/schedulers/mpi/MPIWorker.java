@@ -33,7 +33,6 @@ import edu.iu.dsc.tws.common.resource.ZResourcePlan;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
@@ -281,7 +280,7 @@ public final class MPIWorker {
     int size = MPI.COMM_WORLD.getSize();
     for (int i = 0; i < size; i++) {
       WorkerComputeResource workerComputeResource = new WorkerComputeResource(i);
-      workerComputeResource.addProperty(SchedulerContext.WORKER_NAME, processes.get(i));
+//      workerComputeResource.addProperty(SchedulerContext.WORKER_NAME, processes.get(i));
       resourcePlan.addContainer(workerComputeResource);
     }
   }

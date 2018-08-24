@@ -23,17 +23,15 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.resource;
 
-import java.util.HashMap;
-import java.util.Map;
-
 /**
- * Represent a resource
+ * Represent a resource for a worker
+ * It is used to define a resource when submitting the job
+ * It is also used when providing the worker resources to IWorker from resource scheduler
+ * In the second case, id is also used.
+ * When defining worker resources for a job submission, id is not used
  */
 public class WorkerComputeResource {
   private int id;
-  // include properties of the resource
-  // this can include things like available ports
-  private Map<String, Object> properties = new HashMap<>();
 
   // no of cpus in this container
   // it can be a fractional number such as 0.5
@@ -62,14 +60,6 @@ public class WorkerComputeResource {
 
   public int getId() {
     return id;
-  }
-
-  public void addProperty(String key, Object property) {
-    properties.put(key, property);
-  }
-
-  public Object getProperty(String key) {
-    return properties.get(key);
   }
 
   public double getNoOfCpus() {
