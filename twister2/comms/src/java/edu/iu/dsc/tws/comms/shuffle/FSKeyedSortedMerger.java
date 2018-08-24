@@ -149,13 +149,6 @@ public class FSKeyedSortedMerger implements Shuffle {
     }
 
     Object k1 = FileLoader.convertKeyToArray(keyType, key);
-    int[] k = (int[]) k1;
-    try {
-      int i = k[0];
-    } catch (ArrayIndexOutOfBoundsException e) {
-      throw new RuntimeException("EEEE", e);
-    }
-
     LOG.log(Level.INFO, "adding value: target: " + target + " " + recordsInMemory.size());
     lock.lock();
     try {
@@ -177,7 +170,7 @@ public class FSKeyedSortedMerger implements Shuffle {
     try {
       status = FSStatus.READING;
       // lets convert the in-memory data to objects
-//       deserializeObjects();
+      deserializeObjects();
       // lets sort the in-memory objects
       Collections.sort(objectsInMemory);
     } finally {
