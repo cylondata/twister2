@@ -35,6 +35,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.spi.resource;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,17 +50,17 @@ public final class ResourcePlanUtils {
   public static Map<String, List<WorkerComputeResource>> getContainersPerNode(
       List<WorkerComputeResource> containers) {
     Map<String, List<WorkerComputeResource>> containersPerNode = new HashMap<>();
-//    for (WorkerComputeResource c : containers) {
-//      String processName = (String) c.getProperty(SchedulerContext.WORKER_NAME);
-//      List<WorkerComputeResource> containerList;
-//      if (!containersPerNode.containsKey(processName)) {
-//        containerList = new ArrayList<>();
-//        containersPerNode.put(processName, containerList);
-//      } else {
-//        containerList = containersPerNode.get(processName);
-//      }
-//      containerList.add(c);
-//    }
+    for (WorkerComputeResource c : containers) {
+      String processName = Integer.toString(c.getId());
+      List<WorkerComputeResource> containerList;
+      if (!containersPerNode.containsKey(processName)) {
+        containerList = new ArrayList<>();
+        containersPerNode.put(processName, containerList);
+      } else {
+        containerList = containersPerNode.get(processName);
+      }
+      containerList.add(c);
+    }
     return containersPerNode;
   }
 }

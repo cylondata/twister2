@@ -23,6 +23,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.core;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -65,17 +66,17 @@ public final class TaskPlanBuilder {
 
     List<WorkerComputeResource> containers = resourcePlan.getContainers();
     Map<String, List<WorkerComputeResource>> containersPerNode = new HashMap<>();
-//    for (WorkerComputeResource c : containers) {
-//      String name = (String) c.getProperty(SchedulerContext.WORKER_NAME);
-//      List<WorkerComputeResource> containerList;
-//      if (!containersPerNode.containsKey(name)) {
-//        containerList = new ArrayList<>();
-//        containersPerNode.put(name, containerList);
-//      } else {
-//        containerList = containersPerNode.get(name);
-//      }
-//      containerList.add(c);
-//    }
+    for (WorkerComputeResource c : containers) {
+      String name = Integer.toString(c.getId());
+      List<WorkerComputeResource> containerList;
+      if (!containersPerNode.containsKey(name)) {
+        containerList = new ArrayList<>();
+        containersPerNode.put(name, containerList);
+      } else {
+        containerList = containersPerNode.get(name);
+      }
+      containerList.add(c);
+    }
 
     int i = 0;
     // we take each container as an executor
