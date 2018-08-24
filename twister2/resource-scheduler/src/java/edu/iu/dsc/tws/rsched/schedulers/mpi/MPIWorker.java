@@ -203,7 +203,7 @@ public final class MPIWorker {
       throw new RuntimeException(e);
     }
 
-    // lets do a barrier here so everyone is synchronized at the start
+    // lets do a barrier here so everyone is synchronized at the end
     try {
       MPI.COMM_WORLD.barrier();
       LOG.log(Level.FINE, String.format("Worker %d: the cluster is ready...", rank));

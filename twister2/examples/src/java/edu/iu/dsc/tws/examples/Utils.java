@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -100,17 +101,17 @@ public final class Utils {
 
     List<WorkerComputeResource> containers = plan.getContainers();
     Map<String, List<WorkerComputeResource>> containersPerNode = new HashMap<>();
-//    for (WorkerComputeResource c : containers) {
-//      String name = (String) c.getProperty(SchedulerContext.WORKER_NAME);
-//      List<WorkerComputeResource> containerList;
-//      if (!containersPerNode.containsKey(name)) {
-//        containerList = new ArrayList<>();
-//        containersPerNode.put(name, containerList);
-//      } else {
-//        containerList = containersPerNode.get(name);
-//      }
-//      containerList.add(c);
-//    }
+    for (WorkerComputeResource c : containers) {
+      String name = Integer.toString(c.getId());
+      List<WorkerComputeResource> containerList;
+      if (!containersPerNode.containsKey(name)) {
+        containerList = new ArrayList<>();
+        containersPerNode.put(name, containerList);
+      } else {
+        containerList = containersPerNode.get(name);
+      }
+      containerList.add(c);
+    }
 
     int taskPerExecutor = noOfTasks / noOfProcs;
     for (int i = 0; i < noOfProcs; i++) {
