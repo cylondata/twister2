@@ -43,7 +43,7 @@ public class WorkerComputeSpec {
   private int memoryMegaBytes;
 
   // volatile disk space available to the container
-  private int diskMegaBytes;
+  private double diskGigaBytes;
 
   public WorkerComputeSpec(int id) {
     this.id = id;
@@ -54,10 +54,10 @@ public class WorkerComputeSpec {
     this.memoryMegaBytes = memoryMegaBytes;
   }
 
-  public WorkerComputeSpec(double noOfCpus, int memoryMegaBytes, int diskMegaBytes) {
+  public WorkerComputeSpec(double noOfCpus, int memoryMegaBytes, double diskGigaBytes) {
     this.noOfCpus = noOfCpus;
     this.memoryMegaBytes = memoryMegaBytes;
-    this.diskMegaBytes = diskMegaBytes;
+    this.diskGigaBytes = diskGigaBytes;
   }
 
   public int getId() {
@@ -84,12 +84,16 @@ public class WorkerComputeSpec {
     return memoryMegaBytes * 1024 * 1024L;
   }
 
+  public double getDiskGigaBytes() {
+    return diskGigaBytes;
+  }
+
   public int getDiskMegaBytes() {
-    return diskMegaBytes;
+    return (int) (diskGigaBytes * 1024);
   }
 
   public long getDiskInBytes() {
-    return diskMegaBytes * 1024 * 1024L;
+    return (long) (diskGigaBytes * 1024 * 1024 * 1024);
   }
 
 }

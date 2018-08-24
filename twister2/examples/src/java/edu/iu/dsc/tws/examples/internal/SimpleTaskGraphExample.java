@@ -79,7 +79,7 @@ public class SimpleTaskGraphExample implements IContainer {
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setName("basic-taskgraphJob")
         .setWorkerClass(SimpleTaskGraphExample.class.getName())
-        .setRequestResource(new WorkerComputeSpec(2, 1024, 100), 2)
+        .setRequestResource(new WorkerComputeSpec(2, 1024, 1.0), 2)
         .setConfig(jobConfig)
         .build();
 
