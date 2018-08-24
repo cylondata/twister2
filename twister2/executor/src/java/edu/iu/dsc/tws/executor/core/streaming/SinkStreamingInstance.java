@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.executor.core.streaming;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -75,8 +76,8 @@ public class SinkStreamingInstance  implements INodeInstance {
   private int workerId;
 
   public SinkStreamingInstance(ISink streamingTask, BlockingQueue<IMessage> streamingInQueue,
-                               Config config, int tId, int tIndex, int parallel,
-                               int wId, Map<String, Object> cfgs) {
+                               Config config, String tName, int tId, int tIndex, int parallel,
+                               int wId, Map<String, Object> cfgs, Set<String> inEdges) {
     this.streamingTask = streamingTask;
     this.streamingInQueue = streamingInQueue;
     this.config = config;
@@ -85,7 +86,7 @@ public class SinkStreamingInstance  implements INodeInstance {
     this.parallelism = parallel;
     this.nodeConfigs = cfgs;
     this.workerId = wId;
-
+    this.taskName = tName;
   }
 
   public void prepare() {

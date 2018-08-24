@@ -38,14 +38,14 @@ public class ZResourcePlan {
   private int thisId;
 
   // list of resource containers
-  private List<WorkerComputeSpec> containers = new ArrayList<>();
+  private List<WorkerComputeResource> containers = new ArrayList<>();
 
   public ZResourcePlan(String cluster, int id) {
     this.cluster = cluster;
     this.thisId = id;
   }
 
-  public List<WorkerComputeSpec> getContainers() {
+  public List<WorkerComputeResource> getContainers() {
     return containers;
   }
 
@@ -53,7 +53,7 @@ public class ZResourcePlan {
     return containers.size();
   }
 
-  public void addContainer(WorkerComputeSpec container) {
+  public void addContainer(WorkerComputeResource container) {
     this.containers.add(container);
   }
 

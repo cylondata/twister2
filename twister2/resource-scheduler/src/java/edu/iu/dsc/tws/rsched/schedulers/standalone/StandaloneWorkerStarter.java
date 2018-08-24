@@ -148,7 +148,7 @@ public final class StandaloneWorkerStarter {
 
     String jobDescFile = JobUtils.getJobDescriptionFilePath(jobName, workerConfig);
     JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
-    job.getJobResources().getNoOfContainers();
+    job.getJobResources().getNumberOfWorkers();
 
     Config updatedConfig = JobUtils.overrideConfigs(job, config);
     updatedConfig = Config.newBuilder().putAll(updatedConfig).
@@ -213,8 +213,7 @@ public final class StandaloneWorkerStarter {
     String jobName = StandaloneContext.jobName(config);
     String jobDescFile = JobUtils.getJobDescriptionFilePath(jobName, config);
     JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
-    int numberContainers = job.getJobResources().getNoOfContainers();
-
+    int numberContainers = job.getJobResources().getNumberOfWorkers();
     return new JobMasterBasedWorkerController(config, index, numberContainers,
         jobMasterIP, masterPort, ports, localIps);
   }

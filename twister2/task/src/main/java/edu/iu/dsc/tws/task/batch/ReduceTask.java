@@ -9,19 +9,28 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.op;
+package edu.iu.dsc.tws.task.batch;
 
-import java.util.Set;
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.ITask;
+import edu.iu.dsc.tws.task.api.TaskContext;
 
-import edu.iu.dsc.tws.comms.api.MessageType;
+public class ReduceTask implements ITask {
+  public static final long serialVersionUID = 1258632547;
 
-/**
- * Destination selector
- */
-public interface DestinationSelector {
-  void prepare(Set<Integer> sources, Set<Integer> destinations);
-  void prepare(MessageType type, Set<Integer> sources, Set<Integer> destinations);
-  int next(int source);
-  int next(int source, Object key);
-  void commit(int source, int next);
+  @Override
+  public void run(IMessage content) {
+
+  }
+
+  @Override
+  public void run() {
+
+  }
+
+  @Override
+  public void prepare(Config cfg, TaskContext context) {
+
+  }
 }

@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.executor.core.streaming;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -96,7 +97,8 @@ public class TaskStreamingInstance implements INodeInstance {
 
   public TaskStreamingInstance(ITask task, BlockingQueue<IMessage> inQueue,
                            BlockingQueue<IMessage> outQueue, Config config, String tName,
-                           int tId, int tIndex, int parallel, int wId, Map<String, Object> cfgs) {
+                           int tId, int tIndex, int parallel, int wId, Map<String, Object> cfgs,
+                           Set<String> inEdges, Set<String> outEdges) {
     this.task = task;
     this.inQueue = inQueue;
     this.outQueue = outQueue;

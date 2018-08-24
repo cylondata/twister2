@@ -13,13 +13,14 @@ package edu.iu.dsc.tws.examples.internal.task.batch;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.WorkerComputeSpec;
+import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.resource.ZResourcePlan;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
@@ -76,10 +77,16 @@ public class PartitionBatchTask implements IContainer {
     private static final long serialVersionUID = -254264903510284748L;
     private TaskContext ctx;
     private Config config;
+    private int count = 0;
 
     @Override
     public void run() {
-      ctx.write("partition-edge", "Hello");
+      count++;
+      if (count == 1000) {
+        ctx.writeEnd("partition-edge", "Hello");
+      } else if (count < 1000) {
+        ctx.write("partition-edge", "Hello");
+      }
     }
 
     @Override
@@ -99,9 +106,15 @@ public class PartitionBatchTask implements IContainer {
 
     @Override
     public boolean execute(IMessage message) {
-      if (count % 10000 == 0) {
-        System.out.println("Message Partition Received : " + message.getContent()
-            + ", Count : " + count);
+      if (message.getContent() instanceof Iterator) {
+        while (((Iterator) message.getContent()).hasNext()) {
+          ((Iterator) message.getContent()).next();
+          count++;
+        }
+        if (count % 1 == 0) {
+          System.out.println("Message Partition Received : " + message.getContent()
+              + ", Count : " + count);
+        }
       }
       count++;
       return true;
@@ -115,7 +128,7 @@ public class PartitionBatchTask implements IContainer {
 
   public WorkerPlan createWorkerPlan(ZResourcePlan resourcePlan) {
     List<Worker> workers = new ArrayList<>();
-    for (WorkerComputeSpec resource : resourcePlan.getContainers()) {
+    for (WorkerComputeResource resource : resourcePlan.getContainers()) {
       Worker w = new Worker(resource.getId());
       workers.add(w);
     }
@@ -138,7 +151,7 @@ public class PartitionBatchTask implements IContainer {
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("partition-example");
     jobBuilder.setWorkerClass(PartitionBatchTask.class.getName());
-    jobBuilder.setRequestResource(new WorkerComputeSpec(2, 1024), 4);
+    jobBuilder.setRequestResource(new WorkerComputeResource(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job

@@ -28,12 +28,11 @@ import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.common.resource.WorkerComputeSpec;
+import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.resource.ZResourcePlan;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
@@ -204,7 +203,7 @@ public final class MPIWorker {
       throw new RuntimeException(e);
     }
 
-    // lets do a barrier here so everyone is synchronized at the start
+    // lets do a barrier here so everyone is synchronized at the end
     try {
       MPI.COMM_WORLD.barrier();
       LOG.log(Level.FINE, String.format("Worker %d: the cluster is ready...", rank));
@@ -280,9 +279,9 @@ public final class MPIWorker {
                                     Map<Integer, String> processes) throws MPIException {
     int size = MPI.COMM_WORLD.getSize();
     for (int i = 0; i < size; i++) {
-      WorkerComputeSpec workerComputeSpec = new WorkerComputeSpec(i);
-      workerComputeSpec.addProperty(SchedulerContext.WORKER_NAME, processes.get(i));
-      resourcePlan.addContainer(workerComputeSpec);
+      WorkerComputeResource workerComputeResource = new WorkerComputeResource(i);
+//      workerComputeResource.addProperty(SchedulerContext.WORKER_NAME, processes.get(i));
+      resourcePlan.addContainer(workerComputeResource);
     }
   }
 }

@@ -21,7 +21,7 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.WorkerComputeSpec;
+import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.resource.ZResourcePlan;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
@@ -129,7 +129,7 @@ public class GatherStreamingTask implements IContainer {
 
   public WorkerPlan createWorkerPlan(ZResourcePlan resourcePlan) {
     List<Worker> workers = new ArrayList<>();
-    for (WorkerComputeSpec resource : resourcePlan.getContainers()) {
+    for (WorkerComputeResource resource : resourcePlan.getContainers()) {
       Worker w = new Worker(resource.getId());
       workers.add(w);
     }
@@ -153,7 +153,7 @@ public class GatherStreamingTask implements IContainer {
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("task-gather");
     jobBuilder.setWorkerClass(GatherStreamingTask.class.getName());
-    jobBuilder.setRequestResource(new WorkerComputeSpec(4, 1024), 4);
+    jobBuilder.setRequestResource(new WorkerComputeResource(4, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job

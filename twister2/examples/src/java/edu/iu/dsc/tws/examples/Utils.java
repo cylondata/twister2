@@ -23,10 +23,9 @@ import java.util.logging.Logger;
 import org.apache.commons.cli.Option;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.WorkerComputeSpec;
+import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.resource.ZResourcePlan;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlanUtils;
 
 public final class Utils {
@@ -47,19 +46,19 @@ public final class Utils {
     Map<Integer, Set<Integer>> groupsToExeuctors = new HashMap<>();
     int thisExecutor = plan.getThisId();
 
-    List<WorkerComputeSpec> containers = plan.getContainers();
-    Map<String, List<WorkerComputeSpec>> containersPerNode = new HashMap<>();
-    for (WorkerComputeSpec c : containers) {
-      String name = (String) c.getProperty(SchedulerContext.WORKER_NAME);
-      List<WorkerComputeSpec> containerList;
-      if (!containersPerNode.containsKey(name)) {
-        containerList = new ArrayList<>();
-        containersPerNode.put(name, containerList);
-      } else {
-        containerList = containersPerNode.get(name);
-      }
-      containerList.add(c);
-    }
+    List<WorkerComputeResource> containers = plan.getContainers();
+    Map<String, List<WorkerComputeResource>> containersPerNode = new HashMap<>();
+//    for (WorkerComputeResource c : containers) {
+//      String name = (String) c.getProperty(SchedulerContext.WORKER_NAME);
+//      List<WorkerComputeResource> containerList;
+//      if (!containersPerNode.containsKey(name)) {
+//        containerList = new ArrayList<>();
+//        containersPerNode.put(name, containerList);
+//      } else {
+//        containerList = containersPerNode.get(name);
+//      }
+//      containerList.add(c);
+//    }
 
     for (int i = 0; i < noOfProcs; i++) {
       Set<Integer> nodesOfExecutor = new HashSet<>();
@@ -69,9 +68,9 @@ public final class Utils {
 
     int i = 0;
     // we take each container as an executor
-    for (Map.Entry<String, List<WorkerComputeSpec>> e : containersPerNode.entrySet()) {
+    for (Map.Entry<String, List<WorkerComputeResource>> e : containersPerNode.entrySet()) {
       Set<Integer> executorsOfGroup = new HashSet<>();
-      for (WorkerComputeSpec c : e.getValue()) {
+      for (WorkerComputeResource c : e.getValue()) {
         executorsOfGroup.add(c.getId());
       }
       groupsToExeuctors.put(i, executorsOfGroup);
@@ -100,11 +99,11 @@ public final class Utils {
     Map<Integer, Set<Integer>> groupsToExeuctors = new HashMap<>();
     int thisExecutor = plan.getThisId();
 
-    List<WorkerComputeSpec> containers = plan.getContainers();
-    Map<String, List<WorkerComputeSpec>> containersPerNode = new HashMap<>();
-    for (WorkerComputeSpec c : containers) {
-      String name = (String) c.getProperty(SchedulerContext.WORKER_NAME);
-      List<WorkerComputeSpec> containerList;
+    List<WorkerComputeResource> containers = plan.getContainers();
+    Map<String, List<WorkerComputeResource>> containersPerNode = new HashMap<>();
+    for (WorkerComputeResource c : containers) {
+      String name = Integer.toString(c.getId());
+      List<WorkerComputeResource> containerList;
       if (!containersPerNode.containsKey(name)) {
         containerList = new ArrayList<>();
         containersPerNode.put(name, containerList);
@@ -128,9 +127,9 @@ public final class Utils {
 
     int i = 0;
     // we take each container as an executor
-    for (Map.Entry<String, List<WorkerComputeSpec>> e : containersPerNode.entrySet()) {
+    for (Map.Entry<String, List<WorkerComputeResource>> e : containersPerNode.entrySet()) {
       Set<Integer> executorsOfGroup = new HashSet<>();
-      for (WorkerComputeSpec c : e.getValue()) {
+      for (WorkerComputeResource c : e.getValue()) {
         executorsOfGroup.add(c.getId());
       }
       groupsToExeuctors.put(i, executorsOfGroup);
@@ -153,8 +152,8 @@ public final class Utils {
     Map<Integer, Set<Integer>> groupsToExeuctors = new HashMap<>();
     int thisExecutor = plan.getThisId();
 
-    List<WorkerComputeSpec> containers = plan.getContainers();
-    Map<String, List<WorkerComputeSpec>> containersPerNode =
+    List<WorkerComputeResource> containers = plan.getContainers();
+    Map<String, List<WorkerComputeResource>> containersPerNode =
         ResourcePlanUtils.getContainersPerNode(containers);
 
     int totalTasksPreviously = 0;
@@ -176,9 +175,9 @@ public final class Utils {
     }
 
     int i = 0;
-    for (Map.Entry<String, List<WorkerComputeSpec>> entry : containersPerNode.entrySet()) {
+    for (Map.Entry<String, List<WorkerComputeResource>> entry : containersPerNode.entrySet()) {
       Set<Integer> executorsOfGroup = new HashSet<>();
-      for (WorkerComputeSpec c : entry.getValue()) {
+      for (WorkerComputeResource c : entry.getValue()) {
         executorsOfGroup.add(c.getId());
       }
       groupsToExeuctors.put(i, executorsOfGroup);
@@ -229,8 +228,8 @@ public final class Utils {
     Map<Integer, Set<Integer>> groupsToExeuctors = new HashMap<>();
     int thisExecutor = plan.getThisId();
 
-    List<WorkerComputeSpec> containers = plan.getContainers();
-    Map<String, List<WorkerComputeSpec>> containersPerNode =
+    List<WorkerComputeResource> containers = plan.getContainers();
+    Map<String, List<WorkerComputeResource>> containersPerNode =
         ResourcePlanUtils.getContainersPerNode(containers);
 
     int totalTasksPreviously = 0;
@@ -252,9 +251,9 @@ public final class Utils {
     }
 
     int i = 0;
-    for (Map.Entry<String, List<WorkerComputeSpec>> entry : containersPerNode.entrySet()) {
+    for (Map.Entry<String, List<WorkerComputeResource>> entry : containersPerNode.entrySet()) {
       Set<Integer> executorsOfGroup = new HashSet<>();
-      for (WorkerComputeSpec c : entry.getValue()) {
+      for (WorkerComputeResource c : entry.getValue()) {
         executorsOfGroup.add(c.getId());
       }
       groupsToExeuctors.put(i, executorsOfGroup);

@@ -25,6 +25,7 @@ package edu.iu.dsc.tws.executor.core.streaming;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -95,7 +96,7 @@ public class SourceStreamingInstance implements INodeInstance {
 
   public SourceStreamingInstance(ISource streamingTask, BlockingQueue<IMessage> outStreamingQueue,
                                  Config config, String tName, int tId, int tIndex, int parallel,
-                                 int wId, Map<String, Object> cfgs) {
+                                 int wId, Map<String, Object> cfgs, Set<String> outEdges) {
     this.streamingTask = streamingTask;
     this.outStreamingQueue = outStreamingQueue;
     this.config = config;

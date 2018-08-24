@@ -21,40 +21,23 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.executor.api;
+package edu.iu.dsc.tws.comms.api;
 
-import java.util.concurrent.BlockingQueue;
-
-import edu.iu.dsc.tws.task.api.IMessage;
+import java.util.Set;
 
 /**
- * Represents a parallel communication operation
+ * Destination selector interface needs to be implemented when creating destination selection
+ * logic. For example for a keyed operation a destination selector will be used to calculate the
+ * correct destination based on the key values.
  */
-public interface IParallelOperation {
-  /**
-   * Send a message over the operation
-   * @param source source
-   * @param message the message
-   */
+public interface DestinationSelector {
+  void prepare(Set<Integer> sources, Set<Integer> destinations);
 
-  boolean send(int source, IMessage message, int flags);
+  void prepare(MessageType type, Set<Integer> sources, Set<Integer> destinations);
 
-  /**
-   * Register a queue for receiving message
-   * @param targetTask
-   * @param queue
-   */
-  void register(int targetTask, BlockingQueue<IMessage> queue);
+  int next(int source);
 
-  /**
-   * Progress the parallel operation
-   */
-  boolean progress();
+  int next(int source, Object key);
 
-  /**
-   * Indicate the end of the operation
-   * @param source the source
-   */
-  default void finish(int source) {
-  }
+  void commit(int source, int next);
 }

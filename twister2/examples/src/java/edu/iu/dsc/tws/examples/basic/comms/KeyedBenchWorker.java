@@ -144,9 +144,10 @@ public abstract class KeyedBenchWorker implements IWorker {
     public void run() {
       LOG.log(Level.INFO, "Starting map worker: " + workerId + " task: " + task);
       int[] data = DataGenerator.generateIntData(jobParameters.getSize());
-      Integer key = KeyGenerator.generateIntegerKey();
+      Integer key;
       for (int i = 0; i < jobParameters.getIterations(); i++) {
         // lets generate a message
+        key = KeyGenerator.generateIntegerKey();
         int flag = 0;
         if (i == jobParameters.getIterations() - 1) {
           flag = MessageFlags.FLAGS_LAST;

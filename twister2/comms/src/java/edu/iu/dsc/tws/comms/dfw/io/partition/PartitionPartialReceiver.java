@@ -131,6 +131,19 @@ public class PartitionPartialReceiver implements MessageReceiver {
     }
   }
 
+  /**
+   * All message that come to the partial receiver are handled by this method. Since we currently
+   * do not have a need to know the exact source at the receiving end for the parition operation
+   * this method uses a representative source that is used when forwarding the message to its true
+   * target
+   *
+   * @param src the source of the message
+   * @param path the path that is taken by the message, that is intermediate targets
+   * @param target the target of this receiver
+   * @param flags the communication flags
+   * @param object the actual message
+   * @return true if the message was successfully forwarded or queued.
+   */
   @Override
   public boolean onMessage(int src, int path, int target, int flags, Object object) {
     lock.lock();
@@ -240,8 +253,7 @@ public class PartitionPartialReceiver implements MessageReceiver {
       }
       if (operation.isDelegeteComplete() && !needsFurtherProgress
           && onFinishedSources.equals(thisWorkerSources)
-          && readyToSend.isEmpty() && finishedDestinations.size() != destinations.size()) {
-
+          && readyToSend.isEmpty()) {
         for (int source : thisWorkerSources) {
           Set<Integer> finishedDestPerSource = finishedDestinations.get(source);
           for (int dest : destinations) {
@@ -267,6 +279,15 @@ public class PartitionPartialReceiver implements MessageReceiver {
     return needsFurtherProgress;
   }
 
+  /**
+   * Is called once the source tasks complete sending message to the partition operation,
+   * this does not mean that all the messages related to the given source is processed and sent to
+   * their final targets, this just means that the source task will not be sending any message after
+   * this method has been called, the message sent previously may still be queued in the system and
+   * not reached the partial receiver yet.
+   *
+   * @param source the source for which message sending has completed
+   */
   @Override
   public void onFinish(int source) {
     // flush everything
