@@ -25,6 +25,7 @@ package edu.iu.dsc.tws.examples.internal.task.batch;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -35,7 +36,6 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.resource.ZResourcePlan;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.comm.tasks.batch.SinkBatchTask;
@@ -102,30 +102,22 @@ public class ReduceBatchTask implements IContainer {
 
     @Override
     public void run() {
-      if (count == 0) {
-        this.sourceTaskContext.write("reduce-edge", "Hello " + count);
-      }
-
-      if (count == 1) {
-        //add a writeLast method rather than write
-        this.sourceTaskContext.write("reduce-edge", MessageFlags.LAST_MESSAGE);
-      }
-
       count++;
+      if (count == 20) {
+        sourceTaskContext.writeEnd("reduce-edge", "LAST_MESSAGE");
+      } else if (count < 20) {
+        sourceTaskContext.write("reduce-edge", "Hello " + count);
+      }
     }
 
     @Override
     public void interrupt() {
-      this.sourceTaskContextListener.onInterrupt();
+
     }
 
     @Override
     public void prepare(Config cfg, TaskContext context) {
       this.sourceTaskContext = context;
-      this.sourceTaskContextListener
-          = new SourceTaskContextListener(this, sourceTaskContext);
-      this.sourceTaskContextListener.mutateContext(sourceTaskContext);
-      this.sourceTaskContextListener.onStart();
     }
 
     @Override
@@ -149,12 +141,20 @@ public class ReduceBatchTask implements IContainer {
 
     @Override
     public boolean execute(IMessage message) {
-      System.out.println("Message Reduced : " + message.getContent() + ", Count : " + count);
-      boolean status = false;
+      /*System.out.println("Message Reduced : " + message.getContent() + ", Count : " + count);
+      count++;*/
+      if (message.getContent() instanceof Iterator) {
+        while (((Iterator) message.getContent()).hasNext()) {
+          ((Iterator) message.getContent()).next();
+          count++;
+        }
+        if (count % 1 == 0) {
+          System.out.println("Message Reduced Received : " + message.getContent()
+              + ", Count : " + count);
+        }
+      }
       count++;
-      status = count == 1;
-
-      return status;
+      return true;
     }
 
     @Override

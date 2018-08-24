@@ -23,11 +23,11 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
 import edu.iu.dsc.tws.comms.op.Communicator;
-import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.api.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.api.EdgeGenerator;
 import edu.iu.dsc.tws.executor.util.Utils;
@@ -48,7 +48,7 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
   }
 
   public void prepare(Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
-                      DataType dataType, String edgeName) {
+                      MessageType dataType, String edgeName) {
     this.edge = e;
     //LOG.info("ParitionOperation Prepare 1");
     op = new DataFlowPartition(channel.getChannel(), srcs, dests, new PartitionReceiver(),

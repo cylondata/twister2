@@ -93,7 +93,13 @@ public class BroadCastBatchTask implements IContainer {
 
     @Override
     public void run() {
-      ctx.write("broadcast-edge", "Hello");
+
+      count++;
+      if (count == 12) {
+        ctx.writeEnd("broadcast-edge", "Hello");
+      } else if (count < 12) {
+        ctx.write("broadcast-edge", "Hello");
+      }
     }
 
 

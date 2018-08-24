@@ -19,10 +19,10 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowBroadcast;
 import edu.iu.dsc.tws.comms.op.Communicator;
-import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.api.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.api.EdgeGenerator;
 import edu.iu.dsc.tws.executor.util.Utils;
@@ -38,7 +38,7 @@ public class BroadcastBatchOperation extends AbstractParallelOperation {
   }
 
   public void prepare(int srcs, Set<Integer> dests, EdgeGenerator e,
-                      DataType dataType, String edgeName) {
+                      MessageType dataType, String edgeName) {
     this.edge = e;
     LOG.info(String.format("Srcs %d dests %s", srcs, dests));
     op = new DataFlowBroadcast(channel.getChannel(), srcs, dests, new BcastReceiver());

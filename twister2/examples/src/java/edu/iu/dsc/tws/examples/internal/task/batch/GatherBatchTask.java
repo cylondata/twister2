@@ -94,10 +94,16 @@ public class GatherBatchTask implements IContainer {
     private TaskContext ctx;
     private Config config;
     private static RandomString randomString;
+    private int count = 0;
 
     @Override
     public void run() {
-      ctx.write("gather-edge", "1");
+      count++;
+      if (count == 10) {
+        ctx.writeEnd("gather-edge", "Hello");
+      } else if (count < 10) {
+        ctx.write("gather-edge", "Hello");
+      }
     }
 
     @Override

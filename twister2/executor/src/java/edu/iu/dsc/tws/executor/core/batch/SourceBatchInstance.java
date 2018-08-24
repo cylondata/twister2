@@ -17,6 +17,7 @@ import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.executor.api.DefaultOutputCollection;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
@@ -154,8 +155,14 @@ public class SourceBatchInstance implements INodeInstance {
         IMessage message = outBatchQueue.peek();
         if (message != null) {
           String edge = message.edge();
+
+          int flag = 0;
+          if (message.getContent().equals("LAST_MESSAGE")) {
+            flag = MessageFlags.FLAGS_LAST;
+          }
+
           IParallelOperation op = outBatchParOps.get(edge);
-          if (op.send(batchTaskId, message, 0)) {
+          if (op.send(batchTaskId, message, flag)) {
             outBatchQueue.poll();
           } else {
             // no point in progressing further

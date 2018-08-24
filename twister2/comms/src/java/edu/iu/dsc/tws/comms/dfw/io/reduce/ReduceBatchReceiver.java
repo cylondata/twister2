@@ -125,7 +125,7 @@ public abstract class ReduceBatchReceiver implements MessageReceiver {
       m.add(object);
       if ((flags & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) {
         finishedMessages.put(source, true);
-        //LOG.info("onMessage ReduceBatchReceiver Final Message Added");
+        LOG.info("onMessage ReduceBatchReceiver Final Message Added");
       }
     }
     return canAdd;

@@ -19,10 +19,10 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowGather;
 import edu.iu.dsc.tws.comms.op.Communicator;
-import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.api.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.api.EdgeGenerator;
 import edu.iu.dsc.tws.executor.util.Utils;
@@ -39,7 +39,7 @@ public class GatherStreamingOperation extends AbstractParallelOperation {
   }
 
   public void prepare(Set<Integer> srcs, int dest, EdgeGenerator e,
-                      DataType dataType, String edgeName, Config config, TaskPlan taskPlan) {
+                      MessageType dataType, String edgeName, Config config, TaskPlan taskPlan) {
     this.edge = e;
     communicationEdge = e.generate(edgeName);
     op = new DataFlowGather(channel.getChannel(), srcs, dest, new FinalGatherReceiver(), 0, 0,

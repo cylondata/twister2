@@ -86,6 +86,7 @@ public class ParallelOperationFactory {
               edge.getName());
           return bcastOp;
         } else if (CommunicationOperationType.BATCH_GATHER.equals(edge.getOperation())) {
+          System.out.println("Gather Ops");
           GatherBatchOperation gatherOp = new GatherBatchOperation(config, channel, taskPlan);
           gatherOp.prepare(sources, dests.iterator().next(), edgeGenerator, edge.getDataType(),
               edge.getName(), config, taskPlan);

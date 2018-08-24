@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.graph;
 
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.ISource;
@@ -104,7 +104,7 @@ public final class GraphBuilder {
   }
 
   public GraphBuilder connect(String t1, String t2, String name, String operation,
-                              DataType dataType, DataType keyType) {
+                              MessageType dataType, MessageType keyType) {
     Vertex v1 = graph.vertex(t1);
     if (v1 == null) {
       throw new RuntimeException("Failed to connect non-existing task: " + t1);
@@ -119,7 +119,7 @@ public final class GraphBuilder {
   }
 
   public GraphBuilder connect(String t1, String t2, String name, String operation,
-                              DataType dataType) {
+                              MessageType dataType) {
     Vertex v1 = graph.vertex(t1);
     if (v1 == null) {
       throw new RuntimeException("Failed to connect non-existing task: " + t1);

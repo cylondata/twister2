@@ -82,9 +82,9 @@ public class PartitionBatchTask implements IContainer {
     @Override
     public void run() {
       count++;
-      if (count == 1000) {
+      if (count == 20) {
         ctx.writeEnd("partition-edge", "Hello");
-      } else if (count < 1000) {
+      } else if (count < 20) {
         ctx.write("partition-edge", "Hello");
       }
     }

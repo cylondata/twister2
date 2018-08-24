@@ -115,6 +115,7 @@ public class SinkBatchInstance implements INodeInstance {
     if (state.isSet(InstanceState.INIT) && state.isNotSet(InstanceState.EXECUTION_DONE)) {
       while (!batchInQueue.isEmpty()) {
         IMessage m = batchInQueue.poll();
+        System.out.println("Message @Sink : " + m.getContent());
         batchTask.execute(m);
         state.set(InstanceState.EXECUTING);
       }

@@ -58,6 +58,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
       try {
         t.join();
       } catch (InterruptedException e) {
+        e.printStackTrace();
       }
     }
 
