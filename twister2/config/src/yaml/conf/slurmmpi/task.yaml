@@ -20,6 +20,12 @@ twister2.container.instance.ram: 2048.0
 twister2.container.instance.disk: 2000.0
 twister2.container.instance.cpu: 4.0
 
+#For Network Parameters
+twister2.container.instance.bandwidth: 10 #Mbps
+twister2.container.instance.latency: 0.002 #Milliseconds
+twister2.datanode.instance.bandwidth: 20 #Mbps
+twister2.datanode.instance.latency: 0.01 #Milliseconds
+
 #Default Task Parallelism Value
 twister2.task.parallelism: 2
 

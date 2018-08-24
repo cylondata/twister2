@@ -1,7 +1,7 @@
 #Task Scheduler Mode
-#twister2.class.task.taskscheduler: "roundrobin"
+twister2.class.task.taskscheduler: "roundrobin"
 #twister2.class.task.taskscheduler: "firstfit"
-twister2.class.task.taskscheduler:  "datalocalityaware"
+#twister2.class.task.taskscheduler:  "datalocalityaware"
 
 #Default Task Instance Values
 twister2.task.instances: 2
@@ -19,6 +19,12 @@ twister2.container.padding.percentage: 2
 twister2.container.instance.ram: 2048.0
 twister2.container.instance.disk: 2000.0
 twister2.container.instance.cpu: 4.0
+
+#For Network Parameters
+twister2.container.instance.bandwidth: 10 #Mbps
+twister2.container.instance.latency: 0.002 #Milliseconds
+twister2.datanode.instance.bandwidth: 20 #Mbps
+twister2.datanode.instance.latency: 0.01 #Milliseconds
 
 #Default Task Parallelism Value
 twister2.task.parallelism: 2

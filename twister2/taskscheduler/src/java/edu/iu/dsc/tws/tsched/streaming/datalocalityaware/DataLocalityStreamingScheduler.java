@@ -172,11 +172,6 @@ public class DataLocalityStreamingScheduler {
   /**
    * It calculates the distance between the data nodes and the worker node which is based on
    * the available bandwidth, latency, and the file size.
-   * @param datanodesList
-   * @param workers
-   * @param taskIndex
-   * @param assignedWorkers
-   * @return
    */
   private static Map<String, List<DataTransferTimeCalculator>> distanceCalculation(
       List<String> datanodesList, WorkerPlan workers, int taskIndex,
@@ -201,15 +196,21 @@ public class DataLocalityStreamingScheduler {
         ArrayList<DataTransferTimeCalculator> calculatedVal = new ArrayList<>();
         for (int i = 0; i < workers.getNumberOfWorkers(); i++) {
           worker = workers.getWorker(i);
-          workerBandwidth = (double) worker.getProperty("bandwidth");
-          workerLatency = (double) worker.getProperty("latency");
+
+          if (worker.getProperty("bandwidth") != null && worker.getProperty("latency") != null) {
+            workerBandwidth = (double) worker.getProperty("bandwidth");
+            workerLatency = (double) worker.getProperty("latency");
+          } else {
+            workerBandwidth = TaskSchedulerContext.TWISTER2_CONTAINER_INSTANCE_BANDWIDTH_DEFAULT;
+            workerLatency = TaskSchedulerContext.TWISTER2_CONTAINER_INSTANCE_LATENCY_DEFAULT;
+          }
 
           DataTransferTimeCalculator calculateDataTransferTime =
               new DataTransferTimeCalculator(nodesList, calculateDistance);
 
           //Right now using the default configuration values
-          datanodeBandwidth = TaskSchedulerContext.TWISTER2_CONTAINER_INSTANCE_BANDWIDTH_DEFAULT;
-          datanodeLatency = TaskSchedulerContext.TWISTER2_CONTAINER_INSTANCE_LATENCY_DEFAULT;
+          datanodeBandwidth = TaskSchedulerContext.TWISTER2_DATANODE_INSTANCE_BANDWIDTH_DEFAULT;
+          datanodeLatency = TaskSchedulerContext.TWISTER2_DATANODE_INSTANCE_LATENCY_DEFAULT;
 
           //Calculate the distance between worker nodes and data nodes.
           calculateDistance = Math.abs((2 * workerBandwidth * workerLatency)
@@ -235,12 +236,18 @@ public class DataLocalityStreamingScheduler {
               new DataTransferTimeCalculator(nodesList, calculateDistance);
 
           if (!assignedWorkers.contains(worker.getId())) {
-            workerBandwidth = (double) worker.getProperty("bandwidth");
-            workerLatency = (double) worker.getProperty("latency");
+
+            if (worker.getProperty("bandwidth") != null && worker.getProperty("latency") != null) {
+              workerBandwidth = (double) worker.getProperty("bandwidth");
+              workerLatency = (double) worker.getProperty("latency");
+            } else {
+              workerBandwidth = TaskSchedulerContext.TWISTER2_CONTAINER_INSTANCE_BANDWIDTH_DEFAULT;
+              workerLatency = TaskSchedulerContext.TWISTER2_CONTAINER_INSTANCE_LATENCY_DEFAULT;
+            }
 
             //Right now using the default configuration values
-            datanodeBandwidth = TaskSchedulerContext.TWISTER2_CONTAINER_INSTANCE_BANDWIDTH_DEFAULT;
-            datanodeLatency = TaskSchedulerContext.TWISTER2_CONTAINER_INSTANCE_LATENCY_DEFAULT;
+            datanodeBandwidth = TaskSchedulerContext.TWISTER2_DATANODE_INSTANCE_BANDWIDTH_DEFAULT;
+            datanodeLatency = TaskSchedulerContext.TWISTER2_DATANODE_INSTANCE_LATENCY_DEFAULT;
 
             //Calculate the distance between worker nodes and data nodes.
             calculateDistance = Math.abs((2 * workerBandwidth * workerLatency)
@@ -263,9 +270,6 @@ public class DataLocalityStreamingScheduler {
 
   /**
    * This method chooses the data node which takes minimal data transfer time.
-   * @param vertex
-   * @param workerPlanMap
-   * @return
    */
   private static List<DataTransferTimeCalculator> findBestWorkerNode(Vertex vertex, Map<String,
       List<DataTransferTimeCalculator>> workerPlanMap) {

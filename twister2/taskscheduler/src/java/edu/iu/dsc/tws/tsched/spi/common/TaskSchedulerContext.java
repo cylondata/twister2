@@ -20,7 +20,6 @@ import edu.iu.dsc.tws.common.config.Context;
  */
 public class TaskSchedulerContext extends Context {
 
-
   public static final String TWISTER2_TASK_SCHEDULING_MODE = "twister2.class.task.taskscheduler";
   public static final String TWISTER2_TASK_SCHEDULING_MODE_DEFAULT = "roundrobin";
 
@@ -80,13 +79,29 @@ public class TaskSchedulerContext extends Context {
 
   public static final String TWISTER2_CONTAINER_INSTANCE_BANDWIDTH
       = "twister2.container.instance.bandwidth";
-
   public static final double TWISTER2_CONTAINER_INSTANCE_BANDWIDTH_DEFAULT = 20; //Mbps
 
   public static final String TWISTER2_CONTAINER_INSTANCE_LATENCY
       = "twister2.container.instance.latency";
-
   public static final double TWISTER2_CONTAINER_INSTANCE_LATENCY_DEFAULT = 0.02; //Milliseconds
+
+  public static final String TWISTER2_DATANODE_INSTANCE_BANDWIDTH
+      = "twister2.datanode.instance.bandwidth";
+  public static final double TWISTER2_DATANODE_INSTANCE_BANDWIDTH_DEFAULT = 20; //Mbps
+
+  public static final String TWISTER2_DATANODE_INSTANCE_LATENCY
+      = "twister2.datanode.instance.latency";
+  public static final double TWISTER2_DATANODE_INSTANCE_LATENCY_DEFAULT = 0.02; //Milliseconds
+
+  public static double datanodeInstanceBandwidth(Config cfg) {
+    return cfg.getDoubleValue(TWISTER2_DATANODE_INSTANCE_BANDWIDTH,
+        TWISTER2_DATANODE_INSTANCE_BANDWIDTH_DEFAULT);
+  }
+
+  public static double datanodeInstanceLatency(Config cfg) {
+    return cfg.getDoubleValue(TWISTER2_DATANODE_INSTANCE_LATENCY,
+        TWISTER2_DATANODE_INSTANCE_LATENCY_DEFAULT);
+  }
 
   public static double containerInstanceBandwidth(Config cfg) {
     return cfg.getDoubleValue(TWISTER2_CONTAINER_INSTANCE_BANDWIDTH,

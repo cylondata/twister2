@@ -223,18 +223,20 @@ public class DataLocalityBatchScheduler {
       for (int i = 0; i < workers.getNumberOfWorkers(); i++) {
         worker = workers.getWorker(i);
 
-        try {
+        if (worker.getProperty("bandwidth") != null && worker.getProperty("latency") != null) {
           workerBandwidth = (double) worker.getProperty("bandwidth");
           workerLatency = (double) worker.getProperty("latency");
-        } catch (NullPointerException ne) {
-          ne.printStackTrace();
+        } else {
+          workerBandwidth = TaskSchedulerContext.TWISTER2_CONTAINER_INSTANCE_BANDWIDTH_DEFAULT;
+          workerLatency = TaskSchedulerContext.TWISTER2_CONTAINER_INSTANCE_LATENCY_DEFAULT;
         }
 
         DataTransferTimeCalculator calculateDataTransferTime =
             new DataTransferTimeCalculator(nodesList, calculateDistance);
+
         //Right now using the default configuration values
-        datanodeBandwidth = TaskSchedulerContext.TWISTER2_CONTAINER_INSTANCE_BANDWIDTH_DEFAULT;
-        datanodeLatency = TaskSchedulerContext.TWISTER2_CONTAINER_INSTANCE_LATENCY_DEFAULT;
+        datanodeBandwidth = TaskSchedulerContext.TWISTER2_DATANODE_INSTANCE_BANDWIDTH_DEFAULT;
+        datanodeLatency = TaskSchedulerContext.TWISTER2_DATANODE_INSTANCE_LATENCY_DEFAULT;
 
         //Calculate the distance between worker nodes and data nodes.
         calculateDistance = Math.abs((2 * workerBandwidth * workerLatency)
