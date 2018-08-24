@@ -89,7 +89,7 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
     Set<Vertex> taskVertexSet = graph.getTaskVertexSet();
 
     Map<Integer, List<InstanceId>> containerInstanceMap =
-        DataLocalityScheduler.dataLocalityAwareSchedulingAlgorithm(taskVertexSet,
+        DataLocalityStreamingScheduler.dataLocalityAwareSchedulingAlgorithm(taskVertexSet,
             workerPlan.getNumberOfWorkers(), workerPlan, this.cfg);
 
     TaskInstanceMapCalculation instanceMapCalculation = new TaskInstanceMapCalculation(

@@ -34,12 +34,12 @@ import edu.iu.dsc.tws.tsched.utils.TaskAttributes;
  * This class is responsible for scheduling the task graph instances into the worker nodes
  * based on the locality of the data.
  */
-public class DataLocalityScheduler {
+public class DataLocalityBatchScheduler {
 
-  private static final Logger LOG = Logger.getLogger(DataLocalityScheduler.class.getName());
+  private static final Logger LOG = Logger.getLogger(DataLocalityBatchScheduler.class.getName());
   private static int globalTaskIndex = 0;
 
-  protected DataLocalityScheduler() {
+  protected DataLocalityBatchScheduler() {
   }
 
   /**
@@ -232,18 +232,12 @@ public class DataLocalityScheduler {
 
         DataTransferTimeCalculator calculateDataTransferTime =
             new DataTransferTimeCalculator(nodesList, calculateDistance);
+        
+        //Right now using the default configuration values
+        datanodeBandwidth = TaskSchedulerContext.TWISTER2_CONTAINER_INSTANCE_BANDWIDTH_DEFAULT;
+        datanodeLatency = TaskSchedulerContext.TWISTER2_CONTAINER_INSTANCE_LATENCY_DEFAULT;
 
-        //Just for testing assigned static values and static increment...!
-        if ("datanode1".equals(nodesList)) {
-          datanodeBandwidth = 512.0;
-          datanodeLatency = 0.4;
-        } else {
-          datanodeBandwidth = 512.0; //assign some other bandwidth value
-          datanodeLatency = 0.4;
-        }
-
-        //Write the proper formula to calculate the distance between
-        //worker nodes and data nodes.
+        //Calculate the distance between worker nodes and data nodes.
         calculateDistance = Math.abs((2 * workerBandwidth * workerLatency)
             - (2 * datanodeBandwidth * datanodeLatency));
 

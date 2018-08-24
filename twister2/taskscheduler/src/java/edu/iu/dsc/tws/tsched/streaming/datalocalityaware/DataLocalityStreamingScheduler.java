@@ -35,11 +35,11 @@ import edu.iu.dsc.tws.tsched.utils.TaskAttributes;
  * This class is responsible for scheduling the task graph instances into the worker nodes
  * based on the locality of the data.
  */
-public class DataLocalityScheduler {
+public class DataLocalityStreamingScheduler {
 
-  private static final Logger LOG = Logger.getLogger(DataLocalityScheduler.class.getName());
+  private static final Logger LOG = Logger.getLogger(DataLocalityStreamingScheduler.class.getName());
 
-  protected DataLocalityScheduler() {
+  protected DataLocalityStreamingScheduler() {
   }
 
   /**
@@ -112,7 +112,7 @@ public class DataLocalityScheduler {
             datanodesList = dataNodeLocatorUtils.
                 findDataNodesLocation(vertex.getConfig().getListValue("inputdataset"));
             workerPlanMap = distanceCalculation(datanodesList, workerPlan, cIdx, allocatedWorkers);
-            cal = findOptimalWorkerNode(vertex, workerPlanMap);
+            cal = findBestWorkerNode(vertex, workerPlanMap);
           } else {
             datanodesList = dataNodeLocatorUtils.
                 findDataNodesLocation(vertex.getConfig().getListValue("inputdataset"));
@@ -126,7 +126,7 @@ public class DataLocalityScheduler {
               }
             }
             workerPlanMap = distanceCalculation(datanodesList, workerPlan, cIdx, allocatedWorkers);
-            cal = findOptimalWorkerNode(vertex, workerPlanMap);
+            cal = findBestWorkerNode(vertex, workerPlanMap);
           }
 
           /*This loop allocate the task instances to the respective container, before allocation
@@ -163,7 +163,7 @@ public class DataLocalityScheduler {
       LOG.fine("Container Index:" + integer);
       for (InstanceId instanceId : instanceIds) {
         LOG.fine("Task Details:" + "\tTask Name:" + instanceId.getTaskName()
-            + "\tTask id:" + instanceId.getTaskId()+ "\tTask index:" + instanceId.getTaskIndex());
+            + "\tTask id:" + instanceId.getTaskId() + "\tTask index:" + instanceId.getTaskIndex());
       }
     }
     return dataAwareAllocation;
@@ -204,9 +204,9 @@ public class DataLocalityScheduler {
           DataTransferTimeCalculator calculateDataTransferTime =
               new DataTransferTimeCalculator(nodesList, calculateDistance);
 
-          //For testing just assign the static values
-          datanodeBandwidth = 512.0;
-          datanodeLatency = 0.4;
+          //Right now using the default configuration values
+          datanodeBandwidth = TaskSchedulerContext.TWISTER2_CONTAINER_INSTANCE_BANDWIDTH_DEFAULT;
+          datanodeLatency = TaskSchedulerContext.TWISTER2_CONTAINER_INSTANCE_LATENCY_DEFAULT;
 
           //Calculate the distance between worker nodes and data nodes.
           calculateDistance = Math.abs((2 * workerBandwidth * workerLatency)
@@ -235,9 +235,9 @@ public class DataLocalityScheduler {
             workerBandwidth = (double) worker.getProperty("bandwidth");
             workerLatency = (double) worker.getProperty("latency");
 
-            //For testing just assign the static values
-            datanodeBandwidth = 512.0;
-            datanodeLatency = 0.4;
+            //Right now using the default configuration values
+            datanodeBandwidth = TaskSchedulerContext.TWISTER2_CONTAINER_INSTANCE_BANDWIDTH_DEFAULT;
+            datanodeLatency = TaskSchedulerContext.TWISTER2_CONTAINER_INSTANCE_LATENCY_DEFAULT;
 
             //Calculate the distance between worker nodes and data nodes.
             calculateDistance = Math.abs((2 * workerBandwidth * workerLatency)
@@ -264,7 +264,7 @@ public class DataLocalityScheduler {
    * @param workerPlanMap
    * @return
    */
-  private static List<DataTransferTimeCalculator> findOptimalWorkerNode(Vertex vertex, Map<String,
+  private static List<DataTransferTimeCalculator> findBestWorkerNode(Vertex vertex, Map<String,
       List<DataTransferTimeCalculator>> workerPlanMap) {
 
     Set<Map.Entry<String, List<DataTransferTimeCalculator>>> entries = workerPlanMap.entrySet();

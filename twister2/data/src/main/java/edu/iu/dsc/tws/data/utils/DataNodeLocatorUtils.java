@@ -44,6 +44,7 @@ public class DataNodeLocatorUtils implements IDataNodeLocatorUtils {
   }
 
   //TODO: It could be modified to get all the vertexes of the task graph
+  //TODO: return the map which stores the vertex name -> datanodes list.
 
   /**
    * This method receives the input data list for each vertex and find the location
