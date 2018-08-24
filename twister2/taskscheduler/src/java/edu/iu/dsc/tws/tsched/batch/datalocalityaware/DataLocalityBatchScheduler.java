@@ -271,6 +271,13 @@ public class DataLocalityBatchScheduler {
           cal.add(new DataTransferTimeCalculator(aValue.getNodeName(),
               aValue.getRequiredDataTransferTime(), key));
         }
+
+        for (DataTransferTimeCalculator requiredDataTransferTime : value) {
+          LOG.fine("Task:" + vertex.getName()
+              + "(" + requiredDataTransferTime.getTaskIndex() + ")"
+              + key + "D.Node:" + "-> W.Node:" + requiredDataTransferTime.getNodeName()
+              + "-> D.Time:" + requiredDataTransferTime.getRequiredDataTransferTime());
+        }
       }
     } catch (NoSuchElementException nse) {
       nse.printStackTrace();
