@@ -34,7 +34,6 @@ import com.google.protobuf.ByteString;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
-import edu.iu.dsc.tws.proto.system.ResourceAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 /**
@@ -46,7 +45,7 @@ public final class Twister2Job {
   private String name;
   private String workerClass;
   private WorkerComputeResource requestedResource;
-  private int noOfContainers;
+  private int numberOfWorkers;
   private JobConfig config;
 
   private Twister2Job() {
@@ -84,13 +83,26 @@ public final class Twister2Job {
     jobBuilder.setJobName(name);
 
     JobAPI.JobResources.Builder jobResourceBuilder = JobAPI.JobResources.newBuilder();
-    jobResourceBuilder.setNoOfContainers(noOfContainers);
-    ResourceAPI.ComputeResource.Builder computeResourceBuilder =
-        ResourceAPI.ComputeResource.newBuilder();
-    computeResourceBuilder.setAvailableCPU(requestedResource.getNoOfCpus());
-    computeResourceBuilder.setAvailableDisk(requestedResource.getDiskMegaBytes());
-    computeResourceBuilder.setAvailableMemory(requestedResource.getMemoryMegaBytes());
-    jobResourceBuilder.setContainer(computeResourceBuilder);
+    jobResourceBuilder.setNumberOfWorkers(numberOfWorkers);
+
+    JobAPI.JobResources.ResourceType.Builder resourceTypeBuilder =
+        JobAPI.JobResources.ResourceType.newBuilder();
+    resourceTypeBuilder.setNumberOfWorkers(numberOfWorkers);
+    resourceTypeBuilder.setWorkerComputeResource(
+        JobAPI.WorkerComputeResource.newBuilder()
+            .setCpu(requestedResource.getNoOfCpus())
+            .setRam(requestedResource.getMemoryMegaBytes())
+            .setDisk(requestedResource.getDiskGigaBytes())
+            .build()
+    );
+    jobResourceBuilder.setResources(0, resourceTypeBuilder.build());
+
+//    ResourceAPI.ComputeResource.Builder computeResourceBuilder =
+//        ResourceAPI.ComputeResource.newBuilder();
+//    computeResourceBuilder.setAvailableCPU(requestedResource.getNoOfCpus());
+//    computeResourceBuilder.setAvailableDisk(requestedResource.getDiskMegaBytes());
+//    computeResourceBuilder.setAvailableMemory(requestedResource.getMemoryMegaBytes());
+//    jobResourceBuilder.setContainer(computeResourceBuilder);
 
     // set the job resources
     jobBuilder.setJobResources(jobResourceBuilder.build());
@@ -110,8 +122,8 @@ public final class Twister2Job {
     return requestedResource;
   }
 
-  public int getNoOfContainers() {
-    return noOfContainers;
+  public int getNumberOfWorkers() {
+    return numberOfWorkers;
   }
 
   public JobConfig getConfig() {
@@ -140,8 +152,8 @@ public final class Twister2Job {
     }
 
     public BasicJobBuilder setRequestResource(WorkerComputeResource requestResource,
-                                              int noOfContainers) {
-      twister2Job.noOfContainers = noOfContainers;
+                                              int numberOfWorkers) {
+      twister2Job.numberOfWorkers = numberOfWorkers;
       twister2Job.requestedResource = requestResource;
       return this;
     }

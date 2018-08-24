@@ -354,11 +354,11 @@ public class ResourceAllocator {
 
   private RequestedResources buildRequestedResources(JobAPI.Job job) {
     JobAPI.JobResources jobResources = job.getJobResources();
-    int noOfContainers = jobResources.getNoOfContainers();
-    WorkerComputeResource container = new WorkerComputeResource(
-        (int) jobResources.getContainer().getAvailableCPU(),
-        (int) jobResources.getContainer().getAvailableMemory(),
-        (int) jobResources.getContainer().getAvailableDisk());
+    int noOfContainers = jobResources.getNumberOfWorkers();
+    JobAPI.WorkerComputeResource resource =
+        jobResources.getResourcesList().get(0).getWorkerComputeResource();
+    WorkerComputeResource container =
+        new WorkerComputeResource(resource.getCpu(), resource.getRam(), resource.getDisk());
 
     return new RequestedResources(noOfContainers, container);
   }

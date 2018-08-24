@@ -162,22 +162,25 @@ public final class JobUtils {
       builder.put(SchedulerContext.WORKER_CLASS, workerClass);
     }
 
-    int workerInstances = job.getJobResources().getNoOfContainers();
+    int workerInstances = job.getJobResources().getNumberOfWorkers();
     if (workerInstances > 0) {
       builder.put(Context.TWISTER2_WORKER_INSTANCES, workerInstances);
     }
 
-    double cpuPerWorker = job.getJobResources().getContainer().getAvailableCPU();
+    double cpuPerWorker =
+        job.getJobResources().getResourcesList().get(0).getWorkerComputeResource().getCpu();
     if (cpuPerWorker > 0) {
       builder.put(Context.TWISTER2_WORKER_CPU, cpuPerWorker);
     }
 
-    int ramPerWorker = (int) (job.getJobResources().getContainer().getAvailableMemory());
+    int ramPerWorker =
+        job.getJobResources().getResourcesList().get(0).getWorkerComputeResource().getRam();
     if (ramPerWorker > 0) {
       builder.put(Context.TWISTER2_WORKER_RAM, ramPerWorker);
     }
 
-    int diskPerWorker = (int) (job.getJobResources().getContainer().getAvailableDisk());
+    double diskPerWorker =
+        job.getJobResources().getResourcesList().get(0).getWorkerComputeResource().getDisk();
     if (diskPerWorker > 0) {
       builder.put(Context.WORKER_VOLATILE_DISK, diskPerWorker);
     }

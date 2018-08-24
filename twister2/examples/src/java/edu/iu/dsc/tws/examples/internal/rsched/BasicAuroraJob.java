@@ -106,10 +106,13 @@ public final class BasicAuroraJob {
     JobAPI.Job job = JobUtils.readJobFile(null, fl);
     System.out.println("job name: " + job.getJobName());
     System.out.println("job worker class name: " + job.getWorkerClassName());
-    System.out.println("job containers: " + job.getJobResources().getNoOfContainers());
-    System.out.println("CPUs: " + job.getJobResources().getContainer().getAvailableCPU());
-    System.out.println("RAM: " + job.getJobResources().getContainer().getAvailableMemory());
-    System.out.println("Disk: " + job.getJobResources().getContainer().getAvailableDisk());
+    System.out.println("job containers: " + job.getJobResources().getNumberOfWorkers());
+    System.out.println("CPUs: "
+        + job.getJobResources().getResourcesList().get(0).getWorkerComputeResource().getCpu());
+    System.out.println("RAM: "
+        + job.getJobResources().getResourcesList().get(0).getWorkerComputeResource().getRam());
+    System.out.println("Disk: "
+        + job.getJobResources().getResourcesList().get(0).getWorkerComputeResource().getDisk());
     JobAPI.Config conf = job.getConfig();
     System.out.println("number of key-values in job conf: " + conf.getKvsCount());
 

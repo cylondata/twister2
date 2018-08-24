@@ -24,9 +24,19 @@ message Config {
     map<string, bytes> config_byte_map = 2;
 }
 
+message WorkerComputeResource {
+    double cpu = 1;
+    int32 ram = 2;
+    double disk = 3;
+}
+
 message JobResources {
-    tws.proto.resource.scheduler.ComputeResource container = 1;
-    int32 no_of_containers = 2;
+    message ResourceType {
+        int32 numberOfWorkers = 1;
+        WorkerComputeResource workerComputeResource = 2;
+    }
+    repeated ResourceType resources = 1;
+    int32 numberOfWorkers = 2;
 }
 
 message JobFormat {
@@ -36,11 +46,11 @@ message JobFormat {
 
 // this is a basic job. it will only have a container
 message Job {
-    string job_name = 1;
-    // the container to run
+    string jobName = 1;
+    // worker class to run
     string workerClassName = 2;
     // the requested resourcces
-    JobResources job_resources = 3;
+    JobResources jobResources = 3;
     // the configurations specified
     Config config = 4;
     // how the job is layed out
