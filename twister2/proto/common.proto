@@ -4,28 +4,4 @@ package tws.proto.common;
 option java_package = "edu.iu.dsc.tws.proto.system";
 option java_outer_classname = "Common";
 
-enum StatusCode {
-    OK = 0;
-    NOTOK = 1; //generic not ok message
-
-    // These are messages that are seen by the external applications
-    INVALID_JOB_NAME = 100;
-    JOB_ALREADY_ACTIVE = 101;
-    JOB_ALREADY_DEACTIVE = 102;
-    NOT_YET_IMPLEMENTED = 103;
-
-    // State specific errors
-    PATH_DOES_NOT_EXIST = 2000;
-    PATH_ALREADY_EXISTS = 2001;
-    MASTERLOCATION_ALREADY_EXISTS = 2002;
-    STATE_CORRUPTED = 2003;
-    STATE_READ_ERROR = 2004;
-    STATE_WRITE_ERROR = 2005;
-}
-
-message Status {
-    StatusCode status = 1;
-    string message = 2;
-}
-
-
+// currently nothing in
