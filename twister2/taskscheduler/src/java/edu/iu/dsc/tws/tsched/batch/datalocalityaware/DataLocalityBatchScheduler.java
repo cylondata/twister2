@@ -232,7 +232,6 @@ public class DataLocalityBatchScheduler {
 
         DataTransferTimeCalculator calculateDataTransferTime =
             new DataTransferTimeCalculator(nodesList, calculateDistance);
-        
         //Right now using the default configuration values
         datanodeBandwidth = TaskSchedulerContext.TWISTER2_CONTAINER_INSTANCE_BANDWIDTH_DEFAULT;
         datanodeLatency = TaskSchedulerContext.TWISTER2_CONTAINER_INSTANCE_LATENCY_DEFAULT;
@@ -279,4 +278,6 @@ public class DataLocalityBatchScheduler {
     return cal;
   }
 }
+
+
 

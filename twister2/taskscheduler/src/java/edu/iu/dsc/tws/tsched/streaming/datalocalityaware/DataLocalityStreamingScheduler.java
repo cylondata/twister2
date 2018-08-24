@@ -37,7 +37,8 @@ import edu.iu.dsc.tws.tsched.utils.TaskAttributes;
  */
 public class DataLocalityStreamingScheduler {
 
-  private static final Logger LOG = Logger.getLogger(DataLocalityStreamingScheduler.class.getName());
+  private static final Logger LOG = Logger.getLogger(
+      DataLocalityStreamingScheduler.class.getName());
 
   protected DataLocalityStreamingScheduler() {
   }
@@ -92,7 +93,6 @@ public class DataLocalityStreamingScheduler {
       String taskName = entry.getKey();
 
       //If the vertex has input dataset and get the datanode name of the dataset in the HDFS.
-
       for (Vertex vertex : taskVertexSet) {
         if (vertex.getName().equals(taskName)
             && vertex.getConfig().getListValue("inputdataset") != null) {
@@ -185,8 +185,11 @@ public class DataLocalityStreamingScheduler {
     Map<String, List<DataTransferTimeCalculator>> workerPlanMap = new HashMap<>();
     Worker worker;
 
+    //Workernode network parameters
     double workerBandwidth;
     double workerLatency;
+
+    //Datanode network parameters
     double datanodeBandwidth;
     double datanodeLatency;
 
@@ -268,7 +271,6 @@ public class DataLocalityStreamingScheduler {
       List<DataTransferTimeCalculator>> workerPlanMap) {
 
     Set<Map.Entry<String, List<DataTransferTimeCalculator>>> entries = workerPlanMap.entrySet();
-
     List<DataTransferTimeCalculator> cal = new ArrayList<>();
 
     try {
