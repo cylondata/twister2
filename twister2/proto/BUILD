@@ -89,8 +89,8 @@ java_library(
 )
 
 proto_library(
-    name = "proto_network",
-    src = "network.proto",
+    name = "proto_jobmaster",
+    src = "jobmaster.proto",
     gen_cc = 0,
     gen_java = 1,
     gen_py = 0,
@@ -113,13 +113,13 @@ proto_library(
 )
 
 java_library(
-    name = "proto-network-java",
+    name = "proto-jobmaster-java",
     srcs = [
         "Empty.java",
     ],
     deps = [
         ":proto_common_java",
-        ":proto_network_java",
+        ":proto_jobmaster_java",
         "@com_google_protobuf_protobuf_java//jar",
     ],
 )

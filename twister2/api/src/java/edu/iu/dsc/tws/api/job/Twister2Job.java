@@ -97,13 +97,6 @@ public final class Twister2Job {
     );
     jobResourceBuilder.addResources(resourceTypeBuilder.build());
 
-//    ResourceAPI.ComputeResource.Builder computeResourceBuilder =
-//        ResourceAPI.ComputeResource.newBuilder();
-//    computeResourceBuilder.setAvailableCPU(requestedResource.getNoOfCpus());
-//    computeResourceBuilder.setAvailableDisk(requestedResource.getDiskMegaBytes());
-//    computeResourceBuilder.setAvailableMemory(requestedResource.getMemoryMegaBytes());
-//    jobResourceBuilder.setContainer(computeResourceBuilder);
-
     // set the job resources
     jobBuilder.setJobResources(jobResourceBuilder.build());
 
