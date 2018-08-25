@@ -149,7 +149,7 @@ public class FSKeyedSortedMerger implements Shuffle {
     }
 
     Object k1 = FileLoader.convertKeyToArray(keyType, key);
-    LOG.log(Level.INFO, "adding value: target: " + target + " " + recordsInMemory.size());
+    // LOG.log(Level.INFO, "adding value: target: " + target + " " + recordsInMemory.size());
     lock.lock();
     try {
       recordsInMemory.add(new KeyValue(k1, data, keyComparator));

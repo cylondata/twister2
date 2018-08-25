@@ -147,7 +147,6 @@ public class FSMerger implements Shuffle {
   private void deserializeObjects() {
     for (int i = 0; i < bytesInMemory.size(); i++) {
       Object o = DataDeserializer.deserialize(valueType, kryoSerializer, bytesInMemory.get(i));
-      LOG.log(Level.INFO, "Adding object: " + o);
       objectsInMemory.add(o);
     }
   }
@@ -245,7 +244,6 @@ public class FSMerger implements Shuffle {
     public Object next() {
       // we are reading from in memory
       if (currentFileIndex == -1) {
-        LOG.log(Level.INFO, "Getting from objects in memory: " + objectsInMemory.size());
         return it.next();
       }
 
