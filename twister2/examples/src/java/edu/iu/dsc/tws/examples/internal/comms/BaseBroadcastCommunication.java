@@ -40,9 +40,8 @@ import edu.iu.dsc.tws.examples.IntData;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 
-public class BaseBroadcastCommunication implements IContainer, IWorker {
+public class BaseBroadcastCommunication implements IWorker {
   private static final Logger LOG = Logger.getLogger(BaseBroadcastCommunication.class.getName());
 
   private DataFlowOperation broadcast;
@@ -68,16 +67,11 @@ public class BaseBroadcastCommunication implements IContainer, IWorker {
   @Override
   public void init(Config cfg,
                    int workerID,
-                   AllocatedResources allocatedResources,
+                   AllocatedResources resources,
                    IWorkerController workerController,
                    IPersistentVolume persistentVolume,
                    IVolatileVolume volatileVolume) {
 
-    init(cfg, workerID, allocatedResources);
-  }
-
-  @Override
-  public void init(Config cfg, int workerID, AllocatedResources resources) {
     LOG.log(Level.INFO, "Starting the example with container id: " + resources.getWorkerId());
     try {
       this.config = cfg;

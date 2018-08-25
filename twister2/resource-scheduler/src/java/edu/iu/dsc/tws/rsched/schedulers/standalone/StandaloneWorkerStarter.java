@@ -39,7 +39,6 @@ import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.bootstrap.JobMasterBasedWorkerController;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 public final class StandaloneWorkerStarter {
@@ -172,10 +171,10 @@ public final class StandaloneWorkerStarter {
 
     try {
       Object object = ReflectionUtils.newInstance(workerClass);
-      if (object instanceof IContainer) {
-        IContainer container = (IContainer) object;
+      if (object instanceof IWorker) {
+        IWorker container = (IWorker) object;
         // now initialize the container
-        container.init(config, workerNetworkInfo.getWorkerID(), resourcePlan);
+        container.init(config, workerNetworkInfo.getWorkerID(), resourcePlan, null, null, null);
       } else if (object instanceof IWorker) {
         IWorker worker = (IWorker) object;
         worker.init(config, workerNetworkInfo.getWorkerID(), resourcePlan,

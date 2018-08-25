@@ -32,8 +32,12 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
+import edu.iu.dsc.tws.common.worker.IPersistentVolume;
+import edu.iu.dsc.tws.common.worker.IVolatileVolume;
+import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
@@ -47,7 +51,6 @@ import edu.iu.dsc.tws.executor.core.SourceTaskContextListener;
 import edu.iu.dsc.tws.executor.threading.Executor;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskContext;
@@ -60,9 +63,12 @@ import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler;
 
 
-public class ReduceBatchTask implements IContainer {
+public class ReduceBatchTask implements IWorker {
   @Override
-  public void init(Config config, int workerID, AllocatedResources resources) {
+  public void init(Config config, int workerID, AllocatedResources resources,
+                   IWorkerController workerController,
+                   IPersistentVolume persistentVolume,
+                   IVolatileVolume volatileVolume) {
     GeneratorTask g = new GeneratorTask();
     RecevingTask r = new RecevingTask();
     //System.out.println("Reduce Batch Task Starting ...");

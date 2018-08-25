@@ -30,8 +30,12 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
+import edu.iu.dsc.tws.common.worker.IPersistentVolume;
+import edu.iu.dsc.tws.common.worker.IVolatileVolume;
+import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.api.BatchReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
@@ -46,9 +50,8 @@ import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.utils.RandomString;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 
-public class BasicMemoryManagerByteKeyedGatherCommunication implements IContainer {
+public class BasicMemoryManagerByteKeyedGatherCommunication implements IWorker {
   private static final Logger LOG = Logger.
       getLogger(BasicMemoryManagerByteKeyedGatherCommunication.class.getName());
 
@@ -69,7 +72,10 @@ public class BasicMemoryManagerByteKeyedGatherCommunication implements IContaine
   private long startTime = 0;
 
   @Override
-  public void init(Config cfg, int workerID, AllocatedResources resources) {
+  public void init(Config cfg, int workerID, AllocatedResources resources,
+                   IWorkerController workerController,
+                   IPersistentVolume persistentVolume,
+                   IVolatileVolume volatileVolume) {
     LOG.log(Level.INFO, "Starting the example with container id: " + resources.getWorkerId());
 
     this.config = cfg;

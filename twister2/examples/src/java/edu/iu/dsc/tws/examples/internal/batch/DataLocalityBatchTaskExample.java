@@ -22,8 +22,12 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
+import edu.iu.dsc.tws.common.worker.IPersistentVolume;
+import edu.iu.dsc.tws.common.worker.IVolatileVolume;
+import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.data.api.HDFSConnector;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
@@ -31,7 +35,6 @@ import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.Executor;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.Operations;
 import edu.iu.dsc.tws.task.api.SinkTask;
@@ -45,7 +48,7 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
-public class DataLocalityBatchTaskExample implements IContainer {
+public class DataLocalityBatchTaskExample implements IWorker {
 
   private static final Logger LOG =
       Logger.getLogger(DataLocalityBatchTaskExample.class.getName());
@@ -73,7 +76,10 @@ public class DataLocalityBatchTaskExample implements IContainer {
   }
 
   @Override
-  public void init(Config config, int workerID, AllocatedResources resources) {
+  public void init(Config config, int workerID, AllocatedResources resources,
+                   IWorkerController workerController,
+                   IPersistentVolume persistentVolume,
+                   IVolatileVolume volatileVolume) {
 
     SourceTask1 g = new SourceTask1(); //source task
     SourceTask2 m = new SourceTask2(); //sink task 1

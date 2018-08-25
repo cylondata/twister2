@@ -22,14 +22,20 @@ import java.net.Socket;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
-import edu.iu.dsc.tws.rsched.spi.container.IContainer;
+import edu.iu.dsc.tws.common.worker.IPersistentVolume;
+import edu.iu.dsc.tws.common.worker.IVolatileVolume;
+import edu.iu.dsc.tws.common.worker.IWorker;
 
-public class BasicMesosContainer implements IContainer {
+public class BasicMesosContainer implements IWorker {
   private static final Logger LOG = Logger.getLogger(BasicMesosContainer.class.getName());
 
   @Override
-  public void init(Config config, int workerID, AllocatedResources resources) {
+  public void init(Config config, int workerID, AllocatedResources resources,
+                   IWorkerController workerController,
+                   IPersistentVolume persistentVolume,
+                   IVolatileVolume volatileVolume) {
     // wait some random amount of time before finishing
     long duration = (long) (Math.random() * 1000);
     //temporary solution until parameter problem solved

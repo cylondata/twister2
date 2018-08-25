@@ -23,7 +23,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
+import edu.iu.dsc.tws.common.worker.IPersistentVolume;
+import edu.iu.dsc.tws.common.worker.IVolatileVolume;
+import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
@@ -32,9 +36,8 @@ import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.utils.RandomString;
-import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 
-public class BasicGatherTestCommunication implements IContainer {
+public class BasicGatherTestCommunication implements IWorker {
   private static final Logger LOG = Logger.
       getLogger(BasicGatherTestCommunication.class.getName());
 
@@ -55,7 +58,10 @@ public class BasicGatherTestCommunication implements IContainer {
   private long startTime = 0;
 
   @Override
-  public void init(Config cfg, int workerID, AllocatedResources resources) {
+  public void init(Config cfg, int workerID, AllocatedResources resources,
+                   IWorkerController workerController,
+                   IPersistentVolume persistentVolume,
+                   IVolatileVolume volatileVolume) {
     LOG.log(Level.INFO, "Starting the example with container id: " + resources.getWorkerId());
 
     this.config = cfg;

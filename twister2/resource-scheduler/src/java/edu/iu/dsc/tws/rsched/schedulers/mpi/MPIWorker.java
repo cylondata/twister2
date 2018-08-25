@@ -33,7 +33,6 @@ import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 import mpi.MPI;
@@ -187,10 +186,10 @@ public final class MPIWorker {
     String workerClass = MPIContext.workerClass(config);
     try {
       Object object = ReflectionUtils.newInstance(workerClass);
-      if (object instanceof IContainer) {
-        IContainer container = (IContainer) object;
+      if (object instanceof IWorker) {
+        IWorker container = (IWorker) object;
         // now initialize the container
-        container.init(config, rank, resourcePlan);
+        container.init(config, rank, resourcePlan, null, null, null);
       } else if (object instanceof IWorker) {
         IWorker worker = (IWorker) object;
         worker.init(config, rank, resourcePlan,
