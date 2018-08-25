@@ -20,7 +20,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.ZResourcePlan;
+import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
@@ -44,7 +44,7 @@ public class WordCountContainer implements IContainer {
 
   private Config config;
 
-  private ZResourcePlan resourcePlan;
+  private AllocatedResources resourcePlan;
 
   private int id;
 
@@ -55,11 +55,11 @@ public class WordCountContainer implements IContainer {
   private TaskPlan taskPlan;
 
   @Override
-  public void init(Config cfg, int containerId, ZResourcePlan plan) {
+  public void init(Config cfg, int containerId, AllocatedResources plan) {
     this.config = cfg;
     this.resourcePlan = plan;
     this.id = containerId;
-    this.noOfTasksPerExecutor = NO_OF_TASKS / plan.noOfContainers();
+    this.noOfTasksPerExecutor = NO_OF_TASKS / plan.getNumberOfWorkers();
 
     // set up the tasks
     setupTasks();

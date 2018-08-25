@@ -20,7 +20,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.ZResourcePlan;
+import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
@@ -40,8 +40,8 @@ public class PingPongCommunication implements IContainer {
   /**
    * Initialize the container
    */
-  public void init(Config cfg, int containerId, ZResourcePlan plan) {
-    LOG.log(Level.INFO, "Starting the example with container id: " + plan.getThisId());
+  public void init(Config cfg, int containerId, AllocatedResources plan) {
+    LOG.log(Level.INFO, "Starting the example with container id: " + plan.getThisWorkerId());
 
     this.status = Status.INIT;
 

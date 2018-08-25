@@ -23,7 +23,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.ZResourcePlan;
+import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
@@ -40,7 +40,7 @@ public class BasicGatherTestCommunication implements IContainer {
 
   private DataFlowOperation aggregate;
 
-  private ZResourcePlan resourcePlan;
+  private AllocatedResources resourcePlan;
 
   private int id;
 
@@ -55,13 +55,13 @@ public class BasicGatherTestCommunication implements IContainer {
   private long startTime = 0;
 
   @Override
-  public void init(Config cfg, int containerId, ZResourcePlan plan) {
-    LOG.log(Level.INFO, "Starting the example with container id: " + plan.getThisId());
+  public void init(Config cfg, int containerId, AllocatedResources plan) {
+    LOG.log(Level.INFO, "Starting the example with container id: " + plan.getThisWorkerId());
 
     this.config = cfg;
     this.resourcePlan = plan;
     this.id = containerId;
-    this.noOfTasksPerExecutor = NO_OF_TASKS / plan.noOfContainers();
+    this.noOfTasksPerExecutor = NO_OF_TASKS / plan.getNumberOfWorkers();
     this.randomString = new RandomString(128000, new Random(), RandomString.ALPHANUM);
 
     // lets create the task plan

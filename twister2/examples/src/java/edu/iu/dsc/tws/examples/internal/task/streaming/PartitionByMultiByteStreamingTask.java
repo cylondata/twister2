@@ -21,8 +21,8 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
-import edu.iu.dsc.tws.common.resource.ZResourcePlan;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
@@ -47,7 +47,7 @@ import edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler;
 
 public class PartitionByMultiByteStreamingTask implements IContainer {
   @Override
-  public void init(Config config, int id, ZResourcePlan resourcePlan) {
+  public void init(Config config, int id, AllocatedResources resourcePlan) {
     GeneratorTask g = new GeneratorTask();
     RecevingTask r = new RecevingTask();
 
@@ -68,7 +68,7 @@ public class PartitionByMultiByteStreamingTask implements IContainer {
     WorkerPlan workerPlan = createWorkerPlan(resourcePlan);
     TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
 
-    TWSNetwork network = new TWSNetwork(config, resourcePlan.getThisId());
+    TWSNetwork network = new TWSNetwork(config, resourcePlan.getThisWorkerId());
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
     Executor executor = new Executor(config, plan, network.getChannel(),
@@ -132,9 +132,9 @@ public class PartitionByMultiByteStreamingTask implements IContainer {
     }
   }
 
-  public WorkerPlan createWorkerPlan(ZResourcePlan resourcePlan) {
+  public WorkerPlan createWorkerPlan(AllocatedResources resourcePlan) {
     List<Worker> workers = new ArrayList<>();
-    for (WorkerComputeResource resource : resourcePlan.getContainers()) {
+    for (WorkerComputeResource resource : resourcePlan.getWorkerComputeResources()) {
       Worker w = new Worker(resource.getId());
       workers.add(w);
     }

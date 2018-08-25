@@ -24,8 +24,8 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
-import edu.iu.dsc.tws.common.resource.ZResourcePlan;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
@@ -46,7 +46,7 @@ public class BaseReduceCommunication implements IContainer {
 
   private DataFlowOperation reduce;
 
-  private ZResourcePlan resourcePlan;
+  private AllocatedResources resourcePlan;
 
   private int id;
 
@@ -65,14 +65,14 @@ public class BaseReduceCommunication implements IContainer {
   private Status status;
 
   @Override
-  public void init(Config cfg, int containerId, ZResourcePlan plan) {
-    LOG.log(Level.INFO, "Starting the example with container id: " + plan.getThisId());
+  public void init(Config cfg, int containerId, AllocatedResources plan) {
+    LOG.log(Level.INFO, "Starting the example with container id: " + plan.getThisWorkerId());
 
     this.config = cfg;
     this.resourcePlan = plan;
     this.id = containerId;
     this.status = Status.INIT;
-    this.noOfTasksPerExecutor = NO_OF_TASKS / plan.noOfContainers();
+    this.noOfTasksPerExecutor = NO_OF_TASKS / plan.getNumberOfWorkers();
 
     // lets create the task plan
     TaskPlan taskPlan = Utils.createReduceTaskPlan(cfg, plan, NO_OF_TASKS);

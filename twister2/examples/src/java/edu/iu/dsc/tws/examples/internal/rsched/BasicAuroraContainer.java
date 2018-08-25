@@ -12,14 +12,14 @@
 package edu.iu.dsc.tws.examples.internal.rsched;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.ZResourcePlan;
+import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 
 public class BasicAuroraContainer implements IContainer {
 
 
   @Override
-  public void init(Config config, int id, ZResourcePlan resourcePlan) {
+  public void init(Config config, int id, AllocatedResources resourcePlan) {
     // wait some random amount of time before finishing
     long duration = (long) (Math.random() * 1000);
     try {

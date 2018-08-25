@@ -22,8 +22,8 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
-import edu.iu.dsc.tws.common.resource.ZResourcePlan;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.data.api.HDFSConnector;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
@@ -73,7 +73,7 @@ public class RoundRobinBatchTaskExample implements IContainer {
   }
 
   @Override
-  public void init(Config config, int id, ZResourcePlan resourcePlan) {
+  public void init(Config config, int id, AllocatedResources resourcePlan) {
 
     SourceTask1 g = new SourceTask1();
 
@@ -176,16 +176,16 @@ public class RoundRobinBatchTaskExample implements IContainer {
       }
     }
 
-    TWSNetwork network = new TWSNetwork(config, resourcePlan.getThisId());
+    TWSNetwork network = new TWSNetwork(config, resourcePlan.getThisWorkerId());
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
     Executor executor = new Executor(config, plan, network.getChannel());
     executor.execute();
   }
 
-  public WorkerPlan createWorkerPlan(ZResourcePlan resourcePlan) {
+  public WorkerPlan createWorkerPlan(AllocatedResources resourcePlan) {
     List<Worker> workers = new ArrayList<>();
-    for (WorkerComputeResource resource : resourcePlan.getContainers()) {
+    for (WorkerComputeResource resource : resourcePlan.getWorkerComputeResources()) {
       Worker w = new Worker(resource.getId());
       workers.add(w);
     }

@@ -72,7 +72,7 @@ public abstract class MPICommand {
                                                     JobAPI.Job job) {
     Map<String, Object> commands = new HashMap<>();
     // lets get the configurations
-    commands.put("procs", requestedResources.getNoOfContainers());
+    commands.put("procs", requestedResources.getNumberOfWorkers());
 
     String jobClassPath = JobUtils.jobClassPath(cfg, job, workingDirectory);
     LOG.log(Level.INFO, "Job class path: " + jobClassPath);

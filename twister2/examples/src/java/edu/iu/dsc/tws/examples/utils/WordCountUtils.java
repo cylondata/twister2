@@ -20,8 +20,8 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
-import edu.iu.dsc.tws.common.resource.ZResourcePlan;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 
 public final class WordCountUtils {
@@ -36,14 +36,14 @@ public final class WordCountUtils {
    * @param plan the resource plan from scheduler
    * @return task plan
    */
-  public static TaskPlan createWordCountPlan(Config cfg, ZResourcePlan plan, int noOfTasks) {
-    int noOfProcs = plan.noOfContainers();
+  public static TaskPlan createWordCountPlan(Config cfg, AllocatedResources plan, int noOfTasks) {
+    int noOfProcs = plan.getNumberOfWorkers();
 //    LOG.log(Level.INFO, "No of containers: " + noOfProcs);
     Map<Integer, Set<Integer>> executorToGraphNodes = new HashMap<>();
     Map<Integer, Set<Integer>> groupsToExeuctors = new HashMap<>();
-    int thisExecutor = plan.getThisId();
+    int thisExecutor = plan.getThisWorkerId();
 
-    List<WorkerComputeResource> containers = plan.getContainers();
+    List<WorkerComputeResource> containers = plan.getWorkerComputeResources();
     Map<String, List<WorkerComputeResource>> containersPerNode = new HashMap<>();
     for (WorkerComputeResource c : containers) {
       String name = Integer.toString(c.getId());
@@ -80,8 +80,10 @@ public final class WordCountUtils {
       i++;
     }
 
-    LOG.fine(String.format("%d Executor To Graph: %s", plan.getThisId(), executorToGraphNodes));
-    LOG.fine(String.format("%d Groups to executors: %s", plan.getThisId(), groupsToExeuctors));
+    LOG.fine(String.format("%d Executor To Graph: %s",
+        plan.getThisWorkerId(), executorToGraphNodes));
+    LOG.fine(String.format("%d Groups to executors: %s",
+        plan.getThisWorkerId(), groupsToExeuctors));
     // now lets create the task plan of this, we assume we have map tasks in all the processes
     // and reduce task in 0th process
     return new TaskPlan(executorToGraphNodes, groupsToExeuctors, thisExecutor);

@@ -12,8 +12,8 @@
 package edu.iu.dsc.tws.rsched.spi.container;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.ZResourcePlan;
+import edu.iu.dsc.tws.common.resource.AllocatedResources;
 
 public interface IContainer {
-  void init(Config config, int id, ZResourcePlan resourcePlan);
+  void init(Config config, int id, AllocatedResources resourcePlan);
 }

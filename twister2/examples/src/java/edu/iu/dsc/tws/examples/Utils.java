@@ -23,8 +23,8 @@ import java.util.logging.Logger;
 import org.apache.commons.cli.Option;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
-import edu.iu.dsc.tws.common.resource.ZResourcePlan;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlanUtils;
 
@@ -39,14 +39,14 @@ public final class Utils {
    * @param plan the resource plan from scheduler
    * @return task plan
    */
-  public static TaskPlan createTaskPlan(Config cfg, ZResourcePlan plan) {
-    int noOfProcs = plan.noOfContainers();
+  public static TaskPlan createTaskPlan(Config cfg, AllocatedResources plan) {
+    int noOfProcs = plan.getNumberOfWorkers();
     LOG.log(Level.INFO, "No of containers: " + noOfProcs);
     Map<Integer, Set<Integer>> executorToGraphNodes = new HashMap<>();
     Map<Integer, Set<Integer>> groupsToExeuctors = new HashMap<>();
-    int thisExecutor = plan.getThisId();
+    int thisExecutor = plan.getThisWorkerId();
 
-    List<WorkerComputeResource> containers = plan.getContainers();
+    List<WorkerComputeResource> containers = plan.getWorkerComputeResources();
     Map<String, List<WorkerComputeResource>> containersPerNode = new HashMap<>();
 //    for (WorkerComputeResource c : containers) {
 //      String name = (String) c.getProperty(SchedulerContext.WORKER_NAME);
@@ -92,14 +92,14 @@ public final class Utils {
    * @param plan the resource plan from scheduler
    * @return task plan
    */
-  public static TaskPlan createReduceTaskPlan(Config cfg, ZResourcePlan plan, int noOfTasks) {
-    int noOfProcs = plan.noOfContainers();
+  public static TaskPlan createReduceTaskPlan(Config cfg, AllocatedResources plan, int noOfTasks) {
+    int noOfProcs = plan.getNumberOfWorkers();
     LOG.log(Level.INFO, "No of containers: " + noOfProcs);
     Map<Integer, Set<Integer>> executorToGraphNodes = new HashMap<>();
     Map<Integer, Set<Integer>> groupsToExeuctors = new HashMap<>();
-    int thisExecutor = plan.getThisId();
+    int thisExecutor = plan.getThisWorkerId();
 
-    List<WorkerComputeResource> containers = plan.getContainers();
+    List<WorkerComputeResource> containers = plan.getWorkerComputeResources();
     Map<String, List<WorkerComputeResource>> containersPerNode = new HashMap<>();
     for (WorkerComputeResource c : containers) {
       String name = Integer.toString(c.getId());
@@ -145,14 +145,14 @@ public final class Utils {
     return new TaskPlan(executorToGraphNodes, groupsToExeuctors, thisExecutor);
   }
 
-  public static TaskPlan createReduceTaskPlan(Config cfg, ZResourcePlan plan,
+  public static TaskPlan createReduceTaskPlan(Config cfg, AllocatedResources plan,
                                               List<Integer> noOfTaskEachStage) {
-    int noOfContainers = plan.noOfContainers();
+    int noOfContainers = plan.getNumberOfWorkers();
     Map<Integer, Set<Integer>> executorToGraphNodes = new HashMap<>();
     Map<Integer, Set<Integer>> groupsToExeuctors = new HashMap<>();
-    int thisExecutor = plan.getThisId();
+    int thisExecutor = plan.getThisWorkerId();
 
-    List<WorkerComputeResource> containers = plan.getContainers();
+    List<WorkerComputeResource> containers = plan.getWorkerComputeResources();
     Map<String, List<WorkerComputeResource>> containersPerNode =
         ResourcePlanUtils.getContainersPerNode(containers);
 
@@ -221,14 +221,14 @@ public final class Utils {
    * @param noOfTaskEachStage no of tasks at each stage
    * @return task plan
    */
-  public static TaskPlan createStageTaskPlan(Config cfg, ZResourcePlan plan,
+  public static TaskPlan createStageTaskPlan(Config cfg, AllocatedResources plan,
                                              List<Integer> noOfTaskEachStage) {
-    int noOfContainers = plan.noOfContainers();
+    int noOfContainers = plan.getNumberOfWorkers();
     Map<Integer, Set<Integer>> executorToGraphNodes = new HashMap<>();
     Map<Integer, Set<Integer>> groupsToExeuctors = new HashMap<>();
-    int thisExecutor = plan.getThisId();
+    int thisExecutor = plan.getThisWorkerId();
 
-    List<WorkerComputeResource> containers = plan.getContainers();
+    List<WorkerComputeResource> containers = plan.getWorkerComputeResources();
     Map<String, List<WorkerComputeResource>> containersPerNode =
         ResourcePlanUtils.getContainersPerNode(containers);
 
