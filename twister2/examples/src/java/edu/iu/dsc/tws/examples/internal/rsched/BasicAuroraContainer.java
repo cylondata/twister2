@@ -19,11 +19,11 @@ public class BasicAuroraContainer implements IContainer {
 
 
   @Override
-  public void init(Config config, int id, AllocatedResources resourcePlan) {
+  public void init(Config config, int workerID, AllocatedResources resources) {
     // wait some random amount of time before finishing
     long duration = (long) (Math.random() * 1000);
     try {
-      System.out.println("I am the worker: " + id);
+      System.out.println("I am the worker: " + workerID);
       System.out.println("I am sleeping " + duration + "ms. Then will close.");
       Thread.sleep(duration);
     } catch (InterruptedException e) {

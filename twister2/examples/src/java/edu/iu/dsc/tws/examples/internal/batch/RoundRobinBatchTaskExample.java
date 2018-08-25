@@ -73,7 +73,7 @@ public class RoundRobinBatchTaskExample implements IContainer {
   }
 
   @Override
-  public void init(Config config, int id, AllocatedResources resourcePlan) {
+  public void init(Config config, int workerID, AllocatedResources resources) {
 
     SourceTask1 g = new SourceTask1();
 
@@ -146,18 +146,18 @@ public class RoundRobinBatchTaskExample implements IContainer {
     List<TaskSchedulePlan> taskSchedulePlanList = new ArrayList<>();
     TaskSchedulePlan taskSchedulePlan = null;
 
-    if (id == 0) {
+    if (workerID == 0) {
       if ("Batch".equalsIgnoreCase(jobType)
           && "roundrobin".equalsIgnoreCase(schedulingType)) {
         RoundRobinBatchTaskScheduler rrBatchTaskScheduler = new RoundRobinBatchTaskScheduler();
         rrBatchTaskScheduler.initialize(config);
-        WorkerPlan workerPlan = createWorkerPlan(resourcePlan);
+        WorkerPlan workerPlan = createWorkerPlan(resources);
         taskSchedulePlanList = rrBatchTaskScheduler.scheduleBatch(graph, workerPlan);
       }
     }
 
     //Just to print the task schedule plan.
-    if (id == 0) {
+    if (workerID == 0) {
       for (int j = 0; j < taskSchedulePlanList.size(); j++) {
         taskSchedulePlan = taskSchedulePlanList.get(j);
         Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap
@@ -176,8 +176,8 @@ public class RoundRobinBatchTaskExample implements IContainer {
       }
     }
 
-    TWSNetwork network = new TWSNetwork(config, resourcePlan.getWorkerId());
-    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);
+    TWSNetwork network = new TWSNetwork(config, resources.getWorkerId());
+    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resources, network);
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
     Executor executor = new Executor(config, plan, network.getChannel());
     executor.execute();

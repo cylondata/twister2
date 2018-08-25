@@ -113,14 +113,14 @@ public class HDFSTaskExample implements IContainer {
   /**
    * This method initialize the config, container id, and resource plan objects.
    */
-  public void init(Config cfg, int containerId, AllocatedResources plan) {
+  public void init(Config cfg, int workerID, AllocatedResources resources) {
 
-    LOG.log(Level.INFO, "Starting the example with container id: " + plan.getWorkerId());
+    LOG.log(Level.INFO, "Starting the example with container id: " + resources.getWorkerId());
 
     taskExecutor = new TaskExecutorFixedThread();
     this.status = Status.INIT;
 
-    TaskPlan taskPlan = Utils.createTaskPlan(cfg, plan);
+    TaskPlan taskPlan = Utils.createTaskPlan(cfg, resources);
     TWSNetwork network = new TWSNetwork(cfg, taskPlan);
     TWSCommunication channel = network.getDataFlowTWSCommunication();
 
@@ -230,7 +230,7 @@ public class HDFSTaskExample implements IContainer {
 
     DataFlowTaskGraph dataFlowTaskGraph = graphBuilder.build();
 
-    if (containerId == 0) {
+    if (workerID == 0) {
       //Twister2 -> HDFS Integration Testing....
       //Move the code to the actual task to perform the processing.
       String srcFileLocation = null;

@@ -84,7 +84,7 @@ public class BatchTaskExample implements IContainer {
   }
 
   @Override
-  public void init(Config config, int id, AllocatedResources resourcePlan) {
+  public void init(Config config, int workerID, AllocatedResources resources) {
     GeneratorTask g = new GeneratorTask();
     ReceivingTask r = new ReceivingTask();
 
@@ -119,7 +119,7 @@ public class BatchTaskExample implements IContainer {
         && "roundrobin".equalsIgnoreCase(schedulingType)) {
       RoundRobinBatchTaskScheduler rrBatchTaskScheduling = new RoundRobinBatchTaskScheduler();
       rrBatchTaskScheduling.initialize(config);
-      WorkerPlan workerPlan = createWorkerPlan(resourcePlan);
+      WorkerPlan workerPlan = createWorkerPlan(resources);
       scheduleBatch = rrBatchTaskScheduling.scheduleBatch(graph, workerPlan);
     }
 
@@ -138,8 +138,8 @@ public class BatchTaskExample implements IContainer {
       }
     }
 
-    TWSNetwork network = new TWSNetwork(config, resourcePlan.getWorkerId());
-    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);
+    TWSNetwork network = new TWSNetwork(config, resources.getWorkerId());
+    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resources, network);
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
     Executor executor = new Executor(config, plan, network.getChannel());
     executor.execute();

@@ -15,5 +15,5 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
 
 public interface IContainer {
-  void init(Config config, int id, AllocatedResources resourcePlan);
+  void init(Config config, int workerID, AllocatedResources resources);
 }

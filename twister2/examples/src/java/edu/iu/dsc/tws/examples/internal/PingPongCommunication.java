@@ -40,13 +40,13 @@ public class PingPongCommunication implements IContainer {
   /**
    * Initialize the container
    */
-  public void init(Config cfg, int containerId, AllocatedResources plan) {
-    LOG.log(Level.INFO, "Starting the example with container id: " + plan.getWorkerId());
+  public void init(Config cfg, int workerID, AllocatedResources resources) {
+    LOG.log(Level.INFO, "Starting the example with container id: " + resources.getWorkerId());
 
     this.status = Status.INIT;
 
     // lets create the task plan
-    TaskPlan taskPlan = Utils.createTaskPlan(cfg, plan);
+    TaskPlan taskPlan = Utils.createTaskPlan(cfg, resources);
     //first get the communication config file
     TWSNetwork network = new TWSNetwork(cfg, taskPlan);
 
@@ -64,7 +64,7 @@ public class PingPongCommunication implements IContainer {
     direct = channel.direct(newCfg, MessageType.OBJECT, 0, sources,
         dests, new PingPongReceive());
 
-    if (containerId == 0) {
+    if (workerID == 0) {
       // the map thread where data is produced
       Thread mapThread = new Thread(new MapWorker());
 
@@ -79,7 +79,7 @@ public class PingPongCommunication implements IContainer {
         direct.progress();
         Thread.yield();
       }
-    } else if (containerId == 1) {
+    } else if (workerID == 1) {
       while (status != Status.LOAD_RECEIVE_FINISHED) {
         channel.progress();
         direct.progress();

@@ -68,7 +68,7 @@ import edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler;
 
 public class TaskExampleBatchKafka implements IContainer {
   @Override
-  public void init(Config config, int id, AllocatedResources resourcePlan) {
+  public void init(Config config, int workerID, AllocatedResources resources) {
     List<String> topics = new ArrayList<>();
     topics.add("sample_topic1");
     List<String> servers = new ArrayList<>();
@@ -107,11 +107,11 @@ public class TaskExampleBatchKafka implements IContainer {
     RoundRobinTaskScheduler roundRobinTaskScheduler = new RoundRobinTaskScheduler();
     roundRobinTaskScheduler.initialize(config);
 
-    WorkerPlan workerPlan = createWorkerPlan(resourcePlan);
+    WorkerPlan workerPlan = createWorkerPlan(resources);
     TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
 
-    TWSNetwork network = new TWSNetwork(config, resourcePlan.getWorkerId());
-    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);
+    TWSNetwork network = new TWSNetwork(config, resources.getWorkerId());
+    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resources, network);
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
     Executor executor = new Executor(config, plan, network.getChannel(),
         OperationMode.BATCH);

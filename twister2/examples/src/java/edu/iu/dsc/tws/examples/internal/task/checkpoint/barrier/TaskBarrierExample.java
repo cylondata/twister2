@@ -44,7 +44,7 @@ import edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler;
 
 public class TaskBarrierExample implements IContainer {
   @Override
-  public void init(Config config, int id, AllocatedResources resourcePlan) {
+  public void init(Config config, int workerID, AllocatedResources resources) {
     GeneratorBarrierTask g = new GeneratorBarrierTask();
     RecevingBarrierTask r = new RecevingBarrierTask();
 
@@ -60,11 +60,11 @@ public class TaskBarrierExample implements IContainer {
     RoundRobinTaskScheduler roundRobinTaskScheduling = new RoundRobinTaskScheduler();
     roundRobinTaskScheduling.initialize(config);
 
-    WorkerPlan workerPlan = createWorkerPlan(resourcePlan);
+    WorkerPlan workerPlan = createWorkerPlan(resources);
     TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduling.schedule(graph, workerPlan);
 
-    TWSNetwork network = new TWSNetwork(config, resourcePlan.getWorkerId());
-    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);
+    TWSNetwork network = new TWSNetwork(config, resources.getWorkerId());
+    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resources, network);
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
     Executor executor = new Executor(config, plan, network.getChannel(),
         OperationMode.STREAMING);

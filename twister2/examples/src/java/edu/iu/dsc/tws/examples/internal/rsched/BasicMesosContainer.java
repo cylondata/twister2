@@ -29,11 +29,11 @@ public class BasicMesosContainer implements IContainer {
   private static final Logger LOG = Logger.getLogger(BasicMesosContainer.class.getName());
 
   @Override
-  public void init(Config config, int id, AllocatedResources resourcePlan) {
+  public void init(Config config, int workerID, AllocatedResources resources) {
     // wait some random amount of time before finishing
     long duration = (long) (Math.random() * 1000);
     //temporary solution until parameter problem solved
-    String s = id + "";
+    String s = workerID + "";
     String p = s.substring(0, 5);
     String ids = s.substring(5);
     int port = Integer.parseInt(p);

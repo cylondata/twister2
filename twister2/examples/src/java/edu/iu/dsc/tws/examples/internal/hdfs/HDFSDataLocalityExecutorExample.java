@@ -90,7 +90,7 @@ public class HDFSDataLocalityExecutorExample implements IContainer {
   }
 
   @Override
-  public void init(Config config, int id, AllocatedResources resourcePlan) {
+  public void init(Config config, int workerID, AllocatedResources resources) {
 
     try {
       fileHandler = new FileHandler("/home/kgovind/twister2/taskscheduler.log");
@@ -141,7 +141,7 @@ public class HDFSDataLocalityExecutorExample implements IContainer {
 
     DataFlowTaskGraph graph = builder.build();
     TaskSchedulePlan taskSchedulePlan = null;
-    WorkerPlan workerPlan = createWorkerPlan(resourcePlan);
+    WorkerPlan workerPlan = createWorkerPlan(resources);
 
     if (TaskSchedulerContext.taskSchedulingMode(config).equals("datalocalityaware")) {
       DataLocalityStreamingTaskScheduler dataLocalityAwareTaskScheduling
@@ -154,8 +154,8 @@ public class HDFSDataLocalityExecutorExample implements IContainer {
       taskSchedulePlan = roundRobinTaskScheduling.schedule(graph, workerPlan);
     }
 
-    TWSNetwork network = new TWSNetwork(config, resourcePlan.getWorkerId());
-    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);
+    TWSNetwork network = new TWSNetwork(config, resources.getWorkerId());
+    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resources, network);
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
     Executor executor = new Executor(config, plan, network.getChannel());
     executor.execute();

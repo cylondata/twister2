@@ -90,14 +90,14 @@ public class SimpleTaskGraphExample implements IContainer {
   /**
    * Init method to submit the task to the executor
    */
-  public void init(Config cfg, int containerId, AllocatedResources plan) {
+  public void init(Config cfg, int workerID, AllocatedResources resources) {
 
-    LOG.log(Level.INFO, "Starting the example with container id: " + plan.getWorkerId());
+    LOG.log(Level.INFO, "Starting the example with container id: " + resources.getWorkerId());
 
     taskExecutor = new TaskExecutorFixedThread();
     this.status = Status.INIT;
 
-    TaskPlan taskPlan = Utils.createTaskPlan(cfg, plan);
+    TaskPlan taskPlan = Utils.createTaskPlan(cfg, resources);
     TWSNetwork network = new TWSNetwork(cfg, taskPlan);
     TWSCommunication channel = network.getDataFlowTWSCommunication();
 

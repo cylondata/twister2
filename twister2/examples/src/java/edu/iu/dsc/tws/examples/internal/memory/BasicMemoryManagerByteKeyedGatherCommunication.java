@@ -69,17 +69,17 @@ public class BasicMemoryManagerByteKeyedGatherCommunication implements IContaine
   private long startTime = 0;
 
   @Override
-  public void init(Config cfg, int containerId, AllocatedResources plan) {
-    LOG.log(Level.INFO, "Starting the example with container id: " + plan.getWorkerId());
+  public void init(Config cfg, int workerID, AllocatedResources resources) {
+    LOG.log(Level.INFO, "Starting the example with container id: " + resources.getWorkerId());
 
     this.config = cfg;
-    this.resourcePlan = plan;
-    this.id = containerId;
-    this.noOfTasksPerExecutor = NO_OF_TASKS / plan.getNumberOfWorkers();
+    this.resourcePlan = resources;
+    this.id = workerID;
+    this.noOfTasksPerExecutor = NO_OF_TASKS / resources.getNumberOfWorkers();
     this.randomString = new RandomString(128000, new Random(), RandomString.ALPHANUM);
 
     // lets create the task plan
-    TaskPlan taskPlan = Utils.createReduceTaskPlan(cfg, plan, NO_OF_TASKS);
+    TaskPlan taskPlan = Utils.createReduceTaskPlan(cfg, resources, NO_OF_TASKS);
     //first get the communication config file
     TWSNetwork network = new TWSNetwork(cfg, taskPlan);
 

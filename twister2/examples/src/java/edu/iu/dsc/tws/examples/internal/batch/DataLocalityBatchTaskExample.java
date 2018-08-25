@@ -73,7 +73,7 @@ public class DataLocalityBatchTaskExample implements IContainer {
   }
 
   @Override
-  public void init(Config config, int id, AllocatedResources resourcePlan) {
+  public void init(Config config, int workerID, AllocatedResources resources) {
 
     SourceTask1 g = new SourceTask1(); //source task
     SourceTask2 m = new SourceTask2(); //sink task 1
@@ -146,14 +146,14 @@ public class DataLocalityBatchTaskExample implements IContainer {
     builder.addConfiguration("sink2", "outputdataset2", sinkOutputDataset2);
 
     DataFlowTaskGraph graph = builder.build();
-    WorkerPlan workerPlan = createWorkerPlan(resourcePlan);
+    WorkerPlan workerPlan = createWorkerPlan(resources);
 
     String jobType = "batch";
     String schedulingType = "datalocalityaware";
     List<TaskSchedulePlan> taskSchedulePlanList = new ArrayList<>();
     TaskSchedulePlan taskSchedulePlan = null;
 
-    if (id == 0) { //Remove this condition during Executor integration
+    if (workerID == 0) { //Remove this condition during Executor integration
       if ("batch".equalsIgnoreCase(jobType)
           && "datalocalityaware".equalsIgnoreCase(schedulingType)) {
         //&& TaskSchedulerContext.taskSchedulingMode(config).equals("datalocalityaware")) {
@@ -165,7 +165,7 @@ public class DataLocalityBatchTaskExample implements IContainer {
     }
 
     //Just to print the task schedule plan.
-    if (id == 0) {
+    if (workerID == 0) {
       for (int j = 0; j < taskSchedulePlanList.size(); j++) {
         taskSchedulePlan = taskSchedulePlanList.get(j);
         Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap
@@ -184,8 +184,8 @@ public class DataLocalityBatchTaskExample implements IContainer {
       }
     }
 
-    TWSNetwork network = new TWSNetwork(config, resourcePlan.getWorkerId());
-    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);
+    TWSNetwork network = new TWSNetwork(config, resources.getWorkerId());
+    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resources, network);
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
     Executor executor = new Executor(config, plan, network.getChannel());
     executor.execute();

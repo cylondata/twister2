@@ -52,14 +52,14 @@ public class BaseReduceBatchCommunication implements IContainer {
   private static final int NO_OF_TASKS = 4;
 
   @Override
-  public void init(Config cfg, int containerId, AllocatedResources plan) {
-    LOG.log(Level.INFO, "Starting the example with container id: " + plan.getWorkerId());
+  public void init(Config cfg, int workerID, AllocatedResources resources) {
+    LOG.log(Level.INFO, "Starting the example with container id: " + resources.getWorkerId());
 
-    this.id = containerId;
-    int noOfTasksPerExecutor = NO_OF_TASKS / plan.getNumberOfWorkers();
+    this.id = workerID;
+    int noOfTasksPerExecutor = NO_OF_TASKS / resources.getNumberOfWorkers();
 
     // lets create the task plan
-    TaskPlan taskPlan = Utils.createReduceTaskPlan(cfg, plan, NO_OF_TASKS);
+    TaskPlan taskPlan = Utils.createReduceTaskPlan(cfg, resources, NO_OF_TASKS);
     //first get the communication config file
     TWSNetwork network = new TWSNetwork(cfg, taskPlan);
 

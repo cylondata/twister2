@@ -53,11 +53,11 @@ public class WordCountContainer implements IContainer {
   private TaskPlan taskPlan;
 
   @Override
-  public void init(Config cfg, int containerId, AllocatedResources plan) {
+  public void init(Config cfg, int workerID, AllocatedResources resources) {
     this.config = cfg;
-    this.resourcePlan = plan;
-    this.id = containerId;
-    this.noOfTasksPerExecutor = NO_OF_TASKS / plan.getNumberOfWorkers();
+    this.resourcePlan = resources;
+    this.id = workerID;
+    this.noOfTasksPerExecutor = NO_OF_TASKS / resources.getNumberOfWorkers();
 
     setupTasks();
     setupNetwork();
