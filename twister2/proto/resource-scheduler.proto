@@ -1,7 +1,0 @@
-syntax = "proto3";
-package tws.proto.resource.scheduler;
-
-option java_package = "edu.iu.dsc.tws.proto.system";
-option java_outer_classname = "ResourceAPI";
-
-// currently nothing in
