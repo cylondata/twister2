@@ -92,7 +92,7 @@ public class SimpleTaskGraphExample implements IContainer {
    */
   public void init(Config cfg, int containerId, AllocatedResources plan) {
 
-    LOG.log(Level.INFO, "Starting the example with container id: " + plan.getThisWorkerId());
+    LOG.log(Level.INFO, "Starting the example with container id: " + plan.getWorkerId());
 
     taskExecutor = new TaskExecutorFixedThread();
     this.status = Status.INIT;

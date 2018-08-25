@@ -176,7 +176,7 @@ public class RoundRobinBatchTaskExample implements IContainer {
       }
     }
 
-    TWSNetwork network = new TWSNetwork(config, resourcePlan.getThisWorkerId());
+    TWSNetwork network = new TWSNetwork(config, resourcePlan.getWorkerId());
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
     Executor executor = new Executor(config, plan, network.getChannel());

@@ -64,13 +64,13 @@ public class SortJob implements IWorker {
   private TaskPlan taskPlan;
 
   @Override
-  public void init(Config cfg, int thisWorkerID, AllocatedResources allocatedResources,
+  public void init(Config cfg, int workerID, AllocatedResources allocatedResources,
                    IWorkerController workerController,
                    IPersistentVolume persistentVolume,
                    IVolatileVolume volatileVolume) {
     this.config = cfg;
     this.resourcePlan = allocatedResources;
-    this.id = thisWorkerID;
+    this.id = workerID;
     // setup the network
     setupNetwork(cfg, workerController, allocatedResources);
     // set up the tasks

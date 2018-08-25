@@ -61,7 +61,7 @@ public final class Network {
                                                  IWorkerController wController,
                                                  AllocatedResources plan) {
     //first get the communication config file
-    return new TWSMPIChannel(config, MPI.COMM_WORLD, plan.getThisWorkerId());
+    return new TWSMPIChannel(config, MPI.COMM_WORLD, plan.getWorkerId());
   }
 
   private static TWSNetwork initializeMPINetwork(Config config,
@@ -109,7 +109,7 @@ public final class Network {
     channel.waitForConnections();
 
     // now lets create a tcp channel
-    return new TWSTCPChannel(config, resourcePlan.getThisWorkerId(), channel);
+    return new TWSTCPChannel(config, resourcePlan.getWorkerId(), channel);
   }
 
   /**

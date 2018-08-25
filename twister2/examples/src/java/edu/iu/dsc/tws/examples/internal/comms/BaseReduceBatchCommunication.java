@@ -53,7 +53,7 @@ public class BaseReduceBatchCommunication implements IContainer {
 
   @Override
   public void init(Config cfg, int containerId, AllocatedResources plan) {
-    LOG.log(Level.INFO, "Starting the example with container id: " + plan.getThisWorkerId());
+    LOG.log(Level.INFO, "Starting the example with container id: " + plan.getWorkerId());
 
     this.id = containerId;
     int noOfTasksPerExecutor = NO_OF_TASKS / plan.getNumberOfWorkers();

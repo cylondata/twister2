@@ -70,7 +70,7 @@ public class BasicMemoryManagerByteKeyedGatherCommunication implements IContaine
 
   @Override
   public void init(Config cfg, int containerId, AllocatedResources plan) {
-    LOG.log(Level.INFO, "Starting the example with container id: " + plan.getThisWorkerId());
+    LOG.log(Level.INFO, "Starting the example with container id: " + plan.getWorkerId());
 
     this.config = cfg;
     this.resourcePlan = plan;

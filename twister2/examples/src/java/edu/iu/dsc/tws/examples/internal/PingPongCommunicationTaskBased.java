@@ -47,7 +47,7 @@ package edu.iu.dsc.tws.examples.internal;
 //   * Initialize the container
 //   */
 //  public void init(Config cfg, int containerId, AllocatedResources plan) {
-//    LOG.log(Level.INFO, "Starting the example with container id: " + plan.getThisWorkerId());
+//    LOG.log(Level.INFO, "Starting the example with container id: " + plan.getWorkerId());
 //    //Creates task an task executor instance to be used in this container
 //    taskExecutor = new TaskExecutorFixedThread();
 //    this.status = Status.INIT;

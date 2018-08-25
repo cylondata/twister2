@@ -60,7 +60,7 @@ public class TaskCheckpointExample implements IContainer {
   @Override
   public void init(Config config, int id, AllocatedResources resourcePlan) {
 
-    TWSNetwork network = new TWSNetwork(config, resourcePlan.getThisWorkerId());
+    TWSNetwork network = new TWSNetwork(config, resourcePlan.getWorkerId());
     TWSCommunication channel = network.getDataFlowTWSCommunication();
 
 

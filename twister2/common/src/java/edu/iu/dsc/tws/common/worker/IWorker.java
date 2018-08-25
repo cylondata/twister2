@@ -29,7 +29,7 @@ import edu.iu.dsc.tws.common.resource.AllocatedResources;
 
 public interface IWorker {
   void init(Config config,
-            int thisWorkerID,
+            int workerID,
             AllocatedResources allocatedResources,
             IWorkerController workerController,
             IPersistentVolume persistentVolume,

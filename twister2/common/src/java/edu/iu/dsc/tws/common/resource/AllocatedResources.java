@@ -35,14 +35,14 @@ public class AllocatedResources {
   private String cluster;
 
   // id of this worker
-  private int thisWorkerId;
+  private int workerId;
 
   // list of resource workers
   private List<WorkerComputeResource> workers = new ArrayList<>();
 
   public AllocatedResources(String cluster, int workerId) {
     this.cluster = cluster;
-    this.thisWorkerId = workerId;
+    this.workerId = workerId;
   }
 
   public List<WorkerComputeResource> getWorkerComputeResources() {
@@ -61,7 +61,7 @@ public class AllocatedResources {
     return cluster;
   }
 
-  public int getThisWorkerId() {
-    return thisWorkerId;
+  public int getWorkerId() {
+    return workerId;
   }
 }

@@ -99,7 +99,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
   private Communicator communication;
 
   public ExecutionPlanBuilder(AllocatedResources plan, TWSNetwork net) {
-    this.workerId = plan.getThisWorkerId();
+    this.workerId = plan.getWorkerId();
     this.taskIdGenerator = new TaskIdGenerator();
     this.kryoMemorySerializer = new KryoMemorySerializer();
     this.resourcePlan = plan;

@@ -41,7 +41,7 @@ public final class WordCountUtils {
 //    LOG.log(Level.INFO, "No of containers: " + noOfProcs);
     Map<Integer, Set<Integer>> executorToGraphNodes = new HashMap<>();
     Map<Integer, Set<Integer>> groupsToExeuctors = new HashMap<>();
-    int thisExecutor = plan.getThisWorkerId();
+    int thisExecutor = plan.getWorkerId();
 
     List<WorkerComputeResource> containers = plan.getWorkerComputeResources();
     Map<String, List<WorkerComputeResource>> containersPerNode = new HashMap<>();
@@ -81,9 +81,9 @@ public final class WordCountUtils {
     }
 
     LOG.fine(String.format("%d Executor To Graph: %s",
-        plan.getThisWorkerId(), executorToGraphNodes));
+        plan.getWorkerId(), executorToGraphNodes));
     LOG.fine(String.format("%d Groups to executors: %s",
-        plan.getThisWorkerId(), groupsToExeuctors));
+        plan.getWorkerId(), groupsToExeuctors));
     // now lets create the task plan of this, we assume we have map tasks in all the processes
     // and reduce task in 0th process
     return new TaskPlan(executorToGraphNodes, groupsToExeuctors, thisExecutor);

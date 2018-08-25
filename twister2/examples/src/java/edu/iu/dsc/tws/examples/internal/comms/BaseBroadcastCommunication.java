@@ -67,18 +67,18 @@ public class BaseBroadcastCommunication implements IContainer, IWorker {
 
   @Override
   public void init(Config cfg,
-                   int thisWorkerID,
+                   int workerID,
                    AllocatedResources allocatedResources,
                    IWorkerController workerController,
                    IPersistentVolume persistentVolume,
                    IVolatileVolume volatileVolume) {
 
-    init(cfg, thisWorkerID, allocatedResources);
+    init(cfg, workerID, allocatedResources);
   }
 
   @Override
   public void init(Config cfg, int containerId, AllocatedResources plan) {
-    LOG.log(Level.INFO, "Starting the example with container id: " + plan.getThisWorkerId());
+    LOG.log(Level.INFO, "Starting the example with container id: " + plan.getWorkerId());
     try {
       this.config = cfg;
       this.resourcePlan = plan;

@@ -44,7 +44,7 @@ public final class Utils {
     LOG.log(Level.INFO, "No of containers: " + noOfProcs);
     Map<Integer, Set<Integer>> executorToGraphNodes = new HashMap<>();
     Map<Integer, Set<Integer>> groupsToExeuctors = new HashMap<>();
-    int thisExecutor = plan.getThisWorkerId();
+    int thisExecutor = plan.getWorkerId();
 
     List<WorkerComputeResource> containers = plan.getWorkerComputeResources();
     Map<String, List<WorkerComputeResource>> containersPerNode = new HashMap<>();
@@ -97,7 +97,7 @@ public final class Utils {
     LOG.log(Level.INFO, "No of containers: " + noOfProcs);
     Map<Integer, Set<Integer>> executorToGraphNodes = new HashMap<>();
     Map<Integer, Set<Integer>> groupsToExeuctors = new HashMap<>();
-    int thisExecutor = plan.getThisWorkerId();
+    int thisExecutor = plan.getWorkerId();
 
     List<WorkerComputeResource> containers = plan.getWorkerComputeResources();
     Map<String, List<WorkerComputeResource>> containersPerNode = new HashMap<>();
@@ -150,7 +150,7 @@ public final class Utils {
     int noOfContainers = plan.getNumberOfWorkers();
     Map<Integer, Set<Integer>> executorToGraphNodes = new HashMap<>();
     Map<Integer, Set<Integer>> groupsToExeuctors = new HashMap<>();
-    int thisExecutor = plan.getThisWorkerId();
+    int thisExecutor = plan.getWorkerId();
 
     List<WorkerComputeResource> containers = plan.getWorkerComputeResources();
     Map<String, List<WorkerComputeResource>> containersPerNode =
@@ -226,7 +226,7 @@ public final class Utils {
     int noOfContainers = plan.getNumberOfWorkers();
     Map<Integer, Set<Integer>> executorToGraphNodes = new HashMap<>();
     Map<Integer, Set<Integer>> groupsToExeuctors = new HashMap<>();
-    int thisExecutor = plan.getThisWorkerId();
+    int thisExecutor = plan.getWorkerId();
 
     List<WorkerComputeResource> containers = plan.getWorkerComputeResources();
     Map<String, List<WorkerComputeResource>> containersPerNode =

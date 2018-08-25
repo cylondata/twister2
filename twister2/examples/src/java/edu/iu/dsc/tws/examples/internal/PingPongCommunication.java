@@ -41,7 +41,7 @@ public class PingPongCommunication implements IContainer {
    * Initialize the container
    */
   public void init(Config cfg, int containerId, AllocatedResources plan) {
-    LOG.log(Level.INFO, "Starting the example with container id: " + plan.getThisWorkerId());
+    LOG.log(Level.INFO, "Starting the example with container id: " + plan.getWorkerId());
 
     this.status = Status.INIT;
 

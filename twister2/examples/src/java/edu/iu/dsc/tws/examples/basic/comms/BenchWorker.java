@@ -51,14 +51,14 @@ public abstract class BenchWorker implements IWorker {
   protected boolean sourcesDone = false;
 
   @Override
-  public void init(Config cfg, int thisWorkerID, AllocatedResources allocatedResources,
+  public void init(Config cfg, int workerID, AllocatedResources allocatedResources,
                    IWorkerController workerController, IPersistentVolume persistentVolume,
                    IVolatileVolume volatileVolume) {
     // create the job parameters
     this.jobParameters = JobParameters.build(cfg);
     this.config = cfg;
     this.resourcePlan = allocatedResources;
-    this.workerId = thisWorkerID;
+    this.workerId = workerID;
 
     // lets create the task plan
     this.taskPlan =

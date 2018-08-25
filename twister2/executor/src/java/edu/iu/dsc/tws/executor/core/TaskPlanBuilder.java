@@ -89,6 +89,6 @@ public final class TaskPlanBuilder {
       i++;
     }
 
-    return new TaskPlan(containersToTasks, groupsToTasks, resourcePlan.getThisWorkerId());
+    return new TaskPlan(containersToTasks, groupsToTasks, resourcePlan.getWorkerId());
   }
 }
