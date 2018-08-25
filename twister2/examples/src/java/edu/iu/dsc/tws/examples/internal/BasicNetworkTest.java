@@ -54,8 +54,8 @@ public class BasicNetworkTest implements IWorker, Runnable {
 
   @Override
   public void init(Config config,
-                   int id,
-                   AllocatedResources resourcePlan,
+                   int thisWorkerID,
+                   AllocatedResources allocatedResources,
                    IWorkerController wController,
                    IPersistentVolume persistentVolume,
                    IVolatileVolume volatileVolume) {

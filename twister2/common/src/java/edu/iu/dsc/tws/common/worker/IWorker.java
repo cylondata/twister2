@@ -29,10 +29,9 @@ import edu.iu.dsc.tws.common.resource.AllocatedResources;
 
 public interface IWorker {
   void init(Config config,
-            int id,
-            AllocatedResources resourcePlan,
+            int thisWorkerID,
+            AllocatedResources allocatedResources,
             IWorkerController workerController,
             IPersistentVolume persistentVolume,
             IVolatileVolume volatileVolume);
-
 }

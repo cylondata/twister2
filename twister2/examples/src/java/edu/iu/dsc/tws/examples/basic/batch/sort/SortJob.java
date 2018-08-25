@@ -64,20 +64,20 @@ public class SortJob implements IWorker {
   private TaskPlan taskPlan;
 
   @Override
-  public void init(Config cfg, int wID, AllocatedResources plan,
+  public void init(Config cfg, int thisWorkerID, AllocatedResources allocatedResources,
                    IWorkerController workerController,
                    IPersistentVolume persistentVolume,
                    IVolatileVolume volatileVolume) {
     this.config = cfg;
-    this.resourcePlan = plan;
-    this.id = wID;
+    this.resourcePlan = allocatedResources;
+    this.id = thisWorkerID;
     // setup the network
-    setupNetwork(cfg, workerController, plan);
+    setupNetwork(cfg, workerController, allocatedResources);
     // set up the tasks
     setupTasks();
 
     // we get the number of containers after initializing the network
-    this.noOfTasksPerExecutor = NO_OF_TASKS / plan.getNumberOfWorkers();
+    this.noOfTasksPerExecutor = NO_OF_TASKS / allocatedResources.getNumberOfWorkers();
 
     partition = new DataFlowPartition(config, channel, taskPlan, sources, destinations,
         new PartitionBatchFinalReceiver(new RecordSave(), false, true,

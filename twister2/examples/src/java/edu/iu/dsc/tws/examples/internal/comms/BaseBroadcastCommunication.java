@@ -67,13 +67,13 @@ public class BaseBroadcastCommunication implements IContainer, IWorker {
 
   @Override
   public void init(Config cfg,
-                   int workerID,
-                   AllocatedResources plan,
+                   int thisWorkerID,
+                   AllocatedResources allocatedResources,
                    IWorkerController workerController,
                    IPersistentVolume persistentVolume,
                    IVolatileVolume volatileVolume) {
 
-    init(cfg, workerID, plan);
+    init(cfg, thisWorkerID, allocatedResources);
   }
 
   @Override

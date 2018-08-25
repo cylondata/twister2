@@ -90,17 +90,18 @@ public abstract class KeyedBenchWorker implements IWorker {
   protected boolean sourcesDone = false;
 
   @Override
-  public void init(Config cfg, int containerId, AllocatedResources plan,
+  public void init(Config cfg, int thisWorkerID, AllocatedResources allocatedResources,
                    IWorkerController workerController, IPersistentVolume persistentVolume,
                    IVolatileVolume volatileVolume) {
     // create the job parameters
     this.jobParameters = JobParameters.build(cfg);
     this.config = cfg;
-    this.resourcePlan = plan;
-    this.workerId = containerId;
+    this.resourcePlan = allocatedResources;
+    this.workerId = thisWorkerID;
 
     // lets create the task plan
-    this.taskPlan = Utils.createStageTaskPlan(cfg, plan, jobParameters.getTaskStages());
+    this.taskPlan =
+        Utils.createStageTaskPlan(cfg, allocatedResources, jobParameters.getTaskStages());
     // create the channel
     channel = Network.initializeChannel(config, workerController, resourcePlan);
     // create the communicator

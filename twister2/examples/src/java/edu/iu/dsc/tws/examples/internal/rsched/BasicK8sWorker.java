@@ -35,8 +35,8 @@ public class BasicK8sWorker implements IWorker {
 
   @Override
   public void init(Config config,
-                   int id,
-                   AllocatedResources resourcePlan,
+                   int thisWorkerID,
+                   AllocatedResources allocatedResources,
                    IWorkerController workerController,
                    IPersistentVolume persistentVolume,
                    IVolatileVolume volatileVolume) {

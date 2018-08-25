@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.common.worker.IWorker;
 
 public class TaskWorker implements IWorker {
   @Override
-  public void init(Config config, int id, AllocatedResources resourcePlan,
+  public void init(Config config, int thisWorkerID, AllocatedResources allocatedResources,
                    IWorkerController workerController, IPersistentVolume persistentVolume,
                    IVolatileVolume volatileVolume) {
 
