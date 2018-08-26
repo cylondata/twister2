@@ -208,22 +208,6 @@ public class SourceSinkDiscoveryExample implements IWorker {
     }
   }
 
-
-  private static class ReceivingTask extends SinkTask {
-    private static final long serialVersionUID = -254264903511284798L;
-
-    @Override
-    public boolean execute(IMessage message) {
-      System.out.println(message.getContent());
-      return true;
-    }
-
-    @Override
-    public void prepare(Config cfg, TaskContext context) {
-
-    }
-  }
-
   public WorkerPlan createWorkerPlan(AllocatedResources resourcePlan) {
     List<Worker> workers = new ArrayList<>();
     for (WorkerComputeResource resource : resourcePlan.getWorkerComputeResources()) {
