@@ -16,14 +16,14 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.task.api.IMessage;
 
 public abstract class AbstractParallelOperation implements IParallelOperation {
   protected Config config;
 
-  protected TWSChannel channel;
+  protected Communicator channel;
 
   protected Map<Integer, BlockingQueue<IMessage>> outMessages;
 
@@ -33,7 +33,7 @@ public abstract class AbstractParallelOperation implements IParallelOperation {
 
   protected int communicationEdge;
 
-  public AbstractParallelOperation(Config config, TWSChannel network, TaskPlan tPlan) {
+  public AbstractParallelOperation(Config config, Communicator network, TaskPlan tPlan) {
     this.config = config;
     this.taskPlan = tPlan;
     this.channel = network;
@@ -43,10 +43,6 @@ public abstract class AbstractParallelOperation implements IParallelOperation {
   @Override
   public boolean send(int source, IMessage message, int flags) {
     return true;
-  }
-
-  @Override
-  public void send(int source, IMessage message, int dest, int flags) {
   }
 
   @Override

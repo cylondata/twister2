@@ -20,10 +20,9 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
 /**
- * This class is responsible for constructing the container plan, instance plan, and task schedule plan along
- * with their resource requirements.
+ * This class is responsible for generating the task schedule plan which consists of container plan,
+ * task instance plan along with their resource requirements.
  */
-
 public class TaskSchedulePlan {
 
   private static final Logger LOG = Logger.getLogger(TaskSchedulePlan.class.getName());
@@ -60,10 +59,6 @@ public class TaskSchedulePlan {
 
   public int getTaskSchedulePlanId() {
     return jobId;
-  }
-
-  public void setTaskSchedulePlanId(int id) {
-    this.jobId = id;
   }
 
   public Map<Integer, ContainerPlan> getContainersMap() {
@@ -114,7 +109,10 @@ public class TaskSchedulePlan {
     return result;
   }
 
-
+  /**
+   * This static class is responsible for assigning the task name, task id, task index, and resource
+   * requirements of the task instances.
+   */
   public static class TaskInstancePlan {
 
     private final String taskName;
@@ -179,6 +177,10 @@ public class TaskSchedulePlan {
     }
   }
 
+  /**
+   * This static class is responsible for assigning the container id, task instances, required
+   * resource, and scheduled resource for the task instances.
+   */
   public static class ContainerPlan {
 
     private final int containerId;

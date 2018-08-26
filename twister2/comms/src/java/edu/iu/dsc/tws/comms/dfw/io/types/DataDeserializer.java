@@ -311,26 +311,26 @@ public final class DataDeserializer {
       os.get(bytes);
       data = bytes;
     } else if (dataType == MessageType.DOUBLE) {
-      double[] bytes = new double[dataSize / 8];
-      for (int i = 0; i < dataSize / 8; i++) {
+      double[] bytes = new double[dataSize / Double.BYTES];
+      for (int i = 0; i < dataSize / Double.BYTES; i++) {
         bytes[i] = os.getDouble();
       }
       data = bytes;
     } else if (dataType == MessageType.INTEGER) {
-      int[] bytes = new int[dataSize / 4];
-      for (int i = 0; i < dataSize / 4; i++) {
+      int[] bytes = new int[dataSize / Integer.BYTES];
+      for (int i = 0; i < dataSize / Integer.BYTES; i++) {
         bytes[i] = os.getInt();
       }
       data = bytes;
     } else if (dataType == MessageType.LONG) {
-      long[] bytes = new long[dataSize / 8];
-      for (int i = 0; i < dataSize / 8; i++) {
+      long[] bytes = new long[dataSize / Long.BYTES];
+      for (int i = 0; i < dataSize / Long.BYTES; i++) {
         bytes[i] = os.getLong();
       }
       data = bytes;
     } else if (dataType == MessageType.SHORT) {
-      short[] bytes = new short[dataSize / 2];
-      for (int i = 0; i < dataSize / 2; i++) {
+      short[] bytes = new short[dataSize / Short.BYTES];
+      for (int i = 0; i < dataSize / Short.BYTES; i++) {
         bytes[i] = os.getShort();
       }
       data = bytes;
@@ -340,8 +340,63 @@ public final class DataDeserializer {
         bytes[i] = os.getChar();
       }
       data = bytes;
+    } else {
+      byte[] bytes = new byte[dataSize];
+      os.get(bytes);
+      data = deserializer.deserialize(bytes);
     }
     return data;
   }
 
+  /**
+   * Deserialize's the given data in the byte[] based on the dataType
+   *
+   * @param dataType the type of the the object in the buffer
+   * @param deserializer the deserializer to be used for types other than primitives
+   * @param dataBytes the byte[] that contains the data
+   * @return the deserialized object
+   */
+  public static Object deserialize(MessageType dataType, KryoMemorySerializer deserializer,
+                                   byte[] dataBytes) {
+    Object data = null;
+    ByteBuffer byteBuffer = ByteBuffer.wrap(dataBytes);
+    if (dataType == MessageType.OBJECT) {
+      data = deserializer.deserialize(dataBytes);
+    } else if (dataType == MessageType.BYTE) {
+      data = dataBytes;
+    } else if (dataType == MessageType.DOUBLE) {
+      double[] bytes = new double[dataBytes.length / Double.BYTES];
+      for (int i = 0; i < dataBytes.length / Double.BYTES; i++) {
+        bytes[i] = byteBuffer.getDouble();
+      }
+      data = bytes;
+    } else if (dataType == MessageType.INTEGER) {
+      int[] bytes = new int[dataBytes.length / Integer.BYTES];
+      for (int i = 0; i < dataBytes.length / Integer.BYTES; i++) {
+        bytes[i] = byteBuffer.getInt();
+      }
+      data = bytes;
+    } else if (dataType == MessageType.LONG) {
+      long[] bytes = new long[dataBytes.length / Long.BYTES];
+      for (int i = 0; i < dataBytes.length / Long.BYTES; i++) {
+        bytes[i] = byteBuffer.getLong();
+      }
+      data = bytes;
+    } else if (dataType == MessageType.SHORT) {
+      short[] bytes = new short[dataBytes.length / Short.BYTES];
+      for (int i = 0; i < dataBytes.length / Short.BYTES; i++) {
+        bytes[i] = byteBuffer.getShort();
+      }
+      data = bytes;
+    } else if (dataType == MessageType.CHAR) {
+      char[] bytes = new char[dataBytes.length];
+      for (int i = 0; i < dataBytes.length; i++) {
+        bytes[i] = byteBuffer.getChar();
+      }
+      data = bytes;
+    } else {
+      data = deserializer.deserialize(dataBytes);
+    }
+    return data;
+  }
 }

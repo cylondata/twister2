@@ -35,6 +35,9 @@ import edu.iu.dsc.tws.tsched.utils.TaskScheduleUtils;
 
 //import com.google.common.base.Optional;
 
+/**
+ * This class is mainly responsible for building the task schedule plan.
+ */
 public class TaskSchedulePlanBuilder {
 
   private static final Logger LOG = Logger.getLogger(TaskSchedulePlanBuilder.class.getName());
@@ -176,8 +179,14 @@ public class TaskSchedulePlanBuilder {
     return sorted;
   }
 
+
   /**
-   * Add instancePlan to container and update the componentIndexes and taskIds indexes
+   * It add the instance plan to the container and update the task indexes and task ids indexes.
+   * @param container
+   * @param taskInstancePlan
+   * @param taskIndexes
+   * @param taskIds
+   * @throws TaskSchedulerException
    */
   private static void addToContainer(Container container,
                                      TaskSchedulePlan.TaskInstancePlan taskInstancePlan,
@@ -215,11 +224,18 @@ public class TaskSchedulePlanBuilder {
           "Insufficient container resources to add instance %s with resources %s to container %d.",
           taskInstanceId, resource, containerId), e);
     }
-    LOG.info(String.format("Added to container %d task instance %s task index %s ", containerId,
+    LOG.fine(String.format("Added to container %d task instance %s task index %s ", containerId,
         taskInstanceId.getTaskName(), taskInstanceId.getTaskIndex()));
     return this;
   }
 
+  /**
+   * It will add the task instance to the container based on the container score value.
+   * @param scorer
+   * @param taskName
+   * @return
+   * @throws TaskSchedulerException
+   */
   public int addInstance(Scorer<Container> scorer, String taskName)
       throws TaskSchedulerException {
     List<Scorer<Container>> scorers = new LinkedList<>();
@@ -227,6 +243,14 @@ public class TaskSchedulePlanBuilder {
     return addInstance(scorers, taskName);
   }
 
+  /**
+   * This method first initialize the container value then add the task instance in the sorted
+   * container score values.
+   * @param scorers
+   * @param taskName
+   * @return
+   * @throws TaskSchedulerException
+   */
   private int addInstance(List<Scorer<Container>> scorers, String taskName)
       throws TaskSchedulerException {
     initContainers();
@@ -243,6 +267,11 @@ public class TaskSchedulePlanBuilder {
         taskName, this.containers.size()));
   }
 
+  /**
+   * This method first initialize the containers and add the task instance to the containers.
+   * @param taskName
+   * @return
+   */
   public int addInstance(String taskName) {
     initContainers();
     int containerId = 0;
@@ -253,6 +282,11 @@ public class TaskSchedulePlanBuilder {
     return containerId;
   }
 
+  /**
+   * This method first validates the available resource settings and invoke the build container
+   * plans method to build the container based on the task instance ram, disk, and cpu map values.
+   * @return
+   */
   public TaskSchedulePlan build() {
     assertResourceSettings();
     Set<TaskSchedulePlan.ContainerPlan> containerPlans = buildContainerPlans(
@@ -264,6 +298,10 @@ public class TaskSchedulePlanBuilder {
     return new TaskSchedulePlan(id, containerPlans);
   }
 
+  /**
+   * This method first initialize the container map values, task index values, and task id sets.
+   *
+   */
   private void initContainers() {
     assertResourceSettings();
     Map<Integer, Container> containerMap = this.containers;
@@ -348,7 +386,7 @@ public class TaskSchedulePlanBuilder {
 
         Container container = containerValue.get(containerId);
 
-        LOG.info("Container Resource Value:" + containerId + "\t"
+        LOG.fine("Container Resource Value:" + containerId + "\t"
             + container.getResource().getRam() + "\t"
             + container.getResource().getDisk() + "\t"
             + container.getResource().getCpu());
@@ -381,7 +419,7 @@ public class TaskSchedulePlanBuilder {
           double instanceCPUValue = instdefaultresourceValue.getCpu();
           containerCPUValue += instanceCPUValue;
 
-          LOG.info("Resource Container Values:" + "Ram Value:" + containerRAMValue + "\t"
+          LOG.fine("Resource Container Values:" + "Ram Value:" + containerRAMValue + "\t"
               + "Cpu Value:" + containerCPUValue + "\t" + "Disk Value:" + containerDiskValue);
 
           Resource resource = new Resource(instanceRAMValue, instanceDiskValue, instanceCPUValue);
@@ -467,7 +505,7 @@ public class TaskSchedulePlanBuilder {
               instanceId.getTaskId(), instanceId.getTaskIndex(), resource));
         }
 
-        LOG.info("Total Required Resource Value for:" + containerId + "\t"
+        LOG.fine("Total Required Resource Value for:" + containerId + "\t"
             + containerRAMValue + "\t" + containerDiskValue + "\t" + containerCPUValue);
 
         containerCPUValue += (requestedContainerPadding * containerCPUValue) / 100;
@@ -477,7 +515,7 @@ public class TaskSchedulePlanBuilder {
         //containerRAMValue = containerRAMValue.increaseBy(requestedContainerPadding);
         //containerDiskValue = containerDiskValue.increaseBy(requestedContainerPadding);
 
-        LOG.info("Container" + "\t" + containerId + "Values After Padding:"
+        LOG.fine("Container" + "\t" + containerId + "Values After Padding:"
             + "Ram Value:" + containerRAMValue + "\t"
             + "Disk Value:" + containerDiskValue + "\t"
             + "Cpu Value:" + containerCPUValue);

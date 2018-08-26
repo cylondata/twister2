@@ -20,11 +20,11 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.ReduceReceiver;
-import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowReduce;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceStreamingFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceStreamingPartialReceiver;
+import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.api.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.api.EdgeGenerator;
@@ -38,14 +38,14 @@ public class ReduceStreamingOperation extends AbstractParallelOperation {
 
   protected DataFlowReduce op;
 
-  public ReduceStreamingOperation(Config config, TWSChannel network, TaskPlan tPlan) {
+  public ReduceStreamingOperation(Config config, Communicator network, TaskPlan tPlan) {
     super(config, network, tPlan);
   }
 
   public void prepare(Set<Integer> sources, int dest, EdgeGenerator e,
                       DataType dataType, String edgeName) {
     this.edge = e;
-    op = new DataFlowReduce(channel, sources, dest,
+    op = new DataFlowReduce(channel.getChannel(), sources, dest,
         new ReduceStreamingFinalReceiver(new IdentityFunction(), new FinalReduceReceiver()),
         new ReduceStreamingPartialReceiver(dest, new IdentityFunction()));
     communicationEdge = e.generate(edgeName);
@@ -56,11 +56,6 @@ public class ReduceStreamingOperation extends AbstractParallelOperation {
   @Override
   public boolean send(int source, IMessage message, int flags) {
     return op.send(source, message.getContent(), flags);
-  }
-
-  @Override
-  public void send(int source, IMessage message, int dest, int flags) {
-    op.send(source, message, flags, dest);
   }
 
   @Override

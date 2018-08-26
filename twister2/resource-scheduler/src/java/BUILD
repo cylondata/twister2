@@ -6,13 +6,12 @@ java_library(
     deps = [
         "//third_party:ompi_javabinding_java",
         "//twister2/common/src/java:common-java",
+        "//twister2/comms/src/java:comms-java",
         "//twister2/master/src/java:master-java",
-        "//twister2/proto:proto-resource-scheduler-java",
         "//twister2/proto:proto_job_java",
         "//twister2/proto:proto_job_state_java",
-        "//twister2/proto:proto_network_java",
-        "//twister2/proto:proto_resource_scheduler_java",
-        "//twister2/comms/src/java:comms-java",
+        "//twister2/proto:proto_jobmaster_java",
+        "@com_esotericsoftware_kryo//jar",
         "@com_fasterxml_jackson_core_jackson_annotations//jar",
         "@com_fasterxml_jackson_core_jackson_core//jar",
         "@com_fasterxml_jackson_core_jackson_databind//jar",
@@ -43,6 +42,5 @@ java_library(
         "@org_apache_zookeeper_zookeeper//jar",
         "@org_bouncycastle_bcpkix_jdk15on//jar",
         "@org_bouncycastle_bcprov_jdk15on//jar",
-        "@com_esotericsoftware_kryo//jar",
     ],
 )

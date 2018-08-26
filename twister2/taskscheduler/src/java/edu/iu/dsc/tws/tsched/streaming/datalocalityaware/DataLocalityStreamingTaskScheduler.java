@@ -30,34 +30,66 @@ import edu.iu.dsc.tws.tsched.spi.taskschedule.Resource;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskInstanceMapCalculation;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
+/**
+ * The data locality aware task scheduler generate the task schedule plan based on the distance
+ * calculated between the worker node and the data nodes where the input data resides. Once the
+ * allocation is done, it calculates the task instance ram, disk, and cpu values and also it
+ * allocates the size of the container with required ram, disk, and cpu values.
+ */
 public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
 
   private static final Logger LOG = Logger.getLogger(
       DataLocalityStreamingTaskScheduler.class.getName());
 
+  //Represents task schedule plan Id
   private static int taskSchedulePlanId = 0;
+
+  //Represents task instance ram
   private Double instanceRAM;
+
+  //Represents task instance disk
   private Double instanceDisk;
+
+  //Represents task instance cpu
   private Double instanceCPU;
+
+  //Represents task config object
   private Config cfg;
 
+  /**
+   * This method first initialize the task instance values with default task instance ram, disk, and
+   * cpu values from the task scheduler context.
+   * @param config
+   */
   @Override
-  public void initialize(Config cfg1) {
-    this.cfg = cfg1;
+  public void initialize(Config config) {
+    this.cfg = config;
     this.instanceRAM = TaskSchedulerContext.taskInstanceRam(cfg);
     this.instanceDisk = TaskSchedulerContext.taskInstanceDisk(cfg);
     this.instanceCPU = TaskSchedulerContext.taskInstanceCpu(cfg);
   }
 
+  /**
+   * This is the base method for the data locality aware task scheduling for scheduling the
+   * streaming task instances. It retrieves the task vertex set of the task graph and send the set
+   * to the data locality aware scheduling algorithm to allocate the streaming task instances which
+   * are closer to the data nodes.
+   *
+   * @param graph
+   * @param workerPlan
+   * @return
+   */
   @Override
   public TaskSchedulePlan schedule(DataFlowTaskGraph graph, WorkerPlan workerPlan) {
 
     Set<TaskSchedulePlan.ContainerPlan> containerPlans = new HashSet<>();
+
     //Set<Vertex> taskVertexSet = new LinkedHashSet<>(graph.getTaskVertexSet());
+
     Set<Vertex> taskVertexSet = graph.getTaskVertexSet();
 
     Map<Integer, List<InstanceId>> containerInstanceMap =
-        DataLocalityStreamingScheduling.dataLocalityAwareSchedulingAlgorithm(taskVertexSet,
+        DataLocalityStreamingScheduler.dataLocalityAwareSchedulingAlgorithm(taskVertexSet,
             workerPlan.getNumberOfWorkers(), workerPlan, this.cfg);
 
     TaskInstanceMapCalculation instanceMapCalculation = new TaskInstanceMapCalculation(
@@ -77,9 +109,9 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
 
     for (int containerId : containerInstanceMap.keySet()) {
 
-      Double containerRAMValue = TaskSchedulerContext.containerRamPadding(cfg);
-      Double containerDiskValue = TaskSchedulerContext.containerDiskPadding(cfg);
-      Double containerCpuValue = TaskSchedulerContext.containerCpuPadding(cfg);
+      double containerRAMValue = TaskSchedulerContext.containerRamPadding(cfg);
+      double containerDiskValue = TaskSchedulerContext.containerDiskPadding(cfg);
+      double containerCpuValue = TaskSchedulerContext.containerCpuPadding(cfg);
 
       List<InstanceId> taskInstanceIds = containerInstanceMap.get(containerId);
       Map<InstanceId, TaskSchedulePlan.TaskInstancePlan> taskInstancePlanMap = new HashMap<>();
@@ -106,18 +138,13 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
       if (worker != null && worker.getCpu() > 0 && worker.getDisk() > 0 && worker.getRam() > 0) {
         containerResource = new Resource((double) worker.getRam(),
             (double) worker.getDisk(), (double) worker.getCpu());
-        //write into a log file
-        LOG.fine("Worker (if loop):" + containerId + "\tRam:"
-            + worker.getRam() + "\tDisk:" + worker.getDisk()  //write into a log file
-            + "\tCpu:" + worker.getCpu());
+        LOG.fine("Worker (if loop):" + containerId + "\tRam:" + worker.getRam()
+            + "\tDisk:" + worker.getDisk() + "\tCpu:" + worker.getCpu());
       } else {
         containerResource = new Resource(containerRAMValue, containerDiskValue,
             containerCpuValue);
-        //write into a log file
-        LOG.fine("Worker (else loop):" + containerId
-            + "\tRam:" + containerRAMValue     //write into a log file
-            + "\tDisk:" + containerDiskValue
-            + "\tCpu:" + containerCpuValue);
+        LOG.fine("Worker (else loop):" + containerId + "\tRam:" + containerRAMValue
+            + "\tDisk:" + containerDiskValue + "\tCpu:" + containerCpuValue);
       }
 
       TaskSchedulePlan.ContainerPlan taskContainerPlan =

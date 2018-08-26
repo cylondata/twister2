@@ -29,9 +29,9 @@ import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
 import edu.iu.dsc.tws.master.JobMasterContext;
-import edu.iu.dsc.tws.proto.network.Network;
-import edu.iu.dsc.tws.proto.network.Network.ListWorkersRequest;
-import edu.iu.dsc.tws.proto.network.Network.ListWorkersResponse;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersRequest;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersResponse;
 
 public class JMWorkerController implements IWorkerController, MessageHandler {
   private static final Logger LOG = Logger.getLogger(JMWorkerController.class.getName());
@@ -135,13 +135,13 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
       LOG.info("ListWorkersResponse message received from the master: \n" + message);
 
       ListWorkersResponse listResponse = (ListWorkersResponse) message;
-      List<Network.WorkerNetworkInfo> receivedWorkerInfos =
+      List<JobMasterAPI.WorkerNetworkInfo> receivedWorkerInfos =
           listResponse.getWorkersList();
 
       workerList.clear();
       workerList.add(thisWorker);
 
-      for (Network.WorkerNetworkInfo receivedWorkerInfo : receivedWorkerInfos) {
+      for (JobMasterAPI.WorkerNetworkInfo receivedWorkerInfo : receivedWorkerInfos) {
 
         // if received worker info belongs to this worker, do not add
         if (receivedWorkerInfo.getWorkerID() != thisWorker.getWorkerID()) {
@@ -158,7 +158,7 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
         }
       }
 
-    } else if (message instanceof Network.BarrierResponse) {
+    } else if (message instanceof JobMasterAPI.BarrierResponse) {
       LOG.info("Received a BarrierResponse message from the master. \n" + message);
 
     } else {
@@ -169,7 +169,7 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
 
   public boolean waitOnBarrier(long timeLimitMilliSec) {
 
-    Network.BarrierRequest barrierRequest = Network.BarrierRequest.newBuilder()
+    JobMasterAPI.BarrierRequest barrierRequest = JobMasterAPI.BarrierRequest.newBuilder()
         .setWorkerID(thisWorker.getWorkerID())
         .build();
 

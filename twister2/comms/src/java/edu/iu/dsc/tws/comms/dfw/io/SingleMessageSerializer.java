@@ -123,7 +123,7 @@ public class SingleMessageSerializer implements MessageSerializer {
 
           MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
               sendMessage.getEdge(), totalBytes);
-          builder.destination(sendMessage.getDestintationIdentifier());
+          builder.destination(sendMessage.getPath());
           channelMessage.setHeader(builder.build());
           state.setTotalBytes(0);
           channelMessage.setHeaderSent(true);
@@ -140,7 +140,7 @@ public class SingleMessageSerializer implements MessageSerializer {
 
           MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
               sendMessage.getEdge(), totalBytes);
-          builder.destination(sendMessage.getDestintationIdentifier());
+          builder.destination(sendMessage.getPath());
           channelMessage.setHeader(builder.build());
           channelMessage.setHeaderSent(true);
         }
@@ -170,7 +170,7 @@ public class SingleMessageSerializer implements MessageSerializer {
     byteBuffer.putInt(sendMessage.getSource());
     // the path we are on, if not grouped it will be 0 and ignored
     byteBuffer.putInt(sendMessage.getFlags());
-    byteBuffer.putInt(sendMessage.getDestintationIdentifier());
+    byteBuffer.putInt(sendMessage.getPath());
     // we add 0 for now and late change it
     byteBuffer.putInt(0);
     // at this point we haven't put the length and we will do it at the serialization
@@ -333,7 +333,7 @@ public class SingleMessageSerializer implements MessageSerializer {
       // now lets set the header
       MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
           sendMessage.getEdge(), dataBuffer.getSize());
-      builder.destination(sendMessage.getDestintationIdentifier());
+      builder.destination(sendMessage.getPath());
       sendMessage.getChannelMessage().setHeader(builder.build());
     }
     targetBuffer.setSize(HEADER_SIZE + dataBuffer.getSize());

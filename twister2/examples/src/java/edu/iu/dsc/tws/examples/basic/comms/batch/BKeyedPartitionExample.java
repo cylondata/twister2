@@ -19,13 +19,15 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.google.common.collect.Iterators;
+
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BatchReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.op.SimpleKeyBasedPartitionSelector;
 import edu.iu.dsc.tws.comms.op.batch.BKeyedPartition;
+import edu.iu.dsc.tws.comms.op.selectors.SimpleKeyBasedPartitionSelector;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.basic.comms.KeyedBenchWorker;
 
@@ -72,17 +74,21 @@ public class BKeyedPartitionExample extends KeyedBenchWorker {
 
   @Override
   protected void progressCommunication() {
-
+    partition.progress();
   }
 
   @Override
   protected boolean isDone() {
-    return false;
+    return partitionDone && sourcesDone && !partition.hasPending();
   }
 
   @Override
   protected boolean sendMessages(int task, Object key, Object data, int flag) {
-    return false;
+    while (!partition.partition(task, key, data, flag)) {
+      // lets wait a litte and try again
+      partition.progress();
+    }
+    return true;
   }
 
   public class PartitionReceiver implements BatchReceiver {
@@ -96,9 +102,14 @@ public class BKeyedPartitionExample extends KeyedBenchWorker {
 
     @Override
     public void receive(int target, Iterator<Object> it) {
-      LOG.log(Level.INFO, String.format("%d Received message %d count %d expected %d",
-          workerId, target, count, expected));
+      LOG.log(Level.INFO, String.format("%d Received message %d count %d",
+          workerId, target, Iterators.size(it)));
       partitionDone = true;
     }
+  }
+
+  @Override
+  protected void finishCommunication(int src) {
+    partition.finish(src);
   }
 }

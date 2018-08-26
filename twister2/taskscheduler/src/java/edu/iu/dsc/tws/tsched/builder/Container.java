@@ -9,31 +9,22 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
 package edu.iu.dsc.tws.tsched.builder;
 
 import java.util.HashSet;
-import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.tsched.spi.scheduler.TaskSchedulerException;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.Resource;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.ScheduleException;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
+/**
+ * This class is for the logical representation of container and it has getter and setter
+ * property to retrieve and set the task instances allocated to the container.
+ *
+ */
 public class Container {
 
-  private static final Logger LOG = Logger.getLogger(Container.class.getName());
   private int containerId;
   private HashSet<TaskSchedulePlan.TaskInstancePlan> taskInstances;
   private Resource resource;
@@ -79,6 +70,14 @@ public class Container {
     this.paddingPercentage = paddingPercentage;
   }
 
+  /**
+   * It will add the task instance plan to the container if the required and available resource
+   * meets the requirements. It will call @assertHasSpace to validate that whether the resource
+   * satisfies the required value.
+   *
+   * @param taskInstancePlan
+   * @throws TaskSchedulerException
+   */
   void add(TaskSchedulePlan.TaskInstancePlan taskInstancePlan) throws TaskSchedulerException {
     if (this.taskInstances.contains(taskInstancePlan)) {
       throw new ScheduleException(String.format(
@@ -86,16 +85,11 @@ public class Container {
     }
     assertHasSpace(taskInstancePlan.getResource());
     this.taskInstances.add(taskInstancePlan);
-
-    /*boolean flag = assertHasSpace(taskInstancePlan.getResource());
-    if (flag) {
-      this.taskInstances.add(taskInstancePlan);
-    }*/
   }
+
 
   private void assertHasSpace(Resource resourceValue) throws TaskSchedulerException {
 
-    boolean flag = false;
     Resource usedResources = this.getTotalUsedResources();
 
     double newRam = usedResources.getRam() + resourceValue.getRam() + paddingPercentage;

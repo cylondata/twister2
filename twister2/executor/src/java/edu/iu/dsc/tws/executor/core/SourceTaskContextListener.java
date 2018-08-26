@@ -63,10 +63,9 @@ public class SourceTaskContextListener extends TaskContextListener {
   @Override
   public void onInterrupt() {
     for (Map.Entry<SourceBatchTask, TaskContext> e : this.instanceBatchContextMap.entrySet()) {
-      if (e.getValue().isDone()) {
+      if (e.getValue().isDone("")) {
         SourceBatchTask currentSourceTask = e.getKey();
         TaskContext newContext = e.getValue();
-        newContext.setDone(newContext.isDone());
         this.instanceBatchContextMap.put(currentSourceTask, newContext);
       }
     }

@@ -198,14 +198,15 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
     return router.isLastReceiver();
   }
 
-  public boolean receiveSendInternally(int source, int t, int path, int flags, Object message) {
+  public boolean receiveSendInternally(int source, int target, int path, int flags,
+                                       Object message) {
     // check weather this is the last task
     if (router.isLastReceiver()) {
 //      LOG.info(String.format("%d Calling directly final receiver %d",
 //          instancePlan.getThisExecutor(), source));
-      return finalReceiver.onMessage(source, path, t, flags, message);
+      return finalReceiver.onMessage(source, path, target, flags, message);
     } else {
-      return partialReceiver.onMessage(source, path, t, flags, message);
+      return partialReceiver.onMessage(source, path, target, flags, message);
     }
   }
 
@@ -221,15 +222,15 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public boolean send(int source, Object message, int flags, int dest) {
-    return delegete.sendMessage(source, message, dest, flags,
+  public boolean send(int source, Object message, int flags, int target) {
+    return delegete.sendMessage(source, message, target, flags,
         sendRoutingParameters(source, pathToUse));
   }
 
   @Override
-  public boolean sendPartial(int source, Object message, int flags, int dest) {
-    return delegete.sendMessagePartial(source, message, dest, flags,
-        partialSendRoutingParameters(source, dest));
+  public boolean sendPartial(int source, Object message, int flags, int target) {
+    return delegete.sendMessagePartial(source, message, target, flags,
+        partialSendRoutingParameters(source, target));
   }
 
 

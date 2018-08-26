@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.comms.op.stream;
 
 import java.util.Set;
 
+import edu.iu.dsc.tws.comms.api.DestinationSelector;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
@@ -20,7 +21,6 @@ import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
 import edu.iu.dsc.tws.comms.op.Communicator;
-import edu.iu.dsc.tws.comms.op.DestinationSelector;
 
 public class SKeyedPartition {
   private DataFlowPartition partition;
@@ -45,7 +45,7 @@ public class SKeyedPartition {
   public boolean partition(int source, Object key, Object message, int flags) {
     int dest = destinationSelector.next(source);
 
-    boolean send =  partition.send(source, new KeyedContent(key, message, partition.getKeyType(),
+    boolean send = partition.send(source, new KeyedContent(key, message, partition.getKeyType(),
         partition.getDataType()), flags, dest);
     if (send) {
       destinationSelector.commit(source, dest);

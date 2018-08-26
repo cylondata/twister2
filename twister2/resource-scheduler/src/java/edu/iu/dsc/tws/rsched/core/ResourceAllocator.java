@@ -23,7 +23,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.resource.RequestedResources;
-import edu.iu.dsc.tws.common.resource.WorkerComputeSpec;
+import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
@@ -354,11 +354,11 @@ public class ResourceAllocator {
 
   private RequestedResources buildRequestedResources(JobAPI.Job job) {
     JobAPI.JobResources jobResources = job.getJobResources();
-    int noOfContainers = jobResources.getNoOfContainers();
-    WorkerComputeSpec container = new WorkerComputeSpec(
-        (int) jobResources.getContainer().getAvailableCPU(),
-        (int) jobResources.getContainer().getAvailableMemory(),
-        (int) jobResources.getContainer().getAvailableDisk());
+    int noOfContainers = jobResources.getNumberOfWorkers();
+    JobAPI.WorkerComputeResource resource =
+        jobResources.getResourcesList().get(0).getWorkerComputeResource();
+    WorkerComputeResource container =
+        new WorkerComputeResource(resource.getCpu(), resource.getRam(), resource.getDisk());
 
     return new RequestedResources(noOfContainers, container);
   }

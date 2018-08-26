@@ -39,7 +39,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
-import edu.iu.dsc.tws.common.resource.ZResourcePlan;
+import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
@@ -54,8 +54,8 @@ public class BasicNetworkTest implements IWorker, Runnable {
 
   @Override
   public void init(Config config,
-                   int id,
-                   ZResourcePlan resourcePlan,
+                   int workerID,
+                   AllocatedResources allocatedResources,
                    IWorkerController wController,
                    IPersistentVolume persistentVolume,
                    IVolatileVolume volatileVolume) {

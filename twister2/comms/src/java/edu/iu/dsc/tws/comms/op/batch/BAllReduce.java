@@ -39,4 +39,12 @@ public class BAllReduce {
   public boolean progress() {
     return reduce.progress();
   }
+
+  public boolean hasPending() {
+    return !reduce.isComplete();
+  }
+
+  public void finish(int source) {
+    reduce.finish(source);
+  }
 }

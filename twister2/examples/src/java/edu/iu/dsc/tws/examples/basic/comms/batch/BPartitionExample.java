@@ -19,13 +19,15 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.google.common.collect.Iterators;
+
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BatchReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.op.LoadBalanceDestinationSelector;
 import edu.iu.dsc.tws.comms.op.batch.BPartition;
+import edu.iu.dsc.tws.comms.op.selectors.LoadBalanceDestinationSelector;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.basic.comms.BenchWorker;
 
@@ -93,20 +95,13 @@ public class BPartitionExample extends BenchWorker {
 
     @Override
     public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-      expected = expectedIds.keySet().size() * jobParameters.getIterations();
+      expected = jobParameters.getIterations();
     }
 
     @Override
     public void receive(int target, Iterator<Object> it) {
-      Object data;
-      while (it.hasNext()) {
-        data = it.next();
-        if (data instanceof int[]) {
-          System.out.println("Int data " + ((int[]) data)[0]);
-        }
-      }
       LOG.log(Level.INFO, String.format("%d Received message %d count %d expected %d",
-          workerId, target, count, expected));
+          workerId, target, Iterators.size(it), expected));
       partitionDone = true;
     }
   }

@@ -21,8 +21,8 @@ import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.Vertex;
 
 /**
- * This class acts as a helper class for the batch task scheduling algorithms to
- * parse the simple dataflow task graph to the complex task graph.
+ * This class acts as a helper class for the batch task scheduling algorithms to parse the simple
+ * to complex task graph.
  */
 public final class TaskVertexParser {
 
@@ -32,9 +32,9 @@ public final class TaskVertexParser {
   }
 
   /**
-   * This method is mainly used to parse the task vertex set and the taskgraph and
-   * identify the source, parent, child, and sink tasks. Finally, the identified tasks
-   * will be stored in a separate Set.
+   * This method is mainly used to parse the task vertex set and the taskgraph and identify the
+   * source, parent, child, and sink tasks. Finally, the identified tasks will be stored in a
+   * separate Set.
    */
   @SuppressWarnings("unchecked")
   public static List<Set<Vertex>> parseVertexSet(Set<Vertex> taskVertexSet,

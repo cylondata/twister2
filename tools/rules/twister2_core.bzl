@@ -26,7 +26,7 @@ def twister2_core_lib_task_scheduler_files():
 def twister2_core_lib_communication_files():
     return [
         "//twister2/comms/src/java:comms-java",
-        "//twister2/proto:proto-network-java",
+        "//twister2/proto:proto-jobmaster-java",
     ]
 
 def twister2_core_lib_connector_files():

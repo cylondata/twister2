@@ -13,10 +13,10 @@ package edu.iu.dsc.tws.executor.core.batch;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.executor.api.DefaultOutputCollection;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
@@ -92,9 +92,14 @@ public class SourceBatchInstance implements INodeInstance {
    */
   private TaskContext taskContext;
 
+  /**
+   * The output edges
+   */
+  private Set<String> outputEdges;
+
   public SourceBatchInstance(ISource task, BlockingQueue<IMessage> outQueue,
                              Config config, String tName, int tId, int tIndex, int parallel,
-                             int wId, Map<String, Object> cfgs) {
+                             int wId, Map<String, Object> cfgs, Set<String> outEdges) {
     this.batchTask = task;
     this.outBatchQueue = outQueue;
     this.config = config;
@@ -104,6 +109,7 @@ public class SourceBatchInstance implements INodeInstance {
     this.batchTaskName = tName;
     this.nodeConfigs = cfgs;
     this.workerId = wId;
+    this.outputEdges = outEdges;
   }
 
   public void prepare() {
@@ -130,8 +136,16 @@ public class SourceBatchInstance implements INodeInstance {
       }
 
       // now check the context
-      if (taskContext.isDone()) {
-        // we are done with execution
+      boolean isDone = true;
+      for (String e : outputEdges) {
+        if (!taskContext.isDone(e)) {
+          // we are done with execution
+          isDone = false;
+          break;
+        }
+      }
+      // if all the edges are done
+      if (isDone) {
         state.set(InstanceState.EXECUTION_DONE);
       }
 
@@ -141,25 +155,20 @@ public class SourceBatchInstance implements INodeInstance {
         if (message != null) {
           String edge = message.edge();
           IParallelOperation op = outBatchParOps.get(edge);
-          if (message.getContent().equals(MessageFlags.LAST_MESSAGE)) {
-            if (op.send(batchTaskId, message, MessageFlags.FLAGS_LAST)) {
-              outBatchQueue.poll();
-            } else {
-              break;
-            }
+          if (op.send(batchTaskId, message, 0)) {
+            outBatchQueue.poll();
           } else {
-            if (op.send(batchTaskId, message, 0)) {
-              outBatchQueue.poll();
-            } else {
-              // no point in progressing further
-              break;
-            }
+            // no point in progressing further
+            break;
           }
         }
       }
 
       // if execution is done and outqueue is emput, we have put everything to communication
       if (state.isSet(InstanceState.EXECUTION_DONE) && outBatchQueue.isEmpty()) {
+        for (IParallelOperation op : outBatchParOps.values()) {
+          op.finish(batchTaskId);
+        }
         state.set(InstanceState.OUT_COMPLETE);
       }
     }
@@ -179,6 +188,10 @@ public class SourceBatchInstance implements INodeInstance {
     return batchTaskId;
   }
 
+  /**
+   * Progress the communication and return weather we need to further progress
+   * @return true if further progress is needed
+   */
   public boolean communicationProgress() {
     boolean allDone = true;
     for (Map.Entry<String, IParallelOperation> e : outBatchParOps.entrySet()) {
@@ -186,7 +199,7 @@ public class SourceBatchInstance implements INodeInstance {
         allDone = false;
       }
     }
-    return allDone;
+    return !allDone;
   }
 
 

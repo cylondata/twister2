@@ -23,17 +23,15 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.resource;
 
-import java.util.HashMap;
-import java.util.Map;
-
 /**
- * Represent a resource
+ * Represent a resource for a worker
+ * It is used to define a resource when submitting the job
+ * It is also used when providing the worker resources to IWorker from resource scheduler
+ * In the second case, id is also used.
+ * When defining worker resources for a job submission, id is not used
  */
-public class WorkerComputeSpec {
+public class WorkerComputeResource {
   private int id;
-  // include properties of the resource
-  // this can include things like available ports
-  private Map<String, Object> properties = new HashMap<>();
 
   // no of cpus in this container
   // it can be a fractional number such as 0.5
@@ -43,33 +41,25 @@ public class WorkerComputeSpec {
   private int memoryMegaBytes;
 
   // volatile disk space available to the container
-  private int diskMegaBytes;
+  private double diskGigaBytes;
 
-  public WorkerComputeSpec(int id) {
+  public WorkerComputeResource(int id) {
     this.id = id;
   }
 
-  public WorkerComputeSpec(double noOfCpus, int memoryMegaBytes) {
+  public WorkerComputeResource(double noOfCpus, int memoryMegaBytes) {
     this.noOfCpus = noOfCpus;
     this.memoryMegaBytes = memoryMegaBytes;
   }
 
-  public WorkerComputeSpec(double noOfCpus, int memoryMegaBytes, int diskMegaBytes) {
+  public WorkerComputeResource(double noOfCpus, int memoryMegaBytes, double diskGigaBytes) {
     this.noOfCpus = noOfCpus;
     this.memoryMegaBytes = memoryMegaBytes;
-    this.diskMegaBytes = diskMegaBytes;
+    this.diskGigaBytes = diskGigaBytes;
   }
 
   public int getId() {
     return id;
-  }
-
-  public void addProperty(String key, Object property) {
-    properties.put(key, property);
-  }
-
-  public Object getProperty(String key) {
-    return properties.get(key);
   }
 
   public double getNoOfCpus() {
@@ -84,12 +74,16 @@ public class WorkerComputeSpec {
     return memoryMegaBytes * 1024 * 1024L;
   }
 
+  public double getDiskGigaBytes() {
+    return diskGigaBytes;
+  }
+
   public int getDiskMegaBytes() {
-    return diskMegaBytes;
+    return (int) (diskGigaBytes * 1024);
   }
 
   public long getDiskInBytes() {
-    return diskMegaBytes * 1024 * 1024L;
+    return (long) (diskGigaBytes * 1024 * 1024 * 1024);
   }
 
 }

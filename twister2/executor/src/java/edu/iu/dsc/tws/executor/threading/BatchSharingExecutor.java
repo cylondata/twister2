@@ -29,8 +29,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
     Map<Integer, INodeInstance> nodes = executionPlan.getNodes();
 
     // initialize finished
-    initFinishedInstances();
-
+    // initFinishedInstances();
     tasks = new ArrayBlockingQueue<>(nodes.size() * 2);
     tasks.addAll(nodes.values());
 

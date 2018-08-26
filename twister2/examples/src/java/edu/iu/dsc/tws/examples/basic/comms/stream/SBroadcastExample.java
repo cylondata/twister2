@@ -97,7 +97,7 @@ public class SBroadcastExample extends BenchWorker {
     }
 
     @Override
-    public boolean onMessage(int source, int destination, int target, int flags, Object object) {
+    public boolean onMessage(int source, int path, int target, int flags, Object object) {
       count++;
       if (count % 10 == 0) {
         LOG.log(Level.INFO, String.format("%d Received message to %d - %d",

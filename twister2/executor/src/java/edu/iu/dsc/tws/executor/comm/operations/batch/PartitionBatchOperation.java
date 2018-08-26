@@ -13,19 +13,19 @@ package edu.iu.dsc.tws.executor.comm.operations.batch;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.checkpointmanager.barrier.CheckpointBarrier;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.BatchReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
-import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
-import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
+import edu.iu.dsc.tws.comms.op.Communicator;
+import edu.iu.dsc.tws.comms.op.batch.BPartition;
+import edu.iu.dsc.tws.comms.op.selectors.LoadBalanceDestinationSelector;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.api.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.api.EdgeGenerator;
@@ -39,9 +39,9 @@ public class PartitionBatchOperation extends AbstractParallelOperation {
   private HashMap<Integer, Integer> incomingMap = new HashMap<>();
   private HashMap<Integer, ArrayList<Object>> incomingBuffer = new HashMap<>();
 
-  protected DataFlowPartition op;
+  protected BPartition op;
 
-  public PartitionBatchOperation(Config config, TWSChannel network, TaskPlan tPlan) {
+  public PartitionBatchOperation(Config config, Communicator network, TaskPlan tPlan) {
     super(config, network, tPlan);
   }
 
@@ -49,34 +49,25 @@ public class PartitionBatchOperation extends AbstractParallelOperation {
                       DataType dataType, String edgeName) {
     this.edge = e;
     //LOG.info("ParitionOperation Prepare 1");
-    op = new DataFlowPartition(channel, srcs, dests, new PartitionReceiver(),
-        new PartitionPartialReceiver(), DataFlowPartition.PartitionStratergy.DIRECT);
+    op = new BPartition(channel, taskPlan, srcs, dests,
+        Utils.dataTypeToMessageType(dataType), new PartitionReceiver(),
+        new LoadBalanceDestinationSelector());
     communicationEdge = e.generate(edgeName);
-    op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
-  }
-
-  public void prepare(Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
-                      DataType dataType, DataType keyType, String edgeName) {
-    this.edge = e;
-    op = new DataFlowPartition(channel, srcs, dests, new PartitionReceiver(),
-        new PartitionPartialReceiver(), DataFlowPartition.PartitionStratergy.DIRECT,
-        Utils.dataTypeToMessageType(dataType), Utils.dataTypeToMessageType(keyType));
-    communicationEdge = e.generate(edgeName);
-    op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
   }
 
   public void send(int source, IMessage message) {
-    op.send(source, message.getContent(), 0);
+    op.partition(source, message.getContent(), 0);
   }
 
   public boolean send(int source, IMessage message, int dest) {
-    return op.send(source, message, 0, dest);
+    return op.partition(source, message.getContent(), 0);
   }
 
-  public class PartitionReceiver implements MessageReceiver {
+  public class PartitionReceiver implements BatchReceiver {
     @Override
     public void init(Config cfg, DataFlowOperation operation,
                      Map<Integer, List<Integer>> expectedIds) {
+<<<<<<< HEAD
 
     }
 
@@ -124,17 +115,21 @@ public class PartitionBatchOperation extends AbstractParallelOperation {
 
       }
       return true;
+=======
+>>>>>>> origin/master
     }
 
     @Override
-    public void onFinish(int target) {
-
+    public void receive(int target, Iterator<Object> it) {
+      TaskMessage msg = new TaskMessage(it,
+          edge.getStringMapping(communicationEdge), target);
+      outMessages.get(target).offer(msg);
     }
+  }
 
-    @Override
-    public boolean progress() {
-      return true;
-    }
+  @Override
+  public void finish(int source) {
+    op.finish(source);
   }
 
   @Override
@@ -143,6 +138,6 @@ public class PartitionBatchOperation extends AbstractParallelOperation {
   }
 
   public boolean hasPending() {
-    return !op.isComplete();
+    return op.hasPending();
   }
 }

@@ -78,14 +78,15 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public boolean receiveSendInternally(int source, int t, int path, int flags, Object message) {
+  public boolean receiveSendInternally(int source, int target, int path, int flags,
+                                       Object message) {
     // we only have one destination in this case
-    if (t != destination) {
+    if (target != destination) {
       throw new RuntimeException("We only have one destination");
     }
 
     // okay this must be for the
-    return finalReceiver.onMessage(source, path, t, flags, message);
+    return finalReceiver.onMessage(source, path, target, flags, message);
   }
 
   @Override
@@ -99,10 +100,6 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
 
   /**
    * Initialize
-   * @param cfg
-   * @param t
-   * @param taskPlan
-   * @param edge
    */
   public void init(Config cfg, MessageType t, TaskPlan taskPlan, int edge) {
 
@@ -157,13 +154,13 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public boolean send(int source, Object message, int flags, int dest) {
-    return delegete.sendMessage(source, message, dest, flags,
-        sendRoutingParameters(source, dest));
+  public boolean send(int source, Object message, int flags, int target) {
+    return delegete.sendMessage(source, message, target, flags,
+        sendRoutingParameters(source, target));
   }
 
   @Override
-  public boolean sendPartial(int source, Object message, int flags, int dest) {
+  public boolean sendPartial(int source, Object message, int flags, int target) {
     return false;
   }
 

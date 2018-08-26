@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.api;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class TaskContext {
@@ -28,7 +29,7 @@ public class TaskContext {
 
   private int workerId;
 
-  private boolean isDone;
+  private Map<String, Boolean> isDone = new HashMap<>();
 
   public TaskContext(int taskIndex, int taskId, String taskName,
                      int parallelism, int wId, Map<String, Object> configs) {
@@ -61,14 +62,13 @@ public class TaskContext {
     this.collection = collection;
     this.configs = configs;
     this.workerId = workerId;
-    this.isDone = isDone;
   }
 
   /**
    * Reset the context
    */
   public void reset() {
-    this.isDone = false;
+    this.isDone = new HashMap<>();
   }
 
   /**
@@ -124,6 +124,9 @@ public class TaskContext {
    * @param message message
    */
   public void write(String edge, Object message) {
+    if (isDone.containsKey(edge) && isDone.get(edge)) {
+      throw new RuntimeException("Cannot send on a stream that ended");
+    }
     collection.collect(0, new TaskMessage(message, edge, taskId));
   }
 
@@ -133,7 +136,11 @@ public class TaskContext {
    * @param message message
    */
   public void writeEnd(String edge, Object message) {
-
+    if (isDone.containsKey(edge) && isDone.get(edge)) {
+      throw new RuntimeException("Cannot send on a stream that ended");
+    }
+    collection.collect(0, new TaskMessage(message, edge, taskId));
+    isDone.put(edge, true);
   }
 
   /**
@@ -141,14 +148,10 @@ public class TaskContext {
    * @param edge edge
    */
   public void end(String edge) {
-
+    isDone.put(edge, true);
   }
 
-  public boolean isDone() {
-    return isDone;
-  }
-
-  public void setDone(boolean done) {
-    isDone = done;
+  public boolean isDone(String edge) {
+    return isDone.containsKey(edge) && isDone.get(edge);
   }
 }

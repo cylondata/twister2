@@ -26,8 +26,12 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.WorkerComputeSpec;
-import edu.iu.dsc.tws.common.resource.ZResourcePlan;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
+import edu.iu.dsc.tws.common.resource.AllocatedResources;
+import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
+import edu.iu.dsc.tws.common.worker.IPersistentVolume;
+import edu.iu.dsc.tws.common.worker.IVolatileVolume;
+import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
@@ -40,17 +44,16 @@ import edu.iu.dsc.tws.examples.IntData;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 
 /**
  * This will be a map-partition job only using the communication primitives
  */
-public class BasePartitionCommunication implements IContainer {
+public class BasePartitionCommunication implements IWorker {
   private static final Logger LOG = Logger.getLogger(BasePartitionCommunication.class.getName());
 
   private DataFlowOperation partition;
 
-  private ZResourcePlan resourcePlan;
+  private AllocatedResources resourcePlan;
 
   private int id;
 
@@ -69,17 +72,20 @@ public class BasePartitionCommunication implements IContainer {
   private Status status;
 
   @Override
-  public void init(Config cfg, int containerId, ZResourcePlan plan) {
-    LOG.log(Level.INFO, "Starting the example with container id: " + plan.getThisId());
+  public void init(Config cfg, int workerID, AllocatedResources resources,
+                   IWorkerController workerController,
+                   IPersistentVolume persistentVolume,
+                   IVolatileVolume volatileVolume) {
+    LOG.log(Level.INFO, "Starting the example with container id: " + resources.getWorkerId());
 
     this.config = cfg;
-    this.resourcePlan = plan;
-    this.id = containerId;
+    this.resourcePlan = resources;
+    this.id = workerID;
     this.status = Status.INIT;
-    this.noOfTasksPerExecutor = NO_OF_TASKS / plan.noOfContainers();
+    this.noOfTasksPerExecutor = NO_OF_TASKS / resources.getNumberOfWorkers();
 
     // lets create the task plan
-    TaskPlan taskPlan = Utils.createReduceTaskPlan(cfg, plan, NO_OF_TASKS);
+    TaskPlan taskPlan = Utils.createReduceTaskPlan(cfg, resources, NO_OF_TASKS);
     //first get the communication config file
     TWSNetwork network = new TWSNetwork(cfg, taskPlan);
 
@@ -181,24 +187,6 @@ public class BasePartitionCommunication implements IContainer {
     }
   }
 
-  private class PartialPartitionReciver implements MessageReceiver {
-
-    @Override
-    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-
-    }
-
-    @Override
-    public boolean onMessage(int source, int destination, int target, int flags, Object object) {
-      return false;
-    }
-
-    @Override
-    public boolean progress() {
-      return true;
-    }
-  }
-
   private class FinalPartitionReciver implements MessageReceiver {
     private Map<Integer, Map<Integer, Boolean>> finished;
 
@@ -217,7 +205,7 @@ public class BasePartitionCommunication implements IContainer {
     }
 
     @Override
-    public boolean onMessage(int source, int destination, int target, int flags, Object object) {
+    public boolean onMessage(int source, int path, int target, int flags, Object object) {
       // add the object to the map
       if ((flags & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) {
         finished.get(target).put(source, true);
@@ -282,7 +270,7 @@ public class BasePartitionCommunication implements IContainer {
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setName("basic-partition")
         .setWorkerClass(BasePartitionCommunication.class.getName())
-        .setRequestResource(new WorkerComputeSpec(2, 1024), 4)
+        .setRequestResource(new WorkerComputeResource(2, 1024), 4)
         .setConfig(jobConfig)
         .build();
 

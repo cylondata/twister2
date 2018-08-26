@@ -29,6 +29,7 @@ import java.util.logging.Logger;
 import org.apache.commons.io.FileUtils;
 
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.dfw.io.types.DataDeserializer;
 import edu.iu.dsc.tws.comms.utils.Heap;
 import edu.iu.dsc.tws.comms.utils.HeapNode;
 import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
@@ -124,18 +125,10 @@ public class FSKeyedSortedMerger implements Shuffle {
 
   /**
    * Create a key based sorted merger
-   * @param maxBytesInMemory
-   * @param maxRecsInMemory
-   * @param dir
-   * @param opName
-   * @param kType
-   * @param dType
-   * @param kComparator
-   * @param tar
    */
   public FSKeyedSortedMerger(int maxBytesInMemory, int maxRecsInMemory,
-                       String dir, String opName, MessageType kType,
-                       MessageType dType, Comparator<Object> kComparator, int tar) {
+                             String dir, String opName, MessageType kType,
+                             MessageType dType, Comparator<Object> kComparator, int tar) {
     this.maxBytesToKeepInMemory = maxBytesInMemory;
     this.maxRecordsInMemory = maxRecsInMemory;
     this.folder = dir;
@@ -149,8 +142,6 @@ public class FSKeyedSortedMerger implements Shuffle {
 
   /**
    * Add the data to the file
-   * @param data
-   * @param length
    */
   public void add(Object key, byte[] data, int length) {
     if (status == FSStatus.READING) {
@@ -158,14 +149,7 @@ public class FSKeyedSortedMerger implements Shuffle {
     }
 
     Object k1 = FileLoader.convertKeyToArray(keyType, key);
-    int[] k = (int[]) k1;
-    try {
-      int i = k[0];
-    } catch (ArrayIndexOutOfBoundsException e) {
-      throw new RuntimeException("EEEE", e);
-    }
-
-    LOG.log(Level.INFO, "adding value: target: " + target + " " + recordsInMemory.size());
+    // LOG.log(Level.INFO, "adding value: target: " + target + " " + recordsInMemory.size());
     lock.lock();
     try {
       recordsInMemory.add(new KeyValue(k1, data, keyComparator));
@@ -186,7 +170,7 @@ public class FSKeyedSortedMerger implements Shuffle {
     try {
       status = FSStatus.READING;
       // lets convert the in-memory data to objects
-//       deserializeObjects();
+      deserializeObjects();
       // lets sort the in-memory objects
       Collections.sort(objectsInMemory);
     } finally {
@@ -197,7 +181,7 @@ public class FSKeyedSortedMerger implements Shuffle {
   private void deserializeObjects() {
     for (int i = 0; i < recordsInMemory.size(); i++) {
       KeyValue kv = recordsInMemory.get(i);
-      Object o = kryoSerializer.deserialize((byte[]) kv.getValue());
+      Object o = DataDeserializer.deserialize(dataType, kryoSerializer, (byte[]) kv.getValue());
       objectsInMemory.add(new KeyValue(kv.getKey(), o, keyComparator));
     }
   }
@@ -344,6 +328,7 @@ public class FSKeyedSortedMerger implements Shuffle {
 
   /**
    * Get the file name to save the current part
+   *
    * @return the save file name
    */
   private String getSaveFolderName() {
@@ -352,6 +337,7 @@ public class FSKeyedSortedMerger implements Shuffle {
 
   /**
    * Get the file name to save the current part
+   *
    * @param filePart file part index
    * @return the save file name
    */
@@ -361,6 +347,7 @@ public class FSKeyedSortedMerger implements Shuffle {
 
   /**
    * Get the name of the sizes file name
+   *
    * @param filePart file part index
    * @return filename
    */

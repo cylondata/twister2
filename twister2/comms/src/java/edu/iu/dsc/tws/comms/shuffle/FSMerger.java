@@ -25,6 +25,7 @@ import java.util.logging.Logger;
 import org.apache.commons.io.FileUtils;
 
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.dfw.io.types.DataDeserializer;
 import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 
 /**
@@ -117,8 +118,6 @@ public class FSMerger implements Shuffle {
 
   /**
    * Add the data to the file
-   * @param data
-   * @param length
    */
   public void add(byte[] data, int length) {
     if (status == FSStatus.READING) {
@@ -147,8 +146,7 @@ public class FSMerger implements Shuffle {
 
   private void deserializeObjects() {
     for (int i = 0; i < bytesInMemory.size(); i++) {
-      Object o = kryoSerializer.deserialize(bytesInMemory.get(i));
-      LOG.log(Level.INFO, "Adding object: " + o);
+      Object o = DataDeserializer.deserialize(valueType, kryoSerializer, bytesInMemory.get(i));
       objectsInMemory.add(o);
     }
   }
@@ -246,7 +244,6 @@ public class FSMerger implements Shuffle {
     public Object next() {
       // we are reading from in memory
       if (currentFileIndex == -1) {
-        LOG.log(Level.INFO, "Getting from objects in memory: " + objectsInMemory.size());
         return it.next();
       }
 
@@ -274,6 +271,7 @@ public class FSMerger implements Shuffle {
 
   /**
    * Get the file name to save the current part
+   *
    * @return the save file name
    */
   private String getSaveFolderName() {
@@ -282,6 +280,7 @@ public class FSMerger implements Shuffle {
 
   /**
    * Get the file name to save the current part
+   *
    * @param filePart file part index
    * @return the save file name
    */
@@ -291,6 +290,7 @@ public class FSMerger implements Shuffle {
 
   /**
    * Get the name of the sizes file name
+   *
    * @param filePart file part index
    * @return filename
    */

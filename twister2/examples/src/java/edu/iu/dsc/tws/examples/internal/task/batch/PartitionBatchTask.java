@@ -13,14 +13,19 @@ package edu.iu.dsc.tws.examples.internal.task.batch;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.WorkerComputeSpec;
-import edu.iu.dsc.tws.common.resource.ZResourcePlan;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
+import edu.iu.dsc.tws.common.resource.AllocatedResources;
+import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
+import edu.iu.dsc.tws.common.worker.IPersistentVolume;
+import edu.iu.dsc.tws.common.worker.IVolatileVolume;
+import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.comm.tasks.batch.SinkBatchTask;
@@ -30,7 +35,6 @@ import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.Executor;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
@@ -41,9 +45,12 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler;
 
-public class PartitionBatchTask implements IContainer {
+public class PartitionBatchTask implements IWorker {
   @Override
-  public void init(Config config, int id, ZResourcePlan resourcePlan) {
+  public void init(Config config, int workerID, AllocatedResources resources,
+                   IWorkerController workerController,
+                   IPersistentVolume persistentVolume,
+                   IVolatileVolume volatileVolume) {
     GeneratorTask g = new GeneratorTask();
     RecevingTask r = new RecevingTask();
 
@@ -61,11 +68,11 @@ public class PartitionBatchTask implements IContainer {
     RoundRobinTaskScheduler roundRobinTaskScheduler = new RoundRobinTaskScheduler();
     roundRobinTaskScheduler.initialize(config);
 
-    WorkerPlan workerPlan = createWorkerPlan(resourcePlan);
+    WorkerPlan workerPlan = createWorkerPlan(resources);
     TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
 
-    TWSNetwork network = new TWSNetwork(config, resourcePlan.getThisId());
-    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);
+    TWSNetwork network = new TWSNetwork(config, resources.getWorkerId());
+    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resources, network);
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
     Executor executor = new Executor(config, plan, network.getChannel(),
         OperationMode.BATCH);
@@ -76,10 +83,16 @@ public class PartitionBatchTask implements IContainer {
     private static final long serialVersionUID = -254264903510284748L;
     private TaskContext ctx;
     private Config config;
+    private int count = 0;
 
     @Override
     public void run() {
-      ctx.write("partition-edge", "Hello");
+      count++;
+      if (count == 1000) {
+        ctx.writeEnd("partition-edge", "Hello");
+      } else if (count < 1000) {
+        ctx.write("partition-edge", "Hello");
+      }
     }
 
     @Override
@@ -99,9 +112,15 @@ public class PartitionBatchTask implements IContainer {
 
     @Override
     public boolean execute(IMessage message) {
-      if (count % 10000 == 0) {
-        System.out.println("Message Partition Received : " + message.getContent()
-            + ", Count : " + count);
+      if (message.getContent() instanceof Iterator) {
+        while (((Iterator) message.getContent()).hasNext()) {
+          ((Iterator) message.getContent()).next();
+          count++;
+        }
+        if (count % 1 == 0) {
+          System.out.println("Message Partition Received : " + message.getContent()
+              + ", Count : " + count);
+        }
       }
       count++;
       return true;
@@ -113,9 +132,9 @@ public class PartitionBatchTask implements IContainer {
     }
   }
 
-  public WorkerPlan createWorkerPlan(ZResourcePlan resourcePlan) {
+  public WorkerPlan createWorkerPlan(AllocatedResources resourcePlan) {
     List<Worker> workers = new ArrayList<>();
-    for (WorkerComputeSpec resource : resourcePlan.getContainers()) {
+    for (WorkerComputeResource resource : resourcePlan.getWorkerComputeResources()) {
       Worker w = new Worker(resource.getId());
       workers.add(w);
     }
@@ -138,7 +157,7 @@ public class PartitionBatchTask implements IContainer {
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("partition-example");
     jobBuilder.setWorkerClass(PartitionBatchTask.class.getName());
-    jobBuilder.setRequestResource(new WorkerComputeSpec(2, 1024), 4);
+    jobBuilder.setRequestResource(new WorkerComputeResource(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job

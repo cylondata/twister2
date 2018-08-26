@@ -26,8 +26,9 @@ import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.hdfs.HadoopFileSystem;
 
 /**
- * This class is to retrieve the datanode names values corresponding to the
- * dataset filenames.
+ * This class is to find out the location of the datanodes corresponding to the input file names.
+ * It establishes the connection with the HDFS through HDFSConnector and retrieve the location
+ * of the input file name.
  */
 public class DataNodeLocatorUtils implements IDataNodeLocatorUtils {
 
@@ -36,32 +37,31 @@ public class DataNodeLocatorUtils implements IDataNodeLocatorUtils {
   private Config config;
   private HDFSConnector hdfsConnector;
   private String datasetName;
-  private List<String> inputDataList = new ArrayList<>();
+  private List<String> inputFileList = new ArrayList<>();
 
-  public DataNodeLocatorUtils(Config config1) {
-    this.config = config1;
+  public DataNodeLocatorUtils(Config cfg) {
+    this.config = cfg;
   }
 
-  //TODO: It could be modified to get all the vertexes of the task graph and
+  //TODO: It could be modified to get all the vertexes of the task graph
   //TODO: return the map which stores the vertex name -> datanodes list.
 
   /**
    * This method receives the input data list for each vertex and find the location
    * of the datanodes in the HDFS and returns the data node list.
    *
-   * @param inputDataList1
+   * @param inputList
    * @return datanodeList
    */
-  public List<String> findDataNodesLocation(List<String> inputDataList1) {
+  public List<String> findDataNodesLocation(List<String> inputList) {
 
     HadoopFileSystem hadoopFileSystem = null;
 
     Configuration conf = new Configuration(false);
-    conf.addResource(new org.apache.hadoop.fs.Path(
-        HdfsDataContext.getHdfsConfigDirectory(config)));
+    conf.addResource(new org.apache.hadoop.fs.Path(HdfsDataContext.getHdfsConfigDirectory(config)));
 
     hdfsConnector = new HDFSConnector(config);
-    this.inputDataList = inputDataList1;
+    this.inputFileList = inputList;
 
     try {
       hadoopFileSystem = new HadoopFileSystem(conf, org.apache.hadoop.fs.FileSystem.get(conf));
@@ -70,17 +70,18 @@ public class DataNodeLocatorUtils implements IDataNodeLocatorUtils {
     }
 
     List<String> dataNodes = new ArrayList<>();
-    for (int i = 0; i < this.inputDataList.size(); i++) {
 
-      this.datasetName = this.inputDataList.get(i);
+    for (int i = 0; i < this.inputFileList.size(); i++) {
+
+      this.datasetName = this.inputFileList.get(i);
+
       String[] fName = new String[0];
-
-      if (this.inputDataList.size() == 1) {
-        fName = new String[this.inputDataList.size()];
-        fName[0] = this.inputDataList.get(i);
-      } else if (this.inputDataList.size() > 1) {
-        fName = new String[this.inputDataList.size() - 1];
-        fName[0] = this.inputDataList.get(i);
+      if (this.inputFileList.size() == 1) {
+        fName = new String[this.inputFileList.size()];
+        fName[0] = this.inputFileList.get(i);
+      } else if (this.inputFileList.size() > 1) {
+        fName = new String[this.inputFileList.size() - 1];
+        fName[0] = this.inputFileList.get(i);
       }
 
       try {
@@ -88,10 +89,12 @@ public class DataNodeLocatorUtils implements IDataNodeLocatorUtils {
         assert hadoopFileSystem != null;
         FileStatus fileStatus = hadoopFileSystem.getFileStatus(path);
         if (!fileStatus.getPath().isNullOrEmpty()) {
+
           String fileURL = fileStatus.getPath().toString();
           String datanodeName = hdfsConnector.getDFSCK(fName);
-          LOG.fine("HDFS URL:" + fileURL + "\tDataNode:"
-              + datanodeName + "\tDataSet:" + datasetName);
+
+          LOG.fine("HDFS URL:" + fileURL + "\tDataNode:" + datanodeName);
+
           dataNodes.add(datanodeName); //proper data node
           dataNodes.add("samepledatenode1"); //this is just for testing (it will be removed)
         }
@@ -116,8 +119,7 @@ public class DataNodeLocatorUtils implements IDataNodeLocatorUtils {
     HadoopFileSystem hadoopFileSystem = null;
 
     Configuration conf = new Configuration(false);
-    conf.addResource(new org.apache.hadoop.fs.Path(
-        HdfsDataContext.getHdfsConfigDirectory(config)));
+    conf.addResource(new org.apache.hadoop.fs.Path(HdfsDataContext.getHdfsConfigDirectory(config)));
 
     hdfsConnector = new HDFSConnector(config);
 
@@ -128,17 +130,20 @@ public class DataNodeLocatorUtils implements IDataNodeLocatorUtils {
     }
 
     List<String> dataNodes = new ArrayList<>();
+
     String[] fName = new String[0];
     fName[0] = datasetName;
 
     try {
       Path path = new Path(datasetName);
       FileStatus fileStatus = hadoopFileSystem.getFileStatus(path);
+
       if (!fileStatus.getPath().isNullOrEmpty()) {
         String fileURL = fileStatus.getPath().toString();
         String datanodeName = hdfsConnector.getDFSCK(fName);
-        LOG.info("HDFS URL:" + fileURL + "\tDataNode:"
-            + datanodeName + "\tDataSet:" + datasetName);
+
+        LOG.info("HDFS URL:" + fileURL + "\tDataNode:" + datanodeName);
+
         if ("dataset1.txt".equals(datasetName)) {
           dataNodes.add("datanode1");
           dataNodes.add("datanode2");

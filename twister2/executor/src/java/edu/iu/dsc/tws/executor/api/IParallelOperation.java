@@ -40,14 +40,6 @@ public interface IParallelOperation {
   boolean send(int source, IMessage message, int flags);
 
   /**
-   * Send a message to specific destination
-   * @param source source
-   * @param message message
-   * @param dest destination
-   */
-  void send(int source, IMessage message, int dest, int flags);
-
-  /**
    * Register a queue for receiving message
    * @param targetTask
    * @param queue
@@ -58,4 +50,11 @@ public interface IParallelOperation {
    * Progress the parallel operation
    */
   boolean progress();
+
+  /**
+   * Indicate the end of the operation
+   * @param source the source
+   */
+  default void finish(int source) {
+  }
 }

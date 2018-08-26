@@ -32,14 +32,13 @@ import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
-import edu.iu.dsc.tws.common.resource.ZResourcePlan;
+import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.bootstrap.JobMasterBasedWorkerController;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 public final class StandaloneWorkerStarter {
@@ -148,7 +147,7 @@ public final class StandaloneWorkerStarter {
 
     String jobDescFile = JobUtils.getJobDescriptionFilePath(jobName, workerConfig);
     JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
-    job.getJobResources().getNoOfContainers();
+    job.getJobResources().getNumberOfWorkers();
 
     Config updatedConfig = JobUtils.overrideConfigs(job, config);
     updatedConfig = Config.newBuilder().putAll(updatedConfig).
@@ -167,15 +166,15 @@ public final class StandaloneWorkerStarter {
 
     String workerClass = SchedulerContext.workerClass(config);
 
-    ZResourcePlan resourcePlan = new ZResourcePlan(SchedulerContext.clusterType(config),
+    AllocatedResources resourcePlan = new AllocatedResources(SchedulerContext.clusterType(config),
         workerNetworkInfo.getWorkerID());
 
     try {
       Object object = ReflectionUtils.newInstance(workerClass);
-      if (object instanceof IContainer) {
-        IContainer container = (IContainer) object;
+      if (object instanceof IWorker) {
+        IWorker container = (IWorker) object;
         // now initialize the container
-        container.init(config, workerNetworkInfo.getWorkerID(), resourcePlan);
+        container.init(config, workerNetworkInfo.getWorkerID(), resourcePlan, null, null, null);
       } else if (object instanceof IWorker) {
         IWorker worker = (IWorker) object;
         worker.init(config, workerNetworkInfo.getWorkerID(), resourcePlan,
@@ -213,8 +212,7 @@ public final class StandaloneWorkerStarter {
     String jobName = StandaloneContext.jobName(config);
     String jobDescFile = JobUtils.getJobDescriptionFilePath(jobName, config);
     JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
-    int numberContainers = job.getJobResources().getNoOfContainers();
-
+    int numberContainers = job.getJobResources().getNumberOfWorkers();
     return new JobMasterBasedWorkerController(config, index, numberContainers,
         jobMasterIP, masterPort, ports, localIps);
   }

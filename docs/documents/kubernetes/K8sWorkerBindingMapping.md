@@ -23,7 +23,7 @@ When CPUs are requested for workers with static binding, CPUs per worker
 has to be an integer. When a pod is statically bounded to a core, 
 it can not have fractional ownership of that core. 
 It has to have the total access to the core. 
-However, one worker (container) can have more than one cores, but not fractional cores.
+However, one worker (workerComputeResource) can have more than one cores, but not fractional cores.
 Kubernetes use [Linux CPUSETS](https://www.kernel.org/doc/Documentation/cgroup-v1/cpusets.txt) 
 to implement exclusive binding of pods to cores.
 

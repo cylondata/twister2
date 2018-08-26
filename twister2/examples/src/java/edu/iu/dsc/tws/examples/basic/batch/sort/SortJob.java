@@ -25,8 +25,8 @@ import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.resource.WorkerComputeSpec;
-import edu.iu.dsc.tws.common.resource.ZResourcePlan;
+import edu.iu.dsc.tws.common.resource.AllocatedResources;
+import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
@@ -53,7 +53,7 @@ public class SortJob implements IWorker {
 
   private Config config;
 
-  private ZResourcePlan resourcePlan;
+  private AllocatedResources resourcePlan;
 
   private int id;
 
@@ -64,20 +64,20 @@ public class SortJob implements IWorker {
   private TaskPlan taskPlan;
 
   @Override
-  public void init(Config cfg, int wID, ZResourcePlan plan,
+  public void init(Config cfg, int workerID, AllocatedResources allocatedResources,
                    IWorkerController workerController,
                    IPersistentVolume persistentVolume,
                    IVolatileVolume volatileVolume) {
     this.config = cfg;
-    this.resourcePlan = plan;
-    this.id = wID;
+    this.resourcePlan = allocatedResources;
+    this.id = workerID;
     // setup the network
-    setupNetwork(cfg, workerController, plan);
+    setupNetwork(cfg, workerController, allocatedResources);
     // set up the tasks
     setupTasks();
 
     // we get the number of containers after initializing the network
-    this.noOfTasksPerExecutor = NO_OF_TASKS / plan.noOfContainers();
+    this.noOfTasksPerExecutor = NO_OF_TASKS / allocatedResources.getNumberOfWorkers();
 
     partition = new DataFlowPartition(config, channel, taskPlan, sources, destinations,
         new PartitionBatchFinalReceiver(new RecordSave(), false, true,
@@ -116,7 +116,7 @@ public class SortJob implements IWorker {
     }
   }
 
-  private void setupNetwork(Config cfg, IWorkerController controller, ZResourcePlan rPlan) {
+  private void setupNetwork(Config cfg, IWorkerController controller, AllocatedResources rPlan) {
     channel = Network.initializeChannel(cfg, controller, rPlan);
   }
 
@@ -163,7 +163,7 @@ public class SortJob implements IWorker {
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("sort-job");
     jobBuilder.setWorkerClass(SortJob.class.getName());
-    jobBuilder.setRequestResource(new WorkerComputeSpec(2, 1024), NO_OF_TASKS);
+    jobBuilder.setRequestResource(new WorkerComputeResource(2, 1024), NO_OF_TASKS);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job
