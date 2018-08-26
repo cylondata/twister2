@@ -67,56 +67,6 @@ public class PartitionBatchOperation extends AbstractParallelOperation {
     @Override
     public void init(Config cfg, DataFlowOperation operation,
                      Map<Integer, List<Integer>> expectedIds) {
-<<<<<<< HEAD
-
-    }
-
-    @Override
-    public boolean onMessage(int source, int destination, int target, int flags, Object object) {
-      if (barrierMap.containsKey(source)) {
-        if (barrierMap.get(source).size() == 0) {
-          barrierMap.remove(source);
-          if (object instanceof List) {
-            for (Object o : (List) object) {
-              TaskMessage msg = new TaskMessage(o,
-                  edge.getStringMapping(communicationEdge), target);
-              outMessages.get(target).offer(msg);
-            }
-          } else if (object instanceof CheckpointBarrier) {
-            barrierMap.get(source).add(destination);
-            ArrayList<Object> bufferMessege = new ArrayList<>();
-            bufferMessege.add(object);
-            incomingBuffer.put(source, bufferMessege);
-          }
-        } else if (barrierMap.get(source).size() == incomingMap.get(source)) {
-          for (Object message : incomingBuffer.get(source)) {
-            if (message instanceof List) {
-              for (Object o : (List) message) {
-                TaskMessage msg = new TaskMessage(o,
-                    edge.getStringMapping(communicationEdge), target);
-                outMessages.get(target).offer(msg);
-              }
-            }
-          }
-        }
-      } else {
-        if (object instanceof List) {
-          for (Object o : (List) object) {
-            TaskMessage msg = new TaskMessage(o,
-                edge.getStringMapping(communicationEdge), target);
-            outMessages.get(target).offer(msg);
-
-          }
-        } else if (object instanceof CheckpointBarrier) {
-          ArrayList<Integer> destinationMap = new ArrayList<Integer>();
-          destinationMap.add(destination);
-          barrierMap.put(source, destinationMap);
-        }
-
-      }
-      return true;
-=======
->>>>>>> origin/master
     }
 
     @Override
