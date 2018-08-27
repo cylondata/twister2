@@ -72,9 +72,9 @@ public class DataLocalityBatchScheduler {
       String taskName = entry.getKey();
 
       /*
-        If the vertex has the input data set list and get the status
-        and the path of the file in HDFS.
-       */
+      If the vertex has the input data set, get the status and the datanode name of the input
+      dataset in the HDFS.
+      */
 
       if (taskVertex.getName().equals(taskName)
           && (taskVertex.getConfig().getListValue("inputdataset") != null)) {
@@ -95,7 +95,7 @@ public class DataLocalityBatchScheduler {
           datanodesList = dataNodeLocatorUtils.
               findDataNodesLocation(taskVertex.getConfig().getListValue("inputdataset"));
           workerPlanMap = distanceCalculation(datanodesList, workerPlan, cIdx);
-          cal = findOptimalWorkerNode(taskVertex, workerPlanMap, cIdx);
+          cal = findBestWorkerNode(taskVertex, workerPlanMap);
         }
 
         /*
@@ -175,7 +175,7 @@ public class DataLocalityBatchScheduler {
             datanodesList = dataNodeLocatorUtils.
                 findDataNodesLocation(vertex.getConfig().getListValue("inputdataset"));
             workerPlanMap = distanceCalculation(datanodesList, workerPlan, cIdx);
-            cal = findOptimalWorkerNode(vertex, workerPlanMap, cIdx);
+            cal = findBestWorkerNode(vertex, workerPlanMap);
           }
 
           for (int i = 0; i < totalNumberOfInstances; i++) {
@@ -259,25 +259,25 @@ public class DataLocalityBatchScheduler {
    * This method finds the worker node which has better network parameters (bandwidth/latency)
    * or it will take lesser time for the data transfer if there is any.
    */
-  private static List<DataTransferTimeCalculator> findOptimalWorkerNode(Vertex vertex, Map<String,
-      List<DataTransferTimeCalculator>> workerPlanMap, int i) {
+  private static List<DataTransferTimeCalculator> findBestWorkerNode(Vertex vertex, Map<String,
+      List<DataTransferTimeCalculator>> workerPlanMap) {
 
     Set<Map.Entry<String, List<DataTransferTimeCalculator>>> entries = workerPlanMap.entrySet();
     List<DataTransferTimeCalculator> cal = new ArrayList<>();
 
     try {
       for (Map.Entry<String, List<DataTransferTimeCalculator>> entry : entries) {
+
         String key = entry.getKey();
         List<DataTransferTimeCalculator> value = entry.getValue();
         for (DataTransferTimeCalculator aValue : value) {
           cal.add(new DataTransferTimeCalculator(aValue.getNodeName(),
               aValue.getRequiredDataTransferTime(), key));
         }
-
-        for (DataTransferTimeCalculator requiredDataTransferTime : value) {
+        for (DataTransferTimeCalculator requiredDataTransferTime : entry.getValue()) {
           LOG.fine("Task:" + vertex.getName()
               + "(" + requiredDataTransferTime.getTaskIndex() + ")"
-              + key + "D.Node:" + "-> W.Node:" + requiredDataTransferTime.getNodeName()
+              + entry.getKey() + "D.Node:" + "-> W.Node:" + requiredDataTransferTime.getNodeName()
               + "-> D.Time:" + requiredDataTransferTime.getRequiredDataTransferTime());
         }
       }
@@ -287,6 +287,8 @@ public class DataLocalityBatchScheduler {
     return cal;
   }
 }
+
+
 
 
 
