@@ -495,7 +495,7 @@ public class TaskSchedulePlanBuilder {
           }
           containerCPUValue += instanceCPUValue;
 
-          LOG.info("Required Resource Values for Task Instance:"
+          LOG.fine("Required Resource Values for Task Instance:"
               + taskInstancePlan.getTaskName() + "--Task Index("
               + taskInstancePlan.getTaskIndex() + ")" + "\tRam Value:" + containerRAMValue
               + "\tDisk Value:" + containerDiskValue + "\tCpu Value:" + containerCPUValue);

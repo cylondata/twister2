@@ -123,8 +123,8 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
           double instanceDiskValue = instancesDiskMap.get(containerId).get(id);
           double instanceCPUValue = instancesCPUMap.get(containerId).get(id);
 
-          Resource instanceResource = new Resource(instanceRAMValue,
-              instanceDiskValue, instanceCPUValue);
+          Resource instanceResource = new Resource(instanceRAMValue, instanceDiskValue,
+              instanceCPUValue);
 
           taskInstancePlanMap.put(id, new TaskSchedulePlan.TaskInstancePlan(
               id.getTaskName(), id.getTaskId(), id.getTaskIndex(), instanceResource));
