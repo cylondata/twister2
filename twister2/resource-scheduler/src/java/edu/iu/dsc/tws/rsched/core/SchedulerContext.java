@@ -25,7 +25,6 @@ public class SchedulerContext extends Context {
 
   public static final String SYSTEM_PACKAGE_URI = "twister2.system.package.uri";
 
-
   // Internal configuration for job package url
   public static final String JOB_PACKAGE_URI = "twister2.job.package.uri";
 
@@ -33,7 +32,7 @@ public class SchedulerContext extends Context {
   public static final String JOB_TEMP_DIR = "twister2.client.job.temp.dir";
 
   /**
-   * These are specified as system properties when deploying a topology
+   * These are specified as system properties when deploying a job
    */
   public static final String TWISTER_2_HOME = "twister2_home";
   public static final String CONFIG_DIR = "config_dir";

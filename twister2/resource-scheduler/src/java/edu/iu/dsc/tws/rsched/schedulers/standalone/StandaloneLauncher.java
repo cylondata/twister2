@@ -97,7 +97,7 @@ public class StandaloneLauncher implements ILauncher {
         jobMaster =
             new JobMaster(config, hostAddress,
                 new StandaloneTerminator(), job.getJobName(),
-                port,  job.getJobResources().getNumberOfWorkers());
+                port,  job.getNumberOfWorkers());
         jobMaster.addShutdownHook();
         jmThread = jobMaster.startJobMasterThreaded();
       } catch (UnknownHostException e) {

@@ -24,8 +24,11 @@ import edu.iu.dsc.tws.common.discovery.NodeInfo;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
+import edu.iu.dsc.tws.common.resource.AllocatedResources;
+import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.client.JobMasterClient;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
@@ -204,6 +207,28 @@ public final class K8sWorkerUtils {
 
     return nodeInfo;
   }
+
+  /**
+   * we assume all resources are uniform
+   * @return
+   */
+  public static AllocatedResources createAllocatedResources(String cluster,
+                                                            int workerID,
+                                                            JobAPI.Job job) {
+
+    JobAPI.WorkerComputeResource computeResource =
+        job.getJobResources().getResources(0).getWorkerComputeResource();
+
+    AllocatedResources allocatedResources = new AllocatedResources(cluster, workerID);
+
+    for (int i = 0; i < job.getNumberOfWorkers(); i++) {
+      allocatedResources.addWorkerComputeResource(new WorkerComputeResource(
+          i, computeResource.getCpu(), computeResource.getRam(), computeResource.getDisk()));
+    }
+
+    return allocatedResources;
+  }
+
 
   /**
    * a test method to make the worker wait indefinitely
