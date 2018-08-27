@@ -46,7 +46,6 @@ message JobResources {
         WorkerComputeResource workerComputeResource = 2;
     }
     repeated ResourceType resources = 1;
-    int32 numberOfWorkers = 2;
 }
 
 // this is a Twister job.
@@ -54,10 +53,11 @@ message Job {
     string jobName = 1;
     // worker class to run
     string workerClassName = 2;
+    int32 numberOfWorkers = 3;
     // the requested resources
-    JobResources jobResources = 3;
+    JobResources jobResources = 4;
     // the configurations specified
-    Config config = 4;
+    Config config = 5;
     // how the job is layed out
-    JobFormat job_format = 5;
+    JobFormat job_format = 6;
 }

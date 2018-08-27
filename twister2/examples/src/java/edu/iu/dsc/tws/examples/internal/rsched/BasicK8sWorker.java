@@ -19,6 +19,7 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -26,6 +27,8 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
+import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
+import edu.iu.dsc.tws.common.resource.WorkerResourceUtils;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
@@ -59,10 +62,16 @@ public class BasicK8sWorker implements IWorker {
     if (workerList != null) {
       LOG.info("All workers joined. " + WorkerNetworkInfo.workerListAsString(workerList));
     } else {
-      LOG.severe("Can not get all workers to join. Something wrong. .......................");
+      LOG.severe("Can not get all workers to join. Something wrong. Exiting ....................");
+      return;
     }
 
     LOG.info("All workers joined. Current time: " + System.currentTimeMillis());
+
+    Map<String, List<WorkerComputeResource>> workersPerNode =
+        WorkerResourceUtils.getWorkersPerNode(allocatedResources, workerList);
+
+    printWorkersPerNode(workersPerNode);
 
     sleepSomeTime(50);
 //    echoServer(workerController.getWorkerNetworkInfo());
@@ -127,6 +136,19 @@ public class BasicK8sWorker implements IWorker {
     } catch (InterruptedException e) {
       LOG.log(Level.WARNING, "Thread sleep interrupted.", e);
     }
+  }
+
+  public void printWorkersPerNode(Map<String, List<WorkerComputeResource>> workersPerNode) {
+
+    StringBuffer toPrint = new StringBuffer();
+    for (String nodeIP: workersPerNode.keySet()) {
+      toPrint.append("\n" + nodeIP + ": ");
+      for (WorkerComputeResource resource: workersPerNode.get(nodeIP)) {
+        toPrint.append(resource.getId() + ", ");
+      }
+    }
+
+    LOG.info("Workers per node: " + toPrint.toString());
   }
 
 }

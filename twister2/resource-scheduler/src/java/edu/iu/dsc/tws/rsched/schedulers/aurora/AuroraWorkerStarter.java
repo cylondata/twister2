@@ -141,7 +141,7 @@ public final class AuroraWorkerStarter {
 
     long startTime = System.currentTimeMillis();
     String workerHostPort = workerAddress.getHostAddress() + ":" + workerPort;
-    int numberOfWorkers = job.getJobResources().getNumberOfWorkers();
+    int numberOfWorkers = job.getNumberOfWorkers();
 
     NodeInfo nodeInfo = new NodeInfo(null, null, null);
     zkController =
@@ -156,7 +156,7 @@ public final class AuroraWorkerStarter {
    * needs to close down when finished computation
    */
   public void waitAndGetAllWorkers() {
-    int numberOfWorkers = job.getJobResources().getNumberOfWorkers();
+    int numberOfWorkers = job.getNumberOfWorkers();
     System.out.println("Waiting for " + numberOfWorkers + " workers to join .........");
 
     // the amount of time to wait for all workers to join a job
@@ -223,7 +223,7 @@ public final class AuroraWorkerStarter {
   public static void printJob(JobAPI.Job job) {
     System.out.println("Job name: " + job.getJobName());
     System.out.println("Job file: " + job.getJobFormat().getJobFile());
-    System.out.println("workers: " + job.getJobResources().getNumberOfWorkers());
+    System.out.println("workers: " + job.getNumberOfWorkers());
     System.out.println("CPUs: "
         + job.getJobResources().getResourcesList().get(0).getWorkerComputeResource().getCpu());
     System.out.println("RAM: "

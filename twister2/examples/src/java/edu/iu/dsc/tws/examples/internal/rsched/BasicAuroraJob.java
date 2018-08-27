@@ -106,7 +106,7 @@ public final class BasicAuroraJob {
     JobAPI.Job job = JobUtils.readJobFile(null, fl);
     System.out.println("job name: " + job.getJobName());
     System.out.println("job worker class name: " + job.getWorkerClassName());
-    System.out.println("job containers: " + job.getJobResources().getNumberOfWorkers());
+    System.out.println("job workers: " + job.getNumberOfWorkers());
     System.out.println("CPUs: "
         + job.getJobResources().getResourcesList().get(0).getWorkerComputeResource().getCpu());
     System.out.println("RAM: "

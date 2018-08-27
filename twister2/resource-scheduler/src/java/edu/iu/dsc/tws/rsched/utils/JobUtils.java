@@ -162,7 +162,7 @@ public final class JobUtils {
       builder.put(SchedulerContext.WORKER_CLASS, workerClass);
     }
 
-    int workerInstances = job.getJobResources().getNumberOfWorkers();
+    int workerInstances = job.getNumberOfWorkers();
     if (workerInstances > 0) {
       builder.put(Context.TWISTER2_WORKER_INSTANCES, workerInstances);
     }

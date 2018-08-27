@@ -15,8 +15,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.rsched.spi.uploaders.IUploader;
-import edu.iu.dsc.tws.rsched.spi.uploaders.UploaderException;
+import edu.iu.dsc.tws.rsched.exceptions.UploaderException;
+import edu.iu.dsc.tws.rsched.interfaces.IUploader;
 
 /**
  * a class to use when no uploading is necessary
