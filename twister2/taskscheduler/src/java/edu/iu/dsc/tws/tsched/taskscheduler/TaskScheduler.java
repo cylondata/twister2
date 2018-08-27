@@ -38,8 +38,11 @@ public class TaskScheduler implements ITaskScheduler {
   private static final Logger LOG = Logger.getLogger(TaskScheduler.class.getName());
 
   private Config config;
+
   private DataFlowTaskGraph dataFlowTaskGraph;
+
   private WorkerPlan workerPlan;
+
   private String schedulingType;
 
   @Override
@@ -47,6 +50,12 @@ public class TaskScheduler implements ITaskScheduler {
     this.config = cfg;
   }
 
+  /**
+   * Initialize with config, task graph, and worker plan
+   * @param cfg
+   * @param graph
+   * @param plan
+   */
   public TaskScheduler(Config cfg, DataFlowTaskGraph graph, WorkerPlan plan) {
     initialize(cfg);
     this.dataFlowTaskGraph = graph;
