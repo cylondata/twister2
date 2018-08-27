@@ -43,8 +43,6 @@ twister2.docker.image.name: "gurhangunduz/twister2-mesos:docker-mpi"
 # For fetching http server must be running on mesos master
 twister2.system.job.uri: "http://149.165.150.81:8082/twister2/mesos/twister2-job.tar.gz"
 
-# the resource manager class
-twister2.class.state.manager: "edu.iu.dsc.tws.rsched.statemanagers.fs.SharedFileSystemStateManager"
 # launcher class for mesos submission
 twister2.class.launcher: "edu.iu.dsc.tws.rsched.schedulers.mesos.MesosLauncher"
 # the uploader class

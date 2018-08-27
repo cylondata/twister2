@@ -30,7 +30,6 @@ import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.spi.scheduler.ILauncher;
 import edu.iu.dsc.tws.rsched.spi.scheduler.LauncherException;
-import edu.iu.dsc.tws.rsched.spi.statemanager.IStateManager;
 import edu.iu.dsc.tws.rsched.spi.uploaders.IUploader;
 import edu.iu.dsc.tws.rsched.spi.uploaders.UploaderException;
 import edu.iu.dsc.tws.rsched.uploaders.scp.ScpContext;
@@ -223,11 +222,6 @@ public class ResourceAllocator {
     // lets prepare the job files
     String jobDirectory = prepareJobFiles(config, job);
 
-    String statemgrClass = SchedulerContext.stateManagerClass(config);
-    if (statemgrClass == null) {
-      throw new RuntimeException("The state manager class must be spcified");
-    }
-
     String launcherClass = SchedulerContext.launcherClass(config);
     if (launcherClass == null) {
       throw new RuntimeException("The launcher class must be specified");
@@ -240,15 +234,6 @@ public class ResourceAllocator {
 
     ILauncher launcher;
     IUploader uploader;
-    IStateManager statemgr;
-
-    // create an instance of state manager
-    try {
-      statemgr = ReflectionUtils.newInstance(statemgrClass);
-    } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
-      throw new JobSubmissionException(
-          String.format("Failed to instantiate state manager class '%s'", statemgrClass), e);
-    }
 
     // create an instance of launcher
     try {
@@ -265,10 +250,6 @@ public class ResourceAllocator {
       throw new UploaderException(
           String.format("Failed to instantiate uploader class '%s'", uploaderClass), e);
     }
-
-    LOG.log(Level.INFO, "Initialize state manager");
-    // initialize the state manager
-    statemgr.initialize(config);
 
     LOG.log(Level.INFO, "Initialize uploader");
     // now upload the content of the package
@@ -288,7 +269,6 @@ public class ResourceAllocator {
         .putAll(updatedConfig)
         .put(SchedulerContext.TWISTER2_PACKAGES_PATH, scpPath)
         .put(SchedulerContext.JOB_PACKAGE_URI, packageURI)
-        .put(SchedulerContext.STATE_MANAGER_OBJECT, statemgr)
         .build();
 
     // this is a handler chain based execution in resource allocator. We need to
@@ -306,26 +286,12 @@ public class ResourceAllocator {
    */
   public void terminateJob(String jobName, Config config) {
 
-    String statemgrClass = SchedulerContext.stateManagerClass(config);
-    if (statemgrClass == null) {
-      throw new RuntimeException("The state manager class must be spcified");
-    }
-
     String launcherClass = SchedulerContext.launcherClass(config);
     if (launcherClass == null) {
       throw new RuntimeException("The launcher class must be specified");
     }
 
     ILauncher launcher;
-    IStateManager statemgr;
-
-    // create an instance of state manager
-    try {
-      statemgr = ReflectionUtils.newInstance(statemgrClass);
-    } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
-      throw new JobSubmissionException(
-          String.format("Failed to instantiate state manager class '%s'", statemgrClass), e);
-    }
 
     // create an instance of launcher
     try {
@@ -335,17 +301,8 @@ public class ResourceAllocator {
           String.format("Failed to instantiate launcher class '%s'", launcherClass), e);
     }
 
-    // let the state manager know that we are killing this job??
-    statemgr.initialize(config);
-
-    // Update the runtime config with the statemanager
-    updatedConfig = Config.newBuilder()
-        .putAll(config)
-        .put(SchedulerContext.STATE_MANAGER_OBJECT, statemgr)
-        .build();
-
     // initialize the launcher and terminate the job
-    launcher.initialize(updatedConfig);
+    launcher.initialize(config);
     boolean terminated = launcher.terminateJob(jobName);
     if (!terminated) {
       LOG.log(Level.SEVERE, "Could not terminate the job");
