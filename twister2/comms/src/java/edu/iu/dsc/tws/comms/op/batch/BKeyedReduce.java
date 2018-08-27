@@ -30,7 +30,7 @@ import edu.iu.dsc.tws.comms.op.Communicator;
  * based on the key value related to that data point.
  */
 public class BKeyedReduce {
-  DataFlowMultiReduce keyedReduce;
+  private DataFlowMultiReduce keyedReduce;
 
   private DestinationSelector destinationSelector;
 

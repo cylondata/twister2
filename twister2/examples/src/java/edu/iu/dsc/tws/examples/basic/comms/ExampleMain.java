@@ -137,7 +137,7 @@ public class ExampleMain {
         twister2Job = Twister2Job.newBuilder()
             .setName("partition-batch-bench")
             .setWorkerClass(BKeyedReduceExample.class.getName())
-            .setRequestResource(new WorkerComputeSpec(2, 1024), containers)
+            .setRequestResource(new WorkerComputeResource(2, 1024), containers)
             .setConfig(jobConfig)
             .build();
         // now submit the job

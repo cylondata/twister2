@@ -23,12 +23,10 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
 import edu.iu.dsc.tws.comms.op.batch.BKeyedReduce;
 import edu.iu.dsc.tws.comms.op.functions.ReduceIdentityFunction;
 import edu.iu.dsc.tws.comms.op.selectors.SimpleKeyBasedPartitionSelector;
 import edu.iu.dsc.tws.examples.Utils;
-import edu.iu.dsc.tws.examples.basic.comms.BenchWorker;
 import edu.iu.dsc.tws.examples.basic.comms.KeyedBenchWorker;
 
 /**
