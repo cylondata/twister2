@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -116,16 +115,20 @@ public abstract class ReduceBatchReceiver implements MessageReceiver {
       if (object instanceof ChannelMessage) {
         ((ChannelMessage) object).incrementRefCount();
       }
+
       Integer c = counts.get(target).get(source);
       counts.get(target).put(source, c + 1);
 
       Integer tc = totalCounts.get(target).get(source);
       totalCounts.get(target).put(source, tc + 1);
       //LOG.info("Flags : " + flags + ", Message Flag Last : " + MessageFlags.FLAGS_LAST);
-      m.add(object);
+
+      if (object != null) {
+        m.add(object);
+      }
       if ((flags & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) {
         finishedMessages.put(source, true);
-        LOG.info("onMessage ReduceBatchReceiver Final Message Added");
+       // LOG.info("onMessage ReduceBatchReceiver Final Message Added");
       }
     }
     return canAdd;
@@ -133,6 +136,6 @@ public abstract class ReduceBatchReceiver implements MessageReceiver {
 
   @Override
   public void onFinish(int target) {
-    LOG.log(Level.INFO, "Task  " + target + " Completed ...");
+    //LOG.log(Level.INFO, "Task  " + target + " Completed ...");
   }
 }

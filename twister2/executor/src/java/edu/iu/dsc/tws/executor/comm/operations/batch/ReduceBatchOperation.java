@@ -53,15 +53,18 @@ public class ReduceBatchOperation extends AbstractParallelOperation {
 
   @Override
   public boolean send(int source, IMessage message, int flags) {
-    if (flags == MessageFlags.LAST_MESSAGE) {
-      System.out.println("Last Message Sent");
-    }
     return op.reduce(source, message.getContent(), flags);
   }
 
   @Override
   public boolean progress() {
     return op.progress() || hasPending();
+  }
+
+  @Override
+  public void finish(int source) {
+    op.finish(source);
+    op.reduce(source, null, MessageFlags.FLAGS_LAST);
   }
 
   public boolean hasPending() {
@@ -106,7 +109,6 @@ public class ReduceBatchOperation extends AbstractParallelOperation {
 
     @Override
     public boolean receive(int target, Object object) {
-      System.out.println("Final Batch Receiver");
       TaskMessage msg = new TaskMessage(object,
           edge.getStringMapping(communicationEdge), target);
       outMessages.get(target).offer(msg);

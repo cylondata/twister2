@@ -40,7 +40,6 @@ import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.comm.tasks.batch.SinkBatchTask;
@@ -111,8 +110,9 @@ public class ReduceBatchTask implements IWorker {
     public void run() {
       count++;
       if (count == 20) {
-        String msg = String.valueOf(MessageFlags.EMPTY);
+        String msg = "Last Message";
         sourceTaskContext.writeEnd("reduce-edge", msg);
+        sourceTaskContext.end("reduce-edge");
       } else if (count < 20) {
         sourceTaskContext.write("reduce-edge", "Hello " + count);
       }

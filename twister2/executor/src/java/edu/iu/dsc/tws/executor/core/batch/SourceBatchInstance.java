@@ -155,7 +155,7 @@ public class SourceBatchInstance implements INodeInstance {
         IMessage message = outBatchQueue.peek();
         if (message != null) {
           String edge = message.edge();
-          flag = getFlag(message);
+          //flag = getFlag(message);
           IParallelOperation op = outBatchParOps.get(edge);
           if (op.send(batchTaskId, message, flag)) {
             outBatchQueue.poll();
