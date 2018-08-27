@@ -30,6 +30,7 @@ import edu.iu.dsc.tws.comms.op.batch.BKeyedPartition;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.basic.comms.batch.BGatherExample;
 import edu.iu.dsc.tws.examples.basic.comms.batch.BKeyedPartitionExample;
+import edu.iu.dsc.tws.examples.basic.comms.batch.BKeyedReduceExample;
 import edu.iu.dsc.tws.examples.basic.comms.batch.BPartitionExample;
 import edu.iu.dsc.tws.examples.basic.comms.batch.BReduceExample;
 import edu.iu.dsc.tws.examples.basic.comms.stream.SAllGatherExample;
@@ -128,6 +129,15 @@ public class ExampleMain {
         twister2Job = Twister2Job.newBuilder()
             .setName("reduce-batch-bench")
             .setWorkerClass(BReduceExample.class.getName())
+            .setRequestResource(new WorkerComputeSpec(2, 1024), containers)
+            .setConfig(jobConfig)
+            .build();
+        // now submit the job
+        Twister2Submitter.submitContainerJob(twister2Job, config);
+      } else if (operation.equals("keyedreduce")) {
+        twister2Job = Twister2Job.newBuilder()
+            .setName("partition-batch-bench")
+            .setWorkerClass(BKeyedReduceExample.class.getName())
             .setRequestResource(new WorkerComputeSpec(2, 1024), containers)
             .setConfig(jobConfig)
             .build();

@@ -184,7 +184,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
                    Map<Integer, Queue<Pair<Object, ChannelMessage>>> pRMPS,
                    Map<Integer, Queue<ChannelMessage>> pendingReceiveDesrialize,
                    Map<Integer, MessageSerializer> serializer,
-                   Map<Integer, MessageDeSerializer> deSerializer, boolean k) {
+                   Map<Integer, MessageDeSerializer> deSerializer, boolean keyed) {
     this.config = cfg;
     this.instancePlan = plan;
     this.edge = graphEdge;
@@ -195,7 +195,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     this.executor = instancePlan.getThisExecutor();
     this.receivingExecutors = recvExecutors;
     this.receiver = msgReceiver;
-    this.isKeyed = k;
+    this.isKeyed = keyed;
 
     this.pendingReceiveMessagesPerSource = pRMPS;
     this.pendingSendMessagesPerSource = pendingSendPerSource;
@@ -244,10 +244,10 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
                    Map<Integer, Queue<Pair<Object, ChannelMessage>>> pRMPS,
                    Map<Integer, Queue<ChannelMessage>> pendingReceiveDesrialize,
                    Map<Integer, MessageSerializer> serializer,
-                   Map<Integer, MessageDeSerializer> deSerializer, boolean k) {
+                   Map<Integer, MessageDeSerializer> deSerializer, boolean keyed) {
     init(cfg, messageType, messageType, keyType, keyType,
         plan, graphEdge, recvExecutors, lastReceiver, msgReceiver,
-        pendingSendPerSource, pRMPS, pendingReceiveDesrialize, serializer, deSerializer, k);
+        pendingSendPerSource, pRMPS, pendingReceiveDesrialize, serializer, deSerializer, keyed);
   }
 
   public void setCompletionListener(CompletionListener cmpListener) {
