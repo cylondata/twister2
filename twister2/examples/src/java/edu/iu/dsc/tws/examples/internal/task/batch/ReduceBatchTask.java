@@ -111,7 +111,8 @@ public class ReduceBatchTask implements IWorker {
     public void run() {
       count++;
       if (count == 20) {
-        sourceTaskContext.writeEnd("reduce-edge", MessageFlags.EMPTY);
+        String msg = String.valueOf(MessageFlags.EMPTY);
+        sourceTaskContext.writeEnd("reduce-edge", msg);
       } else if (count < 20) {
         sourceTaskContext.write("reduce-edge", "Hello " + count);
       }
@@ -148,8 +149,8 @@ public class ReduceBatchTask implements IWorker {
 
     @Override
     public boolean execute(IMessage message) {
-      /*System.out.println("Message Reduced : " + message.getContent() + ", Count : " + count);
-      count++;*/
+      System.out.println("Message Reduced : " + message.getContent() + ", Count : " + count);
+      count++;
       if (message.getContent() instanceof Iterator) {
         while (((Iterator) message.getContent()).hasNext()) {
           ((Iterator) message.getContent()).next();

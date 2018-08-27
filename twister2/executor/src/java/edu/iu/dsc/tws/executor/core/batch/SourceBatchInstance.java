@@ -222,7 +222,8 @@ public class SourceBatchInstance implements INodeInstance {
     int flag = 0;
     Object content = message.getContent();
     if (content instanceof String) {
-      if (Integer.parseInt((String) content) == MessageFlags.EMPTY) {
+      String msg = (String) content;
+      if (content.equals(String.valueOf(MessageFlags.EMPTY))) {
         flag = MessageFlags.FLAGS_LAST;
       }
     }
