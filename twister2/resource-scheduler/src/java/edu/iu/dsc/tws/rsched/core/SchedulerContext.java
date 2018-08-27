@@ -18,7 +18,6 @@ import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.config.TokenSub;
 
 public class SchedulerContext extends Context {
-  public static final String SCHEDULER_CLASS = "twister2.class.scheduler";
   public static final String LAUNCHER_CLASS = "twister2.class.launcher";
   public static final String UPLOADER_CLASS = "twister2.class.uploader";
   public static final String WORKER_CLASS = "twister2.job.worker.class";
@@ -62,10 +61,6 @@ public class SchedulerContext extends Context {
   // persistent volume per worker in GB
   public static final double PERSISTENT_VOLUME_PER_WORKER_DEFAULT = 0.0;
   public static final String PERSISTENT_VOLUME_PER_WORKER = "persistent.volume.per.worker";
-
-  public static String schedulerClass(Config cfg) {
-    return cfg.getStringValue(SCHEDULER_CLASS);
-  }
 
   public static String uploaderClass(Config cfg) {
     return cfg.getStringValue(UPLOADER_CLASS);

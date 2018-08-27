@@ -1,6 +1,3 @@
-# scheduler class for distributing the topology for execution
-twister2.class.scheduler: "edu.iu.dsc.tws.rsched.schedulers.mesos.MesosScheduler"
-
 # working directory for the topologies
 twister2.scheduler.mesos.scheduler.working.directory: "~/.twister2/repository"#"${TWISTER2_DIST}/topologies/${CLUSTER}/${ROLE}/${TOPOLOGY}"
 
