@@ -24,11 +24,11 @@ import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.discovery.NodeInfo;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
+import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKController;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import static edu.iu.dsc.tws.common.config.Context.JOB_ARCHIVE_DIRECTORY;
 
@@ -141,7 +141,7 @@ public final class AuroraWorkerStarter {
 
     long startTime = System.currentTimeMillis();
     String workerHostPort = workerAddress.getHostAddress() + ":" + workerPort;
-    int numberOfWorkers = job.getJobResources().getNumberOfWorkers();
+    int numberOfWorkers = job.getNumberOfWorkers();
 
     NodeInfo nodeInfo = new NodeInfo(null, null, null);
     zkController =
@@ -156,7 +156,7 @@ public final class AuroraWorkerStarter {
    * needs to close down when finished computation
    */
   public void waitAndGetAllWorkers() {
-    int numberOfWorkers = job.getJobResources().getNumberOfWorkers();
+    int numberOfWorkers = job.getNumberOfWorkers();
     System.out.println("Waiting for " + numberOfWorkers + " workers to join .........");
 
     // the amount of time to wait for all workers to join a job
@@ -198,10 +198,10 @@ public final class AuroraWorkerStarter {
     worker.waitAndGetAllWorkers();
 
     String workerClass = SchedulerContext.workerClass(worker.config);
-    IContainer container;
+    IWorker container;
     try {
       Object object = ReflectionUtils.newInstance(workerClass);
-      container = (IContainer) object;
+      container = (IWorker) object;
       LOG.info("loaded worker class: " + workerClass);
     } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
       LOG.log(Level.SEVERE, String.format("failed to load the worker class %s",
@@ -209,7 +209,8 @@ public final class AuroraWorkerStarter {
       throw new RuntimeException(e);
     }
 
-    container.init(worker.config, worker.zkController.getWorkerNetworkInfo().getWorkerID(), null);
+    container.init(worker.config, worker.zkController.getWorkerNetworkInfo().getWorkerID(),
+        null, null, null, null);
 
     // close the things, let others know that it is done
     worker.close();
@@ -222,7 +223,7 @@ public final class AuroraWorkerStarter {
   public static void printJob(JobAPI.Job job) {
     System.out.println("Job name: " + job.getJobName());
     System.out.println("Job file: " + job.getJobFormat().getJobFile());
-    System.out.println("workers: " + job.getJobResources().getNumberOfWorkers());
+    System.out.println("workers: " + job.getNumberOfWorkers());
     System.out.println("CPUs: "
         + job.getJobResources().getResourcesList().get(0).getWorkerComputeResource().getCpu());
     System.out.println("RAM: "

@@ -22,7 +22,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.resource.RequestedResources;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.spi.scheduler.IController;
+import edu.iu.dsc.tws.rsched.interfaces.IController;
 import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
 
 public class MPIController implements IController {
@@ -65,11 +65,11 @@ public class MPIController implements IController {
 
   @Override
   public boolean start(RequestedResources resourcePlan, JobAPI.Job job) {
-    if (resourcePlan == null || resourcePlan.getNoOfContainers() == 0) {
+    if (resourcePlan == null || resourcePlan.getNumberOfWorkers() == 0) {
       LOG.log(Level.SEVERE, "No container requested. Can't schedule");
       return false;
     }
-    long containers = resourcePlan.getNoOfContainers();
+    long containers = resourcePlan.getNumberOfWorkers();
     LOG.log(Level.INFO, String.format("Launching job in %s scheduler with no of containers = %d",
         MPIContext.clusterType(config), containers));
 

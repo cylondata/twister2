@@ -19,12 +19,12 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.discovery.NodeInfo;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
-import edu.iu.dsc.tws.proto.network.Network;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 public class WorkerInfo {
   private static final Logger LOG = Logger.getLogger(WorkerInfo.class.getName());
 
-  private Network.WorkerState workerState;
+  private JobMasterAPI.WorkerState workerState;
   private WorkerNetworkInfo networkInfo;
   private long pingTimestamp;
 
@@ -36,7 +36,7 @@ public class WorkerInfo {
                     String nodeIP, String rackName, String dcname) {
 
     networkInfo = new WorkerNetworkInfo(ip, port, workerID, new NodeInfo(nodeIP, rackName, dcname));
-    workerState = Network.WorkerState.UNASSIGNED;
+    workerState = JobMasterAPI.WorkerState.UNASSIGNED;
     pingTimestamp = -1;
   }
 
@@ -51,11 +51,11 @@ public class WorkerInfo {
     return null;
   }
 
-  public void setWorkerState(Network.WorkerState workerState) {
+  public void setWorkerState(JobMasterAPI.WorkerState workerState) {
     this.workerState = workerState;
   }
 
-  public Network.WorkerState getWorkerState() {
+  public JobMasterAPI.WorkerState getWorkerState() {
     return workerState;
   }
 

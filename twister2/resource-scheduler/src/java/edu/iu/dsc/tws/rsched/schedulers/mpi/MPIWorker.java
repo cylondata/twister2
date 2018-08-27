@@ -28,12 +28,11 @@ import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
+import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
-import edu.iu.dsc.tws.common.resource.ZResourcePlan;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 import mpi.MPI;
@@ -182,15 +181,15 @@ public final class MPIWorker {
 
   private static void worker(Config config, int rank) {
     // lets create the resource plan
-    ZResourcePlan resourcePlan = createResourcePlan(config);
+    AllocatedResources resourcePlan = createResourcePlan(config);
 
     String workerClass = MPIContext.workerClass(config);
     try {
       Object object = ReflectionUtils.newInstance(workerClass);
-      if (object instanceof IContainer) {
-        IContainer container = (IContainer) object;
+      if (object instanceof IWorker) {
+        IWorker container = (IWorker) object;
         // now initialize the container
-        container.init(config, rank, resourcePlan);
+        container.init(config, rank, resourcePlan, null, null, null);
       } else if (object instanceof IWorker) {
         IWorker worker = (IWorker) object;
         worker.init(config, rank, resourcePlan,
@@ -214,14 +213,14 @@ public final class MPIWorker {
   }
 
   /**
-   * create a ZResourcePlan
+   * create a AllocatedResources
    * @param config
    * @return
    */
-  public static ZResourcePlan createResourcePlan(Config config) {
+  public static AllocatedResources createResourcePlan(Config config) {
     try {
       int rank = MPI.COMM_WORLD.getRank();
-      ZResourcePlan resourcePlan = new ZResourcePlan(
+      AllocatedResources resourcePlan = new AllocatedResources(
           MPIContext.clusterType(config), MPI.COMM_WORLD.getRank());
 
       String processName = MPI.getProcessorName();
@@ -275,13 +274,13 @@ public final class MPIWorker {
     }
   }
 
-  private static void addContainers(Config cfg, ZResourcePlan resourcePlan,
+  private static void addContainers(Config cfg, AllocatedResources resourcePlan,
                                     Map<Integer, String> processes) throws MPIException {
     int size = MPI.COMM_WORLD.getSize();
     for (int i = 0; i < size; i++) {
       WorkerComputeResource workerComputeResource = new WorkerComputeResource(i);
 //      workerComputeResource.addProperty(SchedulerContext.WORKER_NAME, processes.get(i));
-      resourcePlan.addContainer(workerComputeResource);
+      resourcePlan.addWorkerComputeResource(workerComputeResource);
     }
   }
 }

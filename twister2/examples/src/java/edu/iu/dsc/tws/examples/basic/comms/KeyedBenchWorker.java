@@ -48,6 +48,7 @@
 package edu.iu.dsc.tws.examples.basic.comms;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -55,7 +56,8 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.resource.ZResourcePlan;
+import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
+import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
@@ -71,7 +73,7 @@ import edu.iu.dsc.tws.examples.Utils;
 public abstract class KeyedBenchWorker implements IWorker {
   private static final Logger LOG = Logger.getLogger(KeyedBenchWorker.class.getName());
 
-  protected ZResourcePlan resourcePlan;
+  protected AllocatedResources resourcePlan;
 
   protected int workerId;
 
@@ -89,18 +91,31 @@ public abstract class KeyedBenchWorker implements IWorker {
 
   protected boolean sourcesDone = false;
 
+  protected List<WorkerNetworkInfo> workerList = null;
+
   @Override
-  public void init(Config cfg, int containerId, ZResourcePlan plan,
+  public void init(Config cfg, int workerID, AllocatedResources allocatedResources,
                    IWorkerController workerController, IPersistentVolume persistentVolume,
                    IVolatileVolume volatileVolume) {
     // create the job parameters
     this.jobParameters = JobParameters.build(cfg);
     this.config = cfg;
-    this.resourcePlan = plan;
-    this.workerId = containerId;
+    this.resourcePlan = allocatedResources;
+    this.workerId = workerID;
+
+    // wait for all workers in this job to join
+    workerList = workerController.waitForAllWorkersToJoin(50000);
+    if (workerList != null) {
+      LOG.info("All workers joined. " + WorkerNetworkInfo.workerListAsString(workerList));
+    } else {
+      LOG.severe("Can not get all workers to join. Something wrong. Exiting ....................");
+      return;
+    }
 
     // lets create the task plan
-    this.taskPlan = Utils.createStageTaskPlan(cfg, plan, jobParameters.getTaskStages());
+    this.taskPlan = Utils.createStageTaskPlan(
+        cfg, allocatedResources, jobParameters.getTaskStages(), workerList);
+
     // create the channel
     channel = Network.initializeChannel(config, workerController, resourcePlan);
     // create the communicator

@@ -9,23 +9,19 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.rsched.spi.statemanager;
-
-import java.util.concurrent.TimeUnit;
+package edu.iu.dsc.tws.rsched.exceptions;
 
 /**
- * Interface for a shared lock
+ * Thrown to indicate that an error occurred while uploading package
  */
-public interface Lock {
+public class UploaderException extends RuntimeException {
+  private static final long serialVersionUID = -254264900110286748L;
 
-  /**
-   * Wait until timeout for a lock to be available. Return true if lock is obtained or false if it
-   * can not be obtained.
-   */
-  boolean tryLock(long timeout, TimeUnit unit) throws InterruptedException;
+  public UploaderException(String message) {
+    super(message);
+  }
 
-  /**
-   * Release the lock. Failure to call this method could result in an orphaned lock.
-   */
-  void unlock();
+  public UploaderException(String message, Throwable cause) {
+    super(message, cause);
+  }
 }

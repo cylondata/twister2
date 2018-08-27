@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
-import edu.iu.dsc.tws.proto.network.Network;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 public class Pinger implements MessageHandler {
   private static final Logger LOG = Logger.getLogger(Pinger.class.getName());
@@ -54,10 +54,10 @@ public class Pinger implements MessageHandler {
 
     lastPingTime = System.currentTimeMillis();
 
-    Network.Ping ping = Network.Ping.newBuilder()
+    JobMasterAPI.Ping ping = JobMasterAPI.Ping.newBuilder()
         .setWorkerID(thisWorker.getWorkerID())
         .setPingMessage("Ping Message From the Worker to the Job Master")
-        .setMessageType(Network.Ping.MessageType.WORKER_TO_MASTER)
+        .setMessageType(JobMasterAPI.Ping.MessageType.WORKER_TO_MASTER)
         .build();
 
     requestID = rrClient.sendRequest(ping);
@@ -71,7 +71,7 @@ public class Pinger implements MessageHandler {
 
   @Override
   public void onMessage(RequestID id, int workerId, Message message) {
-    if (message instanceof Network.Ping) {
+    if (message instanceof JobMasterAPI.Ping) {
       LOG.fine("Ping Response message received from the master: \n" + message);
 
       if (!requestID.equals(id)) {

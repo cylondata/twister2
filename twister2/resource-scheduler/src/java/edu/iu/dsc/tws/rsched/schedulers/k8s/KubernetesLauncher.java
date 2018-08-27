@@ -27,8 +27,8 @@ import edu.iu.dsc.tws.master.JobMaster;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+import edu.iu.dsc.tws.rsched.interfaces.ILauncher;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobMasterRequestObject;
-import edu.iu.dsc.tws.rsched.spi.scheduler.ILauncher;
 
 import io.kubernetes.client.models.V1PersistentVolumeClaim;
 import io.kubernetes.client.models.V1Service;
@@ -110,7 +110,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
       long start = System.currentTimeMillis();
 
       int containersPerPod = KubernetesContext.workersPerPod(config);
-      int numberOfPods = resourceRequest.getNoOfContainers() / containersPerPod;
+      int numberOfPods = resourceRequest.getNumberOfWorkers() / containersPerPod;
 
       boolean transferred =
           controller.transferJobPackageInParallel(namespace, jobName, numberOfPods, jobPackageFile);

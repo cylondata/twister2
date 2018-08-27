@@ -3,8 +3,6 @@ twister2.docker.image.for.kubernetes: "auyar/twister2-openmpi:0.0.1"
 
 # the package uri
 twister2.system.package.uri: "${TWISTER2_DIST}/twister2-core.tar.gz"
-# the resource manager class
-twister2.class.state.manager: "edu.iu.dsc.tws.rsched.statemanagers.fs.SharedFileSystemStateManager"
 # launcher class for aurora submission
 twister2.class.launcher: edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesLauncher
 # the uplaoder class

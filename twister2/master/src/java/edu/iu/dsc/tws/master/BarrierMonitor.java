@@ -21,7 +21,7 @@ import com.google.protobuf.Message;
 import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
-import edu.iu.dsc.tws.proto.network.Network;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 public class BarrierMonitor implements MessageHandler {
   private static final Logger LOG = Logger.getLogger(BarrierMonitor.class.getName());
@@ -39,8 +39,8 @@ public class BarrierMonitor implements MessageHandler {
   @Override
   public void onMessage(RequestID requestID, int workerId, Message message) {
 
-    if (message instanceof Network.BarrierRequest) {
-      Network.BarrierRequest barrierRequest = (Network.BarrierRequest) message;
+    if (message instanceof JobMasterAPI.BarrierRequest) {
+      JobMasterAPI.BarrierRequest barrierRequest = (JobMasterAPI.BarrierRequest) message;
       LOG.info("BarrierRequest message received:\n" + barrierRequest);
 
       waitList.put(barrierRequest.getWorkerID(), requestID);
@@ -60,7 +60,7 @@ public class BarrierMonitor implements MessageHandler {
   private void sendBarrierResponseToWaitList() {
 
     for (Map.Entry<Integer, RequestID> entry: waitList.entrySet()) {
-      Network.BarrierResponse response = Network.BarrierResponse.newBuilder()
+      JobMasterAPI.BarrierResponse response = JobMasterAPI.BarrierResponse.newBuilder()
           .setWorkerID(entry.getKey())
           .build();
 
