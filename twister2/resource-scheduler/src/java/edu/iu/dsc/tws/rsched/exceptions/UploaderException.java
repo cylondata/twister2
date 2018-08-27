@@ -9,16 +9,19 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.rsched.core;
+package edu.iu.dsc.tws.rsched.exceptions;
 
 /**
- * This is the class used for controlling a job running on the cluster.
+ * Thrown to indicate that an error occurred while uploading package
  */
-public final class JobClient {
-  private JobClient() {
+public class UploaderException extends RuntimeException {
+  private static final long serialVersionUID = -254264900110286748L;
+
+  public UploaderException(String message) {
+    super(message);
   }
 
-  public static void main(String[] args) {
-
+  public UploaderException(String message, Throwable cause) {
+    super(message, cause);
   }
 }
