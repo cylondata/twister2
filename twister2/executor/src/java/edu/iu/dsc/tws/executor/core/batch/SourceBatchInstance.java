@@ -149,18 +149,13 @@ public class SourceBatchInstance implements INodeInstance {
       if (isDone) {
         state.set(InstanceState.EXECUTION_DONE);
       }
-
+      int flag = 0;
       // now check the output queue
       while (!outBatchQueue.isEmpty()) {
         IMessage message = outBatchQueue.peek();
         if (message != null) {
           String edge = message.edge();
-
-          int flag = 0;
-          if (message.getContent().equals("LAST_MESSAGE")) {
-            flag = MessageFlags.FLAGS_LAST;
-          }
-
+          flag = getFlag(message);
           IParallelOperation op = outBatchParOps.get(edge);
           if (op.send(batchTaskId, message, flag)) {
             outBatchQueue.poll();
@@ -197,6 +192,7 @@ public class SourceBatchInstance implements INodeInstance {
 
   /**
    * Progress the communication and return weather we need to further progress
+   *
    * @return true if further progress is needed
    */
   public boolean communicationProgress() {
@@ -220,5 +216,16 @@ public class SourceBatchInstance implements INodeInstance {
 
   public int getWorkerId() {
     return workerId;
+  }
+
+  public int getFlag(IMessage message) {
+    int flag = 0;
+    Object content = message.getContent();
+    if (content instanceof String) {
+      if (Integer.parseInt((String) content) == MessageFlags.EMPTY) {
+        flag = MessageFlags.FLAGS_LAST;
+      }
+    }
+    return flag;
   }
 }
