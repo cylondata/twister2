@@ -27,19 +27,19 @@ package edu.iu.dsc.tws.common.resource;
  * We are using uniform resources.
  */
 public class RequestedResources {
-  private int noOfContainers;
-  private WorkerComputeResource container;
+  private int numberOfWorkers;
+  private WorkerComputeResource workerComputeResource;
 
-  public RequestedResources(int noOfContainers, WorkerComputeResource container) {
-    this.noOfContainers = noOfContainers;
-    this.container = container;
+  public RequestedResources(int numberOfWorkers, WorkerComputeResource workerComputeResource) {
+    this.numberOfWorkers = numberOfWorkers;
+    this.workerComputeResource = workerComputeResource;
   }
 
-  public int getNoOfContainers() {
-    return noOfContainers;
+  public int getNumberOfWorkers() {
+    return numberOfWorkers;
   }
 
-  public WorkerComputeResource getContainer() {
-    return container;
+  public WorkerComputeResource getWorkerComputeResource() {
+    return workerComputeResource;
   }
 }

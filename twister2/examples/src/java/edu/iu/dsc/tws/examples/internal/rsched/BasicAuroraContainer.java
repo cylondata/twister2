@@ -12,18 +12,23 @@
 package edu.iu.dsc.tws.examples.internal.rsched;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.ZResourcePlan;
-import edu.iu.dsc.tws.rsched.spi.container.IContainer;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
+import edu.iu.dsc.tws.common.resource.AllocatedResources;
+import edu.iu.dsc.tws.common.worker.IPersistentVolume;
+import edu.iu.dsc.tws.common.worker.IVolatileVolume;
+import edu.iu.dsc.tws.common.worker.IWorker;
 
-public class BasicAuroraContainer implements IContainer {
-
+public class BasicAuroraContainer implements IWorker {
 
   @Override
-  public void init(Config config, int id, ZResourcePlan resourcePlan) {
+  public void init(Config config, int workerID, AllocatedResources resources,
+                   IWorkerController workerController,
+                   IPersistentVolume persistentVolume,
+                   IVolatileVolume volatileVolume) {
     // wait some random amount of time before finishing
     long duration = (long) (Math.random() * 1000);
     try {
-      System.out.println("I am the worker: " + id);
+      System.out.println("I am the worker: " + workerID);
       System.out.println("I am sleeping " + duration + "ms. Then will close.");
       Thread.sleep(duration);
     } catch (InterruptedException e) {

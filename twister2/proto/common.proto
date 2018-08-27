@@ -1,7 +1,0 @@
-syntax = "proto3";
-package tws.proto.common;
-
-option java_package = "edu.iu.dsc.tws.proto.system";
-option java_outer_classname = "Common";
-
-// currently nothing in

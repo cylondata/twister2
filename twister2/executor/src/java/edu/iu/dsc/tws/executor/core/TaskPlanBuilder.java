@@ -30,8 +30,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
-import edu.iu.dsc.tws.common.resource.ZResourcePlan;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.executor.api.TaskIdGenerator;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
@@ -47,7 +47,7 @@ public final class TaskPlanBuilder {
    * @param idGenerator global task id generator
    * @return the task plan
    */
-  public static TaskPlan build(ZResourcePlan resourcePlan,
+  public static TaskPlan build(AllocatedResources resourcePlan,
                                TaskSchedulePlan schedulePlan, TaskIdGenerator idGenerator) {
     Set<TaskSchedulePlan.ContainerPlan> cPlanList = schedulePlan.getContainers();
     Map<Integer, Set<Integer>> containersToTasks = new HashMap<>();
@@ -64,7 +64,7 @@ public final class TaskPlanBuilder {
       containersToTasks.put(c.getContainerId(), instances);
     }
 
-    List<WorkerComputeResource> containers = resourcePlan.getContainers();
+    List<WorkerComputeResource> containers = resourcePlan.getWorkerComputeResources();
     Map<String, List<WorkerComputeResource>> containersPerNode = new HashMap<>();
     for (WorkerComputeResource c : containers) {
       String name = Integer.toString(c.getId());
@@ -89,6 +89,6 @@ public final class TaskPlanBuilder {
       i++;
     }
 
-    return new TaskPlan(containersToTasks, groupsToTasks, resourcePlan.getThisId());
+    return new TaskPlan(containersToTasks, groupsToTasks, resourcePlan.getWorkerId());
   }
 }

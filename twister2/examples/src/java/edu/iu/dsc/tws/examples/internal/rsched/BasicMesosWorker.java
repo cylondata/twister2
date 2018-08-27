@@ -23,7 +23,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.resource.ZResourcePlan;
+import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
@@ -33,7 +33,7 @@ public class BasicMesosWorker implements IWorker {
   private static final Logger LOG = Logger.getLogger(BasicMesosContainer.class.getName());
 
   @Override
-  public void init(Config config, int id, ZResourcePlan resourcePlan,
+  public void init(Config config, int workerID, AllocatedResources allocatedResources,
                    IWorkerController workerController, IPersistentVolume persistentVolume,
                    IVolatileVolume volatileVolume) {
     LOG.info("Mesos Worker start time(ms): " + System.currentTimeMillis());
@@ -42,7 +42,7 @@ public class BasicMesosWorker implements IWorker {
     long duration = (long) (Math.random() * 1000);
     int port = workerController.getWorkerNetworkInfo().getWorkerPort();
     try {
-      System.out.println("I am the worker: " + id);
+      System.out.println("I am the worker: " + workerID);
       System.out.println("I am sleeping " + duration + "ms. Then will close.");
       Thread.sleep(duration);
       //echoServer(port);

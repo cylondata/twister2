@@ -65,11 +65,11 @@ public class MPIController implements IController {
 
   @Override
   public boolean start(RequestedResources resourcePlan, JobAPI.Job job) {
-    if (resourcePlan == null || resourcePlan.getNoOfContainers() == 0) {
+    if (resourcePlan == null || resourcePlan.getNumberOfWorkers() == 0) {
       LOG.log(Level.SEVERE, "No container requested. Can't schedule");
       return false;
     }
-    long containers = resourcePlan.getNoOfContainers();
+    long containers = resourcePlan.getNumberOfWorkers();
     LOG.log(Level.INFO, String.format("Launching job in %s scheduler with no of containers = %d",
         MPIContext.clusterType(config), containers));
 

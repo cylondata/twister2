@@ -25,14 +25,13 @@ package edu.iu.dsc.tws.common.worker;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.resource.ZResourcePlan;
+import edu.iu.dsc.tws.common.resource.AllocatedResources;
 
 public interface IWorker {
   void init(Config config,
-            int id,
-            ZResourcePlan resourcePlan,
+            int workerID,
+            AllocatedResources allocatedResources,
             IWorkerController workerController,
             IPersistentVolume persistentVolume,
             IVolatileVolume volatileVolume);
-
 }

@@ -47,7 +47,7 @@ kubernetes.workers.per.pod: 2
 # Otherwise, it will try to get these information by querying Kubernetes Master
 # It will use below two labels when querying node locations
 # For this to work, submitting client has to have admin privileges
-kubernetes.node.locations.from.config: true
+kubernetes.node.locations.from.config: false
 
 # rack label key for Kubernetes nodes in a cluster
 # each rack should have a unique label

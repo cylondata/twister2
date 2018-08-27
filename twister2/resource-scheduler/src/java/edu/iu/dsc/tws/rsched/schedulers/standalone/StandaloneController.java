@@ -162,7 +162,7 @@ public class StandaloneController implements IController {
 
   private TaskGroup getTaskGroup(JobAPI.Job job, RequestedResources resources) {
     TaskGroup taskGroup = new TaskGroup();
-    taskGroup.setCount(resources.getNoOfContainers());
+    taskGroup.setCount(resources.getNumberOfWorkers());
     taskGroup.setName(job.getJobName());
     taskGroup.addTasks(getShellDriver(job, resources));
     return taskGroup;
@@ -283,7 +283,7 @@ public class StandaloneController implements IController {
                                                      JobAPI.Job job) {
     Map<String, Object> commands = new HashMap<>();
     // lets get the configurations
-    commands.put("procs", requestedResources.getNoOfContainers());
+    commands.put("procs", requestedResources.getNumberOfWorkers());
 
     String jobClassPath = JobUtils.jobClassPath(cfg, job, workingDirectory);
     LOG.log(Level.INFO, "Job class path: " + jobClassPath);
