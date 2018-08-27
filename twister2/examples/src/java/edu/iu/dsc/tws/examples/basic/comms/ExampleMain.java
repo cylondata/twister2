@@ -135,7 +135,7 @@ public class ExampleMain {
         Twister2Submitter.submitContainerJob(twister2Job, config);
       } else if (operation.equals("keyedreduce")) {
         twister2Job = Twister2Job.newBuilder()
-            .setName("partition-batch-bench")
+            .setName("keyed-reduce-batch-bench")
             .setWorkerClass(BKeyedReduceExample.class.getName())
             .setRequestResource(new WorkerComputeResource(2, 1024), containers)
             .setConfig(jobConfig)

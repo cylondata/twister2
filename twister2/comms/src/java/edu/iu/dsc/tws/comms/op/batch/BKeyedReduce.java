@@ -46,6 +46,7 @@ public class BKeyedReduce {
         new ReduceMultiBatchPartialReceiver(fnc), edges);
     this.keyedReduce.init(comm.getConfig(), dataType, plan);
     this.destinationSelector = destSelector;
+    this.destinationSelector.prepare(sources, destinations);
 
   }
 

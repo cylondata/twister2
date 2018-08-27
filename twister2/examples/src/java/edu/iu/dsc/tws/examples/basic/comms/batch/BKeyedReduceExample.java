@@ -52,7 +52,7 @@ public class BKeyedReduceExample extends KeyedBenchWorker {
     Set<Integer> targets = new HashSet<>();
     Integer noOfTargetTasks = jobParameters.getTaskStages().get(1);
     for (int i = 0; i < noOfTargetTasks; i++) {
-      targets.add(i);
+      targets.add(noOfSourceTasks + i);
     }
 
     keyedReduce = new BKeyedReduce(communicator, taskPlan, sources, targets,

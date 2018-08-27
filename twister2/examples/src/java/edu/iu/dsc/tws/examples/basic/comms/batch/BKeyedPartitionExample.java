@@ -65,6 +65,9 @@ public class BKeyedPartitionExample extends KeyedBenchWorker {
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
     // now initialize the workers
+
+    LOG.log(Level.INFO, String.format("%d Sources %s target %d this %s",
+        workerId, sources, 1, tasksOfExecutor));
     for (int t : tasksOfExecutor) {
       // the map thread where data is produced
       Thread mapThread = new Thread(new KeyedBenchWorker.MapWorker(t));
