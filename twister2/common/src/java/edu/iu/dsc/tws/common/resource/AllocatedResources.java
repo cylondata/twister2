@@ -28,40 +28,40 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Holds information about the cluster resources including each container.
+ * Holds information about the job compute resources for each worker.
  */
-public class ZResourcePlan {
+public class AllocatedResources {
   // the cluster name
   private String cluster;
 
-  // id of this task
-  private int thisId;
+  // id of this worker
+  private int workerId;
 
-  // list of resource containers
-  private List<WorkerComputeSpec> containers = new ArrayList<>();
+  // list of resource workers
+  private List<WorkerComputeResource> workers = new ArrayList<>();
 
-  public ZResourcePlan(String cluster, int id) {
+  public AllocatedResources(String cluster, int workerId) {
     this.cluster = cluster;
-    this.thisId = id;
+    this.workerId = workerId;
   }
 
-  public List<WorkerComputeSpec> getContainers() {
-    return containers;
+  public List<WorkerComputeResource> getWorkerComputeResources() {
+    return workers;
   }
 
-  public int noOfContainers() {
-    return containers.size();
+  public int getNumberOfWorkers() {
+    return workers.size();
   }
 
-  public void addContainer(WorkerComputeSpec container) {
-    this.containers.add(container);
+  public void addWorkerComputeResource(WorkerComputeResource workerComputeResource) {
+    this.workers.add(workerComputeResource);
   }
 
   public String getCluster() {
     return cluster;
   }
 
-  public int getThisId() {
-    return thisId;
+  public int getWorkerId() {
+    return workerId;
   }
 }

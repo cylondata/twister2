@@ -19,7 +19,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.resource.RequestedResources;
-import edu.iu.dsc.tws.common.resource.WorkerComputeSpec;
+import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKUtil;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
@@ -71,13 +71,13 @@ public class AuroraLauncher implements ILauncher {
     Map<AuroraField, String> bindings = constructEnvVariables(config);
 
     // convert RequestedResources to environment variables, override previous values from config
-    WorkerComputeSpec container = resourceRequest.getContainer();
+    WorkerComputeResource container = resourceRequest.getWorkerComputeResource();
     bindings.put(AuroraField.JOB_NAME, jobName);
     bindings.put(AuroraField.AURORA_WORKER_CLASS, AuroraContext.auroraWorkerClass(config));
     bindings.put(AuroraField.CPUS_PER_CONTAINER, container.getNoOfCpus() + "");
     bindings.put(AuroraField.RAM_PER_CONTAINER, container.getMemoryInBytes() + "");
     bindings.put(AuroraField.DISK_PER_CONTAINER, container.getDiskInBytes() + "");
-    bindings.put(AuroraField.NUMBER_OF_CONTAINERS, resourceRequest.getNoOfContainers() + "");
+    bindings.put(AuroraField.NUMBER_OF_CONTAINERS, resourceRequest.getNumberOfWorkers() + "");
 
     printEnvs(bindings);
 

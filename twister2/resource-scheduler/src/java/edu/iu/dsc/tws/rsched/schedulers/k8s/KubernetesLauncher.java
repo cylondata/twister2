@@ -110,7 +110,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
       long start = System.currentTimeMillis();
 
       int containersPerPod = KubernetesContext.workersPerPod(config);
-      int numberOfPods = resourceRequest.getNoOfContainers() / containersPerPod;
+      int numberOfPods = resourceRequest.getNumberOfWorkers() / containersPerPod;
 
       boolean transferred =
           controller.transferJobPackageInParallel(namespace, jobName, numberOfPods, jobPackageFile);

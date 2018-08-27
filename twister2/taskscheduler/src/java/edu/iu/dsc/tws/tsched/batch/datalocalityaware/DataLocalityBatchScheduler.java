@@ -34,12 +34,12 @@ import edu.iu.dsc.tws.tsched.utils.TaskAttributes;
  * This class is responsible for scheduling the task graph instances into the worker nodes
  * based on the locality of the data.
  */
-public class DataLocalityBatchScheduling {
+public class DataLocalityBatchScheduler {
 
-  private static final Logger LOG = Logger.getLogger(DataLocalityBatchScheduling.class.getName());
+  private static final Logger LOG = Logger.getLogger(DataLocalityBatchScheduler.class.getName());
   private static int globalTaskIndex = 0;
 
-  protected DataLocalityBatchScheduling() {
+  protected DataLocalityBatchScheduler() {
   }
 
   /**
@@ -223,27 +223,22 @@ public class DataLocalityBatchScheduling {
       for (int i = 0; i < workers.getNumberOfWorkers(); i++) {
         worker = workers.getWorker(i);
 
-        try {
+        if (worker.getProperty("bandwidth") != null && worker.getProperty("latency") != null) {
           workerBandwidth = (double) worker.getProperty("bandwidth");
           workerLatency = (double) worker.getProperty("latency");
-        } catch (NullPointerException ne) {
-          ne.printStackTrace();
+        } else {
+          workerBandwidth = TaskSchedulerContext.TWISTER2_CONTAINER_INSTANCE_BANDWIDTH_DEFAULT;
+          workerLatency = TaskSchedulerContext.TWISTER2_CONTAINER_INSTANCE_LATENCY_DEFAULT;
         }
 
         DataTransferTimeCalculator calculateDataTransferTime =
             new DataTransferTimeCalculator(nodesList, calculateDistance);
 
-        //Just for testing assigned static values and static increment...!
-        if ("datanode1".equals(nodesList)) {
-          datanodeBandwidth = 512.0;
-          datanodeLatency = 0.4;
-        } else {
-          datanodeBandwidth = 512.0; //assign some other bandwidth value
-          datanodeLatency = 0.4;
-        }
+        //Right now using the default configuration values
+        datanodeBandwidth = TaskSchedulerContext.TWISTER2_DATANODE_INSTANCE_BANDWIDTH_DEFAULT;
+        datanodeLatency = TaskSchedulerContext.TWISTER2_DATANODE_INSTANCE_LATENCY_DEFAULT;
 
-        //Write the proper formula to calculate the distance between
-        //worker nodes and data nodes.
+        //Calculate the distance between worker nodes and data nodes.
         calculateDistance = Math.abs((2 * workerBandwidth * workerLatency)
             - (2 * datanodeBandwidth * datanodeLatency));
 
@@ -278,6 +273,13 @@ public class DataLocalityBatchScheduling {
           cal.add(new DataTransferTimeCalculator(aValue.getNodeName(),
               aValue.getRequiredDataTransferTime(), key));
         }
+
+        for (DataTransferTimeCalculator requiredDataTransferTime : value) {
+          LOG.fine("Task:" + vertex.getName()
+              + "(" + requiredDataTransferTime.getTaskIndex() + ")"
+              + key + "D.Node:" + "-> W.Node:" + requiredDataTransferTime.getNodeName()
+              + "-> D.Time:" + requiredDataTransferTime.getRequiredDataTransferTime());
+        }
       }
     } catch (NoSuchElementException nse) {
       nse.printStackTrace();
@@ -285,4 +287,6 @@ public class DataLocalityBatchScheduling {
     return cal;
   }
 }
+
+
 

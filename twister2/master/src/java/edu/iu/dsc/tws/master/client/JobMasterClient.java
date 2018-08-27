@@ -28,9 +28,9 @@ import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
 import edu.iu.dsc.tws.master.JobMasterContext;
-import edu.iu.dsc.tws.proto.network.Network;
-import edu.iu.dsc.tws.proto.network.Network.ListWorkersRequest;
-import edu.iu.dsc.tws.proto.network.Network.ListWorkersResponse;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersRequest;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersResponse;
 
 /**
  * JobMasterClient class
@@ -124,7 +124,7 @@ public class JobMasterClient {
 
     jmWorkerController = new JMWorkerController(config, thisWorker, rrClient, numberOfWorkers);
 
-    Network.Ping.Builder pingBuilder = Network.Ping.newBuilder();
+    JobMasterAPI.Ping.Builder pingBuilder = JobMasterAPI.Ping.newBuilder();
     rrClient.registerResponseHandler(pingBuilder, pinger);
 
     ListWorkersRequest.Builder listRequestBuilder = ListWorkersRequest.newBuilder();
@@ -132,16 +132,19 @@ public class JobMasterClient {
     rrClient.registerResponseHandler(listRequestBuilder, jmWorkerController);
     rrClient.registerResponseHandler(listResponseBuilder, jmWorkerController);
 
-    Network.WorkerStateChange.Builder stateChangeBuilder = Network.WorkerStateChange.newBuilder();
-    Network.WorkerStateChangeResponse.Builder stateChangeResponseBuilder
-        = Network.WorkerStateChangeResponse.newBuilder();
+    JobMasterAPI.WorkerStateChange.Builder stateChangeBuilder =
+        JobMasterAPI.WorkerStateChange.newBuilder();
+    JobMasterAPI.WorkerStateChangeResponse.Builder stateChangeResponseBuilder
+        = JobMasterAPI.WorkerStateChangeResponse.newBuilder();
 
     ResponseMessageHandler responseMessageHandler = new ResponseMessageHandler();
     rrClient.registerResponseHandler(stateChangeBuilder, responseMessageHandler);
     rrClient.registerResponseHandler(stateChangeResponseBuilder, responseMessageHandler);
 
-    Network.BarrierRequest.Builder barrierRequestBuilder = Network.BarrierRequest.newBuilder();
-    Network.BarrierResponse.Builder barrierResponseBuilder = Network.BarrierResponse.newBuilder();
+    JobMasterAPI.BarrierRequest.Builder barrierRequestBuilder =
+        JobMasterAPI.BarrierRequest.newBuilder();
+    JobMasterAPI.BarrierResponse.Builder barrierResponseBuilder =
+        JobMasterAPI.BarrierResponse.newBuilder();
     rrClient.registerResponseHandler(barrierRequestBuilder, jmWorkerController);
     rrClient.registerResponseHandler(barrierResponseBuilder, jmWorkerController);
 
@@ -277,7 +280,8 @@ public class JobMasterClient {
    */
   public WorkerNetworkInfo sendWorkerStartingMessage() {
 
-    Network.WorkerNetworkInfo.Builder workerInfoBuilder = Network.WorkerNetworkInfo.newBuilder()
+    JobMasterAPI.WorkerNetworkInfo.Builder workerInfoBuilder =
+        JobMasterAPI.WorkerNetworkInfo.newBuilder()
         .setWorkerID(thisWorker.getWorkerID())
         .setWorkerIP(thisWorker.getWorkerIP().getHostAddress())
         .setPort(thisWorker.getWorkerPort());
@@ -294,9 +298,9 @@ public class JobMasterClient {
       workerInfoBuilder.setDataCenterName(thisWorker.getNodeInfo().getDataCenterName());
     }
 
-    Network.WorkerStateChange workerStateChange = Network.WorkerStateChange.newBuilder()
+    JobMasterAPI.WorkerStateChange workerStateChange = JobMasterAPI.WorkerStateChange.newBuilder()
         .setWorkerNetworkInfo(workerInfoBuilder.build())
-        .setNewState(Network.WorkerState.STARTING)
+        .setNewState(JobMasterAPI.WorkerState.STARTING)
         .build();
 
     // if JobMaster assigns ID, wait for the response
@@ -326,14 +330,14 @@ public class JobMasterClient {
   }
 
   public boolean sendWorkerRunningMessage() {
-    Network.WorkerNetworkInfo workerInfo =
-        Network.WorkerNetworkInfo.newBuilder()
+    JobMasterAPI.WorkerNetworkInfo workerInfo =
+        JobMasterAPI.WorkerNetworkInfo.newBuilder()
             .setWorkerID(thisWorker.getWorkerID())
             .build();
 
-    Network.WorkerStateChange workerStateChange = Network.WorkerStateChange.newBuilder()
+    JobMasterAPI.WorkerStateChange workerStateChange = JobMasterAPI.WorkerStateChange.newBuilder()
         .setWorkerNetworkInfo(workerInfo)
-        .setNewState(Network.WorkerState.RUNNING)
+        .setNewState(JobMasterAPI.WorkerState.RUNNING)
         .build();
 
     RequestID requestID = rrClient.sendRequest(workerStateChange);
@@ -348,14 +352,14 @@ public class JobMasterClient {
 
   public boolean sendWorkerCompletedMessage() {
 
-    Network.WorkerNetworkInfo workerInfo =
-        Network.WorkerNetworkInfo.newBuilder()
+    JobMasterAPI.WorkerNetworkInfo workerInfo =
+        JobMasterAPI.WorkerNetworkInfo.newBuilder()
             .setWorkerID(thisWorker.getWorkerID())
             .build();
 
-    Network.WorkerStateChange workerStateChange = Network.WorkerStateChange.newBuilder()
+    JobMasterAPI.WorkerStateChange workerStateChange = JobMasterAPI.WorkerStateChange.newBuilder()
         .setWorkerNetworkInfo(workerInfo)
-        .setNewState(Network.WorkerState.COMPLETED)
+        .setNewState(JobMasterAPI.WorkerState.COMPLETED)
         .build();
 
     LOG.info("Sending the Worker Completed message: \n" + workerStateChange);
@@ -375,14 +379,14 @@ public class JobMasterClient {
     @Override
     public void onMessage(RequestID id, int workerId, Message message) {
 
-      if (message instanceof Network.WorkerStateChangeResponse) {
+      if (message instanceof JobMasterAPI.WorkerStateChangeResponse) {
         LOG.info("Received a WorkerStateChange response from the master. \n" + message);
 
-        Network.WorkerStateChangeResponse responseMessage =
-            (Network.WorkerStateChangeResponse) message;
+        JobMasterAPI.WorkerStateChangeResponse responseMessage =
+            (JobMasterAPI.WorkerStateChangeResponse) message;
 
         if (JobMasterContext.jobMasterAssignsWorkerIDs(config)
-            && responseMessage.getSentState() == Network.WorkerState.STARTING) {
+            && responseMessage.getSentState() == JobMasterAPI.WorkerState.STARTING) {
           thisWorker.setWorkerID(responseMessage.getWorkerID());
         }
 

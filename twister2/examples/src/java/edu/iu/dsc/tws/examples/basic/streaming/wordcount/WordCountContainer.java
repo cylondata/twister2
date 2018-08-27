@@ -20,16 +20,19 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.ZResourcePlan;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
+import edu.iu.dsc.tws.common.resource.AllocatedResources;
+import edu.iu.dsc.tws.common.worker.IPersistentVolume;
+import edu.iu.dsc.tws.common.worker.IVolatileVolume;
+import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowMultiGather;
 import edu.iu.dsc.tws.examples.utils.WordCountUtils;
-import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 
-public class WordCountContainer implements IContainer {
+public class WordCountContainer implements IWorker {
   private static final Logger LOG = Logger.getLogger(WordCountContainer.class.getName());
 
   private DataFlowMultiGather keyGather;
@@ -42,7 +45,7 @@ public class WordCountContainer implements IContainer {
 
   private Config config;
 
-  private ZResourcePlan resourcePlan;
+  private AllocatedResources resourcePlan;
 
   private int id;
 
@@ -53,11 +56,14 @@ public class WordCountContainer implements IContainer {
   private TaskPlan taskPlan;
 
   @Override
-  public void init(Config cfg, int containerId, ZResourcePlan plan) {
+  public void init(Config cfg, int workerID, AllocatedResources resources,
+                   IWorkerController workerController,
+                   IPersistentVolume persistentVolume,
+                   IVolatileVolume volatileVolume) {
     this.config = cfg;
-    this.resourcePlan = plan;
-    this.id = containerId;
-    this.noOfTasksPerExecutor = NO_OF_TASKS / plan.noOfContainers();
+    this.resourcePlan = resources;
+    this.id = workerID;
+    this.noOfTasksPerExecutor = NO_OF_TASKS / resources.getNumberOfWorkers();
 
     setupTasks();
     setupNetwork();

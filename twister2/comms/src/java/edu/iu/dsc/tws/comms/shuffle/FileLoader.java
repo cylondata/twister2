@@ -55,8 +55,6 @@ public final class FileLoader {
       for (int i = 0; i < records.size(); i++) {
         byte[] r = records.get(i);
         total += sizes.get(i) + 4;
-//        LOG.info("Writing data size: " + sizes.get(i) + " file: "
-//            + outFileName + " size: " + i + " total: " + total);
         os.putInt(sizes.get(i));
         os.put(r, 0, sizes.get(i));
       }
@@ -122,9 +120,6 @@ public final class FileLoader {
       }
       // we need to write the data lengths and key lengths
       totalSize += size + records.size() * 8;
-//      LOG.log(Level.INFO, String.format("Total size: %d sum: %d size %d elements %d",
-//          totalSize, sum, size, records.size()));
-
 
       Files.createDirectories(Paths.get(outFileName).getParent());
       FileChannel rwChannel = new RandomAccessFile(outFileName, "rw").getChannel();
@@ -154,7 +149,6 @@ public final class FileLoader {
           for (int d : kd) {
             os.putInt(d);
             totalWritten += 4;
-//            LOG.log(Level.INFO, String.format("Key write %d", totalWritten));
           }
         } else if (keyType == MessageType.LONG) {
           long[] kd = (long[]) keyValue.getKey();
@@ -209,10 +203,6 @@ public final class FileLoader {
         value = DataDeserializer.deserialize(dataType, deserializer, os, dataSize);
         keyValues.add(new KeyValue(key, value));
 
-//        LOG.log(Level.INFO, "Reading data size: " + dataSize + "key size: " + keySize
-//            + " count " + count + " file: " + fileName
-//            + " total: " + totalRead + " value: " + value + " file size: " + rwChannel.size());
-
         totalRead += 8 + keySize + dataSize;
         count++;
       }
@@ -242,8 +232,6 @@ public final class FileLoader {
         int dataSize = os.getInt();
         value = DataDeserializer.deserialize(dataType, deserializer, os, dataSize);
         values.add(value);
-//        LOG.log(Level.INFO, "Reading data size: " + dataSize + " count "
-//            + count + " file: " + fileName + " total: " + totalRead + " value: " + value);
         totalRead += 4 + dataSize;
         count++;
       }
@@ -351,9 +339,6 @@ public final class FileLoader {
         }
         value = DataDeserializer.deserialize(dataType, deserializer, os, dataSize);
 
-        // LOG.log(Level.INFO, "Reading data size: " + dataSize + " count "
-        // + count + " file: " + fileName + " total: " + totalRead + " value: " + value);
-
         keyValues.add(new KeyValue(key, value));
         totalRead += 8 + keySize + dataSize;
         count++;
@@ -426,9 +411,7 @@ public final class FileLoader {
 
   public static Object convertKeyToArray(MessageType keyType, Object key) {
     if (keyType == MessageType.INTEGER) {
-      int[] ints = {(int) key};
-//      LOG.info("Size of key: " + ints.length);
-      return ints;
+      return new int[]{(int) key};
     } else if (keyType == MessageType.SHORT) {
       return new short[]{(short) key};
     }

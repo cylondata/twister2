@@ -19,7 +19,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.resource.ZResourcePlan;
+import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
@@ -32,7 +32,7 @@ import edu.iu.dsc.tws.examples.Utils;
 public abstract class BenchWorker implements IWorker {
   private static final Logger LOG = Logger.getLogger(BenchWorker.class.getName());
 
-  protected ZResourcePlan resourcePlan;
+  protected AllocatedResources resourcePlan;
 
   protected int workerId;
 
@@ -51,17 +51,18 @@ public abstract class BenchWorker implements IWorker {
   protected boolean sourcesDone = false;
 
   @Override
-  public void init(Config cfg, int containerId, ZResourcePlan plan,
+  public void init(Config cfg, int workerID, AllocatedResources allocatedResources,
                    IWorkerController workerController, IPersistentVolume persistentVolume,
                    IVolatileVolume volatileVolume) {
     // create the job parameters
     this.jobParameters = JobParameters.build(cfg);
     this.config = cfg;
-    this.resourcePlan = plan;
-    this.workerId = containerId;
+    this.resourcePlan = allocatedResources;
+    this.workerId = workerID;
 
     // lets create the task plan
-    this.taskPlan = Utils.createStageTaskPlan(cfg, plan, jobParameters.getTaskStages());
+    this.taskPlan =
+        Utils.createStageTaskPlan(cfg, allocatedResources, jobParameters.getTaskStages());
     // create the channel
     channel = Network.initializeChannel(config, workerController, resourcePlan);
     // create the communicator

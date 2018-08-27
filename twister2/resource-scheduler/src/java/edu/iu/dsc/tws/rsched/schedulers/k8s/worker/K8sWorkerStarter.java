@@ -16,13 +16,11 @@ import java.net.UnknownHostException;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.discovery.NodeInfo;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
-import edu.iu.dsc.tws.common.resource.WorkerComputeSpec;
-import edu.iu.dsc.tws.common.resource.ZResourcePlan;
+import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
@@ -33,7 +31,6 @@ import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.K8sEnvVariables;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
-import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.PodWatchUtils;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import static edu.iu.dsc.tws.common.config.Context.JOB_ARCHIVE_DIRECTORY;
@@ -175,37 +172,10 @@ public final class K8sWorkerStarter {
           new K8sVolatileVolume(SchedulerContext.jobName(config), workerID);
     }
 
-    ZResourcePlan resourcePlan = generateResourcePlan();
+    AllocatedResources resourcePlan =
+        new AllocatedResources(SchedulerContext.clusterType(config), workerID);
 
     worker.init(config, workerID, resourcePlan, workerController, pv, volatileVolume);
-  }
-
-  /**
-   * A ZResourcePlan object is created
-   * For each worker in the job, a WorkerComputeSpec is created and it is added to the ZResourcePlan
-   * Each WorkerComputeSpec has the podName of its worker as a property
-   * @return
-   */
-  public static ZResourcePlan generateResourcePlan() {
-    int numberOfWorkers = Context.workerInstances(config);
-    int workersPerPod = KubernetesContext.workersPerPod(config);
-    int numberOfPods = numberOfWorkers / workersPerPod;
-
-    ZResourcePlan plan = new ZResourcePlan(SchedulerContext.clusterType(config), workerID);
-    int nextWorkerID = 0;
-
-    for (int i = 0; i < numberOfPods; i++) {
-
-      String podName = KubernetesUtils.podNameFromJobName(jobName, i);
-      for (int j = 0; j < workersPerPod; j++) {
-        WorkerComputeSpec workerComputeSpec = new WorkerComputeSpec(nextWorkerID);
-        workerComputeSpec.addProperty(SchedulerContext.WORKER_NAME, podName);
-        plan.addContainer(workerComputeSpec);
-        nextWorkerID++;
-      }
-    }
-
-    return plan;
   }
 
   /**

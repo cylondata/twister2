@@ -21,7 +21,7 @@ import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.discovery.NodeInfo;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
-import edu.iu.dsc.tws.common.resource.ZResourcePlan;
+import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
@@ -190,9 +190,9 @@ public final class MPIWorkerStarter {
           new K8sVolatileVolume(SchedulerContext.jobName(config), workerID);
     }
 
-    ZResourcePlan resourcePlan = new ZResourcePlan(SchedulerContext.clusterType(config),
+    AllocatedResources resourcePlan = new AllocatedResources(SchedulerContext.clusterType(config),
         workerNetworkInfo.getWorkerID());
-//    ZResourcePlan resourcePlan = MPIWorker.createResourcePlan(config);
+//    AllocatedResources resourcePlan = MPIWorker.createResourcePlan(config);
 
     worker.init(config, workerID, resourcePlan, workerController, pv, volatileVolume);
   }

@@ -22,8 +22,8 @@ import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.net.NetworkInfo;
 import edu.iu.dsc.tws.common.net.tcp.TCPChannel;
 import edu.iu.dsc.tws.common.net.tcp.TCPContext;
-import edu.iu.dsc.tws.common.resource.WorkerComputeSpec;
-import edu.iu.dsc.tws.common.resource.ZResourcePlan;
+import edu.iu.dsc.tws.common.resource.AllocatedResources;
+import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
@@ -37,7 +37,7 @@ public final class Network {
   }
 
   public static TWSChannel initializeChannel(Config config, IWorkerController wController,
-                                             ZResourcePlan resourcePlan) {
+                                             AllocatedResources resourcePlan) {
     if (config.getStringValue("twister2.network.channel.class").equals(
         "edu.iu.dsc.tws.comms.dfw.tcp.TWSTCPChannel")) {
       return initializeTCPNetwork(config, wController, resourcePlan);
@@ -47,7 +47,7 @@ public final class Network {
   }
 
   public static TWSNetwork initializeNetwork(Config config, IWorkerController wController,
-                                             TaskPlan plan, ZResourcePlan resourcePlan) {
+                                             TaskPlan plan, AllocatedResources resourcePlan) {
     if (config.getStringValue("twister2.network.channel.class").equals(
         "edu.iu.dsc.tws.comms.dfw.tcp.TWSTCPChannel")) {
       TWSChannel channel = initializeTCPNetwork(config, wController, resourcePlan);
@@ -59,9 +59,9 @@ public final class Network {
 
   private static TWSChannel initializeMPIChannel(Config config,
                                                  IWorkerController wController,
-                                                 ZResourcePlan plan) {
+                                                 AllocatedResources plan) {
     //first get the communication config file
-    return new TWSMPIChannel(config, MPI.COMM_WORLD, plan.getThisId());
+    return new TWSMPIChannel(config, MPI.COMM_WORLD, plan.getWorkerId());
   }
 
   private static TWSNetwork initializeMPINetwork(Config config,
@@ -72,7 +72,7 @@ public final class Network {
 
   private static TWSChannel initializeTCPNetwork(Config config,
                                                  IWorkerController wController,
-                                                 ZResourcePlan resourcePlan) {
+                                                 AllocatedResources resourcePlan) {
     TCPChannel channel;
     int index = wController.getWorkerNetworkInfo().getWorkerID();
     Integer workerPort = wController.getWorkerNetworkInfo().getWorkerPort();
@@ -100,8 +100,8 @@ public final class Network {
       networkInfo.addProperty(TCPContext.NETWORK_HOSTNAME, w.getWorkerIP().getHostAddress());
       nInfos.add(networkInfo);
 
-      WorkerComputeSpec container = new WorkerComputeSpec(w.getWorkerID());
-      resourcePlan.addContainer(container);
+      WorkerComputeResource container = new WorkerComputeResource(w.getWorkerID());
+      resourcePlan.addWorkerComputeResource(container);
     }
     // start the connections
     channel.startConnections(nInfos);
@@ -109,7 +109,7 @@ public final class Network {
     channel.waitForConnections();
 
     // now lets create a tcp channel
-    return new TWSTCPChannel(config, resourcePlan.getThisId(), channel);
+    return new TWSTCPChannel(config, resourcePlan.getWorkerId(), channel);
   }
 
   /**

@@ -3,24 +3,12 @@ package(default_visibility = ["//visibility:public"])
 load("/tools/rules/genproto", "proto_library")
 
 proto_library(
-    name = "proto_common",
-    src = "common.proto",
-    gen_cc = 0,
-    gen_java = 1,
-    gen_py = 0,
-    includes = ["twister2/proto"],
-)
-
-proto_library(
     name = "proto_job_state",
     src = "job_state.proto",
     gen_cc = 0,
     gen_java = 1,
     gen_py = 0,
     includes = ["twister2/proto"],
-    deps = [
-        ":proto_common",
-    ],
 )
 
 proto_library(
@@ -30,36 +18,6 @@ proto_library(
     gen_java = 1,
     gen_py = 0,
     includes = ["twister2/proto"],
-    deps = [
-        ":proto_common",
-        ":proto_resource_scheduler",
-    ],
-)
-
-proto_library(
-    name = "proto_resource_scheduler",
-    src = "resource-scheduler.proto",
-    gen_cc = 0,
-    gen_java = 1,
-    gen_py = 0,
-    includes = ["twister2/proto"],
-    deps = [
-        ":proto_common",
-    ],
-)
-
-java_library(
-    name = "proto-resource-scheduler-java",
-    srcs = [
-        "Empty.java",
-    ],
-    deps = [
-        ":proto_common_java",
-        ":proto_job_java",
-        ":proto_job_state_java",
-        ":proto_resource_scheduler_java",
-        "@com_google_protobuf_protobuf_java//jar",
-    ],
 )
 
 proto_library(
@@ -69,9 +27,6 @@ proto_library(
     gen_java = 1,
     gen_py = 0,
     includes = ["twister2/proto"],
-    deps = [
-        ":proto_common",
-    ],
 )
 
 java_library(
@@ -80,7 +35,6 @@ java_library(
         "Empty.java",
     ],
     deps = [
-        ":proto_common_java",
         ":proto_job_java",
         ":proto_job_state_java",
         ":proto_taskscheduleplan_java",
@@ -89,15 +43,12 @@ java_library(
 )
 
 proto_library(
-    name = "proto_network",
-    src = "network.proto",
+    name = "proto_jobmaster",
+    src = "jobmaster.proto",
     gen_cc = 0,
     gen_java = 1,
     gen_py = 0,
     includes = ["twister2/proto"],
-    deps = [
-        ":proto_common",
-    ],
 )
 
 proto_library(
@@ -107,19 +58,15 @@ proto_library(
     gen_java = 1,
     gen_py = 0,
     includes = ["twister2/proto"],
-    deps = [
-        ":proto_common",
-    ],
 )
 
 java_library(
-    name = "proto-network-java",
+    name = "proto-jobmaster-java",
     srcs = [
         "Empty.java",
     ],
     deps = [
-        ":proto_common_java",
-        ":proto_network_java",
+        ":proto_jobmaster_java",
         "@com_google_protobuf_protobuf_java//jar",
     ],
 )

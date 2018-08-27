@@ -48,8 +48,12 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.WorkerComputeSpec;
-import edu.iu.dsc.tws.common.resource.ZResourcePlan;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
+import edu.iu.dsc.tws.common.resource.AllocatedResources;
+import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
+import edu.iu.dsc.tws.common.worker.IPersistentVolume;
+import edu.iu.dsc.tws.common.worker.IVolatileVolume;
+import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
@@ -64,7 +68,6 @@ import edu.iu.dsc.tws.examples.IntData;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.ITask;
 import edu.iu.dsc.tws.task.api.LinkedQueue;
@@ -79,7 +82,7 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler;
 
-public class HDFSTaskExample implements IContainer {
+public class HDFSTaskExample implements IWorker {
 
   public static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
   private static final Logger LOG = Logger.getLogger(HDFSTaskExample.class.getName());
@@ -103,7 +106,7 @@ public class HDFSTaskExample implements IContainer {
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("hdfstask-example");
     jobBuilder.setWorkerClass(HDFSTaskExample.class.getName());
-    jobBuilder.setRequestResource(new WorkerComputeSpec(2, 1024), 3);
+    jobBuilder.setRequestResource(new WorkerComputeResource(2, 1024), 3);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job
@@ -113,14 +116,17 @@ public class HDFSTaskExample implements IContainer {
   /**
    * This method initialize the config, container id, and resource plan objects.
    */
-  public void init(Config cfg, int containerId, ZResourcePlan plan) {
+  public void init(Config cfg, int workerID, AllocatedResources resources,
+                   IWorkerController workerController,
+                   IPersistentVolume persistentVolume,
+                   IVolatileVolume volatileVolume) {
 
-    LOG.log(Level.INFO, "Starting the example with container id: " + plan.getThisId());
+    LOG.log(Level.INFO, "Starting the example with container id: " + resources.getWorkerId());
 
     taskExecutor = new TaskExecutorFixedThread();
     this.status = Status.INIT;
 
-    TaskPlan taskPlan = Utils.createTaskPlan(cfg, plan);
+    TaskPlan taskPlan = Utils.createTaskPlan(cfg, resources);
     TWSNetwork network = new TWSNetwork(cfg, taskPlan);
     TWSCommunication channel = network.getDataFlowTWSCommunication();
 
@@ -230,7 +236,7 @@ public class HDFSTaskExample implements IContainer {
 
     DataFlowTaskGraph dataFlowTaskGraph = graphBuilder.build();
 
-    if (containerId == 0) {
+    if (workerID == 0) {
       //Twister2 -> HDFS Integration Testing....
       //Move the code to the actual task to perform the processing.
       String srcFileLocation = null;
@@ -708,9 +714,9 @@ public class HDFSTaskExample implements IContainer {
     return new IntData(d);
   }
 
-  public WorkerPlan createWorkerPlan(ZResourcePlan resourcePlan) {
+  public WorkerPlan createWorkerPlan(AllocatedResources resourcePlan) {
     List<Worker> workers = new ArrayList<>();
-    for (WorkerComputeSpec resource : resourcePlan.getContainers()) {
+    for (WorkerComputeResource resource : resourcePlan.getWorkerComputeResources()) {
       Worker w = new Worker(resource.getId());
       workers.add(w);
     }

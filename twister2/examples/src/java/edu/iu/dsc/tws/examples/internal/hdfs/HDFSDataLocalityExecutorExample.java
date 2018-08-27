@@ -36,8 +36,12 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.WorkerComputeSpec;
-import edu.iu.dsc.tws.common.resource.ZResourcePlan;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
+import edu.iu.dsc.tws.common.resource.AllocatedResources;
+import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
+import edu.iu.dsc.tws.common.worker.IPersistentVolume;
+import edu.iu.dsc.tws.common.worker.IVolatileVolume;
+import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.data.api.HDFSConnector;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
@@ -45,7 +49,6 @@ import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.Executor;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.Operations;
 import edu.iu.dsc.tws.task.api.SinkTask;
@@ -61,7 +64,7 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.streaming.datalocalityaware.DataLocalityStreamingTaskScheduler;
 
-public class HDFSDataLocalityExecutorExample implements IContainer {
+public class HDFSDataLocalityExecutorExample implements IWorker {
 
   private static final Logger LOG =
       Logger.getLogger(HDFSDataLocalityExecutorExample.class.getName());
@@ -82,7 +85,7 @@ public class HDFSDataLocalityExecutorExample implements IContainer {
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("hdfs-task-datalocalityaware-example");
     jobBuilder.setWorkerClass(HDFSDataLocalityExecutorExample.class.getName());
-    jobBuilder.setRequestResource(new WorkerComputeSpec(2, 1024), 2);
+    jobBuilder.setRequestResource(new WorkerComputeResource(2, 1024), 2);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job
@@ -90,7 +93,10 @@ public class HDFSDataLocalityExecutorExample implements IContainer {
   }
 
   @Override
-  public void init(Config config, int id, ZResourcePlan resourcePlan) {
+  public void init(Config config, int workerID, AllocatedResources resources,
+                   IWorkerController workerController,
+                   IPersistentVolume persistentVolume,
+                   IVolatileVolume volatileVolume) {
 
     try {
       fileHandler = new FileHandler("/home/kgovind/twister2/taskscheduler.log");
@@ -141,7 +147,7 @@ public class HDFSDataLocalityExecutorExample implements IContainer {
 
     DataFlowTaskGraph graph = builder.build();
     TaskSchedulePlan taskSchedulePlan = null;
-    WorkerPlan workerPlan = createWorkerPlan(resourcePlan);
+    WorkerPlan workerPlan = createWorkerPlan(resources);
 
     if (TaskSchedulerContext.taskSchedulingMode(config).equals("datalocalityaware")) {
       DataLocalityStreamingTaskScheduler dataLocalityAwareTaskScheduling
@@ -154,8 +160,8 @@ public class HDFSDataLocalityExecutorExample implements IContainer {
       taskSchedulePlan = roundRobinTaskScheduling.schedule(graph, workerPlan);
     }
 
-    TWSNetwork network = new TWSNetwork(config, resourcePlan.getThisId());
-    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);
+    TWSNetwork network = new TWSNetwork(config, resources.getWorkerId());
+    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resources, network);
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
     Executor executor = new Executor(config, plan, network.getChannel());
     executor.execute();
@@ -166,9 +172,9 @@ public class HDFSDataLocalityExecutorExample implements IContainer {
     }
   }
 
-  public WorkerPlan createWorkerPlan(ZResourcePlan resourcePlan) {
+  public WorkerPlan createWorkerPlan(AllocatedResources resourcePlan) {
     List<Worker> workers = new ArrayList<>();
-    for (WorkerComputeSpec resource : resourcePlan.getContainers()) {
+    for (WorkerComputeResource resource : resourcePlan.getWorkerComputeResources()) {
       Worker w = new Worker(resource.getId());
       if (w.getId() == 0) {
         w.addProperty("bandwidth", 1000.0);

@@ -21,9 +21,9 @@ import edu.iu.dsc.tws.common.net.tcp.Progress;
 import edu.iu.dsc.tws.common.net.tcp.StatusCode;
 import edu.iu.dsc.tws.common.net.tcp.request.ConnectHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
-import edu.iu.dsc.tws.proto.network.Network;
-import edu.iu.dsc.tws.proto.network.Network.ListWorkersRequest;
-import edu.iu.dsc.tws.proto.network.Network.ListWorkersResponse;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersRequest;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersResponse;
 
 /**
  * JobMaster class
@@ -147,15 +147,18 @@ public class JobMaster {
     workerMonitor = new WorkerMonitor(config, this, rrServer, numberOfWorkers);
     barrierMonitor = new BarrierMonitor(numberOfWorkers, rrServer);
 
-    Network.Ping.Builder pingBuilder = Network.Ping.newBuilder();
-    Network.WorkerStateChange.Builder stateChangeBuilder = Network.WorkerStateChange.newBuilder();
-    Network.WorkerStateChangeResponse.Builder stateChangeResponseBuilder
-        = Network.WorkerStateChangeResponse.newBuilder();
+    JobMasterAPI.Ping.Builder pingBuilder = JobMasterAPI.Ping.newBuilder();
+    JobMasterAPI.WorkerStateChange.Builder stateChangeBuilder =
+        JobMasterAPI.WorkerStateChange.newBuilder();
+    JobMasterAPI.WorkerStateChangeResponse.Builder stateChangeResponseBuilder
+        = JobMasterAPI.WorkerStateChangeResponse.newBuilder();
 
     ListWorkersRequest.Builder listWorkersBuilder = ListWorkersRequest.newBuilder();
     ListWorkersResponse.Builder listResponseBuilder = ListWorkersResponse.newBuilder();
-    Network.BarrierRequest.Builder barrierRequestBuilder = Network.BarrierRequest.newBuilder();
-    Network.BarrierResponse.Builder barrierResponseBuilder = Network.BarrierResponse.newBuilder();
+    JobMasterAPI.BarrierRequest.Builder barrierRequestBuilder =
+        JobMasterAPI.BarrierRequest.newBuilder();
+    JobMasterAPI.BarrierResponse.Builder barrierResponseBuilder =
+        JobMasterAPI.BarrierResponse.newBuilder();
 
     rrServer.registerRequestHandler(pingBuilder, workerMonitor);
     rrServer.registerRequestHandler(stateChangeBuilder, workerMonitor);

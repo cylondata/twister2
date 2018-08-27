@@ -9,11 +9,28 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.rsched.spi.container;
+package edu.iu.dsc.tws.task.batch;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.ZResourcePlan;
+import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.ITask;
+import edu.iu.dsc.tws.task.api.TaskContext;
 
-public interface IContainer {
-  void init(Config config, int id, ZResourcePlan resourcePlan);
+public class ReduceTask implements ITask {
+  public static final long serialVersionUID = 1258632547;
+
+  @Override
+  public void run(IMessage content) {
+
+  }
+
+  @Override
+  public void run() {
+
+  }
+
+  @Override
+  public void prepare(Config cfg, TaskContext context) {
+
+  }
 }

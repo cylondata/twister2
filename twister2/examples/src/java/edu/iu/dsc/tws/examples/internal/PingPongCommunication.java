@@ -20,7 +20,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.ZResourcePlan;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
+import edu.iu.dsc.tws.common.resource.AllocatedResources;
+import edu.iu.dsc.tws.common.worker.IPersistentVolume;
+import edu.iu.dsc.tws.common.worker.IVolatileVolume;
+import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
@@ -29,9 +33,8 @@ import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.examples.IntData;
 import edu.iu.dsc.tws.examples.Utils;
-import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 
-public class PingPongCommunication implements IContainer {
+public class PingPongCommunication implements IWorker {
   private static final Logger LOG = Logger.getLogger(PingPongCommunication.class.getName());
 
   private DataFlowOperation direct;
@@ -40,13 +43,16 @@ public class PingPongCommunication implements IContainer {
   /**
    * Initialize the container
    */
-  public void init(Config cfg, int containerId, ZResourcePlan plan) {
-    LOG.log(Level.INFO, "Starting the example with container id: " + plan.getThisId());
+  public void init(Config cfg, int workerID, AllocatedResources resources,
+                   IWorkerController workerController,
+                   IPersistentVolume persistentVolume,
+                   IVolatileVolume volatileVolume) {
+    LOG.log(Level.INFO, "Starting the example with container id: " + resources.getWorkerId());
 
     this.status = Status.INIT;
 
     // lets create the task plan
-    TaskPlan taskPlan = Utils.createTaskPlan(cfg, plan);
+    TaskPlan taskPlan = Utils.createTaskPlan(cfg, resources);
     //first get the communication config file
     TWSNetwork network = new TWSNetwork(cfg, taskPlan);
 
@@ -64,7 +70,7 @@ public class PingPongCommunication implements IContainer {
     direct = channel.direct(newCfg, MessageType.OBJECT, 0, sources,
         dests, new PingPongReceive());
 
-    if (containerId == 0) {
+    if (workerID == 0) {
       // the map thread where data is produced
       Thread mapThread = new Thread(new MapWorker());
 
@@ -79,7 +85,7 @@ public class PingPongCommunication implements IContainer {
         direct.progress();
         Thread.yield();
       }
-    } else if (containerId == 1) {
+    } else if (workerID == 1) {
       while (status != Status.LOAD_RECEIVE_FINISHED) {
         channel.progress();
         direct.progress();

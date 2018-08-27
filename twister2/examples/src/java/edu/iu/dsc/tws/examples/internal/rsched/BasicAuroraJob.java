@@ -19,7 +19,8 @@ import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.WorkerComputeSpec;
+import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
@@ -40,10 +41,11 @@ public final class BasicAuroraJob {
     double cpus = SchedulerContext.workerCPU(config);
     int ramMegaBytes = SchedulerContext.workerRAM(config);
     int workers = SchedulerContext.workerInstances(config);
-    int diskMegaBytes = (int) (SchedulerContext.workerVolatileDisk(config) * 1024);
+    double diskGigaBytes = Context.workerVolatileDisk(config);
 
     String jobName = SchedulerContext.jobName(config);
-    WorkerComputeSpec workerComputeSpec = new WorkerComputeSpec(cpus, ramMegaBytes, diskMegaBytes);
+    WorkerComputeResource workerComputeResource =
+        new WorkerComputeResource(cpus, ramMegaBytes, diskGigaBytes);
 
     // build JobConfig
     HashMap<String, Object> configurations = new HashMap<>();
@@ -58,7 +60,7 @@ public final class BasicAuroraJob {
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setName(jobName)
         .setWorkerClass(workerClass)
-        .setRequestResource(workerComputeSpec, workers)
+        .setRequestResource(workerComputeResource, workers)
         .setConfig(jobConfig)
         .build();
 
@@ -103,11 +105,14 @@ public final class BasicAuroraJob {
     String fl = "/tmp/basic-aurora/basic-aurora3354891958097304472/twister2-core/basic-aurora.job";
     JobAPI.Job job = JobUtils.readJobFile(null, fl);
     System.out.println("job name: " + job.getJobName());
-    System.out.println("job container class name: " + job.getContainer().getClassName());
-    System.out.println("job containers: " + job.getJobResources().getNoOfContainers());
-    System.out.println("CPUs: " + job.getJobResources().getContainer().getAvailableCPU());
-    System.out.println("RAM: " + job.getJobResources().getContainer().getAvailableMemory());
-    System.out.println("Disk: " + job.getJobResources().getContainer().getAvailableDisk());
+    System.out.println("job worker class name: " + job.getWorkerClassName());
+    System.out.println("job containers: " + job.getJobResources().getNumberOfWorkers());
+    System.out.println("CPUs: "
+        + job.getJobResources().getResourcesList().get(0).getWorkerComputeResource().getCpu());
+    System.out.println("RAM: "
+        + job.getJobResources().getResourcesList().get(0).getWorkerComputeResource().getRam());
+    System.out.println("Disk: "
+        + job.getJobResources().getResourcesList().get(0).getWorkerComputeResource().getDisk());
     JobAPI.Config conf = job.getConfig();
     System.out.println("number of key-values in job conf: " + conf.getKvsCount());
 

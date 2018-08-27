@@ -24,8 +24,12 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.WorkerComputeSpec;
-import edu.iu.dsc.tws.common.resource.ZResourcePlan;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
+import edu.iu.dsc.tws.common.resource.AllocatedResources;
+import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
+import edu.iu.dsc.tws.common.worker.IPersistentVolume;
+import edu.iu.dsc.tws.common.worker.IVolatileVolume;
+import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
@@ -36,7 +40,6 @@ import edu.iu.dsc.tws.examples.IntData;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.ITask;
 import edu.iu.dsc.tws.task.api.LinkedQueue;
@@ -55,7 +58,7 @@ import edu.iu.dsc.tws.tsched.taskscheduler.TaskScheduler;
  * It will be extended further to submit the job to the executor...
  */
 
-public class SimpleTaskGraphExample implements IContainer {
+public class SimpleTaskGraphExample implements IWorker {
 
   private static final Logger LOG = Logger.getLogger(SimpleTaskGraphExample.class.getName());
 
@@ -79,7 +82,7 @@ public class SimpleTaskGraphExample implements IContainer {
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setName("basic-taskgraphJob")
         .setWorkerClass(SimpleTaskGraphExample.class.getName())
-        .setRequestResource(new WorkerComputeSpec(2, 1024, 100), 2)
+        .setRequestResource(new WorkerComputeResource(2, 1024, 1.0), 2)
         .setConfig(jobConfig)
         .build();
 
@@ -90,14 +93,17 @@ public class SimpleTaskGraphExample implements IContainer {
   /**
    * Init method to submit the task to the executor
    */
-  public void init(Config cfg, int containerId, ZResourcePlan plan) {
+  public void init(Config cfg, int workerID, AllocatedResources resources,
+                   IWorkerController workerController,
+                   IPersistentVolume persistentVolume,
+                   IVolatileVolume volatileVolume) {
 
-    LOG.log(Level.INFO, "Starting the example with container id: " + plan.getThisId());
+    LOG.log(Level.INFO, "Starting the example with container id: " + resources.getWorkerId());
 
     taskExecutor = new TaskExecutorFixedThread();
     this.status = Status.INIT;
 
-    TaskPlan taskPlan = Utils.createTaskPlan(cfg, plan);
+    TaskPlan taskPlan = Utils.createTaskPlan(cfg, resources);
     TWSNetwork network = new TWSNetwork(cfg, taskPlan);
     TWSCommunication channel = network.getDataFlowTWSCommunication();
 

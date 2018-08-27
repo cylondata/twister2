@@ -1,8 +1,8 @@
 syntax = "proto3";
-package tws.proto.net;
+package tws.proto.jobmaster;
 
-option java_package = "edu.iu.dsc.tws.proto.network";
-option java_outer_classname = "Network";
+option java_package = "edu.iu.dsc.tws.proto.jobmaster";
+option java_outer_classname = "JobMasterAPI";
 
 //*****************************************************
 // a note:

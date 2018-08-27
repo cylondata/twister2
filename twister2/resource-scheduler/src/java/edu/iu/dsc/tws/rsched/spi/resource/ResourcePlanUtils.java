@@ -40,20 +40,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import edu.iu.dsc.tws.common.resource.WorkerComputeSpec;
-import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 
 public final class ResourcePlanUtils {
 
   private ResourcePlanUtils() {
   }
 
-  public static Map<String, List<WorkerComputeSpec>> getContainersPerNode(
-      List<WorkerComputeSpec> containers) {
-    Map<String, List<WorkerComputeSpec>> containersPerNode = new HashMap<>();
-    for (WorkerComputeSpec c : containers) {
-      String processName = (String) c.getProperty(SchedulerContext.WORKER_NAME);
-      List<WorkerComputeSpec> containerList;
+  public static Map<String, List<WorkerComputeResource>> getContainersPerNode(
+      List<WorkerComputeResource> containers) {
+    Map<String, List<WorkerComputeResource>> containersPerNode = new HashMap<>();
+    for (WorkerComputeResource c : containers) {
+      String processName = Integer.toString(c.getId());
+      List<WorkerComputeResource> containerList;
       if (!containersPerNode.containsKey(processName)) {
         containerList = new ArrayList<>();
         containersPerNode.put(processName, containerList);
