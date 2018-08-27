@@ -149,7 +149,7 @@ public class DataFlowCommunication implements TWSCommunication {
         sourceTasks, destTasks, receiver, partial, edge);
 
     // intialize the operation
-    dataFlowOperation.init(mergedCfg, type, instancePlan, 0);
+    dataFlowOperation.init(mergedCfg, type, instancePlan);
     return dataFlowOperation;
   }
 
