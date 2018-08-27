@@ -11,8 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.comm.operations.streaming;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -21,7 +20,6 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
@@ -32,14 +30,9 @@ import edu.iu.dsc.tws.executor.api.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.api.EdgeGenerator;
 import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.TaskMessage;
 
 public class PartitionStreamingOperation extends AbstractParallelOperation {
   private static final Logger LOG = Logger.getLogger(PartitionStreamingOperation.class.getName());
-  private HashMap<Integer, Boolean> barrierMap = new HashMap<>();
-
-  private HashMap<Integer, ArrayList<Object>> incommingBuffer = new HashMap<>();
-  private boolean checkpointStarted = false;
 
   protected DataFlowPartition op;
 
@@ -70,35 +63,7 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
 
     @Override
     public boolean onMessage(int source, int path, int target, int flags, Object object) {
-      if ((flags & MessageFlags.BARRIER) == MessageFlags.BARRIER) {
-        if (!checkpointStarted) {
-          checkpointStarted = true;
-        }
-        barrierMap.putIfAbsent(source, true);
-        if (barrierMap.keySet() == op.getSources()) {
-          op.getDestinations();
-          //start checkpoint and flush the buffering messages
-        }
-      } else {
-        if (barrierMap.containsKey(source)) {
-          if (incommingBuffer.containsKey(source)) {
-            incommingBuffer.get(source).add(object);
-          } else {
-            ArrayList<Object> bufferMessege = new ArrayList<>();
-            bufferMessege.add(object);
-            incommingBuffer.put(source, bufferMessege);
-          }
-        } else {
-          if (object instanceof List) {
-            for (Object o : (List) object) {
-              TaskMessage msg = new TaskMessage(o,
-                  edge.getStringMapping(communicationEdge), target);
-              outMessages.get(target).offer(msg);
-
-            }
-          }
-        }
-      }
+      barrierChecking(op, source, path, target, flags, object);
       return true;
     }
 
