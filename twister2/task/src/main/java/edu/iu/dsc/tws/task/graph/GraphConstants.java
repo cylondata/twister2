@@ -18,10 +18,10 @@ public class GraphConstants {
   protected GraphConstants() {
   }
 
-  public static final String TWISTER2_TASK_INSTANCE_RAM = "Ram";
+  public static final String TWISTER2_TASK_INSTANCE_RAM = "Ram"; //In MB
   public static final int TWISTER2_TASK_INSTANCE_RAM_DEFAULT = 512;
 
-  public static final String TWISTER2_TASK_INSTANCE_DISK = "Disk";
+  public static final String TWISTER2_TASK_INSTANCE_DISK = "Disk"; //In GB
   public static final int TWISTER2_TASK_INSTANCE_DISK_DEFAULT = 500;
 
   public static final String TWISTER2_TASK_INSTANCE_CPU = "Cpu";
