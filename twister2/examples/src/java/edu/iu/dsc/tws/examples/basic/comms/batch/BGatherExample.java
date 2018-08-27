@@ -37,8 +37,9 @@ public class BGatherExample extends BenchWorker {
 
   @Override
   protected void execute() {
+
     TaskPlan taskPlan = Utils.createStageTaskPlan(config, resourcePlan,
-        jobParameters.getTaskStages());
+        jobParameters.getTaskStages(), workerList);
 
     Set<Integer> sources = new HashSet<>();
     Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);

@@ -50,7 +50,6 @@ public class SchedulerContext extends Context {
 
   // The path from where the workers will transfer twister2 tar.gz packages
   public static final String TWISTER2_PACKAGES_PATH = "twister2.packages.path";
-  public static final String WORKER_NAME = "twister2.worker.name";
   // local temporary packages path on the submitting client
   public static final String TEMPORARY_PACKAGES_PATH = "temporary.packages.path";
 
