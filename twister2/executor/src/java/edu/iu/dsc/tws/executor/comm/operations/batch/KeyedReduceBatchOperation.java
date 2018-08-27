@@ -45,7 +45,7 @@ public class KeyedReduceBatchOperation extends AbstractParallelOperation {
     op = new DataFlowMultiReduce(channel.getChannel(), sources, dests, new FinalReduceReceive(),
         new PartialReduceWorker(), dests);
     communicationEdge = e.generate(edgeName);
-    op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
+    op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan);
   }
 
   @Override
