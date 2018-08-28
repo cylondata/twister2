@@ -45,6 +45,7 @@ public final class K8sWorkerStarter {
   private static WorkerNetworkInfo workerNetworkInfo;
   private static JobMasterClient jobMasterClient;
   private static String jobName = null;
+  private static JobAPI.Job job = null;
 
   private K8sWorkerStarter() { }
 
@@ -114,7 +115,7 @@ public final class K8sWorkerStarter {
     // read job description file
     String jobDescFileName = SchedulerContext.createJobDescriptionFileName(jobName);
     jobDescFileName = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY + "/" + jobDescFileName;
-    JobAPI.Job job = JobUtils.readJobFile(null, jobDescFileName);
+    job = JobUtils.readJobFile(null, jobDescFileName);
     LOG.info("Job description file is loaded: " + jobDescFileName);
 
     // add any configuration from job file to the config object
@@ -172,10 +173,10 @@ public final class K8sWorkerStarter {
           new K8sVolatileVolume(SchedulerContext.jobName(config), workerID);
     }
 
-    AllocatedResources resourcePlan =
-        new AllocatedResources(SchedulerContext.clusterType(config), workerID);
+    AllocatedResources allocatedResources = K8sWorkerUtils.createAllocatedResources(
+        KubernetesContext.clusterType(config), workerID, job);
 
-    worker.init(config, workerID, resourcePlan, workerController, pv, volatileVolume);
+    worker.init(config, workerID, allocatedResources, workerController, pv, volatileVolume);
   }
 
   /**

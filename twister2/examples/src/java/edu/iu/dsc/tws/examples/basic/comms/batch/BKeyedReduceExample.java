@@ -23,15 +23,19 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.op.batch.BReduce;
+import edu.iu.dsc.tws.comms.op.batch.BKeyedReduce;
 import edu.iu.dsc.tws.comms.op.functions.ReduceIdentityFunction;
+import edu.iu.dsc.tws.comms.op.selectors.SimpleKeyBasedPartitionSelector;
 import edu.iu.dsc.tws.examples.Utils;
-import edu.iu.dsc.tws.examples.basic.comms.BenchWorker;
+import edu.iu.dsc.tws.examples.basic.comms.KeyedBenchWorker;
 
-public class BReduceExample extends BenchWorker {
-  private static final Logger LOG = Logger.getLogger(BReduceExample.class.getName());
+/**
+ * Created by pulasthi on 8/24/18.
+ */
+public class BKeyedReduceExample extends KeyedBenchWorker {
+  private static final Logger LOG = Logger.getLogger(BKeyedReduceExample.class.getName());
 
-  private BReduce reduce;
+  private BKeyedReduce keyedReduce;
 
   private boolean reduceDone;
 
@@ -45,11 +49,15 @@ public class BReduceExample extends BenchWorker {
     for (int i = 0; i < noOfSourceTasks; i++) {
       sources.add(i);
     }
-    int target = noOfSourceTasks;
-    // create the communication
-    reduce = new BReduce(communicator, taskPlan, sources, target,
-        new ReduceIdentityFunction(), new FinalReduceReceiver(), MessageType.INTEGER);
+    Set<Integer> targets = new HashSet<>();
+    Integer noOfTargetTasks = jobParameters.getTaskStages().get(1);
+    for (int i = 0; i < noOfTargetTasks; i++) {
+      targets.add(noOfSourceTasks + i);
+    }
 
+    keyedReduce = new BKeyedReduce(communicator, taskPlan, sources, targets,
+        new ReduceIdentityFunction(), new FinalReduceReceiver(), MessageType.OBJECT,
+        new SimpleKeyBasedPartitionSelector());
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
@@ -60,39 +68,38 @@ public class BReduceExample extends BenchWorker {
       sourcesDone = true;
     }
 
-    if (!taskPlan.getChannelsOfExecutor(workerId).contains(target)) {
-      reduceDone = true;
-    }
+//    if (!taskPlan.getChannelsOfExecutor(workerId).contains(target)) {
+//      reduceDone = true;
+//    }
 
     LOG.log(Level.INFO, String.format("%d Sources %s target %d this %s",
-        workerId, sources, target, tasksOfExecutor));
+        workerId, sources, 1, tasksOfExecutor));
     // now initialize the workers
     for (int t : tasksOfExecutor) {
       // the map thread where data is produced
-      Thread mapThread = new Thread(new MapWorker(t));
+      Thread mapThread = new Thread(new KeyedBenchWorker.MapWorker(t));
       mapThread.start();
     }
+
   }
 
   @Override
   protected void progressCommunication() {
-    reduce.progress();
-  }
-
-  @Override
-  protected boolean sendMessages(int task, Object data, int flag) {
-    while (!reduce.reduce(task, data, flag)) {
-      // lets wait a litte and try again
-      reduce.progress();
-    }
-    return true;
+    keyedReduce.progress();
   }
 
   @Override
   protected boolean isDone() {
-//    LOG.log(Level.INFO, String.format("%d Reduce %b sources %b pending %b",
-//        id, reduceDone, sourcesDone, reduce.hasPending()));
-    return reduceDone && sourcesDone && !reduce.hasPending();
+    return reduceDone && sourcesDone && !keyedReduce.hasPending();
+  }
+
+  @Override
+  protected boolean sendMessages(int task, Object key, Object data, int flag) {
+    while (!keyedReduce.reduce(task, key, data, flag)) {
+      // lets wait a litte and try again
+      keyedReduce.progress();
+    }
+    return true;
   }
 
   public class FinalReduceReceiver implements ReduceReceiver {

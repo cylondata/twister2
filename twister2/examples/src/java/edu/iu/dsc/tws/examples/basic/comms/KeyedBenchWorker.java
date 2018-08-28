@@ -48,6 +48,7 @@
 package edu.iu.dsc.tws.examples.basic.comms;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -55,6 +56,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
+import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
@@ -89,6 +91,8 @@ public abstract class KeyedBenchWorker implements IWorker {
 
   protected boolean sourcesDone = false;
 
+  protected List<WorkerNetworkInfo> workerList = null;
+
   @Override
   public void init(Config cfg, int workerID, AllocatedResources allocatedResources,
                    IWorkerController workerController, IPersistentVolume persistentVolume,
@@ -99,9 +103,19 @@ public abstract class KeyedBenchWorker implements IWorker {
     this.resourcePlan = allocatedResources;
     this.workerId = workerID;
 
+    // wait for all workers in this job to join
+    workerList = workerController.waitForAllWorkersToJoin(50000);
+    if (workerList != null) {
+      LOG.info("All workers joined. " + WorkerNetworkInfo.workerListAsString(workerList));
+    } else {
+      LOG.severe("Can not get all workers to join. Something wrong. Exiting ....................");
+      return;
+    }
+
     // lets create the task plan
-    this.taskPlan =
-        Utils.createStageTaskPlan(cfg, allocatedResources, jobParameters.getTaskStages());
+    this.taskPlan = Utils.createStageTaskPlan(
+        cfg, allocatedResources, jobParameters.getTaskStages(), workerList);
+
     // create the channel
     channel = Network.initializeChannel(config, workerController, resourcePlan);
     // create the communicator

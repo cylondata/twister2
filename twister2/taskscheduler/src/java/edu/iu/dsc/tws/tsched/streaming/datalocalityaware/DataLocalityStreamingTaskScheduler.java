@@ -85,7 +85,6 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
     Set<TaskSchedulePlan.ContainerPlan> containerPlans = new HashSet<>();
 
     //Set<Vertex> taskVertexSet = new LinkedHashSet<>(graph.getTaskVertexSet());
-
     Set<Vertex> taskVertexSet = graph.getTaskVertexSet();
 
     Map<Integer, List<InstanceId>> containerInstanceMap =
@@ -154,4 +153,6 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
     }
     return new TaskSchedulePlan(taskSchedulePlanId, containerPlans);
   }
+
+
 }

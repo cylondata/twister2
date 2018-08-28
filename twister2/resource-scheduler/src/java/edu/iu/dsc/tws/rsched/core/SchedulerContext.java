@@ -18,17 +18,12 @@ import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.config.TokenSub;
 
 public class SchedulerContext extends Context {
-  public static final String STATE_MANAGER_CLASS = "twister2.class.state.manager";
-  public static final String SCHEDULER_CLASS = "twister2.class.scheduler";
   public static final String LAUNCHER_CLASS = "twister2.class.launcher";
   public static final String UPLOADER_CLASS = "twister2.class.uploader";
   public static final String WORKER_CLASS = "twister2.job.worker.class";
   public static final String THREADS_PER_WORKER = "twister2.exector.worker.threads";
-  public static final String STATE_MANAGER_OBJECT = "twister2.state.manager.object";
 
-  public static final String STATE_MANAGER_ROOT_PATH = "twister2.state.manager.root.path";
   public static final String SYSTEM_PACKAGE_URI = "twister2.system.package.uri";
-
 
   // Internal configuration for job package url
   public static final String JOB_PACKAGE_URI = "twister2.job.package.uri";
@@ -37,7 +32,7 @@ public class SchedulerContext extends Context {
   public static final String JOB_TEMP_DIR = "twister2.client.job.temp.dir";
 
   /**
-   * These are specified as system properties when deploying a topology
+   * These are specified as system properties when deploying a job
    */
   public static final String TWISTER_2_HOME = "twister2_home";
   public static final String CONFIG_DIR = "config_dir";
@@ -55,7 +50,6 @@ public class SchedulerContext extends Context {
 
   // The path from where the workers will transfer twister2 tar.gz packages
   public static final String TWISTER2_PACKAGES_PATH = "twister2.packages.path";
-  public static final String WORKER_NAME = "twister2.worker.name";
   // local temporary packages path on the submitting client
   public static final String TEMPORARY_PACKAGES_PATH = "temporary.packages.path";
 
@@ -65,14 +59,6 @@ public class SchedulerContext extends Context {
   // persistent volume per worker in GB
   public static final double PERSISTENT_VOLUME_PER_WORKER_DEFAULT = 0.0;
   public static final String PERSISTENT_VOLUME_PER_WORKER = "persistent.volume.per.worker";
-
-  public static String stateManagerClass(Config cfg) {
-    return cfg.getStringValue(STATE_MANAGER_CLASS);
-  }
-
-  public static String schedulerClass(Config cfg) {
-    return cfg.getStringValue(SCHEDULER_CLASS);
-  }
 
   public static String uploaderClass(Config cfg) {
     return cfg.getStringValue(UPLOADER_CLASS);
@@ -92,10 +78,6 @@ public class SchedulerContext extends Context {
 
   public static String temporaryPackagesPath(Config cfg) {
     return cfg.getStringValue(TEMPORARY_PACKAGES_PATH);
-  }
-
-  public static String stateManegerRootPath(Config cfg) {
-    return cfg.getStringValue(STATE_MANAGER_ROOT_PATH, "state");
   }
 
   public static String systemPackageUrl(Config cfg) {

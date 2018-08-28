@@ -23,6 +23,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.resource;
 
+import java.util.Objects;
+
 /**
  * Represent a resource for a worker
  * It is used to define a resource when submitting the job
@@ -58,6 +60,13 @@ public class WorkerComputeResource {
     this.diskGigaBytes = diskGigaBytes;
   }
 
+  public WorkerComputeResource(int id, double noOfCpus, int memoryMegaBytes, double diskGigaBytes) {
+    this.id = id;
+    this.noOfCpus = noOfCpus;
+    this.memoryMegaBytes = memoryMegaBytes;
+    this.diskGigaBytes = diskGigaBytes;
+  }
+
   public int getId() {
     return id;
   }
@@ -84,6 +93,31 @@ public class WorkerComputeResource {
 
   public long getDiskInBytes() {
     return (long) (diskGigaBytes * 1024 * 1024 * 1024);
+  }
+
+  /**
+   * only id based equality
+   * @param o
+   * @return
+   */
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+
+    WorkerComputeResource that = (WorkerComputeResource) o;
+    return id == that.id;
+  }
+
+  @Override
+  public int hashCode() {
+
+    return Objects.hash(id);
   }
 
 }

@@ -81,9 +81,9 @@ public final class Twister2Job {
     jobBuilder.setConfig(configBuilder);
     jobBuilder.setWorkerClassName(workerClass);
     jobBuilder.setJobName(name);
+    jobBuilder.setNumberOfWorkers(numberOfWorkers);
 
     JobAPI.JobResources.Builder jobResourceBuilder = JobAPI.JobResources.newBuilder();
-    jobResourceBuilder.setNumberOfWorkers(numberOfWorkers);
 
     JobAPI.JobResources.ResourceType.Builder resourceTypeBuilder =
         JobAPI.JobResources.ResourceType.newBuilder();

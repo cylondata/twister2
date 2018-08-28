@@ -41,7 +41,7 @@ public class BPartitionExample extends BenchWorker {
   @Override
   protected void execute() {
     TaskPlan taskPlan = Utils.createStageTaskPlan(config, resourcePlan,
-        jobParameters.getTaskStages());
+        jobParameters.getTaskStages(), workerList);
 
     Set<Integer> sources = new HashSet<>();
     Set<Integer> targets = new HashSet<>();

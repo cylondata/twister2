@@ -9,23 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.rsched.spi.statemanager;
+package edu.iu.dsc.tws.api.task.stream;
 
-import java.util.concurrent.TimeUnit;
-
-/**
- * Interface for a shared lock
- */
-public interface Lock {
-
-  /**
-   * Wait until timeout for a lock to be available. Return true if lock is obtained or false if it
-   * can not be obtained.
-   */
-  boolean tryLock(long timeout, TimeUnit unit) throws InterruptedException;
-
-  /**
-   * Release the lock. Failure to call this method could result in an orphaned lock.
-   */
-  void unlock();
+public interface Source {
 }
