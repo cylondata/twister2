@@ -14,7 +14,7 @@ def twister2_client_conf_files():
         "//twister2/config/src/yaml:conf-nodesmpi-yaml",
         "//twister2/config/src/yaml:conf-aurora-yaml",
         "//twister2/config/src/yaml:conf-kubernetes-yaml",
-	"//twister2/config/src/yaml:conf-mesos-yaml",
+	      "//twister2/config/src/yaml:conf-mesos-yaml",
     ]
 
 def twister2_client_local_files():
