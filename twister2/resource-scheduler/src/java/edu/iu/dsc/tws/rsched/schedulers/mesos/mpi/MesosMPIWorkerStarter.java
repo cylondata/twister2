@@ -152,7 +152,7 @@ public final class MesosMPIWorkerStarter {
     AllocatedResources resourcePlan = MPIWorker.addContainers(config, processNames);
 
     //resourcePlan = new AllocatedResources(SchedulerContext.clusterType(config), workerID);
-    worker.init(config, workerID, resourcePlan, workerController, pv, volatileVolume);
+    worker.execute(config, workerID, resourcePlan, workerController, pv, volatileVolume);
   }
 
   /**

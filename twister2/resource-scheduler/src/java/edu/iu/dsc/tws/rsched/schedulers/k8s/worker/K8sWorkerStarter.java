@@ -176,7 +176,7 @@ public final class K8sWorkerStarter {
     AllocatedResources allocatedResources = K8sWorkerUtils.createAllocatedResources(
         KubernetesContext.clusterType(config), workerID, job);
 
-    worker.init(config, workerID, allocatedResources, workerController, pv, volatileVolume);
+    worker.execute(config, workerID, allocatedResources, workerController, pv, volatileVolume);
   }
 
   /**

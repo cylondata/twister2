@@ -55,10 +55,10 @@ public class BaseReduceBatchCommunication implements IWorker {
   private static final int NO_OF_TASKS = 4;
 
   @Override
-  public void init(Config cfg, int workerID, AllocatedResources resources,
-                   IWorkerController workerController,
-                   IPersistentVolume persistentVolume,
-                   IVolatileVolume volatileVolume) {
+  public void execute(Config cfg, int workerID, AllocatedResources resources,
+                      IWorkerController workerController,
+                      IPersistentVolume persistentVolume,
+                      IVolatileVolume volatileVolume) {
     LOG.log(Level.INFO, "Starting the example with container id: " + resources.getWorkerId());
 
     this.id = workerID;
@@ -81,7 +81,7 @@ public class BaseReduceBatchCommunication implements IWorker {
 
     LOG.info("Setting up reduce dataflow operation");
     try {
-      // this method calls the init method
+      // this method calls the execute method
       // I think this is wrong
       reduce = channel.reduce(newCfg, MessageType.OBJECT, 0, sources,
           dest, new ReduceBatchFinalReceiver(new SumFunction(), new FinalReduceReceiver()),

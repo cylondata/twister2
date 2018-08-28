@@ -59,10 +59,10 @@ import edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler;
 
 public class ComplexBatchTask implements IWorker {
   @Override
-  public void init(Config config, int workerID, AllocatedResources resources,
-                   IWorkerController workerController,
-                   IPersistentVolume persistentVolume,
-                   IVolatileVolume volatileVolume) {
+  public void execute(Config config, int workerID, AllocatedResources resources,
+                      IWorkerController workerController,
+                      IPersistentVolume persistentVolume,
+                      IVolatileVolume volatileVolume) {
     GeneratorTask g = new GeneratorTask();
     IntermediateTask i = new IntermediateTask();
     ReceivingTask r = new ReceivingTask();

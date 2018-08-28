@@ -33,9 +33,9 @@ public class BasicMesosWorker implements IWorker {
   private static final Logger LOG = Logger.getLogger(BasicMesosContainer.class.getName());
 
   @Override
-  public void init(Config config, int workerID, AllocatedResources allocatedResources,
-                   IWorkerController workerController, IPersistentVolume persistentVolume,
-                   IVolatileVolume volatileVolume) {
+  public void execute(Config config, int workerID, AllocatedResources allocatedResources,
+                      IWorkerController workerController, IPersistentVolume persistentVolume,
+                      IVolatileVolume volatileVolume) {
     LOG.info("Mesos Worker start time(ms): " + System.currentTimeMillis());
 
     // wait some random amount of time before finishing

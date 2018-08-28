@@ -31,9 +31,9 @@ public class TaskWorker implements IWorker {
   protected Communicator communicator;
 
   @Override
-  public void init(Config config, int workerID, AllocatedResources allocatedResources,
-                   IWorkerController workerController, IPersistentVolume persistentVolume,
-                   IVolatileVolume volatileVolume) {
+  public void execute(Config config, int workerID, AllocatedResources allocatedResources,
+                      IWorkerController workerController, IPersistentVolume persistentVolume,
+                      IVolatileVolume volatileVolume) {
     // create the channel
     channel = Network.initializeChannel(config, workerController, allocatedResources);
     // create the communicator

@@ -67,10 +67,10 @@ public class BaseLoadBalanceCommunication implements IWorker {
   private TWSCommunication channel;
 
   @Override
-  public void init(Config cfg, int workerID, AllocatedResources resources,
-                   IWorkerController workerController,
-                   IPersistentVolume persistentVolume,
-                   IVolatileVolume volatileVolume) {
+  public void execute(Config cfg, int workerID, AllocatedResources resources,
+                      IWorkerController workerController,
+                      IPersistentVolume persistentVolume,
+                      IVolatileVolume volatileVolume) {
     LOG.log(Level.INFO, "Starting the example with container id: " + resources.getWorkerId());
 
     this.config = cfg;
@@ -100,7 +100,7 @@ public class BaseLoadBalanceCommunication implements IWorker {
     Map<String, Object> newCfg = new HashMap<>();
 
     LOG.info("Setting up reduce dataflow operation");
-    // this method calls the init method
+    // this method calls the execute method
     // I think this is wrong
     loadBalance = channel.loadBalance(newCfg, MessageType.BUFFER, 0,
         sources, dests, new LoadBalanceReceiver());

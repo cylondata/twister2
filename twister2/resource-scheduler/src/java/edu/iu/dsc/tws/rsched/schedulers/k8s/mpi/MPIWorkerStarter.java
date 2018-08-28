@@ -194,7 +194,7 @@ public final class MPIWorkerStarter {
     AllocatedResources allocatedResources = K8sWorkerUtils.createAllocatedResources(
         KubernetesContext.clusterType(config), workerID, job);
 
-    worker.init(config, workerID, allocatedResources, workerController, pv, volatileVolume);
+    worker.execute(config, workerID, allocatedResources, workerController, pv, volatileVolume);
   }
 
   /**

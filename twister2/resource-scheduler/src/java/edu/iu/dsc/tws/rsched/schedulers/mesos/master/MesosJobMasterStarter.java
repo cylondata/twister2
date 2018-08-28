@@ -78,7 +78,7 @@ public final class MesosJobMasterStarter {
       workerController.waitForAllWorkersToJoin(
           ZKContext.maxWaitTimeForAllWorkersToJoin(config));
       LOG.info("Everyone has joined");
-      //container.init(worker.config, id, null, workerController, null);
+      //container.execute(worker.config, id, null, workerController, null);
 
     } catch (Exception e) {
       e.printStackTrace();

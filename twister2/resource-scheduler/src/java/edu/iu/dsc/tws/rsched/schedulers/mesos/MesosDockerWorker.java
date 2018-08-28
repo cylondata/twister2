@@ -83,7 +83,7 @@ public class MesosDockerWorker {
       workerNetworkInfoList = workerController.waitForAllWorkersToJoin(
           ZKContext.maxWaitTimeForAllWorkersToJoin(worker.config));
       LOG.info("Everyone has joined");
-      //container.init(worker.config, id, null, workerController, null);
+      //container.execute(worker.config, id, null, workerController, null);
 
     } catch (Exception e) {
       e.printStackTrace();

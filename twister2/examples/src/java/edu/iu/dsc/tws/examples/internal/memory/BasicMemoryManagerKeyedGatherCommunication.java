@@ -71,10 +71,10 @@ public class BasicMemoryManagerKeyedGatherCommunication implements IWorker {
   private long startTime = 0;
 
   @Override
-  public void init(Config cfg, int workerID, AllocatedResources resources,
-                   IWorkerController workerController,
-                   IPersistentVolume persistentVolume,
-                   IVolatileVolume volatileVolume) {
+  public void execute(Config cfg, int workerID, AllocatedResources resources,
+                      IWorkerController workerController,
+                      IPersistentVolume persistentVolume,
+                      IVolatileVolume volatileVolume) {
     LOG.log(Level.INFO, "Starting the example with container id: " + resources.getWorkerId());
 
     this.config = cfg;
@@ -101,7 +101,7 @@ public class BasicMemoryManagerKeyedGatherCommunication implements IWorker {
     LOG.info("Setting up keyed gather MM dataflow operation");
 
     try {
-      // this method calls the init method
+      // this method calls the execute method
       // I think this is wrong
 
       aggregate = channel.gather(newCfg, MessageType.INTEGER, MessageType.INTEGER, 0, sources,
