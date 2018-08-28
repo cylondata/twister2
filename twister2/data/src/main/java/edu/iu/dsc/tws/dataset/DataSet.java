@@ -19,12 +19,12 @@ public class DataSet<T> {
 
   private int id;
 
-  public DataSet(int id) {
-    this.id = id;
+  public DataSet(int dId) {
+    this.id = dId;
   }
 
-  public void addPartition(int id, T data) {
-    partitions.put(id, new Partition<T>(id, data));
+  public void addPartition(int dId, T data) {
+    partitions.put(dId, new Partition<T>(dId, data));
   }
 
   public T getPartition(int pId) {
