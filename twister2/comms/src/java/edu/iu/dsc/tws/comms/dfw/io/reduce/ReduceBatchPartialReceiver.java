@@ -73,9 +73,7 @@ public class ReduceBatchPartialReceiver extends ReduceBatchReceiver {
             Queue<Object> valueList = e.getValue();
             if (valueList.size() > 0) {
               if (currentVal == null) {
-                System.out.println(valueList.size());
                 currentVal = valueList.poll();
-                System.out.println(valueList.size());
                 tempBufferCount += 1;
               } else {
                 Object current = valueList.poll();
