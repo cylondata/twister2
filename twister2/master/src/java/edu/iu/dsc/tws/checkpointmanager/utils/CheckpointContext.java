@@ -17,7 +17,8 @@ import edu.iu.dsc.tws.common.config.Context;
 public class CheckpointContext extends Context {
 
   private static final String STATEBACKEND_DIRECTORY = "twister2.statebackend.directory";
-  private static final String STATEBACKEND_DIRECTORY_DEFAULT = System.getProperty("user.home")+"/statebackend/";
+  private static final String STATEBACKEND_DIRECTORY_DEFAULT = System.getProperty("user.home")
+      + "/statebackend/";
 
   public static String getStatebackendDirectoryDefault(Config cfg) {
     return cfg.getStringValue(STATEBACKEND_DIRECTORY, STATEBACKEND_DIRECTORY_DEFAULT);
