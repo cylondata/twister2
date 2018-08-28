@@ -225,6 +225,6 @@ public class BaseBroadcastCommunication implements IWorker {
         .build();
 
     // now submit the job
-    Twister2Submitter.submitContainerJob(twister2Job, config);
+    Twister2Submitter.submitJob(twister2Job, config);
   }
 }

@@ -132,7 +132,7 @@ public class ExampleMain {
             .setConfig(jobConfig)
             .build();
         // now submit the job
-        Twister2Submitter.submitContainerJob(twister2Job, config);
+        Twister2Submitter.submitJob(twister2Job, config);
       } else if (operation.equals("keyedreduce")) {
         twister2Job = Twister2Job.newBuilder()
             .setName("keyed-reduce-batch-bench")
@@ -141,7 +141,7 @@ public class ExampleMain {
             .setConfig(jobConfig)
             .build();
         // now submit the job
-        Twister2Submitter.submitContainerJob(twister2Job, config);
+        Twister2Submitter.submitJob(twister2Job, config);
       } else if (operation.equals("partition")) {
         twister2Job = Twister2Job.newBuilder()
             .setName("partition-batch-bench")
@@ -150,7 +150,7 @@ public class ExampleMain {
             .setConfig(jobConfig)
             .build();
         // now submit the job
-        Twister2Submitter.submitContainerJob(twister2Job, config);
+        Twister2Submitter.submitJob(twister2Job, config);
       } else if (operation.equals("keyedpartition")) {
         twister2Job = Twister2Job.newBuilder()
             .setName("keyed-partition-batch-bench")
@@ -159,7 +159,7 @@ public class ExampleMain {
             .setConfig(jobConfig)
             .build();
         // now submit the job
-        Twister2Submitter.submitContainerJob(twister2Job, config);
+        Twister2Submitter.submitJob(twister2Job, config);
       } else if (operation.equals("gather")) {
         twister2Job = Twister2Job.newBuilder()
             .setName("partition-batch-bench")
@@ -168,7 +168,7 @@ public class ExampleMain {
             .setConfig(jobConfig)
             .build();
         // now submit the job
-        Twister2Submitter.submitContainerJob(twister2Job, config);
+        Twister2Submitter.submitJob(twister2Job, config);
       }
     } else {
       switch (operation) {
@@ -180,7 +180,7 @@ public class ExampleMain {
               .setConfig(jobConfig)
               .build();
           // now submit the job
-          Twister2Submitter.submitContainerJob(twister2Job, config);
+          Twister2Submitter.submitJob(twister2Job, config);
           break;
         case "bcast":
           twister2Job = Twister2Job.newBuilder()
@@ -190,7 +190,7 @@ public class ExampleMain {
               .setConfig(jobConfig)
               .build();
           // now submit the job
-          Twister2Submitter.submitContainerJob(twister2Job, config);
+          Twister2Submitter.submitJob(twister2Job, config);
           break;
         case "partition":
           twister2Job = Twister2Job.newBuilder()
@@ -200,7 +200,7 @@ public class ExampleMain {
               .setConfig(jobConfig)
               .build();
           // now submit the job
-          Twister2Submitter.submitContainerJob(twister2Job, config);
+          Twister2Submitter.submitJob(twister2Job, config);
           break;
         case "keyedpartition":
           twister2Job = Twister2Job.newBuilder()
@@ -210,7 +210,7 @@ public class ExampleMain {
               .setConfig(jobConfig)
               .build();
           // now submit the job
-          Twister2Submitter.submitContainerJob(twister2Job, config);
+          Twister2Submitter.submitJob(twister2Job, config);
           break;
         case "gather":
           twister2Job = Twister2Job.newBuilder()
@@ -220,7 +220,7 @@ public class ExampleMain {
               .setConfig(jobConfig)
               .build();
           // now submit the job
-          Twister2Submitter.submitContainerJob(twister2Job, config);
+          Twister2Submitter.submitJob(twister2Job, config);
           break;
         case "allreduce":
           twister2Job = Twister2Job.newBuilder()
@@ -230,7 +230,7 @@ public class ExampleMain {
               .setConfig(jobConfig)
               .build();
           // now submit the job
-          Twister2Submitter.submitContainerJob(twister2Job, config);
+          Twister2Submitter.submitJob(twister2Job, config);
           break;
         case "allgather":
           twister2Job = Twister2Job.newBuilder()
@@ -240,7 +240,7 @@ public class ExampleMain {
               .setConfig(jobConfig)
               .build();
           // now submit the job
-          Twister2Submitter.submitContainerJob(twister2Job, config);
+          Twister2Submitter.submitJob(twister2Job, config);
           break;
         default:
           LOG.log(Level.SEVERE, "Un-supported operation: " + operation);

@@ -185,6 +185,6 @@ public class ConfigTestBatchTask implements IWorker {
 
     // now submit the job
     LOG.info("Twister2Submitter In Action ... ");
-    Twister2Submitter.submitContainerJob(jobBuilder.build(), config);
+    Twister2Submitter.submitJob(jobBuilder.build(), config);
   }
 }
