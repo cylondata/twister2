@@ -65,10 +65,10 @@ public class BaseAllReduceCommunication implements IWorker {
   private Status status;
 
   @Override
-  public void init(Config cfg, int workerID, AllocatedResources resources,
-                   IWorkerController workerController,
-                   IPersistentVolume persistentVolume,
-                   IVolatileVolume volatileVolume) {
+  public void execute(Config cfg, int workerID, AllocatedResources resources,
+                      IWorkerController workerController,
+                      IPersistentVolume persistentVolume,
+                      IVolatileVolume volatileVolume) {
     LOG.log(Level.INFO, "Starting the example with container id: " + resources.getWorkerId());
 
     this.config = cfg;
@@ -98,7 +98,7 @@ public class BaseAllReduceCommunication implements IWorker {
 
     LOG.info("Setting up reduce dataflow operation");
     try {
-      // this method calls the init method
+      // this method calls the execute method
       // I think this is wrong
       allReduce = channel.allReduce(newCfg, MessageType.OBJECT, 0, 1, sources,
           destinations, dest, new IndentityFunction(), new FinalReduceReceive(), true);

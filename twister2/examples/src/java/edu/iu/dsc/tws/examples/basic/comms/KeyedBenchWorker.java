@@ -94,9 +94,9 @@ public abstract class KeyedBenchWorker implements IWorker {
   protected List<WorkerNetworkInfo> workerList = null;
 
   @Override
-  public void init(Config cfg, int workerID, AllocatedResources allocatedResources,
-                   IWorkerController workerController, IPersistentVolume persistentVolume,
-                   IVolatileVolume volatileVolume) {
+  public void execute(Config cfg, int workerID, AllocatedResources allocatedResources,
+                      IWorkerController workerController, IPersistentVolume persistentVolume,
+                      IVolatileVolume volatileVolume) {
     // create the job parameters
     this.jobParameters = JobParameters.build(cfg);
     this.config = cfg;

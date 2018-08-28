@@ -52,10 +52,10 @@ public class ConfigTestStreamingTask implements IWorker {
   public static final Logger LOG = Logger.getLogger(ConfigTestStreamingTask.class.getName());
 
   @Override
-  public void init(Config config, int workerID, AllocatedResources resources,
-                   IWorkerController workerController,
-                   IPersistentVolume persistentVolume,
-                   IVolatileVolume volatileVolume) {
+  public void execute(Config config, int workerID, AllocatedResources resources,
+                      IWorkerController workerController,
+                      IPersistentVolume persistentVolume,
+                      IVolatileVolume volatileVolume) {
     GeneratorTask g = new GeneratorTask();
     RecevingTask r = new RecevingTask();
 

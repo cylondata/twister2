@@ -64,10 +64,10 @@ public class SortJob implements IWorker {
   private TaskPlan taskPlan;
 
   @Override
-  public void init(Config cfg, int workerID, AllocatedResources allocatedResources,
-                   IWorkerController workerController,
-                   IPersistentVolume persistentVolume,
-                   IVolatileVolume volatileVolume) {
+  public void execute(Config cfg, int workerID, AllocatedResources allocatedResources,
+                      IWorkerController workerController,
+                      IPersistentVolume persistentVolume,
+                      IVolatileVolume volatileVolume) {
     this.config = cfg;
     this.resourcePlan = allocatedResources;
     this.id = workerID;

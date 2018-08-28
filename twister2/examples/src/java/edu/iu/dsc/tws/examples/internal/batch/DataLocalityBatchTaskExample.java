@@ -76,10 +76,10 @@ public class DataLocalityBatchTaskExample implements IWorker {
   }
 
   @Override
-  public void init(Config config, int workerID, AllocatedResources resources,
-                   IWorkerController workerController,
-                   IPersistentVolume persistentVolume,
-                   IVolatileVolume volatileVolume) {
+  public void execute(Config config, int workerID, AllocatedResources resources,
+                      IWorkerController workerController,
+                      IPersistentVolume persistentVolume,
+                      IVolatileVolume volatileVolume) {
 
     SourceTask1 g = new SourceTask1(); //source task
     SourceTask2 m = new SourceTask2(); //sink task 1

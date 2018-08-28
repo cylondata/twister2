@@ -209,7 +209,7 @@ public final class AuroraWorkerStarter {
       throw new RuntimeException(e);
     }
 
-    container.init(worker.config, worker.zkController.getWorkerNetworkInfo().getWorkerID(),
+    container.execute(worker.config, worker.zkController.getWorkerNetworkInfo().getWorkerID(),
         null, null, null, null);
 
     // close the things, let others know that it is done
