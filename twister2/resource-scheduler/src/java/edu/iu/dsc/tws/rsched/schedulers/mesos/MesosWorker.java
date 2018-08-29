@@ -106,7 +106,7 @@ public class MesosWorker implements Executor {
       container.execute(config, id, null, workerController, null, null);
       workerController.close();
     } catch (UnknownHostException e) {
-      e.printStackTrace();
+      LOG.severe("Host unkown " + e.getMessage());
     }
 
     //The below two lines can be used to send a message to the framework

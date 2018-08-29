@@ -29,6 +29,7 @@ import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.master.client.JobMasterClient;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerUtils;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosVolatileVolume;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerController;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerLogger;
@@ -85,10 +86,10 @@ public final class MesosMPIWorkerStarter {
       config = JobUtils.updateConfigs(job, config);
 
       workerController = new MesosWorkerController(config, job,
-          Inet4Address.getLocalHost().getHostAddress(), 2022, workerID);
-
+          Inet4Address.getLocalHost().getHostAddress(), 2023, workerID);
+      workerController.initializeWithZooKeeper();
     } catch (Exception e) {
-      e.printStackTrace();
+      LOG.severe("Error " + e.getMessage());
     }
 
     //can not access docker env variable so it was passed as a parameter
@@ -149,8 +150,9 @@ public final class MesosMPIWorkerStarter {
     // lets create the resource plan
     Map<Integer, String> processNames = MPIWorker.createResourcePlan(config);
     // now create the resource plan
-    AllocatedResources resourcePlan = MPIWorker.addContainers(config, processNames);
-
+    //AllocatedResources resourcePlan = MPIWorker.addContainers(config, processNames);
+    AllocatedResources resourcePlan = K8sWorkerUtils.createAllocatedResources("mesos",
+        workerID, job);
     //resourcePlan = new AllocatedResources(SchedulerContext.clusterType(config), workerID);
     worker.execute(config, workerID, resourcePlan, workerController, pv, volatileVolume);
   }

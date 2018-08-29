@@ -122,38 +122,31 @@ public class MesosScheduler implements Scheduler {
                   .setValue("FRAMEWORK_ID=" + offer.getFrameworkId().getValue()).build();
 
               Protos.Parameter classNameParam = null;
-              if (mpiJob) {
-                //worker 0 will be the job master.
-                if (taskId.getValue().equals("0")) {
-                  ((TaskInfo.Builder) taskBuilder).setName("Job Master");
 
-                  classNameParam = Protos.Parameter.newBuilder().setKey("env")
-                      .setValue("CLASS_NAME="
-                          + "edu.iu.dsc.tws.rsched.schedulers.mesos.master.MesosJobMasterStarter")
-                      .build();
-                } else if (taskId.getValue().equals("1")) {
-                  ((TaskInfo.Builder) taskBuilder).setName("MPI Master " + taskId);
-                  classNameParam = Protos.Parameter.newBuilder().setKey("env")
-                      .setValue("CLASS_NAME="
-                          + "edu.iu.dsc.tws.rsched.schedulers.mesos.mpi.MesosMPIMasterStarter")
-                      .build();
-                } else {
-                  ((TaskInfo.Builder) taskBuilder).setName("task " + taskId);
-                  classNameParam = Protos.Parameter.newBuilder().setKey("env")
-                      .setValue("CLASS_NAME="
-                          + "edu.iu.dsc.tws.rsched.schedulers.mesos.mpi.MesosMPISlaveStarter")
-                      .build();
-                }
+              //worker 0 will be the job master.
+              if (taskId.getValue().equals("0")) {
+                ((TaskInfo.Builder) taskBuilder).setName("Job Master");
+
+                classNameParam = Protos.Parameter.newBuilder().setKey("env")
+                    .setValue("CLASS_NAME="
+                        + "edu.iu.dsc.tws.rsched.schedulers.mesos.master.MesosJobMasterStarter")
+                    .build();
               } else {
-                //worker 0 will be the job master.
-                if (taskId.getValue().equals("0")) {
-                  ((TaskInfo.Builder) taskBuilder).setName("Job Master");
-
-                  classNameParam = Protos.Parameter.newBuilder().setKey("env")
-                      .setValue("CLASS_NAME="
-                          + "edu.iu.dsc.tws.rsched.schedulers.mesos.master.MesosJobMasterStarter")
-                      .build();
-                } else  {
+                if (mpiJob) {
+                  if (taskId.getValue().equals("1")) {
+                    ((TaskInfo.Builder) taskBuilder).setName("MPI Master " + taskId);
+                    classNameParam = Protos.Parameter.newBuilder().setKey("env")
+                        .setValue("CLASS_NAME="
+                            + "edu.iu.dsc.tws.rsched.schedulers.mesos.mpi.MesosMPIMasterStarter")
+                        .build();
+                  } else {
+                    ((TaskInfo.Builder) taskBuilder).setName("task " + taskId);
+                    classNameParam = Protos.Parameter.newBuilder().setKey("env")
+                        .setValue("CLASS_NAME="
+                            + "edu.iu.dsc.tws.rsched.schedulers.mesos.mpi.MesosMPISlaveStarter")
+                        .build();
+                  }
+                } else {
                   if (taskId.getValue().equals("1")) {
                     ((TaskInfo.Builder) taskBuilder).setName("MPI Master " + taskId);
                   } else {
@@ -164,8 +157,8 @@ public class MesosScheduler implements Scheduler {
                           + "edu.iu.dsc.tws.rsched.schedulers.mesos.MesosDockerWorker")
                       .build();
                 }
-
               }
+
               // docker image info
               Protos.ContainerInfo.DockerInfo.Builder dockerInfoBuilder
                   = Protos.ContainerInfo.DockerInfo.newBuilder();
@@ -244,7 +237,6 @@ public class MesosScheduler implements Scheduler {
         }
       }
     }
-
   }
 
   private Protos.TaskID buildNewTaskID() {
