@@ -46,8 +46,6 @@ import edu.iu.dsc.tws.executor.comm.tasks.batch.SinkBatchTask;
 import edu.iu.dsc.tws.executor.comm.tasks.batch.SourceBatchTask;
 import edu.iu.dsc.tws.executor.core.CommunicationOperationType;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
-import edu.iu.dsc.tws.executor.core.SinkTaskContextListener;
-import edu.iu.dsc.tws.executor.core.SourceTaskContextListener;
 import edu.iu.dsc.tws.executor.threading.Executor;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
@@ -103,7 +101,6 @@ public class ReduceBatchTask implements IWorker {
     private static final long serialVersionUID = -254264903510284748L;
     private TaskContext sourceTaskContext;
     private Config config;
-    private SourceTaskContextListener sourceTaskContextListener = null;
     private int count = 0;
 
     @Override
@@ -121,29 +118,14 @@ public class ReduceBatchTask implements IWorker {
     }
 
     @Override
-    public void interrupt() {
-      this.sourceTaskContextListener.onInterrupt();
-    }
-
-    @Override
     public void prepare(Config cfg, TaskContext context) {
       this.sourceTaskContext = context;
-      this.sourceTaskContextListener
-          = new SourceTaskContextListener(this, sourceTaskContext);
-      this.sourceTaskContextListener.mutateContext(sourceTaskContext);
-      this.sourceTaskContextListener.onStart();
     }
 
     @Override
     public TaskContext getContext() {
       return this.sourceTaskContext;
     }
-
-    @Override
-    public SourceTaskContextListener getSourceTaskContextListener() {
-      return this.sourceTaskContextListener;
-    }
-
   }
 
   private static class RecevingTask extends SinkBatchTask {
@@ -151,7 +133,6 @@ public class ReduceBatchTask implements IWorker {
     private int count = 0;
     private Config config;
     private TaskContext sinkTaskContext;
-    private SinkTaskContextListener sinkTaskContextListener = new SinkTaskContextListener();
 
     @Override
     public boolean execute(IMessage message) {

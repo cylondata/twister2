@@ -12,14 +12,12 @@
 package edu.iu.dsc.tws.executor.comm.tasks.batch;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.executor.core.SinkTaskContextListener;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
 public class SinkBatchTask implements ISink {
   private static final long serialVersionUID = -254264903510286748L;
-  private SinkTaskContextListener sinkTaskContextListener;
 
   @Override
   public boolean execute(IMessage message) {
@@ -32,11 +30,4 @@ public class SinkBatchTask implements ISink {
 
   }
 
-  public SinkTaskContextListener getSinkTaskContextListener() {
-    return sinkTaskContextListener;
-  }
-
-  public void setSinkTaskContextListener(SinkTaskContextListener sinkTaskContextListener) {
-    this.sinkTaskContextListener = sinkTaskContextListener;
-  }
 }

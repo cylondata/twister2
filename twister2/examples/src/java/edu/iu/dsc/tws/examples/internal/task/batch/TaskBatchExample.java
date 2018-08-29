@@ -43,7 +43,6 @@ import edu.iu.dsc.tws.executor.comm.tasks.batch.SinkBatchTask;
 import edu.iu.dsc.tws.executor.comm.tasks.batch.SourceBatchTask;
 import edu.iu.dsc.tws.executor.core.CommunicationOperationType;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
-import edu.iu.dsc.tws.executor.core.SourceTaskContextListener;
 import edu.iu.dsc.tws.executor.threading.Executor;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
@@ -117,16 +116,6 @@ public class TaskBatchExample implements IWorker {
     @Override
     public void setContext(TaskContext context) {
       super.setContext(context);
-    }
-
-    @Override
-    public SourceTaskContextListener getSourceTaskContextListener() {
-      return super.getSourceTaskContextListener();
-    }
-
-    @Override
-    public void setSourceTaskContextListener(SourceTaskContextListener sourceTaskContextListener) {
-      super.setSourceTaskContextListener(sourceTaskContextListener);
     }
 
     private Config config;
