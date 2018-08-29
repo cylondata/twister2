@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.executor.comm.tasks.batch;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.executor.core.SourceTaskContextListener;
 import edu.iu.dsc.tws.task.api.ISource;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
@@ -21,7 +20,6 @@ public abstract class SourceBatchTask implements ISource {
   private static final long serialVersionUID = -254264120110286748L;
   private TaskContext ctx;
   private Config config;
-  private SourceTaskContextListener sourceTaskContextListener;
 
   @Override
   public void run() {
@@ -44,13 +42,5 @@ public abstract class SourceBatchTask implements ISource {
 
   public void setContext(TaskContext context) {
     this.ctx = context;
-  }
-
-  public SourceTaskContextListener getSourceTaskContextListener() {
-    return sourceTaskContextListener;
-  }
-
-  public void setSourceTaskContextListener(SourceTaskContextListener sourceTaskContextListener) {
-    this.sourceTaskContextListener = sourceTaskContextListener;
   }
 }
