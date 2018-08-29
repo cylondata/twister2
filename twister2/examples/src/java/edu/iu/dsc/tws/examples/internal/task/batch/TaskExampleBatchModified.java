@@ -59,10 +59,10 @@ import edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler;
 
 public class TaskExampleBatchModified implements IWorker {
   @Override
-  public void init(Config config, int workerID, AllocatedResources resources,
-                   IWorkerController workerController,
-                   IPersistentVolume persistentVolume,
-                   IVolatileVolume volatileVolume) {
+  public void execute(Config config, int workerID, AllocatedResources resources,
+                      IWorkerController workerController,
+                      IPersistentVolume persistentVolume,
+                      IVolatileVolume volatileVolume) {
     GeneratorTaskModified g = new GeneratorTaskModified();
     RecevingTaskModified r = new RecevingTaskModified();
     MiddleTaskModified m = new MiddleTaskModified();
@@ -179,6 +179,6 @@ public class TaskExampleBatchModified implements IWorker {
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job
-    Twister2Submitter.submitContainerJob(jobBuilder.build(), config);
+    Twister2Submitter.submitJob(jobBuilder.build(), config);
   }
 }

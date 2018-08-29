@@ -110,16 +110,16 @@ public class HDFSTaskExample implements IWorker {
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job
-    Twister2Submitter.submitContainerJob(jobBuilder.build(), config);
+    Twister2Submitter.submitJob(jobBuilder.build(), config);
   }
 
   /**
    * This method initialize the config, container id, and resource plan objects.
    */
-  public void init(Config cfg, int workerID, AllocatedResources resources,
-                   IWorkerController workerController,
-                   IPersistentVolume persistentVolume,
-                   IVolatileVolume volatileVolume) {
+  public void execute(Config cfg, int workerID, AllocatedResources resources,
+                      IWorkerController workerController,
+                      IPersistentVolume persistentVolume,
+                      IVolatileVolume volatileVolume) {
 
     LOG.log(Level.INFO, "Starting the example with container id: " + resources.getWorkerId());
 

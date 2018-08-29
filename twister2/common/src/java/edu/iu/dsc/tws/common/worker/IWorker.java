@@ -28,10 +28,10 @@ import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
 
 public interface IWorker {
-  void init(Config config,
-            int workerID,
-            AllocatedResources allocatedResources,
-            IWorkerController workerController,
-            IPersistentVolume persistentVolume,
-            IVolatileVolume volatileVolume);
+  void execute(Config config,
+               int workerID,
+               AllocatedResources allocatedResources,
+               IWorkerController workerController,
+               IPersistentVolume persistentVolume,
+               IVolatileVolume volatileVolume);
 }

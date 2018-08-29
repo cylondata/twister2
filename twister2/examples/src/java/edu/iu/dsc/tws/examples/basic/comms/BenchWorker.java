@@ -55,24 +55,15 @@ public abstract class BenchWorker implements IWorker {
   protected List<WorkerNetworkInfo> workerList = null;
 
   @Override
-  public void init(Config cfg, int workerID, AllocatedResources allocatedResources,
-                   IWorkerController workerController, IPersistentVolume persistentVolume,
-                   IVolatileVolume volatileVolume) {
+  public void execute(Config cfg, int workerID, AllocatedResources allocatedResources,
+                      IWorkerController workerController, IPersistentVolume persistentVolume,
+                      IVolatileVolume volatileVolume) {
     // create the job parameters
     this.jobParameters = JobParameters.build(cfg);
     this.config = cfg;
     this.resourcePlan = allocatedResources;
     this.workerId = workerID;
-
-    // wait for all workers in this job to join
-    workerList = workerController.waitForAllWorkersToJoin(50000);
-    if (workerList != null) {
-      LOG.info("All workers joined. " + WorkerNetworkInfo.workerListAsString(workerList));
-    } else {
-      LOG.severe("Can not get all workers to join. Something wrong. Exiting ....................");
-      return;
-    }
-
+    this.workerList = workerController.getWorkerList();
     // lets create the task plan
     this.taskPlan = Utils.createStageTaskPlan(
         cfg, allocatedResources, jobParameters.getTaskStages(), workerList);

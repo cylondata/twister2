@@ -64,10 +64,10 @@ public class SortJob implements IWorker {
   private TaskPlan taskPlan;
 
   @Override
-  public void init(Config cfg, int workerID, AllocatedResources allocatedResources,
-                   IWorkerController workerController,
-                   IPersistentVolume persistentVolume,
-                   IVolatileVolume volatileVolume) {
+  public void execute(Config cfg, int workerID, AllocatedResources allocatedResources,
+                      IWorkerController workerController,
+                      IPersistentVolume persistentVolume,
+                      IVolatileVolume volatileVolume) {
     this.config = cfg;
     this.resourcePlan = allocatedResources;
     this.id = workerID;
@@ -167,6 +167,6 @@ public class SortJob implements IWorker {
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job
-    Twister2Submitter.submitContainerJob(jobBuilder.build(), config);
+    Twister2Submitter.submitJob(jobBuilder.build(), config);
   }
 }

@@ -174,10 +174,10 @@ public final class StandaloneWorkerStarter {
       if (object instanceof IWorker) {
         IWorker container = (IWorker) object;
         // now initialize the container
-        container.init(config, workerNetworkInfo.getWorkerID(), resourcePlan, null, null, null);
+        container.execute(config, workerNetworkInfo.getWorkerID(), resourcePlan, null, null, null);
       } else if (object instanceof IWorker) {
         IWorker worker = (IWorker) object;
-        worker.init(config, workerNetworkInfo.getWorkerID(), resourcePlan,
+        worker.execute(config, workerNetworkInfo.getWorkerID(), resourcePlan,
             workerController, null, null);
       }
       LOG.log(Level.FINE, "loaded worker class: " + workerClass);

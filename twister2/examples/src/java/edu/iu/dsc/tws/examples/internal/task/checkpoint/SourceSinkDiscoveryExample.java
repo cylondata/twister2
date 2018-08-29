@@ -62,10 +62,10 @@ public class SourceSinkDiscoveryExample implements IWorker {
   private static final Logger LOG = Logger.getLogger(SourceSinkDiscoveryExample.class.getName());
 
   @Override
-  public void init(Config config, int workerID, AllocatedResources resources,
-                   IWorkerController workerController,
-                   IPersistentVolume persistentVolume,
-                   IVolatileVolume volatileVolume) {
+  public void execute(Config config, int workerID, AllocatedResources resources,
+                      IWorkerController workerController,
+                      IPersistentVolume persistentVolume,
+                      IVolatileVolume volatileVolume) {
     SourceSinkDiscoveryExample.GeneratorTask g = new GeneratorTask();
     ReceivingTask r
         = new ReceivingTask();
@@ -202,7 +202,7 @@ public class SourceSinkDiscoveryExample implements IWorker {
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job
-    Twister2Submitter.submitContainerJob(jobBuilder.build(), config);
+    Twister2Submitter.submitJob(jobBuilder.build(), config);
   }
 }
 

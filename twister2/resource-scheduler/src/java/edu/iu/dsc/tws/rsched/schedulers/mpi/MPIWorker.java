@@ -28,6 +28,7 @@ import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
@@ -180,30 +181,34 @@ public final class MPIWorker {
   }
 
   private static void worker(Config config, int rank) {
-    // lets create the resource plan
-    AllocatedResources resourcePlan = createResourcePlan(config);
-
-    String workerClass = MPIContext.workerClass(config);
     try {
-      Object object = ReflectionUtils.newInstance(workerClass);
-      if (object instanceof IWorker) {
-        IWorker container = (IWorker) object;
-        // now initialize the container
-        container.init(config, rank, resourcePlan, null, null, null);
-      } else if (object instanceof IWorker) {
-        IWorker worker = (IWorker) object;
-        worker.init(config, rank, resourcePlan,
-            null, null, null);
+      // lets create the resource plan
+      Map<Integer, String> processNames = createResourcePlan(config);
+      // now create the resource plan
+      AllocatedResources resourcePlan = addContainers(config, processNames);
+      // now create the worker
+      IWorkerController controller = new MPIWorkerController(MPI.COMM_WORLD.getRank(),
+          processNames);
+
+      String workerClass = MPIContext.workerClass(config);
+      try {
+        Object object = ReflectionUtils.newInstance(workerClass);
+        if (object instanceof IWorker) {
+          IWorker container = (IWorker) object;
+          // now initialize the container
+          container.execute(config, rank, resourcePlan, controller, null, null);
+        } else {
+          throw new RuntimeException("Cannot instantiate class: " + object.getClass());
+        }
+        LOG.log(Level.FINE, "loaded worker class: " + workerClass);
+      } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+        LOG.log(Level.SEVERE, String.format("failed to load the worker class %s",
+            workerClass), e);
+        throw new RuntimeException(e);
       }
-      LOG.log(Level.FINE, "loaded worker class: " + workerClass);
-    } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-      LOG.log(Level.SEVERE, String.format("failed to load the worker class %s",
-          workerClass), e);
-      throw new RuntimeException(e);
-    }
 
-    // lets do a barrier here so everyone is synchronized at the end
-    try {
+      // lets do a barrier here so everyone is synchronized at the end
+
       MPI.COMM_WORLD.barrier();
       LOG.log(Level.FINE, String.format("Worker %d: the cluster is ready...", rank));
     } catch (MPIException e) {
@@ -217,12 +222,8 @@ public final class MPIWorker {
    * @param config
    * @return
    */
-  public static AllocatedResources createResourcePlan(Config config) {
+  public static Map<Integer, String> createResourcePlan(Config config) {
     try {
-      int rank = MPI.COMM_WORLD.getRank();
-      AllocatedResources resourcePlan = new AllocatedResources(
-          MPIContext.clusterType(config), MPI.COMM_WORLD.getRank());
-
       String processName = MPI.getProcessorName();
       char[] processNameChars = new char[processName.length()];
       int length = processNameChars.length;
@@ -265,22 +266,26 @@ public final class MPIWorker {
         LOG.log(Level.FINE, String.format("Process %d name: %s", i, processNames.get(i)));
       }
 
-      // now lets add the containers
-      addContainers(config, resourcePlan, processNames);
-
-      return resourcePlan;
+      return processNames;
     } catch (MPIException e) {
       throw new RuntimeException("Failed to communicate", e);
     }
   }
 
-  private static void addContainers(Config cfg, AllocatedResources resourcePlan,
-                                    Map<Integer, String> processes) throws MPIException {
-    int size = MPI.COMM_WORLD.getSize();
-    for (int i = 0; i < size; i++) {
-      WorkerComputeResource workerComputeResource = new WorkerComputeResource(i);
-//      workerComputeResource.addProperty(SchedulerContext.WORKER_NAME, processes.get(i));
-      resourcePlan.addWorkerComputeResource(workerComputeResource);
+  public static AllocatedResources addContainers(Config cfg,
+                                    Map<Integer, String> processes) {
+    int size = 0;
+    try {
+      size = MPI.COMM_WORLD.getSize();
+      AllocatedResources resourcePlan = new AllocatedResources(
+          MPIContext.clusterType(cfg), MPI.COMM_WORLD.getRank());
+      for (int i = 0; i < size; i++) {
+        WorkerComputeResource workerComputeResource = new WorkerComputeResource(i);
+        resourcePlan.addWorkerComputeResource(workerComputeResource);
+      }
+      return resourcePlan;
+    } catch (MPIException e) {
+      throw new RuntimeException("MPI Failure", e);
     }
   }
 }

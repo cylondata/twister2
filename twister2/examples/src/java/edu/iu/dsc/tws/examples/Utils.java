@@ -230,7 +230,6 @@ public final class Utils {
     Map<Integer, Set<Integer>> groupsToExeuctors = new HashMap<>();
     int thisExecutor = allocatedResources.getWorkerId();
 
-    List<WorkerComputeResource> containers = allocatedResources.getWorkerComputeResources();
     Map<String, List<WorkerComputeResource>> containersPerNode =
         WorkerResourceUtils.getWorkersPerNode(allocatedResources, workerList);
 

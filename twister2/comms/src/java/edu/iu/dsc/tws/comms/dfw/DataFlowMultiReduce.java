@@ -124,9 +124,8 @@ public class DataFlowMultiReduce implements DataFlowOperation {
    * @param config
    * @param type
    * @param instancePlan
-   * @param edge
    */
-  public void init(Config config, MessageType type, TaskPlan instancePlan, int edge) {
+  public void init(Config config, MessageType type, TaskPlan instancePlan) {
     executor = instancePlan.getThisExecutor();
     this.taskPlan = instancePlan;
     this.dataType = type;

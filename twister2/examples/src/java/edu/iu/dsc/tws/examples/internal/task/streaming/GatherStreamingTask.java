@@ -54,10 +54,10 @@ public class GatherStreamingTask implements IWorker {
   private RandomString randomString;
 
   @Override
-  public void init(Config config, int workerID, AllocatedResources resources,
-                   IWorkerController workerController,
-                   IPersistentVolume persistentVolume,
-                   IVolatileVolume volatileVolume) {
+  public void execute(Config config, int workerID, AllocatedResources resources,
+                      IWorkerController workerController,
+                      IPersistentVolume persistentVolume,
+                      IVolatileVolume volatileVolume) {
     GeneratorTask g = new GeneratorTask();
     RecevingTask r = new RecevingTask();
 
@@ -163,7 +163,7 @@ public class GatherStreamingTask implements IWorker {
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job
-    Twister2Submitter.submitContainerJob(jobBuilder.build(), config);
+    Twister2Submitter.submitJob(jobBuilder.build(), config);
   }
 }
 

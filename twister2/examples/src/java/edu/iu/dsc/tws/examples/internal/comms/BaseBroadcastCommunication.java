@@ -65,12 +65,12 @@ public class BaseBroadcastCommunication implements IWorker {
   private Status status;
 
   @Override
-  public void init(Config cfg,
-                   int workerID,
-                   AllocatedResources resources,
-                   IWorkerController workerController,
-                   IPersistentVolume persistentVolume,
-                   IVolatileVolume volatileVolume) {
+  public void execute(Config cfg,
+                      int workerID,
+                      AllocatedResources resources,
+                      IWorkerController workerController,
+                      IPersistentVolume persistentVolume,
+                      IVolatileVolume volatileVolume) {
 
     LOG.log(Level.INFO, "Starting the example with container id: " + resources.getWorkerId());
     try {
@@ -97,7 +97,7 @@ public class BaseBroadcastCommunication implements IWorker {
       Map<String, Object> newCfg = new HashMap<>();
 
       LOG.info(String.format("Setting up broadcast dataflow operation %d %s", dest, sources));
-      // this method calls the init method
+      // this method calls the execute method
       // I think this is wrong
       broadcast = channel.broadCast(newCfg, MessageType.OBJECT, 0, dest,
           sources, new BCastReceive());
@@ -225,6 +225,6 @@ public class BaseBroadcastCommunication implements IWorker {
         .build();
 
     // now submit the job
-    Twister2Submitter.submitContainerJob(twister2Job, config);
+    Twister2Submitter.submitJob(twister2Job, config);
   }
 }

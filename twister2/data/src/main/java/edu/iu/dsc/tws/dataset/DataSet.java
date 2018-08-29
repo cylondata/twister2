@@ -9,15 +9,33 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.data.api;
+package edu.iu.dsc.tws.dataset;
 
-import java.util.logging.Logger;
+import java.util.HashMap;
+import java.util.Map;
 
-/**
- * A DataSet is the main data abstraction, which represents data that is loaded into the system
- */
-public abstract class DataSet {
+public class DataSet<T> {
+  private Map<Integer, Partition<T>> partitions = new HashMap<>();
 
-  private static final Logger LOG = Logger.getLogger(DataSet.class.getName());
+  private int id;
 
+  public DataSet(int dId) {
+    this.id = dId;
+  }
+
+  public void addPartition(int dId, T data) {
+    partitions.put(dId, new Partition<T>(dId, data));
+  }
+
+  public T getPartition(int pId) {
+    if (partitions.containsKey(pId)) {
+      return partitions.get(pId).getData();
+    } else {
+      return null;
+    }
+  }
+
+  public int getId() {
+    return id;
+  }
 }

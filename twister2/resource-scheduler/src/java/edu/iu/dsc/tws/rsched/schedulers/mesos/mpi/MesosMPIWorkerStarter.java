@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.rsched.schedulers.mesos.mpi;
 
 import java.net.Inet4Address;
 import java.nio.file.Paths;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -145,9 +146,13 @@ public final class MesosMPIWorkerStarter {
           new MesosVolatileVolume(SchedulerContext.jobName(config), workerID);
     }
 
-    AllocatedResources resourcePlan = MPIWorker.createResourcePlan(config);
+    // lets create the resource plan
+    Map<Integer, String> processNames = MPIWorker.createResourcePlan(config);
+    // now create the resource plan
+    AllocatedResources resourcePlan = MPIWorker.addContainers(config, processNames);
+
     //resourcePlan = new AllocatedResources(SchedulerContext.clusterType(config), workerID);
-    worker.init(config, workerID, resourcePlan, workerController, pv, volatileVolume);
+    worker.execute(config, workerID, resourcePlan, workerController, pv, volatileVolume);
   }
 
   /**

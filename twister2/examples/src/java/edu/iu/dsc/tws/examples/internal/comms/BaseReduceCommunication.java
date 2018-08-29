@@ -68,10 +68,10 @@ public class BaseReduceCommunication implements IWorker {
   private Status status;
 
   @Override
-  public void init(Config cfg, int workerID, AllocatedResources resources,
-                   IWorkerController workerController,
-                   IPersistentVolume persistentVolume,
-                   IVolatileVolume volatileVolume) {
+  public void execute(Config cfg, int workerID, AllocatedResources resources,
+                      IWorkerController workerController,
+                      IPersistentVolume persistentVolume,
+                      IVolatileVolume volatileVolume) {
     LOG.log(Level.INFO, "Starting the example with container id: " + resources.getWorkerId());
 
     this.config = cfg;
@@ -97,7 +97,7 @@ public class BaseReduceCommunication implements IWorker {
 
     LOG.info("Setting up reduce dataflow operation");
     try {
-      // this method calls the init method
+      // this method calls the execute method
       // I think this is wrong
       reduce = channel.reduce(newCfg, MessageType.OBJECT, 0, sources,
           dest, new FinalReduceReceive(), new PartialReduceWorker());
@@ -412,7 +412,7 @@ public class BaseReduceCommunication implements IWorker {
         .build();
 
     // now submit the job
-    Twister2Submitter.submitContainerJob(twister2Job, config);
+    Twister2Submitter.submitJob(twister2Job, config);
   }
 
 }

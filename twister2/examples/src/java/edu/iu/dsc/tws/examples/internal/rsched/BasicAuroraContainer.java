@@ -21,10 +21,10 @@ import edu.iu.dsc.tws.common.worker.IWorker;
 public class BasicAuroraContainer implements IWorker {
 
   @Override
-  public void init(Config config, int workerID, AllocatedResources resources,
-                   IWorkerController workerController,
-                   IPersistentVolume persistentVolume,
-                   IVolatileVolume volatileVolume) {
+  public void execute(Config config, int workerID, AllocatedResources resources,
+                      IWorkerController workerController,
+                      IPersistentVolume persistentVolume,
+                      IVolatileVolume volatileVolume) {
     // wait some random amount of time before finishing
     long duration = (long) (Math.random() * 1000);
     try {

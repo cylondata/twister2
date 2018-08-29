@@ -87,16 +87,16 @@ public class SimpleTaskGraphExample implements IWorker {
         .build();
 
     // now submit the job
-    Twister2Submitter.submitContainerJob(twister2Job, config);
+    Twister2Submitter.submitJob(twister2Job, config);
   }
 
   /**
    * Init method to submit the task to the executor
    */
-  public void init(Config cfg, int workerID, AllocatedResources resources,
-                   IWorkerController workerController,
-                   IPersistentVolume persistentVolume,
-                   IVolatileVolume volatileVolume) {
+  public void execute(Config cfg, int workerID, AllocatedResources resources,
+                      IWorkerController workerController,
+                      IPersistentVolume persistentVolume,
+                      IVolatileVolume volatileVolume) {
 
     LOG.log(Level.INFO, "Starting the example with container id: " + resources.getWorkerId());
 

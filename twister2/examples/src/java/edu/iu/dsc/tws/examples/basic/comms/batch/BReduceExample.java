@@ -21,10 +21,10 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.batch.BReduce;
+import edu.iu.dsc.tws.comms.op.functions.ReduceIdentityFunction;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.basic.comms.BenchWorker;
 
@@ -48,7 +48,7 @@ public class BReduceExample extends BenchWorker {
     int target = noOfSourceTasks;
     // create the communication
     reduce = new BReduce(communicator, taskPlan, sources, target,
-        new IdentityFunction(), new FinalReduceReceiver(), MessageType.INTEGER);
+        new ReduceIdentityFunction(), new FinalReduceReceiver(), MessageType.INTEGER);
 
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
@@ -105,20 +105,6 @@ public class BReduceExample extends BenchWorker {
       LOG.log(Level.INFO, String.format("%d Received final input", workerId));
       reduceDone = true;
       return true;
-    }
-  }
-
-  public class IdentityFunction implements ReduceFunction {
-    private int count = 0;
-    @Override
-    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-    }
-
-    @Override
-    public Object reduce(Object t1, Object t2) {
-      count++;
-//      LOG.log(Level.INFO, String.format("%d Received %d", id, count));
-      return t1;
     }
   }
 }
