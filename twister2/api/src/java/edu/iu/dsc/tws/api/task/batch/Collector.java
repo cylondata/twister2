@@ -20,6 +20,8 @@ import edu.iu.dsc.tws.task.api.TaskContext;
  * Special task for collecting the output from tasks
  */
 public class Collector implements ISink {
+  private static final long serialVersionUID = -254264120110286748L;
+
   @Override
   public boolean execute(IMessage message) {
     return false;
