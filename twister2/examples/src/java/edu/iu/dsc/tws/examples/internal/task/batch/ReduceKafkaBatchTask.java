@@ -126,11 +126,6 @@ public class ReduceKafkaBatchTask implements IWorker {
     }
 
     @Override
-    public void interrupt() {
-
-    }
-
-    @Override
     public void prepare(Config cfg, TaskContext context) {
       this.ctx = context;
     }
