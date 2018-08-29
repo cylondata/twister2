@@ -51,7 +51,7 @@ public final class MesosMPISlaveStarter {
       JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/"
           + jobName + ".job");
       workerController = new MesosWorkerController(config, job,
-          Inet4Address.getLocalHost().getHostAddress(), 2022, workerID);
+          Inet4Address.getLocalHost().getHostAddress(), 2023, workerID);
       LOG.info("Initializing with zookeeper ");
       workerController.initializeWithZooKeeper();
       LOG.info("Waiting for all workers to join");
@@ -62,7 +62,7 @@ public final class MesosMPISlaveStarter {
       workerController.close();
 
     } catch (Exception e) {
-      e.printStackTrace();
+      LOG.severe("Host unkown " + e.getMessage());
     }
     Thread.sleep(3000000);
 

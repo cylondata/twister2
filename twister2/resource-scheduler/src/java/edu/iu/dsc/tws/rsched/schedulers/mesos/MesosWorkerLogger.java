@@ -17,7 +17,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 
-public class MesosWorkerLogger extends Thread {
+public class MesosWorkerLogger {
 
   public static final Logger LOG = Logger.getLogger(MesosWorkerLogger.class.getName());
   private String logFileName;
