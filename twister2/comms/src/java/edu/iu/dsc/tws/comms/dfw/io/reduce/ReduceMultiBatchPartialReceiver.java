@@ -42,8 +42,8 @@ public class ReduceMultiBatchPartialReceiver implements MultiMessageReceiver {
 
   @Override
   public boolean onMessage(int source, int path, int target, int flags, Object object) {
-    ReduceBatchPartialReceiver finalReceiver = receiverMap.get(path);
-    return finalReceiver.onMessage(source, path, target, flags, object);
+    ReduceBatchPartialReceiver partialReceiver = receiverMap.get(path);
+    return partialReceiver.onMessage(source, path, target, flags, object);
   }
 
   @Override

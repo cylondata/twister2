@@ -18,13 +18,13 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowReduce;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceStreamingFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceStreamingPartialReceiver;
 import edu.iu.dsc.tws.comms.op.Communicator;
+import edu.iu.dsc.tws.comms.op.functions.ReduceIdentityFunction;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.api.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.api.EdgeGenerator;
@@ -46,8 +46,8 @@ public class ReduceStreamingOperation extends AbstractParallelOperation {
                       DataType dataType, String edgeName) {
     this.edge = e;
     op = new DataFlowReduce(channel.getChannel(), sources, dest,
-        new ReduceStreamingFinalReceiver(new IdentityFunction(), new FinalReduceReceiver()),
-        new ReduceStreamingPartialReceiver(dest, new IdentityFunction()));
+        new ReduceStreamingFinalReceiver(new ReduceIdentityFunction(), new FinalReduceReceiver()),
+        new ReduceStreamingPartialReceiver(dest, new ReduceIdentityFunction()));
     communicationEdge = e.generate(edgeName);
     LOG.info("===Communication Edge : " + communicationEdge);
     op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
@@ -64,20 +64,9 @@ public class ReduceStreamingOperation extends AbstractParallelOperation {
   }
 
 
-  public static class IdentityFunction implements ReduceFunction {
-    @Override
-    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-    }
-
-    @Override
-    public Object reduce(Object t1, Object t2) {
-      return t1;
-    }
-  }
-
-
   public class FinalReduceReceiver implements ReduceReceiver {
     private int count = 0;
+
     @Override
     public void init(Config cfg, DataFlowOperation operation,
                      Map<Integer, List<Integer>> expectedIds) {
