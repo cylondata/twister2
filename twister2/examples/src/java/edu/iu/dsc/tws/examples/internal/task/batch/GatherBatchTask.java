@@ -105,7 +105,8 @@ public class GatherBatchTask implements IWorker {
     public void run() {
       count++;
       if (count == 10) {
-        ctx.writeEnd("gather-edge", "Hello");
+        ctx.writeEnd("gather-edge", "Hello Final Gather");
+        ctx.end("gather-edge");
       } else if (count < 10) {
         ctx.write("gather-edge", "Hello");
       }
@@ -169,7 +170,7 @@ public class GatherBatchTask implements IWorker {
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("task-gather");
     jobBuilder.setWorkerClass(GatherBatchTask.class.getName());
-    jobBuilder.setRequestResource(new WorkerComputeResource(4, 1024), 4);
+    jobBuilder.setRequestResource(new WorkerComputeResource(1, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job
