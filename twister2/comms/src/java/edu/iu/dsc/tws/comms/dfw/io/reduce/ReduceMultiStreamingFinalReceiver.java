@@ -26,7 +26,7 @@ public class ReduceMultiStreamingFinalReceiver implements MultiMessageReceiver {
 
   private ReduceReceiver reduceReceiver;
 
-  private Map<Integer, ReduceStreamingFinalReceiver> receiverMap = new HashMap<>();
+  private Map<Integer, KeyedReduceStreamingFinalReceiver> receiverMap = new HashMap<>();
 
   public ReduceMultiStreamingFinalReceiver(ReduceFunction reduceFunction,
                                            ReduceReceiver reduceReceiver) {
@@ -38,8 +38,8 @@ public class ReduceMultiStreamingFinalReceiver implements MultiMessageReceiver {
   public void init(Config cfg, DataFlowOperation op,
                    Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
     for (Map.Entry<Integer, Map<Integer, List<Integer>>> e : expectedIds.entrySet()) {
-      ReduceStreamingFinalReceiver finalReceiver =
-          new ReduceStreamingFinalReceiver(reduceFunction, reduceReceiver);
+      KeyedReduceStreamingFinalReceiver finalReceiver =
+          new KeyedReduceStreamingFinalReceiver(reduceFunction, reduceReceiver);
       receiverMap.put(e.getKey(), finalReceiver);
       finalReceiver.init(cfg, op, e.getValue());
     }
@@ -47,13 +47,13 @@ public class ReduceMultiStreamingFinalReceiver implements MultiMessageReceiver {
 
   @Override
   public boolean onMessage(int source, int path, int target, int flags, Object object) {
-    ReduceStreamingFinalReceiver finalReceiver = receiverMap.get(path);
+    KeyedReduceStreamingFinalReceiver finalReceiver = receiverMap.get(path);
     return finalReceiver.onMessage(source, path, target, flags, object);
   }
 
   @Override
   public void progress() {
-    for (Map.Entry<Integer, ReduceStreamingFinalReceiver> e : receiverMap.entrySet()) {
+    for (Map.Entry<Integer, KeyedReduceStreamingFinalReceiver> e : receiverMap.entrySet()) {
       e.getValue().progress();
     }
   }
