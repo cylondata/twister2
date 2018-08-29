@@ -31,6 +31,7 @@ public class ReduceMultiStreamingFinalReceiver implements MultiMessageReceiver {
   public ReduceMultiStreamingFinalReceiver(ReduceFunction reduceFunction,
                                            ReduceReceiver reduceReceiver) {
     this.reduceFunction = reduceFunction;
+    this.reduceReceiver = reduceReceiver;
   }
 
   @Override

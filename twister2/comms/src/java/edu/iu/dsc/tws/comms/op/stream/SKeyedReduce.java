@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.op.batch;
+package edu.iu.dsc.tws.comms.op.stream;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -21,20 +21,21 @@ import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowMultiReduce;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
-import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceMultiBatchFinalReceiver;
-import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceMultiBatchPartialReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceMultiStreamingFinalReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceMultiStreamingPartialReceiver;
 import edu.iu.dsc.tws.comms.op.Communicator;
 
 /**
  * Example class for Batch keyed reduce. The reduce destination for each data point will be
  * based on the key value related to that data point.
  */
-public class BKeyedReduce {
+public class SKeyedReduce {
+
   private DataFlowMultiReduce keyedReduce;
 
   private DestinationSelector destinationSelector;
 
-  public BKeyedReduce(Communicator comm, TaskPlan plan,
+  public SKeyedReduce(Communicator comm, TaskPlan plan,
                       Set<Integer> sources, Set<Integer> destinations, ReduceFunction fnc,
                       ReduceReceiver rcvr, MessageType dataType, DestinationSelector destSelector) {
     Set<Integer> edges = new HashSet<>();
@@ -42,8 +43,8 @@ public class BKeyedReduce {
       edges.add(comm.nextEdge());
     }
     this.keyedReduce = new DataFlowMultiReduce(comm.getChannel(), sources, destinations,
-        new ReduceMultiBatchFinalReceiver(fnc, rcvr),
-        new ReduceMultiBatchPartialReceiver(fnc), edges);
+        new ReduceMultiStreamingFinalReceiver(fnc, rcvr),
+        new ReduceMultiStreamingPartialReceiver(fnc), edges);
     this.keyedReduce.init(comm.getConfig(), dataType, plan);
     this.destinationSelector = destSelector;
     this.destinationSelector.prepare(sources, destinations);
