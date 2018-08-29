@@ -14,11 +14,13 @@ package edu.iu.dsc.tws.executor.threading;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 
 public class BatchSharingExecutor extends ThreadSharingExecutor {
+  private static final Logger LOG = Logger.getLogger(BatchSharingExecutor.class.getName());
   // keep track of finished executions
   private Map<Integer, Boolean> finishedInstances = new HashMap<>();
 
@@ -58,7 +60,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
       try {
         t.join();
       } catch (InterruptedException e) {
-        e.printStackTrace();
+        LOG.info(e.getMessage());
       }
     }
 

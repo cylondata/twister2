@@ -112,7 +112,6 @@ public class ReduceBatchOperation extends AbstractParallelOperation {
       TaskMessage msg = new TaskMessage(object,
           edge.getStringMapping(communicationEdge), target);
       outMessages.get(target).offer(msg);
-      System.out.println(msg.getContent().getClass());
       return true;
     }
   }

@@ -149,7 +149,7 @@ public class SourceBatchInstance implements INodeInstance {
       if (isDone) {
         state.set(InstanceState.EXECUTION_DONE);
       }
-      int flag = 0;
+
       // now check the output queue
       while (!outBatchQueue.isEmpty()) {
         IMessage message = outBatchQueue.peek();
@@ -157,7 +157,7 @@ public class SourceBatchInstance implements INodeInstance {
           String edge = message.edge();
           //flag = getFlag(message);
           IParallelOperation op = outBatchParOps.get(edge);
-          if (op.send(batchTaskId, message, flag)) {
+          if (op.send(batchTaskId, message, 0)) {
             outBatchQueue.poll();
           } else {
             // no point in progressing further
@@ -212,10 +212,6 @@ public class SourceBatchInstance implements INodeInstance {
 
   public void registerOutParallelOperation(String edge, IParallelOperation op) {
     outBatchParOps.put(edge, op);
-  }
-
-  public int getWorkerId() {
-    return workerId;
   }
 
   public int getFlag(IMessage message) {
