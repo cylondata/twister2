@@ -9,22 +9,30 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.api;
+package edu.iu.dsc.tws.comms.op.functions.reduction;
+
+import java.util.List;
+import java.util.Map;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.Op;
+import edu.iu.dsc.tws.comms.api.ReduceFunction;
+import edu.iu.dsc.tws.data.api.DataType;
 
-public abstract class AbstractStreamSinkTask implements ISink {
-  private static final long serialVersionUID = -254264120110286748L;
-  private TaskContext ctx;
-  private Config config;
+public class ReduceIntegerFunction implements ReduceFunction {
+
+  private DataType dataType;
+  private Op op;
+
 
   @Override
-  public boolean execute(IMessage message) {
-    return false;
+  public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+
   }
 
   @Override
-  public void prepare(Config cfg, TaskContext context) {
-
+  public Object reduce(Object t1, Object t2) {
+    return null;
   }
 }
