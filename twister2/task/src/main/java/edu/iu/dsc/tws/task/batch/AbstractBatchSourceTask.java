@@ -30,8 +30,8 @@ import edu.iu.dsc.tws.task.api.TaskContext;
 public abstract class AbstractBatchSourceTask implements ISource {
 
   private static final long serialVersionUID = -254264120110286748L;
-  private TaskContext ctx;
-  private Config config;
+  protected TaskContext ctx;
+  protected Config config;
 
   @Override
   public void run() {

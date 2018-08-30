@@ -69,8 +69,6 @@ public class ReduceBatchTask implements IWorker {
                       IVolatileVolume volatileVolume) {
     GeneratorTask g = new GeneratorTask();
     RecevingTask r = new RecevingTask();
-    //System.out.println("Reduce Batch Task Starting ...");
-    //System.out.println("Config-Threads : " + SchedulerContext.numOfThreads(config));
 
     GraphBuilder builder = GraphBuilder.newBuilder();
     builder.addSource("source", g);
