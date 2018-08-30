@@ -18,15 +18,11 @@ import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
 public abstract class BaseBatchSinkTask implements ISink {
-
   private static final long serialVersionUID = -254264120110286748L;
-  protected TaskContext ctx;
-  protected Config config;
 
-  @Override
-  public boolean execute(IMessage message) {
-    return false;
-  }
+  protected TaskContext ctx;
+
+  protected Config config;
 
   @Override
   public void prepare(Config cfg, TaskContext context) {
