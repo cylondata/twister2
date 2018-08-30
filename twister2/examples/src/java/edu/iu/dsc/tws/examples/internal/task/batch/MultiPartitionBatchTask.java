@@ -37,6 +37,8 @@ import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.ITask;
 import edu.iu.dsc.tws.task.api.TaskContext;
+import edu.iu.dsc.tws.task.batch.BaseBatchSinkTask;
+import edu.iu.dsc.tws.task.batch.BaseBatchSourceTask;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.OperationMode;
@@ -84,7 +86,7 @@ public class MultiPartitionBatchTask implements IWorker {
     executor.execute();
   }
 
-  private static class GeneratorTask extends SourceBatchTask {
+  private static class GeneratorTask extends BaseBatchSourceTask {
     private static final long serialVersionUID = -254264903510284748L;
     private TaskContext ctx;
     private Config config;
@@ -123,7 +125,7 @@ public class MultiPartitionBatchTask implements IWorker {
   }
 
 
-  private static class RecevingTask extends SinkBatchTask {
+  private static class RecevingTask extends BaseBatchSinkTask {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 
