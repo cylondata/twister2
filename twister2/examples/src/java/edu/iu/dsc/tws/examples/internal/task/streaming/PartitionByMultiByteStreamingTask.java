@@ -116,7 +116,7 @@ public class PartitionByMultiByteStreamingTask implements IWorker {
     @Override
     public void prepare(Config cfg, TaskContext context) {
       this.ctx = context;
-      this.config = config;
+      this.config = cfg;
     }
   }
 
