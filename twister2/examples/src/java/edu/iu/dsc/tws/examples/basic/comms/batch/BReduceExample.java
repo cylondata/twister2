@@ -21,10 +21,13 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.batch.BReduce;
 import edu.iu.dsc.tws.comms.op.functions.ReduceIdentityFunction;
+import edu.iu.dsc.tws.comms.op.functions.reduction.ReduceOperationFunction;
+import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.basic.comms.BenchWorker;
 
@@ -48,7 +51,7 @@ public class BReduceExample extends BenchWorker {
     int target = noOfSourceTasks;
     // create the communication
     reduce = new BReduce(communicator, taskPlan, sources, target,
-        new ReduceIdentityFunction(), new FinalReduceReceiver(), MessageType.INTEGER);
+        new ReduceOperationFunction(Op.SUM, DataType.INTEGER), new FinalReduceReceiver(), MessageType.INTEGER);
 
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
@@ -104,6 +107,12 @@ public class BReduceExample extends BenchWorker {
     public boolean receive(int target, Object object) {
       LOG.log(Level.INFO, String.format("%d Received final input", workerId));
       reduceDone = true;
+      if (object instanceof int[]) {
+        int res [] = (int []) object;
+        for (int i = 0; i < res.length; i++) {
+          System.out.print(res[i]+" ");
+        }
+      }
       return true;
     }
   }
