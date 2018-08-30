@@ -40,8 +40,8 @@ import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.OperationMode;
-import edu.iu.dsc.tws.task.streaming.AbstractStreamSinkTask;
-import edu.iu.dsc.tws.task.streaming.AbstractStreamSourceTask;
+import edu.iu.dsc.tws.task.streaming.BaseStreamSinkTask;
+import edu.iu.dsc.tws.task.streaming.BaseStreamSourceTask;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
@@ -84,7 +84,7 @@ public class ReduceStreamingTask implements IWorker {
     executor.execute();
   }
 
-  private static class GeneratorTask extends AbstractStreamSourceTask {
+  private static class GeneratorTask extends BaseStreamSourceTask {
     private static final long serialVersionUID = -254264903510284748L;
     private TaskContext ctx;
     private Config config;
@@ -102,7 +102,7 @@ public class ReduceStreamingTask implements IWorker {
 
   }
 
-  private static class RecevingTask extends AbstractStreamSinkTask {
+  private static class RecevingTask extends BaseStreamSinkTask {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 
