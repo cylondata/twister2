@@ -160,8 +160,7 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
 
     /*To retrieve the batch task instances(it may be single task vertex or a batch
      of task vertexes)*/
-    List<Set<Vertex>> taskVertexList = TaskVertexParser.parseVertexSet(taskVertexSet,
-                                                                      dataFlowTaskGraph);
+    List<Set<Vertex>> taskVertexList = TaskVertexParser.parseVertexSet(dataFlowTaskGraph);
     for (Set<Vertex> vertexSet : taskVertexList) {
 
       /* Based on the size of the task vertex list, it will invoke the respective methods */
