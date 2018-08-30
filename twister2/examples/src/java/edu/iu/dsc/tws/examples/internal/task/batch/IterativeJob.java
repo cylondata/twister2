@@ -57,6 +57,8 @@ public class IterativeJob extends TaskWorker {
   }
 
   private static class IterativeSourceTask extends BaseBatchSourceTask {
+    protected static final long serialVersionUID = -254264120110286748L;
+
     @Override
     public void run() {
       ctx.write("", "Hello");
@@ -64,6 +66,7 @@ public class IterativeJob extends TaskWorker {
   }
 
   private static class ReceiveTask extends BaseBatchSinkTask {
+    protected static final long serialVersionUID = -254264120110286748L;
     @Override
     public boolean execute(IMessage message) {
       LOG.log(Level.INFO, "Received message: " + message.getContent());

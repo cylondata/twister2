@@ -29,7 +29,7 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler;
 
-public class TaskExecutor<T> {
+public class TaskExecutor {
   private Config config;
 
   private int workerID;
@@ -47,7 +47,7 @@ public class TaskExecutor<T> {
    * @param graph task graph
    * @return the data set
    */
-  public DataSet<T> execute(DataFlowTaskGraph graph) {
+  public DataSet<Object> execute(DataFlowTaskGraph graph) {
     RoundRobinTaskScheduler roundRobinTaskScheduler = new RoundRobinTaskScheduler();
     roundRobinTaskScheduler.initialize(config);
 

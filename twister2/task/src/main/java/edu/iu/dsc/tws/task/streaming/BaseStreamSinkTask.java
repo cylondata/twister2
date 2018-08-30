@@ -17,7 +17,7 @@ import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
 public abstract class BaseStreamSinkTask implements ISink {
-  private static final long serialVersionUID = -254264120110286748L;
+  protected static final long serialVersionUID = -254264120110286748L;
 
   protected TaskContext ctx;
 
