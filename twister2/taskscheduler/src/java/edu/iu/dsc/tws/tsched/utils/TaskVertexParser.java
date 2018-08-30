@@ -37,11 +37,13 @@ public final class TaskVertexParser {
    * separate Set.
    */
   @SuppressWarnings("unchecked")
-  public static List<Set<Vertex>> parseVertexSet(Set<Vertex> taskVertexSet,
-                                                 DataFlowTaskGraph dataFlowTaskGraph) {
+  public static List<Set<Vertex>> parseVertexSet(DataFlowTaskGraph dataFlowTaskGraph) {
+
+    Set<Vertex> taskVertexSet = dataFlowTaskGraph.getTaskVertexSet();
 
     //This logic could be optimized later...!
     List<Set<Vertex>> taskVertexList = new LinkedList<>();
+
     for (Vertex vertex : taskVertexSet) {
       if (dataFlowTaskGraph.incomingTaskEdgesOf(vertex).size() == 0
           && !(dataFlowTaskGraph.outgoingTaskEdgesOf(vertex).size() > 1)) {
