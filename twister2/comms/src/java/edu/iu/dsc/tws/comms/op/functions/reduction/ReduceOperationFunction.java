@@ -20,11 +20,15 @@ import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.data.api.DataType;
 
-public class ReduceIntegerFunction implements ReduceFunction {
+public class ReduceOperationFunction implements ReduceFunction {
 
   private DataType dataType;
-  private Op op;
+  private Op operation;
 
+  public ReduceOperationFunction(Op operation, DataType dtype) {
+    this.operation = operation;
+    this.dataType = dtype;
+  }
 
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
@@ -33,6 +37,12 @@ public class ReduceIntegerFunction implements ReduceFunction {
 
   @Override
   public Object reduce(Object t1, Object t2) {
-    return null;
+    Object result = null;
+    if (this.dataType == DataType.INTEGER) {
+      int i1 = (int) t1;
+      int i2 = (int) t2;
+      result = i1 + i2;
+    }
+    return result;
   }
 }
