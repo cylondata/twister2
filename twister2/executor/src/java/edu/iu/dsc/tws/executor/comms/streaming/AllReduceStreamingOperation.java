@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.executor.comm.operations.batch;
+package edu.iu.dsc.tws.executor.comms.streaming;
 
 import java.util.List;
 import java.util.Map;
@@ -30,12 +30,12 @@ import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
 
-public class AllReduceBatchOperation extends AbstractParallelOperation {
-  private static final Logger LOG = Logger.getLogger(AllReduceBatchOperation.class.getName());
+public class AllReduceStreamingOperation extends AbstractParallelOperation {
+  private static final Logger LOG = Logger.getLogger(AllReduceStreamingOperation.class.getName());
 
   protected DataFlowAllReduce op;
 
-  public AllReduceBatchOperation(Config config, Communicator network, TaskPlan tPlan) {
+  public AllReduceStreamingOperation(Config config, Communicator network, TaskPlan tPlan) {
     super(config, network, tPlan);
   }
 
@@ -55,11 +55,7 @@ public class AllReduceBatchOperation extends AbstractParallelOperation {
 
   @Override
   public boolean progress() {
-    return op.progress() && hasPending();
-  }
-
-  public boolean hasPending() {
-    return !op.isComplete();
+    return op.progress();
   }
 
   public static class IndentityFunction implements ReduceFunction {

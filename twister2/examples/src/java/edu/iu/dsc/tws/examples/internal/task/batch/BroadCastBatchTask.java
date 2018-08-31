@@ -46,9 +46,9 @@ import edu.iu.dsc.tws.executor.threading.Executor;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.SinkTask;
-import edu.iu.dsc.tws.task.api.SourceTask;
 import edu.iu.dsc.tws.task.api.TaskContext;
+import edu.iu.dsc.tws.task.batch.BaseBatchSinkTask;
+import edu.iu.dsc.tws.task.batch.BaseBatchSourceTask;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.OperationMode;
@@ -92,7 +92,7 @@ public class BroadCastBatchTask implements IWorker {
     executor.execute();
   }
 
-  private static class GeneratorTask extends SourceTask {
+  private static class GeneratorTask extends BaseBatchSourceTask {
     private static final long serialVersionUID = -254264903510284748L;
     private TaskContext ctx;
     private int count = 0;
@@ -109,7 +109,7 @@ public class BroadCastBatchTask implements IWorker {
     }
   }
 
-  private static class RecevingTask extends SinkTask {
+  private static class RecevingTask extends BaseBatchSinkTask {
     private static final long serialVersionUID = -254264903510284798L;
     private static int counter = 0;
     private TaskContext ctx;

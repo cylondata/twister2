@@ -27,8 +27,6 @@ import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
-import edu.iu.dsc.tws.executor.comm.tasks.streaming.SinkStreamTask;
-import edu.iu.dsc.tws.executor.comm.tasks.streaming.SourceStreamTask;
 import edu.iu.dsc.tws.executor.core.CommunicationOperationType;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.Executor;
@@ -40,6 +38,8 @@ import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.OperationMode;
+import edu.iu.dsc.tws.task.streaming.BaseStreamSinkTask;
+import edu.iu.dsc.tws.task.streaming.BaseStreamSourceTask;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
@@ -84,7 +84,7 @@ public class TaskExampleModified implements IWorker {
     executor.execute();
   }
 
-  private static class GeneratorTaskModified extends SourceStreamTask {
+  private static class GeneratorTaskModified extends BaseStreamSourceTask {
     private static final long serialVersionUID = -254264903510284748L;
     private TaskContext ctx;
     private Config config;
@@ -100,7 +100,7 @@ public class TaskExampleModified implements IWorker {
     }
   }
 
-  private static class RecevingTaskModified extends SinkStreamTask {
+  private static class RecevingTaskModified extends BaseStreamSinkTask {
     private static final long serialVersionUID = -254264903510284798L;
 
     @Override
