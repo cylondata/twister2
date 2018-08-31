@@ -9,34 +9,23 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.executor.comm.tasks.streaming;
+
+package edu.iu.dsc.tws.task.batch;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.api.ISource;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
-public class SourceStreamTask implements ISource {
+public abstract class BaseBatchSourceTask implements ISource {
+  protected static final long serialVersionUID = -254264120110286748L;
 
-  private static final long serialVersionUID = -254264120110286748L;
-  private TaskContext ctx;
-  private Config config;
+  protected TaskContext ctx;
 
-  @Override
-  public void run() {
-
-  }
+  protected Config config;
 
   @Override
   public void prepare(Config cfg, TaskContext context) {
+    this.ctx = context;
     this.config = cfg;
-    this.ctx = context;
-  }
-
-  public TaskContext getContext() {
-    return ctx;
-  }
-
-  public void setContext(TaskContext context) {
-    this.ctx = context;
   }
 }

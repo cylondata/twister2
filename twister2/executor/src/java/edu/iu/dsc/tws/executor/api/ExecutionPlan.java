@@ -16,11 +16,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
+/**
+ * Execution plan to keep track of the tasks
+ */
 public class ExecutionPlan {
-
-  private int numThreads;
-
   private Map<Integer, INodeInstance> nodes = new HashMap<>();
 
   private Map<Integer, IParallelOperation> inputMessages = new HashMap<>();
@@ -48,17 +47,5 @@ public class ExecutionPlan {
 
   public List<IParallelOperation> getParallelOperations() {
     return parallelOperations;
-  }
-
-  public void stop() {
-
-  }
-
-  public int getNumThreads() {
-    return numThreads;
-  }
-
-  public void setNumThreads(int numThreads) {
-    this.numThreads = numThreads;
   }
 }

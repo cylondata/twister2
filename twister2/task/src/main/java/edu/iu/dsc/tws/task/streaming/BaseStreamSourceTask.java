@@ -9,24 +9,23 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.executor.comm.tasks.streaming;
+
+package edu.iu.dsc.tws.task.streaming;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.ISink;
+import edu.iu.dsc.tws.task.api.ISource;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
-public class SinkStreamTask implements ISink {
-  private static final long serialVersionUID = -254264903510286748L;
+public abstract class BaseStreamSourceTask implements ISource {
+  protected static final long serialVersionUID = -254264120110286748L;
 
-  @Override
-  public boolean execute(IMessage message) {
+  protected TaskContext ctx;
 
-    return false;
-  }
+  protected Config config;
 
   @Override
   public void prepare(Config cfg, TaskContext context) {
-
+    this.ctx = context;
+    this.config = cfg;
   }
 }

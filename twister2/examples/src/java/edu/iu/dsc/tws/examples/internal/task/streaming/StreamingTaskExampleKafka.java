@@ -40,7 +40,6 @@ import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.connectors.TwsKafkaConsumer;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
-import edu.iu.dsc.tws.executor.comm.tasks.streaming.SinkStreamTask;
 import edu.iu.dsc.tws.executor.core.CommunicationOperationType;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.Executor;
@@ -52,6 +51,7 @@ import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.GraphConstants;
 import edu.iu.dsc.tws.task.graph.OperationMode;
+import edu.iu.dsc.tws.task.streaming.BaseStreamSinkTask;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
@@ -108,7 +108,7 @@ public class StreamingTaskExampleKafka implements IWorker {
     executor.execute();
   }
 
-  private static class RecevingTask extends SinkStreamTask {
+  private static class RecevingTask extends BaseStreamSinkTask {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 

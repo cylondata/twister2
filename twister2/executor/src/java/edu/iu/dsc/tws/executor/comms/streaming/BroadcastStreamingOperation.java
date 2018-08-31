@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.executor.comm.operations.streaming;
+package edu.iu.dsc.tws.executor.comms.streaming;
 
 import java.util.List;
 import java.util.Map;
@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowGather;
+import edu.iu.dsc.tws.comms.dfw.DataFlowBroadcast;
 import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.api.AbstractParallelOperation;
@@ -29,28 +29,26 @@ import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
 
+public class BroadcastStreamingOperation extends AbstractParallelOperation {
+  private static final Logger LOG = Logger.getLogger(BroadcastStreamingOperation.class.getName());
+  private DataFlowBroadcast op;
 
-public class GatherStreamingOperation extends AbstractParallelOperation {
-  private static final Logger LOG = Logger.getLogger(GatherStreamingOperation.class.getName());
-  private DataFlowGather op;
-
-  public GatherStreamingOperation(Config config, Communicator network, TaskPlan tPlan) {
+  public BroadcastStreamingOperation(Config config, Communicator network, TaskPlan tPlan) {
     super(config, network, tPlan);
   }
 
-  public void prepare(Set<Integer> srcs, int dest, EdgeGenerator e,
-                      DataType dataType, String edgeName, Config config, TaskPlan taskPlan) {
+  public void prepare(int srcs, Set<Integer> dests, EdgeGenerator e,
+                      DataType dataType, String edgeName) {
     this.edge = e;
+    LOG.info(String.format("Srcs %d dests %s", srcs, dests));
+    op = new DataFlowBroadcast(channel.getChannel(), srcs, dests, new BcastReceiver());
     communicationEdge = e.generate(edgeName);
-    op = new DataFlowGather(channel.getChannel(), srcs, dest, new FinalGatherReceiver(), 0, 0,
-        config, Utils.dataTypeToMessageType(dataType), taskPlan, e.getIntegerMapping(edgeName));
+    LOG.info("===Communication Edge : " + communicationEdge);
     op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
-    LOG.info("===CommunicationEdge : " + communicationEdge);
   }
 
   @Override
   public boolean send(int source, IMessage message, int flags) {
-    //LOG.info("Message : " + message.getContent());
     return op.send(source, message.getContent(), flags);
   }
 
@@ -59,38 +57,27 @@ public class GatherStreamingOperation extends AbstractParallelOperation {
     return op.progress();
   }
 
-
-  private class FinalGatherReceiver implements MessageReceiver {
-    // lets keep track of the messages
-    // for each task we need to keep track of incoming messages
+  public class BcastReceiver implements MessageReceiver {
     @Override
     public void init(Config cfg, DataFlowOperation operation,
                      Map<Integer, List<Integer>> expectedIds) {
-
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public boolean onMessage(int source, int path, int target, int flags, Object object) {
-
-      // add the object to the map
-      if (object instanceof List) {
-        for (Object o : (List) object) {
-          TaskMessage msg = new TaskMessage(o,
-              edge.getStringMapping(communicationEdge), target);
-          outMessages.get(target).offer(msg);
-          //    LOG.info("Source : " + source + ", Message : " + msg.getContent() + ", Target : "
-          //        + target + ", Destination : " + destination);
-
-        }
-      }
+      TaskMessage msg = new TaskMessage(object,
+          edge.getStringMapping(communicationEdge), target);
+      int remainingCap = outMessages.get(target).remainingCapacity();
+      //LOG.info("Remaining Capacity : " + remainingCap);
+      boolean status = outMessages.get(target).offer(msg);
+      /*LOG.info("Message from Communication : " + msg.getContent() + ", Status : "
+          + status + ", Rem Cap : " + remainingCap);*/
       return true;
-
     }
 
+    @Override
     public boolean progress() {
       return true;
     }
   }
-
 }

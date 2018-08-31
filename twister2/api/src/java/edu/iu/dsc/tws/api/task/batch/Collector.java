@@ -11,31 +11,18 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.task.batch;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.dataset.Partition;
 import edu.iu.dsc.tws.task.api.ISink;
-import edu.iu.dsc.tws.task.api.TaskContext;
 
 /**
  * Special task for collecting the output from tasks
  */
-public class Collector implements ISink {
-  private static final long serialVersionUID = -254264120110286748L;
-
-  @Override
-  public boolean execute(IMessage message) {
-    return false;
-  }
-
-  @Override
-  public void prepare(Config cfg, TaskContext context) {
-
-  }
-
+public interface Collector<T> extends ISink {
+  long serialVersionUID = -112312423421235L;
   /**
    * get the collected valued
    */
-  public Object get() {
+  default Partition<T> get() {
     return null;
   }
 }

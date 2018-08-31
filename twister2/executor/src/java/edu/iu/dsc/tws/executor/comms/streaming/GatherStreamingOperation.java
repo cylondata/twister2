@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.executor.comm.operations.batch;
+package edu.iu.dsc.tws.executor.comms.streaming;
 
 import java.util.List;
 import java.util.Map;
@@ -30,11 +30,11 @@ import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
 
 
-public class GatherBatchOperation extends AbstractParallelOperation {
-  private static final Logger LOG = Logger.getLogger(GatherBatchOperation.class.getName());
+public class GatherStreamingOperation extends AbstractParallelOperation {
+  private static final Logger LOG = Logger.getLogger(GatherStreamingOperation.class.getName());
   private DataFlowGather op;
 
-  public GatherBatchOperation(Config config, Communicator network, TaskPlan tPlan) {
+  public GatherStreamingOperation(Config config, Communicator network, TaskPlan tPlan) {
     super(config, network, tPlan);
   }
 
@@ -45,6 +45,7 @@ public class GatherBatchOperation extends AbstractParallelOperation {
     op = new DataFlowGather(channel.getChannel(), srcs, dest, new FinalGatherReceiver(), 0, 0,
         config, Utils.dataTypeToMessageType(dataType), taskPlan, e.getIntegerMapping(edgeName));
     op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
+    LOG.info("===CommunicationEdge : " + communicationEdge);
   }
 
   @Override
@@ -55,11 +56,7 @@ public class GatherBatchOperation extends AbstractParallelOperation {
 
   @Override
   public boolean progress() {
-    return op.progress() && hasPending();
-  }
-
-  public boolean hasPending() {
-    return !op.isComplete();
+    return op.progress();
   }
 
 
@@ -75,6 +72,7 @@ public class GatherBatchOperation extends AbstractParallelOperation {
     @Override
     @SuppressWarnings("unchecked")
     public boolean onMessage(int source, int path, int target, int flags, Object object) {
+
       // add the object to the map
       if (object instanceof List) {
         for (Object o : (List) object) {
@@ -90,7 +88,6 @@ public class GatherBatchOperation extends AbstractParallelOperation {
 
     }
 
-    @Override
     public boolean progress() {
       return true;
     }

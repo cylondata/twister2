@@ -9,25 +9,23 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.executor.comm.tasks.batch;
+
+package edu.iu.dsc.tws.task.batch;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
-public class SinkBatchTask implements ISink {
-  private static final long serialVersionUID = -254264903510286748L;
+public abstract class BaseBatchSinkTask implements ISink {
+  protected static final long serialVersionUID = -254264120110286748L;
 
-  @Override
-  public boolean execute(IMessage message) {
+  protected TaskContext ctx;
 
-    return false;
-  }
+  protected Config config;
 
   @Override
   public void prepare(Config cfg, TaskContext context) {
-
+    this.ctx = context;
+    this.config = cfg;
   }
-
 }

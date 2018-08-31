@@ -73,11 +73,11 @@ public final class JobUtils {
   public static String jobClassPath(Config cfg, JobAPI.Job job, String wd) {
     StringBuilder classPathBuilder = new StringBuilder();
 //    LOG.log(Level.INFO, "Job type: " + job.getJobFormat().getType());
-    if (job.getJobFormat().getType() == JobAPI.JobFormatType.SHUFFLE) {
+//    if (job.getJobFormat().getType() == JobAPI.JobFormatType.SHUFFLE) {
       // Bundled jar
-      classPathBuilder.append(
-          Paths.get(wd, job.getJobName(), job.getJobFormat().getJobFile()).toString());
-    }
+    classPathBuilder.append(
+        Paths.get(wd, job.getJobName(), job.getJobFormat().getJobFile()).toString());
+//    }
     return classPathBuilder.toString();
   }
 

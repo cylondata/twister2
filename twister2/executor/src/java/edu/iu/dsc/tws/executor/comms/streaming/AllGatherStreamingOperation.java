@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.executor.comm.operations.batch;
+package edu.iu.dsc.tws.executor.comms.streaming;
 
 import java.util.logging.Logger;
 
@@ -20,13 +20,13 @@ import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.executor.api.AbstractParallelOperation;
 import edu.iu.dsc.tws.task.api.IMessage;
 
-public class AllGatherBatchOperation extends AbstractParallelOperation {
-  private static final Logger LOG = Logger.getLogger(AllGatherBatchOperation.class.getName());
+public class AllGatherStreamingOperation extends AbstractParallelOperation {
+  private static final Logger LOG = Logger.getLogger(AllGatherStreamingOperation.class.getName());
 
   protected DataFlowAllGather op;
 
 
-  public AllGatherBatchOperation(Config config, Communicator network, TaskPlan tPlan) {
+  public AllGatherStreamingOperation(Config config, Communicator network, TaskPlan tPlan) {
     super(config, network, tPlan);
   }
 
@@ -37,10 +37,6 @@ public class AllGatherBatchOperation extends AbstractParallelOperation {
 
   @Override
   public boolean progress() {
-    return op.progress() && hasPending();
-  }
-
-  public boolean hasPending() {
-    return !op.isComplete();
+    return op.progress();
   }
 }
