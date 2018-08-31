@@ -48,10 +48,13 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
+//import java.util.Map;
+//import java.util.Set;
+
 public class RoundRobinBatchTaskExample implements IWorker {
 
   private static final Logger LOG =
-      Logger.getLogger(RoundRobinBatchTaskExample.class.getName());
+          Logger.getLogger(RoundRobinBatchTaskExample.class.getName());
 
   public static void main(String[] args) {
     // first load the configurations from command line and config files
@@ -106,7 +109,6 @@ public class RoundRobinBatchTaskExample implements IWorker {
 
     builder.addSink("final", f1);
     builder.setParallelism("final", 4);
-
     //Task graph Structure
     /**   Source (Two Outgoing Edges)
      *   |    |
@@ -140,10 +142,6 @@ public class RoundRobinBatchTaskExample implements IWorker {
     sinkOutputDataset1.add("sinkoutput1.txt");
     builder.addConfiguration("sink1", "outputdataset1", sinkOutputDataset1);
 
-    List<String> sinkOutputDataset2 = new ArrayList<>();
-    sinkOutputDataset2.add("sinkoutput2.txt");
-    builder.addConfiguration("sink2", "outputdataset2", sinkOutputDataset2);
-
     DataFlowTaskGraph graph = builder.build();
 
     String jobType = "Batch";
@@ -154,11 +152,38 @@ public class RoundRobinBatchTaskExample implements IWorker {
 
     if (workerID == 0) {
       if ("Batch".equalsIgnoreCase(jobType)
+              && "roundrobin".equalsIgnoreCase(schedulingType)) {
+        RoundRobinBatchTaskScheduler rrBatchTaskScheduler = new RoundRobinBatchTaskScheduler();
+        rrBatchTaskScheduler.initialize(config);
+        WorkerPlan workerPlan = createWorkerPlan(resources);
+        taskSchedulePlan = rrBatchTaskScheduler.schedule(graph, workerPlan);
+        taskSchedulePlanList = rrBatchTaskScheduler.scheduleBatch(graph, workerPlan);
+      }
+    }
+
+    Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap
+            = taskSchedulePlan.getContainersMap();
+    for (Map.Entry<Integer, TaskSchedulePlan.ContainerPlan> entry : containersMap.entrySet()) {
+      Integer integer = entry.getKey();
+      TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
+      Set<TaskSchedulePlan.TaskInstancePlan> taskContainerPlan1
+              = containerPlan.getTaskInstances();
+      LOG.fine("Container Id:" + integer);
+      for (TaskSchedulePlan.TaskInstancePlan ip : taskContainerPlan1) {
+        LOG.fine("Task Id:" + ip.getTaskId()
+                + "\tTask Index" + ip.getTaskIndex()
+                + "\tTask Name:" + ip.getTaskName());
+      }
+    }
+
+    /*if (workerID == 0) {
+      if ("Batch".equalsIgnoreCase(jobType)
           && "roundrobin".equalsIgnoreCase(schedulingType)) {
         RoundRobinBatchTaskScheduler rrBatchTaskScheduler = new RoundRobinBatchTaskScheduler();
         rrBatchTaskScheduler.initialize(config);
         WorkerPlan workerPlan = createWorkerPlan(resources);
-        taskSchedulePlanList = rrBatchTaskScheduler.scheduleBatch(graph, workerPlan);
+        //taskSchedulePlanList = rrBatchTaskScheduler.scheduleBatch(graph, workerPlan);
+        taskSchedulePlan = rrBatchTaskScheduler.scheduleBatch(graph, workerPlan);
       }
     }
 
@@ -166,10 +191,10 @@ public class RoundRobinBatchTaskExample implements IWorker {
     if (workerID == 0) {
       for (int j = 0; j < taskSchedulePlanList.size(); j++) {
         taskSchedulePlan = taskSchedulePlanList.get(j);
-        Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap
+        Map<Integer, TaskSchedulePlan.ContainerPlan> planMap
             = taskSchedulePlan.getContainersMap();
         LOG.info("Task Schedule Plan:" + j);
-        for (Map.Entry<Integer, TaskSchedulePlan.ContainerPlan> entry : containersMap.entrySet()) {
+        for (Map.Entry<Integer, TaskSchedulePlan.ContainerPlan> entry : planMap.entrySet()) {
           Integer integer = entry.getKey();
           TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
           Set<TaskSchedulePlan.TaskInstancePlan> taskContainerPlan
@@ -180,7 +205,7 @@ public class RoundRobinBatchTaskExample implements IWorker {
           }
         }
       }
-    }
+    }*/
 
     TWSNetwork network = new TWSNetwork(config, resources.getWorkerId());
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resources, network);
@@ -227,7 +252,7 @@ public class RoundRobinBatchTaskExample implements IWorker {
     public boolean execute(IMessage message) {
 
       LOG.info("Message Partition Received : " + message.getContent()
-          + ", Count : " + count);
+              + ", Count : " + count);
       count++;
       return true;
     }
@@ -251,7 +276,7 @@ public class RoundRobinBatchTaskExample implements IWorker {
     public boolean execute(IMessage message) {
 
       LOG.info("Message Partition Received : " + message.getContent()
-          + ", Count : " + count);
+              + ", Count : " + count);
       count++;
       return true;
     }
@@ -274,7 +299,7 @@ public class RoundRobinBatchTaskExample implements IWorker {
     public boolean execute(IMessage message) {
 
       LOG.info("Message Partition Received : " + message.getContent()
-          + ", Count : " + count);
+              + ", Count : " + count);
       count++;
       return true;
     }
@@ -299,7 +324,7 @@ public class RoundRobinBatchTaskExample implements IWorker {
     public boolean execute(IMessage message) {
 
       LOG.info("Message Partition Received : " + message.getContent()
-          + ", Count : " + count);
+              + ", Count : " + count);
       count++;
       return true;
     }

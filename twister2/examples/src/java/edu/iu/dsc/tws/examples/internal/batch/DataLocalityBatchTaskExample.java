@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+//import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
@@ -166,30 +166,31 @@ public class DataLocalityBatchTaskExample implements IWorker {
         DataLocalityBatchTaskScheduler dataLocalityBatchTaskScheduler = new
             DataLocalityBatchTaskScheduler();
         dataLocalityBatchTaskScheduler.initialize(config);
-        taskSchedulePlanList = dataLocalityBatchTaskScheduler.scheduleBatch(graph, workerPlan);
+        taskSchedulePlan = dataLocalityBatchTaskScheduler.schedule(graph, workerPlan);
+        //taskSchedulePlanList = dataLocalityBatchTaskScheduler.scheduleBatch(graph, workerPlan);
       }
     }
 
     //Just to print the task schedule plan.
-    if (workerID == 0) {
+    /*if (workerID == 0) {
       for (int j = 0; j < taskSchedulePlanList.size(); j++) {
         taskSchedulePlan = taskSchedulePlanList.get(j);
         Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap
             = taskSchedulePlan.getContainersMap();
-        LOG.info("Task Schedule Plan:" + j);
+        LOG.fine("Task Schedule Plan:" + j);
         for (Map.Entry<Integer, TaskSchedulePlan.ContainerPlan> entry : containersMap.entrySet()) {
           Integer integer = entry.getKey();
           TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
           Set<TaskSchedulePlan.TaskInstancePlan> taskContainerPlan
               = containerPlan.getTaskInstances();
           for (TaskSchedulePlan.TaskInstancePlan ip : taskContainerPlan) {
-            LOG.info("\tTask Id:" + ip.getTaskId() + "\tTask Index:" + ip.getTaskIndex()
+            LOG.fine("\tTask Id:" + ip.getTaskId() + "\tTask Index:" + ip.getTaskIndex()
                 + "\tTask Name:" + ip.getTaskName() + "\tContainer Id:" + integer);
           }
         }
       }
     }
-
+*/
     TWSNetwork network = new TWSNetwork(config, resources.getWorkerId());
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resources, network);
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);

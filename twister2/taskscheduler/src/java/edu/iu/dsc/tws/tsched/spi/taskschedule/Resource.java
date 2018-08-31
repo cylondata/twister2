@@ -21,10 +21,28 @@ public class Resource {
   private Double disk;
   private Double cpu;
 
+  public int getId() {
+    return id;
+  }
+
+  public Resource setId(int idx) {
+    this.id = idx;
+    return this;
+  }
+
+  private int id;
+
   public Resource(Double ram, Double disk, Double cpu) {
     this.ram = ram;
     this.disk = disk;
     this.cpu = cpu;
+  }
+
+  public Resource(Double ram, Double disk, Double cpu, Integer idx) {
+    this.ram = ram;
+    this.disk = disk;
+    this.cpu = cpu;
+    this.id = idx;
   }
 
   @Override
