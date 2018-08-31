@@ -65,7 +65,7 @@ public class AllocatedResources {
     return workerId;
   }
 
-  //Newly added for taskscheduler
+  //New method for taskscheduler
   public WorkerComputeResource getWorkerComputeResources(int id) {
     for (WorkerComputeResource w : workers) {
       if (w.getId() == id) {
