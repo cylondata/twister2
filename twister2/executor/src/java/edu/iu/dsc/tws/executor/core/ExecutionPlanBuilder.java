@@ -127,7 +127,6 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
     }
 
     ExecutionPlan execution = new ExecutionPlan();
-    execution.setNumThreads(noOfThreads);
 
     Set<TaskSchedulePlan.TaskInstancePlan> instancePlan = conPlan.getTaskInstances();
     // for each task we are going to create the communications
