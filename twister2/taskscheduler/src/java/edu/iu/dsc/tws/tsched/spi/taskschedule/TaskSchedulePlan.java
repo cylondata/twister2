@@ -12,21 +12,19 @@
 package edu.iu.dsc.tws.tsched.spi.taskschedule;
 
 import java.util.HashMap;
+//import java.util.HashSet;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
 /**
- * This class is responsible for constructing the container plan, instance plan, and task schedule plan along
- * with their resource requirements.
+ * This class is responsible for generating the task schedule plan which consists of container plan,
+ * task instance plan along with their resource requirements.
  */
-
 public class TaskSchedulePlan {
-
-  private static final Logger LOG = Logger.getLogger(TaskSchedulePlan.class.getName());
 
   private final Set<ContainerPlan> containers;
 
@@ -60,10 +58,6 @@ public class TaskSchedulePlan {
 
   public int getTaskSchedulePlanId() {
     return jobId;
-  }
-
-  public void setTaskSchedulePlanId(int id) {
-    this.jobId = id;
   }
 
   public Map<Integer, ContainerPlan> getContainersMap() {
@@ -114,7 +108,10 @@ public class TaskSchedulePlan {
     return result;
   }
 
-
+  /**
+   * This static class is responsible for assigning the task name, task id, task index, and resource
+   * requirements of the task instances.
+   */
   public static class TaskInstancePlan {
 
     private final String taskName;
@@ -179,6 +176,10 @@ public class TaskSchedulePlan {
     }
   }
 
+  /**
+   * This static class is responsible for assigning the container id, task instances, required
+   * resource, and scheduled resource for the task instances.
+   */
   public static class ContainerPlan {
 
     private final int containerId;
@@ -195,7 +196,8 @@ public class TaskSchedulePlan {
                          Resource requiredResource,
                          Resource scheduledResource) {
       this.containerId = id;
-      this.taskInstances = ImmutableSet.copyOf(taskInstances);
+      //this.taskInstances = ImmutableSet.copyOf(taskInstances);
+      this.taskInstances = new HashSet<>(taskInstances);
       this.requiredResource = requiredResource;
       this.scheduledResource = Optional.fromNullable(scheduledResource);
     }
@@ -228,7 +230,6 @@ public class TaskSchedulePlan {
       ContainerPlan that = (ContainerPlan) o;
 
       return containerId == that.containerId
-          && getTaskInstances().equals(that.getTaskInstances())
           && getRequiredResource().equals(that.getRequiredResource())
           && getScheduledResource().equals(that.getScheduledResource());
     }

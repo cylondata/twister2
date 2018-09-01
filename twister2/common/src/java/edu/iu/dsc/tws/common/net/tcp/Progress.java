@@ -20,6 +20,9 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.logging.Logger;
 
+/**
+ * The communicationProgress loop
+ */
 public class Progress {
   private static final Logger LOG = Logger.getLogger(Progress.class.getName());
 

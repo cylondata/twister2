@@ -24,6 +24,9 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 
+/**
+ * Base network channel
+ */
 public abstract class BaseNetworkChannel {
   private static final Logger LOG = Logger.getLogger(BaseNetworkChannel.class.getName());
 
@@ -74,7 +77,6 @@ public abstract class BaseNetworkChannel {
   }
 
   public void read() {
-//    LOG.info("Reading from channel: " + socketChannel);
     while (pendingReceives.size() > 0) {
       TCPMessage readRequest = readRequest(socketChannel);
 
@@ -220,6 +222,15 @@ public abstract class BaseNetworkChannel {
         return;
       }
     }
+  }
+
+  public boolean isPending() {
+    boolean sendPending = pendingSends.size() > 0;
+    boolean recvPending = false;
+    for (Map.Entry<Integer, BlockingQueue<TCPMessage>> e : pendingReceives.entrySet()) {
+      recvPending = e.getValue().size() > 0;
+    }
+    return sendPending || recvPending;
   }
 
   public void enableReading() {

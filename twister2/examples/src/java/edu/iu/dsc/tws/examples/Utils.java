@@ -20,12 +20,14 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.cli.Option;
+
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
+import edu.iu.dsc.tws.common.resource.AllocatedResources;
+import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
+import edu.iu.dsc.tws.common.resource.WorkerResourceUtils;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
-import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
-import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlanUtils;
 
 public final class Utils {
   private static final Logger LOG = Logger.getLogger(Utils.class.getName());
@@ -38,26 +40,26 @@ public final class Utils {
    * @param plan the resource plan from scheduler
    * @return task plan
    */
-  public static TaskPlan createTaskPlan(Config cfg, ResourcePlan plan) {
-    int noOfProcs = plan.noOfContainers();
+  public static TaskPlan createTaskPlan(Config cfg, AllocatedResources plan) {
+    int noOfProcs = plan.getNumberOfWorkers();
     LOG.log(Level.INFO, "No of containers: " + noOfProcs);
     Map<Integer, Set<Integer>> executorToGraphNodes = new HashMap<>();
     Map<Integer, Set<Integer>> groupsToExeuctors = new HashMap<>();
-    int thisExecutor = plan.getThisId();
+    int thisExecutor = plan.getWorkerId();
 
-    List<ResourceContainer> containers = plan.getContainers();
-    Map<String, List<ResourceContainer>> containersPerNode = new HashMap<>();
-    for (ResourceContainer c : containers) {
-      String name = (String) c.getProperty(SchedulerContext.WORKER_NAME);
-      List<ResourceContainer> containerList;
-      if (!containersPerNode.containsKey(name)) {
-        containerList = new ArrayList<>();
-        containersPerNode.put(name, containerList);
-      } else {
-        containerList = containersPerNode.get(name);
-      }
-      containerList.add(c);
-    }
+    List<WorkerComputeResource> containers = plan.getWorkerComputeResources();
+    Map<String, List<WorkerComputeResource>> containersPerNode = new HashMap<>();
+//    for (WorkerComputeResource c : containers) {
+//      String name = (String) c.getProperty(SchedulerContext.WORKER_NAME);
+//      List<WorkerComputeResource> containerList;
+//      if (!containersPerNode.containsKey(name)) {
+//        containerList = new ArrayList<>();
+//        containersPerNode.put(name, containerList);
+//      } else {
+//        containerList = containersPerNode.get(name);
+//      }
+//      containerList.add(c);
+//    }
 
     for (int i = 0; i < noOfProcs; i++) {
       Set<Integer> nodesOfExecutor = new HashSet<>();
@@ -67,9 +69,9 @@ public final class Utils {
 
     int i = 0;
     // we take each container as an executor
-    for (Map.Entry<String, List<ResourceContainer>> e : containersPerNode.entrySet()) {
+    for (Map.Entry<String, List<WorkerComputeResource>> e : containersPerNode.entrySet()) {
       Set<Integer> executorsOfGroup = new HashSet<>();
-      for (ResourceContainer c : e.getValue()) {
+      for (WorkerComputeResource c : e.getValue()) {
         executorsOfGroup.add(c.getId());
       }
       groupsToExeuctors.put(i, executorsOfGroup);
@@ -91,18 +93,18 @@ public final class Utils {
    * @param plan the resource plan from scheduler
    * @return task plan
    */
-  public static TaskPlan createReduceTaskPlan(Config cfg, ResourcePlan plan, int noOfTasks) {
-    int noOfProcs = plan.noOfContainers();
+  public static TaskPlan createReduceTaskPlan(Config cfg, AllocatedResources plan, int noOfTasks) {
+    int noOfProcs = plan.getNumberOfWorkers();
     LOG.log(Level.INFO, "No of containers: " + noOfProcs);
     Map<Integer, Set<Integer>> executorToGraphNodes = new HashMap<>();
     Map<Integer, Set<Integer>> groupsToExeuctors = new HashMap<>();
-    int thisExecutor = plan.getThisId();
+    int thisExecutor = plan.getWorkerId();
 
-    List<ResourceContainer> containers = plan.getContainers();
-    Map<String, List<ResourceContainer>> containersPerNode = new HashMap<>();
-    for (ResourceContainer c : containers) {
-      String name = (String) c.getProperty(SchedulerContext.WORKER_NAME);
-      List<ResourceContainer> containerList;
+    List<WorkerComputeResource> containers = plan.getWorkerComputeResources();
+    Map<String, List<WorkerComputeResource>> containersPerNode = new HashMap<>();
+    for (WorkerComputeResource c : containers) {
+      String name = Integer.toString(c.getId());
+      List<WorkerComputeResource> containerList;
       if (!containersPerNode.containsKey(name)) {
         containerList = new ArrayList<>();
         containersPerNode.put(name, containerList);
@@ -126,9 +128,9 @@ public final class Utils {
 
     int i = 0;
     // we take each container as an executor
-    for (Map.Entry<String, List<ResourceContainer>> e : containersPerNode.entrySet()) {
+    for (Map.Entry<String, List<WorkerComputeResource>> e : containersPerNode.entrySet()) {
       Set<Integer> executorsOfGroup = new HashSet<>();
-      for (ResourceContainer c : e.getValue()) {
+      for (WorkerComputeResource c : e.getValue()) {
         executorsOfGroup.add(c.getId());
       }
       groupsToExeuctors.put(i, executorsOfGroup);
@@ -144,16 +146,92 @@ public final class Utils {
     return new TaskPlan(executorToGraphNodes, groupsToExeuctors, thisExecutor);
   }
 
-  public static TaskPlan createReduceTaskPlan(Config cfg, ResourcePlan plan,
-                                              List<Integer> noOfTaskEachStage) {
-    int noOfContainers = plan.noOfContainers();
+//  public static TaskPlan createReduceTaskPlan(Config cfg, AllocatedResources plan,
+//                                              List<Integer> noOfTaskEachStage) {
+//    int noOfContainers = plan.getNumberOfWorkers();
+//    Map<Integer, Set<Integer>> executorToGraphNodes = new HashMap<>();
+//    Map<Integer, Set<Integer>> groupsToExeuctors = new HashMap<>();
+//    int thisExecutor = plan.getWorkerId();
+//
+//    List<WorkerComputeResource> containers = plan.getWorkerComputeResources();
+//    Map<String, List<WorkerComputeResource>> containersPerNode =
+//        ResourcePlanUtils.getContainersPerNode(containers);
+//
+//    int totalTasksPreviously = 0;
+//    for (int noOfTasks : noOfTaskEachStage) {
+//      int currentExecutorId = 0;
+//      for (int i = 0; i < noOfTasks; i++) {
+//        Set<Integer> nodesOfExecutor;
+//        if (executorToGraphNodes.get(currentExecutorId) == null) {
+//          nodesOfExecutor = new HashSet<>();
+//        } else {
+//          nodesOfExecutor = executorToGraphNodes.get(currentExecutorId);
+//        }
+//        nodesOfExecutor.add(totalTasksPreviously + i);
+//        executorToGraphNodes.put(currentExecutorId, nodesOfExecutor);
+//        // we go to the next executor
+//        currentExecutorId = nextExecutorId(currentExecutorId, noOfContainers);
+//      }
+//      totalTasksPreviously += noOfTasks;
+//    }
+//
+//    int i = 0;
+//    for (Map.Entry<String, List<WorkerComputeResource>> entry : containersPerNode.entrySet()) {
+//      Set<Integer> executorsOfGroup = new HashSet<>();
+//      for (WorkerComputeResource c : entry.getValue()) {
+//        executorsOfGroup.add(c.getId());
+//      }
+//      groupsToExeuctors.put(i, executorsOfGroup);
+//      i++;
+//    }
+//
+//    return new TaskPlan(executorToGraphNodes, groupsToExeuctors, thisExecutor);
+//  }
+
+  private static int nextExecutorId(int current, int noOfContainers) {
+    if (current < noOfContainers - 1) {
+      return current + 1;
+    } else {
+      return 0;
+    }
+  }
+
+  public static String printMap(Map<Integer, Set<Integer>> map) {
+    StringBuilder sb = new StringBuilder();
+    for (Map.Entry<Integer, Set<Integer>> e : map.entrySet()) {
+      sb.append(e.getKey() + " : ");
+      for (Integer i : e.getValue()) {
+        sb.append(i).append(" ");
+      }
+      sb.append("\n");
+    }
+    return sb.toString();
+  }
+
+  public static Option createOption(String opt, boolean hasArg,
+                                    String description, boolean required) {
+    Option symbolListOption = new Option(opt, hasArg, description);
+    symbolListOption.setRequired(required);
+    return symbolListOption;
+  }
+
+  /**
+   * Create task plan according to stages
+   * @param cfg configuration
+   * @param allocatedResources plan
+   * @param noOfTaskEachStage no of tasks at each stage
+   * @return task plan
+   */
+  public static TaskPlan createStageTaskPlan(Config cfg, AllocatedResources allocatedResources,
+                                             List<Integer> noOfTaskEachStage,
+                                             List<WorkerNetworkInfo> workerList) {
+    int noOfContainers = allocatedResources.getNumberOfWorkers();
     Map<Integer, Set<Integer>> executorToGraphNodes = new HashMap<>();
     Map<Integer, Set<Integer>> groupsToExeuctors = new HashMap<>();
-    int thisExecutor = plan.getThisId();
+    int thisExecutor = allocatedResources.getWorkerId();
 
-    List<ResourceContainer> containers = plan.getContainers();
-    Map<String, List<ResourceContainer>> containersPerNode =
-        ResourcePlanUtils.getContainersPerNode(containers);
+    Map<String, List<WorkerComputeResource>> containersPerNode =
+        WorkerResourceUtils.getWorkersPerNode(allocatedResources, workerList);
 
     int totalTasksPreviously = 0;
     for (int noOfTasks : noOfTaskEachStage) {
@@ -174,35 +252,37 @@ public final class Utils {
     }
 
     int i = 0;
-    for (Map.Entry<String, List<ResourceContainer>> entry : containersPerNode.entrySet()) {
+    for (Map.Entry<String, List<WorkerComputeResource>> entry : containersPerNode.entrySet()) {
       Set<Integer> executorsOfGroup = new HashSet<>();
-      for (ResourceContainer c : entry.getValue()) {
+      for (WorkerComputeResource c : entry.getValue()) {
         executorsOfGroup.add(c.getId());
       }
       groupsToExeuctors.put(i, executorsOfGroup);
       i++;
     }
+//    groupsToExeuctors.put(0, new HashSet<>(Arrays.asList(1)));
+//    groupsToExeuctors.put(1, new HashSet<>(Arrays.asList(2)));
+//    groupsToExeuctors.put(2, new HashSet<>(Arrays.asList(0)));
+//    groupsToExeuctors.put(3, new HashSet<>(Arrays.asList(3)));
 
     return new TaskPlan(executorToGraphNodes, groupsToExeuctors, thisExecutor);
   }
 
-  private static int nextExecutorId(int current, int noOfContainers) {
-    if (current < noOfContainers - 1) {
-      return current + 1;
-    } else {
-      return 0;
+  public static Set<Integer> getTasksOfExecutor(int exec, TaskPlan plan,
+                                                List<Integer> noOfTaskEachStage, int stage) {
+    Set<Integer> out = new HashSet<>();
+    int noOfTasks = noOfTaskEachStage.get(stage);
+    int total = 0;
+    for (int i = 0; i < stage; i++) {
+      total += noOfTaskEachStage.get(i);
     }
-  }
 
-  public static String printMap(Map<Integer, Set<Integer>> map) {
-    StringBuilder sb = new StringBuilder();
-    for (Map.Entry<Integer, Set<Integer>> e : map.entrySet()) {
-      sb.append(e.getKey() + " : ");
-      for (Integer i : e.getValue()) {
-        sb.append(i).append(" ");
+    Set<Integer> tasksOfExec = plan.getChannelsOfExecutor(exec);
+    for (int i = 0; i < noOfTasks; i++) {
+      if (tasksOfExec.contains(i + total)) {
+        out.add(i + total);
       }
-      sb.append("\n");
     }
-    return sb.toString();
+    return out;
   }
 }

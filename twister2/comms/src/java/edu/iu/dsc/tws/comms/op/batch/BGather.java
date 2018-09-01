@@ -23,33 +23,41 @@ import edu.iu.dsc.tws.comms.dfw.io.gather.GatherBatchPartialReceiver;
 import edu.iu.dsc.tws.comms.op.Communicator;
 
 public class BGather {
-  private DataFlowGather partition;
+  private DataFlowGather gather;
 
   public BGather(Communicator comm, TaskPlan plan,
                  Set<Integer> sources, int destinations,
-                 MessageType dataType, MessageType keyType,
+                 MessageType dataType,
                  BatchReceiver rcvr) {
-    this.partition = new DataFlowGather(comm.getChannel(), sources, destinations,
+    this.gather = new DataFlowGather(comm.getChannel(), sources, destinations,
         new GatherBatchFinalReceiver(rcvr), new GatherBatchPartialReceiver(destinations),
-        0, 0, comm.getConfig(), dataType, keyType, plan, comm.nextEdge());
-    this.partition.init(comm.getConfig(), dataType, plan, comm.nextEdge());
+        0, 0, comm.getConfig(), dataType, plan, comm.nextEdge());
+    this.gather.init(comm.getConfig(), dataType, plan, comm.nextEdge());
   }
 
   public BGather(Communicator comm, TaskPlan plan,
                  Set<Integer> sources, int destinations,
-                 MessageType dataType, MessageType keyType,
+                 MessageType dataType,
                  BatchReceiver rcvr, Comparator<Object> comparator) {
-    this.partition = new DataFlowGather(comm.getChannel(), sources, destinations,
+    this.gather = new DataFlowGather(comm.getChannel(), sources, destinations,
         new GatherBatchFinalReceiver(rcvr), new GatherBatchPartialReceiver(destinations),
-        0, 0, comm.getConfig(), dataType, keyType, plan, comm.nextEdge());
-    this.partition.init(comm.getConfig(), dataType, plan, comm.nextEdge());
+        0, 0, comm.getConfig(), dataType, plan, comm.nextEdge());
+    this.gather.init(comm.getConfig(), dataType, plan, comm.nextEdge());
   }
 
-  public void gather(int source, Object message, int flags) {
-    partition.send(source, message, flags);
+  public boolean gather(int source, Object message, int flags) {
+    return gather.send(source, message, flags);
+  }
+
+  public boolean hasPending() {
+    return !gather.isComplete();
   }
 
   public void finish(int source) {
-    partition.finish(source);
+    gather.finish(source);
+  }
+
+  public boolean progress() {
+    return gather.progress();
   }
 }

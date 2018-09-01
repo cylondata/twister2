@@ -169,27 +169,38 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
     throw new RuntimeException("Not supported method");
   }
 
+  public boolean isComplete() {
+    boolean done = delegete.isComplete();
+    if (lock.tryLock()) {
+      try {
+        boolean needsFurtherProgress = finalReceiver.progress();
+        return done && !needsFurtherProgress;
+      } finally {
+        lock.unlock();
+      }
+    }
+    return true;
+  }
+
   @Override
   public boolean send(int src, Object message, int flags) {
     RoutingParameters routingParameters = sendRoutingParameters(src, 0);
-//    LOG.info("Bcast send down 1: " + routingParameters);
     return delegete.sendMessage(src, message, 0, flags, routingParameters);
   }
 
   @Override
-  public boolean send(int src, Object message, int flags, int dest) {
+  public boolean send(int src, Object message, int flags, int target) {
     RoutingParameters routingParameters = sendRoutingParameters(src, 0);
-//    LOG.info("Bcast sedn down 2: " + routingParameters);
-    return delegete.sendMessage(src, message, dest, flags, routingParameters);
+    return delegete.sendMessage(src, message, target, flags, routingParameters);
   }
 
   @Override
-  public boolean sendPartial(int src, Object message, int flags, int dest) {
+  public boolean sendPartial(int src, Object message, int flags, int target) {
     return false;
   }
 
   @Override
-  public void progress() {
+  public boolean progress() {
     try {
       delegete.progress();
       if (lock.tryLock()) {
@@ -203,6 +214,7 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
       LOG.log(Level.SEVERE, "un-expected error", t);
       throw new RuntimeException(t);
     }
+    return true;
   }
 
   public boolean passMessageDownstream(Object object, ChannelMessage currentMessage) {
@@ -273,8 +285,8 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public boolean receiveSendInternally(int src, int t, int path, int flags, Object message) {
-    return finalReceiver.onMessage(src, path, t, flags, message);
+  public boolean receiveSendInternally(int src, int target, int path, int flags, Object message) {
+    return finalReceiver.onMessage(src, path, target, flags, message);
   }
 
   protected Set<Integer> receivingExecutors() {

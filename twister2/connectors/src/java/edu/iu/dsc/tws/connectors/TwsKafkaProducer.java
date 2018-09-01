@@ -42,7 +42,7 @@ public class TwsKafkaProducer<T> extends SinkTask {
   private List<TopicPartition> topicPartitions;
   private Properties  simpleKafkaConfig;
   @Override
-  public void execute(IMessage message) {
+  public boolean execute(IMessage message) {
     log.info("Recieved message {}", message.getContent());
 //    if (this.singleTopic == null) {
 //      for (String topic : this.listOfTopics) {
@@ -69,7 +69,7 @@ public class TwsKafkaProducer<T> extends SinkTask {
             message.getContent().toString()));
       }
     }
-
+    return true;
   }
 
   @Override

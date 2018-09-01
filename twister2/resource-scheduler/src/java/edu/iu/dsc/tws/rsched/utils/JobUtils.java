@@ -73,11 +73,11 @@ public final class JobUtils {
   public static String jobClassPath(Config cfg, JobAPI.Job job, String wd) {
     StringBuilder classPathBuilder = new StringBuilder();
 //    LOG.log(Level.INFO, "Job type: " + job.getJobFormat().getType());
-    if (job.getJobFormat().getType() == JobAPI.JobFormatType.SHUFFLE) {
+//    if (job.getJobFormat().getType() == JobAPI.JobFormatType.SHUFFLE) {
       // Bundled jar
-      classPathBuilder.append(
-          Paths.get(wd, job.getJobName(), job.getJobFormat().getJobFile()).toString());
-    }
+    classPathBuilder.append(
+        Paths.get(wd, job.getJobName(), job.getJobFormat().getJobFile()).toString());
+//    }
     return classPathBuilder.toString();
   }
 
@@ -132,8 +132,60 @@ public final class JobUtils {
     return builder.build();
   }
 
+  public static String getJobDescriptionFilePath(String workingDirectory,
+                                                 String jobFileName, Config config) {
+    return Paths.get(workingDirectory, jobFileName + ".job").toAbsolutePath().toString();
+  }
+
   public static String getJobDescriptionFilePath(String jobFileName, Config config) {
     String home = Context.twister2Home(config);
     return Paths.get(home, jobFileName + ".job").toAbsolutePath().toString();
   }
+
+  /**
+   * write the values from Job object to config object
+   * only write the values that are initialized
+   * @param job
+   * @param config
+   * @return
+   */
+  public static Config updateConfigs(JobAPI.Job job, Config config) {
+    Config.Builder builder = Config.newBuilder().putAll(config);
+
+    String jobName = job.getJobName();
+    if (jobName != null) {
+      builder.put(Context.JOB_NAME, jobName);
+    }
+
+    String workerClass = job.getWorkerClassName();
+    if (workerClass != null) {
+      builder.put(SchedulerContext.WORKER_CLASS, workerClass);
+    }
+
+    int workerInstances = job.getNumberOfWorkers();
+    if (workerInstances > 0) {
+      builder.put(Context.TWISTER2_WORKER_INSTANCES, workerInstances);
+    }
+
+    double cpuPerWorker =
+        job.getJobResources().getResourcesList().get(0).getWorkerComputeResource().getCpu();
+    if (cpuPerWorker > 0) {
+      builder.put(Context.TWISTER2_WORKER_CPU, cpuPerWorker);
+    }
+
+    int ramPerWorker =
+        job.getJobResources().getResourcesList().get(0).getWorkerComputeResource().getRam();
+    if (ramPerWorker > 0) {
+      builder.put(Context.TWISTER2_WORKER_RAM, ramPerWorker);
+    }
+
+    double diskPerWorker =
+        job.getJobResources().getResourcesList().get(0).getWorkerComputeResource().getDisk();
+    if (diskPerWorker > 0) {
+      builder.put(Context.WORKER_VOLATILE_DISK, diskPerWorker);
+    }
+
+    return builder.build();
+  }
+
 }

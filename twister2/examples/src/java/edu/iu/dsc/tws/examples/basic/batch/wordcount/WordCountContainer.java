@@ -20,6 +20,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
+import edu.iu.dsc.tws.common.resource.AllocatedResources;
+import edu.iu.dsc.tws.common.worker.IPersistentVolume;
+import edu.iu.dsc.tws.common.worker.IVolatileVolume;
+import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
@@ -28,10 +33,8 @@ import edu.iu.dsc.tws.comms.dfw.DataFlowMultiGather;
 import edu.iu.dsc.tws.comms.dfw.io.gather.GatherMultiBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.gather.GatherMultiBatchPartialReceiver;
 import edu.iu.dsc.tws.examples.utils.WordCountUtils;
-import edu.iu.dsc.tws.rsched.spi.container.IContainer;
-import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
-public class WordCountContainer implements IContainer {
+public class WordCountContainer implements IWorker {
   private static final Logger LOG = Logger.getLogger(WordCountContainer.class.getName());
 
   private DataFlowMultiGather keyGather;
@@ -44,7 +47,7 @@ public class WordCountContainer implements IContainer {
 
   private Config config;
 
-  private ResourcePlan resourcePlan;
+  private AllocatedResources resourcePlan;
 
   private int id;
 
@@ -55,11 +58,14 @@ public class WordCountContainer implements IContainer {
   private TaskPlan taskPlan;
 
   @Override
-  public void init(Config cfg, int containerId, ResourcePlan plan) {
+  public void execute(Config cfg, int workerID, AllocatedResources resources,
+                      IWorkerController workerController,
+                      IPersistentVolume persistentVolume,
+                      IVolatileVolume volatileVolume) {
     this.config = cfg;
-    this.resourcePlan = plan;
-    this.id = containerId;
-    this.noOfTasksPerExecutor = NO_OF_TASKS / plan.noOfContainers();
+    this.resourcePlan = resources;
+    this.id = workerID;
+    this.noOfTasksPerExecutor = NO_OF_TASKS / resources.getNumberOfWorkers();
 
     // set up the tasks
     setupTasks();
@@ -73,7 +79,7 @@ public class WordCountContainer implements IContainer {
         new GatherMultiBatchPartialReceiver());
     // start the threads
     scheduleTasks();
-    // progress the work
+    // communicationProgress the work
     progress();
   }
 
@@ -110,12 +116,12 @@ public class WordCountContainer implements IContainer {
   }
 
   private void progress() {
-    // we need to progress the communication
+    // we need to communicationProgress the communication
     while (true) {
       try {
-        // progress the channel
+        // communicationProgress the channel
         channel.progress();
-        // we should progress the communication directive
+        // we should communicationProgress the communication directive
         keyGather.progress();
       } catch (Throwable t) {
         LOG.log(Level.SEVERE, "Something bad happened", t);

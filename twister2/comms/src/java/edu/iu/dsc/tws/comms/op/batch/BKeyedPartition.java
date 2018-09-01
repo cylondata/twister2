@@ -15,6 +15,7 @@ import java.util.Comparator;
 import java.util.Set;
 
 import edu.iu.dsc.tws.comms.api.BatchReceiver;
+import edu.iu.dsc.tws.comms.api.DestinationSelector;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
@@ -22,10 +23,11 @@ import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
 import edu.iu.dsc.tws.comms.op.Communicator;
-import edu.iu.dsc.tws.comms.op.DestinationSelector;
 
 public class BKeyedPartition {
   private DataFlowPartition partition;
+
+  private Communicator comm;
 
   private DestinationSelector destinationSelector;
 
@@ -55,13 +57,23 @@ public class BKeyedPartition {
     this.destinationSelector.prepare(partition.getSources(), partition.getDestinations());
   }
 
-  public void partition(int source, Object key, Object message, int flags) {
-    int destinations = destinationSelector.next(source);
+  public boolean partition(int source, Object key, Object message, int flags) {
+    int destinations = destinationSelector.next(source, key);
 
-    partition.send(source, new KeyedContent(key, message), flags, destinations);
+    boolean send = partition.send(source, new KeyedContent(key, message, partition.getKeyType(),
+        partition.getDataType()), flags, destinations);
+    return send;
+  }
+
+  public boolean hasPending() {
+    return !partition.isComplete();
   }
 
   public void finish(int source) {
     partition.finish(source);
+  }
+
+  public boolean progress() {
+    return partition.progress();
   }
 }

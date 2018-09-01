@@ -28,7 +28,8 @@ public class ReduceBatchPartialReceiver extends ReduceBatchReceiver {
   }
 
   @Override
-  public void progress() {
+  public boolean progress() {
+    boolean needsFurtherProgress = false;
     for (int t : messages.keySet()) {
       if (batchDone.get(t)) {
         //System.out.println("Number of messages send from partial : " + t + "count : ");
@@ -48,17 +49,23 @@ public class ReduceBatchPartialReceiver extends ReduceBatchReceiver {
         boolean allFinished = true;
         boolean allZero = true;
 
-
+        boolean moreThanOne = false;
         for (Map.Entry<Integer, Queue<Object>> e : messagePerTarget.entrySet()) {
           if (e.getValue().size() == 0 && !finishedForTarget.get(e.getKey())) {
             found = false;
             canProgress = false;
+          } else if (e.getValue().size() > 0) {
+            moreThanOne = true;
           }
           if (!finishedForTarget.get(e.getKey())) {
             allFinished = false;
           }
         }
 
+        // if we have queues with 0 and more than zero we need further communicationProgress
+        if (!found && moreThanOne) {
+          needsFurtherProgress = true;
+        }
 
         if (found) {
           currentVal = reducedValueMap.get(t);
@@ -66,9 +73,7 @@ public class ReduceBatchPartialReceiver extends ReduceBatchReceiver {
             Queue<Object> valueList = e.getValue();
             if (valueList.size() > 0) {
               if (currentVal == null) {
-                System.out.println(valueList.size());
                 currentVal = valueList.poll();
-                System.out.println(valueList.size());
                 tempBufferCount += 1;
               } else {
                 Object current = valueList.poll();
@@ -124,9 +129,11 @@ public class ReduceBatchPartialReceiver extends ReduceBatchReceiver {
             }
           } else {
             canProgress = false;
+            needsFurtherProgress = true;
           }
         }
       }
     }
+    return needsFurtherProgress;
   }
 }

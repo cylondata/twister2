@@ -16,9 +16,8 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
-import edu.iu.dsc.tws.rsched.spi.container.IWorkerLogger;
 
-public class MesosWorkerLogger extends Thread implements IWorkerLogger {
+public class MesosWorkerLogger {
 
   public static final Logger LOG = Logger.getLogger(MesosWorkerLogger.class.getName());
   private String logFileName;
@@ -30,37 +29,6 @@ public class MesosWorkerLogger extends Thread implements IWorkerLogger {
     this.logFileName = logFileName;
     this.logDir = logDir;
   }
-
-  @Override
-  public void startLoggingSinceBeginning() {
-
-  }
-
-  @Override
-  public void startLoggingSinceNow() {
-
-  }
-
-  @Override
-  public boolean startLoggingSince(int sinceSecondsValue) {
-    return false;
-  }
-
-  @Override
-  public boolean isFirstLogMessageReceived() {
-    return false;
-  }
-
-  @Override
-  public String getLogFileName() {
-    return null;
-  }
-
-  @Override
-  public void stopLogger() {
-
-  }
-
 
   /**
    * Initialize the logger
@@ -82,13 +50,12 @@ public class MesosWorkerLogger extends Thread implements IWorkerLogger {
             + "Check the log file for the upcoming log messages. ");
       }
 
-      System.out.println("logs redirecting to " + logDir + "/" + logFileName);
+      LOG.info("logs redirecting to " + logDir + "/" + logFileName);
 
       LoggingHelper.setupLogging(cfg, logDir, logFileName);
 
       LOG.info("Persistent logging to file initialized.");
     }
   }
-
 
 }

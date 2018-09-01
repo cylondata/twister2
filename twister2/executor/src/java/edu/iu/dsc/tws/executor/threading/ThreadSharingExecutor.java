@@ -9,100 +9,52 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
 package edu.iu.dsc.tws.executor.threading;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.executor.ExecutionPlan;
-import edu.iu.dsc.tws.executor.INodeInstance;
-import edu.iu.dsc.tws.executor.comm.IParallelOperation;
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.TWSChannel;
+import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.executor.api.INodeInstance;
+import edu.iu.dsc.tws.executor.core.ExecutorContext;
 
-public class ThreadSharingExecutor extends ThreadExecutor {
+public abstract class ThreadSharingExecutor extends AbstractExecutor {
   private static final Logger LOG = Logger.getLogger(ThreadSharingExecutor.class.getName());
 
-  private int numThreads;
+  protected int numThreads;
 
-  private BlockingQueue<INodeInstance> tasks;
+  protected BlockingQueue<INodeInstance> tasks;
 
-  private List<Thread> threads = new ArrayList<>();
+  protected List<Thread> threads = new ArrayList<>();
 
-  private ExecutionPlan executionPlan;
+  protected ExecutionPlan executionPlan;
 
-  public ThreadSharingExecutor() {
-  }
+  protected TWSChannel channel;
 
-  public ThreadSharingExecutor(int numThreads) {
-    this.numThreads = numThreads;
-  }
+  protected Config config;
 
-  public ThreadSharingExecutor(ExecutionPlan executionPlan) {
-    this.executionPlan = executionPlan;
-  }
-
-  @Override
-  public void execute() {
+  public boolean execute(Config cfg, ExecutionPlan plan, TWSChannel ch) {
+    this.numThreads = ExecutorContext.threadsPerContainer(cfg);
+    this.channel = ch;
+    this.executionPlan = plan;
+    this.config = cfg;
     // go through the instances
+    return runExecution();
+  }
 
-    Map<Integer, INodeInstance> nodes = executionPlan.getNodes();
-    tasks = new ArrayBlockingQueue<>(nodes.size() * 2);
-    tasks.addAll(nodes.values());
+  public abstract boolean runExecution();
 
-    for (INodeInstance node : tasks) {
-      node.prepare();
-    }
-
-
-
-    List<IParallelOperation> parallelOperations = executionPlan.getParallelOperations();
-    Iterator<IParallelOperation> itr = parallelOperations.iterator();
-    while (itr.hasNext()) {
-      IParallelOperation op = itr.next();
-      LOG.info("IParallelOperation Type : " + op.getClass().getName());
-    }
-
-    LOG.info("Execution Thread Count : " + executionPlan.getNumThreads() + "No of Tasks : "
-        + tasks.size() + ", Tasks " + executionPlan.getNodes().keySet().size());
-
-    for (int i = 0; i < tasks.size(); i++) {
-      Thread t = new Thread(new Worker());
-      t.setName("Thread-" + tasks.getClass().getSimpleName() + "-" + i);
-      t.start();
-      threads.add(t);
-    }
-
-    for (int i = 0; i < threads.size(); i++) {
-      System.out.println(ThreadStaticExecutor.class.getName() + " : " + threads.get(i).getName());
+  public void progressStreamComm() {
+    while (true) {
+      this.channel.progress();
     }
   }
 
-  private class Worker implements Runnable {
-    @Override
-    public void run() {
-      while (true) {
-        INodeInstance nodeInstance = tasks.poll();
-        nodeInstance.execute();
-        tasks.offer(nodeInstance);
-      }
-    }
+  public boolean isDone() {
+    return false;
   }
-
-
 }

@@ -40,12 +40,14 @@ ZKJobMasterFinder class is used to get the Job Master address from the ZooKeeper
 **ZNode Creation**  
 When the Job Master is registered its address on the ZooKeeper server, 
 an ephemeral znode is created. The name of this znode will be:  
-* /twister2/<job-name>-<job-master>  
+
+    /twister2/<job-name>-<job-master>  
 
 assuming the root znode is twister2.
 
 Job Master IP address and the port number is put as the payload in this znode as a String in the form of:
-* ip:port 
+
+    ip:port 
 
 **ZNode Deletion**  
 When the job completes, the ZKJobMasterRegistrar should delete the znode from the ZooKeeper server explicitly by calling its close method. 
@@ -74,7 +76,8 @@ NodeCache works event based. So, we avoid polling the ZooKeeper server continual
 **Registering the Job Master**  
 Job Master is started by a separate program in each cluster.
 For example, in Kubernetes it is started by the class:  
-* edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobMasterStarter
+
+    edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobMasterStarter
 
 When this class starts the Job Master, it also needs to start the ZKJobMasterRegistrar. 
 When the ZKJobMasterRegistrar is constructed, its initialize method needs to be called to register. 
@@ -86,13 +89,26 @@ to delete the job znode and close the connection to the ZooKeeper server.
 **Getting the Job Master Address**  
 Similar to Job Master, Twister2 workers are also started by a separate program in each cluster. 
 For example, in Kubernetes clusters, they are started by:
-* edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerStarter  
+
+    edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerStarter  
 
 Before starting the worker, this program should start ZKJobMasterFinder. 
-After initializing, it can get the Job Master address by calling the method: getJobMasterIPandPort().
+After initializing, it can get the Job Master address by calling the method: 
+
+    getJobMasterIPandPort().
+
 If this method returns null, it means that the Job Master has  not registered yet. 
-In that case, it can call waitAndGetJobMasterIPandPort(long timeLimit) method. 
+In that case, it can call the method 
+
+    waitAndGetJobMasterIPandPort(long timeLimit)
+
 This method will wait for the Job Master znode to be registered until the timeLimit has been reached. 
 
 **Example Code**  
-We put sample usages of both classes to their main methods. 
+A sample usage of ZKJobMasterRegistrar is provided in the example class:
+
+    edu.iu.dsc.tws.examples.ZKJobMasterRegistrarExample.java
+
+Its corresponding sample usage of ZKJobMasterFinder is provided in the example class:
+
+    edu.iu.dsc.tws.examples.ZKJobMasterFinderExample.java

@@ -92,13 +92,9 @@ public class DataFlowLoadBalance implements DataFlowOperation, ChannelReceiver {
 
   /**
    * Initialize
-   * @param cfg
-   * @param t
-   * @param taskPlan
-   * @param edge
    */
   public void init(Config cfg, MessageType t, TaskPlan taskPlan, int edge) {
-    this.thisSources = TaskPlanUtils.getTasksOfThisExecutor(taskPlan, sources);
+    this.thisSources = TaskPlanUtils.getTasksOfThisWorker(taskPlan, sources);
     LOG.info(String.format("%d setup loadbalance routing %s",
         taskPlan.getThisExecutor(), thisSources));
     this.thisTasks = taskPlan.getTasksOfThisExecutor();
@@ -142,7 +138,7 @@ public class DataFlowLoadBalance implements DataFlowOperation, ChannelReceiver {
     Map<Integer, MessageSerializer> serializerMap = new HashMap<>();
     Map<Integer, MessageDeSerializer> deSerializerMap = new HashMap<>();
 
-    Set<Integer> srcs = TaskPlanUtils.getTasksOfThisExecutor(taskPlan, sources);
+    Set<Integer> srcs = TaskPlanUtils.getTasksOfThisWorker(taskPlan, sources);
     for (int s : srcs) {
       // later look at how not to allocate pairs for this each time
       ArrayBlockingQueue<Pair<Object, OutMessage>> pendingSendMessages =
@@ -185,17 +181,18 @@ public class DataFlowLoadBalance implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public boolean send(int source, Object message, int flags, int dest) {
-    return delegete.sendMessage(source, message, dest, flags, sendRoutingParameters(source, dest));
+  public boolean send(int source, Object message, int flags, int target) {
+    return delegete.sendMessage(source, message, target, flags,
+        sendRoutingParameters(source, target));
   }
 
   @Override
-  public boolean sendPartial(int source, Object message, int flags, int dest) {
+  public boolean sendPartial(int source, Object message, int flags, int target) {
     throw new RuntimeException("Not supported method");
   }
 
   @Override
-  public void progress() {
+  public boolean progress() {
     try {
       delegete.progress();
       if (finalReceiverProgress.compareAndSet(false, true)) {
@@ -206,6 +203,7 @@ public class DataFlowLoadBalance implements DataFlowOperation, ChannelReceiver {
       LOG.log(Level.SEVERE, "un-expected error", t);
       throw new RuntimeException(t);
     }
+    return true;
   }
 
   @Override
@@ -252,9 +250,10 @@ public class DataFlowLoadBalance implements DataFlowOperation, ChannelReceiver {
     return routingParameters;
   }
 
-  public boolean receiveSendInternally(int source, int t, int path, int flags, Object message) {
+  public boolean receiveSendInternally(int source, int target, int path, int flags,
+                                       Object message) {
     // okay this must be for the
-    return finalReceiver.onMessage(source, path, t, flags, message);
+    return finalReceiver.onMessage(source, path, target, flags, message);
   }
 
   @Override

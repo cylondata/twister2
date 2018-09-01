@@ -1,0 +1,88 @@
+# a sample StatefulSet YAML file to create the Twister Job Master
+# before creating this StatefulSet,
+#   a Service needs to be created for this twister2 job master
+#   then a PersistentVolumeClaim (if persistent storage is requested)
+# need to be created.
+
+apiVersion: apps/v1beta2
+kind: StatefulSet
+metadata:
+  name: <job-name>-<job-master>
+  namespace: <kubernetes.namespace>
+  labels:
+    app: twister2-service-label-<job-name>-<job-master>
+    twister2-job-pods: twister2-<job-name>
+
+spec:
+  replicas: 1
+  serviceName: twister2-service-<jobname>-<job-master>
+
+  selector:
+    matchLabels:
+      app: twister2-service-label-<job-name>-<job-master>
+
+  template:
+    metadata:
+      labels:
+        app: twister2-service-label-<job-name>-<job-master>
+
+    spec:
+      terminationGracePeriodSeconds: 0
+      volumes:
+      - emptyDir:
+          sizeLimit: <twister2.job.master.volatile.volume.size> + <Gi>
+        name: twister2-volatile-dir
+      - name: persistent-volume
+        persistentVolumeClaim:
+          claimName: twister2-storage-<job-name>
+
+      containers:
+        name: twister2-job-master
+        image: auyar/twister2:v0.01
+        imagePullPolicy: <kubernetes.image.pull.policy>
+        ports:
+          name: job-master-port
+          containerPort: <twister2.job.master.port>
+          protocol: TCP
+        resources:
+          requests:
+            cpu: <twister2.job.master.cpu>
+            memory: <twister2.job.master.ram> + "Mi"
+        volumeMounts:
+        - mountPath: /twister2-volatile
+          name: twister2-volatile-dir
+        - name: persistent-volume
+          mountPath: /persistent
+        env:
+          # below values are sample values. 
+          # they are calculated for each job
+        - name: twister2.job.master.ip
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: status.podIP
+        - name: twister2.job.master.port
+          value: <twister2.job.master.port>
+        - name: twister2.job.name
+          value: <twister2.job.name>
+        - name: kubernetes.namespace
+          value: <kubernetes.namespace>
+        - name: twister2.job.master.persistent.volume.size
+          value: <twister2.job.master.persistent.volume.size>
+        - name: twister2.worker.instances
+          value: <twister2.worker.instances>
+        - name: twister2.job.master.assigns.worker.ids
+          value: <true or false>
+        - name: twister2.worker.ping.interval
+          value: <twister2.worker.ping.interval>
+        - name: persistent.logging.requested
+          value: <persistent.logging.requested>
+        - name: twister2.logging.level
+          value: <twister2.logging.level>
+        - name: twister2.logging.redirect.sysouterr
+          value: <twister2.logging.redirect.sysouterr>
+        - name: twister2.logging.max.file.size.mb
+          value: <twister2.logging.max.file.size.mb>
+        - name: twister2.logging.maximum.files
+          value: <twister2.logging.maximum.files>
+

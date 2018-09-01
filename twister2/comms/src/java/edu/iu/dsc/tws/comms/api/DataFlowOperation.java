@@ -19,6 +19,7 @@ import edu.iu.dsc.tws.comms.core.TaskPlan;
 public interface DataFlowOperation {
   /**
    * Use this to inject partial results in a distributed dataflow operation
+   *
    * @param message message
    * @return true if message is accepted
    */
@@ -26,6 +27,7 @@ public interface DataFlowOperation {
 
   /**
    * Send a send message, this call will work asynchronously
+   *
    * @param source source task
    * @param message message as a generic object
    * @return true if message is accepted
@@ -34,31 +36,48 @@ public interface DataFlowOperation {
 
   /**
    * Send the message on a specific path
+   *
    * @param source source task
    * @param message a generic java object
-   * @param dest destination task
+   * @param target target task
    * @return true if message is accepted
    */
-  boolean send(int source, Object message, int flags, int dest);
+  boolean send(int source, Object message, int flags, int target);
 
   /**
    * Send partial message on a specific path
+   *
    * @param source the source
    * @param message message as a generic object
-   * @param dest the destination
+   * @param target the final target
    * @return true if message is accepted
    */
-  boolean sendPartial(int source, Object message, int flags, int dest);
+  boolean sendPartial(int source, Object message, int flags, int target);
 
   /**
    * Progress the pending dataflow operations
+   *
+   * @return true if there is more messages to communicationProgress, unless return false
    */
-  void progress();
+  boolean progress();
 
   /**
    * Clean up the resources
    */
   void close();
+
+  /**
+   * Weather the operation doesn't have any pending sends or receives
+   *
+   * @return is complete
+   */
+  default boolean isComplete() {
+    return false;
+  }
+
+  default boolean isDelegeteComplete() {
+    return false;
+  }
 
   /**
    * If this is a larger transfer of dataflow style, we need to finish
@@ -68,6 +87,7 @@ public interface DataFlowOperation {
 
   /**
    * Task plan associated with this operation
+   *
    * @return task plan
    */
   TaskPlan getTaskPlan();

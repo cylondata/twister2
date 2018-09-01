@@ -13,8 +13,6 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s;
 
 public final class KubernetesConstants {
 
-  public static final String TWISTER2_DOCKER_IMAGE = "auyar/twister2-openmpi:0.0.1";
-//  public static final String TWISTER2_DOCKER_IMAGE = "auyar/twister2:v0.01";
   public static final String KUBERNETES_CLUSTER_TYPE = "kubernetes";
   public static final String POD_MEMORY_VOLUME_NAME = "twister2-memory-dir";
   public static final String POD_MEMORY_VOLUME = "/twister2-memory-dir";

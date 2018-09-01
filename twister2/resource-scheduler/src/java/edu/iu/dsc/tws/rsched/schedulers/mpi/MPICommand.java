@@ -23,8 +23,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.resource.RequestedResources;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 public abstract class MPICommand {
@@ -72,7 +72,7 @@ public abstract class MPICommand {
                                                     JobAPI.Job job) {
     Map<String, Object> commands = new HashMap<>();
     // lets get the configurations
-    commands.put("procs", requestedResources.getNoOfContainers());
+    commands.put("procs", requestedResources.getNumberOfWorkers());
 
     String jobClassPath = JobUtils.jobClassPath(cfg, job, workingDirectory);
     LOG.log(Level.INFO, "Job class path: " + jobClassPath);
@@ -80,7 +80,7 @@ public abstract class MPICommand {
     String classPath = jobClassPath + ":" + systemClassPath;
     commands.put("classpath", classPath);
     commands.put("java_props", "");
-    commands.put("container_class", job.getContainer().getClassName());
+    commands.put("container_class", job.getWorkerClassName());
 
     return commands;
   }

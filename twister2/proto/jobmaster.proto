@@ -1,0 +1,112 @@
+syntax = "proto3";
+package tws.proto.jobmaster;
+
+option java_package = "edu.iu.dsc.tws.proto.jobmaster";
+option java_outer_classname = "JobMasterAPI";
+
+//*****************************************************
+// a note:
+// oneof structs are added to workerID fields
+// main reason is to force the workerID to be encoded and logged when its value is zero.
+// if we do not use oneof, the value zero is not logged.
+// The reason for that seems to be that zero is the default value,
+// and it is not encoded and transferred.
+//
+// an advantage of this solution is that each message must have workerID field set.
+// that is positive I think.
+//*****************************************************
+
+// Ping message is sent by workers to the job master periodically
+// it is to show that that the workers are running
+message Ping {
+    oneof required {
+        int32 workerID = 1;
+    }
+    string pingMessage = 2;
+    MessageType messageType = 3;
+
+    enum MessageType {
+        WORKER_TO_MASTER = 0;
+        MASTER_TO_WORKER = 1;
+    }
+}
+
+// a worker can be any one of these states
+enum WorkerState {
+    STARTING = 0;
+    RUNNING = 1;
+    COMPLETED = 2;
+    ERROR = 3;
+    UNASSIGNED = 4;
+}
+
+//
+// Networking Data about a Twister2 Worker
+//
+message WorkerNetworkInfo {
+    oneof required {
+        int32 workerID = 1;
+    }
+    string workerIP = 2;
+    int32 port = 3;
+    string nodeIP = 4;
+    string rackName = 5;
+    string dataCenterName = 6;
+}
+
+// a worker informs the master that its state has changed
+// if the worker state becomes STARTING,
+//   the worker has to provide its IP address and the port number
+//   optionally its node info: nodeIP, rackName and dataCenterName
+// for other states, just the workerID and newState is enough
+message WorkerStateChange {
+    WorkerNetworkInfo workerNetworkInfo = 1;
+    WorkerState newState = 2;
+}
+
+// sent by the master to the worker
+// to inform that its state change message has been received
+message WorkerStateChangeResponse {
+    oneof required {
+        int32 workerID = 1;
+    }
+    WorkerState sentState = 2;
+}
+
+// Get the list of wokers in a job from the job master
+message ListWorkersRequest {
+    enum RequestType {
+        IMMEDIATE_RESPONSE = 0;
+        RESPONSE_AFTER_ALL_JOINED = 1;
+    }
+
+    oneof required {
+        int32 workerID = 1;
+    }
+    RequestType requestType = 2;
+}
+
+// Job master returns the list of workers in a job to a worker
+message ListWorkersResponse {
+
+    oneof required {
+        int32 workerID = 1;
+    }
+    repeated WorkerNetworkInfo workers = 2;
+}
+
+// All workers in a job wants to wait in a Barrier point
+// When BarrierRequest message is received from all workers in the job,
+// Job Master will send response messages to all
+// previous request messages are quueed until the last request message is received
+message BarrierRequest {
+    oneof required{
+        int32 workerID = 1;
+    }
+}
+
+message BarrierResponse {
+    oneof required {
+        int32 workerID = 1;
+    }
+}

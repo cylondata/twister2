@@ -64,6 +64,11 @@ public class Client implements SelectHandler {
    */
   private boolean fixedBuffers = true;
 
+  /**
+   * try connecting flag
+   */
+  private boolean tryConnectFlag;
+
   public Client(String host, int port, Config cfg, Progress looper, ChannelHandler handler) {
     address = new InetSocketAddress(host, port);
     config = cfg;
@@ -88,8 +93,11 @@ public class Client implements SelectHandler {
       socketChannel.configureBlocking(false);
       socketChannel.socket().setTcpNoDelay(true);
 
-      LOG.log(Level.INFO, String.format("Starting server on %s:%d",
-          address.getHostName(), address.getPort()));
+      if (!tryConnectFlag) {
+        LOG.log(Level.INFO, String.format("Connecting to the server on %s:%d",
+            address.getHostName(), address.getPort()));
+      }
+
       if (socketChannel.connect(address)) {
         handleConnect(socketChannel);
       } else {
@@ -101,6 +109,17 @@ public class Client implements SelectHandler {
     }
 
     return true;
+  }
+
+  /**
+   * this method may be called when the target machine may not be up yet
+   * this method may be called repeatedly, until it connects
+   * the exception message, that is thrown in case the other endpoint is not up, is ignored
+   * @return
+   */
+  public boolean tryConnecting() {
+    tryConnectFlag = true;
+    return connect();
   }
 
   public boolean isConnected() {
@@ -159,6 +178,28 @@ public class Client implements SelectHandler {
     }
   }
 
+  /**
+   * Stop the client while trying to process any queued requests and responses
+   */
+  public void disconnectGraceFully(long waitTime) {
+    // now lets wait if there are messages pending
+    long start = System.currentTimeMillis();
+
+    boolean pending;
+    long elapsed;
+    do {
+      pending = false;
+      if (channel.isPending()) {
+        progress.loop();
+        pending = true;
+      }
+      elapsed = System.currentTimeMillis() - start;
+    } while (pending && elapsed < waitTime);
+
+    // after sometime we need to stop
+    disconnect();
+  }
+
   @Override
   public void handleRead(SelectableChannel ch) {
     channel.read();
@@ -179,6 +220,13 @@ public class Client implements SelectHandler {
     try {
       if (socketChannel.finishConnect()) {
         progress.unregisterConnect(selectableChannel);
+      }
+    } catch (java.net.ConnectException e) {
+      if (tryConnectFlag && "Connection refused".equalsIgnoreCase(e.getMessage())) {
+//        LOG.severe("java.net.ConnectException message: " + e.getMessage());
+        tryConnectFlag = false;
+        channelHandler.onConnect(socketChannel, StatusCode.CONNECTION_REFUSED);
+        return;
       }
     } catch (IOException e) {
       LOG.log(Level.SEVERE, "Failed to FinishConnect to endpoint: " + address, e);

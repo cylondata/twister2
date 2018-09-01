@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.rsched.schedulers.standalone;
 
 import java.io.File;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -27,18 +28,17 @@ import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
+import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
+import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.bootstrap.JobMasterBasedWorkerDiscoverer;
+import edu.iu.dsc.tws.rsched.bootstrap.JobMasterBasedWorkerController;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.rsched.spi.container.IContainer;
-import edu.iu.dsc.tws.rsched.spi.container.IWorker;
-import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 public final class StandaloneWorkerStarter {
@@ -141,18 +141,18 @@ public final class StandaloneWorkerStarter {
 
     Config workerConfig = Config.newBuilder().putAll(config).
         put(SchedulerContext.TWISTER2_HOME.getKey(), twister2Home).
-        put(SchedulerContext.CONTAINER_CLASS, container).
+        put(SchedulerContext.WORKER_CLASS, container).
         put(SchedulerContext.TWISTER2_CONTAINER_ID, id).
         put(SchedulerContext.TWISTER2_CLUSTER_TYPE, clusterType).build();
 
     String jobDescFile = JobUtils.getJobDescriptionFilePath(jobName, workerConfig);
     JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
-    job.getJobResources().getNoOfContainers();
+    job.getNumberOfWorkers();
 
     Config updatedConfig = JobUtils.overrideConfigs(job, config);
     updatedConfig = Config.newBuilder().putAll(updatedConfig).
         put(SchedulerContext.TWISTER2_HOME.getKey(), twister2Home).
-        put(SchedulerContext.CONTAINER_CLASS, container).
+        put(SchedulerContext.WORKER_CLASS, container).
         put(SchedulerContext.TWISTER2_CONTAINER_ID, id).
         put(SchedulerContext.TWISTER2_CLUSTER_TYPE, clusterType).
         put(SchedulerContext.JOB_NAME, job.getJobName()).build();
@@ -161,29 +161,29 @@ public final class StandaloneWorkerStarter {
 
   private static void createWorker(Config config) {
     // lets create the resource plan
-    IWorkerDiscoverer workerController = createWorkerController(config);
+    IWorkerController workerController = createWorkerController(config);
     WorkerNetworkInfo workerNetworkInfo = workerController.getWorkerNetworkInfo();
 
-    String containerClass = SchedulerContext.containerClass(config);
+    String workerClass = SchedulerContext.workerClass(config);
 
-    ResourcePlan resourcePlan = new ResourcePlan(SchedulerContext.clusterType(config),
+    AllocatedResources resourcePlan = new AllocatedResources(SchedulerContext.clusterType(config),
         workerNetworkInfo.getWorkerID());
 
     try {
-      Object object = ReflectionUtils.newInstance(containerClass);
-      if (object instanceof IContainer) {
-        IContainer container = (IContainer) object;
+      Object object = ReflectionUtils.newInstance(workerClass);
+      if (object instanceof IWorker) {
+        IWorker container = (IWorker) object;
         // now initialize the container
-        container.init(config, workerNetworkInfo.getWorkerID(), resourcePlan);
+        container.execute(config, workerNetworkInfo.getWorkerID(), resourcePlan, null, null, null);
       } else if (object instanceof IWorker) {
         IWorker worker = (IWorker) object;
-        worker.init(config, workerNetworkInfo.getWorkerID(), resourcePlan,
+        worker.execute(config, workerNetworkInfo.getWorkerID(), resourcePlan,
             workerController, null, null);
       }
-      LOG.log(Level.FINE, "loaded container class: " + containerClass);
+      LOG.log(Level.FINE, "loaded worker class: " + workerClass);
     } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-      LOG.log(Level.SEVERE, String.format("failed to load the container class %s",
-          containerClass), e);
+      LOG.log(Level.SEVERE, String.format("failed to load the worker class %s",
+          workerClass), e);
       throw new RuntimeException(e);
     }
   }
@@ -193,7 +193,7 @@ public final class StandaloneWorkerStarter {
    * @param config config
    * @return
    */
-  private static IWorkerDiscoverer createWorkerController(Config config) {
+  private static IWorkerController createWorkerController(Config config) {
     // first get the worker id
     String indexEnv = System.getenv("NOMAD_ALLOC_INDEX");
     String idEnv = System.getenv("NOMAD_ALLOC_ID");
@@ -212,9 +212,8 @@ public final class StandaloneWorkerStarter {
     String jobName = StandaloneContext.jobName(config);
     String jobDescFile = JobUtils.getJobDescriptionFilePath(jobName, config);
     JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
-    int numberContainers = job.getJobResources().getNoOfContainers();
-
-    return new JobMasterBasedWorkerDiscoverer(config, index, numberContainers,
+    int numberContainers = job.getNumberOfWorkers();
+    return new JobMasterBasedWorkerController(config, index, numberContainers,
         jobMasterIP, masterPort, ports, localIps);
   }
 
@@ -253,6 +252,12 @@ public final class StandaloneWorkerStarter {
     // if no persistent volume requested, return
     if (persistentJobDir == null) {
       return;
+    }
+
+    String jobWorkingDirectory = StandaloneContext.workingDirectory(cfg);
+    String jobName = StandaloneContext.jobName(cfg);
+    if (StandaloneContext.getLoggingSandbox(cfg)) {
+      persistentJobDir = Paths.get(jobWorkingDirectory, jobName).toString();
     }
 
     String logDir = persistentJobDir + "/logs";

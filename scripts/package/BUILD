@@ -46,7 +46,7 @@ filegroup(
     srcs = [
         ":twister2-client",
         ":twister2-core",
-        ":twister2-master",
+        #        ":twister2-master",
     ],
 )
 
@@ -64,13 +64,13 @@ pkg_tar(
         ":twister2-core-lib-common",
         ":twister2-core-lib-communication",
         ":twister2-core-lib-connector",
+        ":twister2-core-lib-data",
+        ":twister2-core-lib-lmdb",
         ":twister2-core-lib-resource-scheduler",
         ":twister2-core-lib-task",
         ":twister2-core-lib-task-scheduler",
         ":twister2-core-lib-third_party",
         ":twister2-master-lib",
-        ":twister2-core-lib-data",
-        ":twister2-core-lib-lmdb",
     ],
 )
 
@@ -292,24 +292,24 @@ pkg_tar(
 # twister2 master packaging
 ######################################################
 
-pkg_tar(
-    name = "twister2-master",
-    extension = "tar.gz",
-    # srcs = generated_release_files,
-    package_dir = "twister2-master",
-    deps = [
-        ":twister2-client-conf-aurora",
-        ":twister2-client-conf-kubernetes",
-        ":twister2-client-conf-mesos",
-        ":twister2-client-conf-nodesmpi",
-        ":twister2-client-conf-slurmmpi",
-        ":twister2-client-conf-standalone",
-        ":twister2-client-lib-common",
-        ":twister2-client-lib-third_party",
-        ":twister2-master-lib",
-    ],
-)
-
+#pkg_tar(
+#    name = "twister2-master",
+#    extension = "tar.gz",
+#    # srcs = generated_release_files,
+#    package_dir = "twister2-master",
+#    deps = [
+#        ":twister2-client-conf-aurora",
+#        ":twister2-client-conf-kubernetes",
+#        ":twister2-client-conf-mesos",
+#        ":twister2-client-conf-nodesmpi",
+#        ":twister2-client-conf-slurmmpi",
+#        ":twister2-client-conf-standalone",
+#        ":twister2-client-lib-common",
+#        ":twister2-client-lib-third_party",
+#        ":twister2-master-lib",
+#    ],
+#)
+#
 pkg_tar(
     name = "twister2-master-lib",
     srcs = twister2_master_lib_files(),

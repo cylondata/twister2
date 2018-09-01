@@ -48,7 +48,7 @@ import mpi.Status;
 
 /**
  * We are going to use a byte based messaging protocol.
- *
+ * <p>
  * The transport threads doesn't handle the message serialization and it is left to the
  * application level.
  */
@@ -163,9 +163,7 @@ public class TWSMPIChannel implements TWSChannel {
 
   /**
    * Register our interest to receive messages from particular rank using a stream
-   * @param rank
-   * @param stream
-   * @param callback
+   *
    * @return true if the message is accepted
    */
   public boolean receiveMessage(int rank, int stream,
@@ -181,13 +179,13 @@ public class TWSMPIChannel implements TWSChannel {
    */
   private void postMessage(MPISendRequests requests) {
     ChannelMessage message = requests.message;
-    for (int i = 0; i < message.getBuffers().size(); i++) {
+    for (int i = 0; i < message.getNormalBuffers().size(); i++) {
       try {
         sendCount++;
-        DataBuffer buffer = message.getBuffers().get(i);
+        DataBuffer buffer = message.getNormalBuffers().get(i);
         Request request = comm.iSend(buffer.getByteBuffer(), buffer.getSize(),
             MPI.BYTE, requests.rank, message.getHeader().getEdge());
-        // register to the loop to make progress on the send
+        // register to the loop to make communicationProgress on the send
         requests.pendingSends.add(new MPIRequest(request, buffer));
       } catch (MPIException e) {
         throw new RuntimeException("Failed to send message to rank: " + requests.rank);
@@ -208,6 +206,7 @@ public class TWSMPIChannel implements TWSChannel {
 
   /**
    * Post the receive request to MPI
+   *
    * @param rank MPI rank
    * @param stream the stream as a tag
    * @param byteBuffer the buffer
@@ -228,6 +227,7 @@ public class TWSMPIChannel implements TWSChannel {
   }
 
   private int completedReceives = 0;
+
   /**
    * Progress the communications that are pending
    */
@@ -307,10 +307,17 @@ public class TWSMPIChannel implements TWSChannel {
               ++receiveCount;
               // lets call the callback about the receive complete
               r.buffer.setSize(status.getCount(MPI.BYTE));
+
               receiveRequests.callback.onReceiveComplete(
                   receiveRequests.rank, receiveRequests.edge, r.buffer);
 //              LOG.info(String.format("%d finished calling the on complete method", executor));
               requestIterator.remove();
+              if (receiveRequests.pendingRequests.size() == 0
+                  && receiveRequests.availableBuffers.size() == 0) {
+                //We do not have any buffers to receive messages so we need to free a buffer
+                receiveRequests.callback.freeReceiveBuffers(receiveRequests.rank,
+                    receiveRequests.edge);
+              }
             } else {
               throw new RuntimeException("MPI receive request cancelled");
             }

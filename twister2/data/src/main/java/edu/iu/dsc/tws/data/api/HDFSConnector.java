@@ -11,15 +11,15 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.api;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.logging.FileHandler;
 import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSClient;
@@ -39,36 +39,32 @@ import edu.iu.dsc.tws.data.utils.HdfsDataContext;
  */
 public class HDFSConnector implements IHDFSConnector {
 
-  public static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
+  private static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
+
   private static final Logger LOG = Logger.getLogger(HDFSConnector.class.getName());
+
   private Config config;
   private String outputFile;
-  private FileHandler fileHandler;
 
-  public HDFSConnector(Config config1) {
-    this.config = config1;
+  public HDFSConnector(Config cfg) {
+    this.config = cfg;
   }
 
-  public HDFSConnector(Config config1, String outputFile1) {
-    this.config = config1;
-    this.outputFile = outputFile1;
+  public HDFSConnector(Config cfg, String outFile) {
+    this.config = cfg;
+    this.outputFile = outFile;
   }
 
-
+  /**
+   * This method retrieve the HadoopFileSystem object using the Hadoop File System class.
+   *
+   * @return hadoopFileSystem
+   */
   @Override
   public HadoopFileSystem HDFSConnect() {
-    try {
-      fileHandler = new FileHandler("/home/kgovind/twister2/twister2hdfs.log");
-      LOG.addHandler(fileHandler);
-      SimpleFormatter simpleFormatter = new SimpleFormatter();
-      fileHandler.setFormatter(simpleFormatter);
-    } catch (IOException ioe) {
-      ioe.printStackTrace();
-    }
     Configuration conf = new Configuration(false);
     conf.addResource(new org.apache.hadoop.fs.Path(HdfsDataContext.getHdfsConfigDirectory(config)));
     HadoopFileSystem hadoopFileSystem = null;
-
     try {
       hadoopFileSystem = new HadoopFileSystem(conf, org.apache.hadoop.fs.FileSystem.get(conf));
     } catch (IOException ioe) {
@@ -77,21 +73,22 @@ public class HDFSConnector implements IHDFSConnector {
     return hadoopFileSystem;
   }
 
+
   /**
-   * To connect the HDFS file system
+   * This method retrieve the HadoopFileSystem object using the Hadoop File System class
+   * and write the message using the Hadoop Output Stream class.
+   * @param message
+   * @param count
    */
   public void HDFSConnect(String message, int count) {
 
     HadoopFileSystem hadoopFileSystem = HDFSConnect();
     HadoopDataOutputStream hadoopDataOutputStream = null;
-
     try {
       String directoryString =
-          HdfsDataContext.getHdfsUrlDefault(config) + "/user/kannan/" + outputFile;
+          HdfsDataContext.getHdfsUrlDefault(config) + "/user/kgovind/" + outputFile;
       Path path = new Path(directoryString);
       if (!hadoopFileSystem.exists(path)) {
-        /*LOG.info("Directory String Is:%%%" + directoryString + "\t"
-            + "Output File Is:%%%" + outputFile);*/
         hadoopDataOutputStream = hadoopFileSystem.create(path);
         hadoopDataOutputStream.write(
             "Hello, I am writing to Hadoop Data Output Stream\n".getBytes(DEFAULT_CHARSET));
@@ -117,6 +114,11 @@ public class HDFSConnector implements IHDFSConnector {
     }
   }
 
+  /**
+   * This method retrieve the HadoopFileSystem object using the Hadoop File System class
+   * and write the message using the Hadoop Output Stream class.
+   * @param message
+   */
   @Override
   public void HDFSConnect(String message) {
 
@@ -127,11 +129,7 @@ public class HDFSConnector implements IHDFSConnector {
 
     try {
       hadoopFileSystem = new HadoopFileSystem(conf, org.apache.hadoop.fs.FileSystem.get(conf));
-      String directoryString = HdfsDataContext.getHdfsUrlDefault(config)
-          + "/user/kannan/" + outputFile;
-
-      /*LOG.info("Directory String Is:%%%" + directoryString + "\t"
-          + "Output File Is:%%%" + outputFile);*/
+      String directoryString = HdfsDataContext.getHdfsUrlDefault(config) + "/" + outputFile;
 
       Path path = new Path(directoryString);
       if (!hadoopFileSystem.exists(path)) {
@@ -155,22 +153,25 @@ public class HDFSConnector implements IHDFSConnector {
   }
 
   /**
-   * This method will be used to locate the datanode location of the input file.
+   * This method is used to locate the datanode location of the input file name.
+   * @param fileName
+   * @return datanodeName
    */
-  public String getDFSCK(String[] fName) {
+  public String getDFSCK(String[] fileName) {
 
     Configuration conf = new Configuration(false);
     conf.addResource(new org.apache.hadoop.fs.Path(HdfsDataContext.getHdfsConfigDirectory(config)));
 
     ByteArrayOutputStream bStream = new ByteArrayOutputStream();
     PrintStream out = new PrintStream(bStream, true);
+    StringBuilder stringBuilder = new StringBuilder();
 
     String datanodeName = null;
-    StringBuilder stringBuilder = new StringBuilder();
 
     try {
       InetSocketAddress namenodeAddress =
-          new InetSocketAddress("hairy.soic.indiana.edu", 9000);
+          new InetSocketAddress(HdfsDataContext.getHdfsNamenodeDefault(config),
+              HdfsDataContext.getHdfsNamenodePortDefault(config));
       DFSClient dfsClient = new DFSClient(namenodeAddress, conf);
       ClientProtocol nameNode = dfsClient.getNamenode();
       DatanodeInfo[] datanodeReport =
@@ -180,12 +181,30 @@ public class HDFSConnector implements IHDFSConnector {
       }
       //It will be enabled later...!
       //run(new DFSck(conf, out), fName);
-      //out.println();
-    } catch (IOException ioe) {
-      ioe.printStackTrace();
+      out.println();
     } catch (Exception e) {
       e.printStackTrace();
     }
     return datanodeName;
+  }
+
+  public int getLengthOfFile(String fName) {
+    int length = 0;
+    String fileName = HdfsDataContext.getHdfsDataDirectory(config) + "/" + fName;
+    String directoryString = HdfsDataContext.getHdfsUrlDefault(config) + fileName;
+    Path path = new Path(directoryString);
+    HadoopFileSystem hadoopFileSystem = HDFSConnect();
+    try {
+      if (hadoopFileSystem.exists(path)) {
+        BufferedReader br = new BufferedReader(new InputStreamReader(
+            hadoopFileSystem.open(path)));
+        while ((br.readLine()) != null) {
+          length++;
+        }
+      }
+    } catch (Exception ee) {
+      ee.printStackTrace();
+    }
+    return length;
   }
 }

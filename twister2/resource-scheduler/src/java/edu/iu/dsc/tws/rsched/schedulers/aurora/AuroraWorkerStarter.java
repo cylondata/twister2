@@ -21,13 +21,14 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.common.discovery.NodeInfo;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
+import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
-import edu.iu.dsc.tws.rsched.bootstrap.ZKDiscoverer;
+import edu.iu.dsc.tws.rsched.bootstrap.ZKController;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import static edu.iu.dsc.tws.common.config.Context.JOB_ARCHIVE_DIRECTORY;
 
@@ -39,7 +40,7 @@ public final class AuroraWorkerStarter {
   private String mesosTaskID;
   private Config config;
   private JobAPI.Job job;
-  private ZKDiscoverer zkController;
+  private ZKController zkController;
 
   private AuroraWorkerStarter() {
   }
@@ -140,8 +141,11 @@ public final class AuroraWorkerStarter {
 
     long startTime = System.currentTimeMillis();
     String workerHostPort = workerAddress.getHostAddress() + ":" + workerPort;
-    int numberOfWorkers = job.getJobResources().getNoOfContainers();
-    zkController = new ZKDiscoverer(config, job.getJobName(), workerHostPort, numberOfWorkers);
+    int numberOfWorkers = job.getNumberOfWorkers();
+
+    NodeInfo nodeInfo = new NodeInfo(null, null, null);
+    zkController =
+        new ZKController(config, job.getJobName(), workerHostPort, numberOfWorkers, nodeInfo);
     zkController.initialize();
     long duration = System.currentTimeMillis() - startTime;
     System.out.println("Initialization for the worker: " + zkController.getWorkerNetworkInfo()
@@ -152,7 +156,7 @@ public final class AuroraWorkerStarter {
    * needs to close down when finished computation
    */
   public void waitAndGetAllWorkers() {
-    int numberOfWorkers = job.getJobResources().getNoOfContainers();
+    int numberOfWorkers = job.getNumberOfWorkers();
     System.out.println("Waiting for " + numberOfWorkers + " workers to join .........");
 
     // the amount of time to wait for all workers to join a job
@@ -193,19 +197,20 @@ public final class AuroraWorkerStarter {
     // print their list and exit
     worker.waitAndGetAllWorkers();
 
-    String containerClass = SchedulerContext.containerClass(worker.config);
-    IContainer container;
+    String workerClass = SchedulerContext.workerClass(worker.config);
+    IWorker container;
     try {
-      Object object = ReflectionUtils.newInstance(containerClass);
-      container = (IContainer) object;
-      LOG.info("loaded container class: " + containerClass);
+      Object object = ReflectionUtils.newInstance(workerClass);
+      container = (IWorker) object;
+      LOG.info("loaded worker class: " + workerClass);
     } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-      LOG.log(Level.SEVERE, String.format("failed to load the container class %s",
-          containerClass), e);
+      LOG.log(Level.SEVERE, String.format("failed to load the worker class %s",
+          workerClass), e);
       throw new RuntimeException(e);
     }
 
-    container.init(worker.config, worker.zkController.getWorkerNetworkInfo().getWorkerID(), null);
+    container.execute(worker.config, worker.zkController.getWorkerNetworkInfo().getWorkerID(),
+        null, null, null, null);
 
     // close the things, let others know that it is done
     worker.close();
@@ -218,10 +223,13 @@ public final class AuroraWorkerStarter {
   public static void printJob(JobAPI.Job job) {
     System.out.println("Job name: " + job.getJobName());
     System.out.println("Job file: " + job.getJobFormat().getJobFile());
-    System.out.println("job containers: " + job.getJobResources().getNoOfContainers());
-    System.out.println("CPUs: " + job.getJobResources().getContainer().getAvailableCPU());
-    System.out.println("RAM: " + job.getJobResources().getContainer().getAvailableMemory());
-    System.out.println("Disk: " + job.getJobResources().getContainer().getAvailableDisk());
+    System.out.println("workers: " + job.getNumberOfWorkers());
+    System.out.println("CPUs: "
+        + job.getJobResources().getResourcesList().get(0).getWorkerComputeResource().getCpu());
+    System.out.println("RAM: "
+        + job.getJobResources().getResourcesList().get(0).getWorkerComputeResource().getRam());
+    System.out.println("Disk: "
+        + job.getJobResources().getResourcesList().get(0).getWorkerComputeResource().getDisk());
 
     JobAPI.Config conf = job.getConfig();
     System.out.println("number of key-values in job conf: " + conf.getKvsCount());

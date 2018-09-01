@@ -19,8 +19,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.rsched.spi.uploaders.IUploader;
-import edu.iu.dsc.tws.rsched.spi.uploaders.UploaderException;
+import edu.iu.dsc.tws.rsched.exceptions.UploaderException;
+import edu.iu.dsc.tws.rsched.interfaces.IUploader;
 
 
 public class ScpUploader implements IUploader {

@@ -74,25 +74,25 @@ public class DataFlowMultiReduce implements DataFlowOperation {
   }
 
   @Override
-  public boolean send(int source, Object message, int flags, int dest) {
-    DataFlowReduce reduce = reduceMap.get(dest);
+  public boolean send(int source, Object message, int flags, int target) {
+    DataFlowReduce reduce = reduceMap.get(target);
     if (reduce == null) {
-      throw new RuntimeException("Un-expected destination: " + dest);
+      throw new RuntimeException("Un-expected destination: " + target);
     }
-    return reduce.send(source, message, flags, dest);
+    return reduce.send(source, message, flags, target);
   }
 
   @Override
-  public boolean sendPartial(int source, Object message, int flags, int dest) {
-    DataFlowReduce reduce = reduceMap.get(dest);
+  public boolean sendPartial(int source, Object message, int flags, int target) {
+    DataFlowReduce reduce = reduceMap.get(target);
     if (reduce == null) {
-      throw new RuntimeException("Un-expected destination: " + dest);
+      throw new RuntimeException("Un-expected destination: " + target);
     }
-    return reduce.sendPartial(source, message, flags, dest);
+    return reduce.sendPartial(source, message, flags, target);
   }
 
   @Override
-  public synchronized void progress() {
+  public synchronized boolean progress() {
     try {
       for (DataFlowReduce reduce : reduceMap.values()) {
         reduce.progress();
@@ -103,6 +103,7 @@ public class DataFlowMultiReduce implements DataFlowOperation {
       LOG.log(Level.SEVERE, "un-expected error", t);
       throw new RuntimeException(t);
     }
+    return true;
   }
 
   @Override
@@ -123,9 +124,8 @@ public class DataFlowMultiReduce implements DataFlowOperation {
    * @param config
    * @param type
    * @param instancePlan
-   * @param edge
    */
-  public void init(Config config, MessageType type, TaskPlan instancePlan, int edge) {
+  public void init(Config config, MessageType type, TaskPlan instancePlan) {
     executor = instancePlan.getThisExecutor();
     this.taskPlan = instancePlan;
     this.dataType = type;
@@ -171,13 +171,14 @@ public class DataFlowMultiReduce implements DataFlowOperation {
     }
 
     @Override
-    public boolean onMessage(int source, int dest, int target, int flags, Object object) {
+    public boolean onMessage(int source, int path, int target, int flags, Object object) {
 //      LOG.info(String.format("%d received message %d %d %d %d",
 //          executor, path, target, source, flags));
       return partialReceiver.onMessage(source, this.destination, target, flags, object);
     }
 
-    public void progress() {
+    public boolean progress() {
+      return true;
     }
   }
 
@@ -193,14 +194,15 @@ public class DataFlowMultiReduce implements DataFlowOperation {
     }
 
     @Override
-    public boolean onMessage(int source, int dest, int target, int flags, Object object) {
+    public boolean onMessage(int source, int path, int target, int flags, Object object) {
 //      LOG.info(String.format("%d received message %d %d %d %d",
 //          executor, path, target, source, flags));
       return finalReceiver.onMessage(source, this.destination, target, flags, object);
     }
 
     @Override
-    public void progress() {
+    public boolean progress() {
+      return true;
     }
   }
 }

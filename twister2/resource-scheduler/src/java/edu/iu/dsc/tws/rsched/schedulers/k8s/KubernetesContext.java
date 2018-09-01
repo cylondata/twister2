@@ -12,11 +12,15 @@
 package edu.iu.dsc.tws.rsched.schedulers.k8s;
 
 import java.util.List;
+import java.util.Map;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.discovery.NodeInfo;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
 public class KubernetesContext extends SchedulerContext {
+
+  public static final String TWISTER2_DOCKER_IMAGE_FOR_K8S = "twister2.docker.image.for.kubernetes";
 
   public static final int WORKERS_PER_POD_DEFAULT = 1;
   public static final String WORKERS_PER_POD = "kubernetes.workers.per.pod";
@@ -24,23 +28,26 @@ public class KubernetesContext extends SchedulerContext {
   public static final String KUBERNETES_NAMESPACE_DEFAULT = "default";
   public static final String KUBERNETES_NAMESPACE = "kubernetes.namespace";
 
+  public static final int K8S_WORKER_BASE_PORT_DEFAULT = 9999;
+  public static final String K8S_WORKER_BASE_PORT = "kubernetes.worker.base.port";
+
+  public static final boolean NODE_LOCATIONS_FROM_CONFIG_DEFAULT = true;
+  public static final String NODE_LOCATIONS_FROM_CONFIG = "kubernetes.node.locations.from.config";
+
+  public static final String KUBERNETES_RACK_LABEL_KEY = "kubernetes.rack.labey.key";
+  public static final String KUBERNETES_DATACENTER_LABEL_KEY = "kubernetes.datacenter.labey.key";
+
+  public static final String KUBERNETES_RACKS_LIST = "kubernetes.racks.list";
+  public static final String KUBERNETES_DATACENTERS_LIST = "kubernetes.datacenters.list";
+
   public static final boolean NODE_PORT_SERVICE_REQUESTED_DEFAULT = false;
   public static final String NODE_PORT_SERVICE_REQUESTED = "kubernetes.node.port.service.requested";
-
-  public static final boolean WORKERS_USE_OPENMPI_DEFAULT = false;
-  public static final String WORKERS_USE_OPENMPI = "kubernetes.workers.use.openmpi";
 
   public static final int SERVICE_NODE_PORT_DEFAULT = 0;
   public static final String SERVICE_NODE_PORT = "kubernetes.service.node.port";
 
-  public static final int K8S_WORKER_BASE_PORT_DEFAULT = 9999;
-  public static final String K8S_WORKER_BASE_PORT = "kubernetes.worker.base.port";
-
-  // this value has to be set in order to be used. Therefore its default value is not valid.
-  // this value is not set through config files.
-  // It is set when initiating the worker automatically
-  public static final int K8S_WORKER_PORT_DEFAULT = -1;
-  public static final String K8S_WORKER_PORT = "kubernetes.worker.port";
+  public static final boolean WORKERS_USE_OPENMPI_DEFAULT = false;
+  public static final String WORKERS_USE_OPENMPI = "kubernetes.workers.use.openmpi";
 
   public static final String WORKER_TRANSPORT_PROTOCOL_DEFAULT = "TCP";
   public static final String WORKER_TRANSPORT_PROTOCOL = "kubernetes.worker.transport.protocol";
@@ -54,10 +61,6 @@ public class KubernetesContext extends SchedulerContext {
   public static final String K8S_STORAGE_ACCESS_MODE_DEFAULT = "ReadWriteMany";
   public static final String K8S_STORAGE_ACCESS_MODE = "kubernetes.storage.access.mode";
 
-  // it can be either "system" or "kubernetes". currently not used.
-  public static final String PERSISTENT_LOGGING_TYPE_DEFAULT = "system";
-  public static final String PERSISTENT_LOGGING_TYPE = "persistent.logging.type";
-
   public static final boolean K8S_BIND_WORKER_TO_CPU_DEFAULT = false;
   public static final String K8S_BIND_WORKER_TO_CPU = "kubernetes.bind.worker.to.cpu";
 
@@ -68,15 +71,19 @@ public class KubernetesContext extends SchedulerContext {
   public static final String K8S_WORKER_MAPPING_OPERATOR = "kubernetes.worker.mapping.operator";
   public static final String K8S_WORKER_MAPPING_VALUES = "kubernetes.worker.mapping.values";
 
-  // it can be either "all-same-node", "all-separate-nodes", "none"
+  // it can be either of: "all-same-node", "all-separate-nodes", "none"
   public static final String K8S_WORKER_MAPPING_UNIFORM_DEFAULT = "none";
   public static final String K8S_WORKER_MAPPING_UNIFORM = "kubernetes.worker.mapping.uniform";
 
-  // it can be either "webserver", "client-to-pods"
+  // it can be either "webserver" or "client-to-pods"
   public static final String K8S_UPLOADING_METHOD_DEFAULT = "webserver";
   public static final String K8S_UPLOADING_METHOD = "twister2.kubernetes.uploading.method";
 
-  public static final String PERSISTENT_JOB_DIRECTORY = "job.master.persistent.job.directory";
+  public static final String SECRET_NAME = "kubernetes.secret.name";
+
+  public static String twister2DockerImageForK8s(Config cfg) {
+    return cfg.getStringValue(TWISTER2_DOCKER_IMAGE_FOR_K8S);
+  }
 
   public static int workersPerPod(Config cfg) {
     return cfg.getIntegerValue(WORKERS_PER_POD, WORKERS_PER_POD_DEFAULT);
@@ -84,6 +91,18 @@ public class KubernetesContext extends SchedulerContext {
 
   public static String namespace(Config cfg) {
     return cfg.getStringValue(KUBERNETES_NAMESPACE, KUBERNETES_NAMESPACE_DEFAULT);
+  }
+
+  public static boolean nodeLocationsFromConfig(Config cfg) {
+    return cfg.getBooleanValue(NODE_LOCATIONS_FROM_CONFIG, NODE_LOCATIONS_FROM_CONFIG_DEFAULT);
+  }
+
+  public static String rackLabelKeyForK8s(Config cfg) {
+    return cfg.getStringValue(KUBERNETES_RACK_LABEL_KEY);
+  }
+
+  public static String datacenterLabelKeyForK8s(Config cfg) {
+    return cfg.getStringValue(KUBERNETES_DATACENTER_LABEL_KEY);
   }
 
   public static boolean workersUseOpenMPI(Config cfg) {
@@ -102,10 +121,6 @@ public class KubernetesContext extends SchedulerContext {
     return cfg.getIntegerValue(K8S_WORKER_BASE_PORT, K8S_WORKER_BASE_PORT_DEFAULT);
   }
 
-  public static int workerPort(Config cfg) {
-    return cfg.getIntegerValue(K8S_WORKER_PORT, K8S_WORKER_PORT_DEFAULT);
-  }
-
   public static String imagePullPolicy(Config cfg) {
     return cfg.getStringValue(K8S_IMAGE_PULL_POLICY, K8S_IMAGE_PULL_POLICY_NAMESPACE);
   }
@@ -116,10 +131,6 @@ public class KubernetesContext extends SchedulerContext {
 
   public static String storageAccessMode(Config cfg) {
     return cfg.getStringValue(K8S_STORAGE_ACCESS_MODE, K8S_STORAGE_ACCESS_MODE_DEFAULT);
-  }
-
-  public static String persistentLoggingType(Config cfg) {
-    return cfg.getStringValue(PERSISTENT_LOGGING_TYPE, PERSISTENT_LOGGING_TYPE_DEFAULT);
   }
 
   public static String workerTransportProtocol(Config cfg) {
@@ -150,12 +161,50 @@ public class KubernetesContext extends SchedulerContext {
     return cfg.getStringValue(K8S_WORKER_MAPPING_UNIFORM, K8S_WORKER_MAPPING_UNIFORM_DEFAULT);
   }
 
-  public static String persistentJobDirectory(Config cfg) {
-    return cfg.getStringValue(PERSISTENT_JOB_DIRECTORY);
-  }
-
   public static String uploadMethod(Config cfg) {
     return cfg.getStringValue(K8S_UPLOADING_METHOD, K8S_UPLOADING_METHOD_DEFAULT);
+  }
+
+  public static String secretName(Config cfg) {
+    return cfg.getStringValue(SECRET_NAME);
+  }
+
+  public static NodeInfo getNodeInfo(Config cfg, String nodeIP) {
+
+    List<Map<String, List<String>>> rackList =
+        cfg.getListOfMapsWithListValues(KUBERNETES_RACKS_LIST);
+
+    String rack = findValue(rackList, nodeIP);
+    if (rack == null) {
+      return new NodeInfo(nodeIP, null, null);
+    }
+
+    List<Map<String, List<String>>> dcList =
+        cfg.getListOfMapsWithListValues(KUBERNETES_DATACENTERS_LIST);
+
+    String datacenter = findValue(dcList, rack);
+    return new NodeInfo(nodeIP, rack, datacenter);
+  }
+
+  /**
+   * find the given String value in the inner List
+   * return the key for that Map
+   * @return
+   */
+  private static String findValue(List<Map<String, List<String>>> outerList, String value) {
+
+    for (Map<String, List<String>> map: outerList) {
+      for (String mapKey: map.keySet()) {
+        List<String> innerList = map.get(mapKey);
+        for (String listItem: innerList) {
+          if (listItem.equals(value)) {
+            return mapKey;
+          }
+        }
+      }
+    }
+
+    return null;
   }
 
 }

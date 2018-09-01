@@ -31,23 +31,25 @@ public interface MessageReceiver {
    * The actual message callback
    *
    * @param source  the source task
-   * @param destination the final destination
+   * @param path the path that is taken by the message, that is intermediate targets
    * @param target the target of this receiver
    * @param flags the communication flags
    * @param object the actual message
    *
    * @return true if the message is accepted
    */
-  boolean onMessage(int source, int destination, int target, int flags, Object object);
+  boolean onMessage(int source, int path, int target, int flags, Object object);
 
   /**
    * Called when the end of the operation is reached
    */
-  default void onFinish(int target) {
+  default void onFinish(int source) {
   }
 
   /**
-   * This method will be called by the progress
+   * This method will be called by the communicationProgress
+   *
+   * @return true if needs further communicationProgress
    */
-  void progress();
+  boolean progress();
 }

@@ -35,4 +35,16 @@ public class BAllReduce {
   public boolean reduce(int src, Object message, int flags) {
     return reduce.send(src, message, flags);
   }
+
+  public boolean progress() {
+    return reduce.progress();
+  }
+
+  public boolean hasPending() {
+    return !reduce.isComplete();
+  }
+
+  public void finish(int source) {
+    reduce.finish(source);
+  }
 }

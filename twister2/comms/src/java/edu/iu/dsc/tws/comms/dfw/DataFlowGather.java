@@ -126,9 +126,6 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
   /**
    * We can receive messages from internal tasks or an external task, we allways receive messages
    * to the main task of the executor and we go from there
-   *
-   * @param currentMessage
-   * @param object
    */
   @Override
   public boolean receiveMessage(ChannelMessage currentMessage, Object object) {
@@ -147,8 +144,8 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
     } else {
 //      LOG.info(String.format("%d calling FINAL receiver %d", executor, header.getSourceId()));
       return finalReceiver.onMessage(header.getSourceId(),
-              DataFlowContext.DEFAULT_DESTINATION,
-              router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
+          DataFlowContext.DEFAULT_DESTINATION,
+          router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
               DataFlowContext.DEFAULT_DESTINATION), header.getFlags(), object);
     }
   }
@@ -215,17 +212,18 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
     return router.isLastReceiver();
   }
 
-  public boolean receiveSendInternally(int source, int t, int path, int flags, Object message) {
+  public boolean receiveSendInternally(int source, int target, int path, int flags,
+                                       Object message) {
     // check weather this is the last task
     if (router.isLastReceiver()) {
 //      LOG.info(String.format("%d internally FINAL receiver %d %s", executor, source,
 //          finalReceiver.getClass().getName()));
-      return finalReceiver.onMessage(source, path, t, flags, message);
+      return finalReceiver.onMessage(source, path, target, flags, message);
     } else {
 //      LOG.info(String.format("%d internally PARTIAL receiver %d %s", executor, source,
 //          partialReceiver.getClass().getName()));
       // now we need to serialize this to the buffer
-      return partialReceiver.onMessage(source, path, t, flags, message);
+      return partialReceiver.onMessage(source, path, target, flags, message);
     }
   }
 
@@ -241,24 +239,20 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public boolean send(int source, Object message, int flags, int dest) {
-    return delegete.sendMessage(source, message, dest, flags,
-        sendRoutingParameters(source, dest));
+  public boolean send(int source, Object message, int flags, int target) {
+    return delegete.sendMessage(source, message, target, flags,
+        sendRoutingParameters(source, target));
   }
 
   @Override
-  public boolean sendPartial(int source, Object message, int flags, int dest) {
-    return delegete.sendMessagePartial(source, message, dest, flags,
-        partialSendRoutingParameters(source, dest));
+  public boolean sendPartial(int source, Object message, int flags, int target) {
+    return delegete.sendMessagePartial(source, message, target, flags,
+        partialSendRoutingParameters(source, target));
   }
 
 
   /**
    * Initialize
-   * @param cfg
-   * @param t
-   * @param taskPlan
-   * @param edge
    */
   public void init(Config cfg, MessageType t, TaskPlan taskPlan, int edge) {
     this.type = t;
@@ -311,17 +305,16 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
       deSerializerMap.put(e, new MultiMessageDeserializer(new KryoSerializer(), executor));
     }
 
-    Set<Integer> sourcesOfThisExec = TaskPlanUtils.getTasksOfThisExecutor(taskPlan, sources);
+    Set<Integer> sourcesOfThisExec = TaskPlanUtils.getTasksOfThisWorker(taskPlan, sources);
     for (int s : sourcesOfThisExec) {
       sendRoutingParameters(s, pathToUse);
       partialSendRoutingParameters(s, pathToUse);
     }
 
-    delegete.init(cfg, t, taskPlan, edge,
+    delegete.init(cfg, t, t, keyType, keyType, taskPlan, edge,
         router.receivingExecutors(), router.isLastReceiver(), this,
         pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
         pendingReceiveDeSerializations, serializerMap, deSerializerMap, isKeyed);
-    delegete.setKeyType(keyType);
   }
 
   @Override
@@ -329,6 +322,14 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
     // now what we need to do
     return delegete.sendMessagePartial(source, message, pathToUse, flags,
         partialSendRoutingParameters(source, pathToUse));
+  }
+
+  public boolean isComplete() {
+    boolean done = delegete.isComplete();
+    boolean needsFurtherProgress = OperationUtils.progressReceivers(delegete, lock, finalReceiver,
+        partialLock, partialReceiver);
+//    LOG.log(Level.INFO, String.format("Done %b needsFurther %b", done, needsFurtherProgress));
+    return done && !needsFurtherProgress;
   }
 
   protected Set<Integer> receivingExecutors() {
@@ -340,8 +341,9 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public void progress() {
+  public boolean progress() {
     OperationUtils.progressReceivers(delegete, lock, finalReceiver, partialLock, partialReceiver);
+    return true;
   }
 
   @Override

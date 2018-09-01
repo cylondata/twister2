@@ -1,0 +1,120 @@
+# a sample StatefulSet YAML file to create workers for a Twister2 job
+# before creating this StatefulSet,
+#   first a Service and
+#   then a PersistentVolumeClaim (if persistent storage is requested)
+# need to be created. 
+
+apiVersion: apps/v1beta2
+kind: StatefulSet
+metadata:
+  name: <job-name>
+  namespace: <kubernetes.namespace>
+  labels:
+    app: twister2-service-label-<job-name>
+    twister2-job-pods: twister2-<job-name>
+spec:
+  # replicas are calculated by dividing twister2.worker.instances/kubernetes.workers.per.pod
+  replicas: <twister2.worker.instances>/<kubernetes.workers.per.pod>
+  serviceName: twister2-service-<job-name>
+  podManagementPolicy: Parallel
+
+  selector:
+    matchLabels:
+      app: twister2-service-label-<job-name>
+
+  template:
+    metadata:
+      labels:
+        app: twister2-service-label-<job-name>
+
+    spec:
+      terminationGracePeriodSeconds: 0
+      volumes:
+      - name: twister2-shared-dir
+        emptyDir: {medium: Memory}
+      - name: twister2-volatile-dir
+        emptyDir: {sizeLimit: <twister2.worker.volatile.disk>*<twister2.worker.instances>}
+      - name: persistent-volume
+        persistentVolumeClaim:
+          claimName: twister2-storage-<job-name>
+      - name: kube-openmpi-ssh-key
+        secret:
+          defaultMode: 256
+          secretName: kubempi-ssh-key
+
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: <kubernetes.worker.mapping.key>
+                operator: <kubernetes.worker.mapping.operator>
+                values: <kubernetes.worker.mapping.values>
+        # pod affinity below is to place all pods in a job to the same node
+        # when we change podAffinity with podAntiAffinity, all pods are started in separate nodes
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - twister2-service-label-<job-name>
+            topologyKey: kubernetes.io/hostname
+
+      containers:
+        # container-index is added automatically inside the code
+        # it starts from 0 and increases sequentially
+        name: twister2-container-<container-index>
+        image: auyar/twister2:v0.01
+        imagePullPolicy: <kubernetes.image.pull.policy>
+        ports:
+          name: port11
+          containerPort: <kubernetes.worker.base.port> + <container-index>
+          protocol: <kubernetes.worker.transport.protocol>
+        resources:
+          requests: # if worker to cpu binding is requested, "requests" replaced with "limits" on this line
+            cpu: <twister2.worker.cpu>
+            memory: <twister2.worker.ram> + "Mi"
+        volumeMounts:
+        - name: twister2-shared-dir
+          mountPath: /twister2-shared
+        - name: twister2-volatile-dir
+          mountPath: /twister2-volatile
+        - name: persistent-volume
+          mountPath: /persistent
+        - mountPath: /ssh-key/openmpi
+          name: kube-openmpi-ssh-key
+        command:
+        - <./init_openmpi.sh or ./init_nonmpi.sh>
+        env:
+          # below values are sample values. 
+          # they are calculated for each job
+        - name: JOB_PACKAGE_FILE_SIZE
+          value: <dynamically calculated>
+        - name: CONTAINER_NAME
+          value: <name of this container>
+        - name: USER_JOB_JAR_FILE
+          value: <jar file name provided by the user from command line>
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: status.podIP
+        - name: JOB_MASTER_IP
+          value: <set if the Job master runs in submitting client. client machine IP address>
+        - name: CLASS_TO_RUN
+          value: <can be MPIMasterStarter, K8sWorkerStarter with full package name>
+        - name: POD_MEMORY_VOLUME
+          value: /twister2-memory-dir
+        - name: JOB_ARCHIVE_DIRECTORY
+          value: twister2-job
+        - name: JOB_PACKAGE_FILENAME
+          value: twister2-job.tar.gz
+        - name: WORKER_PORT
+          value: <port of this container>
+        - name: UPLOAD_METHOD
+          value: <twister2.kubernetes.uploading.method>
+        - name: DOWNLOAD_DIRECTORY
+          value: <twister2.download.directory>
+

@@ -26,7 +26,18 @@ public class SAllReduce {
   public SAllReduce(Communicator comm, TaskPlan plan,
                  Set<Integer> sources, Set<Integer> destination, ReduceFunction fnc,
                  ReduceReceiver rcvr, MessageType dataType) {
-    int middleTask = 0;
+    if (sources.size() == 0) {
+      throw new IllegalArgumentException("The sources cannot be empty");
+    }
+
+    if (destination.size() == 0) {
+      throw new IllegalArgumentException("The destination cannot be empty");
+    }
+
+    int middleTask = comm.nextId();
+    int firstSource = sources.iterator().next();
+    plan.addChannelToExecutor(plan.getExecutorForChannel(firstSource), middleTask);
+
     reduce = new DataFlowAllReduce(comm.getChannel(), sources, destination, middleTask, fnc,
         rcvr, comm.nextEdge(), comm.nextEdge(), true);
     reduce.init(comm.getConfig(), dataType, plan, comm.nextEdge());
@@ -34,5 +45,21 @@ public class SAllReduce {
 
   public boolean reduce(int src, Object message, int flags) {
     return reduce.send(src, message, flags);
+  }
+
+  public boolean progress() {
+    return reduce.progress();
+  }
+
+  public boolean hasPending() {
+    return !reduce.isComplete();
+  }
+
+  public void finish(int src) {
+    reduce.finish(src);
+  }
+
+  public void close() {
+    // deregister from the channel
   }
 }

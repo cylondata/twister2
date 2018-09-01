@@ -21,11 +21,9 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
-import edu.iu.dsc.tws.master.client.JobMasterClient;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerController;
-import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerLogger;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 public final class MesosMPISlaveStarter {
@@ -33,42 +31,40 @@ public final class MesosMPISlaveStarter {
   public static final Logger LOG = Logger.getLogger(MesosMPISlaveStarter.class.getName());
   private static Config config;
   private static String jobName;
-  private static JobMasterClient jobMasterClient;
   private static int workerID;
-  private static int numberOfWorkers;
 
   private MesosMPISlaveStarter() { }
 
   public static void main(String[] args) throws Exception {
 
+    Thread.sleep(5000);
     workerID = Integer.parseInt(System.getenv("WORKER_ID"));
     jobName = System.getenv("JOB_NAME");
     String twister2Home = Paths.get("").toAbsolutePath().toString();
     String configDir = "twister2-job/mesos/";
     config = ConfigLoader.loadConfig(twister2Home, configDir);
-    MesosWorkerLogger logger = new MesosWorkerLogger(config,
-        "/persistent-volume/logs", "worker" + workerID);
-    logger.initLogging();
 
-    MesosWorkerController workerController = null;
+    MesosWorkerController workerController;
     List<WorkerNetworkInfo> workerNetworkInfoList = new ArrayList<>();
     try {
+
       JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/"
           + jobName + ".job");
       workerController = new MesosWorkerController(config, job,
-          Inet4Address.getLocalHost().getHostAddress(), 22, workerID);
-      LOG.info("Initializing with zookeeper");
+          Inet4Address.getLocalHost().getHostAddress(), 2023, workerID);
+      LOG.info("Initializing with zookeeper ");
       workerController.initializeWithZooKeeper();
       LOG.info("Waiting for all workers to join");
       workerNetworkInfoList = workerController.waitForAllWorkersToJoin(
           ZKContext.maxWaitTimeForAllWorkersToJoin(config));
       LOG.info("Everyone has joined");
-      //container.init(worker.config, id, null, workerController, null);
+      Thread.sleep(30000);
+      workerController.close();
 
     } catch (Exception e) {
-      e.printStackTrace();
+      LOG.severe("Host unkown " + e.getMessage());
     }
-    Thread.sleep(10000);
+    Thread.sleep(3000000);
 
   }
 }

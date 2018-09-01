@@ -213,6 +213,8 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
     this.isKeyed = true;
     this.keyType = keyType;
     this.dataType = dataType;
+    this.receiveKeyType = keyType;
+    this.receiveType = dataType;
   }
 
   public DataFlowPartition(TWSChannel channel, Set<Integer> sourceTasks, Set<Integer> destTasks,
@@ -220,7 +222,6 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
                            PartitionStratergy partitionStratergy,
                            MessageType dataType) {
     this(channel, sourceTasks, destTasks, finalRcvr, partialRcvr, partitionStratergy);
-    this.isKeyed = true;
     this.dataType = dataType;
   }
 
@@ -318,7 +319,7 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
    */
   public void init(Config cfg, MessageType t, TaskPlan taskPlan, int ed) {
     this.edge = ed;
-    this.thisSources = TaskPlanUtils.getTasksOfThisExecutor(taskPlan, sources);
+    this.thisSources = TaskPlanUtils.getTasksOfThisWorker(taskPlan, sources);
     LOG.log(Level.FINE, String.format("%d setup loadbalance routing %s %s",
         taskPlan.getThisExecutor(), sources, destinations));
     this.thisTasks = taskPlan.getTasksOfThisExecutor();
@@ -366,8 +367,8 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
     Map<Integer, MessageSerializer> serializerMap = new HashMap<>();
     Map<Integer, MessageDeSerializer> deSerializerMap = new HashMap<>();
 
-    Set<Integer> srcs = TaskPlanUtils.getTasksOfThisExecutor(taskPlan, sources);
-    Set<Integer> tempsrcs = TaskPlanUtils.getTasksOfThisExecutor(taskPlan, sources);
+    Set<Integer> srcs = TaskPlanUtils.getTasksOfThisWorker(taskPlan, sources);
+    Set<Integer> tempsrcs = TaskPlanUtils.getTasksOfThisWorker(taskPlan, sources);
 
     //need to set minus tasks as well
     for (Integer src : tempsrcs) {
@@ -421,10 +422,10 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public boolean sendPartial(int source, Object message, int flags, int dest) {
+  public boolean sendPartial(int source, Object message, int flags, int target) {
     int newFlags = flags | MessageFlags.ORIGIN_PARTIAL;
-    return delegete.sendMessagePartial(source, message, dest, newFlags,
-        sendPartialRoutingParameters(source, dest));
+    return delegete.sendMessagePartial(source, message, target, newFlags,
+        sendPartialRoutingParameters(source, target));
   }
 
   @Override
@@ -434,15 +435,27 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public boolean send(int source, Object message, int flags, int dest) {
+  public boolean send(int source, Object message, int flags, int target) {
     int newFlags = flags | MessageFlags.ORIGIN_SENDER;
-    return delegete.sendMessage(source, message, dest, newFlags,
-        sendRoutingParameters(source, dest));
+    return delegete.sendMessage(source, message, target, newFlags,
+        sendRoutingParameters(source, target));
+  }
+
+  public boolean isComplete() {
+    boolean done = delegete.isComplete();
+    boolean needsFurtherProgress = OperationUtils.progressReceivers(delegete, lock, finalReceiver,
+        partialLock, partialReceiver);
+    return done && !needsFurtherProgress;
+  }
+
+  public boolean isDelegeteComplete() {
+    return delegete.isComplete();
   }
 
   @Override
-  public void progress() {
-    OperationUtils.progressReceivers(delegete, lock, finalReceiver, partialLock, partialReceiver);
+  public boolean progress() {
+    return OperationUtils.progressReceivers(delegete, lock, finalReceiver,
+        partialLock, partialReceiver);
   }
 
   @Override
@@ -453,7 +466,7 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
   public void finish(int source) {
     // first we need to call finish on the partial receivers
     if (partialReceiver != null) {
-      partialReceiver.onFinish(source * -1);
+      partialReceiver.onFinish(source);
     }
   }
 
@@ -534,13 +547,22 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
     }
   }
 
-  public boolean receiveSendInternally(int source, int t,
+  /**
+   * For partial receives the path and
+   * @param source
+   * @param path
+   * @param destination
+   * @param flags
+   * @param message
+   * @return
+   */
+  public boolean receiveSendInternally(int source, int path,
                                        int destination, int flags, Object message) {
     // okay this must be for the
     if ((flags & MessageFlags.ORIGIN_PARTIAL) == MessageFlags.ORIGIN_PARTIAL) {
-      return finalReceiver.onMessage(source, destination, t, flags, message);
+      return finalReceiver.onMessage(source, path, destination, flags, message);
     }
-    return partialReceiver.onMessage(source, destination, t, flags, message);
+    return partialReceiver.onMessage(source, path, destination, flags, message);
   }
 
   @Override

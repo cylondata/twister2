@@ -193,6 +193,11 @@ public class Config {
     return value != null ? value : defaultValue;
   }
 
+  @SuppressWarnings("unchecked")
+  public List<Map<String, List<String>>> getListOfMapsWithListValues(String key) {
+    return (List<Map<String, List<String>>>) get(key);
+  }
+
   public Boolean getBooleanValue(String key) {
     Object value = get(key);
     if (value instanceof Boolean) {
@@ -239,7 +244,9 @@ public class Config {
   public Double getDoubleValue(String key, double defaultValue) {
     Object value = get(key);
     if (value != null) {
-      if (value instanceof Integer || value instanceof Double) {
+      if (value instanceof Integer) {
+        return ((Integer) value).doubleValue();
+      } else if (value instanceof Double) {
         return (Double) value;
       } else if (value instanceof String) {
         return Double.valueOf((String) value);

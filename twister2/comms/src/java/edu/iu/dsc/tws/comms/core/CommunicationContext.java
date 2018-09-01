@@ -23,7 +23,7 @@ public class CommunicationContext extends Context {
   public static final ByteOrder DEFAULT_BYTEORDER = ByteOrder.BIG_ENDIAN;
   public static final String COMMUNICATION_TYPE = "network.type";
   public static final String MPI_COMMUNICATION_TYPE = "mpi";
-  public static final String TCP_COMMUNICATION_TYPE = "mpi";
+  public static final String TCP_COMMUNICATION_TYPE = "tcp";
   public static final String DEFAULT_COMMUNICATION_TYPE = MPI_COMMUNICATION_TYPE;
 
   public static String communicationClass(Config cfg) {

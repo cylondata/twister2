@@ -25,6 +25,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.hashicorp.nomad.apimodel.Job;
+import com.hashicorp.nomad.apimodel.JobListStub;
 import com.hashicorp.nomad.apimodel.NetworkResource;
 import com.hashicorp.nomad.apimodel.Port;
 import com.hashicorp.nomad.apimodel.Resources;
@@ -35,12 +36,13 @@ import com.hashicorp.nomad.javasdk.EvaluationResponse;
 import com.hashicorp.nomad.javasdk.NomadApiClient;
 import com.hashicorp.nomad.javasdk.NomadApiConfiguration;
 import com.hashicorp.nomad.javasdk.NomadException;
+import com.hashicorp.nomad.javasdk.ServerQueryResponse;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.resource.RequestedResources;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
-import edu.iu.dsc.tws.rsched.spi.scheduler.IController;
+import edu.iu.dsc.tws.rsched.interfaces.IController;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 public class StandaloneController implements IController {
@@ -90,7 +92,12 @@ public class StandaloneController implements IController {
     NomadApiClient nomadApiClient = new NomadApiClient(
         new NomadApiConfiguration.Builder().setAddress(uri).build());
     try {
-      nomadApiClient.getJobsApi().deregister("");
+      Job nomadJob = getRunningJob(nomadApiClient, job.getJobName());
+      if (nomadJob == null) {
+        LOG.log(Level.INFO, "Cannot find the running job: " + job.getJobName());
+        return false;
+      }
+      nomadApiClient.getJobsApi().deregister(nomadJob.getId());
     } catch (RuntimeException | IOException | NomadException e) {
       LOG.log(Level.SEVERE, "Failed to terminate job " + jobName
           + " with error: " + e.getMessage(), e);
@@ -123,9 +130,39 @@ public class StandaloneController implements IController {
     return nomadJob;
   }
 
+  private static List<JobListStub> getRunningJobList(NomadApiClient apiClient) {
+    ServerQueryResponse<List<JobListStub>> response;
+    try {
+      response = apiClient.getJobsApi().list();
+    } catch (IOException | NomadException e) {
+      LOG.log(Level.SEVERE, "Error when attempting to fetch job list", e);
+      throw new RuntimeException(e);
+    }
+    return response.getValue();
+  }
+
+  private static Job getRunningJob(NomadApiClient apiClient, String jobName) {
+    List<JobListStub> jobs = getRunningJobList(apiClient);
+    for (JobListStub job : jobs) {
+      Job jobActual;
+      try {
+        jobActual = apiClient.getJobsApi().info(job.getId()).getValue();
+      } catch (IOException | NomadException e) {
+        String msg = "Failed to retrieve job info for job " + job.getId()
+            + " part of job " + jobName;
+        LOG.log(Level.SEVERE, msg, e);
+        throw new RuntimeException(msg, e);
+      }
+      if (jobName.equals(jobActual.getName())) {
+        return jobActual;
+      }
+    }
+    return null;
+  }
+
   private TaskGroup getTaskGroup(JobAPI.Job job, RequestedResources resources) {
     TaskGroup taskGroup = new TaskGroup();
-    taskGroup.setCount(resources.getNoOfContainers());
+    taskGroup.setCount(resources.getNumberOfWorkers());
     taskGroup.setName(job.getJobName());
     taskGroup.addTasks(getShellDriver(job, resources));
     return taskGroup;
@@ -246,7 +283,7 @@ public class StandaloneController implements IController {
                                                      JobAPI.Job job) {
     Map<String, Object> commands = new HashMap<>();
     // lets get the configurations
-    commands.put("procs", requestedResources.getNoOfContainers());
+    commands.put("procs", requestedResources.getNumberOfWorkers());
 
     String jobClassPath = JobUtils.jobClassPath(cfg, job, workingDirectory);
     LOG.log(Level.INFO, "Job class path: " + jobClassPath);
@@ -254,7 +291,7 @@ public class StandaloneController implements IController {
     String classPath = jobClassPath + ":" + systemClassPath;
     commands.put("classpath", classPath);
     commands.put("java_props", "");
-    commands.put("container_class", job.getContainer().getClassName());
+    commands.put("container_class", job.getWorkerClassName());
 
     return commands;
   }

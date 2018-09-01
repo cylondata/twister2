@@ -21,13 +21,17 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
-import edu.iu.dsc.tws.api.basic.job.BasicJob;
+import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
+import edu.iu.dsc.tws.common.resource.AllocatedResources;
+import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
+import edu.iu.dsc.tws.common.worker.IPersistentVolume;
+import edu.iu.dsc.tws.common.worker.IVolatileVolume;
+import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionBatchFinalReceiver;
@@ -37,18 +41,11 @@ import edu.iu.dsc.tws.comms.op.OperationSemantics;
 import edu.iu.dsc.tws.examples.utils.WordCountUtils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.rsched.spi.container.IPersistentVolume;
-import edu.iu.dsc.tws.rsched.spi.container.IVolatileVolume;
-import edu.iu.dsc.tws.rsched.spi.container.IWorker;
-import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
-import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
 public class SortJob implements IWorker {
   private static final Logger LOG = Logger.getLogger(SortJob.class.getName());
 
   private DataFlowPartition partition;
-
-  private TWSNetwork network;
 
   private TWSChannel channel;
 
@@ -56,7 +53,7 @@ public class SortJob implements IWorker {
 
   private Config config;
 
-  private ResourcePlan resourcePlan;
+  private AllocatedResources resourcePlan;
 
   private int id;
 
@@ -67,19 +64,20 @@ public class SortJob implements IWorker {
   private TaskPlan taskPlan;
 
   @Override
-  public void init(Config cfg, int wID, ResourcePlan plan,
-                   IWorkerDiscoverer workerController,
-                   IPersistentVolume persistentVolume,
-                   IVolatileVolume volatileVolume) {
+  public void execute(Config cfg, int workerID, AllocatedResources allocatedResources,
+                      IWorkerController workerController,
+                      IPersistentVolume persistentVolume,
+                      IVolatileVolume volatileVolume) {
     this.config = cfg;
-    this.resourcePlan = plan;
-    this.id = wID;
+    this.resourcePlan = allocatedResources;
+    this.id = workerID;
+    // setup the network
+    setupNetwork(cfg, workerController, allocatedResources);
     // set up the tasks
     setupTasks();
-    // setup the network
-    setupNetwork(cfg, workerController, taskPlan, plan);
+
     // we get the number of containers after initializing the network
-    this.noOfTasksPerExecutor = NO_OF_TASKS / plan.noOfContainers();
+    this.noOfTasksPerExecutor = NO_OF_TASKS / allocatedResources.getNumberOfWorkers();
 
     partition = new DataFlowPartition(config, channel, taskPlan, sources, destinations,
         new PartitionBatchFinalReceiver(new RecordSave(), false, true,
@@ -87,9 +85,10 @@ public class SortJob implements IWorker {
         new PartitionPartialReceiver(), DataFlowPartition.PartitionStratergy.DIRECT,
         MessageType.BYTE, MessageType.BYTE, MessageType.INTEGER, MessageType.INTEGER,
         OperationSemantics.STREAMING_BATCH, new EdgeGenerator(0));
+
     // start the threads
     scheduleTasks();
-    // progress the work
+    LOG.info("Scheduling tasks complete ------------------------------");
     progress();
   }
 
@@ -117,10 +116,8 @@ public class SortJob implements IWorker {
     }
   }
 
-  private void setupNetwork(Config cfg, IWorkerDiscoverer controller,
-                            TaskPlan plan, ResourcePlan rPlan) {
-    network = Network.initializeNetwork(cfg, controller, plan, rPlan);
-    channel = network.getChannel();
+  private void setupNetwork(Config cfg, IWorkerController controller, AllocatedResources rPlan) {
+    channel = Network.initializeChannel(cfg, controller, rPlan);
   }
 
   private class IntegerComparator implements Comparator<Object> {
@@ -138,12 +135,12 @@ public class SortJob implements IWorker {
   }
 
   private void progress() {
-    // we need to progress the communication
+    // we need to communicationProgress the communication
     while (true) {
       try {
-        // progress the channel
+        // communicationProgress the channel
         channel.progress();
-        // we should progress the communication directive
+        // we should communicationProgress the communication directive
         partition.progress();
       } catch (Throwable t) {
         LOG.log(Level.SEVERE, "Something bad happened", t);
@@ -163,13 +160,13 @@ public class SortJob implements IWorker {
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(configurations);
 
-    BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
+    Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("sort-job");
-    jobBuilder.setContainerClass(SortJob.class.getName());
-    jobBuilder.setRequestResource(new ResourceContainer(2, 1024), NO_OF_TASKS);
+    jobBuilder.setWorkerClass(SortJob.class.getName());
+    jobBuilder.setRequestResource(new WorkerComputeResource(2, 1024), NO_OF_TASKS);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job
-    Twister2Submitter.submitContainerJob(jobBuilder.build(), config);
+    Twister2Submitter.submitJob(jobBuilder.build(), config);
   }
 }

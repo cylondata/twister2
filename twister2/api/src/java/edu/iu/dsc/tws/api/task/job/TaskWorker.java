@@ -12,17 +12,17 @@
 package edu.iu.dsc.tws.api.task.job;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerDiscoverer;
-import edu.iu.dsc.tws.rsched.spi.container.IPersistentVolume;
-import edu.iu.dsc.tws.rsched.spi.container.IVolatileVolume;
-import edu.iu.dsc.tws.rsched.spi.container.IWorker;
-import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
+import edu.iu.dsc.tws.common.resource.AllocatedResources;
+import edu.iu.dsc.tws.common.worker.IPersistentVolume;
+import edu.iu.dsc.tws.common.worker.IVolatileVolume;
+import edu.iu.dsc.tws.common.worker.IWorker;
 
 public class TaskWorker implements IWorker {
   @Override
-  public void init(Config config, int id, ResourcePlan resourcePlan,
-                   IWorkerDiscoverer workerController, IPersistentVolume persistentVolume,
-                   IVolatileVolume volatileVolume) {
+  public void execute(Config config, int workerID, AllocatedResources allocatedResources,
+                      IWorkerController workerController, IPersistentVolume persistentVolume,
+                      IVolatileVolume volatileVolume) {
 
   }
 }

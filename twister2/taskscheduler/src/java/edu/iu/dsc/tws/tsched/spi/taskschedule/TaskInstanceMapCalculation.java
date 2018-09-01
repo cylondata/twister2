@@ -9,18 +9,6 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
 package edu.iu.dsc.tws.tsched.spi.taskschedule;
 
 import java.util.ArrayList;
@@ -34,10 +22,9 @@ import edu.iu.dsc.tws.task.graph.Vertex;
 import edu.iu.dsc.tws.tsched.utils.TaskAttributes;
 
 /**
- * This class constructs the instance map based on the requested ram, disk, and cpu values
- * of the job.
+ * This class constructs the task instance map which is based on the required ram, disk, and cpu
+ * values of the task graph.
  */
-
 public class TaskInstanceMapCalculation {
 
   private static final Logger LOG = Logger.getLogger(TaskInstanceMapCalculation.class.getName());
@@ -46,13 +33,12 @@ public class TaskInstanceMapCalculation {
   private static final double DEFAULT_RAM_PADDING_PER_CONTAINER = 2;
   private static final double NOT_SPECIFIED_NUMBER_VALUE = -1;
   private static final double DEFAULT_CPU_PADDING_PER_CONTAINER = 1;
-  private static final double MIN_RAM_PER_INSTANCE = 180;
 
   private final Double instanceRAM;
   private final Double instanceDisk;
   private final Double instanceCPU;
 
-  private TaskAttributes taskAttributes = null;
+  private TaskAttributes taskAttributes;
 
   public TaskInstanceMapCalculation(Double instanceRam, Double instanceDisk, Double instanceCPU) {
     this.instanceRAM = instanceRam;
@@ -73,8 +59,7 @@ public class TaskInstanceMapCalculation {
     return max;
   }
 
-  private static double getContainerCpuValue(Map<Integer,
-      List<InstanceId>> instancesAllocation) {
+  private static double getContainerCpuValue(Map<Integer, List<InstanceId>> instancesAllocation) {
 
       /*List<JobAPI.Config.KeyValue> jobConfig= job.getJobConfig().getKvsList();
       double defaultContainerCpu =
@@ -89,8 +74,7 @@ public class TaskInstanceMapCalculation {
     return Double.parseDouble(cpuHint);
   }
 
-  private static Double getContainerDiskValue(Map<Integer,
-      List<InstanceId>> instancesAllocation) {
+  private static Double getContainerDiskValue(Map<Integer, List<InstanceId>> instancesAllocation) {
 
       /*ByteAmount defaultContainerDisk = instanceDiskDefault
                 .multiply(getLargestContainerSize(instancesAllocation))
@@ -106,8 +90,7 @@ public class TaskInstanceMapCalculation {
     return containerDiskValue.doubleValue();
   }
 
-  private static Double getContainerRamValue(Map<Integer,
-      List<InstanceId>> instancesAllocation) {
+  private static Double getContainerRamValue(Map<Integer, List<InstanceId>> instancesAllocation) {
 
         /*List<JobAPI.Config.KeyValue> jobConfig = job.getJobConfig().getKvsList();
         return JobUtils.getConfigWithDefault(
@@ -121,8 +104,11 @@ public class TaskInstanceMapCalculation {
   }
 
   /**
-   * It receives the container instance allocation map and calculate
-   * the required number of instances with ram values.
+   *  It receives the container instance allocation map and calculate the required number of
+   *  task instances with ram values.
+   * @param containerInstanceAllocationMap
+   * @param taskVertexSet
+   * @return
    */
   public Map<Integer, Map<InstanceId, Double>> getInstancesRamMapInContainer(
       Map<Integer, List<InstanceId>> containerInstanceAllocationMap, Set<Vertex> taskVertexSet) {
@@ -153,8 +139,8 @@ public class TaskInstanceMapCalculation {
       if (instancesAllocationSize != 0) {
         Double instanceRequiredRam = instanceRAM;
         if (!containerRamValue.equals(NOT_SPECIFIED_NUMBER_VALUE)) {
-          Double remainingRam = containerRamValue
-              - DEFAULT_RAM_PADDING_PER_CONTAINER - usedRamValue;
+          Double remainingRam = containerRamValue - DEFAULT_RAM_PADDING_PER_CONTAINER
+              - usedRamValue;
           instanceRequiredRam = remainingRam / instancesAllocationSize;
         }
         for (InstanceId instanceId : instancesToBeCalculated) {
@@ -166,9 +152,13 @@ public class TaskInstanceMapCalculation {
     return instancesRamContainerMap;
   }
 
+
   /**
-   * It receives the container instance allocation map and calculate
-   * the required number of instances with disk values.
+   * It receives the container instance allocation map and calculate the required number of
+   * instances with disk values.
+   * @param containerInstanceAllocationMap
+   * @param taskVertexSet
+   * @return
    */
   public Map<Integer, Map<InstanceId, Double>> getInstancesDiskMapInContainer(
       Map<Integer, List<InstanceId>> containerInstanceAllocationMap, Set<Vertex> taskVertexSet) {
@@ -199,8 +189,8 @@ public class TaskInstanceMapCalculation {
       if (instancesAllocationSize != 0) {
         Double instanceRequiredDisk = 0.0;
         if (!containerDiskValue.equals(NOT_SPECIFIED_NUMBER_VALUE)) {
-          Double remainingDisk = containerDiskValue
-              - DEFAULT_DISK_PADDING_PER_CONTAINER - usedDiskValue;
+          Double remainingDisk = containerDiskValue - DEFAULT_DISK_PADDING_PER_CONTAINER
+              - usedDiskValue;
           instanceRequiredDisk = remainingDisk / instancesAllocationSize;
         }
         for (InstanceId instanceId : instancesToBeCalculated) {
@@ -213,8 +203,11 @@ public class TaskInstanceMapCalculation {
   }
 
   /**
-   * It receives the container instance allocation map and calculate
-   * the required number of instances with cpu values.
+   * It receives the container instance allocation map and calculate the required number of
+   * task instances with cpu values.
+   * @param containerInstanceAllocationMap
+   * @param taskVertexSet
+   * @return
    */
   public Map<Integer, Map<InstanceId, Double>> getInstancesCPUMapInContainer(
       Map<Integer, List<InstanceId>> containerInstanceAllocationMap, Set<Vertex> taskVertexSet) {
@@ -245,8 +238,8 @@ public class TaskInstanceMapCalculation {
       if (instancesAllocationSize != 0) {
         Double instanceRequiredCpu = 0.0;
         if (!containerCpuValue.equals(NOT_SPECIFIED_NUMBER_VALUE)) {
-          Double remainingCpu = containerCpuValue
-              - DEFAULT_CPU_PADDING_PER_CONTAINER - usedCPUValue;
+          Double remainingCpu = containerCpuValue - DEFAULT_CPU_PADDING_PER_CONTAINER
+              - usedCPUValue;
           instanceRequiredCpu = remainingCpu / instancesAllocationSize;
         }
         for (InstanceId instanceId : instancesToBeCalculated) {

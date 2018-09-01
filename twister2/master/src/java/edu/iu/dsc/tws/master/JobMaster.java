@@ -17,16 +17,35 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.net.tcp.Progress;
 import edu.iu.dsc.tws.common.net.tcp.StatusCode;
 import edu.iu.dsc.tws.common.net.tcp.request.ConnectHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
-import edu.iu.dsc.tws.proto.network.Network;
-import edu.iu.dsc.tws.proto.network.Network.ListWorkersRequest;
-import edu.iu.dsc.tws.proto.network.Network.ListWorkersResponse;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersRequest;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersResponse;
 
-public class JobMaster extends Thread {
+/**
+ * JobMaster class
+ * It is started for each Twister2 job
+ * It provides:
+ *   worker discovery
+ *   barrier method
+ *   Ping service
+ *
+ * It can be started in two different modes:
+ *   Threaded and Blocking
+ *
+ * If the user calls:
+ *   startJobMasterThreaded()
+ * It starts as a Thread and the call to this method returns
+ *
+ * If the user calls:
+ *   startJobMasterBlocking()
+ * It uses the calling thread and this call does not return unless the JobMaster completes
+ */
+
+public class JobMaster {
   private static final Logger LOG = Logger.getLogger(JobMaster.class.getName());
 
   /**
@@ -87,6 +106,11 @@ public class JobMaster extends Thread {
    */
   private int numberOfWorkers;
 
+  /**
+   * BarrierMonitor object
+   */
+  private BarrierMonitor barrierMonitor;
+
   public JobMaster(Config config,
                    String masterAddress,
                    IJobTerminator jobTerminator,
@@ -109,7 +133,10 @@ public class JobMaster extends Thread {
     this.numberOfWorkers = numWorkers;
   }
 
-  public void init() {
+  /**
+   * initialize the Job Master
+   */
+  private void init() {
 
     looper = new Progress();
 
@@ -118,30 +145,65 @@ public class JobMaster extends Thread {
         new RRServer(config, masterAddress, masterPort, looper, JOB_MASTER_ID, connectHandler);
 
     workerMonitor = new WorkerMonitor(config, this, rrServer, numberOfWorkers);
+    barrierMonitor = new BarrierMonitor(numberOfWorkers, rrServer);
 
-    Network.Ping.Builder pingBuilder = Network.Ping.newBuilder();
-    Network.WorkerStateChange.Builder stateChangeBuilder = Network.WorkerStateChange.newBuilder();
-    Network.WorkerStateChangeResponse.Builder stateChangeResponseBuilder
-        = Network.WorkerStateChangeResponse.newBuilder();
+    JobMasterAPI.Ping.Builder pingBuilder = JobMasterAPI.Ping.newBuilder();
+    JobMasterAPI.WorkerStateChange.Builder stateChangeBuilder =
+        JobMasterAPI.WorkerStateChange.newBuilder();
+    JobMasterAPI.WorkerStateChangeResponse.Builder stateChangeResponseBuilder
+        = JobMasterAPI.WorkerStateChangeResponse.newBuilder();
 
     ListWorkersRequest.Builder listWorkersBuilder = ListWorkersRequest.newBuilder();
     ListWorkersResponse.Builder listResponseBuilder = ListWorkersResponse.newBuilder();
+    JobMasterAPI.BarrierRequest.Builder barrierRequestBuilder =
+        JobMasterAPI.BarrierRequest.newBuilder();
+    JobMasterAPI.BarrierResponse.Builder barrierResponseBuilder =
+        JobMasterAPI.BarrierResponse.newBuilder();
 
     rrServer.registerRequestHandler(pingBuilder, workerMonitor);
     rrServer.registerRequestHandler(stateChangeBuilder, workerMonitor);
     rrServer.registerRequestHandler(stateChangeResponseBuilder, workerMonitor);
     rrServer.registerRequestHandler(listWorkersBuilder, workerMonitor);
     rrServer.registerRequestHandler(listResponseBuilder, workerMonitor);
+    rrServer.registerRequestHandler(barrierRequestBuilder, barrierMonitor);
+    rrServer.registerRequestHandler(barrierResponseBuilder, barrierMonitor);
 
     rrServer.start();
     looper.loop();
-
-    start();
   }
 
-  @Override
-  public void run() {
+  /**
+   * start the Job Master in a Thread
+   */
+  public Thread startJobMasterThreaded() {
+    // first call the init method
+    init();
 
+    Thread jmThread = new Thread() {
+      public void run() {
+        startLooping();
+      }
+    };
+
+    jmThread.start();
+
+    return jmThread;
+  }
+
+  /**
+   * start the Job Master in a blocking call
+   */
+  public void startJobMasterBlocking() {
+    // first call the init method
+    init();
+
+    startLooping();
+  }
+
+  /**
+   * Job Master loops until all workers in the job completes
+   */
+  private void startLooping() {
     LOG.info("JobMaster [" + masterAddress + "] started and waiting worker messages on port: "
         + masterPort);
 
@@ -149,13 +211,8 @@ public class JobMaster extends Thread {
       looper.loopBlocking();
     }
 
-    // to send the last remaining messages if any
-//    looper.sendQueedMessages();
-    looper.loop();
-    looper.loop();
-    looper.loop();
-
-    rrServer.stop();
+    // send the remaining messages if any and stop
+    rrServer.stopGraceFully(2000);
   }
 
   /**
@@ -163,13 +220,23 @@ public class JobMaster extends Thread {
    */
   public void allWorkersCompleted() {
 
-    LOG.info("All workers have completed. JobMaster will stop.");
+    LOG.info("All workers have completed. JobMaster is stopping.");
     workersCompleted = true;
     looper.wakeup();
 
     if (jobTerminator != null) {
       jobTerminator.terminateJob(jobName);
     }
+  }
+
+  public void addShutdownHook() {
+    Thread hookThread = new Thread() {
+      public void run() {
+        allWorkersCompleted();
+      }
+    };
+
+    Runtime.getRuntime().addShutdownHook(hookThread);
   }
 
   public class ServerConnectHandler implements ConnectHandler {
@@ -189,44 +256,6 @@ public class JobMaster extends Thread {
     @Override
     public void onClose(SocketChannel channel) {
     }
-  }
-
-  /**
-   * this main method is for locally testing only
-   * JobMaster is started by:
-   *    edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobMasterStarter
-   * @param args
-   */
-  public static void main(String[] args) {
-
-    int numberOfWorkers = 1;
-    if (args.length == 1) {
-      numberOfWorkers = Integer.parseInt(args[0]);
-    }
-
-    Config configs = buildConfig(numberOfWorkers);
-
-    LOG.info("Config parameters: \n" + configs);
-
-    String host = JobMasterContext.jobMasterIP(configs);
-    String jobName = Context.jobName(configs);
-
-    JobMaster jobMaster = new JobMaster(configs, host, null, jobName);
-    jobMaster.init();
-  }
-
-
-  /**
-   * construct a Config object
-   * @return
-   */
-  public static Config buildConfig(int numberOfWorkers) {
-    return Config.newBuilder()
-        .put(JobMasterContext.JOB_MASTER_IP, "localhost")
-        .put(Context.JOB_NAME, "basic-kube")
-        .put(Context.TWISTER2_WORKER_INSTANCES, numberOfWorkers)
-        .put(JobMasterContext.JOB_MASTER_ASSIGNS_WORKER_IDS, "true")
-        .build();
   }
 
 }

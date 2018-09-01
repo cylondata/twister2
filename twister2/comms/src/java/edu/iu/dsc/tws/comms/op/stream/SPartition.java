@@ -14,13 +14,13 @@ package edu.iu.dsc.tws.comms.op.stream;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.comms.api.DestinationSelector;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
 import edu.iu.dsc.tws.comms.op.Communicator;
-import edu.iu.dsc.tws.comms.op.DestinationSelector;
 
 public class SPartition {
   private static final Logger LOG = Logger.getLogger(SPartition.class.getName());
@@ -40,9 +40,29 @@ public class SPartition {
     this.destinationSelector.prepare(partition.getSources(), partition.getDestinations());
   }
 
-  public void partition(int source, Object message, int flags) {
-    int destinations = destinationSelector.next(source);
+  public boolean partition(int source, Object message, int flags) {
+    final int dest = destinationSelector.next(source);
 
-    partition.send(source, message, flags, destinations);
+    boolean send = partition.send(source, message, flags, dest);
+    if (send) {
+      destinationSelector.commit(source, dest);
+    }
+    return send;
+  }
+
+  public boolean hasPending() {
+    return !partition.isComplete();
+  }
+
+  public boolean progress() {
+    return partition.progress();
+  }
+
+  public void finish(int src) {
+    partition.finish(src);
+  }
+
+  public void close() {
+    // deregister from the channel
   }
 }

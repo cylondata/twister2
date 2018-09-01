@@ -23,7 +23,7 @@ When CPUs are requested for workers with static binding, CPUs per worker
 has to be an integer. When a pod is statically bounded to a core, 
 it can not have fractional ownership of that core. 
 It has to have the total access to the core. 
-However, one worker (container) can have more than one cores, but not fractional cores.
+However, one worker (workerComputeResource) can have more than one cores, but not fractional cores.
 Kubernetes use [Linux CPUSETS](https://www.kernel.org/doc/Documentation/cgroup-v1/cpusets.txt) 
 to implement exclusive binding of pods to cores.
 
@@ -59,7 +59,7 @@ Node labeling is performed by using kubectl command line tool.
 We assume that node labeling is performed prior to creating Twister2 jobs. 
 The format of the label creation command is as follows:
 
-    >kubectl label nodes <node-name> <label-key>=<label-value>
+    >kubectl label node <node-name> <label-key>=<label-value>
 
 **Predefined Labels**: There are also some predefined labels in Kubernetes for each node. 
 Users can request mapping based on these labels also. Some of these labels are as follows: 

@@ -17,5 +17,6 @@ public enum StatusCode {
   ERROR_READ,
   ERROR_CONN,
   ERROR_CLOSE,
+  CONNECTION_REFUSED,
   TIMEOUT_ERROR
 }

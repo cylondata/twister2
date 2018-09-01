@@ -47,20 +47,18 @@ import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
 public class MesosDockerWorker {
 
   public static final Logger LOG = Logger.getLogger(MesosDockerWorker.class.getName());
+  public static JobMasterClient jobMasterClient;
   private Config config;
   private String jobName;
-  public static JobMasterClient jobMasterClient;
-
 
   public static void main(String[] args) throws Exception {
 
+    Thread.sleep(20000);
 
-    Thread.sleep(5000);
     //gets the docker home directory
-    String homeDir = System.getenv("HOME");
+    //String homeDir = System.getenv("HOME");
     int workerId = Integer.parseInt(System.getenv("WORKER_ID"));
     String jobName = System.getenv("JOB_NAME");
-    int id = workerId;
     MesosDockerWorker worker = new MesosDockerWorker();
 
     String twister2Home = Paths.get("").toAbsolutePath().toString();
@@ -72,135 +70,74 @@ public class MesosDockerWorker {
         "/persistent-volume/logs", "worker" + workerId);
     logger.initLogging();
 
-
-    /*
-    String containerClass = SchedulerContext.containerClass(worker.config);
-    IWorker container;
-    try {
-      Object object = ReflectionUtils.newInstance(containerClass);
-      container = (IWorker) object;
-      LOG.info("loaded container class: " + containerClass);
-    } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-      LOG.log(Level.SEVERE, String.format("failed to load the container class %s",
-          containerClass), e);
-      throw new RuntimeException(e);
-
-    }
-    */
-
-
     MesosWorkerController workerController = null;
     List<WorkerNetworkInfo> workerNetworkInfoList = new ArrayList<>();
     try {
       JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/"
           + jobName + ".job");
       workerController = new MesosWorkerController(worker.config, job,
-          Inet4Address.getLocalHost().getHostAddress(), 22, id);
+          Inet4Address.getLocalHost().getHostAddress(), 2022, workerId);
       LOG.info("Initializing with zookeeper");
       workerController.initializeWithZooKeeper();
       LOG.info("Waiting for all workers to join");
       workerNetworkInfoList = workerController.waitForAllWorkersToJoin(
           ZKContext.maxWaitTimeForAllWorkersToJoin(worker.config));
       LOG.info("Everyone has joined");
-      //container.init(worker.config, id, null, workerController, null);
+      //container.execute(worker.config, id, null, workerController, null);
 
     } catch (Exception e) {
-      e.printStackTrace();
+      LOG.severe("Error " + e.getMessage());
     }
 
+    //job master is the one with the id==0
     String jobMasterIP = workerNetworkInfoList.get(0).getWorkerIP().getHostAddress();
-    LOG.info("JobMasterIP" + jobMasterIP);
-    System.out.println("Worker id " + id);
+    LOG.info("JobMasterIP..: " + jobMasterIP);
+    LOG.info("Worker ID..: " + workerId);
     StringBuilder outputBuilder = new StringBuilder();
     int workerCount = workerController.getNumberOfWorkers();
-    System.out.println("worker count " + workerCount);
-    worker.startJobMasterClient(workerController.getWorkerNetworkInfo(), jobMasterIP);
+    LOG.info("Worker count..: " + workerCount);
 
+    //start job master client
+    worker.startJobMasterClient(workerController.getWorkerNetworkInfo(), jobMasterIP);
 
     //mpi master has the id equals to 1
     //id==0 is job master
-    if (id == 1) {
-
-      File hostFile = new File(homeDir + "/.ssh/config");
-
-      hostFile.getParentFile().mkdirs();
+    if (workerId == 1) {
 
       Writer writer = new BufferedWriter(new OutputStreamWriter(
-          new FileOutputStream(homeDir + "/.ssh/config", true)));
-
-      writer.write("Host *\n\tStrictHostKeyChecking no\n\tUserKnownHostsFile /dev/null\n"
-          + "\tIdentityFile ~/.ssh/id_rsa\n");
-
-
-      String hosts = "";
-
+          new FileOutputStream("/twister2/hostFile", true)));
       for (int i = 1; i < workerCount; i++) {
-
-        writer.write("Host w" + workerNetworkInfoList.get(i).getWorkerID() + "\n"
-            + "\tHostname " + workerNetworkInfoList.get(i).getWorkerIP().getHostAddress() + "\n"
-            + "\tPort " + workerNetworkInfoList.get(i).getWorkerPort() + "\n");
-
-        System.out.println("Host w" + workerNetworkInfoList.get(i).getWorkerID() + "\n"
-            + "\tHostname " + workerNetworkInfoList.get(i).getWorkerIP().getHostAddress() + "\n"
-            + "\tPort " + workerNetworkInfoList.get(i).getWorkerPort() + "\n");
-
-        hosts += "w" + workerNetworkInfoList.get(i).getWorkerID() + ",";
+        writer.write(workerNetworkInfoList.get(i).getWorkerIP().getHostAddress()
+            + "\n");
+        LOG.info("Host IP..: " + workerNetworkInfoList.get(i).getWorkerIP().getHostAddress());
       }
-
-
       writer.close();
-
-      //remove final comma
-      hosts = hosts.substring(0, hosts.lastIndexOf(','));
-
-
-      System.out.println("Before mpirun");
-      System.out.println("hosts " + hosts);
-      String[] command = {"mpirun", "-allow-run-as-root", "-np",
-          (workerController.getNumberOfWorkers() - 1) + "",
-          "--host", hosts, "java", "-cp",
+      LOG.info("Before mpirun");
+      //mpi command to run
+      String[] command = {"mpirun", "-allow-run-as-root", "-npernode",
+          "1", "--mca", "btl_tcp_if_include", "eth0",
+          "--hostfile", "/twister2/hostFile", "java", "-cp",
           "twister2-job/libexamples-java.jar",
-          "edu.iu.dsc.tws.examples.basic.BasicMpiJob", ">mpioutfile"};
+          "edu.iu.dsc.tws.examples.internal.rsched.BasicMpiJob", ">mpioutfile"};
 
-      System.out.println("command:" + String.join(" ", command));
-
+      LOG.info("command:" + String.join(" ", command));
+      //run the mpi command
       ProcessUtils.runSyncProcess(false, command, outputBuilder,
           new File("."), true);
       workerController.close();
-      System.out.println("Finished");
+      LOG.info("Job DONE");
     }
 
-
-    Thread.sleep(20000);
     jobMasterClient.sendWorkerCompletedMessage();
   }
 
 
-
   public void startJobMasterClient(WorkerNetworkInfo networkInfo, String jobMasterIP) {
 
-    //String jobMasterIP = JobMasterContext.jobMasterIP(config);
-   // jobMasterIP = jobMasterIP.trim();
-
-    // if jobMasterIP is null, or the length zero,
-    // job master runs as a separate pod
-    // get its IP address first
-    /*if (jobMasterIP == null || jobMasterIP.length() == 0) {
-
-      DiscoverJobMaster djm = new DiscoverJobMaster();
-      jobMasterIP = djm.waitUntilJobMasterRunning(jobMasterPodName, 10000);
-
-      cnf = Config.newBuilder()
-          .putAll(cnfg)
-          .put(JobMasterContext.JOB_MASTER_IP, jobMasterIP)
-          .build();
-    }
-    */
-
-    LOG.info("JobMasterIP: " + jobMasterIP);
+    LOG.info("JobMasterIP..: " + jobMasterIP);
 
     jobMasterClient = new JobMasterClient(config, networkInfo, jobMasterIP);
-    jobMasterClient.init();
+    jobMasterClient.startThreaded();
     // we need to make sure that the worker starting message went through
     jobMasterClient.sendWorkerStartingMessage();
   }

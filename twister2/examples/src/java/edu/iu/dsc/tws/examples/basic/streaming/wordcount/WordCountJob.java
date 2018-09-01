@@ -15,11 +15,11 @@ import java.util.HashMap;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
-import edu.iu.dsc.tws.api.basic.job.BasicJob;
+import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 
 public final class WordCountJob {
   private WordCountJob() {
@@ -37,13 +37,13 @@ public final class WordCountJob {
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(configurations);
 
-    BasicJob.BasicJobBuilder jobBuilder = BasicJob.newBuilder();
+    Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("streaming-wordcount");
-    jobBuilder.setContainerClass(WordCountContainer.class.getName());
-    jobBuilder.setRequestResource(new ResourceContainer(2, 1024), 4);
+    jobBuilder.setWorkerClass(WordCountContainer.class.getName());
+    jobBuilder.setRequestResource(new WorkerComputeResource(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job
-    Twister2Submitter.submitContainerJob(jobBuilder.build(), config);
+    Twister2Submitter.submitJob(jobBuilder.build(), config);
   }
 }

@@ -23,7 +23,9 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
-import edu.iu.dsc.tws.proto.network.Network;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersRequest;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersResponse;
 
 public class WorkerMonitor implements MessageHandler {
   private static final Logger LOG = Logger.getLogger(WorkerMonitor.class.getName());
@@ -55,19 +57,18 @@ public class WorkerMonitor implements MessageHandler {
   @Override
   public void onMessage(RequestID id, int workerId, Message message) {
 
-    if (message instanceof Network.Ping) {
-      LOG.log(Level.INFO, "Ping request received: " + message.toString());
-      Network.Ping ping = (Network.Ping) message;
+    if (message instanceof JobMasterAPI.Ping) {
+      JobMasterAPI.Ping ping = (JobMasterAPI.Ping) message;
       pingMessageReceived(id, ping);
 
-    } else if (message instanceof Network.WorkerStateChange) {
+    } else if (message instanceof JobMasterAPI.WorkerStateChange) {
       LOG.log(Level.INFO, "Worker change request received: " + message.toString());
-      Network.WorkerStateChange wscMessage = (Network.WorkerStateChange) message;
+      JobMasterAPI.WorkerStateChange wscMessage = (JobMasterAPI.WorkerStateChange) message;
       stateChangeMessageReceived(id, wscMessage);
 
-    } else if (message instanceof Network.ListWorkersRequest) {
+    } else if (message instanceof JobMasterAPI.ListWorkersRequest) {
       LOG.log(Level.INFO, "List worker request received: " + message.toString());
-      Network.ListWorkersRequest listMessage = (Network.ListWorkersRequest) message;
+      JobMasterAPI.ListWorkersRequest listMessage = (JobMasterAPI.ListWorkersRequest) message;
       listWorkersMessageReceived(id, listMessage);
 
     } else {
@@ -75,39 +76,42 @@ public class WorkerMonitor implements MessageHandler {
     }
   }
 
-  private void pingMessageReceived(RequestID id, Network.Ping ping) {
+  private void pingMessageReceived(RequestID id, JobMasterAPI.Ping ping) {
 
     if (workers.containsKey(ping.getWorkerID())) {
-      LOG.info("Ping message received from a worker: \n" + ping);
+      LOG.fine("Ping message received from a worker: \n" + ping);
       workers.get(ping.getWorkerID()).setPingTimestamp(System.currentTimeMillis());
     } else {
-      LOG.info("Ping message received from a worker that has not joined the job yet: " + ping);
+      LOG.warning("Ping message received from a worker that has not joined the job yet: " + ping);
     }
 
-    Network.Ping pingResponse = Network.Ping.newBuilder()
+    JobMasterAPI.Ping pingResponse = JobMasterAPI.Ping.newBuilder()
         .setWorkerID(ping.getWorkerID())
         .setPingMessage("Ping Response From the Master to Worker")
-        .setMessageType(Network.Ping.MessageType.MASTER_TO_WORKER)
+        .setMessageType(JobMasterAPI.Ping.MessageType.MASTER_TO_WORKER)
         .build();
 
     rrServer.sendResponse(id, pingResponse);
-    LOG.info("Ping response sent to the worker: \n" + pingResponse);
+    LOG.fine("Ping response sent to the worker: \n" + pingResponse);
   }
 
-  private void stateChangeMessageReceived(RequestID id, Network.WorkerStateChange message) {
+  private void stateChangeMessageReceived(RequestID id, JobMasterAPI.WorkerStateChange message) {
 
-    if (message.getNewState() == Network.WorkerState.STARTING) {
+    if (message.getNewState() == JobMasterAPI.WorkerState.STARTING) {
       LOG.info("WorkerStateChange message received: \n" + message);
-      InetAddress ip = WorkerInfo.covertToIPAddress(message.getWorkerIP());
-      int port = message.getWorkerPort();
-      int workerID = message.getWorkerID();
+      InetAddress ip = WorkerInfo.covertToIPAddress(message.getWorkerNetworkInfo().getWorkerIP());
+      int port = message.getWorkerNetworkInfo().getPort();
+      int workerID = message.getWorkerNetworkInfo().getWorkerID();
+      String nodeIP = message.getWorkerNetworkInfo().getNodeIP();
+      String rackName = message.getWorkerNetworkInfo().getRackName();
+      String dcName = message.getWorkerNetworkInfo().getDataCenterName();
 
       if (JobMasterContext.jobMasterAssignsWorkerIDs(config)) {
         workerID = workers.size();
       }
 
-      WorkerInfo worker = new WorkerInfo(workerID, ip, port);
-      worker.setWorkerState(Network.WorkerState.STARTING);
+      WorkerInfo worker = new WorkerInfo(workerID, ip, port, nodeIP, rackName, dcName);
+      worker.setWorkerState(JobMasterAPI.WorkerState.STARTING);
       workers.put(workerID, worker);
 
       sendWorkerStateChangeResponse(id, workerID, message.getNewState());
@@ -118,23 +122,26 @@ public class WorkerMonitor implements MessageHandler {
 
       return;
 
-    } else if (!workers.containsKey(message.getWorkerID())) {
+    } else if (!workers.containsKey(message.getWorkerNetworkInfo().getWorkerID())) {
 
       LOG.warning("WorkerStateChange message received from a worker "
           + "that has not joined the job yet.\n"
           + "Not processing the message, just sending a response"
           + message);
 
-      sendWorkerStateChangeResponse(id, message.getWorkerID(), message.getNewState());
+      sendWorkerStateChangeResponse(id, message.getWorkerNetworkInfo().getWorkerID(),
+          message.getNewState());
       return;
 
-    } else if (message.getNewState() == Network.WorkerState.COMPLETED) {
+    } else if (message.getNewState() == JobMasterAPI.WorkerState.COMPLETED) {
 
-      workers.get(message.getWorkerID()).setWorkerState(message.getNewState());
+      workers.get(message.getWorkerNetworkInfo().getWorkerID())
+          .setWorkerState(message.getNewState());
       LOG.info("WorkerStateChange message received: \n" + message);
 
       // send the response message
-      sendWorkerStateChangeResponse(id, message.getWorkerID(), message.getNewState());
+      sendWorkerStateChangeResponse(id, message.getWorkerNetworkInfo().getWorkerID(),
+          message.getNewState());
 
       // check whether all workers completed
       // if so, stop the job master
@@ -146,11 +153,13 @@ public class WorkerMonitor implements MessageHandler {
       return;
 
     } else {
-      workers.get(message.getWorkerID()).setWorkerState(message.getNewState());
+      workers.get(message.getWorkerNetworkInfo().getWorkerID())
+          .setWorkerState(message.getNewState());
       LOG.info("WorkerStateChange message received: \n" + message);
 
       // send the response message
-      sendWorkerStateChangeResponse(id, message.getWorkerID(), message.getNewState());
+      sendWorkerStateChangeResponse(id, message.getWorkerNetworkInfo().getWorkerID(),
+          message.getNewState());
     }
   }
 
@@ -160,7 +169,7 @@ public class WorkerMonitor implements MessageHandler {
     }
 
     for (WorkerInfo worker: workers.values()) {
-      if (worker.getWorkerState() != Network.WorkerState.COMPLETED) {
+      if (worker.getWorkerState() != JobMasterAPI.WorkerState.COMPLETED) {
         return false;
       }
     }
@@ -169,9 +178,10 @@ public class WorkerMonitor implements MessageHandler {
   }
 
   private void sendWorkerStateChangeResponse(RequestID id, int workerID,
-                                             Network.WorkerState sentState) {
+                                             JobMasterAPI.WorkerState sentState) {
 
-    Network.WorkerStateChangeResponse response = Network.WorkerStateChangeResponse.newBuilder()
+    JobMasterAPI.WorkerStateChangeResponse response =
+        JobMasterAPI.WorkerStateChangeResponse.newBuilder()
         .setWorkerID(workerID)
         .setSentState(sentState)
         .build();
@@ -181,46 +191,58 @@ public class WorkerMonitor implements MessageHandler {
 
   }
 
-  private void listWorkersMessageReceived(RequestID id, Network.ListWorkersRequest listMessage) {
+  private void listWorkersMessageReceived(RequestID id, ListWorkersRequest listMessage) {
 
-    if (listMessage.getRequestType() == Network.ListWorkersRequest.RequestType.IMMEDIATE_RESPONSE) {
+    if (listMessage.getRequestType() == ListWorkersRequest.RequestType.IMMEDIATE_RESPONSE) {
 
       sendListWorkersResponse(listMessage.getWorkerID(), id);
-      LOG.log(Level.INFO, String.format("IR Workers expecting %d joined %d",
+      LOG.log(Level.INFO, String.format("Expecting %d workers, %d joined",
           numberOfWorkers, workers.size()));
     } else if (listMessage.getRequestType()
-        == Network.ListWorkersRequest.RequestType.RESPONSE_AFTER_ALL_JOINED) {
-      waitList.put(listMessage.getWorkerID(), id);
-      // if all workers already joined, send the current list
+        == JobMasterAPI.ListWorkersRequest.RequestType.RESPONSE_AFTER_ALL_JOINED) {
+
+      // if all workers have already joined, send the current list
       if (workers.size() == numberOfWorkers) {
-//        sendListWorkersResponse(listMessage.getWorkerID(), id);
-        sendListWorkersResponseToWaitList();
-        // if some workers have not yet joined, put this worker into the wait list
+        sendListWorkersResponse(listMessage.getWorkerID(), id);
+
+      // if some workers have not joined yet, put this worker into the wait list
+      } else {
+        waitList.put(listMessage.getWorkerID(), id);
       }
-      LOG.log(Level.INFO, String.format("WA Workers expecting %d joined %d",
+
+      LOG.log(Level.INFO, String.format("Expecting %d workers, %d joined",
           numberOfWorkers, workers.size()));
     }
-    LOG.log(Level.INFO, String.format("Workers expecting %d joined %d",
-        numberOfWorkers, workers.size()));
   }
 
   private void sendListWorkersResponse(int workerID, RequestID requestID) {
 
-    Network.ListWorkersResponse.Builder responseBuilder = Network.ListWorkersResponse.newBuilder()
+    JobMasterAPI.ListWorkersResponse.Builder responseBuilder = ListWorkersResponse.newBuilder()
         .setWorkerID(workerID);
 
     for (WorkerInfo worker: workers.values()) {
-      Network.ListWorkersResponse.WorkerNetworkInfo workerInfo =
-          Network.ListWorkersResponse.WorkerNetworkInfo.newBuilder()
-              .setId(worker.getWorkerID())
-              .setIp(worker.getIp().getHostAddress())
-              .setPort(worker.getPort())
-              .build();
+      JobMasterAPI.WorkerNetworkInfo.Builder workerInfoBuilder =
+          JobMasterAPI.WorkerNetworkInfo.newBuilder()
+              .setWorkerID(worker.getWorkerID())
+              .setWorkerIP(worker.getIp().getHostAddress())
+              .setPort(worker.getPort());
 
-      responseBuilder.addWorkers(workerInfo);
+      if (worker.hasNodeIP()) {
+        workerInfoBuilder.setNodeIP(worker.getNodeIP());
+      }
+
+      if (worker.hasRackName()) {
+        workerInfoBuilder.setRackName(worker.getRackName());
+      }
+
+      if (worker.hasDataCenterName()) {
+        workerInfoBuilder.setDataCenterName(worker.getDataCenterName());
+      }
+
+      responseBuilder.addWorkers(workerInfoBuilder.build());
     }
 
-    Network.ListWorkersResponse response = responseBuilder.build();
+    JobMasterAPI.ListWorkersResponse response = responseBuilder.build();
     rrServer.sendResponse(requestID, response);
     LOG.info("ListWorkersResponse sent:\n" + response);
   }

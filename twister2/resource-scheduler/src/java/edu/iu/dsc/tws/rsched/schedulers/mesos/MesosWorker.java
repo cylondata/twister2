@@ -27,10 +27,10 @@ import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
+import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.rsched.spi.container.IWorker;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import static java.lang.Math.toIntExact;
 
@@ -72,15 +72,15 @@ public class MesosWorker implements Executor {
 
     //jobName = SchedulerContext.jobName(config);
     //System.out.println("job name is " + jobName);
-    String containerClass = SchedulerContext.containerClass(config);
+    String workerClass = SchedulerContext.workerClass(config);
     IWorker container;
     try {
-      Object object = ReflectionUtils.newInstance(containerClass);
+      Object object = ReflectionUtils.newInstance(workerClass);
       container = (IWorker) object;
-      LOG.info("loaded container class: " + containerClass);
+      LOG.info("loaded worker class: " + workerClass);
     } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-      LOG.log(Level.SEVERE, String.format("failed to load the container class %s",
-          containerClass), e);
+      LOG.log(Level.SEVERE, String.format("failed to load the worker class %s",
+          workerClass), e);
       throw new RuntimeException(e);
 
     }
@@ -92,6 +92,7 @@ public class MesosWorker implements Executor {
       }
 
     }
+
     MesosWorkerController workerController;
     try {
       JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/" + jobName + ".job");
@@ -102,10 +103,10 @@ public class MesosWorker implements Executor {
       LOG.info("Waiting for all workers to join");
       workerController.waitForAllWorkersToJoin(ZKContext.maxWaitTimeForAllWorkersToJoin(config));
       LOG.info("Everyone has joined");
-      container.init(config, id, null, workerController, null, null);
+      container.execute(config, id, null, workerController, null, null);
       workerController.close();
     } catch (UnknownHostException e) {
-      e.printStackTrace();
+      LOG.severe("Host unkown " + e.getMessage());
     }
 
     //The below two lines can be used to send a message to the framework
@@ -138,22 +139,6 @@ public class MesosWorker implements Executor {
 
   }
 
-  //This method was used for the old version of logger
-  /*public static void addLogFileHandler(String logFile) {
-    Logger rootLogger = Logger.getLogger("");
-
-    try {
-      FileHandler fileHandler = new FileHandler(logFile);
-      fileHandler.setFormatter(new SimpleFormatter());
-      rootLogger.addHandler(fileHandler);
-      LOG.info("Logger dir changed.");
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-  }
-  */
-
-
   public static void main(String[] args) throws Exception {
 
     MesosWorker worker = new MesosWorker();
@@ -173,31 +158,12 @@ public class MesosWorker implements Executor {
     initLogging(worker.config, SchedulerContext.nfsServerPath(worker.config)
             + "/" + worker.jobName + "/logs", workerName);
 
-    //addLogFileHandler(SchedulerContext.nfsServerPath(worker.config)
-    //    + "/" + jobName + "/logs/" + workerName + ".log");
-/*    try {
-      File stdoutFile = new File(SchedulerContext.nfsServerPath(worker.config)
-          + "/" + jobName + "/" + workerName + "/stdout");
-      PrintStream printStreamOut = new PrintStream(stdoutFile);
-      System.setOut(printStreamOut);
-
-      File stderrFile = new File(SchedulerContext.nfsServerPath(worker.config)
-          + "/" + jobName + "/" + workerName + "/stderr");
-      PrintStream printStreamErr = new PrintStream(stderrFile);
-      System.setErr(printStreamErr);
-    } catch (FileNotFoundException e) {
-      e.printStackTrace();
-    }*/
-
     System.out.println(worker.config);
     MesosExecutorDriver driver = new MesosExecutorDriver(
         worker);
 
     driver.run();
-    //System.exit(driver.run() == Protos.Status.DRIVER_STOPPED ? 0 : 1);
   }
-
-
 
   /**
    * Initialize the logger

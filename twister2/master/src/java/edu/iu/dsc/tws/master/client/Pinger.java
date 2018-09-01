@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
-import edu.iu.dsc.tws.proto.network.Network;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 public class Pinger implements MessageHandler {
   private static final Logger LOG = Logger.getLogger(Pinger.class.getName());
@@ -52,26 +52,27 @@ public class Pinger implements MessageHandler {
 
   public void sendPingMessage() {
 
-    Network.Ping ping = Network.Ping.newBuilder()
+    lastPingTime = System.currentTimeMillis();
+
+    JobMasterAPI.Ping ping = JobMasterAPI.Ping.newBuilder()
         .setWorkerID(thisWorker.getWorkerID())
         .setPingMessage("Ping Message From the Worker to the Job Master")
-        .setMessageType(Network.Ping.MessageType.WORKER_TO_MASTER)
+        .setMessageType(JobMasterAPI.Ping.MessageType.WORKER_TO_MASTER)
         .build();
 
     requestID = rrClient.sendRequest(ping);
-    lastPingTime = System.currentTimeMillis();
 
     if (requestID == null) {
       LOG.severe("When sending Ping message, the requestID returned null.");
     } else {
-      LOG.info("Ping request message sent to the master: \n" + ping);
+      LOG.fine("Ping request message sent to the master: \n" + ping);
     }
   }
 
   @Override
   public void onMessage(RequestID id, int workerId, Message message) {
-    if (message instanceof Network.Ping) {
-      LOG.info("Ping Response message received from the master: \n" + message);
+    if (message instanceof JobMasterAPI.Ping) {
+      LOG.fine("Ping Response message received from the master: \n" + message);
 
       if (!requestID.equals(id)) {
         LOG.severe("Ping Response message requestID does not match.");

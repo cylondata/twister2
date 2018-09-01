@@ -11,16 +11,38 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tsched.spi.taskschedule;
 
+/**
+ * This class is internal to the task scheduler to get and set the required ram, disk, and cpu
+ * values to the task instances.
+ */
 public class Resource {
 
   private Double ram;
   private Double disk;
   private Double cpu;
 
+  public int getId() {
+    return id;
+  }
+
+  public Resource setId(int idx) {
+    this.id = idx;
+    return this;
+  }
+
+  private int id;
+
   public Resource(Double ram, Double disk, Double cpu) {
     this.ram = ram;
     this.disk = disk;
     this.cpu = cpu;
+  }
+
+  public Resource(Double ram, Double disk, Double cpu, Integer idx) {
+    this.ram = ram;
+    this.disk = disk;
+    this.cpu = cpu;
+    this.id = idx;
   }
 
   @Override
@@ -74,6 +96,7 @@ public class Resource {
     return new Resource(newRam, this.getDisk(), this.getCpu());
   }
 
+  //This will be used in future.
   public Resource cloneWithRam(double newRam, double newDisk, double newCpu) {
     return new Resource(newRam, newDisk, newCpu);
   }

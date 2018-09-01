@@ -22,17 +22,16 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
+import edu.iu.dsc.tws.common.resource.RequestedResources;
+import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.exceptions.LauncherException;
+import edu.iu.dsc.tws.rsched.exceptions.UploaderException;
+import edu.iu.dsc.tws.rsched.interfaces.ILauncher;
+import edu.iu.dsc.tws.rsched.interfaces.IUploader;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
-import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
-import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
-import edu.iu.dsc.tws.rsched.spi.scheduler.ILauncher;
-import edu.iu.dsc.tws.rsched.spi.scheduler.LauncherException;
-import edu.iu.dsc.tws.rsched.spi.statemanager.IStateManager;
-import edu.iu.dsc.tws.rsched.spi.uploaders.IUploader;
-import edu.iu.dsc.tws.rsched.spi.uploaders.UploaderException;
 import edu.iu.dsc.tws.rsched.uploaders.scp.ScpContext;
 import edu.iu.dsc.tws.rsched.utils.FileUtils;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
@@ -175,7 +174,7 @@ public class ResourceAllocator {
     // get file name without directory
     String jobJarFileName = Paths.get(jobJarFile).getFileName().toString();
     JobAPI.JobFormat.Builder format = JobAPI.JobFormat.newBuilder();
-    format.setType(JobAPI.JobFormatType.SHUFFLE);
+//    format.setType(JobAPI.JobFormatType.SHUFFLE);
     format.setJobFile(jobJarFileName);
     updatedJob = JobAPI.Job.newBuilder(job).setJobFormat(format).build();
 
@@ -221,13 +220,7 @@ public class ResourceAllocator {
    */
   public void submitJob(JobAPI.Job job, Config config) {
     // lets prepare the job files
-//    String jobDirectory = prepareJobFilesOld(config, job);
     String jobDirectory = prepareJobFiles(config, job);
-
-    String statemgrClass = SchedulerContext.stateManagerClass(config);
-    if (statemgrClass == null) {
-      throw new RuntimeException("The state manager class must be spcified");
-    }
 
     String launcherClass = SchedulerContext.launcherClass(config);
     if (launcherClass == null) {
@@ -239,24 +232,8 @@ public class ResourceAllocator {
       throw new RuntimeException("The uploader class must be specified");
     }
 
-    String threadNumber = SchedulerContext.numOfThreads(config);
-    if (threadNumber == null) {
-      threadNumber = new String("1"); // initializing to single threaded application
-    }
-    LOG.info("Allocated Thread Number : " + threadNumber);
-
-
     ILauncher launcher;
     IUploader uploader;
-    IStateManager statemgr;
-
-    // create an instance of state manager
-    try {
-      statemgr = ReflectionUtils.newInstance(statemgrClass);
-    } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
-      throw new JobSubmissionException(
-          String.format("Failed to instantiate state manager class '%s'", statemgrClass), e);
-    }
 
     // create an instance of launcher
     try {
@@ -274,10 +251,6 @@ public class ResourceAllocator {
           String.format("Failed to instantiate uploader class '%s'", uploaderClass), e);
     }
 
-    LOG.log(Level.INFO, "Initialize state manager");
-    // initialize the state manager
-    statemgr.initialize(config);
-
     LOG.log(Level.INFO, "Initialize uploader");
     // now upload the content of the package
     uploader.initialize(config);
@@ -290,18 +263,12 @@ public class ResourceAllocator {
     String scpPath = scpServerAdress + ":" + packageURI.toString() + "/";
     LOG.log(Level.INFO, "SCP PATH to copy files from: " + scpPath);
 
-    // this is a temporary solution
-//    String packagesPath = "root@149.165.150.81:/root/.twister2/repository/";
-//    String packagesPath = "149.165.150.81:~/.twister2/repository/";
-
     // now launch the launcher
     // Update the runtime config with the packageURI
     updatedConfig = Config.newBuilder()
         .putAll(updatedConfig)
         .put(SchedulerContext.TWISTER2_PACKAGES_PATH, scpPath)
-//        .put(SchedulerContext.TWISTER2_PACKAGES_PATH, packagesPath)
         .put(SchedulerContext.JOB_PACKAGE_URI, packageURI)
-        .put(SchedulerContext.THREADS_PER_WORKER, threadNumber)
         .build();
 
     // this is a handler chain based execution in resource allocator. We need to
@@ -309,10 +276,6 @@ public class ResourceAllocator {
     launcher.initialize(updatedConfig);
 
     RequestedResources requestedResources = buildRequestedResources(updatedJob);
-    if (requestedResources == null) {
-      throw new RuntimeException("Failed to build the requested resources");
-    }
-
     launcher.launch(requestedResources, updatedJob);
   }
 
@@ -323,26 +286,12 @@ public class ResourceAllocator {
    */
   public void terminateJob(String jobName, Config config) {
 
-    String statemgrClass = SchedulerContext.stateManagerClass(config);
-    if (statemgrClass == null) {
-      throw new RuntimeException("The state manager class must be spcified");
-    }
-
     String launcherClass = SchedulerContext.launcherClass(config);
     if (launcherClass == null) {
       throw new RuntimeException("The launcher class must be specified");
     }
 
     ILauncher launcher;
-    IStateManager statemgr;
-
-    // create an instance of state manager
-    try {
-      statemgr = ReflectionUtils.newInstance(statemgrClass);
-    } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
-      throw new JobSubmissionException(
-          String.format("Failed to instantiate state manager class '%s'", statemgrClass), e);
-    }
 
     // create an instance of launcher
     try {
@@ -351,9 +300,6 @@ public class ResourceAllocator {
       throw new LauncherException(
           String.format("Failed to instantiate launcher class '%s'", launcherClass), e);
     }
-
-    // let the state manager know that we are killing this job??
-    // statemgr.initialize(config);
 
     // initialize the launcher and terminate the job
     launcher.initialize(config);
@@ -365,12 +311,11 @@ public class ResourceAllocator {
 
   private RequestedResources buildRequestedResources(JobAPI.Job job) {
     JobAPI.JobResources jobResources = job.getJobResources();
-    int noOfContainers = jobResources.getNoOfContainers();
-    ResourceContainer container = new ResourceContainer(
-        (int) jobResources.getContainer().getAvailableCPU(),
-        (int) jobResources.getContainer().getAvailableMemory(),
-        (int) jobResources.getContainer().getAvailableDisk());
+    JobAPI.WorkerComputeResource resource =
+        jobResources.getResourcesList().get(0).getWorkerComputeResource();
+    WorkerComputeResource computeResource =
+        new WorkerComputeResource(resource.getCpu(), resource.getRam(), resource.getDisk());
 
-    return new RequestedResources(noOfContainers, container);
+    return new RequestedResources(job.getNumberOfWorkers(), computeResource);
   }
 }

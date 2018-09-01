@@ -13,18 +13,20 @@ package edu.iu.dsc.tws.rsched.schedulers.standalone;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.common.resource.RequestedResources;
 import edu.iu.dsc.tws.master.JobMaster;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
-import edu.iu.dsc.tws.rsched.spi.scheduler.IController;
-import edu.iu.dsc.tws.rsched.spi.scheduler.ILauncher;
+import edu.iu.dsc.tws.rsched.interfaces.IController;
+import edu.iu.dsc.tws.rsched.interfaces.ILauncher;
+import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import edu.iu.dsc.tws.rsched.utils.ResourceSchedulerUtils;
 
 public class StandaloneLauncher implements ILauncher {
@@ -44,7 +46,23 @@ public class StandaloneLauncher implements ILauncher {
 
   @Override
   public boolean terminateJob(String jobName) {
-    return false;
+    LOG.log(Level.INFO, "Terminating job for cluster: ",
+        StandaloneContext.clusterType(config));
+
+    // get the job working directory
+    String jobWorkingDirectory = StandaloneContext.workingDirectory(config);
+    Config newConfig = Config.newBuilder().putAll(config).put(
+        SchedulerContext.WORKING_DIRECTORY, jobWorkingDirectory).build();
+    // now start the controller, which will get the resources from
+    // slurm and start the job
+    IController controller = new StandaloneController(true);
+    controller.initialize(newConfig);
+
+    jobWorkingDirectory = Paths.get(jobWorkingDirectory, jobName).toAbsolutePath().toString();
+    String jobDescFile = JobUtils.getJobDescriptionFilePath(jobWorkingDirectory, jobName, config);
+    JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
+
+    return controller.kill(job);
   }
 
   @Override
@@ -70,6 +88,7 @@ public class StandaloneLauncher implements ILauncher {
 
     // start the Job Master locally
     JobMaster jobMaster = null;
+    Thread jmThread = null;
     if (JobMasterContext.jobMasterRunsInClient(config)) {
       try {
         int port = JobMasterContext.jobMasterPort(config);
@@ -78,8 +97,9 @@ public class StandaloneLauncher implements ILauncher {
         jobMaster =
             new JobMaster(config, hostAddress,
                 new StandaloneTerminator(), job.getJobName(),
-                port,  job.getJobResources().getNoOfContainers());
-        jobMaster.init();
+                port,  job.getNumberOfWorkers());
+        jobMaster.addShutdownHook();
+        jmThread = jobMaster.startJobMasterThreaded();
       } catch (UnknownHostException e) {
         LOG.log(Level.SEVERE, "Exception when getting local host address: ", e);
         throw new RuntimeException(e);
@@ -90,8 +110,8 @@ public class StandaloneLauncher implements ILauncher {
     // now lets wait on client
     if (JobMasterContext.jobMasterRunsInClient(config)) {
       try {
-        if (jobMaster != null) {
-          jobMaster.join();
+        if (jmThread != null) {
+          jmThread.join();
         }
       } catch (InterruptedException ignore) {
       }

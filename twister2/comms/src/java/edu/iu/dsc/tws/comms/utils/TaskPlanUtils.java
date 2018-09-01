@@ -32,7 +32,7 @@ public final class TaskPlanUtils {
   private TaskPlanUtils() {
   }
 
-  public static Set<Integer> getTasksOfThisExecutor(TaskPlan plan, Set<Integer> tasks) {
+  public static Set<Integer> getTasksOfThisWorker(TaskPlan plan, Set<Integer> tasks) {
     Set<Integer> allTasksOfThisExec = plan.getTasksOfThisExecutor();
     Set<Integer> tasksOfThisExec = new HashSet<>();
 
@@ -42,5 +42,15 @@ public final class TaskPlanUtils {
       }
     }
     return tasksOfThisExec;
+  }
+
+  public static Set<Integer> getWorkersOfTasks(TaskPlan plan, Set<Integer> tasks) {
+    Set<Integer> workersOfTasks = new HashSet<>();
+
+    for (int t : tasks) {
+      int w = plan.getExecutorForChannel(t);
+      workersOfTasks.add(w);
+    }
+    return workersOfTasks;
   }
 }

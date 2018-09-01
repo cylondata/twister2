@@ -67,7 +67,7 @@ public class Server implements SelectHandler {
                 ChannelHandler msgHandler) {
     this.config = cfg;
     this.progress = loop;
-    address = new InetSocketAddress(host, port);
+    this.address = new InetSocketAddress(host, port);
     this.channelHandler = msgHandler;
   }
 
@@ -75,11 +75,16 @@ public class Server implements SelectHandler {
                 ChannelHandler msgHandler, boolean fixBuffers) {
     this.config = cfg;
     this.progress = loop;
-    address = new InetSocketAddress(host, port);
+    this.address = new InetSocketAddress(host, port);
     this.channelHandler = msgHandler;
     this.fixedBuffers = fixBuffers;
   }
 
+  /**
+   * Start listening on the port
+   *
+   * @return true if started successfully
+   */
   public boolean start() {
     try {
       serverSocketChannel = ServerSocketChannel.open();
@@ -90,11 +95,15 @@ public class Server implements SelectHandler {
       progress.registerAccept(serverSocketChannel, this);
       return true;
     } catch (IOException e) {
-      LOG.log(Level.SEVERE, "Failed to start server", e);
-      throw new RuntimeException("Failed to start server", e);
+      LOG.log(Level.SEVERE, String.format("Failed to start server on %s:%d",
+          address.getHostName(), address.getPort()), e);
+      return false;
     }
   }
 
+  /**
+   * Stop the server
+   */
   public void stop() {
     if (serverSocketChannel == null || !serverSocketChannel.isOpen()) {
       LOG.info("Fail to stop server; not yet open.");
@@ -110,8 +119,32 @@ public class Server implements SelectHandler {
     try {
       serverSocketChannel.close();
     } catch (IOException e) {
-      LOG.log(Level.SEVERE, "Failed to close server", e);
+      LOG.log(Level.WARNING, "Failed to close server", e);
     }
+  }
+
+  /**
+   * Stop the server while trying to process any queued responses
+   */
+  public void stopGraceFully(long waitTime) {
+    // now lets wait if there are messages pending
+    long start = System.currentTimeMillis();
+
+    boolean pending;
+    long elapsed;
+    do {
+      pending = false;
+      for (BaseNetworkChannel channel : connectedChannels.values()) {
+        if (channel.isPending()) {
+          progress.loop();
+          pending = true;
+        }
+      }
+      elapsed = System.currentTimeMillis() - start;
+    } while (pending && elapsed < waitTime);
+
+    // after sometime we need to stop
+    stop();
   }
 
   public TCPMessage send(SocketChannel sc, ByteBuffer buffer, int size, int edge) {
@@ -125,6 +158,7 @@ public class Server implements SelectHandler {
     channel.enableWriting();
 
     TCPMessage request = new TCPMessage(buffer, edge, size);
+    // we need to handle the false
     channel.addWriteRequest(request);
 
     return request;

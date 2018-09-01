@@ -16,5 +16,3 @@ twister2.filesystem.shared: true
 twister2.nomad.shell.script: "nomad.sh"
 # path to the system core package
 twister2.system.package.uri: "${TWISTER2_DIST}/twister2-core.tar.gz"
-# the resource manager class
-twister2.class.state.manager: "edu.iu.dsc.tws.rsched.statemanagers.fs.SharedFileSystemStateManager"

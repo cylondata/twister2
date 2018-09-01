@@ -45,15 +45,7 @@ public final class JobMasterStarter {
     JobTerminator jobTerminator = new JobTerminator(namespace);
 
     JobMaster jobMaster = new JobMaster(envConfigs, host, jobTerminator, jobName);
-    jobMaster.init();
-
-    try {
-      Thread.sleep(50000);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
-
-    waitIndefinitely();
+    jobMaster.startJobMasterBlocking();
   }
 
 
@@ -68,8 +60,8 @@ public final class JobMasterStarter {
         .put(Context.JOB_NAME, System.getenv(Context.JOB_NAME))
         .put(KubernetesContext.KUBERNETES_NAMESPACE,
             System.getenv(KubernetesContext.KUBERNETES_NAMESPACE))
-        .put(KubernetesContext.PERSISTENT_VOLUME_PER_WORKER,
-            System.getenv(KubernetesContext.PERSISTENT_VOLUME_PER_WORKER))
+        .put(JobMasterContext.PERSISTENT_VOLUME,
+            System.getenv(JobMasterContext.PERSISTENT_VOLUME))
         .put(Context.TWISTER2_WORKER_INSTANCES, System.getenv(Context.TWISTER2_WORKER_INSTANCES))
         .put(JobMasterContext.JOB_MASTER_ASSIGNS_WORKER_IDS,
             System.getenv(JobMasterContext.JOB_MASTER_ASSIGNS_WORKER_IDS))
@@ -82,22 +74,6 @@ public final class JobMasterStarter {
         .put(LoggingContext.MAX_LOG_FILE_SIZE, System.getenv(LoggingContext.MAX_LOG_FILE_SIZE))
         .put(LoggingContext.MAX_LOG_FILES, System.getenv(LoggingContext.MAX_LOG_FILES))
         .build();
-  }
-
-  /**
-   * a method to make the job master wait indefinitely
-   */
-  public static void waitIndefinitely() {
-
-    while (true) {
-      try {
-        LOG.info("JobMasterStarter thread waiting indefinitely. Sleeping 100sec. "
-            + "Time: " + new java.util.Date());
-        Thread.sleep(100000);
-      } catch (InterruptedException e) {
-        LOG.warning("Thread sleep interrupted.");
-      }
-    }
   }
 
 }

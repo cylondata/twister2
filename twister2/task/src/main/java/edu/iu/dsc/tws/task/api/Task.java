@@ -13,24 +13,8 @@ package edu.iu.dsc.tws.task.api;
 
 import edu.iu.dsc.tws.common.config.Config;
 
-public abstract class Task implements ITask {
+public abstract class Task implements ICompute {
   private static final long serialVersionUID = -252364900110286748L;
-
-
-  @Override
-  public IMessage execute() {
-    return null;
-  }
-
-  @Override
-  public IMessage execute(IMessage content) {
-    return null;
-  }
-
-  @Override
-  public void run(IMessage content) {
-
-  }
 
   @Override
   public void run() {

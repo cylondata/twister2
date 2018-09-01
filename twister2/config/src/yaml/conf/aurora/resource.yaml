@@ -1,7 +1,5 @@
 # the package uri
 twister2.system.package.uri: "${TWISTER2_DIST}/twister2-core.tar.gz"
-# the resource manager class
-twister2.class.state.manager: "edu.iu.dsc.tws.rsched.statemanagers.fs.SharedFileSystemStateManager"
 # launcher class for aurora submission
 twister2.class.launcher: edu.iu.dsc.tws.rsched.schedulers.aurora.AuroraLauncher
 # the uplaoder class
@@ -10,7 +8,7 @@ twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.scp.ScpUploader"
 # twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader"
 
 # container class to run in workers
-twister2.job.basic.container.class: "edu.iu.dsc.tws.examples.basic.BasicAuroraContainer"
+twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.rsched.BasicAuroraContainer"
 
 # the Aurora worker class
 twister2.class.aurora.worker: "edu.iu.dsc.tws.rsched.schedulers.aurora.AuroraWorkerStarter"

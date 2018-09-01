@@ -70,9 +70,10 @@ public final class RequestObjectBuilder {
    * @param jobName
    * @return
    */
-  public static V1beta2StatefulSet createStatefulSetObjectForJob(String jobName,
+  public static V1beta2StatefulSet createStatefulSetObjectForJob(Config config,
+                                                                 String jobName,
                                                                  long jobFileSize,
-                                                                 Config config) {
+                                                                 String encodedNodeInfoList) {
 
     V1beta2StatefulSet statefulSet = new V1beta2StatefulSet();
     statefulSet.setApiVersion("apps/v1beta2");
@@ -101,7 +102,8 @@ public final class RequestObjectBuilder {
     setSpec.setSelector(selector);
 
     // construct the pod template
-    V1PodTemplateSpec template = constructPodTemplate(serviceLabel, jobFileSize, config);
+    V1PodTemplateSpec template =
+        constructPodTemplate(config, serviceLabel, jobFileSize, encodedNodeInfoList);
     setSpec.setTemplate(template);
 
     statefulSet.setSpec(setSpec);
@@ -116,9 +118,10 @@ public final class RequestObjectBuilder {
    * @param config
    * @return
    */
-  public static V1PodTemplateSpec constructPodTemplate(String serviceLabel,
+  public static V1PodTemplateSpec constructPodTemplate(Config config,
+                                                       String serviceLabel,
                                                        long jobFileSize,
-                                                       Config config) {
+                                                       String encodedNodeInfoList) {
 
     V1PodTemplateSpec template = new V1PodTemplateSpec();
     V1ObjectMeta templateMetaData = new V1ObjectMeta();
@@ -152,14 +155,15 @@ public final class RequestObjectBuilder {
     }
 
     if (SchedulerContext.persistentVolumeRequested(config)) {
-      String claimName = KubernetesUtils.createStorageClaimName(SchedulerContext.jobName(config));
+      String claimName =
+          KubernetesUtils.createPersistentVolumeClaimName(SchedulerContext.jobName(config));
       V1Volume persistentVolume = createPersistentVolumeObject(claimName);
       volumes.add(persistentVolume);
     }
 
     // if openmpi is used, we initialize a Secret volume on each pod
     if (KubernetesContext.workersUseOpenMPI(config)) {
-      String secretName = "kubempi-ssh-key";
+      String secretName = KubernetesContext.secretName(config);
       V1Volume secretVolume = createSecretVolumeObject(secretName);
       volumes.add(secretVolume);
     }
@@ -175,7 +179,7 @@ public final class RequestObjectBuilder {
 
     ArrayList<V1Container> containers = new ArrayList<V1Container>();
     for (int i = 0; i < containersPerPod; i++) {
-      containers.add(constructContainer(i, jobFileSize, config));
+      containers.add(constructContainer(config, i, jobFileSize, encodedNodeInfoList));
     }
     podSpec.setContainers(containers);
 
@@ -237,14 +241,22 @@ public final class RequestObjectBuilder {
    * @param config
    * @return
    */
-  public static V1Container constructContainer(int containerIndex,
+  public static V1Container constructContainer(Config config,
+                                               int containerIndex,
                                                long jobFileSize,
-                                               Config config) {
+                                               String encodedNodeInfoList) {
     // construct container and add it to podSpec
     V1Container container = new V1Container();
     String containerName = KubernetesUtils.createContainerName(containerIndex);
     container.setName(containerName);
-    container.setImage(KubernetesConstants.TWISTER2_DOCKER_IMAGE);
+
+    String containerImage = KubernetesContext.twister2DockerImageForK8s(config);
+    if (containerImage == null) {
+      throw new RuntimeException("Container Image name is null. Config parameter: "
+          + "twister2.docker.image.for.kubernetes can not be null");
+    }
+    container.setImage(containerImage);
+
     // by default: IfNotPresent
     // can be set to Always from client.yaml
     container.setImagePullPolicy(KubernetesContext.imagePullPolicy(config));
@@ -313,7 +325,8 @@ public final class RequestObjectBuilder {
     container.setPorts(Arrays.asList(port));
 
     container.setEnv(
-        constructEnvironmentVariables(config, containerName, jobFileSize, containerPort));
+        constructEnvironmentVariables(
+            config, containerName, jobFileSize, containerPort, encodedNodeInfoList));
 
     return container;
   }
@@ -325,10 +338,16 @@ public final class RequestObjectBuilder {
    * @param jobFileSize
    */
   public static List<V1EnvVar> constructEnvironmentVariables(Config config,
-                                                   String containerName, long jobFileSize,
-                                                   int workerPort) {
+                                                             String containerName,
+                                                             long jobFileSize,
+                                                             int workerPort,
+                                                             String encodedNodeInfoList) {
 
     ArrayList<V1EnvVar> envVars = new ArrayList<>();
+
+    envVars.add(new V1EnvVar()
+        .name(K8sEnvVariables.JOB_NAME + "")
+        .value(Context.jobName(config)));
 
     envVars.add(new V1EnvVar()
         .name(K8sEnvVariables.JOB_PACKAGE_FILE_SIZE + "")
@@ -396,6 +415,10 @@ public final class RequestObjectBuilder {
     envVars.add(new V1EnvVar()
         .name(K8sEnvVariables.DOWNLOAD_DIRECTORY + "")
         .value(ScpContext.downloadDirectory(config)));
+
+    envVars.add(new V1EnvVar()
+        .name(K8sEnvVariables.ENCODED_NODE_INFO_LIST + "")
+        .value(encodedNodeInfoList));
 
     return envVars;
   }
@@ -603,7 +626,13 @@ public final class RequestObjectBuilder {
     pvcSpec.setAccessModes(Arrays.asList(accessMode));
 
     V1ResourceRequirements resources = new V1ResourceRequirements();
-    double storageSize = SchedulerContext.persistentVolumePerWorker(config);
+    double storageSize =
+        SchedulerContext.persistentVolumePerWorker(config) * Context.workerInstances(config);
+
+    if (!JobMasterContext.jobMasterRunsInClient(config)) {
+      storageSize += JobMasterContext.persistentVolumeSize(config);
+    }
+
     resources.putRequestsItem("storage", new Quantity(storageSize + "Gi"));
     pvcSpec.setResources(resources);
 

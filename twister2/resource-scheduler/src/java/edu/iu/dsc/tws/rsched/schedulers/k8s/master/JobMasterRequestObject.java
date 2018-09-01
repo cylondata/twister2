@@ -128,7 +128,7 @@ public final class JobMasterRequestObject {
     }
 
     if (JobMasterContext.persistentVolumeRequested(config)) {
-      String claimName = KubernetesUtils.createStorageClaimName(jobName);
+      String claimName = KubernetesUtils.createPersistentVolumeClaimName(jobName);
       V1Volume persistentVolume = RequestObjectBuilder.createPersistentVolumeObject(claimName);
       volumes.add(persistentVolume);
     }
@@ -152,7 +152,14 @@ public final class JobMasterRequestObject {
     // construct container and add it to podSpec
     V1Container container = new V1Container();
     container.setName("twister2-job-master");
-    container.setImage(KubernetesConstants.TWISTER2_DOCKER_IMAGE);
+
+    String containerImage = KubernetesContext.twister2DockerImageForK8s(config);
+    if (containerImage == null) {
+      throw new RuntimeException("Container Image name is null. Config parameter: "
+          + "twister2.docker.image.for.kubernetes can not be null");
+    }
+    container.setImage(containerImage);
+
     // by default: IfNotPresent
     // can be set to Always from client.yaml
     container.setImagePullPolicy(KubernetesContext.imagePullPolicy(config));
@@ -225,8 +232,8 @@ public final class JobMasterRequestObject {
         .value(KubernetesContext.namespace(config)));
 
     envVars.add(new V1EnvVar()
-        .name(KubernetesContext.PERSISTENT_VOLUME_PER_WORKER)
-        .value(KubernetesContext.persistentVolumePerWorker(config) + ""));
+        .name(JobMasterContext.PERSISTENT_VOLUME)
+        .value(JobMasterContext.persistentVolumeSize(config) + ""));
 
     envVars.add(new V1EnvVar()
         .name(Context.TWISTER2_WORKER_INSTANCES)

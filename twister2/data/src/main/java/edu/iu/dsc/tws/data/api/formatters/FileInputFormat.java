@@ -366,7 +366,7 @@ public abstract class FileInputFormat<OT> implements InputFormat<OT, FileInputSp
     return !name.startsWith("_")
         && !name.startsWith(".");
     //TODO: Need to add support for file filters
-    // && !filesFilter.filterPath(fileStatus.getPath());
+    // && !filesFilter.filterPath(fileStatus.getTarget());
   }
 
   /**

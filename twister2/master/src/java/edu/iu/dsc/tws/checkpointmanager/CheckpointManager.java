@@ -37,7 +37,7 @@ import edu.iu.dsc.tws.master.JobMaster;
 import edu.iu.dsc.tws.proto.checkpoint.Checkpoint;
 import edu.iu.dsc.tws.task.graph.Vertex;
 
-public class CheckpointManager {
+public class CheckpointManager extends Thread {
   private static final Logger LOG = Logger.getLogger(CheckpointManager.class.getName());
 
 //  private final CheckpointProperties checkpointProperties;
@@ -83,11 +83,13 @@ public class CheckpointManager {
     this.maxConcurrentCheckpointAttempts = maxConcurrentCheckpointAttempts;
 
     TaskMonitor taskMonitor = new TaskMonitor(cfg, this, rrServer);
-
+    looper = new Progress();
     rrServer = new RRServer(cfg, "localhost", 6789, looper,
         -2, new ServerConnectHandler());
 
     rrServer.registerRequestHandler(Checkpoint.TaskDiscovery.newBuilder(), taskMonitor);
+
+    rrServer.start();
 
   }
 
@@ -98,11 +100,29 @@ public class CheckpointManager {
 
   public CheckpointManager() {
     TaskMonitor taskMonitor = new TaskMonitor(cfg, this, rrServer);
-
+    looper = new Progress();
     rrServer = new RRServer(cfg, "localhost", 6789, looper,
         -2, new ServerConnectHandler());
 
     rrServer.registerRequestHandler(Checkpoint.TaskDiscovery.newBuilder(), taskMonitor);
+
+    rrServer.start();
+
+    looper.loop();
+
+    start();
+  }
+
+  @Override
+  public void run() {
+
+    long time = System.currentTimeMillis();
+
+    while (true) {
+      looper.loop();
+    }
+
+
   }
 
   public void startCheckpointScheduler() {

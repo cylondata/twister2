@@ -151,12 +151,12 @@ public class TWSTCPChannel implements TWSChannel {
    */
   private void postMessage(TCPSendRequests requests) {
     ChannelMessage message = requests.message;
-    for (int i = 0; i < message.getBuffers().size(); i++) {
+    for (int i = 0; i < message.getNormalBuffers().size(); i++) {
       sendCount++;
-      DataBuffer buffer = message.getBuffers().get(i);
+      DataBuffer buffer = message.getNormalBuffers().get(i);
       TCPMessage request = comm.iSend(buffer.getByteBuffer(), buffer.getSize(),
           requests.rank, message.getHeader().getEdge());
-      // register to the loop to make progress on the send
+      // register to the loop to make communicationProgress on the send
       requests.pendingSends.add(new Request(request, buffer));
     }
   }
@@ -211,7 +211,7 @@ public class TWSTCPChannel implements TWSChannel {
         Request r = requestIterator.next();
         TCPStatus status = r.request.testStatus();
         // this request has finished
-        if (status != null) {
+        if (status == TCPStatus.COMPLETE) {
           requestIterator.remove();
         }
       }
@@ -232,12 +232,18 @@ public class TWSTCPChannel implements TWSChannel {
       while (requestIterator.hasNext()) {
         Request r = requestIterator.next();
         TCPStatus status = r.request.testStatus();
-        if (status != null) {
+        if (status == TCPStatus.COMPLETE) {
           // lets call the callback about the receive complete
           r.buffer.setSize(r.buffer.getByteBuffer().limit());
           receiveRequests.callback.onReceiveComplete(
               receiveRequests.rank, receiveRequests.edge, r.buffer);
           requestIterator.remove();
+          if (receiveRequests.pendingRequests.size() == 0
+              && receiveRequests.availableBuffers.size() == 0) {
+            //We do not have any buffers to receive messages so we need to free a buffer
+            receiveRequests.callback.freeReceiveBuffers(receiveRequests.rank,
+                receiveRequests.edge);
+          }
         }
       }
     }

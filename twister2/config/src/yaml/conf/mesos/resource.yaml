@@ -1,6 +1,3 @@
-# scheduler class for distributing the topology for execution
-twister2.class.scheduler: "edu.iu.dsc.tws.rsched.schedulers.mesos.MesosScheduler"
-
 # working directory for the topologies
 twister2.scheduler.mesos.scheduler.working.directory: "~/.twister2/repository"#"${TWISTER2_DIST}/topologies/${CLUSTER}/${ROLE}/${TOPOLOGY}"
 
@@ -43,8 +40,6 @@ twister2.docker.image.name: "gurhangunduz/twister2-mesos:docker-mpi"
 # For fetching http server must be running on mesos master
 twister2.system.job.uri: "http://149.165.150.81:8082/twister2/mesos/twister2-job.tar.gz"
 
-# the resource manager class
-twister2.class.state.manager: "edu.iu.dsc.tws.rsched.statemanagers.fs.SharedFileSystemStateManager"
 # launcher class for mesos submission
 twister2.class.launcher: "edu.iu.dsc.tws.rsched.schedulers.mesos.MesosLauncher"
 # the uploader class
@@ -56,9 +51,9 @@ twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.scp.ScpUploader"
 
 
 # container class to run in workers
-#twister2.job.basic.container.class: "edu.iu.dsc.tws.examples.basic.BasicMesosWorker"
-#twister2.job.basic.container.class: "edu.iu.dsc.tws.examples.basic.BasicMpiJob"
-twister2.job.basic.container.class: "edu.iu.dsc.tws.examples.basic.comms.BaseBroadcastCommunication"
+#twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.rsched.BasicMesosWorker"
+#twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.rsched.BasicMpiJob"
+twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.comms.BaseBroadcastCommunication"
 
 # the Mesos worker class
 twister2.class.mesos.worker: "edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorker"
@@ -66,17 +61,16 @@ twister2.class.mesos.worker: "edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorker
 ###################################################################################
 # ZooKeeper related config parameters
 ###################################################################################
-# ZooKeeper server ip address and port number
-#twister2.zookeeper.server.ip: "149.165.150.81" #######don't forget to uncomment when pushing##############################################
-twister2.zookeeper.server.ip: "149.165.150.81"
-twister2.zookeeper.server.port: "2181"
+# ZooKeeper server addresses: comma separated host:port pairs
+# example: "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002"
+twister2.zookeeper.server.addresses: "149.165.150.81:2181"
 
 # the root node path of this job on ZooKeeper
 # the default is "/twister2"
 #twister2.zookeeper.root.node.path: "/twister2"
 
 # if the workers want to wait for all others to join a job, max wait time in ms
-twister2.zookeeper.max.wait.time.for.all.workers.to.join: "100000"
+twister2.zookeeper.max.wait.time.for.all.workers.to.join: 100000
 
 
 

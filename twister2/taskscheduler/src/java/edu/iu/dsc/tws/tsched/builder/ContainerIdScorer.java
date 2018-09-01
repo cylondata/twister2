@@ -11,6 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tsched.builder;
 
+/**
+ * This class is to sort the container in an ascending order.
+ */
 public class ContainerIdScorer implements Scorer<Container> {
 
   private final boolean sortAscending;
@@ -21,7 +24,7 @@ public class ContainerIdScorer implements Scorer<Container> {
     this(true);
   }
 
-  public ContainerIdScorer(boolean sortAscending) {
+  private ContainerIdScorer(boolean sortAscending) {
     this(0, 0, sortAscending);
   }
 
