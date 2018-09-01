@@ -13,14 +13,16 @@ package edu.iu.dsc.tws.executor.core;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
 public class ExecutorContext extends Context {
   public static final String THREADS_PER_WORKER = "twister2.exector.worker.threads";
+  public static final String INSTANCE_QUEUE_SIZE = "twister2.exector.instance.queue.size";
 
   public static int threadsPerContainer(Config cfg) {
-    String numOfThreads = SchedulerContext.numOfThreads(cfg);
-    return Integer.parseInt(numOfThreads);
+    return cfg.getIntegerValue(THREADS_PER_WORKER, 1);
   }
 
+  public static int instanceQueueSize(Config cfg) {
+    return cfg.getIntegerValue(INSTANCE_QUEUE_SIZE, 1024);
+  }
 }

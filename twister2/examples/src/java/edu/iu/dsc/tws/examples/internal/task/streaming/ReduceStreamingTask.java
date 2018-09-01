@@ -51,7 +51,6 @@ public class ReduceStreamingTask implements IWorker {
     GeneratorTask g = new GeneratorTask();
     RecevingTask r = new RecevingTask();
 
-    System.out.println("Config-Threads : " + SchedulerContext.numOfThreads(config));
     GraphBuilder builder = GraphBuilder.newBuilder();
     builder.addSource("source", g);
     builder.setParallelism("source", 4);
