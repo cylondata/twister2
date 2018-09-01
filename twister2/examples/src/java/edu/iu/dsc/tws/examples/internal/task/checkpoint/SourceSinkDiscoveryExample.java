@@ -1,4 +1,3 @@
-
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
@@ -38,19 +37,20 @@ import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.executor.core.CommunicationOperationType;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.Executor;
 import edu.iu.dsc.tws.proto.checkpoint.Checkpoint;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.Operations;
-import edu.iu.dsc.tws.task.api.SinkTask;
 import edu.iu.dsc.tws.task.api.SourceCheckpointableTask;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.GraphConstants;
+import edu.iu.dsc.tws.task.graph.OperationMode;
+import edu.iu.dsc.tws.task.streaming.BaseStreamSinkTask;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
@@ -65,21 +65,28 @@ public class SourceSinkDiscoveryExample implements IWorker {
                       IWorkerController workerController,
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
-    SourceSinkDiscoveryExample.GeneratorTask g = new GeneratorTask();
-    ReceivingTask r
-        = new ReceivingTask();
+    GeneratorTask g = new GeneratorTask();
+
+    ReceivingTask r = new ReceivingTask();
 
     GraphBuilder builder = GraphBuilder.newBuilder();
     builder.addSource("source", g);
     builder.setParallelism("source", 4);
     builder.addSink("sink", r);
     builder.setParallelism("sink", 4);
-    builder.connect("source", "sink", "partition-edge", Operations.PARTITION);
+    builder.connect("source", "sink", "partition-edge",
+        CommunicationOperationType.STREAMING_PARTITION);
+    builder.operationMode(OperationMode.STREAMING);
 
     builder.addConfiguration("source", "Ram", GraphConstants.taskInstanceRam(config));
     builder.addConfiguration("source", "Disk", GraphConstants.taskInstanceDisk(config));
     builder.addConfiguration("source", "Cpu", GraphConstants.taskInstanceCpu(config));
 
+    List<String> sourceInputDataset = new ArrayList<>();
+    sourceInputDataset.add("dataset1.txt");
+    sourceInputDataset.add("dataset2.txt");
+
+    builder.addConfiguration("source", "inputdataset", sourceInputDataset);
 
     DataFlowTaskGraph graph = builder.build();
 
@@ -97,17 +104,23 @@ public class SourceSinkDiscoveryExample implements IWorker {
   }
 
   private static class GeneratorTask extends SourceCheckpointableTask {
-    private static final long serialVersionUID = -254264903510214748L;
+    private static final long serialVersionUID = -254264903510284748L;
+    private TaskContext ctx;
+    private Config config;
 
     @Override
     public void run() {
       ctx.write("partition-edge", "Hello");
     }
 
+
+    @Override
+    public void prepare(Config cfg, TaskContext context) {
+      this.ctx = context;
+    }
   }
 
-
-  private static class ReceivingTask extends SinkTask {
+  private static class ReceivingTask extends BaseStreamSinkTask {
     private static final long serialVersionUID = -254264903511284798L;
     private Config config;
 
@@ -229,7 +242,6 @@ public class SourceSinkDiscoveryExample implements IWorker {
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(configurations);
-
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("source-sink-discovery-example");
     jobBuilder.setWorkerClass(SourceSinkDiscoveryExample.class.getName());
@@ -240,4 +252,7 @@ public class SourceSinkDiscoveryExample implements IWorker {
     Twister2Submitter.submitJob(jobBuilder.build(), config);
   }
 }
+
+
+
 
