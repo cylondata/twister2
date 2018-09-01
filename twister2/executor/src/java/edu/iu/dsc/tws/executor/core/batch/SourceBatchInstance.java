@@ -21,6 +21,7 @@ import edu.iu.dsc.tws.executor.api.DefaultOutputCollection;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
 import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.ISource;
 import edu.iu.dsc.tws.task.api.OutputCollection;
 import edu.iu.dsc.tws.task.api.TaskContext;
@@ -186,6 +187,11 @@ public class SourceBatchInstance implements INodeInstance {
   @Override
   public int getId() {
     return batchTaskId;
+  }
+
+  @Override
+  public INode getNode() {
+    return batchTask;
   }
 
   /**

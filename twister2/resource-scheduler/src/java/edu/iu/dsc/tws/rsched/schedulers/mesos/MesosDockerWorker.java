@@ -86,7 +86,7 @@ public class MesosDockerWorker {
       //container.execute(worker.config, id, null, workerController, null);
 
     } catch (Exception e) {
-      e.printStackTrace();
+      LOG.severe("Error " + e.getMessage());
     }
 
     //job master is the one with the id==0

@@ -63,7 +63,7 @@ public final class BasicMesosJob {
         .build();
 
     // now submit the job
-    Twister2Submitter.submitContainerJob(twister2Job, config);
+    Twister2Submitter.submitJob(twister2Job, config);
 
     System.out.println("now terminating...");
     Twister2Submitter.terminateJob(twister2Job.getName(), config);

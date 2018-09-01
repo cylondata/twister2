@@ -14,5 +14,7 @@ package edu.iu.dsc.tws.comms.api;
 public enum  Op {
   SUM,
   MAX,
-  MIN
+  MIN,
+  PRODUCT,
+  DIVISION
 }
