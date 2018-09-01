@@ -40,10 +40,10 @@ import edu.iu.dsc.tws.executor.core.batch.TaskBatchInstance;
 import edu.iu.dsc.tws.executor.core.streaming.SinkStreamingInstance;
 import edu.iu.dsc.tws.executor.core.streaming.SourceStreamingInstance;
 import edu.iu.dsc.tws.executor.core.streaming.TaskStreamingInstance;
+import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.ISource;
-import edu.iu.dsc.tws.task.api.ITask;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.Edge;
 import edu.iu.dsc.tws.task.graph.OperationMode;
@@ -139,7 +139,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
       }
 
       INode node = v.getTask();
-      if (node instanceof ITask || node instanceof ISource) {
+      if (node instanceof ICompute || node instanceof ISource) {
         // lets get the communication
         Set<Edge> edges = taskGraph.outEdges(v);
         // now lets create the communication object
@@ -159,7 +159,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
         }
       }
 
-      if (node instanceof ITask || node instanceof ISink) {
+      if (node instanceof ICompute || node instanceof ISink) {
         // lets get the parent tasks
         Set<Edge> parentEdges = taskGraph.inEdges(v);
         for (Edge e : parentEdges) {
@@ -296,8 +296,8 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
         ip.getTaskId(), ip.getTaskIndex());
 
     if (operationMode.equals(OperationMode.BATCH)) {
-      if (newInstance instanceof ITask) {
-        TaskBatchInstance v = new TaskBatchInstance((ITask) newInstance,
+      if (newInstance instanceof ICompute) {
+        TaskBatchInstance v = new TaskBatchInstance((ICompute) newInstance,
             new ArrayBlockingQueue<>(1024),
             new ArrayBlockingQueue<>(1024), cfg,
             vertex.getName(), taskId, ip.getTaskIndex(),
@@ -322,8 +322,8 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
         throw new RuntimeException("Un-known type");
       }
     } else if (operationMode.equals(OperationMode.STREAMING)) {
-      if (newInstance instanceof ITask) {
-        TaskStreamingInstance v = new TaskStreamingInstance((ITask) newInstance,
+      if (newInstance instanceof ICompute) {
+        TaskStreamingInstance v = new TaskStreamingInstance((ICompute) newInstance,
             new ArrayBlockingQueue<>(1024),
             new ArrayBlockingQueue<>(1024), cfg,
             vertex.getName(), taskId, ip.getTaskIndex(),

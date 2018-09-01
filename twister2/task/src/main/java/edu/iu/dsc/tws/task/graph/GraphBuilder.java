@@ -12,10 +12,10 @@
 package edu.iu.dsc.tws.task.graph;
 
 import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.ISource;
-import edu.iu.dsc.tws.task.api.ITask;
 
 public final class GraphBuilder {
   private DataFlowTaskGraph graph;
@@ -38,7 +38,7 @@ public final class GraphBuilder {
     return this;
   }
 
-  public GraphBuilder addTask(String name, ITask task) {
+  public GraphBuilder addTask(String name, ICompute task) {
     graph.addTaskVertex(name, new Vertex(name, task));
     return this;
   }

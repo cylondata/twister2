@@ -26,7 +26,7 @@ package edu.iu.dsc.tws.task.api;
 /**
  * Base interface for tasks
  */
-public interface ITask extends INode {
+public interface ICompute extends INode {
   /**
    * Execute with an incoming message
    * @param content
