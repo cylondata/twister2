@@ -124,6 +124,8 @@ public class SourceSinkDiscoveryExample implements IWorker {
     private static final long serialVersionUID = -254264903511284798L;
     private Config config;
 
+    private int count = 0;
+
     private RRClient client;
     private Progress looper;
 
@@ -131,7 +133,10 @@ public class SourceSinkDiscoveryExample implements IWorker {
 
     @Override
     public boolean execute(IMessage message) {
-      System.out.println(message.getContent());
+      if (count % 1000000 == 0) {
+        System.out.println(message.getContent());
+      }
+      count++;
       return true;
     }
 
