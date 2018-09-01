@@ -23,7 +23,6 @@ import com.google.common.collect.Table;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
-import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
@@ -86,7 +85,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
       = HashBasedTable.create();
 
 
-  private TWSNetwork network;
+  private Communicator network;
 
   private AllocatedResources resourcePlan;
 
@@ -96,9 +95,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
 
   private EdgeGenerator edgeGenerator;
 
-  private Communicator communication;
-
-  public ExecutionPlanBuilder(AllocatedResources plan, TWSNetwork net) {
+  public ExecutionPlanBuilder(AllocatedResources plan, Communicator net) {
     this.workerId = plan.getWorkerId();
     this.taskIdGenerator = new TaskIdGenerator();
     this.kryoMemorySerializer = new KryoMemorySerializer();
@@ -110,14 +107,12 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
   @Override
   public ExecutionPlan build(Config cfg, DataFlowTaskGraph taskGraph,
                              TaskSchedulePlan taskSchedule) {
-    this.communication = new Communicator(cfg, network.getChannel());
     noOfThreads = ExecutorContext.threadsPerContainer(cfg);
-    //LOG.log(Level.INFO, " ExecutionBuilder Thread Count : " + noOfThreads);
 
     // we need to build the task plan
     TaskPlan taskPlan = TaskPlanBuilder.build(resourcePlan, taskSchedule, taskIdGenerator);
     ParallelOperationFactory opFactory = new ParallelOperationFactory(
-        cfg, communication, taskPlan, edgeGenerator);
+        cfg, network, taskPlan, edgeGenerator);
 
     Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap = taskSchedule.getContainersMap();
     TaskSchedulePlan.ContainerPlan conPlan = containersMap.get(workerId);
@@ -199,11 +194,8 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
       Set<Integer> targetsOfThisWorker = intersectionOfTasks(conPlan, c.getTargetTasks());
 
       // set the parallel operation to the instance
-      // lets see weather this comunication belongs to a task instance
-
       //let's separate the execution instance generation based on the Operation Mode
-
-      if (operationMode.equals(OperationMode.STREAMING)) {
+      if (operationMode == OperationMode.STREAMING) {
         for (Integer i : sourcesOfThisWorker) {
           if (streamingTaskInstances.contains(c.getSourceTask(), i)) {
             TaskStreamingInstance taskStreamingInstance
@@ -212,7 +204,6 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
           } else if (streamingSourceInstances.contains(c.getSourceTask(), i)) {
             SourceStreamingInstance sourceStreamingInstance
                 = streamingSourceInstances.get(c.getSourceTask(), i);
-            //LOG.info("Edge : " + c.getEdge().getName() + ", Op : " + op.getClass().getName());
             sourceStreamingInstance.registerOutParallelOperation(c.getEdge().getName(), op);
           } else {
             throw new RuntimeException("Not found: " + c.getSourceTask());
@@ -237,8 +228,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
         execution.addOps(op);
       }
 
-      if (operationMode.equals(OperationMode.BATCH)) {
-
+      if (operationMode == OperationMode.BATCH) {
         for (Integer i : sourcesOfThisWorker) {
           if (batchTaskInstances.contains(c.getSourceTask(), i)) {
             TaskBatchInstance taskBatchInstance = batchTaskInstances.get(c.getSourceTask(), i);
@@ -246,7 +236,6 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
           } else if (batchSourceInstances.contains(c.getSourceTask(), i)) {
             SourceBatchInstance sourceBatchInstance
                 = batchSourceInstances.get(c.getSourceTask(), i);
-            //LOG.info("Edge : " + c.getEdge().getName() + ", Op : " + op.getClass().getName());
             sourceBatchInstance.registerOutParallelOperation(c.getEdge().getName(), op);
           } else {
             throw new RuntimeException("Not found: " + c.getSourceTask());

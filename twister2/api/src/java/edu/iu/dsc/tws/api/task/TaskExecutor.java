@@ -18,6 +18,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
+import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.dataset.DataSet;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
@@ -36,10 +37,13 @@ public class TaskExecutor {
 
   private AllocatedResources allocResources;
 
-  public TaskExecutor(Config cfg, int wId, AllocatedResources resources) {
+  private Communicator communicator;
+
+  public TaskExecutor(Config cfg, int wId, AllocatedResources resources, Communicator net) {
     this.config = cfg;
     this.workerID = wId;
     this.allocResources = resources;
+    this.communicator = net;
   }
 
   /**
@@ -55,7 +59,9 @@ public class TaskExecutor {
     TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
 
     TWSNetwork network = new TWSNetwork(config, allocResources.getWorkerId());
-    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(allocResources, network);
+    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(
+        allocResources, communicator);
+
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
     Executor executor = new Executor(config, plan, network.getChannel(),
         OperationMode.BATCH);
