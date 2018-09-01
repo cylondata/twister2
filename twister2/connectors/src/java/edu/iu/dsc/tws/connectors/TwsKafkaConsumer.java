@@ -15,10 +15,10 @@ import org.slf4j.LoggerFactory;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.connectors.config.KafkaConsumerConfig;
-import edu.iu.dsc.tws.task.api.SourceTask;
+import edu.iu.dsc.tws.task.api.SourceCheckpointableTask;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
-public class TwsKafkaConsumer<T> extends SourceTask {
+public class TwsKafkaConsumer<T> extends SourceCheckpointableTask {
   private static final long serialVersionUID = -264264120110286748L;
   private static Logger log = LoggerFactory.getLogger(TwsKafkaConsumer.class);
 
@@ -50,6 +50,7 @@ public class TwsKafkaConsumer<T> extends SourceTask {
 
   @Override
   public void prepare(Config cfg, TaskContext context) {
+    connect(cfg, context);
     this.myIndex = cfg.getIntegerValue("twister2.container.id", 0);
     this.worldSize = context.getParallelism();
     log.info("myID : {} , worldSize : {} ", myIndex, worldSize);

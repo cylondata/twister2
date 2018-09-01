@@ -37,8 +37,7 @@ public abstract class SourceCheckpointableTask extends BaseStreamSourceTask {
   public RRClient client;
   public Progress looper;
 
-  @Override
-  public void prepare(Config cfg, TaskContext context) {
+  public void connect(Config cfg, TaskContext context) {
     this.ctx = context;
 
     looper = new Progress();
@@ -49,8 +48,40 @@ public abstract class SourceCheckpointableTask extends BaseStreamSourceTask {
     client.registerResponseHandler(Checkpoint.TaskDiscovery.newBuilder(),
         new ClientMessageHandler());
 
-    client.connect();
+    tryUntilConnected(5000);
+  }
 
+  public boolean tryUntilConnected(long timeLimit) {
+    long startTime = System.currentTimeMillis();
+    long duration = 0;
+    long sleepInterval = 30;
+
+    long logInterval = 1000;
+    long nextLogTime = logInterval;
+
+    while (duration < timeLimit) {
+      // try connecting
+      client.connect();
+      // loop once to connect
+      looper.loop();
+
+      if (client.isConnected()) {
+        return true;
+      }
+
+
+      if (client.isConnected()) {
+        return true;
+      }
+
+      duration = System.currentTimeMillis() - startTime;
+
+      if (duration > nextLogTime) {
+        LOG.info("Still trying to connect to Job Master");
+        nextLogTime += logInterval;
+      }
+    }
+    return false;
   }
 
   public class ClientConnectHandler implements ConnectHandler {

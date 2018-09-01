@@ -116,6 +116,7 @@ public class SourceSinkDiscoveryExample implements IWorker {
 
     @Override
     public void prepare(Config cfg, TaskContext context) {
+      connect(cfg, context);
       this.ctx = context;
     }
   }
