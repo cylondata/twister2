@@ -71,17 +71,17 @@ public final class MesosJobMasterStarter {
       JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/"
           + jobName + ".job");
       workerController = new MesosWorkerController(config, job,
-          Inet4Address.getLocalHost().getHostAddress(), 2022, workerId);
+          Inet4Address.getLocalHost().getHostAddress(), 2023, workerId);
       LOG.info("Initializing with zookeeper");
       workerController.initializeWithZooKeeper();
       LOG.info("Waiting for all workers to join");
       workerController.waitForAllWorkersToJoin(
           ZKContext.maxWaitTimeForAllWorkersToJoin(config));
       LOG.info("Everyone has joined");
-      //container.init(worker.config, id, null, workerController, null);
+      //container.execute(worker.config, id, null, workerController, null);
 
     } catch (Exception e) {
-      e.printStackTrace();
+      LOG.severe("Error " + e.getMessage());
     }
 
     if (!JobMasterContext.jobMasterRunsInClient(config)) {

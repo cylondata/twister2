@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.connectors.config.KafkaConsumerConfig;
 import edu.iu.dsc.tws.connectors.config.KafkaProducerConfig;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.SinkTask;
@@ -39,6 +40,7 @@ public class TwsKafkaProducer<T> extends SinkTask {
   private KafkaPartitionFinder kafkaPartitionFinder;
   private KafkaTopicDescription topicDescription;
   private List<TopicPartition> topicPartitions;
+  private Properties  simpleKafkaConfig;
   @Override
   public boolean execute(IMessage message) {
     log.info("Recieved message {}", message.getContent());
@@ -77,7 +79,7 @@ public class TwsKafkaProducer<T> extends SinkTask {
     log.info("myID : {} , worldSize : {} ", myIndex, worldSize);
     this.topicDescription = new KafkaTopicDescription(listOfTopics);
     this.kafkaPartitionFinder = new KafkaPartitionFinder(
-        this.kafkaConfigs, worldSize, myIndex, topicDescription);
+        this.simpleKafkaConfig, worldSize, myIndex, topicDescription);
     this.topicPartitions = kafkaPartitionFinder.getRelevantPartitions();
     this.producer = new KafkaProducer<String, String>(this.kafkaConfigs);
 
@@ -88,6 +90,7 @@ public class TwsKafkaProducer<T> extends SinkTask {
   ) {
     this.kafkaConfigs = createKafkaConfig(servers);
     this.listOfTopics = topics;
+    this.simpleKafkaConfig = KafkaConsumerConfig.getSimpleKafkaConsumer(servers);
 
   }
 
@@ -98,6 +101,7 @@ public class TwsKafkaProducer<T> extends SinkTask {
     this.kafkaConfigs = createKafkaConfig(servers);
     this.listOfTopics = new ArrayList<>();
     listOfTopics.add(singletopic);
+    this.simpleKafkaConfig = KafkaConsumerConfig.getSimpleKafkaConsumer(servers);
   }
 
   private Properties createKafkaConfig(List<String> servers) {

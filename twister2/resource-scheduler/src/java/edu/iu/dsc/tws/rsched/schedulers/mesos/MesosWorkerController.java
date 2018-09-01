@@ -49,7 +49,8 @@ public class MesosWorkerController implements IWorkerController {
     numberOfWorkers = MesosContext.numberOfContainers(config);
     containerPerWorker = MesosContext.containerPerWorker(config);
     workerList = new ArrayList<>();
-    thisWorker = new WorkerNetworkInfo(convertStringToIP(ip), port, workerID);
+    thisWorker = new WorkerNetworkInfo(convertStringToIP(ip), port, workerID,
+        new NodeInfo(ip, null, null));
   }
 
   /**
@@ -59,7 +60,7 @@ public class MesosWorkerController implements IWorkerController {
     try {
       return InetAddress.getByName(ipStr);
     } catch (UnknownHostException e) {
-      LOG.log(Level.SEVERE, "Can not convert the pod IP to InetAddress: " + ipStr, e);
+      LOG.log(Level.SEVERE, "Can not convert the IP to InetAddress: " + ipStr, e);
       throw new RuntimeException(e);
     }
   }

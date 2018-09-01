@@ -37,12 +37,12 @@ public class BasicK8sWorker implements IWorker {
   private static final Logger LOG = Logger.getLogger(BasicK8sWorker.class.getName());
 
   @Override
-  public void init(Config config,
-                   int workerID,
-                   AllocatedResources allocatedResources,
-                   IWorkerController workerController,
-                   IPersistentVolume persistentVolume,
-                   IVolatileVolume volatileVolume) {
+  public void execute(Config config,
+                      int workerID,
+                      AllocatedResources allocatedResources,
+                      IWorkerController workerController,
+                      IPersistentVolume persistentVolume,
+                      IVolatileVolume volatileVolume) {
 
     LOG.info("BasicK8sWorker started. Current time: " + System.currentTimeMillis());
 

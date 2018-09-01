@@ -13,5 +13,9 @@ java_library(
         "@com_google_guava_guava//jar",
         "@com_google_protobuf_protobuf_java//jar",
         "@commons_cli_commons_cli//jar",
+        "//twister2/executor/src/java:executor-java",
+        "//twister2/data/src/main/java:data-java",
+        "//twister2/task/src/main/java:task-java",
+        "//twister2/taskscheduler/src/java:taskscheduler-java",
     ],
 )

@@ -12,9 +12,10 @@
 package edu.iu.dsc.tws.tsched.spi.taskschedule;
 
 import java.util.HashMap;
+//import java.util.HashSet;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
@@ -24,8 +25,6 @@ import com.google.common.collect.ImmutableSet;
  * task instance plan along with their resource requirements.
  */
 public class TaskSchedulePlan {
-
-  private static final Logger LOG = Logger.getLogger(TaskSchedulePlan.class.getName());
 
   private final Set<ContainerPlan> containers;
 
@@ -197,7 +196,8 @@ public class TaskSchedulePlan {
                          Resource requiredResource,
                          Resource scheduledResource) {
       this.containerId = id;
-      this.taskInstances = ImmutableSet.copyOf(taskInstances);
+      //this.taskInstances = ImmutableSet.copyOf(taskInstances);
+      this.taskInstances = new HashSet<>(taskInstances);
       this.requiredResource = requiredResource;
       this.scheduledResource = Optional.fromNullable(scheduledResource);
     }
@@ -230,7 +230,6 @@ public class TaskSchedulePlan {
       ContainerPlan that = (ContainerPlan) o;
 
       return containerId == that.containerId
-          && getTaskInstances().equals(that.getTaskInstances())
           && getRequiredResource().equals(that.getRequiredResource())
           && getScheduledResource().equals(that.getScheduledResource());
     }

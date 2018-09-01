@@ -53,12 +53,12 @@ public class BasicNetworkTest implements IWorker, Runnable {
   private IWorkerController workerController;
 
   @Override
-  public void init(Config config,
-                   int workerID,
-                   AllocatedResources allocatedResources,
-                   IWorkerController wController,
-                   IPersistentVolume persistentVolume,
-                   IVolatileVolume volatileVolume) {
+  public void execute(Config config,
+                      int workerID,
+                      AllocatedResources allocatedResources,
+                      IWorkerController wController,
+                      IPersistentVolume persistentVolume,
+                      IVolatileVolume volatileVolume) {
 
 
     this.workerController = wController;

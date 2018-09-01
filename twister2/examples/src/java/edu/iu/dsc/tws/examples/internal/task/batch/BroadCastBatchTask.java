@@ -38,33 +38,28 @@ import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
-import edu.iu.dsc.tws.comms.core.TWSNetwork;
-import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.examples.internal.task.TaskUtils;
 import edu.iu.dsc.tws.executor.core.CommunicationOperationType;
-import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
-import edu.iu.dsc.tws.executor.threading.Executor;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.SinkTask;
-import edu.iu.dsc.tws.task.api.SourceTask;
 import edu.iu.dsc.tws.task.api.TaskContext;
+import edu.iu.dsc.tws.task.batch.BaseBatchSinkTask;
+import edu.iu.dsc.tws.task.batch.BaseBatchSourceTask;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
-import edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler;
 
 public class BroadCastBatchTask implements IWorker {
   private static final Logger LOG = Logger.getLogger(BroadCastBatchTask.class.getName());
 
   @Override
-  public void init(Config config, int workerID, AllocatedResources resources,
-                   IWorkerController workerController,
-                   IPersistentVolume persistentVolume,
-                   IVolatileVolume volatileVolume) {
+  public void execute(Config config, int workerID, AllocatedResources resources,
+                      IWorkerController workerController,
+                      IPersistentVolume persistentVolume,
+                      IVolatileVolume volatileVolume) {
     GeneratorTask g = new GeneratorTask();
     RecevingTask r = new RecevingTask();
 
@@ -77,22 +72,10 @@ public class BroadCastBatchTask implements IWorker {
         CommunicationOperationType.BATCH_BROADCAST);
     builder.operationMode(OperationMode.BATCH);
     DataFlowTaskGraph graph = builder.build();
-
-    RoundRobinTaskScheduler roundRobinTaskScheduler = new RoundRobinTaskScheduler();
-    roundRobinTaskScheduler.initialize(config);
-
-    WorkerPlan workerPlan = createWorkerPlan(resources);
-    TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
-
-    TWSNetwork network = new TWSNetwork(config, resources.getWorkerId());
-    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resources, network);
-    ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
-    Executor executor = new Executor(config, plan, network.getChannel(),
-        OperationMode.BATCH);
-    executor.execute();
+    TaskUtils.executeBatch(config, resources, graph);
   }
 
-  private static class GeneratorTask extends SourceTask {
+  private static class GeneratorTask extends BaseBatchSourceTask {
     private static final long serialVersionUID = -254264903510284748L;
     private TaskContext ctx;
     private int count = 0;
@@ -109,7 +92,7 @@ public class BroadCastBatchTask implements IWorker {
     }
   }
 
-  private static class RecevingTask extends SinkTask {
+  private static class RecevingTask extends BaseBatchSinkTask {
     private static final long serialVersionUID = -254264903510284798L;
     private static int counter = 0;
     private TaskContext ctx;
@@ -158,6 +141,6 @@ public class BroadCastBatchTask implements IWorker {
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job
-    Twister2Submitter.submitContainerJob(jobBuilder.build(), config);
+    Twister2Submitter.submitJob(jobBuilder.build(), config);
   }
 }

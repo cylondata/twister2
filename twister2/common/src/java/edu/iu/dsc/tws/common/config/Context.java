@@ -69,6 +69,8 @@ public class Context {
   public static final ConfigEntry HADOOP_HOME = new ConfigEntry(
       "twister2.hadoop.home", "${HADOOP_HOME}", null, "HADOOP_HOME");
 
+  public static final ConfigEntry CHECKPOINT_YAML = new ConfigEntry(
+      "twister2.config.file.checkpoint.yaml",  "${TWISTER2_CONF}/checkpoint.yaml");
   public static final String JOB_NAME = "twister2.job.name";
 
   // an internal property to represent the container id
@@ -187,6 +189,10 @@ public class Context {
 
   public static String twister2Home(Config cfg) {
     return cfg.getStringValue(TWISTER2_HOME);
+  }
+
+  public static String checkpointConfigurationFile(Config cfg) {
+    return cfg.getStringValue(CHECKPOINT_YAML);
   }
 
   /**

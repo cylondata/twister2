@@ -17,13 +17,16 @@ import edu.iu.dsc.tws.comms.api.MessageType;
  * Keyed content is serialized given priority and serialized as two parts of key and object.
  */
 public class KeyedContent {
-  private final Object key;
+  private Object key;
 
-  private final Object value;
+  private Object value;
 
   private MessageType keyType = MessageType.SHORT;
 
   private MessageType contentType = MessageType.OBJECT;
+
+  public KeyedContent() {
+  }
 
   public KeyedContent(Object keyObj, Object object) {
     this.key = keyObj;

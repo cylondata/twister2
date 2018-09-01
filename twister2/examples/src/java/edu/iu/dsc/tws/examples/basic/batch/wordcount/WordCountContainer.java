@@ -58,10 +58,10 @@ public class WordCountContainer implements IWorker {
   private TaskPlan taskPlan;
 
   @Override
-  public void init(Config cfg, int workerID, AllocatedResources resources,
-                   IWorkerController workerController,
-                   IPersistentVolume persistentVolume,
-                   IVolatileVolume volatileVolume) {
+  public void execute(Config cfg, int workerID, AllocatedResources resources,
+                      IWorkerController workerController,
+                      IPersistentVolume persistentVolume,
+                      IVolatileVolume volatileVolume) {
     this.config = cfg;
     this.resourcePlan = resources;
     this.id = workerID;

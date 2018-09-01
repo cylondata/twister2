@@ -9,29 +9,15 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
 package edu.iu.dsc.tws.examples.internal.task.checkpoint;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
-import edu.iu.dsc.tws.checkpointmanager.barrier.CheckpointBarrier;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
@@ -39,21 +25,21 @@ import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
-import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.executor.core.CommunicationOperationType;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.Executor;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.Operations;
-import edu.iu.dsc.tws.task.api.SinkTask;
-import edu.iu.dsc.tws.task.api.SourceTask;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.GraphConstants;
+import edu.iu.dsc.tws.task.graph.OperationMode;
+import edu.iu.dsc.tws.task.streaming.BaseStreamSinkTask;
+import edu.iu.dsc.tws.task.streaming.BaseStreamSourceTask;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
@@ -61,24 +47,21 @@ import edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler;
 
 public class TaskCheckpointExample implements IWorker {
   @Override
-  public void init(Config config, int workerID, AllocatedResources resources,
-                   IWorkerController workerController,
-                   IPersistentVolume persistentVolume,
-                   IVolatileVolume volatileVolume) {
-
-    TWSNetwork network = new TWSNetwork(config, resources.getWorkerId());
-    TWSCommunication channel = network.getDataFlowTWSCommunication();
-
-
-    GeneratorCheckpointTask g = new GeneratorCheckpointTask();
-    RecevingCheckpointTask r = new RecevingCheckpointTask(channel);
+  public void execute(Config config, int workerID, AllocatedResources resources,
+                      IWorkerController workerController,
+                      IPersistentVolume persistentVolume,
+                      IVolatileVolume volatileVolume) {
+    GeneratorTask g = new GeneratorTask();
+    RecevingTask r = new RecevingTask();
 
     GraphBuilder builder = GraphBuilder.newBuilder();
     builder.addSource("source", g);
     builder.setParallelism("source", 4);
     builder.addSink("sink", r);
     builder.setParallelism("sink", 4);
-    builder.connect("source", "sink", "partition-edge", Operations.PARTITION);
+    builder.connect("source", "sink", "partition-edge",
+        CommunicationOperationType.STREAMING_PARTITION);
+    builder.operationMode(OperationMode.STREAMING);
 
     builder.addConfiguration("source", "Ram", GraphConstants.taskInstanceRam(config));
     builder.addConfiguration("source", "Disk", GraphConstants.taskInstanceDisk(config));
@@ -98,32 +81,23 @@ public class TaskCheckpointExample implements IWorker {
     WorkerPlan workerPlan = createWorkerPlan(resources);
     TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
 
-
+    TWSNetwork network = new TWSNetwork(config, resources.getWorkerId());
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resources, network);
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
     Executor executor = new Executor(config, plan, network.getChannel());
     executor.execute();
   }
 
-  private static class GeneratorCheckpointTask extends SourceTask {
-    private static final long serialVersionUID = -254264903510284848L;
+  private static class GeneratorTask extends BaseStreamSourceTask {
+    private static final long serialVersionUID = -254264903510284748L;
     private TaskContext ctx;
     private Config config;
 
-    private long id = 1;
-
     @Override
     public void run() {
-
-      CheckpointBarrier cb = new CheckpointBarrier(id, 2141535, null);
-      ctx.write("partition-edge", cb);
-      id++;
-      try {
-        Thread.sleep(1000);
-      } catch (Exception e) {
-        System.out.print("Sleep failed");
-      }
+      ctx.write("partition-edge", "Hello");
     }
+
 
     @Override
     public void prepare(Config cfg, TaskContext context) {
@@ -131,35 +105,22 @@ public class TaskCheckpointExample implements IWorker {
     }
   }
 
-  private static final class RecevingCheckpointTask extends SinkTask {
-    private static final long serialVersionUID = -254264903520284798L;
-
-    private TWSCommunication channel;
-
-    private int taskId;
-
-    private Map<String, Object> newCfg = new HashMap<>();
-
-    private RecevingCheckpointTask() {
-    }
-
-    private RecevingCheckpointTask(TWSCommunication channel) {
-      super();
-      this.channel = channel;
-    }
+  private static class RecevingTask extends BaseStreamSinkTask {
+    private static final long serialVersionUID = -254264903510284798L;
+    private int count = 0;
 
     @Override
     public boolean execute(IMessage message) {
-
-      CheckpointBarrier cb = (CheckpointBarrier) message.getContent();
-      System.out.println(cb.getId() + " from taskId : " + taskId);
-//      channel.direct(newCfg, MessageType.OBJECT, 0, )
+      if (count % 1000000 == 0) {
+        System.out.println(message.getContent());
+      }
+      count++;
       return true;
     }
 
     @Override
     public void prepare(Config cfg, TaskContext context) {
-      this.taskId = context.taskId();
+
     }
   }
 
@@ -184,7 +145,6 @@ public class TaskCheckpointExample implements IWorker {
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(configurations);
-
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("task-checkpoint-example");
     jobBuilder.setWorkerClass(TaskCheckpointExample.class.getName());
@@ -192,6 +152,6 @@ public class TaskCheckpointExample implements IWorker {
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job
-    Twister2Submitter.submitContainerJob(jobBuilder.build(), config);
+    Twister2Submitter.submitJob(jobBuilder.build(), config);
   }
 }

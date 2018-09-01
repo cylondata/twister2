@@ -19,14 +19,11 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MultiMessageReceiver;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 
 public class ReduceMultiStreamingPartialReceiver implements MultiMessageReceiver {
   private ReduceFunction reduceFunction;
 
-  private ReduceReceiver reduceReceiver;
-
-  private Map<Integer, ReduceStreamingPartialReceiver> receiverMap = new HashMap<>();
+  private Map<Integer, KeyedReduceStreamingPartialReceiver> receiverMap = new HashMap<>();
 
   public ReduceMultiStreamingPartialReceiver(ReduceFunction reduceFunction) {
     this.reduceFunction = reduceFunction;
@@ -36,8 +33,8 @@ public class ReduceMultiStreamingPartialReceiver implements MultiMessageReceiver
   public void init(Config cfg, DataFlowOperation op,
                    Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
     for (Map.Entry<Integer, Map<Integer, List<Integer>>> e : expectedIds.entrySet()) {
-      ReduceStreamingPartialReceiver finalReceiver =
-          new ReduceStreamingPartialReceiver(e.getKey(), reduceFunction);
+      KeyedReduceStreamingPartialReceiver finalReceiver =
+          new KeyedReduceStreamingPartialReceiver(e.getKey(), reduceFunction);
       receiverMap.put(e.getKey(), finalReceiver);
       finalReceiver.init(cfg, op, e.getValue());
     }
@@ -45,13 +42,13 @@ public class ReduceMultiStreamingPartialReceiver implements MultiMessageReceiver
 
   @Override
   public boolean onMessage(int source, int path, int target, int flags, Object object) {
-    ReduceStreamingPartialReceiver finalReceiver = receiverMap.get(path);
+    KeyedReduceStreamingPartialReceiver finalReceiver = receiverMap.get(path);
     return finalReceiver.onMessage(source, path, target, flags, object);
   }
 
   @Override
   public void progress() {
-    for (Map.Entry<Integer, ReduceStreamingPartialReceiver> e : receiverMap.entrySet()) {
+    for (Map.Entry<Integer, KeyedReduceStreamingPartialReceiver> e : receiverMap.entrySet()) {
       e.getValue().progress();
     }
   }

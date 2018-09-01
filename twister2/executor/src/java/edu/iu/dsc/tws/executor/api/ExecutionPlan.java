@@ -16,12 +16,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import edu.iu.dsc.tws.task.graph.Vertex;
-
+/**
+ * Execution plan to keep track of the tasks
+ */
 public class ExecutionPlan {
-
-  private int numThreads;
-
   private Map<Integer, INodeInstance> nodes = new HashMap<>();
 
   private Map<Integer, IParallelOperation> inputMessages = new HashMap<>();
@@ -29,8 +27,6 @@ public class ExecutionPlan {
   private Map<Integer, IParallelOperation> outputMessages = new HashMap<>();
 
   private List<IParallelOperation> parallelOperations = new ArrayList<>();
-
-  private  HashMap<Vertex, List<Vertex>> incomingVertex = new HashMap<>();
 
   /**
    * Add a node instance of this execution
@@ -52,27 +48,4 @@ public class ExecutionPlan {
   public List<IParallelOperation> getParallelOperations() {
     return parallelOperations;
   }
-
-  public void stop() {
-
-  }
-
-  public int getNumThreads() {
-    return numThreads;
-  }
-
-  public void setNumThreads(int numThreads) {
-    this.numThreads = numThreads;
-  }
-
-  public void addIncomingVertex(Vertex parent, Vertex child) {
-    if (this.incomingVertex.containsKey(child)) {
-      this.incomingVertex.get(child).add(parent);
-    } else {
-      List<Vertex> parentVertex = new ArrayList<>();
-      parentVertex.add(child);
-      this.incomingVertex.put(child, parentVertex);
-    }
-  }
-
 }

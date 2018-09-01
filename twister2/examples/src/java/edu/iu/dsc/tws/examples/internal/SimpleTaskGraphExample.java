@@ -40,8 +40,8 @@ import edu.iu.dsc.tws.examples.IntData;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.ITask;
 import edu.iu.dsc.tws.task.api.LinkedQueue;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.core.TaskExecutorFixedThread;
@@ -87,16 +87,16 @@ public class SimpleTaskGraphExample implements IWorker {
         .build();
 
     // now submit the job
-    Twister2Submitter.submitContainerJob(twister2Job, config);
+    Twister2Submitter.submitJob(twister2Job, config);
   }
 
   /**
    * Init method to submit the task to the executor
    */
-  public void init(Config cfg, int workerID, AllocatedResources resources,
-                   IWorkerController workerController,
-                   IPersistentVolume persistentVolume,
-                   IVolatileVolume volatileVolume) {
+  public void execute(Config cfg, int workerID, AllocatedResources resources,
+                      IWorkerController workerController,
+                      IPersistentVolume persistentVolume,
+                      IVolatileVolume volatileVolume) {
 
     LOG.log(Level.INFO, "Starting the example with container id: " + resources.getWorkerId());
 
@@ -231,7 +231,7 @@ public class SimpleTaskGraphExample implements IWorker {
     LOAD_RECEIVE_FINISHED,
   }
 
-  private class TaskMapper implements ITask {
+  private class TaskMapper implements ICompute {
     private static final long serialVersionUID = 3233011943332591934L;
     public String taskName = null;
 
@@ -267,7 +267,7 @@ public class SimpleTaskGraphExample implements IWorker {
     }
   }
 
-  private class TaskReducer implements ITask {
+  private class TaskReducer implements ICompute {
     private static final long serialVersionUID = 3233011943332591934L;
     public String taskName = null;
 
@@ -303,7 +303,7 @@ public class SimpleTaskGraphExample implements IWorker {
     }
   }
 
-  private class TaskShuffler implements ITask {
+  private class TaskShuffler implements ICompute {
     private static final long serialVersionUID = 3233011943332591934L;
     public String taskName = null;
 
@@ -339,7 +339,7 @@ public class SimpleTaskGraphExample implements IWorker {
     }
   }
 
-  private class TaskMerger implements ITask {
+  private class TaskMerger implements ICompute {
     private static final long serialVersionUID = 3233011943332591934L;
     public String taskName = null;
 

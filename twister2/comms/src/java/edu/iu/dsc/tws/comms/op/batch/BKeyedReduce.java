@@ -52,7 +52,8 @@ public class BKeyedReduce {
 
   public boolean reduce(int src, Object key, Object data, int flags) {
     int dest = destinationSelector.next(src, key);
-    return keyedReduce.send(src, new KeyedContent(key, data), flags, dest);
+    return keyedReduce.send(src, new KeyedContent(key, data, MessageType.INTEGER,
+        MessageType.INTEGER), flags, dest);
   }
 
   public boolean hasPending() {

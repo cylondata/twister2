@@ -80,17 +80,17 @@ public final class MesosMPIMasterStarter {
       JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/"
           + mpiMaster.jobName + ".job");
       workerController = new MesosWorkerController(mpiMaster.config, job,
-          Inet4Address.getLocalHost().getHostAddress(), 2022, workerId);
+          Inet4Address.getLocalHost().getHostAddress(), 2023, workerId);
       LOG.info("Initializing with zookeeper");
       workerController.initializeWithZooKeeper();
       LOG.info("Waiting for all workers to join");
       workerNetworkInfoList = workerController.waitForAllWorkersToJoin(
           ZKContext.maxWaitTimeForAllWorkersToJoin(mpiMaster.config));
       LOG.info("Everyone has joined");
-      //container.init(worker.config, id, null, workerController, null);
+      //container.execute(worker.config, id, null, workerController, null);
 
     } catch (Exception e) {
-      e.printStackTrace();
+      LOG.severe("Host unkown " + e.getMessage());
     }
 
     String jobMasterIP = workerNetworkInfoList.get(0).getWorkerIP().getHostAddress();

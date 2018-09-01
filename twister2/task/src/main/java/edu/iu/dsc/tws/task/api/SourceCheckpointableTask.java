@@ -24,8 +24,9 @@ import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
 import edu.iu.dsc.tws.proto.checkpoint.Checkpoint;
+import edu.iu.dsc.tws.task.streaming.BaseStreamSourceTask;
 
-public abstract class SourceCheckpointableTask extends SourceTask {
+public abstract class SourceCheckpointableTask extends BaseStreamSourceTask {
   private static final long serialVersionUID = -254264903510214728L;
 
   private static final Logger LOG = Logger.getLogger(SourceCheckpointableTask.class.getName());
@@ -36,8 +37,7 @@ public abstract class SourceCheckpointableTask extends SourceTask {
   public RRClient client;
   public Progress looper;
 
-  @Override
-  public void prepare(Config cfg, TaskContext context) {
+  public void connect(Config cfg, TaskContext context) {
     this.ctx = context;
 
     looper = new Progress();
@@ -48,8 +48,40 @@ public abstract class SourceCheckpointableTask extends SourceTask {
     client.registerResponseHandler(Checkpoint.TaskDiscovery.newBuilder(),
         new ClientMessageHandler());
 
-    client.connect();
+    tryUntilConnected(5000);
+  }
 
+  public boolean tryUntilConnected(long timeLimit) {
+    long startTime = System.currentTimeMillis();
+    long duration = 0;
+    long sleepInterval = 30;
+
+    long logInterval = 1000;
+    long nextLogTime = logInterval;
+
+    while (duration < timeLimit) {
+      // try connecting
+      client.connect();
+      // loop once to connect
+      looper.loop();
+
+      if (client.isConnected()) {
+        return true;
+      }
+
+
+      if (client.isConnected()) {
+        return true;
+      }
+
+      duration = System.currentTimeMillis() - startTime;
+
+      if (duration > nextLogTime) {
+        LOG.info("Still trying to connect to Job Master");
+        nextLogTime += logInterval;
+      }
+    }
+    return false;
   }
 
   public class ClientConnectHandler implements ConnectHandler {

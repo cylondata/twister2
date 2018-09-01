@@ -21,6 +21,18 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 package edu.iu.dsc.tws.examples.internal.hdfs;
 
 import java.util.ArrayList;
@@ -83,14 +95,14 @@ public class BatchTaskExample implements IWorker {
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job
-    Twister2Submitter.submitContainerJob(jobBuilder.build(), config);
+    Twister2Submitter.submitJob(jobBuilder.build(), config);
   }
 
   @Override
-  public void init(Config config, int workerID, AllocatedResources resources,
-                   IWorkerController workerController,
-                   IPersistentVolume persistentVolume,
-                   IVolatileVolume volatileVolume) {
+  public void execute(Config config, int workerID, AllocatedResources resources,
+                      IWorkerController workerController,
+                      IPersistentVolume persistentVolume,
+                      IVolatileVolume volatileVolume) {
     GeneratorTask g = new GeneratorTask();
     ReceivingTask r = new ReceivingTask();
 
@@ -126,7 +138,7 @@ public class BatchTaskExample implements IWorker {
       RoundRobinBatchTaskScheduler rrBatchTaskScheduling = new RoundRobinBatchTaskScheduler();
       rrBatchTaskScheduling.initialize(config);
       WorkerPlan workerPlan = createWorkerPlan(resources);
-      scheduleBatch = rrBatchTaskScheduling.scheduleBatch(graph, workerPlan);
+      //scheduleBatch = rrBatchTaskScheduling.scheduleBatch(graph, workerPlan);
     }
 
     for (int j = 0; j < scheduleBatch.size(); j++) {

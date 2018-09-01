@@ -26,10 +26,10 @@ public final class Twister2Submitter {
   }
 
   /**
-   * Submit a basic job with only container and communications
-   * @param twister2Job basic job
+   * Submit a Twister2 job
+   * @param twister2Job job
    */
-  public static void submitContainerJob(Twister2Job twister2Job, Config config) {
+  public static void submitJob(Twister2Job twister2Job, Config config) {
 
     // save the job to state manager
     JobAPI.Job job = twister2Job.serialize();
