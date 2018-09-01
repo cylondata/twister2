@@ -12,7 +12,9 @@
 package edu.iu.dsc.tws.api.task;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
@@ -38,6 +40,8 @@ public class TaskExecutor {
   private AllocatedResources allocResources;
 
   private Communicator communicator;
+
+  private Map<String, DataSet<Object>> inputs = new HashMap<>();
 
   public TaskExecutor(Config cfg, int wId, AllocatedResources resources, Communicator net) {
     this.config = cfg;
@@ -81,5 +85,9 @@ public class TaskExecutor {
     }
 
     return new WorkerPlan(workers);
+  }
+
+  public void addInput(String key, DataSet<Object> input) {
+    inputs.put(key, input);
   }
 }

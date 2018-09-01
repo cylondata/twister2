@@ -70,11 +70,14 @@ public class PartitionBatchTask implements IWorker {
 
     @Override
     public void run() {
-      count++;
       if (count == 1000) {
-        ctx.writeEnd("partition-edge", "Hello");
+        if (ctx.writeEnd("partition-edge", "Hello")) {
+          count++;
+        }
       } else if (count < 1000) {
-        ctx.write("partition-edge", "Hello");
+        if (ctx.write("partition-edge", "Hello")) {
+          count++;
+        }
       }
     }
 
