@@ -32,15 +32,33 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler;
 
+/**
+ * The task executor API
+ */
 public class TaskExecutor {
+  /**
+   * Configuration
+   */
   private Config config;
 
+  /**
+   * Worker id
+   */
   private int workerID;
 
+  /**
+   * The allocated resources
+   */
   private AllocatedResources allocResources;
 
+  /**
+   * The network communicator
+   */
   private Communicator communicator;
 
+  /**
+   * Inputs
+   */
   private Map<String, DataSet<Object>> inputs = new HashMap<>();
 
   public TaskExecutor(Config cfg, int wId, AllocatedResources resources, Communicator net) {

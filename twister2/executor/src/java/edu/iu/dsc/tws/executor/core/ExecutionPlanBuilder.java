@@ -170,7 +170,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
       INodeInstance iNodeInstance = createInstances(cfg, ip, v, taskGraph.getOperationMode(),
           inEdges, outEdges);
       // add to execution
-      execution.addNodes(taskIdGenerator.generateGlobalTaskId(
+      execution.addNodes(v.getName(), taskIdGenerator.generateGlobalTaskId(
           v.getName(), ip.getTaskId(), ip.getTaskIndex()), iNodeInstance);
     }
 

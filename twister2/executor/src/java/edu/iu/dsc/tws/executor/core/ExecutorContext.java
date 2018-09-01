@@ -23,6 +23,6 @@ public class ExecutorContext extends Context {
   }
 
   public static int instanceQueueSize(Config cfg) {
-    return cfg.getIntegerValue(INSTANCE_QUEUE_SIZE, 1024);
+    return cfg.getIntegerValue(INSTANCE_QUEUE_SIZE, 64);
   }
 }

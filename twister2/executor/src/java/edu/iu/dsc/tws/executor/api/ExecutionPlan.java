@@ -22,6 +22,8 @@ import java.util.Map;
 public class ExecutionPlan {
   private Map<Integer, INodeInstance> nodes = new HashMap<>();
 
+  private Map<String, Map<Integer, INodeInstance>> nodesByName = new HashMap<>();
+
   private Map<Integer, IParallelOperation> inputMessages = new HashMap<>();
 
   private Map<Integer, IParallelOperation> outputMessages = new HashMap<>();
@@ -33,8 +35,16 @@ public class ExecutionPlan {
    * @param taskId the global task id
    * @param node the instance
    */
-  public void addNodes(int taskId, INodeInstance node) {
+  public void addNodes(String name, int taskId, INodeInstance node) {
     nodes.put(taskId, node);
+    Map<Integer, INodeInstance> instances;
+    if (!nodesByName.containsKey(name)) {
+      instances = new HashMap<>();
+      nodesByName.put(name, instances);
+    } else {
+      instances = nodesByName.get(name);
+    }
+    instances.put(taskId, node);
   }
 
   public Map<Integer, INodeInstance> getNodes() {
