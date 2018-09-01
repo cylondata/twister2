@@ -81,7 +81,9 @@ public abstract class AbstractParallelOperation implements IParallelOperation {
       }
       barrierMap.putIfAbsent(source, true);
       if (barrierMap.keySet() == op.getSources()) {
-        op.getDestinations();
+        for (Integer dest :op.getDestinations()){
+          op.send(source, new Object(), MessageFlags.BARRIER, dest);
+        }
         //start checkpoint and flush the buffering messages
       }
     } else {
