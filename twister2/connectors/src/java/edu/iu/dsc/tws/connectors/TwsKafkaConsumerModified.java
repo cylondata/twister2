@@ -41,7 +41,7 @@ public class TwsKafkaConsumerModified<T> extends SourceTask {
   private  KafkaConsumerThread<T> kafkaConsumerThread;
 
   @Override
-  public void run() {
+  public void execute() {
     if (!consumerThreadStarted) {
       try {
         kafkaConsumerThread.run();

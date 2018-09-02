@@ -60,7 +60,7 @@ public class IterativeJob extends TaskWorker {
     protected static final long serialVersionUID = -254264120110286748L;
 
     @Override
-    public void run() {
+    public void execute() {
       ctx.write("", "Hello");
     }
   }

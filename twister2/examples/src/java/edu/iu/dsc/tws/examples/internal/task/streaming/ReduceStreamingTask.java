@@ -51,7 +51,6 @@ public class ReduceStreamingTask implements IWorker {
     GeneratorTask g = new GeneratorTask();
     RecevingTask r = new RecevingTask();
 
-    System.out.println("Config-Threads : " + SchedulerContext.numOfThreads(config));
     GraphBuilder builder = GraphBuilder.newBuilder();
     builder.addSource("source", g);
     builder.setParallelism("source", 4);
@@ -73,7 +72,7 @@ public class ReduceStreamingTask implements IWorker {
     private Config config;
 
     @Override
-    public void run() {
+    public void execute() {
       ctx.write("reduce-edge", "Hello");
     }
 

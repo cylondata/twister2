@@ -20,12 +20,7 @@ public class ReduceTask implements ICompute {
   public static final long serialVersionUID = 1258632547;
 
   @Override
-  public void run(IMessage content) {
-
-  }
-
-  @Override
-  public void run() {
+  public void execute(IMessage content) {
 
   }
 

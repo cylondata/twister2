@@ -9,17 +9,30 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.executor.comm.operations.batch;
+package edu.iu.dsc.tws.executor.comms.batch;
 
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
-import edu.iu.dsc.tws.executor.api.IParallelOperation;
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.op.Communicator;
+import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.executor.api.AbstractParallelOperation;
+import edu.iu.dsc.tws.executor.api.EdgeGenerator;
 import edu.iu.dsc.tws.task.api.IMessage;
 
-/**
- * This is a special batch operation to collect the data from in-memory tasks
- */
-public class CollectBatchOperation implements IParallelOperation {
+public class CollectingOperation extends AbstractParallelOperation {
+  public CollectingOperation(Config config, Communicator network, TaskPlan tPlan) {
+    super(config, network, tPlan);
+  }
+
+  public void prepare(Set<Integer> srcs, int dest, EdgeGenerator e,
+                      DataType dataType, String edgeName, Config config, TaskPlan taskPlan) {
+    this.edge = e;
+    communicationEdge = e.generate(edgeName);
+  }
+
   @Override
   public boolean send(int source, IMessage message, int flags) {
     return false;

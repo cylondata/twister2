@@ -79,7 +79,7 @@ public class AllReduceBatchTask implements IWorker {
     private Config config;
 
     @Override
-    public void run() {
+    public void execute() {
       ctx.write("all-reduce-edge", "Hello");
     }
 

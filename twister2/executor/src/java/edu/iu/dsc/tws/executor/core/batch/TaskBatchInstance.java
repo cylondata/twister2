@@ -157,7 +157,7 @@ public class TaskBatchInstance implements INodeInstance {
     if (state.isSet(InstanceState.INIT) && state.isNotSet(InstanceState.EXECUTION_DONE)) {
       while (!inQueue.isEmpty()) {
         IMessage m = inQueue.poll();
-        task.run(m);
+        task.execute(m);
         state.set(InstanceState.EXECUTING);
       }
 

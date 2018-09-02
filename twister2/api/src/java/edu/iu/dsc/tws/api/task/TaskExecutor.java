@@ -12,12 +12,15 @@
 package edu.iu.dsc.tws.api.task;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
+import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.dataset.DataSet;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
@@ -29,17 +32,40 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler;
 
+/**
+ * The task executor API
+ */
 public class TaskExecutor {
+  /**
+   * Configuration
+   */
   private Config config;
 
+  /**
+   * Worker id
+   */
   private int workerID;
 
+  /**
+   * The allocated resources
+   */
   private AllocatedResources allocResources;
 
-  public TaskExecutor(Config cfg, int wId, AllocatedResources resources) {
+  /**
+   * The network communicator
+   */
+  private Communicator communicator;
+
+  /**
+   * Inputs
+   */
+  private Map<String, DataSet<Object>> inputs = new HashMap<>();
+
+  public TaskExecutor(Config cfg, int wId, AllocatedResources resources, Communicator net) {
     this.config = cfg;
     this.workerID = wId;
     this.allocResources = resources;
+    this.communicator = net;
   }
 
   /**
@@ -55,7 +81,9 @@ public class TaskExecutor {
     TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
 
     TWSNetwork network = new TWSNetwork(config, allocResources.getWorkerId());
-    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(allocResources, network);
+    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(
+        allocResources, communicator);
+
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
     Executor executor = new Executor(config, plan, network.getChannel(),
         OperationMode.BATCH);
@@ -75,5 +103,9 @@ public class TaskExecutor {
     }
 
     return new WorkerPlan(workers);
+  }
+
+  public void addInput(String key, DataSet<Object> input) {
+    inputs.put(key, input);
   }
 }

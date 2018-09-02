@@ -121,7 +121,7 @@ public class SourceStreamingInstance implements INodeInstance {
    **/
   public boolean execute() {
     // lets execute the task
-    streamingTask.run();
+    streamingTask.execute();
     // now check the output queue
     while (!outStreamingQueue.isEmpty()) {
       IMessage message = outStreamingQueue.peek();

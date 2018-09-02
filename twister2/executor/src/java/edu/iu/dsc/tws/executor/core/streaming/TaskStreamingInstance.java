@@ -131,7 +131,7 @@ public class TaskStreamingInstance implements INodeInstance {
     while (!inQueue.isEmpty()) {
       IMessage m = inQueue.poll();
       if (m != null) {
-        task.run(m);
+        task.execute(m);
       }
     }
 

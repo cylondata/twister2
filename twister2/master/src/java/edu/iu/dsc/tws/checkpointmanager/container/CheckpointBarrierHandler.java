@@ -25,11 +25,11 @@ package edu.iu.dsc.tws.checkpointmanager.container;
 
 import java.io.IOException;
 
-import edu.iu.dsc.tws.task.api.Task;
+import edu.iu.dsc.tws.task.api.INode;
 
 public interface CheckpointBarrierHandler {
 
-  void registerCheckpointEventHandler(Task task);
+  void registerCheckpointEventHandler(INode task);
 
   void cleanup() throws IOException;
 

@@ -133,7 +133,7 @@ public class SourceBatchInstance implements INodeInstance {
     if (batchTask != null) {
       // if we are in executing state we can run
       if (state.isSet(InstanceState.EXECUTING) && state.isNotSet(InstanceState.EXECUTION_DONE)) {
-        batchTask.run();
+        batchTask.execute();
       }
 
       // now check the context

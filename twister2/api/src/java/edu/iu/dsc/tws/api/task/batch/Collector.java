@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.task.batch;
 
-import edu.iu.dsc.tws.dataset.Partition;
+import edu.iu.dsc.tws.dataset.DataSet;
 import edu.iu.dsc.tws.task.api.ISink;
 
 /**
@@ -22,7 +22,7 @@ public interface Collector<T> extends ISink {
   /**
    * get the collected valued
    */
-  default Partition<T> get() {
+  default DataSet<T> get() {
     return null;
   }
 }

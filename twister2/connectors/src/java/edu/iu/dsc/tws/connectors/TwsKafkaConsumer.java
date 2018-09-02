@@ -40,7 +40,7 @@ public class TwsKafkaConsumer<T> extends SourceCheckpointableTask {
   private  KafkaConsumerThread<T> kafkaConsumerThread;
 
   @Override
-  public void run() {
+  public void execute() {
     try {
       kafkaConsumerThread.run();
     } catch (IllegalThreadStateException e) {
