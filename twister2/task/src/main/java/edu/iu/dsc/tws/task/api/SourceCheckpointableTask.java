@@ -44,6 +44,7 @@ public abstract class SourceCheckpointableTask extends BaseStreamSourceTask {
 
   public void connect(Config cfg, TaskContext context) {
     this.ctx = context;
+    this.config = cfg;
 
     taskLooper = new Progress();
 
@@ -57,9 +58,9 @@ public abstract class SourceCheckpointableTask extends BaseStreamSourceTask {
     sendTaskDiscoveryMessage();
   }
 
-  public void checkForBarrier(Config cfg, TaskContext context) {
-    barrierClient = new RRClient("localhost", 6789, cfg, taskLooper,
-        context.taskId(), new BarrierClientConnectHandler());
+  public void checkForBarrier() {
+    barrierClient = new RRClient("localhost", 6789, config, taskLooper,
+        ctx.taskId(), new BarrierClientConnectHandler());
 
     barrierClient.registerResponseHandler(Checkpoint.BarrierSend.newBuilder(),
         new BarrierClientMessageHandler());

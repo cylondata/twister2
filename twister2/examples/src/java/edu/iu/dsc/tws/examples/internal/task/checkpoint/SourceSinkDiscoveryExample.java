@@ -102,6 +102,7 @@ public class SourceSinkDiscoveryExample implements IWorker {
 
     @Override
     public void execute() {
+      checkForBarrier();
       ctx.write("partition-edge", "Hello");
     }
 
