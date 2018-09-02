@@ -15,3 +15,12 @@ message TaskDiscovery {
         SINK = 1;
     }
 }
+
+message BarrierSync {
+    int32 currentBarrierID = 1;
+}
+
+message BarrierSend {
+    bool sendBarrier = 1;
+    int32 currentBarrierID = 2;
+}
