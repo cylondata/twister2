@@ -87,12 +87,12 @@ public abstract class SinkCheckpointableTask extends BaseStreamSinkTask {
   public class ClientConnectHandler implements ConnectHandler {
     @Override
     public void onError(SocketChannel channel) {
-      LOG.severe("ClientConnectHandler error thrown inside Sink Task");
+      LOG.severe("TaskClientConnectHandler error thrown inside Sink Task");
     }
 
     @Override
     public void onConnect(SocketChannel channel, StatusCode status) {
-      LOG.info("ClientConnectHandler inside Sink Task got connected");
+      LOG.info("TaskClientConnectHandler inside Sink Task got connected");
 
       Checkpoint.TaskDiscovery message = Checkpoint.TaskDiscovery.newBuilder()
           .setTaskID(ctx.taskId())
@@ -111,7 +111,7 @@ public abstract class SinkCheckpointableTask extends BaseStreamSinkTask {
   public class ClientMessageHandler implements MessageHandler {
     @Override
     public void onMessage(RequestID id, int workerId, Message message) {
-      LOG.info("ClientMessageHandler inside sink task got message from worker ID "
+      LOG.info("TaskClientMessageHandler inside sink task got message from worker ID "
           + workerId);
 
       client.disconnect();
