@@ -33,7 +33,5 @@ public interface Collector<T> {
   /**
    * get the collected valued
    */
-  default Partition<T> get() {
-    return null;
-  }
+  Partition<T> get();
 }

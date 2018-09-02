@@ -17,5 +17,10 @@ import edu.iu.dsc.tws.dataset.DataSet;
  * Add input to a task graph
  */
 public interface Receptor {
+  /**
+   * This method is called when the data is available
+   * @param name name of the input
+   * @param data input data
+   */
   void add(String name, DataSet<Object> data);
 }
