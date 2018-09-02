@@ -9,20 +9,13 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.task.batch;
+package edu.iu.dsc.tws.api.task;
 
-import edu.iu.dsc.tws.dataset.Partition;
-import edu.iu.dsc.tws.task.api.ISink;
+import edu.iu.dsc.tws.dataset.DataSet;
 
 /**
- * Special task for collecting the output from tasks
+ * Add input to a task graph
  */
-public interface Collector<T> extends ISink {
-  long serialVersionUID = -112312423421235L;
-  /**
-   * get the collected valued
-   */
-  default Partition<T> get() {
-    return null;
-  }
+public interface Receptor {
+  void add(String name, DataSet<Object> data);
 }

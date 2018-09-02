@@ -16,7 +16,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import edu.iu.dsc.tws.api.task.batch.Collector;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
@@ -93,9 +92,45 @@ public class TaskExecutor {
     executor.execute();
   }
 
+  /**
+   * Add input to the the task instances
+   * @param graph task graph
+   * @param plan execution plan
+   * @param taskName task name
+   * @param inputKey inputkey
+   * @param input input
+   */
+  public void addInput(DataFlowTaskGraph graph, ExecutionPlan plan,
+                       String taskName, String inputKey, DataSet<Object> input) {
+    Map<Integer, INodeInstance> nodes = plan.getNodes(taskName);
+    if (nodes == null) {
+      throw new RuntimeException("Failed to get output from non-existing task name: " + taskName);
+    }
+
+    for (Map.Entry<Integer, INodeInstance> e : nodes.entrySet()) {
+      INodeInstance node = e.getValue();
+      if (node instanceof Receptor) {
+        ((Receptor) node).add(inputKey, input);
+      } else {
+        throw new RuntimeException("Cannot add input to non input instance: " + node);
+      }
+    }
+  }
+
+  /**
+   * Extract output from a task graph
+   * @param graph
+   * @param plan
+   * @param name
+   * @return
+   */
   @SuppressWarnings({"unchecked", "rawtypes"})
   public DataSet<Object> getOutput(DataFlowTaskGraph graph, ExecutionPlan plan, String name) {
     Map<Integer, INodeInstance> nodes = plan.getNodes(name);
+    if (nodes == null) {
+      throw new RuntimeException("Failed to get output from non-existing task name: " + name);
+    }
+
     DataSet<Object> dataSet = new DataSet<>(0);
     for (Map.Entry<Integer, INodeInstance> e : nodes.entrySet()) {
       INodeInstance node = e.getValue();
