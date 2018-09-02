@@ -59,6 +59,9 @@ public abstract class SourceCheckpointableTask extends BaseStreamSourceTask {
   }
 
   public void checkForBarrier() {
+
+    barrierLooper = new Progress();
+
     barrierClient = new RRClient("localhost", 6789, config, taskLooper,
         ctx.taskId(), new BarrierClientConnectHandler());
 
