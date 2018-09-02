@@ -11,25 +11,16 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.internal.task.checkpoint;
 
-import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Logger;
-
-import com.google.protobuf.Message;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.net.tcp.Progress;
-import edu.iu.dsc.tws.common.net.tcp.StatusCode;
-import edu.iu.dsc.tws.common.net.tcp.request.ConnectHandler;
-import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
-import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
-import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
@@ -40,17 +31,16 @@ import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.core.CommunicationOperationType;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.Executor;
-import edu.iu.dsc.tws.proto.checkpoint.Checkpoint;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.SinkCheckpointableTask;
 import edu.iu.dsc.tws.task.api.SourceCheckpointableTask;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.GraphConstants;
 import edu.iu.dsc.tws.task.graph.OperationMode;
-import edu.iu.dsc.tws.task.streaming.BaseStreamSinkTask;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
@@ -121,14 +111,11 @@ public class SourceSinkDiscoveryExample implements IWorker {
     }
   }
 
-  private static class ReceivingTask extends BaseStreamSinkTask {
+  private static class ReceivingTask extends SinkCheckpointableTask {
     private static final long serialVersionUID = -254264903511284798L;
     private Config config;
 
     private int count = 0;
-
-    private RRClient client;
-    private Progress looper;
 
     private TaskContext ctx;
 
@@ -141,89 +128,11 @@ public class SourceSinkDiscoveryExample implements IWorker {
       return true;
     }
 
-    public boolean tryUntilConnected(long timeLimit) {
-      long startTime = System.currentTimeMillis();
-      long duration = 0;
-      long sleepInterval = 30;
-
-      long logInterval = 1000;
-      long nextLogTime = logInterval;
-
-      while (duration < timeLimit) {
-        // try connecting
-        client.connect();
-        // loop once to connect
-        looper.loop();
-
-        if (client.isConnected()) {
-          return true;
-        }
-
-
-        if (client.isConnected()) {
-          return true;
-        }
-
-        duration = System.currentTimeMillis() - startTime;
-
-        if (duration > nextLogTime) {
-          LOG.info("Still trying to connect to Job Master");
-          nextLogTime += logInterval;
-        }
-      }
-      return false;
-    }
-
     @Override
     public void prepare(Config cfg, TaskContext context) {
       this.ctx = context;
-      LOG.info("This is sample message............");
 
-      looper = new Progress();
-
-      client = new RRClient("localhost", 6789, cfg, looper,
-          context.taskId(), new ClientConnectHandler());
-
-      client.registerResponseHandler(Checkpoint.TaskDiscovery.newBuilder(),
-          new ClientMessageHandler());
-
-      long connectionTimeLimit = 100000;
-      tryUntilConnected(connectionTimeLimit);
-
-    }
-
-
-    private class ClientConnectHandler implements ConnectHandler {
-      @Override
-      public void onError(SocketChannel channel) {
-        LOG.severe("ClientConnectHandler error thrown inside Sink Task");
-      }
-
-      @Override
-      public void onConnect(SocketChannel channel, StatusCode status) {
-        LOG.info("ClientConnectHandler connected inside Sink Task");
-        Checkpoint.TaskDiscovery message = Checkpoint.TaskDiscovery.newBuilder()
-            .setTaskID(ctx.taskId())
-            .setTaskType(Checkpoint.TaskDiscovery.TaskType.SINK)
-            .build();
-
-        client.sendRequest(message);
-      }
-
-      @Override
-      public void onClose(SocketChannel channel) {
-
-      }
-    }
-
-    private class ClientMessageHandler implements MessageHandler {
-      @Override
-      public void onMessage(RequestID id, int workerId, Message message) {
-        LOG.info("ClientMessageHandler inside sink task got message from worker ID "
-            + workerId);
-
-        client.disconnect();
-      }
+      connect(cfg, context);
     }
   }
 
