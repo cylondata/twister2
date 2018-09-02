@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
-import edu.iu.dsc.tws.task.api.Task;
+import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.TaskExecutor;
 
 /**
@@ -100,7 +100,7 @@ public class TaskExecutorCachedThreadPool implements TaskExecutor {
    * @return returns true if the task was submitted and queued
    */
   @Override
-  public boolean submitTask(Task task) {
+  public boolean submitTask(INode task) {
     executorPool.submit(new RunnableTask(task));
     return true;
   }
@@ -126,7 +126,7 @@ public class TaskExecutorCachedThreadPool implements TaskExecutor {
   }
 
   @Override
-  public boolean registerTask(Task task) {
+  public boolean registerTask(INode task) {
     return false;
   }
 

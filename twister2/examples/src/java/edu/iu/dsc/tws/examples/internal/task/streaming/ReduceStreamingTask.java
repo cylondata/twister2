@@ -72,7 +72,7 @@ public class ReduceStreamingTask implements IWorker {
     private Config config;
 
     @Override
-    public void run() {
+    public void execute() {
       ctx.write("reduce-edge", "Hello");
     }
 

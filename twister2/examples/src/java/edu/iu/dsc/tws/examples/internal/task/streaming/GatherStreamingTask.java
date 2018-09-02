@@ -76,7 +76,7 @@ public class GatherStreamingTask implements IWorker {
     private static RandomString randomString;
 
     @Override
-    public void run() {
+    public void execute() {
       randomString = new RandomString(128000, new Random(), RandomString.ALPHANUM);
       String data = generateStringData();
       // lets generate a message

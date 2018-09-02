@@ -67,7 +67,7 @@ public class PartitionKeyedStreamingTask implements IWorker {
     private Config config;
 
     @Override
-    public void run() {
+    public void execute() {
       ctx.write("partition-keyed-edge", "Hello");
     }
 

@@ -751,17 +751,8 @@ public class HDFSTaskExample implements IWorker {
      * Execute with an incoming message
      */
     @Override
-    public void run(IMessage content) {
+    public void execute(IMessage content) {
 
-    }
-
-    /**
-     * Execute without an incoming message
-     */
-    @Override
-    public void run() {
-
-      //ctx.write("partition-edge", "Hello");
     }
   }
 
@@ -788,15 +779,7 @@ public class HDFSTaskExample implements IWorker {
      * Execute with an incoming message
      */
     @Override
-    public void run(IMessage content) {
-
-    }
-
-    /**
-     * Execute without an incoming message
-     */
-    @Override
-    public void run() {
+    public void execute(IMessage content) {
 
     }
   }
@@ -824,15 +807,7 @@ public class HDFSTaskExample implements IWorker {
      * Execute with an incoming message
      */
     @Override
-    public void run(IMessage content) {
-
-    }
-
-    /**
-     * Execute without an incoming message
-     */
-    @Override
-    public void run() {
+    public void execute(IMessage content) {
 
     }
   }
@@ -860,15 +835,7 @@ public class HDFSTaskExample implements IWorker {
      * Execute with an incoming message
      */
     @Override
-    public void run(IMessage content) {
-
-    }
-
-    /**
-     * Execute without an incoming message
-     */
-    @Override
-    public void run() {
+    public void execute(IMessage content) {
 
     }
   }

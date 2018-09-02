@@ -16,6 +16,11 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
+/**
+ * The abstract class that represents the Last task of a job. This task will be responsible of
+ * outputing the results to various output sources such as files or console.
+ * The task takes inputs from another task and outputs to a output source
+ */
 public abstract class BaseBatchSinkTask implements ISink {
   protected static final long serialVersionUID = -254264120110286748L;
 

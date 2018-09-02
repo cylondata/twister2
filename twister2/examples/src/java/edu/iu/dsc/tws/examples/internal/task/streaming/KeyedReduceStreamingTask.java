@@ -71,7 +71,7 @@ public class KeyedReduceStreamingTask implements IWorker {
     private Config config;
 
     @Override
-    public void run() {
+    public void execute() {
       ctx.write("keyed-reduce-edge", "Hello");
     }
 

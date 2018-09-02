@@ -231,7 +231,7 @@ public class RoundRobinBatchTaskExample implements IWorker {
     private TaskContext ctx;
 
     @Override
-    public void run() {
+    public void execute() {
       ctx.write("partition-edge", "Hello");
     }
 

@@ -70,7 +70,7 @@ public class BroadCastStreamingTask implements IWorker {
     private int count = 0;
 
     @Override
-    public void run() {
+    public void execute() {
       ctx.write("broadcast-edge", "Hello");
     }
 

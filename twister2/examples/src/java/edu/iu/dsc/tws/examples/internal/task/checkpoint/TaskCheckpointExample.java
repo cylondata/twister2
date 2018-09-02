@@ -115,7 +115,7 @@ public class TaskCheckpointExample implements IWorker {
     private long id = 1;
 
     @Override
-    public void run() {
+    public void execute() {
 
       CheckpointBarrier cb = new CheckpointBarrier(id, 2141535, null);
       ctx.write("partition-edge", cb);

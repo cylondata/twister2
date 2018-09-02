@@ -84,7 +84,7 @@ public class GatherBatchTask implements IWorker {
     private static RandomString randomString;
 
     @Override
-    public void run() {
+    public void execute() {
       ctx.write("gather-edge", "1");
     }
 

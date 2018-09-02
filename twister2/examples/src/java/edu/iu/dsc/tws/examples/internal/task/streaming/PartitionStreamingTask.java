@@ -67,7 +67,7 @@ public class PartitionStreamingTask implements IWorker {
     private Config config;
 
     @Override
-    public void run() {
+    public void execute() {
       ctx.write("partition-edge", "Hello");
     }
 

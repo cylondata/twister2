@@ -84,7 +84,7 @@ public class ReduceBatchTask implements IWorker {
     private int count = 0;
 
     @Override
-    public void run() {
+    public void execute() {
       if (count == 0) {
         this.sourceTaskContext.write("reduce-edge", "Hello " + count);
       }

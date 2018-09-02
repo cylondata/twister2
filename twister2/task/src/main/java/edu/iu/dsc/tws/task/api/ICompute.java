@@ -31,10 +31,5 @@ public interface ICompute extends INode {
    * Execute with an incoming message
    * @param content
    */
-  void run(IMessage content);
-
-  /**
-   * Execute without an incoming message
-   */
-  void run();
+  void execute(IMessage content);
 }

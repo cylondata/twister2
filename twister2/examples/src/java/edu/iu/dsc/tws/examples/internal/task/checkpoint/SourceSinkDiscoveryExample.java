@@ -112,7 +112,7 @@ public class SourceSinkDiscoveryExample implements IWorker {
     private Progress looper;
 
     @Override
-    public void run() {
+    public void execute() {
       ctx.write("partition-edge", "Hello");
     }
 

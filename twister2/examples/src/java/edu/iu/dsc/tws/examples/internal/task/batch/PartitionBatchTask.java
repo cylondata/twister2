@@ -69,7 +69,7 @@ public class PartitionBatchTask implements IWorker {
     private int count = 0;
 
     @Override
-    public void run() {
+    public void execute() {
       if (count == 999) {
         if (ctx.writeEnd("partition-edge", "Hello")) {
           count++;

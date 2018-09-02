@@ -254,15 +254,7 @@ public class SimpleTaskGraphExample implements IWorker {
      * Execute with an incoming message
      */
     @Override
-    public void run(IMessage content) {
-
-    }
-
-    /**
-     * Execute without an incoming message
-     */
-    @Override
-    public void run() {
+    public void execute(IMessage content) {
 
     }
   }
@@ -290,15 +282,7 @@ public class SimpleTaskGraphExample implements IWorker {
      * Execute with an incoming message
      */
     @Override
-    public void run(IMessage content) {
-
-    }
-
-    /**
-     * Execute without an incoming message
-     */
-    @Override
-    public void run() {
+    public void execute(IMessage content) {
 
     }
   }
@@ -326,15 +310,7 @@ public class SimpleTaskGraphExample implements IWorker {
      * Execute with an incoming message
      */
     @Override
-    public void run(IMessage content) {
-
-    }
-
-    /**
-     * Execute without an incoming message
-     */
-    @Override
-    public void run() {
+    public void execute(IMessage content) {
 
     }
   }
@@ -362,15 +338,7 @@ public class SimpleTaskGraphExample implements IWorker {
      * Execute with an incoming message
      */
     @Override
-    public void run(IMessage content) {
-
-    }
-
-    /**
-     * Execute without an incoming message
-     */
-    @Override
-    public void run() {
+    public void execute(IMessage content) {
 
     }
   }
