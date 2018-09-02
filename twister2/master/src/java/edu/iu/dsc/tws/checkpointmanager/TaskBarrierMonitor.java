@@ -34,9 +34,9 @@ import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
 import edu.iu.dsc.tws.proto.checkpoint.Checkpoint;
 
-public class TaskMonitor implements MessageHandler {
+public class TaskBarrierMonitor implements MessageHandler {
 
-  private static final Logger LOG = Logger.getLogger(TaskMonitor.class.getName());
+  private static final Logger LOG = Logger.getLogger(TaskBarrierMonitor.class.getName());
 
   private CheckpointManager checkpointManager;
   private Config config;
@@ -45,7 +45,10 @@ public class TaskMonitor implements MessageHandler {
   private List<Integer> sourceTaskList;
   private List<Integer> sinkTaskList;
 
-  public TaskMonitor(Config cfg, CheckpointManager checkpointManager, RRServer server) {
+  private boolean sendBarrierFlag;
+  private int currentBarrierID;
+
+  public TaskBarrierMonitor(Config cfg, CheckpointManager checkpointManager, RRServer server) {
     this.config = cfg;
     this.checkpointManager = checkpointManager;
     this.rrServer = server;
@@ -63,6 +66,8 @@ public class TaskMonitor implements MessageHandler {
 
         this.sourceTaskList.add(taskDiscoveryMessage.getTaskID());
 
+        printTaskList(sourceTaskList, "Source");
+
       } else if (taskDiscoveryMessage.getTaskType()
           .equals(Checkpoint.TaskDiscovery.TaskType.SINK)) {
 
@@ -71,8 +76,20 @@ public class TaskMonitor implements MessageHandler {
 
         this.sinkTaskList.add(taskDiscoveryMessage.getTaskID());
 
+        printTaskList(sinkTaskList, "Sink");
+
       }
 
+    } else if (message instanceof Checkpoint.BarrierSync) {
+      Checkpoint.BarrierSync barrierSyncMessage = (Checkpoint.BarrierSync) message;
     }
+  }
+
+  private void printTaskList(List<Integer> ids, String type) {
+    String temp = type + " Task IDs";
+    for (Integer i : ids) {
+      temp += " " + i;
+    }
+    LOG.info(temp);
   }
 }

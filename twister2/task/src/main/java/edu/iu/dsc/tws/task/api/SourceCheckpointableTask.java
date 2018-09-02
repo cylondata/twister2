@@ -54,6 +54,7 @@ public abstract class SourceCheckpointableTask extends BaseStreamSourceTask {
         new TaskClientMessageHandler());
 
     tryUntilConnected(taskClient, taskLooper, 5000);
+    sendTaskDiscoveryMessage();
   }
 
   public void checkForBarrier(Config cfg, TaskContext context) {
@@ -64,6 +65,7 @@ public abstract class SourceCheckpointableTask extends BaseStreamSourceTask {
         new BarrierClientMessageHandler());
 
     tryUntilConnected(barrierClient, barrierLooper, 5000);
+
   }
 
   public boolean tryUntilConnected(RRClient client, Progress looper, long timeLimit) {
@@ -108,12 +110,6 @@ public abstract class SourceCheckpointableTask extends BaseStreamSourceTask {
     public void onConnect(SocketChannel channel, StatusCode status) {
       LOG.info("TaskClientConnectHandler inside Source Task got connected");
 
-      Checkpoint.TaskDiscovery message = Checkpoint.TaskDiscovery.newBuilder()
-          .setTaskID(ctx.taskId())
-          .setTaskType(Checkpoint.TaskDiscovery.TaskType.SOURCE)
-          .build();
-
-      taskClient.sendRequest(message);
     }
 
     @Override
@@ -174,6 +170,15 @@ public abstract class SourceCheckpointableTask extends BaseStreamSourceTask {
 
       barrierClient.disconnect();
     }
+  }
+
+  private void sendTaskDiscoveryMessage() {
+    Checkpoint.TaskDiscovery message = Checkpoint.TaskDiscovery.newBuilder()
+        .setTaskID(ctx.taskId())
+        .setTaskType(Checkpoint.TaskDiscovery.TaskType.SOURCE)
+        .build();
+
+    taskClient.sendRequest(message);
   }
 
   public void emitBarrier() { }

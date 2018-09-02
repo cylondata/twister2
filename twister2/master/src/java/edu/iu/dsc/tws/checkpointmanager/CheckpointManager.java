@@ -82,12 +82,12 @@ public class CheckpointManager extends Thread {
     this.minPauseBetweenCheckpoints = minPauseBetweenCheckpoints;
     this.maxConcurrentCheckpointAttempts = maxConcurrentCheckpointAttempts;
 
-    TaskMonitor taskMonitor = new TaskMonitor(cfg, this, rrServer);
+    TaskBarrierMonitor taskBarrierMonitor = new TaskBarrierMonitor(cfg, this, rrServer);
     looper = new Progress();
     rrServer = new RRServer(cfg, "localhost", 6789, looper,
         -2, new ServerConnectHandler());
 
-    rrServer.registerRequestHandler(Checkpoint.TaskDiscovery.newBuilder(), taskMonitor);
+    rrServer.registerRequestHandler(Checkpoint.TaskDiscovery.newBuilder(), taskBarrierMonitor);
 
     rrServer.start();
 
@@ -99,12 +99,12 @@ public class CheckpointManager extends Thread {
   }
 
   public CheckpointManager() {
-    TaskMonitor taskMonitor = new TaskMonitor(cfg, this, rrServer);
+    TaskBarrierMonitor taskBarrierMonitor = new TaskBarrierMonitor(cfg, this, rrServer);
     looper = new Progress();
     rrServer = new RRServer(cfg, "localhost", 6789, looper,
         -2, new ServerConnectHandler());
 
-    rrServer.registerRequestHandler(Checkpoint.TaskDiscovery.newBuilder(), taskMonitor);
+    rrServer.registerRequestHandler(Checkpoint.TaskDiscovery.newBuilder(), taskBarrierMonitor);
 
     rrServer.start();
 
@@ -163,7 +163,7 @@ public class CheckpointManager extends Thread {
     @Override
     public void onConnect(SocketChannel channel, StatusCode status) {
       try {
-        LOG.finer("Client connected from:" + channel.getRemoteAddress());
+        LOG.info("Client connected from:" + channel.getRemoteAddress());
       } catch (IOException e) {
         e.printStackTrace();
       }
