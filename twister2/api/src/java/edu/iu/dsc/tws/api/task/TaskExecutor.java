@@ -26,6 +26,7 @@ import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.Executor;
+import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
@@ -104,13 +105,15 @@ public class TaskExecutor {
                        String taskName, String inputKey, DataSet<Object> input) {
     Map<Integer, INodeInstance> nodes = plan.getNodes(taskName);
     if (nodes == null) {
-      throw new RuntimeException("Failed to get output from non-existing task name: " + taskName);
+      throw new RuntimeException(String.format("%d Failed to set input for non-existing "
+          + "task name: %s existing sources: %s", workerID, taskName, plan.getNodeNames()));
     }
 
     for (Map.Entry<Integer, INodeInstance> e : nodes.entrySet()) {
       INodeInstance node = e.getValue();
-      if (node instanceof Receptor) {
-        ((Receptor) node).add(inputKey, input);
+      INode task = node.getNode();
+      if (task instanceof Receptor) {
+        ((Receptor) task).add(inputKey, input);
       } else {
         throw new RuntimeException("Cannot add input to non input instance: " + node);
       }
@@ -134,8 +137,9 @@ public class TaskExecutor {
     DataSet<Object> dataSet = new DataSet<>(0);
     for (Map.Entry<Integer, INodeInstance> e : nodes.entrySet()) {
       INodeInstance node = e.getValue();
-      if (node instanceof Collector) {
-        Partition partition = ((Collector) node).get();
+      INode task = node.getNode();
+      if (task instanceof Collector) {
+        Partition partition = ((Collector) task).get();
         dataSet.addPartition(partition);
       } else {
         throw new RuntimeException("Cannot collect from node because it is not a collector: "
