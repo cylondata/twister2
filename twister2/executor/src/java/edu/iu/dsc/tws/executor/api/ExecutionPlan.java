@@ -58,4 +58,8 @@ public class ExecutionPlan {
   public List<IParallelOperation> getParallelOperations() {
     return parallelOperations;
   }
+
+  public Map<Integer, INodeInstance> getNodes(String taskName) {
+    return nodesByName.get(taskName);
+  }
 }

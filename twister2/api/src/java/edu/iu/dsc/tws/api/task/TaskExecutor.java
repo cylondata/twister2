@@ -16,13 +16,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import edu.iu.dsc.tws.api.task.batch.Collector;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
-import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.dataset.DataSet;
+import edu.iu.dsc.tws.dataset.Partition;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.Executor;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
@@ -73,26 +75,39 @@ public class TaskExecutor {
    * @param graph task graph
    * @return the data set
    */
-  public DataSet<Object> execute(DataFlowTaskGraph graph) {
+  public ExecutionPlan plan(DataFlowTaskGraph graph) {
     RoundRobinTaskScheduler roundRobinTaskScheduler = new RoundRobinTaskScheduler();
     roundRobinTaskScheduler.initialize(config);
 
     WorkerPlan workerPlan = createWorkerPlan(allocResources);
     TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
 
-    TWSNetwork network = new TWSNetwork(config, allocResources.getWorkerId());
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(
         allocResources, communicator);
+    return executionPlanBuilder.build(config, graph, taskSchedulePlan);
+  }
 
-    ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
-    Executor executor = new Executor(config, plan, network.getChannel(),
+  public void execute(DataFlowTaskGraph graph, ExecutionPlan plan) {
+    Executor executor = new Executor(config, plan, communicator.getChannel(),
         OperationMode.BATCH);
     executor.execute();
+  }
 
-    // lets collect the results
-
-
-    return null;
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  public DataSet<Object> getOutput(DataFlowTaskGraph graph, ExecutionPlan plan, String name) {
+    Map<Integer, INodeInstance> nodes = plan.getNodes(name);
+    DataSet<Object> dataSet = new DataSet<>(0);
+    for (Map.Entry<Integer, INodeInstance> e : nodes.entrySet()) {
+      INodeInstance node = e.getValue();
+      if (node instanceof Collector) {
+        Partition partition = ((Collector) node).get();
+        dataSet.addPartition(partition);
+      } else {
+        throw new RuntimeException("Cannot collect from node because it is not a collector: "
+            + node);
+      }
+    }
+    return dataSet;
   }
 
   private WorkerPlan createWorkerPlan(AllocatedResources resourcePlan) {

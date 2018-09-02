@@ -27,6 +27,10 @@ public class DataSet<T> {
     partitions.put(dId, new Partition<T>(dId, data));
   }
 
+  public void addPartition(Partition<T> p) {
+    partitions.put(p.getId(), p);
+  }
+
   public T getPartition(int pId) {
     if (partitions.containsKey(pId)) {
       return partitions.get(pId).getData();
