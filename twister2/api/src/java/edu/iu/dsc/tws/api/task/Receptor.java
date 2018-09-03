@@ -9,7 +9,18 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.task.stream;
+package edu.iu.dsc.tws.api.task;
 
-public interface Source {
+import edu.iu.dsc.tws.dataset.DataSet;
+
+/**
+ * Add input to a task graph
+ */
+public interface Receptor {
+  /**
+   * This method is called when the data is available
+   * @param name name of the input
+   * @param data input data
+   */
+  void add(String name, DataSet<Object> data);
 }

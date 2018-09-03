@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.executor.threading;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.api.IExecutor;
 import edu.iu.dsc.tws.task.graph.OperationMode;
@@ -27,8 +26,6 @@ public class Executor {
 
   private Config config;
 
-  private Communicator communicator;
-
   public Executor(Config cfg, ExecutionPlan executionPlan,
                   TWSChannel channel) {
     this(cfg, executionPlan, channel, OperationMode.STREAMING);
@@ -40,7 +37,6 @@ public class Executor {
     this.channel = channel;
     this.operationMode = operationMode;
     this.config = cfg;
-    this.communicator = new Communicator(cfg, channel);
   }
 
   /***

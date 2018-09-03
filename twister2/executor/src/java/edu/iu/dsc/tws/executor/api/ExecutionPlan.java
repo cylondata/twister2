@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Execution plan to keep track of the tasks
@@ -57,5 +58,13 @@ public class ExecutionPlan {
 
   public List<IParallelOperation> getParallelOperations() {
     return parallelOperations;
+  }
+
+  public Map<Integer, INodeInstance> getNodes(String taskName) {
+    return nodesByName.get(taskName);
+  }
+
+  public Set<String> getNodeNames() {
+    return nodesByName.keySet();
   }
 }
