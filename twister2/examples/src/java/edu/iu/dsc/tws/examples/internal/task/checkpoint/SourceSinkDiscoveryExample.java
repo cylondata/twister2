@@ -100,10 +100,15 @@ public class SourceSinkDiscoveryExample implements IWorker {
     private TaskContext ctx;
     private Config config;
 
+    private int count = 0;
+
     @Override
     public void execute() {
-      checkForBarrier();
+      if (count % 1000000 == 0) {
+        checkForBarrier();
+      }
       ctx.write("partition-edge", "Hello");
+      count++;
     }
 
 
