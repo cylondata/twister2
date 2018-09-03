@@ -11,7 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.internal.task.batch;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -60,6 +64,9 @@ public class IterativeJob extends TaskWorker {
     ExecutionPlan plan = taskExecutor.plan(graph);
     taskExecutor.addInput(graph, plan, "source", "input", new DataSet<>(0));
     taskExecutor.execute(graph, plan);
+    DataSet<Object> dataSet = taskExecutor.getOutput(graph, plan, "sink");
+    Set<Object> values = dataSet.getData();
+    LOG.log(Level.INFO, "Values: " + values);
   }
 
   private static class IterativeSourceTask extends BaseBatchSourceTask implements Receptor {
@@ -92,15 +99,30 @@ public class IterativeJob extends TaskWorker {
   private static class PartitionTask extends BaseBatchSinkTask implements Collector<Object> {
     protected static final long serialVersionUID = -254264120110286748L;
 
+    private List<String> list = new ArrayList<>();
+
+    private int count;
+
     @Override
     public boolean execute(IMessage message) {
       LOG.log(Level.INFO, "Received message: " + message.getContent());
-      return false;
+
+      if (message.getContent() instanceof Iterator) {
+        while (((Iterator) message.getContent()).hasNext()) {
+          Object ret = ((Iterator) message.getContent()).next();
+          count++;
+          list.add(ret.toString());
+        }
+        System.out.println("Message Partition Received : " + message.getContent()
+            + ", Count : " + count);
+      }
+      count++;
+      return true;
     }
 
     @Override
     public Partition<Object> get() {
-      return null;
+      return new Partition<>(ctx.taskIndex(), list);
     }
   }
 
