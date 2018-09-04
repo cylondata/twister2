@@ -12,14 +12,16 @@
 package edu.iu.dsc.tws.checkpointmanager.state_backend;
 
 import java.io.IOException;
-
-import javax.print.attribute.standard.JobName;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.checkpointmanager.CompletedCheckpointStorageLocation;
 import edu.iu.dsc.tws.data.fs.FileSystem;
 import edu.iu.dsc.tws.data.fs.Path;
 
 public class FsCheckpointStorage extends AbstractFsCheckpointStorage {
+
+  private static final Logger LOG = Logger.getLogger(FsCheckpointStorage.class.getName());
 
   private final FileSystem fileSystem;
 
@@ -35,8 +37,8 @@ public class FsCheckpointStorage extends AbstractFsCheckpointStorage {
       FileSystem fs,
       Path checkpointBaseDirectory,
       Path defaultSavepointDirectory,
-      JobName jobName,
-      int fileSizeThreshold) throws IOException {
+      String jobName,
+      int fileSizeThreshold) {
 
     super(jobName);
 
@@ -44,15 +46,19 @@ public class FsCheckpointStorage extends AbstractFsCheckpointStorage {
     //todo check the JobName
     this.fileSystem = fs;
     this.checkpointsDirectory = getCheckpointDirectoryForJob(checkpointBaseDirectory,
-        jobName.getName());
+        jobName);
     this.sharedStateDirectory = new Path(checkpointsDirectory, CHECKPOINT_SHARED_STATE_DIR);
     this.taskOwnedStateDirectory = new Path(checkpointsDirectory, CHECKPOINT_TASK_OWNED_STATE_DIR);
     this.fileSizeThreshold = fileSizeThreshold;
 
     // initialize the dedicated directories
-    fileSystem.mkdirs(checkpointsDirectory);
-    fileSystem.mkdirs(sharedStateDirectory);
-    fileSystem.mkdirs(taskOwnedStateDirectory);
+    try {
+      fileSystem.mkdirs(checkpointsDirectory);
+      fileSystem.mkdirs(sharedStateDirectory);
+      fileSystem.mkdirs(taskOwnedStateDirectory);
+    } catch (IOException e) {
+      LOG.log(Level.WARNING, "checkpoint storage location is not initialized", e);
+    }
   }
 
   public Path getCheckpointsDirectory() {
