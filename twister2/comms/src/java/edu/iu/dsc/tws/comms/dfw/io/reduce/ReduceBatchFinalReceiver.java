@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.comms.dfw.io.reduce;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -113,6 +114,7 @@ public class ReduceBatchFinalReceiver extends ReduceBatchReceiver {
             Object current = finalMessagePerTask.get(i);
             previous = reduceFunction.reduce(previous, current);
           }
+
         }
         reduceReceiver.receive(t, previous);
         // we can call on finish at this point
