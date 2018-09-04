@@ -39,9 +39,15 @@ public class ReduceOperationFunction implements ReduceFunction {
   public Object reduce(Object t1, Object t2) {
     Object result = null;
     if (this.dataType == DataType.INTEGER) {
-      int i1 = (int) t1;
-      int i2 = (int) t2;
-      result = i1 + i2;
+      if (t1 instanceof int[] && t2 instanceof int[]) {
+        int[] i1 = (int[]) t1;
+        int[] i2 = (int[]) t2;
+        int[] res = new int[i1.length];
+        for (int i = 0; i < i1.length; i++) {
+          res[i] = i1[i] + i2[i];
+        }
+        result = res;
+      }
     }
     return result;
   }

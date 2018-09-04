@@ -109,7 +109,8 @@ public abstract class BenchWorker implements IWorker {
     @Override
     public void run() {
       LOG.log(Level.INFO, "Starting map worker: " + workerId + " task: " + task);
-      int[] data = DataGenerator.generateIntData(jobParameters.getSize());
+//      int[] data = DataGenerator.generateIntData(jobParameters.getSize());
+      int[] data = {1, 0, 2};
       for (int i = 0; i < jobParameters.getIterations(); i++) {
         // lets generate a message
         int flag = 0;

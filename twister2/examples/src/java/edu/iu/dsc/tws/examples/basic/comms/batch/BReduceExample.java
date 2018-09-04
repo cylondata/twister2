@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.basic.comms.batch;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -24,7 +25,7 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.batch.BReduce;
-import edu.iu.dsc.tws.comms.op.functions.ReduceIdentityFunction;
+import edu.iu.dsc.tws.comms.op.functions.ReduceSumFunction;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.basic.comms.BenchWorker;
 
@@ -48,7 +49,7 @@ public class BReduceExample extends BenchWorker {
     int target = noOfSourceTasks;
     // create the communication
     reduce = new BReduce(communicator, taskPlan, sources, target,
-        new ReduceIdentityFunction(), new FinalReduceReceiver(), MessageType.INTEGER);
+        new ReduceSumFunction(), new FinalReduceReceiver(), MessageType.INTEGER);
 
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
@@ -102,6 +103,8 @@ public class BReduceExample extends BenchWorker {
 
     @Override
     public boolean receive(int target, Object object) {
+      int[] data = (int[]) object;
+      System.out.println("Results : " + Arrays.toString(data));
       LOG.log(Level.INFO, String.format("%d Received final input", workerId));
       reduceDone = true;
       return true;
