@@ -24,7 +24,6 @@
 package edu.iu.dsc.tws.executor.api;
 
 import java.util.Set;
-import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
@@ -47,7 +46,6 @@ import edu.iu.dsc.tws.task.graph.Edge;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
 public class ParallelOperationFactory {
-  private static final Logger LOG = Logger.getLogger(ParallelOperationFactory.class.getName());
   private Communicator channel;
 
   private Config config;
@@ -160,7 +158,7 @@ public class ParallelOperationFactory {
           return gatherOp;
         } else if (CommunicationOperationType.STREAMING_REDUCE.equals(edge.getOperation())) {
           ReduceStreamingOperation reduceStreamingOperation = new ReduceStreamingOperation(config,
-              channel, taskPlan);
+              channel, taskPlan, edge.getFunction());
           reduceStreamingOperation.prepare(sources, dests.iterator().next(), edgeGenerator,
               edge.getDataType(), edge.getName());
           return reduceStreamingOperation;
@@ -186,7 +184,7 @@ public class ParallelOperationFactory {
           return broadcastOp;
         } else if (CommunicationOperationType.STREAMING_REDUCE.equals(edge.getOperation())) {
           ReduceStreamingOperation reduceStreamingOperation = new ReduceStreamingOperation(config,
-              channel, taskPlan);
+              channel, taskPlan, edge.getFunction());
           reduceStreamingOperation.prepare(sources, dests.iterator().next(), edgeGenerator,
               edge.getDataType(), edge.getName());
           return reduceStreamingOperation;
@@ -234,7 +232,7 @@ public class ParallelOperationFactory {
         return gatherOp;
       } else if (Operations.REDUCE.equals(edge.getOperation())) {
         ReduceStreamingOperation reduceStreamingOperation = new ReduceStreamingOperation(config,
-            channel, taskPlan);
+            channel, taskPlan, edge.getFunction());
         reduceStreamingOperation.prepare(sources, dests.iterator().next(), edgeGenerator,
             edge.getDataType(), edge.getName());
         return reduceStreamingOperation;
@@ -260,7 +258,7 @@ public class ParallelOperationFactory {
         return broadcastOp;
       } else if (Operations.REDUCE.equals(edge.getOperation())) {
         ReduceStreamingOperation reduceStreamingOperation = new ReduceStreamingOperation(config,
-            channel, taskPlan);
+            channel, taskPlan, edge.getFunction());
         reduceStreamingOperation.prepare(sources, dests.iterator().next(), edgeGenerator,
             edge.getDataType(), edge.getName());
         return reduceStreamingOperation;
