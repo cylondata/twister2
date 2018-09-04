@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.comms.dfw.io.reduce;
 
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.MessageFlags;
@@ -20,11 +21,13 @@ import edu.iu.dsc.tws.comms.api.ReduceFunction;
 
 public class ReduceBatchPartialReceiver extends ReduceBatchReceiver {
   private static final Logger LOG = Logger.getLogger(ReduceBatchPartialReceiver.class.getName());
+  private int partialSendCount;
 
   public ReduceBatchPartialReceiver(int dst, ReduceFunction reduce) {
     super(dst, reduce);
     this.destination = dst;
     this.reduceFunction = reduce;
+    this.partialSendCount = 0;
   }
 
   @Override
@@ -40,6 +43,8 @@ public class ReduceBatchPartialReceiver extends ReduceBatchReceiver {
       Map<Integer, Boolean> finishedForTarget = finished.get(t);
       Map<Integer, Integer> countMap = counts.get(t);
       Map<Integer, Integer> totalCountMap = totalCounts.get(t);
+      Set<Integer> emptyMessages = emptyReceivedSources.get(t);
+
       boolean canProgress = true;
       int tempBufferCount = bufferCounts.get(t);
       Object currentVal = null;
@@ -106,8 +111,8 @@ public class ReduceBatchPartialReceiver extends ReduceBatchReceiver {
 
           if (currentVal != null
               && dataFlowOperation.sendPartial(t, currentVal, flags, destination)) {
+            partialSendCount++;
             // lets remove the value
-            reducedValues.poll();
             bufferCounts.put(t, 0);
             tempBufferCount = 0;
             reducedValueMap.put(t, null);
@@ -122,7 +127,8 @@ public class ReduceBatchPartialReceiver extends ReduceBatchReceiver {
               Integer i = e.getValue();
               e.setValue(i - 1);
             }
-            if (allFinished && allZero && reducedValues.size() == 0) {
+            if (allFinished && allZero) {
+              System.out.println(executor + "  partialSendCount " + partialSendCount);
               batchDone.put(t, true);
               // we don't want to go through the while loop for this one
               break;
@@ -135,5 +141,17 @@ public class ReduceBatchPartialReceiver extends ReduceBatchReceiver {
       }
     }
     return needsFurtherProgress;
+  }
+
+  @Override
+  public void onFinish(int source) {
+    //Send empty messages for the local sources.
+//    System.out.println(executor + ">>>>>>>>>>> sending empty from source : " + source);
+//
+//    while (!dataFlowOperation.send(source, new byte[1], MessageFlags.EMPTY)) {
+//      // try until we send it
+//    }
+//    System.out.println(executor + "<<<<<<<<<< sending empty from source : " + source);
+
   }
 }

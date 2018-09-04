@@ -110,4 +110,9 @@ public class BReduceExample extends BenchWorker {
       return true;
     }
   }
+
+  @Override
+  protected void finishCommunication(int src) {
+    reduce.finish(src);
+  }
 }

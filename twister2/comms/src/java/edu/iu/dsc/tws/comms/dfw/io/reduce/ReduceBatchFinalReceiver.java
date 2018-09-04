@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -56,13 +57,14 @@ public class ReduceBatchFinalReceiver extends ReduceBatchReceiver {
       if (batchDone.get(t)) {
         continue;
       }
-
       boolean allFinished = true;
       // now check weather we have the messages for this source
       Map<Integer, Queue<Object>> map = messages.get(t);
       Map<Integer, Boolean> finishedForTarget = finished.get(t);
       Map<Integer, Integer> countMap = counts.get(t);
       Map<Integer, Integer> totalCountMap = totalCounts.get(t);
+      Set<Integer> emptyMessages = emptyReceivedSources.get(t);
+
       boolean found = true;
 
       boolean moreThanOne = false;
@@ -115,10 +117,20 @@ public class ReduceBatchFinalReceiver extends ReduceBatchReceiver {
           }
         }
         reduceReceiver.receive(t, previous);
-        // we can call on finish at this point
-        onFinish(t);
       }
     }
     return needsFurtherProgress;
+  }
+
+  @Override
+  public void onFinish(int source) {
+    //Send empty messages for the local sources.
+//    System.out.println(executor + ">>>>>>>>>>> sending empty from source : " + source);
+//
+//    while (!dataFlowOperation.send(source, new byte[1], MessageFlags.EMPTY)) {
+//      //try until we send it
+//    }
+//    System.out.println(executor + "<<<<<<<<<< sending empty from source : " + source);
+
   }
 }
