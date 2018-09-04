@@ -27,7 +27,6 @@ import edu.iu.dsc.tws.data.fs.FSDataOutputStream;
 import edu.iu.dsc.tws.data.fs.FileStatus;
 import edu.iu.dsc.tws.data.fs.FileSystem;
 import edu.iu.dsc.tws.data.fs.Path;
-import edu.iu.dsc.tws.data.utils.OperatingSystem;
 
 /**
  * Represents a local file system.
@@ -39,8 +38,7 @@ public class LocalFileSystem extends FileSystem {
   /**
    * The URI representing the local file system.
    */
-  private static URI uri = OperatingSystem.isWindows() ? URI.create("file:/")
-      : URI.create("file:///");
+  private URI uri = URI.create("file:///");
 
   /**
    * Path pointing to the current working directory.
