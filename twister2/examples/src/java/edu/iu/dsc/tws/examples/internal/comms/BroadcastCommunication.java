@@ -23,6 +23,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
+import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
@@ -33,18 +34,18 @@ import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.core.TWSCommunication;
-import edu.iu.dsc.tws.comms.core.TWSNetwork;
+import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.dfw.DataFlowBroadcast;
 import edu.iu.dsc.tws.examples.IntData;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
-public class BaseBroadcastCommunication implements IWorker {
-  private static final Logger LOG = Logger.getLogger(BaseBroadcastCommunication.class.getName());
+public class BroadcastCommunication implements IWorker {
+  private static final Logger LOG = Logger.getLogger(BroadcastCommunication.class.getName());
 
-  private DataFlowOperation broadcast;
+  private DataFlowBroadcast broadcast;
 
   private AllocatedResources resourcePlan;
 
@@ -73,55 +74,49 @@ public class BaseBroadcastCommunication implements IWorker {
                       IVolatileVolume volatileVolume) {
 
     LOG.log(Level.INFO, "Starting the example with container id: " + resources.getWorkerId());
-    try {
-      this.config = cfg;
-      this.resourcePlan = resources;
-      this.id = workerID;
-      this.status = Status.INIT;
-      this.noOfTasksPerExecutor = NO_OF_TASKS / resources.getNumberOfWorkers();
+    this.config = cfg;
+    this.resourcePlan = resources;
+    this.id = workerID;
+    this.status = Status.INIT;
+    this.noOfTasksPerExecutor = NO_OF_TASKS / resources.getNumberOfWorkers();
 
-      // lets create the task plan
-      TaskPlan taskPlan = Utils.createReduceTaskPlan(cfg, resources, NO_OF_TASKS);
-      LOG.log(Level.INFO, "Task plan: " + taskPlan);
-      //first get the communication config file
-      TWSNetwork network = new TWSNetwork(cfg, taskPlan);
+    // lets create the task plan
+    TaskPlan taskPlan = Utils.createReduceTaskPlan(cfg, resources, NO_OF_TASKS);
+    LOG.log(Level.INFO, "Task plan: " + taskPlan);
+    //first get the communication config file
+    TWSChannel network = Network.initializeChannel(cfg, workerController, resources);
 
-      TWSCommunication channel = network.getDataFlowTWSCommunication();
+    Set<Integer> sources = new HashSet<>();
+    for (int i = 0; i < NO_OF_TASKS; i++) {
+      sources.add(i);
+    }
+    int dest = NO_OF_TASKS;
 
-      Set<Integer> sources = new HashSet<>();
-      for (int i = 0; i < NO_OF_TASKS; i++) {
-        sources.add(i);
+    Map<String, Object> newCfg = new HashMap<>();
+
+    LOG.info(String.format("Setting up broadcast dataflow operation %d %s", dest, sources));
+    // this method calls the execute method
+    // I think this is wrong
+    broadcast = new DataFlowBroadcast(network, dest, sources, new BCastReceive());
+    broadcast.init(config, MessageType.OBJECT, taskPlan, 0);
+
+    // the map thread where data is produced
+    if (id == 0) {
+      Thread mapThread = new Thread(new MapWorker());
+      mapThread.start();
+    }
+
+    // we need to communicationProgress the communication
+    while (true) {
+      try {
+        // communicationProgress the channel
+        network.progress();
+        // we should communicationProgress the communication directive
+        broadcast.progress();
+        Thread.yield();
+      } catch (Throwable t) {
+        t.printStackTrace();
       }
-      int dest = NO_OF_TASKS;
-
-      Map<String, Object> newCfg = new HashMap<>();
-
-      LOG.info(String.format("Setting up broadcast dataflow operation %d %s", dest, sources));
-      // this method calls the execute method
-      // I think this is wrong
-      broadcast = channel.broadCast(newCfg, MessageType.OBJECT, 0, dest,
-          sources, new BCastReceive());
-
-      // the map thread where data is produced
-      if (id == 0) {
-        Thread mapThread = new Thread(new MapWorker());
-        mapThread.start();
-      }
-
-      // we need to communicationProgress the communication
-      while (true) {
-        try {
-          // communicationProgress the channel
-          channel.progress();
-          // we should communicationProgress the communication directive
-          broadcast.progress();
-          Thread.yield();
-        } catch (Throwable t) {
-          t.printStackTrace();
-        }
-      }
-    } catch (Throwable t) {
-      t.printStackTrace();
     }
   }
 
@@ -219,7 +214,7 @@ public class BaseBroadcastCommunication implements IWorker {
     // build the job
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setName("basic-broadcast")
-        .setWorkerClass(BaseBroadcastCommunication.class.getName())
+        .setWorkerClass(BroadcastCommunication.class.getName())
         .setRequestResource(new WorkerComputeResource(2, 1024), 4)
         .setConfig(jobConfig)
         .build();

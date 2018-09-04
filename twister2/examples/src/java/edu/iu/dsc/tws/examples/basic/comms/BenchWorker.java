@@ -128,7 +128,6 @@ public abstract class BenchWorker implements IWorker {
       }
       finishCommunication(task);
       sourcesDone = allDone;
-//      LOG.info(String.format("%d Sources done %s, %b", id, finishedSources, sourcesDone));
     }
   }
 }

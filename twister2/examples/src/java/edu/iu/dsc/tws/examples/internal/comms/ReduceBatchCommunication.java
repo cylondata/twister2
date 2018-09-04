@@ -18,10 +18,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.IntStream;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
+import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
@@ -30,39 +32,28 @@ import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.ReduceReceiver;
-import edu.iu.dsc.tws.comms.core.TWSCommunication;
-import edu.iu.dsc.tws.comms.core.TWSNetwork;
+import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.dfw.DataFlowReduce;
+import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceBatchFinalReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceBatchPartialReceiver;
 import edu.iu.dsc.tws.examples.IntData;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
-public class BaseAllReduceCommunication implements IWorker {
-  private static final Logger LOG = Logger.getLogger(BaseAllReduceCommunication.class.getName());
+public class ReduceBatchCommunication implements IWorker {
+  private static final Logger LOG = Logger.getLogger(ReduceBatchCommunication.class.getName());
 
-  private DataFlowOperation allReduce;
-
-  private AllocatedResources resourcePlan;
+  private DataFlowReduce reduce;
 
   private int id;
 
-  private Config config;
-
-  private static final int NO_OF_TASKS = 16;
-
-  private int noOfTasksPerExecutor = 2;
-
-  private enum Status {
-    INIT,
-    MAP_FINISHED,
-    LOAD_RECEIVE_FINISHED,
-  }
-
-  private Status status;
+  private static final int NO_OF_TASKS = 4;
 
   @Override
   public void execute(Config cfg, int workerID, AllocatedResources resources,
@@ -71,60 +62,45 @@ public class BaseAllReduceCommunication implements IWorker {
                       IVolatileVolume volatileVolume) {
     LOG.log(Level.INFO, "Starting the example with container id: " + resources.getWorkerId());
 
-    this.config = cfg;
-    this.resourcePlan = resources;
     this.id = workerID;
-    this.status = Status.INIT;
-    this.noOfTasksPerExecutor = NO_OF_TASKS / resources.getNumberOfWorkers();
+    int noOfTasksPerExecutor = NO_OF_TASKS / resources.getNumberOfWorkers();
 
     // lets create the task plan
     TaskPlan taskPlan = Utils.createReduceTaskPlan(cfg, resources, NO_OF_TASKS);
     //first get the communication config file
-    TWSNetwork network = new TWSNetwork(cfg, taskPlan);
-
-    TWSCommunication channel = network.getDataFlowTWSCommunication();
+    TWSChannel network = Network.initializeChannel(cfg, workerController, resources);
 
     Set<Integer> sources = new HashSet<>();
-    for (int i = 0; i < NO_OF_TASKS / 2; i++) {
+    for (int i = 0; i < NO_OF_TASKS; i++) {
       sources.add(i);
-    }
-    Set<Integer> destinations = new HashSet<>();
-    for (int i = 0; i < NO_OF_TASKS / 2; i++) {
-      destinations.add(NO_OF_TASKS / 2 + i);
     }
     int dest = NO_OF_TASKS;
 
-    Map<String, Object> newCfg = new HashMap<>();
-
     LOG.info("Setting up reduce dataflow operation");
-    try {
-      // this method calls the execute method
-      // I think this is wrong
-      allReduce = channel.allReduce(newCfg, MessageType.OBJECT, 0, 1, sources,
-          destinations, dest, new IndentityFunction(), new FinalReduceReceive(), true);
+    // this method calls the execute method
+    // I think this is wrong
+    reduce = new DataFlowReduce(network, sources,
+        dest, new ReduceBatchFinalReceiver(new SumFunction(), new FinalReduceReceiver()),
+        new ReduceBatchPartialReceiver(dest, new SumFunction()));
+    reduce.init(cfg, MessageType.OBJECT, taskPlan, 0);
 
-      if (id == 0 || id == 1) {
-        for (int i = 0; i < noOfTasksPerExecutor; i++) {
-          // the map thread where data is produced
-          LOG.info(String.format("%d Starting %d", id, i + id * noOfTasksPerExecutor));
-          Thread mapThread = new Thread(new MapWorker(i + id * noOfTasksPerExecutor));
-          mapThread.start();
-        }
+    for (int i = 0; i < noOfTasksPerExecutor; i++) {
+      // the map thread where data is produced
+      LOG.info(String.format("%d Starting %d", id, i + id * noOfTasksPerExecutor));
+      Thread mapThread = new Thread(new MapWorker(i + id * noOfTasksPerExecutor));
+      mapThread.start();
+    }
+    // we need to communicationProgress the communication
+    while (true) {
+      try {
+        // communicationProgress the channel
+        network.progress();
+        // we should communicationProgress the communication directive
+        reduce.progress();
+        Thread.yield();
+      } catch (Throwable t) {
+        t.printStackTrace();
       }
-      // we need to communicationProgress the communication
-      while (true) {
-        try {
-          // communicationProgress the channel
-          channel.progress();
-          // we should communicationProgress the communication directive
-          allReduce.progress();
-          Thread.yield();
-        } catch (Throwable t) {
-          t.printStackTrace();
-        }
-      }
-    } catch (Throwable t) {
-      t.printStackTrace();
     }
   }
 
@@ -133,6 +109,8 @@ public class BaseAllReduceCommunication implements IWorker {
    */
   private class MapWorker implements Runnable {
     private int task = 0;
+    private int sendCount = 0;
+
     MapWorker(int task) {
       this.task = task;
     }
@@ -142,62 +120,31 @@ public class BaseAllReduceCommunication implements IWorker {
       try {
         LOG.log(Level.INFO, "Starting map worker: " + id);
         IntData data = generateData();
-        for (int i = 0; i < 10000; i++) {
+        for (int i = 0; i < 10; i++) {
           // lets generate a message
-          while (!allReduce.send(task, data, 0)) {
-            // lets wait a litte and try again
-            try {
-              Thread.sleep(1);
-            } catch (InterruptedException e) {
-              e.printStackTrace();
-            }
+          int flag = 0;
+          if (i == 10 - 1) {
+            flag = MessageFlags.FLAGS_LAST;
           }
-          if (i % 1000 == 0) {
+          while (!reduce.send(task, data, flag)) {
+            // lets wait a litte and try again
+            reduce.progress();
+            Thread.yield();
+//            try {
+//            Thread.sleep(1);
+//            } catch (InterruptedException e) {
+//              e.printStackTrace();
+//            }
+          }
+          if (i % 10 == 0) {
             LOG.info(String.format("%d sent %d", id, i));
           }
           Thread.yield();
         }
         LOG.info(String.format("%d Done sending", id));
-        status = Status.MAP_FINISHED;
       } catch (Throwable t) {
         t.printStackTrace();
       }
-    }
-  }
-
-  private class IndentityFunction implements ReduceFunction {
-    private int count = 0;
-    @Override
-    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-    }
-
-    @Override
-    public Object reduce(Object t1, Object t2) {
-      count++;
-      if (count % 100 == 0) {
-        LOG.info(String.format("%d Count %d", id, count));
-      }
-      return t1;
-    }
-  }
-
-  private class FinalReduceReceive implements ReduceReceiver {
-    private int count = 0;
-    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-      for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
-        LOG.info(String.format("%d Final Task %d receives from %s",
-            id, e.getKey(), e.getValue().toString()));
-      }
-    }
-
-    @Override
-    public boolean receive(int target, Object object) {
-      count++;
-      if (count % 100 == 0) {
-        LOG.info("Message received for last target: "
-            + target + " count: " + count);
-      }
-      return true;
     }
   }
 
@@ -210,9 +157,64 @@ public class BaseAllReduceCommunication implements IWorker {
     int s = 64000;
     int[] d = new int[s];
     for (int i = 0; i < s; i++) {
-      d[i] = i;
+      d[i] = 1;
     }
     return new IntData(d);
+  }
+
+  public static class FinalReduceReceiver implements ReduceReceiver {
+    private int count = 0;
+
+    @Override
+    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+
+    }
+
+    @Override
+    public boolean receive(int target, Object object) {
+      count++;
+      if (count % 1 == 0) {
+        LOG.info(String.format("%d Received %d", target, count));
+        LOG.info(String.format("%d Received Value %d", target, ((IntData) object).getData()[1]));
+      }
+      return true;
+    }
+  }
+
+  public static class IdentityFunction implements ReduceFunction {
+    private int count = 0;
+
+    @Override
+    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+    }
+
+    @Override
+    public Object reduce(Object t1, Object t2) {
+      count++;
+      if (count % 10 == 0) {
+        LOG.info(String.format("Partial received %d", count));
+      }
+      return t1;
+    }
+  }
+
+  public static class SumFunction implements ReduceFunction {
+
+    @Override
+    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+
+    }
+
+    @Override
+    public Object reduce(Object t1, Object t2) {
+      IntData d1 = (IntData) t1;
+      IntData d2 = (IntData) t2;
+      int[] sum = new int[d1.getData().length];
+      IntStream.range(0, d1.getData().length).forEach(i -> sum[i] = d1.getData()[i]
+          + d2.getData()[i]);
+
+      return new IntData(sum);
+    }
   }
 
   public static void main(String[] args) {
@@ -229,9 +231,9 @@ public class BaseAllReduceCommunication implements IWorker {
 
     // build the job
     Twister2Job twister2Job = Twister2Job.newBuilder()
-        .setName("basic-all-reduce")
-        .setWorkerClass(BaseAllReduceCommunication.class.getName())
-        .setRequestResource(new WorkerComputeResource(2, 1024), 4)
+        .setName("basic-batch-reduce")
+        .setWorkerClass(ReduceBatchCommunication.class.getName())
+        .setRequestResource(new WorkerComputeResource(1, 1024), 4)
         .setConfig(jobConfig)
         .build();
 

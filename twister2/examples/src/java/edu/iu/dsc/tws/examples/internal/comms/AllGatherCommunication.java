@@ -16,7 +16,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -24,6 +23,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
+import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
@@ -34,31 +34,22 @@ import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.core.TWSCommunication;
-import edu.iu.dsc.tws.comms.core.TWSNetwork;
+import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.dfw.DataFlowAllGather;
 import edu.iu.dsc.tws.examples.IntData;
 import edu.iu.dsc.tws.examples.Utils;
-import edu.iu.dsc.tws.examples.utils.RandomString;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
-public class BaseAllGatherCommunication implements IWorker {
-  private static final Logger LOG = Logger.getLogger(BaseAllGatherCommunication.class.getName());
+public class AllGatherCommunication implements IWorker {
+  private static final Logger LOG = Logger.getLogger(AllGatherCommunication.class.getName());
 
-  private DataFlowOperation allAggregate;
-
-  private AllocatedResources resourcePlan;
+  private DataFlowAllGather allAggregate;
 
   private int id;
 
-  private Config config;
-
   private static final int NO_OF_TASKS = 16;
-
-  private int noOfTasksPerExecutor = 2;
-
-  private RandomString randomString;
 
   private long startTime = 0;
 
@@ -69,18 +60,13 @@ public class BaseAllGatherCommunication implements IWorker {
                       IVolatileVolume volatileVolume) {
     LOG.log(Level.INFO, "Starting the example with container id: " + resources.getWorkerId());
 
-    this.config = cfg;
-    this.resourcePlan = resources;
     this.id = workerID;
-    this.noOfTasksPerExecutor = NO_OF_TASKS / resources.getNumberOfWorkers();
-    this.randomString = new RandomString(128000, new Random(), RandomString.ALPHANUM);
+    int noOfTasksPerExecutor = NO_OF_TASKS / resources.getNumberOfWorkers();
 
     // lets create the task plan
     TaskPlan taskPlan = Utils.createReduceTaskPlan(cfg, resources, NO_OF_TASKS);
     //first get the communication config file
-    TWSNetwork network = new TWSNetwork(cfg, taskPlan);
-
-    TWSCommunication channel = network.getDataFlowTWSCommunication();
+    TWSChannel network = Network.initializeChannel(cfg, workerController, resources);
 
     Set<Integer> sources = new HashSet<>();
     for (int i = 0; i < NO_OF_TASKS; i++) {
@@ -92,41 +78,26 @@ public class BaseAllGatherCommunication implements IWorker {
       destinations.add(NO_OF_TASKS / 2 + i);
     }
 
-    int dest = NO_OF_TASKS;
-
-    Map<String, Object> newCfg = new HashMap<>();
-
     LOG.info("Setting up AllGather dataflow operation");
-
-    try {
-
-      allAggregate = channel.allGather(newCfg, MessageType.OBJECT, 0, 1,
-          sources, destinations, dest, new FinalAllGatherReceive());
-      if (id == 0 || id == 1) {
-        for (int i = 0; i < noOfTasksPerExecutor; i++) {
-          // the map thread where data is produced
-          LOG.info(String.format("%d Starting %d", id, i + id * noOfTasksPerExecutor));
-          Thread mapThread = new Thread(new MapWorker(i + id * noOfTasksPerExecutor));
-          mapThread.start();
-        }
+    allAggregate = new DataFlowAllGather(network, sources, destinations, NO_OF_TASKS,
+        new FinalAllGatherReceive(), 0, 1);
+    allAggregate.init(cfg, MessageType.OBJECT, taskPlan, 0);
+    if (id == 0 || id == 1) {
+      for (int i = 0; i < noOfTasksPerExecutor; i++) {
+        // the map thread where data is produced
+        LOG.info(String.format("%d Starting %d", id, i + id * noOfTasksPerExecutor));
+        Thread mapThread = new Thread(new MapWorker(i + id * noOfTasksPerExecutor));
+        mapThread.start();
       }
-      // we need to communicationProgress the communication
-      while (true) {
-        try {
-          // communicationProgress the channel
-          channel.progress();
-          // we should communicationProgress the communication directive
-          allAggregate.progress();
-          Thread.yield();
-        } catch (Throwable t) {
-          t.printStackTrace();
-        }
-      }
-
-    } catch (Throwable t) {
-      t.printStackTrace();
     }
-
+    // we need to communicationProgress the communication
+    while (true) {
+      // communicationProgress the channel
+      network.progress();
+      // we should communicationProgress the communication directive
+      allAggregate.progress();
+      Thread.yield();
+    }
   }
 
   /**
@@ -144,12 +115,9 @@ public class BaseAllGatherCommunication implements IWorker {
     public void run() {
       try {
         LOG.log(Level.INFO, "Starting map worker: " + id);
-//      MPIBuffer data = new MPIBuffer(1024);
         startTime = System.nanoTime();
         for (int i = 0; i < 1000; i++) {
           IntData data = generateData();
-          // lets generate a message
-//
           while (!allAggregate.send(task, data, 0)) {
             // lets wait a litte and try again
             try {
@@ -170,10 +138,6 @@ public class BaseAllGatherCommunication implements IWorker {
         t.printStackTrace();
       }
     }
-  }
-
-  private String generateStringData() {
-    return "1";
   }
 
   private class FinalAllGatherReceive implements MessageReceiver {
@@ -312,7 +276,7 @@ public class BaseAllGatherCommunication implements IWorker {
     // build the job
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setName("basic-all-gather")
-        .setWorkerClass(BaseAllGatherCommunication.class.getName())
+        .setWorkerClass(AllGatherCommunication.class.getName())
         .setRequestResource(new WorkerComputeResource(2, 1024), 4)
         .setConfig(jobConfig)
         .build();
@@ -320,6 +284,4 @@ public class BaseAllGatherCommunication implements IWorker {
     // now submit the job
     Twister2Submitter.submitJob(twister2Job, config);
   }
-
-
 }

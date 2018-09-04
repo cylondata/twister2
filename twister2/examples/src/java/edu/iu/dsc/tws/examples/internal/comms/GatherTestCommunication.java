@@ -13,15 +13,14 @@ package edu.iu.dsc.tws.examples.internal.comms;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
@@ -31,29 +30,20 @@ import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.core.TWSCommunication;
-import edu.iu.dsc.tws.comms.core.TWSNetwork;
+import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.dfw.DataFlowGather;
 import edu.iu.dsc.tws.examples.Utils;
-import edu.iu.dsc.tws.examples.utils.RandomString;
 
-public class BasicGatherTestCommunication implements IWorker {
+public class GatherTestCommunication implements IWorker {
   private static final Logger LOG = Logger.
-      getLogger(BasicGatherTestCommunication.class.getName());
+      getLogger(GatherTestCommunication.class.getName());
 
-  private DataFlowOperation aggregate;
-
-  private AllocatedResources resourcePlan;
+  private DataFlowGather aggregate;
 
   private int id;
 
-  private Config config;
-
   private static final int NO_OF_TASKS = 8;
-
-  private int noOfTasksPerExecutor = 2;
-
-  private RandomString randomString;
 
   private long startTime = 0;
 
@@ -64,18 +54,13 @@ public class BasicGatherTestCommunication implements IWorker {
                       IVolatileVolume volatileVolume) {
     LOG.log(Level.INFO, "Starting the example with container id: " + resources.getWorkerId());
 
-    this.config = cfg;
-    this.resourcePlan = resources;
     this.id = workerID;
-    this.noOfTasksPerExecutor = NO_OF_TASKS / resources.getNumberOfWorkers();
-    this.randomString = new RandomString(128000, new Random(), RandomString.ALPHANUM);
+    int noOfTasksPerExecutor = NO_OF_TASKS / resources.getNumberOfWorkers();
 
     // lets create the task plan
     TaskPlan taskPlan = Utils.createReduceTaskPlan(cfg, resources, NO_OF_TASKS);
     //first get the communication config file
-    TWSNetwork network = new TWSNetwork(cfg, taskPlan);
-
-    TWSCommunication channel = network.getDataFlowTWSCommunication();
+    TWSChannel network = Network.initializeChannel(cfg, workerController, resources);
 
     Set<Integer> sources = new HashSet<>();
     for (int i = 0; i < NO_OF_TASKS; i++) {
@@ -83,40 +68,29 @@ public class BasicGatherTestCommunication implements IWorker {
     }
     int dest = NO_OF_TASKS;
 
-    Map<String, Object> newCfg = new HashMap<>();
+    // this method calls the execute method
+    // I think this is wrong
+    aggregate = new DataFlowGather(network, sources,
+        dest, new FinalGatherReceiver(), 0, 0, cfg, MessageType.OBJECT, taskPlan, 0);
+    aggregate.init(cfg, MessageType.OBJECT, taskPlan, 0);
 
-    LOG.info("Setting up reduce dataflow operation");
-
-    try {
-      // this method calls the execute method
-      // I think this is wrong
-
-      aggregate = channel.gather(newCfg, MessageType.INTEGER, 0, sources,
-          dest, new FinalGatherReceiver());
-
-//      aggregate = channel.gather(newCfg, MessageType.OBJECT, 0, sources,
-//          dest, new FinalGatherReceiver());
-
-      for (int i = 0; i < noOfTasksPerExecutor; i++) {
-        // the map thread where data is produced
-        LOG.info(String.format("%d Starting %d", id, i + id * noOfTasksPerExecutor));
-        Thread mapThread = new Thread(new MapWorker(i + id * noOfTasksPerExecutor));
-        mapThread.start();
+    for (int i = 0; i < noOfTasksPerExecutor; i++) {
+      // the map thread where data is produced
+      LOG.info(String.format("%d Starting %d", id, i + id * noOfTasksPerExecutor));
+      Thread mapThread = new Thread(new MapWorker(i + id * noOfTasksPerExecutor));
+      mapThread.start();
+    }
+    // we need to communicationProgress the communication
+    while (true) {
+      try {
+        // communicationProgress the channel
+        network.progress();
+        // we should communicationProgress the communication directive
+        aggregate.progress();
+        Thread.yield();
+      } catch (Throwable t) {
+        t.printStackTrace();
       }
-      // we need to communicationProgress the communication
-      while (true) {
-        try {
-          // communicationProgress the channel
-          channel.progress();
-          // we should communicationProgress the communication directive
-          aggregate.progress();
-          Thread.yield();
-        } catch (Throwable t) {
-          t.printStackTrace();
-        }
-      }
-    } catch (Throwable t) {
-      t.printStackTrace();
     }
   }
 

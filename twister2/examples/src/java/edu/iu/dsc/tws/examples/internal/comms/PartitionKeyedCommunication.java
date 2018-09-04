@@ -25,6 +25,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
+import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
@@ -36,9 +37,9 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.core.TWSCommunication;
-import edu.iu.dsc.tws.comms.core.TWSNetwork;
+import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
 import edu.iu.dsc.tws.examples.IntData;
 import edu.iu.dsc.tws.examples.Utils;
@@ -48,29 +49,15 @@ import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 /**
  * This will be a map-partition job only using the communication primitives
  */
-public class BasePartitionKeyedCommunication implements IWorker {
+public class PartitionKeyedCommunication implements IWorker {
   private static final Logger LOG =
-      Logger.getLogger(BasePartitionKeyedCommunication.class.getName());
+      Logger.getLogger(PartitionKeyedCommunication.class.getName());
 
-  private DataFlowOperation partition;
-
-  private AllocatedResources resourcePlan;
+  private DataFlowPartition partition;
 
   private int id;
 
-  private Config config;
-
   private static final int NO_OF_TASKS = 8;
-
-  private int noOfTasksPerExecutor = 2;
-
-  private enum Status {
-    INIT,
-    MAP_FINISHED,
-    LOAD_RECEIVE_FINISHED,
-  }
-
-  private Status status;
 
   @Override
   public void execute(Config cfg, int workerID, AllocatedResources resources,
@@ -79,18 +66,13 @@ public class BasePartitionKeyedCommunication implements IWorker {
                       IVolatileVolume volatileVolume) {
     LOG.log(Level.INFO, "Starting the example with container id: " + resources.getWorkerId());
 
-    this.config = cfg;
-    this.resourcePlan = resources;
     this.id = workerID;
-    this.status = Status.INIT;
-    this.noOfTasksPerExecutor = NO_OF_TASKS / resources.getNumberOfWorkers();
+    int noOfTasksPerExecutor = NO_OF_TASKS / resources.getNumberOfWorkers();
 
     // lets create the task plan
     TaskPlan taskPlan = Utils.createReduceTaskPlan(cfg, resources, NO_OF_TASKS);
     //first get the communication config file
-    TWSNetwork network = new TWSNetwork(cfg, taskPlan);
-
-    TWSCommunication channel = network.getDataFlowTWSCommunication();
+    TWSChannel network = Network.initializeChannel(cfg, workerController, resources);
 
     Set<Integer> sources = new HashSet<>();
     Set<Integer> dests = new HashSet<>();
@@ -115,13 +97,13 @@ public class BasePartitionKeyedCommunication implements IWorker {
         }
       }
       FinalPartitionReciver finalPartitionRec = new FinalPartitionReciver();
-      partition = channel.partition(newCfg, MessageType.INTEGER, MessageType.INTEGER, 2, sources,
-          dests, finalPartitionRec, new PartialPartitionReciver());
-//      partition = channel.partition(newCfg, MessageType.INTEGER, MessageType.INTEGER, 2, sources,
-//          dests, finalPartitionRec);
-      finalPartitionRec.setMap(expectedIds);
-//      partition.setMemoryMapped(true);
+      partition = new DataFlowPartition(network,
+          sources, dests, finalPartitionRec, new PartialPartitionReciver(),
+          DataFlowPartition.PartitionStratergy.DIRECT,
+          MessageType.INTEGER, MessageType.INTEGER);
+      partition.init(cfg, MessageType.INTEGER, taskPlan, 0);
 
+      finalPartitionRec.setMap(expectedIds);
       for (int i = 0; i < noOfTasksPerExecutor; i++) {
         // the map thread where data is produced
         LOG.info(String.format("%d Starting %d", id, i + id * noOfTasksPerExecutor));
@@ -132,7 +114,7 @@ public class BasePartitionKeyedCommunication implements IWorker {
       while (true) {
         try {
           // communicationProgress the channel
-          channel.progress();
+          network.progress();
           // we should communicationProgress the communication directive
           partition.progress();
           Thread.yield();
@@ -189,7 +171,6 @@ public class BasePartitionKeyedCommunication implements IWorker {
           }
         }
         LOG.info(String.format("%d Done sending", id));
-        status = Status.MAP_FINISHED;
       } catch (Throwable t) {
         t.printStackTrace();
       }
@@ -296,7 +277,7 @@ public class BasePartitionKeyedCommunication implements IWorker {
     // build the job
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setName("basic-partition-keyed")
-        .setWorkerClass(BasePartitionKeyedCommunication.class.getName())
+        .setWorkerClass(PartitionKeyedCommunication.class.getName())
         .setRequestResource(new WorkerComputeResource(2, 1024), 4)
         .setConfig(jobConfig)
         .build();

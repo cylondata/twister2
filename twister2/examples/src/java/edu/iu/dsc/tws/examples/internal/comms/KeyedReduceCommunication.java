@@ -23,6 +23,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
+import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
@@ -31,41 +32,26 @@ import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.core.TWSCommunication;
-import edu.iu.dsc.tws.comms.core.TWSNetwork;
+import edu.iu.dsc.tws.comms.api.MultiMessageReceiver;
+import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.dfw.DataFlowMultiReduce;
 import edu.iu.dsc.tws.examples.IntData;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
-/**
- * This will be a map-reduce job only using the communication primitives
- */
-public class BaseReduceCommunication implements IWorker {
-  private static final Logger LOG = Logger.getLogger(BaseReduceCommunication.class.getName());
+public class KeyedReduceCommunication implements IWorker {
+  private static final Logger LOG = Logger.getLogger(KeyedReduceCommunication.class.getName());
 
-  private DataFlowOperation reduce;
-
-  private AllocatedResources resourcePlan;
+  private DataFlowMultiReduce reduce;
 
   private int id;
 
-  private Config config;
+  private static final int NO_OF_TASKS = 16;
 
-  private static final int NO_OF_TASKS = 8;
-
-  private int noOfTasksPerExecutor = 2;
-
-  private enum Status {
-    INIT,
-    MAP_FINISHED,
-    LOAD_RECEIVE_FINISHED,
-  }
-
-  private Status status;
+  private int reduceTask = 0;
 
   @Override
   public void execute(Config cfg, int workerID, AllocatedResources resources,
@@ -74,54 +60,54 @@ public class BaseReduceCommunication implements IWorker {
                       IVolatileVolume volatileVolume) {
     LOG.log(Level.INFO, "Starting the example with container id: " + resources.getWorkerId());
 
-    this.config = cfg;
-    this.resourcePlan = resources;
     this.id = workerID;
-    this.status = Status.INIT;
-    this.noOfTasksPerExecutor = NO_OF_TASKS / resources.getNumberOfWorkers();
+    int noOfTasksPerExecutor = NO_OF_TASKS / resources.getNumberOfWorkers();
+    this.reduceTask = NO_OF_TASKS / 2;
 
     // lets create the task plan
     TaskPlan taskPlan = Utils.createReduceTaskPlan(cfg, resources, NO_OF_TASKS);
     //first get the communication config file
-    TWSNetwork network = new TWSNetwork(cfg, taskPlan);
-
-    TWSCommunication channel = network.getDataFlowTWSCommunication();
+    TWSChannel network = Network.initializeChannel(cfg, workerController, resources);
 
     Set<Integer> sources = new HashSet<>();
-    for (int i = 0; i < NO_OF_TASKS; i++) {
+    for (int i = 0; i < NO_OF_TASKS / 2; i++) {
       sources.add(i);
     }
-    int dest = NO_OF_TASKS;
+    Set<Integer> destinations = new HashSet<>();
+    for (int i = 0; i < NO_OF_TASKS / 2; i++) {
+      destinations.add(NO_OF_TASKS / 2 + i);
+    }
 
     Map<String, Object> newCfg = new HashMap<>();
 
     LOG.info("Setting up reduce dataflow operation");
-    try {
-      // this method calls the execute method
-      // I think this is wrong
-      reduce = channel.reduce(newCfg, MessageType.OBJECT, 0, sources,
-          dest, new FinalReduceReceive(), new PartialReduceWorker());
+    // this method calls the execute method
+    // I think this is wrong
+    reduce = new DataFlowMultiReduce(network,
+        sources, destinations, new FinalReduceReceive(), new PartialReduceWorker(), destinations);
+    reduce.init(cfg, MessageType.OBJECT, taskPlan);
 
+    if (id == 0 || id == 1) {
       for (int i = 0; i < noOfTasksPerExecutor; i++) {
         // the map thread where data is produced
         LOG.info(String.format("%d Starting %d", id, i + id * noOfTasksPerExecutor));
         Thread mapThread = new Thread(new MapWorker(i + id * noOfTasksPerExecutor));
         mapThread.start();
       }
-      // we need to communicationProgress the communication
-      while (true) {
-        try {
-          // communicationProgress the channel
-          channel.progress();
-          // we should communicationProgress the communication directive
-          reduce.progress();
-          Thread.yield();
-        } catch (Throwable t) {
-          t.printStackTrace();
-        }
+    }
+
+    // we need to communicationProgress the communication
+    while (true) {
+      try {
+        // communicationProgress the channel
+        network.progress();
+        // we should communicationProgress the communication directive
+        reduce.progress();
+        Thread.yield();
+      } catch (Throwable t) {
+        LOG.severe("Error occurred: " + id);
+        t.printStackTrace();
       }
-    } catch (Throwable t) {
-      t.printStackTrace();
     }
   }
 
@@ -141,9 +127,9 @@ public class BaseReduceCommunication implements IWorker {
         LOG.log(Level.INFO, "Starting map worker: " + id);
 //      MPIBuffer data = new MPIBuffer(1024);
         IntData data = generateData();
-        for (int i = 0; i < 100; i++) { //original 11000
+        for (int i = 0; i < 10000; i++) {
           // lets generate a message
-          while (!reduce.send(task, data, 0)) {
+          while (!reduce.send(task, data, 0, reduceTask)) {
             // lets wait a litte and try again
             try {
               Thread.sleep(1);
@@ -153,13 +139,12 @@ public class BaseReduceCommunication implements IWorker {
           }
 //          LOG.info(String.format("%d sending to %d", id, task)
 //              + " count: " + sendCount++);
-          if (i % 10 == 0) {
+          if (i % 1000 == 0) {
             LOG.info(String.format("%d sent %d", id, i));
           }
           Thread.yield();
         }
         LOG.info(String.format("%d Done sending", id));
-        status = Status.MAP_FINISHED;
       } catch (Throwable t) {
         t.printStackTrace();
       }
@@ -169,32 +154,28 @@ public class BaseReduceCommunication implements IWorker {
   /**
    * Reduce class will work on the reduce messages.
    */
-  private class PartialReduceWorker implements MessageReceiver {
+  private class PartialReduceWorker implements MultiMessageReceiver {
 
     // lets keep track of the messages
     // for each task we need to keep track of incoming messages
     private Map<Integer, Map<Integer, List<Object>>> messages = new HashMap<>();
     private Map<Integer, Map<Integer, Integer>> counts = new HashMap<>();
-    private Map<Integer, Map<Integer, Integer>> totalCounts = new HashMap<>();
 
     private int count = 0;
-    /**
-     * For each task in this exector, we will receive from the list of tasks in the given path
-     *
-     * @param expectedIds expected task ids
-     */
+
+    private long start = System.nanoTime();
+
     @Override
-    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-      for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
+    public void init(Config cfg, DataFlowOperation op,
+                     Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
+      Map<Integer, List<Integer>> exp = expectedIds.get(reduceTask);
+      for (Map.Entry<Integer, List<Integer>> e : exp.entrySet()) {
         Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
         Map<Integer, Integer> countsPerTask = new HashMap<>();
-        Map<Integer, Integer> totalCountsPerTask = new HashMap<>();
-
 
         for (int i : e.getValue()) {
           messagesPerTask.put(i, new ArrayList<Object>());
           countsPerTask.put(i, 0);
-          totalCountsPerTask.put(i, 0);
         }
 
         LOG.info(String.format("%d Partial Task %d receives from %s",
@@ -202,21 +183,21 @@ public class BaseReduceCommunication implements IWorker {
 
         messages.put(e.getKey(), messagesPerTask);
         counts.put(e.getKey(), countsPerTask);
-        totalCounts.put(e.getKey(), totalCountsPerTask);
       }
     }
 
     @Override
     public boolean onMessage(int source, int path, int target, int flags, Object object) {
-//      LOG.info(String.format("%d Message received for partial %d from %d", id, target, source));
+//      LOG.info(String.format("%d Message received for target %d source %d %d path",
+//          id, target, source, path));
       // add the object to the map
       boolean canAdd = true;
       try {
         List<Object> m = messages.get(target).get(source);
         Integer c = counts.get(target).get(source);
         if (m.size() > 128) {
-//          if (count % 10 == 0) {
-//          LOG.info(String.format("%d Partial false %d %d", id, source, m.size()));
+//          if (count % 1 == 0) {
+//            LOG.info(String.format("%d Partial false %d %d %s", id, source, m.size(), counts));
 //          }
           canAdd = false;
         } else {
@@ -224,8 +205,6 @@ public class BaseReduceCommunication implements IWorker {
 //          }
           m.add(object);
           counts.get(target).put(source, c + 1);
-          Integer tc = totalCounts.get(target).get(source);
-          totalCounts.get(target).put(source, tc + 1);
 //          LOG.info(String.format("%d Partial true %d %d %s", id, source, m.size(), counts));
         }
 
@@ -236,7 +215,7 @@ public class BaseReduceCommunication implements IWorker {
       return true;
     }
 
-    public boolean progress() {
+    public void progress() {
       for (int t : messages.keySet()) {
         boolean canProgress = true;
         while (canProgress) {
@@ -255,7 +234,7 @@ public class BaseReduceCommunication implements IWorker {
           }
           if (found) {
             if (o != null) {
-              if (reduce.sendPartial(t, o, 0)) {
+              if (reduce.sendPartial(t, o, 0, reduceTask)) {
                 count++;
                 for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
                   o = e.getValue().remove(0);
@@ -269,10 +248,10 @@ public class BaseReduceCommunication implements IWorker {
                 canProgress = false;
 //                LOG.info(String.format("%d reduce send false", id));
               }
-              if (count % 10 == 0) {
-                LOG.info(String.format("%d Inject partial %d count: %d %s",
-                    id, t, count, counts));
-              }
+//              if (count % 100 == 0) {
+//                LOG.info(String.format("%d Inject partial %d count: %d %s",
+//                    id, t, count, counts));
+//              }
             } else {
               canProgress = false;
               LOG.severe("We cannot find an object and this is not correct");
@@ -280,11 +259,10 @@ public class BaseReduceCommunication implements IWorker {
           }
         }
       }
-      return true;
     }
   }
 
-  private class FinalReduceReceive implements MessageReceiver {
+  private class FinalReduceReceive implements MultiMessageReceiver {
     // lets keep track of the messages
     // for each task we need to keep track of incoming messages
     private Map<Integer, Map<Integer, List<Object>>> messages = new HashMap<>();
@@ -295,7 +273,9 @@ public class BaseReduceCommunication implements IWorker {
     private long start = System.nanoTime();
 
     @Override
-    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+    public void init(Config cfg, DataFlowOperation op,
+                     Map<Integer, Map<Integer, List<Integer>>> exp) {
+      Map<Integer, List<Integer>> expectedIds = exp.get(reduceTask);
       for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
         Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
         Map<Integer, Integer> countsPerTask = new HashMap<>();
@@ -305,16 +285,17 @@ public class BaseReduceCommunication implements IWorker {
           countsPerTask.put(i, 0);
         }
 
-        LOG.info(String.format("%d Final Task %d receives from %s",
-            id, e.getKey(), e.getValue().toString()));
-
         messages.put(e.getKey(), messagesPerTask);
         counts.put(e.getKey(), countsPerTask);
       }
+      LOG.info(String.format("%d Final Task receives from %s",
+          id, expectedIds));
     }
 
     @Override
     public boolean onMessage(int source, int path, int target, int flags, Object object) {
+//      LOG.info(String.format("%d Final receive source %d path %d target %d",
+//          id, source, path, target));
       // add the object to the map
       boolean canAdd = true;
       if (count == 0) {
@@ -326,9 +307,11 @@ public class BaseReduceCommunication implements IWorker {
         Integer c = counts.get(target).get(source);
         if (m.size() > 128) {
           canAdd = false;
+//          LOG.info(String.format("%d Final false %d %d %s", id, source, m.size(), counts));
         } else {
           m.add(object);
           counts.get(target).put(source, c + 1);
+//          LOG.info(String.format("%d Final true %d %d %s", id, source, m.size(), counts));
         }
 
         return canAdd;
@@ -338,8 +321,9 @@ public class BaseReduceCommunication implements IWorker {
       return true;
     }
 
-    public boolean progress() {
+    public void progress() {
       for (int t : messages.keySet()) {
+        Map<Integer, Integer> cMap = counts.get(t);
         boolean canProgress = true;
         while (canProgress) {
           // now check weather we have the messages for this source
@@ -358,13 +342,17 @@ public class BaseReduceCommunication implements IWorker {
             for (Map.Entry<Integer, List<Object>> e : map.entrySet()) {
               o = e.getValue().remove(0);
             }
+            for (Map.Entry<Integer, Integer> e : cMap.entrySet()) {
+              Integer i = e.getValue();
+              cMap.put(e.getKey(), i - 1);
+            }
             if (o != null) {
               count++;
-              if (count % 10 == 0) {
+              if (count % 100 == 0) {
                 LOG.info(String.format("%d Last %d count: %d %s",
                     id, t, count, counts));
               }
-              if (count >= 11000) {
+              if (count >= 10000) {
                 LOG.info("Total time: " + (System.nanoTime() - start) / 1000000
                     + " Count: " + count);
               }
@@ -374,7 +362,6 @@ public class BaseReduceCommunication implements IWorker {
           }
         }
       }
-      return true;
     }
   }
 
@@ -384,9 +371,9 @@ public class BaseReduceCommunication implements IWorker {
    * @return IntData
    */
   private IntData generateData() {
-    int s = 64000;
-    int[] d = new int[s];
-    for (int i = 0; i < s; i++) {
+    int i1 = 64000;
+    int[] d = new int[i1];
+    for (int i = 0; i < i1; i++) {
       d[i] = i;
     }
     return new IntData(d);
@@ -405,14 +392,14 @@ public class BaseReduceCommunication implements IWorker {
 
     // build the job
     Twister2Job twister2Job = Twister2Job.newBuilder()
-        .setName("basic-reduce")
-        .setWorkerClass(BaseReduceCommunication.class.getName())
+        .setName("basic-keyed-reduce")
+        .setWorkerClass(KeyedReduceCommunication.class.getName())
         .setRequestResource(new WorkerComputeResource(2, 1024), 4)
         .setConfig(jobConfig)
         .build();
 
     // now submit the job
     Twister2Submitter.submitJob(twister2Job, config);
-  }
 
+  }
 }

@@ -25,6 +25,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
+import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
@@ -36,9 +37,9 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.core.TWSCommunication;
-import edu.iu.dsc.tws.comms.core.TWSNetwork;
+import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
 import edu.iu.dsc.tws.examples.IntData;
 import edu.iu.dsc.tws.examples.Utils;
@@ -47,29 +48,15 @@ import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 /**
  * This will be a map-partition job only using the communication primitives
  */
-public class BasePartitionBarrierCommunication implements IWorker {
+public class PartitionBarrierCommunication implements IWorker {
   private static final Logger LOG = Logger.getLogger(
-      BasePartitionBarrierCommunication.class.getName());
+      PartitionBarrierCommunication.class.getName());
 
-  private DataFlowOperation partition;
-
-  private AllocatedResources resourcePlan;
+  private DataFlowPartition partition;
 
   private int id;
 
-  private Config config;
-
   private static final int NO_OF_TASKS = 4;
-
-  private int noOfTasksPerExecutor = 1;
-
-  private enum Status {
-    INIT,
-    MAP_FINISHED,
-    LOAD_RECEIVE_FINISHED,
-  }
-
-  private Status status;
 
   @Override
   public void execute(Config cfg, int workerID, AllocatedResources resources,
@@ -78,18 +65,13 @@ public class BasePartitionBarrierCommunication implements IWorker {
                       IVolatileVolume volatileVolume) {
     LOG.log(Level.INFO, "Starting the example with container id: " + resources.getWorkerId());
 
-    this.config = cfg;
-    this.resourcePlan = resources;
     this.id = workerID;
-    this.status = Status.INIT;
-    this.noOfTasksPerExecutor = NO_OF_TASKS / resources.getNumberOfWorkers();
+    int noOfTasksPerExecutor = NO_OF_TASKS / resources.getNumberOfWorkers();
 
     // lets create the task plan
     TaskPlan taskPlan = Utils.createReduceTaskPlan(cfg, resources, NO_OF_TASKS);
     //first get the communication config file
-    TWSNetwork network = new TWSNetwork(cfg, taskPlan);
-
-    TWSCommunication channel = network.getDataFlowTWSCommunication();
+    TWSChannel network = Network.initializeChannel(cfg, workerController, resources);
 
     Set<Integer> sources = new HashSet<>();
     Set<Integer> dests = new HashSet<>();
@@ -100,42 +82,40 @@ public class BasePartitionBarrierCommunication implements IWorker {
     Map<String, Object> newCfg = new HashMap<>();
 
     LOG.info("Setting up partition dataflow operation");
-    try {
-      // this method calls the execute method
-      // I think this is wrong
-      Map<Integer, List<Integer>> expectedIds = new HashMap<>();
-      for (int i = 0; i < NO_OF_TASKS; i++) {
-        expectedIds.put(i, new ArrayList<>());
-        for (int j = 0; j < NO_OF_TASKS; j++) {
-          if (!(i == j)) {
-            expectedIds.get(i).add(j);
+    // this method calls the execute method
+    // I think this is wrong
+    Map<Integer, List<Integer>> expectedIds = new HashMap<>();
+    for (int i = 0; i < NO_OF_TASKS; i++) {
+      expectedIds.put(i, new ArrayList<>());
+      for (int j = 0; j < NO_OF_TASKS; j++) {
+        if (!(i == j)) {
+          expectedIds.get(i).add(j);
 
-          }
         }
       }
-      partition = channel.partition(newCfg, MessageType.BYTE, 2, sources,
-          dests, new FinalPartitionReciver(), new PartitionPartialReceiver());
+    }
+    partition = new DataFlowPartition(network,
+        sources, dests, new FinalPartitionReciver(), new PartitionPartialReceiver(),
+        DataFlowPartition.PartitionStratergy.DIRECT);
+    partition.init(cfg, MessageType.BYTE, taskPlan, 0);
 
-      for (int i = 0; i < noOfTasksPerExecutor; i++) {
-        // the map thread where data is produced
-        LOG.info(String.format("%d Starting %d", id, i + id * noOfTasksPerExecutor));
-        Thread mapThread = new Thread(new MapWorker(i + id * noOfTasksPerExecutor));
-        mapThread.start();
+    for (int i = 0; i < noOfTasksPerExecutor; i++) {
+      // the map thread where data is produced
+      LOG.info(String.format("%d Starting %d", id, i + id * noOfTasksPerExecutor));
+      Thread mapThread = new Thread(new MapWorker(i + id * noOfTasksPerExecutor));
+      mapThread.start();
+    }
+    // we need to progress the communication
+    while (true) {
+      try {
+        // progress the channel
+        network.progress();
+        // we should progress the communication directive
+        partition.progress();
+        Thread.yield();
+      } catch (Throwable t) {
+        t.printStackTrace();
       }
-      // we need to progress the communication
-      while (true) {
-        try {
-          // progress the channel
-          channel.progress();
-          // we should progress the communication directive
-          partition.progress();
-          Thread.yield();
-        } catch (Throwable t) {
-          t.printStackTrace();
-        }
-      }
-    } catch (Throwable t) {
-      t.printStackTrace();
     }
   }
 
@@ -178,7 +158,6 @@ public class BasePartitionBarrierCommunication implements IWorker {
           }
         }
         LOG.info(String.format("%d Done sending", id));
-        status = Status.MAP_FINISHED;
       } catch (Throwable t) {
         t.printStackTrace();
       }
@@ -264,7 +243,7 @@ public class BasePartitionBarrierCommunication implements IWorker {
     // build the job
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setName("basic-partition")
-        .setWorkerClass(BasePartitionBarrierCommunication.class.getName())
+        .setWorkerClass(PartitionBarrierCommunication.class.getName())
         .setRequestResource(new WorkerComputeResource(2, 1024), 4)
         .setConfig(jobConfig)
         .build();
