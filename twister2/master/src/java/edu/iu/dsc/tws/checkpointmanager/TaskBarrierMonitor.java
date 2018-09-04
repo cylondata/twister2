@@ -82,6 +82,8 @@ public class TaskBarrierMonitor implements MessageHandler {
 
     } else if (message instanceof Checkpoint.BarrierSync) {
       Checkpoint.BarrierSync barrierSyncMessage = (Checkpoint.BarrierSync) message;
+
+      LOG.info("Source task " + taskId + " sent BarrierSync message.");
     }
   }
 
