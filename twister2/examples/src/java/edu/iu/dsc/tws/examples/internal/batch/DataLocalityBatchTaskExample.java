@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-//import java.util.Set;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
@@ -43,10 +43,10 @@ import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.GraphConstants;
-import edu.iu.dsc.tws.tsched.batch.datalocalityaware.DataLocalityBatchTaskScheduler;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
+import edu.iu.dsc.tws.tsched.taskscheduler.TaskScheduler;
 
 public class DataLocalityBatchTaskExample implements IWorker {
 
@@ -123,12 +123,6 @@ public class DataLocalityBatchTaskExample implements IWorker {
     builder.connect("sink2", "final", "partition-edge4", Operations.PARTITION);
     builder.connect("merge", "final", "partition-edge5", Operations.PARTITION);
 
-     /*builder.connect("source", "sink1", "partition-edge1", Operations.PARTITION);
-    builder.connect("source", "sink2", "partition-edge2", Operations.PARTITION);
-    builder.connect("sink1", "merge", "partition-edge3", Operations.PARTITION);
-    builder.connect("sink2", "merge", "partition-edge4", Operations.PARTITION);
-    builder.connect("merge", "final", "partition-edge5", Operations.PARTITION);*/
-
     builder.addConfiguration("source", "Ram", GraphConstants.taskInstanceRam(config));
     builder.addConfiguration("source", "Disk", GraphConstants.taskInstanceDisk(config));
     builder.addConfiguration("source", "Cpu", GraphConstants.taskInstanceCpu(config));
@@ -152,45 +146,36 @@ public class DataLocalityBatchTaskExample implements IWorker {
     builder.addConfiguration("sink2", "outputdataset2", sinkOutputDataset2);
 
     DataFlowTaskGraph graph = builder.build();
-    WorkerPlan workerPlan = createWorkerPlan(resources);
+    //WorkerPlan workerPlan = createWorkerPlan(resources);
 
     String jobType = "batch";
     String schedulingType = "datalocalityaware";
-    List<TaskSchedulePlan> taskSchedulePlanList = new ArrayList<>();
+
     TaskSchedulePlan taskSchedulePlan = null;
 
-    if (workerID == 0) { //Remove this condition during Executor integration
-      if ("batch".equalsIgnoreCase(jobType)
-          && "datalocalityaware".equalsIgnoreCase(schedulingType)) {
-        //&& TaskSchedulerContext.taskSchedulingMode(config).equals("datalocalityaware")) {
-        DataLocalityBatchTaskScheduler dataLocalityBatchTaskScheduler = new
-            DataLocalityBatchTaskScheduler();
-        dataLocalityBatchTaskScheduler.initialize(config);
-        taskSchedulePlan = dataLocalityBatchTaskScheduler.schedule(graph, workerPlan);
-        //taskSchedulePlanList = dataLocalityBatchTaskScheduler.scheduleBatch(graph, workerPlan);
+    if (workerID == 0) {
+      if ("Batch".equalsIgnoreCase(jobType)
+              && "roundrobin".equalsIgnoreCase(schedulingType)) {
+        TaskScheduler taskScheduler = new TaskScheduler();
+        taskScheduler.initialize(config);
+        taskSchedulePlan = taskScheduler.schedule(graph, createWorkerPlan(resources));
       }
     }
 
-    //Just to print the task schedule plan.
-    /*if (workerID == 0) {
-      for (int j = 0; j < taskSchedulePlanList.size(); j++) {
-        taskSchedulePlan = taskSchedulePlanList.get(j);
-        Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap
+    Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap
             = taskSchedulePlan.getContainersMap();
-        LOG.fine("Task Schedule Plan:" + j);
-        for (Map.Entry<Integer, TaskSchedulePlan.ContainerPlan> entry : containersMap.entrySet()) {
-          Integer integer = entry.getKey();
-          TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
-          Set<TaskSchedulePlan.TaskInstancePlan> taskContainerPlan
+    for (Map.Entry<Integer, TaskSchedulePlan.ContainerPlan> entry : containersMap.entrySet()) {
+      Integer integer = entry.getKey();
+      TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
+      Set<TaskSchedulePlan.TaskInstancePlan> containerPlanTaskInstances
               = containerPlan.getTaskInstances();
-          for (TaskSchedulePlan.TaskInstancePlan ip : taskContainerPlan) {
-            LOG.fine("\tTask Id:" + ip.getTaskId() + "\tTask Index:" + ip.getTaskIndex()
-                + "\tTask Name:" + ip.getTaskName() + "\tContainer Id:" + integer);
-          }
-        }
+      LOG.fine("Container Id:" + integer);
+      for (TaskSchedulePlan.TaskInstancePlan ip : containerPlanTaskInstances) {
+        LOG.fine("Task Id:" + ip.getTaskId()
+                + "\tTask Index" + ip.getTaskIndex()
+                + "\tTask Name:" + ip.getTaskName());
       }
     }
-*/
     TWSNetwork network = new TWSNetwork(config, resources.getWorkerId());
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resources, network);
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);

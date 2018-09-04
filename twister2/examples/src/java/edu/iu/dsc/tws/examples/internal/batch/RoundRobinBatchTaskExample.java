@@ -29,7 +29,6 @@ import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
-import edu.iu.dsc.tws.data.api.HDFSConnector;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.Executor;
@@ -43,13 +42,10 @@ import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.GraphConstants;
-import edu.iu.dsc.tws.tsched.batch.roundrobin.RoundRobinBatchTaskScheduler;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
-
-//import java.util.Map;
-//import java.util.Set;
+import edu.iu.dsc.tws.tsched.taskscheduler.TaskScheduler;
 
 public class RoundRobinBatchTaskExample implements IWorker {
 
@@ -85,13 +81,10 @@ public class RoundRobinBatchTaskExample implements IWorker {
                       IVolatileVolume volatileVolume) {
 
     SourceTask1 g = new SourceTask1();
-
     SinkTask1 s1 = new SinkTask1();
     SinkTask2 s2 = new SinkTask2();
-
-    MergingTask m1 = new MergingTask();
-
-    FinalTask f1 = new FinalTask();
+    MergingTask m = new MergingTask();
+    FinalTask f = new FinalTask();
 
     GraphBuilder builder = GraphBuilder.newBuilder();
 
@@ -104,10 +97,10 @@ public class RoundRobinBatchTaskExample implements IWorker {
     builder.addSink("sink2", s2);
     builder.setParallelism("sink2", 3);
 
-    builder.addSink("merge", m1);
+    builder.addSink("merge", m);
     builder.setParallelism("merge", 3);
 
-    builder.addSink("final", f1);
+    builder.addSink("final", f);
     builder.setParallelism("final", 4);
     //Task graph Structure
     /**   Source (Two Outgoing Edges)
@@ -134,8 +127,6 @@ public class RoundRobinBatchTaskExample implements IWorker {
 
     List<String> sourceInputDataset = new ArrayList<>();
     sourceInputDataset.add("dataset1.txt");
-    sourceInputDataset.add("dataset2.txt");
-
     builder.addConfiguration("source", "inputdataset", sourceInputDataset);
 
     List<String> sinkOutputDataset1 = new ArrayList<>();
@@ -147,17 +138,14 @@ public class RoundRobinBatchTaskExample implements IWorker {
     String jobType = "Batch";
     String schedulingType = "roundrobin";
 
-    List<TaskSchedulePlan> taskSchedulePlanList = new ArrayList<>();
     TaskSchedulePlan taskSchedulePlan = null;
 
     if (workerID == 0) {
       if ("Batch".equalsIgnoreCase(jobType)
               && "roundrobin".equalsIgnoreCase(schedulingType)) {
-        RoundRobinBatchTaskScheduler rrBatchTaskScheduler = new RoundRobinBatchTaskScheduler();
-        rrBatchTaskScheduler.initialize(config);
-        WorkerPlan workerPlan = createWorkerPlan(resources);
-        taskSchedulePlan = rrBatchTaskScheduler.schedule(graph, workerPlan);
-        taskSchedulePlanList = rrBatchTaskScheduler.scheduleBatch(graph, workerPlan);
+        TaskScheduler taskScheduler = new TaskScheduler();
+        taskScheduler.initialize(config);
+        taskSchedulePlan = taskScheduler.schedule(graph, createWorkerPlan(resources));
       }
     }
 
@@ -166,46 +154,15 @@ public class RoundRobinBatchTaskExample implements IWorker {
     for (Map.Entry<Integer, TaskSchedulePlan.ContainerPlan> entry : containersMap.entrySet()) {
       Integer integer = entry.getKey();
       TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
-      Set<TaskSchedulePlan.TaskInstancePlan> taskContainerPlan1
+      Set<TaskSchedulePlan.TaskInstancePlan> containerPlanTaskInstances
               = containerPlan.getTaskInstances();
       LOG.fine("Container Id:" + integer);
-      for (TaskSchedulePlan.TaskInstancePlan ip : taskContainerPlan1) {
+      for (TaskSchedulePlan.TaskInstancePlan ip : containerPlanTaskInstances) {
         LOG.fine("Task Id:" + ip.getTaskId()
                 + "\tTask Index" + ip.getTaskIndex()
                 + "\tTask Name:" + ip.getTaskName());
       }
     }
-
-    /*if (workerID == 0) {
-      if ("Batch".equalsIgnoreCase(jobType)
-          && "roundrobin".equalsIgnoreCase(schedulingType)) {
-        RoundRobinBatchTaskScheduler rrBatchTaskScheduler = new RoundRobinBatchTaskScheduler();
-        rrBatchTaskScheduler.initialize(config);
-        WorkerPlan workerPlan = createWorkerPlan(resources);
-        //taskSchedulePlanList = rrBatchTaskScheduler.scheduleBatch(graph, workerPlan);
-        taskSchedulePlan = rrBatchTaskScheduler.scheduleBatch(graph, workerPlan);
-      }
-    }
-
-    //Just to print the task schedule plan.
-    if (workerID == 0) {
-      for (int j = 0; j < taskSchedulePlanList.size(); j++) {
-        taskSchedulePlan = taskSchedulePlanList.get(j);
-        Map<Integer, TaskSchedulePlan.ContainerPlan> planMap
-            = taskSchedulePlan.getContainersMap();
-        LOG.info("Task Schedule Plan:" + j);
-        for (Map.Entry<Integer, TaskSchedulePlan.ContainerPlan> entry : planMap.entrySet()) {
-          Integer integer = entry.getKey();
-          TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
-          Set<TaskSchedulePlan.TaskInstancePlan> taskContainerPlan
-              = containerPlan.getTaskInstances();
-          for (TaskSchedulePlan.TaskInstancePlan ip : taskContainerPlan) {
-            LOG.info("\tTask Id:" + ip.getTaskId() + "\tTask Index:" + ip.getTaskIndex()
-                + "\tTask Name:" + ip.getTaskName() + "\tContainer Id:" + integer);
-          }
-        }
-      }
-    }*/
 
     TWSNetwork network = new TWSNetwork(config, resources.getWorkerId());
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resources, network);
@@ -220,7 +177,6 @@ public class RoundRobinBatchTaskExample implements IWorker {
       Worker w = new Worker(resource.getId());
       workers.add(w);
     }
-
     return new WorkerPlan(workers);
   }
 
@@ -244,9 +200,6 @@ public class RoundRobinBatchTaskExample implements IWorker {
     private int count = 0;
     private TaskContext ctx;
     private Config config;
-    private String outputFile;
-    private String inputFile;
-    private HDFSConnector hdfsConnector = null;
 
     @Override
     public boolean execute(IMessage message) {
@@ -268,9 +221,6 @@ public class RoundRobinBatchTaskExample implements IWorker {
     private int count = 0;
     private TaskContext ctx;
     private Config config;
-    private String outputFile;
-    private String inputFile;
-    private HDFSConnector hdfsConnector = null;
 
     @Override
     public boolean execute(IMessage message) {
@@ -316,9 +266,6 @@ public class RoundRobinBatchTaskExample implements IWorker {
     private int count = 0;
     private TaskContext ctx;
     private Config config;
-    private String outputFile;
-    private String inputFile;
-    private HDFSConnector hdfsConnector = null;
 
     @Override
     public boolean execute(IMessage message) {
@@ -336,3 +283,5 @@ public class RoundRobinBatchTaskExample implements IWorker {
     }
   }
 }
+
+

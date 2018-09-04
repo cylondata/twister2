@@ -53,11 +53,6 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.taskscheduler.TaskScheduler;
 
-/**
- * This is the task graph generation class with input and output files.
- * It will be extended further to submit the job to the executor...
- */
-
 public class SimpleTaskGraphExample implements IWorker {
 
   private static final Logger LOG = Logger.getLogger(SimpleTaskGraphExample.class.getName());
@@ -80,11 +75,11 @@ public class SimpleTaskGraphExample implements IWorker {
 
     // build the job
     Twister2Job twister2Job = Twister2Job.newBuilder()
-        .setName("basic-taskgraphJob")
-        .setWorkerClass(SimpleTaskGraphExample.class.getName())
-        .setRequestResource(new WorkerComputeResource(2, 1024, 1.0), 2)
-        .setConfig(jobConfig)
-        .build();
+            .setName("basic-taskgraphJob")
+            .setWorkerClass(SimpleTaskGraphExample.class.getName())
+            .setRequestResource(new WorkerComputeResource(2, 1024, 1.0), 2)
+            .setConfig(jobConfig)
+            .build();
 
     // now submit the job
     Twister2Submitter.submitJob(twister2Job, config);
@@ -116,7 +111,7 @@ public class SimpleTaskGraphExample implements IWorker {
     taskExecutor.registerQueue(0, pongQueue);
 
     direct = channel.direct(newCfg, MessageType.OBJECT, 0, sources,
-        destination, new SimpleTaskGraphExample.PingPongReceive());
+            destination, new SimpleTaskGraphExample.PingPongReceive());
     taskExecutor.initCommunication(channel, direct);
 
     TaskMapper taskMapper = new TaskMapper("task1");
@@ -137,8 +132,8 @@ public class SimpleTaskGraphExample implements IWorker {
 
     graphBuilder.setParallelism("task1", 2);
     graphBuilder.setParallelism("task2", 2);
-    graphBuilder.setParallelism("task3", 1);
-    graphBuilder.setParallelism("task4", 1);
+    graphBuilder.setParallelism("task3", 2);
+    graphBuilder.setParallelism("task4", 2);
 
     graphBuilder.addConfiguration("task1", "Ram", GraphConstants.taskInstanceRam(cfg));
     graphBuilder.addConfiguration("task1", "Disk", GraphConstants.taskInstanceDisk(cfg));
@@ -161,55 +156,49 @@ public class SimpleTaskGraphExample implements IWorker {
     graphBuilder.addConfiguration("task3", "dataset", new ArrayList<>().add("dataset3.txt"));
     graphBuilder.addConfiguration("task4", "dataset", new ArrayList<>().add("dataset4.txt"));
 
-    WorkerPlan workerPlan = new WorkerPlan();
-    Worker worker0 = new Worker(0);
-    Worker worker1 = new Worker(1);
-    Worker worker2 = new Worker(2);
-
-    worker0.setCpu(4);
-    worker0.setDisk(4000);
-    worker0.setRam(2048);
-    worker0.addProperty("bandwidth", 1000.0);
-    worker0.addProperty("latency", 0.1);
-
-    worker1.setCpu(4);
-    worker1.setDisk(4000);
-    worker1.setRam(2048);
-    worker1.addProperty("bandwidth", 2000.0);
-    worker1.addProperty("latency", 0.1);
-
-    worker2.setCpu(4);
-    worker2.setDisk(4000);
-    worker2.setRam(2048);
-    worker2.addProperty("bandwidth", 3000.0);
-    worker2.addProperty("latency", 0.1);
-
-    workerPlan.addWorker(worker0);
-    workerPlan.addWorker(worker1);
-    workerPlan.addWorker(worker2);
-
     DataFlowTaskGraph dataFlowTaskGraph = graphBuilder.build();
     LOG.info("Generated Dataflow Task Graph Is:" + dataFlowTaskGraph.getTaskVertexSet());
 
     //For scheduling streaming task
-    TaskSchedulePlan taskSchedulePlan = new TaskScheduler(cfg, dataFlowTaskGraph, workerPlan).
-        scheduleStreamingTask();
 
-    //For scheduling batch task
-    List<TaskSchedulePlan> taskSchedulePlanList = new TaskScheduler(cfg, dataFlowTaskGraph,
-        workerPlan).scheduleBatchTask();
-    if (taskSchedulePlanList != null) {
-      taskSchedulePlan = taskSchedulePlanList.get(0);
-    }
+    String jobType = "batch";
+    String schedulingType = "datalocalityaware";
 
-    try {
-      if (taskSchedulePlan.getContainersMap() != null) {
-        LOG.info("Task schedule plan details:" + taskSchedulePlan.getTaskSchedulePlanId()
-            + ":" + taskSchedulePlan.getContainersMap());
+    TaskSchedulePlan taskSchedulePlan = null;
+
+    if (workerID == 0) {
+      if ("Batch".equalsIgnoreCase(jobType)
+              && "roundrobin".equalsIgnoreCase(schedulingType)) {
+        TaskScheduler taskScheduler = new TaskScheduler();
+        taskScheduler.initialize(cfg);
+        taskSchedulePlan = taskScheduler.schedule(dataFlowTaskGraph, createWorkerPlan(resources));
       }
-    } catch (NullPointerException ne) {
-      ne.printStackTrace();
     }
+
+    Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap
+            = taskSchedulePlan.getContainersMap();
+    for (Map.Entry<Integer, TaskSchedulePlan.ContainerPlan> entry : containersMap.entrySet()) {
+      Integer integer = entry.getKey();
+      TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
+      Set<TaskSchedulePlan.TaskInstancePlan> taskInstancePlans
+              = containerPlan.getTaskInstances();
+      //int containerId = containerPlan.getRequiredResource().getId();
+      LOG.info("Container Index (Schedule Method):" + integer);
+      for (TaskSchedulePlan.TaskInstancePlan ip : taskInstancePlans) {
+        LOG.info("Task Id:" + ip.getTaskId() + "\tTask Index" + ip.getTaskIndex()
+                + "\tTask Name:" + ip.getTaskName() + "\tContainer Index:" + integer);
+      }
+    }
+  }
+
+  public WorkerPlan createWorkerPlan(AllocatedResources resourcePlan) {
+    List<Worker> workers = new ArrayList<>();
+    for (WorkerComputeResource resource : resourcePlan.getWorkerComputeResources()) {
+      Worker w = new Worker(resource.getId());
+      workers.add(w);
+    }
+
+    return new WorkerPlan(workers);
   }
 
   /**
@@ -242,7 +231,7 @@ public class SimpleTaskGraphExample implements IWorker {
     /**
      * Prepare the task to be executed
      *
-     * @param cfg the configuration
+     * @param cfg        the configuration
      * @param collection the output collection
      */
     @Override
@@ -278,7 +267,7 @@ public class SimpleTaskGraphExample implements IWorker {
     /**
      * Prepare the task to be executed
      *
-     * @param cfg the configuration
+     * @param cfg        the configuration
      * @param collection the output collection
      */
     @Override
@@ -314,7 +303,7 @@ public class SimpleTaskGraphExample implements IWorker {
     /**
      * Prepare the task to be executed
      *
-     * @param cfg the configuration
+     * @param cfg        the configuration
      * @param collection the output collection
      */
     @Override
@@ -350,7 +339,7 @@ public class SimpleTaskGraphExample implements IWorker {
     /**
      * Prepare the task to be executed
      *
-     * @param cfg the configuration
+     * @param cfg        the configuration
      * @param collection the output collection
      */
     @Override
@@ -401,6 +390,7 @@ public class SimpleTaskGraphExample implements IWorker {
     }
   }
 }
+
 
 
 
