@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.examples.internal;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -30,21 +29,12 @@ import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
-import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.core.TWSCommunication;
-import edu.iu.dsc.tws.comms.core.TWSNetwork;
-import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.examples.IntData;
-import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.LinkedQueue;
 import edu.iu.dsc.tws.task.api.TaskContext;
-import edu.iu.dsc.tws.task.core.TaskExecutorFixedThread;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.GraphConstants;
@@ -56,11 +46,6 @@ import edu.iu.dsc.tws.tsched.taskscheduler.TaskScheduler;
 public class SimpleTaskGraphExample implements IWorker {
 
   private static final Logger LOG = Logger.getLogger(SimpleTaskGraphExample.class.getName());
-
-  private int taskGraphFlag = 1;
-  private DataFlowOperation direct;
-  private TaskExecutorFixedThread taskExecutor;
-  private Status status;
 
   public static void main(String[] args) {
     // first load the configurations from command line and config files
@@ -94,25 +79,6 @@ public class SimpleTaskGraphExample implements IWorker {
                       IVolatileVolume volatileVolume) {
 
     LOG.log(Level.INFO, "Starting the example with container id: " + resources.getWorkerId());
-
-    taskExecutor = new TaskExecutorFixedThread();
-    this.status = Status.INIT;
-
-    TaskPlan taskPlan = Utils.createTaskPlan(cfg, resources);
-    TWSNetwork network = new TWSNetwork(cfg, taskPlan);
-    TWSCommunication channel = network.getDataFlowTWSCommunication();
-
-    Set<Integer> sources = new HashSet<>();
-    sources.add(0);
-    int destination = 1;
-
-    Map<String, Object> newCfg = new HashMap<>();
-    LinkedQueue<IMessage> pongQueue = new LinkedQueue<IMessage>();
-    taskExecutor.registerQueue(0, pongQueue);
-
-    direct = channel.direct(newCfg, MessageType.OBJECT, 0, sources,
-            destination, new SimpleTaskGraphExample.PingPongReceive());
-    taskExecutor.initCommunication(channel, direct);
 
     TaskMapper taskMapper = new TaskMapper("task1");
     TaskReducer taskReducer = new TaskReducer("task2");
@@ -329,32 +295,6 @@ public class SimpleTaskGraphExample implements IWorker {
     @Override
     public void execute(IMessage content) {
 
-    }
-  }
-
-  private class PingPongReceive implements MessageReceiver {
-    private int count = 0;
-
-    @Override
-    public void init(Config cfg, DataFlowOperation op,
-                     Map<Integer, List<Integer>> expectedIds) {
-    }
-
-    @Override
-    public boolean onMessage(int source, int path, int target, int flags, Object object) {
-      count++;
-      if (count % 10000 == 0) {
-        LOG.info("received message: " + count);
-      }
-      if (count == 100000) {
-        status = Status.LOAD_RECEIVE_FINISHED;
-      }
-      return true;
-    }
-
-    @Override
-    public boolean progress() {
-      return true;
     }
   }
 }
