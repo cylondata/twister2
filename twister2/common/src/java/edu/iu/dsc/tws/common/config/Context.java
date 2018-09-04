@@ -122,6 +122,7 @@ public class Context {
     defaults.put(UPLOADER_YAML.getKey(), UPLOADER_YAML.getDefaultValue());
     defaults.put(AURORA_SCRIPT.getKey(), AURORA_SCRIPT.getDefaultValue());
     defaults.put(DATA_YAML.getKey(), DATA_YAML.getDefaultValue());
+    defaults.put(CHECKPOINT_YAML.getKey(), CHECKPOINT_YAML.getDefaultValue());
   }
 
   protected Context() {
