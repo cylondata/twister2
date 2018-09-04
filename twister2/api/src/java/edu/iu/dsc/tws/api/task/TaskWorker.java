@@ -23,20 +23,74 @@ import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.op.Communicator;
 
-public class TaskWorker implements IWorker {
+public abstract class TaskWorker implements IWorker {
   private static final Logger LOG = Logger.getLogger(TaskWorker.class.getName());
 
+  /**
+   * The channel
+   */
   protected TWSChannel channel;
 
+  /**
+   * Communicator
+   */
   protected Communicator communicator;
 
+  /**
+   * This id
+   */
+  protected int workerId;
+
+  /**
+   * Allocated resources
+   */
+  protected AllocatedResources allocatedResources;
+
+  /**
+   * Controller
+   */
+  protected IWorkerController workerController;
+
+  /**
+   * Persistent volume
+   */
+  protected IPersistentVolume persistentVolume;
+
+  /**
+   * Volatile volume
+   */
+  protected IVolatileVolume volatileVolume;
+
+  /**
+   * Configuration
+   */
+  protected Config config;
+
+  /**
+   * The task executor to be used
+   */
+  protected TaskExecutor taskExecutor;
+
   @Override
-  public void execute(Config config, int workerID, AllocatedResources allocatedResources,
-                      IWorkerController workerController, IPersistentVolume persistentVolume,
-                      IVolatileVolume volatileVolume) {
+  public void execute(Config cfg, int workerID, AllocatedResources allocResources,
+                      IWorkerController wController, IPersistentVolume pVolume,
+                      IVolatileVolume vVolume) {
+    this.config = cfg;
+    this.workerId = workerID;
+    this.allocatedResources = allocResources;
+    this.workerController = wController;
+    this.persistentVolume = pVolume;
+    this.volatileVolume = vVolume;
+
     // create the channel
     channel = Network.initializeChannel(config, workerController, allocatedResources);
     // create the communicator
     communicator = new Communicator(config, channel);
+    // create the executor
+    taskExecutor = new TaskExecutor(config, workerId, allocatedResources, communicator);
+    // call execute
+    execute();
   }
+
+  public abstract void execute();
 }

@@ -174,7 +174,7 @@ public class ResourceAllocator {
     // get file name without directory
     String jobJarFileName = Paths.get(jobJarFile).getFileName().toString();
     JobAPI.JobFormat.Builder format = JobAPI.JobFormat.newBuilder();
-    format.setType(JobAPI.JobFormatType.SHUFFLE);
+//    format.setType(JobAPI.JobFormatType.SHUFFLE);
     format.setJobFile(jobJarFileName);
     updatedJob = JobAPI.Job.newBuilder(job).setJobFormat(format).build();
 

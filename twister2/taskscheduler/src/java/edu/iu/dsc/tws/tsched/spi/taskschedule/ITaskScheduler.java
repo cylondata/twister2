@@ -24,6 +24,8 @@ public interface ITaskScheduler {
 
   TaskSchedulePlan schedule(DataFlowTaskGraph graph, WorkerPlan workerPlan);
 
+  //TaskSchedulePlan schedule(DataFlowTaskGraph graph, AllocatedResources allocatedResource);
+
   //List<TaskSchedulePlan> schedule(Config config, DataFlowTaskGraph graph, WorkerPlan workerPlan);
 
 }

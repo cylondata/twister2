@@ -27,9 +27,8 @@ import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
+import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
-import edu.iu.dsc.tws.executor.comm.tasks.streaming.SinkStreamTask;
-import edu.iu.dsc.tws.executor.comm.tasks.streaming.SourceStreamTask;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.Executor;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -40,6 +39,8 @@ import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.OperationMode;
+import edu.iu.dsc.tws.task.streaming.BaseStreamSinkTask;
+import edu.iu.dsc.tws.task.streaming.BaseStreamSourceTask;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
@@ -70,7 +71,8 @@ public class TaskBarrierExample implements IWorker {
     TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduling.schedule(graph, workerPlan);
 
     TWSNetwork network = new TWSNetwork(config, resources.getWorkerId());
-    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resources, network);
+    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resources,
+        new Communicator(config, network.getChannel()));
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
     Executor executor = new Executor(config, plan, network.getChannel(),
         OperationMode.STREAMING);
@@ -78,14 +80,14 @@ public class TaskBarrierExample implements IWorker {
 
   }
 
-  private static class GeneratorBarrierTask extends SourceStreamTask {
+  private static class GeneratorBarrierTask extends BaseStreamSourceTask {
     private static final long serialVersionUID = -254264903510284748L;
     private TaskContext ctx;
     private Config config;
     private long id = 5555;
 
     @Override
-    public void run() {
+    public void execute() {
       CheckpointBarrier cb = new CheckpointBarrier(id, 2141535, null);
       ctx.write("partition-edge", cb);
       id++;
@@ -103,7 +105,7 @@ public class TaskBarrierExample implements IWorker {
     }
   }
 
-  private static final class RecevingBarrierTask extends SinkStreamTask {
+  private static final class RecevingBarrierTask extends BaseStreamSinkTask {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 

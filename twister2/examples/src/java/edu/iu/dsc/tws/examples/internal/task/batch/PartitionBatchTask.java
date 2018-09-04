@@ -26,24 +26,19 @@ import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
-import edu.iu.dsc.tws.comms.core.TWSNetwork;
-import edu.iu.dsc.tws.executor.api.ExecutionPlan;
-import edu.iu.dsc.tws.executor.comm.tasks.batch.SinkBatchTask;
-import edu.iu.dsc.tws.executor.comm.tasks.batch.SourceBatchTask;
+import edu.iu.dsc.tws.examples.internal.task.TaskUtils;
 import edu.iu.dsc.tws.executor.core.CommunicationOperationType;
-import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
-import edu.iu.dsc.tws.executor.threading.Executor;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskContext;
+import edu.iu.dsc.tws.task.batch.BaseBatchSinkTask;
+import edu.iu.dsc.tws.task.batch.BaseBatchSourceTask;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
-import edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler;
 
 public class PartitionBatchTask implements IWorker {
   @Override
@@ -64,34 +59,25 @@ public class PartitionBatchTask implements IWorker {
     builder.operationMode(OperationMode.BATCH);
 
     DataFlowTaskGraph graph = builder.build();
-
-    RoundRobinTaskScheduler roundRobinTaskScheduler = new RoundRobinTaskScheduler();
-    roundRobinTaskScheduler.initialize(config);
-
-    WorkerPlan workerPlan = createWorkerPlan(resources);
-    TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
-
-    TWSNetwork network = new TWSNetwork(config, resources.getWorkerId());
-    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resources, network);
-    ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
-    Executor executor = new Executor(config, plan, network.getChannel(),
-        OperationMode.BATCH);
-    executor.execute();
+    TaskUtils.executeBatch(config, resources, graph);
   }
 
-  private static class GeneratorTask extends SourceBatchTask {
+  private static class GeneratorTask extends BaseBatchSourceTask {
     private static final long serialVersionUID = -254264903510284748L;
     private TaskContext ctx;
     private Config config;
     private int count = 0;
 
     @Override
-    public void run() {
-      count++;
-      if (count == 1000) {
-        ctx.writeEnd("partition-edge", "Hello");
-      } else if (count < 1000) {
-        ctx.write("partition-edge", "Hello");
+    public void execute() {
+      if (count == 999) {
+        if (ctx.writeEnd("partition-edge", "Hello")) {
+          count++;
+        }
+      } else if (count < 999) {
+        if (ctx.write("partition-edge", "Hello")) {
+          count++;
+        }
       }
     }
 
@@ -101,7 +87,7 @@ public class PartitionBatchTask implements IWorker {
     }
   }
 
-  private static class RecevingTask extends SinkBatchTask {
+  private static class RecevingTask extends BaseBatchSinkTask {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 

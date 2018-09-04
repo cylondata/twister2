@@ -14,21 +14,48 @@ package edu.iu.dsc.tws.task.api;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Task context
+ */
 public class TaskContext {
+  /**
+   * Task index, which goes from 0 up to the number of parallel tasks
+   */
   private int taskIndex;
 
+  /**
+   * Unique id of the task
+   */
   private int taskId;
 
+  /**
+   * Name of the task
+   */
   private String taskName;
 
+  /**
+   * Parallel instances of the task
+   */
   private int parallelism;
 
+  /**
+   * Collect output
+   */
   private OutputCollection collection;
 
+  /**
+   * Task specific configurations
+   */
   private Map<String, Object> configs;
 
+  /**
+   * The worker id this task instance belongs to
+   */
   private int workerId;
 
+  /**
+   * Keep track of the edges that are been done
+   */
   private Map<String, Boolean> isDone = new HashMap<>();
 
   public TaskContext(int taskIndex, int taskId, String taskName,
@@ -52,18 +79,6 @@ public class TaskContext {
     this.workerId = wId;
   }
 
-  public TaskContext(int taskIndex, int taskId, String taskName, int parallelism,
-                     OutputCollection collection, Map<String, Object> configs,
-                     int workerId, boolean isDone) {
-    this.taskIndex = taskIndex;
-    this.taskId = taskId;
-    this.taskName = taskName;
-    this.parallelism = parallelism;
-    this.collection = collection;
-    this.configs = configs;
-    this.workerId = workerId;
-  }
-
   /**
    * Reset the context
    */
@@ -73,7 +88,7 @@ public class TaskContext {
 
   /**
    * The task index
-   * @return
+   * @return index
    */
   public int taskIndex() {
     return taskIndex;
@@ -123,11 +138,11 @@ public class TaskContext {
    * @param edge edge
    * @param message message
    */
-  public void write(String edge, Object message) {
+  public boolean write(String edge, Object message) {
     if (isDone.containsKey(edge) && isDone.get(edge)) {
       throw new RuntimeException("Cannot send on a stream that ended");
     }
-    collection.collect(0, new TaskMessage(message, edge, taskId));
+    return collection.collect(0, new TaskMessage(message, edge, taskId));
   }
 
   /**
@@ -135,12 +150,13 @@ public class TaskContext {
    * @param edge edge
    * @param message message
    */
-  public void writeEnd(String edge, Object message) {
+  public boolean writeEnd(String edge, Object message) {
     if (isDone.containsKey(edge) && isDone.get(edge)) {
       throw new RuntimeException("Cannot send on a stream that ended");
     }
-    collection.collect(0, new TaskMessage(message, edge, taskId));
+    boolean collect = collection.collect(0, new TaskMessage(message, edge, taskId));
     isDone.put(edge, true);
+    return collect;
   }
 
   /**
@@ -151,6 +167,11 @@ public class TaskContext {
     isDone.put(edge, true);
   }
 
+  /**
+   * Return true, if this task is done
+   * @param edge edge name
+   * @return boolean
+   */
   public boolean isDone(String edge) {
     return isDone.containsKey(edge) && isDone.get(edge);
   }

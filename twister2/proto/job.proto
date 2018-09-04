@@ -5,8 +5,8 @@ option java_package = "edu.iu.dsc.tws.proto.system.job";
 option java_outer_classname = "JobAPI";
 
 enum JobFormatType {
-    SHUFFLE = 0;
-    FIELDS = 1;
+    JAR = 0;
+    ZIP = 1;
 }
 
 message JobFormat {

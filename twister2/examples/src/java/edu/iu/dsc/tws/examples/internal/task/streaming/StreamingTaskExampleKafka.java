@@ -37,13 +37,9 @@ import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
-import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.connectors.TwsKafkaConsumer;
-import edu.iu.dsc.tws.executor.api.ExecutionPlan;
-import edu.iu.dsc.tws.executor.comm.tasks.streaming.SinkStreamTask;
+import edu.iu.dsc.tws.examples.internal.task.TaskUtils;
 import edu.iu.dsc.tws.executor.core.CommunicationOperationType;
-import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
-import edu.iu.dsc.tws.executor.threading.Executor;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.IMessage;
@@ -52,10 +48,7 @@ import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.GraphConstants;
 import edu.iu.dsc.tws.task.graph.OperationMode;
-import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
-import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
-import edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler;
+import edu.iu.dsc.tws.task.streaming.BaseStreamSinkTask;
 
 public class StreamingTaskExampleKafka implements IWorker {
   @Override
@@ -95,20 +88,10 @@ public class StreamingTaskExampleKafka implements IWorker {
 
     DataFlowTaskGraph graph = builder.build();
 
-    RoundRobinTaskScheduler roundRobinTaskScheduler = new RoundRobinTaskScheduler();
-    roundRobinTaskScheduler.initialize(config);
-
-    WorkerPlan workerPlan = createWorkerPlan(resources);
-    TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
-
-    TWSNetwork network = new TWSNetwork(config, resources.getWorkerId());
-    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resources, network);
-    ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
-    Executor executor = new Executor(config, plan, network.getChannel());
-    executor.execute();
+    TaskUtils.execute(config, resources, graph);
   }
 
-  private static class RecevingTask extends SinkStreamTask {
+  private static class RecevingTask extends BaseStreamSinkTask {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 
@@ -125,16 +108,6 @@ public class StreamingTaskExampleKafka implements IWorker {
     public void prepare(Config cfg, TaskContext context) {
       System.out.println("preparing listening");
     }
-  }
-
-  public WorkerPlan createWorkerPlan(AllocatedResources resourcePlan) {
-    List<Worker> workers = new ArrayList<>();
-    for (WorkerComputeResource resource : resourcePlan.getWorkerComputeResources()) {
-      Worker w = new Worker(resource.getId());
-      workers.add(w);
-    }
-
-    return new WorkerPlan(workers);
   }
 
   public static void main(String[] args) {

@@ -26,13 +26,13 @@ package edu.iu.dsc.tws.checkpointmanager.container;
 import java.io.IOException;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.task.api.Task;
+import edu.iu.dsc.tws.task.api.INode;
 
 public class CheckpointBarrierTracker implements CheckpointBarrierHandler {
   private static final Logger LOG = Logger.getLogger(CheckpointBarrierTracker.class.getName());
 
   @Override
-  public void registerCheckpointEventHandler(Task task) {
+  public void registerCheckpointEventHandler(INode task) {
 
   }
 

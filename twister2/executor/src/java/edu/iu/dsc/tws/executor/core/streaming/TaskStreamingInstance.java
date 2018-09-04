@@ -20,8 +20,9 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.executor.api.DefaultOutputCollection;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
+import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.ITask;
+import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.OutputCollection;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
@@ -32,7 +33,7 @@ public class TaskStreamingInstance implements INodeInstance {
   /**
    * The actual task executing
    */
-  private ITask task;
+  private ICompute task;
 
   /**
    * All the inputs will come through a single queue, otherwise we need to look
@@ -95,10 +96,10 @@ public class TaskStreamingInstance implements INodeInstance {
    */
   private int workerId;
 
-  public TaskStreamingInstance(ITask task, BlockingQueue<IMessage> inQueue,
-                           BlockingQueue<IMessage> outQueue, Config config, String tName,
-                           int tId, int tIndex, int parallel, int wId, Map<String, Object> cfgs,
-                           Set<String> inEdges, Set<String> outEdges) {
+  public TaskStreamingInstance(ICompute task, BlockingQueue<IMessage> inQueue,
+                               BlockingQueue<IMessage> outQueue, Config config, String tName,
+                               int tId, int tIndex, int parallel, int wId, Map<String, Object> cfgs,
+                               Set<String> inEdges, Set<String> outEdges) {
     this.task = task;
     this.inQueue = inQueue;
     this.outQueue = outQueue;
@@ -130,7 +131,7 @@ public class TaskStreamingInstance implements INodeInstance {
     while (!inQueue.isEmpty()) {
       IMessage m = inQueue.poll();
       if (m != null) {
-        task.run(m);
+        task.execute(m);
       }
     }
 
@@ -159,6 +160,11 @@ public class TaskStreamingInstance implements INodeInstance {
     }
 
     return true;
+  }
+
+  @Override
+  public INode getNode() {
+    return task;
   }
 
   public BlockingQueue<IMessage> getInQueue() {

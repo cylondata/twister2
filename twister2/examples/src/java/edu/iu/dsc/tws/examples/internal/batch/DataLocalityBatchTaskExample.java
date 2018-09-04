@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+//import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
@@ -29,6 +29,7 @@ import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
+import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.data.api.HDFSConnector;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
@@ -166,32 +167,34 @@ public class DataLocalityBatchTaskExample implements IWorker {
         DataLocalityBatchTaskScheduler dataLocalityBatchTaskScheduler = new
             DataLocalityBatchTaskScheduler();
         dataLocalityBatchTaskScheduler.initialize(config);
-        taskSchedulePlanList = dataLocalityBatchTaskScheduler.scheduleBatch(graph, workerPlan);
+        taskSchedulePlan = dataLocalityBatchTaskScheduler.schedule(graph, workerPlan);
+        //taskSchedulePlanList = dataLocalityBatchTaskScheduler.scheduleBatch(graph, workerPlan);
       }
     }
 
     //Just to print the task schedule plan.
-    if (workerID == 0) {
+    /*if (workerID == 0) {
       for (int j = 0; j < taskSchedulePlanList.size(); j++) {
         taskSchedulePlan = taskSchedulePlanList.get(j);
         Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap
             = taskSchedulePlan.getContainersMap();
-        LOG.info("Task Schedule Plan:" + j);
+        LOG.fine("Task Schedule Plan:" + j);
         for (Map.Entry<Integer, TaskSchedulePlan.ContainerPlan> entry : containersMap.entrySet()) {
           Integer integer = entry.getKey();
           TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
           Set<TaskSchedulePlan.TaskInstancePlan> taskContainerPlan
               = containerPlan.getTaskInstances();
           for (TaskSchedulePlan.TaskInstancePlan ip : taskContainerPlan) {
-            LOG.info("\tTask Id:" + ip.getTaskId() + "\tTask Index:" + ip.getTaskIndex()
+            LOG.fine("\tTask Id:" + ip.getTaskId() + "\tTask Index:" + ip.getTaskIndex()
                 + "\tTask Name:" + ip.getTaskName() + "\tContainer Id:" + integer);
           }
         }
       }
     }
-
+*/
     TWSNetwork network = new TWSNetwork(config, resources.getWorkerId());
-    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resources, network);
+    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resources,
+        new Communicator(config, network.getChannel()));
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
     Executor executor = new Executor(config, plan, network.getChannel());
     executor.execute();
@@ -222,7 +225,7 @@ public class DataLocalityBatchTaskExample implements IWorker {
     private TaskContext ctx;
 
     @Override
-    public void run() {
+    public void execute() {
       ctx.write("partition-edge", "Hello");
     }
 
@@ -237,7 +240,7 @@ public class DataLocalityBatchTaskExample implements IWorker {
     private TaskContext ctx;
 
     @Override
-    public void run() {
+    public void execute() {
       ctx.write("partition-edge", "Hello");
     }
 

@@ -21,6 +21,18 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 package edu.iu.dsc.tws.examples.internal.hdfs;
 
 import java.util.ArrayList;
@@ -41,6 +53,7 @@ import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
+import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.data.api.HDFSConnector;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
@@ -126,7 +139,7 @@ public class BatchTaskExample implements IWorker {
       RoundRobinBatchTaskScheduler rrBatchTaskScheduling = new RoundRobinBatchTaskScheduler();
       rrBatchTaskScheduling.initialize(config);
       WorkerPlan workerPlan = createWorkerPlan(resources);
-      scheduleBatch = rrBatchTaskScheduling.scheduleBatch(graph, workerPlan);
+      //scheduleBatch = rrBatchTaskScheduling.scheduleBatch(graph, workerPlan);
     }
 
     for (int j = 0; j < scheduleBatch.size(); j++) {
@@ -145,7 +158,8 @@ public class BatchTaskExample implements IWorker {
     }
 
     TWSNetwork network = new TWSNetwork(config, resources.getWorkerId());
-    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resources, network);
+    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resources,
+        new Communicator(config, network.getChannel()));
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
     Executor executor = new Executor(config, plan, network.getChannel());
     executor.execute();
@@ -171,7 +185,7 @@ public class BatchTaskExample implements IWorker {
     private TaskContext ctx;
 
     @Override
-    public void run() {
+    public void execute() {
       ctx.write("partition-edge", "Hello");
     }
 

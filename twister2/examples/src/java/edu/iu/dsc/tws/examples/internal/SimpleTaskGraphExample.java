@@ -40,8 +40,8 @@ import edu.iu.dsc.tws.examples.IntData;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.ITask;
 import edu.iu.dsc.tws.task.api.LinkedQueue;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.core.TaskExecutorFixedThread;
@@ -231,7 +231,7 @@ public class SimpleTaskGraphExample implements IWorker {
     LOAD_RECEIVE_FINISHED,
   }
 
-  private class TaskMapper implements ITask {
+  private class TaskMapper implements ICompute {
     private static final long serialVersionUID = 3233011943332591934L;
     public String taskName = null;
 
@@ -254,20 +254,12 @@ public class SimpleTaskGraphExample implements IWorker {
      * Execute with an incoming message
      */
     @Override
-    public void run(IMessage content) {
-
-    }
-
-    /**
-     * Execute without an incoming message
-     */
-    @Override
-    public void run() {
+    public void execute(IMessage content) {
 
     }
   }
 
-  private class TaskReducer implements ITask {
+  private class TaskReducer implements ICompute {
     private static final long serialVersionUID = 3233011943332591934L;
     public String taskName = null;
 
@@ -290,20 +282,12 @@ public class SimpleTaskGraphExample implements IWorker {
      * Execute with an incoming message
      */
     @Override
-    public void run(IMessage content) {
-
-    }
-
-    /**
-     * Execute without an incoming message
-     */
-    @Override
-    public void run() {
+    public void execute(IMessage content) {
 
     }
   }
 
-  private class TaskShuffler implements ITask {
+  private class TaskShuffler implements ICompute {
     private static final long serialVersionUID = 3233011943332591934L;
     public String taskName = null;
 
@@ -326,20 +310,12 @@ public class SimpleTaskGraphExample implements IWorker {
      * Execute with an incoming message
      */
     @Override
-    public void run(IMessage content) {
-
-    }
-
-    /**
-     * Execute without an incoming message
-     */
-    @Override
-    public void run() {
+    public void execute(IMessage content) {
 
     }
   }
 
-  private class TaskMerger implements ITask {
+  private class TaskMerger implements ICompute {
     private static final long serialVersionUID = 3233011943332591934L;
     public String taskName = null;
 
@@ -362,15 +338,7 @@ public class SimpleTaskGraphExample implements IWorker {
      * Execute with an incoming message
      */
     @Override
-    public void run(IMessage content) {
-
-    }
-
-    /**
-     * Execute without an incoming message
-     */
-    @Override
-    public void run() {
+    public void execute(IMessage content) {
 
     }
   }

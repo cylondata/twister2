@@ -11,30 +11,123 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.internal.task.batch;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
+import edu.iu.dsc.tws.api.task.Collector;
+import edu.iu.dsc.tws.api.task.Receptor;
 import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
-import edu.iu.dsc.tws.common.worker.IPersistentVolume;
-import edu.iu.dsc.tws.common.worker.IVolatileVolume;
+import edu.iu.dsc.tws.dataset.DataSet;
+import edu.iu.dsc.tws.dataset.Partition;
+import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.executor.core.CommunicationOperationType;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.batch.BaseBatchSinkTask;
+import edu.iu.dsc.tws.task.batch.BaseBatchSourceTask;
+import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.task.graph.GraphBuilder;
+import edu.iu.dsc.tws.task.graph.OperationMode;
 
 public class IterativeJob extends TaskWorker {
-  @Override
-  public void execute(Config config, int workerID, AllocatedResources allocatedResources,
-                      IWorkerController workerController, IPersistentVolume persistentVolume,
-                      IVolatileVolume volatileVolume) {
+  private static final Logger LOG = Logger.getLogger(IterativeJob.class.getName());
 
+  @Override
+  public void execute() {
+    LOG.log(Level.INFO, "Task worker starting: " + workerId);
+
+    IterativeSourceTask g = new IterativeSourceTask();
+    PartitionTask r = new PartitionTask();
+
+    GraphBuilder builder = GraphBuilder.newBuilder();
+    builder.addSource("source", g);
+    builder.setParallelism("source", 4);
+    builder.addSink("sink", r);
+    builder.setParallelism("sink", 4);
+    builder.connect("source", "sink", "partition-edge",
+        CommunicationOperationType.BATCH_PARTITION);
+    builder.operationMode(OperationMode.BATCH);
+
+    DataFlowTaskGraph graph = builder.build();
+    // this is a blocking call
+    ExecutionPlan plan = taskExecutor.plan(graph);
+    taskExecutor.addInput(graph, plan, "source", "input", new DataSet<>(0));
+    taskExecutor.execute(graph, plan);
+    DataSet<Object> dataSet = taskExecutor.getOutput(graph, plan, "sink");
+    Set<Object> values = dataSet.getData();
+    LOG.log(Level.INFO, "Values: " + values);
+  }
+
+  private static class IterativeSourceTask extends BaseBatchSourceTask implements Receptor {
+    protected static final long serialVersionUID = -254264120110286748L;
+
+    private DataSet<Object> input;
+
+    private int count = 0;
+
+    @Override
+    public void execute() {
+      if (count == 999) {
+        if (ctx.writeEnd("partition-edge", "Hello")) {
+          count++;
+        }
+      } else if (count < 999) {
+        if (ctx.write("partition-edge", "Hello")) {
+          count++;
+        }
+      }
+    }
+
+    @Override
+    public void add(String name, DataSet<Object> data) {
+      LOG.log(Level.INFO, "Received input: " + name);
+      input = data;
+    }
+  }
+
+  private static class PartitionTask extends BaseBatchSinkTask implements Collector<Object> {
+    protected static final long serialVersionUID = -254264120110286748L;
+
+    private List<String> list = new ArrayList<>();
+
+    private int count;
+
+    @Override
+    public boolean execute(IMessage message) {
+      LOG.log(Level.INFO, "Received message: " + message.getContent());
+
+      if (message.getContent() instanceof Iterator) {
+        while (((Iterator) message.getContent()).hasNext()) {
+          Object ret = ((Iterator) message.getContent()).next();
+          count++;
+          list.add(ret.toString());
+        }
+        System.out.println("Message Partition Received : " + message.getContent()
+            + ", Count : " + count);
+      }
+      count++;
+      return true;
+    }
+
+    @Override
+    public Partition<Object> get() {
+      return new Partition<>(ctx.taskIndex(), list);
+    }
   }
 
   public static void main(String[] args) {
+    LOG.log(Level.INFO, "Iterative job");
     // first load the configurations from command line and config files
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 

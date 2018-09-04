@@ -13,10 +13,6 @@ package edu.iu.dsc.tws.task.api;
 
 import edu.iu.dsc.tws.common.config.Config;
 
-/**
- * The abstract class that represents the start of a application
- * This task reads data from a input data source and ouputs data to another task
- */
 public abstract class SourceTask implements ISource {
   private static final long serialVersionUID = -254264120110286748L;
   private TaskContext ctx;
@@ -24,7 +20,7 @@ public abstract class SourceTask implements ISource {
 
 
   @Override
-  public void run() {
+  public void execute() {
 
   }
 
