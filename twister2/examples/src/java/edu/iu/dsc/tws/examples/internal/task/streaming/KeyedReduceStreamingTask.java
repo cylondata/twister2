@@ -62,7 +62,7 @@ public class KeyedReduceStreamingTask implements IWorker {
     builder.operationMode(OperationMode.STREAMING);
 
     DataFlowTaskGraph graph = builder.build();
-    TaskUtils.execute(config, resources, graph);
+    TaskUtils.execute(config, resources, graph, workerController);
   }
 
   private static class GeneratorTask extends BaseStreamSourceTask {

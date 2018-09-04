@@ -72,7 +72,7 @@ public class ReduceBatchTask implements IWorker {
     builder.operationMode(OperationMode.BATCH);
 
     DataFlowTaskGraph graph = builder.build();
-    TaskUtils.executeBatch(config, resources, graph);
+    TaskUtils.executeBatch(config, resources, graph, workerController);
   }
 
   private static class GeneratorTask extends BaseBatchSourceTask {
