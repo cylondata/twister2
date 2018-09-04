@@ -15,12 +15,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Execution plan to keep track of the tasks
  */
 public class ExecutionPlan {
   private Map<Integer, INodeInstance> nodes = new HashMap<>();
+
+  private Map<String, Map<Integer, INodeInstance>> nodesByName = new HashMap<>();
 
   private Map<Integer, IParallelOperation> inputMessages = new HashMap<>();
 
@@ -33,8 +36,16 @@ public class ExecutionPlan {
    * @param taskId the global task id
    * @param node the instance
    */
-  public void addNodes(int taskId, INodeInstance node) {
+  public void addNodes(String name, int taskId, INodeInstance node) {
     nodes.put(taskId, node);
+    Map<Integer, INodeInstance> instances;
+    if (!nodesByName.containsKey(name)) {
+      instances = new HashMap<>();
+      nodesByName.put(name, instances);
+    } else {
+      instances = nodesByName.get(name);
+    }
+    instances.put(taskId, node);
   }
 
   public Map<Integer, INodeInstance> getNodes() {
@@ -47,5 +58,13 @@ public class ExecutionPlan {
 
   public List<IParallelOperation> getParallelOperations() {
     return parallelOperations;
+  }
+
+  public Map<Integer, INodeInstance> getNodes(String taskName) {
+    return nodesByName.get(taskName);
+  }
+
+  public Set<String> getNodeNames() {
+    return nodesByName.keySet();
   }
 }

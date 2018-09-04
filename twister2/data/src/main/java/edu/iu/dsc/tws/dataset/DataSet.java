@@ -12,7 +12,9 @@
 package edu.iu.dsc.tws.dataset;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class DataSet<T> {
   private Map<Integer, Partition<T>> partitions = new HashMap<>();
@@ -27,6 +29,10 @@ public class DataSet<T> {
     partitions.put(dId, new Partition<T>(dId, data));
   }
 
+  public void addPartition(Partition<T> p) {
+    partitions.put(p.getId(), p);
+  }
+
   public T getPartition(int pId) {
     if (partitions.containsKey(pId)) {
       return partitions.get(pId).getData();
@@ -37,5 +43,13 @@ public class DataSet<T> {
 
   public int getId() {
     return id;
+  }
+
+  public Set<T> getData() {
+    Set<T> t = new HashSet<>();
+    for (Map.Entry<Integer, Partition<T>> e : partitions.entrySet()) {
+      t.add(e.getValue().getData());
+    }
+    return t;
   }
 }

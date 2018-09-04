@@ -138,11 +138,11 @@ public class TaskContext {
    * @param edge edge
    * @param message message
    */
-  public void write(String edge, Object message) {
+  public boolean write(String edge, Object message) {
     if (isDone.containsKey(edge) && isDone.get(edge)) {
       throw new RuntimeException("Cannot send on a stream that ended");
     }
-    collection.collect(0, new TaskMessage(message, edge, taskId));
+    return collection.collect(0, new TaskMessage(message, edge, taskId));
   }
 
   /**
@@ -150,12 +150,13 @@ public class TaskContext {
    * @param edge edge
    * @param message message
    */
-  public void writeEnd(String edge, Object message) {
+  public boolean writeEnd(String edge, Object message) {
     if (isDone.containsKey(edge) && isDone.get(edge)) {
       throw new RuntimeException("Cannot send on a stream that ended");
     }
-    collection.collect(0, new TaskMessage(message, edge, taskId));
+    boolean collect = collection.collect(0, new TaskMessage(message, edge, taskId));
     isDone.put(edge, true);
+    return collect;
   }
 
   /**

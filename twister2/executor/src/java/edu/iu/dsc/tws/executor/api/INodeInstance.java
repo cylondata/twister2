@@ -23,6 +23,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.api;
 
+import edu.iu.dsc.tws.task.api.INode;
+
 public interface INodeInstance {
   /**
    * Get task id
@@ -48,4 +50,10 @@ public interface INodeInstance {
    */
   default void reset() {
   }
+
+  /**
+   * Get the node of this instance
+   * @return the graph node
+   */
+  INode getNode();
 }

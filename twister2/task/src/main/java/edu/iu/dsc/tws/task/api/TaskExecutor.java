@@ -32,7 +32,7 @@ public interface TaskExecutor {
    *
    * @param task the task to be submitted
    */
-  boolean submitTask(Task task);
+  boolean submitTask(INode task);
 
   /**
    * Submit task with tid. This method assumes the actual task is already submitted through another
@@ -62,7 +62,7 @@ public interface TaskExecutor {
   /**
    * Register the task in the executor
    */
-  boolean registerTask(Task task);
+  boolean registerTask(INode task);
 
   /**
    * Method submits messages to a given queue

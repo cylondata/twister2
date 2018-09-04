@@ -23,7 +23,6 @@ import com.google.common.collect.Table;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
-import edu.iu.dsc.tws.comms.core.TWSNetwork;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
@@ -40,10 +39,10 @@ import edu.iu.dsc.tws.executor.core.batch.TaskBatchInstance;
 import edu.iu.dsc.tws.executor.core.streaming.SinkStreamingInstance;
 import edu.iu.dsc.tws.executor.core.streaming.SourceStreamingInstance;
 import edu.iu.dsc.tws.executor.core.streaming.TaskStreamingInstance;
+import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.ISource;
-import edu.iu.dsc.tws.task.api.ITask;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.Edge;
 import edu.iu.dsc.tws.task.graph.OperationMode;
@@ -52,11 +51,6 @@ import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
   private static final Logger LOG = Logger.getLogger(ExecutionPlanBuilder.class.getName());
-
-  /**
-   * no of threads used for this executor
-   */
-  private int noOfThreads;
 
   /**
    * Worker id
@@ -86,7 +80,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
       = HashBasedTable.create();
 
 
-  private TWSNetwork network;
+  private Communicator network;
 
   private AllocatedResources resourcePlan;
 
@@ -96,9 +90,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
 
   private EdgeGenerator edgeGenerator;
 
-  private Communicator communication;
-
-  public ExecutionPlanBuilder(AllocatedResources plan, TWSNetwork net) {
+  public ExecutionPlanBuilder(AllocatedResources plan, Communicator net) {
     this.workerId = plan.getWorkerId();
     this.taskIdGenerator = new TaskIdGenerator();
     this.kryoMemorySerializer = new KryoMemorySerializer();
@@ -110,14 +102,10 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
   @Override
   public ExecutionPlan build(Config cfg, DataFlowTaskGraph taskGraph,
                              TaskSchedulePlan taskSchedule) {
-    this.communication = new Communicator(cfg, network.getChannel());
-    noOfThreads = ExecutorContext.threadsPerContainer(cfg);
-    //LOG.log(Level.INFO, " ExecutionBuilder Thread Count : " + noOfThreads);
-
     // we need to build the task plan
     TaskPlan taskPlan = TaskPlanBuilder.build(resourcePlan, taskSchedule, taskIdGenerator);
     ParallelOperationFactory opFactory = new ParallelOperationFactory(
-        cfg, communication, taskPlan, edgeGenerator);
+        cfg, network, taskPlan, edgeGenerator);
 
     Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap = taskSchedule.getContainersMap();
     TaskSchedulePlan.ContainerPlan conPlan = containersMap.get(workerId);
@@ -139,7 +127,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
       }
 
       INode node = v.getTask();
-      if (node instanceof ITask || node instanceof ISource) {
+      if (node instanceof ICompute || node instanceof ISource) {
         // lets get the communication
         Set<Edge> edges = taskGraph.outEdges(v);
         // now lets create the communication object
@@ -159,7 +147,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
         }
       }
 
-      if (node instanceof ITask || node instanceof ISink) {
+      if (node instanceof ICompute || node instanceof ISink) {
         // lets get the parent tasks
         Set<Edge> parentEdges = taskGraph.inEdges(v);
         for (Edge e : parentEdges) {
@@ -182,7 +170,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
       INodeInstance iNodeInstance = createInstances(cfg, ip, v, taskGraph.getOperationMode(),
           inEdges, outEdges);
       // add to execution
-      execution.addNodes(taskIdGenerator.generateGlobalTaskId(
+      execution.addNodes(v.getName(), taskIdGenerator.generateGlobalTaskId(
           v.getName(), ip.getTaskId(), ip.getTaskIndex()), iNodeInstance);
     }
 
@@ -199,11 +187,8 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
       Set<Integer> targetsOfThisWorker = intersectionOfTasks(conPlan, c.getTargetTasks());
 
       // set the parallel operation to the instance
-      // lets see weather this comunication belongs to a task instance
-
       //let's separate the execution instance generation based on the Operation Mode
-
-      if (operationMode.equals(OperationMode.STREAMING)) {
+      if (operationMode == OperationMode.STREAMING) {
         for (Integer i : sourcesOfThisWorker) {
           if (streamingTaskInstances.contains(c.getSourceTask(), i)) {
             TaskStreamingInstance taskStreamingInstance
@@ -212,7 +197,6 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
           } else if (streamingSourceInstances.contains(c.getSourceTask(), i)) {
             SourceStreamingInstance sourceStreamingInstance
                 = streamingSourceInstances.get(c.getSourceTask(), i);
-            //LOG.info("Edge : " + c.getEdge().getName() + ", Op : " + op.getClass().getName());
             sourceStreamingInstance.registerOutParallelOperation(c.getEdge().getName(), op);
           } else {
             throw new RuntimeException("Not found: " + c.getSourceTask());
@@ -237,8 +221,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
         execution.addOps(op);
       }
 
-      if (operationMode.equals(OperationMode.BATCH)) {
-
+      if (operationMode == OperationMode.BATCH) {
         for (Integer i : sourcesOfThisWorker) {
           if (batchTaskInstances.contains(c.getSourceTask(), i)) {
             TaskBatchInstance taskBatchInstance = batchTaskInstances.get(c.getSourceTask(), i);
@@ -246,7 +229,6 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
           } else if (batchSourceInstances.contains(c.getSourceTask(), i)) {
             SourceBatchInstance sourceBatchInstance
                 = batchSourceInstances.get(c.getSourceTask(), i);
-            //LOG.info("Edge : " + c.getEdge().getName() + ", Op : " + op.getClass().getName());
             sourceBatchInstance.registerOutParallelOperation(c.getEdge().getName(), op);
           } else {
             throw new RuntimeException("Not found: " + c.getSourceTask());
@@ -295,25 +277,26 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
     int taskId = taskIdGenerator.generateGlobalTaskId(vertex.getName(),
         ip.getTaskId(), ip.getTaskIndex());
 
+    int queueSize = ExecutorContext.instanceQueueSize(cfg);
     if (operationMode.equals(OperationMode.BATCH)) {
-      if (newInstance instanceof ITask) {
-        TaskBatchInstance v = new TaskBatchInstance((ITask) newInstance,
-            new ArrayBlockingQueue<>(1024),
-            new ArrayBlockingQueue<>(1024), cfg,
+      if (newInstance instanceof ICompute) {
+        TaskBatchInstance v = new TaskBatchInstance((ICompute) newInstance,
+            new ArrayBlockingQueue<>(queueSize),
+            new ArrayBlockingQueue<>(queueSize), cfg,
             vertex.getName(), taskId, ip.getTaskIndex(),
             vertex.getParallelism(), workerId, vertex.getConfig().toMap(), inEdges, outEdges);
         batchTaskInstances.put(vertex.getName(), taskId, v);
         return v;
       } else if (newInstance instanceof ISource) {
         SourceBatchInstance v = new SourceBatchInstance((ISource) newInstance,
-            new ArrayBlockingQueue<>(1024), cfg,
+            new ArrayBlockingQueue<>(queueSize), cfg,
             vertex.getName(), taskId, ip.getTaskIndex(),
             vertex.getParallelism(), workerId, vertex.getConfig().toMap(), outEdges);
         batchSourceInstances.put(vertex.getName(), taskId, v);
         return v;
       } else if (newInstance instanceof ISink) {
         SinkBatchInstance v = new SinkBatchInstance((ISink) newInstance,
-            new ArrayBlockingQueue<>(1024), cfg, vertex.getName(),
+            new ArrayBlockingQueue<>(queueSize), cfg, vertex.getName(),
             taskId, ip.getTaskIndex(), vertex.getParallelism(),
             workerId, vertex.getConfig().toMap(), inEdges);
         batchSinkInstances.put(vertex.getName(), taskId, v);
@@ -322,24 +305,24 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
         throw new RuntimeException("Un-known type");
       }
     } else if (operationMode.equals(OperationMode.STREAMING)) {
-      if (newInstance instanceof ITask) {
-        TaskStreamingInstance v = new TaskStreamingInstance((ITask) newInstance,
-            new ArrayBlockingQueue<>(1024),
-            new ArrayBlockingQueue<>(1024), cfg,
+      if (newInstance instanceof ICompute) {
+        TaskStreamingInstance v = new TaskStreamingInstance((ICompute) newInstance,
+            new ArrayBlockingQueue<>(queueSize),
+            new ArrayBlockingQueue<>(queueSize), cfg,
             vertex.getName(), taskId, ip.getTaskIndex(),
             vertex.getParallelism(), workerId, vertex.getConfig().toMap(), inEdges, outEdges);
         streamingTaskInstances.put(vertex.getName(), taskId, v);
         return v;
       } else if (newInstance instanceof ISource) {
         SourceStreamingInstance v = new SourceStreamingInstance((ISource) newInstance,
-            new ArrayBlockingQueue<>(1024), cfg,
+            new ArrayBlockingQueue<>(queueSize), cfg,
             vertex.getName(), taskId, ip.getTaskIndex(),
             vertex.getParallelism(), workerId, vertex.getConfig().toMap(), outEdges);
         streamingSourceInstances.put(vertex.getName(), taskId, v);
         return v;
       } else if (newInstance instanceof ISink) {
         SinkStreamingInstance v = new SinkStreamingInstance((ISink) newInstance,
-            new ArrayBlockingQueue<>(1024), cfg, vertex.getName(),
+            new ArrayBlockingQueue<>(queueSize), cfg, vertex.getName(),
             taskId, ip.getTaskIndex(), vertex.getParallelism(), workerId,
             vertex.getConfig().toMap(), inEdges);
         streamingSinkInstances.put(vertex.getName(), taskId, v);
@@ -381,11 +364,11 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
       this.targetTask = tarTast;
     }
 
-    public Set<Integer> getSourceTasks() {
+    Set<Integer> getSourceTasks() {
       return sourceTasks;
     }
 
-    public Set<Integer> getTargetTasks() {
+    Set<Integer> getTargetTasks() {
       return targetTasks;
     }
 
@@ -393,11 +376,11 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
       return edge;
     }
 
-    public String getSourceTask() {
+    String getSourceTask() {
       return sourceTask;
     }
 
-    public String getTargetTask() {
+    String getTargetTask() {
       return targetTask;
     }
   }

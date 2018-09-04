@@ -24,47 +24,47 @@
 package edu.iu.dsc.tws.task.core;
 
 import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.Queue;
-import edu.iu.dsc.tws.task.api.Task;
 
 /**
  * Wrapper class that is used to execute Tasks ( this is for the chached thread executor which is
  * not in use at the moment)
  */
 public class RunnableTask implements Runnable {
-  private Task executableTask;
+  private INode executableTask;
   private Queue<IMessage> queueRef;
   private boolean isMessageBased = false;
   private int messageProcessLimit = 1;
   private int messageProcessCount = 0;
 
-  public RunnableTask(Task task) {
+  public RunnableTask(INode task) {
     this.executableTask = task;
   }
 
-  public RunnableTask(Task task, int messageLimit) {
+  public RunnableTask(INode task, int messageLimit) {
     this.executableTask = task;
   }
 
   //TODO: would it better to send a referance to the queue and then use that to get the message?
-  public RunnableTask(Task task, Queue<IMessage> msg) {
+  public RunnableTask(INode task, Queue<IMessage> msg) {
     this.executableTask = task;
     this.queueRef = msg;
     isMessageBased = true;
   }
 
-  public RunnableTask(Task task, Queue<IMessage> msg, int messageLimit) {
+  public RunnableTask(INode task, Queue<IMessage> msg, int messageLimit) {
     this.executableTask = task;
     this.queueRef = msg;
     this.messageProcessLimit = messageLimit;
     isMessageBased = true;
   }
 
-  public Task getExecutableTask() {
+  public INode getExecutableTask() {
     return executableTask;
   }
 
-  public void setExecutableTask(Task executableTask) {
+  public void setExecutableTask(INode executableTask) {
     this.executableTask = executableTask;
   }
 

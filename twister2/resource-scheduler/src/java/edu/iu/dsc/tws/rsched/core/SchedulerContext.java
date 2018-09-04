@@ -117,29 +117,6 @@ public class SchedulerContext extends Context {
     return cfg.getDoubleValue(PERSISTENT_VOLUME_PER_WORKER, PERSISTENT_VOLUME_PER_WORKER_DEFAULT);
   }
 
-  public static String numOfThreads(Config cfg) {
-    String numThreads = "";
-    Object threadObj = cfg.get(THREADS_PER_WORKER);
-    if (threadObj == null) {
-      numThreads = "1";
-    } else {
-      if (threadObj instanceof Integer) {
-        numThreads = String.valueOf(threadObj);
-      } else if (threadObj instanceof String) {
-        numThreads = (String) threadObj;
-      } else if (threadObj instanceof Float) {
-        numThreads = String.valueOf((int) threadObj);
-      } else if (threadObj instanceof Double) {
-        numThreads = String.valueOf((int) threadObj);
-      } else {
-        numThreads = "1";
-      }
-    }
-
-    return numThreads;
-  }
-
-
   /**
    * if persistentVolumePerWorker is more than zero, return true, otherwise false
    */

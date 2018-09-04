@@ -53,7 +53,7 @@ twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.scp.ScpUploader"
 # container class to run in workers
 #twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.rsched.BasicMesosWorker"
 #twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.rsched.BasicMpiJob"
-twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.comms.BaseBroadcastCommunication"
+twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.comms.BroadcastCommunication"
 
 # the Mesos worker class
 twister2.class.mesos.worker: "edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorker"

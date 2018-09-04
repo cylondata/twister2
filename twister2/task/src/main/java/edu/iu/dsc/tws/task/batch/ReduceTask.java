@@ -12,20 +12,15 @@
 package edu.iu.dsc.tws.task.batch;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.ITask;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
-public class ReduceTask implements ITask {
+public class ReduceTask implements ICompute {
   public static final long serialVersionUID = 1258632547;
 
   @Override
-  public void run(IMessage content) {
-
-  }
-
-  @Override
-  public void run() {
+  public void execute(IMessage content) {
 
   }
 

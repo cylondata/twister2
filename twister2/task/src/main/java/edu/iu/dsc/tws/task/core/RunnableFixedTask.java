@@ -40,8 +40,8 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.Queue;
-import edu.iu.dsc.tws.task.api.Task;
 import edu.iu.dsc.tws.task.api.TaskExecutor;
 
 /**
@@ -52,7 +52,7 @@ public class RunnableFixedTask implements Runnable {
 
   private static final Logger LOG = Logger.getLogger(RunnableFixedTask.class.getName());
 
-  private Task executableTask;
+  private INode executableTask;
   private Queue<IMessage> queueRef;
   private List<Integer> outQueues;
   private boolean isMessageBased = false;
@@ -60,24 +60,24 @@ public class RunnableFixedTask implements Runnable {
   private int messageProcessCount = 0;
   private TaskExecutor taskExecutor;
 
-  public RunnableFixedTask(Task task, TaskExecutor taskExec) {
+  public RunnableFixedTask(INode task, TaskExecutor taskExec) {
     this.executableTask = task;
     this.taskExecutor = taskExec;
     this.outQueues = new ArrayList<Integer>();
   }
 
-  public RunnableFixedTask(Task task, TaskExecutor taskExec, List<Integer> outputQueues) {
+  public RunnableFixedTask(INode task, TaskExecutor taskExec, List<Integer> outputQueues) {
     this.executableTask = task;
     this.taskExecutor = taskExec;
     this.outQueues = outputQueues;
   }
 
-  public RunnableFixedTask(Task task, int messageLimit) {
+  public RunnableFixedTask(INode task, int messageLimit) {
     this.executableTask = task;
   }
 
   //TODO: would it better to send a referance to the queue and then use that to get the message?
-  public RunnableFixedTask(Task task, Queue<IMessage> msg, TaskExecutor taskExec,
+  public RunnableFixedTask(INode task, Queue<IMessage> msg, TaskExecutor taskExec,
                            List<Integer> outputQueues) {
     this.executableTask = task;
     this.queueRef = msg;
@@ -86,7 +86,7 @@ public class RunnableFixedTask implements Runnable {
     this.outQueues = outputQueues;
   }
 
-  public RunnableFixedTask(Task task, Queue<IMessage> msg, int messageLimit,
+  public RunnableFixedTask(INode task, Queue<IMessage> msg, int messageLimit,
                            TaskExecutor taskExec, List<Integer> outputQueues) {
     this.executableTask = task;
     this.queueRef = msg;
@@ -96,11 +96,11 @@ public class RunnableFixedTask implements Runnable {
     this.outQueues = outputQueues;
   }
 
-  public Task getExecutableTask() {
+  public INode getExecutableTask() {
     return executableTask;
   }
 
-  public void setExecutableTask(Task executableTask) {
+  public void setExecutableTask(INode executableTask) {
     this.executableTask = executableTask;
   }
 

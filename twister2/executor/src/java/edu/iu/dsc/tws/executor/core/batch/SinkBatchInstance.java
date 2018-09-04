@@ -20,6 +20,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
 import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
@@ -135,6 +136,11 @@ public class SinkBatchInstance implements INodeInstance {
   @Override
   public int getId() {
     return batchTaskId;
+  }
+
+  @Override
+  public INode getNode() {
+    return batchTask;
   }
 
   /**

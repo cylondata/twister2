@@ -13,11 +13,11 @@ package edu.iu.dsc.tws.checkpointmanager.container;
 
 import java.io.IOException;
 
-import edu.iu.dsc.tws.task.api.Task;
+import edu.iu.dsc.tws.task.api.INode;
 
 public class CheckpointBarrierBuffer implements CheckpointBarrierHandler {
   @Override
-  public void registerCheckpointEventHandler(Task task) {
+  public void registerCheckpointEventHandler(INode task) {
 
   }
 

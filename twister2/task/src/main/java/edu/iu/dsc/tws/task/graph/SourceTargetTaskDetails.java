@@ -11,28 +11,28 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.graph;
 
-import edu.iu.dsc.tws.task.api.ITask;
+import edu.iu.dsc.tws.task.api.ICompute;
 
 public class SourceTargetTaskDetails {
 
-  private ITask sourceTask;
-  private ITask targetTask;
+  private ICompute sourceTask;
+  private ICompute targetTask;
   private String dataflowOperationName;
   private Edge dataflowOperation;
 
-  public ITask getSourceTask() {
+  public ICompute getSourceTask() {
     return sourceTask;
   }
 
-  public void setSourceTask(ITask sourceTask) {
+  public void setSourceTask(ICompute sourceTask) {
     this.sourceTask = sourceTask;
   }
 
-  public ITask getTargetTask() {
+  public ICompute getTargetTask() {
     return targetTask;
   }
 
-  public void setTargetTask(ITask targetTask) {
+  public void setTargetTask(ICompute targetTask) {
     this.targetTask = targetTask;
   }
 

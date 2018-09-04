@@ -33,6 +33,7 @@ import edu.iu.dsc.tws.executor.api.DefaultOutputCollection;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
 import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.ISource;
 import edu.iu.dsc.tws.task.api.OutputCollection;
 import edu.iu.dsc.tws.task.api.TaskContext;
@@ -120,7 +121,7 @@ public class SourceStreamingInstance implements INodeInstance {
    **/
   public boolean execute() {
     // lets execute the task
-    streamingTask.run();
+    streamingTask.execute();
     // now check the output queue
     while (!outStreamingQueue.isEmpty()) {
       IMessage message = outStreamingQueue.peek();
@@ -139,6 +140,11 @@ public class SourceStreamingInstance implements INodeInstance {
     }
 
     return true;
+  }
+
+  @Override
+  public INode getNode() {
+    return streamingTask;
   }
 
   public BlockingQueue<IMessage> getOutStreamingQueue() {

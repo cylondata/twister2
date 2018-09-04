@@ -87,7 +87,9 @@ public abstract class TaskWorker implements IWorker {
     // create the communicator
     communicator = new Communicator(config, channel);
     // create the executor
-    taskExecutor = new TaskExecutor(config, workerId, allocatedResources);
+    taskExecutor = new TaskExecutor(config, workerId, allocatedResources, communicator);
+    // call execute
+    execute();
   }
 
   public abstract void execute();

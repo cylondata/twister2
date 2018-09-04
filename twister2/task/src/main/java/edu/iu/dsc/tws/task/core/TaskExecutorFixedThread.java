@@ -24,8 +24,8 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.core.TWSCommunication;
 import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.Queue;
-import edu.iu.dsc.tws.task.api.Task;
 import edu.iu.dsc.tws.task.api.TaskExecutor;
 import edu.iu.dsc.tws.task.api.TaskMessage;
 
@@ -84,7 +84,7 @@ public class TaskExecutorFixedThread implements TaskExecutor {
   /**
    * Hashmap that contains the tasks that need to be executed
    */
-  private Map<Integer, Task> taskMap = new HashMap<Integer, Task>();
+  private Map<Integer, INode> taskMap = new HashMap<Integer, INode>();
 
   /**
    * Hashset that keeps track of all the tasks that are currently running and queued
@@ -150,28 +150,28 @@ public class TaskExecutorFixedThread implements TaskExecutor {
   /**
    * Register sink tasks which only have input queues associated with the task
    */
-  public boolean registerSinkTask(Task task, List<Integer> inputQueues) {
+  public boolean registerSinkTask(INode task, List<Integer> inputQueues) {
     return registerTask(task, inputQueues, inputQueues);
   }
 
   /**
    * Register source tasks which only have output queues associated with the task
    */
-  public boolean registerSourceTask(Task task, List<Integer> outputQueues) {
+  public boolean registerSourceTask(INode task, List<Integer> outputQueues) {
     return registerTask(task, null, outputQueues);
   }
 
   /**
    * register tasks that does not contain any queues associated
    */
-  public boolean registerTask(Task task) {
+  public boolean registerTask(INode task) {
     return registerTask(task, new ArrayList<>(), new ArrayList<>());
   }
 
   /**
    * register a given task with executor
    */
-  public boolean registerTask(Task task, List<Integer> inputQueues,
+  public boolean registerTask(INode task, List<Integer> inputQueues,
                               List<Integer> outputQueues) {
     LOG.info("------------------------------------------");
     LOG.info("Register Task");
@@ -243,7 +243,7 @@ public class TaskExecutorFixedThread implements TaskExecutor {
   }
 
   @Override
-  public boolean submitTask(Task task) {
+  public boolean submitTask(INode task) {
     if (!taskMap.containsKey(0)) {
       throw new RuntimeException(String.format("Unable to locate task with task id : %d, "
           + "Please make sure the task is registered", 0));
