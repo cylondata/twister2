@@ -26,7 +26,6 @@ package edu.iu.dsc.tws.examples.internal.task.streaming;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
@@ -38,7 +37,6 @@ import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.connectors.TwsKafkaConsumer;
 import edu.iu.dsc.tws.examples.internal.task.TaskUtils;
 
@@ -125,16 +123,8 @@ public class ReduceKafkaStreamingTask implements IWorker {
     private static final long serialVersionUID = -254264903510284748L;
 
     @Override
-    public void init(Config cfg, DataFlowOperation op, Map<Integer,
-        List<Integer>> expectedIds, TaskContext context) {
-
-    }
-
-    @Override
-    public boolean onMessage(int source, int path, int target, int flags, Object object) {
-      System.out.println("Source : " + source + ", Path : " + path + "Target : " + target
-          + " Object : " + object.getClass().getName());
-      return true;
+    public Object onMessage(Object object1, Object object2) {
+      return object1;
     }
   }
 
