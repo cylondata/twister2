@@ -108,24 +108,12 @@ public class ParallelOperationFactory {
           return keyedReduceBatchOperation;
         }
       } else {
-        if (CommunicationOperationType.BATCH_BROADCAST.equals(edge.getOperation())) {
-          BroadcastBatchOperation broadcastOp = new BroadcastBatchOperation(config, channel,
-              taskPlan);
-          broadcastOp.prepare(sources.iterator().next(), dests, edgeGenerator, edge.getDataType(),
-              edge.getName());
-          return broadcastOp;
-        } else if (CommunicationOperationType.BATCH_REDUCE.equals(edge.getOperation())) {
+        if (CommunicationOperationType.BATCH_REDUCE.equals(edge.getOperation())) {
           ReduceBatchOperation reduceBatchOperation = new ReduceBatchOperation(config, channel,
               taskPlan);
           reduceBatchOperation.prepare(sources, dests.iterator().next(), edgeGenerator,
               edge.getDataType(), edge.getName());
           return reduceBatchOperation;
-        } else if (CommunicationOperationType.BATCH_ALLREDUCE.equals(edge.getOperation())) {
-          AllReduceBatchOperation allReduceBatchOperation = new AllReduceBatchOperation(config,
-              channel, taskPlan);
-          allReduceBatchOperation.prepare(sources, dests, edgeGenerator, edge.getDataType(),
-              edge.getName());
-          return allReduceBatchOperation;
         } else if (CommunicationOperationType.BATCH_KEYED_REDUCE.equals(edge.getOperation())) {
           KeyedReduceBatchOperation keyedReduceBatchOperation
               = new KeyedReduceBatchOperation(config, channel, taskPlan);
@@ -134,7 +122,6 @@ public class ParallelOperationFactory {
           return keyedReduceBatchOperation;
         }
       }
-
     } else if (operationMode.equals(OperationMode.STREAMING)) {
       //LOG.info("Streaming Job Building ...");
       if (!edge.isKeyed()) {
@@ -164,37 +151,13 @@ public class ParallelOperationFactory {
           return reduceStreamingOperation;
         } else if (CommunicationOperationType.STREAMING_ALLREDUCE.equals(edge.getOperation())) {
           AllReduceStreamingOperation allReduceStreamingOperation
-              = new AllReduceStreamingOperation(config, channel, taskPlan);
+              = new AllReduceStreamingOperation(config, channel, taskPlan, edge.getFunction());
           allReduceStreamingOperation.prepare(sources, dests, edgeGenerator, edge.getDataType(),
               edge.getName());
           return allReduceStreamingOperation;
-        } else if (CommunicationOperationType.STREAMING_KEYED_REDUCE.equals(edge.getOperation())) {
-          KeyedReduceStreamingOperation keyedReduceStreamingOperation
-              = new KeyedReduceStreamingOperation(config, channel, taskPlan);
-          keyedReduceStreamingOperation.prepare(sources, dests, edgeGenerator, edge.getDataType(),
-              edge.getName());
-          return keyedReduceStreamingOperation;
         }
       } else {
-        if (CommunicationOperationType.STREAMING_BROADCAST.equals(edge.getOperation())) {
-          BroadcastStreamingOperation broadcastOp = new BroadcastStreamingOperation(config,
-              channel, taskPlan);
-          broadcastOp.prepare(sources.iterator().next(), dests, edgeGenerator, edge.getDataType(),
-              edge.getName());
-          return broadcastOp;
-        } else if (CommunicationOperationType.STREAMING_REDUCE.equals(edge.getOperation())) {
-          ReduceStreamingOperation reduceStreamingOperation = new ReduceStreamingOperation(config,
-              channel, taskPlan, edge.getFunction());
-          reduceStreamingOperation.prepare(sources, dests.iterator().next(), edgeGenerator,
-              edge.getDataType(), edge.getName());
-          return reduceStreamingOperation;
-        } else if (CommunicationOperationType.STREAMING_ALLREDUCE.equals(edge.getOperation())) {
-          AllReduceStreamingOperation allReduceStreamingOperation
-              = new AllReduceStreamingOperation(config, channel, taskPlan);
-          allReduceStreamingOperation.prepare(sources, dests, edgeGenerator, edge.getDataType(),
-              edge.getName());
-          return allReduceStreamingOperation;
-        } else if (CommunicationOperationType.STREAMING_KEYED_REDUCE.equals(edge.getOperation())) {
+        if (CommunicationOperationType.STREAMING_KEYED_REDUCE.equals(edge.getOperation())) {
           KeyedReduceStreamingOperation keyedReduceStreamingOperation
               = new KeyedReduceStreamingOperation(config, channel, taskPlan);
           keyedReduceStreamingOperation.prepare(sources, dests, edgeGenerator, edge.getDataType(),
@@ -238,7 +201,7 @@ public class ParallelOperationFactory {
         return reduceStreamingOperation;
       } else if (Operations.ALL_REDUCE.equals(edge.getOperation())) {
         AllReduceStreamingOperation allReduceStreamingOperation
-            = new AllReduceStreamingOperation(config, channel, taskPlan);
+            = new AllReduceStreamingOperation(config, channel, taskPlan, edge.getFunction());
         allReduceStreamingOperation.prepare(sources, dests, edgeGenerator, edge.getDataType(),
             edge.getName());
         return allReduceStreamingOperation;
@@ -250,25 +213,7 @@ public class ParallelOperationFactory {
         return keyedReduceStreamingOperation;
       }
     } else {
-      if (Operations.BROADCAST.equals(edge.getOperation())) {
-        BroadcastStreamingOperation broadcastOp = new BroadcastStreamingOperation(config,
-            channel, taskPlan);
-        broadcastOp.prepare(sources.iterator().next(), dests, edgeGenerator, edge.getDataType(),
-            edge.getName());
-        return broadcastOp;
-      } else if (Operations.REDUCE.equals(edge.getOperation())) {
-        ReduceStreamingOperation reduceStreamingOperation = new ReduceStreamingOperation(config,
-            channel, taskPlan, edge.getFunction());
-        reduceStreamingOperation.prepare(sources, dests.iterator().next(), edgeGenerator,
-            edge.getDataType(), edge.getName());
-        return reduceStreamingOperation;
-      } else if (Operations.ALL_REDUCE.equals(edge.getOperation())) {
-        AllReduceStreamingOperation allReduceStreamingOperation
-            = new AllReduceStreamingOperation(config, channel, taskPlan);
-        allReduceStreamingOperation.prepare(sources, dests, edgeGenerator, edge.getDataType(),
-            edge.getName());
-        return allReduceStreamingOperation;
-      } else if (Operations.KEYED_REDUCE.equals(edge.getOperation())) {
+      if (Operations.KEYED_REDUCE.equals(edge.getOperation())) {
         KeyedReduceStreamingOperation keyedReduceStreamingOperation
             = new KeyedReduceStreamingOperation(config, channel, taskPlan);
         keyedReduceStreamingOperation.prepare(sources, dests, edgeGenerator, edge.getDataType(),
