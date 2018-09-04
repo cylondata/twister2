@@ -192,9 +192,9 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
     for (Map.Entry<Integer, List<InstanceId>> entry1 : dataAwareAllocation.entrySet()) {
       Integer integer = entry1.getKey();
       List<InstanceId> instanceIds = entry1.getValue();
-      LOG.info("Container Index:" + integer);
+      LOG.fine("Container Index:" + integer);
       for (InstanceId instanceId : instanceIds) {
-        LOG.info("Task Details:"
+        LOG.fine("Task Details:"
             + "\t Task Name:" + instanceId.getTaskName()
             + "\t Task id:" + instanceId.getTaskId()
             + "\t Task index:" + instanceId.getTaskIndex());
@@ -417,9 +417,9 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
         Integer integer = entry.getKey();
         TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
         Set<TaskSchedulePlan.TaskInstancePlan> taskContainerPlan = containerPlan.getTaskInstances();
-        LOG.info("Container Index (Schedule Method):" + integer);
+        LOG.fine("Container Index (Schedule Method):" + integer);
         for (TaskSchedulePlan.TaskInstancePlan ip : taskContainerPlan) {
-          LOG.info("Task Id:" + ip.getTaskId() + "\tTask Index" + ip.getTaskIndex()
+          LOG.fine("Task Id:" + ip.getTaskId() + "\tTask Index" + ip.getTaskIndex()
                   + "\tTask Name:" + ip.getTaskName() + "\tContainer Id:" + integer);
         }
       }
@@ -524,9 +524,9 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
         Integer integer = entry.getKey();
         TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
         Set<TaskSchedulePlan.TaskInstancePlan> taskContainerPlan = containerPlan.getTaskInstances();
-        LOG.info("Container Index (Schedule Batch Method):" + integer);
+        LOG.fine("Container Index (Schedule Batch Method):" + integer);
         for (TaskSchedulePlan.TaskInstancePlan ip : taskContainerPlan) {
-          LOG.info("Task Id:" + ip.getTaskId() + "\tTask Index" + ip.getTaskIndex()
+          LOG.fine("Task Id:" + ip.getTaskId() + "\tTask Index" + ip.getTaskIndex()
               + "\tTask Name:" + ip.getTaskName() + "\tContainer Id:" + integer);
         }
       }

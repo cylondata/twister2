@@ -181,7 +181,7 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
 
     Map<Integer, List<InstanceId>> containerInstanceMap;
 
-    TaskSchedulePlan taskSchedulePlan = null;
+    TaskSchedulePlan taskSchedulePlan;
 
     //TaskSchedulePlan.ContainerPlan taskContainerPlan;
 
