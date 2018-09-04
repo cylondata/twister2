@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.reduce;
 
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Queue;
 import java.util.logging.Logger;
