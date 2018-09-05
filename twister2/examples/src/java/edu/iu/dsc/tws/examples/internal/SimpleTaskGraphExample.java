@@ -101,7 +101,7 @@ public class SimpleTaskGraphExample implements IWorker {
             CommunicationOperationType.BATCH_PARTITION);
     builder.connect("task1", "task3", "partition-edge2",
             CommunicationOperationType.BATCH_PARTITION);
-    builder.connect("task2", "task3", "partition-edge3",
+    builder.connect("task2", "task4", "partition-edge3",
             CommunicationOperationType.BATCH_PARTITION);
     builder.connect("task3", "task4", "partition-edge4",
             CommunicationOperationType.BATCH_PARTITION);
