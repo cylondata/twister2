@@ -29,7 +29,7 @@ import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
-import edu.iu.dsc.tws.examples.IntData;
+import edu.iu.dsc.tws.executor.core.CommunicationOperationType;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.ICompute;
@@ -38,6 +38,7 @@ import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.GraphConstants;
+import edu.iu.dsc.tws.task.graph.OperationMode;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
@@ -71,7 +72,13 @@ public class SimpleTaskGraphExample implements IWorker {
   }
 
   /**
-   * Init method to submit the task to the executor
+   * This is the execute method for the task graph.
+   * @param cfg
+   * @param workerID
+   * @param resources
+   * @param workerController
+   * @param persistentVolume
+   * @param volatileVolume
    */
   public void execute(Config cfg, int workerID, AllocatedResources resources,
                       IWorkerController workerController,
@@ -79,80 +86,81 @@ public class SimpleTaskGraphExample implements IWorker {
                       IVolatileVolume volatileVolume) {
 
     LOG.log(Level.INFO, "Starting the example with container id: " + resources.getWorkerId());
-
     TaskMapper taskMapper = new TaskMapper("task1");
     TaskReducer taskReducer = new TaskReducer("task2");
     TaskShuffler taskShuffler = new TaskShuffler("task3");
     TaskMerger taskMerger = new TaskMerger("task4");
 
-    GraphBuilder graphBuilder = GraphBuilder.newBuilder();
-    graphBuilder.addTask("task1", taskMapper);
-    graphBuilder.addTask("task2", taskReducer);
-    graphBuilder.addTask("task3", taskShuffler);
-    graphBuilder.addTask("task4", taskMerger);
+    GraphBuilder builder = GraphBuilder.newBuilder();
+    builder.addTask("task1", taskMapper);
+    builder.addTask("task2", taskReducer);
+    builder.addTask("task3", taskShuffler);
+    builder.addTask("task4", taskMerger);
 
-    graphBuilder.connect("task1", "task2", "Reduce");
-    graphBuilder.connect("task1", "task3", "Shuffle");
-    graphBuilder.connect("task2", "task3", "merger1");
-    graphBuilder.connect("task3", "task4", "merger2");
+    builder.connect("task1", "task2", "partition-edge1",
+            CommunicationOperationType.BATCH_PARTITION);
+    builder.connect("task1", "task3", "partition-edge2",
+            CommunicationOperationType.BATCH_PARTITION);
+    builder.connect("task2", "task3", "partition-edge3",
+            CommunicationOperationType.BATCH_PARTITION);
+    builder.connect("task3", "task4", "partition-edge4",
+            CommunicationOperationType.BATCH_PARTITION);
 
-    graphBuilder.setParallelism("task1", 2);
-    graphBuilder.setParallelism("task2", 2);
-    graphBuilder.setParallelism("task3", 2);
-    graphBuilder.setParallelism("task4", 2);
+    builder.operationMode(OperationMode.BATCH);
 
-    graphBuilder.addConfiguration("task1", "Ram", GraphConstants.taskInstanceRam(cfg));
-    graphBuilder.addConfiguration("task1", "Disk", GraphConstants.taskInstanceDisk(cfg));
-    graphBuilder.addConfiguration("task1", "Cpu", GraphConstants.taskInstanceCpu(cfg));
+    builder.setParallelism("task1", 2);
+    builder.setParallelism("task2", 2);
+    builder.setParallelism("task3", 2);
+    builder.setParallelism("task4", 2);
 
-    graphBuilder.addConfiguration("task2", "Ram", GraphConstants.taskInstanceRam(cfg));
-    graphBuilder.addConfiguration("task2", "Disk", GraphConstants.taskInstanceDisk(cfg));
-    graphBuilder.addConfiguration("task2", "Cpu", GraphConstants.taskInstanceCpu(cfg));
+    builder.addConfiguration("task1", "Ram", GraphConstants.taskInstanceRam(cfg));
+    builder.addConfiguration("task1", "Disk", GraphConstants.taskInstanceDisk(cfg));
+    builder.addConfiguration("task1", "Cpu", GraphConstants.taskInstanceCpu(cfg));
 
-    graphBuilder.addConfiguration("task3", "Ram", GraphConstants.taskInstanceRam(cfg));
-    graphBuilder.addConfiguration("task3", "Disk", GraphConstants.taskInstanceDisk(cfg));
-    graphBuilder.addConfiguration("task3", "Cpu", GraphConstants.taskInstanceCpu(cfg));
+    builder.addConfiguration("task2", "Ram", GraphConstants.taskInstanceRam(cfg));
+    builder.addConfiguration("task2", "Disk", GraphConstants.taskInstanceDisk(cfg));
+    builder.addConfiguration("task2", "Cpu", GraphConstants.taskInstanceCpu(cfg));
 
-    graphBuilder.addConfiguration("task4", "Ram", GraphConstants.taskInstanceRam(cfg));
-    graphBuilder.addConfiguration("task4", "Disk", GraphConstants.taskInstanceDisk(cfg));
-    graphBuilder.addConfiguration("task4", "Cpu", GraphConstants.taskInstanceCpu(cfg));
+    builder.addConfiguration("task3", "Ram", GraphConstants.taskInstanceRam(cfg));
+    builder.addConfiguration("task3", "Disk", GraphConstants.taskInstanceDisk(cfg));
+    builder.addConfiguration("task3", "Cpu", GraphConstants.taskInstanceCpu(cfg));
 
-    graphBuilder.addConfiguration("task1", "dataset", new ArrayList<>().add("dataset1.txt"));
-    graphBuilder.addConfiguration("task2", "dataset", new ArrayList<>().add("dataset2.txt"));
-    graphBuilder.addConfiguration("task3", "dataset", new ArrayList<>().add("dataset3.txt"));
-    graphBuilder.addConfiguration("task4", "dataset", new ArrayList<>().add("dataset4.txt"));
+    builder.addConfiguration("task4", "Ram", GraphConstants.taskInstanceRam(cfg));
+    builder.addConfiguration("task4", "Disk", GraphConstants.taskInstanceDisk(cfg));
+    builder.addConfiguration("task4", "Cpu", GraphConstants.taskInstanceCpu(cfg));
 
-    DataFlowTaskGraph dataFlowTaskGraph = graphBuilder.build();
-    LOG.info("Generated Dataflow Task Graph Is:" + dataFlowTaskGraph.getTaskVertexSet());
+    List<String> sourceInputDataset = new ArrayList<>();
+    sourceInputDataset.add("dataset1.txt");
+    sourceInputDataset.add("dataset2.txt");
+
+    builder.addConfiguration("task1", "inputdataset", sourceInputDataset);
+    builder.addConfiguration("task2", "inputdataset", sourceInputDataset);
+    builder.addConfiguration("task3", "inputdataset", sourceInputDataset);
+    builder.addConfiguration("task4", "inputdataset", sourceInputDataset);
+
+    DataFlowTaskGraph graph = builder.build();
+    WorkerPlan workerPlan = createWorkerPlan(resources);
+
+    LOG.info("Generated Dataflow Task Graph Is:" + graph.getTaskVertexSet());
 
     //For scheduling streaming task
-
-    String jobType = "batch";
-    String schedulingType = "datalocalityaware";
-
-    TaskSchedulePlan taskSchedulePlan = null;
-
     if (workerID == 0) {
-      if ("Batch".equalsIgnoreCase(jobType)
-              && "roundrobin".equalsIgnoreCase(schedulingType)) {
-        TaskScheduler taskScheduler = new TaskScheduler();
-        taskScheduler.initialize(cfg);
-        taskSchedulePlan = taskScheduler.schedule(dataFlowTaskGraph, createWorkerPlan(resources));
-      }
-    }
+      TaskScheduler taskScheduler = new TaskScheduler(cfg);
+      TaskSchedulePlan taskSchedulePlan = taskScheduler.schedule(graph, workerPlan);
 
-    Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap
-            = taskSchedulePlan.getContainersMap();
-    for (Map.Entry<Integer, TaskSchedulePlan.ContainerPlan> entry : containersMap.entrySet()) {
-      Integer integer = entry.getKey();
-      TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
-      Set<TaskSchedulePlan.TaskInstancePlan> taskInstancePlans
-              = containerPlan.getTaskInstances();
-      //int containerId = containerPlan.getRequiredResource().getId();
-      LOG.info("Container Index (Schedule Method):" + integer);
-      for (TaskSchedulePlan.TaskInstancePlan ip : taskInstancePlans) {
-        LOG.info("Task Id:" + ip.getTaskId() + "\tTask Index" + ip.getTaskIndex()
-                + "\tTask Name:" + ip.getTaskName() + "\tContainer Index:" + integer);
+      Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap
+              = taskSchedulePlan.getContainersMap();
+      for (Map.Entry<Integer, TaskSchedulePlan.ContainerPlan> entry : containersMap.entrySet()) {
+        Integer integer = entry.getKey();
+        TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
+        Set<TaskSchedulePlan.TaskInstancePlan> taskInstancePlans
+                = containerPlan.getTaskInstances();
+        //int containerId = containerPlan.getRequiredResource().getId();
+        LOG.info("Container Index (Schedule Method):" + integer);
+        for (TaskSchedulePlan.TaskInstancePlan ip : taskInstancePlans) {
+          LOG.info("Task Id:" + ip.getTaskId() + "\tTask Index" + ip.getTaskIndex()
+                  + "\tTask Name:" + ip.getTaskName() + "\tContainer Index:" + integer);
+        }
       }
     }
   }
@@ -163,27 +171,7 @@ public class SimpleTaskGraphExample implements IWorker {
       Worker w = new Worker(resource.getId());
       workers.add(w);
     }
-
     return new WorkerPlan(workers);
-  }
-
-  /**
-   * Generate data with an integer array
-   *
-   * @return IntData
-   */
-  private IntData generateData() {
-    int[] d = new int[10];
-    for (int i = 0; i < 10; i++) {
-      d[i] = i;
-    }
-    return new IntData(d);
-  }
-
-  private enum Status {
-    INIT,
-    MAP_FINISHED,
-    LOAD_RECEIVE_FINISHED,
   }
 
   private class TaskMapper implements ICompute {
@@ -194,20 +182,10 @@ public class SimpleTaskGraphExample implements IWorker {
       this.taskName = taskName1;
     }
 
-    /**
-     * Prepare the task to be executed
-     *
-     * @param cfg        the configuration
-     * @param collection the output collection
-     */
     @Override
     public void prepare(Config cfg, TaskContext collection) {
-
     }
 
-    /**
-     * Execute with an incoming message
-     */
     @Override
     public void execute(IMessage content) {
 
@@ -222,23 +200,12 @@ public class SimpleTaskGraphExample implements IWorker {
       this.taskName = taskName1;
     }
 
-    /**
-     * Prepare the task to be executed
-     *
-     * @param cfg        the configuration
-     * @param collection the output collection
-     */
     @Override
     public void prepare(Config cfg, TaskContext collection) {
-
     }
 
-    /**
-     * Execute with an incoming message
-     */
     @Override
     public void execute(IMessage content) {
-
     }
   }
 
@@ -250,23 +217,12 @@ public class SimpleTaskGraphExample implements IWorker {
       this.taskName = taskName1;
     }
 
-    /**
-     * Prepare the task to be executed
-     *
-     * @param cfg        the configuration
-     * @param collection the output collection
-     */
     @Override
     public void prepare(Config cfg, TaskContext collection) {
-
     }
 
-    /**
-     * Execute with an incoming message
-     */
     @Override
     public void execute(IMessage content) {
-
     }
   }
 
@@ -278,27 +234,15 @@ public class SimpleTaskGraphExample implements IWorker {
       this.taskName = taskName1;
     }
 
-    /**
-     * Prepare the task to be executed
-     *
-     * @param cfg        the configuration
-     * @param collection the output collection
-     */
     @Override
     public void prepare(Config cfg, TaskContext collection) {
-
     }
 
-    /**
-     * Execute with an incoming message
-     */
     @Override
     public void execute(IMessage content) {
-
     }
   }
 }
-
 
 
 
