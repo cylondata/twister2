@@ -13,19 +13,19 @@
 package edu.iu.dsc.tws.task.streaming;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.task.api.ISink;
+import edu.iu.dsc.tws.task.api.ISource;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
-public abstract class BaseStreamSinkTask implements ISink {
-  protected static final long serialVersionUID = -254264120110286748L;
+public abstract class BaseStreamSource implements ISource {
+  private static final long serialVersionUID = -254264120110286748L;
 
-  protected TaskContext ctx;
+  protected TaskContext context;
 
   protected Config config;
 
   @Override
-  public void prepare(Config cfg, TaskContext context) {
-    this.ctx = context;
+  public void prepare(Config cfg, TaskContext ctx) {
+    this.context = ctx;
     this.config = cfg;
   }
 }
