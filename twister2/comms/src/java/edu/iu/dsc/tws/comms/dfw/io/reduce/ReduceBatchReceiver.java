@@ -45,10 +45,11 @@ public abstract class ReduceBatchReceiver implements MessageReceiver {
   protected int sendPendingMax = 128;
   protected int destination;
   protected Map<Integer, Boolean> batchDone = new HashMap<>();
+  protected Map<Integer, Boolean> isEmptySent = new HashMap<>();
   protected Map<Integer, Map<Integer, Integer>> totalCounts = new HashMap<>();
 
   //Variables related to message buffering
-  protected int bufferSize = 1;
+  protected int bufferSize = 10;
   protected boolean bufferTillEnd = false;
   protected Map<Integer, Integer> bufferCounts = new HashMap<>();
   protected Map<Integer, Object> reducedValueMap = new HashMap<>();
@@ -94,6 +95,7 @@ public abstract class ReduceBatchReceiver implements MessageReceiver {
       emptyReceivedSources.put(e.getKey(), new HashSet<>());
       counts.put(e.getKey(), countsPerTask);
       batchDone.put(e.getKey(), false);
+      isEmptySent.put(e.getKey(), false);
       totalCounts.put(e.getKey(), totalCountsPerTask);
 
       bufferCounts.put(e.getKey(), 0);
@@ -115,12 +117,12 @@ public abstract class ReduceBatchReceiver implements MessageReceiver {
 //    if (emptyMessages.contains(source)) {
 //      System.out.println(">>>>>>>>>>>>>> should not happen : " + source + " message: " + object);
 //    }
-//    if ((flags & MessageFlags.EMPTY) == MessageFlags.EMPTY) {
-//      System.out.println(executor + " got empty message from : " + source);
+    if ((flags & MessageFlags.EMPTY) == MessageFlags.EMPTY) {
+      System.out.println(executor + " got empty message from : " + source);
 //      emptyMessages.add(source);
-////      finishedMessages.put(source, true);
-//      return true;
-//    }
+//      finishedMessages.put(source, true);
+      return true;
+    }
 
     Queue<Object> m = messages.get(target).get(source);
 

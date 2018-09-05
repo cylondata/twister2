@@ -36,6 +36,14 @@ public class ReduceBatchPartialReceiver extends ReduceBatchReceiver {
     for (int t : messages.keySet()) {
       if (batchDone.get(t)) {
         //System.out.println("Number of messages send from partial : " + t + "count : ");
+        if (!isEmptySent.get(t)) {
+          if (dataFlowOperation.sendPartial(t, new byte[0],
+              MessageFlags.EMPTY, destination)) {
+            isEmptySent.put(t, true);
+          } else {
+            needsFurtherProgress = true;
+          }
+        }
         continue;
       }
       // now check weather we have the messages for this source
@@ -128,6 +136,12 @@ public class ReduceBatchPartialReceiver extends ReduceBatchReceiver {
               e.setValue(i - 1);
             }
             if (allFinished && allZero) {
+              if (dataFlowOperation.sendPartial(t, new byte[0],
+                  MessageFlags.EMPTY, destination)) {
+                isEmptySent.put(t, true);
+              } else {
+                needsFurtherProgress = true;
+              }
               System.out.println(executor + "  partialSendCount " + partialSendCount);
               batchDone.put(t, true);
               // we don't want to go through the while loop for this one
@@ -148,9 +162,9 @@ public class ReduceBatchPartialReceiver extends ReduceBatchReceiver {
     //Send empty messages for the local sources.
 //    System.out.println(executor + ">>>>>>>>>>> sending empty from source : " + source);
 //
-//    while (!dataFlowOperation.send(source, new byte[1], MessageFlags.EMPTY)) {
-//      // try until we send it
-//    }
+    while (!dataFlowOperation.send(source, new byte[1], MessageFlags.EMPTY)) {
+      // try until we send it
+    }
 //    System.out.println(executor + "<<<<<<<<<< sending empty from source : " + source);
 
   }

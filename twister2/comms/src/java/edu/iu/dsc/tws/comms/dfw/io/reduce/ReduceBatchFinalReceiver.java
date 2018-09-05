@@ -21,6 +21,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 
@@ -127,9 +128,9 @@ public class ReduceBatchFinalReceiver extends ReduceBatchReceiver {
     //Send empty messages for the local sources.
 //    System.out.println(executor + ">>>>>>>>>>> sending empty from source : " + source);
 //
-//    while (!dataFlowOperation.send(source, new byte[1], MessageFlags.EMPTY)) {
-//      //try until we send it
-//    }
+    while (!dataFlowOperation.send(source, new byte[1], MessageFlags.EMPTY)) {
+      //try until we send it
+    }
 //    System.out.println(executor + "<<<<<<<<<< sending empty from source : " + source);
 
   }
