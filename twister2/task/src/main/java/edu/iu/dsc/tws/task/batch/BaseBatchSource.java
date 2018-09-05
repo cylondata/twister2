@@ -13,24 +13,23 @@
 package edu.iu.dsc.tws.task.batch;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.task.api.ISink;
+import edu.iu.dsc.tws.task.api.ISource;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
 /**
- * The abstract class that represents the Last task of a job. This task will be responsible of
- * outputing the results to various output sources such as files or console.
- * The task takes inputs from another task and outputs to a output source
+ * The abstract class that represents the start of a application
+ * This task reads data from a input data source and ouputs data to another task
  */
-public abstract class BaseBatchSinkTask implements ISink {
-  protected static final long serialVersionUID = -254264120110286748L;
+public abstract class BaseBatchSource implements ISource {
+  private static final long serialVersionUID = -254264120110286748L;
 
-  protected TaskContext ctx;
+  protected TaskContext context;
 
   protected Config config;
 
   @Override
-  public void prepare(Config cfg, TaskContext context) {
-    this.ctx = context;
+  public void prepare(Config cfg, TaskContext ctx) {
+    this.context = ctx;
     this.config = cfg;
   }
 }

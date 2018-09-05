@@ -37,16 +37,14 @@ import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
-import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.examples.internal.task.TaskUtils;
 import edu.iu.dsc.tws.executor.core.CommunicationOperationType;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.TaskContext;
-import edu.iu.dsc.tws.task.batch.BaseBatchSinkTask;
-import edu.iu.dsc.tws.task.batch.BaseBatchSourceTask;
+import edu.iu.dsc.tws.task.batch.BaseBatchSink;
+import edu.iu.dsc.tws.task.batch.BaseBatchSource;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.OperationMode;
@@ -75,42 +73,19 @@ public class ReduceBatchTask implements IWorker {
     TaskUtils.executeBatch(config, resources, graph, workerController);
   }
 
-  private static class GeneratorTask extends BaseBatchSourceTask {
+  private static class GeneratorTask extends BaseBatchSource {
     private static final long serialVersionUID = -254264903510284748L;
-    private TaskContext sourceTaskContext;
-    private Config config;
     private int count = 0;
 
     @Override
     public void execute() {
-      if (count == 0) {
-        this.sourceTaskContext.write("reduce-edge", "Hello " + count);
-      }
-
-      if (count == 1) {
-        //add a writeLast method rather than write
-        this.sourceTaskContext.write("reduce-edge", MessageFlags.LAST_MESSAGE);
-      }
-
       count++;
-    }
-
-    @Override
-    public void prepare(Config cfg, TaskContext context) {
-      this.sourceTaskContext = context;
-      this.config = cfg;
-    }
-
-    public TaskContext getContext() {
-      return this.sourceTaskContext;
     }
   }
 
-  private static class RecevingTask extends BaseBatchSinkTask {
+  private static class RecevingTask extends BaseBatchSink {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
-    private Config config;
-    private TaskContext sinkTaskContext;
 
     @Override
     public boolean execute(IMessage message) {
@@ -119,12 +94,6 @@ public class ReduceBatchTask implements IWorker {
       count++;
       status = count == 1;
       return status;
-    }
-
-    @Override
-    public void prepare(Config cfg, TaskContext context) {
-      this.config = cfg;
-      this.sinkTaskContext = context;
     }
   }
 
