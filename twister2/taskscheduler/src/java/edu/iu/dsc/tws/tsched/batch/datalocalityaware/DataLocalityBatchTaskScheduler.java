@@ -48,10 +48,11 @@ import edu.iu.dsc.tws.tsched.utils.TaskVertexParser;
 public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
 
   private static final Logger LOG = Logger.getLogger(
-      DataLocalityBatchTaskScheduler.class.getName());
+                                                  DataLocalityBatchTaskScheduler.class.getName());
 
   private static int taskSchedulePlanId = 0;
   private static int globalTaskIndex = 0;
+
   private Double instanceRAM;
   private Double instanceDisk;
   private Double instanceCPU;
@@ -61,7 +62,7 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
    * This method is primarily responsible for generating the container and task instance map which
    * is based on the task graph, its configuration, and the allocated worker plan.
    */
-  private static Map<Integer, List<InstanceId>> dataLocalityBatchSchedulingAlgo(
+  private static Map<Integer, List<InstanceId>> dataLocalityBatchSchedulingAlgorithm(
       Vertex taskVertex, int numberOfContainers, WorkerPlan workerPlan, Config config) {
 
     DataNodeLocatorUtils dataNodeLocatorUtils = new DataNodeLocatorUtils(config);
@@ -102,7 +103,6 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
         workerPlanMap = distanceCalculation(datanodesList, workerPlan, cIdx);
         cal = findBestWorkerNode(taskVertex, workerPlanMap);
 
-
         /*
           This loop allocate the task instances to the respective container, before allocation
           it will check whether the container has reached maximum task instance size which is
@@ -141,7 +141,7 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
    * This method generates the container and task instance map
    * based on the task graph, its configuration, and the allocated worker plan.
    */
-  private static Map<Integer, List<InstanceId>> dataLocalityBatchSchedulingAlgo(
+  private static Map<Integer, List<InstanceId>> dataLocalityBatchSchedulingAlgorithm(
       Set<Vertex> taskVertexSet, int numberOfContainers, WorkerPlan workerPlan, Config config) {
 
     DataNodeLocatorUtils dataNodeLocatorUtils = new DataNodeLocatorUtils(config);
@@ -309,7 +309,7 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
 
     Map<Integer, List<InstanceId>> containerInstanceMap;
 
-    TaskSchedulePlan taskSchedulePlan = null;
+    TaskSchedulePlan taskSchedulePlan;
 
     //TaskSchedulePlan.ContainerPlan taskContainerPlan;
 
@@ -317,17 +317,15 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
 
     Set<Vertex> taskVertexSet = new LinkedHashSet<>(graph.getTaskVertexSet());
 
-    List<TaskSchedulePlan> taskSchedulePlanList = new ArrayList<>();
-
     List<Set<Vertex>> taskVertexList = TaskVertexParser.parseVertexSet(graph);
 
     for (Set<Vertex> vertexSet : taskVertexList) {
       if (vertexSet.size() > 1) {
-        containerInstanceMap = dataLocalityBatchSchedulingAlgo(vertexSet,
+        containerInstanceMap = dataLocalityBatchSchedulingAlgorithm(vertexSet,
                 workerPlan.getNumberOfWorkers(), workerPlan, this.config);
       } else {
         Vertex vertex = vertexSet.iterator().next();
-        containerInstanceMap = dataLocalityBatchSchedulingAlgo(vertex,
+        containerInstanceMap = dataLocalityBatchSchedulingAlgorithm(vertex,
                 workerPlan.getNumberOfWorkers(), workerPlan, this.config);
       }
 
@@ -406,22 +404,22 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
       //taskSchedulePlanId++;
     }
 
-    taskSchedulePlan = new TaskSchedulePlan(taskSchedulePlanId,
-            new HashSet<>(containerPlans.values()));
+    taskSchedulePlan = new TaskSchedulePlan(taskSchedulePlanId, new HashSet<>(
+            containerPlans.values()));
 
-    //To print the schedule plan list
-    for (TaskSchedulePlan tskSchedulePlan : taskSchedulePlanList) {
-      Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap
-              = tskSchedulePlan.getContainersMap();
-      for (Map.Entry<Integer, TaskSchedulePlan.ContainerPlan> entry : containersMap.entrySet()) {
-        Integer integer = entry.getKey();
-        TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
-        Set<TaskSchedulePlan.TaskInstancePlan> taskContainerPlan = containerPlan.getTaskInstances();
-        LOG.fine("Container Index (Schedule Method):" + integer);
-        for (TaskSchedulePlan.TaskInstancePlan ip : taskContainerPlan) {
-          LOG.fine("Task Id:" + ip.getTaskId() + "\tTask Index" + ip.getTaskIndex()
-                  + "\tTask Name:" + ip.getTaskName() + "\tContainer Id:" + integer);
-        }
+    //To print the taskschedule plan list
+    Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap
+            = taskSchedulePlan.getContainersMap();
+    for (Map.Entry<Integer, TaskSchedulePlan.ContainerPlan> entry : containersMap.entrySet()) {
+      Integer integer = entry.getKey();
+      TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
+      Set<TaskSchedulePlan.TaskInstancePlan> taskInstancePlans
+              = containerPlan.getTaskInstances();
+      //int containerId = containerPlan.getRequiredResource().getId();
+      LOG.info("Container Index (Schedule Method):" + integer);
+      for (TaskSchedulePlan.TaskInstancePlan ip : taskInstancePlans) {
+        LOG.info("Task Id:" + ip.getTaskId() + "\tTask Index" + ip.getTaskIndex()
+                + "\tTask Name:" + ip.getTaskName() + "\tContainer Index:" + integer);
       }
     }
     return taskSchedulePlan;
@@ -445,11 +443,11 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
 
     for (Set<Vertex> vertexSet : taskVertexList) {
       if (vertexSet.size() > 1) {
-        containerInstanceMap = dataLocalityBatchSchedulingAlgo(vertexSet,
+        containerInstanceMap = dataLocalityBatchSchedulingAlgorithm(vertexSet,
             workerPlan.getNumberOfWorkers(), workerPlan, this.config);
       } else {
         Vertex vertex = vertexSet.iterator().next();
-        containerInstanceMap = dataLocalityBatchSchedulingAlgo(vertex,
+        containerInstanceMap = dataLocalityBatchSchedulingAlgorithm(vertex,
             workerPlan.getNumberOfWorkers(), workerPlan, this.config);
       }
 
