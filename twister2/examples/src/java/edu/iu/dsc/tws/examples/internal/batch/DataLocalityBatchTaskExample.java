@@ -162,23 +162,25 @@ public class DataLocalityBatchTaskExample implements IWorker {
     TaskScheduler taskScheduler = new TaskScheduler(config);
     TaskSchedulePlan taskSchedulePlan = taskScheduler.schedule(graph, workerPlan);
 
-    if (taskSchedulePlan != null) {
-      Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap
-              = taskSchedulePlan.getContainersMap();
-      for (Map.Entry<Integer, TaskSchedulePlan.ContainerPlan> entry : containersMap.entrySet()) {
-        Integer integer = entry.getKey();
-        TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
-        Set<TaskSchedulePlan.TaskInstancePlan> containerPlanTaskInstances
-                = containerPlan.getTaskInstances();
-        LOG.fine("Container Id:" + integer);
-        for (TaskSchedulePlan.TaskInstancePlan ip : containerPlanTaskInstances) {
-          LOG.fine("Task Id:" + ip.getTaskId()
-                  + "\tTask Index" + ip.getTaskIndex()
-                  + "\tTask Name:" + ip.getTaskName());
+    //Just to print the task schedule plan...
+    if (workerID == 0) {
+      if (taskSchedulePlan != null) {
+        Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap
+                = taskSchedulePlan.getContainersMap();
+        for (Map.Entry<Integer, TaskSchedulePlan.ContainerPlan> entry : containersMap.entrySet()) {
+          Integer integer = entry.getKey();
+          TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
+          Set<TaskSchedulePlan.TaskInstancePlan> containerPlanTaskInstances
+                  = containerPlan.getTaskInstances();
+          LOG.info("Container Id:" + integer);
+          for (TaskSchedulePlan.TaskInstancePlan ip : containerPlanTaskInstances) {
+            LOG.info("Task Id:" + ip.getTaskId()
+                    + "\tTask Index" + ip.getTaskIndex()
+                    + "\tTask Name:" + ip.getTaskName());
+          }
         }
       }
     }
-
 
     TWSChannel network = Network.initializeChannel(config, workerController, resources);
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resources,

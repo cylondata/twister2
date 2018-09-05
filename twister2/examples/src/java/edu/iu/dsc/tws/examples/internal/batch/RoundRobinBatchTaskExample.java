@@ -121,15 +121,15 @@ public class RoundRobinBatchTaskExample implements IWorker {
      */
 
     builder.connect("source", "sink1", "partition-edge1",
-            CommunicationOperationType.BATCH_PARTITION);
+                                                      CommunicationOperationType.BATCH_PARTITION);
     builder.connect("source", "sink2", "partition-edge2",
-            CommunicationOperationType.BATCH_PARTITION);
+                                                      CommunicationOperationType.BATCH_PARTITION);
     builder.connect("sink1", "merge", "partition-edge3",
-            CommunicationOperationType.BATCH_PARTITION);
+                                                      CommunicationOperationType.BATCH_PARTITION);
     builder.connect("sink2", "merge", "partition-edge4",
-            CommunicationOperationType.BATCH_PARTITION);
+                                                      CommunicationOperationType.BATCH_PARTITION);
     builder.connect("merge", "final", "partition-edge5",
-            CommunicationOperationType.BATCH_PARTITION);
+                                                      CommunicationOperationType.BATCH_PARTITION);
 
     builder.operationMode(OperationMode.BATCH);
 
@@ -150,29 +150,26 @@ public class RoundRobinBatchTaskExample implements IWorker {
     DataFlowTaskGraph graph = builder.build();
     WorkerPlan workerPlan = createWorkerPlan(resources);
 
-    String jobType = "Batch";
-    String schedulingType = "roundrobin";
-    TaskSchedulePlan taskSchedulePlan = null;
+    //Assign the "datalocalityaware" or "roundrobin" scheduling mode in config file.
+    TaskScheduler taskScheduler = new TaskScheduler(config);
+    TaskSchedulePlan taskSchedulePlan = taskScheduler.schedule(graph, workerPlan);
 
-    if ("Batch".equalsIgnoreCase(jobType)
-            && "roundrobin".equalsIgnoreCase(schedulingType)) {
-      TaskScheduler taskScheduler = new TaskScheduler(config);
-      taskSchedulePlan = taskScheduler.schedule(graph, workerPlan);
-    }
-
-    if (taskSchedulePlan != null) {
-      Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap
-              = taskSchedulePlan.getContainersMap();
-      for (Map.Entry<Integer, TaskSchedulePlan.ContainerPlan> entry : containersMap.entrySet()) {
-        Integer integer = entry.getKey();
-        TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
-        Set<TaskSchedulePlan.TaskInstancePlan> containerPlanTaskInstances
-                = containerPlan.getTaskInstances();
-        LOG.fine("Container Id:" + integer);
-        for (TaskSchedulePlan.TaskInstancePlan ip : containerPlanTaskInstances) {
-          LOG.fine("Task Id:" + ip.getTaskId()
-                  + "\tTask Index" + ip.getTaskIndex()
-                  + "\tTask Name:" + ip.getTaskName());
+    //Just to print the task schedule plan...
+    if (workerID == 0) {
+      if (taskSchedulePlan != null) {
+        Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap
+                = taskSchedulePlan.getContainersMap();
+        for (Map.Entry<Integer, TaskSchedulePlan.ContainerPlan> entry : containersMap.entrySet()) {
+          Integer integer = entry.getKey();
+          TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
+          Set<TaskSchedulePlan.TaskInstancePlan> containerPlanTaskInstances
+                  = containerPlan.getTaskInstances();
+          LOG.info("Container Id:" + integer);
+          for (TaskSchedulePlan.TaskInstancePlan ip : containerPlanTaskInstances) {
+            LOG.info("Task Id:" + ip.getTaskId()
+                    + "\tTask Index" + ip.getTaskIndex()
+                    + "\tTask Name:" + ip.getTaskName());
+          }
         }
       }
     }
