@@ -61,7 +61,7 @@ public class ReduceStreamingTask implements IWorker {
 
     DataFlowTaskGraph graph = builder.build();
 
-    TaskUtils.execute(config, resources, graph);
+    TaskUtils.execute(config, resources, graph, workerController);
   }
 
   private static class GeneratorTask extends BaseStreamSourceTask {

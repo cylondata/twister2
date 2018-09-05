@@ -25,8 +25,6 @@ import edu.iu.dsc.tws.common.net.tcp.TCPContext;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.comms.core.TWSNetwork;
-import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.mpi.TWSMPIChannel;
 import edu.iu.dsc.tws.comms.tcp.TWSTCPChannel;
 
@@ -46,28 +44,11 @@ public final class Network {
     }
   }
 
-  public static TWSNetwork initializeNetwork(Config config, IWorkerController wController,
-                                             TaskPlan plan, AllocatedResources resourcePlan) {
-    if (config.getStringValue("twister2.network.channel.class").equals(
-        "edu.iu.dsc.tws.comms.dfw.tcp.TWSTCPChannel")) {
-      TWSChannel channel = initializeTCPNetwork(config, wController, resourcePlan);
-      return new TWSNetwork(config, channel, plan);
-    } else {
-      return initializeMPINetwork(config, wController, plan);
-    }
-  }
-
   private static TWSChannel initializeMPIChannel(Config config,
                                                  IWorkerController wController,
                                                  AllocatedResources plan) {
     //first get the communication config file
     return new TWSMPIChannel(config, MPI.COMM_WORLD, plan.getWorkerId());
-  }
-
-  private static TWSNetwork initializeMPINetwork(Config config,
-                                                 IWorkerController wController, TaskPlan plan) {
-    //first get the communication config file
-    return new TWSNetwork(config, plan);
   }
 
   private static TWSChannel initializeTCPNetwork(Config config,

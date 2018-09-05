@@ -22,7 +22,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.core.TWSCommunication;
+import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.Queue;
@@ -36,7 +36,7 @@ import edu.iu.dsc.tws.task.api.TaskMessage;
  */
 public class TaskExecutorFixedThread implements TaskExecutor {
 
-  private TWSCommunication channel;
+  private TWSChannel channel;
   private DataFlowOperation direct;
   private boolean progres = false;
   private static final Logger LOG = Logger.getLogger(TaskExecutorFixedThread.
@@ -312,7 +312,7 @@ public class TaskExecutorFixedThread implements TaskExecutor {
   /**
    * Init task executor
    */
-  public void initCommunication(TWSCommunication twscom, DataFlowOperation dfo) {
+  public void initCommunication(TWSChannel twscom, DataFlowOperation dfo) {
     this.channel = twscom;
     this.direct = dfo;
     this.progres = true;

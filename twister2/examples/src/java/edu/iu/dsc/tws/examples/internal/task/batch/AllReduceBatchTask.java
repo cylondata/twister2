@@ -70,7 +70,7 @@ public class AllReduceBatchTask implements IWorker {
         CommunicationOperationType.BATCH_ALLREDUCE);
     builder.operationMode(operationMode);
     DataFlowTaskGraph graph = builder.build();
-    TaskUtils.executeBatch(config, resources, graph);
+    TaskUtils.executeBatch(config, resources, graph, workerController);
   }
 
   private static class GeneratorTask extends BaseBatchSourceTask {

@@ -31,6 +31,7 @@ import java.util.Map;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
+import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.checkpointmanager.barrier.CheckpointBarrier;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
@@ -39,8 +40,7 @@ import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
-import edu.iu.dsc.tws.comms.core.TWSCommunication;
-import edu.iu.dsc.tws.comms.core.TWSNetwork;
+import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
@@ -67,9 +67,7 @@ public class TaskCheckpointExample implements IWorker {
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
 
-    TWSNetwork network = new TWSNetwork(config, resources.getWorkerId());
-    TWSCommunication channel = network.getDataFlowTWSCommunication();
-
+    TWSChannel channel = Network.initializeChannel(config, workerController, resources);
 
     GeneratorCheckpointTask g = new GeneratorCheckpointTask();
     RecevingCheckpointTask r = new RecevingCheckpointTask(channel);
@@ -101,9 +99,9 @@ public class TaskCheckpointExample implements IWorker {
 
 
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resources,
-        new Communicator(config, network.getChannel()));
+        new Communicator(config, channel));
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
-    Executor executor = new Executor(config, plan, network.getChannel());
+    Executor executor = new Executor(config, plan, channel);
     executor.execute();
   }
 
@@ -136,7 +134,7 @@ public class TaskCheckpointExample implements IWorker {
   private static final class RecevingCheckpointTask extends SinkTask {
     private static final long serialVersionUID = -254264903520284798L;
 
-    private TWSCommunication channel;
+    private TWSChannel channel;
 
     private int taskId;
 
@@ -145,7 +143,7 @@ public class TaskCheckpointExample implements IWorker {
     private RecevingCheckpointTask() {
     }
 
-    private RecevingCheckpointTask(TWSCommunication channel) {
+    private RecevingCheckpointTask(TWSChannel channel) {
       super();
       this.channel = channel;
     }
