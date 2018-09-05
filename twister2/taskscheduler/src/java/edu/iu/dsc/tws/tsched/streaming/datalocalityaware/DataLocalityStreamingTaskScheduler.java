@@ -433,12 +433,13 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
                                                          Map<Integer, List<InstanceId>>
                                                                  dataLocalityAwareAllocationMap,
                                                          Vertex vertex) {
-    int containerIndex = 0;
+    int containerIndex;
     int maxContainerTaskObjectSize = 0;
     int totalTaskInstances = vertex.getParallelism();
 
     try {
       for (int i = 0; i < totalTaskInstances; i++) {
+
         containerIndex = Integer.parseInt(Collections.min(calList).getNodeName().trim());
 
         LOG.fine("Worker Node Allocation for task:" + vertex.getName()
