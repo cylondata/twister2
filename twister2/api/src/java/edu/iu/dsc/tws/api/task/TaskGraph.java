@@ -9,20 +9,27 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.task.job;
+package edu.iu.dsc.tws.api.task;
+
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
-import edu.iu.dsc.tws.common.worker.IPersistentVolume;
-import edu.iu.dsc.tws.common.worker.IVolatileVolume;
-import edu.iu.dsc.tws.common.worker.IWorker;
+import edu.iu.dsc.tws.task.api.ISink;
 
-public class TaskWorker implements IWorker {
-  @Override
-  public void execute(Config config, int workerID, AllocatedResources allocatedResources,
-                      IWorkerController workerController, IPersistentVolume persistentVolume,
-                      IVolatileVolume volatileVolume) {
+public class TaskGraph {
+  private static final Logger LOG = Logger.getLogger(TaskGraph.class.getName());
 
+  private Config config;
+
+  public TaskGraph(Config cfg) {
+    this.config = cfg;
+  }
+
+  public SinkConnection addSink(String name, ISink sink) {
+    return null;
+  }
+
+  public SinkConnection addSink(String name, ISink sink, int parallel) {
+    return null;
   }
 }

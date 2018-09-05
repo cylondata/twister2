@@ -9,8 +9,12 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.task.job;
+package edu.iu.dsc.tws.api.task;
 
-public class TaskJob {
+import edu.iu.dsc.tws.task.api.IFunction;
 
+public class ComputeConnection {
+  public ComputeConnection reduce(String name, IFunction function) {
+    return null;
+  }
 }
