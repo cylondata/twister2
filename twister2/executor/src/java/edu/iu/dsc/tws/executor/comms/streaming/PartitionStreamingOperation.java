@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -23,9 +24,9 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
-import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
 import edu.iu.dsc.tws.comms.op.Communicator;
+import edu.iu.dsc.tws.comms.op.selectors.LoadBalanceDestinationSelector;
+import edu.iu.dsc.tws.comms.op.stream.SPartition;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.api.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.api.EdgeGenerator;
@@ -40,7 +41,8 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
   private HashMap<Integer, ArrayList<Object>> incommingBuffer = new HashMap<>();
   private boolean checkpointStarted = false;
 
-  protected DataFlowPartition op;
+  protected SPartition op;
+
 
   public PartitionStreamingOperation(Config config, Communicator network, TaskPlan tPlan) {
     super(config, network, tPlan);
@@ -49,15 +51,13 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
   public void prepare(Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
                       DataType dataType, String edgeName) {
     this.edge = e;
-    //LOG.info("ParitionOperation Prepare 1");
-    op = new DataFlowPartition(channel.getChannel(), srcs, dests, new PartitionReceiver(),
-        new PartitionPartialReceiver(), DataFlowPartition.PartitionStratergy.DIRECT);
+    op = new SPartition(channel, taskPlan, srcs, dests, Utils.dataTypeToMessageType(dataType),
+        new PartitionReceiver(), new LoadBalanceDestinationSelector());
     communicationEdge = e.generate(edgeName);
-    op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
   }
 
   public boolean send(int source, IMessage message, int flags) {
-    return op.send(source, message.getContent(), flags);
+    return op.partition(source, message.getContent(), flags);
   }
 
   public class PartitionReceiver implements MessageReceiver {
@@ -74,10 +74,6 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
           checkpointStarted = true;
         }
         barrierMap.putIfAbsent(source, true);
-        if (barrierMap.keySet() == op.getSources()) {
-          op.getDestinations();
-          //start checkpoint and flush the buffering messages
-        }
       } else {
         if (barrierMap.containsKey(source)) {
           if (incommingBuffer.containsKey(source)) {
@@ -92,18 +88,17 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
             for (Object o : (List) object) {
               TaskMessage msg = new TaskMessage(o,
                   edge.getStringMapping(communicationEdge), target);
-              outMessages.get(target).offer(msg);
-
+              BlockingQueue<IMessage> messages = outMessages.get(target);
+              if (messages != null) {
+                if (messages.offer(msg)) {
+                  return true;
+                }
+              }
             }
           }
         }
       }
       return true;
-    }
-
-    @Override
-    public void onFinish(int source) {
-
     }
 
     @Override

@@ -97,7 +97,6 @@ public class ReduceStreamingTask implements IWorker {
 
   public static void main(String[] args) {
     // first load the configurations from command line and config files
-    System.out.println("==================Reduce Task Example========================");
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
     HashMap<String, Object> configurations = new HashMap<>();
     configurations.put(SchedulerContext.THREADS_PER_WORKER, 8);
