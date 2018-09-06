@@ -19,11 +19,11 @@ public final class HadoopDataOutputStream extends FSDataOutputStream {
 
   private final org.apache.hadoop.fs.FSDataOutputStream fosOutputStream;
 
-  public HadoopDataOutputStream(org.apache.hadoop.fs.FSDataOutputStream fsOutputStream1) {
-    if (fsOutputStream1 == null) {
+  public HadoopDataOutputStream(org.apache.hadoop.fs.FSDataOutputStream dataOutputStream) {
+    if (dataOutputStream == null) {
       throw new NullPointerException();
     }
-    this.fosOutputStream = fsOutputStream1;
+    this.fosOutputStream = dataOutputStream;
   }
 
   @Override
@@ -59,7 +59,5 @@ public final class HadoopDataOutputStream extends FSDataOutputStream {
   public org.apache.hadoop.fs.FSDataOutputStream getHadoopOutputStream() {
     return fosOutputStream;
   }
-
-  //public void append(Path f, final int bufferSize, final Progressable communicationProgress)
 
 }

@@ -34,30 +34,28 @@ import edu.iu.dsc.tws.data.hdfs.HadoopFileSystem;
 import edu.iu.dsc.tws.data.utils.HdfsDataContext;
 
 /**
- * This is the abstraction class for the HDFS file system and establishing
- * HDFS file system connections.
+ * This is the abstraction class for the Hadoop Distributed File System and establishing
+ * connections with HDFS connections.
  */
 public class HDFSConnector implements IHDFSConnector {
 
+  private static final Logger LOG = Logger.getLogger(HDFSConnector.class.getName());
   private static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
 
-  private static final Logger LOG = Logger.getLogger(HDFSConnector.class.getName());
-
   private Config config;
-  private String outputFile;
+  private String fileName;
 
   public HDFSConnector(Config cfg) {
     this.config = cfg;
   }
 
-  public HDFSConnector(Config cfg, String outFile) {
+  public HDFSConnector(Config cfg, String fName) {
     this.config = cfg;
-    this.outputFile = outFile;
+    this.fileName = fName;
   }
 
   /**
    * This method retrieve the HadoopFileSystem object using the Hadoop File System class.
-   *
    * @return hadoopFileSystem
    */
   @Override
@@ -73,10 +71,15 @@ public class HDFSConnector implements IHDFSConnector {
     return hadoopFileSystem;
   }
 
+  public Path getPath() {
+    String directoryString = HdfsDataContext.getHdfsUrlDefault(this.config) + this.fileName;
+    Path path = new Path(directoryString);
+    return path;
+  }
 
   /**
-   * This method retrieve the HadoopFileSystem object using the Hadoop File System class
-   * and write the message using the Hadoop Output Stream class.
+   * This method retrieve the HadoopFileSystem object using the Hadoop File System class and
+   * write the message using the Hadoop Output Stream class.
    * @param message
    * @param count
    */
@@ -86,7 +89,7 @@ public class HDFSConnector implements IHDFSConnector {
     HadoopDataOutputStream hadoopDataOutputStream = null;
     try {
       String directoryString =
-          HdfsDataContext.getHdfsUrlDefault(config) + "/user/kgovind/" + outputFile;
+          HdfsDataContext.getHdfsUrlDefault(config) + "/user/kgovind/" + this.fileName;
       Path path = new Path(directoryString);
       if (!hadoopFileSystem.exists(path)) {
         hadoopDataOutputStream = hadoopFileSystem.create(path);
@@ -129,8 +132,7 @@ public class HDFSConnector implements IHDFSConnector {
 
     try {
       hadoopFileSystem = new HadoopFileSystem(conf, org.apache.hadoop.fs.FileSystem.get(conf));
-      String directoryString = HdfsDataContext.getHdfsUrlDefault(config) + "/" + outputFile;
-
+      String directoryString = HdfsDataContext.getHdfsUrlDefault(config) + "/" + fileName;
       Path path = new Path(directoryString);
       if (!hadoopFileSystem.exists(path)) {
         hadoopDataOutputStream = hadoopFileSystem.create(path);
@@ -154,10 +156,10 @@ public class HDFSConnector implements IHDFSConnector {
 
   /**
    * This method is used to locate the datanode location of the input file name.
-   * @param fileName
+   * @param fName
    * @return datanodeName
    */
-  public String getDFSCK(String[] fileName) {
+  public String getDFSCK(String[] fName) {
 
     Configuration conf = new Configuration(false);
     conf.addResource(new org.apache.hadoop.fs.Path(HdfsDataContext.getHdfsConfigDirectory(config)));
@@ -190,8 +192,8 @@ public class HDFSConnector implements IHDFSConnector {
 
   public int getLengthOfFile(String fName) {
     int length = 0;
-    String fileName = HdfsDataContext.getHdfsDataDirectory(config) + "/" + fName;
-    String directoryString = HdfsDataContext.getHdfsUrlDefault(config) + fileName;
+    String inputFileName = HdfsDataContext.getHdfsDataDirectory(config) + "/" + fName;
+    String directoryString = HdfsDataContext.getHdfsUrlDefault(config) + inputFileName;
     Path path = new Path(directoryString);
     HadoopFileSystem hadoopFileSystem = HDFSConnect();
     try {
