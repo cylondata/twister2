@@ -40,7 +40,7 @@ import edu.iu.dsc.tws.executor.comms.streaming.GatherStreamingOperation;
 import edu.iu.dsc.tws.executor.comms.streaming.KeyedReduceStreamingOperation;
 import edu.iu.dsc.tws.executor.comms.streaming.PartitionStreamingOperation;
 import edu.iu.dsc.tws.executor.comms.streaming.ReduceStreamingOperation;
-import edu.iu.dsc.tws.executor.core.CommunicationOperationType;
+import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.task.api.Operations;
 import edu.iu.dsc.tws.task.graph.Edge;
 import edu.iu.dsc.tws.task.graph.OperationMode;
@@ -72,35 +72,35 @@ public class ParallelOperationFactory {
     if (operationMode.equals(OperationMode.BATCH)) {
       //LOG.info("Batch Job Building ...");
       if (!edge.isKeyed()) {
-        if (CommunicationOperationType.BATCH_PARTITION.equals(edge.getOperation())) {
+        if (OperationNames.PARTITION.equals(edge.getOperation())) {
           PartitionBatchOperation partitionOp
               = new PartitionBatchOperation(config, channel, taskPlan);
           partitionOp.prepare(sources, dests, edgeGenerator, edge.getDataType(), edge.getName());
           return partitionOp;
-        } else if (CommunicationOperationType.BATCH_BROADCAST.equals(edge.getOperation())) {
+        } else if (OperationNames.BROADCAST.equals(edge.getOperation())) {
           BroadcastBatchOperation bcastOp = new BroadcastBatchOperation(config, channel, taskPlan);
           // get the first as the source
           bcastOp.prepare(sources.iterator().next(), dests, edgeGenerator, edge.getDataType(),
               edge.getName());
           return bcastOp;
-        } else if (CommunicationOperationType.BATCH_GATHER.equals(edge.getOperation())) {
+        } else if (OperationNames.GATHER.equals(edge.getOperation())) {
           GatherBatchOperation gatherOp = new GatherBatchOperation(config, channel, taskPlan);
           gatherOp.prepare(sources, dests.iterator().next(), edgeGenerator, edge.getDataType(),
               edge.getName(), config, taskPlan);
           return gatherOp;
-        } else if (CommunicationOperationType.BATCH_REDUCE.equals(edge.getOperation())) {
+        } else if (OperationNames.REDUCE.equals(edge.getOperation())) {
           ReduceBatchOperation reduceBatchOperation = new ReduceBatchOperation(config, channel,
               taskPlan);
           reduceBatchOperation.prepare(sources, dests.iterator().next(), edgeGenerator,
               edge.getDataType(), edge.getName());
           return reduceBatchOperation;
-        } else if (CommunicationOperationType.BATCH_ALLREDUCE.equals(edge.getOperation())) {
+        } else if (OperationNames.ALLREDUCE.equals(edge.getOperation())) {
           AllReduceBatchOperation allReduceBatchOperation = new AllReduceBatchOperation(config,
               channel, taskPlan);
           allReduceBatchOperation.prepare(sources, dests, edgeGenerator, edge.getDataType(),
               edge.getName());
           return allReduceBatchOperation;
-        } else if (CommunicationOperationType.BATCH_KEYED_REDUCE.equals(edge.getOperation())) {
+        } else if (OperationNames.KEYED_REDUCE.equals(edge.getOperation())) {
           KeyedReduceBatchOperation keyedReduceBatchOperation
               = new KeyedReduceBatchOperation(config, channel, taskPlan);
           keyedReduceBatchOperation.prepare(sources, dests, edgeGenerator, edge.getDataType(),
@@ -108,13 +108,13 @@ public class ParallelOperationFactory {
           return keyedReduceBatchOperation;
         }
       } else {
-        if (CommunicationOperationType.BATCH_REDUCE.equals(edge.getOperation())) {
+        if (OperationNames.REDUCE.equals(edge.getOperation())) {
           ReduceBatchOperation reduceBatchOperation = new ReduceBatchOperation(config, channel,
               taskPlan);
           reduceBatchOperation.prepare(sources, dests.iterator().next(), edgeGenerator,
               edge.getDataType(), edge.getName());
           return reduceBatchOperation;
-        } else if (CommunicationOperationType.BATCH_KEYED_REDUCE.equals(edge.getOperation())) {
+        } else if (OperationNames.KEYED_REDUCE.equals(edge.getOperation())) {
           KeyedReduceBatchOperation keyedReduceBatchOperation
               = new KeyedReduceBatchOperation(config, channel, taskPlan);
           keyedReduceBatchOperation.prepare(sources, dests, edgeGenerator, edge.getDataType(),
@@ -125,31 +125,31 @@ public class ParallelOperationFactory {
     } else if (operationMode.equals(OperationMode.STREAMING)) {
       //LOG.info("Streaming Job Building ...");
       if (!edge.isKeyed()) {
-        if (CommunicationOperationType.STREAMING_PARTITION.equals(edge.getOperation())) {
+        if (OperationNames.PARTITION.equals(edge.getOperation())) {
           PartitionStreamingOperation partitionOp = new PartitionStreamingOperation(config, channel,
               taskPlan);
           partitionOp.prepare(sources, dests, edgeGenerator, edge.getDataType(), edge.getName());
           return partitionOp;
-        } else if (CommunicationOperationType.STREAMING_BROADCAST.equals(edge.getOperation())) {
+        } else if (OperationNames.BROADCAST.equals(edge.getOperation())) {
           BroadcastStreamingOperation bcastOp = new BroadcastStreamingOperation(config, channel,
               taskPlan);
           // get the first as the source
           bcastOp.prepare(sources.iterator().next(), dests, edgeGenerator, edge.getDataType(),
               edge.getName());
           return bcastOp;
-        } else if (CommunicationOperationType.STREAMING_GATHER.equals(edge.getOperation())) {
+        } else if (OperationNames.GATHER.equals(edge.getOperation())) {
           GatherStreamingOperation gatherOp = new GatherStreamingOperation(config, channel,
               taskPlan);
           gatherOp.prepare(sources, dests.iterator().next(), edgeGenerator, edge.getDataType(),
               edge.getName(), config, taskPlan);
           return gatherOp;
-        } else if (CommunicationOperationType.STREAMING_REDUCE.equals(edge.getOperation())) {
+        } else if (OperationNames.REDUCE.equals(edge.getOperation())) {
           ReduceStreamingOperation reduceStreamingOperation = new ReduceStreamingOperation(config,
               channel, taskPlan, edge.getFunction());
           reduceStreamingOperation.prepare(sources, dests.iterator().next(), edgeGenerator,
               edge.getDataType(), edge.getName());
           return reduceStreamingOperation;
-        } else if (CommunicationOperationType.STREAMING_ALLREDUCE.equals(edge.getOperation())) {
+        } else if (OperationNames.ALLREDUCE.equals(edge.getOperation())) {
           AllReduceStreamingOperation allReduceStreamingOperation
               = new AllReduceStreamingOperation(config, channel, taskPlan, edge.getFunction());
           allReduceStreamingOperation.prepare(sources, dests, edgeGenerator, edge.getDataType(),
@@ -157,7 +157,7 @@ public class ParallelOperationFactory {
           return allReduceStreamingOperation;
         }
       } else {
-        if (CommunicationOperationType.STREAMING_KEYED_REDUCE.equals(edge.getOperation())) {
+        if (OperationNames.KEYED_REDUCE.equals(edge.getOperation())) {
           KeyedReduceStreamingOperation keyedReduceStreamingOperation
               = new KeyedReduceStreamingOperation(config, channel, taskPlan);
           keyedReduceStreamingOperation.prepare(sources, dests, edgeGenerator, edge.getDataType(),

@@ -29,7 +29,7 @@ import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
-import edu.iu.dsc.tws.executor.core.CommunicationOperationType;
+import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.ICompute;
@@ -98,13 +98,13 @@ public class SimpleTaskGraphExample implements IWorker {
     builder.addTask("task4", taskMerger);
 
     builder.connect("task1", "task2", "partition-edge1",
-            CommunicationOperationType.BATCH_PARTITION);
+            OperationNames.PARTITION);
     builder.connect("task1", "task3", "partition-edge2",
-            CommunicationOperationType.BATCH_PARTITION);
+            OperationNames.PARTITION);
     builder.connect("task2", "task4", "partition-edge3",
-            CommunicationOperationType.BATCH_PARTITION);
+            OperationNames.PARTITION);
     builder.connect("task3", "task4", "partition-edge4",
-            CommunicationOperationType.BATCH_PARTITION);
+            OperationNames.PARTITION);
 
     builder.operationMode(OperationMode.BATCH);
 

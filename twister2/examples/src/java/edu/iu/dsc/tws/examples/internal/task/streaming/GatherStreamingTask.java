@@ -29,7 +29,7 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
 import edu.iu.dsc.tws.examples.internal.task.TaskUtils;
 import edu.iu.dsc.tws.examples.utils.RandomString;
-import edu.iu.dsc.tws.executor.core.CommunicationOperationType;
+import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.IMessage;
@@ -59,7 +59,7 @@ public class GatherStreamingTask implements IWorker {
     builder.addSink("sink", r);
     builder.setParallelism("sink", 1);
     builder.connect("source", "sink", "gather-edge",
-        CommunicationOperationType.STREAMING_GATHER);
+        OperationNames.GATHER);
     builder.operationMode(OperationMode.STREAMING);
 
     DataFlowTaskGraph graph = builder.build();

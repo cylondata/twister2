@@ -27,7 +27,7 @@ import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.examples.internal.task.TaskUtils;
-import edu.iu.dsc.tws.executor.core.CommunicationOperationType;
+import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.IMessage;
@@ -57,7 +57,7 @@ public class KeyedReduceStreamingTask implements IWorker {
     builder.addSink("sink", r);
     builder.setParallelism("sink", 1);
     builder.connect("source", "sink", "keyed-reduce-edge",
-        CommunicationOperationType.STREAMING_KEYED_REDUCE);
+        OperationNames.KEYED_REDUCE);
     builder.operationMode(OperationMode.STREAMING);
 
     DataFlowTaskGraph graph = builder.build();

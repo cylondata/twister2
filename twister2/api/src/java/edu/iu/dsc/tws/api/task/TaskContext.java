@@ -11,15 +11,17 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.task;
 
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.common.config.Config;
 
-public class SourceConnection {
-  private String nodeName;
+public final class TaskContext {
+  public static final String DEFAULT_PARALLELISM = "twister2.task.default.parallelism";
 
-  public SourceConnection(String name) {
-    this.nodeName = name;
+  public static final String DEFAULT_EDGE = "default";
+
+  private TaskContext() {
   }
 
-  void build(DataFlowTaskGraph graph) {
+  public static int getDefaultParallelism(Config cfg, int def) {
+    return cfg.getIntegerValue(DEFAULT_PARALLELISM, def);
   }
 }

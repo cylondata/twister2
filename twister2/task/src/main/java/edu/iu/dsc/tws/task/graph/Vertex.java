@@ -34,6 +34,13 @@ public class Vertex {
     config = Config.newBuilder().build();
   }
 
+  public Vertex(String name, INode task, int parallelism) {
+    this.name = name;
+    this.task = task;
+    this.parallelism = parallelism;
+    config = Config.newBuilder().build();
+  }
+
   public int getRam() {
     return ram;
   }

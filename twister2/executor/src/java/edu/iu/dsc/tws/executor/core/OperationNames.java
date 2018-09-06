@@ -9,17 +9,20 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.task;
+package edu.iu.dsc.tws.executor.core;
 
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
+public final class OperationNames {
 
-public class SourceConnection {
-  private String nodeName;
-
-  public SourceConnection(String name) {
-    this.nodeName = name;
+  private OperationNames() {
   }
 
-  void build(DataFlowTaskGraph graph) {
-  }
+  public static final String REDUCE = "reduce";
+  public static final String GATHER = "gather";
+  public static final String PARTITION = "partition";
+  public static final String ALLGATHER = "allgather";
+  public static final String ALLREDUCE = "allreduce";
+  public static final String BROADCAST = "broadcast";
+  public static final String KEYED_PARTITION = "keyed_partition";
+  public static final String KEYED_REDUCE = "keyed_reduce";
 }
+

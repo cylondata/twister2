@@ -9,17 +9,29 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.task;
+package edu.iu.dsc.tws.api.task.function;
 
+import edu.iu.dsc.tws.api.task.ReduceOp;
+import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.task.api.IFunction;
 
-public class SinkConnection {
-  public SinkConnection reduce(String parent, IFunction function) {
-    return null;
+public class ReduceFn implements IFunction {
+  private static final long serialVersionUID = -123142353453456L;
+
+  private ReduceFunction reduceFunction;
+
+  private DataType dataType;
+
+  private ReduceOp reduceOp;
+
+  public ReduceFn(ReduceOp op, DataType dataType) {
+    this.dataType = dataType;
+    this.reduceOp = op;
   }
 
-  public SinkConnection reduce(String parent, IFunction function, DataType dataType) {
+  @Override
+  public Object onMessage(Object object1, Object object2) {
     return null;
   }
 }
