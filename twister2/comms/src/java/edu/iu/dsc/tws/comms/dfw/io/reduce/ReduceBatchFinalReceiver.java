@@ -120,6 +120,7 @@ public class ReduceBatchFinalReceiver extends ReduceBatchReceiver {
             Object current = finalMessagePerTask.get(i);
             previous = reduceFunction.reduce(previous, current);
           }
+
         }
         reduceReceiver.receive(t, previous);
       }
