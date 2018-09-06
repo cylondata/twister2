@@ -1,20 +1,20 @@
-# Path of the twister2 core and job package to be uploaded to Mesos workerComputeResource excluding finename
+# Path of the twister2 core and job package to be uploaded to Mesos container excluding filename
 path = '{{TWISTER2_PACKAGES_PATH}}'
-# filename of the twister2 core package to be uploaded to Mesos workerComputeResource
+# filename of the twister2 core package to be uploaded to Mesos container
 # coreFN='twister2-core.tar.gz'
 coreFN='{{CORE_PACKAGE_FILENAME}}'
 # twister2 job package filename
 jobFN = '{{JOB_PACKAGE_FILENAME}}'
 
 # one Java job submission to Aurora Scheduler
-# two processes: one is for file copy and the other is to run java code in the workerComputeResource
+# two processes: one is for file copy and the other is to run java code in the container
 
 # a process to copy project package file to the sandbox
 copy_java = Process(
   name = 'fetch2',
   cmdline = 'scp %s%s . && tar xf %s && scp %s%s . && tar xf %s && echo %s %s copied' % (path, coreFN, coreFN, path, jobFN, jobFN, coreFN, jobFN))
 
-# first construct classpath to run Java workerComputeResource class
+# first construct classpath to run Java worker class
 jcp = '-cp ' \
   'twister2-core/lib/libresource-scheduler-java.jar:' \
   'twister2-core/lib/snakeyaml-1.15.jar:' \
@@ -55,7 +55,7 @@ run_java = Process(
 # describe the task
 java_task = SequentialTask(
   processes = [copy_java, run_java],
-  resources = Resources(cpu = '{{CPUS_PER_CONTAINER}}', ram = '{{RAM_PER_CONTAINER}}', disk = '{{DISK_PER_CONTAINER}}')
+  resources = Resources(cpu = '{{CPUS_PER_WORKER}}', ram = '{{RAM_PER_WORKER}}', disk = '{{DISK_PER_WORKER}}')
 )
 
 java_job = Job(
@@ -64,7 +64,7 @@ java_job = Job(
   role = '{{ROLE}}',
   name = '{{JOB_NAME}}',
   task = java_task,
-  instances = '{{NUMBER_OF_CONTAINERS}}'
+  instances = '{{NUMBER_OF_WORKERS}}'
 )
 
 jobs = [java_job]
