@@ -37,8 +37,8 @@ public class ReduceBatchPartialReceiver extends ReduceBatchReceiver {
       if (batchDone.get(t)) {
         //System.out.println("Number of messages send from partial : " + t + "count : ");
         if (!isEmptySent.get(t)) {
-          if (dataFlowOperation.sendPartial(t, new byte[0],
-              MessageFlags.EMPTY, destination)) {
+          if (dataFlowOperation.isDelegeteComplete() && dataFlowOperation.sendPartial(t,
+              new byte[0], MessageFlags.EMPTY, destination)) {
             isEmptySent.put(t, true);
           } else {
             needsFurtherProgress = true;
@@ -79,7 +79,6 @@ public class ReduceBatchPartialReceiver extends ReduceBatchReceiver {
         if (!found && moreThanOne) {
           needsFurtherProgress = true;
         }
-
         if (found) {
           currentVal = reducedValueMap.get(t);
           for (Map.Entry<Integer, Queue<Object>> e : messagePerTarget.entrySet()) {
@@ -135,17 +134,18 @@ public class ReduceBatchPartialReceiver extends ReduceBatchReceiver {
               Integer i = e.getValue();
               e.setValue(i - 1);
             }
-            if (allFinished && allZero) {
+            if (dataFlowOperation.isDelegeteComplete() && allFinished && allZero) {
               if (dataFlowOperation.sendPartial(t, new byte[0],
                   MessageFlags.EMPTY, destination)) {
                 isEmptySent.put(t, true);
               } else {
                 needsFurtherProgress = true;
               }
-              System.out.println(executor + "  partialSendCount " + partialSendCount);
               batchDone.put(t, true);
               // we don't want to go through the while loop for this one
               break;
+            } else {
+              needsFurtherProgress = true;
             }
           } else {
             canProgress = false;
@@ -159,13 +159,6 @@ public class ReduceBatchPartialReceiver extends ReduceBatchReceiver {
 
   @Override
   public void onFinish(int source) {
-    //Send empty messages for the local sources.
-//    System.out.println(executor + ">>>>>>>>>>> sending empty from source : " + source);
-//
-    while (!dataFlowOperation.send(source, new byte[1], MessageFlags.EMPTY)) {
-      // try until we send it
-    }
-//    System.out.println(executor + "<<<<<<<<<< sending empty from source : " + source);
-
+    super.onFinish(source);
   }
 }

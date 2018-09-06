@@ -18,7 +18,6 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -113,14 +112,10 @@ public abstract class ReduceBatchReceiver implements MessageReceiver {
     }
 
     Map<Integer, Boolean> finishedMessages = finished.get(target);
-//    Set<Integer> emptyMessages = emptyReceivedSources.get(target);
-//    if (emptyMessages.contains(source)) {
-//      System.out.println(">>>>>>>>>>>>>> should not happen : " + source + " message: " + object);
-//    }
+
     if ((flags & MessageFlags.EMPTY) == MessageFlags.EMPTY) {
       System.out.println(executor + " got empty message from : " + source);
-//      emptyMessages.add(source);
-//      finishedMessages.put(source, true);
+      finishedMessages.put(source, true);
       return true;
     }
 
@@ -148,7 +143,10 @@ public abstract class ReduceBatchReceiver implements MessageReceiver {
   }
 
   @Override
-  public void onFinish(int target) {
-    LOG.log(Level.INFO, "Task  " + target + " Completed ...");
+  public void onFinish(int source) {
+    for (Integer target : finished.keySet()) {
+      Map<Integer, Boolean> finishedMessages = finished.get(target);
+      finishedMessages.put(source, true);
+    }
   }
 }
