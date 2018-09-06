@@ -6,7 +6,7 @@ for multi-worker jobs in cluster environments that use a ZooKeeper server.
 
 We developed the following class:
 
-    edu.iu.dsc.tws.rsched.bootstrap.ZKController
+    edu.iu.dsc.tws.rsched.bootstrap.ZKWorkerController
 
 It implements the interface:
 

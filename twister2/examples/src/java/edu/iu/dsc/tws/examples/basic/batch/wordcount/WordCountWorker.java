@@ -12,13 +12,12 @@
 package edu.iu.dsc.tws.examples.basic.batch.wordcount;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
@@ -26,22 +25,19 @@ import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.core.TWSCommunication;
-import edu.iu.dsc.tws.comms.core.TWSNetwork;
+import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowMultiGather;
 import edu.iu.dsc.tws.comms.dfw.io.gather.GatherMultiBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.gather.GatherMultiBatchPartialReceiver;
 import edu.iu.dsc.tws.examples.utils.WordCountUtils;
 
-public class WordCountContainer implements IWorker {
-  private static final Logger LOG = Logger.getLogger(WordCountContainer.class.getName());
+public class WordCountWorker implements IWorker {
+  private static final Logger LOG = Logger.getLogger(WordCountWorker.class.getName());
 
   private DataFlowMultiGather keyGather;
 
-  private TWSNetwork network;
-
-  private TWSCommunication channel;
+  private TWSChannel channel;
 
   private static final int NO_OF_TASKS = 16;
 
@@ -70,13 +66,13 @@ public class WordCountContainer implements IWorker {
     // set up the tasks
     setupTasks();
     // setup the network
-    setupNetwork();
+    setupNetwork(workerController, resources);
     // create the communication
-    Map<String, Object> newCfg = new HashMap<>();
-    keyGather = (DataFlowMultiGather) channel.keyedGather(newCfg, MessageType.OBJECT,
-        destinations, sources, destinations,
+    keyGather = new DataFlowMultiGather(channel, sources, destinations,
         new GatherMultiBatchFinalReceiver(new WordAggregator()),
-        new GatherMultiBatchPartialReceiver());
+        new GatherMultiBatchPartialReceiver(), destinations);
+    // intialize the operation
+    keyGather.init(config, MessageType.OBJECT, taskPlan, 0);
     // start the threads
     scheduleTasks();
     // communicationProgress the work
@@ -106,13 +102,8 @@ public class WordCountContainer implements IWorker {
     }
   }
 
-  private void setupNetwork() {
-    network = new TWSNetwork(config, taskPlan);
-    channel = network.getDataFlowTWSCommunication();
-
-    //first get the communication config file
-    network = new TWSNetwork(config, taskPlan);
-    channel = network.getDataFlowTWSCommunication();
+  private void setupNetwork(IWorkerController controller, AllocatedResources resources) {
+    channel = Network.initializeChannel(config, controller, resources);
   }
 
   private void progress() {

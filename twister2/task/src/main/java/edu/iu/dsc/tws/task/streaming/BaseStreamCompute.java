@@ -9,27 +9,22 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+package edu.iu.dsc.tws.task.streaming;
 
-package edu.iu.dsc.tws.rsched.schedulers.aurora;
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.task.api.ICompute;
+import edu.iu.dsc.tws.task.api.TaskContext;
 
-/**
- * Field names passed to aurora controllers during job creation
- */
-public enum AuroraField {
-  AURORA_CLUSTER_NAME,
-  ENVIRONMENT,
-  ROLE,
-  JOB_NAME,
-  CPUS_PER_WORKER,
-  DISK_PER_WORKER,
-  RAM_PER_WORKER,
-  NUMBER_OF_WORKERS,
-  TWISTER2_PACKAGES_PATH,
-  CORE_PACKAGE_FILENAME,
-  JOB_PACKAGE_FILENAME,
-  JOB_PACKAGE_URI,
-  JOB_DESCRIPTION_FILE,
-  USER_JOB_JAR_FILE,
-  CLUSTER_TYPE,
-  AURORA_WORKER_CLASS
+public abstract class BaseStreamCompute implements ICompute {
+  private static final long serialVersionUID = -254264120110286748L;
+
+  protected Config config;
+
+  protected TaskContext context;
+
+  @Override
+  public void prepare(Config cfg, TaskContext ctx) {
+    this.config = cfg;
+    this.context = ctx;
+  }
 }

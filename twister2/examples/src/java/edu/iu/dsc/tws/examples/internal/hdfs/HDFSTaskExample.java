@@ -34,10 +34,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -54,25 +51,15 @@ import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
-import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.core.TWSCommunication;
-import edu.iu.dsc.tws.comms.core.TWSNetwork;
-import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.hdfs.HadoopDataOutputStream;
 import edu.iu.dsc.tws.data.hdfs.HadoopFileSystem;
 import edu.iu.dsc.tws.data.utils.HdfsDataContext;
-import edu.iu.dsc.tws.examples.IntData;
-import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.LinkedQueue;
 import edu.iu.dsc.tws.task.api.TaskContext;
-import edu.iu.dsc.tws.task.core.TaskExecutorFixedThread;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.GraphConstants;
@@ -82,13 +69,14 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler;
 
+/**
+ * It would be modified properly before the first release.
+ */
+
 public class HDFSTaskExample implements IWorker {
 
   public static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
   private static final Logger LOG = Logger.getLogger(HDFSTaskExample.class.getName());
-  private DataFlowOperation direct;
-  private TaskExecutorFixedThread taskExecutor;
-  private Status status;
   private TaskSchedulePlan taskSchedulePlan = null;
 
   public static void main(String[] args) {
@@ -122,25 +110,6 @@ public class HDFSTaskExample implements IWorker {
                       IVolatileVolume volatileVolume) {
 
     LOG.log(Level.INFO, "Starting the example with container id: " + resources.getWorkerId());
-
-    taskExecutor = new TaskExecutorFixedThread();
-    this.status = Status.INIT;
-
-    TaskPlan taskPlan = Utils.createTaskPlan(cfg, resources);
-    TWSNetwork network = new TWSNetwork(cfg, taskPlan);
-    TWSCommunication channel = network.getDataFlowTWSCommunication();
-
-    Set<Integer> sources = new HashSet<>();
-    sources.add(0);
-    int destination = 1;
-
-    Map<String, Object> newCfg = new HashMap<>();
-    LinkedQueue<IMessage> pongQueue = new LinkedQueue<IMessage>();
-    taskExecutor.registerQueue(0, pongQueue);
-
-    direct = channel.direct(newCfg, MessageType.OBJECT, 0, sources,
-        destination, new PingPongReceive());
-    taskExecutor.initCommunication(channel, direct);
 
     TaskMapper taskMapper = new TaskMapper("task1");
     TaskReducer taskReducer = new TaskReducer("task2");
@@ -701,19 +670,6 @@ public class HDFSTaskExample implements IWorker {
     System.out.println("HDFS Config Directory:" + HdfsDataContext.getHdfsConfigDirectory(cfg));
   }
 
-  /**
-   * Generate data with an integer array
-   *
-   * @return IntData
-   */
-  private IntData generateData() {
-    int[] d = new int[10];
-    for (int i = 0; i < 10; i++) {
-      d[i] = i;
-    }
-    return new IntData(d);
-  }
-
   public WorkerPlan createWorkerPlan(AllocatedResources resourcePlan) {
     List<Worker> workers = new ArrayList<>();
     for (WorkerComputeResource resource : resourcePlan.getWorkerComputeResources()) {
@@ -722,12 +678,6 @@ public class HDFSTaskExample implements IWorker {
     }
 
     return new WorkerPlan(workers);
-  }
-
-  private enum Status {
-    INIT,
-    MAP_FINISHED,
-    LOAD_RECEIVE_FINISHED,
   }
 
   private class TaskMapper implements ICompute {
@@ -837,32 +787,6 @@ public class HDFSTaskExample implements IWorker {
     @Override
     public void execute(IMessage content) {
 
-    }
-  }
-
-  private class PingPongReceive implements MessageReceiver {
-    private int count = 0;
-
-    @Override
-    public void init(Config cfg, DataFlowOperation op,
-                     Map<Integer, List<Integer>> expectedIds) {
-    }
-
-    @Override
-    public boolean onMessage(int source, int path, int target, int flags, Object object) {
-      count++;
-      if (count % 10000 == 0) {
-        LOG.info("received message: " + count);
-      }
-      if (count == 100000) {
-        status = Status.LOAD_RECEIVE_FINISHED;
-      }
-      return true;
-    }
-
-    @Override
-    public boolean progress() {
-      return true;
     }
   }
 }

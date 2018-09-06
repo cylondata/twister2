@@ -1,11 +1,11 @@
 # Job Master Design, Features and Usage
 Ahmet Uyar
 
-The Job Master will manage job related activities during job execution such as 
+The Job Master manages job related activities during job execution such as 
 worker life cycle management, worker discovery, resource cleanup, 
 dynamic resource allocation, fault tolerance, etc.
  
-Initially, we plan to implement the following services:
+Currently, we implemented the following services:
 1. Ping Service
 2. Worker life-cycle monitoring 
 3. Worker Discovery
@@ -13,10 +13,10 @@ Initially, we plan to implement the following services:
 5. Supporting check-point manager
 
 ## Possibilities for Job Master Architecture 
-There are three architectural alternatives for the design of Job Master. 
+There are three architectural alternatives for the design of the Job Master. 
 1. **Long Running Singleton Job Master**: A single Job master process may serve all Twister2 jobs in a cluster.
 It runs as a a long running service in a dedicated machine on the cluster. 
-Every job will be tracked by this single Job manager.
+All jobs can be tracked by this single Job manager.
    * A disadvantage of this solution is that it puts too much pressure on a single process to manage all jobs.
 2. **Job submission client becomes the Job master**: When a user submits a Twister2 job, 
 its process continues to run and become the job master. It means each job will have 
@@ -24,13 +24,13 @@ a different job master.
    * One disadvantage might be that the job submitting client can not run outside of the cluster, 
 since all workers need to connect to the Job Master. Submitting client has to run in one of 
 the cluster machines. 
-   * Another disadvantage is that this solution does not support long running jobs. 
+   * Another disadvantage is that this solution is not really suitable for long running jobs. 
 3. **A separate Job Master for each Job**: Submitting client instantiates a separate Job master 
 for each job on a cluster machine. 
    * This may increase the job initialization times, since the job master needs to be started as a separate entity for each job. 
    * A separate entity is introduced to the system. This increases the overall complexity of Twister2 ecosystem. 
 
-## Job Management in Other Systems
+## Job Master in Other Systems
 **Heron**: Option 3 is implemented. One topology master is initiated for each job. 
 
 **Hadoop MapReduce v2**: Option 3 is implemented. One ApplicationMaster is initiated for each job. 
@@ -42,11 +42,11 @@ It acts as the job master.
 One Job Manager instance runs in one cluster. 
 
 ## Twister2 Job Master Architecture
-We decided to choose option 3 for the Job Master architecture. 
-A separate Job master will be started for each job. It will run in a cluster node. 
-It will be started when a job is submitted and deleted after the job has completed. 
+We decided to choose the option 3 for the Job Master architecture. 
+A separate Job master is started for each job. It runs in a cluster node. 
+It is started when a job is submitted and deleted after the job has completed. 
 
-We will also provide the option of starting the Job Master in the job submitting client. 
+We also support the option 2. Submitting client can become the Job Master. 
 With that option, our solution covers both the first and the second architectural options.
 
 By default, Job Master is started as a separate process. If the user wants to start it
@@ -60,12 +60,11 @@ All messages are in request-response semantics. All communications are initiated
 The job master only responds to requests. 
 
 ## Job Master Threading
-
 Job Master is developed as a single threaded application.
 When a request message is received, a single thread is waken up. 
 It processes the message and sends the response if needed. 
 Then it starts to sleep and wait for the next message. 
-It always starts the execution by worker request messages. 
+It always starts to execute by worker request messages. 
 
 ## Ping Service
 When a worker starts, after it sends the worker STARTING message, it starts sending ping messages. 
@@ -108,7 +107,7 @@ Currently we have the following states for workers:
     }
 
 When a worker is in the initializing phase, it first sends a STARTING message. 
-It sends its IP address and the port number in this message. STARTING message
+It sends its IP address and its port number in this message. STARTING message
 registers the worker with the Job Master. STARTING message is mandatory. 
 It can not be omitted. After a request is received for the STARTING message,
 the worker can send other messages. 
@@ -117,7 +116,7 @@ After the worker completes initialization and ready to execute the user code,
 it sends RUNNING message. When it has completed the computation, 
 it sends COMPLETED message. 
 
-UNASSIGNED state is used in the program code to handle the initial case 
+UNASSIGNED state is used in the program code to handle the initial state 
 when no state information is present for a worker. 
 UNASSIGNED message is not exchanged between the worker and the job master.
 
@@ -162,10 +161,11 @@ with their network address information.
  
 Workers send ListWorkersRequest message to get the list of all workers in a job 
 with the network information. The message proto is shown below. 
-Workers can get either the current list from the job master, 
+Workers can get either the current list joined workers from the job master, 
 or they can request the full list. In that case, the full list will be sent 
 when all workers joined the job. When they ask the current list, 
 they get the list of joined workers immediately. 
+In both cases, this list includes the workers that have already left if any. 
 
     message ListWorkersRequest {
         enum RequestType {
@@ -287,7 +287,7 @@ If there is no need for Job Terminator, that may be null.
 
 A sample usage is provided in the example class: 
 
-    edu.iu.dsc.tws.examples.JobMasterExample.java 
+    edu.iu.dsc.tws.examples.internal.jobmaster.JobMasterExample 
 
 When Jobs are executed in resource schedulers such as in Kubernetes and Mesos, 
 Job Master needs to be deployed in those systems. It is usually a good practice to write
@@ -315,7 +315,7 @@ response to proceed.
 
 A sample usage is provided in the example class: 
 
-    edu.iu.dsc.tws.examples.JobMasterClientExample.java 
+    edu.iu.dsc.tws.examples.internal.jobmaster.JobMasterClientExample 
 
 ### IWorkerController Usage
  
@@ -348,7 +348,4 @@ Their names are default values are shown:
     twister2.job.master.port: 11011
     twister2.worker.ping.interval: 10000
     twister2.worker.to.job.master.response.wait.duration: 10000
-
-
-
 

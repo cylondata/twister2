@@ -12,20 +12,13 @@
 package edu.iu.dsc.tws.task.api;
 
 import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
-
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 
 public interface IFunction extends Serializable {
-  void init(Config cfg, DataFlowOperation op, Map<Integer,
-      List<Integer>> expectedIds, TaskContext context);
-
   /**
    * The actual message callback
    *
-   * @param object the actual message
+   * @param object1 the actual message
+   * @param object2 the actual message
    */
-  boolean onMessage(int source, int path, int target, int flags, Object object);
+  Object onMessage(Object object1, Object object2);
 }

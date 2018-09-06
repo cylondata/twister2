@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.examples.internal.batch;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -21,6 +22,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
+import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
@@ -28,29 +30,26 @@ import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
-import edu.iu.dsc.tws.comms.core.TWSNetwork;
+import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.op.Communicator;
-import edu.iu.dsc.tws.data.api.HDFSConnector;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.executor.core.CommunicationOperationType;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.Executor;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.Operations;
-import edu.iu.dsc.tws.task.api.SinkTask;
-import edu.iu.dsc.tws.task.api.SourceTask;
 import edu.iu.dsc.tws.task.api.TaskContext;
+import edu.iu.dsc.tws.task.batch.BaseBatchSink;
+import edu.iu.dsc.tws.task.batch.BaseBatchSource;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.GraphConstants;
-import edu.iu.dsc.tws.tsched.batch.roundrobin.RoundRobinBatchTaskScheduler;
+import edu.iu.dsc.tws.task.graph.OperationMode;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
-
-//import java.util.Map;
-//import java.util.Set;
+import edu.iu.dsc.tws.tsched.taskscheduler.TaskScheduler;
 
 public class RoundRobinBatchTaskExample implements IWorker {
 
@@ -70,7 +69,7 @@ public class RoundRobinBatchTaskExample implements IWorker {
     jobConfig.putAll(configurations);
 
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
-    jobBuilder.setName("task-example");
+    jobBuilder.setName("roundrobin-batchexample");
     jobBuilder.setWorkerClass(RoundRobinBatchTaskExample.class.getName());
     jobBuilder.setRequestResource(new WorkerComputeResource(2, 1024), 2);
     jobBuilder.setConfig(jobConfig);
@@ -86,12 +85,9 @@ public class RoundRobinBatchTaskExample implements IWorker {
                       IVolatileVolume volatileVolume) {
 
     SourceTask1 g = new SourceTask1();
-
     SinkTask1 s1 = new SinkTask1();
     SinkTask2 s2 = new SinkTask2();
-
     MergingTask m1 = new MergingTask();
-
     FinalTask f1 = new FinalTask();
 
     GraphBuilder builder = GraphBuilder.newBuilder();
@@ -110,6 +106,7 @@ public class RoundRobinBatchTaskExample implements IWorker {
 
     builder.addSink("final", f1);
     builder.setParallelism("final", 4);
+
     //Task graph Structure
     /**   Source (Two Outgoing Edges)
      *   |    |
@@ -123,11 +120,18 @@ public class RoundRobinBatchTaskExample implements IWorker {
      *    Final
      */
 
-    builder.connect("source", "sink1", "partition-edge1", Operations.PARTITION);
-    builder.connect("source", "sink2", "partition-edge2", Operations.PARTITION);
-    builder.connect("sink1", "merge", "partition-edge3", Operations.PARTITION);
-    builder.connect("sink2", "merge", "partition-edge4", Operations.PARTITION);
-    builder.connect("merge", "final", "partition-edge5", Operations.PARTITION);
+    builder.connect("source", "sink1", "partition-edge1",
+                                                      CommunicationOperationType.BATCH_PARTITION);
+    builder.connect("source", "sink2", "partition-edge2",
+                                                      CommunicationOperationType.BATCH_PARTITION);
+    builder.connect("sink1", "merge", "partition-edge3",
+                                                      CommunicationOperationType.BATCH_PARTITION);
+    builder.connect("sink2", "merge", "partition-edge4",
+                                                      CommunicationOperationType.BATCH_PARTITION);
+    builder.connect("merge", "final", "partition-edge5",
+                                                      CommunicationOperationType.BATCH_PARTITION);
+
+    builder.operationMode(OperationMode.BATCH);
 
     builder.addConfiguration("source", "Ram", GraphConstants.taskInstanceRam(config));
     builder.addConfiguration("source", "Disk", GraphConstants.taskInstanceDisk(config));
@@ -144,75 +148,37 @@ public class RoundRobinBatchTaskExample implements IWorker {
     builder.addConfiguration("sink1", "outputdataset1", sinkOutputDataset1);
 
     DataFlowTaskGraph graph = builder.build();
+    WorkerPlan workerPlan = createWorkerPlan(resources);
 
-    String jobType = "Batch";
-    String schedulingType = "roundrobin";
+    //Assign the "datalocalityaware" or "roundrobin" scheduling mode in config file.
+    TaskScheduler taskScheduler = new TaskScheduler(config);
+    TaskSchedulePlan taskSchedulePlan = taskScheduler.schedule(graph, workerPlan);
 
-    List<TaskSchedulePlan> taskSchedulePlanList = new ArrayList<>();
-    TaskSchedulePlan taskSchedulePlan = null;
-
+    //Just to print the task schedule plan...
     if (workerID == 0) {
-      if ("Batch".equalsIgnoreCase(jobType)
-              && "roundrobin".equalsIgnoreCase(schedulingType)) {
-        RoundRobinBatchTaskScheduler rrBatchTaskScheduler = new RoundRobinBatchTaskScheduler();
-        rrBatchTaskScheduler.initialize(config);
-        WorkerPlan workerPlan = createWorkerPlan(resources);
-        taskSchedulePlan = rrBatchTaskScheduler.schedule(graph, workerPlan);
-        taskSchedulePlanList = rrBatchTaskScheduler.scheduleBatch(graph, workerPlan);
-      }
-    }
-
-    Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap
-            = taskSchedulePlan.getContainersMap();
-    for (Map.Entry<Integer, TaskSchedulePlan.ContainerPlan> entry : containersMap.entrySet()) {
-      Integer integer = entry.getKey();
-      TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
-      Set<TaskSchedulePlan.TaskInstancePlan> taskContainerPlan1
-              = containerPlan.getTaskInstances();
-      LOG.fine("Container Id:" + integer);
-      for (TaskSchedulePlan.TaskInstancePlan ip : taskContainerPlan1) {
-        LOG.fine("Task Id:" + ip.getTaskId()
-                + "\tTask Index" + ip.getTaskIndex()
-                + "\tTask Name:" + ip.getTaskName());
-      }
-    }
-
-    /*if (workerID == 0) {
-      if ("Batch".equalsIgnoreCase(jobType)
-          && "roundrobin".equalsIgnoreCase(schedulingType)) {
-        RoundRobinBatchTaskScheduler rrBatchTaskScheduler = new RoundRobinBatchTaskScheduler();
-        rrBatchTaskScheduler.initialize(config);
-        WorkerPlan workerPlan = createWorkerPlan(resources);
-        //taskSchedulePlanList = rrBatchTaskScheduler.scheduleBatch(graph, workerPlan);
-        taskSchedulePlan = rrBatchTaskScheduler.scheduleBatch(graph, workerPlan);
-      }
-    }
-
-    //Just to print the task schedule plan.
-    if (workerID == 0) {
-      for (int j = 0; j < taskSchedulePlanList.size(); j++) {
-        taskSchedulePlan = taskSchedulePlanList.get(j);
-        Map<Integer, TaskSchedulePlan.ContainerPlan> planMap
-            = taskSchedulePlan.getContainersMap();
-        LOG.info("Task Schedule Plan:" + j);
-        for (Map.Entry<Integer, TaskSchedulePlan.ContainerPlan> entry : planMap.entrySet()) {
+      if (taskSchedulePlan != null) {
+        Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap
+                = taskSchedulePlan.getContainersMap();
+        for (Map.Entry<Integer, TaskSchedulePlan.ContainerPlan> entry : containersMap.entrySet()) {
           Integer integer = entry.getKey();
           TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
-          Set<TaskSchedulePlan.TaskInstancePlan> taskContainerPlan
-              = containerPlan.getTaskInstances();
-          for (TaskSchedulePlan.TaskInstancePlan ip : taskContainerPlan) {
-            LOG.info("\tTask Id:" + ip.getTaskId() + "\tTask Index:" + ip.getTaskIndex()
-                + "\tTask Name:" + ip.getTaskName() + "\tContainer Id:" + integer);
+          Set<TaskSchedulePlan.TaskInstancePlan> containerPlanTaskInstances
+                  = containerPlan.getTaskInstances();
+          LOG.info("Container Id:" + integer);
+          for (TaskSchedulePlan.TaskInstancePlan ip : containerPlanTaskInstances) {
+            LOG.info("Task Id:" + ip.getTaskId()
+                    + "\tTask Index" + ip.getTaskIndex()
+                    + "\tTask Name:" + ip.getTaskName());
           }
         }
       }
-    }*/
+    }
 
-    TWSNetwork network = new TWSNetwork(config, resources.getWorkerId());
+    TWSChannel network = Network.initializeChannel(config, workerController, resources);
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resources,
-        new Communicator(config, network.getChannel()));
+            new Communicator(config, network));
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
-    Executor executor = new Executor(config, plan, network.getChannel());
+    Executor executor = new Executor(config, plan, network, OperationMode.BATCH);
     executor.execute();
   }
 
@@ -226,115 +192,109 @@ public class RoundRobinBatchTaskExample implements IWorker {
     return new WorkerPlan(workers);
   }
 
-  private static class SourceTask1 extends SourceTask {
+  private static class SourceTask1 extends BaseBatchSource {
     private static final long serialVersionUID = -254264903510284748L;
-    private TaskContext ctx;
+    private int count = 0;
 
     @Override
     public void execute() {
-      ctx.write("partition-edge", "Hello");
-    }
-
-    @Override
-    public void prepare(Config cfg, TaskContext context) {
-      this.ctx = context;
+      if (count == 999) {
+        if (context.writeEnd("partition-edge1", "Hello")) {
+          count++;
+        }
+      } else if (count < 999) {
+        if (context.write("partition-edge1", "Hello")) {
+          count++;
+        }
+      }
     }
   }
 
-  private static class SinkTask1 extends SinkTask {
+  private static class SinkTask1 extends BaseBatchSink {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
-    private TaskContext ctx;
-    private Config config;
-    private String outputFile;
-    private String inputFile;
-    private HDFSConnector hdfsConnector = null;
 
     @Override
     public boolean execute(IMessage message) {
+      if (message.getContent() instanceof Iterator) {
+        while (((Iterator) message.getContent()).hasNext()) {
+          ((Iterator) message.getContent()).next();
+          count++;
+        }
+        if (count % 1 == 0) {
+          System.out.println("Message Partition Received : " + message.getContent()
+                  + ", Count : " + count);
+        }
+      }
+      count++;
+      return true;
+    }
+  }
 
-      LOG.info("Message Partition Received : " + message.getContent()
-              + ", Count : " + count);
+  private static class SinkTask2 extends BaseBatchSink {
+    private static final long serialVersionUID = -254264903510284798L;
+    private int count = 0;
+
+    @Override
+    public boolean execute(IMessage message) {
+      if (message.getContent() instanceof Iterator) {
+        while (((Iterator) message.getContent()).hasNext()) {
+          ((Iterator) message.getContent()).next();
+          count++;
+        }
+        if (count % 1 == 0) {
+          System.out.println("Message Partition Received : " + message.getContent()
+                  + ", Count : " + count);
+        }
+      }
+      count++;
+      return true;
+    }
+  }
+
+  private static class MergingTask extends BaseBatchSink {
+    private static final long serialVersionUID = -254264903510284798L;
+    private int count = 0;
+
+    @Override
+    public boolean execute(IMessage message) {
+      if (message.getContent() instanceof Iterator) {
+        while (((Iterator) message.getContent()).hasNext()) {
+          ((Iterator) message.getContent()).next();
+          count++;
+        }
+        if (count % 1 == 0) {
+          System.out.println("Message Partition Received : " + message.getContent()
+                  + ", Count : " + count);
+        }
+      }
+      count++;
+      return true;
+    }
+  }
+
+  private static class FinalTask extends BaseBatchSink {
+    private static final long serialVersionUID = -254264903510284798L;
+    private int count = 0;
+
+    @Override
+    public boolean execute(IMessage message) {
+      if (message.getContent() instanceof Iterator) {
+        while (((Iterator) message.getContent()).hasNext()) {
+          ((Iterator) message.getContent()).next();
+          count++;
+        }
+        if (count % 1 == 0) {
+          System.out.println("Message Partition Received : " + message.getContent()
+                  + ", Count : " + count);
+        }
+      }
       count++;
       return true;
     }
 
-    public void prepare(Config cfg, TaskContext context) {
-      this.ctx = context;
-      this.config = cfg;
-    }
-  }
-
-  private static class SinkTask2 extends SinkTask {
-    private static final long serialVersionUID = -254264903510284798L;
-    private int count = 0;
-    private TaskContext ctx;
-    private Config config;
-    private String outputFile;
-    private String inputFile;
-    private HDFSConnector hdfsConnector = null;
-
     @Override
-    public boolean execute(IMessage message) {
-
-      LOG.info("Message Partition Received : " + message.getContent()
-              + ", Count : " + count);
-      count++;
-      return true;
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public void prepare(Config cfg, TaskContext context) {
-      this.ctx = context;
-      this.config = cfg;
-    }
-  }
-
-  private static class MergingTask extends SinkTask {
-    private static final long serialVersionUID = -254264903510284798L;
-    private int count = 0;
-    private TaskContext ctx;
-    private Config config;
-
-    @Override
-    public boolean execute(IMessage message) {
-
-      LOG.info("Message Partition Received : " + message.getContent()
-              + ", Count : " + count);
-      count++;
-      return true;
-    }
-
-    @Override
-    public void prepare(Config cfg, TaskContext context) {
-      this.ctx = context;
-      this.config = cfg;
-    }
-  }
-
-  private static class FinalTask extends SinkTask {
-    private static final long serialVersionUID = -254264903510284798L;
-    private int count = 0;
-    private TaskContext ctx;
-    private Config config;
-    private String outputFile;
-    private String inputFile;
-    private HDFSConnector hdfsConnector = null;
-
-    @Override
-    public boolean execute(IMessage message) {
-
-      LOG.info("Message Partition Received : " + message.getContent()
-              + ", Count : " + count);
-      count++;
-      return true;
-    }
-
-    @Override
-    public void prepare(Config cfg, TaskContext context) {
-      this.ctx = context;
-      this.config = cfg;
+    public void prepare(Config cfg, TaskContext ctx) {
     }
   }
 }

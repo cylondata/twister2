@@ -12,13 +12,14 @@
 package edu.iu.dsc.tws.tsched.spi.taskschedule;
 
 import java.util.HashMap;
-//import java.util.HashSet;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
+
+//import java.util.HashSet;
 
 /**
  * This class is responsible for generating the task schedule plan which consists of container plan,

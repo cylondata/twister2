@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.basic.comms.batch;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -52,7 +53,6 @@ public class BReduceExample extends BenchWorker {
     reduce = new BReduce(communicator, taskPlan, sources, target,
         new ReduceOperationFunction(Op.SUM, DataType.INTEGER), new FinalReduceReceiver(),
         MessageType.INTEGER);
-
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
@@ -105,6 +105,9 @@ public class BReduceExample extends BenchWorker {
 
     @Override
     public boolean receive(int target, Object object) {
+      int[] data = (int[]) object;
+      LOG.log(Level.INFO, String.format("%d Results : %s", workerId,
+          Arrays.toString(Arrays.copyOfRange(data, 0, 10))));
       LOG.log(Level.INFO, String.format("%d Received final input", workerId));
       reduceDone = true;
       LOG.info("Final Output ==> ");
@@ -116,5 +119,10 @@ public class BReduceExample extends BenchWorker {
       }
       return true;
     }
+  }
+
+  @Override
+  protected void finishCommunication(int src) {
+    reduce.finish(src);
   }
 }

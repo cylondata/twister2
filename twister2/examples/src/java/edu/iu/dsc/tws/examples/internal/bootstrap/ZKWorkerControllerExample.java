@@ -31,16 +31,16 @@ import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.discovery.NodeInfo;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
-import edu.iu.dsc.tws.rsched.bootstrap.ZKController;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKUtil;
+import edu.iu.dsc.tws.rsched.bootstrap.ZKWorkerController;
 
-public final class ZKControllerExample {
-  public static final Logger LOG = Logger.getLogger(ZKControllerExample.class.getName());
+public final class ZKWorkerControllerExample {
+  public static final Logger LOG = Logger.getLogger(ZKWorkerControllerExample.class.getName());
 
-  private ZKControllerExample() { }
+  private ZKWorkerControllerExample() { }
 
   /**
-   * example usage of ZKController class
+   * example usage of ZKWorkerController class
    * Two actions supported:
    *   join: join a Job znode
    *   delete: delete a Job znode
@@ -92,7 +92,7 @@ public final class ZKControllerExample {
 
   public static void printUsage() {
     LOG.info("Usage:\n"
-        + "java ZKControllerExample zkAddress action numberOfWorkers\n"
+        + "java ZKWorkerControllerExample zkAddress action numberOfWorkers\n"
         + "\tzkAddress is in the form of IP:PORT"
         + "\taction can be: join, delete\n"
         + "\tnumberOfWorkers is not needed for delete");
@@ -109,7 +109,7 @@ public final class ZKControllerExample {
   }
 
   /**
-   * an example usage of ZKController class
+   * an example usage of ZKWorkerController class
    * @param jobName
    * @param numberOfWorkers
    * @param cnfg
@@ -119,52 +119,52 @@ public final class ZKControllerExample {
     String workerAddress = "localhost:" + port;
 
     NodeInfo nodeInfo = new NodeInfo("node1.on.hostx", "rack1", "dc01");
-    ZKController zkController =
-        new ZKController(cnfg, jobName, workerAddress, numberOfWorkers, nodeInfo);
-    zkController.initialize();
+    ZKWorkerController zkWorkerController =
+        new ZKWorkerController(cnfg, jobName, workerAddress, numberOfWorkers, nodeInfo);
+    zkWorkerController.initialize();
 
-    List<WorkerNetworkInfo> workerList = zkController.getWorkerList();
+    List<WorkerNetworkInfo> workerList = zkWorkerController.getWorkerList();
     LOG.info("Initial worker list: \n" + WorkerNetworkInfo.workerListAsString(workerList));
 
     LOG.info("Waiting for all workers to join: ");
     // wait until 100sec
-    workerList = zkController.waitForAllWorkersToJoin(100000);
+    workerList = zkWorkerController.waitForAllWorkersToJoin(100000);
     LOG.info(WorkerNetworkInfo.workerListAsString(workerList));
 
     sleeeep((long) (Math.random() * 10000));
 
     LOG.info("Waiting on the first barrier -------------------------- ");
     long timeLimit = 200000;
-    boolean allWorkersReachedBarrier = zkController.waitOnBarrier(timeLimit);
+    boolean allWorkersReachedBarrier = zkWorkerController.waitOnBarrier(timeLimit);
     if (allWorkersReachedBarrier) {
       LOG.info("All workers reached the barrier. Proceeding.");
     } else {
       LOG.info("Not all workers reached the barrier on the given timelimit: " + timeLimit + "ms"
           + " Exiting ....... ");
-      zkController.close();
+      zkWorkerController.close();
       return;
     }
 
-    workerList = zkController.getCurrentWorkers();
+    workerList = zkWorkerController.getCurrentWorkers();
     LOG.info("Current worker list: \n" + WorkerNetworkInfo.workerListAsString(workerList));
 
     sleeeep((long) (Math.random() * 10000));
 
     LOG.info("Waiting on the second barrier -------------------------- ");
-    allWorkersReachedBarrier = zkController.waitOnBarrier(timeLimit);
+    allWorkersReachedBarrier = zkWorkerController.waitOnBarrier(timeLimit);
     if (allWorkersReachedBarrier) {
       LOG.info("All workers reached the barrier. Proceeding.");
     } else {
       LOG.info("Not all workers reached the barrier on the given timelimit: " + timeLimit + "ms"
           + " Exiting ....... ");
-      zkController.close();
+      zkWorkerController.close();
       return;
     }
 
     // sleep some random amount of time before closing
     // this is to prevent all workers to close almost at the same time
     sleeeep((long) (Math.random() * 2000));
-    zkController.close();
+    zkWorkerController.close();
   }
 
   public static void sleeeep(long duration) {

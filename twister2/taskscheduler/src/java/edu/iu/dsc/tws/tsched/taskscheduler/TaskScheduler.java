@@ -11,10 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tsched.taskscheduler;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -31,7 +27,7 @@ import edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler;
 
 /**
  * This class invokes the appropriate task schedulers based on the 'streaming' or 'batch' task types
- * and scheduling modes 'roundrobin', 'firstfit', 'datalocality'.
+ * and scheduling modes 'roundrobin', 'firstfit', and 'datalocality'.
  */
 public class TaskScheduler implements ITaskScheduler {
 
@@ -45,21 +41,18 @@ public class TaskScheduler implements ITaskScheduler {
 
   private String schedulingType;
 
+  /**
+   * Initialize the config values.
+   *
+   * @param cfg
+   */
+  public TaskScheduler(Config cfg) {
+    initialize(cfg);
+  }
+
   @Override
   public void initialize(Config cfg) {
     this.config = cfg;
-  }
-
-  /**
-   * Initialize with config, task graph, and worker plan
-   * @param cfg
-   * @param graph
-   * @param plan
-   */
-  public TaskScheduler(Config cfg, DataFlowTaskGraph graph, WorkerPlan plan) {
-    initialize(cfg);
-    this.dataFlowTaskGraph = graph;
-    this.workerPlan = plan;
   }
 
   /**
@@ -72,26 +65,20 @@ public class TaskScheduler implements ITaskScheduler {
     this.dataFlowTaskGraph = graph;
     this.workerPlan = plan;
 
-    String taskType;
-
     TaskSchedulePlan taskSchedulePlan = null;
-    List<TaskSchedulePlan> taskSchedulePlanList = null;
-
-    if (graph.getOperationMode().equals("Streaming")) {
-      taskType = graph.getOperationMode().toString();
-      //taskSchedulePlan = scheduleStreamingTask();
-    } else if (graph.getOperationMode().equals("batch")) {
-      taskType = graph.getOperationMode().toString();
-      //taskSchedulePlanList = scheduleBatchTask();
+    if ("STREAMING".equals(graph.getOperationMode().toString())) {
+      taskSchedulePlan = scheduleStreamingTask();
+    } else if ("BATCH".equals(graph.getOperationMode().toString())) {
+      taskSchedulePlan = scheduleBatchTask();
     }
-    return null;
+    return taskSchedulePlan;
   }
 
   /**
    * This method invokes the appropriate streaming task schedulers based on the scheduling mode
    * specified in the task configuration by the user or else from the default configuration value.
    */
-  public TaskSchedulePlan scheduleStreamingTask() {
+  private TaskSchedulePlan scheduleStreamingTask() {
 
     if (config.getStringValue("SchedulingMode") != null) {
       this.schedulingType = config.getStringValue("SchedulingMode");
@@ -99,10 +86,11 @@ public class TaskScheduler implements ITaskScheduler {
       this.schedulingType = TaskSchedulerContext.taskSchedulingMode(config);
     }
 
+    LOG.info("Task Scheduling Mode:" + schedulingType);
+
     TaskSchedulePlan taskSchedulePlan = null;
 
     if ("roundrobin".equalsIgnoreCase(schedulingType)) {
-
       RoundRobinTaskScheduler roundRobinTaskScheduler = new RoundRobinTaskScheduler();
       roundRobinTaskScheduler.initialize(config);
       taskSchedulePlan = roundRobinTaskScheduler.schedule(dataFlowTaskGraph, workerPlan);
@@ -110,40 +98,27 @@ public class TaskScheduler implements ITaskScheduler {
     } else if ("firstfit".equalsIgnoreCase(schedulingType)) {
 
       FirstFitStreamingTaskScheduler firstFitStreamingTaskScheduler
-          = new FirstFitStreamingTaskScheduler();
+              = new FirstFitStreamingTaskScheduler();
       firstFitStreamingTaskScheduler.initialize(config);
       taskSchedulePlan = firstFitStreamingTaskScheduler.schedule(dataFlowTaskGraph, workerPlan);
 
     } else if ("datalocalityaware".equalsIgnoreCase(schedulingType)) {
 
       DataLocalityStreamingTaskScheduler dataLocalityAwareTaskScheduler
-          = new DataLocalityStreamingTaskScheduler();
+              = new DataLocalityStreamingTaskScheduler();
       dataLocalityAwareTaskScheduler.initialize(config);
       taskSchedulePlan = dataLocalityAwareTaskScheduler.schedule(dataFlowTaskGraph, workerPlan);
-    }
-
-    //For just printing the task schedule plan
-    Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap
-        = taskSchedulePlan.getContainersMap();
-    for (Map.Entry<Integer, TaskSchedulePlan.ContainerPlan> entry : containersMap.entrySet()) {
-      Integer integer = entry.getKey();
-      TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
-      Set<TaskSchedulePlan.TaskInstancePlan> taskContainerPlan = containerPlan.getTaskInstances();
-      for (TaskSchedulePlan.TaskInstancePlan ip : taskContainerPlan) {
-        LOG.fine("\tTask Id:" + ip.getTaskId() + "\tTask Index:" + ip.getTaskIndex()
-            + "\tTask Name:" + ip.getTaskName() + "\tContainer Id:" + integer);
-      }
     }
     return taskSchedulePlan;
   }
 
-
   /**
    * This method invokes the appropriate batch task schedulers based on the scheduling mode
    * specified in the task configuration by the user or else from the default configuration value.
+   *
    * @return
    */
-  public List<TaskSchedulePlan> scheduleBatchTask() {
+  private TaskSchedulePlan scheduleBatchTask() {
 
     if (config.getStringValue("SchedulingMode") != null) {
       this.schedulingType = config.getStringValue("SchedulingMode");
@@ -151,40 +126,27 @@ public class TaskScheduler implements ITaskScheduler {
       this.schedulingType = TaskSchedulerContext.taskSchedulingMode(config);
     }
 
-    List<TaskSchedulePlan> taskSchedulePlanList = new LinkedList<>();
+    LOG.info("Task Scheduling Mode:" + schedulingType);
+
+    TaskSchedulePlan taskSchedulePlan = null;
 
     if ("roundrobin".equals(schedulingType)) {
-      RoundRobinBatchTaskScheduler roundRobinBatchTaskScheduling
-          = new RoundRobinBatchTaskScheduler();
-      roundRobinBatchTaskScheduling.initialize(config);
-      taskSchedulePlanList
-          = roundRobinBatchTaskScheduling.scheduleBatch(dataFlowTaskGraph, workerPlan);
+      RoundRobinBatchTaskScheduler roundRobinBatchTaskScheduler
+              = new RoundRobinBatchTaskScheduler();
+      roundRobinBatchTaskScheduler.initialize(config);
+      taskSchedulePlan = roundRobinBatchTaskScheduler.schedule(dataFlowTaskGraph, workerPlan);
 
     } else if ("datalocalityaware".equals(schedulingType)) {
-      DataLocalityBatchTaskScheduler dataLocalityBatchTaskScheduling
-          = new DataLocalityBatchTaskScheduler();
-      dataLocalityBatchTaskScheduling.initialize(config);
-      taskSchedulePlanList
-          = dataLocalityBatchTaskScheduling.scheduleBatch(dataFlowTaskGraph, workerPlan);
-    }
+      DataLocalityBatchTaskScheduler dataLocalityBatchTaskScheduler
+              = new DataLocalityBatchTaskScheduler();
+      dataLocalityBatchTaskScheduler.initialize(config);
+      taskSchedulePlan = dataLocalityBatchTaskScheduler.schedule(dataFlowTaskGraph, workerPlan);
 
-    //For printing the task schedule plan list
-    for (int i = 0; i < taskSchedulePlanList.size(); i++) {
-      TaskSchedulePlan taskSchedulePlan = taskSchedulePlanList.get(i);
-      Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap
-          = taskSchedulePlan.getContainersMap();
-      for (Map.Entry<Integer, TaskSchedulePlan.ContainerPlan> entry : containersMap.entrySet()) {
-        Integer integer = entry.getKey();
-        TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
-        Set<TaskSchedulePlan.TaskInstancePlan> taskContainerPlan
-            = containerPlan.getTaskInstances();
-        for (TaskSchedulePlan.TaskInstancePlan ip : taskContainerPlan) {
-          LOG.fine("\tTask Id:" + ip.getTaskId() + "\tTask Index:" + ip.getTaskIndex()
-              + "\tTask Name:" + ip.getTaskName() + "\tContainer Id:" + integer);
-        }
-      }
+      //To return the taskschedule plan in a list
+      //dataLocalityBatchTaskScheduler.scheduleBatch(dataFlowTaskGraph, workerPlan);
     }
-    return taskSchedulePlanList;
+    return taskSchedulePlan;
   }
 }
+
 

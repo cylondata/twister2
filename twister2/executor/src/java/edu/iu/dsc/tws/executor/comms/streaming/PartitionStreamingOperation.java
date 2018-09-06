@@ -18,7 +18,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
@@ -57,8 +56,8 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
     op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
   }
 
-  public boolean send(int source, IMessage message, int dest) {
-    return op.send(source, message.getContent(), 0, dest);
+  public boolean send(int source, IMessage message, int flags) {
+    return op.send(source, message.getContent(), flags);
   }
 
   public class PartitionReceiver implements MessageReceiver {
