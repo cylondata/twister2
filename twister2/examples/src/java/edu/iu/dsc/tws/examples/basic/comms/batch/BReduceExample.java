@@ -107,6 +107,7 @@ public class BReduceExample extends BenchWorker {
     public boolean receive(int target, Object object) {
       LOG.log(Level.INFO, String.format("%d Received final input", workerId));
       reduceDone = true;
+      LOG.info("Final Output ==> ");
       if (object instanceof int[]) {
         int[] res = (int[]) object;
         for (int i = 0; i < res.length; i++) {
