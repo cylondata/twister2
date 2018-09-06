@@ -134,21 +134,23 @@ public class ReduceBatchPartialReceiver extends ReduceBatchReceiver {
               Integer i = e.getValue();
               e.setValue(i - 1);
             }
-            if (dataFlowOperation.isDelegeteComplete() && allFinished && allZero) {
-              if (dataFlowOperation.sendPartial(t, new byte[0],
-                  MessageFlags.EMPTY, destination)) {
-                isEmptySent.put(t, true);
-              } else {
-                needsFurtherProgress = true;
-              }
-              batchDone.put(t, true);
-              // we don't want to go through the while loop for this one
-              break;
+
+          } else {
+            canProgress = false;
+            needsFurtherProgress = true;
+          }
+
+          if (dataFlowOperation.isDelegeteComplete() && allFinished && allZero) {
+            if (dataFlowOperation.sendPartial(t, new byte[0],
+                MessageFlags.EMPTY, destination)) {
+              isEmptySent.put(t, true);
             } else {
               needsFurtherProgress = true;
             }
+            batchDone.put(t, true);
+            // we don't want to go through the while loop for this one
+            break;
           } else {
-            canProgress = false;
             needsFurtherProgress = true;
           }
         }
