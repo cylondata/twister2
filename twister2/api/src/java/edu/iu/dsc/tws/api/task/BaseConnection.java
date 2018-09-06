@@ -11,8 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.task;
 
-import edu.iu.dsc.tws.task.api.INode;
-
 public class BaseConnection {
 
 }
