@@ -338,7 +338,7 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
     for (Map.Entry<Integer, List<InstanceId>> entry1 : dataAwareAllocation.entrySet()) {
       Integer integer = entry1.getKey();
       List<InstanceId> instanceIds = entry1.getValue();
-      LOG.fine("Container Index:" + integer);
+      LOG.info("Container Index:" + integer);
       for (InstanceId instanceId : instanceIds) {
         LOG.fine("Task Details:"
             + "\t Task Name:" + instanceId.getTaskName()

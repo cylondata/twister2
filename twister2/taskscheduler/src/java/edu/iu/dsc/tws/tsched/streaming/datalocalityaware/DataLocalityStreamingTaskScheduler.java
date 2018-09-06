@@ -442,7 +442,7 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
 
         containerIndex = Integer.parseInt(Collections.min(calList).getNodeName().trim());
 
-        LOG.fine("Worker Node Allocation for task:" + vertex.getName()
+        LOG.info("Worker Node Allocation for task:" + vertex.getName()
                 + "(" + containerIndex + ")" + "-> Worker:" + containerIndex + "->"
                 + Collections.min(calList).getDataNode());
 

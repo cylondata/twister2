@@ -59,7 +59,7 @@ public final class TaskVertexParser {
         add(vertex);
       }
     }
-    LOGGER.fine("Batch Task Vertex List:" + taskVertexList);
+    LOGGER.info("Batch Task Vertex List:" + taskVertexList);
     return taskVertexList;
   }
 

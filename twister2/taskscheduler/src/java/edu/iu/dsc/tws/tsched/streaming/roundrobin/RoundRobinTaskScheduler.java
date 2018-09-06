@@ -201,7 +201,7 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
       for (Map.Entry<Integer, List<InstanceId>> entry : roundrobinAllocation.entrySet()) {
         Integer integer = entry.getKey();
         List<InstanceId> instanceIds = entry.getValue();
-        LOG.fine("Container Index:" + integer);
+        LOG.info("Container Index:" + integer);
         for (InstanceId instanceId : instanceIds) {
           LOG.fine("Task Instance Details:"
                   + "\t Task Name:" + instanceId.getTaskName()

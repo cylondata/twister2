@@ -77,7 +77,7 @@ public class TaskScheduler implements ITaskScheduler {
       this.schedulingType = TaskSchedulerContext.taskSchedulingMode(config);
     }
 
-    LOG.info("Task Scheduling Mode:" + schedulingType);
+    LOG.info("Task Scheduling Type:" + schedulingType);
 
     TaskSchedulePlan taskSchedulePlan = null;
 
@@ -117,7 +117,7 @@ public class TaskScheduler implements ITaskScheduler {
       this.schedulingType = TaskSchedulerContext.taskSchedulingMode(config);
     }
 
-    LOG.info("Task Scheduling Mode:" + schedulingType);
+    LOG.info("Task Scheduling Type:" + schedulingType);
 
     TaskSchedulePlan taskSchedulePlan = null;
 
