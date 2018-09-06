@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.hdfs;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
 import java.util.logging.Logger;
@@ -28,7 +27,7 @@ public class HadoopFileSystem extends FileSystem {
 
   private static final Logger LOG = Logger.getLogger(HadoopFileSystem.class.getName());
 
-  protected org.apache.hadoop.conf.Configuration conf;
+  private org.apache.hadoop.conf.Configuration conf;
   private org.apache.hadoop.fs.FileSystem fileSystem;
 
   public HadoopFileSystem(
@@ -39,7 +38,7 @@ public class HadoopFileSystem extends FileSystem {
     this.fileSystem = checkNotNull(hadoopFileSystem, "hadoopFileSystem");
   }
 
-  public HadoopFileSystem(String hdfsConfigDirectory, String hdfsDataDirectory) {
+  public HadoopFileSystem() {
     super();
   }
 
@@ -74,7 +73,6 @@ public class HadoopFileSystem extends FileSystem {
    */
   @Override
   public void setWorkingDirectory(Path path1) {
-
   }
 
 
@@ -91,16 +89,13 @@ public class HadoopFileSystem extends FileSystem {
    */
   @Override
   public void initialize(URI name) {
-
   }
 
   /**
-   * Return a file status object that represents the path.
-   *
+   * It returns the status of the file respective to the path given by the user.
    * @param f The path we want information from
-   * @return a FileStatus object
-   * @throws FileNotFoundException when the path does not exist;
-   * IOException see specific implementation
+   * @return
+   * @throws IOException
    */
   @Override
   public FileStatus getFileStatus(final Path f) throws IOException {
@@ -135,9 +130,10 @@ public class HadoopFileSystem extends FileSystem {
   }
 
   /**
-   * Opens an FSDataInputStream at the indicated Path.
-   *
-   * @param f the file to open
+   * This method open and return the input stream object respective to the path
+   * @param f Open an data input stream at the indicated path
+   * @return
+   * @throws IOException
    */
   @Override
   public HadoopDataInputStream open(final Path f) throws IOException {
