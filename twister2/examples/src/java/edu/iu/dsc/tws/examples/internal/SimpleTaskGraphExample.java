@@ -157,10 +157,10 @@ public class SimpleTaskGraphExample implements IWorker {
         Set<TaskSchedulePlan.TaskInstancePlan> taskInstancePlans
                 = containerPlan.getTaskInstances();
         //int containerId = containerPlan.getRequiredResource().getId();
-        LOG.info("Container Index (Schedule Method):" + integer);
+        LOG.info("Task Details for Container Id:" + integer);
         for (TaskSchedulePlan.TaskInstancePlan ip : taskInstancePlans) {
           LOG.info("Task Id:" + ip.getTaskId() + "\tTask Index" + ip.getTaskIndex()
-                  + "\tTask Name:" + ip.getTaskName() + "\tContainer Index:" + integer);
+                  + "\tTask Name:" + ip.getTaskName());
         }
       }
     }

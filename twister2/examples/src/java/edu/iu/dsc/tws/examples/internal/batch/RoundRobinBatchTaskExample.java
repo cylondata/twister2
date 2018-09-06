@@ -165,7 +165,7 @@ public class RoundRobinBatchTaskExample implements IWorker {
           TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
           Set<TaskSchedulePlan.TaskInstancePlan> containerPlanTaskInstances
                   = containerPlan.getTaskInstances();
-          LOG.info("Container Id:" + integer);
+          LOG.info("Task Details for Container Id:" + integer);
           for (TaskSchedulePlan.TaskInstancePlan ip : containerPlanTaskInstances) {
             LOG.info("Task Id:" + ip.getTaskId()
                     + "\tTask Index" + ip.getTaskIndex()
