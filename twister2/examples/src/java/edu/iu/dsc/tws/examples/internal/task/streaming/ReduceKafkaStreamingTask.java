@@ -45,12 +45,11 @@ import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.OperationMode;
-import edu.iu.dsc.tws.task.streaming.BaseStreamSinkTask;
-import edu.iu.dsc.tws.task.streaming.BaseStreamSourceTask;
+import edu.iu.dsc.tws.task.streaming.BaseStreamSink;
+import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 
@@ -84,23 +83,16 @@ public class ReduceKafkaStreamingTask implements IWorker {
     TaskUtils.execute(config, resources, graph, workerController);
   }
 
-  private static class GeneratorTask extends BaseStreamSourceTask {
+  private static class GeneratorTask extends BaseStreamSource {
     private static final long serialVersionUID = -254264903510284748L;
-    private TaskContext ctx;
-    private Config config;
 
     @Override
     public void execute() {
-      ctx.write("reduce-edge", "Hello");
-    }
-
-    @Override
-    public void prepare(Config cfg, TaskContext context) {
-      this.ctx = context;
+      context.write("reduce-edge", "Hello");
     }
   }
 
-  private static class RecevingTask extends BaseStreamSinkTask {
+  private static class RecevingTask extends BaseStreamSink {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 
@@ -111,11 +103,6 @@ public class ReduceKafkaStreamingTask implements IWorker {
       }
       count++;
       return true;
-    }
-
-    @Override
-    public void prepare(Config cfg, TaskContext context) {
-
     }
   }
 

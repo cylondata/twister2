@@ -43,9 +43,8 @@ import edu.iu.dsc.tws.executor.core.CommunicationOperationType;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.TaskContext;
-import edu.iu.dsc.tws.task.batch.BaseBatchSinkTask;
-import edu.iu.dsc.tws.task.batch.BaseBatchSourceTask;
+import edu.iu.dsc.tws.task.batch.BaseBatchSink;
+import edu.iu.dsc.tws.task.batch.BaseBatchSource;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.OperationMode;
@@ -75,40 +74,25 @@ public class BroadCastBatchTask implements IWorker {
     TaskUtils.executeBatch(config, resources, graph, workerController);
   }
 
-  private static class GeneratorTask extends BaseBatchSourceTask {
+  private static class GeneratorTask extends BaseBatchSource {
     private static final long serialVersionUID = -254264903510284748L;
-    private TaskContext ctx;
-    private int count = 0;
 
     @Override
     public void execute() {
-      ctx.write("broadcast-edge", "Hello");
-    }
-
-
-    @Override
-    public void prepare(Config cfg, TaskContext context) {
-      this.ctx = context;
+      context.write("broadcast-edge", "Hello");
     }
   }
 
-  private static class RecevingTask extends BaseBatchSinkTask {
+  private static class RecevingTask extends BaseBatchSink {
     private static final long serialVersionUID = -254264903510284798L;
     private static int counter = 0;
-    private TaskContext ctx;
 
     @Override
     public boolean execute(IMessage message) {
-
       System.out.println(" Message Braodcasted : "
           + message.getContent() + ", counter : " + counter);
       counter++;
       return true;
-    }
-
-    @Override
-    public void prepare(Config cfg, TaskContext context) {
-      this.ctx = context;
     }
   }
 

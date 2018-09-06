@@ -9,23 +9,17 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+package edu.iu.dsc.tws.api.task;
 
-package edu.iu.dsc.tws.task.streaming;
+import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.task.api.IFunction;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.task.api.ISource;
-import edu.iu.dsc.tws.task.api.TaskContext;
+public class SinkConnection {
+  public SinkConnection reduce(String parent, IFunction function) {
+    return null;
+  }
 
-public abstract class BaseStreamSourceTask implements ISource {
-  protected static final long serialVersionUID = -254264120110286748L;
-
-  protected TaskContext ctx;
-
-  protected Config config;
-
-  @Override
-  public void prepare(Config cfg, TaskContext context) {
-    this.ctx = context;
-    this.config = cfg;
+  public SinkConnection reduce(String parent, IFunction function, DataType dataType) {
+    return null;
   }
 }

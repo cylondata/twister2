@@ -9,20 +9,27 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.task.job;
+
+package edu.iu.dsc.tws.task.batch;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
-import edu.iu.dsc.tws.common.worker.IPersistentVolume;
-import edu.iu.dsc.tws.common.worker.IVolatileVolume;
-import edu.iu.dsc.tws.common.worker.IWorker;
+import edu.iu.dsc.tws.task.api.ISource;
+import edu.iu.dsc.tws.task.api.TaskContext;
 
-public class TaskWorker implements IWorker {
+/**
+ * The abstract class that represents the start of a application
+ * This task reads data from a input data source and ouputs data to another task
+ */
+public abstract class BaseBatchSource implements ISource {
+  private static final long serialVersionUID = -254264120110286748L;
+
+  protected TaskContext context;
+
+  protected Config config;
+
   @Override
-  public void execute(Config config, int workerID, AllocatedResources allocatedResources,
-                      IWorkerController workerController, IPersistentVolume persistentVolume,
-                      IVolatileVolume volatileVolume) {
-
+  public void prepare(Config cfg, TaskContext ctx) {
+    this.context = ctx;
+    this.config = cfg;
   }
 }

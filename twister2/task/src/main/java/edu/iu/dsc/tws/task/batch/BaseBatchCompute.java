@@ -9,27 +9,22 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
 package edu.iu.dsc.tws.task.batch;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.task.api.ISource;
+import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
-/**
- * The abstract class that represents the start of a application
- * This task reads data from a input data source and ouputs data to another task
- */
-public abstract class BaseBatchSourceTask implements ISource {
-  protected static final long serialVersionUID = -254264120110286748L;
+public abstract class BaseBatchCompute implements ICompute {
+  private static final long serialVersionUID = -254264120110286748L;
 
-  protected TaskContext ctx;
+  protected TaskContext context;
 
   protected Config config;
 
   @Override
-  public void prepare(Config cfg, TaskContext context) {
-    this.ctx = context;
+  public void prepare(Config cfg, TaskContext ctx) {
     this.config = cfg;
+    this.context = ctx;
   }
 }

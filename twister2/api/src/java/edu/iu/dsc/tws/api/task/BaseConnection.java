@@ -9,23 +9,8 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.batch;
+package edu.iu.dsc.tws.api.task;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.task.api.ICompute;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.TaskContext;
+public class BaseConnection {
 
-public class ReduceTask implements ICompute {
-  public static final long serialVersionUID = 1258632547;
-
-  @Override
-  public void execute(IMessage content) {
-
-  }
-
-  @Override
-  public void prepare(Config cfg, TaskContext context) {
-
-  }
 }

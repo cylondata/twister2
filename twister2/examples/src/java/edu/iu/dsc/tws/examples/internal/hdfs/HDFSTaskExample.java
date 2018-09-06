@@ -69,6 +69,10 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler;
 
+/**
+ * It would be modified properly before the first release.
+ */
+
 public class HDFSTaskExample implements IWorker {
 
   public static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
