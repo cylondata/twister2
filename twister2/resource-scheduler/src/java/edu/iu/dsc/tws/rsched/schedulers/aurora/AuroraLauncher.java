@@ -71,15 +71,15 @@ public class AuroraLauncher implements ILauncher {
     Map<AuroraField, String> bindings = constructEnvVariables(config);
 
     // convert RequestedResources to environment variables, override previous values from config
-    WorkerComputeResource container = resourceRequest.getWorkerComputeResource();
+    WorkerComputeResource computeResource = resourceRequest.getWorkerComputeResource();
     bindings.put(AuroraField.JOB_NAME, jobName);
     bindings.put(AuroraField.AURORA_WORKER_CLASS, AuroraContext.auroraWorkerClass(config));
-    bindings.put(AuroraField.CPUS_PER_CONTAINER, container.getNoOfCpus() + "");
-    bindings.put(AuroraField.RAM_PER_CONTAINER, container.getMemoryInBytes() + "");
-    bindings.put(AuroraField.DISK_PER_CONTAINER, container.getDiskInBytes() + "");
-    bindings.put(AuroraField.NUMBER_OF_CONTAINERS, resourceRequest.getNumberOfWorkers() + "");
+    bindings.put(AuroraField.CPUS_PER_WORKER, computeResource.getNoOfCpus() + "");
+    bindings.put(AuroraField.RAM_PER_WORKER, computeResource.getMemoryInBytes() + "");
+    bindings.put(AuroraField.DISK_PER_WORKER, computeResource.getDiskInBytes() + "");
+    bindings.put(AuroraField.NUMBER_OF_WORKERS, resourceRequest.getNumberOfWorkers() + "");
 
-    printEnvs(bindings);
+    logEnvVariables(bindings);
 
     return controller.createJob(bindings, auroraFilename);
   }
@@ -135,11 +135,11 @@ public class AuroraLauncher implements ILauncher {
     envs.put(AuroraField.ENVIRONMENT, AuroraContext.environment(config));
     envs.put(AuroraField.ROLE, AuroraContext.role(config));
     envs.put(AuroraField.JOB_NAME, jobName);
-    envs.put(AuroraField.CPUS_PER_CONTAINER, SchedulerContext.workerCPU(config) + "");
-    envs.put(AuroraField.RAM_PER_CONTAINER, SchedulerContext.workerRAM(config) * 1048576 + "");
-    envs.put(AuroraField.DISK_PER_CONTAINER,
+    envs.put(AuroraField.CPUS_PER_WORKER, SchedulerContext.workerCPU(config) + "");
+    envs.put(AuroraField.RAM_PER_WORKER, SchedulerContext.workerRAM(config) * 1048576 + "");
+    envs.put(AuroraField.DISK_PER_WORKER,
         AuroraContext.workerVolatileDisk(config) * 1073741824 + "");
-    envs.put(AuroraField.NUMBER_OF_CONTAINERS, SchedulerContext.workerInstances(config) + "");
+    envs.put(AuroraField.NUMBER_OF_WORKERS, SchedulerContext.workerInstances(config) + "");
     envs.put(AuroraField.TWISTER2_PACKAGES_PATH, SchedulerContext.packagesPath(config));
     envs.put(AuroraField.JOB_DESCRIPTION_FILE, jobDescriptionFile);
     envs.put(AuroraField.USER_JOB_JAR_FILE, SchedulerContext.userJobJarFile(config));
@@ -151,12 +151,13 @@ public class AuroraLauncher implements ILauncher {
    * print all environment variables for debugging purposes
    * @param envs
    */
-  public static void printEnvs(Map<AuroraField, String> envs) {
-    LOG.log(Level.INFO, "All environment variables when submitting Aurora job");
-    Set<AuroraField> keys = envs.keySet();
+  public static void logEnvVariables(Map<AuroraField, String> envs) {
 
+    Set<AuroraField> keys = envs.keySet();
+    StringBuffer sb = new StringBuffer("All environment variables:");
     for (AuroraField key: keys) {
-      System.out.println(key + ": " + envs.get(key));
+      sb.append("\n" + key + ": " + envs.get(key));
     }
+    LOG.log(Level.INFO, sb.toString());
   }
 }

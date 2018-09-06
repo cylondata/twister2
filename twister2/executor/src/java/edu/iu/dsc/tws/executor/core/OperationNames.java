@@ -9,27 +9,20 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+package edu.iu.dsc.tws.executor.core;
 
-package edu.iu.dsc.tws.rsched.schedulers.aurora;
+public final class OperationNames {
 
-/**
- * Field names passed to aurora controllers during job creation
- */
-public enum AuroraField {
-  AURORA_CLUSTER_NAME,
-  ENVIRONMENT,
-  ROLE,
-  JOB_NAME,
-  CPUS_PER_WORKER,
-  DISK_PER_WORKER,
-  RAM_PER_WORKER,
-  NUMBER_OF_WORKERS,
-  TWISTER2_PACKAGES_PATH,
-  CORE_PACKAGE_FILENAME,
-  JOB_PACKAGE_FILENAME,
-  JOB_PACKAGE_URI,
-  JOB_DESCRIPTION_FILE,
-  USER_JOB_JAR_FILE,
-  CLUSTER_TYPE,
-  AURORA_WORKER_CLASS
+  private OperationNames() {
+  }
+
+  public static final String REDUCE = "reduce";
+  public static final String GATHER = "gather";
+  public static final String PARTITION = "partition";
+  public static final String ALLGATHER = "allgather";
+  public static final String ALLREDUCE = "allreduce";
+  public static final String BROADCAST = "broadcast";
+  public static final String KEYED_PARTITION = "keyed_partition";
+  public static final String KEYED_REDUCE = "keyed_reduce";
 }
+

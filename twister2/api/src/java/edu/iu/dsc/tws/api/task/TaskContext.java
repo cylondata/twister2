@@ -9,20 +9,19 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.task.job;
+package edu.iu.dsc.tws.api.task;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
-import edu.iu.dsc.tws.common.worker.IPersistentVolume;
-import edu.iu.dsc.tws.common.worker.IVolatileVolume;
-import edu.iu.dsc.tws.common.worker.IWorker;
 
-public class TaskWorker implements IWorker {
-  @Override
-  public void execute(Config config, int workerID, AllocatedResources allocatedResources,
-                      IWorkerController workerController, IPersistentVolume persistentVolume,
-                      IVolatileVolume volatileVolume) {
+public final class TaskContext {
+  public static final String DEFAULT_PARALLELISM = "twister2.task.default.parallelism";
 
+  public static final String DEFAULT_EDGE = "default";
+
+  private TaskContext() {
+  }
+
+  public static int getDefaultParallelism(Config cfg, int def) {
+    return cfg.getIntegerValue(DEFAULT_PARALLELISM, def);
   }
 }

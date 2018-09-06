@@ -33,8 +33,8 @@ import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
-import edu.iu.dsc.tws.executor.core.CommunicationOperationType;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
+import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.executor.threading.Executor;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
@@ -121,15 +121,16 @@ public class RoundRobinBatchTaskExample implements IWorker {
      */
 
     builder.connect("source", "sink1", "partition-edge1",
-                                                      CommunicationOperationType.BATCH_PARTITION);
+                                                      OperationNames.PARTITION);
     builder.connect("source", "sink2", "partition-edge2",
-                                                      CommunicationOperationType.BATCH_PARTITION);
+                                                      OperationNames.PARTITION);
     builder.connect("sink1", "merge", "partition-edge3",
-                                                      CommunicationOperationType.BATCH_PARTITION);
+                                                      OperationNames.PARTITION);
     builder.connect("sink2", "merge", "partition-edge4",
-                                                      CommunicationOperationType.BATCH_PARTITION);
+                                                      OperationNames.PARTITION);
     builder.connect("merge", "final", "partition-edge5",
-                                                      CommunicationOperationType.BATCH_PARTITION);
+                                                      OperationNames.PARTITION);
+
     builder.operationMode(OperationMode.BATCH);
 
     builder.addConfiguration("source", "Ram", GraphConstants.taskInstanceRam(config));
@@ -138,23 +139,22 @@ public class RoundRobinBatchTaskExample implements IWorker {
 
     List<String> sourceInputDataset = new ArrayList<>();
     sourceInputDataset.add("dataset1.txt");
+    sourceInputDataset.add("dataset2.txt");
 
     builder.addConfiguration("source", "inputdataset", sourceInputDataset);
 
-    List<String> sinkOutputDataset = new ArrayList<>();
-    sinkOutputDataset.add("sinkoutput.txt");
-
-    builder.addConfiguration("sink1", "outputdataset", sinkOutputDataset);
+    List<String> sinkOutputDataset1 = new ArrayList<>();
+    sinkOutputDataset1.add("sinkoutput1.txt");
+    builder.addConfiguration("sink1", "outputdataset1", sinkOutputDataset1);
 
     DataFlowTaskGraph graph = builder.build();
     WorkerPlan workerPlan = createWorkerPlan(resources);
 
     //Assign the "datalocalityaware" or "roundrobin" scheduling mode in config file.
-    TaskScheduler taskScheduler = new TaskScheduler();
-    taskScheduler.initialize(config);
+    TaskScheduler taskScheduler = new TaskScheduler(config);
     TaskSchedulePlan taskSchedulePlan = taskScheduler.schedule(graph, workerPlan);
 
-    //Just to print the task schedule plan once...
+    //Just to print the task schedule plan...
     if (workerID == 0) {
       if (taskSchedulePlan != null) {
         Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap
@@ -179,7 +179,7 @@ public class RoundRobinBatchTaskExample implements IWorker {
             new Communicator(config, network));
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
     Executor executor = new Executor(config, plan, network, OperationMode.BATCH);
-    //executor.execute();
+    executor.execute();
   }
 
   public WorkerPlan createWorkerPlan(AllocatedResources resourcePlan) {

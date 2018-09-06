@@ -67,16 +67,7 @@ class AuroraClientController {
       auroraCmd.add("--verbose");
     }
 
-//    return printForTesting(auroraCmd);
     return runProcess(auroraCmd);
-  }
-
-  private boolean printForTesting(List<String> auroraCmd) {
-    System.out.println("State of AuroraClientController: ");
-    System.out.println("jobSpec: " + jobSpec);
-    System.out.println("auroraCmd: " + auroraCmd);
-
-    return true;
   }
 
   // Kill an aurora job

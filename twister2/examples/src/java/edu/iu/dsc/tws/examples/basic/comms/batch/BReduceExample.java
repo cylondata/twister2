@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.basic.comms.batch;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -21,10 +22,11 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.batch.BReduce;
-import edu.iu.dsc.tws.comms.op.functions.ReduceIdentityFunction;
+import edu.iu.dsc.tws.comms.op.functions.reduction.ReduceOperationFunction;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.basic.comms.BenchWorker;
 
@@ -48,8 +50,8 @@ public class BReduceExample extends BenchWorker {
     int target = noOfSourceTasks;
     // create the communication
     reduce = new BReduce(communicator, taskPlan, sources, target,
-        new ReduceIdentityFunction(), new FinalReduceReceiver(), MessageType.INTEGER);
-
+        new ReduceOperationFunction(Op.SUM, MessageType.INTEGER), new FinalReduceReceiver(),
+        MessageType.INTEGER);
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
@@ -102,9 +104,23 @@ public class BReduceExample extends BenchWorker {
 
     @Override
     public boolean receive(int target, Object object) {
+      int[] data = (int[]) object;
+      LOG.log(Level.INFO, String.format("%d Results : %s", workerId,
+          Arrays.toString(Arrays.copyOfRange(data, 0, 10))));
       LOG.log(Level.INFO, String.format("%d Received final input", workerId));
       reduceDone = true;
+      LOG.info("Final Output ==> ");
+      if (object instanceof int[]) {
+        int[] res = (int[]) object;
+        String output = String.format("%s", Arrays.toString(res));
+        LOG.info("Final Output : " + output);
+      }
       return true;
     }
+  }
+
+  @Override
+  protected void finishCommunication(int src) {
+    reduce.finish(src);
   }
 }

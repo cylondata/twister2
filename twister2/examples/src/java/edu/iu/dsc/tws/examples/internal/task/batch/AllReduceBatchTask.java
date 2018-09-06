@@ -38,7 +38,7 @@ import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.examples.internal.task.TaskUtils;
-import edu.iu.dsc.tws.executor.core.CommunicationOperationType;
+import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.IMessage;
@@ -66,7 +66,7 @@ public class AllReduceBatchTask implements IWorker {
     builder.addSink("sink", r);
     builder.setParallelism("sink", 4);
     builder.connect("source", "sink", "all-reduce-edge",
-        CommunicationOperationType.BATCH_ALLREDUCE);
+        OperationNames.ALLREDUCE);
     builder.operationMode(operationMode);
     DataFlowTaskGraph graph = builder.build();
     TaskUtils.executeBatch(config, resources, graph, workerController);

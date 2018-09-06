@@ -33,8 +33,8 @@ import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.data.api.HDFSConnector;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
-import edu.iu.dsc.tws.executor.core.CommunicationOperationType;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
+import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.executor.threading.Executor;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
@@ -121,15 +121,15 @@ public class DataLocalityBatchTaskExample implements IWorker {
      */
 
     builder.connect("source", "sink1", "partition-edge1",
-                                                      CommunicationOperationType.BATCH_PARTITION);
+            OperationNames.PARTITION);
     builder.connect("sink1", "sink2", "partition-edge2",
-                                                      CommunicationOperationType.BATCH_PARTITION);
+            OperationNames.PARTITION);
     builder.connect("sink1", "merge", "partition-edge3",
-                                                      CommunicationOperationType.BATCH_PARTITION);
+            OperationNames.PARTITION);
     builder.connect("sink2", "final", "partition-edge4",
-                                                      CommunicationOperationType.BATCH_PARTITION);
+            OperationNames.PARTITION);
     builder.connect("merge", "final", "partition-edge5",
-                                                      CommunicationOperationType.BATCH_PARTITION);
+            OperationNames.PARTITION);
 
     builder.operationMode(OperationMode.BATCH);
 
@@ -159,11 +159,10 @@ public class DataLocalityBatchTaskExample implements IWorker {
     WorkerPlan workerPlan = createWorkerPlan(resources);
 
     //Assign the "datalocalityaware" or "roundrobin" scheduling mode in config file.
-    TaskScheduler taskScheduler = new TaskScheduler();
-    taskScheduler.initialize(config);
+    TaskScheduler taskScheduler = new TaskScheduler(config);
     TaskSchedulePlan taskSchedulePlan = taskScheduler.schedule(graph, workerPlan);
 
-    //Just to print the task schedule plan once...
+    //Just to print the task schedule plan...
     if (workerID == 0) {
       if (taskSchedulePlan != null) {
         Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap
@@ -188,7 +187,7 @@ public class DataLocalityBatchTaskExample implements IWorker {
             new Communicator(config, network));
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
     Executor executor = new Executor(config, plan, network, OperationMode.BATCH);
-    //executor.execute();
+    executor.execute();
   }
 
   public WorkerPlan createWorkerPlan(AllocatedResources resourcePlan) {

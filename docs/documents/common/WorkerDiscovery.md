@@ -27,7 +27,7 @@ Cluster resource schedulers start the workers in the nodes of the cluster.
 **Node Location Information**:
 Twister2 can use worker locations when scheduling tasks. 
 Workers may run in virtual machines such as pods in Kubernetes. 
-So, worker IP addresses can be different than the IP address of the physical node it is running on. 
+So, worker IP addresses can be different from the IP address of the physical node it is running on. 
 We provide a NodeInfo object for workers. 
 It shows the physical node IP address for that worker. 
 The rack name of the node it is running on. 
@@ -54,7 +54,7 @@ using various cluster services.
 We implemented a worker controller using a ZooKeeper server. 
 ZooKeeper server runs in many clusters. This worker controller can be used in those clusters. 
 The worker controller class is: 
-* [edu.iu.dsc.tws.rsched.bootstrap.ZKController](../../../twister2/resource-scheduler/src/java/edu/iu/dsc/tws/rsched/bootstrap/ZKController.java)
+* [edu.iu.dsc.tws.rsched.bootstrap.ZKWorkerController](../../../twister2/resource-scheduler/src/java/edu/iu/dsc/tws/rsched/bootstrap/ZKWorkerController.java)
 
 Details of the implementation is provided in [the document](../zookeeper/ZKBasedWorkerDiscovery.md). 
 

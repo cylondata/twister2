@@ -27,7 +27,7 @@ import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
-import edu.iu.dsc.tws.rsched.bootstrap.ZKController;
+import edu.iu.dsc.tws.rsched.bootstrap.ZKWorkerController;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import static edu.iu.dsc.tws.common.config.Context.JOB_ARCHIVE_DIRECTORY;
@@ -40,9 +40,40 @@ public final class AuroraWorkerStarter {
   private String mesosTaskID;
   private Config config;
   private JobAPI.Job job;
-  private ZKController zkController;
+  private ZKWorkerController zkWorkerController;
 
   private AuroraWorkerStarter() {
+  }
+
+  public static void main(String[] args) {
+
+    // create the worker
+    AuroraWorkerStarter workerStarter = createAuroraWorker();
+
+    // get the number of workers from some where
+    // wait for all of them
+    // print their list and exit
+    workerStarter.waitAndGetAllWorkers();
+
+    String workerClass = SchedulerContext.workerClass(workerStarter.config);
+    IWorker worker;
+    try {
+      Object object = ReflectionUtils.newInstance(workerClass);
+      worker = (IWorker) object;
+      LOG.info("loaded worker class: " + workerClass);
+    } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+      LOG.log(Level.SEVERE, String.format("failed to load the worker class %s",
+          workerClass), e);
+      throw new RuntimeException(e);
+    }
+
+    // TODO: need toprovide all parameters
+    worker.execute(workerStarter.config,
+        workerStarter.zkWorkerController.getWorkerNetworkInfo().getWorkerID(),
+        null, null, null, null);
+
+    // close the things, let others know that it is done
+    workerStarter.close();
   }
 
   /**
@@ -50,36 +81,35 @@ public final class AuroraWorkerStarter {
    * @return
    */
   public static AuroraWorkerStarter createAuroraWorker() {
-    AuroraWorkerStarter worker = new AuroraWorkerStarter();
+    AuroraWorkerStarter workerStarter = new AuroraWorkerStarter();
     String hostname =  System.getProperty("hostname");
     String portStr =  System.getProperty("tcpPort");
-    worker.mesosTaskID = System.getProperty("taskID");
+    workerStarter.mesosTaskID = System.getProperty("taskID");
     try {
-      worker.workerAddress = InetAddress.getByName(hostname);
-      worker.workerPort = Integer.parseInt(portStr);
+      workerStarter.workerAddress = InetAddress.getByName(hostname);
+      workerStarter.workerPort = Integer.parseInt(portStr);
       LOG.log(Level.INFO, "worker IP: " + hostname + " workerPort: " + portStr);
-      LOG.log(Level.INFO, "worker mesosTaskID: " + worker.mesosTaskID);
+      LOG.log(Level.INFO, "worker mesosTaskID: " + workerStarter.mesosTaskID);
     } catch (UnknownHostException e) {
       LOG.log(Level.SEVERE, "worker ip address is not valid: " + hostname, e);
       throw new RuntimeException(e);
     }
 
     // read job description file
-    worker.readJobDescFile();
-    printJob(worker.job);
+    workerStarter.readJobDescFile();
+    logJobInfo(workerStarter.job);
 
     // load config files
-    worker.loadConfig();
-//    System.out.println("Config from files: ");
-//    System.out.println(worker.config.toString());
+    workerStarter.loadConfig();
+    LOG.fine("Config from files: \n" + workerStarter.config.toString());
 
     // override config files with values from job config if any
-    worker.overrideConfigsFromJob();
+    workerStarter.overrideConfigsFromJob();
 
     // get unique workerID and let other workers know about this worker in the job
-    worker.initializeWithZooKeeper();
+    workerStarter.initializeWithZooKeeper();
 
-    return worker;
+    return workerStarter;
   }
 
   /**
@@ -143,12 +173,13 @@ public final class AuroraWorkerStarter {
     String workerHostPort = workerAddress.getHostAddress() + ":" + workerPort;
     int numberOfWorkers = job.getNumberOfWorkers();
 
+    // TODO: need to put at least nodeIP to this NodeInfo object
     NodeInfo nodeInfo = new NodeInfo(null, null, null);
-    zkController =
-        new ZKController(config, job.getJobName(), workerHostPort, numberOfWorkers, nodeInfo);
-    zkController.initialize();
+    zkWorkerController =
+        new ZKWorkerController(config, job.getJobName(), workerHostPort, numberOfWorkers, nodeInfo);
+    zkWorkerController.initialize();
     long duration = System.currentTimeMillis() - startTime;
-    System.out.println("Initialization for the worker: " + zkController.getWorkerNetworkInfo()
+    LOG.info("Initialization for the worker: " + zkWorkerController.getWorkerNetworkInfo()
         + " took: " + duration + "ms");
   }
 
@@ -157,26 +188,22 @@ public final class AuroraWorkerStarter {
    */
   public void waitAndGetAllWorkers() {
     int numberOfWorkers = job.getNumberOfWorkers();
-    System.out.println("Waiting for " + numberOfWorkers + " workers to join .........");
+    LOG.info("Waiting for " + numberOfWorkers + " workers to join .........");
 
     // the amount of time to wait for all workers to join a job
     int timeLimit =  ZKContext.maxWaitTimeForAllWorkersToJoin(config);
     long startTime = System.currentTimeMillis();
-    List<WorkerNetworkInfo> workers = zkController.waitForAllWorkersToJoin(timeLimit);
+    List<WorkerNetworkInfo> workerList = zkWorkerController.waitForAllWorkersToJoin(timeLimit);
     long duration = System.currentTimeMillis() - startTime;
 
-    if (workers == null) {
+    if (workerList == null) {
       LOG.log(Level.SEVERE, "Could not get full worker list. timeout limit has been reached !!!!"
           + "Waited " + timeLimit + " ms.");
     } else {
       LOG.log(Level.INFO, "Waited " + duration + " ms for all workers to join.");
 
-      System.out.println("list of current workers in the job: ");
-      zkController.printWorkers(workers);
-
-      System.out.println();
-      System.out.println("list of all joined workers to the job: ");
-      zkController.printWorkers(zkController.getWorkerList());
+      LOG.info("list of all joined workers in the job: "
+          + WorkerNetworkInfo.workerListAsString(workerList));
     }
   }
 
@@ -184,57 +211,31 @@ public final class AuroraWorkerStarter {
    * needs to close down when finished computation
    */
   public void close() {
-    zkController.close();
-  }
-
-  public static void main(String[] args) {
-
-    // create the worker
-    AuroraWorkerStarter worker = createAuroraWorker();
-
-    // get the number of workers from some where
-    // wait for all of them
-    // print their list and exit
-    worker.waitAndGetAllWorkers();
-
-    String workerClass = SchedulerContext.workerClass(worker.config);
-    IWorker container;
-    try {
-      Object object = ReflectionUtils.newInstance(workerClass);
-      container = (IWorker) object;
-      LOG.info("loaded worker class: " + workerClass);
-    } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-      LOG.log(Level.SEVERE, String.format("failed to load the worker class %s",
-          workerClass), e);
-      throw new RuntimeException(e);
-    }
-
-    container.execute(worker.config, worker.zkController.getWorkerNetworkInfo().getWorkerID(),
-        null, null, null, null);
-
-    // close the things, let others know that it is done
-    worker.close();
+    zkWorkerController.close();
   }
 
   /**
    * a test method to print a job
    * @param job
    */
-  public static void printJob(JobAPI.Job job) {
-    System.out.println("Job name: " + job.getJobName());
-    System.out.println("Job file: " + job.getJobFormat().getJobFile());
-    System.out.println("workers: " + job.getNumberOfWorkers());
-    System.out.println("CPUs: "
+  public static void logJobInfo(JobAPI.Job job) {
+    StringBuffer sb = new StringBuffer("Job Details:");
+    sb.append("\nJob name: " + job.getJobName());
+    sb.append("\nJob file: " + job.getJobFormat().getJobFile());
+    sb.append("\nnumber of workers: " + job.getNumberOfWorkers());
+    sb.append("\nCPUs: "
         + job.getJobResources().getResourcesList().get(0).getWorkerComputeResource().getCpu());
-    System.out.println("RAM: "
+    sb.append("\nRAM: "
         + job.getJobResources().getResourcesList().get(0).getWorkerComputeResource().getRam());
-    System.out.println("Disk: "
+    sb.append("\nDisk: "
         + job.getJobResources().getResourcesList().get(0).getWorkerComputeResource().getDisk());
 
     JobAPI.Config conf = job.getConfig();
-    System.out.println("number of key-values in job conf: " + conf.getKvsCount());
+    sb.append("\nnumber of key-values in job conf: " + conf.getKvsCount());
     for (JobAPI.Config.KeyValue kv : conf.getKvsList()) {
-      System.out.println(kv.getKey() + ": " + kv.getValue());
+      sb.append("\n" + kv.getKey() + ": " + kv.getValue());
     }
+
+    LOG.info(sb.toString());
   }
 }
