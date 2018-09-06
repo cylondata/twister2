@@ -35,7 +35,6 @@ public class ReduceBatchPartialReceiver extends ReduceBatchReceiver {
     boolean needsFurtherProgress = false;
     for (int t : messages.keySet()) {
       if (batchDone.get(t)) {
-        //System.out.println("Number of messages send from partial : " + t + "count : ");
         if (!isEmptySent.get(t)) {
           if (dataFlowOperation.isDelegeteComplete() && dataFlowOperation.sendPartial(t,
               new byte[0], MessageFlags.EMPTY, destination)) {

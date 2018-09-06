@@ -27,6 +27,7 @@ import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.Communicator;
@@ -92,9 +93,6 @@ public abstract class BenchWorker implements IWorker {
       // we should communicationProgress the communication directive
       progressCommunication();
     }
-    if (isDone()) {
-      System.out.println(workerId + " is done progress");
-    }
   }
 
   protected abstract void progressCommunication();
@@ -121,9 +119,9 @@ public abstract class BenchWorker implements IWorker {
       for (int i = 0; i < jobParameters.getIterations(); i++) {
         // lets generate a message
         int flag = 0;
-//        if (i == jobParameters.getIterations() - 1) {
-//          flag = MessageFlags.FLAGS_LAST;
-//        }
+        if (i == jobParameters.getIterations() - 1) {
+          flag = MessageFlags.FLAGS_LAST;
+        }
         sendMessages(task, data, flag);
       }
       LOG.info(String.format("%d Done sending", workerId));

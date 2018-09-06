@@ -114,7 +114,6 @@ public abstract class ReduceBatchReceiver implements MessageReceiver {
     Map<Integer, Boolean> finishedMessages = finished.get(target);
 
     if ((flags & MessageFlags.EMPTY) == MessageFlags.EMPTY) {
-      System.out.println(executor + " got empty message from : " + source);
       finishedMessages.put(source, true);
       return true;
     }
