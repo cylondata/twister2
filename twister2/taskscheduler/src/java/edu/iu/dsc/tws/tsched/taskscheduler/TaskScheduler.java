@@ -41,15 +41,6 @@ public class TaskScheduler implements ITaskScheduler {
 
   private String schedulingType;
 
-  /**
-   * Initialize the config values.
-   *
-   * @param cfg
-   */
-  public TaskScheduler(Config cfg) {
-    initialize(cfg);
-  }
-
   @Override
   public void initialize(Config cfg) {
     this.config = cfg;

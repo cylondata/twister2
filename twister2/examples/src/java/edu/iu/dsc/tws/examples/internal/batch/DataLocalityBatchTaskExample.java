@@ -121,15 +121,15 @@ public class DataLocalityBatchTaskExample implements IWorker {
      */
 
     builder.connect("source", "sink1", "partition-edge1",
-            CommunicationOperationType.BATCH_PARTITION);
+                                                      CommunicationOperationType.BATCH_PARTITION);
     builder.connect("sink1", "sink2", "partition-edge2",
-            CommunicationOperationType.BATCH_PARTITION);
+                                                      CommunicationOperationType.BATCH_PARTITION);
     builder.connect("sink1", "merge", "partition-edge3",
-            CommunicationOperationType.BATCH_PARTITION);
+                                                      CommunicationOperationType.BATCH_PARTITION);
     builder.connect("sink2", "final", "partition-edge4",
-            CommunicationOperationType.BATCH_PARTITION);
+                                                      CommunicationOperationType.BATCH_PARTITION);
     builder.connect("merge", "final", "partition-edge5",
-            CommunicationOperationType.BATCH_PARTITION);
+                                                      CommunicationOperationType.BATCH_PARTITION);
 
     builder.operationMode(OperationMode.BATCH);
 
@@ -159,10 +159,11 @@ public class DataLocalityBatchTaskExample implements IWorker {
     WorkerPlan workerPlan = createWorkerPlan(resources);
 
     //Assign the "datalocalityaware" or "roundrobin" scheduling mode in config file.
-    TaskScheduler taskScheduler = new TaskScheduler(config);
+    TaskScheduler taskScheduler = new TaskScheduler();
+    taskScheduler.initialize(config);
     TaskSchedulePlan taskSchedulePlan = taskScheduler.schedule(graph, workerPlan);
 
-    //Just to print the task schedule plan...
+    //Just to print the task schedule plan once...
     if (workerID == 0) {
       if (taskSchedulePlan != null) {
         Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap
@@ -187,7 +188,7 @@ public class DataLocalityBatchTaskExample implements IWorker {
             new Communicator(config, network));
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
     Executor executor = new Executor(config, plan, network, OperationMode.BATCH);
-    executor.execute();
+    //executor.execute();
   }
 
   public WorkerPlan createWorkerPlan(AllocatedResources resourcePlan) {

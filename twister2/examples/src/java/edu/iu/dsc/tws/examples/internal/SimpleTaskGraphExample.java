@@ -73,14 +73,14 @@ public class SimpleTaskGraphExample implements IWorker {
 
   /**
    * This is the execute method for the task graph.
-   * @param cfg
+   * @param config
    * @param workerID
    * @param resources
    * @param workerController
    * @param persistentVolume
    * @param volatileVolume
    */
-  public void execute(Config cfg, int workerID, AllocatedResources resources,
+  public void execute(Config config, int workerID, AllocatedResources resources,
                       IWorkerController workerController,
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
@@ -113,21 +113,21 @@ public class SimpleTaskGraphExample implements IWorker {
     builder.setParallelism("task3", 2);
     builder.setParallelism("task4", 2);
 
-    builder.addConfiguration("task1", "Ram", GraphConstants.taskInstanceRam(cfg));
-    builder.addConfiguration("task1", "Disk", GraphConstants.taskInstanceDisk(cfg));
-    builder.addConfiguration("task1", "Cpu", GraphConstants.taskInstanceCpu(cfg));
+    builder.addConfiguration("task1", "Ram", GraphConstants.taskInstanceRam(config));
+    builder.addConfiguration("task1", "Disk", GraphConstants.taskInstanceDisk(config));
+    builder.addConfiguration("task1", "Cpu", GraphConstants.taskInstanceCpu(config));
 
-    builder.addConfiguration("task2", "Ram", GraphConstants.taskInstanceRam(cfg));
-    builder.addConfiguration("task2", "Disk", GraphConstants.taskInstanceDisk(cfg));
-    builder.addConfiguration("task2", "Cpu", GraphConstants.taskInstanceCpu(cfg));
+    builder.addConfiguration("task2", "Ram", GraphConstants.taskInstanceRam(config));
+    builder.addConfiguration("task2", "Disk", GraphConstants.taskInstanceDisk(config));
+    builder.addConfiguration("task2", "Cpu", GraphConstants.taskInstanceCpu(config));
 
-    builder.addConfiguration("task3", "Ram", GraphConstants.taskInstanceRam(cfg));
-    builder.addConfiguration("task3", "Disk", GraphConstants.taskInstanceDisk(cfg));
-    builder.addConfiguration("task3", "Cpu", GraphConstants.taskInstanceCpu(cfg));
+    builder.addConfiguration("task3", "Ram", GraphConstants.taskInstanceRam(config));
+    builder.addConfiguration("task3", "Disk", GraphConstants.taskInstanceDisk(config));
+    builder.addConfiguration("task3", "Cpu", GraphConstants.taskInstanceCpu(config));
 
-    builder.addConfiguration("task4", "Ram", GraphConstants.taskInstanceRam(cfg));
-    builder.addConfiguration("task4", "Disk", GraphConstants.taskInstanceDisk(cfg));
-    builder.addConfiguration("task4", "Cpu", GraphConstants.taskInstanceCpu(cfg));
+    builder.addConfiguration("task4", "Ram", GraphConstants.taskInstanceRam(config));
+    builder.addConfiguration("task4", "Disk", GraphConstants.taskInstanceDisk(config));
+    builder.addConfiguration("task4", "Cpu", GraphConstants.taskInstanceCpu(config));
 
     List<String> sourceInputDataset = new ArrayList<>();
     sourceInputDataset.add("dataset1.txt");
@@ -145,7 +145,8 @@ public class SimpleTaskGraphExample implements IWorker {
 
     //For scheduling streaming task
     if (workerID == 0) {
-      TaskScheduler taskScheduler = new TaskScheduler(cfg);
+      TaskScheduler taskScheduler = new TaskScheduler();
+      taskScheduler.initialize(config);
       TaskSchedulePlan taskSchedulePlan = taskScheduler.schedule(graph, workerPlan);
 
       Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap

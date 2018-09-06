@@ -46,7 +46,7 @@ import edu.iu.dsc.tws.tsched.utils.TaskAttributes;
 public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
 
   private static final Logger LOG = Logger.getLogger(
-      DataLocalityStreamingTaskScheduler.class.getName());
+                                                DataLocalityStreamingTaskScheduler.class.getName());
 
   //Represents task schedule plan Id
   private static int taskSchedulePlanId = 0;
@@ -68,6 +68,98 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
 
   //Allocated workers list
   private static List<Integer> allocatedWorkers = new ArrayList<>();
+
+  /**
+   * This method first initialize the task instance values with default task instance ram, disk, and
+   * cpu values from the task scheduler context.
+   */
+  @Override
+  public void initialize(Config config) {
+    this.cfg = config;
+    this.instanceRAM = TaskSchedulerContext.taskInstanceRam(cfg);
+    this.instanceDisk = TaskSchedulerContext.taskInstanceDisk(cfg);
+    this.instanceCPU = TaskSchedulerContext.taskInstanceCpu(cfg);
+  }
+
+  /**
+   * This is the base method for the data locality aware task scheduling for scheduling the
+   * streaming task instances. It retrieves the task vertex set of the task graph and send the set
+   * to the data locality aware scheduling algorithm to schedule the streaming task instances
+   * which are closer to the data nodes.
+   */
+  @Override
+  public TaskSchedulePlan schedule(DataFlowTaskGraph graph, WorkerPlan workerPlan) {
+
+    Set<TaskSchedulePlan.ContainerPlan> containerPlans = new HashSet<>();
+
+    //Set<Vertex> taskVertexSet = new LinkedHashSet<>(graph.getTaskVertexSet());
+    Set<Vertex> taskVertexSet = graph.getTaskVertexSet();
+
+    Map<Integer, List<InstanceId>> containerInstanceMap = dataLocalityAwareSchedulingAlgorithm(
+            taskVertexSet, workerPlan.getNumberOfWorkers(), workerPlan, this.cfg);
+
+    TaskInstanceMapCalculation instanceMapCalculation = new TaskInstanceMapCalculation(
+            this.instanceRAM, this.instanceCPU, this.instanceDisk);
+
+    Map<Integer, Map<InstanceId, Double>> instancesRamMap =
+            instanceMapCalculation.getInstancesRamMapInContainer(containerInstanceMap,
+                    taskVertexSet);
+
+    Map<Integer, Map<InstanceId, Double>> instancesDiskMap =
+            instanceMapCalculation.getInstancesDiskMapInContainer(containerInstanceMap,
+                    taskVertexSet);
+
+    Map<Integer, Map<InstanceId, Double>> instancesCPUMap =
+            instanceMapCalculation.getInstancesCPUMapInContainer(containerInstanceMap,
+                    taskVertexSet);
+
+    for (int containerId : containerInstanceMap.keySet()) {
+
+      double containerRAMValue = TaskSchedulerContext.containerRamPadding(cfg);
+      double containerDiskValue = TaskSchedulerContext.containerDiskPadding(cfg);
+      double containerCpuValue = TaskSchedulerContext.containerCpuPadding(cfg);
+
+      List<InstanceId> taskInstanceIds = containerInstanceMap.get(containerId);
+      Map<InstanceId, TaskSchedulePlan.TaskInstancePlan> taskInstancePlanMap = new HashMap<>();
+
+      for (InstanceId id : taskInstanceIds) {
+        double instanceRAMValue = instancesRamMap.get(containerId).get(id);
+        double instanceDiskValue = instancesDiskMap.get(containerId).get(id);
+        double instanceCPUValue = instancesCPUMap.get(containerId).get(id);
+
+        Resource instanceResource = new Resource(instanceRAMValue,
+                instanceDiskValue, instanceCPUValue);
+
+        taskInstancePlanMap.put(id, new TaskSchedulePlan.TaskInstancePlan(
+                id.getTaskName(), id.getTaskId(), id.getTaskIndex(), instanceResource));
+
+        containerRAMValue += instanceRAMValue;
+        containerDiskValue += instanceDiskValue;
+        containerCpuValue += instanceDiskValue;
+      }
+
+      Worker worker = workerPlan.getWorker(containerId);
+      Resource containerResource;
+
+      if (worker != null && worker.getCpu() > 0 && worker.getDisk() > 0 && worker.getRam() > 0) {
+        containerResource = new Resource((double) worker.getRam(),
+                (double) worker.getDisk(), (double) worker.getCpu());
+        LOG.fine("Worker (if loop):" + containerId + "\tRam:" + worker.getRam()
+                + "\tDisk:" + worker.getDisk() + "\tCpu:" + worker.getCpu());
+      } else {
+        containerResource = new Resource(containerRAMValue, containerDiskValue,
+                containerCpuValue);
+        LOG.fine("Worker (else loop):" + containerId + "\tRam:" + containerRAMValue
+                + "\tDisk:" + containerDiskValue + "\tCpu:" + containerCpuValue);
+      }
+
+      TaskSchedulePlan.ContainerPlan taskContainerPlan =
+              new TaskSchedulePlan.ContainerPlan(containerId,
+                      new HashSet<>(taskInstancePlanMap.values()), containerResource);
+      containerPlans.add(taskContainerPlan);
+    }
+    return new TaskSchedulePlan(taskSchedulePlanId, containerPlans);
+  }
 
   /**
    * This method is primarily responsible for generating the container and task instance map which
@@ -106,7 +198,6 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
           + "capacity of " + containerCapacity + " and " + totalTask + " task instances");
     }
 
-    LOG.fine("Data Aware Before Task Allocation:\t" + allocationMap);
 
     //Parallel Task Map for the complete task graph
     Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
@@ -148,7 +239,7 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
       }
     }
 
-    LOG.fine("Container Map Values After Allocation" + allocationMap);
+    //To print the allocation map
     for (Map.Entry<Integer, List<InstanceId>> entry : allocationMap.entrySet()) {
       Integer integer = entry.getKey();
       List<InstanceId> instanceIds = entry.getValue();
@@ -336,97 +427,6 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
     return cal;
   }
 
-  /**
-   * This method first initialize the task instance values with default task instance ram, disk, and
-   * cpu values from the task scheduler context.
-   */
-  @Override
-  public void initialize(Config config) {
-    this.cfg = config;
-    this.instanceRAM = TaskSchedulerContext.taskInstanceRam(cfg);
-    this.instanceDisk = TaskSchedulerContext.taskInstanceDisk(cfg);
-    this.instanceCPU = TaskSchedulerContext.taskInstanceCpu(cfg);
-  }
-
-  /**
-   * This is the base method for the data locality aware task scheduling for scheduling the
-   * streaming task instances. It retrieves the task vertex set of the task graph and send the set
-   * to the data locality aware scheduling algorithm to schedule the streaming task instances
-   * which are closer to the data nodes.
-   */
-  @Override
-  public TaskSchedulePlan schedule(DataFlowTaskGraph graph, WorkerPlan workerPlan) {
-
-    Set<TaskSchedulePlan.ContainerPlan> containerPlans = new HashSet<>();
-
-    //Set<Vertex> taskVertexSet = new LinkedHashSet<>(graph.getTaskVertexSet());
-    Set<Vertex> taskVertexSet = graph.getTaskVertexSet();
-
-    Map<Integer, List<InstanceId>> containerInstanceMap = dataLocalityAwareSchedulingAlgorithm(
-        taskVertexSet, workerPlan.getNumberOfWorkers(), workerPlan, this.cfg);
-
-    TaskInstanceMapCalculation instanceMapCalculation = new TaskInstanceMapCalculation(
-        this.instanceRAM, this.instanceCPU, this.instanceDisk);
-
-    Map<Integer, Map<InstanceId, Double>> instancesRamMap =
-        instanceMapCalculation.getInstancesRamMapInContainer(containerInstanceMap,
-            taskVertexSet);
-
-    Map<Integer, Map<InstanceId, Double>> instancesDiskMap =
-        instanceMapCalculation.getInstancesDiskMapInContainer(containerInstanceMap,
-            taskVertexSet);
-
-    Map<Integer, Map<InstanceId, Double>> instancesCPUMap =
-        instanceMapCalculation.getInstancesCPUMapInContainer(containerInstanceMap,
-            taskVertexSet);
-
-    for (int containerId : containerInstanceMap.keySet()) {
-
-      double containerRAMValue = TaskSchedulerContext.containerRamPadding(cfg);
-      double containerDiskValue = TaskSchedulerContext.containerDiskPadding(cfg);
-      double containerCpuValue = TaskSchedulerContext.containerCpuPadding(cfg);
-
-      List<InstanceId> taskInstanceIds = containerInstanceMap.get(containerId);
-      Map<InstanceId, TaskSchedulePlan.TaskInstancePlan> taskInstancePlanMap = new HashMap<>();
-
-      for (InstanceId id : taskInstanceIds) {
-        double instanceRAMValue = instancesRamMap.get(containerId).get(id);
-        double instanceDiskValue = instancesDiskMap.get(containerId).get(id);
-        double instanceCPUValue = instancesCPUMap.get(containerId).get(id);
-
-        Resource instanceResource = new Resource(instanceRAMValue,
-            instanceDiskValue, instanceCPUValue);
-
-        taskInstancePlanMap.put(id, new TaskSchedulePlan.TaskInstancePlan(
-            id.getTaskName(), id.getTaskId(), id.getTaskIndex(), instanceResource));
-
-        containerRAMValue += instanceRAMValue;
-        containerDiskValue += instanceDiskValue;
-        containerCpuValue += instanceDiskValue;
-      }
-
-      Worker worker = workerPlan.getWorker(containerId);
-      Resource containerResource;
-
-      if (worker != null && worker.getCpu() > 0 && worker.getDisk() > 0 && worker.getRam() > 0) {
-        containerResource = new Resource((double) worker.getRam(),
-            (double) worker.getDisk(), (double) worker.getCpu());
-        LOG.fine("Worker (if loop):" + containerId + "\tRam:" + worker.getRam()
-            + "\tDisk:" + worker.getDisk() + "\tCpu:" + worker.getCpu());
-      } else {
-        containerResource = new Resource(containerRAMValue, containerDiskValue,
-            containerCpuValue);
-        LOG.fine("Worker (else loop):" + containerId + "\tRam:" + containerRAMValue
-            + "\tDisk:" + containerDiskValue + "\tCpu:" + containerCpuValue);
-      }
-
-      TaskSchedulePlan.ContainerPlan taskContainerPlan =
-          new TaskSchedulePlan.ContainerPlan(containerId,
-              new HashSet<>(taskInstancePlanMap.values()), containerResource);
-      containerPlans.add(taskContainerPlan);
-    }
-    return new TaskSchedulePlan(taskSchedulePlanId, containerPlans);
-  }
 
   private static Map<Integer, List<InstanceId>> allocate(List<DataTransferTimeCalculator> calList,
                                                          int maxTaskInstancesPerContainer,
