@@ -27,7 +27,6 @@ import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.batch.BReduce;
 import edu.iu.dsc.tws.comms.op.functions.reduction.ReduceOperationFunction;
-import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.basic.comms.BenchWorker;
 
@@ -51,7 +50,7 @@ public class BReduceExample extends BenchWorker {
     int target = noOfSourceTasks;
     // create the communication
     reduce = new BReduce(communicator, taskPlan, sources, target,
-        new ReduceOperationFunction(Op.SUM, DataType.INTEGER), new FinalReduceReceiver(),
+        new ReduceOperationFunction(Op.SUM, MessageType.INTEGER), new FinalReduceReceiver(),
         MessageType.INTEGER);
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,

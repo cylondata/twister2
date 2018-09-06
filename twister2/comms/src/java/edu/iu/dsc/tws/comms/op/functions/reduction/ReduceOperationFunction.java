@@ -16,18 +16,19 @@ import java.util.Map;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.data.api.DataType;
+
 
 public class ReduceOperationFunction implements ReduceFunction {
 
-  private DataType dataType;
+  private MessageType messageType;
   private Op operation;
 
-  public ReduceOperationFunction(Op operation, DataType dtype) {
+  public ReduceOperationFunction(Op operation, MessageType dtype) {
     this.operation = operation;
-    this.dataType = dtype;
+    this.messageType = dtype;
   }
 
   @Override
@@ -39,7 +40,7 @@ public class ReduceOperationFunction implements ReduceFunction {
   public Object reduce(Object t1, Object t2) {
     Object result = null;
     if (this.operation == Op.SUM) { // Start SUM
-      if (this.dataType == DataType.INTEGER) {
+      if (this.messageType == MessageType.INTEGER) {
         if (t1 instanceof int[] && t2 instanceof int[]) {
           int[] i1 = (int[]) t1;
           int[] i2 = (int[]) t2;
@@ -49,7 +50,7 @@ public class ReduceOperationFunction implements ReduceFunction {
           }
           result = res;
         }
-      } else if (this.dataType == DataType.DOUBLE) {
+      } else if (this.messageType == MessageType.DOUBLE) {
         if (t1 instanceof double[] && t2 instanceof double[]) {
           double[] i1 = (double[]) t1;
           double[] i2 = (double[]) t2;
@@ -58,7 +59,7 @@ public class ReduceOperationFunction implements ReduceFunction {
             res[i] = i1[i] + i2[i];
           }
           result = res;
-        } else if (this.dataType == DataType.SHORT) {
+        } else if (this.messageType == MessageType.SHORT) {
           if (t1 instanceof short[] && t2 instanceof short[]) {
             short[] i1 = (short[]) t1;
             short[] i2 = (short[]) t2;
@@ -68,7 +69,7 @@ public class ReduceOperationFunction implements ReduceFunction {
             }
             result = res;
           }
-        } else if (this.dataType == DataType.BYTE) {
+        } else if (this.messageType == MessageType.BYTE) {
           if (t1 instanceof byte[] && t2 instanceof byte[]) {
             byte[] i1 = (byte[]) t1;
             byte[] i2 = (byte[]) t2;
@@ -78,7 +79,7 @@ public class ReduceOperationFunction implements ReduceFunction {
             }
             result = res;
           }
-        } else if (this.dataType == DataType.LONG) {
+        } else if (this.messageType == MessageType.LONG) {
           if (t1 instanceof long[] && t2 instanceof long[]) {
             long[] i1 = (long[]) t1;
             long[] i2 = (long[]) t2;
@@ -93,7 +94,7 @@ public class ReduceOperationFunction implements ReduceFunction {
       } // END SUM
     }
     if (this.operation == Op.PRODUCT) { // Start PRODUCT
-      if (this.dataType == DataType.INTEGER) {
+      if (this.messageType == MessageType.INTEGER) {
         if (t1 instanceof int[] && t2 instanceof int[]) {
           int[] i1 = (int[]) t1;
           int[] i2 = (int[]) t2;
@@ -103,7 +104,7 @@ public class ReduceOperationFunction implements ReduceFunction {
           }
           result = res;
         }
-      } else if (this.dataType == DataType.DOUBLE) {
+      } else if (this.messageType == MessageType.DOUBLE) {
         if (t1 instanceof double[] && t2 instanceof double[]) {
           double[] i1 = (double[]) t1;
           double[] i2 = (double[]) t2;
@@ -112,7 +113,7 @@ public class ReduceOperationFunction implements ReduceFunction {
             res[i] = i1[i] * i2[i];
           }
           result = res;
-        } else if (this.dataType == DataType.SHORT) {
+        } else if (this.messageType == MessageType.SHORT) {
           if (t1 instanceof short[] && t2 instanceof short[]) {
             short[] i1 = (short[]) t1;
             short[] i2 = (short[]) t2;
@@ -122,7 +123,7 @@ public class ReduceOperationFunction implements ReduceFunction {
             }
             result = res;
           }
-        } else if (this.dataType == DataType.BYTE) {
+        } else if (this.messageType == MessageType.BYTE) {
           if (t1 instanceof byte[] && t2 instanceof byte[]) {
             byte[] i1 = (byte[]) t1;
             byte[] i2 = (byte[]) t2;
@@ -132,7 +133,7 @@ public class ReduceOperationFunction implements ReduceFunction {
             }
             result = res;
           }
-        } else if (this.dataType == DataType.LONG) {
+        } else if (this.messageType == MessageType.LONG) {
           if (t1 instanceof long[] && t2 instanceof long[]) {
             long[] i1 = (long[]) t1;
             long[] i2 = (long[]) t2;
@@ -147,7 +148,7 @@ public class ReduceOperationFunction implements ReduceFunction {
     }
 
     if (this.operation == Op.DIVISION) { // Start DIVISION
-      if (this.dataType == DataType.INTEGER) {
+      if (this.messageType == MessageType.INTEGER) {
         if (t1 instanceof int[] && t2 instanceof int[]) {
           int[] i1 = (int[]) t1;
           int[] i2 = (int[]) t2;
@@ -157,7 +158,7 @@ public class ReduceOperationFunction implements ReduceFunction {
           }
           result = res;
         }
-      } else if (this.dataType == DataType.DOUBLE) {
+      } else if (this.messageType == MessageType.DOUBLE) {
         if (t1 instanceof double[] && t2 instanceof double[]) {
           double[] i1 = (double[]) t1;
           double[] i2 = (double[]) t2;
@@ -166,7 +167,7 @@ public class ReduceOperationFunction implements ReduceFunction {
             res[i] = i1[i] / i2[i];
           }
           result = res;
-        } else if (this.dataType == DataType.SHORT) {
+        } else if (this.messageType == MessageType.SHORT) {
           if (t1 instanceof short[] && t2 instanceof short[]) {
             short[] i1 = (short[]) t1;
             short[] i2 = (short[]) t2;
@@ -176,7 +177,7 @@ public class ReduceOperationFunction implements ReduceFunction {
             }
             result = res;
           }
-        } else if (this.dataType == DataType.BYTE) {
+        } else if (this.messageType == MessageType.BYTE) {
           if (t1 instanceof byte[] && t2 instanceof byte[]) {
             byte[] i1 = (byte[]) t1;
             byte[] i2 = (byte[]) t2;
@@ -186,7 +187,7 @@ public class ReduceOperationFunction implements ReduceFunction {
             }
             result = res;
           }
-        } else if (this.dataType == DataType.LONG) {
+        } else if (this.messageType == MessageType.LONG) {
           if (t1 instanceof long[] && t2 instanceof long[]) {
             long[] i1 = (long[]) t1;
             long[] i2 = (long[]) t2;
@@ -201,7 +202,7 @@ public class ReduceOperationFunction implements ReduceFunction {
     }
 
     if (this.operation == Op.MAX) { // Start MAX
-      if (this.dataType == DataType.INTEGER) {
+      if (this.messageType == MessageType.INTEGER) {
         if (t1 instanceof int[] && t2 instanceof int[]) {
           int[] i1 = (int[]) t1;
           int[] i2 = (int[]) t2;
@@ -211,7 +212,7 @@ public class ReduceOperationFunction implements ReduceFunction {
           }
           result = res;
         }
-      } else if (this.dataType == DataType.DOUBLE) {
+      } else if (this.messageType == MessageType.DOUBLE) {
         if (t1 instanceof double[] && t2 instanceof double[]) {
           double[] i1 = (double[]) t1;
           double[] i2 = (double[]) t2;
@@ -220,7 +221,7 @@ public class ReduceOperationFunction implements ReduceFunction {
             res[i] = Math.max(i1[i], i2[i]);
           }
           result = res;
-        } else if (this.dataType == DataType.SHORT) {
+        } else if (this.messageType == MessageType.SHORT) {
           if (t1 instanceof short[] && t2 instanceof short[]) {
             short[] i1 = (short[]) t1;
             short[] i2 = (short[]) t2;
@@ -230,7 +231,7 @@ public class ReduceOperationFunction implements ReduceFunction {
             }
             result = res;
           }
-        } else if (this.dataType == DataType.BYTE) {
+        } else if (this.messageType == MessageType.BYTE) {
           if (t1 instanceof byte[] && t2 instanceof byte[]) {
             byte[] i1 = (byte[]) t1;
             byte[] i2 = (byte[]) t2;
@@ -240,7 +241,7 @@ public class ReduceOperationFunction implements ReduceFunction {
             }
             result = res;
           }
-        } else if (this.dataType == DataType.LONG) {
+        } else if (this.messageType == MessageType.LONG) {
           if (t1 instanceof long[] && t2 instanceof long[]) {
             long[] i1 = (long[]) t1;
             long[] i2 = (long[]) t2;
@@ -255,7 +256,7 @@ public class ReduceOperationFunction implements ReduceFunction {
     }
 
     if (this.operation == Op.MIN) { // Start MIN
-      if (this.dataType == DataType.INTEGER) {
+      if (this.messageType == MessageType.INTEGER) {
         if (t1 instanceof int[] && t2 instanceof int[]) {
           int[] i1 = (int[]) t1;
           int[] i2 = (int[]) t2;
@@ -265,7 +266,7 @@ public class ReduceOperationFunction implements ReduceFunction {
           }
           result = res;
         }
-      } else if (this.dataType == DataType.DOUBLE) {
+      } else if (this.messageType == MessageType.DOUBLE) {
         if (t1 instanceof double[] && t2 instanceof double[]) {
           double[] i1 = (double[]) t1;
           double[] i2 = (double[]) t2;
@@ -274,7 +275,7 @@ public class ReduceOperationFunction implements ReduceFunction {
             res[i] = Math.min(i1[i], i2[i]);
           }
           result = res;
-        } else if (this.dataType == DataType.SHORT) {
+        } else if (this.messageType == MessageType.SHORT) {
           if (t1 instanceof short[] && t2 instanceof short[]) {
             short[] i1 = (short[]) t1;
             short[] i2 = (short[]) t2;
@@ -284,7 +285,7 @@ public class ReduceOperationFunction implements ReduceFunction {
             }
             result = res;
           }
-        } else if (this.dataType == DataType.BYTE) {
+        } else if (this.messageType == MessageType.BYTE) {
           if (t1 instanceof byte[] && t2 instanceof byte[]) {
             byte[] i1 = (byte[]) t1;
             byte[] i2 = (byte[]) t2;
@@ -294,7 +295,7 @@ public class ReduceOperationFunction implements ReduceFunction {
             }
             result = res;
           }
-        } else if (this.dataType == DataType.LONG) {
+        } else if (this.messageType == MessageType.LONG) {
           if (t1 instanceof long[] && t2 instanceof long[]) {
             long[] i1 = (long[]) t1;
             long[] i2 = (long[]) t2;

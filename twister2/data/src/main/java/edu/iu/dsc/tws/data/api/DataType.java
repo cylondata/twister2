@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.api;
 
-public enum DataType {
+public enum MessageType {
   OBJECT,
   BYTE,
   INTEGER,
