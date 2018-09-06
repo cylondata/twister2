@@ -159,7 +159,8 @@ public class DataLocalityBatchTaskExample implements IWorker {
     WorkerPlan workerPlan = createWorkerPlan(resources);
 
     //Assign the "datalocalityaware" or "roundrobin" scheduling mode in config file.
-    TaskScheduler taskScheduler = new TaskScheduler(config);
+    TaskScheduler taskScheduler = new TaskScheduler();
+    taskScheduler.initialize(config);
     TaskSchedulePlan taskSchedulePlan = taskScheduler.schedule(graph, workerPlan);
 
     //Just to print the task schedule plan...
