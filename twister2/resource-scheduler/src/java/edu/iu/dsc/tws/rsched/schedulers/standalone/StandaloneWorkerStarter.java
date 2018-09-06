@@ -36,8 +36,8 @@ import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.master.JobMasterContext;
+import edu.iu.dsc.tws.master.client.JobMasterClient;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.bootstrap.JobMasterBasedWorkerController;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
@@ -198,23 +198,50 @@ public final class StandaloneWorkerStarter {
     String indexEnv = System.getenv("NOMAD_ALLOC_INDEX");
     String idEnv = System.getenv("NOMAD_ALLOC_ID");
 
-    int index = Integer.valueOf(indexEnv);
+    int workerID = Integer.valueOf(indexEnv);
 
-    initLogger(config, index);
-    LOG.log(Level.INFO, String.format("Worker id = %s and index = %d", idEnv, index));
+    initLogger(config, workerID);
+    LOG.log(Level.INFO, String.format("Worker id = %s and index = %d", idEnv, workerID));
 
     Map<String, Integer> ports = getPorts(config);
     Map<String, String> localIps = getIPAddress(ports);
 
     String jobMasterIP = JobMasterContext.jobMasterIP(config);
-    int masterPort = JobMasterContext.jobMasterPort(config);
+    int jobMasterPort = JobMasterContext.jobMasterPort(config);
 
     String jobName = StandaloneContext.jobName(config);
     String jobDescFile = JobUtils.getJobDescriptionFilePath(jobName, config);
     JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
-    int numberContainers = job.getNumberOfWorkers();
-    return new JobMasterBasedWorkerController(config, index, numberContainers,
-        jobMasterIP, masterPort, ports, localIps);
+    int numberOfWorkers = job.getNumberOfWorkers();
+
+    int port = ports.get("worker");
+    String host = localIps.get("worker");
+    WorkerNetworkInfo networkInfo = new WorkerNetworkInfo(host, port, workerID);
+
+    JobMasterClient jobMasterClient = createMasterClient(config, jobMasterIP, jobMasterPort,
+        networkInfo, numberOfWorkers);
+
+    return jobMasterClient.getJMWorkerController();
+  }
+
+  /**
+   * Create the job master client to get information about the workers
+   */
+  private static JobMasterClient createMasterClient(Config cfg, String masterHost, int masterPort,
+                                                    WorkerNetworkInfo networkInfo,
+                                                    int numberContainers) {
+    // we start the job master client
+    JobMasterClient jobMasterClient = new JobMasterClient(cfg,
+        networkInfo, masterHost, masterPort, numberContainers);
+    LOG.log(Level.INFO, String.format("Connecting to job master %s:%d", masterHost, masterPort));
+    jobMasterClient.startThreaded();
+    // now lets send the starting message
+    jobMasterClient.sendWorkerStartingMessage();
+
+    // now lets send the starting message
+    jobMasterClient.sendWorkerRunningMessage();
+
+    return jobMasterClient;
   }
 
   /**
