@@ -54,7 +54,7 @@ using various cluster services.
 We implemented a worker controller using a ZooKeeper server. 
 ZooKeeper server runs in many clusters. This worker controller can be used in those clusters. 
 The worker controller class is: 
-* [edu.iu.dsc.tws.rsched.bootstrap.ZKController](../../../twister2/resource-scheduler/src/java/edu/iu/dsc/tws/rsched/bootstrap/ZKController.java)
+* [edu.iu.dsc.tws.rsched.bootstrap.ZKWorkerController](../../../twister2/resource-scheduler/src/java/edu/iu/dsc/tws/rsched/bootstrap/ZKController.java)
 
 Details of the implementation is provided in [the document](../zookeeper/ZKBasedWorkerDiscovery.md). 
 

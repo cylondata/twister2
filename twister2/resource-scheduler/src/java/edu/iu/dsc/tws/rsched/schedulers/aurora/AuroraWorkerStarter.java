@@ -27,7 +27,7 @@ import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
-import edu.iu.dsc.tws.rsched.bootstrap.ZKController;
+import edu.iu.dsc.tws.rsched.bootstrap.ZKWorkerController;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import static edu.iu.dsc.tws.common.config.Context.JOB_ARCHIVE_DIRECTORY;
@@ -40,7 +40,7 @@ public final class AuroraWorkerStarter {
   private String mesosTaskID;
   private Config config;
   private JobAPI.Job job;
-  private ZKController zkController;
+  private ZKWorkerController zkWorkerController;
 
   private AuroraWorkerStarter() {
   }
@@ -69,7 +69,7 @@ public final class AuroraWorkerStarter {
 
     // TODO: need toprovide all parameters
     worker.execute(workerStarter.config,
-        workerStarter.zkController.getWorkerNetworkInfo().getWorkerID(),
+        workerStarter.zkWorkerController.getWorkerNetworkInfo().getWorkerID(),
         null, null, null, null);
 
     // close the things, let others know that it is done
@@ -175,11 +175,11 @@ public final class AuroraWorkerStarter {
 
     // TODO: need to put at least nodeIP to this NodeInfo object
     NodeInfo nodeInfo = new NodeInfo(null, null, null);
-    zkController =
-        new ZKController(config, job.getJobName(), workerHostPort, numberOfWorkers, nodeInfo);
-    zkController.initialize();
+    zkWorkerController =
+        new ZKWorkerController(config, job.getJobName(), workerHostPort, numberOfWorkers, nodeInfo);
+    zkWorkerController.initialize();
     long duration = System.currentTimeMillis() - startTime;
-    LOG.info("Initialization for the worker: " + zkController.getWorkerNetworkInfo()
+    LOG.info("Initialization for the worker: " + zkWorkerController.getWorkerNetworkInfo()
         + " took: " + duration + "ms");
   }
 
@@ -193,7 +193,7 @@ public final class AuroraWorkerStarter {
     // the amount of time to wait for all workers to join a job
     int timeLimit =  ZKContext.maxWaitTimeForAllWorkersToJoin(config);
     long startTime = System.currentTimeMillis();
-    List<WorkerNetworkInfo> workerList = zkController.waitForAllWorkersToJoin(timeLimit);
+    List<WorkerNetworkInfo> workerList = zkWorkerController.waitForAllWorkersToJoin(timeLimit);
     long duration = System.currentTimeMillis() - startTime;
 
     if (workerList == null) {
@@ -211,7 +211,7 @@ public final class AuroraWorkerStarter {
    * needs to close down when finished computation
    */
   public void close() {
-    zkController.close();
+    zkWorkerController.close();
   }
 
   /**

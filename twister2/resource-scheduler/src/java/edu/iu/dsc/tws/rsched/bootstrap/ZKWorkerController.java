@@ -52,8 +52,8 @@ import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
  * we count the number of waiting workers by using a DistributedAtomicInteger
  */
 
-public class ZKController implements IWorkerController {
-  public static final Logger LOG = Logger.getLogger(ZKController.class.getName());
+public class ZKWorkerController implements IWorkerController {
+  public static final Logger LOG = Logger.getLogger(ZKWorkerController.class.getName());
 
   // hostname and port number of this worker
   private InetAddress workerIP;
@@ -89,11 +89,11 @@ public class ZKController implements IWorkerController {
   // config object
   private Config config;
 
-  public ZKController(Config config,
-                      String jobName,
-                      String workerIpAndPort,
-                      int numberOfWorkers,
-                      NodeInfo nodeInfo) {
+  public ZKWorkerController(Config config,
+                            String jobName,
+                            String workerIpAndPort,
+                            int numberOfWorkers,
+                            NodeInfo nodeInfo) {
     this.config = config;
     this.jobName = jobName;
     this.numberOfWorkers = numberOfWorkers;
@@ -179,7 +179,7 @@ public class ZKController implements IWorkerController {
 
       return true;
     } catch (Exception e) {
-      LOG.log(Level.SEVERE, "Exception when initializing ZKController", e);
+      LOG.log(Level.SEVERE, "Exception when initializing ZKWorkerController", e);
       return false;
     }
   }
