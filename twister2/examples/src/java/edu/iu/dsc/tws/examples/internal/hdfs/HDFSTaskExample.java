@@ -33,11 +33,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
+import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
@@ -45,11 +45,16 @@ import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
+import edu.iu.dsc.tws.comms.api.TWSChannel;
+import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.data.api.HDFSConnector;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.hdfs.HadoopDataOutputStream;
 import edu.iu.dsc.tws.data.hdfs.HadoopFileSystem;
+import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.core.OperationNames;
+import edu.iu.dsc.tws.executor.threading.Executor;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.ICompute;
@@ -58,19 +63,12 @@ import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.OperationMode;
-import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.taskscheduler.TaskScheduler;
 
-/**
- * It would be modified properly before the first release.
- */
-
 public class HDFSTaskExample implements IWorker {
-
-  private static final Logger LOG = Logger.getLogger(HDFSTaskExample.class.getName());
 
   private static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
 
@@ -101,7 +99,7 @@ public class HDFSTaskExample implements IWorker {
   /**
    * This method initialize the config, container id, and resource plan objects.
    */
-  public void execute(Config cfg, int workerID, AllocatedResources resources,
+  public void execute(Config config, int workerID, AllocatedResources resources,
                       IWorkerController workerController,
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
@@ -116,22 +114,26 @@ public class HDFSTaskExample implements IWorker {
     builder.setParallelism("task1", 2);
     builder.setParallelism("task2", 2);
 
-    List<String> datasetList = new ArrayList<>();
-    datasetList.add("dataset1.txt");
-    builder.addConfiguration("task1", "inputdataset", datasetList);
+    List<String> inputList = new ArrayList<>();
+    inputList.add("dataset1.txt");
+    builder.addConfiguration("task1", "inputdataset", inputList);
 
     builder.connect("task1", "task2", OperationNames.PARTITION);
     builder.operationMode(OperationMode.STREAMING);
 
     WorkerPlan workerPlan = createWorkerPlan(resources);
-    DataFlowTaskGraph dataFlowTaskGraph = builder.build();
+    DataFlowTaskGraph graph = builder.build();
 
-    if (dataFlowTaskGraph != null) {
-      LOG.info("Task Scheduling Mode:" + TaskSchedulerContext.taskSchedulingMode(cfg));
-      TaskScheduler taskScheduler = new TaskScheduler();
-      taskScheduler.initialize(cfg);
-      TaskSchedulePlan taskSchedulePlan = taskScheduler.schedule(dataFlowTaskGraph, workerPlan);
-    }
+    TaskScheduler taskScheduler = new TaskScheduler();
+    taskScheduler.initialize(config);
+    TaskSchedulePlan taskSchedulePlan = taskScheduler.schedule(graph, workerPlan);
+
+    TWSChannel network = Network.initializeChannel(config, workerController, resources);
+    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resources,
+            new Communicator(config, network));
+    ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
+    Executor executor = new Executor(config, plan, network);
+    executor.execute();
   }
 
   public WorkerPlan createWorkerPlan(AllocatedResources resourcePlan) {
@@ -263,7 +265,6 @@ public class HDFSTaskExample implements IWorker {
           List<String> outputFiles = (List<String>) entry.getValue();
           for (int i = 0; i < outputFiles.size(); i++) {
             this.outputFile = outputFiles.get(i);
-            LOG.info("Output File(s):" + this.outputFile);
           }
         }
         hdfsConnector = new HDFSConnector(config, outputFile);

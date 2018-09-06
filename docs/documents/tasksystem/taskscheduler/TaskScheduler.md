@@ -1,4 +1,4 @@
-#Task Scheduling in Twister2
+# Task Scheduling in Twister2
 
 Task Scheduling is the process of scheduling the tasks into the cluster resources in a manner that 
 minimizes the task completion time and utilizes the resources effectively. The other main functional 
@@ -16,7 +16,7 @@ scheduling algorithms namely RoundRobin, FirstFit, and DataLocality.
 **FirstFit Task Scheduling**
 * Heterogeneous Containers -> Heterogeneous Task Instances
 
-##Implementation
+## Implementation
 
 The task scheduler has a base interface named ITaskScheduler that consists of two main methods 
 namely initialize and schedule methods to initialize the taskgraph configuration and schedule the 
@@ -31,7 +31,7 @@ the scheduleBatchTask method.
 
     edu.iu.dsc.tws.tsched.taskscheduler.TaskScheduler
 
-##Proto file
+## Proto file
 
 The task scheduler has the protobuf file named taskscheduleplan.proto in the proto directory. The
 proto file consists of the following details as follows. The resource object represents the values 
@@ -71,14 +71,14 @@ the taskschedule of the batch tasks.
        repeated TaskSchedulePlan taskscheduleplan = 2;
     }
 
-##YAML file
-The task scheduler has task.yaml in the config directory. The task.yaml details are given below. 
-The task scheduler mode represents either 'roundrobin' or 'firstfit' or 'datalocalityaware'. The
-default task instances represents the default memory, disk, and cpu values assigned to the task 
-instances. The default container padding values represents the percentage of values to be added to
-each container. The default container instance values represents the default size of memory, disk,
-and cpu of the container. The task parallelism represents the default parallelism value assigned to
-each task instance. The task type represents the streaming or batch task.
+## YAML file
+The task scheduler has task.yaml in the config directory. The task scheduler mode represents either 
+'roundrobin' or 'firstfit' or 'datalocalityaware'. The default task instances represents the 
+default memory, disk, and cpu values assigned to the task instances. The default container padding 
+values represents the percentage of values to be added to each container. The default container 
+instance values represents the default size of memory, disk, and cpu of the container. The task
+parallelism represents the default parallelism value assigned to each task instance. The task type 
+represents the streaming or batch task.
     
     #Task Scheduler Mode
     twister2.class.task.taskscheduler: "roundrobin"

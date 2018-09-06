@@ -1,4 +1,4 @@
-#DataLocality Aware Task Scheduler for scheduling batch tasks in Twister2
+# DataLocality Aware Task Scheduler for scheduling batch tasks in Twister2
 
 DataLocality Aware Task Scheduler allocates the task instances of the streaming task graph based on the 
 locality of data. It calculates the distance between the worker nodes and the data nodes and allocate 
@@ -13,7 +13,7 @@ values and then it will calculate the required ram, disk, and cpu values for the
 the logical containers which is based on the task configuration values and the allocated worker 
 values respectively. 
 
-#Implementation 
+## Implementation 
  
 The data locality aware task scheduler for scheduling batch task graph is implemented in
 
@@ -59,13 +59,12 @@ helper class and it is implemented in
 which is responsible for getting the datanode location of the input files in the Hadoop Distributed 
 File System (HDFS). 
 
-The algorithm send the task vertex and the distance calculation map to find out the best 
-worker node which is calculated between the worker nodes and the data nodes and store it 
-in the map. Then, it allocate the task instances of the task vertex to the worker (which 
-has minimal distance), if the container/worker has reached the maximum number of task instances then 
-it will allocate the remaining task instances to the next container. Finally, the algorithm returns 
-the datalocalityawareallocation map object which consists of container and its task instance 
-allocation.
+The algorithm send the task vertex and the distance calculation map to find out the best worker node
+which is calculated between the worker nodes and the data nodes and store it in the map. Then, it 
+allocate the task instances of the task vertex to the worker (which has minimal distance), if the 
+container/worker has reached the maximum number of task instances then it will allocate the remaining
+task instances to the next container. Finally, the algorithm returns the datalocalityawareallocation
+map object which consists of container and its task instance allocation.
 
 The DataLocalityBatchTaskScheduler assign the logical container size which is based on the default 
 ram, disk, and cpu values specified in the TaskScheduler Context. The default configuration value 

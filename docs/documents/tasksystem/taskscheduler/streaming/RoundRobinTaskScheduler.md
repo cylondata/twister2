@@ -1,4 +1,4 @@
-#RoundRobin Task Scheduler for scheduling streaming Tasks in Twister2
+# RoundRobin Task Scheduler for scheduling streaming Tasks in Twister2
 
 RoundRobin Task Scheduler allocates the task instances of the task graph in a round robin fashion. 
 For example, if there are 2 containers and 2 tasks with a task parallelism value of 2, 
@@ -14,7 +14,7 @@ First, it will allocate the task instances into the logical container values and
 calculate the required ram, disk, and cpu values for the task instances and the logical containers 
 which is based on the task configuration values and the allocated worker values respectively. 
 
-#Implementation 
+## Implementation 
  
 The round robin task scheduler for scheduling streaming task is implemented in
 

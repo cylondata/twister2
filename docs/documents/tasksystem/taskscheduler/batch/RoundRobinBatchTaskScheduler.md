@@ -1,4 +1,4 @@
-#RoundRobin TaskScheduler for scheduling batch tasks in Twister2
+# RoundRobin TaskScheduler for scheduling batch tasks in Twister2
 
 RoundRobinBatchTaskScheduler allocates the task instances of the task graph in a round robin 
 fashion which is similar to the Round Robin Task Scheduler for batch tasks. However, the primary 
@@ -49,7 +49,7 @@ First, it will allocate the task instances into the logical container values and
 calculate the required ram, disk, and cpu values for the task instances and the logical containers 
 which is based on the task configuration values and the allocated worker values respectively. 
 
-#Implementation 
+## Implementation 
  
 The round robin task scheduler for scheduling batch task is implemented in
 

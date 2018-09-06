@@ -1,4 +1,4 @@
-#FirstFit Task Scheduler for scheduling streaming Tasks in Twister2
+# FirstFit Task Scheduler for scheduling streaming Tasks in Twister2
 
 FirstFit Task Scheduler allocates the task instances of the task graph in a heuristic 
 manner. The main objective of the task scheduler is to reduce the total number of containers and
@@ -10,7 +10,7 @@ go to container 0 (if the total task instance required values doesn't reach the 
 container 0. If the container has reached its maximum limit then it will allocate the
 2nd task -> instance 1 will go to container 1.
 
-##Implementation
+## Implementation
 
 The first fit task scheduler for scheduling streaming task is implemented in 
 
