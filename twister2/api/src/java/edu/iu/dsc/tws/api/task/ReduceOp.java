@@ -11,15 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.task;
 
-import edu.iu.dsc.tws.data.api.DataType;
-import edu.iu.dsc.tws.task.api.IFunction;
-
-public class SinkConnection {
-  public SinkConnection reduce(String parent, IFunction function) {
-    return null;
-  }
-
-  public SinkConnection reduce(String parent, IFunction function, DataType dataType) {
-    return null;
-  }
+public enum ReduceOp {
+  SUM,
+  MULTIPLY,
 }

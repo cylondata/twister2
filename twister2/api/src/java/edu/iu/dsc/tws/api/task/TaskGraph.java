@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.api.task;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.ISink;
 
 public class TaskGraph {
@@ -30,6 +31,18 @@ public class TaskGraph {
   }
 
   public SinkConnection addSink(String name, ISink sink, int parallel) {
+    return null;
+  }
+
+  public ComputeConnection addCompute(String name, ICompute compute) {
+    return null;
+  }
+
+  public ComputeConnection addCompute(String name, ICompute compute, int parallel) {
+    return null;
+  }
+
+  public SourceConnection addSource(String name, ISink sink) {
     return null;
   }
 }

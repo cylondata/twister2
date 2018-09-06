@@ -11,10 +11,52 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.task;
 
+import java.util.HashSet;
+import java.util.Set;
+
+import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.task.api.IFunction;
+import edu.iu.dsc.tws.task.graph.Edge;
 
 public class ComputeConnection {
-  public ComputeConnection reduce(String name, IFunction function) {
+  private String nodeName;
+
+  private Set<Edge> inputs = new HashSet<>();
+
+  public ComputeConnection(String nodeName) {
+    this.nodeName = nodeName;
+  }
+
+  public ComputeConnection reduce(String parent, IFunction function) {
+    return null;
+  }
+
+  public ComputeConnection reduce(String parent, ReduceOp op) {
+    return null;
+  }
+
+  public ComputeConnection reduce(String parent, IFunction function, DataType dataType) {
+    return null;
+  }
+
+  public ComputeConnection reduce(String parent, String name, IFunction function) {
+    return null;
+  }
+
+  public ComputeConnection reduce(String parent, String name, ReduceOp op) {
+    return null;
+  }
+
+  public ComputeConnection reduce(String parent, String name,
+                                  IFunction function, DataType dataType) {
+    return null;
+  }
+
+  public ComputeConnection reduce(String name, ReduceOp op, DataType dataType) {
+    return null;
+  }
+
+  public ComputeConnection partition(String parent) {
     return null;
   }
 }
