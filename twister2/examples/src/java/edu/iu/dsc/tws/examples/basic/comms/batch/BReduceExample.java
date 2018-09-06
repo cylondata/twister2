@@ -112,9 +112,8 @@ public class BReduceExample extends BenchWorker {
       LOG.info("Final Output ==> ");
       if (object instanceof int[]) {
         int[] res = (int[]) object;
-        for (int i = 0; i < res.length; i++) {
-          System.out.print(res[i] + " ");
-        }
+        String output = String.format("%s", Arrays.toString(res));
+        LOG.info("Final Output : " + output);
       }
       return true;
     }
