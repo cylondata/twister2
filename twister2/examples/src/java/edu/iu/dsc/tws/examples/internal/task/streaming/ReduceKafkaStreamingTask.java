@@ -40,6 +40,7 @@ import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.connectors.TwsKafkaConsumer;
+import edu.iu.dsc.tws.connectors.TwsKafkaProducer;
 import edu.iu.dsc.tws.examples.internal.task.TaskUtils;
 
 import edu.iu.dsc.tws.executor.core.CommunicationOperationType;
@@ -71,7 +72,11 @@ public class ReduceKafkaStreamingTask implements IWorker {
         servers,
         "test",
         "reduce-edge");
-    RecevingTask r = new RecevingTask();
+    RecevingTask r2 = new RecevingTask();
+    TwsKafkaProducer<String> r = new TwsKafkaProducer<String>(
+        "outTopic",
+        servers
+    );
 
     GraphBuilder builder = GraphBuilder.newBuilder();
     builder.addSource("source", g);
