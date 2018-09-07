@@ -29,9 +29,6 @@ import edu.iu.dsc.tws.comms.op.stream.SKeyedReduce;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.basic.comms.KeyedBenchWorker;
 
-/**
- * Created by pulasthi on 8/28/18.
- */
 public class SKeyedReduceExample extends KeyedBenchWorker {
   private static final Logger LOG = Logger.getLogger(SKeyedReduceExample.class.getName());
 
@@ -57,7 +54,7 @@ public class SKeyedReduceExample extends KeyedBenchWorker {
 
     keyedReduce = new SKeyedReduce(communicator, taskPlan, sources, targets,
         new ReduceIdentityFunction(), new FinalReduceReceiver(jobParameters.getIterations()),
-        MessageType.OBJECT,
+        MessageType.OBJECT, MessageType.OBJECT,
         new SimpleKeyBasedSelector());
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,

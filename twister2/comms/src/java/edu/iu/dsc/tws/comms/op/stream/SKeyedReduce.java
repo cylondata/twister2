@@ -35,13 +35,22 @@ public class SKeyedReduce {
 
   private DestinationSelector destinationSelector;
 
+  private MessageType keyType;
+
+  private MessageType dataType;
+
   public SKeyedReduce(Communicator comm, TaskPlan plan,
                       Set<Integer> sources, Set<Integer> destinations, ReduceFunction fnc,
-                      ReduceReceiver rcvr, MessageType dataType, DestinationSelector destSelector) {
+                      ReduceReceiver rcvr, MessageType dType, MessageType kType,
+                      DestinationSelector destSelector) {
+    this.keyType = kType;
+    this.dataType = dType;
+
     Set<Integer> edges = new HashSet<>();
     for (int i = 0; i < destinations.size(); i++) {
       edges.add(comm.nextEdge());
     }
+
     this.keyedReduce = new DataFlowMultiReduce(comm.getChannel(), sources, destinations,
         new ReduceMultiStreamingFinalReceiver(fnc, rcvr),
         new ReduceMultiStreamingPartialReceiver(fnc), edges);
@@ -53,8 +62,7 @@ public class SKeyedReduce {
 
   public boolean reduce(int src, Object key, Object data, int flags) {
     int dest = destinationSelector.next(src, key);
-    return keyedReduce.send(src, new KeyedContent(key, data, MessageType.INTEGER,
-        MessageType.INTEGER), flags, dest);
+    return keyedReduce.send(src, new KeyedContent(key, data, keyType, dataType), flags, dest);
   }
 
   public boolean hasPending() {
